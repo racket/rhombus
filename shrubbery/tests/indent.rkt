@@ -108,12 +108,17 @@
 
  @e{define fib(n):
      cond | n == 0: 0
-          ^         ^|}
+    ^     ^ ^       ^|}
+
+ @e{define fib(n):
+     cond | n == 0:
+              0
+    ^     ^ ^ ^|}
 
  @e{define fib(n):
      log_error("fib called")
      cond | n == 0: 0
-          ^         ^|}
+    ^     ^ ^       ^|}
  
  @e{define
      | fib(0): 0
@@ -131,7 +136,7 @@
      lambda (n):
        cond
        | n == 0: 0
-       ^         ^| n == 1: 1}
+    ^^ ^ ^       ^| n == 1: 1}
 
  @e|{define fib(n):
       match n { | 0 { 0 }
@@ -160,12 +165,12 @@
  @e{define go():
       hello
       | world
-      ^ ^|}
+    ^ ^ ^|}
 
  @e{define go():
       define more(m):
         if m == 0 | "done"
-                  ^ ^|}
+    ^ ^           ^ ^|}
 
  @e{define go():
       define more(m):
@@ -177,7 +182,7 @@
       match x
       | something(v): lambda
                       | (): v
-      ^               ^     ^| (n): v+n}
+    ^ ^ ^             ^ ^   ^| (n): v+n}
 
  @e{define colors:
      list(
@@ -206,7 +211,7 @@
 
  @e{this is | one: a \
                     long result
-            ^      ^| two}
+            ^ ^    ^| two}
 
  @e{this is | one: a \
                     long result
@@ -296,11 +301,11 @@
     ^)}
 
  @e{(match v
-      | cons(bv, av):
-          define values(is_a_match, ar):
-            ¿a_pred(av)
-          if is_a_match
-      ^   ^| define}
+     | cons(bv, av):
+         define values(is_a_match, ar):
+           ¿a_pred(av)
+         if is_a_match
+     ^ ^ ^| define}
 
  @e{a  |« b»
     ^ c}
@@ -350,7 +355,7 @@
  @e{z:
       a:«x»
       b
-      ^|x}
+    ^ ^|x}
 
  @e{(1,
      a:

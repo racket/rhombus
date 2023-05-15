@@ -1,58 +1,74 @@
 #lang scribble/rhombus/manual
-@(import: "grammar.rhm" open)
+@(import:
+    "grammar.rhm" open
+    "quote.rhm" open
+    lib("scribble/core.rkt"):
+      expose:
+        style
+        #{color-property})
 
 @(def opener: @emph{opener})
 @(def closer: @emph{closer})
 @(def opener_closer: @elem{@opener--@italic{closer}})
+@(fun annote(content, note): [content,
+                              @elem(~style: style(#false, [#{color-property}("gray")]),
+                                    hspace(4), "---", " ", italic(note))])
+@(fun nogood(content, ...): @elem(~style: style(#false, [#{color-property}("red")]),
+                                  tt(content, ...)))
 
 @title(~tag: "group-and-block"){Groups and Blocks}
 
 The heart of shrubbery notation is its set of rules for organizing
-@deftech{terms} into @deftech{groups}, @deftech{blocks}, and
-@deftech{alt-blocks}. The following grammar summarizes the abstract
-structure of a shrubbery-notation document, where literal fragments like
-@litchar{(} serve merely as tags:
+@deftech{terms} into @deftech{groups}. Terms include @deftech{atoms},
+which are a subset of individual @seclink("token-parsing"){tokens} for
+things like numbers, identifiers, strings, and booleans. Parentheses and
+similar @opener_closer pairs form compound terms. A @deftech{block}
+created with @litchar{:} is also a term, and a non-empty sequence of
+@litchar{|} @deftech{alternatives} is a term. The following grammar
+summarizes the abstract structure of a group, ignoring whitespace rules
+and @litchar{,} and @litchar{;} separators.
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{document},
-                 kleenestar(@nonterm{group})],
-                [@nonterm{group},
-                 bseq(kleenestar(@nonterm{term}), @nonterm{tail-term})],
+        bnf.BNF([@nonterm{group}, bseq(kleeneplus(@nonterm{term}))],
                 [@nonterm{term},
                  @nonterm{atom},
                  balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
                       bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
                       bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
+                      bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'"))),
+                 bseq(@litchar{:}, kleenestar(@nonterm{group})),
+                 kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
+
+This initial grammar is overly permissive, however, because a sequence
+of @litchar{|} alternatives can appear only at the end of a group, and a
+@litchar{:} block can appear in a group at most once and only after all
+terms other than a sequence of @litchar{|} alternatives. Any number of
+self-delimiting terms can appear before a single optional @litchar{:}
+block or sequence of @litchar{|} alternatives, as long as the group is
+nonempty.
+
+@nested(~style: #'inset,
+        bnf.BNF([@nonterm{group},
+                 annote(bseq(kleenestar(@nonterm{dterm}),
+                             boptional(@nonterm{block}),
+                             boptional(@nonterm{alts})),
+                        "must be nonempty")],
+                [@nonterm{dterm},
+                 @nonterm{atom},
+                 balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
+                      bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
+                      bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
                       bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'")))],
-                [@nonterm{tail-term},
-                 @nonterm{term},
-                 @nonterm{block},
-                 @nonterm{alt-block}],
                 [@nonterm{block},
                  bseq(@litchar{:}, kleenestar(@nonterm{group}))],
-                [@nonterm{alt-block},
-                 bseq(@litchar("|"), kleenestar(@nonterm{block}))]))
+                [@nonterm{alts},
+                 kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
 
-A document is a sequence of groups, each of which is a non-empty
-sequence of terms. Terms include @deftech{atoms}, which are either
-individual @seclink("token-parsing"){tokens}, @opener_closer
-pairs that contain groups, or blocks as created with @litchar{:} or
-@litchar{|}---but a block as a term is constrained to appear only at the
-end of a group.
+Overall, a document is a sequence of groups:
 
-An alt-block, as created with @litchar{|}, is a special kind of block
-that contains a sequence of blocks. Conceptually, each nested block in
-an alt-block is in a group, but the group is constrained to have a
-single block, so a layer is collapsed in the abstract structure.
-The fact that an alt-block was created with @litchar{|} is tagged in the
-abstract structure, much in the same way that specific @opener_closer
-pairs @litchar{()}, @litchar{[]}, @litchar{{}}, and @litchar{''} tag
-the terms that they create.
-
-Although an @opener_closer pair contains a sequence of groups, that
-content is not a block, since it is not created via @litchar{:} or
-@litchar{|}. Similarly, a document overall is a sequence of groups but
-not a block.
+@nested(~style: #'inset,
+        bnf.BNF([@nonterm{document},
+                 kleenestar(@nonterm{group})]))
 
 @section{Grouping by Lines}
 
@@ -69,25 +85,23 @@ when this document says “the previous line” or “the next line.”
 
 @section{Grouping by Opener--Closer Pairs}
 
-An @opener_closer pair @litchar{(} and @litchar{)}, @litchar{[} and
-@litchar{]}, @litchar("{") and @litchar("}"), or @litchar{'} and
-@litchar{'} (those two are the same character) forms a @tech{term} that
+An @opener_closer pair @parens, @brackets, @braces, or @quotes forms a @tech{term} that
 can span lines and encloses nested groups. Within most @opener_closer
 pairs, @litchar{,} separates groups, but @litchar{;} separates group
-with a @litchar{'} pair. Groups can be on separate lines at the same
+with @quotes. Groups can be on separate lines at the same
 indentation, but groups on separate lines still must be separated by
-@litchar{,} in @litchar{()}, @litchar{[]}, or @litchar{{}}. Parsing
-retains whether a term is formed by @litchar{()}, @litchar{[]},
-@litchar{{}}, or @litchar{''}.
+@litchar{,} in @parens, @brackets, or @braces. Parsing
+retains whether a term is formed by @parens, @brackets,
+@braces, or @quotes.
 
 @rhombusblock(
   group 1
-  [group 2 - subgroup I,
-   group 2 - subgroup II,
-   (group 2 - subgroup III - subsubgroup A,
-    group 2 - subgroup III - subsubgroup B,
-    {group 2 - subgroup III - subsubgroup C, subsubsubgroup α,
-     group 2 - subgroup III - subsubgroup C, subsubsubgroup β})]
+  [group 2 - subgroup I, group 2 - subgroup II,
+   group 2 - subgroup III,
+   (group 2 - subgroup IV - subsubgroup A,
+    group 2 - subgroup IV - subsubgroup B,
+    {group 2 - subgroup IV - subsubgroup C - subsubsubgroup α,
+     group 2 - subgroup IV - subsubgroup C - subsubsubgroup β})]
   'group 3 - subgroup I;  group 3 - subgroup II
    group 3 - subgroup III'
 )
@@ -96,7 +110,7 @@ The following three forms are not allowed, because they are missing a
 @litchar{,} between two groups:
 
 @verbatim(~indent: 2){
-// Not allowed
+@nogood{// Not allowed}
 (1
  2)
 [1
@@ -109,11 +123,11 @@ A @litchar{,} is disallowed if it would create an empty group, except
 that a trailing @litchar{,} is allowed.
 
 @verbatim(~indent: 2){
-// Not allowed
+@nogood{// Not allowed}
 (, 1)
 (1,, 2)
 
-// Allowed, but not standard
+@nogood{// Allowed, but not standard}
 (1, 2,)
 }
 
@@ -153,7 +167,7 @@ start with the same indentation as the first group.
 @verbatim(~indent: 2){
 group 1
 group 2
-// error, because the group is indented incorrectly:
+@nogood{// error, because the group is indented incorrectly:}
   group 3
 }
 
@@ -167,7 +181,8 @@ it starts a new sequence of groups that form a @tech{block}:
 )
 
 There is no constraint on how much indentation a nested group sequence
-must use, as long as the indentation is more than the enclosing group.
+must use, as long as the indentation is more than the enclosing group,
+but standard indentation is two spaces.
 Also, a new line is not required after @litchar{:}, but then it's as if the
 @litchar{:} is followed by a newline plus spaces that reach the same column as
 the @litchar{:}. All four of the following groups are the same, each with one
@@ -201,11 +216,11 @@ any indentation; it doesn't have to be indented to the right of the
 )
 
 A block that is started with @litchar{:} normally cannot be empty
-(unless explicit-grouping @litchar{«} and @litchar{»} are used as
-described in @secref("guillemot")), so the following is ill-formed:
+(unless explicit-grouping @guillemets are used as
+described in @secref("guillemet")), so the following is ill-formed:
 
 @verbatim(~indent: 2){
-bad_empty:  // empty block disallowed
+bad_empty:  @nogood{// empty block disallowed}
 }
 
 However, @litchar{:} can be used at the start of a group so that the group
@@ -245,13 +260,13 @@ original continuing line. The following two groups are the same:
   f(1) + 2 + 3 + 4 - 5 - 6
 )
 
-A block is always at the end of its immediately containing group. One
-consequence is that an operator-starting line cannot continue a group
-that already has a block:
+An operator-starting line cannot continue a group that already has a
+block, because a block is always at the end of its immediately
+containing group or followed only by @litchar{|} alternatives:
 
 @verbatim(~indent: 2){
 hello: world
-  + 3 // bad indentation
+  + 3 @nogood{// bad indentation}
 }
 
 Along those lines, there is no ambiguity when an indented line appears
@@ -267,19 +282,19 @@ with a block that has a @litchar{+ 3} group:
     + 3
 )
 
-@section(~tag: "alt-block"){Blocking with @litchar{|}}
+@section(~tag: "alts"){Alternatives with @litchar{|}}
 
-A @litchar{|} is implicitly shifted half a column right (so, implicitly
-nested), and it is implicitly followed by a @litchar{:} that
-conceptually occupies same column as the @litchar{|}. That is, like
-@litchar{:}, a @litchar{|} always creates a nested block. Furthermore,
-@litchar{|} starts an enclosing block that includes the @litchar{|}
-block plus subsequent @litchar{|} blocks that are at the same
-indentation. An overall sequence of blocks created with @litchar{|} and
-under an implicit @litchar{:} is an @tech{alt-block}.
+A group can end with a sequence of @tech{alternatives}, each of which
+starts with @litchar{|}. The initial @litchar{|} of the sequence can be
+on a new line, in which case it must have the same indentation as the
+beginning of its enclosing group, but it does not have to be on a new
+line. If a later @litchar{|} for the same alternative sequence starts a
+new line, it must be indented the same as the initial @litchar{|}
+(whether or not that initial @litchar{|} was on its own line). Each
+@litchar{|} is followed by a sequence of groups using the same
+indentation rules as the groups in a @litchar{:} block.
 
-A @litchar{|} that starts the enclosing block can appear at the start of
-a line with new indentation. The following four groups are the same:
+The following four groups are the same:
 
 @rhombusblock(
   hello
@@ -287,8 +302,8 @@ a line with new indentation. The following four groups are the same:
   | universe
 
   hello
-    | world
-    | universe
+  | world
+  | universe
 
   hello | world
         | universe
@@ -299,24 +314,20 @@ a line with new indentation. The following four groups are the same:
           universe
 )
 
-Each of the four groups has two elements: @litchar{hello} and a block.
-The block has two groups, each of which is a more nested block. The
-first nested block has @litchar{world} in a single group, and the second
-nested block as @litchar{universe} in a single group.
-
-A @litchar{|} cannot be a in a top-level sequence of groups, and it
-cannot appear just after @litchar{:}, but a @litchar{|} can start a
-group immediately within @litchar{()}, @litchar{[]}, or @litchar{{}}.
-Like @litchar{:}, the content of a block after @litchar{|} cannot be
-empty unless explicit-grouping @litchar{«} and @litchar{»} are used.
+A group can start with an @litchar{|} alternative only when it is
+immediately within @quotes, @brackets, or @braces, or if is
+the first group of the sequence immediately within @quotes. Like
+@litchar{:}, the group-sequence content after @litchar{|} cannot be
+empty (unless explicit-grouping @guillemets are used
+immediately after @litchar{|}, as desctibed in @secref("guillemet")).
 
 If a @litchar{|} appears on the same line as an earlier @litchar{|} and
-is not more nested inside @litchar{()}, @litchar{[]}, or @litchar{{}},
-then the @litchar{|} terminates the earlier @litchar{|}'s block and
-continues its enclosing block with a new @litchar{|} group. The intent
-and consequence of this rule is that multiple @litchar{|}s can be used
-on a single line as an alternative to starting each @litchar{|} on its
-own line, making the following groups the same as the above groups:
+is not more nested inside @parens, @brackets, or @braces,
+then the @litchar{|} terminates the earlier @litchar{|}'s content and
+continues its enclosing group with a new @litchar{|} alternative. The
+intent and consequence of this rule is that multiple @litchar{|}s can be
+used on a single line instead of starting each @litchar{|} on its own
+line, making the following groups the same as the above groups:
 
 @rhombusblock(
   hello | world | universe
@@ -325,18 +336,54 @@ own line, making the following groups the same as the above groups:
   | world | universe
 )
 
-The implicit shifting of @litchar{|} by half a column is consistent with its
-visual representation, and it avoids the possibility of a group
-sequence that contains a mixture of @litchar{|}-started groups and other kinds
-of groups. Standard indentation uses no additional space of
-indentation before @litchar{|} relative to its enclosing block's group.
+A group can contain both a (single) @litchar{:} block and a sequence of
+@litchar{|} alternatives. The block's content will be more nested
+relative to the @litchar{|} alternatives (or delimited with @guillemets,
+as described in @secref("guillemet")).
 
+@rhombusblock(
+  hello:
+    in english
+  | world
+  | universe
+)
+
+A @litchar{:} block before a sequence of @litchar{|} alternatives can be
+empty. Such an empty @litchar{:} is not preserved in the parsed form (unless
+it uses @guillemets, as described in @secref("guillemet")). In effect, a
+@rhombus{:} is optional before @litchar{|} alternatives that start in a
+new line, but standard style omits an optional @litchar{:}.
+The following two groups are the same:
+
+@rhombusblock(
+  hello:
+  | world
+  | universe
+
+  hello
+  | world
+  | universe
+)
+
+When @litchar{|} appears after @litchar{:} on the same line, it is part
+of the @litchar{:} block (unless the block is delimited with
+@guillemets, as described in @secref("guillemet")).
+The following two groups are the same:
+
+@rhombusblock(
+  hello: in english | world | universe
+
+  hello:
+    in english
+    | world
+    | universe
+)
 
 @section(~tag: "semicolon"){Separating Groups with @litchar{;} and @litchar{,}}
 
 A @litchar{;} separates two groups on the same line. A @litchar{;} is
 allowed in any context—except between groups immediately within,
-@litchar{()}, @litchar{[]}, or @litchar{{}}, where a @litchar{,}
+@parens, @brackets, or @braces, where a @litchar{,}
 separates groups. The following three blocks are the same:
 
 @rhombusblock(
@@ -352,7 +399,7 @@ separates groups. The following three blocks are the same:
 
 The @litchar{;} and @litchar{,} separators interact differently with blocks formed by
 @litchar{:} and @litchar{|}. A @litchar{,} closes blocks as necessary to reach
-an enclosing @litchar{()}, @litchar{[]}, or @litchar{{}}, while a @litchar{;} separates groups within a
+an enclosing @parens, @brackets, or @braces, while a @litchar{;} separates groups within a
 nested group sequence. If @litchar{;} would create an empty group, it is
 ignored.
 
@@ -369,7 +416,7 @@ groups:
 
 The following two groups are also the same, where the group has one
 parenthesized term, but that term contains two groups, where the first
-group is a block that contains a single group:
+group contains a block that contains a single group:
 
 
 @rhombusblock(
@@ -379,18 +426,19 @@ group is a block that contains a single group:
    universe)
 )
 
-@section(~tag: "guillemot"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
+@section(~tag: "guillemet"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
 
-A block can be delimited explicitly with @litchar{«} and @litchar{»} to
+A group sequence can be delimited explicitly with @guillemets to
 disable the use of line and column information for parsing between
-@litchar{«} and @litchar{»}. A @litchar{«} can be used immediately after
+@guillemets. A @litchar{«} can be used immediately after
 @litchar{:} or immediately after @litchar{|}, in which case a
-@litchar{»} indicates the end of the block that starts after the
-@litchar{:} or @litchar{|}. Within the block, an explicit @litchar{;}
+@litchar{»} indicates the end of the group sequence that starts after the
+@litchar{:} or @litchar{|}. Within the sequence, an explicit @litchar{;}
 must be used to separate groups. A @litchar{«} can also be used
-immediately after @litchar{'} and then @litchar{»} is used just before
-the closing @litchar{'}, but that is a different kind of @litchar{«}
-@litchar{»} that is specific to supporting nested @litchar{'} pairs.
+immediately after @litchar{'}, and then @litchar{»} is used just before
+the closing @litchar{'}, but that is a different kind of @guillemets
+that is specific to supporting nested @litchar{'} pairs and does not disable
+line and column sensitivity.
 
 A sequence of groups, either at the top level or within a block, can be
 written without line and column sensitivity as @litchar{;} followed
@@ -402,7 +450,7 @@ into the enclosing context. The combination of @litchar{;} and
 for a single group or for representing a sequence of groups that is not
 within a block.
 
-Whitespace and block comments are allowed between a @litchar{:},
+Whitespace and @block_comment comments are allowed between a @litchar{:},
 @litchar{|}, or @litchar{;} and its @litchar{«}, but in a line-sensitive
 context, the @litchar{«} must be on the same line as its @litchar{:},
 @litchar{|}, or @litchar{;}.
@@ -445,15 +493,15 @@ The following five groups are the same:
     »
 )
 
-Using @litchar{«} and @litchar{»} can “armor” a shrubbery for transport from one
+Using @guillemets can “armor” a shrubbery for transport from one
 context to another where its line breaks or indentation might get
 mangled. For example, an editor might offer an operation to armor a
 range of text in perparation for moving or copying the text, and then
 it can be properly indentend in its destination before unmarmoring.
 Along similar lines, when writing code as data to be read back later,
-it's easy for a printer to insert explicit @litchar{«} and @litchar{»}.
+it's easy for a printer to insert explicit @guillemets.
 
-In rare cases, a programmer might write @litchar{«} and @litchar{»} directly. Although
+In rare cases, a programmer might write @guillemets directly. Although
 many shrubbery forms can be written with @litchar{:}, @litchar{|}, and @litchar{;} on a single
 line, as illustrated above, not all forms can be collapsed to a single
 line without extra delimiters. For example, these six groups are all
@@ -486,7 +534,7 @@ different:
   hello: if x | world | universe; the end
 )
 
-Using @litchar{«} and @litchar{»} can help in those cases:
+Using @guillemets can help in those cases:
 
 @rhombusblock(
   outside:
@@ -512,18 +560,18 @@ Using @litchar{«} and @litchar{»} can help in those cases:
   hello: if x | world |« universe »; the end
 )
 
-Even so, delimiting blocks with @litchar{«} and @litchar{»} is expected to be rare in
+Even so, delimiting blocks with @guillemets is expected to be rare in
 practice, both because programmers are likely to break things across
 lines and because a language that uses shrubbery notation is likely to
-allow @litchar{()} in places where grouping might be needed. For example,
-assuming that @litchar{if} is an expression form and @litchar{()} can wrap an
+allow @parens in places where grouping might be needed. For example,
+assuming that @litchar{if} is an expression form and @parens can wrap an
 expression, a nested conditional is probably better written like this:
 
 @rhombusblock(
   if | true | (if false | x | y) | z
 )
 
-Using @litchar{()} in this way does not produce an equivalent shrubbery to
+Using @parens in this way does not produce an equivalent shrubbery to
 
 @rhombusblock( if | true |« if false | x | y »| z)
 
@@ -531,11 +579,11 @@ but it might represent an equivalent expression in the language using
 shrubbery notation.
 
 To stay consistent with blocks expressed through line breaks and
-indentation, a block with @litchar{«} and @litchar{»} must still appear at the end of
-its enclosing group.
+indentation, a block with @guillemets must still appear at the end of
+its enclosing group or have only @litchar{|} alternatives afterward.
 
 @verbatim(~indent: 2){
-// not allowed, because a block must end a group
+@nogood{// not allowed, because a block must end a group}
 inside:« fruit » more
 }
 
@@ -549,7 +597,7 @@ line as it if were one line continuing with the next line. The itself
 line (followed by whitespace and coments) is treated the same as
 whitespace.
 
-Lines contianing only whitespace and (non-term) comments do not count
+Lines containing only whitespace and (non-term) comments do not count
 as “the next line” even for @litchar{\} continuations, so any number of
 whitespace and comment lines can appear between @litchar{\} and the line that
 it continues.
@@ -596,7 +644,7 @@ used:
  @item{When @litchar{#//} appears completely on its own line (possibly with
    whitespace and non-group comments), then its indentation does not
    matter. It comments out the next group or alternative—which might
-   be a single-line group, block, or @litchar{|} block.},
+   be a single-line group, multi-line group, or @litchar{\} alternative.},
 
  @item{When @litchar{#//} appears at the start of a group with more tokens
    afterward on the same line, it determines that group's indentation,
@@ -608,10 +656,8 @@ used:
 
  @item{When @litchar{#//} appears just before a @litchar{|} on the same line, then unlike
    the case for groups, it does not affect the the column of the @litchar{|}
-   as used to align alternatives on later lines. (That's because the
-   half-column alignment of @litchar{|} does not fit with the column alignment
-   of @litchar{#}.) Along those lines and to avoid an indentation mismatch, a
-   @litchar{#//} is not allowed to start a line for commenting out a @litchar{|}
+   as used to align alternatives on later lines. Along those lines and to avoid an indentation mismatch, a
+   @litchar{#//} is not allowed to start a line for commenting out a @litchar{|}Using
    alternative on the same line.}
 
 )

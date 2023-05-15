@@ -3,9 +3,12 @@
                      syntax/parse/pre
                      shrubbery/property)
          racket/string
+         racket/syntax-srcloc
          rhombus/parse
          racket/sandbox
          syntax/strip-context
+         (only-in rhombus/private/srcloc
+                  respan)
          (only-in scribble/example
                   make-base-eval
                   close-eval)
@@ -58,7 +61,9 @@
                                               (group #:inset (block (group (parsed #f)))))
                                       (t-block t-form)))))
      (with-syntax ([((t-form e-form) ...)
-                    (for/list ([form (in-list (syntax->list #'((group form ...) ...)))])
+                    (for/list ([form (in-list (map (lambda (s) (datum->syntax #f
+                                                                              (cons 'group (syntax-e s))))
+                                                   (syntax->list #'((form ...) ...))))])
                       (syntax-parse form
                         #:datum-literals (group)
                         [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed (void))))]
@@ -121,11 +126,23 @@
                                                       (define msg (format-exception exn eval))
                                                       (if (eq? mode 'error)
                                                           msg
-                                                          (raise-arguments-error
+                                                          (apply
+                                                           raise-arguments-error
                                                            'examples
                                                            "error during example"
-                                                           "example" expr
-                                                           "message" msg)))])
+                                                           (append
+                                                            (list "example" expr)
+                                                            (let ([loc (let ([l (syntax->list expr)])
+                                                                         (and (pair? l)
+                                                                              (eq? 'top (syntax-e (car l)))
+                                                                              (pair? (cdr l))
+                                                                              (null? (cddr l))
+                                                                              (syntax-srcloc (respan (cadr l)))))])
+                                                              (if loc
+                                                                  (list "source"
+                                                                        (unquoted-printing-string (srcloc->string loc)))
+                                                                  null))
+                                                            (list "message" msg)))))])
                            (cond
                              [(eq? mode 'error) (begin
                                                   (eval (strip-context expr))

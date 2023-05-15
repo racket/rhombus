@@ -316,7 +316,7 @@
              ;; indentation under the block operator is valid unless armored
              (define next-candidate (col-of (add1 next-s) start delta))
              ;; a `|` cannot appear just after a `:`, so look before that block
-             (define adj-block-col (if as-bar? (sub1 block-col) block-col))
+             (define adj-block-col block-col) ;; (if as-bar? (sub1 block-col) block-col))
              ;; look further outside this block, and don't consider anything
              ;; that would appear to be nested in the block:
              (define outer-candidates (if (or candidate

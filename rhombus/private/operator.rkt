@@ -14,7 +14,6 @@
          "compound-repetition.rkt"
          "dotted-sequence-parse.rkt"
          "parse.rkt"
-         (submod "match.rkt" for-match-id)
          "macro-macro.rkt"
          "definition.rkt"
          "static-info.rkt"
@@ -35,6 +34,13 @@
     #:description "non-operator"
     #:datum-literals (op)
     (pattern (~not (op _))))
+
+  (define-syntax-class :not-op-or-block
+    #:description "non-operator, non-block"
+    #:datum-literals (op block alts)
+    (pattern (~not (~or (op _)
+                        (block . _)
+                        (alts . _)))))
   
   (define-splicing-syntax-class :prefix-case
     #:description "prefix operator case"
@@ -49,7 +55,7 @@
              #:attr rhs #'(tag body ...)
              #:attr ret-predicate #'ret.converter
              #:attr ret-static-infos #'ret.static-infos)
-    (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op
+    (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op-or-block
                    ((~and tag block) (~var options (:prefix-operator-options '#f))
                                      body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -75,7 +81,7 @@
              #:attr rhs #'(tag body ...)
              #:attr ret-predicate #'ret.converter
              #:attr ret-static-infos #'ret.static-infos)
-    (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op
+    (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op-or-block
                    ret::ret-annotation
                    ((~and tag block) (~var options (:infix-operator-options '#f))
                                      body ...))
@@ -339,14 +345,19 @@
                               #'() #'())]
         [(form-id main-op-name-seq::dotted-operator-or-identifier-sequence
                   main-ret::ret-annotation
-                  (_::block
-                   (~var options (:all-operator-options '#f))
-                   (group _::match (_::alts . as))))
+                  (~optional (_::block
+                              (~var options (:all-operator-options '#f))))
+                  (_::alts . as))
          #:with main-op-name::dotted-operator-or-identifier #'main-op-name-seq
          (parse-operator-alts stx #'form-id #'as
                               #'main-op-name.name
                               #'main-ret.converter #'main-ret.static-infos
-                              #'options.prec #'options.assc)]))))
+                              (if (attribute options)
+                                  #'options.prec
+                                  #'())
+                              (if (attribute options)
+                                  #'options.assc
+                                  #'()))]))))
 
 (define-for-syntax (parse-operator-alts stx form-id as-stx
                                         main-name main-ret-predicate main-ret-static-infos

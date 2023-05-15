@@ -16,9 +16,6 @@
 
 (provide match)
 
-(module+ for-match-id
-  (provide (for-syntax :match)))
-
 (begin-for-syntax
   (define-syntax-class :pattern-clause
     #:attributes ([bind 1] rhs)
@@ -30,14 +27,7 @@
     (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
 
   (define (l1falses l-stx)
-    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx)))))
-  
-  (define-syntax-class :match
-    #:description "match form"
-    #:opaque
-    #:attributes ()
-    (pattern name::name
-             #:when (free-identifier=? #'name.name (expr-quote match)))))
+    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx))))))
 
 (define-syntax match
   (expression-transformer

@@ -36,9 +36,8 @@ block:
   operator ++*:
     ~weaker_than: *
     ~associativity: ~right
-    match
-    | (a ++* b):
-        (a + b) * b
+  | (a ++* b):
+      (a + b) * b
   
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
@@ -47,10 +46,9 @@ block:
 block:
   operator ++*:
     ~weaker_than: *
-    match
-    | (a ++* b):
-        ~associativity: ~right
-        (a + b) * b
+  | (a ++* b):
+      ~associativity: ~right
+      (a + b) * b
   
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
@@ -59,10 +57,9 @@ block:
 block:
   operator ++*:
     ~associativity: ~right
-    match
-    | (a ++* b):
-        ~weaker_than: *
-        (a + b) * b
+  | (a ++* b):
+      ~weaker_than: *
+      (a + b) * b
   
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
@@ -191,9 +188,8 @@ check:
 check:
   ~eval
   operator **:
-    match
-    | (0 ** a): 0
-    | (1 ??): 1
+  | (0 ** a): 0
+  | (1 ??): 1
   ~raises "case operator does not match the declared operator"
 
 check:
@@ -227,9 +223,8 @@ check:
   ~eval
   operator **:
     ~associativity: ~none
-    match
-    | (** 0): 0
-    | (** 1): 1
+  | (** 0): 0
+  | (** 1): 1
   ~raises "associativity specified without infix cases"
 
 check:

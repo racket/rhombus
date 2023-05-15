@@ -111,28 +111,25 @@ normally bound to implement function calls.
     map_bind: def bind
     repet_bind: def bind
 
-  ~literal: match
   defn.macro 'fun $id_path($bind, ...):
                 $body
                 ...'
   defn.macro 'fun $id_path $case_maybe_kw_opt'
-  defn.macro 'fun | $id_path $case_maybe_kw
-                  | ...'
-  defn.macro 'fun $id_path $maybe_res_annot:
-                match | $id_path $case_maybe_kw
-                      | ...'
+  defn.macro 'fun
+              | $id_path $case_maybe_kw
+              | ...'
+  defn.macro 'fun $id_path $maybe_res_annot
+              | $id_path $case_maybe_kw
+              | ...'
 
   expr.macro 'fun ($bind, ...):
                 $body
                 ...'
   expr.macro 'fun $case_maybe_kw_opt'
 
-  expr.macro 'fun | $case_maybe_kw
-                  | ...'
-
-  expr.macro 'fun $maybe_res_annot:
-                match | $case_maybe_kw
-                      | ...'
+  expr.macro 'fun $maybe_res_annot
+              | $case_maybe_kw
+              | ...'
 
   grammar case_maybe_kw_opt:
     ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
@@ -242,15 +239,8 @@ normally bound to implement function calls.
 )
 
  When alternatives are specified with multiple @vbar clauses, the
- clauses can be provided immediately after @rhombus(fun), or they may be
- nested in a @rhombus(match) for in a block after @rhombus(fun). The use
- of @rhombus(match) in this way is not a normal @rhombus(match)
- expression form (which would need an expression after @rhombus(match)
- itself), but merely suggestive of the expression form. With or without
- @rhombus(match), the
- alternatives are tried in order when the function is called. The
- alternatives can differ by number of arguments as well as keywords,
- annotations, and binding patterns.
+ clauses can be provided immediately after @rhombus(fun) or after the
+ name and a @rhombus(maybe_res_annot) as described further below.
 
 @examples(
   ~defn:
@@ -317,8 +307,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  function's body is @emph{not} in tail position with respect to a call to
  the function, since a check will be applied to the function's result.
  When @rhombus(maybe_res_annot) is present for a function declared with
- cases under @rhombus(match), a @rhombus(maybe_res_annot) before the block
- containing @rhombus(match) applies to all cases, in addition to any
+ cases afterward, a @rhombus(maybe_res_annot) applies to all cases, in addition to any
  @rhombus(maybe_res_annot) supplied for a specific case. A
  @rhombus(maybe_res_annot) that has a parenthesized sequence of
  @rhombus(annot)s (with our without @rhombus(values)) describes
@@ -326,23 +315,21 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 @examples(
   ~defn:
-    fun hello :: String:
-      match
-      | hello(name):
-          "Hello, " +& name
-      | hello():
-          #false
+    fun hello :: String
+    | hello(name):
+        "Hello, " +& name
+    | hello():
+        #false
   ~repl:
     hello("World")
     ~error:
       hello()
   ~defn:
-    fun things_to_say :: values(String, String):
-      match
-      | things_to_say():
-          values("Hi", "Bye")
-      | things_to_say(more):
-          values("Hi", "Bye", more)
+    fun things_to_say :: values(String, String)
+    | things_to_say():
+        values("Hi", "Bye")
+    | things_to_say(more):
+        values("Hi", "Bye", more)
   ~repl:
     things_to_say()
     ~error:
@@ -363,12 +350,9 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
                        ...'
   entry_point.macro 'fun $case_maybe_kw_opt'
 
-  entry_point.macro 'fun | $case_maybe_kw
-                         | ...'
-
-  entry_point.macro 'fun $maybe_res_annot:
-                       match | $case_maybe_kw
-                             | ...'
+  entry_point.macro 'fun $maybe_res_annot
+                     | $case_maybe_kw
+                     | ...'
 ){
 
  The @tech{entry point} form of @rhombus(fun, ~entry_point) is the same as the

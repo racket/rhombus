@@ -5,13 +5,18 @@ import:
   lib("scribble/bnf.rkt"):
     rename: #{BNF-seq} as bseq
             #{BNF-alt} as balt
-            optional as boptional
-    expose: nonterm bseq balt kleenestar kleeneplus boptional
+    expose: nonterm bseq balt kleenestar kleeneplus
 
 export:
   bnf
-  bseq balt boptional nonterm kleenestar kleeneplus boptional
+  bseq balt boptional nonterm kleenestar kleeneplus boptional bgroup
   bis bor
 
 def bis: @elem{@hspace(1)::=@hspace(1)}
 def bor: @elem{@hspace(1) | @hspace(1)}
+
+fun boptional(content, ...):
+  [content, ..., @italic{?}]
+
+fun bgroup(content, ...):
+  [@elem{( }, content, ..., @elem{ )}]

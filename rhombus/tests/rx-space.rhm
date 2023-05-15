@@ -104,13 +104,12 @@ regexp.macro '$left ?':
 // and curly braces
 regexp.macro #%comp:
   ~stronger_than: #%juxtapose #%call
-  match
-  | '$left #%comp {$(min :: Int), _}':
-      '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ ",}")'
-  | '$left #%comp {$(min :: Int), $(max :: Int)}':
-      '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
-  | '$left #%comp {$(count :: Int)}':
-      '$(atomic(left.unwrap()) ++ "{" +& count.unwrap() ++ "}")'
+| '$left #%comp {$(min :: Int), _}':
+    '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ ",}")'
+| '$left #%comp {$(min :: Int), $(max :: Int)}':
+    '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
+| '$left #%comp {$(count :: Int)}':
+    '$(atomic(left.unwrap()) ++ "{" +& count.unwrap() ++ "}")'
 
 regexp.macro
 | '^ $right':

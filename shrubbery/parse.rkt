@@ -16,7 +16,7 @@
                paren-immed     ; immediately in `()` or `[]`: #f, 'normal, or 'at
                bar-closes?     ; does `|` always end a group?
                bar-closes-line ; `|` (also) ends a group on this line
-               block-mode      ; 'inside, #f, `:` or `|` token, or 'end
+               block-mode      ; 'inside, #f, in-block-mode with `:` or `|` token, or 'end
                can-empty?      ; in a context where a `:` can be empty?
                delta           ; a `cont-delta`, tracks `\` continuations
                raw             ; reversed whitespace (and comments) to be remembered
@@ -72,7 +72,7 @@
                      check-column?  ; #f => allow any sufficiently large (based on closer) indentation
                      bar-closes?    ; does `|` always end the sequence of groups?
                      bar-closes-line ; `|` (also) ends a sequence of groups on this line
-                     block-mode     ; 'inside, #f, `:` or `|` token, or 'end
+                     block-mode     ; 'inside, #f, in-block-mode with `:` or `|` token, or 'end
                      can-empty?      ; in a context where a `:` can be empty?
                      comma-time?    ; allow and expect a comma next
                      sequence-mode  ; 'any, 'one, or 'none
@@ -81,6 +81,8 @@
                      commenting     ; pending group-level `#//` token; exclusive with `tail-commenting`
                      tail-commenting ; pending group-level `#//` at end (so far)
                      raw))          ; reversed whitespace (and comments) to be remembered
+
+(struct in-block-mode (token parent-column))
 
 (define (make-group-state #:count? count?
                           #:closer closer
@@ -342,7 +344,7 @@
                                                       [delta close-delta]
                                                       [commenting #f]
                                                       [tail-commenting #f]
-                                                      [block-mode (next-block-mode (group-state-block-mode sg))]
+                                                      [block-mode (next-group-block-mode (group-state-block-mode sg))]
                                                       [can-empty? #f]
                                                       [raw group-tail-raw])))
                  (values (append gs more-gs)
@@ -358,7 +360,7 @@
                                                    [delta delta]
                                                    [commenting (group-state-tail-commenting sg)]
                                                    [tail-commenting #f]
-                                                   [block-mode (next-block-mode (group-state-block-mode sg))]
+                                                   [block-mode (next-group-block-mode (group-state-block-mode sg))]
                                                    [raw raw]))])])]
           [else
            (when (and (group-state-comma-time? sg)
@@ -374,14 +376,18 @@
                           (eqv? line (line+ (group-state-bar-closes-line sg)
                                             (cont-delta-line-span (group-state-delta sg))))))
                  (done)]
-                [(eq? (group-state-block-mode sg) 'inside)
+                [(or (eq? (group-state-block-mode sg) 'inside)
+                     (and (in-block-mode? (group-state-block-mode sg))
+                          (eq? 'block-operator (token-name (in-block-mode-token (group-state-block-mode sg))))))
                  ;; Bar at the start of a group
                  (define same-line? (or (not (group-state-count? sg))
                                         (not (group-state-last-line sg))
                                         (= line (group-state-last-line sg))))
                  (when (group-state-check-column? sg)
-                   (unless (or same-line?
-                               (= column (group-state-column sg)))
+                   (unless (if (in-block-mode? (group-state-block-mode sg))
+                               (= column (column-half-next (in-block-mode-parent-column (group-state-block-mode sg))))
+                               (or same-line?
+                                   (= column (group-state-column sg))))
                      (fail t "wrong indentation")))
                  (define pre-raw (group-state-raw sg))
                  (define commenting (or (group-state-commenting sg)
@@ -404,7 +410,7 @@
                                                      [column (if same-line?
                                                                  (group-state-column sg)
                                                                  column)]
-                                                     [check-column? (next-line?* rest-l group-end-line)]
+                                                    [check-column? (next-line?* rest-l group-end-line)]
                                                      [last-line group-end-line]
                                                      [delta group-end-delta]
                                                      [comma-time? (and (group-state-paren-immed sg) #t)]
@@ -420,6 +426,7 @@
                              (cons (list group-tag
                                          (add-span-srcloc
                                           t end-t
+                                          ;; this 'bar will be converted by `tag-as-block`
                                           (cons 'bar g)))
                                    gs))
                          rest-rest-l
@@ -429,9 +436,9 @@
                          tail-commenting
                          tail-raw)]
                 [else
-                 (if (and (token? (group-state-block-mode sg))
-                          (eq? 'block-operator (token-name (group-state-block-mode sg))))
-                     (fail (group-state-block-mode sg) "unnecessary `:` before `|`")
+                 (if (and (in-block-mode? (group-state-block-mode sg))
+                          (eq? 'block-operator (token-name (in-block-mode-token (group-state-block-mode sg)))))
+                     (fail (in-block-mode-token (group-state-block-mode sg)) "unnecessary `:` before `|`")
                      (fail t "misplaced `|`"))])]
              [else
               ;; Parse one group, then recur to continue the sequence:
@@ -539,7 +546,10 @@
                                      (cont-delta-line-span (state-delta s))))))
           (done)]
          [else
-          (check-block-mode)
+          ;; no `(check-block-mode)` here, because `|` is allowed after `:`
+          (when (and (state-operator-column s)
+                     (not (= (token-column t) (column-half-next (state-operator-column s)))))
+            (fail t "wrong indentation"))
           (parse-block #f l
                        #:count? (state-count? s)
                        #:block-mode 'inside
@@ -578,9 +588,8 @@
               ;; operator
               (cond
                 [(eq? 'bar-operator (token-name use-t))
-                 (when (and (state-operator-column s)
-                            (<= column (state-operator-column s)))
-                   (fail use-t "wrong indentation")) 
+                 (unless (= column (column-half-next (state-column s)))
+                   (fail use-t "wrong indentation"))
                  (parse-block #f use-l
                               #:count? (state-count? s)
                               #:block-mode 'inside
@@ -632,7 +641,9 @@
                                            (not (state-bar-closes-line s)))
                         #:bar-closes-line (state-bar-closes-line s)
                         #:can-empty? (state-can-empty? s)
-                        #:could-empty-if-start? #t)]
+                        #:could-empty-if-start? #t
+                        #:parent-column (or (state-operator-column s)
+                                            (state-column s)))]
           [(bar-operator)
            (parse-alts-block t l)]
           [(opener)
@@ -834,7 +845,8 @@
                      #:delta in-delta
                      #:raw in-raw
                      #:group-commenting [in-group-commenting #f]
-                     #:block-mode [block-mode t]
+                     #:parent-column [parent-column +inf.0]
+                     #:block-mode [block-mode (in-block-mode t parent-column)]
                      #:can-empty? [can-empty? #f]
                      #:could-empty-if-start? [could-empty-if-start? #f])
   (define-values (opener-t opener-l opener-line opener-delta opener-raw)
@@ -879,12 +891,12 @@
        (keep-same-indentation-comments content-column tail-and-suffix-raw))
      (define used-closer? (or opener-t
                               (closer-expected? closer)))
-     (define-values (null-g post-l post-line post-delta post-tail-commenting post-tail-raw)
+     (define-values (post-g post-l post-line post-delta post-tail-commenting post-tail-raw)
        (if used-closer?
-           ;; in 'end mode, so errors or returns a null group:
+           ;; in 'end mode, so errors, returns a null group, or returns alts:
            (parse-group rest-l (make-state #:count? count?
                                            #:line end-line
-                                           #:column +inf.0
+                                           #:column parent-column
                                            #:bar-closes? bar-closes?
                                            #:bar-closes-line bar-closes-line
                                            #:block-mode 'end
@@ -893,18 +905,22 @@
            (values '() rest-l end-line end-delta tail-commenting (if used-closer?
                                                                      null
                                                                      tail-raw))))
-     (unless (null? null-g) (error "internal error, parsed more"))
-     (values (if (and (null? indent-gs)
-                      drop-empty?)
-                 null
-                 (list (add-raw-to-prefix
-                        t in-raw #:tail (let ([tail-raw (and used-closer? tail-raw)])
-                                          (if (pair? rev-suffix-raw)
-                                              (append (or tail-raw null) rev-suffix-raw)
-                                              tail-raw))
-                        (add-span-srcloc
-                         t end-t #:alt next-t
-                         (tag-as-block indent-gs)))))
+     (unless (or (null? post-g) (null? (cdr post-g)) (eq? 'alts (syntax-e (caar post-g)))) (error "internal error, parsed more"))
+     (define-values (head-block post-alts) (tag-as-block indent-gs))
+     (values (append
+              (if (and (null? indent-gs)
+                       drop-empty?)
+                  null
+                  (cons (add-raw-to-prefix
+                         t in-raw #:tail (let ([tail-raw (and used-closer? tail-raw)])
+                                           (if (pair? rev-suffix-raw)
+                                               (append (or tail-raw null) rev-suffix-raw)
+                                               tail-raw))
+                         (add-span-srcloc
+                          t end-t #:alt next-t
+                          head-block))
+                        post-alts))
+              post-g)
              post-l
              post-line
              post-delta
@@ -916,60 +932,55 @@
     [else
      (when opener-t (fail opener-t (format "expected `»`")))
      (when (and (not can-empty?) t (not opener-t)) (fail-empty))
+     (define-values (head-block post-alts) (tag-as-block null))
      (values (list (add-raw-to-prefix
                     t in-raw
                     (add-span-srcloc
                      t #f
-                     (tag-as-block null))))
+                     head-block)))
              next-l
              line
              delta
              group-commenting
              raw)]))
 
+;; converts to `block` and/or `alts`
 (define (tag-as-block gs)
-  (cond
-    [(and (pair? gs)
-          ;; really only need to check the first one:
-          (for/and ([g (in-list gs)])
-            (and (pair? g)
-                 (tag? 'group (car g))
-                 (pair? (cdr g))
-                 (null? (cddr g))
-                 (let ([b (cadr g)])
-                   (and (pair? b)
-                        (tag? 'bar (car b))
-                        ;; the rest should always be true:
-                        (pair? (cdr b))
-                        (null? (cddr b))
-                        (pair? (cadr b))
-                        (tag? 'block (caadr b)))))))
-     (cons 'alts (for/list ([g (in-list gs)])
-                   (move-pre-raw
-                    (car g)
-                    (let ([b (cadr g)])
-                      (cadr b)))))]
-    [else (cons 'block gs)]))
+  (let loop ([gs gs] [accum null])
+    (cond
+      [(and (pair? gs)
+            ;; really only need to check the first one:
+            (for/and ([g (in-list gs)])
+              (and (pair? g)
+                   (tag? 'group (car g))
+                   (pair? (cdr g))
+                   (null? (cddr g))
+                   (let ([b (cadr g)])
+                     (and (pair? b)
+                          (tag? 'bar (car b))
+                          ;; the rest should always be true:
+                          (pair? (cdr b))
+                          (null? (cddr b))
+                          (pair? (cadr b))
+                          (tag? 'block (caadr b)))))))
+       (define end-alts
+         (cons (syntax-raw-property (datum->syntax #f 'alts) null)
+               (for/list ([g (in-list gs)])
+                 (move-pre-raw
+                  (car g)
+                  (let ([b (cadr g)])
+                    (cadr b))))))
+       (if (null? accum)
+           (values end-alts null)
+           (values (cons 'block (reverse accum))
+                   (list end-alts)))]
+      [(null? gs) (values (cons 'block (reverse accum))
+                          null)]
+      [else (loop (cdr gs) (cons (car gs) accum))])))
 
 (define (bars-insert-alts gs)
-  (cond
-    [(and (pair? gs)
-          ;; same check is in `tag-as-block
-          (let ([g (car gs)])
-            (and (pair? g)
-                 (tag? 'group (car g))
-                 (pair? (cdr g))
-                 (null? (cddr g))
-                 (let ([b (cadr g)])
-                   (and (pair? b)
-                        (tag? 'bar (car b))
-                        (car b))))))
-     => (lambda (bar-tag)
-          (list (list group-tag
-                      (add-span-srcloc
-                       bar-tag #f
-                       (tag-as-block gs)))))]
-    [else gs]))
+  (define-values (head-block tail-alts) (tag-as-block gs))
+  (append (cdr head-block) tail-alts))
 
 (define (tag? sym e)
   (or (eq? sym e)
@@ -1389,6 +1400,13 @@
 
 (define (next-block-mode mode)
   #f)
+
+(define (next-group-block-mode mode)
+  (cond
+    [(in-block-mode? mode)
+     ;; keep block mode to allow a `|` continuation afterward
+     mode]
+    [else #f]))
 
 ;; ----------------------------------------
 
