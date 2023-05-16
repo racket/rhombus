@@ -34,7 +34,9 @@
                        (comment-tracked-stack status)
                        '()))
      (define (not-line-sensitive?)
-       (member "«" (pending-comment-stack pending)))
+       (define l (member "«" (pending-comment-stack pending)))
+       (and l (or (null? (cdr l))
+                  (not (equal? "'" (cadr l))))))
      (define (finish pending stack
                      #:whitespace? [whitespace? #f]
                      #:comment? [comment? pending])
