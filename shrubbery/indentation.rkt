@@ -24,7 +24,8 @@
 
 (define (shrubbery-indentation t pos
                                #:multi? [multi? #f]
-                               #:always? [always? multi?])
+                               #:always? [always? multi?]
+                               #:stop-pos [stop-pos 0])
   (parameterize ([current-classify-range (or (for/or ([r (in-list (send t get-regions))])
                                                (and (pos . >= . (car r))
                                                     (or (eq? (cadr r) 'end)
@@ -53,7 +54,8 @@
                                          #:multi? multi?
                                          #:as-bar? as-bar?
                                          #:as-operator? as-operator?
-                                         #:also-zero? also-zero?))
+                                         #:also-zero? also-zero?
+                                         #:stop-pos stop-pos))
           (case (classify-position t (+ start current-tab))
             [(closer)
              (indent-like-parenthesis t start current-tab)]
@@ -89,7 +91,11 @@
      (list (list (max 0 (- current-amt amt))
                  (make-string (max 0 (- amt current-amt)) #\space)))]
     [else
-     (define changes (indent-interior t s-line e-line))
+     (define changes (indent-interior t s-line e-line
+                                      ;; when trying to reindent within parentheses and similar,
+                                      ;; we want to get indentation suggestions that line up
+                                           ;; with the first argument in the range, not the `(`
+                                      #:stop-pos (send t paragraph-start-position s-line)))
      (cond
        [(or (not changes)
             (for/and ([change (in-list changes)])
@@ -128,13 +134,14 @@
             '())])]
        [else (cons '(0 "") changes)])]))
 
-(define (indent-interior t s-line e-line)
+(define (indent-interior t s-line e-line #:stop-pos [stop-pos 0])
   (cond
     [(= s-line e-line) '()]
     [else
      (define pos (send t paragraph-start-position (add1 s-line)))
      (define indent (shrubbery-indentation t pos
-                                           #:multi? #t))
+                                           #:multi? #t
+                                           #:stop-pos stop-pos))
      (cond
        [(or (not (list? indent))
             (= 1 (length indent)))
@@ -149,7 +156,10 @@
                                t
                                (make-delta-text t pos (- amt current)))
                            (add1 s-line)
-                           e-line))
+                           e-line
+                           #:stop-pos (if (= current amt)
+                                          stop-pos
+                                          0)))
         (and changes
              (cons one changes))]
        [else #f])]))
@@ -159,13 +169,15 @@
                                      #:as-operator? [as-operator? #f]
                                      #:multi? [multi? #f]
                                      #:also-zero? [also-zero? #f]
-                                     #:leftmost? [leftmost? #f])
+                                     #:leftmost? [leftmost? #f]
+                                     #:stop-pos [stop-pos 0])
   ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define (add-zero l) (if also-zero? (add-zero-to-end l) l))
   (define (leftmost l) (if (and leftmost? (pair? l)) (list (last l)) l))
   (define candidates (remove-dups (indentation-candidates t (sub1 start)
                                                           #:as-bar? as-bar?
-                                                          #:as-operator? as-operator?)))
+                                                          #:as-operator? as-operator?
+                                                          #:stop-pos stop-pos)))
   (define delta (line-delta t start))
   (define tabs  (leftmost
                  (add-zero
@@ -235,7 +247,8 @@
 ;; The search works going backwards to find enclosing groups.
 (define (indentation-candidates t pos
                                 #:as-bar? [as-bar? #f]
-                                #:as-operator? [as-operator? #f])
+                                #:as-operator? [as-operator? #f]
+                                #:stop-pos [stop-pos 0])
   (let loop ([pos pos]
              ;; possible target column, depending on what's we
              ;; find by looking further back; for example, this
@@ -430,9 +443,14 @@
                   [candidate (maybe-list candidate plus-one-more?)]
                   [else
                    (define i-pos (get-inside-start t pos))
-                   (define start (line-start t i-pos))
-                   (define delta (line-delta t start))
-                   (maybe-list (col-of i-pos start delta) #f)])]
+                   (cond
+                     [(i-pos . < . stop-pos)
+                      ;; trying to perform a block indent within the group
+                      (loop (sub1 s) candidate limit bar-after? #f #f)]
+                     [else
+                      (define start (line-start t i-pos))
+                      (define delta (line-delta t start))
+                      (maybe-list (col-of i-pos start delta) #f)])])]
                [else
                 (keep s)])])])])))
 
