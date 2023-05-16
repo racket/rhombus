@@ -15,6 +15,7 @@
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "composite.rkt"
+         "op-literal.rkt"
          "name-root.rkt"
          "dot-parse.rkt"
          "reducer.rkt"
@@ -145,22 +146,36 @@
    '((default . stronger))
    'macro
    (lambda (stx)
+     (define (build args len pred rest-arg form-id tail)
+       ((make-composite-binding-transformer "Array"
+                                            pred
+                                            (for/list ([arg (in-list args)]
+                                                       [i (in-naturals)])
+                                              #`(lambda (v) (vector-ref v #,i)))
+                                            (for/list ([arg (in-list args)])
+                                              #'())
+                                            #:static-infos array-static-infos
+                                            #:ref-result-info? #t
+                                            #:rest-accessor (and rest-arg
+                                                                 #`(lambda (v) (vector-suffix->list v #,len)))
+                                            #:rest-repetition? (and rest-arg #t))
+        #`(#,form-id (parens . #,args) . #,tail)
+        rest-arg))
      (syntax-parse stx
+       [(form-id (tag::parens arg ... rest-arg (group _::...-bind)) . tail)
+        (define args (syntax->list #'(arg ...)))
+        (define len (length args))
+        (define pred #`(lambda (v)
+                         (and (vector? v)
+                              (>= (vector-length v) #,len))))
+        (build args len pred #'rest-arg #'form-id #'tail)]
        [(form-id (tag::parens arg ...) . tail)
         (define args (syntax->list #'(arg ...)))
         (define len (length args))
         (define pred #`(lambda (v)
                          (and (vector? v)
                               (= (vector-length v) #,len))))
-        ((make-composite-binding-transformer "Array"
-                                             pred
-                                             (for/list ([arg (in-list args)]
-                                                        [i (in-naturals)])
-                                               #`(lambda (v) (vector-ref v #,i)))
-                                             (for/list ([arg (in-list args)])
-                                               #'())
-                                             #:ref-result-info? #t)
-         stx)]))))
+        (build args len pred #f #'form-id #'tail)]))))
 
 (define-static-info-syntax make-vector
   (#%call-result #,array-static-infos)
@@ -168,3 +183,7 @@
 
 (define-static-info-syntax vector-length
   (#%function-arity 2))
+
+(define (vector-suffix->list v start)
+  (for/list ([i (in-range start (vector-length v))])
+    (vector-ref v i)))

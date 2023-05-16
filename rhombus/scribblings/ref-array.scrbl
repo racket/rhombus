@@ -57,15 +57,28 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
+  ~nonterminal:
+    repet_bind: def bind
   bind.macro 'Array($bind, ...)'
+  bind.macro 'Array($bind, ..., $repet_bind #,(@litchar{,}) $ellipsis)'
 ){
 
  Matches an array with as many elements as @rhombus(bind)s, where
- each element matches its corresponding @rhombus(bind).
+ each element matches its corresponding @rhombus(bind), or at least
+ as may elements as @rhombus(bind)s when a @rhombus(repet_bind) is
+ provided.  When @rhombus(repet_bind) is provided, each additional element
+ must match @rhombus(repet_bind).
+
+ Elements are extracted from a matching array eagerly, so mutations of
+ the array afterward do no change the matched values. When
+ @rhombus(repet_bind) is provided, the extracted matching elements are
+ combined into an internal list to implement the repetition.
 
 @examples(
   def Array(1, x, y): Array(1, 2, 3)
   y
+  def Array(1, z, ...): Array(1, 2, 3)
+  [z, ...]
 )
 
 }

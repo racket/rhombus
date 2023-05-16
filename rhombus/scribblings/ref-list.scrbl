@@ -103,6 +103,13 @@ it supplies its elements in order.
  @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
  rest of the list.
 
+ When @rhombus(repet_bind) is used and does not impose a predicate or
+ conversion on a matching value (e.g., @rhombus(repet_bind) is an
+ identifier), then the corresponding elements of a matching value are not
+ traversed, which means that matching can be constant-time. Using this
+ repetition for the tail a new list similarly avoids traversing the
+ elements.
+
  @see_implicit(@rhombus(#%brackets, ~bind), @rhombus([]), "binding")
 
 @examples(

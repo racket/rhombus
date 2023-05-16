@@ -110,7 +110,9 @@ it supplies its elements in an unspecified order.
  supplied, the rest of the set excluding the given @rhombus(expr)s
  must have individual values that match @rhombus(rest_bind), and identifiers in
  @rhombus(rest_bind) are bound
- as repetitions.
+ as repetitions. Values matching @rhombus(rest_bind)
+ are extracted eagerly and preserved in an internal list to implement
+ the repetition.
 
  The @rhombus(Set, ~bind) binding forms match only immutable sets, while
  @rhombus(SetView, ~bind) forms match both immutable and mutable sets.

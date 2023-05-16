@@ -47,8 +47,8 @@ in an unspecified order.
 ){
 
  Matches any immutable map in the form without @rhombus(of). The @rhombus(of)
- variant matches a map whose keys satisfy @rhombus(key_annotation)
- and whose values satisfy @rhombus(value_annotation).
+ variant matches a map whose keys satisfy @rhombus(key_annot)
+ and whose values satisfy @rhombus(value_annot).
 
  @rhombus(MapView, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
@@ -258,7 +258,9 @@ in an unspecified order.
  must have individual keys that match @rhombus(rest_key_bind) and
  values that match @rhombus(rest_val_bind), and identifiers in
  @rhombus(rest_key_bind) and @rhombus(rest_val_bind) are bound
- as repetitions.
+ as repetitions. Values matching @rhombus(rest_key_bind) and @rhombus(rest_val_bind)
+ are extracted eagerly and preserved in internal lists to implement
+ the repetitions.
 
  The @rhombus(Map, ~bind) binding forms match only immutable maps, while
  @rhombus(MapView, ~bind) forms match both immutable and mutable maps.

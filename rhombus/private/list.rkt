@@ -347,7 +347,7 @@
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
-                           (>= (length v) #,len))))
+                           (length-at-least v #,len))))
      (generate-binding #'form-id pred args #'tail #'(group rest-arg ...)
                        (if (null? args) #'values #'cdr)
                        #f)]
@@ -356,7 +356,7 @@
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
-                           (>= (length v) #,len))))
+                           (length-at-least v #,len))))
      (generate-binding #'form-id pred args #'tail #'rest-arg
                        (if (null? args) #'values #'cdr)
                        #t)]
@@ -455,6 +455,11 @@
 
 (define-for-syntax (parse-list-repetition stx)
   (parse-list-form stx #:repetition? #t))
+
+(define (length-at-least v len)
+  (or (eqv? len 0)
+      (and (pair? v)
+           (length-at-least (cdr v) (- len 1)))))
 
 (define (assert-list v)
   (unless (list? v)

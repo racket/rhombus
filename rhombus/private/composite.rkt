@@ -266,18 +266,22 @@
 (define-for-syntax (make-rest-match c-arg-id accessor rest-info fail)
   (syntax-parse rest-info
     [rest::binding-info
-     #`(get-rest-getters '(rest.bind-id ...)
-                         (let ([rest.name-id (#,accessor #,c-arg-id)])
-                           rest.name-id)
-                         (lambda (arg-id)
-                           (rest.matcher-id arg-id rest.data
-                            if/blocked
-                            (lambda ()
-                              (rest.committer-id arg-id rest.data)
-                              (rest.binder-id arg-id rest.data)
-                              (values (maybe-repetition-as-list rest.bind-id rest.bind-uses)
-                                      ...))
-                            (#,fail arg-id))))]))
+     (define get-rest #`(let ([rest.name-id (#,accessor #,c-arg-id)])
+                          rest.name-id))
+     (if (free-identifier=? #'always-succeed #'rest.matcher-id)
+         #`(lambda () #,get-rest)
+         #`(get-rest-getters
+            '(rest.bind-id ...)
+            #,get-rest
+            (lambda (arg-id)
+              (rest.matcher-id arg-id rest.data
+                               if/blocked
+                               (lambda ()
+                                 (rest.committer-id arg-id rest.data)
+                                 (rest.binder-id arg-id rest.data)
+                                 (values (maybe-repetition-as-list rest.bind-id rest.bind-uses)
+                                         ...))
+                               (#,fail arg-id)))))]))
 
 (define-syntax (maybe-repetition-as-list stx)
   (syntax-parse stx

@@ -22,6 +22,10 @@
 ;; ---------------------------------------------------------
 
 (begin-for-syntax
+  (define-syntax-class :simple-formals
+    [pattern (_:identifier ... . _:identifier)]
+    [pattern (_:identifier ...)])
+
   (define-syntax-class pos-param
     #:attributes [param id mand opt-id
                   param/tmp expr/tmp default]
@@ -171,6 +175,11 @@
 (define-syntax case-lambda/kwrest
   (lambda (stx)
     (syntax-parse stx
+      [(_ [a::simple-formals b:expr ...+]
+          ...)
+       #'(case-lambda
+           [a b ...]
+           ...)]
       [(_ [c:params/kwrest
            b:expr
            ...+]
