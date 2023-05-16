@@ -21,3 +21,8 @@ check:
     values("1", "2", "3")
   [ma, mb, mc]
   ~is ["1", "2", "3"]
+
+check:
+  def values(x, [y, ...]): values(0, [1, 2, 3])
+  [y, ..., x]
+  ~is [1, 2, 3, 0]

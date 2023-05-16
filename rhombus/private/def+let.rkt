@@ -124,16 +124,16 @@
       #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
                                       (values lhs-i.name-id ...)))
       #'(begin
-          (lhs-i.committer-id tmp-id lhs-i.data)
-          ...)
-     (wrap-definition
-      #`(begin
           (lhs-i.matcher-id tmp-id
                             lhs-i.data
                             flattened-if
                             (begin)
                             (rhs-binding-failure '#,form-id tmp-id 'lhs-str))
           ...
+          (lhs-i.committer-id tmp-id lhs-i.data)
+          ...)
+     (wrap-definition
+      #`(begin
           (lhs-i.binder-id tmp-id lhs-i.data)
           ...
           (begin
