@@ -561,6 +561,12 @@ Simple enough that an automatic tool similar to resyntax
 could probably do it.
 But it will still take more than zero effort.
 
+### Choice
+
+Option C is the one we've decided to try for now.
+
+An implementation of option C is at: https://github.com/mflatt/rhombus-prototype/tree/alts
+
 Prior art and References
 ---------
 
