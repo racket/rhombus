@@ -49,7 +49,10 @@
  forms is extensible, so it cannot be completely enumerated here.
 
  If no @rhombus(target_expr) produces a true value and there is no
- @rhombus(~else) clause, a run-time exception is raised.
+ @rhombus(~else) clause, a run-time exception is raised. In that case,
+ when all of the @rhombus(bind) forms are syntax-object patterns, the
+ generated exception's message may be specialized to report the expcted
+ pattern, instead of just reporting that no cases matched.
 
 @examples(
   match 1+2
@@ -58,15 +61,11 @@
 
   match [1+2, 3+4]
   | [x, y]: x+y
+
+  ~error:
+    match 'go ~slow':
+    | 'go ~fast': "ok"
 )
-
- The @rhombus(match) form's binding is recognized specially in
- @rhombus(fun), @rhombus(operator), @rhombus(macro) and similar forms to
- group @vbar alternatives while supplying information that applies to all
- alternatives. Those uses of @rhombus(match) do not have a
- @rhombus(target_expr), and they have a different syntax for the
- @vbar clauses inside @rhombus(match).
-
 }
 
 @doc(

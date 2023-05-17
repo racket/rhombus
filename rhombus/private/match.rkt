@@ -12,7 +12,8 @@
          (submod "function-parse.rkt" for-build)
          "realm.rkt"
          "parens.rkt"
-         (only-in "entry-point.rkt" no-adjustments))
+         (only-in "entry-point.rkt" no-adjustments)
+         (submod "quasiquote.rkt" for-match))
 
 (provide match)
 
@@ -59,22 +60,30 @@
                           clause::pattern-clause
                           ...))
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
-        (define-values (proc arity)
-          (build-case-function no-adjustments
-                               #'match #'#f
-                               (l1falses #'(b ...))
-                               #'((b) ... (unmatched))
-                               #`((b.parsed) ... (#,(binding-form
-                                                     #'else-infoer
-                                                     #'(#f unmatched))))
-                               (falses #'(b ...)) (falses #'(b ...))
-                               (falses #'(b ...)) (falses #'(b ...))
-                               (falses #'(b ...))
-                               #`(clause.rhs ... (parsed
-                                                  (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
-                               #'form-id #'alts-tag))
+        (define in-expr #'(rhombus-expression (group in ...)))
         (values
-         #`(#,proc (rhombus-expression (group in ...)))
+         (handle-syntax-parse-dispatch
+          #'form-id
+          in-expr
+          #'(b.parsed ...)
+          #'(clause.rhs ...)
+          ;; thunk is called if any `b.parsed` is not a syntax pattern
+          (lambda ()
+            (define-values (proc arity)
+              (build-case-function no-adjustments
+                                   #'match #'#f
+                                   (l1falses #'(b ...))
+                                   #'((b) ... (unmatched))
+                                   #`((b.parsed) ... (#,(binding-form
+                                                         #'else-infoer
+                                                         #'(#f unmatched))))
+                                   (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...))
+                                   #`(clause.rhs ... (parsed
+                                                      (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
+                                   #'form-id #'alts-tag))
+            #`(#,proc #,in-expr)))
          #'())]
        [(form-id in ...+ (block-tag::block))
         (values
