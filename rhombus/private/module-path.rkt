@@ -10,7 +10,7 @@
                      "srcloc.rkt"
                      "introducer.rkt"
                      "name-path-op.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "provide.rkt"
          (only-in "implicit.rkt"
                   #%literal)
@@ -64,7 +64,7 @@
   (define (check-module-path-result form proc)
     (unless (and (syntax? form)
                  (module-path? (syntax->datum form)))
-      (raise-result-error* (proc-name proc) rhombus-realm "Module_Path_Syntax" form))
+      (raise-bad-macro-result (proc-name proc) "module path" form))
     form)
 
   (define (make-identifier-module-path id)

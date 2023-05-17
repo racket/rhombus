@@ -5,7 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "enforest.rkt")
 
 (provide define-interface-clause-syntax)
@@ -26,7 +26,7 @@
   (define (check-interface-clause-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::interface-clause-form form]
-      [_ (raise-result-error* (proc-name proc) rhombus-realm "Interface_Clause_Syntax" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "`class` clause" form)]))
 
   (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface_clause))
 

@@ -7,7 +7,7 @@
                      "introducer.rkt"
                      "expression-space.rkt"
                      (for-syntax racket/base)
-                     "realm.rkt"))
+                     "macro-result.rkt"))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -52,7 +52,7 @@
     id)
 
   (define (check-expression-result form proc)
-    (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
+    (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "expression" form))
     form)
 
   (define-syntax (expr-quote stx)

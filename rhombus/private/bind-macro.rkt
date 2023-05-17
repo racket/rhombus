@@ -11,7 +11,8 @@
                      (only-in "repetition.rkt" in-repetition-space)
                      (for-syntax racket/base
                                  syntax/parse/pre)
-                     "tail-returner.rkt")
+                     "tail-returner.rkt"
+                     "macro-result.rkt")
          "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
@@ -382,7 +383,7 @@
                     (unpack-group form proc #f)
                     #'#f)
     [b::binding #'b.parsed]
-    [_ (raise-result-error (proc-name proc) "Binding_Syntax" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "binding" form)]))
 
 (define-for-syntax (make-binding-infix-operator name prec protocol proc assc)
   (binding-infix-operator

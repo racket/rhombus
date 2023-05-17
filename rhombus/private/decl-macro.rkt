@@ -7,6 +7,7 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
+                     "macro-result.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
          "name-root.rkt"
@@ -47,12 +48,12 @@
         (unpack-declarations (proc (pack-tail #'tail) #'head) proc)]))))
 
 (define-for-syntax (unpack-declarations form proc)
-  (syntax-parse (unpack-multi form proc #f)
+  (syntax-parse (and (syntax? form) (unpack-multi form proc #f))
     #:datum-literals (parens block group)
     [((group d ...) ...)
      #`((rhombus-top (group d ...))
         ...)]
-    [_ (raise-result-error (proc-name proc) "declaration-list?" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "declarations" form)]))
 
 ;; ----------------------------------------
 

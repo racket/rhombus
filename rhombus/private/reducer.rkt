@@ -5,7 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "enforest.rkt")
 
 (provide define-reducer-syntax)
@@ -30,7 +30,7 @@
   (define (check-reducer-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::reducer-form form]
-      [_ (raise-result-error* (proc-name proc) rhombus-realm "Reducer_Syntax" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "reducer" form)]))
 
   (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
   

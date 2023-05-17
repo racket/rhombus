@@ -8,7 +8,8 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "macro-result.rkt")
          "name-root.rkt"
          "macro-macro.rkt"
          "parse.rkt"
@@ -54,7 +55,7 @@
                    #'set
                    #'rhs-name
                    #'assign.tail)]
-    [_ (raise-result-error (proc-name proc) "Assign_Syntax" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "assignment" form)]))
 
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #,stx))

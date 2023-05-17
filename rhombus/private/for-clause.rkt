@@ -5,7 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "enforest.rkt")
 
 (provide define-for-clause-syntax)
@@ -27,7 +27,7 @@
   (define (check-for-clause-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::for-clause-form form]
-      [_ (raise-result-error* (proc-name proc) rhombus-realm "For_Clause_Syntax" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "`for` clause" form)]))
 
   (define in-for-clause-space (make-interned-syntax-introducer/add 'rhombus/for_clause))
   

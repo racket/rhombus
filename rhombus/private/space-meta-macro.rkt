@@ -26,7 +26,8 @@
          "forwarding-sequence.rkt"
          "space-meta-clause.rkt"
          (submod "space-meta-clause-primitive.rkt" for-space-meta-macro)
-         (submod "namespace.rkt" for-exports))
+         (submod "namespace.rkt" for-exports)
+         "macro-result.rkt")
 
 (provide enforest-meta
          transform-meta
@@ -90,7 +91,7 @@
        (define infix-more-class-name (hash-ref options '#:syntax_class_infix_more #'#f))
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
-       (define macro-result (hash-ref options '#:parsed_checker #'check-syntax))
+       (define macro-result (hash-ref options '#:parsed_checker #'(make-check-syntax (quote name))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
@@ -159,7 +160,7 @@
                 #:transformer-ref new-transformer-ref
                 #:check-result #,macro-result)
               (define-syntax _class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
-              (define make-transformer (make-make-transformer new-transformer)))])])))
+              (define make-transformer (make-make-transformer 'name new-transformer)))])])))
 
 (define-for-syntax (filter-missing flds)
   (for/list ([fld (in-list (syntax->list flds))]
@@ -200,12 +201,12 @@
        (object-name proc))])
    assc))
 
-(define ((make-make-transformer new-transformer) proc)
+(define ((make-make-transformer name new-transformer) proc)
   (new-transformer
    (lambda (stx)
      (define r (syntax-parse stx
                  [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-syntax r proc)
+     ((make-check-syntax name) r proc)
      r)))
 
 (define (finish thunk proc)
@@ -218,9 +219,9 @@
   (values form
           (unpack-tail new-tail proc #f)))
 
-(define (check-syntax form proc)
+(define ((make-check-syntax name) form proc)
   (unless (syntax? form)
-    (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
+    (raise-bad-macro-result (proc-name proc) (symbol->string name) form))
   form)
 
 (define-for-syntax (check-distinct-exports ex-ht

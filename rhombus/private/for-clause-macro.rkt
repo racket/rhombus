@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      enforest/proc-name
                      "pack.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "space-provide.rkt"
          "for-clause.rkt"
          (submod "for-clause.rkt" for-class)
@@ -24,5 +24,5 @@
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
      (unless (syntax? defns)
-       (raise-result-error* (proc-name proc) rhombus-realm "Syntax" defns))
+       (raise-bad-macro-result (proc-name proc) "`for` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))

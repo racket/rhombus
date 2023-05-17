@@ -7,7 +7,8 @@
                      "static-info-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      "tail-returner.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "macro-result.rkt")
          "space-provide.rkt"
          "definition.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -64,7 +65,7 @@
 
 (define-for-syntax (parse-annotation-macro-result form proc)
   (unless (syntax? form)
-    (raise-result-error (proc-name proc) "syntax?" form))
+    (raise-bad-macro-result (proc-name proc) "annotation" form))
   (syntax-parse (unpack-group form proc #f)
     [c::annotation #'c.parsed]))
 

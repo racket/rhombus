@@ -14,10 +14,10 @@
                      "pack.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
-                     "realm.rkt"
                      "keyword-sort.rkt"
                      "with-syntax.rkt"
                      "tag.rkt"
+                     "macro-result.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
@@ -124,10 +124,7 @@
                                  (= (length l) 3))
                             (and (eq? (syntax-e (car l)) '#:bind)
                                  (= (length l) 4))))))
-      (raise-result-error* (proc-name proc)
-                           rhombus-realm
-                           "Annotation_Syntax"
-                           stx))
+      (raise-bad-macro-result (proc-name proc) "annotation" stx))
     stx)
 
   (define-rhombus-enforest

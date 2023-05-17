@@ -413,7 +413,18 @@
 
 (define (raise-error who msg r)
   (if (procedure? who)
-      (raise-result-error* (proc-name who) rhombus-realm msg r)
+      (let ([who (proc-name who)])
+        (raise
+         (exn:fail:contract
+          (format (string-append "~ainvalid macro result;\n"
+                                 " ~a\n"
+                                 "  received: ~v")
+                  (if who
+                      (format "~a: " who)
+                      "")
+                  msg
+                  r)
+          (current-continuation-marks))))
       (raise-arguments-error* who rhombus-realm
                               msg
                               "syntax" r)))

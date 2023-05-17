@@ -3,7 +3,8 @@
                      syntax/stx
                      enforest/transformer
                      enforest/property
-                     enforest/proc-name))
+                     enforest/proc-name
+                     "macro-result.rkt"))
 
 (begin-for-syntax
   (provide (property-out nestable-declaration-transformer)
@@ -13,5 +14,5 @@
   (property nestable-declaration-transformer transformer)
 
   (define (check-nestable-declaration-result forms proc)
-    (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
+    (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "declarations" forms))
     forms))

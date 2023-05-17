@@ -6,7 +6,8 @@
                      enforest/sequence
                      enforest/property
                      enforest/proc-name
-                     "expression-space.rkt"))
+                     "expression-space.rkt"
+                     "macro-result.rkt"))
 
 (begin-for-syntax
   (provide (property-out definition-transformer)
@@ -18,5 +19,5 @@
   (property definition-sequence-transformer sequence-transformer)
 
   (define (check-definition-result forms proc)
-    (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
+    (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "definitions and expressions" forms))
     forms))

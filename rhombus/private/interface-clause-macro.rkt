@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      enforest/proc-name
                      "pack.rkt"
-                     "realm.rkt"
+                     "macro-result.rkt"
                      (submod "interface-meta.rkt" for-static-info))
          "space-provide.rkt"
          "interface-clause.rkt"
@@ -27,5 +27,5 @@
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head data)]))
      (unless (syntax? defns)
-       (raise-result-error* (proc-name proc) rhombus-realm "Syntax" defns))
+       (raise-bad-macro-result (proc-name proc) "`interface` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))

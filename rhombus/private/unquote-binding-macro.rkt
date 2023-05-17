@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      enforest/proc-name
                      "pack.rkt"
-                     "realm.rkt"
+                     "macro-result.rkt"
                      (submod "class-meta.rkt" for-static-info))
          "space-provide.rkt"
          "unquote-binding.rkt"
@@ -64,7 +64,7 @@
        [(binds tail) (values binds (unpack-tail tail proc #f))]
        [(binds) (values binds #'())])))
   (unless (syntax? binds)
-    (raise-result-error* (proc-name proc) rhombus-realm "Syntax" binds))
+    (raise-bad-macro-result (proc-name proc) "unquote binding" binds))
   (values (syntax-parse (unpack-group binds proc binds)
             [esc::unquote-binding #'esc.parsed])
           tail))

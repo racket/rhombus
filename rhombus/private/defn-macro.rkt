@@ -7,6 +7,7 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
+                     "macro-result.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
          "name-root.rkt"
@@ -36,11 +37,11 @@
      (unpack-definitions defns proc))))
 
 (define-for-syntax (unpack-definitions form proc)
-  (syntax-parse (unpack-multi form proc #f)
+  (syntax-parse (and (syntax? form) (unpack-multi form proc #f))
     [(g ...)
      #`((rhombus-definition g)
         ...)]
-    [_ (raise-result-error (proc-name proc) "definition-list?" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form)]))
 
 ;; ----------------------------------------
 

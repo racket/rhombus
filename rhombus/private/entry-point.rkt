@@ -5,7 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "enforest.rkt")
 
 (module+ for-class
@@ -24,7 +24,7 @@
 
   (define (check-entry-point-result form proc)
     (unless (syntax? form)
-      (raise-result-error* (proc-name proc) rhombus-realm "Entry_Point_Syntax" form))
+      (raise-bad-macro-result (proc-name proc) "entry point" form))
     form)
 
   (define (check-entry-point-arity-result form proc)
@@ -38,7 +38,7 @@
                      (or (not (caddr form))
                          (and (list? (caddr form))
                               (andmap keyword? (caddr form))))))
-      (raise-result-error* (proc-name proc) rhombus-realm "Entry_Point_Arity" form))
+      (raise-bad-macro-result (proc-name proc) "entry point arity" form))
     (datum->syntax #f form))
 
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))

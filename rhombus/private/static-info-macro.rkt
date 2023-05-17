@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      enforest/name-parse
                      "pack.rkt"
-                     "static-info-pack.rkt")
+                     "static-info-pack.rkt"
+                     "macro-result.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root.rkt"
@@ -55,7 +56,7 @@
    
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
-    (raise-result-error who "syntax?" stx))
+    (raise-bad-macro-result who "static info" stx))
   (define si (syntax->list (pack stx)))
   (static-info (lambda () si)))
 

@@ -10,7 +10,8 @@
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "name-path-op.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "macro-result.rkt")
          "static-info.rkt"
          "realm.rkt"
          "error.rkt"
@@ -111,12 +112,12 @@
   (define (check-binding-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::binding-form form]
-      [_ (raise-result-error (proc-name proc) "binding-result?" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "binding" form)]))
 
   (define (check-binding-info-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::binding-info form]
-      [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "binding-info" form)]))
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
   (define-syntax (bind-quote stx)

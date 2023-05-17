@@ -14,7 +14,7 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"
-                     "realm.rkt"
+                     "macro-result.rkt"
                      "import-invert.rkt"
                      "tag.rkt"
                      "id-binding.rkt"
@@ -82,7 +82,7 @@
   (define in-import-space (make-interned-syntax-introducer/add 'rhombus/impo))
 
   (define (check-import-result form proc)
-    (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
+    (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "import" form))
     form)
 
   (define (make-identifier-import id)

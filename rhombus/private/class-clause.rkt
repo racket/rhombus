@@ -5,7 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "realm.rkt"
+                     "macro-result.rkt"
                      (for-syntax racket/base))
          "enforest.rkt")
 
@@ -28,7 +28,7 @@
   (define (check-class-clause-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::class-clause-form form]
-      [_ (raise-result-error* (proc-name proc) rhombus-realm "Class_Clause_Syntax" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "`class` clause" form)]))
 
   (define in-class-clause-space (make-interned-syntax-introducer/add 'rhombus/class_clause))
   (define-syntax (class-clause-quote stx)

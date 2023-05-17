@@ -11,6 +11,7 @@
                      enforest/name-parse
                      enforest/proc-name
                      "introducer.rkt"
+                     "macro-result.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "expression.rkt"
@@ -65,7 +66,7 @@
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::repetition-info form]
-      [_ (raise-result-error (proc-name proc) "repetition-info?" form)]))
+      [_ (raise-bad-macro-result (proc-name proc) "repetition" form)]))
 
   (property repetition-prefix-operator prefix-operator)
   (property repetition-infix-operator infix-operator)

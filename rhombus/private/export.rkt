@@ -14,9 +14,9 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"
-                     "realm.rkt"
                      "tag.rkt"
-                     "id-binding.rkt")
+                     "id-binding.rkt"
+                     "macro-result.rkt")
          "enforest.rkt"
          "all-spaces-out.rkt"
          "only-spaces-out.rkt"
@@ -59,7 +59,7 @@
   (define in-export-space (make-interned-syntax-introducer/add 'rhombus/expo))
 
   (define (check-export-result form proc)
-    (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
+    (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "export" form))
     form)
 
   (define (make-identifier-export id)
