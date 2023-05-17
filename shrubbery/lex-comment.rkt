@@ -34,9 +34,11 @@
                        (comment-tracked-stack status)
                        '()))
      (define (not-line-sensitive?)
-       (define l (member "«" (pending-comment-stack pending)))
-       (and l (or (null? (cdr l))
-                  (not (equal? "'" (cadr l))))))
+       (let loop ([stack (pending-comment-stack pending)])
+         (define l (member "«" stack))
+         (and l (or (null? (cdr l))
+                    (not (equal? "'" (cadr l)))
+                    (loop (cddr l))))))
      (define (finish pending stack
                      #:whitespace? [whitespace? #f]
                      #:comment? [comment? pending])
@@ -66,10 +68,14 @@
                             (token-name tok)))
           (define (pending-new-column #:so-far [so-far 'running])
             (pending-comment line column so-far stack (eq? name 'bar-operator)))
+          (define (continue-running)
+            (finish (struct-copy pending-comment pending [so-far 'running]) new-stack))
           (case name
             [(bar-operator)
-             ;; comment token's column doesn't matter
-             (finish (pending-new-column #:so-far 'running-bar) new-stack)]
+             (if (not-line-sensitive?)
+                 (continue-running)
+                 ;; comment token's column doesn't matter
+                 (finish (pending-new-column #:so-far 'running-bar) new-stack))]
             [(comma-operator semicolor-operator closer)
              ;; comment token is bad, so stop
              (finish #f (pending-comment-stack pending))]
@@ -78,7 +84,7 @@
                [(or (not-line-sensitive?)
                     (eqv? line (pending-comment-line pending)))
                 ;; comment token's column determines indentation of group
-                (finish (struct-copy pending-comment pending [so-far 'running]) new-stack)]
+                (continue-running)]
                [else
                 ;; comment token, on its own line so first element determines indentation
                 (finish (pending-new-column) new-stack)])])]

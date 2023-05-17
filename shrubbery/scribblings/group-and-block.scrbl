@@ -657,7 +657,7 @@ used:
  @item{When @litchar{#//} appears just before a @litchar{|} on the same line, then unlike
    the case for groups, it does not affect the the column of the @litchar{|}
    as used to align alternatives on later lines. Along those lines and to avoid an indentation mismatch, a
-   @litchar{#//} is not allowed to start a line for commenting out a @litchar{|}Using
+   @litchar{#//} is not allowed to start a line for commenting out a @litchar{|}
    alternative on the same line.}
 
 )
