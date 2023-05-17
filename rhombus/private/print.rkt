@@ -198,14 +198,14 @@
       [(symbol? v)
        (cond
          [(display?)
-          (display (symbol->immutable-string v))]
+          (display (symbol->immutable-string v) op)]
          [else
           (display "#'" op)
           (write-shrubbery v op)])]
       [(keyword? v)
        (cond
          [(display?)
-          (display (keyword->immutable-string v))]
+          (display (keyword->immutable-string v) op)]
          [else
           (display "#'" op)
           (write-shrubbery v op)])]

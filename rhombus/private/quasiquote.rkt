@@ -90,7 +90,8 @@
                                    #:as-tail? [as-tail? #f]
                                    #:splice? [splice? #f]
                                    #:splice-pattern [splice-pattern #f]
-                                   #:allow-fltten? [allow-flatten? #f])
+                                   #:allow-fltten? [allow-flatten? #f]
+                                   #:make-describe-op [make-describe-op (lambda (e name) e)])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
@@ -253,7 +254,8 @@
            [(g . _)
             (simple gs depth)]))]
       [((~and tag op) op-name)
-       (values (no-srcloc #`(#,(make-datum #'tag) #,(make-literal #'op-name))) null null null #f)]
+       (values (make-describe-op (no-srcloc #`(#,(make-datum #'tag) #,(make-literal #'op-name))) #'op-name)
+               null null null #f)]
       [id:identifier
        (values (make-literal #'id) null null null #f)]
       [_
@@ -396,7 +398,13 @@
                   (lambda (tag ps idrs sidrs vars)
                     ;; the `(tag . ps)` could match `(group)`, but it just never will,
                     ;; because that won't be an input
-                    (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t))))
+                    (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t))
+                  #:make-describe-op
+                  (lambda (e name)
+                    #`(~describe #,(format "the operator `~a`"
+                                           (or (syntax-raw-property name)
+                                               (syntax-e name)))
+                                 #,e))))
 
 (define-unquote-binding-syntax #%quotes
   (unquote-binding-prefix-operator

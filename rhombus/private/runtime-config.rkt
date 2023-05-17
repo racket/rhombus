@@ -7,7 +7,8 @@
          shrubbery/print
          "set.rkt"
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
-         (submod "print.rkt" redirect))
+         (submod "print.rkt" redirect)
+         "syntax-parse-config.rkt")
 
 (provide install-runtime-config!
          parameters)
@@ -127,4 +128,6 @@
      (define str (shrubbery-syntax->string s #:max-length len))
      (if (equal? str "")
          "[end of group]"
-         str))))
+         str)))
+
+  (config-syntax-parse!))

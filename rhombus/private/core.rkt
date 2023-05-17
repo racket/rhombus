@@ -16,7 +16,8 @@
                      (only-space-in rhombus/stxclass
                                     "syntax-class-primitive.rkt")
                      (only-in "implicit.rkt"
-                              #%parens))
+                              #%parens)
+                     "syntax-parse-config.rkt")
          racket/interaction-info
          "builtin-dot.rkt"
          "bounce.rkt"
@@ -162,6 +163,7 @@
   (error-syntax->string-handler
    (lambda (s len)
      (shrubbery-syntax->string s #:max-length len)))
+  (config-syntax-parse!)
   (check-unbound-identifier-early!)
   (syntax-parse stx
     [(_ (top . content))
@@ -177,6 +179,7 @@
 
 ;; splices content of any block as its own top-level group:
 (define-syntax (#%top-interaction stx)
+  (config-syntax-parse!)
   (syntax-parse stx
     #:datum-literals (group block)
     [(form-id . (top form ... (group (block inner-form ...)) . content))

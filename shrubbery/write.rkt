@@ -86,9 +86,9 @@
           (display "~" op)
           (display s op)]
          [else
-          (display "#{")
+          (display "#{" op)
           (write v op)
-          (display "}")])]
+          (display "}" op)])]
       [(or (string? v)
            (bytes? v)
            (exact-integer? v))
@@ -104,6 +104,6 @@
       [(void? v)
        (display "#void" op)]
       [else
-       (display "#{")
+       (display "#{" op)
        (write v op)
-       (display "}")])))
+       (display "}" op)])))
