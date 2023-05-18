@@ -43,6 +43,7 @@
 
   grammar option:
     ~op_stx: $id
+    ~op_stx $id
 ){
 
  Defines @rhombus(defined_name) as a macro

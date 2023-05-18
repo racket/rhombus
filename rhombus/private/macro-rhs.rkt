@@ -26,7 +26,8 @@
                   in-static-info-space
                   make-static-infos)
          (submod "syntax-object.rkt" for-quasiquote)
-         "realm.rkt")
+         "realm.rkt"
+         "wrap-expression.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -142,14 +143,14 @@
              (cond
                [(syntax-e #'parsed-right-id)
                 (define right-id #'parsed-right-id)
-                (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
+                (define extra-args (entry_point_meta.Adjustment-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args left #,right-id self-id)
                     (define-syntax #,(in-static-info-space #'left) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space right-id) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
                     #,(adjust-result
                        adjustments
-                       1
+                       2
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
                                                   (list #'left right-id #'self-id))
@@ -179,13 +180,13 @@
              (cond
                [(syntax-e #'parsed-right-id)
                 (define arg-id #'parsed-right-id)
-                (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
+                (define extra-args (entry_point_meta.Adjustment-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     (define-syntax #,(in-static-info-space arg-id) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
                     #,(adjust-result
                        adjustments
-                       1
+                       2
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
                                                   (list arg-id #'self-id))
@@ -241,11 +242,11 @@
      (let ([#,(parsed-name p)
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
-                  (let ([extra-args (entry-point-adjustments-prefix-arguments adjustments)])
+                  (let ([extra-args (entry_point_meta.Adjustment-prefix-arguments adjustments)])
                     #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self)
                         #,(adjust-result
                            adjustments
-                           1
+                           2
                            #`(syntax-parse (insert-multi-front-group self tail)
                                #,@(map parsed-impl ps))))))])
        #,(parsed-name p))
@@ -307,7 +308,7 @@
              #,(build-cases infixes #f make-infix-id space-sym adjustments orig-stx))]))
 
 (define-for-syntax (adjust-result adjustments arity b)
-  ((entry-point-adjustments-wrap-body adjustments) arity b))
+  (wrap-expression ((entry_point_meta.Adjustment-wrap-body adjustments) arity #`(parsed #,b))))
 
 ;; ----------------------------------------
 

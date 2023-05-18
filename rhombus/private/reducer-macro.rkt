@@ -54,8 +54,6 @@
   (syntax-parse (if (syntax? form)
                     (unpack-group form proc #f)
                     #'#f)
-    #:datum-literals (group parsed)
-    [(group (parsed r)) #'r]
     [r::reducer #'r.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "reducer" form)]))
 

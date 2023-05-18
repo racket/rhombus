@@ -13,7 +13,8 @@
          "entry-point.rkt"
          "error.rkt"
          "realm.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "wrap-expression.rkt")
 
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
@@ -267,14 +268,15 @@
     #:datum-literals (parsed block)
     [(_ name predicate-id (parsed e)) #'e]
     [(_ name predicate-id (block g))
-     #:do [(define adjustments (entry-point-adjustments
+     #:do [(define adjustments (entry_point_meta.Adjustment
                                 '()
                                 (lambda (arity body)
-                                  #`(let ([r #,body])
-                                      (if (predicate-id r)
-                                          r
-                                          #,(quasisyntax/loc #'g
-                                              (raise-constructor-result-error 'name r)))))
+                                  #`(parsed
+                                     (let ([r #,(wrap-expression body)])
+                                       (if (predicate-id r)
+                                           r
+                                           #,(quasisyntax/loc #'g
+                                               (raise-constructor-result-error 'name r))))))
                                 #f))]
      #:with (~var lam (:entry-point adjustments)) #'g
      #'lam.parsed]))

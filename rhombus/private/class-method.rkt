@@ -26,7 +26,8 @@
          "op-literal.rkt"
          (submod "function-parse.rkt" for-call)
          "is-static.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "wrap-expression.rkt")
 
 (provide (for-syntax extract-method-tables
                      build-interface-vtable
@@ -788,33 +789,34 @@
              (cond
                [(not (syntax-e #'result-id)) #f]
                [else (syntax-local-method-result #'result-id)]))]
-     #:with (~var e (:entry-point (entry-point-adjustments
+     #:with (~var e (:entry-point (entry_point_meta.Adjustment
                                    (list #'this-obj)
                                    (lambda (arity stx)
-                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
-                                                                                              . super-names))]
-                                                             [private-tables (quote-syntax private-tables-id)])
-                                         ;; This check might be redundant, depending on how the method was called
-                                         (unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
-                                         #,(let ([body #`(let ()
-                                                           #,stx)])
-                                             (cond
-                                               [(and (eq? (syntax-e #'kind) 'property)
-                                                     (eqv? arity 1))
-                                                #`(begin #,body (void))]
-                                               [(and result-desc
-                                                     (method-result-handler-expr result-desc))
-                                                (if (method-result-predicate? result-desc)
-                                                    #`(let ([result #,body])
-                                                        (unless (#,(method-result-handler-expr result-desc) result)
-                                                          (raise-result-failure 'method-name result))
-                                                        result)
-                                                    #`(let ([result #,body])
-                                                        (#,(method-result-handler-expr result-desc)
-                                                         result
-                                                         (lambda ()
-                                                           (raise-result-failure 'method-name result)))))]
-                                               [else body]))))
+                                     #`(parsed
+                                        (syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
+                                                                                               . super-names))]
+                                                              [private-tables (quote-syntax private-tables-id)])
+                                          ;; This check might be redundant, depending on how the method was called
+                                          (unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
+                                          #,(let ([body #`(let ()
+                                                            #,(wrap-expression stx))])
+                                              (cond
+                                                [(and (eq? (syntax-e #'kind) 'property)
+                                                      (eqv? arity 2)) ; mask 2 => 1 argument
+                                                 #`(begin #,body (void))]
+                                                [(and result-desc
+                                                      (method-result-handler-expr result-desc))
+                                                 (if (method-result-predicate? result-desc)
+                                                     #`(let ([result #,body])
+                                                         (unless (#,(method-result-handler-expr result-desc) result)
+                                                           (raise-result-failure 'method-name result))
+                                                         result)
+                                                     #`(let ([result #,body])
+                                                         (#,(method-result-handler-expr result-desc)
+                                                          result
+                                                          (lambda ()
+                                                            (raise-result-failure 'method-name result)))))]
+                                                [else body])))))
                                    #t)))
      #'expr
      #'e.parsed]))

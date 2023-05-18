@@ -40,7 +40,8 @@
     #:desc "reducer"
     #:in-space in-reducer-space
     #:transformer-ref reducer-transformer-ref
-    #:check-result check-reducer-result))
+    #:check-result check-reducer-result
+    #:accept-parsed? #t))
 
 (define-syntax (define-reducer-syntax stx)
   (syntax-parse stx

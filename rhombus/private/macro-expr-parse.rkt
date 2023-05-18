@@ -60,7 +60,7 @@
 (define-for-syntax (expose-arity adjustments e)
   (wrap-static-info e
                     #'#%function-arity
-                    #`(#,(+ 1 (length (entry-point-adjustments-prefix-arguments adjustments)))
+                    #`(#,(+ 1 (length (entry_point_meta.Adjustment-prefix-arguments adjustments)))
                        ()
                        ())))
 

@@ -45,7 +45,9 @@
               (~optional (~seq #:transformer-ref transformer-ref)
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
-                         #:defaults ([check-result #'check-is-syntax])))
+                         #:defaults ([check-result #'check-is-syntax]))
+              (~optional (~seq #:accept-parsed? accept-parsed?)
+                         #:defaults ([accept-parsed? #'#f])))
         ...)
      #`(begin
          (define-syntax-class form
@@ -59,10 +61,16 @@
                     #:attr parsed (apply-transformer t head-id
                                                      (datum->syntax #f (cons head-id #'hname.tail))
                                                      check-result))
-           (pattern ((~datum group) ((~datum parsed) . _) . _)
-                    #:cut
-                    #:when #f
-                    #:attr parsed #'#f)
+           #,(if (syntax-e #'accept-parsed?)
+                 #`(pattern ((~datum group) ((~datum parsed) inside . inside-tail) . tail)
+                            #:cut
+                            #:with () #'inside-tail
+                            #:with () #'tail
+                            #:attr parsed #'inside)
+                 #`(pattern ((~datum group) ((~datum parsed) . _) . _)
+                            #:cut
+                            #:when #f
+                            #:attr parsed #'#f))
            (pattern ((~datum group) head . tail)
                     #:do [(define-values (implicit-name ctx) (select-prefix-implicit #'head))]
                     #:do [(define implicit-id (datum->syntax ctx implicit-name))]
@@ -78,7 +86,7 @@
                        [((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
-                       [((~datum group) ((~datum parsed) . _) . _) #f]
+                       [((~datum group) ((~datum parsed) . _) . _) accept-parsed?]
                        [((~datum group) head . _)
                         (define-values (implicit-name ctx) (select-prefix-implicit #'head))
                         (define implicit-id (datum->syntax ctx implicit-name))

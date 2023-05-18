@@ -47,7 +47,8 @@
          "dot-parse.rkt"
          "realm.rkt"
          "compound-repetition.rkt"
-         "function-arity.rkt")
+         "function-arity.rkt"
+         "wrap-expression.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -377,25 +378,27 @@
                             (list (list arg+default) default)]
                            [else
                             (list (list kw arg+default) default)]))])
-          (define body
-            ((entry-point-adjustments-wrap-body adjustments)
-             ((if (syntax-e rest-arg) arity-at-least values) (length (syntax->list #'(arg ...))))
-             #`(nested-bindings
-                #,function-name
-                #f ; try-next
-                argument-binding-failure
-                (tmp-id arg-info arg arg-default)
-                ...
-                maybe-match-rest
-                maybe-match-kwrest
-                (begin
-                  (add-annotation-check
-                   #,function-name #,converter #f
-                   (rhombus-body-expression rhs))))))
-          (define (adjust-args args)
-            (append (entry-point-adjustments-prefix-arguments adjustments)
-                    args))
           (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))               
+          (define body
+            (wrap-expression
+             ((entry_point_meta.Adjustment-wrap-body adjustments)
+              arity
+              #`(parsed
+                 (nested-bindings
+                  #,function-name
+                  #f ; try-next
+                  argument-binding-failure
+                  (tmp-id arg-info arg arg-default)
+                  ...
+                  maybe-match-rest
+                  maybe-match-kwrest
+                  (begin
+                    (add-annotation-check
+                     #,function-name #,converter #f
+                     (rhombus-body-expression rhs))))))))
+          (define (adjust-args args)
+            (append (entry_point_meta.Adjustment-prefix-arguments adjustments)
+                    args))
           (values
            (relocate
             (span-srcloc start end)
@@ -430,7 +433,7 @@
        (map fcase kwss argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds converters rhss)))
     (define pos-arity
       (normalize-arity
-       (let ([adj (length (entry-point-adjustments-prefix-arguments adjustments))])
+       (let ([adj (length (entry_point_meta.Adjustment-prefix-arguments adjustments))])
          (for/list ([n+same (in-list n+sames)])
            (define n (car n+same))
            (cond
@@ -483,7 +486,7 @@
                              [maybe-kwrest-tmp-use (if kws?
                                                        #'kwrest-tmp
                                                        #''#hashalw())])
-                 #`[(#,@(entry-point-adjustments-prefix-arguments adjustments) pos-arg-id ...)
+                 #`[(#,@(entry_point_meta.Adjustment-prefix-arguments adjustments) pos-arg-id ...)
                     maybe-rest-tmp ... maybe-kwrest-tmp ...
                     #,(let loop ([same same])
                         (cond
@@ -551,13 +554,16 @@
                                          maybe-bind-rest ...
                                          maybe-bind-kwrest-seq ...
                                          maybe-bind-kwrest ...
-                                         #,((entry-point-adjustments-wrap-body adjustments)
-                                            ((if (syntax-e (fcase-rest-arg fc)) arity-at-least values)
-                                             (length (fcase-args fc)))
-                                            #`(add-annotation-check
-                                               #,function-name
-                                               converter #,main-converter-stx
-                                               (rhombus-body-expression rhs))))))))]))])))))
+                                         #,(wrap-expression
+                                            ((entry_point_meta.Adjustment-wrap-body adjustments)
+                                             (summarize-arity (fcase-kws fc) (for/list ([kw (in-list (fcase-kws fc))])
+                                                                               #'#f)
+                                                              (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))
+                                             #`(parsed
+                                                (add-annotation-check
+                                                 #,function-name
+                                                 converter #,main-converter-stx
+                                                 (rhombus-body-expression rhs))))))))))]))])))))
      arity))
 
   (define (maybe-add-function-result-definition name static-infoss static-infos arity defns)
