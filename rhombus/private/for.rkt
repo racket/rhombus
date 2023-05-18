@@ -47,8 +47,8 @@
         #:with f::reducer-form #'redr.parsed
         (values (wrap-static-info*
                  #`(f.wrapper
-                    ...
-                    (for/fold f.binds (#:splice (for-clause-step #,stx [(finish f.body-wrapper)] body ...))
+                    f.data
+                    (for/fold f.binds (#:splice (for-clause-step #,stx [(finish (f.body-wrapper f.data))] body ...))
                       (finish)))
                  #'f.static-infos)
                 #'())]))))

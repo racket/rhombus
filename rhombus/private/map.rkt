@@ -291,14 +291,21 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[(begin)
+        #`[build-map-reduce
            ([ht #hashalw()])
-           (add-to-map ht)
-           #,map-static-info]]))))
+           build-map-add
+           #,map-static-info
+           ht]]))))
 
-(define-syntax-rule (add-to-map ht e)
-  (let-values ([(k v) e])
-    (hash-set ht k v)))
+(define-syntax (build-map-reduce stx)
+  (syntax-parse stx
+    [(_ ht-id e) #'e]))
+
+(define-syntax (build-map-add stx)
+  (syntax-parse stx
+    [(_ ht-id e)
+     #'(let-values ([(k v) e])
+         (hash-set ht-id k v))]))
 
 (define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-info))
 (define-annotation-syntax MapView (identifier-annotation #'hash? map-static-info))

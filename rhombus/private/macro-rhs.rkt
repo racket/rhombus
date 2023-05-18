@@ -320,40 +320,41 @@
                                                      #:else [else-case #f]
                                                      #:cut? [cut? #f])
   (define in-extra-ids (generate-temporaries (car extra-bindss)))
-  #`(#,make-transformer-id
-     (let ([id (lambda (tail #,@tail-ids self #,@in-extra-ids)
-                 (syntax-parse (insert-multi-front-group self tail)
-                   #,@(for/list ([pre-parsed (in-list pre-parseds)]
-                                 [self-id (in-list self-ids)]
-                                 [extra-binds-stx (in-list extra-bindss)])
-                        (syntax-parse pre-parsed
-                          #:datum-literals (pre-parsed)
-                          [(pre-parsed id
-                                       tail-pattern
-                                       rhs)
-                           (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)
-                                                                                                   #:as-tail? #t
-                                                                                                   #:splice? #t
-                                                                                                   #:splice-pattern values))
-                           (define-values (extra-patterns wrap-extra)
-                             (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes))
-                           (with-syntax ([((p-id id-ref) ...) idrs]
-                                         [(((s-id ...) sid-ref) ...) sidrs])
-                             #`[#,pattern
-                                #,@(if cut? #'(#:cut) '())
-                                #,@extra-patterns
-                                #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
-                                (define #,self-id self)
-                                (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
-                                #,(wrap-extra
-                                   #`(let ([p-id id-ref] ...)
-                                       (let-syntaxes ([(s-id ...) sid-ref] ...)
-                                         #,(wrap-for-tail
-                                            #`(rhombus-body-expression rhs)))))])]))
-                   #,@(if else-case
-                          #`([_ #,else-case])
-                          null)))])
-       id)))
+  (with-syntax ([((_ id . _) . _) pre-parseds])
+    #`(#,make-transformer-id
+       (let ([id (lambda (tail #,@tail-ids self #,@in-extra-ids)
+                   (syntax-parse (insert-multi-front-group self tail)
+                     #,@(for/list ([pre-parsed (in-list pre-parseds)]
+                                   [self-id (in-list self-ids)]
+                                   [extra-binds-stx (in-list extra-bindss)])
+                          (syntax-parse pre-parsed
+                            #:datum-literals (pre-parsed)
+                            [(pre-parsed id
+                                         tail-pattern
+                                         rhs)
+                             (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)
+                                                                                                     #:as-tail? #t
+                                                                                                     #:splice? #t
+                                                                                                     #:splice-pattern values))
+                             (define-values (extra-patterns wrap-extra)
+                               (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes))
+                             (with-syntax ([((p-id id-ref) ...) idrs]
+                                           [(((s-id ...) sid-ref) ...) sidrs])
+                               #`[#,pattern
+                                  #,@(if cut? #'(#:cut) '())
+                                  #,@extra-patterns
+                                  #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+                                  (define #,self-id self)
+                                  (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
+                                  #,(wrap-extra
+                                     #`(let ([p-id id-ref] ...)
+                                         (let-syntaxes ([(s-id ...) sid-ref] ...)
+                                           #,(wrap-for-tail
+                                              #`(rhombus-body-expression rhs)))))])]))
+                     #,@(if else-case
+                            #`([_ #,else-case])
+                            null)))])
+         id))))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
                                                               make-transformer-id

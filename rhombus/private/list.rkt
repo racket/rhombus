@@ -229,10 +229,19 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[(reverse)
+        #`[build-reverse
            ([accum null])
-           ((lambda (v) (cons v accum)))
-           #,list-static-infos]]))))
+           build-accum
+           #,list-static-infos
+           accum]]))))
+
+(define-syntax (build-reverse stx)
+  (syntax-parse stx
+    [(_ accum e) #'(reverse e)]))
+
+(define-syntax (build-accum stx)
+  (syntax-parse stx
+    [(_ accum e) #'(cons e accum)]))
 
 (define-repetition-syntax repet
   (repetition-transformer

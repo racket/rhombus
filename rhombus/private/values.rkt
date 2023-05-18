@@ -35,10 +35,15 @@
      (syntax-parse stx
        #:datum-literals (group op)
        [(_ (parens (group id:identifier _::equal rhs ...) ...))
-        #'[(begin)
+        #'[build-return
            ([id (rhombus-expression (group rhs ...))] ...)
-           (begin)
-           ()]]))))
+           build-return
+           ()
+           #f]]))))
+
+(define-syntax (build-return stx)
+  (syntax-parse stx
+    [(_ _ e) #'e]))
 
 (define-static-info-syntax values
   (#%function-arity -1))

@@ -89,20 +89,40 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ #:length e ...+)
-        #`[(array-reduce-wrap
-            dest
-            (rhombus-expression (group e ...)))
+        #`[build-array-reduce
            ([i 0])
-           ((lambda (v) (vector-set! dest i v) (add1 i)))
-           #,array-static-infos]]
+           build-array-assign
+           #,array-static-infos
+           [dest
+            (rhombus-expression (group e ...))
+            i]]]
        [(_)
-        #`[(reverse-list->vector)
+        #`[build-array-reduce-list
            ([accum null])
-           ((lambda (v) (cons v accum)))
-           #,array-static-infos]]))))
+           build-array-cons
+           #,array-static-infos
+           accum]]))))
 
-(define (reverse-list->vector l)
-  (list->vector (reverse l)))
+(define-syntax (build-array-reduce stx)
+  (syntax-parse stx
+    [(_ (dest-id len-expr i) body)
+     (wrap-static-info* #'(let ([dest-id (make-vector len-expr)])
+                            body
+                            dest-id)
+                        array-static-infos)]))
+
+(define-syntax (build-array-assign stx)
+  (syntax-parse stx
+    [(_ (dest-id len-expr i) v)
+     #'(begin (vector-set! dest-id i v) (add1 i))]))
+
+(define-syntax (build-array-reduce-list stx)
+  (syntax-parse stx
+    [(_ accum body) #`(list->vector (reverse body))]))
+
+(define-syntax (build-array-cons stx)
+  (syntax-parse stx
+    [(_ accum v) #'(cons v accum)]))
 
 (define-syntax array-reduce-wrap
   (lambda (stx)

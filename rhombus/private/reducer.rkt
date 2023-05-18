@@ -21,10 +21,11 @@
   (property reducer-transformer transformer)
 
   (define-syntax-class :reducer-form
-    (pattern [(wrapper ...)
+    (pattern [wrapper
               ([id:identifier init-expr] ...)
               body-wrapper
-              static-infos]
+              static-infos
+              data]
              #:attr binds #'([id init-expr] ...)))
 
   (define (check-reducer-result form proc)

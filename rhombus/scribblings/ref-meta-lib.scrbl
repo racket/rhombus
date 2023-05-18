@@ -41,6 +41,7 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-annotation-macro.scrbl")
 @include_section("ref-dot-provider.scrbl")
 @include_section("ref-repet-macro.scrbl")
+@include_section("ref-reducer-macro.scrbl")
 @include_section("ref-for-clause-macro.scrbl")
 @include_section("ref-sequence-macro.scrbl")
 @include_section("ref-class-clause-macro.scrbl")

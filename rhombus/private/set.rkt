@@ -165,10 +165,19 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[(set)
+        #`[build-set-reduce
            ([ht #hashalw()])
-           ((lambda (v) (hash-set ht v #t)))
-           #,set-static-info]]))))
+           build-set-add
+           #,set-static-info
+           ht]]))))
+
+(define-syntax (build-set-reduce stx)
+  (syntax-parse stx
+    [(_ ht-id e) #'(set e)]))
+
+(define-syntax (build-set-add stx)
+  (syntax-parse stx
+    [(_ ht-id v) #'(hash-set ht-id v #t)]))
 
 (define-for-syntax (parse-set stx repetition?)
   (syntax-parse stx
