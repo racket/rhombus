@@ -142,8 +142,11 @@
   @rhombus(id) from @rhombus(module_path) path and then importing
   with @rhombus(.id). The last @rhombus(id) in a dotted
   sequence is allowed to be an export that is not a namespace, in which
-  case the dotted form is a shorthand for just importing
-  @rhombus(id) from @rhombus(module_path).}
+  case the dotted form is a shorthand for exposing just
+  @rhombus(id) from @rhombus(module_path). This form can be modified by
+  @rhombus(meta, ~impo) or @rhombus(meta_label, ~impo) only when
+  a single dot is used and @rhombus(module_path) does not refer to a
+  namespace.}
 
  @item{@rhombus(module_path#,(@rhombus(.,~impo))(op)): the same
   shorthand, but for operators.}

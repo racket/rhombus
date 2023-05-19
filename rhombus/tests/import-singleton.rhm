@@ -13,7 +13,7 @@ check:
       export: exint
       def exint = 10  
     import: .n.exint meta
-  ~raises "phase shifting not supported with a dotted module path"
+  ~raises "cannot shift phase of namespace content"
 
 check:
   ~eval
@@ -23,7 +23,7 @@ check:
       def exint = 10  
     import: .n.exint:
               except: exint
-  ~raises "identifier to exclude is not included"
+  ~raises "identifier to exclude is not nested within the imported name"
 
 check:
   import: .n.exint
@@ -48,6 +48,15 @@ check:
   import: .n.exint
   "10" :: exint
   ~raises "value does not satisfy annotation"
+
+check:
+  import: .n:
+            expose exint
+            rename exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  ~is 10
 
 check:
   import: .n.exint as ex_int

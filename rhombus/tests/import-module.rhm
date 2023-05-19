@@ -156,3 +156,11 @@ check:
     expose ex_a
   ex_a.alpha
   ~is "alpha"
+
+check:
+  import:
+    meta: lib("rhombus/tests/example-a.rhm").alpha
+  expr.macro 'get_alpha':
+    '$alpha'
+  get_alpha
+  ~is "alpha"

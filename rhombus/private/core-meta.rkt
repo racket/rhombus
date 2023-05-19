@@ -29,7 +29,8 @@
         "parsed.rkt"
         "syntax-meta-value.rkt"
         "space-macro.rkt"
-        "space-clause-primitive.rkt")
+        "space-clause-primitive.rkt"
+        "namespace-macro.rkt")
 
 (bounce-meta "space-meta-clause-primitive.rkt")
 

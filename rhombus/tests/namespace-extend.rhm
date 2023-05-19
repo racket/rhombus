@@ -127,6 +127,12 @@ check:
   ~is "left"
 
 check:
+  import: .root:
+            expose trunk
+  trunk.side
+  ~is "left"
+
+check:
   namespace math
   namespace ext1:
     def math.e = 2.71

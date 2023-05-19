@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/phase+space
+                     racket/symbol
                      "import-cover.rkt"
                      "id-binding.rkt")
          "space-in.rkt")
@@ -14,7 +15,8 @@
                      space-excluded?
                      expose-spaces
                      expose-spaces-with-rule
-                     find-identifer-in-spaces))
+                     find-identifer-in-spaces
+                     close-over-extensions))
 
 (begin-for-syntax
   ;; inputs:
@@ -29,7 +31,8 @@
   ;;   - exposed-ht: sym -> id, where `id` is the identifier to bind (without a prefix)
   ;;   - new-covered-ht: updated coverage (when `accum?` is true)
   ;;   - as-is?: true means `ht` is as given, and `exposed-ht` is empty
-  (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok? only-space-sym)
+  (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok? only-space-sym for-singleton?)
+    (define included-str (if for-singleton? "nested within the imported name" "included"))
     (let extract ([r r] [ht ht] [step 0])
       (define (root) (values ht #hasheq() covered-ht #t))
       (syntax-parse r
@@ -55,7 +58,7 @@
                   (values renames
                           rename-bind-ids)]
                  [else
-                  (raise-syntax-error 'import "identifier to rename is not included" orig-s)])))
+                  (raise-syntax-error 'import (string-append "identifier to rename is not " included-str) orig-s)])))
          (define-values (pruned-ht pruned-expose-ht)
            (for/fold ([ht new-ht] [expose-ht new-expose-ht])
                      ([(orig bind) (in-hash renames)])
@@ -85,12 +88,11 @@
                              (if as-id
                                  (hash-set expose-ht id as-id)
                                  expose-ht))
-                           (cover covered-ht id step)
-                           #f))]
+                           (cover covered-ht id step)))]
              [(or accum? (covered? covered-ht id step))
-              (values ht expose-ht covered-ht #f)]
+              (values ht expose-ht covered-ht)]
              [else
-              (raise-syntax-error 'import "identifier is not included" id-s)]))]
+              (raise-syntax-error 'import (string-append "identifier is not " included-str) id-s)]))]
         [(except-in mp id ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (for/fold ([ht new-ht]
@@ -106,7 +108,7 @@
              [(or accum? (covered? covered-ht id step))
               (values ht expose-ht covered-ht)]
              [else
-              (raise-syntax-error 'import "identifier to exclude is not included" id-s)]))]
+              (raise-syntax-error 'import (string-append "identifier to exclude is not " included-str) id-s)]))]
         [(expose-in mp id ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (define-values (exposed-expose-ht exposed-covered-ht)
@@ -122,7 +124,7 @@
                 (values expose-ht
                         covered-ht)]
                [else
-                (raise-syntax-error 'import "identifier to expose is not included" id-s)])))
+                (raise-syntax-error 'import (string-append "identifier to expose is not " included-str) id-s)])))
          (values new-ht exposed-expose-ht exposed-covered-ht #f)]
         [(for-meta phase mp)
          (if (or phase-shift-ok?
@@ -239,3 +241,35 @@
         #:keep? (if (eq? (syntax-e #'mode) '#:only)
                     (lambda (space-sym) (hash-ref spaces space-sym #f))
                     (lambda (space-sym) (not (hash-ref spaces space-sym #f)))))])))
+
+(define-for-syntax (close-over-extensions expose-ht ht)
+  (let loop ([expose-ht expose-ht]
+             [expose-ks (sort (hash-keys expose-ht) symbol<?)]
+             [ks (sort (hash-keys ht) symbol<?)])
+    (cond
+      [(null? ks) expose-ht]
+      [(null? expose-ks) expose-ht]
+      [else
+       (define ek (car expose-ks))
+       (define str (format "~a." (symbol->immutable-string ek)))
+       (let e-loop ([expose-ht expose-ht]
+                    [ks ks])
+         (cond
+           [(null? ks) (loop expose-ht (cdr expose-ks) ks)]
+           [(or (eq? (car ks) ek)
+                (symbol<? (car ks) ek)
+                (hash-ref expose-ht (car ks) #f))
+            (e-loop expose-ht (cdr ks))]
+           [else
+            (define k-str (symbol->immutable-string (car ks)))
+            (define len (string-length str))
+            (cond
+              [(and ((string-length k-str) . > . len)
+                    (equal? (substring k-str 0 len) str))
+               (e-loop (hash-set expose-ht (car ks)
+                                 ;; synthesize name using context of the prefix name
+                                 (datum->syntax (hash-ref expose-ht ek)
+                                                (string->symbol
+                                                 (string-append str (substring k-str len)))))
+                       (cdr ks))]
+              [else (loop expose-ht (cdr expose-ks) ks)])]))])))

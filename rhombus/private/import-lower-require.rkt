@@ -47,6 +47,12 @@
                                      [sym (in-list (cdr phase+space+syms))])
                            (hash-set syms sym (hash-set (hash-ref syms sym #hasheq()) (phase+space-space (car phase+space+syms)) #t))))
             (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f))
+          (define (get-not-here revnames only-mentioned?)
+            (string-append " is not provided"
+                           (if (and (= (hash-count revnames) 0)
+                                    (not only-mentioned?))
+                               ""
+                               " or was previously renamed or excluded")))
           (syntax-parse r
             #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
                                         rhombus-prefix-in only-spaces-in except-spaces-in only-space-in)
@@ -117,7 +123,9 @@
                        => (lambda (target)
                             (values (hash-set new-renames orig target)
                                     (hash-set new-revnames id orig)
-                                    (hash-set new-syms id (hash-ref syms (syntax-e target)))
+                                    (hash-set new-syms id (hash-ref syms (syntax-e (if (expose? target)
+                                                                                       (expose-id target)
+                                                                                       target))))
                                     (cover covered-ht id step)))]
                       [else
                        (raise-syntax-error 'import "identifier to include was previously excluded" id-s)])]
@@ -126,7 +134,9 @@
                               (and (not accum?)
                                    (not (or (hash-ref syms id #f)
                                             (covered? covered-ht id step)))))
-                      (raise-syntax-error 'import "identifier to include was not previously included" id-s))
+                      (raise-syntax-error 'import
+                                          (string-append "identifier to include" (get-not-here revnames only-mentioned?))
+                                          id-s))
                     (define spaces (hash-ref syms id #f))
                     (values (hash-set new-renames id id-s)
                             (hash-set new-revnames id id)
@@ -166,7 +176,9 @@
                               (and (not accum?)
                                    (not (or (hash-ref syms id #f)
                                             (covered? covered-ht orig step)))))
-                      (raise-syntax-error 'import "identifier to exclude was not previously included" id-s))
+                      (raise-syntax-error 'import
+                                          (string-append "identifier to exclude" (get-not-here revnames only-mentioned?))
+                                          id-s))
                     (values (hash-set renames id #f)
                             (hash-set revnames id id)
                             (hash-remove syms orig)
@@ -189,7 +201,9 @@
                               (not (or accum?
                                        (hash-ref syms id #f)
                                        (covered? covered-ht id step))))
-                      (raise-syntax-error 'import "identifier to expose was not previously included" id-s))
+                      (raise-syntax-error 'import
+                                          (string-append "identifier to expose" (get-not-here revnames only-mentioned?))
+                                          id-s))
                     (values (hash-set renames id (expose id-s))
                             (hash-set revnames id id)
                             (if (hash-ref syms id #f)
@@ -353,7 +367,9 @@
        (list
         (if prefix-id
             #`(for-meta #,phase-shift
-                        #,@(map prefix-intro (make-ins #f))
+                        #,@(if (eq? '#:none (syntax-e prefix-id))
+                               null
+                               (map prefix-intro (make-ins #f)))
                         #,@(make-ins #t))
             #`(for-meta #,phase-shift
                         #,@(make-ins #f))))
