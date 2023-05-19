@@ -357,7 +357,7 @@
                         #,@(make-ins #t))
             #`(for-meta #,phase-shift
                         #,@(make-ins #f))))
-       (if prefix-id
+       (if (identifier? prefix-id)
            (for/list ([phase (in-hash-keys
                               (for/hasheqv ([phase+space (in-list r-phase+spaces)]
                                             #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))

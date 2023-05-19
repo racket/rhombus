@@ -217,3 +217,29 @@ check:
   import rhombus.List.iota
   iota(2)
   ~is [0, 1]
+
+
+check:
+  import: .n as ~none:
+            expose: exint
+  def exint = 10
+  10 :: exint
+  exint
+  ~is 10
+
+check:
+  import lib("rhombus/tests/example-b.rhm").ex_a
+  ex_a.alpha
+  ~is "alpha"
+
+check:
+  import lib("rhombus/tests/example-b.rhm").ex_a:
+    expose: alpha
+  [alpha, ex_a.beta]
+  ~is ["alpha", "beta"]
+
+check:
+  import lib("rhombus/tests/example-b.rhm").ex_a as ~none:
+    expose: alpha
+  alpha
+  ~is "alpha"

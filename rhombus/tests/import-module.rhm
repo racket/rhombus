@@ -136,3 +136,23 @@ check:
       only_space: annot
   11 :: ex_c.exint
   ~is 11
+
+check:
+  import: lib("rhombus/tests/example-c.rhm") as ~none:
+            expose: exint
+  def exint = 10
+  10 :: exint
+  exint
+  ~is 10
+
+check:
+  import lib("rhombus/tests/example-b.rhm"):
+    expose ex_a
+  ex_a.alpha
+  ~is "alpha"
+
+check:
+  import lib("rhombus/tests/example-b.rhm") as ~none:
+    expose ex_a
+  ex_a.alpha
+  ~is "alpha"

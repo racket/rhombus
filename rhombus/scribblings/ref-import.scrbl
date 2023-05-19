@@ -43,6 +43,7 @@
 
   grammar modifier:
     #,(@rhombus(as, ~impo)) $id
+    #,(@rhombus(as, ~impo)) ~none
     #,(@rhombus(open, ~impo)) $open_decl
     #,(@rhombus(expose, ~impo)) $expose_decl
     #,(@rhombus(rename, ~impo)) $rename_decl
@@ -88,7 +89,10 @@
  By default, each clause with a @rhombus(module_path) binds a prefix
  name that is derived from the @rhombus(module_path)'s last element.
  Imports from the module are then accessed using the prefix, @litchar{.},
- and the provided-provided name.
+ and the provided-provided name. The @rhombus(as, ~impo) modifier with an
+ identifier supplies a prefix to use, instead, while the
+ @rhombus(as, ~impo) modifier with @rhombus(~none) indicates that only
+ exposed names should be bound.
 
  A @rhombus(module_path) clause can be be adjusted through one or more
  @rhombus(import_modifier)s. The set of modifiers is extensible, but
@@ -249,11 +253,15 @@
 
 @doc(
   impo.modifier 'as $id'
+  impo.modifier 'as ~none'
 ){
 
  Modifies an @rhombus(import) clause to bind the prefix
  @rhombus(id), used to access non-exposed imports, instead of
- inferring a prefix id from the module name.
+ inferring a prefix identifier from the module name. When
+ @rhombus(as, ~impo) is followed by @rhombus(~none) instead of
+ @rhombus(id), then no prefix is bound for the import (so only
+ exposed identifiers are bound).
 
 }
 
@@ -263,7 +271,9 @@
 ){
 
  Modifies an @rhombus(import) clause so that no prefix (normally based on the
- module name) is bound, so all imports are exposed.
+ module name) is bound, and all imports are implicitly exposed. Contrast with
+ @rhombus(as ~none, ~impo), which also binds no prefix, but binds only
+ names that are speficially exposed.
 
  If @rhombus(~scope_like id) is specified, then the name part of
  @rhombus(id) does not matter, but its scopes are used for the exposed

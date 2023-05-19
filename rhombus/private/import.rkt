@@ -18,7 +18,8 @@
                      "import-invert.rkt"
                      "tag.rkt"
                      "id-binding.rkt"
-                     "operator-parse.rkt")
+                     "operator-parse.rkt"
+                     "srcloc-span.rkt")
          "enforest.rkt"
          "name-root.rkt"
          "name-root-space.rkt"
@@ -131,16 +132,18 @@
         [#f (reverse accum)]
         [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
          (extract #'mp accum)]
-        [(rhombus-prefix-in mp name ctx)
+        [((~and tag rhombus-prefix-in) mp name ctx)
          (if (or (identifier? #'name)
-                 (not (syntax-e #'name)))
+                 (not (syntax-e #'name))
+                 (eq? (syntax-e #'name) '#:none))
              (extract #'mp (cons r accum))
              (if require-identifier?
                  (raise-syntax-error #f
                                      "expected an identifier"
                                      #'name)
                  (syntax-parse #'name
-                   [(_ op) (extract #'mp (cons #'(rhombus-prefix-in mp op ctx) accum))])))]
+                   [(_ op) (extract #'mp (cons #'(tag mp op ctx)
+                                               accum))])))]
         [((~or for-meta only-space-in) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
@@ -193,7 +196,9 @@
       [else
        (raise-syntax-error 'import
                            "second prefix specification not allowed"
-                           (cadr prefixes))]))
+                           ;; `as` and `open` put original text on `rhombus-prefix-in`
+                           (syntax-parse (car prefixes)
+                             [(form _ _ _) #'form]))]))
 
   (define (apply-modifiers mods r-parsed)
     (cond
@@ -253,7 +258,7 @@
   (syntax-parse stx
     #:datum-literals (import-dotted import-root import-spaces singleton)
     [(_ wrt dotted (import-dotted mod-path id) r k)
-     ;; need to handle `import-dooted` in a right-associative way, but it
+     ;; need to handle `import-dotted` in a right-associative way, but it
      ;; was parsed as left-associative
      (define (make-id after-mp id)
        (datum->syntax (extract-mod-path after-mp) (syntax-e id) id id))
@@ -363,6 +368,10 @@
                 [(space (~and mp (singleton id as-id)))
                  (define-values (prefix ignored-open-id)
                    (extract-prefix+open-id #'mp #'r #:require-identifier? #f)) ; `as` "prefix" is really a rename
+                 (when (eq? '#:none (syntax-e prefix))
+                   (raise-syntax-error 'import
+                                       "cannot suppress a dotted import"
+                                       prefix))
                  (cond
                    [(syntax-e prefix)
                     (cond
@@ -553,7 +562,7 @@
      (values
       #`(begin
           ;; non-exposed
-          #,@(if (syntax-e prefix)
+          #,@(if (identifier? prefix)
                  #`(#,@(cond
                          [as-is?
                           (let ([new-id (in-name-root-space
@@ -783,10 +792,18 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       [(_ name::name)
-        (datum->syntax req
-                       (list #'rhombus-prefix-in req #'name.name #f)
-                       req)]))))
+       [(form-id (~and kw #:none))
+        (datum->syntax #f
+                       (list (relocate-span #'rhombus-prefix-in (list #'form-id #'kw))
+                             req
+                             #'kw
+                             #f))]
+       [(form-id name::name)
+        (datum->syntax #f
+                       (list (relocate-span #'rhombus-prefix-in (list #'form-id #'name.name))
+                             req 
+                             #'name.name
+                             #f))]))))
 
 (begin-for-syntax
   (define-syntax-class :as-id
@@ -870,13 +887,15 @@
      (syntax-parse stx
        #:datum-literals (block group)
        [(_ #:scope_like id:identifier)
-        (datum->syntax req
-                       (list #'rhombus-prefix-in req #f #'id)
-                       req)]
-       [(_)
-        (datum->syntax req
-                       (list #'rhombus-prefix-in req #f #f)
-                       req)]))))
+        (datum->syntax #f (list (relocate-span #'rhombus-prefix-in (syntax->list stx))
+                                req
+                                #f
+                                #'id))]
+       [(form-id)
+        (datum->syntax #f (list (relocate* #'rhombus-prefix-in #'form-id)
+                                req
+                                #f
+                                #f))]))))
 
 (define-import-syntax expose
   (import-modifier-block
