@@ -8,7 +8,7 @@
 (define-syntax (req stx)
   (syntax-case stx ()
     [(_ current-report-configuration)
-     (if #t ;; FIXME when there's a version that supports configuration: (version<? (version) "8.9.0.5")
+     (if (version<? (version) "8.9.0.5")
          #'(define current-report-configuration void)
          #'(require (rename-in syntax/parse/report-config
                                [current-report-configuration current-report-configuration])))]))
