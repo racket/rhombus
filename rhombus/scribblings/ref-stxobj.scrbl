@@ -56,7 +56,8 @@ Metadata for a syntax object can include a source location and the raw
   [stx.unwrap_op(), Syntax.unwrap_op(stx)]
   [stx.unwrap_group(), Syntax.unwrap_group(stx)]
   [stx.unwrap_sequence(), Syntax.unwrap_sequence(stx)]
-  [stx.strip(), Syntax.strip(stx)]
+  [stx.strip_scopes(), Syntax.strip_scopes(stx)]
+  [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
   [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
   [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
   [stx.equal_binding(stx2, #,(more_args)), Syntax.equal_binding(stx, stx2, #,(more_args))]
@@ -637,6 +638,18 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
+@doc(
+  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Syntax) = #false) :: Syntax
+){
+
+ Composes @rhombus(Syntax.make) and @rhombus(Symbol.from_string).
+
+@examples(
+  Syntax.make_id("hello" +& 7, 'here')
+)
+
+}
+
 
 @doc(
   fun Syntax.unwrap(stx :: Syntax)
@@ -710,11 +723,21 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.strip(stx :: Syntax) :: Syntax
+  fun Syntax.strip_scopes(stx :: Syntax) :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except
  that all binding scopes are removed.
+
+}
+
+@doc(
+  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Syntax) :: Syntax
+){
+
+ Returns a syntax object that is the same as @rhombus(stx), except that
+ scopes on all parts of @rhombus(stx) are changed to match the immediate
+ scopes of @rhombus(like_stx).
 
 }
 

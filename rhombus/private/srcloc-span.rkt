@@ -56,9 +56,10 @@
                          (if (and (srcloc-position new-loc)
                                   (srcloc-span new-loc)
                                   (srcloc-position loc))
-                             (- (+ (srcloc-position new-loc)
-                                   (srcloc-span new-loc))
-                                (srcloc-position loc))
+                             (max (- (+ (srcloc-position new-loc)
+                                        (srcloc-span new-loc))
+                                     (srcloc-position loc))
+                                  0)
                              (srcloc-span loc)))
                  loc)
              (if empty-raw?

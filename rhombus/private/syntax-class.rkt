@@ -131,7 +131,7 @@
      #f]
     [else
      (define-values (patterns attributess)
-       (for/lists (patterns a<ttributess) ([alt-stx (in-list alts)])
+       (for/lists (patterns attributess) ([alt-stx (in-list alts)])
          (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
      (define attributes (intersect-attributes stx attributess fields-ht swap-root))
      (cond

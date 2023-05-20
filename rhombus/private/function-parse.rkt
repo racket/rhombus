@@ -1024,7 +1024,7 @@
        (define extra-arg-ids (generate-temporaries extra-args))
        #`(let (#,@(for/list ([extra-arg-id (in-list extra-arg-ids)]
                              [extra-arg (in-list extra-args)])
-                    #`[#,extra-arg-id extra-arg])
+                    #`[#,extra-arg-id #,extra-arg])
                #,@(for/list ([arg (in-list args)])
                     #`[#,(car arg) #,(caddr arg)]))
              #,(let ([lists? (for/or ([arg (in-list args)])
@@ -1135,3 +1135,6 @@
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
+
+(begin-for-syntax
+ (set-parse-function-call! parse-function-call))

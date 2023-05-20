@@ -71,11 +71,13 @@
    make_op
    make_group
    make_sequence
+   make_id
    unwrap
    unwrap_op
    unwrap_group
    unwrap_sequence
-   strip
+   strip_scopes
+   replace_scopes
    relocate
    relocate_span
    equal_binding
@@ -107,11 +109,19 @@
 
 ;; ----------------------------------------
 
+(define (extract-ctx who ctx-stx)
+  (and ctx-stx
+       (begin
+         (unless (syntax? ctx-stx)
+           (raise-argument-error* who rhombus-realm "maybe(Syntax)" ctx-stx))
+         (unpack-term ctx-stx who #f))))
+
 (define (do-make who v ctx-stx tail? group?)
   ;; assume that any syntax objects are well-formed, while list structure
   ;; needs to be validated
+  (define ctx-stx-t (extract-ctx who ctx-stx))
   (define (invalid)
-    (raise-arguments-error* 'Syntax.make rhombus-realm
+    (raise-arguments-error* who rhombus-realm
                             (if group?
                                 "invalid as a shrubbery group representation"
                                 (if tail?
@@ -188,7 +198,7 @@
       [(syntax? v) (or (unpack-term v #f #f)
                        (invalid))]
       [else v]))
-  (datum->syntax ctx-stx (if group? (group v) (loop v tail?))))
+  (datum->syntax ctx-stx-t (if group? (group v) (loop v tail?))))
 
 (define/arity (make v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
@@ -218,6 +228,13 @@
   (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
   (pack-multi (for/list ([e (in-list v)])
                 (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
+
+(define/arity (make_id str ctx)
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (unless (string? str)
+    (raise-argument-error* 'Syntax.make_id rhombus-realm "StringView" str))
+  (datum->syntax (extract-ctx 'Syntax.make_id ctx)
+                 (string->symbol str)))
 
 (define/arity (unwrap v)
   (cond
@@ -263,12 +280,27 @@
     [else
      (syntax->list (unpack-multi-tail v 'Syntax.unwrap_sequence #f))]))
 
-(define/arity (strip v)
+(define/arity (strip_scopes v)
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (cond
     [(not (syntax? v))
-     (raise-argument-error* 'Syntax.strip rhombus-realm "Syntax" v)]
+     (raise-argument-error* 'Syntax.strip_scopes rhombus-realm "Syntax" v)]
     [else
      (strip-context v)]))
+
+(define/arity (replace_scopes v ctx)
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (unless (syntax? v)
+    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" v))
+  (unless (syntax? ctx)
+    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" ctx))
+  (replace-context ctx v))
+
+(define replace_scopes_method
+  (lambda (v)
+    (let ([replace_scopes (lambda (ctx)
+                            (replace_scopes v ctx))])
+      replace_scopes)))
 
 (define/arity (relocate stx ctx-stx-in)
   #:static-infos ((#%call-result #,syntax-static-infos))
@@ -324,7 +356,8 @@
         'unwrap_op (method1 unwrap_op)
         'unwrap_group (method1 unwrap_group)
         'unwrap_sequence (method1 unwrap_sequence)
-        'strip (method1 strip)
+        'strip_scopes (method1 strip_scopes)
+        'replace_scopes replace_scopes_method
         'relocate relocate_method
         'relocate_span relocate_span_method
         'srcloc (method1 syntax-srcloc)
@@ -341,7 +374,8 @@
         [(unwrap_op) (0ary #'unwrap_op)]
         [(unwrap_group) (0ary #'unwrap_group)]
         [(unwrap_sequence) (0ary #'unwrap_sequence)]
-        [(strip) (0ary #'strip)]
+        [(strip_scopes) (0ary #'strip_scopes)]
+        [(replace_scopes) (nary #'replace_scopes 2 #'replace_scopes)]
         [(relocate) (nary #'relocate_method 2 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
         [(srcloc) (0ary #'get-srcloc)]

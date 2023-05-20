@@ -149,12 +149,14 @@
                    (hash-set ht sym (merge-ext+int+rule
                                      ext-ext-id
                                      (hash-ref ht sym #f)
-                                     (make-ext+int+rule ext-ext-id id spaces-mode spaces)))]
+                                     (make-ext+int+rule ext-ext-id id '#:only (hasheq space-sym
+                                                                                      (datum->syntax #f space-sym)))))]
                   [else ht])]
                [else ht]))]))
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
-                                      only-spaces-out except-spaces-out all-spaces-defined-out)
+                                      only-spaces-out except-spaces-out all-spaces-defined-out
+                                      except-out)
         [(combine-out ex ...)
          (for/fold ([ht ht]) ([ex (in-list (syntax->list #'(ex ...)))])
            (loop ex ht except-ht spaces spaces-mode))]
@@ -224,6 +226,9 @@
            (cond
              [(null? use-spaces) ht]
              [else (add-name-at-all-spaces ht id id use-spaces '#:only)]))]
+        [(except-out starting-e exclude-e)
+         (define all-except-ht (loop #'exclude-e except-ht #hasheq() spaces spaces-mode))
+         (loop #'starting-e ht all-except-ht spaces spaces-mode)]
         [(all-from-out mod-path)
          (raise-syntax-error #f
                              "module re-export not supported in a namespace context"
@@ -313,7 +318,7 @@
      (define (add-spaces-to-table int-id spaces space-table)
        (for/fold ([ht space-table]) ([sp (in-list spaces)])
          (hash-set ht sp int-id)))
-     (define (add-to-table int-id space+ids space-table)
+     (define (add-to-table space-table space+ids)
        (for/fold ([ht space-table]) ([space+id (in-list space+ids)])
          (hash-set ht (car space+id) (cadr space+id))))
      (define (add-table space-table rule)
@@ -326,6 +331,8 @@
               (cond
                 [(null? old) (add-table space-table new)]
                 [(null? new) (add-table space-table old)]
+                [(eq? (car new) '#:space)
+                 (loop old (cddr new) (add-to-table space-table (cadr new)))]
                 [(eq? (car old) '#:except)
                  (cond
                    [(eq? (car new) '#:except)
@@ -362,8 +369,4 @@
                       [else
                        (loop new (cddr old) (add-spaces-to-table old-int (cdr old) space-table))])]
                    [else (loop new old space-table)])]
-                [else
-                 (cond
-                   [(eq? (car new) '#:space)
-                    (loop old (cddr new) (add-to-table space-table (cadr new)))]
-                   [else (loop new old space-table)])])))]))
+                [else (loop new old space-table)])))]))

@@ -154,7 +154,7 @@
             [(null? args)
              (raise-syntax-error #f "empty repetition" #'head)]
             [(pair? (cdr args))
-             (raise-syntax-error #f "too many repetions" #'head)]
+             (raise-syntax-error #f "too many repetitions" #'head)]
             [else
              (syntax-parse (car args)
                [r::repetition (values #'r.parsed #'tail)])]))]))))

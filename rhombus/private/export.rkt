@@ -27,7 +27,8 @@
          "nestable-declaration.rkt"
          "dotted-sequence-parse.rkt"
          (submod "module-path.rkt" for-import-export)
-         "space-parse.rkt")
+         "space-parse.rkt"
+         "parens.rkt")
 
 (provide export
 
@@ -47,12 +48,24 @@
 
 (module+ for-meta
   (provide (for-syntax export-modifier
-                       in-export-space)
-           define-export-syntax))
+                       in-export-space
+                       :export
+                       :export-prefix-op+form+tail
+                       :export-infix-op+form+tail
+                       :export-modifier)
+           define-export-syntax)
+  (begin-for-syntax
+    (provide (property-out export-prefix-operator)
+             (property-out export-infix-operator)
+             export-prefix+infix-operator)))
 
 (begin-for-syntax
   (property export-prefix-operator prefix-operator)
   (property export-infix-operator infix-operator)
+
+  (struct export-prefix+infix-operator (prefix infix)
+    #:property prop:export-prefix-operator (lambda (self) (export-prefix+infix-operator-prefix self))
+    #:property prop:export-infix-operator (lambda (self) (export-prefix+infix-operator-infix self)))
 
   (property export-modifier transformer)
 
@@ -67,6 +80,7 @@
 
   (define-rhombus-enforest
     #:syntax-class :export
+    #:prefix-more-syntax-class :export-prefix-op+form+tail
     #:infix-more-syntax-class :export-infix-op+form+tail
     #:desc "export"
     #:operator-desc "export operator"
@@ -86,17 +100,24 @@
                           ((transformer-proc mod) (transform-in ex) stx))))))
 
   (define-rhombus-transform
-    #:syntax-class (:export-modifier req)
+    #:syntax-class (:export-modifier parsed-ex)
     #:desc "export modifier"
     #:in-space in-export-space
-    #:transformer-ref (make-export-modifier-ref transform-in req))
+    #:transformer-ref (make-export-modifier-ref transform-in (syntax-parse parsed-ex
+                                                               #:datum-literals (parsed)
+                                                               [(parsed req) #'req]
+                                                               [_ (raise-arguments-error
+                                                                   'export_meta.ParsedModifier
+                                                                   "given export to modify is not parsed"
+                                                                   "base export" parsed-ex)]))
+    #:accept-parsed? #t)
 
   (define-syntax-class :modified-export
     #:datum-literals (group block)
     (pattern (group mod-id:identifier mod-arg ... (block exp ...))
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
-             #:with (~var ex (:export-modifier #'(combine-out e.parsed ...))) #'(group mod-id mod-arg ...)
+             #:with (~var ex (:export-modifier #'(parsed (combine-out e.parsed ...)))) #'(group mod-id mod-arg ...)
              #:attr parsed #'ex.parsed)
     (pattern e0::export
              #:attr parsed #'e0.parsed))
@@ -107,7 +128,7 @@
       [else
        (syntax-parse (car mods)
          #:datum-literals (group)
-         [(~var ex (:export-modifier e-parsed))
+         [(~var ex (:export-modifier #`(parsed #,e-parsed)))
           (apply-modifiers (cdr mods) #'ex.parsed)]
          [(group form . _)
           (raise-syntax-error #f
@@ -163,11 +184,13 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (block)
-       [(_ (block r::renaming ...)
-           . tail)
+       [(_ (_::block r::renaming ...))
         (values #`(all-spaces-out [r.int-name r.ext-name] ...)
-                #'tail)]))))
+                #'())]
+       [(_ t ...)
+        #:with r::renaming #'(group t ...)
+        (values #`(all-spaces-out [r.int-name r.ext-name])
+                #'())]))))
 
 (define-export-syntax except
   (export-modifier
@@ -176,7 +199,8 @@
        #:datum-literals (block)
        [(_ (block e::export ...))
         #`(except-out #,ex e.parsed ...)]
-       [(_ e::export)
+       [(_ term ...)
+        #:with e::export #'(group term ...)
         #`(except-out #,ex e.parsed)]))))
      
 (define-export-syntax meta
@@ -201,18 +225,30 @@
 (define-export-syntax only_space
   (export-modifier
    (lambda (ex stx)
+     (define (build spaces-stx)
+       (define spaces (parse-space-names stx spaces-stx))
+       (datum->syntax ex (list* (syntax/loc #'form only-spaces-out) ex spaces) ex))
      (syntax-parse stx
+       #:datum-literals (group)
        [(form space ...)
-        (define spaces (parse-space-names stx #'((space ...))))
-        (datum->syntax ex (list* (syntax/loc #'form only-spaces-out) ex spaces) ex)]))))
+        (build #'((space ...)))]
+       [(form (_::block (group space ...)
+                        ...))
+        (build #'((space ...) ...))]))))
 
 (define-export-syntax except_space
   (export-modifier
    (lambda (ex stx)
+     (define (build spaces-stx)
+       (define spaces (parse-space-names stx spaces-stx))
+       (datum->syntax ex (list* (syntax/loc #'form except-spaces-out) ex spaces) ex))
      (syntax-parse stx
+       #:datum-literals (group)
        [(form space ...)
-        (define spaces (parse-space-names stx #'((space ...))))
-        (datum->syntax ex (list* (syntax/loc #'form except-spaces-out) ex spaces) ex)]))))
+        (build #'((space ...)))]
+       [(form (_::block (group space ...)
+                        ...))
+        (build #'((space ...) ...))]))))
 
 (define-export-syntax names
   (export-prefix-operator
@@ -333,7 +369,7 @@
 
 (define-export-syntax |.|
   (export-infix-operator
-   #'rename
+   #'|.|
    '((default . stronger))
    'macro
    (lambda (form stx)

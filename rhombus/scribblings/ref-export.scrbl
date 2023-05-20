@@ -98,6 +98,7 @@
   expo.macro 'rename:
                 $int_id_or_op #,(@rhombus(as, ~expo)) $ext_id_or_op
                 ...'
+  expo.macro 'rename $int_id_or_op #,(@rhombus(as, ~expo)) $ext_id_or_op'
 ){
 
  For each @rhombus(as, ~expo) group, exports
@@ -165,8 +166,8 @@
                   ...'
 ){
 
- Modifies an export to remove the identifiers that would be exported
- by the @rhombus(export)s.
+ Modifies an export to remove the identifiers with the same external
+ names as those that would be exported by the @rhombus(export)s.
 
 }
 

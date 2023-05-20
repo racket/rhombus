@@ -18,7 +18,8 @@
          "dot-parse.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
-         "mutability.rkt")
+         "mutability.rkt"
+         "pack.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -59,7 +60,12 @@
     [(string? a) (string->immutable-string a)]
     [(symbol? a) (symbol->immutable-string a)]
     [(keyword? a) (keyword->immutable-string a)]
-    [(identifier? a) (symbol->immutable-string (syntax-e a))]
+    [(and (syntax? a)
+          (let ([t (unpack-term a #f #f)])
+            (and (identifier? t)
+                 t)))
+     => (lambda (t)
+          (symbol->immutable-string (syntax-e t)))]
     [else
      (define o (open-output-string))
      (rhombus:display a o)
@@ -77,6 +83,7 @@
    to_int
    to_number
    [substring sub_string]
+   [append string-append-immutable]
    upcase
    downcase
    foldcase
@@ -160,6 +167,10 @@
         'substring (lambda (str)
                      (lambda (start [end (and (string? str) (string-length str))])
                        (string->immutable-string (substring str start end))))
+        'append (lambda (str)
+                  (let ([append (lambda strs
+                                  (apply string-append-immutable str strs))])
+                    append))
         'upcase (method1 upcase)
         'downcase (method1 downcase)
         'foldcase (method1 foldcase)
@@ -194,6 +205,7 @@
         [(to_number) (0ary #'to_number)]
         [(to_string) (0ary #'String.to_string)]
         [(substring) (nary #'sub_string 6 #'sub_string string-static-infos)]
+        [(append) (nary #'string-append-immutable -2 #'string-append-immutable string-static-infos)]
         [(upcase) (0ary #'upcase)]
         [(downcase) (0ary #'downcase)]
         [(foldcase) (0ary #'foldcase)]

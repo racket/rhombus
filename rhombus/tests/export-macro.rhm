@@ -1,0 +1,42 @@
+#lang rhombus/and_meta
+
+check:
+  expo.macro 'this_one ($id)':
+    id
+  namespace n:
+    export: this_one (x)
+    def x = 10
+  n.x
+  ~is 10
+
+check:
+  expo.modifier 'not_hello':
+    ~op_stx self
+    'except hello'
+  namespace n:
+    def hello = "hello"
+    def hi = "hi"
+    export:
+      all_defined ~scope_like self: not_hello
+  n.hi
+  ~is "hi"
+
+check:
+  expo.macro 'do $(e :: expo_meta.Parsed) $()': e
+  namespace n:
+    def hi = "hi"
+    export: do rename hi as hello
+  n.hello
+  ~is "hi"
+
+check:
+  expo.modifier 'do $tail ...':
+    ~export exp
+    def '$(m :: expo_meta.ParsedModifier(exp))' = '$tail ...'
+    m
+  namespace n:
+    def hi = "hi"
+    def hello = "hello"
+    export: hi hello: do except hello
+  n.hi
+  ~is "hi"

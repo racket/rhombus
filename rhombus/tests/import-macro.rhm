@@ -1,0 +1,45 @@
+#lang rhombus/and_meta
+
+block:
+  impo.macro 'rkt $(id :: Identifier) $('/ $(next :: Identifier)') ...':
+    def str = to_string(id).append("/" +& next, ..., ".rkt")
+    'lib($(Syntax.make(str, id)))'
+  check:
+    import: rkt racket/base
+    base.car([1, 2])
+    ~is 1
+  check:
+    import: rkt racket/base as r
+    r.car([10, 2])
+    ~is 10
+
+check:
+  impo.macro 'rkt $(id :: Identifier)': 'lib("racket/main.rkt") as $id'
+  import: rkt r
+  r.car([1, 2])
+  ~is 1
+                                       
+check:
+  impo.modifier 'just $id':
+    'only: $id'
+  import:
+    lib("racket/base.rkt"):
+      just car
+  base.car([1, 2])
+  ~is 1
+
+check:
+  impo.macro 'do $(i :: impo_meta.Parsed) $()': i
+  import: do lib("racket/base.rkt") as r
+  r.car([1, 2])
+  ~is 1
+                                       
+check:
+  impo.modifier 'do $tail ...':
+    ~import imp
+    def '$(m :: impo_meta.ParsedModifier(imp))' = '$tail ...'
+    m
+  import:
+    lib("racket/base.rkt") do expose car
+  car([1, 2])
+  ~is 1

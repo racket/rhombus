@@ -229,7 +229,7 @@
        (append
         (map cons
              (syntax->list #'(space-id ...))
-             (syntax->list #'(space ...)))
+             (map syntax-e (syntax->list #'(space ...))))
         (loop #'rule-rest))]
       [(#:only) ; shortcut for zero spaces
        null]

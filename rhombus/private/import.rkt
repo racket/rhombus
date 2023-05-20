@@ -66,8 +66,16 @@
 (module+ for-meta
   (provide (for-syntax import-modifier
                        import-modifier-block
-                       in-import-space)
-           define-import-syntax))
+                       in-import-space
+                       :import
+                       :prefix-op+import+tail
+                       :infix-op+import+tail
+                       :import-modifier)
+           define-import-syntax)
+  (begin-for-syntax
+    (provide (property-out import-prefix-operator)
+             (property-out import-infix-operator)
+             import-prefix+infix-operator)))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
@@ -99,6 +107,8 @@
 
   (define-rhombus-enforest
     #:syntax-class :import
+    #:prefix-more-syntax-class :prefix-op+import+tail
+    #:infix-more-syntax-class :infix-op+import+tail
     #:desc "import"
     #:operator-desc "import operator"
     #:in-space in-import-space
@@ -118,10 +128,17 @@
                           ((transformer-proc mod) (transform-in req) stx))))))
 
   (define-rhombus-transform
-    #:syntax-class (:import-modifier req)
+    #:syntax-class (:import-modifier parsed-req)
     #:desc "import modifier"
     #:in-space in-import-space
-    #:transformer-ref (make-import-modifier-ref transform-in req))
+    #:transformer-ref (make-import-modifier-ref transform-in (syntax-parse parsed-req
+                                                               #:datum-literals (parsed)
+                                                               [(parsed req) #'req]
+                                                               [_ (raise-arguments-error
+                                                                   'import_meta.ParsedModifier
+                                                                   "given import to modify is not parsed"
+                                                                   "base import" parsed-req)]))
+    #:accept-parsed? #t)
 
   (define (extract-prefixes r #:require-identifier? require-identifier?)
     (let extract ([r r] [accum null])
@@ -206,7 +223,7 @@
       [else
        (syntax-parse (car mods)
          #:datum-literals (group)
-         [(~var im (:import-modifier r-parsed))
+         [(~var im (:import-modifier #`(parsed #,r-parsed)))
           (apply-modifiers (cdr mods) #'im.parsed)]
          [(group form . _)
           (raise-syntax-error #f
@@ -445,7 +462,7 @@
             (values (and new-r
                          #`(tag m #,new-r))
                     #'tag)]
-           [((~or only-in except-in expose-in renam<e-in) mp . _)
+           [((~or only-in except-in expose-in rename-in) mp . _)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values #f meta)]
            [_ (error "oops ~s" r)])))
@@ -868,7 +885,7 @@
        [(form-id name::name)
         (datum->syntax #f
                        (list (relocate-span #'rhombus-prefix-in (list #'form-id #'name.name))
-                             req 
+                             req
                              #'name.name
                              #f))]))))
 

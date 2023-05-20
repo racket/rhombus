@@ -6,7 +6,8 @@
          "parens.rkt"
          "static-info.rkt")
 
-(provide (for-syntax dot-parse-dispatch)
+(provide (for-syntax dot-parse-dispatch
+                     set-parse-function-call!)
          method1
          method*)
 
@@ -17,11 +18,11 @@
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
         #:datum-literals ()
-        [((_::parens g ...) . new-tail)
+        [((p-tag::parens g ...) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (cond
            [(bitwise-bit-set? mask (length gs))
-            (success-k (apply n-k (syntax->list #'((rhombus-expression g) ...)))
+            (success-k (n-k #'(p-tag g ...))
                        #'new-tail)]
            [else
             (if more-static?
@@ -34,9 +35,9 @@
 
     (define (0ary id [static-infos #'()])
       (ary 1
-           (lambda () (wrap-static-info*
-                       #`(#,id #,lhs)
-                       static-infos))
+           (lambda (no-args) (wrap-static-info*
+                              #`(#,id #,lhs)
+                              static-infos))
            (lambda () (wrap-static-info*
                        #`(let ([#,id (lambda () (#,id #,lhs))])
                            #,id)
@@ -44,9 +45,13 @@
 
     (define (nary id mask direct-id [static-infos #'()])
       (ary mask
-           (lambda args (wrap-static-info*
-                         #`(#,direct-id #,lhs . #,args)
-                         static-infos))
+           (lambda (args) (wrap-static-info*
+                           (let ()
+                             (define-values (proc tail)
+                               (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
+                                                    #:static? more-static?))
+                             proc)
+                           static-infos))
            (lambda () (wrap-static-info*
                        #`(let ([#,direct-id (lambda () (#,id #,lhs))])
                            #,direct-id)
@@ -65,3 +70,7 @@
   (lambda (v)
     (lambda args
       (apply proc v args))))
+
+(define-for-syntax parse-function-call #f)
+(define-for-syntax (set-parse-function-call! proc)
+  (set! parse-function-call proc))
