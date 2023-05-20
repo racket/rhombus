@@ -62,7 +62,7 @@
 
 (define-binding-syntax List.cons
   (binding-transformer
-   (make-composite-binding-transformer "cons" #'list? (list #'car #'cdr) (list #'() list-static-infos))))
+   (make-composite-binding-transformer "cons" #'nonempty-list? (list #'car #'cdr) (list #'() list-static-infos))))
 
 (define (List.cons a d)
   (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))

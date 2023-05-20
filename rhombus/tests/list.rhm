@@ -120,3 +120,9 @@ check:
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
   [1, 2].append(3) ~raises "contract violation"
+
+check:
+  match []
+  | List.cons(hd,tl): "no"
+  | []: "empty"
+  ~is "empty"
