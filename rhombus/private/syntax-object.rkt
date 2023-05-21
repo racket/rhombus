@@ -330,25 +330,31 @@
   (unless (syntax? stx) (raise-argument-error* 'Syntax.to_code_string rhombus-realm "Syntax" stx))
   (string->immutable-string (shrubbery-syntax->string stx)))
 
+(define (extract-id who stx)
+  (define s (unpack-term stx #f #f))
+  (unless (identifier? s)
+    (raise-argument-error* who rhombus-realm "Identifier" stx))
+  s)
+
 (define/arity equal_binding
   (case-lambda
-    [(id1 id2) (free-identifier=? id1 id2)]
-    [(id1 id2 phase1) (free-identifier=? id1 id2 phase1)]
-    [(id1 id2 phase1 phase2) (free-identifier=? id1 id2 phase1 phase2)]))
+    [(id1 id2) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2))]
+    [(id1 id2 phase1) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2) phase1)]
+    [(id1 id2 phase1 phase2) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2) phase1 phase2)]))
 
 (define/arity equal_name_and_scopes
   (case-lambda
-    [(id1 id2) (bound-identifier=? id1 id2)]
-    [(id1 id2 phase) (bound-identifier=? id1 id2 phase)]))
+    [(id1 id2) (bound-identifier=? (extract-id 'Syntax.equal_name_and_scopes id1) (extract-id 'Syntax.equal_name_and_scopes id2))]
+    [(id1 id2 phase) (bound-identifier=? (extract-id 'Syntax.equal_name_and_scopes id1) (extract-id 'Syntax.equal_name_and_scopes id2) phase)]))
 
 (define (equal_binding_method id1)
   (let ([equal_binding (lambda (id2 [phase1 (syntax-local-phase-level)] [phase2 phase1])
-                            (free-identifier=? id1 id2 phase1 phase2))])
+                         (equal_binding id1 id2 phase1 phase2))])
     equal_binding))
 
 (define (equal_name_and_scopes_method id1)
   (let ([equal_name_and_scopes (lambda (id2 [phase (syntax-local-phase-level)])
-                                    (bound-identifier=? id1 id2 phase))])
+                                 (equal_name_and_scopes id1 id2 phase))])
     equal_name_and_scopes))
 
 (define syntax-method-table
@@ -362,7 +368,7 @@
         'relocate_span relocate_span_method
         'srcloc (method1 syntax-srcloc)
         'to_code_string (method1 to_code_string)
-        'equal_binding (method1 equal_binding)
+        'equal_binding equal_binding_method
         'equal_name_and_scopes (method1 equal_name_and_scopes)))
 
 (define-syntax syntax-instance

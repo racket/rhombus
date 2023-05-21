@@ -136,7 +136,7 @@ syntax class.
 )
 
 The @rhombus($)-escaped variables in a syntax class's patterns bind to
-matched syntax objects as attributes of the class. They can be accessed
+matched syntax objects as fields of the class. They can be accessed
 from a pattern variable using dot notation.
 
 @demo(
@@ -149,7 +149,7 @@ from a pattern variable using dot notation.
     right_operand 8 - 4
 )
 
-An attribute is accessible only when it appears in every pattern
+A field is accessible only when it appears in every pattern
 alternative of a syntax class.
 
 @demo(
@@ -164,7 +164,7 @@ alternative of a syntax class.
     ~error: a.z
 )
 
-In other words, the attributes of a syntax class are defined by the intersection 
+In other words, the fields of a syntax class are defined by the intersection 
 of all escaped pattern variables found in the pattern alternatives. That's more
 flexible than @rhombus(||, ~unquote_bind), which does not bind identifiers
 from either of its arguments.

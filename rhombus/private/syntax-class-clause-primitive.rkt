@@ -3,8 +3,11 @@
                      syntax/parse/pre
                      "tag.rkt")
          "syntax-class-clause.rkt"
+         (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "op-literal.rkt"
+         "pack.rkt")
 
 (provide (for-space rhombus/syntax_class_clause
                     pattern
@@ -15,11 +18,16 @@
                     root_swap))
 
 (module+ for-class
-  (provide (for-syntax extract-clauses)))
+  (begin-for-syntax
+    (provide extract-clauses
+             (struct-out declared-field))))
 
-(define-for-syntax (extract-clauses stx clauses)
+(define-for-syntax (extract-clauses stx clauses patterns)
+  (define init-options (if patterns
+                           (hasheq '#:pattern patterns)
+                           #hasheq()))
   (define options
-    (for/fold ([options #hasheq()]) ([clause (in-list clauses)])
+    (for/fold ([options init-options]) ([clause (in-list clauses)])
       (define (check what)
         (syntax-parse clause
           [(kw (~and orig-stx (_ id . _)) . _)
@@ -30,6 +38,11 @@
                                  #'orig-stx))]))
       (syntax-parse clause
         [(#:pattern _ alts)
+         (when patterns
+           (raise-syntax-error #f
+                               (string-append "found pattern clause, but patterns also supplied directly as alternatives")
+                               stx
+                               #'orig-stx))
          (check "pattern")
          (hash-set options '#:pattern (syntax->list #'alts))]
         [(#:description _ e)
@@ -79,21 +92,66 @@
        [(_ e ...)
         #`(#:description #,stx (rhombus-expression e ...))]))))
 
+(begin-for-syntax
+  (struct declared-field (id depth unpack*-id) #:prefab)
+  (define-syntax-class :kind-id
+    (pattern id:identifier
+             #:when (free-identifier=? (in-syntax-class-clause-space #'id)
+                                       (in-syntax-class-clause-space #'kind)))))
+
 (define-syntax-class-clause-syntax fields
   (syntax-class-clause-transformer
    (lambda (stx)
+     (define (parse-fields field-lines-stx)
+       (define ht (for/fold ([ht #hasheq()]) ([field-line-stx (in-list (syntax->list field-lines-stx))])
+                    (let loop ([field-line-stx field-line-stx] [ht ht])
+                      (define (one id depth)
+                        (define sym (syntax-e id))
+                        (when (hash-ref ht sym #f)
+                          (raise-syntax-error #f
+                                              "duplicate field name"
+                                              stx
+                                              id))
+                        (define-values (kind rest)
+                          (syntax-parse field-line-stx
+                            #:datum-literals (group)
+                            [(_ (_::block
+                                 ~!
+                                 (group _::kind-id
+                                        (~or
+                                         (_::block
+                                          (group (~and kind (~or #:term #:sequence #:group #:multi #:block))))
+                                         (~and kind (~or #:term #:sequence #:group #:multi #:block))))))
+                             (values #'kind #'())]
+                            [(_ . rest)
+                             (values #'#f #'rest)]))
+                        (define unpack*-id
+                          (case (syntax-e kind)
+                            [(#:term) #'unpack-term*]
+                            [(#:sequence) #'unpack-term-list*]
+                            [(#:group) #'unpack-group*]
+                            [(#:multi) #'unpack-multi*]
+                            [else #'#f]))
+                        (loop rest (hash-set ht sym (declared-field id depth unpack*-id))))
+                      (syntax-parse field-line-stx
+                        #:datum-literals (group)
+                        [() ht]
+                        [(id:identifier . _)
+                         (one #'id 0)]
+                        [((_::brackets g (group _::...-bind)) . _)
+                         (let loop ([g #'g] [depth 1])
+                           (syntax-parse g
+                             #:datum-literals (group)
+                             [(group id:identifier) (one #'id depth)]
+                             [(group (_::brackets g (group _::...-bind)))
+                              (loop #'d (add1 depth))]))]))))
+       #`(#:fields #,stx #,ht))
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ (tag::block (group id:identifier ...) ...))
-        (define ht (for/fold ([ht #hasheq()]) ([id (in-list (syntax->list #'(id ... ...)))])
-                     (define sym (syntax-e id))
-                     (if (hash-ref ht sym #f)
-                         (raise-syntax-error #f
-                                             "duplicate field name"
-                                             stx
-                                             id)
-                         (hash-set ht sym id))))
-        #`(#:fields #,stx #,ht)]))))
+       [(_ (tag::block (group fld ...) ...))
+        (parse-fields #'((fld ...) ...))]
+       [(_ (tag::block fld ...))
+        (parse-fields #'((fld ...)))]))))
 
 (define-syntax-class-clause-syntax root_swap
   (syntax-class-clause-transformer

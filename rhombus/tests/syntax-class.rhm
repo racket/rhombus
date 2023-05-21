@@ -54,7 +54,9 @@ block:
 
 check:
   syntax_class Arithmetic:
-    fields: x y
+    fields:
+      x: kind ~term
+      y
     pattern
     | '$x $op $y'
   match '1+2'
@@ -65,11 +67,35 @@ check:
   ~eval
   syntax_class Arithmetic:
     fields: x y
-    pattern
-    | '$x $op $y'
+  | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
   ~raises "no such field"
+
+check:
+  ~eval
+  syntax_class Arithmetic:
+    fields: [x, ...] y
+  | '$x $op $y'
+  match '1+2'
+  | '$(exp :: Arithmetic)': exp.op
+  ~raises "field implementation does not match declared depth"
+
+check:
+  ~eval
+  syntax_class Arithmetic:
+    fields: y x: kind ~group
+  | '$x $op $y'
+  match '1+2'
+  | '$(exp :: Arithmetic)': exp.op
+  ~raises "field implementation does not match declared kind"
+
+check:
+  syntax_class Arithmetic:
+    kind: ~group
+    fields: x y: kind ~group
+  | '$x $op $(y :: Group)'
+  ~completes
 
 block:
   syntax_class Arithmetic
@@ -198,8 +224,7 @@ check:
 block:
   syntax_class Foo:
     kind: ~group
-    pattern
-    | '$x + $y'
+  | '$x + $y'
   check:
     match '(1 + 2)'
     | '($(f :: Foo))': [f.x, f.y]
@@ -208,8 +233,7 @@ block:
 block:
   syntax_class Foo:
     kind: ~group
-    pattern
-    | '$g'
+  | '$g'
   check:
     match '(1 + 2)'
     | '($(f :: Foo))': f.g
@@ -219,8 +243,7 @@ block:
   check:
     syntax_class Foo:
       kind: ~group
-      pattern
-      | '$x + $y'
+    | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
     ~prints_like ['1', '2']
@@ -230,8 +253,7 @@ block:
     ~eval
     syntax_class Foo:
       kind: ~group
-      pattern
-      | '$x + $y'
+    | '$x + $y'
     match '0 + 1 + 2 + 3'
     | '0 + $(f :: Foo) + 3': [f.x, f.y]
     ~raises "syntax class incompatible with this context"
@@ -239,9 +261,8 @@ block:
 block:
   syntax_class Foo:
     kind: ~multi
-    pattern
-    | '$x + $y
-       $z - $w'
+  | '$x + $y
+     $z - $w'
   check:
     match ': 1 + 2
              3 - 4'
@@ -643,3 +664,19 @@ check:
     pattern
     | '$first $second'
   ~raises "field for root already exists"
+
+
+check:
+  syntax_class.together:
+    syntax_class ModPath:
+      fields:
+        [elem, ...]
+      pattern
+      | '$head':
+          field [elem, ...]: [head]
+      | '$head / $(mp :: ModPath)':
+          field [elem, ...] = [head, mp.elem, ...]
+  match 'a / b / c'
+  | '$(mp :: ModPath)':
+      [mp.elem, ...]
+  ~prints_like ['a', 'b', 'c']

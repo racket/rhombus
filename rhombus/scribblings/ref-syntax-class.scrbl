@@ -1,7 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: 
     "common.rhm" open    
-    "nonterminal.rhm" open
+    "nonterminal.rhm" open:
+      except: pattern
     "macro.rhm")
 
 @(def dots: @rhombus(..., ~bind))
@@ -15,12 +16,11 @@
     rest_id: block id
     syntax_pattern: #%quotes pattern
 
-  defn.macro 'syntax_class $id $maybe_args
-              | $pattern_case
-              | ...'
   defn.macro 'syntax_class $id $maybe_args:
                 $class_clause
-                ...'
+                ...
+              | $pattern_case
+              | ...'
 
   grammar maybe_args:
     ($id_bind, ...)
@@ -32,7 +32,7 @@
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
-    #,(@rhombus(fields, ~syntax_class_clause)): $id ...; ...
+    #,(@rhombus(fields, ~syntax_class_clause)): $field_decl
     #,(@rhombus(root_swap, ~syntax_class_clause)): $id $id
 
   grammar pattern_cases:
@@ -58,16 +58,19 @@
  arguments; an @rhombus(id_bind) is like a @rhombus(kwopt_binding, ~var) for
  @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments
- are visible in @rhombus(clause) bodies.
+ are visible in @rhombus(class_clause) bodies. Use @rhombus(syntax_class.together) to
+ define a syntax class that refers to itself or a group of mutually referential
+ syntax classes.
 
  Syntax forms matched by the syntax class are described by
  @rhombus(pattern_case) alternatives. The
  @rhombus(pattern, ~syntax_class_clause) clause is optional in the sense
  that pattern alternatives can be inlined directly in the
- @rhombus(syntax_class) form, but the @rhombus(pattern, ~syntax_class_clause)
- clause form makes room for additional options as clauses. Each kind of
+ @rhombus(syntax_class) form, in which case @rhombus(pattern, ~syntax_class_clause)
+ must not appear as a clause. Each kind of
  @rhombus(class_clause) alternative can be supplied at most once, and
- @rhombus(pattern, ~syntax_class_clause) is required.
+ @rhombus(pattern, ~syntax_class_clause) is required if no @rhombus(pattern_case)
+ alternatives are supplied inline.
 
  An optional @rhombus(description,  ~syntax_class_clause) clause
  provides a description of the syntax class, which is used to produce
@@ -91,7 +94,11 @@
  are accessible from the class, where variables used in all
  @rhombus(pattern_case)s are otherwise available (as described next).
  Each identifier in @rhombus(fields, ~syntax_class_clause) must be a field name that would be
- made available. A @rhombus(root_swap, ~syntax_class_clause) class moves
+ made available. A @rhombus(fields, ~syntax_class_clause) declaration can also
+ specify the repetition depth and context kind of a field, in which case
+ @rhombus(pattern_case)s must be consistent with the declaration; see
+ @rhombus(fields, ~syntax_class_clause) for more information.
+ A @rhombus(root_swap, ~syntax_class_clause) class moves
  the value of one of the would-be fields to the root while moving the root
  to a fresh feild; see @rhombus(root_swap, ~syntax_class_clause) for more information.
 
@@ -187,6 +194,36 @@
 
 }
 
+@doc(
+  defn.macro 'syntax_class.together:
+                #,(@rhombus(syntax_class)) $stxclass_decl
+                ...'
+){
+
+ Declares syntax classes that can refer to themselves and each other.
+ Unlike a @rhombus(syntax_class) form in other contexts, each
+ @rhombus(syntax_class) form within @rhombus(syntax_class.together) is
+ required to declare its fields with @rhombus(field, ~syntax_class_clause),
+ otherwise no fields are available from the syntax class.
+
+@examples(
+  ~defn:
+    syntax_class.together:
+      syntax_class ModPath:
+        fields: [elem, ...]
+        pattern
+        | '$head':
+            field [elem, ...]: [head]
+        | '$head / $(mp :: ModPath)':
+            field [elem, ...] = [head, mp.elem, ...]
+  ~repl:
+    match 'a / b / c'
+    | '$(mp :: ModPath)':
+        [mp.elem, ...]
+)
+
+}
+
 
 @doc(
   ~nonterminal:
@@ -239,12 +276,31 @@
 
 @doc(
   syntax_class_clause.macro 'fields:
-                               $id ...
+                               $spec ...
                                ...'
+
+  grammar spec:
+    $id_maybe_rep
+    $id_maybe_rep: #,(@rhombus(kind, ~syntax_class_clause)) $kind_decl
+
+  grammar id_maybe_rep:
+    $id
+    [$id_maybe_rep, $ellipsis]
+
+  grammar ellipsis:
+    #,(dots)
 ){
 
  Limits the set of fields that are provided by a syntax class to the
- listed @rhombus(id)s. See @rhombus(syntax_class).
+ listed @rhombus(id)s. See @rhombus(syntax_class). A field's repetition
+ depth is declared by wrapping it within @brackets with
+ @rhombus(..., ~bind) like a repetition binding.
+
+ If a @rhombus(kind, ~syntax_class_clause) is not declared for a field
+ identifier, then the context kind is inferred from patterns within the
+ syntax class. If @rhombus(kind, ~syntax_class_clause) is declared, then
+ it must match the context kind that would be inferred for the field from
+ all patterns.
 
 }
 

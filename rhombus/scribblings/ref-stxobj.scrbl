@@ -374,7 +374,7 @@ Metadata for a syntax object can include a source location and the raw
  while @rhombus(||, ~unquote_bind) binds none of them.
 
  Independent matching for @rhombus(&&, ~unquote_bind) means that in a
- term context, combinding a variable binding with a splcing multi-term
+ term context, combinding a variable binding with a splicing multi-term
  binding will @emph{not} enable a multi-term splicing match for the
  variable; instead, the pattern will fail to match a multi-term splice.
 

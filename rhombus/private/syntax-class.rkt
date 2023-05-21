@@ -4,6 +4,7 @@
                      "tag.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
+         "provide.rkt"
          (only-in "binding.rkt" in-binding-space)
          (submod "quasiquote.rkt" convert)
          (submod "quasiquote.rkt" shape-dispatch)
@@ -23,38 +24,48 @@
          (rename-in "ellipsis.rkt"
                     [... rhombus...]))
 
-(provide syntax_class)
+(provide (for-spaces (#f
+                      rhombus/namespace)
+                     syntax_class))
 
 (module+ for-pattern-clause
   (provide (for-syntax parse-pattern-clause)))
 
-(define-for-syntax (make-class-definer define-class-id)
-  (definition-transformer
-    (lambda (stx)
-      (syntax-parse stx
-        ;; immediate-patterns shorthand
-        [(form-id class-name args::class-args (_::alts alt ...))
-         (build-syntax-class stx (syntax->list #'(alt ...))
-                             #:define-class-id define-class-id
-                             #:class/inline-name #'class-name
-                             #:class-formals #'args.formals
-                             #:class-arity #'args.arity)]
-        ;; Patterns within `pattern`
-        [(form-id class-name args::class-args
-                  ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
-                  (_::block clause::syntax-class-clause ...))
-         (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
-           (extract-clauses stx (syntax->list #'(clause.parsed ...))))
-         (build-syntax-class stx pattern-alts
-                             #:define-class-id define-class-id
-                             #:class/inline-name #'class-name
-                             #:class-formals #'args.formals
-                             #:class-arity #'args.arity
-                             #:kind-kw kind-kw
-                             #:description-expr class-desc
-                             #:fields fields-ht
-                             #:swap-root swap-root
-                             #:opaque? opaque?)]))))
+(define-name-root syntax_class
+  #:fields
+  (together))
+
+(define-for-syntax (parse-syntax-class stx #:for-together? [for-together? #f])
+  (syntax-parse stx
+    ;; just immediate-patterns shorthand
+    [(form-id class-name args::class-args (_::alts alt ...))
+     (build-syntax-class stx (syntax->list #'(alt ...))
+                         #:define-class-id #'define-syntax
+                         #:class/inline-name #'class-name
+                         #:class-formals #'args.formals
+                         #:class-arity #'args.arity
+                         #:for-together? for-together?)]
+    ;; patterns within `pattern` or as shorthand
+    [(form-id class-name args::class-args
+              ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
+              (_::block clause::syntax-class-clause ...)
+              (~optional (_::alts alt ...)))
+     (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
+       (extract-clauses stx
+                        (syntax->list #'(clause.parsed ...))
+                        (and (attribute alt)
+                             (syntax->list #'(alt ...)))))
+     (build-syntax-class stx pattern-alts
+                         #:define-class-id #'define-syntax
+                         #:class/inline-name #'class-name
+                         #:class-formals #'args.formals
+                         #:class-arity #'args.arity
+                         #:kind-kw kind-kw
+                         #:description-expr class-desc
+                         #:fields fields-ht
+                         #:swap-root swap-root
+                         #:opaque? opaque?
+                         #:for-together? for-together?)]))
 
 (begin-for-syntax
   (struct definition+syntax-class-parser (def pars)
@@ -62,10 +73,26 @@
     #:property prop:syntax-class-parser (lambda (self) (definition+syntax-class-parser-pars self))))
 
 (define-syntax syntax_class (definition+syntax-class-parser
-                                         (make-class-definer #'define-syntax)
-                                         (syntax-class-parser
-                                          (lambda (who stx expected-kind name tail)
-                                            (parse-anonymous-syntax-class who stx expected-kind name tail)))))
+                              (definition-transformer
+                                (lambda (stx)
+                                  (parse-syntax-class stx)))
+                              (syntax-class-parser
+                               (lambda (who stx expected-kind name tail)
+                                 (parse-anonymous-syntax-class who stx expected-kind name tail)))))
+
+(define-syntax together
+  (definition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (group)
+        #:literals (syntax_class)
+        [(_ (_::block (group (~and form syntax_class) . rest)) ...)
+         (define decls
+           (for/list ([g (in-list (syntax->list #'((form . rest) ...)))])
+             (parse-syntax-class g #:for-together? #t)))
+         (append
+          (map car decls)
+          (map (lambda (stx) #`(finish-together-syntax-class #,stx)) (map cadr decls)))]))))
 
 ;; returns a `rhombus-syntax-class`
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
@@ -76,9 +103,13 @@
                          #:class/inline-name name
                          #:expected-kind expected-kind)]
     ;; patterns within `pattern`
-    [((_::block clause::syntax-class-clause ...))
+    [((_::block clause::syntax-class-clause ...)
+      (~optional (_::alts alt ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
-       (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))
+       (extract-clauses orig-stx
+                        (syntax->list #'(clause.parsed ...))
+                        (and (attribute alt)
+                             (syntax->list #'(alt ...)))))
      (build-syntax-class orig-stx pattern-alts
                          #:class/inline-name name
                          #:kind-kw kind-kw
@@ -114,7 +145,8 @@
                                        #:fields [fields-ht #f]
                                        #:swap-root [swap-root #f]
                                        #:opaque? [opaque? #f]
-                                       #:expected-kind [expected-kind #f])
+                                       #:expected-kind [expected-kind #f]
+                                       #:for-together? [for-together? #f])
   (define-values (kind splicing?)
     (let ([kind (cond
                   [kind-kw (string->symbol (keyword->string kind-kw))]
@@ -131,8 +163,33 @@
      #f]
     [else
      (define-values (patterns attributess)
-       (for/lists (patterns attributess) ([alt-stx (in-list alts)])
-         (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
+       (cond
+         [for-together?
+          ;; delay parsing attributes until we've declared Rhombus syntax classes; this
+          ;; require fully declared fields
+          (define attrs
+            (cond
+              [(not fields-ht) null]
+              [else (for/list ([(k df-stx) (in-hash fields-ht)])
+                      (define df (syntax-e df-stx))
+                      (pattern-variable k
+                                        (declared-field-id df)
+                                        (car (generate-temporaries (list (declared-field-id df))))
+                                        (or (syntax-e (declared-field-depth df)) 0)
+                                        (if (syntax-e (declared-field-unpack*-id df))
+                                            (declared-field-unpack*-id df)
+                                            (quote-syntax unpack-term*))))]))
+          (values #`((#:delayed-patterns #,stx #,alts #,fields-ht
+                      #,(map (lambda (pv)
+                               (list (pattern-variable-sym pv)
+                                     (pattern-variable-val-id pv)))
+                             attrs)
+                      #,kind
+                      #,splicing?))
+                  (list attrs))]
+         [else
+          (for/lists (patterns attributess) ([alt-stx (in-list alts)])
+            (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id)))]))
      (define attributes (intersect-attributes stx attributess fields-ht swap-root))
      (cond
        [(not define-syntax-id)
@@ -150,8 +207,17 @@
         (define define-class (if splicing?
                                  #'define-splicing-syntax-class
                                  #'define-syntax-class))
+        ;; in `for-together?` mode, expects a list of 2 definitions:
         (list
          ;; return a list of definitions
+         #`(#,define-syntax-id #,(in-syntax-class-space class-name)
+            (rhombus-syntax-class '#,kind
+                                  (quote-syntax #,internal-class-name)
+                                  (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                    (pattern-variable->list var #:keep-id? #f)))
+                                  #,splicing?
+                                  '#,class-arity
+                                  '#,swap-root))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)
@@ -160,15 +226,22 @@
             #:attributes #,(for/list ([var (in-list attributes)])
                              #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
             #,@(if opaque? '(#:opaque) '())
-            #,@patterns)
-         #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-            (rhombus-syntax-class '#,kind
-                                  (quote-syntax #,internal-class-name)
-                                  (quote-syntax #,(for/list ([var (in-list attributes)])
-                                                    (pattern-variable->list var #:keep-id? #f)))
-                                  #,splicing?
-                                  '#,class-arity
-                                  '#,swap-root)))])]))
+            #,@patterns))])]))
+
+(define-syntax (finish-together-syntax-class stx)
+  (syntax-parse stx
+    #:datum-literals (delayed-patterns)
+    [(_ (form content ... (#:delayed-patterns orig-stx alts fields-ht key+tmp-ids kind splicing?)))
+     (define-values (patterns attributess)
+       (for/lists (patterns attributess) ([alt-stx (in-list (syntax->list #'alts))])
+         (parse-pattern-cases stx alt-stx (syntax-e #'kind) (syntax-e #'splicing?)
+                              #:tmp-ids (for/hasheq ([key+tmp-id-stx (in-list (syntax->list #'key+tmp-ids))])
+                                          (define key+tmp-id (syntax->list key+tmp-id-stx))
+                                          (values (syntax-e (car key+tmp-id)) (cadr key+tmp-id))))))
+     ;; check against `fields-ht`:
+     (intersect-attributes #'orig-stx attributess (syntax-e #'fields-ht) #f)
+     ;; return `form` with parsed patterns in place:
+     #`(form content ... #,@patterns)]))
 
 ;; ----------------------------------------
 
@@ -213,7 +286,8 @@
 ;;     of the syntax class
 ;; The first result has a restricted form that is recognized by `syntax-class-body->inline`
 (define-for-syntax (parse-pattern-cases orig-stx stx kind splicing?
-                                        #:keep-attr-id? [keep-attr-id? #f])
+                                        #:keep-attr-id? [keep-attr-id? #f]
+                                        #:tmp-ids [tmp-id-ht #f])
   (define-values (pat body)
     (syntax-parse stx
       #:datum-literals (group)
@@ -250,7 +324,7 @@
                                 "multiple groups in pattern"
                                 orig-stx
                                 pat)])]))
-  
+
   (define-values (p idrs sidrs vars can-be-empty?)
     (convert-pattern #:splice? (not (eq? kind 'group))
                      #:splice-pattern (and (not (eq? kind 'group))
@@ -275,7 +349,7 @@
          ...
          (define-syntaxes (stx-id ...) stx-rhs)
          ...]))
-  
+
   (define-values (pattern-body all-attrs)
     (let loop ([body (syntax->list body)]
                [rev-do null]
@@ -296,7 +370,10 @@
               [c::pattern-clause
                (syntax-parse #'c.parsed
                  [(#:field id depth rhs)
-                  #:with (tmp-id) (generate-temporaries #'(id))
+                  #:with (tmp-id) (or (and tmp-id-ht
+                                           (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])
+                                             (and id (list id))))
+                                      (generate-temporaries #'(id)))
                   #:with (pat-ids pat-rhs) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
                                                                        (syntax-e #'depth) null)
                   (loop (cdr body)
@@ -395,13 +472,28 @@
      ;; filter by declared fields
      (define filtered-ht
        (if fields-ht
-           (for/hasheq ([k (in-hash-keys fields-ht)])
+           (for/hasheq ([(k df-stx) (in-hash fields-ht)])
+             (define df (syntax-e df-stx))
              (define var (hash-ref ht k #f))
              (unless var
                (raise-syntax-error #f
                                    "field not available from all pattern cases"
                                    stx
                                    (hash-ref fields-ht k)))
+             (unless (or (not (syntax-e (declared-field-depth df)))
+                         (= (syntax-e (declared-field-depth df))
+                            (pattern-variable-depth var)))
+               (raise-syntax-error #f
+                                   "field implementation does not match declared depth"
+                                   stx
+                                   (declared-field-id df)))
+             (unless (or (not (syntax-e (declared-field-unpack*-id df)))
+                         (free-identifier=? (declared-field-unpack*-id df)
+                                            (pattern-variable-unpack*-id var)))
+               (raise-syntax-error #f
+                                   "field implementation does not match declared kind"
+                                   stx
+                                   (declared-field-id df)))
              (values k var))
            ht))
      ;; check swap root
