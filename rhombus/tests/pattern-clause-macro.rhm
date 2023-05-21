@@ -1,0 +1,15 @@
+#lang rhombus/and_meta
+
+pattern_clause.macro 'ok':
+  'match_when #true
+   field ok = #'yes'
+
+syntax_class C
+| '~as_expected':
+    ok
+
+check:
+  match '~as_expected'
+  | '$(c :: C)':
+      c.ok
+  ~is #'yes

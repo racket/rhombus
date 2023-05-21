@@ -8,14 +8,14 @@
 
 @(def dollar: @rhombus($))
 
-@title{For Clause Macros}
+@title{Syntax Pattern Clause Macros}
 
 @doc(
-  space.transform for_clause
+  space.transform pattern_clause
 ){
 
  The @tech{space} for bindings of identifiers that implement
- @rhombus(for) clauses.
+ @rhombus(pattern, ~bind) clauses.
 
 }
 
@@ -23,29 +23,16 @@
   ~nonterminal:
     prefix_macro_patterns: defn.macro
 
-  defn.macro 'for_clause.macro $prefix_macro_patterns'
+  defn.macro 'pattern_clause.macro $prefix_macro_patterns'
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but defines a name in the
- @rhombus(for_clause, ~space) @tech{space} as a clause form
- for use within a @rhombus(for) body.
+ @rhombus(pattern_clause, ~space) @tech{space} as a clause form
+ for use within a @rhombus(pattern, ~bind) body.
 
  The compile-time @rhombus(body, ~var) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
- use, where each group can be either a another @rhombus(for) clause, an
- expression, or a defintion.
-
-@examples(
-  ~eval: macro_eval
-  ~defn:
-    for_clause.macro 'each_in_three $id':
-      'def three: 3
-       each $id: 0..three'
-  ~repl:
-    for List:
-      each_in_three i
-      i
-)
+ use within a @rhombus(pattern) body.
 
 }
 

@@ -1,0 +1,23 @@
+#lang rhombus/and_meta
+
+syntax_class_clause.macro 'maybe_block $id $body':
+  '«fields: [$body, $('...')]
+    pattern
+    | '$id: $('$')$body; $('...')'
+    | '$id $('$')body0 $('...')':
+        field [$body, $('...')] = ['$('$')body0 $('...')']»'
+
+syntax_class Options:
+  maybe_block options rhs
+
+check:
+  match 'options 1 2'
+  | '$(o :: Options)': [o.rhs, ...]
+  ~prints_like ['1 2']
+
+check:
+  match 'options:
+           1 2
+           3 4'
+  | '$(o :: Options)': [o.rhs, ...]
+  ~prints_like ['1 2', '3 4']

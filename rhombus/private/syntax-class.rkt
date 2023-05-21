@@ -369,6 +369,12 @@
             (syntax-parse g
               [c::pattern-clause
                (syntax-parse #'c.parsed
+                 [(#:splice g ...)
+                  (loop (append (syntax->list #'(g ...))
+                                (cdr body))
+                        rev-do
+                        rev-body
+                        rev-attrs)]
                  [(#:field id depth rhs)
                   #:with (tmp-id) (or (and tmp-id-ht
                                            (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])

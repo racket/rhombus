@@ -27,39 +27,42 @@
                            (hasheq '#:pattern patterns)
                            #hasheq()))
   (define options
-    (for/fold ([options init-options]) ([clause (in-list clauses)])
-      (define (check what)
+    (let loop ([options init-options] [clauses clauses])
+      (for/fold ([options init-options]) ([clause (in-list clauses)])
+        (define (check what)
+          (syntax-parse clause
+            [(kw (~and orig-stx (_ id . _)) . _)
+             (when (hash-ref options (syntax-e #'kw) #f)
+               (raise-syntax-error #f
+                                   (string-append "found second " what "clause, but only one is allowed")
+                                   stx
+                                   #'orig-stx))]))
         (syntax-parse clause
-          [(kw (~and orig-stx (_ id . _)) . _)
-           (when (hash-ref options (syntax-e #'kw) #f)
+          [(#:pattern _ alts)
+           (when patterns
              (raise-syntax-error #f
-                                 (string-append "found second " what "clause, but only one is allowed")
+                                 (string-append "found pattern clause, but patterns also supplied directly as alternatives")
                                  stx
-                                 #'orig-stx))]))
-      (syntax-parse clause
-        [(#:pattern _ alts)
-         (when patterns
-           (raise-syntax-error #f
-                               (string-append "found pattern clause, but patterns also supplied directly as alternatives")
-                               stx
-                               #'orig-stx))
-         (check "pattern")
-         (hash-set options '#:pattern (syntax->list #'alts))]
-        [(#:description _ e)
-         (check "description")
-         (hash-set options '#:description #'e)]
-        [(#:fields _ ht)
-         (check "fields")
-         (hash-set options '#:fields (syntax-e #'ht))]
-        [(#:root_swap _ to-root root-to)
-         (check "root_swap")
-         (hash-set options '#:root_swap (cons #'to-root #'root-to))]
-        [(#:kind _ kw)
-         (check "kind")
-         (hash-set options '#:kind (syntax-e #'kw))]
-        [(#:error-mode _ kw)
-         (check "error mode")
-         (hash-set options '#:error-mode (syntax-e #'kw))])))
+                                 #'orig-stx))
+           (check "pattern")
+           (hash-set options '#:pattern (syntax->list #'alts))]
+          [(#:description _ e)
+           (check "description")
+           (hash-set options '#:description #'e)]
+          [(#:fields _ ht)
+           (check "fields")
+           (hash-set options '#:fields (syntax-e #'ht))]
+          [(#:root_swap _ to-root root-to)
+           (check "root_swap")
+           (hash-set options '#:root_swap (cons #'to-root #'root-to))]
+          [(#:kind _ kw)
+           (check "kind")
+           (hash-set options '#:kind (syntax-e #'kw))]
+          [(#:error-mode _ kw)
+           (check "error mode")
+           (hash-set options '#:error-mode (syntax-e #'kw))]
+          [(#:splice cl ...)
+           (loop options (syntax->list #'(cl ...)))]))))
   (define alts (hash-ref options '#:pattern #f))
   (unless alts
     (raise-syntax-error #f

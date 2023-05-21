@@ -20,7 +20,7 @@
 
   (define in-pattern-clause-space (make-interned-syntax-introducer/add 'rhombus/pattern_clause))
 
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class :pattern-clause
     #:desc "pattern clause"
     #:predicate pattern-clause?

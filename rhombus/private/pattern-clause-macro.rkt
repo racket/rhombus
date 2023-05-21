@@ -1,8 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/proc-name
                      "srcloc.rkt"
-                     "pack.rkt")
+                     "pack.rkt"
+                     "macro-result.rkt")
          "provide.rkt"
          "name-root.rkt"
          "pattern-clause.rkt"
@@ -27,5 +29,9 @@
 
 (define-for-syntax (make-pattern-clause-transformer proc)
   (pattern-clause-transformer
-   (lambda (req stx)
-     (error "TBD"))))
+   (lambda (stx)
+     (define clauses (syntax-parse stx
+                       [(head . tail) (proc (pack-tail #'tail) #'head)]))
+     (unless (syntax? clauses)
+       (raise-bad-macro-result (proc-name proc) "pattern clauses" clauses))
+     #`(#:splice #,@(unpack-multi clauses proc #f)))))
