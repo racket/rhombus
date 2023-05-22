@@ -833,7 +833,6 @@
 (define-import-syntax rhombus-parent
   (make-module-path-submod-up-operator import-prefix-operator))
 
-
 (define-for-syntax infix-path-dot
   (import-infix-operator
    #'rhombus.

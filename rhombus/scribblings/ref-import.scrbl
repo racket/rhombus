@@ -13,18 +13,23 @@
   defn.macro 'import $import_clause'
 
   grammar import_clause:
-    $module_path
-    $module_path:
+    $import_item
+    $import_item:
       $modifier
       ...
-    $module_path $modifier
-    $module_path $modifier:
+    $import_item $modifier
+    $import_item $modifier:
       $modifier
       ...
     $modifier:
       $import_clause
       ...
-  
+
+  grammar import_item:
+    $module_path
+    $import_item #,(@rhombus(#%juxtapose, ~impo)) $import_item
+    $other_import_item
+
   grammar module_path:
     $collection_module_path
     $string
@@ -62,18 +67,18 @@
  @rhombus(import) form that has a block containing the single
  @rhombus(import_clause).
 
- The @rhombus(import_clause) variant @rhombus(module_path) or
- @rhombus(module_path: modifier; ...) are the canonical forms. The other
+ The @rhombus(import_clause) variant @rhombus(import_item) or
+ @rhombus(import_item: modifier; ...) are the canonical forms. The other
  @rhombus(import_clause) forms are converted into a canonical form:
 
 @itemlist(
 
- @item{@rhombus(module_path modifier) is the same as
-   @rhombus(module_path: modifier), where @rhombus(modifier) might include
+ @item{@rhombus(import_item modifier) is the same as
+   @rhombus(import_item: modifier), where @rhombus(modifier) might include
    a block argument. This form is handy when only one modifier is needed.},
 
- @item{@rhombus(module_path modifier: modifier; ...) is the same as
-   @rhombus(module_path: modifier; modifier; ...) where the initial
+ @item{@rhombus(import_item modifier: modifier; ...) is the same as
+   @rhombus(import_item: modifier; modifier; ...) where the initial
    @rhombus(modifier) does not accept a block argument. This form is
    especially handy when the initial @rhombus(modifier) is @rhombus(open)
    or @rhombus(as #,(@rhombus(id,~var))) and additional modifiers
@@ -85,6 +90,10 @@
    when @rhombus(modifier) is @rhombus(meta).}
 
 )
+
+ An @rhombus(import_item) is typically a @rhombus(module_path), but it
+ can be a juxtaposed combination of parsed @rhombus(module_path)s, or it
+ can be another import clause form defined with @rhombus(impo.macro).
 
  By default, each clause with a @rhombus(module_path) binds a prefix
  name that is derived from the @rhombus(module_path)'s last element.
@@ -377,5 +386,18 @@
  Modifies an @rhombus(import) clause to include bindings only in the
  specifically listed @tech{spaces} or only in the spaces not specifically
  listed.
+
+}
+
+@doc(
+  impo.macro '$import_item #%juxtapose $import_item'
+){
+
+ Imports the union of modules described by the two
+ @rhombus(import_item)s. This form is typically useful only to create
+ @tech{parsed} import forms, because parsing will otherwise attempt to
+ treat juxtaposed sequences as an import and modifier.
+
+ @see_implicit(@rhombus(#%juxtapose, ~impo), "an import", "import", ~is_infix: #true)
 
 }

@@ -28,6 +28,7 @@
     #,(@rhombus(rename, ~expo)) $rename_decl
     #,(@rhombus(names, ~expo)) $names_decl
     #,(@rhombus(all_defined, ~expo)) $all_defined_decl
+    $export_item #,(@rhombus(#%juxtapose, ~expo)) $export_item
     $other_export
 
   grammar id_or_op:
@@ -142,10 +143,10 @@
 
 
 @doc(
-  expo.macro '$export #%juxtapose $export'
+  expo.macro '$export_item #%juxtapose $export_item'
 ){
 
- Exports the union of bindings described by the two @rhombus(export)s.
+ Exports the union of bindings described by the two @rhombus(export_item)s.
 
  @see_implicit(@rhombus(#%juxtapose, ~expo), "an export", "export", ~is_infix: #true)
 

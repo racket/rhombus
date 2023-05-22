@@ -40,3 +40,15 @@ check:
     export: hi hello: do except hello
   n.hi
   ~is "hi"
+
+check:
+  expo.macro 'swap $a $b':    
+    def '$(ma :: expo_meta.Parsed)' = 'rename $a as $b'
+    def '$(mb :: expo_meta.Parsed)' = 'rename $b as $a'
+    '$ma #%juxtapose $mb'
+  namespace n:
+    def hi = "hi"
+    def hello = "hello"
+    export: swap hi hello
+  n.hello
+  ~is "hi"

@@ -43,3 +43,13 @@ check:
     lib("racket/base.rkt") do expose car
   car([1, 2])
   ~is 1
+
+
+check:
+  impo.macro 'rkts $base $all':
+    def '$(ibase :: impo_meta.Parsed)' = 'lib("racket/base.rkt") as $base'
+    def '$(iall :: impo_meta.Parsed)' = 'lib("racket/main.rkt") as $all'
+    '$ibase #%juxtapose $iall'
+  import: rkts base r
+  r.car(r.cons(1, 2))
+  ~is 1
