@@ -25,10 +25,12 @@
 
          prefix-operator
          prefix-operator?
+         prefix-operator-ref
 
          infix-operator
          infix-operator?
-         infix-operator-assoc)
+         infix-operator-assoc
+         infix-operator-ref)
 
 (module+ for-parse
   (provide relative-precedence
@@ -70,6 +72,9 @@
             (unless (memq assoc '(left right none))
               (raise-argument-error who "(or/c 'left 'right 'none)" assoc))
             (values name precedences protocol proc assoc)))
+
+(define (prefix-operator-ref v) (and (prefix-operator? v) v))
+(define (infix-operator-ref v) (and (infix-operator? v) v))
 
 ;; `op` is the operator just found, and `left-op` is the
 ;; "current" operator previously found on the left;
