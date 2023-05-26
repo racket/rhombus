@@ -16,7 +16,7 @@ following forms:
 
 @itemlist[
           
- @item{@racket[#%tuple]: implicit prefix for a parenthesized term that is not
+ @item{@racket[#%parens]: implicit prefix for a parenthesized term that is not
    immediately after a parsed form}
 
  @item{@racket[#%call]: implicit infix for a parsed form followed by a
@@ -50,7 +50,7 @@ following forms:
  ]
 
 In an expression context, a Rhombus language's @racket[#%call] implementation
-most likely creates a function call, @racket[#%tuple] most likely does
+most likely creates a function call, @racket[#%parens] most likely does
 nothing for a single expression in parentheses (so parentheses can be
 used for grouping) and might otherwise create a tuple value or return
 multiple values, @racket[#%juxtapose] probably reports an error. Implicit
