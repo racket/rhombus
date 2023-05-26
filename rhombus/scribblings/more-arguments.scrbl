@@ -76,7 +76,7 @@ Note that the annotation on @rhombus(x) as a repetition refers to an
 individual argument within the repetition, while the annotation on
 @rhombus(xs) refers to the whole list of arguments.
 
-To create a function that works with any number of keyowrd arguments,
+To create a function that works with any number of keyword arguments,
 use @rhombus(~&) to bind an argument that receives all additional
 keyword arguments. The additional arguments are collected into a map
 with keywords as keys.
