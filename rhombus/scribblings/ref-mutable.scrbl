@@ -14,7 +14,7 @@
     #,(epsilon)
 ){
 
- Binds @rhombus(id) so that its vaue can be changed using an
+ Binds @rhombus(id) so that its value can be changed using an
  @tech{assignment operator} such as @rhombus(:=).
 
  If an @rhombus(annot) is present using @rhombus(::, ~bind), then the

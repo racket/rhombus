@@ -248,7 +248,7 @@ required to delimit a block using @litchar{«} just after @litchar{:} or
 parentheses work just as well, but the @rhombus(match) example above illustrates
 a rare case where @litchar{«} and @litchar{»} would be needed to fit on
 a single line. Without @litchar{«} and @litchar{»}, the following form
-would put @rhombus(x + zero) insinde the definition of @rhombus(zero):
+would put @rhombus(x + zero) inside the definition of @rhombus(zero):
 
 @rhombusblock(
   match x | 0: def zero:« x »; x + zero | n: n + 1

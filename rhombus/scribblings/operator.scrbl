@@ -101,7 +101,7 @@ appear near an arithmetic operator like @rhombus(*):
 The initially defined operators mostly have the usual precedence:
 @rhombus(*) and @rhombus(/) are stronger than @rhombus(+) and
 @rhombus(-), while @rhombus(+) and @rhombus(-) have the same predence
-and are left-associative. The @rhombus(*) and @rhombus(/) operator have
+and are left-associative. The @rhombus(*) and @rhombus(/) operators have
 the same precedence as long as @rhombus(*) appears only to the left of
 @rhombus(/),
 

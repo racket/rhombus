@@ -91,7 +91,7 @@ Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated as
 an actual argument or binding pattern by itself. The @rhombus(#')
 prefix operator turns a keyword into an expression that produces the keyword, as in
-@rhombus(#'~scale). The operator also works on an identifiers, as in @rhombus(#'x),
+@rhombus(#'~scale). The operator also works on identifiers, as in @rhombus(#'x),
 to produce a symbol.
 
 @margin_note{The keyword prefix and @rhombus(=) for default values are not

@@ -155,9 +155,9 @@ documentation of @rhombus(import) and @rhombus(export) for more
 information.
 
 For examples in most of this guide, we will mostly not write
-modules explicitly. Examples will sometimes show definitions, which
-meant as part of some implicit module, with interactive examples with
-are shown with a leading @litchar{> } prompt and the expected result.
+modules explicitly. Examples will sometimes show definitions, which are
+meant as part of some implicit module, with interactive examples
+shown with a leading @litchar{> } prompt and the expected result.
 
 @demo(
   ~defn:
