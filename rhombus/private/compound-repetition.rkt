@@ -103,7 +103,8 @@
           #,body))
   (define-values (body static-infos)
     (let loop ([depth depth]
-               [depths depths])
+               [depths depths]
+               [immed?s immed?s])
       (cond
         [(= 0 depth)
          ;; returns expression + static infos
@@ -117,13 +118,22 @@
          (define (wrap-body body)
            #`(for/list #,(for/list ([a-depth (in-list depths)]
                                     [name (in-list names)]
+                                    [lst (in-list lists)]
+                                    [immed? (in-list immed?s)]
                                     #:when (= a-depth depth))
-                           #`[#,name (in-list #,name)])
+                           #`[#,name (in-list #,(if immed?
+                                                    lst
+                                                    name))])
                #,body))
          (define-values (body static-infos)
            (loop (sub1 depth)
                  (for/list ([a-depth (in-list depths)])
-                   (min a-depth (sub1 depth)))))
+                   (min a-depth (sub1 depth)))
+                 (for/list ([immed? (in-list immed?s)]
+                            [a-depth (in-list depths)])
+                   (if (= a-depth depth)
+                       #f
+                       immed?))))
          (values (wrap-body body)
                  static-infos)])))
   (values (wrap-body body)

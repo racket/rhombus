@@ -1,0 +1,42 @@
+#lang rhombus/and_meta
+
+repet.macro 'nat3':
+  ~op_stx self
+  repet_meta.pack_list('($self,
+                         n,
+                         [0, 1, 2],
+                         1,
+                         0,
+                         (),
+                         #true)')
+
+check:
+  [nat3, ...] ~is [0, 1, 2]
+  {nat3: nat3, ...} ~is {0: 0, 1: 1, 2: 2}
+  {nat3: "ok", ...} ~is {0: "ok", 1: "ok", 2: "ok"}
+
+repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
+  ~op_stx self
+  def '($orig, $name, $expr, $depth, $use_depth, $statinfos, $is_immed)':
+    repet_meta.unpack_list(sub)
+  def (pred, si):
+    annot_meta.unpack_predicate(match 'List' | '$(p :: annot_meta.Parsed)': p)                                       
+  repet_meta.pack_list('($self(),
+                         $name,
+                         for List:
+                           each:
+                             elem: $expr
+                             i: $from..
+                           [i, elem],
+                         $depth,
+                         $use_depth,
+                         $si,
+                         #false)')
+
+check:
+  [enum(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
+
+check:
+  use_static
+  [enum(10, nat3), ...][0].length()
+  ~is 2

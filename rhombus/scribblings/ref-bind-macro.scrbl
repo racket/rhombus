@@ -6,8 +6,6 @@
 
 @(def macro_eval: macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
-
 @title{Binding Macros}
 
 @doc(
@@ -47,11 +45,13 @@
 
 @examples(
   ~eval: macro_eval
-  bind.macro 'many $ann as $id':
-    '$id && [_ :: $ann, $('...')]'
-  def many Int as tickets: [1, 2, 3]
-  tickets
-  ~error: def many String as names: "oops"
+  ~defn:
+    bind.macro 'many $ann as $id':
+      '$id && [_ :: $ann, $('...')]'
+  ~repl:
+    def many Int as tickets: [1, 2, 3]
+    tickets
+    ~error: def many String as names: "oops"
 )
 
  See @secref("bind-macro-protocol") for examples using the low-level
@@ -136,9 +136,9 @@
 
  @rhombusblock(
   '(#,(@rhombus(ann_string, ~var)),
-    #,(@rhombus(name_identifier, ~var)),
+    #,(@rhombus(name_id, ~var)),
     ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
-    ((#,(@rhombus(defined_identifier, ~var)),
+    ((#,(@rhombus(defined_id, ~var)),
       [#,(@rhombus(var_use, ~var)), ...],
       (#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...),
      ...),
@@ -152,7 +152,7 @@
  fails to match the binding. It describes the binder's match requires in
  the form of an annotation.
 
- The @rhombus(name_identifier, ~var) term is for error reporting and
+ The @rhombus(name_id, ~var) term is for error reporting and
  reflection in the sense that it is used as the inferred name for a value
  matched to the binder, in case such a name is relevant.
 
@@ -161,7 +161,7 @@
  matches the binding. The ``upward'' information can be useful to an
  enclosing binding form.
 
- The @rhombus(defined_identifier, ~var)s are the identifiers that are
+ The @rhombus(defined_id, ~var)s are the identifiers that are
  ultimately bound by the binding form. Each identifier to be defined has
  associated uses through @rhombus(var_use, ~var) values, and each
  identifier has ``downward'' static information through the

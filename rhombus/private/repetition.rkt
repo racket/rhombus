@@ -18,6 +18,7 @@
          "binding.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
+         "indirect-static-info-key.rkt"
          "parse.rkt")
 
 (provide define-repetition-syntax)
@@ -36,6 +37,8 @@
 
             :repetition
             :repetition-info
+            :prefix-op+repetition-use+tail
+            :infix-op+repetition-use+tail
 
             in-repetition-space
             repet-quote
@@ -59,8 +62,6 @@
               immediate?)))
 
   (define (make-repetition-info rep-expr name seq-expr bind-depth use-depth element-static-infos immediate?)
-    ;; `element-static-infos` can be an identifier, which means both that static
-    ;; information can be looked up on demand
     #`(#,rep-expr #,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos #,immediate?))
 
   (define (check-repetition-result form proc)
@@ -86,7 +87,7 @@
                           id
                           0
                           0
-                          id
+                          #`((#%indirect-static-info #,id))
                           #t))
 
   (define (identifier-repetition-use/maybe id)
@@ -95,7 +96,7 @@
                           #`(rhombus-expression (group #,id))
                           0
                           0
-                          id
+                          #`((#%indirect-static-info #,id))
                           #t))
 
   ;; Form in a repetition context:
