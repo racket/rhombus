@@ -9,7 +9,7 @@
 
 @doc(
   ~nonterminal:
-    op_or_id_path: namespace
+    op_or_id_name: namespace
     right_parsed_id: block id
     left_parsed_id: block id
 
@@ -17,7 +17,7 @@
   defn.macro 'macro 
               | $macro_case
               | ...'
-  defn.macro 'macro $op_or_id_path:
+  defn.macro 'macro $op_or_id_name:
                 $option; ...
               | $macro_case
               | ...'
@@ -46,8 +46,8 @@
     $id
     $op
     #,(dollar)('#,(dollar)')
-    ($id_path)
-    ($op_path)
+    ($id_name)
+    ($op_name)
     ()
   grammar parsed_id:
     $id

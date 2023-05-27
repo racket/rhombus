@@ -9,6 +9,7 @@
                      "tail-returner.rkt"
                      "realm.rkt"
                      "macro-result.rkt")
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "definition.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -35,7 +36,8 @@
 (begin-for-syntax
   (define-name-root annot_meta
     #:fields
-    (is_predicate
+    (space
+     is_predicate
      pack_predicate
      unpack_predicate
      is_converter
@@ -44,6 +46,9 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
+
+(define-for-syntax space
+  (space-syntax rhombus/annot))
 
 (define-operator-definition-transformer macro
   'macro

@@ -17,8 +17,9 @@ export:
   id
   op
   id_or_op
-  id_path
-  op_path
+  id_name
+  op_name
+  op_or_id_name
   pattern
   template
 
@@ -35,8 +36,8 @@ manual.nonterminal:
   id: block
   op: block
   id_or_op: block
-  id_path: namespace
-  op_path: namespace
-  op_or_id_path: namespace
+  id_name: namespace
+  op_name: namespace
+  op_or_id_name: namespace
   pattern: #%quotes
   template: #%quotes

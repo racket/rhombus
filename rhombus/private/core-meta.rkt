@@ -25,12 +25,12 @@
         "unquote-binding-macro.rkt"
         "syntax-class-clause-macro.rkt"
         "pattern-clause-macro.rkt"
-        "syntax-error.rkt"
         "parsed.rkt"
-        "syntax-meta-value.rkt"
+        "syntax-meta.rkt"
         "space-macro.rkt"
         "space-clause-primitive.rkt"
         "namespace-macro.rkt")
 
-(bounce-meta "space-meta-clause-primitive.rkt")
+(bounce-meta "space-meta-clause-primitive.rkt"
+             "unquote-binding-primitive-meta.rkt")
 

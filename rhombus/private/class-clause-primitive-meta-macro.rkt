@@ -24,9 +24,9 @@
                      static_info))
 
 ;; see also "class-clause-primitive-macro.rkt"; this one has only
-;; forms that need meta-time bindings, so we don't want a mate-time
-;; including of the works in `rhombus/meta` (which would then need a
-;; meta-meta rhombus)
+;; forms that need meta-time bindings, so we don't want a meta-time
+;; inclusion in `rhombus/meta` (which would then need a meta-meta
+;; rhombus)
 
 (define-for-syntax (make-macro-clause-transformer
                     #:clause-transformer [clause-transformer class-clause-transformer])

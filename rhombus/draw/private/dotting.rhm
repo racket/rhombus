@@ -26,5 +26,5 @@ meta:
         values('$method($left)',
                '$tail ...')
     | ~else:
-        Syntax.error("expected parentheses afterward for a static method call",
-                     field)
+        syntax_meta.error("expected parentheses afterward for a static method call",
+                          field)

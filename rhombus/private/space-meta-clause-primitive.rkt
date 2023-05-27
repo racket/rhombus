@@ -10,6 +10,7 @@
                     parse_syntax_class
                     parse_prefix_more_syntax_class
                     parse_infix_more_syntax_class
+                    reflection
                     description
                     operator_description
                     parse_checker
@@ -37,6 +38,8 @@
   (make-identifier-transformer '#:syntax_class_prefix_more))
 (define-space-meta-clause-syntax parse_infix_more_syntax_class
   (make-identifier-transformer '#:syntax_class_infix_more))
+(define-space-meta-clause-syntax reflection
+  (make-identifier-transformer '#:reflection))
 
 (define-for-syntax (make-expression-transformer kw)
   (space-meta-clause-transformer
@@ -75,6 +78,9 @@
       [(_ (#:syntax_class_infix_more id))
        (check "infix-more syntax classes" #:enforest-only? #t)
        (hash-set options '#:syntax_class_infix_more #'id)]
+      [(_ (#:reflection id))
+       (check "syntax_value names")
+       (hash-set options '#:reflection #'id)]
       [(_ (#:desc stx e))
        (check "description string expressions")
        (hash-set options '#:desc #'e)]

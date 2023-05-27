@@ -23,6 +23,18 @@
 
 
 @doc(
+  def annot_meta.space :: SpaceMeta
+){
+
+@provided_meta()
+
+ A compile-time value that identifies the same space as
+ @rhombus(annot, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
   ~nonterminal:
     macro_patterns: expr.macro
 
@@ -53,7 +65,7 @@
   fun annot_meta.unpack_predicate(stx :: Syntax) :: (Syntax, Syntax)
 ){
 
- @provided_meta()
+@provided_meta()
 
  The @rhombus(annot_meta.is_predicate) function determines whether a
  syntax object represents a parsed @tech{predicate annotation}.  This
@@ -86,7 +98,7 @@
   fun annot_meta.unpack_converter(stx :: Syntax) :: (Syntax, Syntax, Syntax)
 ){
 
- @provided_meta()
+@provided_meta()
 
  The @rhombus(annot_meta.is_predicate) function determines whether a
  syntax object represents a parsed @tech{converter annotation}. This
@@ -118,7 +130,7 @@
 
 @doc(
   defn.macro 'annot.delayed_declare $id'
-  defn.macro 'annot.delayed_complete $id_path: $annot'
+  defn.macro 'annot.delayed_complete $id_name: $annot'
 ){
 
  Last-resort forms for solving mutual-dependency problems among
@@ -128,8 +140,8 @@
 
  A completed delayed annotation need not be declared in the same module
  or definition context, which is why @rhombus(annot.delayed_complete, ~expr)
- allows an @rhombus(id_path). See @secref("namespaces") form more
- information on @rhombus(id_path).
+ allows an @rhombus(id_name). See @secref("namespaces") form more
+ information on @rhombus(id_name).
 
  If a value is tested against a delayed annotation @rhombus(id) before
  it is completed via @rhombus(annot.delayed_complete, ~expr) at run time, then
@@ -180,7 +192,7 @@
     field [tail, ...]
 ){
 
- @provided_meta()
+@provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for annotations.
 

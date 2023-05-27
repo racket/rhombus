@@ -46,17 +46,17 @@
  The result of the @rhombus(body) block might be a macro transformer
  that is triggered by a use of @rhombus(id), or it might be
  some other kind of value that is accessed with
- @rhombus(Syntax.meta_value).
+ @rhombus(syntax_meta.value).
 
  For example, forms like @rhombus(expr.macro, ~expr), @rhombus(bind.macro, ~expr),
  and @rhombus(annot.macro, ~expr) expand to @rhombus(meta.bridge). In
  those cases, the generated @rhombus(body) block produces an
  expression transformer, binding transformer, or annotation
  transformer. Some forms that expand to @rhombus(meta.bridge) enrich
- the @rhombus(id) with a scope for a space of bindings, which
+ the @rhombus(id) with a scope for a @tech{space} of bindings, which
  enables overloading a @rhombus(id) for different contexts
  like expressions versus bindings. For example,
- @rhombus(annotation.macro) enriches its @rhombus(id) with a
+ @rhombus(annot.macro) enriches its @rhombus(id) with a
  scope for annotation operators.
 
 }

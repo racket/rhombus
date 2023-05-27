@@ -8,6 +8,7 @@
                      (for-syntax racket/base)
                      "tail-returner.rkt"
                      "realm.rkt")
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "name-root.rkt"
          "macro-macro.rkt"
@@ -30,11 +31,15 @@
 (begin-for-syntax
   (define-name-root expr_meta
     #:fields
-    (Parsed
+    (space
+     Parsed
      AfterPrefixParsed
      AfterInfixParsed
      pack_s_exp
      pack_expr)))
+
+(define-for-syntax space
+  (space-syntax #f))
 
 (define-operator-definition-transformer macro
   'macro

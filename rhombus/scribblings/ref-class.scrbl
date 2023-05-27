@@ -15,8 +15,8 @@
     method_decl: method ~class_clause
     property_decl: method ~class_clause
 
-  defn.macro 'class $id_path($field_spec, ...)'
-  defn.macro 'class $id_path($field_spec, ...):
+  defn.macro 'class $id_name($field_spec, ...)'
+  defn.macro 'class $id_name($field_spec, ...):
                 $class_clause_or_body_or_export
                 ...'
 
@@ -57,7 +57,7 @@
     #,(@rhombus(private, ~class_clause)) $method_impl
     #,(@rhombus(abstract, ~class_clause)) $method_decl
     #,(@rhombus(property, ~class_clause)) $property_impl
-    #,(@rhombus(extends, ~class_clause)) $id_path
+    #,(@rhombus(extends, ~class_clause)) $id_name
     #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(final, ~class_clause))
@@ -74,7 +74,7 @@
     $other_class_clause
 ){
 
- Binds @rhombus(id_path) as a class name in several @tech{spaces}:
+ Binds @rhombus(id_name) as a class name in several @tech{spaces}:
 
 @itemlist(
 
@@ -86,7 +86,7 @@
 
  @item{in the @rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
-  and an annotation constructor @rhombus(id_path.of), which by
+  and an annotation constructor @rhombus(id_name.of), which by
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause) @rhombus(field_spec)s in
   parentheses;},
@@ -100,13 +100,13 @@
  @item{in the @rhombus(namespace, ~space) space,
   a @tech{namespace} to access exported bindings as well as a
   function
-  @rhombus(id_path#,(rhombus(.))#,(@rhombus(method,~var))),
+  @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
-  @rhombus(id_path#,(rhombus(.))#,(@rhombus(property,~var))),
+  @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
   a syntactic form
-  @rhombus(id_path#,(rhombus(.))#,(@rhombus(dot,~var))),
+  @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))),
   a field accessor
-  @rhombus(id_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
+  @rhombus(id_name#,(rhombus(.))#,(@rhombus(field,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, dot syntax, and field in the class
   (including inherited methods, properties, fields, and dot syntax), respectively; and}
 
@@ -222,7 +222,7 @@
 
  When a @rhombus(class_clause) is an @rhombus(internal, ~class_clause)
  form, then the clause's @rhombus(id) is bound in similar ways as
- the main class @rhombus(id_path): as a constructor, annotation
+ the main class @rhombus(id_name): as a constructor, annotation
  form, binding pattern form, and namespace. A use of the internal
  @rhombus(id) as a constructor creates an instance of the same
  class, but the constructor expects arguments for all fields declared
@@ -238,7 +238,7 @@
  or @rhombus(expression, ~class_clause),
  @rhombus(binding, ~class_clause), and
  @rhombus(annotation, ~class_clause) replace default meanings of the
- defined @rhombus(id_path) for an expression context, binding
+ defined @rhombus(id_name) for an expression context, binding
  context, and annotation context, respectively. The
  @rhombus(dot, ~class_clause) form (which must be imported
  through @rhombusmodname(rhombus/meta)) replaces the way that
@@ -316,8 +316,8 @@
     method_decl: method ~class_clause
     property_decl: method ~class_clause
 
-  defn.macro 'interface $id_path'
-  defn.macro 'interface $id_path:
+  defn.macro 'interface $id_name'
+  defn.macro 'interface $id_name:
                 $interface_clause_or_body_or_export
                 ...'
 
@@ -435,27 +435,27 @@
 
 
 @doc(
-  class_clause.macro 'extends $id_path'
-  class_clause.macro 'extends: $id_path'
-  interface_clause.macro 'extends $id_path'
-  interface_clause.macro 'extends: $id_path ...; ...'
+  class_clause.macro 'extends $id_name'
+  class_clause.macro 'extends: $id_name'
+  interface_clause.macro 'extends $id_name'
+  interface_clause.macro 'extends: $id_name ...; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that is a subclass of the one named by @rhombus(id_path), and an
+ that is a subclass of the one named by @rhombus(id_name), and an
  @tech{interface clause} recognized by @rhombus(interface) to define an
  interface that is a subinterface of the ones named by the
- @rhombus(id_path)s.
+ @rhombus(id_name)s.
 
 }
 
 @doc(
-  class_clause.macro 'implements $id_path ...'
-  class_clause.macro 'implements: $id_path ...; ...'
+  class_clause.macro 'implements $id_name ...'
+  class_clause.macro 'implements: $id_name ...; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that implements subclasses named by @rhombus(id_path)s. See
+ that implements subclasses named by @rhombus(id_name)s. See
  @rhombus(class) and @rhombus(interface).
 
 }
@@ -630,8 +630,8 @@
     method_impl: method ~class_clause
     property_impl: method ~class_clause
 
-  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_path ...'
-  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_path ...; ...'
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_name ...'
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
   class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_decl'
   class_clause.macro 'private $method_impl'
   class_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'
@@ -804,7 +804,7 @@
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form with an empty @rhombus(maybe_name), then a use of new class's
- @rhombus(id_path) as a
+ @rhombus(id_name) as a
  constructor function invokes a function the @tech{entry point} (typically a
  @rhombus(fun, ~entry_point) form) in the block after
  @rhombus(constructor, ~class_clause). That function must return an
@@ -831,8 +831,8 @@
 
  If a @rhombus(constructor, ~class_clause) form has an
  @rhombus(id) for @rhombus(maybe_name) that is not the same as
- the enclosing class's @rhombus(id_path), then the constructor is bound to
- @rhombus(id) instead of @rhombus(id_path).
+ the enclosing class's @rhombus(id_name), then the constructor is bound to
+ @rhombus(id) instead of @rhombus(id_name).
  Typically, naming a constructor is paired with an
  @rhombus(expression, ~class_clause) declaration that refers to that
  constructor.
@@ -847,18 +847,18 @@
  argument as the default superclass constructor.
 
  When a @rhombus(class) has a @rhombus(expression, ~class_clause) form,
- then a use of the new class's @rhombus(id_path) as an
+ then a use of the new class's @rhombus(id_name) as an
  expression invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. This macro replaces the default meaning of the
- @rhombus(id_path) as a reference to the constructor. When
+ @rhombus(id_name) as a reference to the constructor. When
  @rhombus(expression, ~class_clause), then the default
- @rhombus(id_path.of) annotation constructor accepts only
+ @rhombus(id_name.of) annotation constructor accepts only
  @tech{predicate annotations}.
 
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
- then a use of the new class's @rhombus(id_path) as a
+ then a use of the new class's @rhombus(id_name) as a
  binding-pattern constructor invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
@@ -876,7 +876,7 @@
  superclass constructor).
 
  When a @rhombus(class) has an @rhombus(annotation, ~class_clause) form,
- then a use of new class's @rhombus(id_path) in a
+ then a use of new class's @rhombus(id_name) in a
  annotation invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a

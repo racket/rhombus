@@ -50,6 +50,7 @@ driver and macro-definitions forms.
   grammar space_clause_or_body_or_export:
     #,(@rhombus(space_path, ~space_clause)) $space_id_path
     #,(@rhombus(macro_definer, ~space_clause)) $id
+    #,(@rhombus(bridge_definer, ~space_clause)) $id
     #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
       ...
@@ -67,6 +68,7 @@ driver and macro-definitions forms.
     #,(@rhombus(parse_checker, ~space_meta_clause)) $expr
     #,(@rhombus(description, ~space_meta_clause)) $expr
     #,(@rhombus(operator_description, ~space_meta_clause)) $expr
+    #,(@rhombus(reflection, ~space_meta_clause)) $id
     $nestable_body
 ){
 
@@ -79,15 +81,18 @@ driver and macro-definitions forms.
  this identifying path is always referenced as
  @rhombus(space_id).
 
- Besides being defined as a space, the @rhombus(space_id) is
+ Besides being defined as a space, @rhombus(space_id) is
  defined as a @tech{namespace}. Among the
- @rhombus(space_clause_or_body)s, @rhombus(body) and @rhombus(export)
+ @rhombus(space_clause_or_body_or_export)s, @rhombus(body) and @rhombus(export)
  forms can add definitions and exports to the namespace, the same as for
  @rhombus(namespace). However, the namespace is particularly intended to
  export the name specified by @rhombus(macro_definer, ~space_clause).
- That name is conventionally @rhombus(macro, ~datum). If
- @rhombus(macro_definer, ~space_clause) is not declared, then there is no
- way to bind in the new namespace except by using lower-level mechanisms.
+ That name is conventionally @rhombus(macro, ~datum).
+ As a somewhat lower-level mechanism, @rhombus(bridge_definer, ~space_clause)
+ exports a name for binding arbitrary compile-time values analogous to
+ @rhombus(meta.bridge). If @rhombus(macro_definer, ~space_clause) and
+ @rhombus(bridge_definer, ~space_clause) are not declared, then there is
+ no way to bind in the new namespace except by using lower-level mechanisms.
 
  Also typically among the @rhombus(space_clause_or_body)s, a
  @rhombus(meta_namespace, ~space_clause) declares the name of a
@@ -155,6 +160,10 @@ driver and macro-definitions forms.
   be bound to a macro-definition form analogous to @rhombus(expr.macro),
   but for defining macros for the space.}
 
+ @item{@rhombus(bridge_definer, ~space_clause): declares an identifier to
+  be bound to a meta-definition form analogous to @rhombus(meta.bridge),
+  but for defining bridges in the space.}
+
  @item{@rhombus(parse_syntax_class, ~space_meta_clause): declares an
   identifier to be bound as a @rhombus(~group) syntax class with a
   @rhombus(group, ~datum) field; the value of a match is a parsed term,
@@ -198,6 +207,11 @@ driver and macro-definitions forms.
   string that describes operators in the space; the string is used
   for reporting syntax errors.}
 
+ @item{@rhombus(reflection, ~space_meta_clause): declares an identifier to be
+  bound to a @rhombus(SpaceMeta, ~annot) that refers to the defined space.
+  This name is useful in combination with @rhombus(syntax_meta.value), for
+  example.}
+
 )
 
 }
@@ -230,6 +244,7 @@ driver and macro-definitions forms.
     space_id_path: space.enforest
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'
+  space_clause.macro 'bridge_definer $id'
   space_clause.macro 'meta_namespace $meta_namespace_id:
                         $space_meta_clause_or_body_or_export
                           ...'
@@ -249,6 +264,7 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'description $expr'
   space_meta_clause.macro 'operator_description $expr'
+  space_meta_clause.macro 'reflection $id'
 ){
 
  @provided_meta()
@@ -258,5 +274,20 @@ driver and macro-definitions forms.
  form. See @rhombus(space.enforest) for more information.
 
 }
+
+@doc(
+  annot.macro 'SpaceMeta'
+){
+
+@provided_meta()
+
+ A @rhombus(SpaceMeta, ~annot) compile-time value reflects a space that
+ would be referenced in a run-time position by the space name. For
+ example, @rhombus(expr_meta.space) for use with a compile-time function
+ like @rhombus(syntax_meta.value) refers to the same space as
+ @rhombus(expr, ~space) as used with @rhombus(only_space, ~expo).
+
+}
+
 
 @macro.close_eval(macro_eval)

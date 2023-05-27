@@ -37,8 +37,8 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
 @doc(
   ~nonterminal:
     export_clause: export
-  defn.macro 'namespace $id_path'
-  defn.macro 'namespace $id_path:
+  defn.macro 'namespace $id_name'
+  defn.macro 'namespace $id_name:
                 $nestable_body
                 ...'
   defn.macro 'namespace ~open:
@@ -49,14 +49,14 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
  Similar to the same @rhombus(nestable_body) sequence spliced into the
  enclosing context, but definitions within the body are not visible
  outside the body, and @rhombus(export) declarations are allowed and
- determine exports for the @rhombus(id_path) immediately after
+ determine exports for the @rhombus(id_name) immediately after
  @rhombus(namespace). An exported @rhombus(name, ~var) can be reached using
- @rhombus(id_path#,(rhombus(.))#,(rhombus(name, ~var))). The name
- @rhombus(id_path) also works with @rhombus(import). The @rhombus(id)
- at the end of @rhombus(id_path) is bound in the @rhombus(namespace, ~space)
+ @rhombus(id_name#,(rhombus(.))#,(rhombus(name, ~var))). The name
+ @rhombus(id_name) also works with @rhombus(import). The @rhombus(id)
+ at the end of @rhombus(id_name) is bound in the @rhombus(namespace, ~space)
  @tech{space}.
 
- When @rhombus(~open) is supplied in place of @rhombus(id_path), then
+ When @rhombus(~open) is supplied in place of @rhombus(id_name), then
  instead of defining a visible namespace, a private namespace name is
  created and also imported with @rhombus(import) to bind all the exported
  name in the enclosing scope. The names are bound using the same

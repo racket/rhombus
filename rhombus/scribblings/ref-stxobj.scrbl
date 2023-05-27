@@ -60,8 +60,6 @@ Metadata for a syntax object can include a source location and the raw
   [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
   [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
   [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
-  [stx.equal_binding(stx2, #,(more_args)), Syntax.equal_binding(stx, stx2, #,(more_args))]
-  [stx.equal_name_and_scopes(stx2, #,(more_args)), Syntax.equal_name_and_scopes(stx, stx2, #,(more_args))]
 )
 
 @doc(
@@ -192,25 +190,39 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   annot.macro 'Syntax'
-){
-
-  Matches syntax objects.
-
-}
-
-@doc(
+  annot.macro 'Term'
+  annot.macro 'Group'
   annot.macro 'Identifier'
-){
-
-  Matches a syntax object that contains a single identifier term.
-
-}
-
-@doc(
   annot.macro 'Operator'
+  annot.macro 'Name'
+  annot.macro 'IdentifierName'
 ){
 
-  Matches a syntax object that contains a single operator term.
+ The @rhombus(Syntax, ~annot) annotation matches any syntax object,
+ while the others match more specific forms of syntax objects:
+
+@itemlist(
+
+ @item{@rhombus(Term, ~annot) matches only a single-term syntax object.}
+ 
+ @item{@rhombus(Group, ~annot) matches only a single-group syntax object.}
+ 
+ @item{@rhombus(Identifier, ~annot) matches only an identifier (which is
+  a single-term syntax object).}
+
+ @item{@rhombus(Operator, ~annot) matches only an operator (which is
+  a single-term syntax object).}
+
+ @item{@rhombus(Name, ~annot) matches a syntax object that is an
+  identifier, operator, or dotted multi-term group that fits the shape of
+  an @rhombus(op_or_id_name).}
+
+ @item{@rhombus(IdentifierName, ~annot) matches a syntax object that is an
+  identifier or dotted multi-term group that fits the shape of
+  an @rhombus(id_name).}
+
+
+)
 
 }
 
@@ -488,39 +500,6 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
-@doc(
-  unquote_bind.macro '«bound_as $space: '$id_or_op'»'
-){
-
- Unquote binding operator for use with @rhombus($, ~bind). It matches a
- syntax object for an identifier or operator, where the identifier or
- operator's binding is the same as @rhombus(id_or_op) in
- the @tech{space} identified by @rhombus(space) (e.g.,
- @rhombus(expr, ~space)).
-
-@examples(
-  ~defn:
-    import:
-      rhombus/meta open
-      rhombus:
-        rename: + as plus
-        expose: plus
-  ~defn:
-    fun simplify(stx):
-      match stx
-      | '$(a :: Int) $(bound_as expr: '+') $(b :: Int)':
-          '$(a.unwrap() + b.unwrap())'
-      | ~else:
-          stx
-  ~repl:
-    simplify('1 + 2')
-    simplify('1 plus 2')
-    simplify('1 * 2')
-)
-
-}
-
-
 
 @doc(
   expr.macro '«Syntax.literal '$term ...; ...'»'
@@ -773,56 +752,5 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(stx). Merging combines raw source text in sequence, and it
  combines compatible source locations to describe a region containing
  all of the locations.
-
-}
-
-
-@doc(
-  fun Syntax.equal_binding(stx1 :: Identifier,
-                           stx2 :: Identifier,
-                           phase1 :: SyntaxPhase = Syntax.expanding_phase(),
-                           phase2 :: SyntaxPhase = phase1)
-    :: Boolean
-){
-
- Checks whether @rhombus(stx1) at phase @rhombus(phase1) refers to the
- same binding as @rhombus(stx2) at @rhombus(phase2).
-
-}
-
-@doc(
-  fun Syntax.equal_name_and_scopes(stx1 :: Identifier,
-                                   stx2 :: Identifier,
-                                   phase :: SyntaxPhase
-                                     = Syntax.expanding_phase())
-    :: Boolean
-){
-
- Checks whether @rhombus(stx1) and @rhombus(stx) have the same name (as
- returned by @rhombus(Syntax.unwrap)) and the same scopes at
- @rhombus(phase).
-
-}
-
-@doc(
-  annot.macro 'SyntaxPhase'
-){
-
- Matches an integer or @rhombus(#false).
-
- A phase-level integer corresponds to a phase of evaluation, especially
- relative to the main body of a module. Phase level @rhombus(0)
- corresponds to a module's run time, @rhombus(1) corresponds to expansion
- time for run-time forms, and so on. A phase level of @rhombus(#false)
- corresponds to the label phase, like @rhombus(meta_label, ~impo).
-
-}
-
-@doc(
-  fun Syntax.expanding_phase() :: SyntaxPhase
-){
-
- Returns the phase of expression forms currently being expanded, or
- @rhombus(0) if no expansion is in progress.
 
 }

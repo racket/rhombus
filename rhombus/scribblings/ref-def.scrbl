@@ -17,9 +17,9 @@
  definitions, and it normally ends with an expression to provide the
  result value.
 
- A @rhombus(bind) can be just an identifier, or it can be constructed
- with a binding operator, such as a pattern form or @rhombus(::) for
- annotations.
+ A @rhombus(bind) can be just an identifier or @rhombus(id_name), or it
+ can be constructed with a binding operator, such as a pattern form or
+ @rhombus(::) for annotations.
 
  An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and most
  binding operators also create bindings in the @rhombus(expr, ~space) space.
@@ -67,12 +67,12 @@
 
 
 @doc(
-  bind.macro '$id_path . $id'
+  bind.macro '$id_name . $id'
 ){
 
  The @rhombus(., ~bind) operator works somewhat like a binding operator
  that works only with identifiers, and it specifies a namespace-prefixed
- identifier to bin as an extension of an already-defined namespace. More
+ identifier to bind as an extension of an already-defined namespace. More
  precisely, @litchar{.} to join identifiers in a binding position is
  recognized literally as an operator, along the same lines as @litchar{.}
  used to reference a binding within a namespace or import.

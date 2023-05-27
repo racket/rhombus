@@ -38,8 +38,8 @@
     $id
     $op
     #,(dollar)('#,(dollar)')
-    ($id_path)
-    ($op_path)
+    ($id_name)
+    ($op_name)
 
   grammar option:
     ~op_stx: $id

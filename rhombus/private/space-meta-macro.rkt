@@ -27,12 +27,16 @@
          "space-meta-clause.rkt"
          (submod "space-meta-clause-primitive.rkt" for-space-meta-macro)
          (submod "namespace.rkt" for-exports)
-         "macro-result.rkt")
+         "macro-result.rkt"
+         (for-template (only-in "space.rkt" space-name))
+         (submod "annotation.rkt" for-class))
 
 (provide enforest-meta
          transform-meta
          (for-space rhombus/space
-                    space_meta_clause))
+                    space_meta_clause)
+         (for-space rhombus/annot
+                    SpaceMeta))
 
 (define+provide-space space_meta_clause rhombus/space_meta_clause
   #:fields
@@ -89,6 +93,7 @@
        (define class-name (hash-ref options '#:syntax_class #'#f))
        (define prefix-more-class-name (hash-ref options '#:syntax_class_prefix_more #'#f))
        (define infix-more-class-name (hash-ref options '#:syntax_class_infix_more #'#f))
+       (define space-reflect-name (hash-ref options '#:reflection #'#f))
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
        (define macro-result (hash-ref options '#:parsed_checker #'(make-check-syntax (quote name))))
@@ -106,7 +111,8 @@
                 (#,@(filter-missing
                      #`([#,class-name _class-name]
                         [#,prefix-more-class-name _prefix-more-class-name]
-                        [#,infix-more-class-name _infix-more-class-name]))
+                        [#,infix-more-class-name _infix-more-class-name]
+                        [#,space-reflect-name _space]))
                  . #,exs))
               (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
               (property new-prefix-operator prefix-operator)
@@ -143,24 +149,40 @@
                                                                        #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator))
-              (define make-prefix+infix-operator new-prefix+infix-operator))]
+              (define make-prefix+infix-operator new-prefix+infix-operator)
+              (maybe-skip
+               #,space-reflect-name
+               (define _space (space-name 'space-path-name))))]
          [else
           #`(begin
               (define-name-root #,(expose #'meta-name)
-                #:root (space-syntax space-path-name)
                 #:fields
                 #,(filter-missing
-                   #`([#,class-name _class-name])))
-              (define in-new-space (make-interned-syntax-introducer/add 'space.name))
-              (property new-transformer transformer)
-              (define-rhombus-transform
-                #:syntax-class :base
-                #:desc #,desc
-                #:in-space in-new-space
-                #:transformer-ref new-transformer-ref
-                #:check-result #,macro-result)
-              (define-syntax _class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
-              (define make-transformer (make-make-transformer 'name new-transformer)))])])))
+                   #`([#,class-name _class-name]
+                      [#,space-reflect-name _space])))
+              (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
+              (maybe-skip
+               class-name
+               (property new-transformer transformer))
+              (maybe-skip
+               class-name
+               (define-rhombus-transform
+                 #:syntax-class :base
+                 #:desc #,desc
+                 #:in-space in-new-space
+                 #:transformer-ref new-transformer-ref
+                 #:check-result #,macro-result))
+              (maybe-skip
+               class-name
+               (define-syntax _class-name (make-syntax-class #':base
+                                                             #:kind 'group
+                                                             #:fields #'((parsed parsed 0 unpack-term*)))))
+              (maybe-skip
+               class-name
+               (define make-transformer (make-make-transformer 'name new-transformer)))
+              (maybe-skip
+               #,space-reflect-name
+               (define _space (space-name 'space-path-name))))])])))
 
 (define-for-syntax (filter-missing flds)
   (for/list ([fld (in-list (syntax->list flds))]
@@ -235,5 +257,13 @@
                           orig-stx
                           (hash-ref ex-ht (syntax-e id) #f))))
   (check class-name "syntax class name")
-  (check class-name "prefix-more syntax class name")
-  (check class-name "infix-more syntax class name"))
+  (check prefix-more-class-name "prefix-more syntax class name")
+  (check infix-more-class-name "infix-more syntax class name"))
+
+(define-syntax (maybe-skip stx)
+  (syntax-parse stx
+    [(_ #f . _) #'(begin)]
+    [(_ _ def) #'def]))
+
+(define-annotation-syntax SpaceMeta
+  (identifier-annotation #'space-name? #'()))

@@ -2,6 +2,8 @@
 
 import:
   lib("racket/base.rkt")
+  meta -1:
+    lib("rhombus/private/space.rkt").#{space-name}
 
 export:
   Transformer
@@ -9,12 +11,16 @@ export:
   Spacer
   make_Spacer
   in_space
+  space
 
 class Transformer(proc)
 class Spacer(proc)
 
 fun in_space(stx):
   base.#{make-interned-syntax-introducer}(#'#{rhombus/scribble/typeset})(stx)
+
+def space:
+  #{space-name}(#'#{rhombus/scribble/typeset})
 
 fun make_Transformer(proc):
   Transformer(proc)

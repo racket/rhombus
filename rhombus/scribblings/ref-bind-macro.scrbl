@@ -20,6 +20,19 @@
 
 }
 
+
+@doc(
+  def bind_meta.space :: SpaceMeta
+){
+
+@provided_meta()
+
+ A compile-time value that identifies the same space as
+ @rhombus(bind, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
 @doc(
   ~nonterminal:
     macro_patterns: expr.macro

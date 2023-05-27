@@ -111,15 +111,15 @@ normally bound to implement function calls.
     map_bind: def bind
     repet_bind: def bind
 
-  defn.macro 'fun $id_path($bind, ...):
+  defn.macro 'fun $id_name($bind, ...):
                 $body
                 ...'
-  defn.macro 'fun $id_path $case_maybe_kw_opt'
+  defn.macro 'fun $id_name $case_maybe_kw_opt'
   defn.macro 'fun
-              | $id_path $case_maybe_kw
+              | $id_name $case_maybe_kw
               | ...'
-  defn.macro 'fun $id_path $maybe_res_annot
-              | $id_path $case_maybe_kw
+  defn.macro 'fun $id_name $maybe_res_annot
+              | $id_name $case_maybe_kw
               | ...'
 
   expr.macro 'fun ($bind, ...):
@@ -175,9 +175,9 @@ normally bound to implement function calls.
 
 ){
 
- Binds @rhombus(id_path) as a function in the @rhombus(expr, ~space)
+ Binds @rhombus(id_name) as a function in the @rhombus(expr, ~space)
  @tech{space}, or when
- @rhombus(id_path) is not supplied, serves as an expression that
+ @rhombus(id_name) is not supplied, serves as an expression that
  produces a function value.
 
  The first case shown for the definition and expression forms shown

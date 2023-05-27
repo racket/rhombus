@@ -32,7 +32,7 @@ expr.macro 'examples($form, ...)':
     | ['~fake: $repl', &rest]:
         [['~repl', forms]]
     | ['$(kw :: Keyword) $_ ...', &rest]:
-        Syntax.error("misplaced or unrecognized keyword", self, kw)
+        syntax_meta.error("misplaced or unrecognized keyword", self, kw)
     | [form, ...]:
         [['~repl', [form, ...]]]
   fun find_kw(forms, want_kw, was_found):
@@ -42,7 +42,7 @@ expr.macro 'examples($form, ...)':
         cond
         | kw.unwrap() == want_kw:
             when was_found
-            | Syntax.error("duplicate `~" +& kw.unwrap() +& "` clause", '$eval_expr')
+            | syntax_meta.error("duplicate `~" +& kw.unwrap() +& "` clause", '$eval_expr')
             find_kw(rest, want_kw, #true)
             eval_expr
         | ~else: find_kw(rest, want_kw, was_found)

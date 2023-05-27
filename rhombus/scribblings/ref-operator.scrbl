@@ -11,24 +11,24 @@
 @doc(
   ~nonterminal:
     maybe_res_annot: fun
-    op_or_id_path: namespace
+    op_or_id_name: namespace
 
   defn.macro 'operator $op_case'
   defn.macro 'operator 
               | $op_case
               | ...'
-  defn.macro 'operator $op_or_id_path $maybe_res_annot:
+  defn.macro 'operator $op_or_id_name $maybe_res_annot:
                 $option; ...
               | $op_case
               | ...'
 
   grammar op_case:  
-    $op_or_id_path $bind_term $impl_block
-    $bind_term $op_or_id_path $bind_term $impl_block
-    $bind_term $op_or_id_path $impl_block
-    ($op_or_id_path $bind_term) $maybe_res_annot $impl_block
-    ($bind_term $op_or_id_path $bind_term) $maybe_res_annot $impl_block
-    ($bind_term $op_or_id_path) $maybe_res_annot $impl_block
+    $op_or_id_name $bind_term $impl_block
+    $bind_term $op_or_id_name $bind_term $impl_block
+    $bind_term $op_or_id_name $impl_block
+    ($op_or_id_name $bind_term) $maybe_res_annot $impl_block
+    ($bind_term $op_or_id_name $bind_term) $maybe_res_annot $impl_block
+    ($bind_term $op_or_id_name) $maybe_res_annot $impl_block
 
   grammar impl_block:
     :
@@ -65,7 +65,7 @@
     bind
 ){
 
- Binds @rhombus(op_or_id_path) as a operator, either
+ Binds @rhombus(op_or_id_name) as a operator, either
  prefix, infix, postfix, or a combination.
 
  The operator is function-like in the sense that it receives argument

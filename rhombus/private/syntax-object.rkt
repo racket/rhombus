@@ -5,7 +5,6 @@
          syntax/parse/pre
          syntax/strip-context
          racket/syntax-srcloc
-         racket/phase+space
          shrubbery/property
          shrubbery/print
          "provide.rkt"
@@ -16,6 +15,7 @@
          "name-root.rkt"
          "tag.rkt"
          "dot-parse.rkt"
+         "dotted-sequence.rkt"
          "static-info.rkt"
          "define-arity.rkt"
          "srcloc-span.rkt"
@@ -27,10 +27,12 @@
                       rhombus/annot)
                      Syntax)
          (for-spaces (rhombus/annot)
-                     SyntaxPhase)
-         (for-space rhombus/annot
-                    Identifier
-                    Operator))
+                     Term
+                     Group
+                     Identifier
+                     Operator
+                     Name
+                     IdentifierName))
 
 (module+ for-builtin
   (provide syntax-method-table))
@@ -43,9 +45,6 @@
 
 (define-annotation-syntax Syntax
   (identifier-annotation #'syntax? syntax-static-infos))
-
-(define-annotation-syntax SyntaxPhase
-  (identifier-annotation #'phase? #'()))
 
 (define-annotation-syntax Identifier
   (identifier-annotation #'is-identifier? syntax-static-infos))
@@ -62,6 +61,52 @@
            #:datum-literals (op)
            [(op _) #t]
            [_ #f]))))
+
+(define-annotation-syntax Name
+  (identifier-annotation #'syntax-name? syntax-static-infos))
+(define (syntax-name? s)
+  (and (syntax? s)
+       (let ([t (unpack-term s #f #f)])
+         (or (identifier? t)
+             (if t
+                 (syntax-parse t
+                   #:datum-literals (op)
+                   [(op _) #t]
+                   [_ #f])
+                 (let ([t (unpack-group s #f #f)])
+                   (and t
+                        (syntax-parse t
+                          #:datum-literals (group)
+                          [(group _::dotted-operator-or-identifier-sequence) #t]
+                          [_ #f]))))))))
+
+(define-annotation-syntax IdentifierName
+  (identifier-annotation #'syntax-identifier-name? syntax-static-infos))
+(define (syntax-identifier-name? s)
+  (and (syntax? s)
+       (let ([t (unpack-term s #f #f)])
+         (or (identifier? t)
+             (and (not t)
+                  (let ([t (unpack-group s #f #f)])
+                    (and t
+                         (syntax-parse t
+                           #:datum-literals (group)
+                           [(group _::dotted-identifier-sequence) #t]
+                           [_ #f]))))))))
+
+(define-annotation-syntax Term
+  (identifier-annotation #'syntax-term? syntax-static-infos))
+(define (syntax-term? s)
+  (and (syntax? s)
+       (unpack-term s #f #f)
+       #t))
+
+(define-annotation-syntax Group
+  (identifier-annotation #'syntax-group? syntax-static-infos))
+(define (syntax-group? s)
+  (and (syntax? s)
+       (unpack-group s #f #f)
+       #t))
 
 (define-name-root Syntax
   #:fields
@@ -80,11 +125,8 @@
    replace_scopes
    relocate
    relocate_span
-   equal_binding
-   equal_name_and_scopes
-   to_code<_string
-   [srcloc get-srcloc]
-   expanding_phase))
+   to_code_string
+   [srcloc get-srcloc]))
 
 (define-syntax literal
   (expression-transformer
@@ -330,33 +372,6 @@
   (unless (syntax? stx) (raise-argument-error* 'Syntax.to_code_string rhombus-realm "Syntax" stx))
   (string->immutable-string (shrubbery-syntax->string stx)))
 
-(define (extract-id who stx)
-  (define s (unpack-term stx #f #f))
-  (unless (identifier? s)
-    (raise-argument-error* who rhombus-realm "Identifier" stx))
-  s)
-
-(define/arity equal_binding
-  (case-lambda
-    [(id1 id2) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2))]
-    [(id1 id2 phase1) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2) phase1)]
-    [(id1 id2 phase1 phase2) (free-identifier=? (extract-id 'Syntax.equal_binding id1) (extract-id 'Syntax.equal_binding id2) phase1 phase2)]))
-
-(define/arity equal_name_and_scopes
-  (case-lambda
-    [(id1 id2) (bound-identifier=? (extract-id 'Syntax.equal_name_and_scopes id1) (extract-id 'Syntax.equal_name_and_scopes id2))]
-    [(id1 id2 phase) (bound-identifier=? (extract-id 'Syntax.equal_name_and_scopes id1) (extract-id 'Syntax.equal_name_and_scopes id2) phase)]))
-
-(define (equal_binding_method id1)
-  (let ([equal_binding (lambda (id2 [phase1 (syntax-local-phase-level)] [phase2 phase1])
-                         (equal_binding id1 id2 phase1 phase2))])
-    equal_binding))
-
-(define (equal_name_and_scopes_method id1)
-  (let ([equal_name_and_scopes (lambda (id2 [phase (syntax-local-phase-level)])
-                                 (equal_name_and_scopes id1 id2 phase))])
-    equal_name_and_scopes))
-
 (define syntax-method-table
   (hash 'unwrap (method1 unwrap)
         'unwrap_op (method1 unwrap_op)
@@ -367,9 +382,7 @@
         'relocate relocate_method
         'relocate_span relocate_span_method
         'srcloc (method1 syntax-srcloc)
-        'to_code_string (method1 to_code_string)
-        'equal_binding equal_binding_method
-        'equal_name_and_scopes (method1 equal_name_and_scopes)))
+        'to_code_string (method1 to_code_string)))
 
 (define-syntax syntax-instance
   (dot-provider
@@ -386,8 +399,6 @@
         [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
         [(srcloc) (0ary #'get-srcloc)]
         [(to_code_string) (0ary #'to_code_string)]
-        [(equal_binding) (nary #'equal_binding_method 14 #'equal_binding)]
-        [(equal_name_and_scopes) (nary #'equal_binding_method 6 #'equal_name_and_scopes)]
         [else (fail-k)])))))
 
 (define get-srcloc
@@ -400,6 +411,3 @@
              [else
               (raise-argument-error* 'Syntax.srcloc "Syntax" v)]))])
     srcloc))
-
-(define/arity (expanding_phase)
-  (syntax-local-phase-level))

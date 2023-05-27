@@ -6,6 +6,7 @@
          syntax/parse/pre
          "provide.rkt"
          "operator-parse.rkt"
+         "dotted-sequence.rkt"
          "name-root.rkt"
          "definition.rkt"
          "pack.rkt")
@@ -15,6 +16,7 @@
                     Identifier
                     Operator
                     Name
+                    IdentifierName
                     Group
                     Block
                     Multi
@@ -95,7 +97,12 @@
 (define-syntax-class-syntax Term (make-syntax-class #f))
 (define-syntax-class-syntax Identifier (make-syntax-class #'identifier))
 (define-syntax-class-syntax Operator (make-syntax-class #':operator))
-(define-syntax-class-syntax Name (make-syntax-class #':operator-or-identifier))
+(define-syntax-class-syntax Name (make-syntax-class #':dotted-operator-or-identifier-sequence
+                                                    #:splicing? #t
+                                                    #:kind 'term))
+(define-syntax-class-syntax IdentifierName (make-syntax-class #':dotted-identifier-sequence
+                                                              #:splicing? #t
+                                                              #:kind 'term))
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
 (define-syntax-class-syntax Int (make-syntax-class #'exact-integer))

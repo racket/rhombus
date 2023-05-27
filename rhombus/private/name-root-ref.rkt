@@ -7,11 +7,15 @@
                      shrubbery/property
                      "srcloc.rkt"
                      "id-binding.rkt")
+         ;; to support `Syntax.same_binding` and `Syntax.meta_value`, this
+         ;; module is instantiated in phase 0 as well as 1, so keep the
+         ;; imports suitably limited
          "name-root-space.rkt")
 
 ;; convert a hierachical layer implemented as portal syntax to a name-root
 
 (provide (for-syntax name-root-ref
+                     name-root-ref/maybe
                      make-name-root-ref
                      replace-head-dotted-name
                      import-root-ref
@@ -21,7 +25,8 @@
 
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f]
                                        #:non-portal-ref [non-portal-ref #f]
-                                       #:binding-extension-combine [binding-extension-combine (lambda (id prefix) id)])
+                                       #:binding-extension-combine [binding-extension-combine (lambda (id prefix) id)]
+                                       #:quiet-fail? [quiet-fail? #f])
   (lambda (v)
     (define (make self-id get)
       (enforest:name-root
@@ -66,14 +71,17 @@
                                (or (not binding-end?)
                                    (syntax-local-value* (in-space id) binding-ref))
                                (relocate-field form-id field-id id)))]))
-                   (if binding-end?
-                       (let ([prefix (cdar (reverse gets))])
-                         (binding-extension-combine
-                          (relocate-field form-id field-id (build-name prefix field-id))
-                          (in-name-root-space prefix)))
-                       ;; try again with the shallowest to report an error
-                       (let ([get (caar gets)])
-                         (get form-id what field-id in-space)))))
+                   (cond
+                     [(or binding-end?
+                          quiet-fail?)
+                      (let ([prefix (cdar (reverse gets))])
+                        (binding-extension-combine
+                         (relocate-field form-id field-id (build-name prefix field-id))
+                         (in-name-root-space prefix)))]
+                     [else
+                      ;; try again with the shallowest to report an error
+                      (let ([get (caar gets)])
+                        (get form-id what field-id in-space))])))
              ;; keep looking at dots?
              (define more-dots?
                (syntax-parse tail
@@ -124,6 +132,7 @@
       (portal-syntax->lookup (portal-syntax-content v) make)))))
 
 (define-for-syntax name-root-ref (make-name-root-ref))
+(define-for-syntax name-root-ref/maybe (make-name-root-ref #:quiet-fail? #t))
 
 (define-for-syntax (portal-syntax->lookup portal-stx make)
   (syntax-parse portal-stx

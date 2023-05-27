@@ -14,7 +14,7 @@ expr.macro 'doc $parens $tail ...':
       values(parsed(['#{typeset-doc}', me, parens]),
              '$tail ...')
   | ~else:
-      Syntax.error("expected forms and documentation content", '$me $parens')
+      syntax_meta.error("expected forms and documentation content", '$me $parens')
 
 defn.macro 'nonterminal: $nts':
   ~op_stx: me

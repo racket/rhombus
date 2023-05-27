@@ -9,6 +9,7 @@
 (provide (for-space rhombus/space_clause
                     space_path
                     macro_definer
+                    bridge_definer
                     meta_namespace))
 
 (module+ for-space-macro
@@ -50,6 +51,13 @@
        [(_ id:identifier)
         (wrap-clause #`(#:export_macro id))]))))
 
+(define-space-clause-syntax bridge_definer
+  (space-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ id:identifier)
+        (wrap-clause #`(#:export_bridge id))]))))
+
 (define-space-clause-syntax meta_namespace
   (space-clause-transformer
    (lambda (stx)
@@ -68,6 +76,10 @@
        (when (hash-ref options '#:export_macro #f)
          (raise-syntax-error #f "multiple macro definer names declared" orig-stx #'define-macro))
        (hash-set options '#:export_macro #'define-macro)]
+      [(_ (#:export_bridge define-bridge))
+       (when (hash-ref options '#:export_bridge #f)
+         (raise-syntax-error #f "multiple bridge definer names declared" orig-stx #'define-bridge))
+       (hash-set options '#:export_bridge #'define-bridge)]
       [(_ (#:meta_namespace name content))
        (when (hash-ref options '#:meta_namespace #f)
          (raise-syntax-error #f "multiple meta namespaces declared" orig-stx #'name))

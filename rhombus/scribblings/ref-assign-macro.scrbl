@@ -58,7 +58,7 @@
   fun assign_meta.unpack_left(stx :: Syntax) :: values(Syntax, Syntax, Syntax)
 ){
 
- @provided_meta()
+@provided_meta()
 
  Takes a syntax object that represents the parse left-hand side of an
  assignment operator, returning three pieces of information about the
@@ -89,6 +89,8 @@
   fun assign_meta.pack_assignment(group :: Syntax) :: Syntax
 ){
 
+@provided_meta()
+
  Converts a syntax object, which can be a multi-term syntax object, into
  an @tech{parsed} term that represents an expression to implement an
  assignment operator's expansion.
@@ -104,7 +106,7 @@
     field [tail, ...]
 ){
 
- @provided_meta()
+@provided_meta()
 
  A syntax class that matches by parsing an assignment, where the input
  starts with an assignment operator and continues as the operator expects

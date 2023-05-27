@@ -5,6 +5,7 @@
                      enforest/syntax-local
                      "name-path-op.rkt"
                      "operator-parse.rkt"
+                     "dotted-sequence.rkt"
                      "introducer.rkt"
                      "srcloc.rkt")
          "expression.rkt"
@@ -20,32 +21,14 @@
            build-definitions/maybe-extension
            build-syntax-definition/maybe-extension
            build-syntax-definitions/maybe-extension
-           identifier-extension-binding?))
+           identifier-extension-binding?
+           build-dot-identifier))
 
 ;; A dotted identifier as a bindig form does not go though `:dotted-identifier-sequence`.
 ;; Instead, suitable binding information is created by `name-root-ref` via the
 ;; `binding-extension-combine` argument.
 
 (begin-for-syntax
-  (define-splicing-syntax-class :dotted-identifier-sequence
-    (pattern (~seq head-id:identifier (~seq _::op-dot tail-id:identifier) ...)))
-
-  (define-splicing-syntax-class :dotted-operator-or-identifier-sequence
-    #:datum-literals (group)
-    (pattern (~seq _::operator))
-    (pattern (~seq (~seq _:identifier _::op-dot) ... _:identifier))
-    (pattern (~seq (~seq _:identifier _::op-dot) ... (_::parens (group _::operator)))))
-
-  (define (build-dot-symbol ids)
-    (string->symbol
-     (apply string-append
-            (let loop ([ids ids])
-              (cond
-                [(null? (cdr ids)) (list (symbol->string (syntax-e (car ids))))]
-                [else (list* (symbol->string (syntax-e (car ids)))
-                             "."
-                             (loop (cdr ids)))])))))
-
   (define (build-dot-identifier head-ids-stx tail-id all)
     (define head-ids (syntax->list head-ids-stx))
     (cond
@@ -102,10 +85,11 @@
       #`(define #,name #,rhs))]))
 
 (define-for-syntax (build-syntax-definition/maybe-extension space-sym name-in extends rhs)
-  (define name ((space->introducer space-sym) name-in))
+  (define intro (space->introducer space-sym))
+  (define name (intro name-in))
   (cond
     [(syntax-e extends)
-     (define tmp ((space->introducer space-sym) (car (generate-temporaries (list name)))))
+     (define tmp (intro (car (generate-temporaries (list name)))))
      #`(begin
          (define-syntax #,tmp (let ([#,name #,rhs])
                                 #,name))

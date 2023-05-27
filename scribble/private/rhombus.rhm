@@ -97,7 +97,7 @@ meta:
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
     | '$(id :: Name)':
-        def mv = Syntax.meta_value(typeset_meta.in_space(id), #false)
+        def mv = syntax_meta.value(id, typeset_meta.space, #false)
         match mv
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
@@ -108,7 +108,7 @@ meta:
   fun adjust_spaces(head, tail):
     match '$head'
     | '$(id :: Name)':
-        def mv = Syntax.meta_value(typeset_meta.in_space(id), #false)
+        def mv = syntax_meta.value(id, typeset_meta.space, #false)
         match mv
         | typeset_meta.Spacer(proc):
             proc(head, tail, '#,')                
@@ -154,7 +154,7 @@ expr.macro
           || kw === #'~space_clause
           || kw === #'~space_meta_clause)
     | '#{typeset-rhombus}(~space: #'$kw, $(literal_group(forms)))'
-    | Syntax.error("invalid space", kw_stx)
+    | syntax_meta.error("invalid space", kw_stx)
 
 expr.macro 'rhombusblock_etc $tail ...':
   ~op_stx: me
@@ -163,14 +163,14 @@ expr.macro 'rhombusblock_etc $tail ...':
     | ': $_':
         def [opt, ...] = options
         '#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))'
-    | ~else: Syntax.error("expected a block", '$me $tail ...')
+    | ~else: syntax_meta.error("expected a block", '$me $tail ...')
   fun check_options(options):
     match options
     | []: #true
     | ['~inset: $on', more, ...]: check_options([more, ...])
     | ['~indent: $amt', more, ...]: check_options([more, ...])
     | ['~prompt: $prompt', more, ...]: check_options([more, ...])
-    | ['$opt', _, ...]: Syntax.error("invalid option", opt)
+    | ['$opt', _, ...]: syntax_meta.error("invalid option", opt)
   match '$tail ...'
   | '($option, ...) $new_tail ...':
       check_options([option, ...])

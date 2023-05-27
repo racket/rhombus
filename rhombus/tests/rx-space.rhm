@@ -43,10 +43,10 @@ space.enforest regexp:
     parse_checker: fun (stx, who):
                      match stx
                      | '$(s :: String)': stx
-                     | _: Syntax.error("bad result", stx)
+                     | _: syntax_meta.error("bad result", stx)
     // Improve the error for an identifier that isn't an operator
     identifier_parser: fun (id):
-                         Syntax.error("identifier not allowed", id)
+                         syntax_meta.error("identifier not allowed", id)
 
 expr.macro '«rx '$(pat :: regexp_meta.Parsed)'»':
   'pregexp($pat)'

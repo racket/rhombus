@@ -1,4 +1,4 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 block:
   import "static_arity.rhm"
@@ -8,8 +8,6 @@ block:
     Syntax.make_sequence(t, [ctx])
     Syntax.unwrap(stx)
     Syntax.unwrap_sequence(stx)
-    Syntax.equal_binding(stx, stx2, [phase1], [phase2])
-    Syntax.equal_name_and_scopes(stx, stx2, [phase])
 
 check:
   Syntax.make(1)
@@ -105,27 +103,48 @@ check:
   ~is #true
 
 check:
-  Syntax.equal_binding('check', 'check') ~is #true
-  Syntax.equal_binding('check', 'def') ~is #false
-  Syntax.equal_binding('check', 'check', 0, 1) ~is #false
-  Syntax.equal_name_and_scopes('check', 'check') ~is #true
-  Syntax.equal_name_and_scopes('check', 'check', 0) ~is #true
-  Syntax.expanding_phase() ~is 0
+  ~eval
+  module m ~lang rhombus/and_meta:
+    meta:
+      import: rhombus.check
+      check:
+        syntax_meta.equal_binding('check', 'check') ~is #true
+        syntax_meta.equal_binding('check', 'def') ~is #false
+        syntax_meta.equal_binding('check', 'check', expr_meta.space, 0, 2) ~is #false
+        syntax_meta.equal_name_and_scopes('check', 'check') ~is #true
+        syntax_meta.equal_name_and_scopes('check', 'check', 0) ~is #true
+        syntax_meta.expanding_phase() ~is 0
+  ~completes
 
-namespace ns1:
-  import rhombus.Pair.cons
-  export x
-  def x = 'cons'
-namespace ns2:
-  import rhombus.List.cons
-  export x
-  def x = 'cons'
-namespace ns3:
-  import rhombus.List.cons
-  export x
-  def x = 'cons'
 check:
-  Syntax.equal_binding(ns1.x, ns2.x) ~is #false
-  Syntax.equal_binding(ns3.x, ns2.x) ~is #true
-  Syntax.equal_name_and_scopes(ns1.x, ns2.x) ~is #false
-  Syntax.equal_name_and_scopes(ns3.x, ns2.x) ~is #false
+  ~eval
+  module m ~lang rhombus/and_meta:
+    meta:
+      import: rhombus.check
+      namespace ns1:
+        import rhombus.Pair.cons
+        export x
+        def x = 'cons'
+      namespace ns2:
+        import rhombus.List.cons
+        export x
+        def x = 'cons'
+      namespace ns3:
+        import rhombus.List.cons
+        export x
+        def x = 'cons'
+      check:
+        syntax_meta.equal_binding(ns1.x, ns2.x, expr_meta.space, 1) ~is #false
+        syntax_meta.equal_binding(ns3.x, ns2.x, expr_meta.space, 1) ~is #true
+        syntax_meta.equal_name_and_scopes(ns1.x, ns2.x, 1) ~is #false
+        syntax_meta.equal_name_and_scopes(ns3.x, ns2.x, 1) ~is #false
+      check:
+        syntax_meta.equal_binding('+', '+') ~is #true
+        syntax_meta.equal_binding('*', '+') ~is #false
+        syntax_meta.equal_binding('List.cons', 'List.cons') ~is #true
+        syntax_meta.equal_binding('List.cons', 'Pair.cons') ~is #false
+        syntax_meta.equal_binding('List.cons', 'List.first') ~is #false
+        syntax_meta.equal_binding('List.(+)', 'List.(+)') ~is #true
+        syntax_meta.equal_binding('List.(+)', 'Pair.(+)') ~is #false
+        syntax_meta.equal_binding('List.(+)', '+') ~is #false
+  ~completes

@@ -7,11 +7,15 @@
          "name-root.rkt"
          "parens.rkt"
          "parse.rkt"
-         (for-syntax "parse.rkt"))
+         (for-syntax "parse.rkt")
+         "dotted-sequence-parse.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f)
                      meta))
+
+(module+ for-bridge
+  (provide (for-syntax make-bridge-definer)))
 
 (define-name-root meta
   #:fields
@@ -30,11 +34,16 @@
        [(form-id (op |.|) bridge . tail)
         #'((rhombus-definition (group bridge . tail)))]))))
 
-(define-syntax bridge
+(define-for-syntax (make-bridge-definer space-sym)
   (definition-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(form-id lhs:identifier (tag::block form ...))
-        #'((define-syntax lhs
-             (rhombus-body-at tag form ...)))]))))
+       [(form-id name-seq::dotted-operator-or-identifier-sequence (tag::block form ...))
+        #:with name::dotted-operator-or-identifier #'name-seq
+        #`(#,(build-syntax-definition/maybe-extension
+              space-sym #'name.name #'name.extends
+              #'(rhombus-body-at tag form ...)))]))))
+
+(define-syntax bridge
+  (make-bridge-definer #f))

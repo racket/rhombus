@@ -47,7 +47,7 @@ interface DC:
                     ~finally dc.restore()',
                '')
     | _:
-        Syntax.error("expected a block afterward", head)
+        syntax_meta.error("expected a block afterward", head)
 
   property size :: Size:
     def (w, h) = rkt.send get_dc().#{get-size}()

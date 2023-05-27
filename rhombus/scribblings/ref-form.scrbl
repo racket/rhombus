@@ -166,24 +166,26 @@
 @doc(
   ~nonterminal_key: namespace
 
-  grammar id_path:
+  grammar id_name:
     $id
-    $id_path . $id
+    $id_name . $id
 
-  grammar op_path:
+  grammar op_name:
     $op
-    $id_path . ($op)
+    $id_name . ($op)
 
-  grammar op_or_id_path:
-    $op_path
-    $id_path
+  grammar op_or_id_name:
+    $op_name
+    $id_name
 ){
 
- Refers to a defined identifier or operator within a namespace, or used
- in a binding position to extend an existing namespace with a binding for
- the identifier or operator. In either context, in an
- @rhombus(id_path, ~var) or @rhombus(op_path, ~var), each
- @rhombus(id, ~var) before a dot must refer to a namespace.
+ Refers to an identifier or operator that is potentially accessed
+ through a dotted sequence to access a namespace or import. The full name
+ might refer to an identifier or operator that is already bound, or it
+ might be used in a binding position to extend an existing namespace with
+ a binding for the identifier or operator. In either context, in an
+ @rhombus(id_name, ~var) or @rhombus(op_name, ~var), each
+ @rhombus(id, ~var) before a dot must refer to a namespace or import.
 
 }
 

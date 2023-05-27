@@ -476,7 +476,8 @@
   syntax_class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Identifier: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Operator: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Name: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Name: #,(@rhombus(kind, ~syntax_class_clause)): ~sequence
+  syntax_class IdentifierName: #,(@rhombus(kind, ~syntax_class_clause)): ~sequence
   syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Int: #,(@rhombus(kind, ~syntax_class_clause)): ~term
@@ -507,7 +508,12 @@
  single-term syntax object that has a block term, and not as a
  multi-group syntax object).
 
- The @rhombus(Name, ~stxclass) syntax class is the union of
- @rhombus(Identifier, ~stxclass) and @rhombus(Operator, ~stxclass).
+ The @rhombus(Name, ~stxclass) syntax class is an extension of the union
+ of @rhombus(Identifier, ~stxclass) and @rhombus(Operator, ~stxclass)
+ that matches dotted sequences like an @rhombus(op_or_id_name) form.
+
+ The @rhombus(IdentifierName, ~stxclass) syntax class is an extension
+ of @rhombus(Identifier, ~stxclass)
+ that matches dotted sequences like an @rhombus(id_name) form.
 
 }

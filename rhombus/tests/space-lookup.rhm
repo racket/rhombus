@@ -1,0 +1,33 @@
+#lang rhombus/and_meta
+
+space.transform food:
+  space_path rhombus/example/food
+  bridge_definer bridge
+  meta_namespace food_meta:
+    reflection space
+
+check:
+  food.bridge cake:
+    "pineapple upsidedown"
+  expr.macro 'go':
+    '$(syntax_meta.value('cake', food_meta.space))'
+  go
+  ~is "pineapple upsidedown"
+
+check:
+  namespace bakery:
+    export cake
+    food.bridge cake:
+      "chocolate"
+  expr.macro 'go':
+    '$(syntax_meta.value('bakery.cake', food_meta.space))'
+  go
+  ~is "chocolate"
+
+check:
+  food.bridge List.cake:
+    "tiered"
+  expr.macro 'go':
+    '$(syntax_meta.value('List.cake', food_meta.space))'
+  go
+  ~is "tiered"

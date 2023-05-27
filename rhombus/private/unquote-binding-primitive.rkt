@@ -7,7 +7,6 @@
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
-         enforest/name-parse
          "pack.rkt"
          "syntax-class-primitive.rkt"
          (only-in "expression.rkt"
@@ -36,8 +35,7 @@
                     &&
                     \|\|
                     #%literal
-                    #%block
-                    bound_as))
+                    #%block))
 
 ;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
 ;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
@@ -455,35 +453,3 @@
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
 
-(define-unquote-binding-syntax bound_as
-  (unquote-binding-transformer
-   (lambda (stxes)
-     (cond
-       [(eq? (current-unquote-binding-kind) 'term)
-        (syntax-parse stxes
-          #:datum-literals (group)
-          [(_ space ... (_::block (group (_::quotes (group bound::name)))))
-           #:with (~var sp (:hier-name-seq in-name-root-space in-space-space name-path-op name-root-ref)) #'(space ...)
-           (define sn (syntax-local-value* (in-space-space #'sp.name) space-name-ref))
-           (unless sn
-             (raise-syntax-error #f
-                                 "not a space name"
-                                 stxes
-                                 #'sp.name))
-           (values #`((~var _ (:free=-in-space
-                               (quote-syntax #,(if (space-name-symbol sn)
-                                                   ((make-interned-syntax-introducer (space-name-symbol sn)) #'bound.name 'add)
-                                                   #'bound.name))
-                               '#,(space-name-symbol sn)))
-                      ()
-                      ()
-                      ())
-                   #'())])]
-       [else (values #'#f #'())]))))
-
-(define-syntax-class (:free=-in-space bound-id space-sym)
-  #:datum-literals (group)
-  (pattern t::name
-           #:when (free-identifier=? bound-id (if space-sym
-                                                  ((make-interned-syntax-introducer space-sym) #'t.name 'add)
-                                                  #'t.name))))

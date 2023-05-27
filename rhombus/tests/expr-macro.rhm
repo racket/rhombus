@@ -35,7 +35,7 @@ expr.macro 'also_prefix_plus $e ...':
   | '$a $b $c ...':
       values(a, '+ $b $c ...')
   | ~else:
-      Syntax.error("bad syntax", '$e ...')
+      syntax_meta.error("bad syntax", '$e ...')
 
 check:
   also_prefix_plus 7 9
@@ -213,3 +213,25 @@ check:
      ~weaker_than: +
      '$x')
   ~raises "unexpected term"
+
+check:
+  expr.macro 'two_of $(n :: Name)':
+    '[$n, $n]'
+  two_of List.empty
+  ~is [[], []]
+
+check:
+  import rhombus.List.cons
+  expr.macro 'go':
+    match 'cons'
+    | '$(bound_as expr_meta.space: 'List.cons')': '"ok"'
+  go
+  ~is "ok"
+
+check:
+  import rhombus.List.cons
+  expr.macro 'go':
+    match 'List.cons'
+    | '$(bound_as expr_meta.space: 'List.cons')': '"also ok"'
+  go
+  ~is "also ok"

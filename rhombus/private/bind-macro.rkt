@@ -13,6 +13,7 @@
                                  syntax/parse/pre)
                      "tail-returner.rkt"
                      "macro-result.rkt")
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
@@ -48,7 +49,8 @@
 (begin-for-syntax
   (define-name-root bind_meta
     #:fields
-    (pack
+    (space
+     pack
      pack_info
      unpack
      unpack_info
@@ -69,6 +71,9 @@
     Parsed :binding
     AfterPrefixParsed :prefix-op+binding+tail
     AfterInfixParsed :infix-op+binding+tail))
+
+(define-for-syntax space
+  (space-syntax rhombus/bind))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)

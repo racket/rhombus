@@ -32,8 +32,8 @@
     $other_export
 
   grammar id_or_op:
-    $id_path
-    $op_path
+    $id_name
+    $op_name
 
   grammar modifier:
     #,(@rhombus(except, ~impo)) $except_decl
@@ -62,11 +62,11 @@
  a block. The latter order works only if the @rhombus(modifier) itself
  does not need a block.
 
- An @rhombus(id_path) or @rhombus(op_path) export can be
+ An @rhombus(id_name) or @rhombus(op_name) export can be
  an immediate identifier or oerator, or it can be dotted name, such as
  @rhombus(List.length). The last component of a dotted name is used as
  the export name. See @secref("namespaces") for information on
- @rhombus(id_path) and @rhombus(op_path).
+ @rhombus(id_name) and @rhombus(op_name).
 
 }
 
@@ -74,7 +74,7 @@
   ~nonterminal:
     module_path: import
   expo.macro 'all_from($module_path)'
-  expo.macro 'all_from(#,(@rhombus(., ~expo)) $id_path)'
+  expo.macro 'all_from(#,(@rhombus(., ~expo)) $id_name)'
 ){
 
  With @rhombus(module_path), exports all bindings imported without a
@@ -85,11 +85,11 @@
  @rhombus(lib) forms, and in a @rhombus(lib) form, an implicit
  @filepath{.rhm} suffix is made explicit.
 
- With @rhombus(#,(@rhombus(., ~expo)) id_path), exports
+ With @rhombus(#,(@rhombus(., ~expo)) id_name), exports
  the content of the specified @tech{namespace} or module import (i.e.,
  the content that would be accessed with a prefix in the exporting
  context). See @secref("namespaces") for information on
- @rhombus(id_path).
+ @rhombus(id_name).
 }
 
 @doc(
@@ -212,14 +212,14 @@
 
 
 @doc(
-  expo.macro '$id_path . $id'
-  expo.macro '$id_path . ($op)'
+  expo.macro '$id_name . $id'
+  expo.macro '$id_name . ($op)'
 ){
 
   In an export clause, @rhombus(., ~expo) can be used only to form a
-  and @rhombus(id_path) or @rhombus(op_path)
+  and @rhombus(id_name) or @rhombus(op_name)
   as described for @rhombus(export). It can also be used to form an
-  @rhombus(id_path) for @rhombus(all_from).
+  @rhombus(id_name) for @rhombus(all_from).
 
 }
 

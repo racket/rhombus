@@ -28,6 +28,19 @@
 
 }
 
+
+@doc(
+  def expr_meta.space :: SpaceMeta
+){
+
+@provided_meta()
+
+ A compile-time value that identifies the same space as
+ @rhombus(expr, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
 @doc(
   ~nonterminal:
     macro_pattern: macro
@@ -39,7 +52,7 @@
     $macro_case
     Z| $macro_case
      | ...
-    $op_or_id_path:
+    $op_or_id_name:
       $option; ...
       match
       | $macro_case
@@ -85,7 +98,7 @@
     field [tail, ...]
 ){
 
- @provided_meta()
+@provided_meta()
 
  Syntax classes that match by parsing expressions. The value of the
  binding in each case is an opaque syntax object that represents the @tech{parsed}
@@ -127,6 +140,8 @@
   fun expr_meta.pack_expr(group :: Syntax) :: Syntax
 ){
 
+@provided_meta()
+
  Converts a syntax object, which can be a multi-term syntax object, into
  an @tech{parsed} term, but one that represents an expression with
  delayed parsing. The function is intended for use in combination with
@@ -143,6 +158,8 @@
 @doc(
   fun expr_meta.pack_s_exp(tree) :: Syntax
 ){
+
+@provided_meta()
 
  Converts a tree of terms, which can include @tech{parsed} terms, into a
  new parsed term representing a Racket parenthesized form. The intent is
