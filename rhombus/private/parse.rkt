@@ -259,5 +259,5 @@
   (syntax-parse stx
     #:literals (rhombus-expression)
     [(rhombus-expression . _)
-     (enforest-rhombus-expression stx)]
+     (rhombus-local-expand (enforest-rhombus-expression stx))]
     [_ stx]))

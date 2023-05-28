@@ -2,12 +2,17 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
+                     enforest/hier-name-parse
                      "pack.rkt"
                      "static-info-pack.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "name-path-op.rkt"
+                     "realm.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root.rkt"
+         "name-root-ref.rkt"
+         "name-root-space.rkt"
          "quasiquote.rkt"
          "static-info.rkt"
          "parse.rkt"
@@ -71,10 +76,17 @@
                                             (pack info)))))
 
 (define-for-syntax (lookup form key)
-  (define si (extract-static-infos (syntax-parse (unpack-term form 'statinfo_meta.lookup #f)
-                                     #:datum-literals (parsed)
-                                     [(parsed e) #'e]
-                                     [t #'t])))
+  (define who 'statinfo_meta.lookup)
+  (unless (syntax? form) (raise-argument-error* who rhombus-realm "Syntax" form))
+  (unless (identifier? key) (raise-argument-error* who rhombus-realm "Identifier" key))
+  (define si (extract-static-infos (syntax-parse (unpack-group form who #f)
+                                     #:datum-literals (parsed group)
+                                     [(group (parsed e)) #'e]
+                                     [(group . (~var name (:hier-name-seq in-name-root-space (lambda (x) x) name-path-op name-root-ref/maybe)))
+                                      (and (null? (syntax-e #'name.tail))
+                                           #'name.name)]
+                                     [(group t) #'t]
+                                     [g #'g])))
   (and si (static-info-lookup si key)))
 
 (define-for-syntax call_result_key #'#%call-result)

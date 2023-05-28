@@ -86,17 +86,27 @@
 }
 
 @doc(
-  fun statinfo_meta.lookup(expr_stx :: Syntax, key :: Syntax)
+  fun statinfo_meta.lookup(expr_stx :: Syntax, key :: Identifier)
 ){
 
- @provided_meta()
+@provided_meta()
 
- Finds static information for @rhombus(expr_stx), which might be an
- identifier with static information associated to its binding or an
+ Finds static information for @rhombus(expr_stx), which might be a
+ name with static information associated to its binding, or it might be an
  expression with static information associated directly. The result is
- a syntax object for the value associated to @rhombus(key) in tat
+ a syntax object for the value associated to @rhombus(key) in that
  static information, or @rhombus(#false) if no information or value
  for @rhombus(key) is available.
+
+ When @rhombus(expr_stx) is an expression, consider using
+ @rhombus(expr_meta.parse_more) to reveal additional static information
+ by forcing an earlier expansion of the expression. Use the result in
+ place of @rhombus(expr_stx), instead of continuing to use
+ @rhombus(expr_stx) (which could cause parsing and expansion to happen a
+ second time for the same expression). A potential drawback of forcing
+ expansion is that it might constrain the order of definitions in a
+ recursive definition context; as a convention to limit such problems,
+ avoid expansion of terms that are nested within a block.
 
  Keys for static information are compared based on binding, not merely
  the key's symbolic form.

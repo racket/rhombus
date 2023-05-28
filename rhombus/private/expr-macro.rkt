@@ -35,6 +35,7 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
+     parse_more
      pack_s_exp
      pack_expr)))
 
@@ -121,3 +122,7 @@
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
   #`(parsed (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
+
+(define-for-syntax (parse_more s)
+  (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
+    [e::expression #`(parsed #,(rhombus-local-expand #'e.parsed))]))

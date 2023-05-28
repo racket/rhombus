@@ -1,0 +1,26 @@
+#lang rhombus/and_meta
+
+namespace sub:
+  export x
+  statinfo.macro 'x':
+    '((anything, "yes"))'
+
+check:
+  expr.macro 'use_x':
+    statinfo_meta.lookup('sub.x', 'anything')
+  use_x
+  ~is "yes"
+
+expr.macro 'two $(pre_expr :: expr_meta.Parsed) $()':
+  def expr = expr_meta.parse_more(pre_expr)
+  def si = statinfo_meta.lookup(expr, statinfo_meta.map_ref_key)
+  statinfo_meta.wrap(expr_meta.parse_more('[$expr, $expr]'),
+                     '(($statinfo_meta.ref_result_key,
+                        $(statinfo_meta.pack('(($statinfo_meta.map_ref_key, $si))'))))')
+
+macro 'list_of_zero': '[0]'
+
+check:
+  use_static
+  ((two list_of_zero)[0])[0]
+  ~is 0

@@ -135,6 +135,18 @@
 
 }
 
+@doc(
+  fun expr_meta.parse_more(group :: Syntax) :: Syntax
+){
+
+@provided_meta()
+
+ Similar to matching @rhombus(stx) using the syntax class
+ @rhombus(expr_meta.Parsed, ~stxclass), but further forces expression parsing to
+ reveal immediate static information from parsing and macro expansion.
+
+}
+
 
 @doc(
   fun expr_meta.pack_expr(group :: Syntax) :: Syntax
