@@ -72,10 +72,10 @@
                     defaults-id   ; #f if no arguments with defaults
                     static-infos  ; syntax object for aditional instance static-infos
                     call-method-id ; #f or identifier as private `call` (for Callable) whose static info is relevant
-                    ref-method-id ; for `ref`
-                    set-method-id ; for `set`
+                    index-method-id ; for `get`
+                    index-set-method-id ; for `set`
                     prefab-guard-id
-                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'ref, 'set
+                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'get, 'set
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class

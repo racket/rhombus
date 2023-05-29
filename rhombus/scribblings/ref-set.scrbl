@@ -13,14 +13,15 @@ which creates a set containing the values of the @rhombus(value_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
 parsed as an implicit use of the @rhombus(#%braces) form.
 
-To check for membership in a set, use @brackets after a set
-expression with an expression for a value, and the result is a boolean
+A set is @tech{indexable}, and @brackets after a set
+expression with an expression for a value checks for membership: the result is a boolean
 indicating whether the value is in the set. Mutable sets can be updated
 with a combination of @brackets and the @rhombus(:=) operator, where
 a @rhombus(#false) result on the right-hand side of @rhombus(:=) removes an
 element from a set, and any other right-hand side result causes the value
-to be included in the set. These uses of @brackets are implemented by
-@rhombus(#%ref). A set can be used as @tech{sequence}, in which case
+to be included in the set. (Use @rhombus(++) to functionally add to an
+immutable set.) These uses of @brackets are implemented by
+@rhombus(#%index). A set can be used as @tech{sequence}, in which case
 it supplies its elements in an unspecified order.
 
 @dispatch_table(

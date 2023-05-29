@@ -4,7 +4,7 @@
          "provide.rkt"
          "class-primitive.rkt"
          "function-arity-key.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info))
@@ -97,7 +97,7 @@
 
 (define-exn Syntax exn:fail:syntax
   #:parent Fail exn:fail
-  #:fields ([exprs ((#%ref-result #,syntax-static-infos)
+  #:fields ([exprs ((#%index-result #,syntax-static-infos)
                     . #,list-static-infos)])
   #:children (Unbound
               MissingModule))
@@ -114,7 +114,7 @@
 
 (define-exn Read exn:fail:read
   #:parent Fail exn:fail
-  #:fields ([srclocs ((#%ref-result #,srcloc-static-infos)
+  #:fields ([srclocs ((#%index-result #,srcloc-static-infos)
                       . #,list-static-infos)])
   #:children (EOF
               NonChar))

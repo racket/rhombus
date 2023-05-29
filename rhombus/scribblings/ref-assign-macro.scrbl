@@ -18,7 +18,7 @@
   operator}, similar to @rhombus(:=). An assignment operator is
  used in combination with @rhombus(mutable, ~bind)
  variables and forms like @rhombus(.) and like @brackets via
- @rhombus(#%ref). The @rhombus(macro_pattern) is constrained to an
+ @rhombus(#%index). The @rhombus(macro_pattern) is constrained to an
  infix-operator pattern, since the cooperating forms always expect an
  infix use. When the @rhombus(macro_pattern) would imply an
  already-parsed right-hand expression for @rhombus(macro) or

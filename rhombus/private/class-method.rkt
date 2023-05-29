@@ -17,8 +17,8 @@
          "class-method-result.rkt"
          "dot-provider-key.rkt"
          "function-indirect-key.rkt"
-         "map-ref-set-key.rkt"
-         "ref-indirect-key.rkt"
+         "index-key.rkt"
+         "index-indirect-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
@@ -349,8 +349,8 @@
                                          in-final?
                                          methods-ref-id
                                          call-statinfo-indirect-stx callable?
-                                         ref-statinfo-indirect-stx refable?
-                                         set-statinfo-indirect-stx setable?)
+                                         index-statinfo-indirect-stx indexable?
+                                         index-set-statinfo-indirect-stx setable?)
   (define defs
     (for/list ([added (in-list added-methods)]
                #:when (added-method-result-id added))
@@ -375,12 +375,12 @@
           #,(and callable?
                  (eq? 'call (syntax-e (added-method-id added)))
                  call-statinfo-indirect-stx)
-          #,(and refable?
-                 (eq? 'ref (syntax-e (added-method-id added)))
-                 #`[#,ref-statinfo-indirect-stx #,(added-method-rhs-id added)])
+          #,(and indexable?
+                 (eq? 'get (syntax-e (added-method-id added)))
+                 #`[#,index-statinfo-indirect-stx #,(added-method-rhs-id added)])
           #,(and setable?
                  (eq? 'set (syntax-e (added-method-id added)))
-                 #`[#,set-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
+                 #`[#,index-set-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
   ;; may need to add info for inherited `call`, etc.:
   (define (add-able which statinfo-indirect-stx able? key defs abstract-args)
     (if (and statinfo-indirect-stx
@@ -402,8 +402,8 @@
               defs))
         defs))
   (let* ([defs (add-able 'call call-statinfo-indirect-stx callable? #'#%function-indirect defs #f)]
-         [defs (add-able 'ref ref-statinfo-indirect-stx refable? #'#%map-ref defs #'(index))]
-         [defs (add-able 'set set-statinfo-indirect-stx setable? #'#%map-set! defs #'(index val))])
+         [defs (add-able 'get index-statinfo-indirect-stx indexable? #'#%index-get defs #'(index))]
+         [defs (add-able 'set index-set-statinfo-indirect-stx setable? #'#%index-set defs #'(index val))])
     defs))
 
 (define-for-syntax (build-method-result-expression method-result)

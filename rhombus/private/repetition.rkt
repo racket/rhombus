@@ -17,7 +17,7 @@
          "expression.rkt"
          "binding.rkt"
          "static-info.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          "indirect-static-info-key.rkt"
          "parse.rkt")
 
@@ -178,7 +178,7 @@
                           #'rep-info.element-static-infos))
         (if (= depth 0)
             (wrap-static-info* #'rep-info.seq-expr infos)
-            (wrap-static-info #'rep-info.seq-expr #'#%ref-result infos))])]))
+            (wrap-static-info #'rep-info.seq-expr #'#%index-result infos))])]))
 
 (define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos)
   (syntax-parse rep-parsed
@@ -188,7 +188,7 @@
                            #'rep-info.seq-expr
                            #'rep-info.bind-depth
                            (+ 1 (syntax-e #'rep-info.use-depth))
-                           #`((#%ref-result rep-info.element-static-infos)
+                           #`((#%index-result rep-info.element-static-infos)
                               . #,static-infos)
                            #'rep-info.immediate?)]))
 

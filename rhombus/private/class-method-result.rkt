@@ -11,8 +11,8 @@
          "static-info.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
-         "ref-result-key.rkt"
-         "map-ref-set-key.rkt")
+         "index-result-key.rkt"
+         "index-key.rkt")
 
 (provide define-method-result-syntax)
 
@@ -108,8 +108,8 @@
               #,def
               #,@(gen #'maybe-final-id)
               #,@(gen #'maybe-call-statinfo-id)
-              #,@(gen-bounce #'maybe-ref-statinfo-id+id '#%map-ref '#%ref-result)
-              #,@(gen-bounce #'maybe-set-statinfo-id+id '#%map-set! #f))]
+              #,@(gen-bounce #'maybe-ref-statinfo-id+id '#%index-get '#%index-result)
+              #,@(gen-bounce #'maybe-set-statinfo-id+id '#%index-set #f))]
          [else def])]))
   (syntax-parse stx
     #:datum-literals ()

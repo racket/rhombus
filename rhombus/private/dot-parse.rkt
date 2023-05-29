@@ -27,11 +27,11 @@
            [else
             (if more-static?
                 (bad (string-append "wrong number of arguments in method call" statically-str))
-                (values (no-k) tail))])]
+                (success-k (no-k) tail))])]
         [_
          (if more-static?
              (bad "expected parentheses afterward")
-             (values (no-k) tail))]))
+             (success-k (no-k) tail))]))
 
     (define (0ary id [static-infos #'()])
       (ary 1
@@ -57,7 +57,7 @@
                            #,direct-id)
                        static-infos))))
 
-    (define (field mk) (values (mk lhs) tail))
+    (define (field mk) (success-k (mk lhs) tail))
 
     (k (syntax-e field-stx) field ary 0ary nary fail-k)))
 

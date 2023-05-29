@@ -13,10 +13,10 @@ check:
 
 expr.macro 'two $(pre_expr :: expr_meta.Parsed) $()':
   def expr = expr_meta.parse_more(pre_expr)
-  def si = statinfo_meta.lookup(expr, statinfo_meta.map_ref_key)
+  def si = statinfo_meta.lookup(expr, statinfo_meta.index_get_key)
   statinfo_meta.wrap(expr_meta.parse_more('[$expr, $expr]'),
-                     '(($statinfo_meta.ref_result_key,
-                        $(statinfo_meta.pack('(($statinfo_meta.map_ref_key, $si))'))))')
+                     '(($statinfo_meta.index_result_key,
+                        $(statinfo_meta.pack('(($statinfo_meta.index_get_key, $si))'))))')
 
 macro 'list_of_zero': '[0]'
 

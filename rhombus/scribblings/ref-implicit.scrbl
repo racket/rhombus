@@ -30,7 +30,7 @@ Here are all of the implicit forms:
  @item{@rhombus(#%call) --- used as an infix form when a parsed form
        is followed immediately by a @rhombus(()) term}
 
- @item{@rhombus(#%ref) --- used as an infix form when a pared form
+ @item{@rhombus(#%index) --- used as an infix form when a pared form
        is followed immediately by a @rhombus([]) term}
 
  @item{@rhombus(#%comp) --- used as an infix form when a

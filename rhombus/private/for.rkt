@@ -13,7 +13,7 @@
          (submod "reducer.rkt" for-class)
          "for-clause.rkt"
          "static-info.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          "sequence-constructor-key.rkt"
          "parse.rkt"
          "parens.rkt"
@@ -176,7 +176,7 @@
   (syntax-parse lhs-parsed-stxes
     [(lhs-e::binding-form ...)
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
-     #:with static-infos (or (syntax-local-static-info #'rhs #'#%ref-result)
+     #:with static-infos (or (syntax-local-static-info #'rhs #'#%index-result)
                              #'())
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)

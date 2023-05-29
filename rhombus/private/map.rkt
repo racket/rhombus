@@ -17,8 +17,8 @@
          (submod "dot.rkt" for-dot-provider)
          "literal.rkt"
          "static-info.rkt"
-         "ref-result-key.rkt"
-         "map-ref-set-key.rkt"
+         "index-result-key.rkt"
+         "index-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
@@ -76,11 +76,11 @@
         'keys (method1 hash-keys)
         'has_key (lambda (ht) (lambda (key) (hash-has-key? ht key)))
         'copy (method1 hash-copy)
-        'ref (lambda (ht)
-               (let ([ref (case-lambda
+        'get (lambda (ht)
+               (let ([get (case-lambda
                             [(key) (hash-ref ht key)]
                             [(key default) (hash-ref ht key default)])])
-                 ref))
+                 get))
         'hash-snapshot (method1 hash-snapshot)))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
@@ -191,7 +191,8 @@
    [has_key hash-has-key?]
    [copy hash-copy]
    [snapshot hash-snapshot]
-   [ref hash-ref]
+   [get hash-ref]
+   [ref hash-ref] ; temporary
    of))
 
 (define-name-root MapView
@@ -232,13 +233,13 @@
    (lambda (stx) (parse-map stx #t))))
 
 (define-for-syntax map-static-info
-  #'((#%map-ref hash-ref)
-     (#%map-append hash-append)
+  #'((#%index-get hash-ref)
+     (#%append hash-append)
      (#%sequence-constructor in-hash)
      (#%dot-provider hash-instance)))
 
 (define-for-syntax mutable-map-static-info
-  #`((#%map-set! hash-set!)
+  #`((#%index-set hash-set!)
      . #,map-static-info))
 
 (define-annotation-constructor (Map of)
@@ -251,7 +252,7 @@
         (and (#,(car predicate-stxs) k)
              (#,(cadr predicate-stxs) v))))
   (lambda (static-infoss)
-    #`((#%ref-result #,(cadr static-infoss))))
+    #`((#%index-result #,(cadr static-infoss))))
   #'map-build-convert #'())
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
@@ -279,8 +280,8 @@
         [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
         [(copy) (0ary #'hash-copy mutable-map-static-info)]
         [(snapshot) (0ary #'hash-snapshot map-static-info)]
-        [(ref) (nary #'hash-ref 6 #'hash-ref)]
-        [else #f])))))
+        [(get) (nary #'hash-ref 6 #'hash-ref)]
+        [else (fail-k)])))))
 
 (define-static-info-syntax Map-pair-build
   (#%call-result #,map-static-info)
@@ -400,7 +401,7 @@
                                              #`(lambda (v) #,tmp-id))
                                            (for/list ([arg (in-list tmp-ids)])
                                              #'())
-                                           #:ref-result-info? #t
+                                           #:index-result-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
                                                 (if rest-repetition?

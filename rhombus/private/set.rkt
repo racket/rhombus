@@ -17,7 +17,7 @@
          "name-root.rkt"
          "static-info.rkt"
          "reducer.rkt"
-         "map-ref-set-key.rkt"
+         "index-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
@@ -360,13 +360,13 @@
 (define (in-set* s) (in-hash-keys (set-ht s)))
 
 (define-for-syntax set-static-info
-  #'((#%map-ref set-member?)
-     (#%map-append set-append)
+  #'((#%index-get set-member?)
+     (#%append set-append)
      (#%sequence-constructor in-set)
      (#%dot-provider set-instance)))
 
 (define-for-syntax mutable-set-static-info
-  #`((#%map-set! set-member!)
+  #`((#%index-set set-member!)
      . #,set-static-info))
 
 (define-annotation-constructor (Set of)

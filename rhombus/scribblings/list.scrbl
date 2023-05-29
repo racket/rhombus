@@ -138,8 +138,8 @@ or reference a plain list value whose elements are the rest of the list.
 
 
 When @brackets appears after an expression, then instead
-of forming a list, it accesses an element of an @tech{map} value.
-Lists are maps that are indexed by natural numbers starting with
+of forming a list, it accesses an element of an @tech{indexable} value.
+Lists are indexable using natural numbers starting with
 @rhombus(0):
 
 @demo(

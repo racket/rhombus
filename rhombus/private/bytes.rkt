@@ -7,7 +7,7 @@
          "static-info.rkt"
          "define-arity.rkt"
          "call-result-key.rkt"
-         "map-ref-set-key.rkt"
+         "index-key.rkt"
          (submod "annotation.rkt" for-class)
          "mutability.rkt")
 
@@ -26,9 +26,9 @@
 
 (define-for-syntax bytes-static-infos
   #'((#%dot-provider bytes-instance)
-     (#%map-ref bytes-ref)
-     (#%map-set! bytes-set!)
-     (#%map-append bytes-append)))
+     (#%index-get bytes-ref)
+     (#%index-set bytes-set!)
+     (#%append bytes-append)))
 
 (define-annotation-syntax Bytes (identifier-annotation #'bytes? bytes-static-infos))
 (define-annotation-syntax MutableBytes (identifier-annotation #'mutable-bytes? bytes-static-infos))

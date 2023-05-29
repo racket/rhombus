@@ -16,11 +16,12 @@ separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
 implicit use of the @rhombus(#%braces) form.
 
-To access a mapping, use @brackets after a map expression with an
+A map is @tech{indexable} using @brackets after a map expression with an
 expression for the key within @brackets. Mutable maps can be
 updated with a combination of @brackets and @tech{assignment operators}
-such as @rhombus(:=). These uses of square brackets are implemented by
-@rhombus(#%ref).  A map can be used as @tech{sequence}, in which case
+such as @rhombus(:=) (but use @rhombus(++) to functionally update an
+immutable map). These uses of square brackets are implemented by
+@rhombus(#%index).  A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
@@ -30,7 +31,7 @@ in an unspecified order.
   [map.length(), Map.length(map)]
   [map.keys(), Map.keys(map)]
   [map.values(), Map.values(map)]
-  [map.ref(k), Map.ref(map, k)]
+  [map.get(k), Map.get(map, k)]
   [map.has_key(k), Map.has_key(map, k)]
   [map.copy(), Map.copy(map)]
   [map.snapshot(), Map.snapshot(map)]
@@ -119,39 +120,6 @@ in an unspecified order.
 
 }
 
-@doc(
-  ~nonterminal:
-    at_expr: block expr
-    at_repet: block repet
-    rhs_expr: block expr
-  expr.macro '$expr #%ref [$at_expr]'
-  expr.macro '$expr #%ref [$at_expr] $assign_op $rhs_expr'
-  repet.macro '$repetition #%ref [$at_repet]'
-  grammar assign_op:
-    :=
-    $other_assign_op
-){
-
- Without an @rhombus(assign_op), accesses the element of the map, array, list,
- string, or @rhombus(Refable) object produced by @rhombus(expr) at the index or key produced by
- @rhombus(at_expr). The access form also works as a @tech{repetition}
- given repetitions for a collection and an index.
-
- With an @rhombus(assign_op), a mutable array, map, set, or @rhombus(MutableRefable)
- object's element is assigned to
- the value based on the operator and @rhombus(rhs_expr). The expression result is
- @rhombus(#void) in the case of @rhombus(:=) as @rhombus(assign-op).
-
- See also @rhombus(use_static).
-
- @see_implicit(@rhombus(#%ref), @brackets, "expression or repetition", ~is_infix: #true)
-
-@examples(
-  {"a": 1, "b": 2}["a"]
-  {"a": 1, "b": 2} #%ref ["a"]
-)
-
-}
 
 @doc(
   ~nonterminal:
@@ -429,7 +397,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.ref(map :: MapView, key, default = #,@rhombus(raise_error, ~var))
+  fun Map.get(map :: MapView, key, default = #,@rhombus(raise_error, ~var))
 ){
 
  Equivalent to @rhombus(map[key]) when @rhombus(default) is not
@@ -440,10 +408,10 @@ in an unspecified order.
  the result.
 
 @examples(
-  Map.ref({"a": 1, "b": 2}, "a")
-  Map.ref({"a": 1, "b": 2}, "c", #inf)
+  Map.get({"a": 1, "b": 2}, "a")
+  Map.get({"a": 1, "b": 2}, "c", #inf)
   ~error:
-    Map.ref({"a": 1, "b": 2}, "c", fun(): error("no value"))
+    Map.get({"a": 1, "b": 2}, "c", fun(): error("no value"))
 )
 
 }
@@ -480,79 +448,5 @@ in an unspecified order.
 
  Returns an immutable map whose content matches @rhombus(map). If
  @rhombus(map) is immutable, then it is the result.
-
-}
-
-@doc(
-  interface Refable
-){
-
-@provided_interface_only()
-
- An interface that a class can implement (publicly or privately) to make
- instances of the class work with @rhombus(#%ref). The interface has a
- single abstract method:
-
-@itemlist(
-
- @item{@rhombus(#,(@rhombus(ref, ~datum))(#,(@rhombus(index, ~var))))
-  --- the @rhombus(index, ~var) value is the second argument to @rhombus(#%ref),
-  which is normally written within @brackets. The result of the
-  @rhombus(ref) method is the result of the reference form.}
-
-)
-@examples(
-  ~defn:
-    class Interleaved(lst1, lst2):
-      private implements Refable
-      private override method ref(index):
-        if (index mod 2) == 0
-        | lst1[index div 2]
-        | lst2[index div 2]    
-  ~repl:
-    def lsts = Interleaved([1, 2, 3], [-1, -2, -3])
-    lsts[2]
-    lsts[3]
-)
-
-}
-
-@doc(
-  interface MutableRefable:
-    extends Refable
-){
-
-@provided_interface_only()
-
- An interface that extends @rhombus(Refable, ~class) to dd support for
- assignment with @rhombus(#%ref). The interface has one additional
- abstract method:
-
-@itemlist(
-
- @item{@rhombus(#,(@rhombus(set, ~datum))(#,(@rhombus(index, ~var)), #,(@rhombus(val, ~var))))
-  --- takes an @rhombus(index, ~var) and new @rhombus(value, ~var), which are the second and
-  third arguments to @rhombus(#%ref). Those arguments are normally written
-  within @brackets and after an assignment operator like @rhombus(:=),
-  respetcively. The result must be @rhombus(#void).}
-
-)
-@examples(
-  ~defn:
-    class InterleavedArray(arr1, arr2):
-      private implements MutableRefable
-      private override method ref(index):
-        if (index mod 2) == 0
-        | arr1[index div 2]
-        | arr2[index div 2]    
-      private override method set(index, val):
-        if (index mod 2) == 0
-        | arr1[index div 2] := val
-        | arr2[index div 2] := val
-  ~repl:
-    def lsts = InterleavedArray(Array(1, 2, 3), Array(-1, -2, -3))
-    lsts[2] := 20
-    lsts
-)
 
 }

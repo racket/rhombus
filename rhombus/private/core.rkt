@@ -94,7 +94,7 @@
         "array.rkt"
         "map.rkt"
         "set.rkt"
-        "map-ref.rkt"
+        "indexable.rkt"
         "assign.rkt"
         "equal.rkt"
         "function.rkt"
@@ -132,7 +132,6 @@
         "eval.rkt"
         "printable.rkt"
         "callable.rkt"
-        "refable.rkt"
         "path-object.rkt"
         "srcloc-object.rkt")
 

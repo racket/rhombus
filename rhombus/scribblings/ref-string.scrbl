@@ -5,7 +5,7 @@
 
 A @deftech{string} is a sequence of Unicode @tech{characters}. A string
 works with map-referencing @brackets to access a character via
-@rhombus(#%ref). A string also works with the @rhombus(++) operator to
+@rhombus(#%index). A string also works with the @rhombus(++) operator to
 append strings, but a @rhombus(+&) can be used to append strings with
 the static guaratee that the result is a string. A string can be used as
 @tech{sequence}, in which case it supplies its bytes in order.

@@ -2,15 +2,15 @@
 @(import:
    rhombus/meta open
    "common.rhm" open:
-     except: . #%ref
+     except: . #%index
    meta_label:
      rhombus/static open:
-       only: . #%ref)
+       only: . #%index)
 
 @(defn.macro 'def_dynamics $dynamic_dot $dynamic_ref':
     'import: meta_label: rhombus open
      def $dynamic_dot: @rhombus(.)
-     def $dynamic_ref: @rhombus(#%ref)')
+     def $dynamic_ref: @rhombus(#%index)')
 @(def_dynamics dynamic_dot dynamic_ref)
 
 @title(~tag: "static-lib"){Rhombus Static by Default}
@@ -38,8 +38,8 @@ dynamic variants.
 }
 
 @doc(
-  expr.macro '$expr #%ref [$at_expr]',
-  expr.macro '$expr #%ref [$at_expr] := $rhs_expr',
+  expr.macro '$expr #%index [$at_expr]',
+  expr.macro '$expr #%index [$at_expr] := $rhs_expr',
 ){
 
  The static variant of @(dynamic_ref). See @rhombus(use_static).

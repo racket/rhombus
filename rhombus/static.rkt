@@ -5,19 +5,19 @@
 
 (rhombus-definition (group use_static))
 
-(bounce #:except (|.| #%ref #%call ++)
+(bounce #:except (|.| #%index #%call ++)
         "main.rkt")
 (bounce #:only (|.|)
         #:spaces (rhombus/impo rhombus/expo)
         "main.rkt")
 (provide (for-space #f
                     |.|
-                    #%ref
+                    #%index
                     #%call
                     ++)
          (for-space rhombus/repet
                     |.|
-                    #%ref
+                    #%index
                     #%call
                     ++))
 

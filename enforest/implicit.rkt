@@ -18,7 +18,7 @@
 
 ;; implicit infix operator names:
 (define call-implicit-name      '#%call)      ; parentheses adjacent to preceding expression
-(define ref-implicit-name       '#%ref)       ; square brackets adjacent to preceding expression
+(define index-implicit-name     '#%index)     ; square brackets adjacent to preceding expression
 (define comp-implicit-name      '#%comp)      ; curly braces adjacent to preceding expression
 (define juxtapose-implicit-name '#%juxtapose) ; other exprs with no operator between
 
@@ -48,7 +48,7 @@
     [((~and tag (~datum parens)) . _)
      (values call-implicit-name #'tag)]
     [((~and tag (~datum brackets)) . _)
-     (values ref-implicit-name #'tag)]
+     (values index-implicit-name #'tag)]
     [((~and tag (~datum braces)) . _)
      (values comp-implicit-name #'tag)]
     [((~and tag (~datum block)) . _)

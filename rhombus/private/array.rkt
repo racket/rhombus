@@ -9,9 +9,9 @@
          (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
          "define-arity.rkt"
-         "map-ref-set-key.rkt"
+         "index-key.rkt"
          "call-result-key.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "composite.rkt"
@@ -38,8 +38,8 @@
   (provide array-method-table))
 
 (define-for-syntax array-static-infos
-  #'((#%map-ref vector-ref)
-     (#%map-set! vector-set!)
+  #'((#%index-get vector-ref)
+     (#%index-set vector-set!)
      (#%sequence-constructor in-vector)
      (#%dot-provider array-instance)))
 
@@ -65,7 +65,7 @@
     #`(for/and ([e (in-vector #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
-    #`((#%ref-result #,(car static-infoss))))
+    #`((#%index-result #,(car static-infoss))))
   #'array-build-convert #'())
 
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
@@ -158,7 +158,7 @@
         [(length) (0ary #'vector-length)]
         [(copy) (0ary #'copy array-static-infos)]
         [(copy_from) (nary #'copy_from 28 #'copy_from #'())]
-        [else #f])))))
+        [else (fail-k)])))))
 
 (define-binding-syntax Array
   (binding-prefix-operator
@@ -175,7 +175,7 @@
                                             (for/list ([arg (in-list args)])
                                               #'())
                                             #:static-infos array-static-infos
-                                            #:ref-result-info? #t
+                                            #:index-result-info? #t
                                             #:rest-accessor (and rest-arg
                                                                  #`(lambda (v) (vector-suffix->list v #,len)))
                                             #:rest-repetition? (and rest-arg #t))

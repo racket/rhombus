@@ -135,8 +135,8 @@
                                                (temporary "internal-internal-~a"))))
        
        (define-values (call-statinfo-indirect-id
-                       ref-statinfo-indirect-id
-                       set-statinfo-indirect-id
+                       index-statinfo-indirect-id
+                       index-set-statinfo-indirect-id
 
                        static-infos-id
                        static-infos-exprs
@@ -155,8 +155,8 @@
                      [indirect-static-infos indirect-static-infos]
                      [instance-static-infos instance-static-infos]
                      [call-statinfo-indirect call-statinfo-indirect-id]
-                     [ref-statinfo-indirect ref-statinfo-indirect-id]
-                     [set-statinfo-indirect set-statinfo-indirect-id])
+                     [index-statinfo-indirect index-statinfo-indirect-id]
+                     [index-set-statinfo-indirect index-set-statinfo-indirect-id])
          (wrap-for-together
           #'for-together?
           #`(begin
@@ -173,7 +173,7 @@
                                           #,internal-name internal-name? internal-name-instance
                                           #,internal-internal-name
                                           instance-static-infos
-                                          call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect]
+                                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect]
                                 exports
                                 option ...))))])))
 
@@ -186,7 +186,7 @@
                     maybe-internal-name internal-name? internal-name-instance
                     internal-internal-name-id
                     instance-static-infos
-                    call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect]
+                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect]
           exports
           option ...)
        (define stxes #'orig-stx)
@@ -226,8 +226,8 @@
 
        (define-values (callable? here-callable? public-callable?)
          (able-method-status 'call #f supers method-mindex method-vtable method-private))
-       (define-values (refable? here-refable? public-refable?)
-         (able-method-status 'ref #f supers method-mindex method-vtable method-private))
+       (define-values (indexable? here-indexable? public-indexable?)
+         (able-method-status 'get #f supers method-mindex method-vtable method-private))
        (define-values (setable? here-setable? public-setable?)
          (able-method-status 'set #f supers method-mindex method-vtable method-private))
 
@@ -282,7 +282,7 @@
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
-                                     callable? refable? setable?
+                                     callable? indexable? setable?
                                      #'(name prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name
@@ -293,8 +293,8 @@
                                      #f
                                      #'internal-name-ref
                                      #'call-statinfo-indirect callable?
-                                     #'ref-statinfo-indirect refable?
-                                     #'set-statinfo-indirect setable?))))
+                                     #'index-statinfo-indirect indexable?
+                                     #'index-set-statinfo-indirect setable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
@@ -346,7 +346,7 @@
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
-                                         callable? refable? setable?
+                                         callable? indexable? setable?
                                          names)
   (with-syntax ([(name prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
@@ -401,5 +401,5 @@
                             (#,(quote-syntax quasisyntax) instance-static-infos)
                             '#,(append
                                 (if callable? '(call) '())
-                                (if refable? '(ref) '())
+                                (if indexable? '(get) '())
                                 (if setable? '(set) '())))))))))

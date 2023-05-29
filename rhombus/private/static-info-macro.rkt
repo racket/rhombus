@@ -21,8 +21,8 @@
          (for-syntax "name-root.rkt")
          (for-syntax "parse.rkt")
          "call-result-key.rkt"
-         "map-ref-set-key.rkt"
-         "ref-result-key.rkt"
+         "index-key.rkt"
+         "index-result-key.rkt"
          "dot-provider-key.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
@@ -41,10 +41,12 @@
      lookup
      
      call_result_key
-     ref_result_key
-     map_ref_key
-     map_set_key
-     map_append_key
+     index_result_key
+     index_get_key
+     index_set_key
+     [map_ref_key index_get_key] ; temporary
+     [map_set_key index_set_key] ; temporary
+     append_key
      dot_provider_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space)
@@ -90,8 +92,8 @@
   (and si (static-info-lookup si key)))
 
 (define-for-syntax call_result_key #'#%call-result)
-(define-for-syntax ref_result_key #'#%ref-result)
-(define-for-syntax map_ref_key #'#%map-ref)
-(define-for-syntax map_set_key #'#%map-set!)
-(define-for-syntax map_append_key #'#%map-append)
+(define-for-syntax index_result_key #'#%index-result)
+(define-for-syntax index_get_key #'#%index-get)
+(define-for-syntax index_set_key #'#%index-set)
+(define-for-syntax append_key #'#%append)
 (define-for-syntax dot_provider_key #'#%dot-provider)

@@ -4,7 +4,7 @@
          "provide.rkt"
          "class-primitive.rkt"
          "function-arity-key.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "syntax-object.rkt" for-quasiquote)
          (prefix-in rkt: (for-template "entry-point.rkt")))
@@ -22,7 +22,7 @@
   #:existing
   #:transparent
   #:fields
-  ([(prefix-arguments prefix_arguments) ((#%ref-result #,syntax-static-infos)
+  ([(prefix-arguments prefix_arguments) ((#%index-result #,syntax-static-infos)
                                          #,@list-static-infos)]
    [(wrap-body wrap_body) ((#%function-arity 4))]
    [(method? is_method) ()])

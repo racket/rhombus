@@ -113,7 +113,7 @@
   interface Equatable
 ){
 
-@provided_interface_only()
+@provided_interface_and_namespace_only()
 
  An interface that a class can implement (publicly or privately) to
  customize the way its objects are compared and hashed. The interface has

@@ -23,7 +23,6 @@
          "nested-bindings.rkt"
          "name-root.rkt"
          "call-result-key.rkt"
-         "ref-result-key.rkt"
          "function-arity-key.rkt"
          "function-indirect-key.rkt"
          "values-key.rkt"

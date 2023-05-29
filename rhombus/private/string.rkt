@@ -11,7 +11,7 @@
                   [display rhombus:display])
          "realm.rkt"
          "call-result-key.rkt"
-         "map-ref-set-key.rkt"
+         "index-key.rkt"
          "define-arity.rkt"
          "name-root.rkt"
          "static-info.rkt"
@@ -41,8 +41,8 @@
 
 (define-for-syntax string-static-infos
   #'((#%dot-provider string-instance)
-     (#%map-ref string-ref)
-     (#%map-append string-append-immutable)))
+     (#%index-get string-ref)
+     (#%append string-append-immutable)))
 
 (define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
 (define-annotation-syntax StringView (identifier-annotation #'string? string-static-infos))

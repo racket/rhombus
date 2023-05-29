@@ -11,7 +11,7 @@
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-indirect-key.rkt"
-         "ref-indirect-key.rkt"
+         "index-indirect-key.rkt"
          "function-arity.rkt"
          "static-info.rkt"
          "class-able.rkt")
@@ -24,9 +24,9 @@
 (define-for-syntax (extract-instance-static-infoss name-id options super interfaces private-interfaces intro)
   (define call-statinfo-indirect-id
     (able-statinfo-indirect-id 'call super interfaces name-id intro))
-  (define ref-statinfo-indirect-id
-    (able-statinfo-indirect-id 'ref super interfaces name-id intro))
-  (define set-statinfo-indirect-id
+  (define index-statinfo-indirect-id
+    (able-statinfo-indirect-id 'get super interfaces name-id intro))
+  (define index-set-statinfo-indirect-id
     (able-statinfo-indirect-id 'set super interfaces name-id intro))
 
   (define static-infos-exprs (hash-ref options 'static-infoss '()))
@@ -56,11 +56,11 @@
     #`(#,@(if call-statinfo-indirect-id
               #`((#%function-indirect #,call-statinfo-indirect-id))
               #'())
-       #,@(if ref-statinfo-indirect-id
-              #`((#%ref-indirect #,ref-statinfo-indirect-id))
+       #,@(if index-statinfo-indirect-id
+              #`((#%index-get-indirect #,index-statinfo-indirect-id))
               #'())
-       #,@(if set-statinfo-indirect-id
-              #`((#%set-indirect #,set-statinfo-indirect-id))
+       #,@(if index-set-statinfo-indirect-id
+              #`((#%index-set-indirect #,index-set-statinfo-indirect-id))
               #'())))
 
   (define indirect-static-infos
@@ -71,8 +71,8 @@
        #,@internal-instance-static-infos))
 
   (values call-statinfo-indirect-id
-          ref-statinfo-indirect-id
-          set-statinfo-indirect-id
+          index-statinfo-indirect-id
+          index-set-statinfo-indirect-id
 
           static-infos-id
           static-infos-exprs

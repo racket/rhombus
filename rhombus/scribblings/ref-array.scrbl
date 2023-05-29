@@ -5,11 +5,10 @@
 
 @title{Arrays}
 
-An expression followed by a square-bracketed sequence of expressions
-is parsed as an implicit use of the @rhombus(#%ref) form, which is
-normally bound to implement an array reference or assignment, as well
-as other operations.  An array can be used as @tech{sequence}, in which case
-it supplies its elements in order.
+An array is @tech{indexable} using @brackets to access an array element
+by position (in constant time) via @rhombus(#%index). An array can be
+used as @tech{sequence}, in which case it supplies its elements in
+order.
 
 An array is normally mutable, but immutable arrays can originate from
 Racket. The @rhombus(Array, ~annot) annotation is satisfied by both

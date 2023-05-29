@@ -115,10 +115,10 @@
 
 @doc(
   def statinfo_meta.call_result_key
-  def statinfo_meta.ref_result_key
-  def statinfo_meta.map_ref_key
-  def statinfo_meta.map_set_key
-  def statinfo_meta.map_append_key
+  def statinfo_meta.index_result_key
+  def statinfo_meta.index_get_key
+  def statinfo_meta.index_set_key
+  def statinfo_meta.append_key
   def statinfo_meta.dot_provider_key
 ){
 
@@ -133,21 +133,21 @@
         information for the result value if the expression is used as
         a function to call}
 
-  @item{@rhombus(statinfo_meta.ref_result_key) --- packed static information
+  @item{@rhombus(statinfo_meta.index_result_key) --- packed static information
         for the result value if the expression is used with
         @rhombus([]) to access an element}
 
-  @item{@rhombus(statinfo_meta.map_ref_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.index_get_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
         access an element}
         
-  @item{@rhombus(statinfo_meta.map_set_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.index_set_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
         update an element}
         
-  @item{@rhombus(statinfo_meta.map_append_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.append_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to
         append the result of another expression}

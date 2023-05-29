@@ -23,8 +23,8 @@
            ;; => can refer directly to superclass's private implementation, since it can't be overridden here
            (case which
              [(call) (class-desc-call-method-id super)]
-             [(ref) (class-desc-ref-method-id super)]
-             [(set) (class-desc-set-method-id super)]
+             [(get) (class-desc-index-method-id super)]
+             [(set) (class-desc-index-set-method-id super)]
              [else (error "unknown able")]))))
 
 ;; returns `(values here-<which>able? public-<which>able?)`:
@@ -73,7 +73,7 @@
                           (unless super (error "cannot find private <which> method"))
                           (case which
                             [(call) (class-desc-call-method-id super)]
-                            [(ref) (class-desc-ref-method-id super)]
-                            [(set) (class-desc-set-method-id super)]
+                            [(get) (class-desc-index-method-id super)]
+                            [(set) (class-desc-index-set-method-id super)]
                             [else (error "unknown able")])]))]
     [else #'#f]))

@@ -82,7 +82,9 @@
                (case who
                  [(application) (rhombus '|function call|)]
                  [(=) (rhombus '.=)]
-                 [(vector-ref) (rhombus 'Array.ref)]
+                 [(hash-ref) (rhombus 'Map.get)]
+                 [(list-ref) (rhombus 'List.get)]
+                 [(vector-ref) (rhombus 'Array.get)]
                  [(vector-set!) (rhombus 'Array.set)]
                  [(srcloc-source) (rhombus 'Srcloc.source)]
                  [(srcloc-line) (rhombus 'Srcloc.line)]

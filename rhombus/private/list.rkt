@@ -9,9 +9,9 @@
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "reducer.rkt"
-         "map-ref-set-key.rkt"
+         "index-key.rkt"
          "call-result-key.rkt"
-         "ref-result-key.rkt"
+         "index-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "op-literal.rkt"
@@ -55,8 +55,8 @@
   (provide (for-syntax normal-call?)))
 
 (define-for-syntax list-static-infos
-  #'((#%map-ref list-ref)
-     (#%map-append List.append)
+  #'((#%index-get list-ref)
+     (#%append List.append)
      (#%sequence-constructor in-list)
      (#%dot-provider list-instance)))
 
@@ -138,7 +138,7 @@
     #`(for/and ([e (in-list #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
-    #`((#%ref-result #,(car static-infoss))))
+    #`((#%index-result #,(car static-infoss))))
   #'list-build-convert #'())
 
 (define-syntax (list-build-convert arg-id build-convert-stxs kws data)
@@ -192,7 +192,7 @@
     #`(for/and ([e (in-list #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
-    #`((#%ref-result #,(car static-infoss))))
+    #`((#%index-result #,(car static-infoss))))
   #'nonempty-list-build-convert #'())
 
 (define-syntax (nonempty-list-build-convert arg-id build-convert-stxs kws data)
@@ -212,7 +212,7 @@
         [(length) (0ary #'length)]
         [(first) (field (lambda (e)
                           (wrap-static-info* #`(car #,e)
-                                             (or (syntax-local-static-info e #'#%ref-result)
+                                             (or (syntax-local-static-info e #'#%index-result)
                                                  #'()))))]
         [(rest) (field (lambda (e)
                          (wrap-static-info* #`(cdr #,e)
@@ -343,7 +343,7 @@
                                            #'car)
                                          (for/list ([arg (in-list args)])
                                            #'())
-                                         #:ref-result-info? #t
+                                         #:index-result-info? #t
                                          #:rest-accessor rest-selector
                                          #:rest-repetition? rest-repetition?
                                          #:static-infos list-static-infos)

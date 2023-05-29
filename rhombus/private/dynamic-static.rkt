@@ -7,7 +7,7 @@
          "repetition.rkt"
          (submod "dot.rkt" for-dynamic-static)
          (submod "implicit.rkt" for-dynamic-static)
-         (submod "map-ref.rkt" for-dynamic-static))
+         (submod "indexable.rkt" for-dynamic-static))
 
 (provide dynamic
          use_dynamic
@@ -23,7 +23,7 @@
                     (syntax-parse stx
                       [(form-id)
                        #`(#,@(build-definitions #'form-id '|.| (if more-static? #'static-|.| #'|.|))
-                          #,@(build-definitions #'form-id '#%ref (if more-static? #'static-#%ref #'#%ref))
+                          #,@(build-definitions #'form-id '#%index (if more-static? #'static-#%index #'#%index))
                           #,@(build-definitions #'form-id '#%call (if more-static? #'static-#%call #'#%call))
                           #,@(build-definitions #'form-id '++ (if more-static? #'static-++ #'++)))]))))])
       (values (mk #f)

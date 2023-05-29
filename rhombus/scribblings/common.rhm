@@ -22,6 +22,8 @@ export:
   provided_meta
   provided_also_meta
   provided_interface_only
+  provided_interface_and_namespace_only
+  provided_interface_and_other_annotation_only
   demo
   epsilon
   Z
@@ -54,6 +56,15 @@ fun provided_also_meta():
 fun provided_interface_only():
   @provided_note{Provided only in the @scribble.rhombus(class, ~space) space, not
    the @scribble.rhombus(annot, ~space) or @scribble.rhombus(namespace, ~space) space.}
+
+fun provided_interface_and_namespace_only():
+  @provided_note{Provided only in the @scribble.rhombus(class, ~space) space, not
+   the @scribble.rhombus(annot, ~space) space.}
+
+fun provided_interface_and_other_annotation_only():
+  @provided_note{Provided only in the @scribble.rhombus(class, ~space) space
+   and @scribble.rhombus(annot, ~space) space, not
+   the @scribble.rhombus(namespace, ~space) space.}
 
 // suppressed a label, but `examples` now does that, anyway, so maybe
 // we'll end up removing this alias:
