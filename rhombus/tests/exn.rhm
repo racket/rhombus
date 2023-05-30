@@ -17,9 +17,30 @@ block:
   check:
     Exn.Fail.Syntax.exprs(v)[0].unwrap()
     ~prints_like ['fun']
+  check:
+    use_dynamic
+    v.exprs[0].unwrap()
+    ~prints_like ['fun']
 
   check:
     def v = Exn.Fail.Read("hi", Continuation.current_marks() , [Srcloc(1, 2, 3, 4, 5)])
     match v
     | Exn.Fail.Read(a, b, srcs): srcs[0].line
     ~is 2
+  check:
+    String.substring((v :: Exn).message, 0, 24) ~is "fun: expected more terms"
+    String.substring(Exn.message(v), 0, 24) ~is "fun: expected more terms"
+  block:
+    use_dynamic
+    check:
+      String.substring(v.message, 0, 24) ~is "fun: expected more terms"
+
+block:
+  use_static
+  class ExExn(index):
+    extends Exn.Fail.Syntax
+  def v = ExExn("oops", Continuation.current_marks(), ['bad'], 75)
+  check:
+    v.message ~is "oops"
+    v.index ~is 75
+    v is_a Exn ~is #true

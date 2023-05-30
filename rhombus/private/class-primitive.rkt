@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "class-parse.rkt")
          "name-root.rkt"
          "name-root-space.rkt"
          "expression.rkt"
@@ -12,7 +13,8 @@
          "dot-parse.rkt"
          "function-arity-key.rkt"
          "call-result-key.rkt"
-         "composite.rkt")
+         "composite.rkt"
+         "class-desc.rkt")
 
 (provide define-primitive-class)
 
@@ -21,6 +23,7 @@
     [(_ Name name
         #:constructor-static-info (constructor-static-info ...)
         (~and creation (~or #:new #:existing))
+        (~optional (~and actual-class (~or #:class)))
         (~and mode (~or #:transparent #:opaque #:translucent))
         (~optional (~seq #:parent Parent parent)
                    #:defaults ([parent #'#f]
@@ -38,6 +41,7 @@
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))]
      #:with name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))))
+     #:with struct_name (datum->syntax #'name (string->symbol (format "struct:~a" (syntax-e #'name))))
      #:with ((field _field) ...) (for/list ([f/r (in-list (syntax->list #'(field/rename ...)))])
                                    (syntax-parse f/r
                                      [id:identifier #'(id id)]
@@ -70,6 +74,20 @@
      #:with name-static-infos (datum->syntax #'name (string->symbol (format "~a-static-infos" (syntax-e #'name))))
      #:with Name-str (datum->syntax #'here (symbol->string (syntax-e #'Name)))
      #:with arity-mask #`#,(arithmetic-shift 1 (length (syntax->list #'(parent-name-field ... name-field ...))))
+     #:do [(define super (and (syntax-e #'Parent)
+                              (syntax-local-value (in-class-desc-space #'Parent))))
+           (define inherited-field-count (if super
+                                             (+ (class-desc-inherited-field-count super)
+                                                (length (class-desc-fields super)))
+                                             0))]
+     #:with ((super-field-name
+              super-name-field
+              super-name-field-set!
+              super-field-static-info
+              super-field-constructor)
+             ...) (if super
+                      (class-desc-fields super)
+                      null)
      #`(begin
          #,(if (eq? (syntax-e #'creation) '#:new)
                #`(struct name (field ...)
@@ -141,6 +159,48 @@
 
          (define-syntax name-field-list
            (quote-syntax (parent-name-field ... name-field ...)))
+
+         #,@(if (attribute actual-class)
+                #`((define-class-desc-syntax Name
+                     (class-desc #f ; not final
+                                 (quote-syntax Name)
+                                 #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
+                                 null
+                                 (quote-syntax struct_name)
+                                 #f ; `ref-id` would only used by the normal class dot provider
+                                 (list (list 'super-field-name
+                                             (quote-syntax super-name-field)
+                                             #f
+                                             (quote-syntax super-field-static-info)
+                                             (quote-syntax super-field-constructor))
+                                       ...
+                                       (list 'field
+                                             (quote-syntax name-field)
+                                             #f
+                                             (quote-syntax field-static-info)
+                                             (quote-syntax #f))
+                                       ...)
+                                 #f ; no private fields
+                                 #,inherited-field-count
+                                 #() ; no methods
+                                 (quote-syntax #()) ; no methods
+                                 '#hasheq() ; empty method map
+                                 '#hasheq() ; empty method results
+                                 #f ; constructor-makers
+                                 #f ; not custom constructor
+                                 #f ; not custom binding
+                                 #f ; not custom annotation
+                                 null ; no dot syntax
+                                 #f ; dot-provider
+                                 #f ; no arguments with defaults
+                                 #'() ; no additional instance static-infos
+                                 #f ; not callable
+                                 #f ; not indexable
+                                 #f ; not mutable indexable
+                                 #f ; not appendable
+                                 #f ; not prefab
+                                 null)))
+                null)
 
          (define-for-syntax name-dot-dispatch
            (lambda (field-sym field-proc ary 0ary nary fail-k)

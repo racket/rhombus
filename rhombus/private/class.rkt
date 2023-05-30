@@ -771,7 +771,8 @@
                                             #f
                                             '(immutable-field-index ...)
                                             #,(and (not prefab?)
-                                                   guard-expr))])
+                                                   guard-expr)
+                                            'name)])
               (values class:name name name?
                       (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
                       ...

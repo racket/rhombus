@@ -12,7 +12,8 @@
 (provide (for-spaces (rhombus/namespace
                       #f
                       rhombus/bind
-                      rhombus/annot)
+                      rhombus/annot
+                      rhombus/class)
                      Exn))
 
 (module+ for-builtin
@@ -21,6 +22,7 @@
 (define-primitive-class Exn exn
   #:constructor-static-info ()
   #:existing
+  #:class
   #:transparent
   #:fields
   ([message ()]
@@ -40,6 +42,7 @@
   (define-primitive-class Name name
     #:constructor-static-info ()
     #:existing
+    #:class
     #:transparent
     #:parent Parent parent
     #:fields
@@ -57,6 +60,8 @@
   #:children (Contract
               Syntax
               Read
+              Filesystem
+              Network
               OutOfMemory
               Unsupported
               User))
