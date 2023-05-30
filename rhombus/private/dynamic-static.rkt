@@ -7,7 +7,7 @@
          "repetition.rkt"
          (submod "dot.rkt" for-dynamic-static)
          (submod "implicit.rkt" for-dynamic-static)
-         (submod "indexable.rkt" for-dynamic-static))
+         (submod "appendable.rkt" for-dynamic-static))
 
 (provide dynamic
          use_dynamic

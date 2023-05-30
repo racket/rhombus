@@ -8,6 +8,7 @@
          "define-arity.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
+         "append-key.rkt"
          (submod "annotation.rkt" for-class)
          "mutability.rkt")
 

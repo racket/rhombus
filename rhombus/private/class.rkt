@@ -38,7 +38,8 @@
          (submod "namespace.rkt" for-exports)
          (submod "print.rkt" for-class)
          "class-able.rkt"
-         "index-property.rkt")
+         "index-property.rkt"
+         "append-property.rkt")
 
 ;; the `class` form is provided by "class-together.rkt"
 (provide this
@@ -163,6 +164,7 @@
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
+                       append-statinfo-indirect-id
 
                        static-infos-id
                        static-infos-exprs
@@ -194,6 +196,7 @@
                      [call-statinfo-indirect call-statinfo-indirect-id]
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
+                     [append-statinfo-indirect append-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
@@ -219,7 +222,8 @@
                [orig-stx base-stx scope-stx
                          full-name name name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
-                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect indirect-static-infos
+                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                         indirect-static-infos
                          instance-static-infos
                          constructor-field-names
                          constructor-field-keywords
@@ -237,7 +241,8 @@
       [(_ [orig-stx base-stx scope-stx
                     full-name name name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
-                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect indirect-static-infos
+                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                    indirect-static-infos
                     instance-static-infos
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
@@ -402,6 +407,8 @@
          (able-method-status 'get super interfaces method-mindex method-vtable method-private))
        (define-values (setable? here-setable? public-setable?)
          (able-method-status 'set super interfaces method-mindex method-vtable method-private))
+       (define-values (appendable? here-appendable? public-appendable?)
+         (able-method-status 'append super interfaces method-mindex method-vtable method-private))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -512,7 +519,7 @@
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
-                                   has-extra-fields? here-callable? here-indexable? here-setable?
+                                   has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
                                            [public-field-name ...]
                                            [public-maybe-set-name-field! ...]
@@ -597,6 +604,7 @@
                                  here-callable? public-callable?
                                  here-indexable? public-indexable?
                                  here-setable? public-setable?
+                                 here-appendable? public-appendable?
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name prefab-guard-name
                                          instance-static-infos
@@ -620,7 +628,8 @@
                                      #'prop-methods-ref
                                      #'call-statinfo-indirect callable?
                                      #'index-statinfo-indirect indexable?
-                                     #'index-set-statinfo-indirect setable?))))
+                                     #'index-set-statinfo-indirect setable?
+                                     #'append-statinfo-indirect appendable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -628,7 +637,7 @@
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
-                                       has-extra-fields? here-callable? here-indexable? here-setable?
+                                       has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
                        [public-field-name ...]
@@ -717,6 +726,8 @@
                                                                                       method-mindex method-vtable method-private)
                                                           #,@(able-method-as-property 'set #'prop:setable here-setable?
                                                                                       method-mindex method-vtable method-private)
+                                                          #,@(able-method-as-property 'append #'prop:appendable here-appendable?
+                                                                                      method-mindex method-vtable method-private)
                                                           #,@(if (or abstract-name
                                                                      (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
                                                                             (not (syntax-e maybe-name)))
@@ -797,6 +808,7 @@
                                      here-callable? public-callable?
                                      here-indexable? public-indexable?
                                      here-setable? public-setable?
+                                     here-appendable? public-appendable?
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name prefab-guard-name
@@ -880,13 +892,17 @@
                       #,(able-method-for-class-desc 'set here-setable? public-setable?
                                                     super
                                                     method-mindex method-vtable method-private)
+                      #,(able-method-for-class-desc 'append here-appendable? public-appendable?
+                                                    super
+                                                    method-mindex method-vtable method-private)
                       #,(and (syntax-e #'prefab-guard-name)
                              #`(quote-syntax prefab-guard-name))
                       '(#,@(if authentic? '(authentic) null)
                         #,@(if prefab? '(prefab) null)
                         #,@(if public-callable? '(call) null)
                         #,@(if public-indexable? '(get) null)
-                        #,@(if public-setable? '(set) null)))))
+                        #,@(if public-setable? '(set) null)
+                        #,@(if public-appendable? '(append) null)))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

@@ -12,6 +12,7 @@
          "realm.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
+         "append-key.rkt"
          "define-arity.rkt"
          "name-root.rkt"
          "static-info.rkt"

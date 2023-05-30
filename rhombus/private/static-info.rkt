@@ -26,6 +26,8 @@
            wrap-static-info*
            :static-info
            syntax-local-static-info
+           syntax-local-static-info/indirect
+           static-info/indirect
            extract-static-infos
            unwrap-static-infos
            static-info-lookup
@@ -136,7 +138,20 @@
                             #'val)
                        (and (free-identifier=? #'key #'#%indirect-static-info)
                             (indirect-static-info-ref #'val find-key)))]
-        [_ #f]))))
+        [_ #f])))
+
+  (define (syntax-local-static-info/indirect e key indirect-key)
+    (or (syntax-local-static-info e key)
+        (let ([id (syntax-local-static-info e indirect-key)])
+          (and id
+               (syntax-local-static-info/indirect id key indirect-key)))))
+
+  (define (static-info/indirect indexable-static-info key indirect-key)
+    (or (indexable-static-info key)
+        (let ([id (indexable-static-info indirect-key)])
+          (and id
+               (syntax-local-static-info/indirect id key indirect-key))))))
+
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx

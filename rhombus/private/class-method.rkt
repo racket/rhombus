@@ -18,7 +18,7 @@
          "dot-provider-key.rkt"
          "function-indirect-key.rkt"
          "index-key.rkt"
-         "index-indirect-key.rkt"
+         "append-indirect-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
@@ -350,7 +350,8 @@
                                          methods-ref-id
                                          call-statinfo-indirect-stx callable?
                                          index-statinfo-indirect-stx indexable?
-                                         index-set-statinfo-indirect-stx setable?)
+                                         index-set-statinfo-indirect-stx setable?
+                                         append-statinfo-indirect-stx appendable?)
   (define defs
     (for/list ([added (in-list added-methods)]
                #:when (added-method-result-id added))
@@ -359,14 +360,13 @@
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
           ;; When calls do not go through vtable, also add static info
           ;; as #%call-result to binding; non-vtable calls include final methods
-          ;; and `super` calls to non-final methods:
+          ;; and `super` calls to non-final methods... which is all methods,
+          ;; since non-final methods are potentially targets of `super` calls
           #,(or (let ([id/property (hash-ref method-private (syntax-e (added-method-id added)) #f)])
                   (if (pair? id/property) (car id/property) id/property))
                 (and (not (eq? (added-method-body added) 'abstract))
                      (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
-                       (and (or (mindex-final? mix)
-                                (not in-final?))
-                            (vector-ref method-vtable (mindex-index mix))))))
+                       (vector-ref method-vtable (mindex-index mix)))))
           ;; result annotation can convert if final
           #,(or in-final?
                 (eq? (added-method-disposition added) 'final))
@@ -380,7 +380,10 @@
                  #`[#,index-statinfo-indirect-stx #,(added-method-rhs-id added)])
           #,(and setable?
                  (eq? 'set (syntax-e (added-method-id added)))
-                 #`[#,index-set-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
+                 #`[#,index-set-statinfo-indirect-stx #,(added-method-rhs-id added)])
+          #,(and appendable?
+                 (eq? 'append (syntax-e (added-method-id added)))
+                 #`[#,append-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
   ;; may need to add info for inherited `call`, etc.:
   (define (add-able which statinfo-indirect-stx able? key defs abstract-args)
     (if (and statinfo-indirect-stx
@@ -403,7 +406,8 @@
         defs))
   (let* ([defs (add-able 'call call-statinfo-indirect-stx callable? #'#%function-indirect defs #f)]
          [defs (add-able 'get index-statinfo-indirect-stx indexable? #'#%index-get defs #'(index))]
-         [defs (add-able 'set index-set-statinfo-indirect-stx setable? #'#%index-set defs #'(index val))])
+         [defs (add-able 'set index-set-statinfo-indirect-stx setable? #'#%index-set defs #'(index val))]
+         [defs (add-able 'append append-statinfo-indirect-stx appendable? #'#%append/checked defs #'(val))])
     defs))
 
 (define-for-syntax (build-method-result-expression method-result)

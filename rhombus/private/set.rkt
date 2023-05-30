@@ -18,6 +18,7 @@
          "static-info.rkt"
          "reducer.rkt"
          "index-key.rkt"
+         "append-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"

@@ -25,6 +25,7 @@
              [(call) (class-desc-call-method-id super)]
              [(get) (class-desc-index-method-id super)]
              [(set) (class-desc-index-set-method-id super)]
+             [(append) (class-desc-append-method-id super)]
              [else (error "unknown able")]))))
 
 ;; returns `(values here-<which>able? public-<which>able?)`:
@@ -75,5 +76,6 @@
                             [(call) (class-desc-call-method-id super)]
                             [(get) (class-desc-index-method-id super)]
                             [(set) (class-desc-index-set-method-id super)]
+                            [(append) (class-desc-append-method-id super)]
                             [else (error "unknown able")])]))]
     [else #'#f]))

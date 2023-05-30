@@ -284,38 +284,6 @@ in an unspecified order.
 
 
 @doc(
-  operator ((v1 :: MapView) ++ (v2 :: MapView)) :: Map
-  operator ((v1 :: SetView) ++ (v2 :: SetView)) :: Set
-  operator ((v1 :: List) ++ (v2 :: List)) :: List
-  operator ((v1 :: StringView) ++ (v2 :: StringView)) :: String
-  operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: Bytes
-){
-
- Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list,
- string, or byte string. In the case of maps, mappings for keys in @rhombus(v2) replace
- ones that exist already in @rhombus(v1). In the case of sets, the new
- set has all of the elements of @rhombus(v1) and @rhombus(v2).
- In the case of lists, strings, and byte strings, the elements of @rhombus(v1) appear
- first in the result followed by the elements of @rhombus(v2).
-
- The combination
- @rhombus(#,(@rhombus(map_expr, ~var)) ++ {#,(@rhombus(key_expr, ~var)): #,(@rhombus(value_expr, ~var))})
- is recognized by the compiler and turned into an efficient functional update of the
- map produced by @rhombus(map_expr), as opposed to creating an intermediate map.
- Set update is handled similarly.
-
-@examples(
-  def m: {"x": 1, "y": 2}
-  m ++ {"x": 0}
-  m
-  {1, 2, 3} ++ {"four", "five"}
-  [1, 2, 3] ++ [4, 5]
-  "hello" ++ " " ++ "world"
-)
-
-}
-
-@doc(
   bind.macro 'Map.empty'
   expr.macro 'Map.empty'
   bind.macro 'MapView.empty'

@@ -17,6 +17,9 @@ block:
     Array(1, 2, 3)[0]
     ~is 1
   check:
+    Array(1, 2, 3) ++ Array(0)
+    ~is_now Array(1, 2, 3, 0)
+  check:
     Array(1, 2, 3).length()
     ~is 3
   check:
@@ -60,6 +63,9 @@ block:
   check:
     dynamic(Array(1, 2, 3)).length()
     ~is 3
+  check:
+    dynamic(Array(1, 2, 3)) ++ Array(0)
+    ~is_now Array(1, 2, 3, 0)
   check:
     dynamic(Array(1, 2, 3))[0]
     ~is 1

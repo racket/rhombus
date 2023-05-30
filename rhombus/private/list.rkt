@@ -10,6 +10,7 @@
          "static-info.rkt"
          "reducer.rkt"
          "index-key.rkt"
+         "append-key.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
          "function-arity-key.rkt"

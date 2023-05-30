@@ -33,17 +33,10 @@
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
                      Indexable
-                     MutableIndexable)
-         ++)
+                     MutableIndexable))
 
 (module+ for-ref
   (provide (for-syntax parse-indexable-ref-or-set)))
-
-(module+ for-dynamic-static
-  (provide (for-spaces (#f
-                        rhombus/repet)
-                       ++
-                       static-++)))
 
 (define-values (prop:Indexable Indexable? Indexable-ref)
   (make-struct-type-property 'Indexable
@@ -191,18 +184,6 @@
         (values (wrap-static-info* e result-static-infos)
                 #'tail)])]))
 
-(begin-for-syntax
-  (define (syntax-local-static-info/indirect e key indirect-key)
-    (or (syntax-local-static-info e key)
-        (let ([id (syntax-local-static-info e indirect-key)])
-          (and id
-               (syntax-local-static-info/indirect id key indirect-key)))))
-  (define (static-info/indirect indexable-static-info key indirect-key)
-    (or (indexable-static-info key)
-        (let ([id (indexable-static-info indirect-key)])
-          (and id
-               (syntax-local-static-info/indirect id key indirect-key))))))
-
 (define (indexable-index indexable index)
   (cond
     [(vector? indexable) (vector-ref indexable index)]
@@ -227,77 +208,3 @@
     [(and (bytes? indexable) (not (immutable? indexable))) (bytes-set! indexable index val)]
     [else
      (raise-argument-error* 'assign rhombus-realm "MutableIndexable" indexable)]))
-
-(define-for-syntax (make-++-expression name static?)
-  (expression-infix-operator
-   name
-   `((,(expr-quote +&) . same))
-   'automatic
-   (lambda (form1-in form2 stx)
-     (define form1 (rhombus-local-expand form1-in))
-     (define append-id (or (syntax-local-static-info form1 #'#%append)
-                           (if static?
-                               (raise-syntax-error '++ (string-append "specialization not known" statically-str) form1-in)
-                               #'general-append)))
-     (define si (or (syntax-local-static-info append-id #'#%call-result) #'()))
-     (wrap-static-info*
-      (datum->syntax (quote-syntax here)
-                     (list append-id form1 form2)
-                     (span-srcloc form1 form2)
-                     stx)
-      si))
-   'left))
-
-(define-syntax ++ (make-++-expression (expr-quote ++) #f))
-(define-syntax static-++ (make-++-expression (expr-quote static-++) #t))
-
-(define-for-syntax (make-++-repetition name static?)
-  (repetition-infix-operator
-   name
-   `((,(expr-quote +&) . same))
-   'automatic
-   (lambda (form1-in form2 stx)
-     (raise-syntax-error #f "not yet ready" stx))
-   'left))
-
-(define-repetition-syntax ++ (make-++-repetition (expr-quote ++) #f))
-(define-repetition-syntax static-++ (make-++-repetition (expr-quote static-++) #t))
-
-(define (general-append map1 map2)
-  (cond
-    [(vector? map1) (raise-arguments-error* '++ rhombus-realm
-                                            "cannot extend a plain array"
-                                            "array" map1
-                                            "other value" map2)]
-    [(list? map1) (cond
-                    [(list? map2) (append map1 map2)]
-                    [(vector? map2) (append map1 (vector->list map2))]
-                    [else (raise-arguments-error* '++ rhombus-realm
-                                                  "cannot append a list and other value"
-                                                  "list" map1
-                                                  "other value" map2)])]
-    [(hash? map1) (cond
-                    [(hash? map2) (hash-append/proc map1 map2)]
-                    [else (raise-arguments-error* '++ rhombus-realm
-                                                  "cannot append a hash map and other value"
-                                                  "hash map" map1
-                                                  "other value" map2)])]
-    [(set? map1) (cond
-                   [(set? map2) (set-append/proc map1 map2)]
-                   [else (raise-arguments-error* '++ rhombus-realm
-                                                 "cannot append a set and other value"
-                                                 "set" map1
-                                                 "other value" map2)])]
-    [(string? map1) (cond
-                      [(string? map2) (string-append-immutable map1 map2)]
-                      [else (raise-arguments-error* '++ rhombus-realm
-                                                    "cannot append a string and other value"
-                                                    "string" map1
-                                                    "other value" map2)])]
-    [(bytes? map1) (cond
-                     [(bytes? map2) (bytes-append map1 map2)]
-                     [else (raise-arguments-error* '++ rhombus-realm
-                                                   "cannot append a byte string and other value"
-                                                   "byte string" map1
-                                                   "other value" map2)])]
-    [else (raise-argument-error* '++ rhombus-realm "List || Array || Map || Set || String" map1)]))

@@ -24,7 +24,8 @@
       [(list? v)
        (cond
          [(null? v)
-          (error 'write-shubbery "unexpected ~s" v)]
+          #;(error 'write-shubbery "unexpected ~s" v)
+          (display "#{()}" op)]
          [(eq? 'op (car v))
           (display (cadr v) op)]
          [(eq? 'alts (car v))

@@ -21,6 +21,7 @@
          (for-syntax "name-root.rkt")
          (for-syntax "parse.rkt")
          "call-result-key.rkt"
+         "append-key.rkt"
          "index-key.rkt"
          "index-result-key.rkt"
          "dot-provider-key.rkt")

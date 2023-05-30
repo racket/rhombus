@@ -137,6 +137,7 @@
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
+                       append-statinfo-indirect-id
 
                        static-infos-id
                        static-infos-exprs
@@ -156,7 +157,8 @@
                      [instance-static-infos instance-static-infos]
                      [call-statinfo-indirect call-statinfo-indirect-id]
                      [index-statinfo-indirect index-statinfo-indirect-id]
-                     [index-set-statinfo-indirect index-set-statinfo-indirect-id])
+                     [index-set-statinfo-indirect index-set-statinfo-indirect-id]
+                     [append-statinfo-indirect append-statinfo-indirect-id])
          (wrap-for-together
           #'for-together?
           #`(begin
@@ -173,7 +175,8 @@
                                           #,internal-name internal-name? internal-name-instance
                                           #,internal-internal-name
                                           instance-static-infos
-                                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect]
+                                          call-statinfo-indirect index-statinfo-indirect
+                                          index-set-statinfo-indirect append-statinfo-indirect]
                                 exports
                                 option ...))))])))
 
@@ -186,7 +189,8 @@
                     maybe-internal-name internal-name? internal-name-instance
                     internal-internal-name-id
                     instance-static-infos
-                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect]
+                    call-statinfo-indirect index-statinfo-indirect
+                    index-set-statinfo-indirect append-statinfo-indirect]
           exports
           option ...)
        (define stxes #'orig-stx)
@@ -230,6 +234,8 @@
          (able-method-status 'get #f supers method-mindex method-vtable method-private))
        (define-values (setable? here-setable? public-setable?)
          (able-method-status 'set #f supers method-mindex method-vtable method-private))
+       (define-values (appendable? here-appendable? public-appendable?)
+         (able-method-status 'append #f supers method-mindex method-vtable method-private))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -282,7 +288,7 @@
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
-                                     callable? indexable? setable?
+                                     callable? indexable? setable? appendable?
                                      #'(name prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name
@@ -294,7 +300,8 @@
                                      #'internal-name-ref
                                      #'call-statinfo-indirect callable?
                                      #'index-statinfo-indirect indexable?
-                                     #'index-set-statinfo-indirect setable?))))
+                                     #'index-set-statinfo-indirect setable?
+                                     #'append-statinfo-indirect appendable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
@@ -346,7 +353,7 @@
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
-                                         callable? indexable? setable?
+                                         callable? indexable? setable? appendable?
                                          names)
   (with-syntax ([(name prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
@@ -402,4 +409,5 @@
                             '#,(append
                                 (if callable? '(call) '())
                                 (if indexable? '(get) '())
-                                (if setable? '(set) '())))))))))
+                                (if setable? '(set) '())
+                                (if appendable? '(append) '())))))))))

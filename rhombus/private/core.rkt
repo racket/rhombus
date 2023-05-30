@@ -95,6 +95,7 @@
         "map.rkt"
         "set.rkt"
         "indexable.rkt"
+        "appendable.rkt"
         "assign.rkt"
         "equal.rkt"
         "function.rkt"

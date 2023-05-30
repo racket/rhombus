@@ -1,0 +1,82 @@
+#lang rhombus
+
+use_static
+
+class O(v):
+  nonfinal
+
+class A():
+  nonfinal
+  implements Appendable
+  override method append(other) :: O:
+    (other is_a A) && O(1)
+  method append_self(other) :: O:
+    this ++ other
+
+class B():
+  nonfinal
+  extends A
+  override method append(other) :: O:
+    (other is_a A) && O(2)
+
+class C():
+  extends B
+
+interface I3:
+  extends Appendable
+
+class A3():
+  implements I3
+  override method append(other) :: O:
+    (other is_a A3) && O(3)
+
+class A4():
+  private implements Appendable
+  private override method append(other) :: O:
+    (other is_a A4) && O(4)
+
+check:
+  (A() ++ A()).v ~is 1
+  (A().append_self(A())).v ~is 1
+  (B() ++ B()).v ~is 2
+  (C() ++ B()).v ~is 2
+  (A3() ++ A3()).v ~is 3
+  (A3() :: I3) ++ A3() ~is O(3)
+  (A4() ++ A4()).v ~is 4
+  A() ++ B() ~raises "cannot append an appendable object and other value"
+  B() ++ A() ~raises "cannot append an appendable object and other value"
+
+block:
+  use_dynamic
+  check:
+    dynamic(A()) ++ B() ~raises "cannot append an appendable object and other value"
+
+check:
+  A() is_a Appendable ~is #true
+  B() is_a Appendable ~is #true
+  C() is_a Appendable ~is #true
+  A4() is_a Appendable ~is #true
+  
+  { 1: 2 } is_a Appendable ~is #true
+  { 1, 2 } is_a Appendable ~is #true
+  [1, 2] is_a Appendable ~is #true
+  Array(1, 2) is_a Appendable ~is #true
+  "apple" is_a Appendable ~is #true
+  #"apple" is_a Appendable ~is #true
+
+  #'apple is_a Appendable ~is #false
+  4 is_a Appendable ~is #false
+
+block:
+  use_dynamic
+  fun gen():
+    // check that generated `append` method is fresh
+    class A():
+      implements Appendable
+      override method append(other):
+        0
+    A()    
+  check:
+    gen() ++ gen() ~raises "cannot append an appendable object and other value"
+    dynamic("a") ++ "b" ~is "ab"
+    dynamic([]) ++ ["a"] ~is ["a"]

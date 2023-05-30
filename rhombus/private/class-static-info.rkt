@@ -12,6 +12,7 @@
          "function-arity-key.rkt"
          "function-indirect-key.rkt"
          "index-indirect-key.rkt"
+         "append-indirect-key.rkt"
          "function-arity.rkt"
          "static-info.rkt"
          "class-able.rkt")
@@ -28,6 +29,8 @@
     (able-statinfo-indirect-id 'get super interfaces name-id intro))
   (define index-set-statinfo-indirect-id
     (able-statinfo-indirect-id 'set super interfaces name-id intro))
+  (define append-statinfo-indirect-id
+    (able-statinfo-indirect-id 'append super interfaces name-id intro))
 
   (define static-infos-exprs (hash-ref options 'static-infoss '()))
   (define static-infos-id (and (pair? static-infos-exprs)
@@ -61,6 +64,9 @@
               #'())
        #,@(if index-set-statinfo-indirect-id
               #`((#%index-set-indirect #,index-set-statinfo-indirect-id))
+              #'())
+       #,@(if append-statinfo-indirect-id
+              #`((#%append-indirect #,append-statinfo-indirect-id))
               #'())))
 
   (define indirect-static-infos
@@ -73,6 +79,7 @@
   (values call-statinfo-indirect-id
           index-statinfo-indirect-id
           index-set-statinfo-indirect-id
+          append-statinfo-indirect-id
 
           static-infos-id
           static-infos-exprs

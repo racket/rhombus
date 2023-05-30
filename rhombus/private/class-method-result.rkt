@@ -12,7 +12,8 @@
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "index-result-key.rkt"
-         "index-key.rkt")
+         "index-key.rkt"
+         "append-indirect-key.rkt")
 
 (provide define-method-result-syntax)
 
@@ -37,7 +38,8 @@
       [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity
           maybe-call-statinfo-id
           maybe-ref-statinfo-id+id
-          maybe-set-statinfo-id+id)
+          maybe-set-statinfo-id+id
+          maybe-append-statinfo-id+id)
        #:do [(define super-results (map syntax-local-method-result
                                         (syntax->list #'(super-result-id ...))))]
        #:with handler (for/fold ([handler (and check? result-handler)])
@@ -83,7 +85,8 @@
          [(or (syntax-e #'maybe-final-id)
               (syntax-e #'maybe-call-statinfo-id)
               (syntax-e #'maybe-ref-statinfo-id+id)
-              (syntax-e #'maybe-set-statinfo-id+id))
+              (syntax-e #'maybe-set-statinfo-id+id)
+              (syntax-e #'maybe-append-statinfo-id+id))
           (define (gen id)
             (if (syntax-e id)
               #`((define-static-info-syntax #,id
@@ -109,7 +112,8 @@
               #,@(gen #'maybe-final-id)
               #,@(gen #'maybe-call-statinfo-id)
               #,@(gen-bounce #'maybe-ref-statinfo-id+id '#%index-get '#%index-result)
-              #,@(gen-bounce #'maybe-set-statinfo-id+id '#%index-set #f))]
+              #,@(gen-bounce #'maybe-set-statinfo-id+id '#%index-set #f)
+              #,@(gen-bounce #'maybe-append-statinfo-id+id '#%append/checked #f))]
          [else def])]))
   (syntax-parse stx
     #:datum-literals ()

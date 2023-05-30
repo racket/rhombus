@@ -10,6 +10,7 @@
          "static-info.rkt"
          "define-arity.rkt"
          "index-key.rkt"
+         "append-key.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
          "function-arity-key.rkt"
@@ -22,7 +23,8 @@
          "parens.rkt"
          "parse.rkt"
          "realm.rkt"
-         "mutability.rkt")
+         "mutability.rkt"
+         "vector-append.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -40,6 +42,7 @@
 (define-for-syntax array-static-infos
   #'((#%index-get vector-ref)
      (#%index-set vector-set!)
+     (#%append vector-append)
      (#%sequence-constructor in-vector)
      (#%dot-provider array-instance)))
 
@@ -203,6 +206,10 @@
 
 (define-static-info-syntax vector-length
   (#%function-arity 2))
+
+(define-static-info-syntax vector-append
+  (#%call-result #,array-static-infos)
+  (#%function-arity 4))
 
 (define (vector-suffix->list v start)
   (for/list ([i (in-range start (vector-length v))])

@@ -1,9 +1,7 @@
 #lang racket/base
 
 (provide #%index-get
-         #%index-set
-         #%append)
+         #%index-set)
 
 (define #%index-get #f)
 (define #%index-set #f)
-(define #%append #f)

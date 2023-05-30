@@ -621,3 +621,15 @@ check:
     override method m():
       super.m()
   ~raises "inherited method is ambiguous"
+
+check:
+  // make sure static info works calling a final-ish method
+  class O(v)
+  interface I:
+    method m
+  class A():
+    implements I
+    override method m() :: O:
+      O(5)
+  A.m(A()).v
+  ~is 5

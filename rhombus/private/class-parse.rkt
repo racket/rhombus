@@ -74,8 +74,9 @@
                     call-method-id ; #f or identifier as private `call` (for Callable) whose static info is relevant
                     index-method-id ; for `get`
                     index-set-method-id ; for `set`
+                    append-method-id ; for `append`
                     prefab-guard-id
-                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'get, 'set
+                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'get, 'set, 'append
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
