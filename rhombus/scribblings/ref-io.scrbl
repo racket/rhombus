@@ -41,6 +41,15 @@
 }
 
 @doc(
+  fun current_input_port(),
+  fun current_input_port(in),
+){
+
+ A parameter for the current input port.
+
+}
+
+@doc(
   fun current_output_port(),
   fun current_output_port(out),
 ){
