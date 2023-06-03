@@ -21,6 +21,7 @@
                      displayln
                      print_to_string
                      (rename-out
+                      [current-input-port current_input_port]
                       [current-output-port current_output_port]
                       [current-error-port current_error_port])))
 
@@ -226,5 +227,5 @@
   (lambda (r op mode)
     (racket-print (racket-print-redirect-val r) op mode)))
 
-(define-static-info-syntaxes (current-output-port current-error-port)
+(define-static-info-syntaxes (current-input-port current-output-port current-error-port)
   (#%function-arity 3))
