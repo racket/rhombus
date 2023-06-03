@@ -227,4 +227,4 @@
     (racket-print (racket-print-redirect-val r) op mode)))
 
 (define-static-info-syntaxes (current-output-port current-error-port)
-  (#%function-arity 6))
+  (#%function-arity 3))
