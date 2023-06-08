@@ -811,3 +811,24 @@ check:
     internal _C
   C(1, 2) is_a _C
   ~is #true
+
+check:
+  class A():
+    nonfinal
+    private field a :: Boolean = #false
+  class B(b :: Boolean):
+    extends A
+  B(#false).b
+  ~is #false
+
+check:
+  class A():
+    nonfinal
+    private field a :: Boolean = #false
+  class B(b :: Boolean):
+    nonfinal
+    extends A
+  class C():
+    extends B
+  [B(#true).b, C(#true).b]
+  ~is [#true, #true]

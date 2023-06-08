@@ -691,7 +691,10 @@
                                             (datum->syntax #f (string->symbol (format "make-prefab-~a" (syntax-e #'name)))))
                                            #'make-all-name)])
       (define guard-expr
-        (build-guard-expr #'(super-field-name ...)
+        (build-guard-expr (let ([fields (and super (class-desc-all-fields super))])
+                            (if fields
+                                (generate-temporaries fields)
+                                #'(super-field-name ...)))
                           fields
                           (syntax->list #'(field-converter ...))
                           (map syntax-e
