@@ -171,3 +171,9 @@ block:
       def (a, b) = x
       b[0]
     ~raises "specialization not known"
+
+check:
+  ~eval
+  fun f(x = "hello" :: String):
+    "ok"
+  ~raises "immediate annotation operator not allowed in default-value expression"

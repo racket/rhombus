@@ -218,6 +218,9 @@ normally bound to implement function calls.
  supplied argument would be. An argument form @rhombus($keyword = $default_expr)
  is equivalent to the form @rhombus($keyword: $id = $default_expr)
  for the @rhombus($id) with the same string form as @rhombus($keyword).
+ A @rhombus(::) or @rhombus(:~) is not allowed in @rhombus(default_expr),
+ unless it is nested in another term, since that might be misread or
+ confused as an annotation in @rhombus(bind) for an identifier.
 
 @examples(
   ~defn:

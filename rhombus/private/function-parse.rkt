@@ -108,21 +108,24 @@
   (define-syntax-class :kw-opt-binding
     #:attributes [kw parsed default]
     #:datum-literals (block group)
-    (pattern (group kw:keyword (block (group a::not-equal ...+ _::equal e ...+)))
+    (pattern (group kw:keyword (block (group a::not-equal ...+ eq::equal e ...+)))
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
+             #:do [(check-argument-annot #'default #'eq)]
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
              #:with arg::binding #'(group a ...)
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:keyword _::equal e ...+)
+    (pattern (group kw:keyword eq::equal e ...+)
              #:with arg::binding (keyword->binding #'kw)
              #:with default #'(group e ...)
+             #:do [(check-argument-annot #'default #'eq)]
              #:attr parsed #'arg.parsed)
-    (pattern (group a::not-equal ...+ _::equal e ...+)
+    (pattern (group a::not-equal ...+ eq::equal e ...+)
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
+             #:do [(check-argument-annot #'default #'eq)]
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern (group a ...+ (b-tag::block b ...))
@@ -154,6 +157,21 @@
     (pattern ::kw-arity-arg
              #:attr default #'#f))
 
+  (define (check-argument-annot g eq-op)
+    (syntax-parse g
+      #:datum-literals (group)
+      [(group _ ... ann-op::annotate-op _ ...)
+       (raise-syntax-error #f
+                           (string-append
+                            "immediate annotation operator not allowed in default-value expression;\n"
+                            " use parenthese around the expression if the annotation was intended,\n"
+                            " since parentheses avoid the appearance of annotating the binding\n"
+                            " instead of the expression")
+                           #'ann-op.name
+                           #f
+                           (list eq-op))]
+      [_ (void)]))
+  
   (define-syntax-class :not-block
     #:datum-literals (op parens braces brackets quotes)
     (pattern _:identifier)
