@@ -66,7 +66,7 @@ way, too, and it's intended for quoting shrubbery terms.
 A @litchar{;} or @litchar{,} acts as a group
 separator, even within a single line. A @litchar{:} or @litchar{|}
 treats remaining item on the same line like a new indented line, which
-forms a block of nested groups. A guillemot pair @litchar{«} and @litchar{»} can be
+forms a block of nested groups. A guillemet pair @litchar{«} and @litchar{»} can be
 used in rare cases to explicitly bracket subgroups formed by
 @litchar{:} and @litchar{|} without line breaks. A @litchar{\} continues
 a line, effectively shifting all columns on the next line as if they

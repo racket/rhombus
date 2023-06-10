@@ -587,6 +587,31 @@ its enclosing group or have only @litchar{|} alternatives afterward.
 inside:« fruit » more
 }
 
+Ways to type @guillemets, depending on platform or editor:
+
+@itemlist(
+  @item{DrRacket:
+        Typing @litchar{\guillemetleft} for @litchar{«}
+        or @litchar{\guillemetright} for @litchar{»},
+        then hitting Control + @litchar{\}.
+        Typing @litchar{\gui}, hitting Control + @litchar{\},
+        then typing @litchar{l} for @litchar{«} or @litchar{r} for @litchar{»},
+        and then hitting Control + @litchar{\} again also works via autocomplete.}
+  @item{Mac:
+        Hitting Option + @litchar{\} for @litchar{«},
+        or Option + Shift + @litchar{|} for @litchar{»}.}
+  @item{Windows:
+        Holding Alt while typing 174 on the numpad for @litchar{«},
+        or 175 on the numpad for @litchar{»}.}
+  @item{GNU/Linux, BSD:
+        Hitting Control + Shift + U,
+        then typing 00AB for @litchar{«} or 00BB for @litchar{»},
+        and then hitting Enter.}
+)
+
+Or see the
+@hyperlink("https://en.wikipedia.org/wiki/Guillemet#Keyboard_entry"){
+Keyboard Entry section of the Guillemet article on Wikipedia}.
 
 @section(~tag: "continuing-backslash"){Continuing a Line with @litchar{\}}
 
