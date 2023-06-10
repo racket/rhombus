@@ -593,10 +593,11 @@ Ways to type @guillemets, depending on platform or editor:
   @item{DrRacket:
         Typing @litchar{\guillemetleft} for @litchar{«}
         or @litchar{\guillemetright} for @litchar{»},
-        then hitting Control + @litchar{\}.
-        Typing @litchar{\gui}, hitting Control + @litchar{\},
+        then hitting Control or Alt + @litchar{\}.
+        Typing @litchar{\gui}, hitting Control or Alt + @litchar{\},
         then typing @litchar{l} for @litchar{«} or @litchar{r} for @litchar{»},
-        and then hitting Control + @litchar{\} again also works via autocomplete.}
+        and then hitting Control or Alt + @litchar{\} again
+        also works via autocomplete.}
   @item{Mac:
         Hitting Option + @litchar{\} for @litchar{«},
         or Option + Shift + @litchar{|} for @litchar{»}.}
