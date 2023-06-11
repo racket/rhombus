@@ -9,7 +9,8 @@
                     [verbatim base:verbatim]
                     [table-of-contents table_of_contents]
                     [local-table-of-contents local_table_of_contents]
-                    [margin-note margin_note])
+                    [margin-note margin_note]
+                    [as-index as_index])
          scribble/private/manual-defaults
          "private/rhombus.rhm"
          "private/rhombus_typeset.rhm"

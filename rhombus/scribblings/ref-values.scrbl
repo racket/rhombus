@@ -40,3 +40,38 @@
  are the final values of the @rhombus(id)s.
 
 }
+
+
+@doc(
+  fun call_with_values(producer :: Function.of_arity(0),
+                       consumer :: Function)
+){
+
+ Calls @rhombus(producer) with no arguments, and then calls
+ @rhombus(consumer) with the result value(s) from @rhombus(producer).
+
+ Use @rhombus(call_with_values) to dispatch on the number of values that
+ are produced by an expression. The @rhombus(match) form cannot make that
+ distinction, because it always expects a single result value from its
+ initial subexpression.
+
+@examples(
+  ~defn:
+    fun get_fruit(n :: NonnegInt):
+      match n
+      | 0: values()
+      | 1: "apple"
+      | 2: values("apple", "banana")
+      | ~else values("apple", n +& " bananas")
+    fun
+    | show(): println("nothing")
+    | show(s): println(s)
+    | show(a, b): println(a +& " and " +& b)
+  ~repl:
+    call_with_values(fun (): get_fruit(0), show)
+    call_with_values(fun (): get_fruit(1), show)
+    call_with_values(fun (): get_fruit(2), show)
+    call_with_values(fun (): get_fruit(3), show)
+)
+
+}

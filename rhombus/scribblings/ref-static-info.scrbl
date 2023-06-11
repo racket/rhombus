@@ -86,6 +86,25 @@
 }
 
 @doc(
+  fun statinfo_meta.pack_group(statinfo_stx :: Syntax) :: Syntax
+  fun statinfo_meta.unpack_group(statinfo_stx :: Syntax) :: Syntax
+){
+
+ @provided_meta()
+
+ Analogous to @rhombus(statinfo_meta.pack) and
+ @rhombus(statinfo_meta.unpack), but for a sequence of static information
+ sets, such as one set of static information per value produced by a
+ multiple-value expression (see @rhombus(statinfo_meta.values_key).
+
+ An unpacked sequence is represented as a group syntax object, where
+ each term in the group is unpacked static information in the sense of
+ @rhombus(statinfo_meta.pack).
+
+}
+
+
+@doc(
   fun statinfo_meta.lookup(expr_stx :: Syntax, key :: Identifier)
 ){
 
@@ -120,6 +139,7 @@
   def statinfo_meta.index_set_key
   def statinfo_meta.append_key
   def statinfo_meta.dot_provider_key
+  def statinfo_meta.values_key
 ){
 
  @provided_meta()
@@ -156,6 +176,10 @@
         bound to a @rhombus(dot.macro) or
         @rhombus(dot.macro_more_static) to implement the expression's
         behavior as a @tech{dot provider}}
+
+  @item{@rhombus(statinfo_meta.values_key) --- a packed group of
+        static infoformation (see @rhombus(statinfo_meta.pack_group)),
+        one for each value produced by a multiple-value expression}
 
 )
 

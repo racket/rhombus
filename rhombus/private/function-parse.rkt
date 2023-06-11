@@ -5,12 +5,14 @@
                      syntax/parse/pre
                      enforest/name-parse
                      shrubbery/property
+                     shrubbery/print
                      "hash-set.rkt"
                      "srcloc.rkt"
                      "consistent.rkt"
                      "with-syntax.rkt"
                      "tag.rkt"
-                     "same-expression.rkt")
+                     "same-expression.rkt"
+                     "static-info-pack.rkt")
          racket/unsafe/undefined
          "provide.rkt"
          "parens.rkt"
@@ -52,7 +54,9 @@
 (module+ for-build
   (provide (for-syntax :kw-binding
                        :kw-opt-binding
+                       :rhombus-kw-opt-binding
                        :ret-annotation
+                       :rhombus-ret-annotation
                        :maybe-arg-rest
                        :non-...-binding
                        build-function
@@ -83,18 +87,28 @@
   (define (keyword->binding kw)
     #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw)))
 
-  (define-syntax-class :kw-binding
+  (define-syntax-class :has-kw-binding
     #:attributes [kw parsed]
-    #:datum-literals (block group)
-    (pattern (group kw:keyword (block (group a ...+)))
+    #:datum-literals (group)
+    (pattern (group kw:keyword (_::block (group a ...+)))
+             #:cut
              #:with arg::binding #'(group a ...)
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword)
+             #:cut
              #:with arg::binding (keyword->binding #'kw)
-             #:attr parsed #'arg.parsed)
+             #:attr parsed #'arg.parsed))
+
+  (define-syntax-class :plain-binding
+    #:attributes [kw parsed]
     (pattern arg::non-...-binding
              #:attr kw #'#f
              #:attr parsed #'arg.parsed))
+
+  (define-syntax-class :kw-binding
+    #:attributes [kw parsed]
+    (pattern ::has-kw-binding)
+    (pattern ::plain-binding))
 
   ;; used when just extracting an arity:
   (define-syntax-class :kw-arity-arg
@@ -109,33 +123,49 @@
     #:attributes [kw parsed default]
     #:datum-literals (block group)
     (pattern (group kw:keyword (block (group a::not-equal ...+ eq::equal e ...+)))
+             #:cut
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
+             #:cut
              #:with arg::binding #'(group a ...)
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword eq::equal e ...+)
+             #:cut
              #:with arg::binding (keyword->binding #'kw)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
              #:attr parsed #'arg.parsed)
+    (pattern ::has-kw-binding
+             #:attr default #'#f)
     (pattern (group a::not-equal ...+ eq::equal e ...+)
+             #:cut
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern (group a ...+ (b-tag::block b ...))
+             #:cut
              #:with (~not (_:keyword)) #'(a ...)
              #:with arg::binding #'(group a ...)
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
-    (pattern ::kw-binding
+    (pattern ::plain-binding
              #:attr default #'#f))
+
+  (define-syntax-class :rhombus-kw-opt-binding
+    #:attributes [maybe_keyword parsed maybe_expr]
+    (pattern arg::kw-opt-binding
+             #:attr parsed #'arg.parsed
+             #:attr maybe_keyword (and (syntax-e #'arg.kw)
+                                       #'arg.kw)
+             #:attr maybe_expr (and (syntax-e #'arg.default)
+                                    #'arg.default)))
 
   ;; used when just extracting an arity:
   (define-syntax-class :kw-opt-arity-arg
@@ -164,7 +194,7 @@
        (raise-syntax-error #f
                            (string-append
                             "immediate annotation operator not allowed in default-value expression;\n"
-                            " use parenthese around the expression if the annotation was intended,\n"
+                            " use parentheses around the expression if the annotation was intended,\n"
                             " since parentheses avoid the appearance of annotating the binding\n"
                             " instead of the expression")
                            #'ann-op.name
@@ -182,8 +212,8 @@
     (pattern (quotes . _)))
 
   (define-splicing-syntax-class :ret-annotation
-    #:attributes (static-infos ; can be `(#%values (static-infos ...))` for multiple results
-                  converter)   ; can be `(lambda (arg ... success-k fail-k) ....)` for multiple results
+    #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
+                  converter)   ; `(lambda (arg ... success-k fail-k) ....)` with one ` arg` for each result
     #:description "return annotation"
     #:datum-literals (block group)
     (pattern (~seq ann-op::annotate-op (~optional vls:identifier) (_::parens g ...))
@@ -272,6 +302,24 @@
     (pattern (~seq)
              #:attr static-infos #'()
              #:attr converter #'#f))
+
+  (define-splicing-syntax-class :rhombus-ret-annotation
+    #:attributes (count
+                  maybe_converter
+                  static_info
+                  annotation_string)
+    (pattern r::ret-annotation
+             #:attr count (syntax-parse #'r.static-infos
+                            #:literals (#%values)
+                            [((#%values (si ...)))
+                             (length (syntax->list #'(si ...)))]
+                            [_ 1])
+             #:attr maybe_converter (and (syntax-e #'r.converter)
+                                         #'(parsed r.converter))
+             #:attr static_info (unpack-static-infos #'r.static-infos)
+             #:attr annotation_string (syntax-parse (and (syntax-e #'r.converter) #'r)
+                                        [(_ . t) (shrubbery-syntax->string #`(#,group-tag . t))]
+                                        [_ "Any"])))
 
   (define-splicing-syntax-class :pos-rest
     #:attributes [arg parsed]

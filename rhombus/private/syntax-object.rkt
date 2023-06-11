@@ -271,7 +271,7 @@
   (pack-multi (for/list ([e (in-list v)])
                 (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
 
-(define/arity (make_id str ctx)
+(define/arity (make_id str [ctx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (string? str)
     (raise-argument-error* 'Syntax.make_id rhombus-realm "StringView" str))

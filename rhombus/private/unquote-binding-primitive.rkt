@@ -381,7 +381,7 @@
           (compat #'pack-block* #'unpack-multi-as-term*)]
          [else (incompat)])]
       [else
-       (error "unrecognized kind" kind)])))
+       (error "unrecognized kind"  (rhombus-syntax-class-kind rsc))])))
 
 (define-for-syntax (normalize-id form)
   (if (identifier? form)

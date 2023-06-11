@@ -1,0 +1,96 @@
+#lang rhombus
+
+use_static
+
+check:
+  recur f(x = 1): x
+  ~is 1
+
+check:
+  (recur f(x = 1): x) ~is 1
+  (recur f(x = 1, y = [x]): y) ~is [1]
+  (recur f(x = 1, y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f(x = 1, ~y: y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f(~x: x = 1, ~y: y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f(~x: x = 1, ~y: y = [x], ~z: z = [x, y]): z) ~is [1, [1]]
+
+// argument pattern triggers more general transformation
+check:
+  (recur f([x] = [1]): x) ~is 1
+  (recur f([x] = [1], y = [x]): y) ~is [1]
+  (recur f([x] = [1], y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f([x] = [1], ~y: y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f(~x: [x] = [1], ~y: y = [x], z = [x, y]): z) ~is [1, [1]]
+  (recur f(~x: [x] = [1], ~y: y = [x], ~z: z = [x, y]): z) ~is [1, [1]]
+
+check:
+  recur f(x = 2, ~y: y = x):
+    if x == 0
+    | y
+    | f(0)
+  ~is 2
+
+check:
+  recur f(x = 2, ~y: y = x):
+    match x
+    | 0: y
+    | 1: f(0)
+    | ~else: f(x-1, ~y: y+1)
+  ~is 3
+
+check:
+  recur f([x] = [2], ~y: y = x):
+    if x == 0
+    | y
+    | f([0])
+  ~is 2
+
+check:
+  recur f([x] = [2], ~y: y = x):
+    match x
+    | 0: y
+    | 1: f([0])
+    | ~else: f([x-1], ~y: y+1)
+  ~is 3
+
+check:
+  ~eval
+  recur f(x): x
+  ~raises "missing initial-value expression"
+
+check:
+  ~eval
+  recur f(~x: x): x
+  ~raises "missing initial-value expression"
+
+check:
+  recur loop(x :: String = "a"):
+    x.length()
+  ~is 1
+
+check:
+  recur loop(x :: String = 10):
+    x.length()
+  ~raises "value does not match annotation"
+
+check:
+  (recur loop(x :: String = "abs") :: String:
+     x).length()
+  ~is 3
+
+check:
+  def (s, x):
+    recur loop(x :: String = "abs") :: (String, Int):
+      values(x, 0)
+  s.length()
+  ~is 3
+
+check:
+  recur loop(x :: String = "abs") :: String:
+    0
+  ~raises "result does not match annotation"
+
+check:
+  recur loop(x :: String = "abs") :: (String, Int):
+    0
+  ~raises "result does not match annotation"

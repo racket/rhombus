@@ -123,7 +123,9 @@
          tl-decl ...
          (define-syntax-class form-class
            #:attributes (parsed)
-           (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))
+           (pattern ((~datum group) . tail)
+                    #:cut
+                    #:attr parsed (transform-out (enforest (transform-in #'tail)))))
 
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`

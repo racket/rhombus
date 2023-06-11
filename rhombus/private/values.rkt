@@ -14,7 +14,11 @@
                       rhombus/bind
                       rhombus/reducer
                       rhombus/statinfo)
-                     values))
+                     values)
+         (for-spaces (#f
+                      rhombus/statinfo)
+                     (rename-out
+                      [call-with-values call_with_values])))
 
 (define-binding-syntax values
   (binding-prefix-operator
@@ -47,3 +51,6 @@
 
 (define-static-info-syntax values
   (#%function-arity -1))
+
+(define-static-info-syntax call-with-values
+  (#%function-arity 4))

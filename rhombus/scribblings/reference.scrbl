@@ -23,10 +23,11 @@
 
 @include_section("ref-repetition.scrbl")
 
+@include_section("ref-block.scrbl")
 @include_section("ref-cond.scrbl")
 @include_section("ref-match.scrbl")
 @include_section("ref-for.scrbl")
-@include_section("ref-block.scrbl")
+@include_section("ref-recur.scrbl")
 @include_section("ref-parameter.scrbl")
 @include_section("ref-exn.scrbl")
 @include_section("ref-control.scrbl")

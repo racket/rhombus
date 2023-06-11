@@ -3,6 +3,7 @@
 
 (bounce "private/core.rkt"
         "private/core-macro.rkt"
+        "private/recur.rhm"
         "private/check.rhm"
         "private/maybe.rhm"
         "private/string.rhm"

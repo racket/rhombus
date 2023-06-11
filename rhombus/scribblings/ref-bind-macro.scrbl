@@ -228,6 +228,21 @@
 
 }
 
+
+@doc(
+  fun bind_meta.is_immediate(info :: Syntax) :: Boolean
+){
+
+ @provided_meta()
+
+ Takes the initialized binding-form expansion produced by
+ @rhombus(bind_meta.get_info) and restports whether the binding is
+ immediate in the same sense as just a variable: the binding always
+ matches, and no work is required to convert or unpack the matched value.
+
+}
+
+
 @doc(
   defn.macro '«bind.matcher '$id($id_pattern, $data_pattern,
                                  $IF_pattern, $success_pattern, $fail_pattern)':
@@ -317,6 +332,81 @@
  @provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for bindings.
+
+}
+
+@doc(
+  ~nonterminal:
+    bind_maybe_kw_opt: fun
+
+  syntax_class bind_meta.Argument:
+    kind: ~group
+    field parsed
+    field maybe_keyword
+    field maybe_expr
+){
+
+ @provided_meta()
+
+ Matches forms that combine a binding with an optional kyword and
+ optional default-value expression, like @rhombus(bind_maybe_kw_opt) for
+ @rhombus(fun).
+
+@itemlist(
+
+  @item{The @rhombus(parsed) field holds a parsed binding form.}
+
+  @item{The @rhombus(maybe_keyword) field is @rhombus(#false) if no
+  keyword is present, otherwise it is a keyword syntax object.}
+
+  @item{The @rhombus(maybe_expr) field is @rhombus(#false) if no
+  default-value expression is provided, otherwise it is a group syntax
+  object for the expression.}
+
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    maybe_res_annot: fun
+
+  syntax_class bind_meta.Result:
+    kind: ~sequence
+    field count
+    field maybe_converter
+    field static_info
+    field annotation_string
+){
+
+ @provided_meta()
+
+ Matches a sequence of terms (possibly empty) for a result annotation,
+ like @rhombus(maybe_res_annot) for @rhombus(fun).
+
+ @itemlist(
+
+  @item{The @rhombus(count) field holds an integer for the number of
+  expected results.}
+
+  @item{The @rhombus(maybe_converter) field is @rhombus(#false) if no
+  annotation is declared or if it is unchecked, otherwise it is a syntax
+  object for a function expression; the resulting function expects
+  @rhombus(count) plus two arguments: each original result followed by a
+  success procedure of @rhombus(count) arguments and a failure procedure
+  of zero arguments.}
+
+  @item{The @rhombus(static_info) field holds static information for the
+  result (in unpacked form; see @rhombus(static_info.pack)); when
+  @rhombus(count) is not @rhombus(1), then @rhombus(static_info) has a
+  single key @rhombus(statinfo_meta.values_key) whose value is (packed)
+  static information for each value (see
+  @rhombus(statinfo_meta.pack_group)).}
+
+  @item{The @rhombus(annotation_string) field describes the annotation,
+  which is useful for raising an exception when conversion fails.}
+
+)
 
 }
 

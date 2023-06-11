@@ -1,0 +1,128 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+  lib("racket/unsafe/undefined.rkt").#{unsafe-undefined}
+
+export:
+  recur
+
+expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
+                                         ...) $(r :: bind_meta.Result):
+              $body
+              ...':
+  ~op_stx self_id
+  for:
+    each:
+      arg: [arg, ...]
+      expr: [arg.maybe_expr, ...]
+    unless expr
+    | syntax_meta.error("missing initial-value expression",
+                        self_id,
+                        arg)
+  def loop_name = Syntax.make_id(name +& "_recur")
+  def [arg_info, ...]: [bind_meta.get_info(arg.parsed, '()'), ...]
+  // if all the bindings are immediate (as opposed to more complex patterns),
+  // then we expand similar to Racket's named `let`. Otherwise, to avoid
+  // duplicating the binding machinery for the initial call and recursive calls,
+  // we'll expand in a way that uses `#{unsafe-undefined}` on the initial call
+  def all_immediate: for values(immed = #true):
+                       each info: [arg_info, ...]
+                       immed && bind_meta.is_immediate(info)
+  def ['($_, $a_name, $_, ...)', ...]: [bind_meta.unpack_info(arg_info), ...]
+  def [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
+  def [avail_id, ...] = [Syntax.make_id(a_name +& "_ready_arg"), ...]
+  def [recur_arg, ...] = (for List:
+                            each:
+                              kw: [arg.maybe_keyword, ...]
+                              id: [arg_id, ...]
+                              avail_id: [avail_id, ...]
+                            if kw
+                            | '$kw: $id = $avail_id'
+                            | '$id')
+  def body_expr:
+    wrap_converter('block:
+                      fun $name($recur_arg, ...):
+                        $loop_name($arg_id, ...)
+                      $body
+                      ...',
+                   r.count, r.maybe_converter, r.annotation_string, name)
+  fun
+  | make_binds_plus_body(mode, [], [], [], [], inside):
+      inside
+  | make_binds_plus_body(mode,
+                         [arg_info, & arg_infos],
+                         [arg_id, & arg_ids],
+                         [avail_id, & avail_ids],
+                         [init_expr, & init_exprs],
+                         inside):
+      def '($ann_str, $a_name, $sis, (($id, $_, $si), ...), $matcher, $committer, $binder, $data)':
+        bind_meta.unpack_info(arg_info)
+      def next:
+          '«block:
+              $committer($avail_id, $data)
+              $binder($avail_id, $data)
+              statinfo.macro '$id': '$si'
+              ...
+              $(make_binds_plus_body(mode, arg_infos, arg_ids, avail_ids, init_exprs, inside))»'
+      '«block:
+          def $avail_id: $(match mode
+                           | #'immediate: arg_id
+                           | #'general:
+                               'if $arg_id === #{unsafe-undefined}
+                                | $init_expr
+                                | $arg_id'
+                           | #'initial: init_expr)
+          $matcher($avail_id, $data, if, $next, no_match(#' $name, #%literal $ann_str, $avail_id))»'
+  fun make_binds_plus_body_for(mode, inside):
+    make_binds_plus_body(mode,
+                         [arg_info, ...],
+                         [arg_id, ...],
+                         [avail_id, ...],
+                         [arg.maybe_expr, ...],
+                         inside)
+  fun undefined(id): '#{unsafe-undefined}'
+  def expr:
+    'block:
+       fun $loop_name($arg_id, ...):
+         $(make_binds_plus_body_for(if all_immediate | #'immediate | #'general,
+                                    body_expr))
+       $(if all_immediate
+         | make_binds_plus_body_for(#'initial,
+                                    '$loop_name($(arg.maybe_expr), ...)')
+         | '$loop_name($(undefined(arg_id)), ...)')'
+  statinfo_meta.wrap(expr, r.static_info)
+
+fun no_match(who, ann_str, what):
+  error(who,
+        "value does not match annotation\n"
+          +& "  annotation: " +& ann_str +& "\n"
+          +& "  value: " +& what)
+
+meta:
+  fun wrap_converter(expr, count, maybe_converter, annotation_string, name):
+    if maybe_converter
+    | if count == 1
+      | '$maybe_converter($expr,
+                          fun (v): v,
+                          fun (): bad_result(#' $name,
+                                             #%literal $annotation_string))'
+      | def [arg, ...]:
+          for List:
+            each i: 0..count
+            Syntax.make_id("arg" +& i)
+        'block:
+           fun fail(): bad_result(#' $name, #%literal $annotation_string)
+           call_with_values(
+             fun (): $expr,
+             fun
+             | ($arg, ...):
+                 $maybe_converter($arg, ..., values, fail)
+             | (& args): fail()
+           )'
+    | expr
+
+fun bad_result(who, ann_str):
+  error(who,
+        "result does not match annotation\n"
+          +& "  annotation: " +& ann_str)
+

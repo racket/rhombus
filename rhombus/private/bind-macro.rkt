@@ -8,6 +8,8 @@
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     (only-in (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
+                              define-syntax-class-syntax)
                      (only-in "repetition.rkt" in-repetition-space)
                      (for-syntax racket/base
                                  syntax/parse/pre)
@@ -30,7 +32,12 @@
          ;; for `matcher` and `binder`:
          (for-syntax "parse.rkt")
          ;; for `bind_meta`:
-         (for-syntax "name-root.rkt"))
+         (for-syntax "name-root.rkt")
+         (only-in (submod "function-parse.rkt" for-build)
+                  :rhombus-kw-opt-binding
+                  :rhombus-ret-annotation)
+         ;; for `block` in `if-reverse-bridge`:
+         (only-in "implicit.rkt" #%body))
 
 (provide (for-syntax (for-space rhombus/namespace
                                 bind_meta)))
@@ -55,9 +62,12 @@
      unpack
      unpack_info
      get_info
+     is_immediate
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     Argument
+     Result)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -70,7 +80,23 @@
   (define-operator-syntax-classes
     Parsed :binding
     AfterPrefixParsed :prefix-op+binding+tail
-    AfterInfixParsed :infix-op+binding+tail))
+    AfterInfixParsed :infix-op+binding+tail)
+
+  (define-syntax-class-syntax Argument
+    (make-syntax-class #':rhombus-kw-opt-binding
+                       #:kind 'group
+                       #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                   (maybe_keyword #f maybe_keyword 0 unpack-maybe-term*)
+                                   (maybe_expr #f maybe_expr 0 unpack-maybe-group*))))
+
+  (define-syntax-class-syntax Result
+    (make-syntax-class #':rhombus-ret-annotation
+                       #:kind 'term
+                       #:splicing? #t
+                       #:fields #'((count #f count 0 unpack-element*)
+                                   (maybe_converter #f maybe_converter 0 unpack-term*)
+                                   (static_info #f static_info 0 unpack-term*)
+                                   (annotation_string #f annotation_string 0 unpack-element*)))))
 
 (define-for-syntax space
   (space-syntax rhombus/bind))
@@ -172,9 +198,19 @@
                                              'bind_meta.get_info))
      (syntax-parse #`(b.infoer-id #,static-infos b.data)
        [impl::binding-impl #'(parsed impl.info)])]
-    [else
+    [_
      (raise-argument-error 'bind_meta.get_info
                            "binding-form?"
+                           stx)]))
+
+(define-for-syntax (is_immediate stx)
+  (syntax-parse (and (syntax? stx)
+                     stx)
+    [(parsed info::binding-info)
+     (free-identifier=? #'info.matcher-id #'always-succeed)]
+    [_
+     (raise-argument-error 'bind_meta.is_immediate
+                           "binding-info?"
                            stx)]))
 
 (define-syntax infoer
@@ -292,19 +328,39 @@
   (let ([parse (lambda (rhombus stx)
                  (syntax-parse stx
                    #:datum-literals (parsed group parens)
-                   #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
                                (group (parsed (matcher-id committer-id binder-id data)))
-                               (group IF-bridge)
+                               (group if-id)
                                (group success ...)
-                               (group (parsed (if-bridge IF fail)))))
-                    #:with rhombus rhombus
-                    #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)]))])
+                               (group fail ...)))
+                    (syntax-parse #'(fail ...)
+                      #:literals (if-bridge)
+                      [((parsed (if-bridge IF fail)))
+                       #:with rhombus rhombus
+                       #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)]
+                      [_
+                       #'(matcher-id arg-id data
+                                     if-via-rhombus
+                                     (rhombus-expression (group success ...))
+                                     (if-reverse-bridge if-id (group fail ...)))])]))])
     (make-expression+definition-transformer
      (expression-transformer
       (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
+
+(define-syntax (if-via-rhombus stx)
+  (syntax-parse stx
+    #:literals (if-reverse-bridge)
+    [(_ tst thn (if-reverse-bridge if-id els))
+     #'(rhombus-expression (group if-id (parsed tst)
+                                  (alts (block (group (parsed (let () thn))))
+                                        (block els))))]
+    [_
+     (raise-syntax-error #f "misuse of binding conditional" stx)]))
+
+(define-syntax (if-reverse-bridge stx)
+  (raise-syntax-error #f "misuse of binding conditional" stx))
 
 (define-syntax chain-to-committer
   ;; depends on `IF` like `if-bridge` does

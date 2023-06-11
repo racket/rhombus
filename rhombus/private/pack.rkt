@@ -42,9 +42,11 @@
          
          pack-term*
          unpack-term*
+         unpack-maybe-term*
          unpack-term-list*
          pack-group*
          unpack-group*
+         unpack-maybe-group*
          pack-multi*
          pack-tagged-multi*
          pack-block*
@@ -257,6 +259,11 @@
 (define (unpack-term* qs r depth)
   (unpack* qs r depth unpack-term))
 
+(define (unpack-maybe-term* qs r depth)
+  (unpack* qs r depth (lambda (form who at-stx)
+                        (and form
+                             (unpack-term form who at-stx)))))
+
 (define (unpack-term-list* qs r depth)
   (unpack* qs r depth unpack-term-list))
 
@@ -267,6 +274,11 @@
 ;; "Unpacks" to a `group` form, which is really more about coercsions
 (define (unpack-group* qs r depth)
   (unpack* qs r depth unpack-group))
+
+(define (unpack-maybe-group* qs r depth)
+  (unpack* qs r depth (lambda (form who at-stx)
+                        (and form
+                             (unpack-group form who at-stx)))))
 
 ;; Packs to a `multi` form
 (define (pack-multi* stxes depth)
