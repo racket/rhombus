@@ -1,7 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open
+    "nonterminal.rhm" open:
+      except: bind expr defn
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -21,12 +22,12 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    macro_patterns: expr.macro
 
-  defn.macro 'reducer.macro $prefix_macro_patterns'
+  defn.macro 'reducer.macro $macro_patterns'
 ){
 
- Like @rhombus(defn.macro, ~expr), but defines an identifier
+ Like @rhombus(expr.macro, ~expr), but defines an identifier or operator
  as a reducer form in the @rhombus(reducer, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
  reducer description created with @rhombus(reducer_meta.pack).
@@ -206,11 +207,19 @@
   syntax_class reducer_meta.Parsed:
     kind: ~group
     field group
+  syntax_class reducer_meta.AfterPrefixParsed(op_name):
+    kind: ~group
+    field group
+    field [tail, ...]
+  syntax_class reducer_meta.AfterInfixParsed(op_name):
+    kind: ~group
+    field group
+    field [tail, ...]
 ){
 
  @provided_meta()
 
- Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but for reducers.
+ Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for reducers.
 
 }
 

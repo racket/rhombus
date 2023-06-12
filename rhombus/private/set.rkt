@@ -165,12 +165,14 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_)
-        (reducer/no-break #'build-set-reduce
-                          #'([ht #hashalw()])
-                          #'build-set-add
-                          set-static-info
-                          #'ht)]))))
+       [(_ . tail)
+        (values
+         (reducer/no-break #'build-set-reduce
+                           #'([ht #hashalw()])
+                           #'build-set-add
+                           set-static-info
+                           #'ht)
+         #'tail)]))))
 
 (define-syntax (build-set-reduce stx)
   (syntax-parse stx

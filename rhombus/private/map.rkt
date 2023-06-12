@@ -292,12 +292,14 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_)
-        (reducer/no-break #'build-map-reduce
-                          #'([ht #hashalw()])
-                          #'build-map-add
-                          map-static-info
-                          #'ht)]))))
+       [(_ . tail)
+        (values
+         (reducer/no-break #'build-map-reduce
+                           #'([ht #hashalw()])
+                           #'build-map-add
+                           map-static-info
+                           #'ht)
+         #'tail)]))))
 
 (define-syntax (build-map-reduce stx)
   (syntax-parse stx

@@ -38,12 +38,14 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group op)
-       [(_ (parens (group id:identifier _::equal rhs ...) ...))
-        (reducer/no-break #'build-return
-                          #'([id (rhombus-expression (group rhs ...))] ...)
-                          #'build-return
-                          #'()
-                          #'#f)]))))
+       [(_ (parens (group id:identifier _::equal rhs ...) ...) . tail)
+        (values
+         (reducer/no-break #'build-return
+                           #'([id (rhombus-expression (group rhs ...))] ...)
+                           #'build-return
+                           #'()
+                           #'#f)
+         #'tail)]))))
 
 (define-syntax (build-return stx)
   (syntax-parse stx

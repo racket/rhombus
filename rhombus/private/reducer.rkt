@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/transformer
+                     enforest/operator
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
@@ -14,15 +14,22 @@
   (provide (for-syntax in-reducer-space)))
 
 (begin-for-syntax
-  (provide (property-out reducer-transformer)
+  (provide (property-out reducer-prefix-operator)
+           (property-out reducer-infix-operator)
+           reducer-transformer
            :reducer
            :reducer-form
            reducer
            reducer/no-break)
 
-  (property reducer-transformer transformer)
+  (property reducer-prefix-operator prefix-operator)
+  (property reducer-infix-operator infix-operator)
+
+  (define (reducer-transformer proc)
+    (reducer-prefix-operator (quote-syntax unused) '((default . stronger)) 'macro proc))
 
   (define-syntax-class :reducer-form
+    #:description "reducer"
     (pattern [wrapper:id
               (~and binds ([id:identifier init-expr] ...))
               body-wrapper:id
@@ -52,13 +59,15 @@
 
   (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
   
-  (define-rhombus-transform
+  (define-rhombus-enforest
     #:syntax-class :reducer
+    #:prefix-more-syntax-class :prefix-op+reducer+tail
+    #:infix-more-syntax-class :infix-op+reducer+tail
     #:desc "reducer"
     #:in-space in-reducer-space
-    #:transformer-ref reducer-transformer-ref
-    #:check-result check-reducer-result
-    #:accept-parsed? #t))
+    #:prefix-operator-ref reducer-prefix-operator-ref
+    #:infix-operator-ref reducer-infix-operator-ref
+    #:check-result check-reducer-result))
 
 (define-syntax (define-reducer-syntax stx)
   (syntax-parse stx

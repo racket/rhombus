@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
+                     enforest/operator
                      enforest/transformer-result
                      "pack.rkt"
                      "tail-returner.rkt"
@@ -33,30 +34,75 @@
     #:fields
     (pack
      unpack
-     Parsed)))
+     Parsed
+     AfterPrefixParsed
+     AfterInfixParsed)))
 
-(define-identifier-syntax-definition-transformer macro
+(define-operator-definition-transformer macro
+  'macro
   rhombus/reducer
-  #'make-reducer-transformer)
+  #'make-reducer-prefix-operator
+  #'make-reducer-infix-operator
+  #'reducer-prefix+infix-operator)
 
 (begin-for-syntax
-  (define-transformer-syntax-class
-    Parsed :reducer))
+  (define-operator-syntax-classes
+    Parsed :reducer
+    AfterPrefixParsed :prefix-op+reducer+tail
+    AfterInfixParsed :infix-op+reducer+tail)
 
-(define-for-syntax (make-reducer-transformer proc)
-  (reducer-transformer
-   (lambda (stx)
-     (define form
-       (syntax-parse stx
-         [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (extract-reducer form proc))))
+  (struct reducer-prefix+infix-operator (prefix infix)
+    #:property prop:reducer-prefix-operator (lambda (self) (reducer-prefix+infix-operator-prefix self))
+    #:property prop:reducer-infix-operator (lambda (self) (reducer-prefix+infix-operator-infix self))))
+
+(define-for-syntax (wrap-parsed stx)
+  #`(parsed #,stx))
 
 (define-for-syntax (extract-reducer form proc)
   (syntax-parse (if (syntax? form)
                     (unpack-group form proc #f)
                     #'#f)
-    [r::reducer #'r.parsed]
+    [b::reducer #'b.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "reducer" form)]))
+
+(define-for-syntax (make-reducer-infix-operator name prec protocol proc assc)
+  (reducer-infix-operator
+   name
+   prec
+   protocol
+   (if (eq? protocol 'macro)
+       (lambda (form1 tail)
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)])))
+         (check-transformer-result (extract-reducer form proc)
+                                   (unpack-tail new-tail proc #f)
+                                   proc))
+       (lambda (form1 form2 stx)
+         (extract-reducer (proc (wrap-parsed form1) (wrap-parsed form2) stx)
+                          proc)))
+   assc))
+
+(define-for-syntax (make-reducer-prefix-operator name prec protocol proc)
+  (reducer-prefix-operator
+   name
+   prec
+   protocol
+   (if (eq? protocol 'macro)
+       (lambda (tail)
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
+         (check-transformer-result (extract-reducer form proc)
+                                   (unpack-tail new-tail proc #f)
+                                   proc))
+       (lambda (form stx)
+         (extract-reducer (proc (wrap-parsed form) stx)
+                          proc)))))
 
 (define-for-syntax (pack wrapper-id binds step-id maybe-break-id maybe-final-id finish-id static-infos data)
   (unless (identifier? wrapper-id) (raise-argument-error* 'reducer.pack rhombus-realm "Identifier" wrapper-id))

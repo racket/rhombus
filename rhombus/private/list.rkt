@@ -229,12 +229,13 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_)
-        (reducer/no-break #'build-reverse
-                          #'([accum null])
-                          #'build-accum
-                          list-static-infos
-                          #'accum)]))))
+       [(_ . tail)
+        (values (reducer/no-break #'build-reverse
+                                  #'([accum null])
+                                  #'build-accum
+                                  list-static-infos
+                                  #'accum)
+                #'tail)]))))
 
 (define-syntax (build-reverse stx)
   (syntax-parse stx
