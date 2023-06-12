@@ -171,3 +171,39 @@ check:
     each i: 3..7
     i
   ~raises "index is out of range"
+
+check:
+  def mutable accum = []
+  [for &&:
+     each i: 0..10
+     accum := List.cons(i, accum)
+     i > -1 && i,
+   accum]
+  ~is [9, [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
+  
+check:
+  def mutable accum = []
+  [for &&:
+     each i: 0..10
+     accum := List.cons(i, accum)
+     i < 6,
+   accum]
+  ~is [#false, [6, 5, 4, 3, 2, 1, 0]]
+
+check:
+  def mutable accum = []
+  [for ||:
+     each i: 0..10
+     accum := List.cons(i, accum)
+     i > 9,
+   accum]
+  ~is [#false, [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
+  
+check:
+  def mutable accum = []
+  [for ||:
+     each i: 0..10
+     accum := List.cons(i, accum)
+     i > 5 && i,
+   accum]
+  ~is [6, [6, 5, 4, 3, 2, 1, 0]]

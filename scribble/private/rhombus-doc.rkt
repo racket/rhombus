@@ -297,9 +297,9 @@
 (define-doc reducer.macro reducer
   "reducer"
   rhombus/reducer
-  identifier-macro-extract-name
-  identifier-macro-extract-metavariables
-  identifier-macro-extract-typeset)
+  operator-macro-extract-name
+  operator-macro-extract-metavariables
+  operator-macro-extract-typeset)
 
 (define-doc for_clause.macro for_clause
   "for clause"

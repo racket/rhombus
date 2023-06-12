@@ -128,6 +128,7 @@
         "parameterize.rkt"
         "boolean-pattern.rkt"
         "boolean-annotation.rkt"
+        "boolean-reducer.rkt"
         "equatable.rkt"
         "sequenceable.rkt"
         "eval.rkt"

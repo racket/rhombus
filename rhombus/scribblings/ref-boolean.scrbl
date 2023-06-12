@@ -73,6 +73,26 @@
 }
 
 @doc(
+  reducer.macro '||'
+){
+
+ A @tech{reducer} that stops an iteration as soon as a non-@rhombus(#false)
+ value is produced for an element and returns that value, otherwise
+ returns @rhombus(#false).
+
+@examples(
+  for ||:
+    each i: 0..10
+    (i == 5) && to_string(i)
+  for ||:
+    each i: 0..10
+    i == 10
+)
+
+}
+
+
+@doc(
   expr.macro '$expr && $expr'
 ){
 
@@ -139,6 +159,27 @@
 )
 
 }
+
+
+@doc(
+  reducer.macro '&&'
+){
+
+ A @tech{reducer} that stops an iteration as soon as a @rhombus(#false) value
+ is produced for an element and otherwise returns the result of the last
+ iteration.
+
+@examples(
+  for &&:
+    each i: 0..10
+    i == 5
+  for &&:
+    each i: 0..10
+    (i < 10) && to_string(i)
+)
+
+}
+
 
 
 @doc(
