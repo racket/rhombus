@@ -293,11 +293,11 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[build-map-reduce
-           ([ht #hashalw()])
-           build-map-add
-           #,map-static-info
-           ht]]))))
+        (reducer/no-break #'build-map-reduce
+                          #'([ht #hashalw()])
+                          #'build-map-add
+                          map-static-info
+                          #'ht)]))))
 
 (define-syntax (build-map-reduce stx)
   (syntax-parse stx

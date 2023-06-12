@@ -38,8 +38,8 @@
                    (group form-id red ... (block-tag body ...)))
                 #'())]
        [(form-id (block body ...+))
-        (values #`(for (#:splice (for-clause-step #,stx [(finish (begin))] body ...))
-                    (finish))
+        (values #`(for (#:splice (for-clause-step #,stx [(begin (void))] body ...))
+                    (void))
                 #'())]
        [(form-id red ... (block body ...+))
         #:with g-tag group-tag
@@ -48,8 +48,14 @@
         (values (wrap-static-info*
                  #`(f.wrapper
                     f.data
-                    (for/fold f.binds (#:splice (for-clause-step #,stx [(finish (f.body-wrapper f.data))] body ...))
-                      (finish)))
+                    (for/fold f.binds (#:splice (for-clause-step #,stx [(f.body-wrapper f.data)] body ...))
+                      #,@(if (syntax-e #'f.break-whener)
+                             #`(#:break (f.break-whener f.data))
+                             null)
+                      #,@(if (syntax-e #'f.final-whener)
+                             #`(#:final (f.final-whener f.data))
+                             null)
+                      (f.finisher f.data)))
                  #'f.static-infos)
                 #'())]))))
 
@@ -63,7 +69,7 @@
        ;; initialize state
        #`(#:splice (for-clause-step orig [finish () () (void) (void)]
                                     . bodys))]
-      [(_ orig [(finish (body-wrap ...)) rev-clauses rev-bodys matcher binder])
+      [(_ orig [(body-wrapper data) rev-clauses rev-bodys matcher binder])
        (when (null? (syntax-e #'rev-bodys))
          (raise-syntax-error #f
                              "empty body (after any clauses such as `each`)"
@@ -71,11 +77,10 @@
        #`(#,@(reverse (syntax->list #'rev-clauses))
           #:do [matcher
                 binder
-                (define (finish)
-                  (body-wrap
-                   ...
-                   (rhombus-body
-                    . #,(reverse (syntax->list #'rev-bodys)))))])]
+                (body-wrapper
+                 data
+                 (rhombus-body
+                  . #,(reverse (syntax->list #'rev-bodys))))])]
       [(_ orig (~and state [finish rev-clauses rev-bodys matcher binder])
           body0
           . bodys)

@@ -166,11 +166,11 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[build-set-reduce
-           ([ht #hashalw()])
-           build-set-add
-           #,set-static-info
-           ht]]))))
+        (reducer/no-break #'build-set-reduce
+                          #'([ht #hashalw()])
+                          #'build-set-add
+                          set-static-info
+                          #'ht)]))))
 
 (define-syntax (build-set-reduce stx)
   (syntax-parse stx

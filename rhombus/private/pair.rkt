@@ -9,7 +9,6 @@
          "binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
-         "reducer.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "name-root.rkt"

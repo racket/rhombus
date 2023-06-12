@@ -230,11 +230,11 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[build-reverse
-           ([accum null])
-           build-accum
-           #,list-static-infos
-           accum]]))))
+        (reducer/no-break #'build-reverse
+                          #'([accum null])
+                          #'build-accum
+                          list-static-infos
+                          #'accum)]))))
 
 (define-syntax (build-reverse stx)
   (syntax-parse stx

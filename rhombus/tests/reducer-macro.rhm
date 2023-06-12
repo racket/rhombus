@@ -1,4 +1,4 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 
 check:
   reducer.macro 'A5': 'Array ~length 5'
@@ -12,12 +12,17 @@ check:
     reducer_meta.pack('build_reverse',
                       '(l = List.empty)',
                       'build_cons',
+                      #false,
+                      #false,
+                      'use_cons',
                       '()',
-                      'l')
-  expr.macro 'build_reverse $l_id $e':
+                      '(l, next_l)')
+  expr.macro 'build_reverse $_ $e':
     'List.reverse($e)'
-  expr.macro 'build_cons $l_id $e':
-    'List.cons([$e], $l_id)'
+  defn.macro 'build_cons ($l_id, $next_l_id) $e':
+    'def $next_l_id = List.cons([$e], $l_id)'
+  expr.macro 'use_cons ($l_id, $next_l_id)':
+    next_l_id
   for ListOfLists:
     each i: 1..3
     i
@@ -25,18 +30,27 @@ check:
 
 check:
   reducer.macro 'AndCount($(r :: reducer_meta.Parsed))':
-    def '($wrap, ($bind, ...), $step, $static_info, $data)' = reducer_meta.unpack(r)
+    def '($wrap, ($bind, ...), $step, $break, $final, $finish, $static_info, $data)' = reducer_meta.unpack(r)
     reducer_meta.pack('build_return',
                       '($bind, ..., count = 0)',
                       'build_inc',
+                      break.unwrap() && 'build_break',
+                      final.unwrap() && 'build_final',
+                      'build_finish',
                       '()',
-                      '[count, $wrap, $step, $data]')
-  expr.macro 'build_return [$count, $wrap, $step, $data] $e':
+                      '[count, $wrap, $step, $break, $final, $finish, $data]')
+  expr.macro 'build_return [$count, $wrap, $step, $break, $final, $finish, $data] $e':
     'block:
        def values(r, c) = $e
        values($wrap $data r, c)'
-  expr.macro 'build_inc [$count, $wrap, $step, $data] $e':
-    'values($step $data $e, $count + 1)'
+  defn.macro 'build_inc [$count, $wrap, $step, $break, $final, $finish, $data] $e':
+    '$step $data $e'
+  expr.macro 'build_break [$count, $wrap, $step, $break, $final, $finish, $data]':
+    '$break $data'
+  expr.macro 'build_final [$count, $wrap, $step, $break, $final, $finish, $data]':
+    '$final $data'
+  expr.macro 'build_finish [$count, $wrap, $step, $break, $final, $finish, $data]':
+    'values($finish $data, $count + 1)'
   for AndCount(List):
     each i: 0..3
     i

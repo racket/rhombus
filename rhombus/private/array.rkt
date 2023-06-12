@@ -92,19 +92,19 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ #:length e ...+)
-        #`[build-array-reduce
-           ([i 0])
-           build-array-assign
-           #,array-static-infos
-           [dest
-            (rhombus-expression (group e ...))
-            i]]]
+        (reducer/no-break #'build-array-reduce
+                          #'([i 0])
+                          #'build-array-assign
+                          array-static-infos
+                          #'[dest
+                             (rhombus-expression (group e ...))
+                             i])]
        [(_)
-        #`[build-array-reduce-list
-           ([accum null])
-           build-array-cons
-           #,array-static-infos
-           accum]]))))
+        (reducer/no-break #'build-array-reduce-list
+                          #'([accum null])
+                          #'build-array-cons
+                          array-static-infos
+                          #'accum)]))))
 
 (define-syntax (build-array-reduce stx)
   (syntax-parse stx
