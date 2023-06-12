@@ -334,9 +334,9 @@
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? v)
     (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" v))
-  (unless (syntax? ctx)
-    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" ctx))
-  (replace-context ctx v))
+  (unless (is-identifier? ctx)
+    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Identifier" ctx))
+  (replace-context (unpack-term ctx #f #f) v))
 
 (define replace_scopes_method
   (lambda (v)
