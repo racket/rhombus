@@ -125,7 +125,7 @@
    replace_scopes
    relocate
    relocate_span
-   to_code_string
+   to_source_string
    [srcloc get-srcloc]))
 
 (define-syntax literal
@@ -367,9 +367,9 @@
                            (relocate_span stx ctx-stxes))])
       relocate_span)))
 
-(define/arity (to_code_string stx)
+(define/arity (to_source_string stx)
   #:static-infos ((#%call-result #,string-static-infos))  
-  (unless (syntax? stx) (raise-argument-error* 'Syntax.to_code_string rhombus-realm "Syntax" stx))
+  (unless (syntax? stx) (raise-argument-error* 'Syntax.to_source_string rhombus-realm "Syntax" stx))
   (string->immutable-string (shrubbery-syntax->string stx)))
 
 (define syntax-method-table
@@ -382,7 +382,7 @@
         'relocate relocate_method
         'relocate_span relocate_span_method
         'srcloc (method1 syntax-srcloc)
-        'to_code_string (method1 to_code_string)))
+        'to_source_string (method1 to_source_string)))
 
 (define-syntax syntax-instance
   (dot-provider
@@ -398,7 +398,7 @@
         [(relocate) (nary #'relocate_method 2 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
         [(srcloc) (0ary #'get-srcloc)]
-        [(to_code_string) (0ary #'to_code_string)]
+        [(to_source_string) (0ary #'to_source_string)]
         [else (fail-k)])))))
 
 (define get-srcloc

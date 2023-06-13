@@ -60,6 +60,7 @@ Metadata for a syntax object can include a source location and the raw
   [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
   [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
   [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
+  [stx.to_source_string(), Syntax.to_source_string(stx)]
 )
 
 @doc(
@@ -752,5 +753,15 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(stx). Merging combines raw source text in sequence, and it
  combines compatible source locations to describe a region containing
  all of the locations.
+
+}
+
+@doc(
+  fun Syntax.to_source_string(stx :: Syntax) :: String
+){
+
+ Converts to a string with content similar to @rhombus(display) of
+ @rhombus(stx), but using source text as available through
+ @rhombus(#'raw) and related properties attached to @rhombus(stx).
 
 }

@@ -8,7 +8,7 @@ export:
 bind.macro '$left described_as $right ...':
   ~weaker_than: ~other
   bind_meta.pack('(described_as_infoer,
-                   ($('$right ...'.to_code_string()), $left))')
+                   ($('$right ...'.to_source_string()), $left))')
 
 bind.infoer 'described_as_infoer($static_info, ($str, $left))':
   def left_info = bind_meta.get_info(left, static_info)

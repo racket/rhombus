@@ -107,7 +107,7 @@
  static information provided by the context of a use of the binding form,
  plus the same data syntax object that was supplied as part of the
  argument to @rhombus(bind_meta.pack). The transformer's result is
- automatically unpacked via @rhombus(bind_meta.pack_info), so it should be
+ automatically packed via @rhombus(bind_meta.pack_info), so it should be
  a syntax object that is suitable to pack---which means that it encodes
  information about identifiers to be bound as well as further
  ``continuations'' in the form of a matcher transformer defined with
@@ -140,7 +140,7 @@
     ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
     ((#,(@rhombus(defined_id, ~var)),
       [#,(@rhombus(var_use, ~var)), ...],
-      (#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...),
+      ((#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...)),
      ...),
     #,(@rhombus(matcher_id, ~var)),
     #,(@rhombus(committer_id, ~var)),
@@ -167,10 +167,21 @@
  identifier has ``downward'' static information through the
  @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pairs.
  Like @rhombus(var_static_key, ~var)s, the meaning of
- @rhombus(var_use, ~var)s is up to cooperating parts in general, but an
- exact non-negative integer indicates that the variable can be used as an
- expression (in the case of @rhombus(0)) or repetition at a certain depth
- (in the case of @rhombus(k, ~var) greater than @rhombus(0)).
+ @rhombus(var_use, ~var)s is up to cooperating parts in general, but
+ two values are recognized by built-in forms:
+
+@itemlist(
+
+  @item{an exact non-negative integer indicates that the variable can be
+  used as an expression (in the case of @rhombus(0)) or repetition at a
+  certain depth (in the case of @rhombus(k, ~var) greater than
+  @rhombus(0)); and}
+
+  @item{@rhombus(~no_stx) indicates that the variable's is not
+  compatible with @rhombus(let), because it needs to be bound early (such
+  as through @rhombus(where)).}
+
+ )
 
  The @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var) identifiers provide
@@ -257,6 +268,12 @@
  @rhombus(fail_pattern) to dispatch on match success or failure. The term
  matched to @rhombus(data_pattern) is whatever data the infoer included
  at the end of its result.
+
+ When using a matcher unpacked via @rhombus(bind_meta.unpack_info), the
+ group given for @rhombus(success_pattern) can be an immediate block
+ formed with @colon (without a preceding term), and in that case, the
+ groups of the block are spliced into a definition context where the
+ binding is used.
 
  See @secref("bind-macro-protocol") for more explanation and for
  examples.

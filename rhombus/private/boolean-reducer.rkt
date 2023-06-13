@@ -7,10 +7,10 @@
          "static-info.rkt")
 
 (provide (for-space rhombus/reducer
-                    &&
-                    \|\|))
+                    all
+                    any))
 
-(define-reducer-syntax &&
+(define-reducer-syntax all
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -26,7 +26,7 @@
                  #'elem)
                 #'())]))))
 
-(define-reducer-syntax \|\|
+(define-reducer-syntax any
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx

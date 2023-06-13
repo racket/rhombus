@@ -81,3 +81,18 @@
 )
 
 }
+
+
+@doc(
+  bind.macro '$bind where $expr'
+){
+
+ Matches and binds the same as @rhombus(bind), but only when
+ @rhombus(expr) produces a true value. The bindings created by a match to
+ @rhombus(bind) are available for use in @rhombus(expr).
+
+ Because the bindings of @rhombus(bind) must be made available for
+ @rhombus(expr), a @rhombus(where, ~bind) pattern is not compatible for use with
+ @rhombus(let), unless the set of names from @rhombus(bind) is empty.
+
+}

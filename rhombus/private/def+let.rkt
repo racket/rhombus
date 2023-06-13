@@ -29,7 +29,8 @@
                        build-values-definitions)))
 
 (define-for-syntax (make-def #:wrap-definition [wrap-definition values]
-                             #:check-context [check-context void])
+                             #:check-context [check-context void]
+                             #:check-bind-uses [check-bind-uses void])
   (definition-transformer
     (lambda (stx)
       (check-context stx)
@@ -40,25 +41,29 @@
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
-                                   wrap-definition)]
+                                   wrap-definition
+                                   #:check-bind-uses check-bind-uses)]
         [(form-id (~optional op::name) (parens g ...) _::equal rhs ...+)
          #:when (or (not (attribute op))
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
-                                   wrap-definition)]
+                                   wrap-definition
+                                   #:check-bind-uses check-bind-uses)]
         [(form-id any::not-equal ... _::equal rhs ...+)
          #:with g-tag group-tag
          (build-value-definitions #'form-id
                                   (no-srcloc #'(g-tag any ...))
                                   #`(#,group-tag rhs ...)
-                                  wrap-definition)]
+                                  wrap-definition
+                                  #:check-bind-uses check-bind-uses)]
         [(form-id any ... (~and rhs (block body ...)))
          #:with g-tag group-tag
          (build-value-definitions #'form-id
                                   (no-srcloc #'(g-tag any ...))
                                   #'rhs
-                                  wrap-definition)]))))
+                                  wrap-definition
+                                  #:check-bind-uses check-bind-uses)]))))
 
 (define-syntax def
   (make-def))
@@ -69,9 +74,17 @@
                               (when (eq? (syntax-local-context) 'top-level)
                                 (raise-syntax-error #f
                                                     "not allowed in a top-level context"
-                                                    stx)))))
+                                                    stx)))
+            #:check-bind-uses (lambda (form-id form id uses)
+                                (when (for/or ([use (in-list (syntax->list uses))])
+                                        (eq? (syntax-e use) '#:no_let))
+                                  (raise-syntax-error #f
+                                                      "pattern requires early binding of its names"
+                                                      form-id
+                                                      form)))))
 
-(define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition)
+(define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition
+                                            #:check-bind-uses [check-bind-uses void])
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
@@ -79,6 +92,9 @@
      #:with static-infos (single-valued-static-info (extract-static-infos #'rhs))
      #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
      #:with lhs-i::binding-info #'lhs-impl.info
+     (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
+           [uses (in-list (syntax->list #'(lhs-i.bind-uses ...)))])
+       (check-bind-uses form-id #'lhs id uses))
      (list
       #'(define tmp-id (let ([lhs-i.name-id rhs])
                          lhs-i.name-id))
@@ -94,7 +110,8 @@
            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
            ...)))]))
 
-(define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
+(define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
+                                             #:check-bind-uses [check-bind-uses void])
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
@@ -120,7 +137,13 @@
                          (if (zero? i) "" ", ")
                          (shrubbery-syntax->string lhs))))
                      ")")
-    (list
+     (for ([ids (in-list (syntax->list #'((lhs-i.bind-id ...) ...)))]
+           [usess (in-list (syntax->list #'((lhs-i.bind-uses ...) ...)))])
+       (for ([lhs (in-list (syntax->list #'(lhs ...)))]
+             [id (in-list (syntax->list ids))]
+             [uses (in-list (syntax->list usess))])
+         (check-bind-uses form-id lhs id uses)))
+     (list
       #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
                                       (values lhs-i.name-id ...)))
       #'(begin
@@ -132,14 +155,14 @@
           ...
           (lhs-i.committer-id tmp-id lhs-i.data)
           ...)
-     (wrap-definition
-      #`(begin
-          (lhs-i.binder-id tmp-id lhs-i.data)
-          ...
-          (begin
-            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-            ...)
-          ...)))]))
+      (wrap-definition
+       #`(begin
+           (lhs-i.binder-id tmp-id lhs-i.data)
+           ...
+           (begin
+             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+             ...)
+           ...)))]))
 
 (define-syntax (flattened-if stx)
   (syntax-parse stx

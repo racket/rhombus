@@ -73,7 +73,7 @@
 }
 
 @doc(
-  reducer.macro '||'
+  reducer.macro 'any'
 ){
 
  A @tech{reducer} that stops an iteration as soon as a non-@rhombus(#false)
@@ -81,10 +81,10 @@
  returns @rhombus(#false).
 
 @examples(
-  for ||:
+  for any:
     each i: 0..10
     (i == 5) && to_string(i)
-  for ||:
+  for any:
     each i: 0..10
     i == 10
 )
@@ -162,7 +162,7 @@
 
 
 @doc(
-  reducer.macro '&&'
+  reducer.macro 'all'
 ){
 
  A @tech{reducer} that stops an iteration as soon as a @rhombus(#false) value
@@ -170,10 +170,10 @@
  iteration.
 
 @examples(
-  for &&:
+  for all:
     each i: 0..10
     i == 5
-  for &&:
+  for all:
     each i: 0..10
     (i < 10) && to_string(i)
 )

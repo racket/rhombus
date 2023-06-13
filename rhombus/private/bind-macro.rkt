@@ -29,6 +29,7 @@
           "op-literal.rkt"
           "binding.rkt")
          "parse.rkt"
+         "parens.rkt"
          ;; for `matcher` and `binder`:
          (for-syntax "parse.rkt")
          ;; for `bind_meta`:
@@ -337,11 +338,19 @@
                       #:literals (if-bridge)
                       [((parsed (if-bridge IF fail)))
                        #:with rhombus rhombus
-                       #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)]
+                       (syntax-parse #'(success ...)
+                         [((_::block g ...))
+                          #'(matcher-id arg-id data IF (rhombus g ...) fail)]
+                         [_
+                          #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)])]
                       [_
+                       #:with s-expr (syntax-parse #'(success ...)
+                                       [((tag::block g ...))
+                                        #'(rhombus-body-at tag g ...)]
+                                       [_ #'(rhombus-expression (group success ...))])
                        #'(matcher-id arg-id data
                                      if-via-rhombus
-                                     (rhombus-expression (group success ...))
+                                     s-expr
                                      (if-reverse-bridge if-id (group fail ...)))])]))])
     (make-expression+definition-transformer
      (expression-transformer

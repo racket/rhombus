@@ -178,7 +178,8 @@
                                       [(quotes) #t]
                                       [(op s) #f]
                                       [else (ormap loop (cdr s))]))))
-       (display (if maybe-nested? "'«" "'") op)
+       (unless (display?)
+         (display (if maybe-nested? "'«" "'") op))
        (cond
          [(and (pair? s) (eq? 'multi (car s)))
           (write-shrubbery (cons 'top (cdr s)) op)]
@@ -186,7 +187,8 @@
           (write-shrubbery (list 'top s) op)]
          [else
           (write-shrubbery s op)])
-       (display (if maybe-nested? "»'" "'") op)]
+       (unless (display?)
+         (display (if maybe-nested? "»'" "'") op))]
       [(procedure? v)
        (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
        (cond

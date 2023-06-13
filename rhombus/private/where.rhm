@@ -1,0 +1,46 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+export:
+  where
+
+bind.macro '$bind where $expr ...':
+  bind_meta.pack('(where_infoer,
+                   ($bind, $expr ...))')
+
+bind.infoer 'where_infoer($static_info, ($bind, $expr_g))':
+  def a_info: bind_meta.get_info(bind, static_info)
+  def '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
+    bind_meta.unpack_info(a_info)
+  def '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)': a_var_info
+  def ann: Syntax.unwrap(a_ann) +& " where " +& expr_g.to_source_string()
+  '($ann,
+    $a_name,
+    $a_static_info,
+    (($a_var_id, [$a_var_use, ..., ~no_let], ()), ...), // drop static info, because we bind it manually
+    where_matcher,
+    where_committer,
+    where_binder,
+    ($a_info, $expr_g))'
+
+bind.matcher 'where_matcher($in_id, ($a_info, $expr_g),
+                            $IF, $success, $failure)':
+  def '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
+    bind_meta.unpack_info(a_info)
+  def '(($a_var_id, $a_var_use, $a_statinfo), ...)': a_var_info
+  '«$a_matcher($in_id, $a_data, $IF,
+               : $a_committer($in_id, $a_data)
+                 $a_binder($in_id, $a_data)
+                 statinfo.macro '$a_var_id': '$a_statinfo'
+                 ...
+                 $IF $expr_g
+                 | $success
+                 | $failure,
+               $failure)»'
+
+bind.committer 'where_committer($in_id, $data)':
+  ''
+  
+bind.binder 'where_binder($in_id, $data)':
+  ''
