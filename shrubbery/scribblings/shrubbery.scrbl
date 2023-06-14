@@ -24,3 +24,4 @@ parsing is consistent with the shrubbery's lines and indentation.
 @include_section("parsed-representation.scrbl")
 @include_section("language.scrbl")
 @include_section("meta.scrbl")
+@include_section("tool.scrbl")

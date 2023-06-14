@@ -148,10 +148,7 @@ same indentation as @rhombus(if), @rhombus(match), or @rhombus(cond) to
 create the alternative cases within those forms:
 
 @margin_note{In DrRacket, hit Tab to cycle through the possible
- indentations for a line (based on preceding lines). The indentation
- possibilities can be different if a line starts with @litchar{|}. If
- multiple lines are selected, then Tab cycles through possibilities for
- the first selected line and shifts remaining lines by same amount.}
+ indentations for a line. See also @shrubref("drracket-shrubbery").}
 
 @rhombusblock(
   block:

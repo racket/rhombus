@@ -36,6 +36,7 @@ export:
   colon
   vbar
   more_args
+  shrubref
 
 fun see_implicit(what, when, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @when is
@@ -90,3 +91,7 @@ def colon = @manual.litchar(":")
 def vbar = @manual.litchar{|}
 
 def more_args = scribble.elem("....")
+
+fun shrubref(tag):
+  scribble.secref(tag,
+                  ~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"])
