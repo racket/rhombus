@@ -606,8 +606,10 @@ Ways to type @guillemets, depending on platform or editor:
         or 175 on the numpad for @litchar{»}.}
   @item{GNU/Linux, BSD:
         Hitting Control + Shift + U,
-        then typing 00AB for @litchar{«} or 00BB for @litchar{»},
-        and then hitting Enter.}
+        then typing 00AB for @litchar{«} or 00BB for @litchar{»}.}
+  @item{Compose key on Unix/Linux/etc:
+        Hitting Compose,
+        then typing @litchar{<<} for @litchar{«} or @litchar{>>} for @litchar{»}.}
 )
 
 Or see the
