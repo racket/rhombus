@@ -3,13 +3,7 @@
 
 (bounce "private/core.rkt"
         "private/core-macro.rkt"
-        "private/recur.rhm"
-        "private/check.rhm"
-        "private/maybe.rhm"
-        "private/string.rhm"
-        "private/when_unless.rhm"
-        "private/described_as.rhm"
-        "private/sequence.rhm")
+        "private/core-derived.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

@@ -4,6 +4,9 @@
 (bounce "private/core-meta.rkt"
         "private/sequence_meta.rhm")
 
+(require (for-syntax "private/core-derived.rkt"))
+(provide (for-syntax (all-from-out "private/core-derived.rkt")))
+
 (bounce-meta "private/class-meta.rkt"
              "private/interface-meta.rkt")
 
