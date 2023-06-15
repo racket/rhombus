@@ -712,7 +712,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Syntax) :: Syntax
+  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Identifier) :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except that

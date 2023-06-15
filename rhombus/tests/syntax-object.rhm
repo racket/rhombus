@@ -148,3 +148,16 @@ check:
         syntax_meta.equal_binding('List.(+)', 'Pair.(+)') ~is #false
         syntax_meta.equal_binding('List.(+)', '+') ~is #false
   ~completes
+
+check:
+  ~eval
+  module m ~lang rhombus/and_meta:
+    import: rhombus.check
+    expr.macro 'with_y: $expr':
+      ~op_stx h
+      def y: 'y'.replace_scopes('$h')
+      'block:
+         def $y: 2
+         $expr'
+    check: (with_y: y) ~is 2
+  ~completes
