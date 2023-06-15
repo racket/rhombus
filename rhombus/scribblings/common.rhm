@@ -38,8 +38,8 @@ export:
   more_args
   shrubref
 
-fun see_implicit(what, when, context, ~is_infix = #false):
-  @scribble.elem{The @what form is implicitly used when @when is
+fun see_implicit(what, whn, context, ~is_infix = #false):
+  @scribble.elem{The @what form is implicitly used when @whn is
                  used in @(if is_infix | @scribble.elem{after another @context} | "")
                  in a@(if (context[0] == "e"[0] || context[0] == "i"[0]) | "n" | "")
                  @context position.

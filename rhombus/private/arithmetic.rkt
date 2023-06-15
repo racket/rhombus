@@ -70,15 +70,15 @@
   #:stronger-than (&& \|\|))
 
 (define-infix && and
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/)
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem)
   #:stronger-than (\|\|))
 
 (define-infix \|\| or
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/))
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem))
 
 (define-syntax-rule (define-comp-infix name racket-name)
   (define-infix name racket-name
-    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/)
+    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem)
     #:same-as (rhombus> rhombus>= .= rhombus<=)
     #:stronger-than (\|\| &&)
     #:associate 'none))

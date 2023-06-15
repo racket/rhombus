@@ -45,8 +45,10 @@
  matches any value and binds the identifier the the matching value. A
  list form is a @rhombus(bind) pattern with subpatterns as its
  elements, and it matches a list with the right number of elements that
- match match the corresponding pattern. The set of @rhombus(bind)
- forms is extensible, so it cannot be completely enumerated here.
+ match match the corresponding pattern. A @rhombus(when, ~bind) or
+ @rhombus(unless, ~bind) can impose a side condition on a match.
+ The set of @rhombus(bind) forms is extensible, so it cannot be
+ completely enumerated here.
 
  If no @rhombus(target_expr) produces a true value and there is no
  @rhombus(~else) clause, a run-time exception is raised. In that case,
@@ -65,6 +67,10 @@
   ~error:
     match 'go ~slow':
     | 'go ~fast': "ok"
+
+  ~error:
+    match 1+2:
+    | n when n > 4: "ok"
 )
 }
 
@@ -79,20 +85,5 @@
   | 0: "zero"
   | _: "nonzero"
 )
-
-}
-
-
-@doc(
-  bind.macro '$bind where $expr'
-){
-
- Matches and binds the same as @rhombus(bind), but only when
- @rhombus(expr) produces a true value. The bindings created by a match to
- @rhombus(bind) are available for use in @rhombus(expr).
-
- Because the bindings of @rhombus(bind) must be made available for
- @rhombus(expr), a @rhombus(where, ~bind) pattern is not compatible for use with
- @rhombus(let), unless the set of names from @rhombus(bind) is empty.
 
 }

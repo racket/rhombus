@@ -113,3 +113,42 @@
 )
 
 }
+
+
+@doc(
+  bind.macro '$bind when $expr'
+  bind.macro '$bind unless $expr'
+){
+
+ As binding forms, @rhombus(when, ~bind) and @rhombus(unless, ~bind)
+ impose side conditions on a match. These forms match and bind the
+ same as the given @rhombus(bind), but only when @rhombus(expr)
+ produces a true value for @rhombus(when, ~bind) or @rhombus(#false)
+ for @rhombus(unless), and the binding does not match otherwise. The
+ bindings created by a match to @rhombus(bind) are available for use
+ in @rhombus(expr).
+
+ Because the bindings of @rhombus(bind) must be made available for
+ @rhombus(expr), a @rhombus(where, ~bind) or @rhombus(unless, ~bind)
+ binding is not compatible for use with @rhombus(let), unless the set
+ of names from @rhombus(bind) is empty.
+
+@examples(
+  ~defn:
+    fun classify(v):
+      match v
+      | n :: Integral when n mod 2 .= 0:
+          "even"
+      | n :: Integral when n mod 2 .= 1:
+          "odd"
+      | _ :: Real:
+          "other number"
+      | ~else:
+          "other value"
+  ~repl:
+    classify(1)
+    classify(2)
+    classify([1, 2])
+)
+
+}

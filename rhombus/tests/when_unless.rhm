@@ -2,14 +2,20 @@
 
 check:
   use_static
-  def x where x.length() > 1 = "Hello"
+  def x when x.length() > 1 = "Hello"
+  x.length()
+  ~is 5
+
+check:
+  use_static
+  def x unless x.length() > 10 = "Hello"
   x.length()
   ~is 5
 
 block:
   fun classify(v):
     match v
-    | n ::Int where (n mod 2) .= 0: "even"
+    | n ::Int when (n mod 2) .= 0: "even"
     | _ :: Int: "odd"
     | ~else "other"
   check:
@@ -19,12 +25,17 @@ block:
 
 check:
   ~eval
-  def x where x.length() > 10 = "Hello"
+  def x when x.length() > 10 = "Hello"
+  ~raises "value does not satisfy annotation"
+
+check:
+  ~eval
+  def x unless x.length() < 10 = "Hello"
   ~raises "value does not satisfy annotation"
 
 check:
   ~eval
   block:
-    let x where #true = 1
+    let x when #true = 1
     x
   ~raises "pattern requires early binding of its names"

@@ -7,7 +7,7 @@
         "private/check.rhm"
         "private/maybe.rhm"
         "private/string.rhm"
-        "private/where.rhm"
+        "private/when_unless.rhm"
         "private/described_as.rhm"
         "private/sequence.rhm")
 
