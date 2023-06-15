@@ -547,7 +547,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make(term, ctx_stx :: maybe(Syntax) = #false) :: Syntax
+  fun Syntax.make(term, ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
  Converts an ``unwrapped'' representation of a shrubbery @emph{term}
@@ -571,7 +571,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_group(terms :: List,
-                        ctx_stx :: maybe(Syntax) = #false) :: Syntax
+                        ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
  Converts a nonempty list of terms, each convertible by @rhombus(Syntax.make),
@@ -588,7 +588,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_sequence(groups :: List,
-                           ctx_stx :: maybe(Syntax) = #false) :: Syntax
+                           ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
  Converts a list of groups, each convertible by
@@ -604,7 +604,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_op(name :: Symbol,
-                     ctx_stx :: maybe(Syntax) = #false) :: Syntax
+                     ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
  Convenience to convert a plain symbol to a syntax object for an
@@ -619,7 +619,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Syntax) = #false) :: Syntax
+  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
  Composes @rhombus(Syntax.make) and @rhombus(Symbol.from_string).
@@ -712,7 +712,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Identifier) :: Syntax
+  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Term) :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except that

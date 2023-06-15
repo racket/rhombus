@@ -151,12 +151,17 @@
 
 ;; ----------------------------------------
 
-(define (extract-ctx who ctx-stx)
-  (and ctx-stx
-       (begin
-         (unless (syntax? ctx-stx)
-           (raise-argument-error* who rhombus-realm "maybe(Syntax)" ctx-stx))
-         (unpack-term ctx-stx who #f))))
+(define (extract-ctx who ctx-stx #:false-ok? [false-ok? #t])
+  (and (or (not false-ok?) ctx-stx)
+       (let ([t (and (syntax? ctx-stx)
+                     (unpack-term ctx-stx #f #f))])
+         (unless t
+           (raise-argument-error* who rhombus-realm (if false-ok? "maybe(Term)" "Term") ctx-stx))
+         (syntax-parse t
+           #:datum-literals (op)
+           [(op id) #'id]
+           [(head . _) #'head]
+           [_ t]))))
 
 (define (do-make who v ctx-stx tail? group?)
   ;; assume that any syntax objects are well-formed, while list structure
@@ -334,9 +339,7 @@
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? v)
     (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" v))
-  (unless (is-identifier? ctx)
-    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Identifier" ctx))
-  (replace-context (unpack-term ctx #f #f) v))
+  (replace-context (extract-ctx 'Syntax.replace_scopes ctx #:false-ok? #f) v))
 
 (define replace_scopes_method
   (lambda (v)
