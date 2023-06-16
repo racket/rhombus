@@ -688,8 +688,9 @@
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private
+                                  reconstructor-rhs
                                   names)
-  (with-syntax ([(name name-instance name?
+  (with-syntax ([(name name-instance name? reconstructor-name
                        methods-ref
                        indirect-static-infos
                        [field-name ...]
@@ -732,9 +733,13 @@
                              (and (pair? r) (car r)))
                            (if (pair? id/property) 'property 'method)))])
       (list
-       #`(define-values #,(for/list ([added (in-list added-methods)]
-                                     #:when (not (eq? 'abstract (added-method-body added))))
-                            (added-method-rhs-id added))
+       #`(define-values (#,@(for/list ([added (in-list added-methods)]
+                                       #:when (not (eq? 'abstract (added-method-body added))))
+                              (added-method-rhs-id added))
+                         #,@(if (and (syntax-e #'reconstructor-name)
+                                     (not (eq? reconstructor-rhs 'default)))
+                                (list #'reconstructor-name)
+                                null))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
                                                           (quote-syntax field-static-infos)
@@ -777,7 +782,18 @@
                                                                     indirect-static-infos
                                                                     [super-name ...]
                                                                     #,(added-method-kind added))])
-                       #,(added-method-id added))))))))))
+                       #,(added-method-id added)))
+              #,@(if (and (syntax-e #'reconstructor-name)
+                          (not (eq? reconstructor-rhs 'default)))
+                     (list
+                      #`(method-block (block #,reconstructor-rhs)
+                                      name name-instance #f
+                                      #f reconstructor
+                                      new-private-tables
+                                      indirect-static-infos
+                                      [super-name ...]
+                                      reconstructor))
+                     null))))))))
 
 (define-syntax (method-block stx)
   (syntax-parse stx
@@ -801,7 +817,9 @@
                                                                                                . super-names))]
                                                               [private-tables (quote-syntax private-tables-id)])
                                           ;; This check might be redundant, depending on how the method was called
-                                          (unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
+                                          #,(if (syntax-e #'name?)
+                                                #`(unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
+                                                #'(void))
                                           #,(let ([body #`(let ()
                                                             #,(wrap-expression stx))])
                                               (cond

@@ -101,6 +101,7 @@
         "function.rkt"
         "class.rkt"
         "class-clause-primitive.rkt"
+        "with.rkt"
         "interface.rkt"
         "class-together.rkt"
         "block.rkt"

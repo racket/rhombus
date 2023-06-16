@@ -30,7 +30,8 @@
                     prefab
                     authentic
                     field
-                    constructor)
+                    constructor
+                    reconstructor)
          (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
                      extends
@@ -269,6 +270,22 @@
         (wrap-class-clause #`(#:constructor id rhs))]
        [(_ (~and rhs (_::block . _)))
         (wrap-class-clause #`(#:constructor #f rhs))]))))
+
+(define-class-clause-syntax reconstructor
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (~and args (_::parens . _)) ret ...
+           (~and rhs (_::block . _)))
+        (wrap-class-clause #`(#:reconstructor (block (group fun args ret ... rhs))))]
+       [(_ (~and rhs (_::alts
+                      (_::block (group (_::parens . _) ret ...
+                                       (_::block . _)))
+                      ...+)))
+        (wrap-class-clause #`(#:reconstructor (block (group fun rhs))))]
+       [(_ (~and rhs (_::block . _)))
+        (wrap-class-clause #`(#:reconstructor rhs))]))))
 
 (begin-for-syntax
   (define-syntax-rule (define-clause-form-syntax-class id form-id)

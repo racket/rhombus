@@ -5,11 +5,17 @@ import:
 
 use_static
   
-check:
+block:
   class Posn(x, y)
   def p = Posn(1, 2)
-  [p is_a Posn, p.x, p.y]
-  ~is [#true, 1, 2]
+  check [p is_a Posn, p.x, p.y] ~is [#true, 1, 2]
+  check p with (x = 10) ~is Posn(10, 2)
+  check p with (y = 20) ~is Posn(1, 20)
+  check p with (x = 10).x ~is 10
+  check p with (x = 10).y ~is 2
+  def mutable c = 10
+  check p with (y = c, x = block: c := c + 1; c) ~is Posn(11, 10)
+  check p with (x = block: c := c + 1; c, y = block: c := c + 2; c) ~is Posn(12, 14)
 
 check:
   ~eval
@@ -37,42 +43,50 @@ check:
     extends Posn
   ~raises "field name already exists in superclass"
 
-check:
+block:
   class Posn(~x, y)
   def p = Posn(~x: 1, 2)
   def p2 = Posn(2, ~x: 1)
-  [p.x, p.y, p2.x, p2.y]
-  ~is [1, 2, 1, 2]
+  check [p.x, p.y, p2.x, p2.y] ~is [1, 2, 1, 2]
+  check p with (x = 10) ~is Posn(~x: 10, 2)
+  check p with (y = 20) ~is Posn(~x: 1, 20)
 
-check:
+block:
   class Posn(~x, y):
     nonfinal
   class Posn3D(z):
     extends Posn
   def p = Posn3D(~x: 1, 2, 3)
   def p2 = Posn3D(2, 3, ~x: 1)
-  [p.x, p.y, p.z, p2.x, p2.y, p2.z]
-  ~is [1, 2, 3, 1, 2, 3]
+  check [p.x, p.y, p.z, p2.x, p2.y, p2.z] ~is [1, 2, 3, 1, 2, 3]
+  check p with (x = 10) ~is Posn3D(~x: 10, 2, 3)
+  check p with (y = 20) ~is Posn3D(~x: 1, 20, 3)
+  check p with (z = 30) ~is Posn3D(~x: 1, 2, 30)
+  check (p :: Posn) with (x = 10) ~is Posn3D(~x: 10, 2, 3)
 
-check:
+block:
   class Posn(x, y):
     nonfinal
   class Posn3D(~z):
     extends Posn
   def p = Posn3D(1, 2, ~z: 3)
   def p2 = Posn3D(~z: 3, 1, 2)
-  [p.x, p.y, p.z, p2.x, p2.y, p2.z]
-  ~is [1, 2, 3, 1, 2, 3]
+  check [p.x, p.y, p.z, p2.x, p2.y, p2.z] ~is [1, 2, 3, 1, 2, 3]
+  check p with (x = 10) ~is Posn3D(10, 2, ~z: 3)
+  check p with (y = 20) ~is Posn3D(1, 20, ~z: 3)
+  check p with (z = 30) ~is Posn3D(1, 2, ~z: 30)
 
-check:
+block:
   class Posn(~x, y):
     nonfinal
   class Posn3D(~z: zz):
     extends Posn
   def p = Posn3D(~x: 1, 2, ~z: 3)
   def p2 = Posn3D(~z: 3, 2, ~x: 1)
-  [p.x, p.y, p.zz, p2.x, p2.y, p2.zz]
-  ~is [1, 2, 3, 1, 2, 3]
+  check [p.x, p.y, p.zz, p2.x, p2.y, p2.zz] ~is [1, 2, 3, 1, 2, 3]
+  check p with (x = 10) ~is Posn3D(~x: 10, 2, ~z: 3)
+  check p with (y = 20) ~is Posn3D(~x: 1, 20, ~z: 3)
+  check p with (zz = 30) ~is Posn3D(~x: 1, 2, ~z: 30)
 
 check:
   class Posn(x, y):
@@ -189,7 +203,7 @@ check:
   [p.x, p.y, p.z]
   ~is [1, 2, 3]
 
-check:
+block:
   import rhombus/meta open
   class Posn(x, y):
     nonfinal
@@ -211,12 +225,13 @@ check:
   def p = Posn(0, 2)
   def Posn(yy, xx) = p
   def Posn(a) = p    
-  [p.y, p.x, yy, xx, a,
-   p is_a Posn,
-   Posn(1, "2") is_a Posn.of(Int, String)]
-  ~is [0, 2, 0, 2, 2,
-       #true,
-       #true]
+  check:
+    [p.y, p.x, yy, xx, a,
+     p is_a Posn,
+     Posn(1, "2") is_a Posn.of(Int, String)]
+    ~is [0, 2, 0, 2, 2,
+         #true,
+         #true]
 
 check:
   class Posn(x, y):
@@ -832,3 +847,20 @@ check:
     extends B
   [B(#true).b, C(#true).b]
   ~is [#true, #true]
+
+block:
+  class Posn(x, y):
+    field size = 0
+  def p = Posn (1, 2)
+  p.size := 100
+  check p with (x = 10) ~is_now Posn(10, 2)
+  check p with (x = 10).size ~is 0
+
+block:
+  def mutable c = 0
+  class Posn(x, y, private z = c):
+    method get_z(): z
+  def p = Posn (1, 2)
+  c := 1
+  check p with (x = 10) ~is_now Posn(10, 2)
+  check p with (x = 10).get_z() ~is 1

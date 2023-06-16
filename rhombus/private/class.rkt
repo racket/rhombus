@@ -25,6 +25,7 @@
          "class-binding.rkt"
          "class-annotation.rkt"
          "class-dot.rkt"
+         "class-reconstructor.rkt"
          "class-static-info.rkt"
          "class-field.rkt"
          "class-method.rkt"
@@ -39,7 +40,8 @@
          (submod "print.rkt" for-class)
          "class-able.rkt"
          "index-property.rkt"
-         "append-property.rkt")
+         "append-property.rkt"
+         "reconstructor.rkt")
 
 ;; the `class` form is provided by "class-together.rkt"
 (provide this
@@ -387,10 +389,17 @@
          (extract-method-tables stxes added-methods super interfaces private-interfaces final? prefab?))
 
        (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
-       (check-consistent-unimmplemented stxes final? abstract-name)
+       (check-consistent-unimmplemented stxes final? abstract-name #'name)
 
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-exports-distinct stxes exs fields method-mindex dots)
+
+       (define reconstructor-rhs
+         (or (hash-ref options 'reconstructor-rhs #f)
+             (and (not (or (hash-ref options 'expression-rhs #f)
+                           (hash-ref options 'constructor-rhs #f)
+                           abstract-name))
+                  'default)))
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
@@ -452,7 +461,9 @@
                      [(export ...) exs])
          (with-syntax ([constructor-name (if (or constructor-rhs
                                                  expression-macro-rhs)
-                                             (or given-constructor-name
+                                             (or (and given-constructor-name
+                                                      (not (bound-identifier=? #'name (expose given-constructor-name)))
+                                                      given-constructor-name)
                                                  (temporary "~a-ctr"))
                                              #'make-name)]
                        [constructor-visible-name (or given-constructor-name
@@ -488,6 +499,8 @@
                                                    (temporary "dot-provider-~a"))
                                               (and (pair? parent-dot-providers)
                                                    (car parent-dot-providers)))]
+                       [reconstructor-name (and reconstructor-rhs
+                                                (temporary "~a-reconstructor"))]
                        [prefab-guard-name (and prefab?
                                                (or (and super
                                                         (class-desc-prefab-guard-id super))
@@ -499,7 +512,8 @@
               (append
                (build-methods method-results
                               added-methods method-mindex method-names method-private
-                              #'(name name-instance name?
+                              reconstructor-rhs
+                              #'(name name-instance name? reconstructor-name
                                       prop-methods-ref
                                       indirect-static-infos
                                       [(field-name) ... super-field-name ...]
@@ -514,6 +528,22 @@
                                              (quote-syntax private-field-argument))
                                        ...]
                                       [super-name* ... interface-name ...]))
+               (build-class-reconstructor super final?
+                                          reconstructor-rhs method-private
+                                          #'(name name? constructor-name name-instance
+                                                  indirect-static-infos reconstructor-name
+                                                  [(super-field-name super-field-argument super-name-field)
+                                                   ...
+                                                   (public-field-name public-field-argument public-name-field)
+                                                   ...]
+                                                  [private-field-name ...]
+                                                  [(list 'private-field-name
+                                                         (quote-syntax private-name-field)
+                                                         (quote-syntax private-maybe-set-name-field!)
+                                                         (quote-syntax private-field-static-infos)
+                                                         (quote-syntax private-field-argument))
+                                                   ...]
+                                                  [super-name* ... interface-name ...]))
                (build-class-struct super
                                    fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
                                    method-mindex method-names method-vtable method-private
@@ -521,6 +551,7 @@
                                    interfaces private-interfaces
                                    has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
+                                           reconstructor-name
                                            [public-field-name ...]
                                            [public-maybe-set-name-field! ...]
                                            [field-name ...]
@@ -530,7 +561,11 @@
                                            [field-annotation-str ...]
                                            [super-field-name ...]
                                            [super-name-field ...]
-                                           [dot-id ...]))
+                                           [dot-id ...]
+                                           ((super-field-name super-field-argument)
+                                            ...
+                                            (public-field-name public-field-argument)
+                                            ...)))
                (build-added-field-arg-definitions added-fields)
                (build-class-constructor super constructor-rhs
                                         added-fields constructor-private?s
@@ -570,6 +605,7 @@
                                          (not annotation-rhs) dot-provider-rhss parent-dot-providers
                                          #'(name name? constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
+                                                 indirect-static-infos
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
                                                  [public-name-field ...] [name-field ...]
                                                  [dot-id ...]
@@ -600,7 +636,7 @@
                                  final? has-private-fields? private?s
                                  parent-name interface-names all-interfaces private-interfaces
                                  method-mindex method-names method-vtable method-results method-private dots
-                                 authentic? prefab?
+                                 authentic? prefab? (not (syntax-e #'reconstructor-name))
                                  here-callable? public-callable?
                                  here-indexable? public-indexable?
                                  here-setable? public-setable?
@@ -640,6 +676,7 @@
                                        has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
+                       reconstructor-name
                        [public-field-name ...]
                        [public-maybe-set-name-field! ...]
                        [field-name ...]
@@ -649,7 +686,8 @@
                        [field-annotation-str ...]
                        [super-field-name ...]
                        [super-name-field ...]
-                       [dot-id ...])
+                       [dot-id ...]
+                       [(recon-field-name recon-field-arg) ...])
                  names]
                 [(mutable-field ...) (for/list ([field (in-list fields)]
                                                 [mutable (in-list mutables)]
@@ -723,6 +761,17 @@
                                                                                          ...)
                                                                                  (hasheq (~@ 'method-name method-proc)
                                                                                          ...)))))
+                                                          #,@(if (or (syntax-e #'reconstructor-name)
+                                                                     (and super
+                                                                          (not (memq 'no-recon (class-desc-flags super)))))
+                                                                 #`((cons prop:reconstructor
+                                                                          #,(and (syntax-e #'reconstructor-name)
+                                                                                 #`(cons '#,(for/list ([name (in-list (syntax->list #'(recon-field-name ...)))]
+                                                                                                       [arg (in-list (syntax->list #'(recon-field-arg ...)))]
+                                                                                                       #:unless (identifier? arg))
+                                                                                              name)
+                                                                                         reconstructor-name))))
+                                                                 null)
                                                           #,@(able-method-as-property 'call #'prop:procedure here-callable?
                                                                                       method-mindex method-vtable method-private)
                                                           #,@(able-method-as-property 'get #'prop:indexable here-indexable?
@@ -808,7 +857,7 @@
                                      final? has-private-fields? private?s
                                      parent-name interface-names all-interfaces private-interfaces
                                      method-mindex method-names method-vtable method-results method-private dots
-                                     authentic? prefab?
+                                     authentic? prefab? no-recon?
                                      here-callable? public-callable?
                                      here-indexable? public-indexable?
                                      here-setable? public-setable?
@@ -903,6 +952,7 @@
                              #`(quote-syntax prefab-guard-name))
                       '(#,@(if authentic? '(authentic) null)
                         #,@(if prefab? '(prefab) null)
+                        #,@(if no-recon? '(no-recon) null)
                         #,@(if public-callable? '(call) null)
                         #,@(if public-indexable? '(get) null)
                         #,@(if public-setable? '(set) null)

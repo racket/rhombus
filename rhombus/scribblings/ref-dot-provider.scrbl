@@ -88,7 +88,7 @@
     ~tail: '$pattern'
 ){
 
- Forms for @rhombus(class) or @rhombus(interface) to bind a macro that
+ A form for @rhombus(class) or @rhombus(interface) to bind a macro that
  is normally triggered by using the @rhombus(defined_id) after @rhombus(.) on an
  expression that has the class's or interface's annotation. The macro can also be
  triggered by @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)) for a class

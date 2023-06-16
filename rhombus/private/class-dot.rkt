@@ -21,11 +21,11 @@
                   repetition-transformer
                   identifier-repetition-use)
          (submod "assign.rkt" for-assign) (only-in "assign.rkt" :=)
+         (submod "equal.rkt" for-parse)
          "op-literal.rkt"
          "name-root.rkt"
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
-         "function-arity-key.rkt"
          (for-syntax "class-transformer.rkt")
          "class-dot-transformer.rkt"
          "is-static.rkt"
@@ -33,8 +33,6 @@
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
-
-                     make-handle-class-instance-dot
 
                      extract-all-dot-names)
          no-dynamic-dot-syntax)
@@ -46,6 +44,7 @@
                                              names)
   (with-syntax ([(name name? constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
+                       indirect-static-infos
                        [public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
                        [dot-id ...]
@@ -98,7 +97,7 @@
         (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
         (list
          #`(define-dot-provider-syntax name-instance
-             (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
+             (dot-provider #,(let ([default #`(make-handle-class-instance-dot (quote-syntax name)
                                                                               #hasheq()
                                                                               #hasheq())])
                                (if (syntax-e #'dot-provider-name)
@@ -168,13 +167,13 @@
                       [dot-id dot-intf-id]
                       ...
                       ex ...)))
-        (syntax->list
-         #`((define-syntaxes (dot-intf-id dot-rhs-id)
-              (let ([dot-id dot-rhs])
-                (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
-                                                  (quote-syntax name?) (quote-syntax name-instance))
-                        dot-id)))
-            ...))
+       (syntax->list
+        #`((define-syntaxes (dot-intf-id dot-rhs-id)
+             (let ([dot-id dot-rhs])
+               (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
+                                                 (quote-syntax name?) (quote-syntax name-instance))
+                       dot-id)))
+           ...))
        (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
        (list
         #`(define-dot-provider-syntax name-instance

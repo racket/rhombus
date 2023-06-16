@@ -76,7 +76,7 @@
                     index-set-method-id ; for `set`
                     append-method-id ; for `append`
                     prefab-guard-id
-                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'get, 'set, 'append
+                    flags))       ; list with 'authentic, 'prefab, 'no-recon, and/or 'call (=> public `call` is for Callable), 'get, 'set, 'append
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
@@ -247,12 +247,13 @@
                            "constructor name conflicts with expression macro"
                            stxes)])))
 
-(define (check-consistent-unimmplemented stxes final? abstract-name)
+(define (check-consistent-unimmplemented stxes final? abstract-name name)
   (when (and final? abstract-name)
     (raise-syntax-error #f
                         "final class cannot have abstract methods"
                         stxes
-                        abstract-name)))
+                        abstract-name
+                        (list name))))
 
 (define (check-field-defaults stxes super-has-defaults? constructor-fields defaults keywords)
   (for/fold ([need-default? #f]) ([f (in-list constructor-fields)]

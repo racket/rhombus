@@ -265,7 +265,8 @@
                    null)
                (build-methods method-results
                               added-methods method-mindex method-names method-private
-                              #'(name name-instance internal-name?
+                              #f
+                              #'(name name-instance internal-name? #f
                                       internal-name-ref
                                       ()
                                       []

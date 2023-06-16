@@ -8,6 +8,8 @@
                   define-binding-syntax)
          (only-in (submod "dot.rkt" for-dot-provider)
                   define-dot-provider-syntax)
+         (only-in (submod "with.rkt" for-update)
+                  define-update-syntax)
          (only-in "name-root.rkt"
                   define-name-root)
          (only-in "class-desc.rkt"
@@ -63,6 +65,7 @@
             [((~literal define-annotation-syntax) . _) (keep-stx)]
             [((~literal define-annotation-constructor) . _) (keep-stx)]
             [((~literal define-dot-provider-syntax) . _) (keep-stx)]
+            [((~literal define-update-syntax) . _) (keep-stx)]
             [((~literal define-method-result-syntax) . _) (keep-stx)]
             [_
              (loop (cdr defs) stxs (cons def vars) var-names)])]))]

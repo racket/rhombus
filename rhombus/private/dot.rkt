@@ -60,7 +60,6 @@
              #,expr)))
 
   (define-syntax-class :dot-provider
-    #:literals (begin quote-syntax #%dot-provider)
     (pattern id:identifier
              #:when (syntax-local-value* (in-dot-provider-space #'id) dot-provider-ref))
     (pattern (~var ref-id (:static-info #'#%dot-provider))

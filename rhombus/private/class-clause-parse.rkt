@@ -114,6 +114,10 @@
               [(#:dot name block)
                (hash-set options 'dots (cons (cons #'name (extract-rhs #'block))
                                              (hash-ref options 'dots null)))]
+              [(#:reconstructor block)
+               (when (hash-has-key? options 'reconstructor-rhs)
+                 (raise-syntax-error #f "multiple reconstructor clauses" orig-stx clause))
+               (hash-set options 'reconstructor-rhs (extract-rhs #'block))]
               [(#:nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))

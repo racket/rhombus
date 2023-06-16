@@ -7,7 +7,8 @@
   defn.macro 'use_static'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#%index), @rhombus(++) and @rhombus(#%parens)
+ (Re-)defines @rhombus(.), @rhombus(#%index), @rhombus(++), @rhombus(#%call),
+ and @rhombus(with)
  to require certain static information and consistency with static
  information:
 
@@ -26,12 +27,19 @@
   specialized statically (e.g., to a @tech{list} or @tech{map} append),
   otherwise the operator use is an error.}
 
- @item{A static @rhombus(#%parens) does not require static
+ @item{A static @rhombus(#%call) does not require static
   information about functions and methods for calls, but it reports an
   error when the number of supplied arguments is inconsistent with static
   information that is available for the called function or method.
   Similarly, @rhombus(:=) assignment to a property is rejected if static
   information does not declare the property as supporting assignment.}
+
+ @item{A static @rhombus(with) requires static information for a cloass
+  on the left-hand side of @rhombus(with) (i.e., the object to be
+  functionally updated). An error is reported if a field name supplied on
+  the right-hand side of @rhombus(with) does not correspond to the field
+  of the class.}
+
 )
 
  See also @secref("static-lib").
