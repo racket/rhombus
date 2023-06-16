@@ -129,7 +129,7 @@
  in @rhombus(expr).
 
  Because the bindings of @rhombus(bind) must be made available for
- @rhombus(expr), a @rhombus(where, ~bind) or @rhombus(unless, ~bind)
+ @rhombus(expr), a @rhombus(when, ~bind) or @rhombus(unless, ~bind)
  binding is not compatible for use with @rhombus(let), unless the set
  of names from @rhombus(bind) is empty.
 

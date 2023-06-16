@@ -179,7 +179,7 @@
 
   @item{@rhombus(~no_stx) indicates that the variable's is not
   compatible with @rhombus(let), because it needs to be bound early (such
-  as through @rhombus(where)).}
+  as through @rhombus(when, ~bind)).}
 
  )
 
