@@ -4,10 +4,15 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
+                     enforest/syntax-local
                      "introducer.rkt"
                      "expression-space.rkt"
                      (for-syntax racket/base)
-                     "macro-result.rkt"))
+                     "macro-result.rkt")
+         (only-in "definition.rkt"
+                  definition-transformer-ref
+                  definition-sequence-transformer-ref)
+         (only-in "declaration.rkt" declaration-transformer-ref))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -49,6 +54,11 @@
         ;; that we don't compile some things that could (would?)
         ;; end up reporting a use before definition
         (raise-syntax-error #f "unbound identifier" id)))
+    (when (syntax-local-value* id (lambda (v)
+                                    (or (definition-transformer-ref v)
+                                        (definition-sequence-transformer-ref v)
+                                        (declaration-transformer-ref v))))
+      (raise-syntax-error #f "misuse as an expression" id))
     id)
 
   (define (check-expression-result form proc)

@@ -85,6 +85,7 @@
                                                #'begin
                                                #'provide
                                                #'#%require
+                                               #'#%declare
                                                #'begin-for-syntax)
                                          #f)]))
        (syntax-parse exp-form

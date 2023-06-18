@@ -73,3 +73,32 @@ different than the enclosing (sub)module.
  @rhombus(parent!, ~impo)@rhombus(id).
 
 }
+
+@doc(
+  ~nonterminal:
+    module_path: import
+
+  decl.macro 'pragma $decl'
+  decl.macro 'pragma:
+                $decl ...
+                ...'
+
+  grammar decl:
+    ~unsafe
+    ~empty_evaluator
+){
+
+ Controls properties of a module's compilation:
+
+@itemlist(
+
+ @item{@as_index{@rhombus(~unsafe)} compiles the module in unsafe mode,
+  where annotation failurs trigger unspcified behavior.}
+
+ @item{@as_index{@rhombus(~empty_evaluator)} disables the use of the
+  module's content for interactive evaluation, which can avoid overhead
+  for the module.}
+
+)
+
+}

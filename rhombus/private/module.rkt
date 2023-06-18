@@ -6,7 +6,8 @@
          "parens.rkt")
 
 (provide (rename-out
-          [rhombus:module module]))
+          [rhombus:module module])
+         pragma)
 
 (define-syntax rhombus:module
   (declaration-transformer
@@ -121,3 +122,44 @@
                                   (car (syntax-e orig)))])
                  (loop (syntax-track-origin stx orig id-stx)
                        (cdr origs))))))])))
+
+;; ----------------------------------------
+
+(begin-for-syntax
+  (define-splicing-syntax-class :pragma
+    #:attributes (kw [parsed 1])
+    (pattern (~seq (~and kw #:unsafe))
+             #:attr [parsed 1] (list #'kw))
+    (pattern (~seq (~and kw #:empty_evaluator))
+             #:attr [parsed 1] (list #'#:empty-namespace))
+    ;; TODO: allow, but thendisable `#:realm` added by `rhombus`:
+    #;
+    (pattern (~seq (~and kw #:realm) id:identifier)
+             #:attr [parsed 1] (list #'kw #'id))
+    ;; not possible, so far:
+    #;
+    (pattern (~seq (~and kw #:cross_phase_persistent))
+             #:attr [parsed 1] (list #'#:cross-phase-persistent)))
+  
+  ;; Also module-local:
+  (define-values (pragmas-box) (make-hasheq)))
+
+(define-syntax pragma
+  (declaration-transformer
+   (lambda (stx)
+     (define (check kw-stxes)
+       (for ([kw (in-list (syntax->list kw-stxes))])
+         (when (hash-ref pragmas-box (syntax-e kw) #f)
+           (raise-syntax-error #f "duplicate use of keyword" stx kw))
+         (hash-set! pragmas-box (syntax-e kw) #t)))
+     (unless (eq? 'module (syntax-local-context))
+       (raise-syntax-error #f "allowed only within a module body" stx))
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ p::pragma)
+        (check #'(p.kw))
+        #`((#%declare p.parsed ...))]
+       [(_ (_::block (group p::pragma ...)
+                     ...))
+        (check #'(p.kw ... ...))
+        #`((#%declare p.parsed ... ... ...))]))))

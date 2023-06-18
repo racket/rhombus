@@ -1,0 +1,26 @@
+#lang rhombus/and_meta
+import:
+  lib("racket/base.rkt")
+
+export:
+  gc
+  minor_gc
+  incremental_gc
+
+  current_memory_use
+  cumulative_memory_use
+
+fun gc():
+  base.#{collect-garbage}()
+
+fun minor_gc():
+  base.#{collect-garbage}(#'minor)
+
+fun incremental_gc():
+  base.#{collect-garbage}(#'incremental)
+
+fun current_memory_use():
+  base.#{current-memory-use}()
+  
+fun cumulative_memory_use():
+  base.#{current-memory-use}(#'cumulative)

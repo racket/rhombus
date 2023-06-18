@@ -1,0 +1,35 @@
+#lang rhombus/and_meta
+import:
+  lib("racket/base.rkt"):
+    expose: time
+    rename: time as rkt_time
+  rhombus/runtime
+
+export:
+  time
+  memory
+  time_and_memory
+
+expr.macro
+| 'time: ~gc; $body; ...':
+    'block:
+       base.#{collect-garbage}()
+       $(expr_meta.pack_s_exp(['rkt_time', expr_meta.pack_expr('block: $body; ...')]))'
+| 'time: $body':
+    expr_meta.pack_s_exp(['rkt_time', expr_meta.pack_expr('block: $body')])
+
+expr.macro 'memory: $body':
+  'call_with_memory_use(fun (): $body)'
+
+fun call_with_memory_use(proc):
+  def before = runtime.cumulative_memory_use()
+  def (after, results):
+    call_with_values(proc,
+                     fun
+                     | (x): values(runtime.cumulative_memory_use(), [x])
+                     | (& xs): values(runtime.cumulative_memory_use(), xs))
+  displayln("allocated: " +& (after - before))
+  values(& results)
+
+expr.macro 'time_and_memory: $body':
+  'memory: time: $body'
