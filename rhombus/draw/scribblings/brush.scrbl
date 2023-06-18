@@ -5,8 +5,7 @@
 
 @doc(
   class Brush(handle, private saved_stipple):
-    constructor (~like: like :: maybe(Brush) = #false,
-                 ~color: color :: (String || Color) = "Black",
+    constructor (~color: color :: (String || Color) = "Black",
                  ~style: style :: Brush.Style = #'solid,
                  ~stipple: stipple :: maybe(Bitmap) = #false,
                  ~gradient: gradient :: maybe(LinearGradient || RadialGradient)
@@ -15,8 +14,9 @@
 
  Creates a brush configuration.
 
- If @rhombus(like) is provided as a @rhombus(Brush, ~class), then @rhombus(like)
- provides default values for other arguments, instead of the normal defaults.
+ A brush like an existing one can be constructed using @rhombus(with)
+ and the field names @rhombus(color), @rhombus(style), @rhombus(stipple),
+ and/or @rhombus(gradient).
 
 }
 

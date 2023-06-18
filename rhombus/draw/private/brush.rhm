@@ -54,17 +54,13 @@ class RadialGradient(handle):
     def [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
     
-expr.macro 'default($like . $field, $expr)':
-  'if $like | Brush . $field($like) | $expr'
-
 class Brush(handle):
   internal _Brush
   opaque
-  constructor (~like: like :: maybe(Brush) = #false,
-               ~color: color :: (String || Color) = default(like.color, "Black"),
-               ~style: style :: Brush.Style = default(like.style, #'solid),
-               ~stipple: stipple :: maybe(Bitmap) = default(like.stipple, #false),
-               ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = default(like.gradient, #false)):
+  constructor (~color: color :: (String || Color) = "Black",
+               ~style: style :: Brush.Style = #'solid,
+               ~stipple: stipple :: maybe(Bitmap) = #false,
+               ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false):
     if stipple || gradient
     | _Brush(rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
                              stipple && BitmapPrivate.handle(stipple),
@@ -74,7 +70,7 @@ class Brush(handle):
                              | ~else #false))
     | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)))
   property color :: Color: _Color(rkt.send handle.#{get-color}())
-  property style: style_unconvert(rkt.send handle.#{get-width}())
+  property style: style_unconvert(rkt.send handle.#{get-style}())
   property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
     bm && BitmapPrivate(bm)
@@ -83,6 +79,14 @@ class Brush(handle):
     g && (if g rkt.is_a rkt.#{linear-gradient%}
           | _LinearGradient(g)
           | _RadialGradient(g))
+
+  reconstructor_fields:
+    color: this.color
+    style: this.style
+    stipple: this.stipple
+    gradient: this.gradient
+  reconstructor (color, style, stipple, gradient):
+    Brush(~color: color, ~style: style, ~stipple: stipple, ~gradient: gradient)
 
   export:
     none

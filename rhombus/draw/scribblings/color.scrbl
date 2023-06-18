@@ -23,6 +23,10 @@
 
  When @rhombus(alpha) is not supplied, @rhombus(1.0) is used.
 
+ colorbrush like an existing one can be constructed using @rhombus(with)
+ and the field names @rhombus(red), @rhombus(green), @rhombus(blue),
+ and/or @rhombus(alpha).
+
 }
 
 @doc(

@@ -275,7 +275,8 @@
                                       []
                                       []
                                       []
-                                      [super-name ...]))
+                                      [super-name ...]
+                                      []))
                (build-interface-property internal-internal-name
                                          #'(name prop:name name? name-ref name-ref-or-error
                                                  prop:internal-name internal-name? internal-name-ref))

@@ -11,7 +11,8 @@
          "dot-property.rkt"
          "parens.rkt"
          "realm.rkt"
-         (submod "equal.rkt" for-parse))
+         (submod "equal.rkt" for-parse)
+         (only-in "assign.rkt" :=))
 
 (provide with)
 
@@ -37,7 +38,8 @@
 (define-for-syntax (make-with more-static?)
   (expression-infix-operator
    (quote-syntax with)
-   '((default . weaker))
+   `((,(quote-syntax :=) . stronger)
+     (default . weaker))
    'macro
    (lambda (orig-form1 tail)
      (syntax-parse tail
@@ -89,23 +91,22 @@
     (raise-arguments-error* who rhombus-realm
                             "value does not support functional update"
                             "value" obj))
-  (define acc-ht (field-name->accessor-ref obj #hasheq()))
-  (define arg-syms (car r))
+  (define arg-sym+accs (car r))
   (define recon-proc (cdr r))
   (define-values (supplied-c args)
     (for/fold ([supplied-c 0] [args '()])
-              ([arg-sym (in-list (reverse arg-syms))])
-      (define i (hash-ref field-map arg-sym #f))
+              ([arg-sym+acc (in-list (reverse arg-sym+accs))])
+      (define i (hash-ref field-map (car arg-sym+acc) #f))
       (if i
           (values (add1 supplied-c)
                   (cons (vector-ref field-vals i) args))
           (values supplied-c
-                  (cons ((hash-ref acc-ht arg-sym) obj) args)))))
+                  (cons ((cdr arg-sym+acc) obj) args)))))
   (unless (= supplied-c (hash-count field-map))
     (for ([k (in-hash-keys field-map)])
-      (unless (memq k arg-syms)
+      (unless (assq k arg-sym+accs)
         (raise-arguments-error* who rhombus-realm
-                                "no such public field in class"
+                                "no such reconstructor argument in class"
                                 "name" (datum->syntax #f k)))))
   (apply recon-proc obj args))
 

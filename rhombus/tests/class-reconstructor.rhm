@@ -7,13 +7,6 @@ use_static
 check:
   ~eval
   class Posn(x, y):
-    opaque
-  Posn(1, 2) with (x = 10)
-  ~raises "value does not support functional update"
-
-check:
-  ~eval
-  class Posn(x, y):
     constructor (z):
       super(z+1, z-1)
   Posn(0) with (x = 1)
@@ -45,7 +38,7 @@ block:
   check (Posn3D(1, 2, 3) :: Posn) with (x = 10) ~is Posn3D(10, 2, 4)
   block:
     use_dynamic
-    check dynamic(Posn3D(1, 2, 3)) with (w = -1) ~raises "no such public field in class"
+    check dynamic(Posn3D(1, 2, 3)) with (w = -1) ~raises "no such reconstructor argument in class"
     check (Posn3D(1, 2, 3) :: Posn) with (z = 30) ~is Posn3D(1, 2, 31)
 
 block:
@@ -67,7 +60,7 @@ check:
   class Posn(x, y):
     nonfinal
   fun (): Posn(1, 2) with (z = 3)
-  ~raises "no such public field in class"
+  ~raises "no such reconstructor argument in class"
 
 check:
   ~eval
@@ -93,3 +86,52 @@ block:
   check p.x ~is 0
   check p.y ~is 0
   check p.z ~is 30
+
+block:
+  class Posn(x, y):
+    reconstructor_fields:
+      horiz: this.x
+      vert: this.y
+      delta: 0
+    reconstructor(x, y, d):
+      Posn(x+d, y+d)
+  check Posn(1, 2) with (vert = 20) ~is Posn(1, 20)
+  check Posn(1, 2) with (delta = 2) ~is Posn(3, 4)
+  block:
+    use_dynamic
+    check dynamic(Posn(1, 2)) with (delta = 2) ~is Posn(3, 4)
+
+check:
+  ~eval
+  class Posn(x, y):
+    reconstructor_fields:
+      delta: 0
+  ~raises "reconstructor fields supplied without a reconstructor"
+
+check:
+  ~eval
+  class Posn(x, y):
+    nonfinal
+    reconstructor_fields:
+      delta: 0
+    reconstructor(d):
+      "oops"
+  class Posn3D():
+    extends Posn
+  ~raises "superclass requires custom reconstructor"
+
+block:
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    reconstructor_fields:
+      extent: this.z          
+    reconstructor(x, y, z):
+      Posn3D(x, y, z)
+  check Posn3D(1, 2, 3) with (extent = 30) ~is Posn3D(1, 2, 30)
+  check Posn3D(1, 2, 3) with (x = 10) ~is Posn3D(10, 2, 3)
+  block:
+    use_dynamic
+    check dynamic(Posn3D(1, 2, 3)) with (extent = 30) ~is Posn3D(1, 2, 30)
+    check dynamic(Posn3D(1, 2, 3)) with (x = 10) ~is Posn3D(10, 2, 3)

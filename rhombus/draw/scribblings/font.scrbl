@@ -5,8 +5,7 @@
 
 @doc(
   class Font(handle):
-    constructor (~like: like :: maybe(Font) = #false,
-                 ~kind: kind :: Font.Kind = #'default,
+    constructor (~kind: kind :: Font.Kind = #'default,
                  ~name: name :: maybe(String) = #false,
                  ~size: size :: Real.in(0.0, 1024.0) = 12.0,
                  ~in_pixels: in_pixels :: Any = #false,
@@ -20,9 +19,11 @@
 
  Creates a font configuration.
 
- If @rhombus(like) is provided as a @rhombus(Font, ~class), then @rhombus(like)
- provides default values for other arguments, instead of the normal
- defaults.
+ A font like an existing one can be constructed using @rhombus(with) and
+ the field names @rhombus(kind), @rhombus(name), @rhombus(size),
+ @rhombus(in_pixels), @rhombus(style), @rhombus(weight),
+ @rhombus(has_underline), @rhombus(smoothing), @rhombus(hinting), and
+ @rhombus(features).
 
 }
 

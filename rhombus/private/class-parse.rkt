@@ -67,6 +67,7 @@
                     custom-constructor?
                     custom-binding?
                     custom-annotation?
+                    reconstructor-fields ; #f or (list (cons field-sym accessor-id) ...)
                     dots ; list of symbols for dot syntax
                     dot-provider  ; #f or compile-time identifier
                     defaults-id   ; #f if no arguments with defaults

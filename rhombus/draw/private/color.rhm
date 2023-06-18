@@ -32,6 +32,14 @@ class Color(handle):
   property alpha:
     rkt.send handle.alpha()
 
+  reconstructor_fields:
+    red: this.red
+    green: this.green
+    blue: this.blue
+    alpha: this.alpha
+  reconstructor(red, green, blue, alpha):
+    Color(red, green, blue, alpha)
+
   implements Printable
   override print(o):
     _display("Color("

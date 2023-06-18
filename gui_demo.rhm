@@ -38,16 +38,18 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.rectangle([0, 0, w, h])
 
     // draw keyed text
+    dc.font := dc.font with (size = dc.font.size * 2)
     dc.text(config["keyed"])
 
     // draw ghost dots (showing recent mouse movements)
-    dc.brush := draw.Brush(~color: draw.Color(0, 0, 0, 0.25))
     def dot_size = [4, 4]
-    for:
-      each [x, y]: (config["ghosts"] :: List)
+    for values(brush = draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
+      each [x, y]: (config["ghosts"] :: List).reverse()
+      dc.brush := brush
       let x = x/scale
       let y = y/scale
       dc.ellipse([[x-2, y-2], dot_size])
+      brush with (color = brush.color with (alpha = brush.color.alpha * 0.7))
 
     // face shape    
     dc.brush := draw.Brush(~color: "orange")

@@ -699,7 +699,8 @@
                        [maybe-set-name-field! ...]
                        [private-field-name ...]
                        [private-field-desc ...]
-                       [super-name ...])
+                       [super-name ...]
+                       [(recon-field-accessor recon-field-rhs) ...])
                  names])
     (with-syntax ([(field-name ...) (for/list ([id/l (in-list (syntax->list #'(field-name ...)))])
                                       (if (identifier? id/l)
@@ -739,7 +740,11 @@
                          #,@(if (and (syntax-e #'reconstructor-name)
                                      (not (eq? reconstructor-rhs 'default)))
                                 (list #'reconstructor-name)
-                                null))
+                                null)
+                         #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
+                                       [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
+                                       #:when (syntax-e rhs))
+                              acc))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
                                                           (quote-syntax field-static-infos)
@@ -791,9 +796,19 @@
                                       #f reconstructor
                                       new-private-tables
                                       indirect-static-infos
-                                      [super-name ...]
+                                      ()
                                       reconstructor))
-                     null))))))))
+                     null)
+              #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
+                            [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
+                            #:when (syntax-e rhs))
+                   #`(method-block (block #,rhs)
+                                   name name-instance #f
+                                   #f acc
+                                   new-private-tables
+                                   indirect-static-infos
+                                   ()
+                                   reconstructor_field)))))))))
 
 (define-syntax (method-block stx)
   (syntax-parse stx

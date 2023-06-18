@@ -12,7 +12,52 @@
          "reconstructor.rkt"
          "realm.rkt")
 
-(provide (for-syntax build-class-reconstructor))
+(provide (for-syntax extract-reconstructor-fields
+                     build-class-reconstructor))
+
+(define-for-syntax (extract-reconstructor-fields stxes options super reconstructor-rhs
+                                                 public-field-names public-field-arguments public-name-fields)
+  (define-values (new-names new-args new-accs new-rhss)
+    (cond
+      [(hash-ref options 'reconstructor-fields #f)
+       => (lambda (stx)
+            (with-syntax ([(orig-id (id ...) rhss) stx])
+              (when (not (syntax? reconstructor-rhs))
+                (raise-syntax-error #f "reconstructor fields supplied without a reconstructor" stxes #'orig-id))
+              (define ids (syntax->list #'(id ...)))
+              (values (syntax->list #'(id ...))
+                      (map (lambda (id) #f) ids)
+                      (generate-temporaries ids)
+                      (syntax->list #'rhss))))]
+      [else
+       (for/lists (names args accs rhss) ([name (in-list public-field-names)]
+                                          [arg (in-list public-field-arguments)]
+                                          [acc (in-list public-name-fields)]
+                                          #:unless (identifier? arg))
+         (values name
+                 (if (box? (syntax-e arg)) (unbox (syntax-e arg)) arg)
+                 #`(lambda (obj) (#,acc obj))
+                 #f))]))
+  (define-values (super-names super-args super-accs)
+    (cond
+      [(not super) (values null null null)]
+      [(class-desc-reconstructor-fields super)
+       => (lambda (l)
+            (when (not (syntax? reconstructor-rhs))
+              (raise-syntax-error #f "superclass requires custom reconstructor" stxes))
+            (values (map car l)
+                    (map (lambda (x) #f) l)
+                    (map cdr l)))]
+      [else
+       (for/lists (names args accs) ([field (in-list (class-desc-fields super))]
+                                     #:unless (identifier? (field-desc-constructor-arg field)))
+         (values (field-desc-name field)
+                 (field-desc-constructor-arg field)
+                 (field-desc-accessor-id field)))]))
+  (values (append super-names new-names)
+          (append super-args new-args)
+          (append super-accs new-accs)
+          (append (map (lambda (x) #f) super-names) new-rhss)))
 
 (define-for-syntax (build-class-reconstructor super final?
                                               reconstructor-rhs method-private
@@ -46,17 +91,14 @@
 (define-for-syntax (make-reconstructor super constructor-name names args accs)
   #`(lambda (obj #,@(for/list ([name (in-list names)]
                                [arg (in-list args)]
-                               [acc (in-list accs)]
-                               #:unless (identifier? arg))
+                               [acc (in-list accs)])
                       (if super
                           #`[#,name (#,acc obj)]
                           name)))
       (#,constructor-name #,@(apply
                               append
                               (for/list ([name (in-list names)]
-                                         [b-arg (in-list args)]
-                                         #:unless (identifier? b-arg))
-                                (define arg (if (box? (syntax-e b-arg)) (unbox (syntax-e b-arg)) b-arg))
+                                         [arg (in-list args)])
                                 (cond
                                   [(keyword? (syntax-e arg)) (list arg name)]
                                   [else (list name)]))))))
@@ -75,22 +117,36 @@
                   #'constructor-id
                   #'((#%dot-provider name-instance) . indirect-static-infos)
                   (syntax-e #'constructor-id))]))
-     (define ctr-fields
-       (for/fold ([updates #hasheq()]) ([field (in-list (class-desc-fields desc))])
+     (define (recon-field-name f) (car f))
+     (define (recon-field-arg f) (cadr f))
+     (define (recon-field-acc f) (caddr f))
+     (define recon-fields
+       (cond
+         [(class-desc-reconstructor-fields desc)
+          => (lambda (l)
+               (for/list ([field (in-list l)])
+                 (list (car field) #'#f (cdr field))))]
+         [else
+          (for/list ([field (in-list (class-desc-fields desc))]
+                     #:do [(define arg (field-desc-constructor-arg field))]
+                     #:unless (identifier? arg))
+            (list (field-desc-name field)
+                  (if (box? (syntax-e arg))
+                      (unbox (syntax-e arg))
+                      arg)
+                  (field-desc-accessor-id field)))]))
+     (define recon-field-ht
+       (for/fold ([updates #hasheq()]) ([field (in-list recon-fields)])
          (hash-set updates (car field) field)))
      (define arg-ids (generate-temporaries rhss))
      (define updates
        (for/fold ([updates #hasheq()]) ([name (in-list names)]
                                         [arg-id (in-list arg-ids)])
-         (define f (hash-ref ctr-fields (syntax-e name) #f))
+         (define f (hash-ref recon-field-ht (syntax-e name) #f))
          (cond
            [(not f)
             (when static?
-              (raise-syntax-error #f "no such public field in class" with-id name))
-            #f]
-           [(identifier? (field-desc-constructor-arg f))
-            (when static?
-              (raise-syntax-error #f "field is not a constructor argument" with-id name))
+              (raise-syntax-error #f "no such reconstructor argument in class" with-id name))
             #f]
            [else (and updates
                       (hash-set updates (syntax-e name) arg-id))])))
@@ -107,12 +163,10 @@
                  #,@(if direct? null (list #'obj))
                  #,@(apply
                      append
-                     (for/list ([field (in-list (class-desc-fields desc))]
-                                #:do [(define b-arg (field-desc-constructor-arg field))]
-                                #:unless (identifier? b-arg))
-                       (define arg (if (box? (syntax-e b-arg)) (unbox (syntax-e b-arg)) b-arg))
-                       (define rhs (or (hash-ref updates (field-desc-name field) #f)
-                                       #`(#,(field-desc-accessor-id field) obj)))
+                     (for/list ([field (in-list recon-fields)]
+                                #:do [(define arg (recon-field-arg field))])
+                       (define rhs (or (hash-ref updates (recon-field-name field) #f)
+                                       #`(#,(recon-field-acc field) obj)))
                        (cond
                          [(and direct? (keyword? (syntax-e arg))) (list arg rhs)]
                          [else (list rhs)])))))))

@@ -68,6 +68,7 @@
     #,(@rhombus(binding, ~class_clause)) $binding_decl
     #,(@rhombus(annotation, ~class_clause)) $annotation_decl
     #,(@rhombus(reconstructor, ~class_clause)) $reconstructor_impl
+    #,(@rhombus(reconstructor_fields, ~class_clause)) $reconstructor_fields_decl
     #,(@rhombus(dot, ~class_clause)) $dot_decl
     #,(@rhombus(static_info, ~class_clause)) $static_info_decl
     #,(@rhombus(opaque, ~class_clause))
@@ -243,7 +244,8 @@
  @rhombus(annotation, ~class_clause) replace default meanings of the
  defined @rhombus(id_name) for an expression context, binding
  context, and annotation context, respectively. The
- @rhombus(reconstructor, ~class_clause) form replaces the way that
+ @rhombus(reconstructor, ~class_clause) form with optional
+ @rhombus(reconstructor_fields, ~class_clause) replaces the way that
  @rhombus(with) functional update is implemented. The
  @rhombus(dot, ~class_clause) form (which must be imported
  through @rhombusmodname(rhombus/meta)) replaces the way that
@@ -1046,6 +1048,16 @@
     def px = PosnX < 1 || 2 >
     px with (y = 20)
     px
+  ~defn:
+    class PosnD(x, y):
+      reconstructor_fields:
+        x: this.x
+        y: this.y
+        delta: 0
+      reconstructor (x, y, delta):
+        PosnD(x+delta, y+delta)
+  ~repl:
+    PosnD(1, 2) with (delta = 10)
 )
 
 }
@@ -1054,6 +1066,7 @@
 @doc(
   ~nonterminal:
     maybe_res_annot: fun
+    field_id: block id
 
   class_clause.macro 'reconstructor reconstructor_impl'
 
@@ -1064,7 +1077,6 @@
          $body
          ...
      | ...
-
 ){
 
  A form for @rhombus(class) to provide an implementation of a
@@ -1073,16 +1085,49 @@
  to the object being updated (i.e., the object whose fields are being
  used to create a new instance of the class).
 
- A class's reconstructor should expect as many arguments as the class
- has fields, and it should expect them in the declared order. It should
- not expect keyword arguments; all fields are supplied by-position. If
- the class has a superclass, then any fields added by the class should be
- made optional, because those arguments will not be supplied when an
- instance of the class is updated based on static information
- corresponding to the superclass. The optional arguments typically have a
- default value that is drawn from the corresponding field of
- @rhombus(this).
+ By default, a class's reconstructor should expect as many arguments as
+ the class has fields, and it should expect them in the declared order.
+ If the class has a @rhombus(reconstructor_fields, ~class_clause)
+ declaration, the reconstructor should instead expect those fields in addition to
+ the ones that the superclass (if any) expects for its reconstuctor.
+
+ A reconstructor should not expect keyword arguments; all fields are
+ supplied by-position. If the class has a superclass, then any fields
+ added by the class should be made optional, because those arguments will
+ not be supplied when an instance of the class is updated based on static
+ information corresponding to the superclass. The optional arguments
+ typically have a default value that is drawn from the corresponding
+ field of @rhombus(this).
 
  See @rhombus(with) for examples.
+
+}
+
+@doc(
+  ~nonterminal:
+    field_id: block id
+              
+  class_clause.macro 'reconstructor_fields:
+                        field_id: $body; ...
+                        ...'
+){
+
+ Declares fields available to be supplied to a @rhombus(with)
+ functional-update operation for instances of a class, instead of fields
+ declared in the enclosing class, but in addition to the
+ fields that are allowed for the class's superclass (if any).
+
+ The @rhombus(body) sequence for a field is evaluated for a use of
+ @rhombus(with) that does not supply the field. The @rhombus(body)
+ sequence can refer to @rhombus(this) or other bindings that would be
+ available in a 0-argument method of the class.
+
+ When a class has a @rhombus(reconstructor_fields, ~class_clause)
+ declaration, then the class and any subclass that extends it must have a
+ @rhombus(reconstructor, ~class) declaration, since there is not
+ necessarily any connection between the declared reconstructor fields and
+ the constructor's arguments.
+
+ See @rhombus(with) for an example.
 
 }

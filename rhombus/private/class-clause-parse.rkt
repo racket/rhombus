@@ -118,6 +118,10 @@
                (when (hash-has-key? options 'reconstructor-rhs)
                  (raise-syntax-error #f "multiple reconstructor clauses" orig-stx clause))
                (hash-set options 'reconstructor-rhs (extract-rhs #'block))]
+              [(#:reconstructor_fields orig-id ids rhss)
+               (when (hash-has-key? options 'reconstructor-fields)
+                 (raise-syntax-error #f "multiple reconstructor-fields clauses" orig-stx clause))
+               (hash-set options 'reconstructor-fields #'(orig-id ids rhss))]
               [(#:nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))

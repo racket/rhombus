@@ -31,7 +31,8 @@
                     authentic
                     field
                     constructor
-                    reconstructor)
+                    reconstructor
+                    reconstructor_fields)
          (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
                      extends
@@ -286,6 +287,19 @@
         (wrap-class-clause #`(#:reconstructor (block (group fun rhs))))]
        [(_ (~and rhs (_::block . _)))
         (wrap-class-clause #`(#:reconstructor rhs))]))))
+
+(define-class-clause-syntax reconstructor_fields
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (_::block (group name:identifier
+                                  (~and rhs (_::block . _)))
+                           ...))
+        (wrap-class-clause #`(#:reconstructor_fields
+                              form-id
+                              (name ...)
+                              ((group fun (parens) rhs) ...)))]))))
 
 (begin-for-syntax
   (define-syntax-rule (define-clause-form-syntax-class id form-id)

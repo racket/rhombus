@@ -459,6 +459,12 @@
                           '())]
                      [(super-field-keyword ...) super-keywords]
                      [(export ...) exs])
+         (define-values (public-field-names private-field-names) (partition-fields #'(field-name ...) #:result values))
+         (define-values (public-field-arguments private-field-arguments) (partition-fields #'(field-argument ...) #:result values))
+         (define-values (public-name-fields private-name-fields) (partition-fields #'(name-field ...) #:result values))
+         (define-values (recon-field-names recon-field-args recon-field-accs recon-field-rhss)
+           (extract-reconstructor-fields stxes options super reconstructor-rhs
+                                         public-field-names public-field-arguments public-name-fields))
          (with-syntax ([constructor-name (if (or constructor-rhs
                                                  expression-macro-rhs)
                                              (or (and given-constructor-name
@@ -476,11 +482,11 @@
                        [make-all-name (if need-constructor-wrapper?
                                           (temporary "~a-make")
                                           #'make-name)]
-                       [((public-field-name ...) (private-field-name ...)) (partition-fields #'(field-name ...))]
-                       [((public-name-field ...) (private-name-field ...)) (partition-fields #'(name-field ...))]
+                       [((public-field-name ...) (private-field-name ...)) (list public-field-names private-field-names)]
+                       [((public-name-field ...) (private-name-field ...)) (list public-name-fields private-name-fields)]
                        [((public-maybe-set-name-field! ...) (private-maybe-set-name-field! ...)) (partition-fields #'(maybe-set-name-field! ...))]
                        [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
-                       [((public-field-argument ...) (private-field-argument ...)) (partition-fields #'(field-argument ...))]
+                       [((public-field-argument ...) (private-field-argument ...)) (list public-field-arguments private-field-arguments)]
                        [(constructor-public-name-field ...) (partition-fields all-name-fields constructor-private?s
                                                                               #:result (lambda (pub priv) pub))]
                        [(constructor-public-field-static-infos ...) (partition-fields #'(constructor-field-static-infos ...)
@@ -501,6 +507,10 @@
                                                    (car parent-dot-providers)))]
                        [reconstructor-name (and reconstructor-rhs
                                                 (temporary "~a-reconstructor"))]
+                       [(recon-field-name ...) recon-field-names]
+                       [(recon-field-arg ...) recon-field-args]
+                       [(recon-field-acc ...) recon-field-accs]
+                       [(recon-field-rhs ...) recon-field-rhss]
                        [prefab-guard-name (and prefab?
                                                (or (and super
                                                         (class-desc-prefab-guard-id super))
@@ -527,14 +537,14 @@
                                              (quote-syntax private-field-static-infos)
                                              (quote-syntax private-field-argument))
                                        ...]
-                                      [super-name* ... interface-name ...]))
+                                      [super-name* ... interface-name ...]
+                                      [(recon-field-acc recon-field-rhs)
+                                       ...]))
                (build-class-reconstructor super final?
                                           reconstructor-rhs method-private
                                           #'(name name? constructor-name name-instance
                                                   indirect-static-infos reconstructor-name
-                                                  [(super-field-name super-field-argument super-name-field)
-                                                   ...
-                                                   (public-field-name public-field-argument public-name-field)
+                                                  [(recon-field-name recon-field-arg recon-field-acc)
                                                    ...]
                                                   [private-field-name ...]
                                                   [(list 'private-field-name
@@ -562,9 +572,7 @@
                                            [super-field-name ...]
                                            [super-name-field ...]
                                            [dot-id ...]
-                                           ((super-field-name super-field-argument)
-                                            ...
-                                            (public-field-name public-field-argument)
+                                           ((recon-field-name recon-field-acc)
                                             ...)))
                (build-added-field-arg-definitions added-fields)
                (build-class-constructor super constructor-rhs
@@ -641,6 +649,8 @@
                                  here-indexable? public-indexable?
                                  here-setable? public-setable?
                                  here-appendable? public-appendable?
+                                 (or (hash-ref options 'reconstructor-fields #f)
+                                     (and super (class-desc-reconstructor-fields super)))
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name prefab-guard-name
                                          instance-static-infos
@@ -656,7 +666,8 @@
                                                      (quote-syntax public-field-static-infos)
                                                      (quote-syntax public-field-argument))
                                                ...)
-                                         ([field-name field-argument maybe-set-name-field!] ...)))
+                                         ([field-name field-argument maybe-set-name-field!] ...)
+                                         [(recon-field-name recon-field-acc) ...]))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
@@ -687,7 +698,7 @@
                        [super-field-name ...]
                        [super-name-field ...]
                        [dot-id ...]
-                       [(recon-field-name recon-field-arg) ...])
+                       [(recon-field-name recon-field-acc) ...])
                  names]
                 [(mutable-field ...) (for/list ([field (in-list fields)]
                                                 [mutable (in-list mutables)]
@@ -766,10 +777,10 @@
                                                                           (not (memq 'no-recon (class-desc-flags super)))))
                                                                  #`((cons prop:reconstructor
                                                                           #,(and (syntax-e #'reconstructor-name)
-                                                                                 #`(cons '#,(for/list ([name (in-list (syntax->list #'(recon-field-name ...)))]
-                                                                                                       [arg (in-list (syntax->list #'(recon-field-arg ...)))]
-                                                                                                       #:unless (identifier? arg))
-                                                                                              name)
+                                                                                 #`(cons (list
+                                                                                          #,@(for/list ([name (in-list (syntax->list #'(recon-field-name ...)))]
+                                                                                                        [acc (in-list (syntax->list #'(recon-field-acc ...)))])
+                                                                                               #`(cons '#,name #,acc)))
                                                                                          reconstructor-name))))
                                                                  null)
                                                           #,@(able-method-as-property 'call #'prop:procedure here-callable?
@@ -862,12 +873,14 @@
                                      here-indexable? public-indexable?
                                      here-setable? public-setable?
                                      here-appendable? public-appendable?
+                                     force-custom-recon?
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name prefab-guard-name
                        instance-static-infos
                        fields
-                       ([field-name field-argument maybe-set-name-field!] ...))
+                       ([field-name field-argument maybe-set-name-field!] ...)
+                       [(recon-field-name recon-field-acc) ...])
                  names])
     (append
      (list
@@ -930,6 +943,9 @@
                              #t)
                       #,(and (hash-ref options 'binding-rhs #f) #t)
                       #,(and (hash-ref options 'annotation-rhs #f) #t)
+                      #,(if force-custom-recon?
+                            #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
+                            #f)
                       '#,(map car dots)
                       #,(and (syntax-e #'dot-provider-name)
                              #'(quote-syntax dot-provider-name))

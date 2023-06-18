@@ -190,6 +190,7 @@
                                  #f ; not custom constructor
                                  #f ; not custom binding
                                  #f ; not custom annotation
+                                 #f ; no functional-update specialization
                                  null ; no dot syntax
                                  #f ; dot-provider
                                  #f ; no arguments with defaults

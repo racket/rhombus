@@ -5,8 +5,7 @@
 
 @doc(
   class Pen(handle):
-    constructor (~like: like :: maybe(Pen) = #false,
-                 ~color: color :: (String || Color) = "Black",
+    constructor (~color: color :: (String || Color) = "Black",
                  ~width: width :: Real.in(0, 255) = 1,
                  ~style: style :: Pen.Style = #'solid,
                  ~cap: cap :: Pen.Cap = #'round,
@@ -16,9 +15,9 @@
 
  Creates a pen configuration.
 
- If @rhombus(like) is provided as a @rhombus(Pen, ~class), then @rhombus(like)
- provides default values for other arguments, instead of the normal
- defaults.
+ A pen like an existing one can be constructed using @rhombus(with)
+ and the field names @rhombus(color), @rhombus(width), @rhombus(style),
+ @rhombus(cap), @rhombus(join), and/or @rhombus(stipple).
 
 }
 

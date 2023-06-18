@@ -39,17 +39,28 @@
      (syntax-parse stx
        #:datum-literals (group op)
        [(_ (parens (group id:identifier _::equal rhs ...) ...) . tail)
+        #:with (e::expression ...) #'((group rhs ...) ...)
+        #:with (e2 ...) (map rhombus-local-expand (syntax->list #'(e.parsed ...)))
+        #:with (si ...) (map extract-static-infos (syntax->list #'(e2 ...)))
         (values
          (reducer/no-break #'build-return
-                           #'([id (rhombus-expression (group rhs ...))] ...)
-                           #'build-return
+                           #'([id e2] ...)
+                           #'build-static-info
                            #'()
-                           #'#f)
+                           #'([id si] ...))
          #'tail)]))))
 
 (define-syntax (build-return stx)
   (syntax-parse stx
     [(_ _ e) #'e]))
+
+(define-syntax (build-static-info stx)
+  (syntax-parse stx
+    [(_ ([id si] ...) e)
+     #'(let ()
+         (define-static-info-syntax/maybe id . si)
+         ...
+         e)]))
 
 (define-static-info-syntax values
   (#%function-arity -1))
