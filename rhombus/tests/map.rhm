@@ -162,3 +162,6 @@ check:
   def Map{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
   [{key, ...}, {val, ...}]
   ~is [{"y", "z"}, {2, 3}]
+
+check:
+  {1: "a", 2: 2, 3: 3}.keys(#true) ~is [1, 2, 3]

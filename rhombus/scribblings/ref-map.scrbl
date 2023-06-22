@@ -29,7 +29,7 @@ in an unspecified order.
   "map (immutable or mutable)"
   @rhombus(Map)
   [map.length(), Map.length(map)]
-  [map.keys(), Map.keys(map)]
+  [map.keys(try_sort, ...), Map.keys(map, try_sort, ...)]
   [map.values(), Map.values(map)]
   [map.get(k), Map.get(map, k)]
   [map.has_key(k), Map.has_key(map, k)]
@@ -339,13 +339,15 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: MapView) :: List
+  fun Map.keys(map :: MapView, try_sort = #false) :: List
 ){
 
- Returns the keys of @rhombus(map) in a list.
+ Returns the keys of @rhombus(map) in a list.  If @rhombus(try_order)
+ is true, then the elements are sorted to the degree that a built-in
+ comparison can sort them.
 
 @examples(
-  Map.keys({"a": 1, "b": 2})
+  Map.keys({"a": 1, "b": 2}, #true)
 )
 
 }

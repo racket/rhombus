@@ -67,10 +67,11 @@ they are equal by @rhombus(==) only when they are equal by
 
 
 @doc(
+  fun Symbol.gen() :: Symbol
   fun Symbol.gen(name :: String || Symbol) :: Symbol
 ){
 
- Produces an @tech{uninterned} symbol with a character content derived
+ Produces an @tech{uninterned} symbol with a character content optionally derived
  from @rhombus(name) (typically with digits appended as a debugging aid).
 
 }

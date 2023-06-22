@@ -28,6 +28,8 @@ it supplies its elements in order.
   [lst.rest, List.rest(lst)]
   [lst.reverse(), List.reverse(lst)]
   [lst.append(lst2, ...), List.append(lst, lst2, ...)]
+  [list.drop_left(lst, n), List.drop_left(lst, n)]
+  [list.drop_right(lst, n), List.drop_right(lst, n)]
   [lst.map(func), List.map(lst, func)]
   [lst.sort(arg, ...), List.sort(lst, arg, ...)]
 )
@@ -259,6 +261,26 @@ it supplies its elements in order.
 
 }
 
+
+@doc(
+  fun List.drop_left(lst :: List, n :: NonnegInt) :: List
+  fun List.drop_right(lst :: List, n :: NonnegInt) :: List
+){
+
+ Returns a list like @rhombus(lst), but without the first @rhombus(n)
+ elements in the case of @rhombus(List.drop_left), or without the last
+ @rhombus(n) elements in the case of @rhombus(List.drop_right). The given
+ @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
+ @rhombus(Exn.Fail.Contract, ~class) exception is raised.
+
+@examples(
+  [1, 2, 3, 4, 5].drop_left(2)
+  [1, 2, 3, 4, 5].drop_right(2)
+  ~error:
+    [1].drop_left(2)
+)
+
+}
 
 @doc(
   fun List.map(args :: List, f :: Function) :: List,

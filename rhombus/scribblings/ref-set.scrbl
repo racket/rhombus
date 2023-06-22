@@ -28,6 +28,11 @@ it supplies its elements in an unspecified order.
   "set (immutable or mutable)"
   @rhombus(Set)
   [set.length(), Set.length(set)]
+  [set.append(set2, ...), Set.length(set, set2, ...)]
+  [set.union(set2, ...), Set.union(set, set2, ...)]
+  [set.intersect(set2, ...), Set.intersect(set, set2, ...)]
+  [set.remove(v), Set.remove(set, v)]
+  [set.to_list(), Set.to_list(set)]
   [set.copy(), Set.copy(set)]
   [set.snapshot(), Set.snapshot(set)]
 )
@@ -202,7 +207,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.length(set :: Set) :: Int
+  fun Set.length(set :: SetView) :: Int
 ){
 
  Returns the number of values in @rhombus(set).
@@ -211,6 +216,51 @@ it supplies its elements in an unspecified order.
   Set.length({"a", "b"})
   Set.length(Set())
   {"a", "b"}.length()
+)
+
+}
+
+@doc(
+  fun Set.append(set :: SetView, ...) :: Set
+  fun Set.union(set :: SetView, ...) :: Set
+  fun Set.intersect(set :: SetView, ...) :: Set
+){
+
+ Returns the union of the @rhombus(set)s in the case of
+ @rhombus(Set.append) or @rhombus(Set.union), or the intersection of the
+ sets in the case of @rhombus(Set.intersect).
+
+@examples(
+  {1, 2, 3}.append({2, 3}, {3, 4})
+  {1, 2, 3}.union({2, 3}, {3, 4})
+  {1, 2, 3}.intersect({2, 3}, {3, 4})
+  )
+
+}
+
+@doc(
+  fun Set.remove(set :: Set, v) :: Set
+){
+
+ Returns a set like @rhombus(v) from @rhombus(set), if it is present.
+
+@examples(
+  {1, 2, 3}.remove(2)
+  {1, 2, 3}.remove(4)
+)
+
+}
+
+@doc(
+  fun Set.to_list(set :: Set, try_order = #false) :: List
+){
+
+ Returns the elements of @rhombus(set) in a list. If @rhombus(try_order)
+ is true, then the elements are sorted to the degree that a built-in
+ comparison can sort them.
+
+@examples(
+  {1, 2, 3}.to_list(#true)
 )
 
 }

@@ -14,6 +14,7 @@
          "compound-repetition.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
+         (submod "list.rkt" for-compound-repetition)
          "name-root.rkt"
          "static-info.rkt"
          "reducer.rkt"
@@ -106,6 +107,11 @@
         [(length) (0ary #'set-count)]
         [(copy) (0ary #'Set.copy mutable-set-static-info)]
         [(snapshot) (0ary #'Set.snapshot set-static-info)]
+        [(remove) (nary #'Set.remove 2 #'Set.remove set-static-info)]
+        [(append) (nary #'Set.append -1 #'Set.append set-static-info)]
+        [(union) (nary #'Set.union -1 #'Set.union set-static-info)]
+        [(intersect) (nary #'Set.intersect -1 #'Set.intersect set-static-info)]
+        [(to_list) (nary #'Set.to_list 3 #'Set.to_list list-static-infos)]
         [else (fail-k)])))))
 
 (define-syntax (Set-build stx)
@@ -208,6 +214,11 @@
   #:fields
   ([empty empty-set]
    [length set-count]
+   [append Set.append]
+   [union Set.union]
+   [intersect Set.intersect]
+   [remove Set.remove]
+   [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
    of))
@@ -461,8 +472,14 @@
         #'(set-append/proc set1 set2)])]))
 
 (define (set-append/proc set1 set2)
-  (set (for/fold ([ht (set-ht set1)]) ([k (in-hash-keys (set-ht set2))])
-         (hash-set ht k #t))))
+  (define ht1 (set-ht set1))
+  (define ht2 (set-ht set2))
+  (let-values ([(ht1 ht2)
+                (if ((hash-count ht2) . < . (hash-count ht1))
+                    (values ht1 ht2)
+                    (values ht2 ht1))])
+    (set (for/fold ([ht ht1]) ([k (in-hash-keys ht2)])
+           (hash-set ht k #t)))))
 
 (define set-extend*
   (case-lambda
@@ -493,6 +510,79 @@
       s
       (set (hash-snapshot ht))))
 
+(define (set-union who s1 ss)
+  (unless (set? s1)
+    (raise-argument-error* who "Set" s1))
+  (let loop ([s s1] [ss ss])
+       (if (null? ss)
+           s
+           (let ([s1 (car ss)])
+             (unless (set? s1)
+               (raise-argument-error* who "Set" s1))
+             (loop (set-append s s1) (cdr ss))))))
+
+(define/arity Set.append
+  #:static-infos ((#%call-result #,mutable-set-static-info))
+  (case-lambda
+    [() (set #hashalw())]
+    [(s)
+     (unless (set? s)
+       (raise-argument-error* 'Set.append "Set" s))
+     (Set.snapshot s)]
+    [(s1 . ss)
+     (set-union 'Set.append s1 ss)]))
+
+(define/arity Set.union
+  #:static-infos ((#%call-result #,mutable-set-static-info))
+  (case-lambda
+    [() (set #hashalw())]
+    [(s)
+     (unless (set? s)
+       (raise-argument-error* 'Set.union "Set" s))
+     (Set.snapshot s)]
+    [(s1 . ss)
+     (set-union 'Set.union s1 ss)]))
+
+(define/arity Set.intersect
+  #:static-infos ((#%call-result #,mutable-set-static-info))
+  (case-lambda
+    [() (set #hashalw())]
+    [(s)
+     (define who 'Set.intersect)
+     (unless (set? s)
+       (raise-argument-error* who "Set" s))
+     (Set.snapshot s)]
+    [(s1 . ss)
+     (define who 'Set.intersect)
+     (unless (set? s1)
+       (raise-argument-error* who "Set" s1))
+     (define (int a b)
+       (if ((hash-count a) . < . (hash-count b))
+           (int b a)
+           (for/hashalw ([k (in-hash-keys b)]
+                         #:when (hash-ref a k #f))
+             (values k #t))))
+     (set
+      (let loop ([ht (set-ht s1)] [ss ss])
+        (if (null? ss)
+            ht
+            (let ([s1 (car ss)])
+              (unless (set? s1)
+                (raise-argument-error* who "Set" s1))
+              (loop (int ht (set-ht s1))
+                    (cdr ss))))))]))
+
+(define/arity (Set.remove s v)
+  #:static-infos ((#%call-result #,mutable-set-static-info))
+  (unless (immutable-set? s)
+    (raise-argument-error* 'Set.remove rhombus-realm "Set" s))
+  (set (hash-remove (set-ht s) v)))
+
+(define/arity (Set.to_list s [try-sort? #f])
+  #:static-infos ((#%call-result #,list-static-infos))
+  (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "SetView" s))
+  (hash-keys (set-ht s) try-sort?))
+
 (define set-method-table
   (hash 'length (let ([length (lambda (s)
                                 (unless (set? s)
@@ -500,4 +590,11 @@
                                 (hash-count (set-ht s)))])
                   (method1 length))
         'copy (method1 Set.copy)
-        'snapshot (method1 Set.snapshot)))
+        'snapshot (method1 Set.snapshot)
+        'remove (method2 Set.remove)
+        'append (method* Set.append)
+        'union (method* Set.union)
+        'intersect (method* Set.intersect)
+        'to_list (lambda (s)
+                   (lambda ([try-sort? #f])
+                     (Set.to_list s try-sort?)))))

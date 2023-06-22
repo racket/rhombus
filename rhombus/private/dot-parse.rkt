@@ -9,6 +9,7 @@
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!)
          method1
+         method2
          method*)
 
 (define-for-syntax (dot-parse-dispatch k)
@@ -65,6 +66,11 @@
   (lambda (v)
     (lambda ()
       (proc v))))
+
+(define (method2 proc)
+  (lambda (v)
+    (lambda (arg)
+      (proc v arg))))
 
 (define (method* proc)
   (lambda (v)

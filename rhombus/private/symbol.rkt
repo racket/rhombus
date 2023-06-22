@@ -27,5 +27,7 @@
 (define/arity (unreadable_from_string s)
   (string->unreadable-symbol s))
 
-(define/arity (gen s)
-  (gensym s))
+(define/arity gen
+  (case-lambda
+    [(s) (gensym s)]
+    [() (gensym)]))

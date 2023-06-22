@@ -101,6 +101,8 @@
    iota
    [map List.map]
    [sort List.sort]
+   [drop_left List.drop_left]
+   [drop_right List.drop_right]
    repet
    of
    [append List.append]))
@@ -223,6 +225,8 @@
         [(reverse) (0ary #'reverse list-static-infos)]
         [(map) (nary #'List.map 2 #'List.map list-static-infos)]
         [(sort) (nary #'List.sort 3 #'List.sort list-static-infos)]
+        [(drop_left) (nary #'List.drop_left 2 #'List.drop_left list-static-infos)]
+        [(drop_right) (nary #'List.drop_right 2 #'List.drop_right list-static-infos)]
         [else (fail-k)])))))
 
 (define-reducer-syntax List
@@ -319,11 +323,31 @@
   (#%call-result #,list-static-infos)
   (#%function-arity -1))
 
+(define/arity (List.drop_left l n)
+  #:static-infos ((#%call-result #,list-static-infos))
+  (list-tail l n))
+
+(define/arity (List.drop_right l n)
+  #:static-infos ((#%call-result #,list-static-infos))
+  (unless (list? l) (raise-argument-error* 'drop_right rhombus-realm "List" l))
+  (unless (exact-nonnegative-integer? n) (raise-argument-error* 'drop_right rhombus-realm "NonnegInt" n))
+  (define len (length l))
+  (when (n . >= . len)
+    (raise-arguments-error* 'drop_right rhombus-realm
+                            "list is shorter than the number of elements to drop"
+                            "list length" len
+                            "number to drop" n))
+  (for/list ([a (in-list l)]
+             [i (in-range 0 (- len n))])
+    a))
+
 (define list-method-table
   (hash 'length (method1 length)
         'first car
         'rest cdr
         'reverse (method1 reverse)
+        'drop_left (method2 List.drop_left)
+        'drop_right (method2 List.drop_right)
         'append (method* List.append)))
 
 (define-for-syntax (wrap-list-static-info expr)

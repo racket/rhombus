@@ -84,6 +84,7 @@
                  [(=) (rhombus '.=)]
                  [(hash-ref) (rhombus 'Map.get)]
                  [(list-ref) (rhombus 'List.get)]
+                 [(list-tail) (rhombus 'List.drop_left)]
                  [(vector-ref) (rhombus 'Array.get)]
                  [(vector-set!) (rhombus 'Array.set)]
                  [(srcloc-source) (rhombus 'Srcloc.source)]

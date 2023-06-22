@@ -126,3 +126,9 @@ check:
   | List.cons(hd,tl): "no"
   | []: "empty"
   ~is "empty"
+
+check:
+  [1, 2, 3].drop_left(2) ~is [3]
+  List.drop_left([1, 2, 3], 2) ~is [3]
+  [1, 2, 3].drop_right(2) ~is [1]
+  List.drop_right([1, 2, 3], 2) ~is [1]

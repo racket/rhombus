@@ -24,6 +24,7 @@
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "composite.rkt"
+         (submod "list.rkt" for-compound-repetition)
          "parse.rkt"
          "realm.rkt"
          "reducer.rkt"
@@ -74,7 +75,9 @@
 (define map-method-table
   (hash 'length (method1 hash-count)
         'values (method1 hash-values)
-        'keys (method1 hash-keys)
+        'keys (lambda (ht)
+                (lambda ([try-sort? #f])
+                  (hash-keys ht try-sort?)))
         'has_key (lambda (ht) (lambda (key) (hash-has-key? ht key)))
         'copy (method1 hash-copy)
         'get (lambda (ht)
@@ -276,7 +279,7 @@
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'hash-count)]
-        [(keys) (0ary #'hash-keys)]
+        [(keys) (nary #'hash-keys 3 #'hash-keys list-static-infos)]
         [(values) (0ary #'hash-values)]
         [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
         [(copy) (0ary #'hash-copy mutable-map-static-info)]

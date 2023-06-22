@@ -414,7 +414,7 @@
   of zero arguments.}
 
   @item{The @rhombus(static_info) field holds static information for the
-  result (in unpacked form; see @rhombus(static_info.pack)); when
+  result (in unpacked form; see @rhombus(statinfo_meta.pack)); when
   @rhombus(count) is not @rhombus(1), then @rhombus(static_info) has a
   single key @rhombus(statinfo_meta.values_key) whose value is (packed)
   static information for each value (see

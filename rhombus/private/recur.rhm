@@ -40,11 +40,11 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                             | '$kw: $id = $avail_id'
                             | '$id')
   def body_expr:
-    wrap_converter('block:
-                      fun $name($recur_arg, ...):
-                        $loop_name($arg_id, ...)
-                      $body
-                      ...',
+    wrap_converter('«block:
+                       fun $name($recur_arg, ...) :~ providing($r.static_info):
+                         $loop_name($arg_id, ...)
+                       $body
+                       ...»',
                    r.count, r.maybe_converter, r.annotation_string, name)
   fun
   | make_binds_plus_body(mode, [], [], [], [], inside):
@@ -126,3 +126,6 @@ fun bad_result(who, ann_str):
         "result does not match annotation\n"
           +& "  annotation: " +& ann_str)
 
+annot.macro 'providing($unpacked_static_info)':
+  annot_meta.pack_predicate('fun (x): #true',
+                            unpacked_static_info)
