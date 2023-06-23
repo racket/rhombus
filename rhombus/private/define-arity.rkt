@@ -3,9 +3,16 @@
                      syntax/parse/pre)
          "expression.rkt"
          "static-info.rkt"
-         "function-arity-key.rkt")
+         "function-arity-key.rkt"
+         (only-in (submod "dot.rkt" for-dot-provider)
+                  dot-provider)
+         "dot-provider-key.rkt")
 
-(provide define/arity)
+(provide define/arity
+         (for-syntax set-function-dot-provider!))
+
+(module+ dot-provider
+  (provide function-dot-provider))
 
 (define-syntax (define/arity stx)
   (syntax-parse stx
@@ -18,6 +25,7 @@
            (let ([name (lambda args . body)])
              name))
          (define-static-info-syntax id
+           (#%dot-provider function-dot-provider)
            (#%function-arity #,(extract-arity #'args))
            si ...))]
     [(_ id
@@ -30,6 +38,7 @@
      #'(begin
          (define id rhs)
          (define-static-info-syntax id
+           (#%dot-provider function-dot-provider)
            (#%function-arity #,(apply
                                 bitwise-ior
                                 (map extract-arity (syntax->list #'(args ...)))))
@@ -41,6 +50,7 @@
      #'(begin
          (define (id . args) . body)
          (define-static-info-syntax id
+           (#%dot-provider function-dot-provider)
            (#%function-arity #,(extract-arity #'args))
            si ...))]))
 
@@ -52,3 +62,10 @@
       [([_:identifier _] . args) (bitwise-ior mask
                                               (loop #'args (arithmetic-shift mask 1)))]
       [_:identifier (bitwise-not (sub1 (arithmetic-shift mask 1)))])))
+
+(define-for-syntax function-dot-provider-proc void)
+(define-for-syntax (set-function-dot-provider! proc)
+  (set! function-dot-provider-proc proc))
+
+(define-syntax function-dot-provider
+  (dot-provider (lambda args (apply function-dot-provider-proc args))))

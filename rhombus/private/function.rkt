@@ -7,6 +7,7 @@
          racket/unsafe/undefined
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
+         (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
          "expression.rkt"
          "expression+definition.rkt"
@@ -22,14 +23,18 @@
          "dotted-sequence-parse.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dot-parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "define-arity.rkt")
 
 (provide (for-spaces (#f
                       rhombus/entry_point)
                      fun)
          (for-spaces (rhombus/namespace
                       rhombus/annot)
-                     Function))
+                     Function)
+         (for-spaces (rhombus/statinfo)
+                     map
+                     (rename-out [for-each for_each])))
 
 (module+ for-method
   (provide fun/read-only-property))
@@ -40,11 +45,20 @@
 (define-name-root Function
   #:fields
   (map
+   [for_each for-each]
    of_arity
    pass))
 
 (define function-method-table
-  (hash 'map (lambda (f) (lambda lists (apply map f lists)))))
+  (hash 'map (lambda (f) (lambda lists (apply map f lists)))
+        'for_each (lambda (f) (lambda lists (apply for-each f lists)))))
+
+(define-static-info-syntax map
+  (#%call-result #,list-static-infos)
+  (#%function-arity -2))
+
+(define-static-info-syntax for-each
+  (#%function-arity -2))
 
 (define-for-syntax function-static-infos
   #'((#%dot-provider function-instance)))
@@ -115,13 +129,16 @@
            (kw-subset allow kws))
        (kw-subset kws req)))
 
+(define-for-syntax function-instance-proc
+  (dot-parse-dispatch
+   (lambda (field-sym field ary 0ary nary fail-k)
+     (case field-sym
+       [(map) (nary #'map -2 #'map)]
+       [(for_each) (nary #'for-each -2 #'for-each)]
+       [else #f]))))
+
 (define-syntax function-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(map) (nary #'map -2 #'map)]
-        [else #f])))))
+  (dot-provider function-instance-proc))
 
 (begin-for-syntax  
   (define (get-local-name who)
@@ -286,3 +303,7 @@
    (let ([pass (lambda (kws kw-args . args)
                  (void))])
      pass)))
+
+(begin-for-syntax
+  (set-function-dot-provider! function-instance-proc))
+

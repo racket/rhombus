@@ -99,7 +99,7 @@ Metadata for a syntax object can include a source location and the raw
 )
 
  The result of the expression after @rhombus($) can be a list, in which
- case and the elements of the list are spliced in place of the
+ case and the elements of the list are spliced as terms in place of the
  @rhombus($) term and expression witin the enclosing group. If the result
  is a syntax object, it can be a single-term syntax object or a group
  syntax object; in the latter case, the group terms are spliced in place
@@ -108,6 +108,14 @@ Metadata for a syntax object can include a source location and the raw
 @examples(
   'x $[1, 2, 3] z'
   'x $('1 2 3') z'
+)
+
+ Similarly, when an @rhombus($) escape is alone within its enclosing group, then the
+ result of the expression after @rhombus($) can be a multi-group syntax object,
+ in which case the group sequence is spliced in place of the escape.
+
+@examples(
+  'x; $('1; 2 3; 4'); z'
 )
 
  A @dots as a @rhombus(term,~var) must follow a
@@ -604,7 +612,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_op(name :: Symbol,
-                     ctx_stx :: maybe(Term) = #false) :: Syntax
+                     ctx_stx :: maybe(Term) = #false) :: Operator
 ){
 
  Convenience to convert a plain symbol to a syntax object for an
@@ -619,13 +627,30 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Term) = #false) :: Syntax
+  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Term) = #false) :: Identifier
 ){
 
  Composes @rhombus(Syntax.make) and @rhombus(Symbol.from_string).
 
 @examples(
   Syntax.make_id("hello" +& 7, 'here')
+)
+
+}
+
+
+@doc(
+  fun Syntax.make_temp_id(name = #false) :: Identifier
+){
+
+ Creates an identifier with a fresh scope, which is useful for creating
+ a temporary binding. The @rhombus(name) argument can be any value, and
+ the name of the generated identifier may be derived from @rhombus(name)
+ for debugging purposes (especially if it is a string, symbol, or
+ identifier).
+
+@examples(
+  Syntax.make_temp_id("hello")
 )
 
 }

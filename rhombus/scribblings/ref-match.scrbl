@@ -87,3 +87,73 @@
 )
 
 }
+
+
+@doc(
+  ~nonterminal:
+    left_bind: def bind
+    right_bind: def bind
+
+  bind.macro '$left_bind where $right_bind = $expr'
+  bind.macro '$left_bind where:
+                $right_bind_and_expr
+                ...'
+
+  grammar right_bind_and_expr:
+    $right_bind = $expr
+    $right_bind:
+      $body
+      ...
+){
+
+ Creates a binding that matches only when both @rhombus(left_bind)
+ matches and when each @rhombus(right_bind) matches the value of the
+ corresponding @rhombus(expr) or @rhombus(body) sequence. Names bound by
+ @rhombus(left_bind) and each @rhombus(right_bind) are visible in
+ @rhombus(expr)s and @rhombus(body) sequences for subsequent
+ @rhombus(right_bind)s.
+
+ The @rhombus(where) form should generally be used with parentheses
+ around it, since parsing is otherwise likely to interact badly with the
+ enclosing context, such as conflicting interpretations of a @rhombus(=)
+ by @rhombus(where) and @rhombus(def).
+
+@examples(
+  ~repl:
+    def ([x, y, z] where sum = x+y+z) = [1, 2, 3]
+    '$x $y $z'
+    sum
+  ~defn:
+    fun | f(([x, y, z] where sum = x+y+z) when sum == 6):
+            '$x $y $z = $sum'
+        | f(_):
+            "something else"
+  ~repl:
+    f([1, 2, 3])
+    f([0, 2, 3])
+  ~repl:
+    def ([x, y, z] where:
+           partial_sum = x+y
+           sum = partial_sum+z):
+      [1, 2, 3]
+    sum
+  ~repl:
+    def ([xs] where [x, ...] = xs): [[1, 2, 3]]
+    '$x ...'
+  ~repl:
+    ~error:
+      def ([xs] where [x, ...] = xs): ["oops"]
+)
+
+}
+
+
+@doc(
+  expr.macro 'where'
+  expr.macro '$left_bind where'
+){
+
+ As an expression operator, @rhombus(where) always reports a syntax
+ error.
+
+}

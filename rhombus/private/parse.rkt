@@ -28,6 +28,8 @@
 
          rhombus-top-step
 
+         maybe-definition
+
          (for-syntax :declaration
                      :nestable-declaration
                      :definition
@@ -209,7 +211,10 @@
 (define-syntax (rhombus-body-sequence stx)
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
+      #:datum-literals (group parsed)
       [(_) #'(begin)]
+      [(_ (group (parsed ((~literal maybe-definition) e))) . tail)
+       #`(begin e . tail)]
       [(_ e::definition-sequence . tail)
        (define-values (parsed new-tail)
          (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
@@ -227,6 +232,11 @@
         #`(begin
             (#%expression e.parsed)
             (rhombus-body-sequence . tail)))])))
+
+;; Wraps a `parsed` term that can be treated as a definition:
+(define-syntax (maybe-definition stx)
+  (syntax-parse stx
+    [(_ e) #'e]))
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)

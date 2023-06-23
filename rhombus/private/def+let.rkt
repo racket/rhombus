@@ -42,6 +42,7 @@
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
                                    wrap-definition
+                                   #:show-values? (attribute op)
                                    #:check-bind-uses check-bind-uses)]
         [(form-id (~optional op::name) (parens g ...) _::equal rhs ...+)
          #:when (or (not (attribute op))
@@ -49,6 +50,7 @@
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition
+                                   #:show-values? (attribute op)
                                    #:check-bind-uses check-bind-uses)]
         [(form-id any::not-equal ... _::equal rhs ...+)
          #:with g-tag group-tag
@@ -111,6 +113,7 @@
            ...)))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
+                                             #:show-values? [show-values? #f]
                                              #:check-bind-uses [check-bind-uses void])
   (syntax-parse gs-stx
     [(lhs::binding ...)
@@ -127,16 +130,16 @@
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
-     #:with lhs-str (string-append
-                     "values("
-                     (apply
-                      string-append
-                      (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]
-                                 [i (in-naturals)])
-                        (string-append
-                         (if (zero? i) "" ", ")
-                         (shrubbery-syntax->string lhs))))
-                     ")")
+     #:with lhs-str (let ([str (apply
+                                string-append
+                                (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]
+                                           [i (in-naturals)])
+                                  (string-append
+                                   (if (zero? i) "" ", ")
+                                   (shrubbery-syntax->string lhs))))])
+                      (if show-values?
+                          (string-append "values(" str ")")
+                          str))
      (for ([ids (in-list (syntax->list #'((lhs-i.bind-id ...) ...)))]
            [usess (in-list (syntax->list #'((lhs-i.bind-uses ...) ...)))])
        (for ([lhs (in-list (syntax->list #'(lhs ...)))]
@@ -146,7 +149,7 @@
      (list
       #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
                                       (values lhs-i.name-id ...)))
-      #'(begin
+      #`(begin
           (lhs-i.matcher-id tmp-id
                             lhs-i.data
                             flattened-if

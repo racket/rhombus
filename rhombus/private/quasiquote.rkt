@@ -128,6 +128,7 @@
                    #f))]
       [((~and tag (~or parens brackets braces quotes multi block alts group))
         g ...)
+       (define in-block? (eq? (syntax-e #'tag) 'block))
        ;; Note: this is where `depth` would be incremented, when `tag` is `quotes`, if we wanted that
        (let loop ([gs #'(g ...)] [pend-idrs #f] [pend-sidrs #f] [pend-vars #f]
                                  [idrs '()]  ; list of #`[#,id #,rhs] for definitions
@@ -501,7 +502,8 @@
                     (lambda ($-id e in-e)
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (pending-unpack #,e unpack-group* (quote-syntax #,$-id))]) null null))
+                      (values #`(#,(quote-syntax ~@) . #,id)
+                              (list #`[#,id (pending-unpack #,e unpack-group-list* (quote-syntax #,$-id))]) null null))
                     ;; handle-multi-escape:
                     (lambda ($-id e in-e splice?)
                       (check-escape e)

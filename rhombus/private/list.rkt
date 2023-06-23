@@ -65,7 +65,8 @@
   (binding-transformer
    (make-composite-binding-transformer "cons" #'nonempty-list? (list #'car #'cdr) (list #'() list-static-infos))))
 
-(define (List.cons a d)
+(define/arity (List.cons a d)
+  #:static-infos ((#%call-result #,list-static-infos))
   (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))
   (cons a d))
 
@@ -100,6 +101,7 @@
    reverse
    iota
    [map List.map]
+   [for_each List.for_each]
    [sort List.sort]
    [drop_left List.drop_left]
    [drop_right List.drop_right]
@@ -224,6 +226,7 @@
                                                                '())))))]
         [(reverse) (0ary #'reverse list-static-infos)]
         [(map) (nary #'List.map 2 #'List.map list-static-infos)]
+        [(for_each) (nary #'List.for_each 2 #'List.for_each)]
         [(sort) (nary #'List.sort 3 #'List.sort list-static-infos)]
         [(drop_left) (nary #'List.drop_left 2 #'List.drop_left list-static-infos)]
         [(drop_right) (nary #'List.drop_right 2 #'List.drop_right list-static-infos)]
@@ -278,30 +281,26 @@
   (#%call-result #,list-static-infos)
   (#%function-arity 2))
 
-(define (List.map lst proc)
+(define/arity (List.map lst proc)
+  #:static-infos ((#%call-result #,list-static-infos))
   (unless (procedure? proc)
     (raise-argument-error* 'List.map rhombus-realm "Function" proc))
   (map proc lst))
 
-(define-static-info-syntax List.map
-  (#%call-result #,list-static-infos)
-  (#%function-arity 4))
+(define/arity (List.for_each lst proc)
+  (unless (procedure? proc)
+    (raise-argument-error* 'List.for_each rhombus-realm "Function" proc))
+  (for-each proc lst))
 
-(define (List.sort lst [less-than? <])
+(define/arity (List.sort lst [less-than? <])
+  #:static-infos ((#%call-result #,list-static-infos))
   (unless (and (procedure? less-than?)
                (procedure-arity-includes? less-than? 2))
-    (raise-argument-error* 'List.map rhombus-realm "Function.of_arity(2)" less-than?))
+    (raise-argument-error* 'List.sort rhombus-realm "Function.of_arity(2)" less-than?))
   (sort lst less-than?))
 
-(define-static-info-syntax List.sort
-  (#%call-result #,list-static-infos)
-  (#%function-arity 6))
-
-(define-static-info-syntax List.cons
-  (#%call-result #,list-static-infos)
-  (#%function-arity 4))
-
-(define List.append
+(define/arity List.append
+  #:static-infos ((#%call-result #,list-static-infos))
   (case-lambda
     [() null]
     [(a)
@@ -318,10 +317,6 @@
          (apply append ls)
          (for ([l (in-list ls)])
            (unless (list? l) (raise-argument-error* 'List.append rhombus-realm "List" l))))]))
-
-(define-static-info-syntax List.append
-  (#%call-result #,list-static-infos)
-  (#%function-arity -1))
 
 (define/arity (List.drop_left l n)
   #:static-infos ((#%call-result #,list-static-infos))
@@ -348,7 +343,9 @@
         'reverse (method1 reverse)
         'drop_left (method2 List.drop_left)
         'drop_right (method2 List.drop_right)
-        'append (method* List.append)))
+        'append (method* List.append)
+        'map (method1 List.map)
+        'for_each (method1 List.for_each)))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))

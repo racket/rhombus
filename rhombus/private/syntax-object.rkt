@@ -117,6 +117,7 @@
    make_group
    make_sequence
    make_id
+   make_temp_id
    unwrap
    unwrap_op
    unwrap_group
@@ -282,6 +283,10 @@
     (raise-argument-error* 'Syntax.make_id rhombus-realm "StringView" str))
   (datum->syntax (extract-ctx 'Syntax.make_id ctx)
                  (string->symbol str)))
+
+(define/arity (make_temp_id [v #false])
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (car (generate-temporaries (list v))))
 
 (define/arity (unwrap v)
   (cond

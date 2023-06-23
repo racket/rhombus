@@ -177,3 +177,13 @@ check:
   fun f(x = "hello" :: String):
     "ok"
   ~raises "immediate annotation operator not allowed in default-value expression"
+
+check:
+  use_static
+  (fun (x): x + 1).map([1, 2, 3]).length()
+  ~is 3
+
+check:
+  use_static
+  (fun (x): x + 1).for_each([1, 2, 3])
+  ~is #void

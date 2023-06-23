@@ -1,0 +1,69 @@
+#lang rhombus/static
+
+check:
+  match 1
+  | x where y = x+1:
+      y
+  ~is 2
+
+check:
+  match 1
+  | (x where:
+      y = x+1):
+      y
+  ~is 2
+
+check:
+  match 1
+  | (x where:
+      y: x+1):
+      y
+  ~is 2
+
+check:
+  def y = 0
+  block:
+    match 1
+    | (x where:
+         y = x+1
+         z = y+1):
+        [y, z]
+  ~is [2, 3]
+
+check:
+  def y = 0
+  block:
+    match 1
+    | ((x where:
+          y = x+1) where:
+         z = y+1):
+        [y, z]
+  ~is [2, 3]
+
+check:
+  def y = 0
+  block:
+    match 1
+    | (x where:
+         y = x+1
+         z: y+1):
+        [y, z]
+  ~is [2, 3]
+
+check:
+  match 1
+  | x where [y] = [x+1]:
+      y
+  ~is 2
+
+check:
+  match 1
+  | x where y :~ List = [0, 0, 0, x+1]:
+      y.length()
+  ~is 4
+
+check:
+  match 1:
+  | (x where:«»):
+      x
+  ~is 1

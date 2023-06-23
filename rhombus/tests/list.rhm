@@ -6,6 +6,8 @@ block:
     List(l, ...)
     List.length(lst)
     List.cons(a, d)
+    List.map(lst, proc)
+    List.for_each(lst, proc)
 
 check:
   List.length([1, 2, 3])
@@ -110,9 +112,12 @@ check:
   [1, 2].reverse().reverse()
   ~is [1, 2]
 
-check:
-  [1, 2].map(fun (x): x + 1).reverse()
-  ~is [3, 2]
+block:
+  check [1, 2].map(fun (x): x + 1).reverse() ~is [3, 2]
+  block:
+    def mutable sum = 0
+    check [1, 2].for_each(fun (x): sum := sum + x) ~is #void
+    check sum ~is 3
 
 check:
   List.append(&[[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]

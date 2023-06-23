@@ -31,6 +31,7 @@ it supplies its elements in order.
   [list.drop_left(lst, n), List.drop_left(lst, n)]
   [list.drop_right(lst, n), List.drop_right(lst, n)]
   [lst.map(func), List.map(lst, func)]
+  [lst.for_each(func), List.for_each(lst, func)]
   [lst.sort(arg, ...), List.sort(lst, arg, ...)]
 )
 
@@ -283,15 +284,17 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.map(args :: List, f :: Function) :: List,
+  fun List.map(args :: List, f :: Function.of_arity(1)) :: List,
+  fun List.for_each(args :: List, f :: Function.of_arity(1)) :: List,
 ){
 
- Like @rhombus(Function.map), but with a single list of arguments first,
- with the function supplied second.
+ Like @rhombus(Function.map) and @rhombus(Function.for_each), but with a
+ single list of arguments first, with the function supplied second.
 
 @examples(
   List.map([1, 2, 3], fun (x): x + 1)
   [1, 2, 3].map(fun (x): x + 1)
+  [1, 2, 3].for_each(println)
 )
 
 }

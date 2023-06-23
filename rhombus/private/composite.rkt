@@ -286,7 +286,10 @@
 (define-syntax (maybe-repetition-as-list stx)
   (syntax-parse stx
     [(_ id (_ ... 0 _ ...)) #'(rhombus-expression (group id))]
-    [(_ id (_ ... depth:exact-integer _ ...)) (repetition-as-list (quote-syntax ...) #'(group id) (syntax-e #'depth))]))
+    [(_ id (_ ... depth:exact-integer _ ...))
+     ;; unchecked, because this may be an internal identifier where expansion
+     ;; hasn't bothered to bind the identifier as a repetition
+     (repetition-as-list/unchecked #'(group id) (syntax-e #'depth))]))
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))

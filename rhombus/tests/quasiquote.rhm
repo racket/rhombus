@@ -134,3 +134,8 @@ check:
   def g = ''
   '3 + (1, $g $g)'
   ~raises "generated an empty group"
+
+check:
+  def ['(($b_var_id), ...)', ...]: ['((1), (2 2), (3))', '((4))']
+  [b_var_id, ..., ...]
+  ~prints_like ['1', '2 2', '3', '4']

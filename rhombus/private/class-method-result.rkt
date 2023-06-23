@@ -9,6 +9,7 @@
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
+         "dot-provider-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "index-result-key.rkt"
@@ -89,14 +90,14 @@
               (syntax-e #'maybe-append-statinfo-id+id))
           (define (gen id)
             (if (syntax-e id)
-              #`((define-static-info-syntax #,id
-                   #,(if (eq? (syntax-e #'kind) 'property)
-                         #`(#%call-results-at-arities ((1 all-static-infos)))
-                         #`(#%call-result all-static-infos))
-                   #,@(if (syntax-e #'arity)
-                          #`((#%function-arity arity))
-                          #'())))
-              #'()))
+                #`((define-static-info-syntax #,id
+                     #,(if (eq? (syntax-e #'kind) 'property)
+                           #`(#%call-results-at-arities ((1 all-static-infos)))
+                           #`(#%call-result all-static-infos))
+                     #,@(if (syntax-e #'arity)
+                            #`((#%function-arity arity))
+                            #'())))
+                #'()))
           (define (gen-bounce ind-id+id key result-key)
             (if (syntax-e ind-id+id)
                 (syntax-parse ind-id+id

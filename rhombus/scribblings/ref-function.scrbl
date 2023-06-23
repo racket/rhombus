@@ -16,6 +16,7 @@ normally bound to implement function calls.
   "function"
   @rhombus(Function)
   [f.map(args, ...), Function.map(f, args, ...)]
+  [f.for_each(args, ...), Function.for_each(f, args, ...)]
 )
 
 @doc(
@@ -375,17 +376,21 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 @doc(
   fun Function.map(f :: Function, args :: List, ...) :: List,
+  fun Function.for_each(f :: Function, args :: List, ...) :: Void,
 ){
 
  Applies @rhombus(f) to each element of each @rhombus(args), iterating
  through the @rhombus(args) lists together, so @rhombus(f) must take as
- many arguments as the number of given @rhombus(args) lists. The result
- is a list constaining the result of each call to @rhombus(f) in
- order.
+ many arguments as the number of given @rhombus(args) lists. For
+ @rhombus(Function.map), the result is a list constaining the result of
+ each call to @rhombus(f) in order. For @rhombus(Function.for_each), the
+ result is @rhombus(#void), and the result of each call to @rhombus(f) is
+ ignored.
 
 @examples(
   Function.map(fun (x, y): x + y, [1, 2, 3], [4, 5, 6])
   (fun (x, y): x + y).map([1, 2, 3], [4, 5, 6])
+  println.for_each([1, 2, 3])
 )
 
 }

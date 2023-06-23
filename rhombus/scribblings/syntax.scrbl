@@ -213,8 +213,9 @@ term escape, even if it is not at the end of the group.
     '0 + $x + 4'
 )
 
-A multi-group syntax object will not splice multiple
-groups in place of a group escape, because that turns out to create
+A multi-group syntax object splices multiple groups in place of a group
+escape only when the escape is alone in its group. A list of group syntax
+objects does not splice into group contexts, because that would create
 ambiguities among group and term contexts. Meanwhile, a single-term
 syntax object can be used as a group syntax object, a single-group
 syntax object can be used as a multi-group syntax object, and a

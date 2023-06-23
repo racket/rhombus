@@ -6,5 +6,6 @@
         "maybe.rhm"
         "string.rhm"
         "when_unless.rhm"
+        "where.rhm"
         "described_as.rhm"
         "sequence.rhm")

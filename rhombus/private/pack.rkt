@@ -47,6 +47,7 @@
          pack-group*
          unpack-group*
          unpack-maybe-group*
+         unpack-group-list*
          pack-multi*
          pack-tagged-multi*
          pack-block*
@@ -155,6 +156,16 @@
     [(list? r) (for/list ([e (in-list r)])
                  (unpack-term e who at-stx))]
     [else (list (datum->syntax at-stx r))]))
+
+;; Unpacks a multi-group sequence into a list of groups,
+;; but otherwise produces a list with one group. A list is
+;; treated as a list of elements instead of a list of groups
+(define (unpack-group-list r who at-stx)
+  (cond
+    [(and (syntax? r)
+          (multi-syntax? r))
+     (cdr (syntax->list r))]
+    [else (list (unpack-group r who at-stx))]))
 
 ;; `r` is a sequence of groups
 (define (pack-multi r)
@@ -279,6 +290,9 @@
   (unpack* qs r depth (lambda (form who at-stx)
                         (and form
                              (unpack-group form who at-stx)))))
+
+(define (unpack-group-list* qs r depth)
+  (unpack* qs r depth unpack-group-list))
 
 ;; Packs to a `multi` form
 (define (pack-multi* stxes depth)

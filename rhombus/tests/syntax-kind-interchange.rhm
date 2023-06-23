@@ -68,12 +68,27 @@ check:
 check:
   def none = '1; 2'
   'x; $none; y'
-  ~raises "multi-group syntax not allowed in group context"
+  ~prints_like 'x; 1; 2; y'
+
+check:
+  def none = ['1', '2']
+  'x; $none; y'
+  ~prints_like 'x; 1 2; y'
+
+check:
+  def none = ['1', '2 3']
+  'x; $none; y'
+  ~raises "multi-term syntax not allowed in term context"
+
+check:
+  def none = []
+  'x; $none; y'
+  ~raises "cannot coerce empty list to group syntax"
 
 check:
   def none = ''
   'x; $none; y'
-  ~raises "multi-group syntax not allowed in group context"
+  ~prints_like 'x; y'
 
 check:
   def '$tail ...' = ''

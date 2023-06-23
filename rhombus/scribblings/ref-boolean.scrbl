@@ -114,6 +114,9 @@
  static information from @rhombus(left_bind) is propagated to
  @rhombus(right_bind) (but not the other way around).
 
+ See @rhombus(where, ~bind) for a different kind of ``and'' binding that
+ allows the right-hand side to refer to bindings from the left-hand side.
+
 @examples(
   class Posn(x, y)
   fun three_xs(v):

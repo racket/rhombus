@@ -32,6 +32,7 @@
             make-expression+repetition
 
             repetition-as-list
+            repetition-as-list/unchecked
             repetition-as-deeper-repetition
             flatten-repetition
 
@@ -160,25 +161,34 @@
                             "not preceded by a repetition"
                             stx)])]
     [(rep-parsed depth)
-     (syntax-parse rep-parsed
-       [rep-info::repetition-info
-        (define want-depth (syntax-e #'rep-info.bind-depth))
-        (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
-        (unless (= use-depth want-depth)
-          (raise-syntax-error #f
-                              "used with wrong repetition depth"
-                              #'rep-info.rep-expr
-                              #f
-                              null
-                              (format "\n  expected: ~a\n  actual: ~a"
-                                      want-depth
-                                      use-depth)))
-        (define infos (if (identifier? #'rep-info.element-static-infos)
-                          (datum->syntax #f (extract-static-infos #'rep-info.element-static-infos))
-                          #'rep-info.element-static-infos))
-        (if (= depth 0)
-            (wrap-static-info* #'rep-info.seq-expr infos)
-            (wrap-static-info #'rep-info.seq-expr #'#%index-result infos))])]))
+     (repetition-as-list/direct rep-parsed depth 'checked)]))
+
+(define-for-syntax (repetition-as-list/unchecked stx depth)
+  (syntax-parse stx
+    [rep::repetition
+     (repetition-as-list/direct #'rep.parsed depth 'unchecked)]))
+
+(define-for-syntax (repetition-as-list/direct rep-parsed depth mode)
+  (syntax-parse rep-parsed
+    [rep-info::repetition-info
+     (define want-depth (syntax-e #'rep-info.bind-depth))
+     (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
+     (unless (or (eq? mode 'unchecked)
+                 (= use-depth want-depth))
+       (raise-syntax-error #f
+                           "used with wrong repetition depth"
+                           #'rep-info.rep-expr
+                           #f
+                           null
+                           (format "\n  expected: ~a\n  actual: ~a"
+                                   want-depth
+                                   use-depth)))
+     (define infos (if (identifier? #'rep-info.element-static-infos)
+                       (datum->syntax #f (extract-static-infos #'rep-info.element-static-infos))
+                       #'rep-info.element-static-infos))
+     (if (= depth 0)
+         (wrap-static-info* #'rep-info.seq-expr infos)
+         (wrap-static-info #'rep-info.seq-expr #'#%index-result infos))]))
 
 (define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos)
   (syntax-parse rep-parsed

@@ -293,10 +293,10 @@
                       (let ([id id-ref] ... [arg-id #'arg-id])
                         (let-syntaxes ([(sid ...) sid-ref] ...)
                           (let ([IF-id #'if-bridge])
-                            (let ([success-id #'(parsed success)]
+                            (let ([success-id #'(parsed (maybe-definition success))]
                                   ;; putting `if-bridge` in `fail-id`
                                   ;; helps make sure it's used correctly
-                                  [fail-id #'(parsed (if-bridge IF fail))])
+                                  [fail-id #'(parsed (maybe-definition (if-bridge IF fail)))])
                               (unwrap-block
                                (rhombus-body-at block-tag body ...))))))])])))])])))
 
@@ -305,13 +305,13 @@
   ;; or definition context
   (let ([parse (lambda (stx)
                  (syntax-parse stx
-                   #:datum-literals (alts block parsed)
+                   #:datum-literals (alts block parsed maybe-definition)
                    [(form-id e ... (alts (block success ...)
                                          (block . fail-case)))
                     (syntax-parse #'fail-case
                       #:datum-literals (group parsed)
                       #:literals (if-bridge)
-                      [((group (parsed (if-bridge IF fail))))
+                      [((group (parsed (maybe-definition (if-bridge IF fail)))))
                        #`(IF (rhombus-expression (group e ...))
                              (rhombus-body-sequence success ...)
                              fail)]
@@ -328,7 +328,7 @@
   ;; depends on `IF` like `if-bridge` does
   (let ([parse (lambda (rhombus stx)
                  (syntax-parse stx
-                   #:datum-literals (parsed group parens)
+                   #:datum-literals (parsed group parens maybe-definition)
                    [(_ (parens (group arg-id:identifier)
                                (group (parsed (matcher-id committer-id binder-id data)))
                                (group if-id)
@@ -336,7 +336,7 @@
                                (group fail ...)))
                     (syntax-parse #'(fail ...)
                       #:literals (if-bridge)
-                      [((parsed (if-bridge IF fail)))
+                      [((parsed (maybe-definition (if-bridge IF fail))))
                        #:with rhombus rhombus
                        (syntax-parse #'(success ...)
                          [((_::block g ...))
