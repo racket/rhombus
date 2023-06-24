@@ -139,3 +139,18 @@ check:
   def ['(($b_var_id), ...)', ...]: ['((1), (2 2), (3))', '((4))']
   [b_var_id, ..., ...]
   ~prints_like ['1', '2 2', '3', '4']
+
+block:
+  // check that pattern bindings work with `let`
+  check:
+    let x = "no"
+    fun f(): x
+    let '$x' = '6'
+    [x, f()]
+    ~prints_like ['6', "no"]
+  check:
+    let [x, ...] = ["yes", "no"]
+    fun f(): [x, ...]
+    let '$x ...' = '6 7 8'
+    [[x, ...], f()]
+    ~prints_like [['6', '7', '8'], ["yes", "no"]]

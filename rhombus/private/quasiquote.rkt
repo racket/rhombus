@@ -265,6 +265,15 @@
       [_
        (values e null null null #f)])))
 
+;; Conversion produces a `syntax-parse` pattern, a list of identifiers
+;; and right-hand sides to be `define`d (= "idrs"), and a list of
+;; identifiers and right-hand sides to be `define-syntax`ed (=
+;; "sidrs"). The idr and sidr right-hand sides have particular shape
+;; that allow their nesting to be deeped as `...`s are discovered
+;; around them. The sidrs are expected to refer to the idrs (but not
+;; other sidrs), so idrs are bound in the "commit" step of binding,
+;; while sidrs are bound at the final step, and that split cooperates
+;; correctly with `let`.
 (define-for-syntax (convert-pattern e
                                     #:as-tail? [as-tail? #f]
                                     #:splice? [splice? #f]
@@ -855,13 +864,14 @@
 (define-syntax (syntax-committer stx)
   (syntax-parse stx
     [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...)))
-     #'(begin)]))
+     #'(begin
+         (define id tmp-id)
+         ...)]))
 
 (define-syntax (syntax-binder stx)
   (syntax-parse stx
     [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)))
      #'(begin
-         (define id tmp-id) ...
          (define-syntaxes (sid ...) sid-ref)
          ...)]))
 
