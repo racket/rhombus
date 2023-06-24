@@ -351,7 +351,7 @@ as described in @secref("guillemet")).
 A @litchar{:} block before a sequence of @litchar{|} alternatives can be
 empty. Such an empty @litchar{:} is not preserved in the parsed form (unless
 it uses @guillemets, as described in @secref("guillemet")). In effect, a
-@rhombus{:} is optional before @litchar{|} alternatives that start in a
+@litchar{:} is optional before @litchar{|} alternatives that start in a
 new line, but standard style omits an optional @litchar{:}.
 The following two groups are the same:
 

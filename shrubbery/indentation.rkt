@@ -333,12 +333,13 @@
              ;; look further outside this block, and don't consider anything
              ;; that would appear to be nested in the block:
              (define outer-candidates (if (or candidate
-                                              (block-not-disallowed-empty? t pos start))
+                                              (block-not-disallowed-empty? t pos start)
+                                              bar-after?)
                                           (loop next-s next-candidate (min* adj-block-col limit) #f #f #f)
                                           ;; block is empty so far, so son't go outside it
                                           null))
              (append (cond
-                       [(and bar-after? (not as-bar?))
+                       [(and #f bar-after? (not as-bar?))
                         null]
                        [candidate
                         ;; we already have something after `:`, so
