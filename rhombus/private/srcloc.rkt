@@ -24,13 +24,24 @@
 ;;  * `op` normally has the same source location as its symbol, but
 ;;    it's best not to rely on that
 ;;
+;;  * `block` has a source location that corresponds to a `:` or `|`
+;;
+;;  * `alts` isn't expected to have a source location
+;;
 ;;  * the immediate wrapper of an S-expression pair is generally not
 ;;    expected to have a source location or properties
 ;;
 ;; "Respan" means to give a syntax object (i.e., the immediate wrapper)
-;; a source locaiton that corresponds to the content. That may involve
+;; a source location that corresponds to the content. That may involve
 ;; moving out a `parens`, etc., tag or walking through a `group` content
-;; to create a source location that spans all the content.
+;; to create a source location that spans all the content, for example.
+;;
+;; For most calls to `raise-syntax-error`, `respan` is applied
+;; automatically to the arguments. When `raise-syntax-error` is called
+;; in a tampolining macro, though, like the way `for` and `class` are
+;; implemented, then explicit `respan` may be needed. In those cases,
+;; `respan` may also be needed for input to `syntax-parse`, in case it
+;; is responsible for raising an exception when a match files.
 
 ;; Make a source location that spans `start` to `end`, assuming that
 ;; `end` is after `start`
@@ -106,9 +117,12 @@
                        [d (if (syntax? d) (syntax-e d) d)])
                   (or (and (pair? d) (car d))
                       a)))
-           (and (or (memq (syntax-e a) '(parens brackets braces quotes block alts))
-                    (not-identifier-term? a))
-                a)
+           (and (and (memq (syntax-e a) '(parens brackets braces quotes alts))
+                     (not-identifier-term? a))
+                (respan stx))
+           (and (and (eq? (syntax-e a) 'block)
+                     (equal? (syntax-raw-property a) ":"))
+                (respan stx))
            stx)]
       [else stx]))
   ;; compute span from a list of terms
@@ -147,19 +161,30 @@
   (cond
     [(pair? e)
      (define head (car e))
+     (define v (syntax-e head))
      (cond
-       [(and (eq? (syntax-e head) 'group)
+       [(and (eq? v 'group)
              (not-identifier-term? head)
              (syntax->list stx))
         => (lambda (l)
              (from-list stx (cdr l) term->stx))]
-       [(and (eq? (syntax-e head) 'multi)
+       [(and (or (eq? v 'multi)
+                 (eq? v 'alts))
              (not-identifier-term? head)
              (syntax->list stx))
         => (lambda (l)
              (from-list stx (cdr l) (lambda (g)
-                                      ;; we expect `g` to be a group
+                                      ;; we expect `g` to be a group or block
                                       (respan g))))]
+       [(and (eq? v 'block)
+             (equal? (syntax-raw-property head) ":")
+             (syntax->list stx))
+        => (lambda (l)
+             (from-list stx l (lambda (g)
+                                ;; we expect `g` to be a group, usually,
+                                ;; but it will be an identifier for the
+                                ;; head of `l`
+                                (respan g))))]
        [(syntax->list stx)
         => (lambda (l)
              ;; assume a list of terms

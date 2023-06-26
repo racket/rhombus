@@ -57,7 +57,7 @@
            (values #`((group) () () ())
                    #'tail)]
           [(term)
-           (raise-syntax-error #f "incompatible with this context" #'self)]
+           (raise-syntax-error #f "incompatible with this context" stx)]
           [else (values #'#f #'())])]))))
 
 (begin-for-syntax

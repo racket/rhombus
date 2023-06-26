@@ -14,7 +14,8 @@
                      "name-root.rkt"
                      (submod "annotation.rkt" for-class)
                      (for-syntax racket/base)
-                     (submod "syntax-object.rkt" for-quasiquote))
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "srcloc.rkt")
          "space.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt")
@@ -137,9 +138,9 @@
 
   (define/arity syntax_meta.error
     (case-lambda
-      [(form) (raise-syntax-error (name-of form) "bad syntax" (unwrap form))]
-      [(msg form) (raise-syntax-error (name-of form) msg (unwrap form))]
-      [(msg form detail) (raise-syntax-error (name-of form) msg (unwrap form) (unwrap detail))]))
+      [(form) (raise-syntax-error (name-of form) "bad syntax" (respan form))]
+      [(msg form) (raise-syntax-error (name-of form) msg (respan form))]
+      [(msg form detail) (raise-syntax-error (name-of form) msg (respan form) (respan detail))]))
 
   (define (name-of stx)
     (syntax-parse stx
@@ -150,9 +151,6 @@
       [(multi (group who:identifier . _) . _) (name-of #'who)]
       [(multi . _) '?]
       [else #f]))
-
-  (define (unwrap stx)
-    stx)
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,syntax-static-infos))

@@ -138,13 +138,23 @@
 
 ;; In the parsed representation of a shrubbery, source locations are
 ;; not associated with sequences tagged `group` or `top` (but they may
-;; have 'raw-prefix and/or 'raw-tail, as described below). For terms
-;; tagged with `parens`, `braces`, `block`, `alts`, and `op`, the same
-;; source location is associated with the tag and the parentheses that
-;; group the tag with its members, and that location spans the content
-;; and any delimiters used to form it (such as parentheses or a `:`
-;; that starts a block).
-
+;; have 'raw-prefix and/or 'raw-tail, as described below).
+;;
+;; * For terms tagged with `parens`, `braces`, `brackets`, and
+;;   `quotes`, the same source location is associated with the tag and
+;;   the parentheses, etc., that group the tag with its members, and
+;;   that location spans the content and any delimiters used to form
+;;   it (such as parentheses or a `:` that starts a block).
+;;
+;; * For terms tagged with `op`, the source location of the operator
+;;   is copied to the `op` tag.
+;;
+;; * For terms tagged with `block`, the tag's source location
+;;   corresponds to `:` or `|`.
+;;
+;; * For terms tagged with `alts` or groups tagged with `group`, the
+;;   tag has no source location.
+;;
 ;; Raw text is preserved as syntax properties so that the original
 ;; program text can be reconstructed. Raw text is represented as a
 ;; `cons`-based tree of strings to be rendered through an inorder

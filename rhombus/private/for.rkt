@@ -80,7 +80,7 @@
        (when (null? (syntax-e #'rev-bodys))
          (raise-syntax-error #f
                              "empty body (after any clauses such as `each`)"
-                             #'orig))
+                             (respan #'orig)))
        #`(#,@(reverse (syntax->list #'rev-clauses))
           #:do [matcher
                 binder
@@ -188,8 +188,8 @@
                                [lhs::binding #'lhs.parsed]
                                [_ (raise-syntax-error #f
                                                       "expected a binding"
-                                                      orig-stx
-                                                      binding-stx)])))
+                                                      (respan orig-stx)
+                                                      (respan binding-stx))])))
   (syntax-parse lhs-parsed-stxes
     [(lhs-e::binding-form ...)
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
@@ -203,8 +203,8 @@
      (when (and static? (not seq-ctr))
        (raise-syntax-error #f
                            (string-append "no specific iteration implementation available" statically-str)
-                           orig-stx
-                           (unwrap-static-infos rhs-blk-stx)))
+                           (respan orig-stx)
+                           (respan rhs-blk-stx)))
      (syntax-parse state-stx
        [[finish rev-clauses rev-bodys matcher binder]
         #`[finish
@@ -276,7 +276,7 @@
 (define-syntax prim-for-clause
   (for-clause-transformer
    (lambda (stx)
-     (raise-syntax-error #f "should not try to expand" stx))))
+     (raise-syntax-error #f "should not try to expand" (respan stx)))))
 
 (begin-for-syntax
   ;; Like `:var-decl`, but we don't allow `=` here
@@ -300,7 +300,7 @@
        [_
         (raise-syntax-error #f
                             "needs a binding followed by a block, or it needs a block of bindings (each with a block)"
-                            stx)]))))
+                            (respan stx))]))))
 
 (define-for-syntax (parse-when stx kw)
   (syntax-parse stx
@@ -312,7 +312,7 @@
     [(form-id)
      (raise-syntax-error #f
                          "missing expression"
-                         #'stx)]))
+                         (respan #'stx))]))
 
 (define-for-clause-syntax keep_when
   (for-clause-transformer
