@@ -47,7 +47,7 @@ class RegularImmutableList(storage :: Array):
 
 
 class RegularImmutableSublist(
-  backingList :: PrivateRegularImmutableList, start :: Integer, end :: Integer):
+  backingList :: PrivateRegularImmutableList, start :: Int, end :: Int):
 
   implements List
 
@@ -84,7 +84,7 @@ class RegularImmutableSublist(
 class ImmutableListIterator(backingList :: List):
   implements Iterator
 
-  private field index :: Integer: 0
+  private field index :: Int: 0
 
   override method hasNext(): index < backingList.size
 

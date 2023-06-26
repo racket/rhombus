@@ -17,8 +17,8 @@ import:
 interface ListView:
   extends CollectionView
 
-  method get(index :: Integer)
-  method sublist(start :: Integer, end :: Integer) :: ListView
+  method get(index :: Int)
+  method sublist(start :: Int, end :: Int) :: ListView
 
   method checkIndex(who, index):
     checkArgument(
@@ -65,12 +65,12 @@ interface List:
     ListView
     Collection
 
-  method set(index :: Integer, element) :: List
+  method set(index :: Int, element) :: List
   override add(element) :: List
   override remove(element) :: List
-  method insert(index :: Integer, element) :: List
-  method delete(index :: Integer) :: List
-  override sublist(start :: Integer, end :: Integer) :: List
+  method insert(index :: Int, element) :: List
+  method delete(index :: Int) :: List
+  override sublist(start :: Int, end :: Int) :: List
 
 
 interface MutableList:
@@ -78,7 +78,7 @@ interface MutableList:
     ListView
     MutableCollection
 
-  method set(index :: Integer, element) :: Void
-  method insert(index :: Integer, element) :: Void
-  method delete(index :: Integer) :: Void
-  override sublist(start :: Integer, end :: Integer) :: MutableList
+  method set(index :: Int, element) :: Void
+  method insert(index :: Int, element) :: Void
+  method delete(index :: Int) :: Void
+  override sublist(start :: Int, end :: Int) :: MutableList

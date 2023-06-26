@@ -16,11 +16,11 @@ class ArrayList():
   internal PrivateArrayList
 
   private field storage :: Array = Array()
-  private field currentSize :: Integer = 0
+  private field currentSize :: Int = 0
 
   // This field tracks how many structural modifications the list has undergone. Changing an element
   // is not a structural modification, but adding or removing an element is.
-  private field version :: Integer = 0
+  private field version :: Int = 0
 
   override method iterate(): ArrayListIterator(this)
 
@@ -49,7 +49,7 @@ class ArrayList():
     let i = find(element)
     unless i == -1 | delete(i)
 
-  override method insert(index :: Integer, element) :: Void:
+  override method insert(index :: Int, element) :: Void:
     checkInsertionIndex("List.insert", index)
     ensureCapacity(currentSize + 1)
     fun loop(i = currentSize):
@@ -61,7 +61,7 @@ class ArrayList():
     currentSize := currentSize + 1
     version := version + 1
 
-  override method delete(index :: Integer) :: Void:
+  override method delete(index :: Int) :: Void:
     checkIndex("List.delete", index)
     for:
       each i: index + 1 .. currentSize
@@ -94,7 +94,7 @@ class ArrayList():
       storage := newStorage
 
 
-class ArraySublist(backingList :: PrivateArrayList, start :: Integer, mutable end :: Integer):
+class ArraySublist(backingList :: PrivateArrayList, start :: Int, mutable end :: Int):
   implements MutableList
 
   override method iterate():
@@ -159,10 +159,10 @@ class ArraySublist(backingList :: PrivateArrayList, start :: Integer, mutable en
     loop()
 
 
-class ArrayListIterator(backingList :: ArrayList, private version :: Integer = backingList.version):
+class ArrayListIterator(backingList :: ArrayList, private version :: Int = backingList.version):
   implements Iterator
 
-  private field index :: Integer: 0
+  private field index :: Int: 0
 
   override method hasNext():
     when version < backingList.version | error("concurrent modification")

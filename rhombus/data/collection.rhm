@@ -14,7 +14,7 @@ import:
 interface CollectionView:
   extends Sequence
   // read-only property
-  property size :: Integer
+  property size :: Int
 
   method isEmpty() :: Boolean: size() == 0
 
