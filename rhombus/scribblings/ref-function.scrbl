@@ -221,7 +221,9 @@ normally bound to implement function calls.
  for the @rhombus($id) with the same string form as @rhombus($keyword).
  A @rhombus(::) or @rhombus(:~) is not allowed in @rhombus(default_expr),
  unless it is nested in another term, since that might be misread or
- confused as an annotation in @rhombus(bind) for an identifier.
+ confused as an annotation in @rhombus(bind) for an identifier; for similar
+ reasons, @rhombus(bind) and @rhombus(default_expr) cannot contain an
+ immediate @rhombus(=).
 
 @examples(
   ~defn:

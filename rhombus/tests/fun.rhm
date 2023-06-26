@@ -187,3 +187,8 @@ check:
   use_static
   (fun (x): x + 1).for_each([1, 2, 3])
   ~is #void
+
+check:
+  ~eval
+  fun (x where x = 1 = 2): 10
+  ~raises "multiple immediate equals not allowed in this group"

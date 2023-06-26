@@ -26,3 +26,13 @@ check:
   def values(x, [y, ...]): values(0, [1, 2, 3])
   [y, ..., x]
   ~is [1, 2, 3, 0]
+
+check:
+  ~eval
+  def x where x = 1 = 2
+  ~raises "multiple immediate equals not allowed in this group"
+
+check:
+  ~eval
+  def | x = 2
+  ~raises "alternatives are not supported here"

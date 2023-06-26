@@ -19,7 +19,8 @@
                   [values rhombus-values])
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
-                  [= rhombus=]))
+                  [= rhombus=])
+         "parens.rkt")
 
 (provide def
          (rename-out [rhombus-let let]))
@@ -35,8 +36,15 @@
     (lambda (stx)
       (check-context stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts)
-        [(form-id (~optional op::name) (parens g ...) (~and rhs (block body ...)))
+        #:datum-literals (parens group)
+        [(_ ... a::equal _ ... b::equal . _)
+         (raise-syntax-error #f
+                             (string-append "multiple immediate equals not allowed in this group"
+                                            "\n use parentheses to disambiguate")
+                             stx
+                             #'a
+                             (list #'b))]
+        [(form-id (~optional op::name) (parens g ...) (~and rhs (_::block body ...)))
          #:when (or (not (attribute op))
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
@@ -52,20 +60,25 @@
                                    wrap-definition
                                    #:show-values? (attribute op)
                                    #:check-bind-uses check-bind-uses)]
-        [(form-id any::not-equal ... _::equal rhs ...+)
+        [(form-id any::not-equal ...+ _::equal rhs ...+)
          #:with g-tag group-tag
          (build-value-definitions #'form-id
                                   (no-srcloc #'(g-tag any ...))
                                   #`(#,group-tag rhs ...)
                                   wrap-definition
                                   #:check-bind-uses check-bind-uses)]
-        [(form-id any ... (~and rhs (block body ...)))
+        [(form-id any ...+ (~and rhs (_::block body ...)))
          #:with g-tag group-tag
          (build-value-definitions #'form-id
                                   (no-srcloc #'(g-tag any ...))
                                   #'rhs
                                   wrap-definition
-                                  #:check-bind-uses check-bind-uses)]))))
+                                  #:check-bind-uses check-bind-uses)]
+        [(_ ... (a::alts (b::block . _) . _))
+         (raise-syntax-error #f
+                             "alternatives are not supported here"
+                             stx
+                             #'b)]))))
 
 (define-syntax def
   (make-def))

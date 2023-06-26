@@ -124,9 +124,9 @@
     #:datum-literals (block group)
     (pattern (group kw:keyword (block (group a::not-equal ...+ eq::equal e ...+)))
              #:cut
-             #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
+             #:with arg::binding #'(group a ...)
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
              #:cut
@@ -135,17 +135,17 @@
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword eq::equal e ...+)
              #:cut
-             #:with arg::binding (keyword->binding #'kw)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
+             #:with arg::binding (keyword->binding #'kw)
              #:attr parsed #'arg.parsed)
     (pattern ::has-kw-binding
              #:attr default #'#f)
     (pattern (group a::not-equal ...+ eq::equal e ...+)
              #:cut
-             #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
+             #:with arg::binding #'(group a ...)
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern (group a ...+ (b-tag::block b ...))
@@ -200,6 +200,13 @@
                            #'ann-op.name
                            #f
                            (list eq-op))]
+      [(group _ ... eq2::equal _ ...)
+       (raise-syntax-error #f
+                           (string-append "multiple immediate equals not allowed in this group"
+                                          "\n use parentheses to disambiguate")
+                           eq-op
+                           #f
+                           (list #'eq2))]
       [_ (void)]))
   
   (define-syntax-class :not-block

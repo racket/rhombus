@@ -24,6 +24,12 @@
  An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and most
  binding operators also create bindings in the @rhombus(expr, ~space) space.
 
+ When @rhombus(def) is used with @rhombus(=), then @rhombus(expr) must
+ not contain any immediate @rhombus(=) terms (although @rhombus(=) can
+ appear nested in blocks, parentheses, etc.). When a @rhombus(def) group
+ both contains a @rhombus(=) and ends in a block, the block is treated as
+ part of an @rhombus(expr) after the @rhombus(=).
+
 @examples(
   ~repl:
     def pi = 3.14
