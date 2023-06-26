@@ -55,6 +55,9 @@ in an unspecified order.
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableMap) constructor).
 
+ Static information associated by @rhombus(Map, ~annot), etc., makes an
+ expression acceptable as a sequence to @rhombus(for) in static mode.
+
 }
 
 @doc(

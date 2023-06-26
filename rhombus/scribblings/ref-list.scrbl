@@ -45,6 +45,10 @@ it supplies its elements in order.
  Matches any list in the form without @rhombus(of). The @rhombus(of)
  variant matches a list whose elements satisfy @rhombus(annot).
 
+ Static information associated by @rhombus(List, ~annot) or
+ @rhombus(List.of, ~annot) makes an expression acceptable as a sequence
+ to @rhombus(for) in static mode.
+
 }
 
 @doc(

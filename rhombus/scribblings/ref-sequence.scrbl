@@ -23,6 +23,11 @@ internal state, and the state can even be specific to a particular
 
  Matches any @tech{sequence}.
 
+ Static information associated by @rhombus(Sequence, ~annot) makes an
+ expression acceptable as a sequence to @rhombus(for) in static mode, and
+ it is suitable when a more specialized annotation (such as
+ @rhombus(List) or @rhombus(Array)) is not available.
+
 }
 
 @doc(
@@ -41,6 +46,9 @@ internal state, and the state can even be specific to a particular
  @rhombus(+), @rhombus(-), @rhombus(*), and @rhombus(/). In particular,
  @rhombus(n_expr..1+m_expr) creates a sequence that includes
  @rhombus(m, ~var) for many forms @rhombus(m_expr).
+
+ A @rhombus(..) expression has static information that makes it
+ acceptable as a sequence to @rhombus(for) in static mode.
 
 }
 

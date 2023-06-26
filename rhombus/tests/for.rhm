@@ -207,3 +207,11 @@ check:
      i > 5 && i,
    accum]
   ~is [6, [6, 5, 4, 3, 2, 1, 0]]
+
+check:
+  ~eval
+  use_static
+  for:
+    each x: dynamic([1])
+    x
+  ~raises "no specific iteration implementation available"

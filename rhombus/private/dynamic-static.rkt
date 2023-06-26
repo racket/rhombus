@@ -8,7 +8,8 @@
          (submod "dot.rkt" for-dynamic-static)
          (submod "implicit.rkt" for-dynamic-static)
          (submod "appendable.rkt" for-dynamic-static)
-         (submod "with.rkt" for-dynamic-static))
+         (submod "with.rkt" for-dynamic-static)
+         (submod "for.rkt" for-dynamic-static))
 
 (provide dynamic
          use_dynamic
@@ -27,7 +28,8 @@
                           #,@(build-definitions #'form-id '#%index (if more-static? #'static-#%index #'#%index))
                           #,@(build-definitions #'form-id '#%call (if more-static? #'static-#%call #'#%call))
                           #,@(build-definitions #'form-id '++ (if more-static? #'static-++ #'++))
-                          #,@(build-definitions #'form-id 'with (if more-static? #'static-with #'with)))]))))])
+                          #,@(build-definitions #'form-id 'with (if more-static? #'static-with #'with))
+                          #,@(build-definitions #'form-id 'for (if more-static? #'static-for #'for)))]))))])
       (values (mk #f)
               (mk #t)))))
 

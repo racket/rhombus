@@ -4,8 +4,10 @@
                      syntax/srcloc
                      syntax/parse/pre
                      enforest/name-parse
+                     enforest/syntax-local
                      "tag.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "statically-str.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -20,6 +22,10 @@
          (rename-in "values.rkt"
                     [values rhombus-values]))
 
+(module+ for-dynamic-static
+  (provide (rename-out [rhombus-for for])
+           static-for))
+
 (provide (rename-out [rhombus-for for])
          (for-space rhombus/for_clause
                     each
@@ -28,7 +34,7 @@
                     break_when
                     final_when))
 
-(define-syntax rhombus-for
+(define-for-syntax (make-for static?)
   (expression-transformer
    (lambda (stx)
      (syntax-parse (respan stx)
@@ -38,7 +44,7 @@
                    (group form-id red ... (block-tag body ...)))
                 #'())]
        [(form-id (block body ...+))
-        (values #`(for (#:splice (for-clause-step #,stx [(begin (void))] body ...))
+        (values #`(for (#:splice (for-clause-step #,stx #,static? [(begin (void))] body ...))
                     (void))
                 #'())]
        [(form-id red ... (block body ...+))
@@ -48,7 +54,7 @@
         (values (wrap-static-info*
                  #`(f.wrapper
                     f.data
-                    (for/fold f.binds (#:splice (for-clause-step #,stx [(f.body-wrapper f.data)] body ...))
+                    (for/fold f.binds (#:splice (for-clause-step #,stx #,static? [(f.body-wrapper f.data)] body ...))
                       #,@(if (syntax-e #'f.break-whener)
                              #`(#:break (f.break-whener f.data))
                              null)
@@ -59,17 +65,18 @@
                  #'f.static-infos)
                 #'())]))))
 
-(require (for-syntax racket/pretty))
+(define-syntax rhombus-for (make-for #f))
+(define-syntax static-for (make-for #t))
 
 (define-splicing-for-clause-syntax for-clause-step
   (lambda (stx)
     (syntax-parse stx
       #:datum-literals (group block parens)
-      [(_ orig [finish] . bodys)
+      [(_ orig static? [finish] . bodys)
        ;; initialize state
-       #`(#:splice (for-clause-step orig [finish () () (void) (void)]
+       #`(#:splice (for-clause-step orig static? [finish () () (void) (void)]
                                     . bodys))]
-      [(_ orig [(body-wrapper data) rev-clauses rev-bodys matcher binder])
+      [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher binder])
        (when (null? (syntax-e #'rev-bodys))
          (raise-syntax-error #f
                              "empty body (after any clauses such as `each`)"
@@ -81,7 +88,7 @@
                  data
                  (rhombus-body
                   . #,(reverse (syntax->list #'rev-bodys))))])]
-      [(_ orig (~and state [finish rev-clauses rev-bodys matcher binder])
+      [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher binder])
           body0
           . bodys)
        #:when (for-clause? #'body0)
@@ -93,14 +100,14 @@
                    binder
                    (rhombus-body-sequence
                     . #,(reverse (syntax->list #'rev-bodys))))
-             #:splice (for-clause-step orig
+             #:splice (for-clause-step orig static?
                                        [finish () () (void) (void)]
                                        body0 . bodys))]
          [(pair? (syntax-e #'rev-clauses)) ; assert: empty rev-bodys
           ;; emit clauses before starting a new group
           #`(#,@(reverse (syntax->list #'rev-clauses))
              #:do [matcher binder]
-             #:splice (for-clause-step orig
+             #:splice (for-clause-step orig static?
                                        [finish () () (void) (void)]
                                        body0 . bodys))]
          [else
@@ -110,21 +117,23 @@
             [(group prim-for-clause #:each any ...+ rhs-blk)
              ;; parse binding as binding group
              #`(#:splice (for-clause-step
-                          orig
+                          orig static?
                           #,(build-binding-clause/values #'orig
                                                          #'state
                                                          #`((#,group-tag any ...))
-                                                         #'rhs-blk)
+                                                         #'rhs-blk
+                                                         (syntax-e #'static?))
                           . bodys))]
             [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
                                                   ...))
              ;; parse binding as binding group
              #`(#:splice (for-clause-step
-                          orig
+                          orig static?
                           #,(build-binding-clause*/values #'orig
                                                           #'state
                                                           (syntax->list #`(((#,group-tag any ...)) ...))
-                                                          (syntax->list #'(rhs-blk ...)))
+                                                          (syntax->list #'(rhs-blk ...))
+                                                          (syntax-e #'static?))
                           . bodys))]
             [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
                     rhs)
@@ -135,15 +144,15 @@
                              [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
                              [else #'kw])
              #`(new-kw rhs
-                       #:splice (for-clause-step orig state . bodys))]
+                       #:splice (for-clause-step orig static? state . bodys))]
             [body0::for-clause
              #:with f::for-clause-form #'body0.parsed
-             #`(#:splice (for-clause-step orig state f.parsed ... . bodys))])])]
-      [(_ orig [finish rev-clauses rev-bodys matcher binder]
+             #`(#:splice (for-clause-step orig static? state f.parsed ... . bodys))])])]
+      [(_ orig static? [finish rev-clauses rev-bodys matcher binder]
           body0
           . bodys)
        #`(#:splice (for-clause-step
-                    orig
+                    orig static?
                     [finish
                      rev-clauses
                      (body0 . rev-bodys)
@@ -154,7 +163,8 @@
 (define-for-syntax (build-binding-clause/values orig-stx
                                                 state-stx
                                                 bindings-stx
-                                                rhs-block-stx)
+                                                rhs-block-stx
+                                                static?)
   (build-binding-clause orig-stx
                         state-stx
                         (syntax-parse bindings-stx
@@ -165,12 +175,14 @@
                                                          (bind-quote rhombus-values)))
                            #'(g ...)]
                           [else bindings-stx])
-                        rhs-block-stx))
+                        rhs-block-stx
+                        static?))
 
 (define-for-syntax (build-binding-clause orig-stx
                                          state-stx
                                          bindings-stx
-                                         rhs-blk-stx)
+                                         rhs-blk-stx
+                                         static?)
   (define lhs-parsed-stxes (for/list ([binding-stx (in-list (syntax->list bindings-stx))])
                              (syntax-parse binding-stx
                                [lhs::binding #'lhs.parsed]
@@ -188,12 +200,22 @@
      #:with (form-id . _) orig-stx
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
+     (when (and static? (not seq-ctr))
+       (raise-syntax-error #f
+                           (string-append "no specific iteration implementation available" statically-str)
+                           orig-stx
+                           (unwrap-static-infos rhs-blk-stx)))
      (syntax-parse state-stx
        [[finish rev-clauses rev-bodys matcher binder]
         #`[finish
            ([(tmp-id ...) #,(cond
-                              [seq-ctr #`(#,seq-ctr rhs)]
-                              [else #'rhs])]
+                              [(identifier? seq-ctr)
+                               (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
+                                   (unwrap-static-infos
+                                    (rhombus-local-expand
+                                     #`(rhombus-expression (group #,seq-ctr (parens (group (parsed rhs)))))))
+                                   #`(#,seq-ctr rhs))]
+                              [else (unwrap-static-infos #'rhs)])]
             . rev-clauses)
            ()
            (begin
@@ -217,18 +239,21 @@
 (define-for-syntax (build-binding-clause*/values orig-stx
                                                  state-stx
                                                  bindings-stxs
-                                                 rhs-blk-stxs)
+                                                 rhs-blk-stxs
+                                                 static?)
     (cond
       [(null? bindings-stxs) state-stx]
       [else
        (define new-state-stx (build-binding-clause/values orig-stx
                                                           state-stx
                                                           (car bindings-stxs)
-                                                          (car rhs-blk-stxs)))
+                                                          (car rhs-blk-stxs)
+                                                          static?))
        (build-binding-clause*/values orig-stx
                                      new-state-stx
                                      (cdr bindings-stxs)
-                                     (cdr rhs-blk-stxs))]))
+                                     (cdr rhs-blk-stxs)
+                                     static?)]))
 
 (define-syntax-rule (void-result e)
   (begin

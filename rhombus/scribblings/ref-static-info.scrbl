@@ -139,6 +139,7 @@
   def statinfo_meta.index_set_key
   def statinfo_meta.append_key
   def statinfo_meta.dot_provider_key
+  def statinfo_meta.sequence_constructor_key
   def statinfo_meta.values_key
 ){
 
@@ -176,6 +177,11 @@
         bound to a @rhombus(dot.macro) or
         @rhombus(dot.macro_more_static) to implement the expression's
         behavior as a @tech{dot provider}}
+
+  @item{@rhombus(statinfo_meta.sequence_constructor_key) --- an identifier
+        bound as a variable or a macro that is wrapped around an expression
+        to create or specialize a sequence for @rhombus(for), or @rhombus(#true) to
+        indicate that no wrapper is needed}
 
   @item{@rhombus(statinfo_meta.values_key) --- a packed group of
         static infoformation (see @rhombus(statinfo_meta.pack_group)),

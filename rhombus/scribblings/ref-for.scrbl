@@ -47,13 +47,17 @@
  iterations.
 
  The block after a binding within an @rhombus(each, ~for_clause) clause must produce
- a @tech{sequence}, and a fresh @tech{instantiation} of the sequence is used each
+ a @tech{sequence}. When @rhombus(for) is static (see
+ @rhombus(use_static)), static information for the block must indicate
+ a static sequence implementation that may specialize iteration over the
+ sequence; see also @rhombus(Sequence, ~annot) and @rhombus(statinfo_meta.sequence_constructor_key).
+ A fresh @tech{instantiation} of the sequence is used each
  time the @rhombus(for) form is evaluated. Each element of that sequence is bound in turn to
  the @rhombus(bind) variables of the @rhombus(each, ~for_clause). If a sequence
  can has multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
  @rhombus(bind) can be a @rhombus(values, ~bind) pattern or just a
- prenthesized sequence of bindings to receive a matcging number of
+ prenthesized sequence of bindings to receive a matching number of
  element values.
 
  An @rhombus(each, ~for_clause) followed immediately by a sequence binding is

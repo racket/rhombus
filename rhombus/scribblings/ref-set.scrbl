@@ -51,6 +51,9 @@ it supplies its elements in an unspecified order.
  while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableSet) constructor).
 
+ Static information associated by @rhombus(Set, ~annot), etc., makes
+ an expression acceptable to @rhombus(for) in static mode.
+
 }
 
 @doc(

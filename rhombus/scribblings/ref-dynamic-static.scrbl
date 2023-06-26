@@ -8,7 +8,7 @@
 ){
 
  (Re-)defines @rhombus(.), @rhombus(#%index), @rhombus(++), @rhombus(#%call),
- and @rhombus(with)
+ @rhombus(with), and @rhombus(for)
  to require certain static information and consistency with static
  information:
 
@@ -34,11 +34,15 @@
   Similarly, @rhombus(:=) assignment to a property is rejected if static
   information does not declare the property as supporting assignment.}
 
- @item{A static @rhombus(with) requires static information for a cloass
+ @item{A static @rhombus(with) requires static information for a class
   on the left-hand side of @rhombus(with) (i.e., the object to be
   functionally updated). An error is reported if a field name supplied on
   the right-hand side of @rhombus(with) does not correspond to the field
   of the class.}
+
+ @item{A static @rhombus(for) requires static information for each
+  sequence on the right-hand side of an @rhombus(each, ~for_clause) form
+  to specialize the iteration statically.}
 
 )
 

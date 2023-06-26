@@ -38,6 +38,9 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  @rhombus(ImmutableArray, ~annot) matches only immutable arrays (that may
  originate from Racket).
 
+ Static information associated by @rhombus(Array, ~annot), etc., makes
+ an expression acceptable as a sequence to @rhombus(for) in static mode.
+
 }
 
 @doc(

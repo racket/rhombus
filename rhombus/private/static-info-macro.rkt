@@ -25,7 +25,8 @@
          "index-key.rkt"
          "index-result-key.rkt"
          "dot-provider-key.rkt"
-         "values-key.rkt")
+         "values-key.rkt"
+         "sequence-constructor-key.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 statinfo_meta)))
@@ -52,7 +53,8 @@
      [map_set_key index_set_key] ; temporary
      append_key
      dot_provider_key
-     values_key)))
+     values_key
+     sequence_constructor_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space)
   (definition-transformer
@@ -112,3 +114,4 @@
 (define-for-syntax append_key #'#%append)
 (define-for-syntax dot_provider_key #'#%dot-provider)
 (define-for-syntax values_key #'#%values)
+(define-for-syntax sequence_constructor_key #'#%sequence-constructor)
