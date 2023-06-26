@@ -9,23 +9,27 @@ export:
 
 import:
   rhombus/data/private/array_list.ArrayList
-  rhombus/data/private/list.List
+  rhombus/data/private/list
   rhombus/data/private/list.ListView
-  rhombus/data/private/list.MutableList
   rhombus/data/private/list_builder.ListBuilder
 
 
-fun List.builder(): ListBuilder()
+interface List:
+  extends list.List
+  annotation 'List': 'list.List'
+  expression 'List': 'of'
+  export: builder
+  fun builder(): ListBuilder()
+  fun of(element, ...):
+    let builder = List.builder()
+    for:
+      each v: Array(element, ...)
+      builder.add(v)
+    builder.build()
 
 
-// TODO: make this work as List(...) instead of List.of(...)
-fun List.of(element, ...):
-  let builder = List.builder()
-  for:
-    each v: Array(element, ...)
-    builder.add(v)
-  builder.build()
-
-
-// TODO: make this work as MutableList() instead of MutableList.create()
-fun MutableList.create(): ArrayList()
+interface MutableList:
+  extends list.MutableList
+  annotation 'MutableList': 'list.MutableList'
+  expression 'MutableList': 'create'
+  fun create(): ArrayList()

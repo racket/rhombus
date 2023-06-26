@@ -6,43 +6,43 @@ import:
 
 
 check:
-  List.of().size
+  List().size
   ~is 0
 
 check:
-  List.of("foo").size
+  List("foo").size
   ~is 1
 
 check:
-  List.of("foo", "bar", "baz").size
+  List("foo", "bar", "baz").size
   ~is 3
 
 check:
-  List.of("foo").get(0)
-  ~is "foo"
-  
-check:
-  List.of("foo", "bar", "baz").get(0)
+  List("foo").get(0)
   ~is "foo"
 
 check:
-  List.of("foo", "bar", "baz").get(1)
+  List("foo", "bar", "baz").get(0)
+  ~is "foo"
+
+check:
+  List("foo", "bar", "baz").get(1)
   ~is "bar"
 
 check:
-  List.of("foo", "bar", "baz").get(2)
+  List("foo", "bar", "baz").get(2)
   ~is "baz"
 
 check:
-  List.of().isEmpty()
+  List().isEmpty()
   ~is #true
 
 check:
-  List.of(1, 2, 3).contains(2)
+  List(1, 2, 3).contains(2)
   ~is #true
 
 check:
-  List.of(1, 2, 3).contains(4)
+  List(1, 2, 3).contains(4)
   ~is #false
 
 check:
