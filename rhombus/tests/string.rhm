@@ -6,6 +6,10 @@ check:
 
 block:
   use_static
+  check 1 +& 2 ++ "3" ~is "123"
+
+block:
+  use_static
   def hello = "hello"
   check:
     "hello".length() ~is 5

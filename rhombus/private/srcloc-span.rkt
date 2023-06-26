@@ -7,6 +7,10 @@
          relocate*
          relevant-source-syntax)
 
+;; Unlike `respan` in "srcloc.rkt", these functions can assume
+;; a shrubbery encoding. Also, they handle 'raw properties in
+;; addition to source locations.
+
 (define (relocate-span stx ctx-stxes-in)
   (define keep-raw-interior? #f) ; expose this as an option?
   (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))

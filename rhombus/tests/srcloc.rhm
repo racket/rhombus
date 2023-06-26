@@ -4,6 +4,7 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Srcloc(f, l, c, p, s)
+    Srcloc.to_report_string(srcloc)
 
 check:
   use_static

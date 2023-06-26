@@ -105,6 +105,8 @@
    [sort List.sort]
    [drop_left List.drop_left]
    [drop_right List.drop_right]
+   [has_element List.has_element]
+   [remove List.remove]
    repet
    of
    [append List.append]))
@@ -230,6 +232,8 @@
         [(sort) (nary #'List.sort 3 #'List.sort list-static-infos)]
         [(drop_left) (nary #'List.drop_left 2 #'List.drop_left list-static-infos)]
         [(drop_right) (nary #'List.drop_right 2 #'List.drop_right list-static-infos)]
+        [(has_element) (nary #'List.has_element 2 #'List.has_element list-static-infos)]
+        [(remove) (nary #'List.remove 2 #'List.remove list-static-infos)]
         [else (fail-k)])))))
 
 (define-reducer-syntax List
@@ -336,6 +340,13 @@
              [i (in-range 0 (- len n))])
     a))
 
+(define/arity (List.remove l n)
+  #:static-infos ((#%call-result #,list-static-infos))
+  (remove n l equal-always?))
+
+(define/arity (List.has_element l n)
+  (and (member n l equal-always?) #t))
+
 (define list-method-table
   (hash 'length (method1 length)
         'first car
@@ -343,6 +354,8 @@
         'reverse (method1 reverse)
         'drop_left (method2 List.drop_left)
         'drop_right (method2 List.drop_right)
+        'has_element (method2 List.has_element)
+        'remove (method2 List.remove)
         'append (method* List.append)
         'map (method1 List.map)
         'for_each (method1 List.for_each)))

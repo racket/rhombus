@@ -10,9 +10,11 @@
                      "dotted-sequence.rkt"
                      "realm.rkt"
                      "define-arity.rkt"
+                     "call-result-key.rkt"
                      "name-root.rkt"
                      (submod "annotation.rkt" for-class)
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     (submod "syntax-object.rkt" for-quasiquote))
          "space.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt")
@@ -34,7 +36,8 @@
      [equal_name_and_scopes syntax_meta.equal_name_and_scopes]
      expanding_phase
      [error syntax_meta.error]
-     [value syntax_meta.value]))
+     [value syntax_meta.value]
+     [flip_introduce syntax_meta.flip_introduce]))
 
   (define expr-space-path (space-syntax #f))
 
@@ -150,6 +153,10 @@
 
   (define (unwrap stx)
     stx)
+
+  (define/arity (syntax_meta.flip_introduce stx)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (syntax-local-introduce stx))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation #'phase? #'())))

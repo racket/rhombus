@@ -49,7 +49,8 @@
 (define-annotation-syntax StringView (identifier-annotation #'string? string-static-infos))
 
 (define-infix +& append-as-strings
-  #:stronger-than (== ===))
+  #:stronger-than (== ===)
+  #:static-infos #,string-static-infos)
 
 (define (append-as-strings a b)
   (string-append-immutable (to_string a)

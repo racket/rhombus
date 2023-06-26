@@ -77,6 +77,31 @@
 
 }
 
+
+@doc(
+  fun syntax_meta.flip_introduce(stx :: Syntax) :: Syntax
+){
+
+@provided_meta()
+
+ Returns a syntax object like @rhombus(stx), but where scopes indicating
+ that the syntax object is macro-introduced are flipped. This function
+ can be called only during the expansion of a macro.
+
+ Macro-introduction is detected by flipping scopes to the input of a
+ macro, then flipping scopes on the macro's result, so that the two flip
+ operations cancel for any part of the macro's input that is used in the
+ macro's output.
+
+ A macro can flip introduction to implement a non-hygienic expansion for
+ an introduced identifier. Flipping introduction may also be helpful when
+ syntax is preserved through side channels, or in unusual cases when
+ checking for the originaless of a term with
+ @rhombus(Syntax.is_original).
+
+}
+
+
 @doc(
   annot.macro 'SyntaxPhase'
 ){

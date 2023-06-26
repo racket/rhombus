@@ -5,6 +5,7 @@
          syntax/parse/pre
          syntax/strip-context
          racket/syntax-srcloc
+         racket/symbol
          shrubbery/property
          shrubbery/print
          "provide.rkt"
@@ -19,6 +20,7 @@
          "static-info.rkt"
          "define-arity.rkt"
          "srcloc-span.rkt"
+         "srcloc.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos))
@@ -122,12 +124,14 @@
    unwrap_op
    unwrap_group
    unwrap_sequence
+   unwrap_all
    strip_scopes
    replace_scopes
    relocate
    relocate_span
    to_source_string
-   [srcloc get-srcloc]))
+   [srcloc Syntax.srcloc]
+   is_original))
 
 (define-syntax literal
   (expression-transformer
@@ -281,12 +285,15 @@
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (string? str)
     (raise-argument-error* 'Syntax.make_id rhombus-realm "StringView" str))
-  (datum->syntax (extract-ctx 'Syntax.make_id ctx)
-                 (string->symbol str)))
+  (define istr (string->immutable-string str))
+  (syntax-raw-property (datum->syntax (extract-ctx 'Syntax.make_id ctx)
+                                      (string->symbol istr))
+                       istr))
 
 (define/arity (make_temp_id [v #false])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (car (generate-temporaries (list v))))
+  (define id (car (generate-temporaries (list v))))
+  (syntax-raw-property id (symbol->immutable-string (syntax-e id))))
 
 (define/arity (unwrap v)
   (cond
@@ -331,6 +338,13 @@
      (raise-argument-error* 'Syntax.unwrap_sequence rhombus-realm "Syntax" v)]
     [else
      (syntax->list (unpack-multi-tail v 'Syntax.unwrap_sequence #f))]))
+
+(define/arity (unwrap_all v)
+  (cond
+    [(not (syntax? v))
+     (raise-argument-error* 'Syntax.unwrap_all rhombus-realm "Syntax" v)]
+    [else
+     (syntax->datum v)]))
 
 (define/arity (strip_scopes v)
   #:static-infos ((#%call-result #,syntax-static-infos))
@@ -380,16 +394,26 @@
   (unless (syntax? stx) (raise-argument-error* 'Syntax.to_source_string rhombus-realm "Syntax" stx))
   (string->immutable-string (shrubbery-syntax->string stx)))
 
+
+(define/arity (Syntax.srcloc stx)
+  (unless (syntax? stx) (raise-argument-error* 'Syntax.srcloc rhombus-realm "Syntax" stx))
+  (syntax-srcloc (respan stx)))
+
+(define/arity (is_original v)
+  (syntax-original? (extract-ctx 'Syntax.srcloc v #:false-ok? #f)))
+
 (define syntax-method-table
   (hash 'unwrap (method1 unwrap)
         'unwrap_op (method1 unwrap_op)
         'unwrap_group (method1 unwrap_group)
         'unwrap_sequence (method1 unwrap_sequence)
+        'unwrap_all (method1 unwrap_all)
         'strip_scopes (method1 strip_scopes)
         'replace_scopes replace_scopes_method
         'relocate relocate_method
         'relocate_span relocate_span_method
-        'srcloc (method1 syntax-srcloc)
+        'srcloc (method1 Syntax.srcloc)
+        'is_original (method1 is_original)
         'to_source_string (method1 to_source_string)))
 
 (define-syntax syntax-instance
@@ -401,21 +425,12 @@
         [(unwrap_op) (0ary #'unwrap_op)]
         [(unwrap_group) (0ary #'unwrap_group)]
         [(unwrap_sequence) (0ary #'unwrap_sequence)]
+        [(unwrap_all) (0ary #'unwrap_all)]
         [(strip_scopes) (0ary #'strip_scopes)]
         [(replace_scopes) (nary #'replace_scopes 2 #'replace_scopes)]
         [(relocate) (nary #'relocate_method 2 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
-        [(srcloc) (0ary #'get-srcloc)]
+        [(srcloc) (0ary #'Syntax.srcloc)]
+        [(is_original) (0ary #'is_original)]
         [(to_source_string) (0ary #'to_source_string)]
         [else (fail-k)])))))
-
-(define get-srcloc
-  (let ([srcloc
-         (lambda (v)
-           (cond
-             [(syntax? v)
-              (define u (unpack-term v 'Syntax.srcloc #f))
-              (syntax-srcloc u)]
-             [else
-              (raise-argument-error* 'Syntax.srcloc "Syntax" v)]))])
-    srcloc))

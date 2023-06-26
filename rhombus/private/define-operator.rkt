@@ -4,7 +4,8 @@
                      "srcloc.rkt")
          "expression.rkt"
          "repetition.rkt"
-         "compound-repetition.rkt")
+         "compound-repetition.rkt"
+         "static-info.rkt")
 
 (provide define-prefix
          define-infix
@@ -28,7 +29,9 @@
           (~optional (~seq #:same-on-left-as (same-on-left-op ...))
                      #:defaults ([(same-on-left-op 1) '()]))
           (~optional (~seq #:stronger-than (stronger-op ...))
-                     #:defaults ([(stronger-op 1) '()])))
+                     #:defaults ([(stronger-op 1) '()]))
+          (~optional (~seq #:static-infos statinfos)
+                     #:defaults ([statinfos #'()])))
        #`(make-expression&repetition-prefix-operator
           (expr-quote name)
           (repet-quote name)
@@ -49,10 +52,12 @@
                 ...)
           'automatic
           (lambda (form stx)
-            (datum->syntax (quote-syntax here)
-                           (list (quote-syntax prim) form)
-                           (span-srcloc stx form)
-                           stx)))]))
+            (wrap-static-info*
+             (datum->syntax (quote-syntax here)
+                            (list (quote-syntax prim) form)
+                            (span-srcloc stx form)
+                            stx)
+             #`statinfos)))]))
 
   (define-syntax (infix stx)
     (syntax-parse stx
@@ -66,7 +71,9 @@
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:associate assoc)
-                     #:defaults ([assoc #''left])))
+                     #:defaults ([assoc #''left]))
+          (~optional (~seq #:static-infos statinfos)
+                     #:defaults ([statinfos #'()])))
        #`(make-expression&repetition-infix-operator
           (expr-quote name)
           (repet-quote name)
@@ -84,10 +91,12 @@
                 ...)
           'automatic
           (lambda (form1 form2 stx)
-            (datum->syntax (quote-syntax here)
-                           (list (quote-syntax prim) form1 form2)
-                           (span-srcloc form1 form2)
-                           stx))
+            (wrap-static-info*
+             (datum->syntax (quote-syntax here)
+                            (list (quote-syntax prim) form1 form2)
+                            (span-srcloc form1 form2)
+                            stx)
+             #`statinfos))
           assoc)])))
 
 (define-syntax (define-infix stx)

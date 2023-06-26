@@ -69,29 +69,39 @@ check:
   ~prints_like 'a; b c; d e f'
 
 check:
-  Syntax.unwrap('x')
-  ~is #'x
+  Syntax.unwrap('x') ~is #'x
+  Syntax.unwrap('1 1') ~raises "multi-term syntax not allowed in term context"
+  Syntax.unwrap('(1 2 3)') ~prints_like ['parens', '1 2 3']
+  Syntax.unwrap('(1, 2, 3)') ~prints_like ['parens', '1', '2', '3']
+  Syntax.unwrap_group('1 2 3') ~prints_like ['1', '2', '3']
+  Syntax.unwrap_group('1 2; 3 4') ~raises "multi-group syntax not allowed in group context"
+  Syntax.unwrap_sequence('1 2; 3 4 5') ~prints_like ['1 2', '3 4 5']
+  Syntax.unwrap_sequence('1 2') ~prints_like ['1 2']
+  Syntax.unwrap_sequence('1') ~prints_like ['1']
+  Syntax.unwrap_all('(1 2, 3 4)') ~is [#'parens, [#'group, 1, 2], [#'group, 3, 4]]
 
-check:
-  Syntax.unwrap('(1 2 3)')
-  ~prints_like ['parens', '1 2 3']
+block:
+  import:
+    lib("shrubbery/parse.rkt")
+    lib("racket/base.rkt")
+  def orig_x = Syntax.unwrap(parse.#{parse-all}(base.#{open-input-string}("x")))[1]
+  check:
+    Syntax.is_original(orig_x) ~is #true
+    orig_x.is_original() ~is #true
+    Syntax.make_temp_id("x").is_original() ~is #false
 
-check:
-  Syntax.unwrap('(1, 2, 3)')
-  ~prints_like ['parens', '1', '2', '3']
-
-check:
-  Syntax.unwrap_sequence('1 2; 3 4 5')
-  ~prints_like ['1 2', '3 4 5']
-
-check:
-  Syntax.unwrap_sequence('1 2')
-  ~prints_like ['1 2']
-
-check:
-  Syntax.unwrap_sequence('1')
-  ~prints_like ['1']
-
+block:
+  def x = 'x'
+  def xy =  'x y'
+  def xyz =  'x y
+              z'
+  check x.srcloc().span ~is 1
+  check xy.srcloc().span ~is 3
+  check xy.srcloc().line ~is x.srcloc().line + 1
+  check xy.srcloc().column ~is x.srcloc().column + 2
+  check xyz.srcloc().line ~is x.srcloc().line + 2
+  check xyz.srcloc().column ~is x.srcloc().column + 3
+  
 check:
   match 'a: *'
   | 'a: $b': b is_a Operator

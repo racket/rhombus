@@ -30,6 +30,8 @@ it supplies its elements in order.
   [lst.append(lst2, ...), List.append(lst, lst2, ...)]
   [list.drop_left(lst, n), List.drop_left(lst, n)]
   [list.drop_right(lst, n), List.drop_right(lst, n)]
+  [list.has_element(lst, v), List.has_element(lst, v)]
+  [list.remove(lst, v), List.remove(lst, v)]
   [lst.map(func), List.map(lst, func)]
   [lst.for_each(func), List.for_each(lst, func)]
   [lst.sort(arg, ...), List.sort(lst, arg, ...)]
@@ -283,9 +285,38 @@ it supplies its elements in order.
 
 }
 
+
 @doc(
-  fun List.map(args :: List, f :: Function.of_arity(1)) :: List,
-  fun List.for_each(args :: List, f :: Function.of_arity(1)) :: List,
+  fun List.has_element(lst :: List, v) :: List
+){
+
+ Returns @rhombus(#true) if @rhombus(lst) has an element equal to
+ @rhombus(v), @rhombus(#false) otherwise.
+
+@examples(
+  [1, 2, 3].has_element(2)
+  [1, 2, 3].has_element(200)
+)
+
+}
+
+
+@doc(
+  fun List.remove(lst :: List, v) :: List
+){
+
+ Returns a list like @rhombus(lst), but with the first element equal to
+ @rhombus(v) (if any) removed.
+
+@examples(
+  [1, 2, 3, 2].remove(2)
+)
+
+}
+
+@doc(
+  fun List.map(lst :: List, f :: Function.of_arity(1)) :: List,
+  fun List.for_each(lst :: List, f :: Function.of_arity(1)) :: List,
 ){
 
  Like @rhombus(Function.map) and @rhombus(Function.for_each), but with a

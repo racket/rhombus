@@ -56,6 +56,9 @@ Metadata for a syntax object can include a source location and the raw
   [stx.unwrap_op(), Syntax.unwrap_op(stx)]
   [stx.unwrap_group(), Syntax.unwrap_group(stx)]
   [stx.unwrap_sequence(), Syntax.unwrap_sequence(stx)]
+  [stx.unwrap_all(), Syntax.unwrap_all(stx)]
+  [stx.srcloc(), Syntax.srcloc(stx)]
+  [stx.is_original(), Syntax.is_original(stx)]
   [stx.strip_scopes(), Syntax.strip_scopes(stx)]
   [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
   [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
@@ -657,7 +660,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap(stx :: Syntax)
+  fun Syntax.unwrap(stx :: Term)
 ){
 
  Unwraps a single-term syntax object by one layer. The result is a
@@ -676,8 +679,23 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
+
 @doc(
-  fun Syntax.unwrap_group(stx :: Syntax) :: List.of(Syntax)
+  fun Syntax.unwrap_op(stx :: Syntax) :: Symbol
+){
+
+ Unwraps a syntax object containing a single operator, returning the
+ operator's name as a symbol.
+
+@examples(
+  Syntax.unwrap_op('+')
+)
+
+}
+
+
+@doc(
+  fun Syntax.unwrap_group(stx :: Group) :: List.of(Syntax)
 ){
 
  Unwraps a multi-term, single-group syntax object by one layer. The
@@ -694,6 +712,7 @@ Metadata for a syntax object can include a source location and the raw
 )
 
 }
+
 
 @doc(
   fun Syntax.unwrap_sequence(stx :: Syntax) :: List.of(Syntax)
@@ -714,18 +733,44 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
+
 @doc(
-  fun Syntax.unwrap_op(stx :: Syntax) :: Symbol
+  fun Syntax.unwrap_all(stx :: Syntax)
 ){
 
- Unwraps a syntax object containing a single operator, returning the
- operator's name as a symbol.
+ Unwraps a syntax object recursively, returning a value that does not
+ contain a syntax object but could be passed to @rhombus(Syntax.make).
 
 @examples(
-  Syntax.unwrap_op('+')
+  Syntax.unwrap_all('(1 + 2)')
 )
 
 }
+
+@doc(
+  fun Syntax.srcloc(stx :: Syntax) :: maybe(Srcloc)
+){
+
+ Returns the source location, if any, for @rhombus(stx). When
+ @rhombus(stx) is not a single-term syntax object, a source location is
+ constructed, if possible, from its content's locations.
+
+}
+
+
+@doc(
+  fun Syntax.is_original(stx :: Term) :: Boolean
+){
+
+ Reports whether the given syntax object is original in the sense that
+ it was part of the original source of a program, and not introduced by a
+ macro expansion. Originalness is determined by the presence of property
+ that is added to the syntax object when it is originally read, plus the
+ absence of scopes that indicate macro-introduction. See also
+ @rhombus(syntax_meta.toggle_introduce).
+
+}
+
 
 @doc(
   fun Syntax.strip_scopes(stx :: Syntax) :: Syntax

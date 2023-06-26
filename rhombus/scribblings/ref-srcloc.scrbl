@@ -11,6 +11,7 @@
   [srcloc.column, Srcloc.column(srcloc)]
   [srcloc.position, Srcloc.position(srcloc)]
   [srcloc.span, Srcloc.span(srcloc)]
+  [srcloc.to_report_string(), Srcloc.to_report_string(srcloc)]
 )
 
 @doc(
@@ -54,5 +55,19 @@
 ){
 
  Extracts a component of a source location.
+
+}
+
+
+@doc(
+  fun Srcloc.to_report_string(srcloc :: Srcloc) :: String
+){
+
+ Converts a source location into a human-readable string suitable for
+ error messages and other reporting.
+
+@examples(
+  Srcloc("demo.rhm", 1, 14, 500, 10).to_report_string()
+)
 
 }

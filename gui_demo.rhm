@@ -22,7 +22,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.scale(scale)
 
     let background: if config["mood"] == "Happy"
-                    | def center = [w/2, h/2]
+                    | let center = [w/2, h/2]
                       draw.RadialGradient([center, s/2],
                                           [center, math.max(w, h)],
                                           [[0, draw.Color("white")],
@@ -42,7 +42,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.text(config["keyed"])
 
     // draw ghost dots (showing recent mouse movements)
-    def dot_size = [4, 4]
+    let dot_size = [4, 4]
     for values(brush = draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
       each [x, y]: (config["ghosts"] :: List).reverse()
       dc.brush := brush
@@ -53,7 +53,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
     // face shape    
     dc.brush := draw.Brush(~color: "orange")
-    def face_rect = [x, y, s, s]
+    let face_rect = [x, y, s, s]
     match config["shape"]
     | "Square": dc.rectangle(face_rect)
     | "Rounded": dc.rounded_rectangle(face_rect)
