@@ -12,7 +12,7 @@ expr.macro
 | 'maybe_rhombus($args)': 'rhombus($args)'
 
 expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)':
-  fun extract_metavariables(term, ht):
+  fun extract_metavariables(term, ht :~ Map):
     match term
     | '($g, ...)': for values(ht = ht):
                      each g: [g, ...]

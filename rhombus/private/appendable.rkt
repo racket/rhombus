@@ -81,7 +81,9 @@
                                   (syntax-local-static-info/indirect form1 #'#%append/checked #'#%append-indirect)))
      (define append-id (or static-append-id
                            (if static?
-                               (raise-syntax-error '++ (string-append "specialization not known" statically-str) form1-in)
+                               (raise-syntax-error '++
+                                                   (string-append "specialization not known" statically-str)
+                                                   form1-in)
                                #'general-append)))
      (define si (or (syntax-local-static-info/indirect append-id #'#%call-result #'#%function-indirect) #'()))
      (wrap-static-info*

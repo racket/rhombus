@@ -68,7 +68,7 @@ regexp.macro '#%parens ($(p :: regexp_meta.Parsed))':
 // parsed and before a non-operator
 regexp.macro '$left #%juxtapose $right':
   ~same_as: #%call
-  '$(left.unwrap() ++ right.unwrap())'
+  '$("" ++ left.unwrap() ++ right.unwrap())'
 
 // `#%call` is implicitly added between a parsed term
 // and parentheses; we want just the same thing
@@ -78,7 +78,7 @@ regexp.macro '$left #%call $tail ...':
   values('$left', '#%juxtapose $tail ...')
 
 meta:
-  fun atomic(s):
+  fun atomic(s) :~ String:
     match s
     | ".": s
     | ~else: "(?:" ++ s ++ ")"

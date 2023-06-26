@@ -12,7 +12,7 @@ export:
 
 expr.macro 'examples($form, ...)':
   ~op_stx: self
-  fun split(forms):
+  fun split(forms) :~ List:
     match forms
     | []: []
     | ['~eval: $_', &rest]:
