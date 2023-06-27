@@ -79,9 +79,9 @@ block:
   // MUTATE backing list
   ml.set(2, 30)
   check: sl.get(1) ~is 30
-  // TODO: make this test about mutableSublist, not sublist
-  let msl: ml.sublist(1, 4)
+  let msl: ml.mutableSublist(1, 4)
   check: msl is_a List ~is #false
+  check: msl is_a ListView ~is #true
   check: msl is_a MutableList ~is #true
   check: msl.get(0) ~is 2
   check: msl.get(1) ~is 30

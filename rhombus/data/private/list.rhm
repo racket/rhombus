@@ -81,4 +81,4 @@ interface MutableList:
   method set(index :: Int, element) :: Void
   method insert(index :: Int, element) :: Void
   method delete(index :: Int) :: Void
-  override sublist(start :: Int, end :: Int) :: MutableList
+  method mutableSublist(start :: Int, end :: Int) :: MutableList

@@ -6,6 +6,7 @@ export:
 
 
 import:
+  rhombus/data/private/list.ListView
   rhombus/data/private/list.MutableList
   rhombus/data/sequence.Iterator
   lib("racket/base.rkt").error
@@ -32,10 +33,14 @@ class ArrayList():
 
   override method sublist(start, end):
     checkSublistIndicies("List.sublist", start, end)
-    ArraySublist(this, start, end)
+    ArrayUnmodifiableSublist(this, start, end)
+
+  override method mutableSublist(start, end):
+    checkSublistIndicies("MutableList.mutableSublist", start, end)
+    ArrayMutableSublist(this, start, end)
 
   override method set(index, element):
-    checkIndex("List.set", index)
+    checkIndex("MutableList.set", index)
     storage[index] := element
 
   override method add(element):
@@ -50,7 +55,7 @@ class ArrayList():
     unless i == -1 | delete(i)
 
   override method insert(index :: Int, element) :: Void:
-    checkInsertionIndex("List.insert", index)
+    checkInsertionIndex("MutableList.insert", index)
     ensureCapacity(currentSize + 1)
     fun loop(i = currentSize):
       unless i == index
@@ -94,8 +99,9 @@ class ArrayList():
       storage := newStorage
 
 
-class ArraySublist(backingList :: PrivateArrayList, start :: Int, mutable end :: Int):
-  implements MutableList
+class ArrayViewSublist(backingList :: PrivateArrayList, start :: Int, mutable end :: Int):
+  nonfinal
+  implements ListView
 
   override method iterate():
     ArraySublistIterator(this)
@@ -112,10 +118,34 @@ class ArraySublist(backingList :: PrivateArrayList, start :: Int, mutable end ::
 
   override method sublist(start, end):
     checkSublistIndicies("List.sublist", start, end)
-    ArraySublist(backingList, this.start + start, this.start + end)
+    ArrayUnmodifiableSublist(backingList, this.start + start, this.start + end)
+
+  method find(element):
+    fun loop(i = start):
+      cond
+      | i == end: -1
+      | backingList.get(i) == element: i - start
+      | ~else: loop(i + 1)
+    loop()
+
+
+class ArrayUnmodifiableSublist():
+  extends ArrayViewSublist
+
+
+class ArrayMutableSublist():
+  extends ArrayViewSublist
+  implements MutableList
+
+  override method contains(element):
+    find(element) != -1
+
+  override method mutableSublist(start, end):
+    checkSublistIndicies("MutableList.mutableSublist", start, end)
+    ArrayMutableSublist(backingList, this.start + start, this.start + end)
 
   override method set(index, element):
-    checkIndex("List.set", index)
+    checkIndex("MutableList.set", index)
     backingList.set(index + start, element)
 
   override method add(element):
@@ -150,14 +180,6 @@ class ArraySublist(backingList :: PrivateArrayList, start :: Int, mutable end ::
     backingList.version := backingList.version + 1
     end := 0
 
-  private method find(element):
-    fun loop(i = start):
-      cond
-      | i == end: -1
-      | backingList.get(i) == element: i - start
-      | ~else: loop(i + 1)
-    loop()
-
 
 class ArrayListIterator(backingList :: ArrayList, private version :: Int = backingList.version):
   implements Iterator
@@ -177,7 +199,7 @@ class ArrayListIterator(backingList :: ArrayList, private version :: Int = backi
 
 
 // TODO
-class ArraySublistIterator(backingSublist :: ArraySublist)
+class ArraySublistIterator(backingSublist :: ArrayViewSublist)
 
 
 fun max(x, y):
