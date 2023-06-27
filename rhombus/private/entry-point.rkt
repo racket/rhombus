@@ -65,6 +65,7 @@
   (define-rhombus-transform
     #:syntax-class (:entry-point adjustments)
     #:desc "entry-point form"
+    #:parsed-tag #:rhombus/entry_point
     #:in-space in-entry-point-space
     #:transformer-ref (lambda (v)
                         (define t (entry-point-transformer-ref v))
@@ -81,6 +82,7 @@
   (define-rhombus-transform
     #:syntax-class :entry-point-arity
     #:desc "entry-point form"
+    #:parsed-tag #:rhombus/entry_point
     #:in-space in-entry-point-space
     #:transformer-ref (lambda (v)
                         (define t (entry-point-transformer-ref v))

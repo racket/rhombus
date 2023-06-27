@@ -64,6 +64,7 @@
     #:prefix-more-syntax-class :prefix-op+reducer+tail
     #:infix-more-syntax-class :infix-op+reducer+tail
     #:desc "reducer"
+    #:parsed-tag #:rhombus/reducer
     #:in-space in-reducer-space
     #:prefix-operator-ref reducer-prefix-operator-ref
     #:infix-operator-ref reducer-infix-operator-ref

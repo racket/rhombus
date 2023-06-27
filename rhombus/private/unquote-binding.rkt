@@ -45,6 +45,7 @@
     #:syntax-class :unquote-binding
     #:desc "unquote binding"
     #:operator-desc "unquote binding operator"
+    #:parsed-tag #:rhombus/unquote_binding
     #:in-space in-unquote-binding-space
     #:prefix-operator-ref unquote-binding-prefix-operator-ref
     #:infix-operator-ref unquote-binding-infix-operator-ref

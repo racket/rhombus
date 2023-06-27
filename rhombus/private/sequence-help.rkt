@@ -4,7 +4,6 @@
                      "parse.rkt"
                      "pack.rkt")
          "definition.rkt"
-         "parsed.rkt"
          "parse.rkt"
          "parens.rkt"
          (submod "equal.rkt" for-parse))
@@ -35,7 +34,7 @@
   (lambda (stx)
     (syntax-parse stx
       [[(lhs:identifier ...) (_ expr)]
-       (define s (proc #`(group lhs ... (block (group #,(parsed #'expr))))))
+       (define s (proc #`(group lhs ... (block (group (parsed #:rhombus/expr expr))))))
        (cond
          [s
           (syntax-parse s

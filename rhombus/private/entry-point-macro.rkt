@@ -40,9 +40,9 @@
 
 (begin-for-syntax
   (define-transformer-parameterized-syntax-class
-    Parsed :entry-point)
+    Parsed :entry-point #:rhombus/entry_point)
   (define-transformer-syntax-class
-    Arity :entry-point-arity))
+    Arity :entry-point-arity #:rhombus/entry_point))
 
 (define-for-syntax (extract-entry-point form proc adjustments)
   (syntax-parse (if (syntax? form)
@@ -68,4 +68,4 @@
      (extract-entry-point-arity form proc))))
 
 (define-for-syntax (pack stx)
-  #`(parsed (rhombus-expression #,(unpack-group stx 'entry_point_meta.pack #f))))
+  #`(parsed #:rhombus/entry_point (rhombus-expression #,(unpack-group stx 'entry_point_meta.pack #f))))

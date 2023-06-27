@@ -65,7 +65,7 @@
        #:with clause::space-meta-clause (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
-         [((group (parsed p)) ...)
+         [((group (parsed #:rhombus/space_meta_clause p)) ...)
           #`(begin p ... (enforest-meta-body-step . rest))]
          [(form ...)
           #`(enforest-meta-body-step form ... . rest)])]
@@ -96,6 +96,7 @@
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
+       (define parsed-tag (string->keyword (symbol->string (syntax-e #'space-path-name))))
        (define macro-result (hash-ref options '#:parsed_checker #'(make-check-syntax (quote name))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
@@ -126,6 +127,7 @@
                 #:infix-more-syntax-class :infix-more
                 #:desc #,desc
                 #:operator-desc #,desc-operator
+                #:parsed-tag #,parsed-tag
                 #:in-space in-new-space
                 #:prefix-operator-ref new-prefix-operator-ref
                 #:infix-operator-ref new-infix-operator-ref
@@ -169,6 +171,7 @@
                (define-rhombus-transform
                  #:syntax-class :base
                  #:desc #,desc
+                 #:parsed-tag #,parsed-tag
                  #:in-space in-new-space
                  #:transformer-ref new-transformer-ref
                  #:check-result #,macro-result))

@@ -219,7 +219,7 @@
                                (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
                                    (unwrap-static-infos
                                     (rhombus-local-expand
-                                     #`(rhombus-expression (group #,seq-ctr (parens (group (parsed rhs)))))))
+                                     #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs)))))))
                                    #`(#,seq-ctr rhs))]
                               [else (unwrap-static-infos #'rhs)])]
             . rev-clauses)

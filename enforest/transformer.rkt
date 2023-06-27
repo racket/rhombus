@@ -34,6 +34,8 @@
                          #:defaults ([form? #'#f]))
               (~optional (~seq #:desc form-kind-str)
                          #:defaults ([form-kind-str "form"]))
+              (~optional (~seq #:parsed-tag parsed-tag:keyword)
+                         #:defaults ([parsed-tag #'#:transformed]))
               (~optional (~seq #:in-space in-space)
                          #:defaults ([in-space #'values]))
               (~optional (~seq #:name-path-op name-path-op)
@@ -62,12 +64,14 @@
                                                      (datum->syntax #f (cons head-id #'hname.tail))
                                                      check-result))
            #,(if (syntax-e #'accept-parsed?)
-                 #`(pattern ((~datum group) ((~datum parsed) inside . inside-tail) . tail)
+                 #`(pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
                             #:cut
+                            #:do [(unless (eq? (syntax-e #'tag) 'parsed-tag)
+                                    (parsed-wrong-context-error form-kind-str #'head))]
                             #:with () #'inside-tail
                             #:with () #'tail
                             #:attr parsed #'inside)
-                 #`(pattern ((~datum group) ((~datum parsed) . _) . _)
+                 #`(pattern ((~datum group) (~and head ((~datum parsed) _ . _)) . _)
                             #:cut
                             #:when #f
                             #:attr parsed #'#f))
@@ -86,7 +90,8 @@
                        [((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
-                       [((~datum group) ((~datum parsed) . _) . _) accept-parsed?]
+                       [((~datum group) ((~datum parsed) tag . _) . _) (and accept-parsed?
+                                                                            (eq? (syntax-e #'tag) 'parsed-tag))]
                        [((~datum group) head . _)
                         (define-values (implicit-name ctx) (select-prefix-implicit #'head))
                         (define implicit-id (datum->syntax ctx implicit-name))

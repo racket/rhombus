@@ -320,7 +320,7 @@
                              (length (syntax->list #'(si ...)))]
                             [_ 1])
              #:attr maybe_converter (and (syntax-e #'r.converter)
-                                         #'(parsed r.converter))
+                                         #'(parsed #:rhombus/expr r.converter))
              #:attr static_info (unpack-static-infos #'r.static-infos)
              #:attr annotation_string (syntax-parse (and (syntax-e #'r.converter) #'r)
                                         [(_ . t) (shrubbery-syntax->string #`(#,group-tag . t))]
@@ -454,6 +454,7 @@
              ((entry_point_meta.Adjustment-wrap-body adjustments)
               arity
               #`(parsed
+                 #:rhombus/expr
                  (nested-bindings
                   #,function-name
                   #f ; try-next
@@ -630,6 +631,7 @@
                                                                                #'#f)
                                                               (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))
                                              #`(parsed
+                                                #:rhombus/expr
                                                 (add-annotation-check
                                                  #,function-name
                                                  converter #,main-converter-stx
@@ -1119,10 +1121,11 @@
                                    (for/list ([arg (in-list args)]
                                               #:when (eq? (cadr arg) 'kw))
                                      #`(group #,(list-ref arg 3)
-                                              (block (group (parsed #,(car arg)))))))
+                                              (block (group (parsed #:rhombus/expr #,(car arg)))))))
                                   (and lists?
                                        #`(group
                                           (parsed
+                                           #:rhombus/expr
                                            (append
                                             #,@(for/list ([arg (in-list args)]
                                                           #:when (or (eq? (cadr arg) 'arg)
@@ -1138,8 +1141,8 @@
                                                 (car arg))])
                                     (cond
                                       [(null? kwss) #f]
-                                      [(null? (cdr kwss)) #`(group (parsed #,(car kwss)))]
-                                      [else #`(group (parsed (merge-keyword-argument-maps #,@kwss)))]))
+                                      [(null? (cdr kwss)) #`(group (parsed #:rhombus/expr #,(car kwss)))]
+                                      [else #`(group (parsed #:rhombus/expr (merge-keyword-argument-maps #,@kwss)))]))
                                   #'#f
                                   #:static? static?
                                   #:repetition? repetition?

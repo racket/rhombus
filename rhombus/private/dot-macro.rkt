@@ -34,7 +34,7 @@
 (define-for-syntax (wrap-dot-provider-transformer proc)
   (lambda (left dot right tail static? success-k fail-k)
     (call-with-values
-     (lambda () (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot static? (pack-tail tail)))
+     (lambda () (proc (pack-tail #`((parsed #:rhombus/expr #,left) #,dot #,right)) dot static? (pack-tail tail)))
      (case-lambda
        [(e)
         (cond

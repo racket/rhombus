@@ -22,6 +22,7 @@
   (define-rhombus-transform
     #:syntax-class :space-clause
     #:desc "space transform clause"
+    #:parsed-tag #:rhombus/space_clause
     #:in-space in-space-clause-space
     #:transformer-ref space-clause-transformer-ref))
 

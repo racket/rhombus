@@ -59,7 +59,7 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :annotation
+    Parsed :annotation #:rhombus/annot
     AfterPrefixParsed :prefix-op+annotation+tail
     AfterInfixParsed :infix-op+annotation+tail))
 
@@ -84,7 +84,7 @@
        (tail-returner
         proc
         (syntax-parse tail
-          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)])))
+          [(head . tail) (proc #`(parsed #:rhombus/annot #,form1) (pack-tail #'tail) #'head)])))
      (check-transformer-result (parse-annotation-macro-result form proc)
                                (unpack-tail new-tail proc #f)
                                proc))
@@ -108,8 +108,8 @@
 (define-for-syntax (annotation-kind stx who)
   (syntax-parse (unpack-term stx who #f)
     #:datum-literals (parsed)
-    [(parsed a::annotation-predicate-form) 'predicate]
-    [(parsed a::annotation-binding-form) 'converter]
+    [(parsed #:rhombus/annot a::annotation-predicate-form) 'predicate]
+    [(parsed #:rhombus/annot a::annotation-binding-form) 'converter]
     [_ (raise-arguments-error* who
                                rhombus-realm
                                "syntax object is not a parsed annotation"
@@ -120,15 +120,15 @@
 
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
   (unless (syntax? predicate) (raise-argument-error* 'annot.pack_predicate rhombus-realm "Syntax" predicate))
-  #`(parsed #,(annotation-predicate-form (wrap-expression predicate)
-                                         (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
-                                                            'annot.pack_predicate))))
+  #`(parsed #:rhombus/annot #,(annotation-predicate-form (wrap-expression predicate)
+                                                         (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
+                                                                            'annot.pack_predicate))))
 
 (define-for-syntax (unpack_predicate stx)
   (syntax-parse (unpack-term stx 'annot_meta.unpack_predicate #f)
     #:datum-literals (parsed)
-    [(parsed a::annotation-predicate-form)
-     (values #'(parsed a.predicate)
+    [(parsed #:rhombus/annot a::annotation-predicate-form)
+     (values #'(parsed #:rhombus/expr a.predicate)
              (unpack-static-infos #'a.static-infos))]
     [_
      (raise-arguments-error* 'annot_meta.unpack_predicate
@@ -141,9 +141,10 @@
 
 (define-for-syntax (pack_converter binding body [static-infos #'(parens)])
   (syntax-parse (if (syntax? binding) binding #'no)
-    [(parsed _::binding-form)
+    [(parsed #:rhombus/bind _::binding-form)
      (unless (syntax? body) (raise-argument-error* 'annot.pack_converter rhombus-realm "Syntax" body))
-     #`(parsed #,(annotation-binding-form binding
+     #`(parsed #:rhombus/annot
+               #,(annotation-binding-form binding
                                           (wrap-expression body)
                                           (pack-static-infos (unpack-term static-infos 'annot.pack_converter #f)
                                                              'annot.pack_converter)))]
@@ -156,9 +157,9 @@
 (define-for-syntax (unpack_converter stx)
   (syntax-parse (unpack-term stx 'annot_meta.unpack_predicate #f)
     #:datum-literals (parsed)
-    [(parsed a::annotation-binding-form)
-     (values #'(parsed a.binding)
-             #'(parsed a.body)
+    [(parsed #:rhombus/annot a::annotation-binding-form)
+     (values #'(parsed #:rhombus/bind a.binding)
+             #'(parsed #:rhombus/expr a.body)
              (unpack-static-infos #'a.static-infos))]
     [_
      (raise-arguments-error* 'annot_meta.unpack_converter

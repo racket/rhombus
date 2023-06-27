@@ -270,7 +270,7 @@
 (define-for-syntax (make-ellipsis-transformer)
   (typeset-meta:make_Transformer
    (lambda (use-stx)
-     #`(parsed (tt "...")))))
+     #`(parsed #:rhombus/expr (tt "...")))))
 
 (define (make-def-id redef? id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
@@ -376,6 +376,7 @@
                            ((make-interned-syntax-introducer space-sym) def-id)
                            def-id))
      #`(parsed
+        #:rhombus/expr
         (racketvarfont
          (make-id-element (quote-syntax #,sp-def-id) #,(symbol->string id-sym) #f
                           #:space '#,space-sym
@@ -386,7 +387,7 @@
 (define-for-syntax (make-meta-id-transformer id)
   (typeset-meta:make_Transformer
    (lambda (use-stx)
-     #`(parsed (racketvarfont #,(symbol->string (syntax-e id)))))))
+     #`(parsed #:rhombus/expr (racketvarfont #,(symbol->string (syntax-e id)))))))
 
 (define-for-syntax (nt-key-expand nt-key-g)
   (define-values (root fields space-name)
@@ -458,7 +459,8 @@
        (define id (if (identifier? name) name (cadr (syntax->list name))))
        #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
           (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
-           (group (parsed (let ([redef? #,as-redef?])
+           (group (parsed #:rhombus/expr
+                          (let ([redef? #,as-redef?])
                             #,def-id-as-def)))))]
       [else #`(let ([redef? #,as-redef?])
                 #,def-id-as-def)]))

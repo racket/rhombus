@@ -683,10 +683,12 @@
      (define base-e (repetition-as-list #'rep-info (syntax-e #'depth)))
      (define unpack*-id #'unpack*)
      (cond
-       [(free-identifier=? unpack*-id #'unpack-tail*)
+       [(and (identifier? unpack*-id)
+             (free-identifier=? unpack*-id #'unpack-tail*))
         (get-tail-repetition #'$-name base-e (sub1 (syntax-e #'depth))
                              #'unpack-tail-list* #'unpack-tail* #'unpack-list-tail*)]
-       [(free-identifier=? unpack*-id #'unpack-multi-tail*)
+       [(and (identifier? unpack*-id)
+             (free-identifier=? unpack*-id #'unpack-multi-tail*))
         (get-tail-repetition #'$-name base-e (sub1 (syntax-e #'depth))
                              #'unpack-multi-tail-list* #'unpack-multi-tail* #'unpack-multi-list-tail*)]
        [else
@@ -697,7 +699,8 @@
               #:literals (begin quote-syntax)
               [(begin (quote-syntax . _) e) (loop #'e)]
               [(unpack*:id _ e d)
-               #:when (free-identifier=? #'unpack* unpack*-id)
+               #:when (and (identifier? unpack*-id)
+                           (free-identifier=? #'unpack* unpack*-id))
                #'e]
               [_ e])))
         #`(unpack* $-name #,opt-e depth)])]))
@@ -711,7 +714,7 @@
     (syntax-parse e
       #:literals (begin quote-syntax)
       [(begin (quote-syntax . _) e) (loop #'e)]
-      [(unpack* $-name e d)
+      [(unpack*:id $-name e d)
        #:when (free-identifier=? #'unpack* replaceable-unpack*-id)
        #`(#,replacement-unpack*-id $-name e #,depth-stx)]
       [_

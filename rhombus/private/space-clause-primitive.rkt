@@ -19,7 +19,7 @@
 (define-syntax rhombus-space-clause 'placeholder)
 
 (define-for-syntax (wrap-clause parsed)
-  #`[(group (parsed (quote-syntax (rhombus-space-clause #,parsed) #:local)))])
+  #`[(group (parsed #:rhombus/space_clause (quote-syntax (rhombus-space-clause #,parsed) #:local)))])
 
 (begin-for-syntax
   (define-splicing-syntax-class :space_name

@@ -25,7 +25,6 @@
         "unquote-binding-macro.rkt"
         "syntax-class-clause-macro.rkt"
         "pattern-clause-macro.rkt"
-        "parsed.rkt"
         "syntax-meta.rkt"
         "space-macro.rkt"
         "space-clause-primitive.rkt"

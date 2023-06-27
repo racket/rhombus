@@ -11,11 +11,11 @@ expr.macro 'doc $parens $tail ...':
   ~op_stx: me
   match parens
   | '($_ ..., ..., [$_ ..., ...])':
-      values(parsed(['#{typeset-doc}', me, parens]),
+      values(expr_meta.pack_s_exp(['#{typeset-doc}', me, parens]),
              '$tail ...')
   | ~else:
       syntax_meta.error("expected forms and documentation content", '$me $parens')
 
 defn.macro 'nonterminal: $nts':
   ~op_stx: me
-  parsed(['#{define-nonterminal}', me, ': $nts'])
+  defn_meta.pack_s_exp(['#{define-nonterminal}', me, ': $nts'])

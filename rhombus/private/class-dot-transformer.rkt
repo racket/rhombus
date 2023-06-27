@@ -57,7 +57,8 @@
        #:datum-literals ()
        [(_ (_ (~and p (_::parens g)) . tail))
         #:with e::expression #'g
-        (define new-g #`((parsed #,(wrap-static-info #`(check-instance '#,name #,pred e.parsed)
+        (define new-g #`((parsed #:rhombus/expr
+                                 #,(wrap-static-info #`(check-instance '#,name #,pred e.parsed)
                                                      #'#%dot-provider
                                                      instance))
                          |.|

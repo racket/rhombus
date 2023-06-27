@@ -67,7 +67,7 @@
        #:with clause::space-clause (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
-         [((group (parsed p)) ...)
+         [((group (parsed #:rhombus/space_clause p)) ...)
           #`(begin p ... (enforest-body-step . rest))]
          [(form ...)
           #`(enforest-body-step form ... . rest)])]

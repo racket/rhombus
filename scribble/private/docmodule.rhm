@@ -17,13 +17,13 @@ export:
 meta:
   fun translate_mod(mod):
     match mod
-    | '$(a :: Identifier)': Syntax.unwrap(a)
+    | '$(a :: Identifier)': mod
     | '$a / $b ...':
-        base.#{string->symbol}(Syntax.unwrap(a)
-                                 +& "/"
-                                 +& translate_mod('$b ...'))
+        Syntax.make_id(Syntax.unwrap(a)
+                         +& "/"
+                         +& translate_mod('$b ...'))
     | 'lib($str)':
-        [#'lib, str]
+        ['lib', str]
 
   syntax_class Option:
     pattern
@@ -35,12 +35,12 @@ meta:
         field [form, ...]: ['#{#:use-sources}', [translate_mod(modpath), ...]]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
-  '$(parsed(['defmodule',
-             #'#{#:require-form},
-             unparsed('fun (mod): @rhombus(import: #,(mod))'),
-             translate_mod('$mod ...'),
-             option.form, ..., ...]))'
+  '$(decl_meta.pack_s_exp(['defmodule',
+                           '#{#:require-form}',
+                           expr_meta.pack_expr('fun (mod): @rhombus(import: #,(mod))'),
+                           translate_mod('$mod ...'),
+                           option.form, ..., ...]))'
   
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
-  values(parsed(['racketmodname', translate_mod('$mod ...')]),
+  values(expr_meta.pack_s_exp(['racketmodname', translate_mod('$mod ...')]),
          '$tail ...')

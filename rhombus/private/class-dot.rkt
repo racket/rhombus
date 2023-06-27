@@ -423,7 +423,7 @@
             [(_:::=-expr . tail)
              #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
              (values (relocate #'e.parsed
-                               #`(#,(no-srcloc #'parens) (group (parsed e.parsed))))
+                               #`(#,(no-srcloc #'parens) (group (parsed #:rhombus/expr e.parsed))))
                      #'e.tail)]
             [_ (values (no-srcloc #'(parens)) tail)])
           (syntax-parse tail

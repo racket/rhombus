@@ -33,15 +33,15 @@
   (syntax-parse stx
     #:datum-literals (parens group block)
     [(_ (parens (~or (~optional (group #:label (block label-expr))
-                                #:defaults ([label-expr #'(group (parsed #f))]))
+                                #:defaults ([label-expr #'(group (parsed #:rhombus/expr #f))]))
                      (~optional (group (~and no-prompt #:no_prompt))
                                 #:defaults ([no-prompt #'#f]))
                      (~optional (group #:eval (block eval-expr))
-                                #:defaults ([eval-expr #'(group (parsed (make-rhombus-eval)))]))
+                                #:defaults ([eval-expr #'(group (parsed #:rhombus/expr (make-rhombus-eval)))]))
                      (~optional (group #:hidden (block hidden-expr))
-                                #:defaults ([hidden-expr #'(group (parsed #f))]))
+                                #:defaults ([hidden-expr #'(group (parsed #:rhombus/expr #f))]))
                      (~optional (group #:indent (block indent-expr))
-                                #:defaults ([indent-expr #'(group (parsed 0))])))
+                                #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))])))
                 ...
                 (group form ...) ...))
      (define (rb form)
@@ -55,10 +55,11 @@
                      [prompt (if (syntax-e #'no-prompt) "" "> ")]
                      [prompt-indent (if (syntax-e #'no-prompt) 0 2)])
          #'(rhombus-expression (group rhombusblock_etc
-                                      (parens (group #:prompt (block (group (parsed prompt))))
-                                              (group #:indent (block (group (parsed (+ prompt-indent
+                                      (parens (group #:prompt (block (group (parsed #:rhombus/expr prompt))))
+                                              (group #:indent (block (group (parsed #:rhombus/expr
+                                                                                    (+ prompt-indent
                                                                                        (rhombus-expression indent-expr))))))
-                                              (group #:inset (block (group (parsed #f)))))
+                                              (group #:inset (block (group (parsed #:rhombus/expr #f)))))
                                       (t-block t-form)))))
      (with-syntax ([((t-form e-form) ...)
                     (for/list ([form (in-list (map (lambda (s) (datum->syntax #f
@@ -66,7 +67,7 @@
                                                    (syntax->list #'((form ...) ...))))])
                       (syntax-parse form
                         #:datum-literals (group)
-                        [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed (void))))]
+                        [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed #:rhombus/expr (void))))]
                         [(group #:error (block ((~and tag group) form ...)))
                          #`((list (quote #:error)
                                   #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))

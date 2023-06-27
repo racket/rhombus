@@ -43,7 +43,7 @@
 
 (begin-for-syntax
   (define-transformer-parameterized-syntax-class
-    ParsedModifier :export-modifier))
+    ParsedModifier :export-modifier #:rhombus/expo))
 
 (define-for-syntax (extract-modifier form proc req)
   (syntax-parse (if (syntax? form)
@@ -55,7 +55,7 @@
 (define-for-syntax (make-export-modifier proc)
   (export-modifier
    (lambda (req-in stx)
-     (define req #`(parsed #,req-in))
+     (define req #`(parsed #:rhombus/expo #,req-in))
      (define imp (syntax-parse stx
                    [(head . tail) (proc (pack-tail #'tail) #'head req)]))
      (extract-modifier imp proc req))))
@@ -71,7 +71,7 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :export
+    Parsed :export #:rhombus/expo
     AfterPrefixParsed :prefix-op+export+tail
     AfterInfixParsed :infix-op+export+tail))
 
@@ -82,7 +82,7 @@
     [i::export #'i.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "export" form)]))
 
-(define-for-syntax (parsed-argument form) #`(parsed #,form))
+(define-for-syntax (parsed-argument form) #`(parsed #:rhombus/expo #,form))
 
 (define-for-syntax (make-export-infix-operator name prec protocol proc assc)
   (export-infix-operator
@@ -111,7 +111,7 @@
    protocol
    (if (eq? protocol 'automatic)
        (lambda (form stx)
-         (extract-export (proc #`(parsed #,form) stx)
+         (extract-export (proc #`(parsed #:rhombus/expo #,form) stx)
                          proc))
        (lambda (tail)
          (define-values (form new-tail)

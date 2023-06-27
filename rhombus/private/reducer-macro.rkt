@@ -47,7 +47,7 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :reducer
+    Parsed :reducer #:rhombus/reducer
     AfterPrefixParsed :prefix-op+reducer+tail
     AfterInfixParsed :infix-op+reducer+tail)
 
@@ -56,7 +56,7 @@
     #:property prop:reducer-infix-operator (lambda (self) (reducer-prefix+infix-operator-infix self))))
 
 (define-for-syntax (wrap-parsed stx)
-  #`(parsed #,stx))
+  #`(parsed #:rhombus/reducer #,stx))
 
 (define-for-syntax (extract-reducer form proc)
   (syntax-parse (if (syntax? form)
@@ -123,7 +123,8 @@
                                "syntax object" binds)]))
   (define si (pack-static-infos (unpack-term static-infos 'reducer.pack #f) 'reducer.pack))
   (unless (syntax? data) (raise-argument-error* 'reducer.pack rhombus-realm "Syntax" data))
-  (pack-term #`(parsed #,(reducer
+  (pack-term #`(parsed #:rhombus/reducer
+                       #,(reducer
                           #'chain-to-wrapper
                           packed-binds
                           #'chain-to-body-wrapper
@@ -136,12 +137,12 @@
 (define-syntax (chain-to-wrapper stx)
   (syntax-parse stx
     [(_ [wrapper-id step-id break-id final-id finish-id data] e)
-     #'(rhombus-expression (group wrapper-id data (parsed e)))]))
+     #'(rhombus-expression (group wrapper-id data (parsed #:rhombus/expr e)))]))
 
 (define-syntax (chain-to-body-wrapper stx)
   (syntax-parse stx
     [(_ [wrapper-id step-id break-id final-id finish-id data] e)
-     #'(rhombus-definition (group step-id data (parsed e)))]))
+     #'(rhombus-definition (group step-id data (parsed #:rhombus/expr e)))]))
 
 (define-syntax (chain-to-breaker stx)
   (syntax-parse stx
@@ -160,18 +161,19 @@
 
 (define-for-syntax (unpack stx)
   (syntax-parse (unpack-term stx 'reducer_meta.unpack #f)
-    [(parsed r::reducer-form)
+    [(parsed #:rhombus/reducer r::reducer-form)
      #`(parens (group chain-back-to-wrapper)
-               (group (parens (group r.id (op =) (parsed r.init-expr))
+               (group (parens (group r.id (op =) (parsed #:rhombus/expr r.init-expr))
                               ...))
                (group chain-back-to-body-wrapper)
                (group #,(and (syntax-e #'r.break-whener) #'chain-back-to-breaker))
                (group #,(and (syntax-e #'r.final-whener) #'chain-back-to-finaler))
                (group chain-back-to-finisher)
                (group #,(unpack-static-infos #'r.static-infos))
-               (group (parsed (r.wrapper r.body-wrapper r.break-whener r.final-whener r.finisher r.data))))]
+               (group (parsed #:rhombus/reducer/chain (r.wrapper r.body-wrapper r.break-whener r.final-whener r.finisher r.data))))]
     [else
-     (raise-arguments-error* 'reducer.unpack "not a parsed reducer form"
+     (raise-arguments-error* 'reducer.unpack rhombus-realm
+                             "not a parsed reducer form"
                              "syntax object" stx)]))
 
 (define-syntax chain-back-to-wrapper
@@ -179,7 +181,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parsed group)
-       [(_ (parsed (wrapper body-wrapper breaker finaler finisher data)) e)
+       [(_ (parsed #:rhombus/reducer/chain (wrapper body-wrapper breaker finaler finisher data)) e)
         (values #'(wrapper data (rhombus-expression (group e))) #'())]))))
 
 (define-syntax chain-back-to-body-wrapper
@@ -187,7 +189,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parsed group)
-       [(_ (parsed (wrapper body-wrapper breaker finaler finisher data)) e)
+       [(_ (parsed #:rhombus/reducer/chain (wrapper body-wrapper breaker finaler finisher data)) e)
         (list #'(body-wrapper data (rhombus-expression (group e))))]))))
 
 (define-syntax chain-back-to-breaker
@@ -195,7 +197,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parsed group)
-       [(_ (parsed (wrapper body-wrapper breaker finaler finisher data)))
+       [(_ (parsed #:rhombus/reducer/chain (wrapper body-wrapper breaker finaler finisher data)))
         (values #'(finisher data) #'())]))))
 
 (define-syntax chain-back-to-finaler
@@ -203,7 +205,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parsed group)
-       [(_ (parsed (wrapper body-wrapper breaker finaler finisher data)))
+       [(_ (parsed #:rhombus/reducer/chain (wrapper body-wrapper breaker finaler finisher data)))
         (values #'(finaler data) #'())]))))
 
 (define-syntax chain-back-to-finisher
@@ -211,5 +213,5 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parsed group)
-       [(_ (parsed (wrapper body-wrapper breaker finaler finisher data)))
+       [(_ (parsed #:rhombus/reducer/chain (wrapper body-wrapper breaker finaler finisher data)))
         (values #'(finisher data) #'())]))))

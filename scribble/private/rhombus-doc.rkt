@@ -592,7 +592,7 @@
                                    (rb #'(group t ...)
                                        #:at g
                                        #:pattern? #t
-                                       #:options #'((parens (group #:inset (block (group (parsed #f)))))))])))]))))
+                                       #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))]))))
 
 ;; ----------------------------------------
 
@@ -659,7 +659,7 @@
 (define-for-syntax (rb form
                        #:at [at-form form]
                        #:pattern? [pattern? #f]
-                       #:options [options #'((parens (group #:inset (block (group (parsed #f))))))])
+                       #:options [options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))))])
   (with-syntax ([t-form (if pattern?
                             (drop-pattern-escapes form)
                             form)]

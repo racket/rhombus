@@ -4,6 +4,7 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "pack.rkt"
+                     "pack-s-exp.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base)
                      "tail-returner.rkt"
@@ -51,14 +52,14 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :expression
+    Parsed :expression #:rhombus/expr
     AfterPrefixParsed :prefix-op+expression+tail
     AfterInfixParsed :infix-op+expression+tail))
 
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information
   (define loc (maybe-respan form))
-  (relocate loc #`(parsed #,(relocate loc (rhombus-local-expand form)))))
+  (relocate loc #`(parsed #:rhombus/expr #,(relocate loc (rhombus-local-expand form)))))
 
 (define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator
@@ -105,27 +106,14 @@
 
 (define-for-syntax (pack_s_exp orig-s)
   #`(parsed
-     #,(let loop ([s orig-s])
-         (cond
-           [(syntax? s)
-            (define stx (unpack-term s 'expr.pack_s_exp #f))
-            (syntax-parse stx
-              #:datum-literals (parsed)
-              [(parsed e) #'e]
-              [_ stx])]
-           [(list? s)
-            (for/list ([e (in-list s)])
-              (loop e))]
-           [else
-            (raise-arguments-error* 'expr.pack_s_exp rhombus-realm
-                                    "not a list nesting of syntax objects"
-                                    "value" orig-s)]))))
+     #:rhombus/expr
+     #,(pack-s-exp 'expr.pack_s_exp orig-s)))
 
 (define-for-syntax (pack_expr s)
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  #`(parsed (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
+  #`(parsed #:rhombus/expr (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
 
 (define-for-syntax (parse_more s)
   (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
-    [e::expression #`(parsed #,(rhombus-local-expand #'e.parsed))]))
+    [e::expression #`(parsed #:rhombus/expr #,(rhombus-local-expand #'e.parsed))]))

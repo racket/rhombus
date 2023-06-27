@@ -7,4 +7,4 @@
 (define-syntax rhombus-class 'placeholder)
 
 (define-for-syntax (wrap-class-clause parsed)
-  #`[(group (parsed (quote-syntax (rhombus-class #,parsed) #:local)))]) ; `quote-syntax` + `rhombus-class` wrapper => clause
+  #`[(group (parsed #:rhombus/class_clause (quote-syntax (rhombus-class #,parsed) #:local)))]) ; `quote-syntax` + `rhombus-class` wrapper => clause

@@ -107,6 +107,7 @@
     #:infix-more-syntax-class :infix-op+repetition-use+tail
     #:desc "repetition"
     #:operator-desc "repetition operator"
+    #:parsed-tag #:rhombus/repet
     #:in-space in-repetition-space
     #:prefix-operator-ref repetition-prefix-operator-ref
     #:infix-operator-ref repetition-infix-operator-ref

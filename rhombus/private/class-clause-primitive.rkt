@@ -180,7 +180,7 @@
     #:attributes (id rhs maybe-ret)
     (pattern (~seq id:identifier (tag::parens arg ...) ret::maybe-ret)
              #:attr rhs #'(block (group fun (tag arg ...)
-                                        (block (group (parsed (void))))))
+                                        (block (group (parsed #:rhombus/expr (void))))))
              #:attr maybe-ret #'ret.seq)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:attr rhs #'#f
@@ -197,7 +197,7 @@
                                                        (alts
                                                         (block (group (parens) rhs))
                                                         (block (group (parens (group ignored))
-                                                                      (block (group (parsed (not-assignable 'id)))))))))
+                                                                      (block (group (parsed #:rhombus/expr (not-assignable 'id)))))))))
                                                ret.seq)))
     
     (pattern (~seq (_::alts
@@ -210,7 +210,7 @@
                                                        (alts
                                                         (block (group (parens) rhs))
                                                         (block (group (parens (group ignored))
-                                                                      (block (group (parsed (not-assignable 'id)))))))))
+                                                                      (block (group (parsed #:rhombus/expr (not-assignable 'id)))))))))
                                                ret.seq)))
     (pattern (~seq (~and alts
                          (atag::alts
@@ -235,11 +235,11 @@
     #:attributes (id rhs maybe-ret)
     #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret)
-             #:attr rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed (void))))))
-                                                  (block (group (parens (group _)) (block (group (parsed (void)))))))))
+             #:attr rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed #:rhombus/expr (void))))))
+                                                  (block (group (parens (group _)) (block (group (parsed #:rhombus/expr (void)))))))))
              #:attr maybe-ret #'ret.seq)
     (pattern (~seq (_::alts (_::block (group id:identifier ret::maybe-ret))))
-             #:attr rhs #'(block (group fun (parens) (block (group (parsed (void))))))
+             #:attr rhs #'(block (group fun (parens) (block (group (parsed #:rhombus/expr (void))))))
              #:attr maybe-ret #'ret.seq)))
 
 (define-class-clause-syntax constructor

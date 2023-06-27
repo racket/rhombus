@@ -828,6 +828,7 @@
                                    (list #'this-obj)
                                    (lambda (arity stx)
                                      #`(parsed
+                                        #:rhombus/expr
                                         (syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
                                                                                                . super-names))]
                                                               [private-tables (quote-syntax private-tables-id)])

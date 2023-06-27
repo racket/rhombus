@@ -62,14 +62,14 @@
                             id        ; identifier name of external form, useful for errors
                             val-id    ; identifier that holds match
                             depth     ; repetition depth relative to base name
-                            unpack*-id)) ; unpacker
+                            unpack*)) ; unpacker, usually an identifier
 
   (define (pattern-variable->list pv #:keep-id? [keep-id? #t])
     (list (pattern-variable-sym pv)
           (and keep-id? (pattern-variable-id pv))
           (pattern-variable-val-id pv)
           (pattern-variable-depth pv)
-          (pattern-variable-unpack*-id pv)))
+          (pattern-variable-unpack* pv)))
   (define (list->pattern-variable l)
     (apply pattern-variable l))
   (define (syntax-list->pattern-variable pv)
@@ -111,38 +111,38 @@
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
 
 (define-syntax-rule (define-operator-syntax-classes
-                      Parsed :form
+                      Parsed :form parsed-tag
                       AfterPrefixParsed :prefix-op+form+tail
                       AfterInfixParsed :infix-op+form+tail)
   (begin
     (define-syntax-class-syntax Parsed (make-syntax-class #':form
                                                           #:kind 'group
-                                                          #:fields #'((parsed #f parsed 0 unpack-parsed*))
+                                                          #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
                                                           #:root-swap '(parsed . group)))
     (define-syntax-class-syntax AfterPrefixParsed (make-syntax-class #':prefix-op+form+tail
                                                                      #:kind 'group
                                                                      #:arity 2
-                                                                     #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                     #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
                                                                                  (tail #f tail tail unpack-tail-list*))
                                                                      #:root-swap '(parsed . group)))
     (define-syntax-class-syntax AfterInfixParsed (make-syntax-class #':infix-op+form+tail
                                                                     #:kind 'group
                                                                     #:arity 2
-                                                                    #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                    #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
                                                                                 (tail #f tail tail unpack-tail-list*))
                                                                     #:root-swap '(parsed . group)))))
 
 (define-syntax-rule (define-transformer-syntax-class
-                      Parsed :form)
+                      Parsed :form parsed-tag)
   (define-syntax-class-syntax Parsed (make-syntax-class #':form
                                                         #:kind 'group
-                                                        #:fields #'((parsed #f parsed 0 unpack-parsed*))
+                                                        #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
                                                         #:root-swap '(parsed . group))))
 
 (define-syntax-rule (define-transformer-parameterized-syntax-class
-                      Parsed :form)
+                      Parsed :form parsed-tag)
   (define-syntax-class-syntax Parsed (make-syntax-class #':form
                                                         #:kind 'group
                                                         #:arity 2
-                                                        #:fields #'((parsed #f parsed 0 unpack-parsed*))
+                                                        #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
                                                         #:root-swap '(parsed . group))))

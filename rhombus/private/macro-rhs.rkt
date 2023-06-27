@@ -308,7 +308,7 @@
              #,(build-cases infixes #f make-infix-id space-sym adjustments orig-stx))]))
 
 (define-for-syntax (adjust-result adjustments arity b)
-  (wrap-expression ((entry_point_meta.Adjustment-wrap-body adjustments) arity #`(parsed #,b))))
+  (wrap-expression ((entry_point_meta.Adjustment-wrap-body adjustments) arity #`(parsed #:rhombus/expr #,b))))
 
 ;; ----------------------------------------
 

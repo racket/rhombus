@@ -41,6 +41,7 @@
   (define-rhombus-transform
     #:syntax-class (:interface-clause intf-data)
     #:desc "interface clause"
+    #:parsed-tag #:rhombus/class_clause
     #:in-space in-interface-clause-space
     #:transformer-ref (make-interface-clause-transformer-ref intf-data)
     #:check-result check-interface-clause-result))

@@ -46,6 +46,7 @@
   (define-rhombus-transform
     #:syntax-class (:class-clause class-data)
     #:desc "class clause"
+    #:parsed-tag #:rhombus/class_clause
     #:in-space in-class-clause-space
     #:transformer-ref (make-class-clause-transformer-ref class-data)
     #:check-result check-class-clause-result))

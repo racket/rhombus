@@ -4,6 +4,7 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "pack.rkt"
+                     "pack-s-exp.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
@@ -64,7 +65,8 @@
   (define-name-root defn_meta
     #:fields
     (Group
-     SequenceStartGroup)))
+     SequenceStartGroup
+     pack_s_exp)))
 
 (begin-for-syntax
   (define-syntax-class :is_definition
@@ -85,3 +87,9 @@
     (make-syntax-class #':is_definition_sequence
                        #:kind 'group
                        #:fields #'())))
+
+(define-for-syntax (pack_s_exp orig-s)
+  #`(parsed
+     #:rhombus/defn
+     #,(pack-s-exp 'defn.pack_s_exp orig-s)))
+

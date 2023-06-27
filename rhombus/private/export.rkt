@@ -84,6 +84,7 @@
     #:infix-more-syntax-class :export-infix-op+form+tail
     #:desc "export"
     #:operator-desc "export operator"
+    #:parsed-tag #:rhombus/expo
     #:in-space in-export-space
     #:prefix-operator-ref export-prefix-operator-ref
     #:infix-operator-ref export-infix-operator-ref
@@ -102,10 +103,11 @@
   (define-rhombus-transform
     #:syntax-class (:export-modifier parsed-ex)
     #:desc "export modifier"
+    #:parsed-tag #:rhombus/expo
     #:in-space in-export-space
     #:transformer-ref (make-export-modifier-ref transform-in (syntax-parse parsed-ex
                                                                #:datum-literals (parsed)
-                                                               [(parsed req) #'req]
+                                                               [(parsed #:rhombus/expo req) #'req]
                                                                [_ (raise-arguments-error
                                                                    'export_meta.ParsedModifier
                                                                    "given export to modify is not parsed"
@@ -117,7 +119,7 @@
     (pattern (group mod-id:identifier mod-arg ... (block exp ...))
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
-             #:with (~var ex (:export-modifier #'(parsed (combine-out e.parsed ...)))) #'(group mod-id mod-arg ...)
+             #:with (~var ex (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...)))) #'(group mod-id mod-arg ...)
              #:attr parsed #'ex.parsed)
     (pattern e0::export
              #:attr parsed #'e0.parsed))
@@ -128,7 +130,7 @@
       [else
        (syntax-parse (car mods)
          #:datum-literals (group)
-         [(~var ex (:export-modifier #`(parsed #,e-parsed)))
+         [(~var ex (:export-modifier #`(parsed #:rhombus/expo #,e-parsed)))
           (apply-modifiers (cdr mods) #'ex.parsed)]
          [(group form . _)
           (raise-syntax-error #f
@@ -281,7 +283,8 @@
                    (define form
                      (syntax-parse i
                        #:datum-literals (parsed nspace)
-                       [(parsed mod-path parsed-r) #`(all-from-out #,(relocate #'name.name #'mod-path))]
+                       [(parsed mod-path parsed-r)
+                        #`(all-from-out #,(relocate #'name.name #'mod-path))]
                        [(nspace _ _ [key val . rule] ...)
                         (define keys (syntax->list #'(key ...)))
                         (define vals (syntax->list #'(val ...)))

@@ -133,6 +133,7 @@
     #:infix-more-syntax-class :annotation-infix-op+form+tail
     #:desc "annotation"
     #:operator-desc "annotation operator"
+    #:parsed-tag #:rhombus/annot
     #:in-space in-annotation-space
     #:prefix-operator-ref annotation-prefix-operator-ref
     #:infix-operator-ref annotation-infix-operator-ref

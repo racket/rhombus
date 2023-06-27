@@ -89,6 +89,8 @@
                          #:defaults ([form-kind-str #'"form"]))
               (~optional (~seq #:operator-desc operator-kind-str)
                          #:defaults ([operator-kind-str #'"operator"]))
+              (~optional (~seq #:parsed-tag parsed-tag:keyword)
+                         #:defaults ([parsed-tag #'enforested]))
               (~optional (~seq #:in-space in-space)
                          #:defaults ([in-space #'values]))
               (~optional (~seq #:name-path-op name-path-op)
@@ -150,7 +152,7 @@
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space prefix-operator-ref infix-operator-ref
                                                    name-path-op in-name-root-space name-root-ref 
-                                                   check-result
+                                                   check-result 'parsed-tag
                                                    make-identifier-form
                                                    make-operator-form
                                                    -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name
@@ -181,7 +183,7 @@
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space prefix-operator-ref infix-operator-ref
                             name-path-op in-name-root-space name-root-ref
-                            check-result
+                            check-result parsed-tag
                             make-identifier-form
                             make-operator-form
                             select-prefix-implicit select-infix-implicit juxtapose-implicit-name
@@ -225,7 +227,8 @@
                  (if make-operator-form
                      (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx stop-on-unbound?)
                      (raise-unbound-operator #'head.name))])])]
-          [(((~datum parsed) inside) . tail)
+          [(((~datum parsed) tag inside) . tail)
+           (unless (eq? (syntax-e #'tag) parsed-tag) (parsed-wrong-context-error form-kind-str (car (syntax-e stxes))))
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
           [(head . _)
            (define-values (implicit-name ctx) (select-prefix-implicit #'head))

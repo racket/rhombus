@@ -150,4 +150,16 @@
 }
 
 
+@doc(
+  fun defn_meta.pack_s_exp(tree) :: Syntax
+){
+
+@provided_meta()
+
+ Similar to @rhombus(expr_meta.pack_s_exp), but for definitions.
+
+
+}
+
+
 @«macro.close_eval»(macro_eval)

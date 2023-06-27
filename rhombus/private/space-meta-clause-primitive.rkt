@@ -23,7 +23,7 @@
 (define-syntax rhombus-space-meta-clause 'placeholder)
 
 (define-for-syntax (wrap-clause parsed)
-  #`[(group (parsed (quote-syntax (rhombus-space-meta-clause #,parsed) #:local)))])
+  #`[(group (parsed #:rhombus/space_meta_clause (quote-syntax (rhombus-space-meta-clause #,parsed) #:local)))])
 
 (define-for-syntax (make-identifier-transformer kw)
   (space-meta-clause-transformer

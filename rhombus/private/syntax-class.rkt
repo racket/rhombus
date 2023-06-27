@@ -18,7 +18,6 @@
          "definition.rkt"
          "name-root.rkt"
          "parse.rkt"
-         "parsed.rkt"
          "pack.rkt"
          "parens.rkt"
          (rename-in "ellipsis.rkt"
@@ -415,7 +414,7 @@
                                   (pattern-variable-id var)
                                   (pattern-variable-sym var))
                             #,(pattern-variable-depth var)]
-                           (#,(pattern-variable-unpack*-id var)
+                           (#,(pattern-variable-unpack* var)
                             (quote-syntax dots)
                             #,(pattern-variable-val-id var)
                             #,(pattern-variable-depth var))))
@@ -495,7 +494,7 @@
                                    (declared-field-id df)))
              (unless (or (not (syntax-e (declared-field-unpack*-id df)))
                          (free-identifier=? (declared-field-unpack*-id df)
-                                            (pattern-variable-unpack*-id var)))
+                                            (pattern-variable-unpack* var)))
                (raise-syntax-error #f
                                    "field implementation does not match declared kind"
                                    stx
@@ -526,7 +525,7 @@
   ;; keeping the same unpack, if possible, enables optimizations for
   ;; tail repetitions; otherwise, the term is sufficiently normalized
   ;; by matching that we can just use `unpack-element*`
-  (if (free-identifier=? (pattern-variable-unpack*-id a) (pattern-variable-unpack*-id b))
+  (if (free-identifier=? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
       a
       (struct-copy pattern-variable a
-                   [unpack*-id #'unpack-element*])))
+                   [unpack* #'unpack-element*])))

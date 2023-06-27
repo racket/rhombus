@@ -88,7 +88,7 @@
        #:with (~var clause (:interface-clause (interface-expand-data #'data #'accum))) (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
-         [((group (parsed p)) ...)
+         [((group (parsed #:rhombus/class_clause p)) ...)
           #:with (new-accum ...) (class-clause-accum #'(p ...))
           #`(begin p ... (interface-body-step (data (new-accum ... . accum)) . rest))]
          [(g ...)

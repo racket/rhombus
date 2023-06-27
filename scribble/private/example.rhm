@@ -75,7 +75,7 @@ expr.macro 'examples($form, ...)':
      content'
 
 expr.macro 'examples_stanza $(parens && '($_)')':
-  parsed(['#{typeset-examples}', parens])
+  expr_meta.pack_s_exp(['#{typeset-examples}', parens])
   
 fun make_rhombus_eval():
   #{make-rhombus-eval}()

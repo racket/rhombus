@@ -90,8 +90,8 @@
   #`(group . #,(map unpack-static-infos (syntax->list v))))
 
 (define-for-syntax (wrap form info)
-  (pack-term #`(parsed #,(wrap-static-info* (wrap-expression form)
-                                            (pack info)))))
+  (pack-term #`(parsed #:rhombus/expr #,(wrap-static-info* (wrap-expression form)
+                                                           (pack info)))))
 
 (define-for-syntax (lookup form key)
   (define who 'statinfo_meta.lookup)
@@ -99,7 +99,7 @@
   (unless (identifier? key) (raise-argument-error* who rhombus-realm "Identifier" key))
   (define si (extract-static-infos (syntax-parse (unpack-group form who #f)
                                      #:datum-literals (parsed group)
-                                     [(group (parsed e)) #'e]
+                                     [(group (parsed #:rhombus/expr e)) #'e]
                                      [(group . (~var name (:hier-name-seq in-name-root-space (lambda (x) x) name-path-op name-root-ref/maybe)))
                                       (and (null? (syntax-e #'name.tail))
                                            #'name.name)]

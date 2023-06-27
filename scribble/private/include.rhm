@@ -7,4 +7,4 @@ export:
   include_section
 
 defn.macro 'include_section($(mod :: Term))':
-  '$(parsed(['#{include-section}', mod]))'
+  '$(defn_meta.pack_s_exp(['#{include-section}', mod]))'

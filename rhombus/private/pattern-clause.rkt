@@ -23,6 +23,7 @@
   (define-rhombus-transform
     #:syntax-class :pattern-clause
     #:desc "pattern clause"
+    #:parsed-tag #:rhombus/pattern_clause
     #:predicate pattern-clause?
     #:in-space in-pattern-clause-space
     #:transformer-ref pattern-clause-transformer-ref))

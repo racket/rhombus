@@ -111,6 +111,7 @@
     #:infix-more-syntax-class :infix-op+import+tail
     #:desc "import"
     #:operator-desc "import operator"
+    #:parsed-tag #:rhombus/impo
     #:in-space in-import-space
     #:prefix-operator-ref import-prefix-operator-ref
     #:infix-operator-ref import-infix-operator-ref
@@ -130,10 +131,11 @@
   (define-rhombus-transform
     #:syntax-class (:import-modifier parsed-req)
     #:desc "import modifier"
+    #:parsed-tag #:rhombus/impo
     #:in-space in-import-space
     #:transformer-ref (make-import-modifier-ref transform-in (syntax-parse parsed-req
                                                                #:datum-literals (parsed)
-                                                               [(parsed req) #'req]
+                                                               [(parsed #:rhombus/impo req) #'req]
                                                                [_ (raise-arguments-error
                                                                    'import_meta.ParsedModifier
                                                                    "given import to modify is not parsed"
@@ -223,7 +225,7 @@
       [else
        (syntax-parse (car mods)
          #:datum-literals (group)
-         [(~var im (:import-modifier #`(parsed #,r-parsed)))
+         [(~var im (:import-modifier #`(parsed #:rhombus/impo #,r-parsed)))
           (apply-modifiers (cdr mods) #'im.parsed)]
          [(group form . _)
           (raise-syntax-error #f

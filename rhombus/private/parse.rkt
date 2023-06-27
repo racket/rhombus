@@ -59,6 +59,7 @@
     #:syntax-class :declaration
     #:predicate declaration?
     #:desc "declaration"
+    #:parsed-tag #:rhombus/decl
     #:in-space in-expression-space
     #:transformer-ref declaration-transformer-ref
     #:check-result check-declaration-result)
@@ -68,6 +69,7 @@
     #:syntax-class :nestable-declaration
     #:predicate nestable-declaration?
     #:desc "nestable declaration"
+    #:parsed-tag #:rhombus/decl/nestable
     #:in-space in-expression-space
     #:transformer-ref nestable-declaration-transformer-ref
     #:check-result check-nestable-declaration-result)
@@ -77,6 +79,7 @@
     #:syntax-class :definition
     #:predicate definition?
     #:desc "definition"
+    #:parsed-tag #:rhombus/defn
     #:in-space in-expression-space
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
@@ -97,6 +100,7 @@
     #:prefix-more-syntax-class :prefix-op+expression+tail
     #:infix-more-syntax-class :infix-op+expression+tail
     #:desc "expression"
+    #:parsed-tag #:rhombus/expr
     #:operator-desc "expression operator"
     #:in-space in-expression-space
     #:prefix-operator-ref expression-prefix-operator-ref
@@ -118,6 +122,7 @@
     #:infix-more-syntax-class :infix-op+binding+tail
     #:desc "binding"
     #:operator-desc "binding operator"
+    #:parsed-tag #:rhombus/bind
     #:in-space in-binding-space
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
@@ -142,7 +147,7 @@
     (syntax-local-introduce
      (syntax-parse (syntax-local-introduce stx)
        [(_ top decl-ok? data) #`(begin)]
-       [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) decl)) . forms)
+       [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) #:rhombus/decl decl)) . forms)
         #`(begin decl (top data ... . forms))]
        ;; note that we may perform hierarchical name resolution
        ;; up to four times, since resolution in `:declaration`,
@@ -173,7 +178,7 @@
     (syntax-local-introduce
      (syntax-parse (syntax-local-introduce stx)
        [(_) #'(begin)]
-       [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
+       [(_ ((~datum group) ((~datum parsed) #:rhombus/defn defn))) #'defn]
        [(_ e::definition) #'(begin . e.parsed)]
        [(_ e::expression) #'(#%expression e.parsed)]))))
 
@@ -202,7 +207,7 @@
   (syntax-parse stx
     [(_ ((~and body-tag (~datum block)) body ...))
      #'(rhombus-body-at body-tag body ...)]
-    [(_ ((~datum parsed) rhs))
+    [(_ ((~datum parsed) #:rhombus/expr rhs))
      #'rhs]
     [(_ rhs)
      #'(rhombus-expression (group rhs))]))
@@ -213,7 +218,7 @@
     (syntax-parse (syntax-local-introduce stx)
       #:datum-literals (group parsed)
       [(_) #'(begin)]
-      [(_ (group (parsed ((~literal maybe-definition) e))) . tail)
+      [(_ (group (parsed #:rhombus/expr ((~literal maybe-definition) e))) . tail)
        #`(begin e . tail)]
       [(_ e::definition-sequence . tail)
        (define-values (parsed new-tail)
@@ -260,7 +265,7 @@
     [((~datum group) . _)
      (syntax-parse e
        [g-e::expression #'g-e.parsed])]
-    [((~datum block) g ...) #`(rhombus-body g ...)]))
+    [((~datum block) g ...+) #`(rhombus-body g ...)]))
 
 ;; Forces enforestation through `rhombus-expression`; note that
 ;; `#%parens` eagerly enforests its content, so this effectively

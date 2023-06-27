@@ -111,7 +111,7 @@
                                 (values (make-repetition-info #'(var-id dot-op attr-id)
                                                               (string->symbol
                                                                (format "~a.~a" (syntax-e #'var-id) (syntax-e #'attr-id)))
-                                                              #`(#,(pattern-variable-unpack*-id attr)
+                                                              #`(#,(pattern-variable-unpack* attr)
                                                                  #'$
                                                                  #,(pattern-variable-val-id attr)
                                                                  #,var-depth)

@@ -34,6 +34,7 @@
   (define-rhombus-transform
     #:syntax-class :for-clause
     #:desc "for clause"
+    #:parsed-tag #:rhombus/for_clause
     #:in-space in-for-clause-space
     #:predicate for-clause? 
     #:transformer-ref for-clause-transformer-ref

@@ -45,8 +45,8 @@
                     (unpack-group form proc #f)
                     #'#f)
     #:datum-literals (parsed group assignment left-hand-side)
-    [(group (parsed (assignment e)) . tail) (values #'e #'tail)]
-    [(group (parsed (left-hand-side ref set rhs-name)) ~! . tail)
+    [(group (parsed #:rhombus/assign (assignment e)) . tail) (values #'e #'tail)]
+    [(group (parsed #:rhombus/assign (left-hand-side ref set rhs-name)) ~! . tail)
      #:with assign::assign-op-seq #'tail
      #:do [(define op (attribute assign.op))]
      (build-assign op
@@ -56,9 +56,6 @@
                    #'rhs-name
                    #'assign.tail)]
     [_ (raise-bad-macro-result (proc-name proc) "assignment" form)]))
-
-(define-for-syntax (wrap-parsed stx)
-  #`(parsed #,stx))
 
 (define-for-syntax (make-assign-operator name prec protocol proc assc)
   (make-assign-infix-operator
@@ -72,7 +69,7 @@
            (tail-returner
             proc
             (syntax-parse tail
-              [(head . tail) (proc (wrap-parsed #`(left-hand-side #,ref #,set #,rhs-name))
+              [(head . tail) (proc #`(parsed #:rhombus/assign (left-hand-side #,ref #,set #,rhs-name))
                                    (pack-tail #'tail #:after #'head)
                                    #'head)])))
          (define-values (ex-form more-tail)
@@ -88,8 +85,8 @@
                                    proc))
        (lambda (ref set form2 stx rhs-name)
          (define-values (form tail)
-           (extract-assignment (proc (wrap-parsed #`(left-hand-side #,ref #,set #,rhs-name))
-                                     (wrap-parsed form2)
+           (extract-assignment (proc #`(parsed #:rhombus/assign (left-hand-side #,ref #,set #,rhs-name))
+                                     #`(parsed #:rhombus/expr #,form2)
                                      stx)
                                proc))
          (unless (null? (syntax-e tail))
@@ -99,13 +96,14 @@
 (define-for-syntax (unpack_left stx)
   (syntax-parse (unpack-term stx 'assign_meta.unpack_left #f)
     #:datum-literals (parsed left-hand-side)
-    [(parsed (left-hand-side ref set rhs-name))
-     (values #'(parsed ref)
-             #'(parsed set)
+    [(parsed #:rhombus/assign (left-hand-side ref set rhs-name))
+     (values #'(parsed #:rhombus/expr ref)
+             #'(parsed #:rhombus/expr set)
              #'rhs-name)]))
 
 (define-for-syntax (pack_assignment stx)
-  #`(parsed (assignment
+  #`(parsed #:rhombus/assign
+            (assignment
              (rhombus-expression #,(unpack-group stx 'assign_meta.pack_expression #f)))))
 
 (begin-for-syntax
@@ -131,6 +129,6 @@
                                             #':assign-parsed
                                             #:arity 8
                                             #:kind 'group
-                                            #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                            #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr))
                                                         (tail #f tail tail unpack-tail-list*))
                                             #:root-swap '(parsed . group))))

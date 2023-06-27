@@ -79,14 +79,14 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :binding
+    Parsed :binding #:rhombus/bind
     AfterPrefixParsed :prefix-op+binding+tail
     AfterInfixParsed :infix-op+binding+tail)
 
   (define-syntax-class-syntax Argument
     (make-syntax-class #':rhombus-kw-opt-binding
                        #:kind 'group
-                       #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                       #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/bind))
                                    (maybe_keyword #f maybe_keyword 0 unpack-maybe-term*)
                                    (maybe_expr #f maybe_expr 0 unpack-maybe-group*))))
 
@@ -109,13 +109,13 @@
 
 (define-for-syntax (unpack stx)
   (syntax-parse (unpack-term stx 'bind_meta.unpack #f)
-    [((~datum parsed) b::binding-form)
+    [((~datum parsed) #:rhombus/bind b::binding-form)
      (pack-term #'(parens (group chain-to-infoer)
-                          (group (parsed (b.infoer-id b.data)))))]))
+                          (group (parsed #:rhombus/bind/chain (b.infoer-id b.data)))))]))
 
 (define-for-syntax (unpack_info stx)
   (syntax-parse (unpack-term stx 'bind_meta.unpack_info #f)
-    [((~datum parsed) b::binding-info)
+    [((~datum parsed) #:rhombus/bind/info b::binding-info)
      #:with (unpacked-uses ...) (map (lambda (v) (unpack-uses v))
                                      (syntax->list #'(b.bind-uses ...)))
      #:with (unpacked-static-infos ...) (map (lambda (v) (unpack-static-infos v))
@@ -130,15 +130,15 @@
                 (group chain-to-matcher)
                 (group chain-to-committer)
                 (group chain-to-binder)
-                (group (parsed (b.matcher-id b.committer-id b.binder-id b.data)))))]))
+                (group (parsed #:rhombus/bind/info/chain (b.matcher-id b.committer-id b.binder-id b.data)))))]))
 
 (define-for-syntax (pack stx)
   (syntax-parse (unpack-term stx 'bind_meta.pack #f)
     #:datum-literals (parens group)
     [(parens (group infoer-id:identifier)
              (group data))
-     (pack-term #`(parsed #,(binding-form #'infoer-id
-                                          #'data)))]
+     (pack-term #`(parsed #:rhombus/bind #,(binding-form #'infoer-id
+                                                         #'data)))]
     [_ (raise-syntax-error 'bind_meta.pack
                            "ill-formed unpacked binding"
                            stx)]))
@@ -153,7 +153,7 @@
              (group (~literal chain-to-matcher))
              (group (~literal chain-to-committer))
              (group (~literal chain-to-binder))
-             (group (parsed (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
+             (group (parsed #:rhombus/bind/info/chain (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
      ;; hacky: remove indirection to get back to Racket forms
      (pack-info #'(parens name-str-g
                           name-id-g
@@ -189,16 +189,16 @@
                            stx)]))
 
 (define-for-syntax (pack_info stx)
-  (pack-term #`(parsed #,(pack-info stx))))
+  (pack-term #`(parsed #:rhombus/bind/info #,(pack-info stx))))
 
 (define-for-syntax (get_info stx unpacked-static-infos)
   (syntax-parse (unpack-term stx 'bind_meta.get_info #f)
     #:datum-literals (parsed group)
-    [(parsed b::binding-form)
+    [(parsed #:rhombus/bind b::binding-form)
      (define static-infos (pack-static-infos (unpack-term unpacked-static-infos 'bind_meta.get_info #f)
                                              'bind_meta.get_info))
      (syntax-parse #`(b.infoer-id #,static-infos b.data)
-       [impl::binding-impl #'(parsed impl.info)])]
+       [impl::binding-impl #'(parsed #:rhombus/bind/info impl.info)])]
     [_
      (raise-argument-error 'bind_meta.get_info
                            "binding-form?"
@@ -207,7 +207,7 @@
 (define-for-syntax (is_immediate stx)
   (syntax-parse (and (syntax? stx)
                      stx)
-    [(parsed info::binding-info)
+    [(parsed #:rhombus/bind/info info::binding-info)
      (free-identifier=? #'info.matcher-id #'always-succeed)]
     [_
      (raise-argument-error 'bind_meta.is_immediate
@@ -293,10 +293,10 @@
                       (let ([id id-ref] ... [arg-id #'arg-id])
                         (let-syntaxes ([(sid ...) sid-ref] ...)
                           (let ([IF-id #'if-bridge])
-                            (let ([success-id #'(parsed (maybe-definition success))]
+                            (let ([success-id #'(parsed #:rhombus/expr (maybe-definition success))]
                                   ;; putting `if-bridge` in `fail-id`
                                   ;; helps make sure it's used correctly
-                                  [fail-id #'(parsed (maybe-definition (if-bridge IF fail)))])
+                                  [fail-id #'(parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))])
                               (unwrap-block
                                (rhombus-body-at block-tag body ...))))))])])))])])))
 
@@ -311,7 +311,7 @@
                     (syntax-parse #'fail-case
                       #:datum-literals (group parsed)
                       #:literals (if-bridge)
-                      [((group (parsed (maybe-definition (if-bridge IF fail)))))
+                      [((group (parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))))
                        #`(IF (rhombus-expression (group e ...))
                              (rhombus-body-sequence success ...)
                              fail)]
@@ -330,13 +330,13 @@
                  (syntax-parse stx
                    #:datum-literals (parsed group parens maybe-definition)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id committer-id binder-id data)))
+                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))
                                (group if-id)
                                (group success ...)
                                (group fail ...)))
                     (syntax-parse #'(fail ...)
                       #:literals (if-bridge)
-                      [((parsed (maybe-definition (if-bridge IF fail))))
+                      [((parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
                        #:with rhombus rhombus
                        (syntax-parse #'(success ...)
                          [((_::block g ...))
@@ -362,8 +362,8 @@
   (syntax-parse stx
     #:literals (if-reverse-bridge)
     [(_ tst thn (if-reverse-bridge if-id els))
-     #'(rhombus-expression (group if-id (parsed tst)
-                                  (alts (block (group (parsed (let () thn))))
+     #'(rhombus-expression (group if-id (parsed #:rhombus/expr tst)
+                                  (alts (block (group (parsed #:rhombus/expr (let () thn))))
                                         (block els))))]
     [_
      (raise-syntax-error #f "misuse of binding conditional" stx)]))
@@ -378,7 +378,7 @@
                    #:datum-literals (parsed group parens)
                    #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id committer-id binder-id data)))))
+                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
                     #:with rhombus rhombus
                     #`(committer-id arg-id data)]))])
     (make-expression+definition-transformer
@@ -394,7 +394,7 @@
                    #:datum-literals (parsed group parens)
                    #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id committer-id binder-id data)))))
+                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
                     #:with rhombus rhombus
                     #`(binder-id arg-id data)]))])
     (make-expression+definition-transformer
@@ -446,7 +446,7 @@
   #`(rhombus-body-sequence #,@(unpack-multi stx 'bin.binder #f)))
 
 (define-for-syntax (wrap-parsed stx)
-  #`(parsed #,stx))
+  #`(parsed #:rhombus/bind #,stx))
 
 (define-for-syntax (extract-binding form proc)
   (syntax-parse (if (syntax? form)

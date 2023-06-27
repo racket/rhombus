@@ -4,6 +4,7 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "pack.rkt"
+                     "pack-s-exp.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
@@ -61,7 +62,8 @@
   (define-name-root decl_meta
     #:fields
     (Group
-     NestableGroup)))
+     NestableGroup
+     pack_s_exp)))
 
 (begin-for-syntax
   (define-syntax-class :is_declaration
@@ -83,3 +85,9 @@
     (make-syntax-class #':is_nestable_declaration
                        #:kind 'group
                        #:fields #'())))
+
+(define-for-syntax (pack_s_exp orig-s)
+  #`(parsed
+     #:rhombus/decl
+     #,(pack-s-exp 'decl.pack_s_exp orig-s)))
+

@@ -51,7 +51,7 @@
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...))
-                               #'(clause.rhs ... (parsed e.parsed))
+                               #'(clause.rhs ... (parsed #:rhombus/expr e.parsed))
                                #'form-id #'alts-tag))
         (values
          (relocate

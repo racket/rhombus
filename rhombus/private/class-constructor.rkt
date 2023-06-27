@@ -266,12 +266,13 @@
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
     #:datum-literals (parsed block)
-    [(_ name predicate-id (parsed e)) #'e]
+    [(_ name predicate-id (parsed #:rhombus/expr e)) #'e]
     [(_ name predicate-id (block g))
      #:do [(define adjustments (entry_point_meta.Adjustment
                                 '()
                                 (lambda (arity body)
                                   #`(parsed
+                                     #:rhombus/expr
                                      (let ([r #,(wrap-expression body)])
                                        (if (predicate-id r)
                                            r
@@ -447,6 +448,7 @@
   (cond
     [(not super)
      #`(parsed
+        #:rhombus/expr
         (lambda #,formal-args
           (#,make-name #,@all-args)))]
     [else
@@ -455,6 +457,7 @@
      (define super-formal-args (external-protocol (generate-protocol-formal-arguments super-proto)))
      (define super-all-args (protocol-formal->actual super-formal-args))
      #`(parsed
+        #:rhombus/expr
         (lambda (#,@super-formal-args #,@formal-args)
           ((#,make-name #,@super-all-args) #,@all-args)))]))
 

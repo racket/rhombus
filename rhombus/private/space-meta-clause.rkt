@@ -28,6 +28,7 @@
   (define-rhombus-transform
     #:syntax-class :space-meta-clause
     #:desc "class clause"
+    #:parsed-tag #:rhombus/space_meta_clause
     #:in-space in-space-meta-clause-space
     #:transformer-ref space-meta-clause-transformer-ref))
 

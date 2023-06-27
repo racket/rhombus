@@ -12,7 +12,7 @@
    loc
    (syntax-parse form
      #:datum-literals (parsed group multi)
-     [(multi (group (parsed e))) #'e] ; shortcut
-     [(group (parsed e)) #'e]         ; shortcut
-     [(parsed e) #'e]                 ; shortcut
+     [(multi (group (parsed #:rhombus/expr e))) #'e] ; shortcut
+     [(group (parsed #:rhombus/expr e)) #'e]         ; shortcut
+     [(parsed #:rhombus/expr e) #'e]                 ; shortcut
      [_ #`(rhombus-expression #,(unpack-group form 'expression #f))])))

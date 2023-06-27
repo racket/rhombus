@@ -43,7 +43,7 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Parsed :repetition
+    Parsed :repetition #:rhombus/repet
     AfterPrefixParsed :prefix-op+repetition+tail
     AfterInfixParsed :infix-op+repetition+tail))
 
@@ -63,7 +63,7 @@
     [_ (raise-bad-macro-result (proc-name proc) "repetition" form)]))
 
 (define-for-syntax (wrap-parsed stx)
-  #`(parsed #,stx))
+  #`(parsed #:rhombus/repet #,stx))
 
 (define-for-syntax (make-repetition-infix-operator name prec protocol proc assc)
   (repetition-infix-operator
@@ -128,11 +128,11 @@
 
 (define-for-syntax (unpack_list stx)
   (syntax-parse (unpack-term stx 'repet_meta.unpack #f)
-    [((~datum parsed) r::repetition-info)
+    [((~datum parsed) #:rhombus/repet r::repetition-info)
      (pack-term
       #`(parens (group . r.rep-expr)
                 (group r.name)
-                (group (parsed r.seq-expr))
+                (group (parsed #:rhombus/expr r.seq-expr))
                 (group r.bind-depth)
                 (group r.use-depth)
                 (group #,(unpack-static-infos #'r.element-static-infos))

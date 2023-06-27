@@ -218,7 +218,7 @@
           (define name (pattern-variable-sym var))
           (define id (pattern-variable-id var))
           (define depth (pattern-variable-depth var))
-          (define unpack*-id (pattern-variable-unpack*-id var))
+          (define unpack*-form (pattern-variable-unpack* var))
           (define id-with-attr (compose-attr-name match-id name id bind-counter))
           (values #`[#,temp-attr #,(cond
                                      [(eq? depth 'tail)
@@ -226,27 +226,34 @@
                                       ;; a list and then convert back when the tail is used as a new tail in a
                                       ;; template
                                       #`(pack-tail* (syntax #,id-with-attr) 0)]
-                                     [(not (or (free-identifier=? unpack*-id #'unpack-tail-list*)
-                                               (free-identifier=? unpack*-id #'unpack-multi-tail-list*)
-                                               (free-identifier=? unpack*-id #'unpack-parsed*)))
+                                     [(not (or (and (identifier? unpack*-form)
+                                                    (or (free-identifier=? unpack*-form #'unpack-tail-list*)
+                                                        (free-identifier=? unpack*-form #'unpack-multi-tail-list*)))
+                                               (let ([l (syntax->list unpack*-form)])
+                                                 (and l
+                                                      (free-identifier=? (car l) #'unpack-parsed*)))))
                                       ;; assume depth-compatible value checked on binding side, and
                                       ;; let `attribute` unpack syntax repetitions
                                       #`(pack-nothing* (attribute #,id-with-attr) #,depth)]
                                      [else
                                       #`(#,(cond
-                                             [(free-identifier=? unpack*-id #'unpack-tail-list*)
+                                             [(let ([l (syntax->list unpack*-form)])
+                                                (and l
+                                                     (free-identifier=? (car l) #'unpack-parsed*)
+                                                     (cadr l)))
+                                              => (lambda (kw)
+                                                   #`(pack-parsed* #,kw))]
+                                             [(free-identifier=? unpack*-form #'unpack-tail-list*)
                                               #'pack-tail-list*]
-                                             [(free-identifier=? unpack*-id #'unpack-multi-tail-list*)
+                                             [(free-identifier=? unpack*-form #'unpack-multi-tail-list*)
                                               #'pack-multi-tail-list*]
-                                             [(free-identifier=? unpack*-id #'unpack-parsed*)
-                                              #'pack-parsed*]
                                              [else #'pack-term*])
                                          (syntax #,(let loop ([t id-with-attr] [depth depth])
                                                      (if (zero? depth)
                                                          t
                                                          (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
                                          #,depth)])]
-                  (pattern-variable name id temp-attr (if (eq? depth 'tail) 1 depth) unpack*-id))))
+                  (pattern-variable name id temp-attr (if (eq? depth 'tail) 1 depth) unpack*-form))))
 
       ;; #f or (list (list bind-id var))
       (define open-attributes
@@ -311,7 +318,7 @@
                                                       (pattern-variable-val-id swap-to-root-var)
                                                       temp-id)
                                                   (if swap-to-root-var
-                                                      (pattern-variable-unpack*-id swap-to-root-var)
+                                                      (pattern-variable-unpack* swap-to-root-var)
                                                       unpack*)
                                                   (if swap-to-root-var
                                                       (pattern-variable-depth swap-to-root-var)
@@ -332,7 +339,7 @@
                            #:unless (eq? 'root (open-attrib-var oa)))
                   (define bind-id (open-attrib-bind-id oa))
                   (define var (open-attrib-var oa))
-                  (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack*-id var)
+                  (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack* var)
                                               (pattern-variable-depth var) null))))
          #,(append
             (if (identifier? form1)

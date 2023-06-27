@@ -100,7 +100,7 @@
        #:with (~var clause (:class-clause (class-expand-data #'data #'accum))) (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
-         [((group (parsed p)) ...)
+         [((group (parsed #:rhombus/class_clause p)) ...)
           #:with (new-accum ...) (class-clause-accum #'(p ...))
           #`(begin p ... (class-body-step (data (new-accum ... . accum)) . rest))]
          [(form ...)
