@@ -450,7 +450,7 @@
         (gather (lookup int-id) ht saw-abstract?))))
   (define (gather i ht saw-abstract?)
     (cond
-      [i
+      [(and i (hash-has-key? (super-method-map i) key))
        (define idx (hash-ref (super-method-map i) key))
        (define impl (vector-ref (super-method-vtable i) idx))
        (cond
