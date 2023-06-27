@@ -271,7 +271,7 @@
                             #'(rest.kwarg ...) #'(rest.kwparsed ...)
                             #'(ret.converter ...)
                             #'(rhs ...)
-                            #'form-id #'alts-tag))
+                            #'form-id stx))
      (values (wrap-function-static-info
               (if arity
                   (wrap-static-info proc #'#%function-arity arity)
@@ -288,7 +288,7 @@
                        #'rest.kwarg #'rest.kwparsed
                        #'ret.converter
                        #'rhs
-                       #'form-id #'parens-tag))
+                       #'form-id #'rhs))
      (values (let* ([fun (if (pair? (syntax-e #'ret.static-infos))
                              (wrap-static-info fun #'#%call-result #'ret.static-infos)
                              fun)]

@@ -35,8 +35,6 @@
          "op-literal.rkt"
          (submod "ellipsis.rkt" for-parse)
          (only-in "list.rkt" List)
-         (only-in (submod "list.rkt" for-binding)
-                  parse-list-expression)
          (submod "annotation.rkt" for-class)
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
@@ -473,7 +471,7 @@
                     args))
           (values
            (relocate
-            (span-srcloc start end)
+            (span-srcloc (maybe-respan start) (maybe-respan end))
             (if (syntax-e kwrest-arg)
                 #`(lambda/kwrest
                    #,(adjust-args #'(arg-form ... ...))
@@ -537,7 +535,7 @@
                       `(,(arity->mask-syntax pos-arity) ,required-kws ,allowed-kws)))
     (values
      (relocate
-      (span-srcloc start end)
+      (span-srcloc (maybe-respan start) (maybe-respan end))
       (reduce-keyword-arity
        #`(case-lambda/kwrest
           #,@(for/list ([n+same (in-list n+sames)])
@@ -881,6 +879,7 @@
                                         #:static? [static? #f]
                                         #:repetition? [repetition? #f]
                                         #:rator-stx [rator-stx #f] ; for error reporting
+                                        #:srcloc [srcloc #f] ; for `relocate` on result
                                         #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
                                         #:rator-arity [rator-arity #f])
   (define (generate extra-rands rands rsts dots kwrsts tail)
@@ -890,6 +889,7 @@
                       #:static? static?
                       #:repetition? repetition?
                       #:rator-stx rator-stx
+                      #:srcloc srcloc
                       #:rator-kind rator-kind
                       #:rator-arity rator-arity)]))
   (define (check-complex-allowed)
@@ -904,6 +904,7 @@
                                            #:static? static?
                                            #:repetition? repetition?
                                            #:rator-stx rator-stx
+                                           #:srcloc srcloc
                                            #:rator-kind rator-kind
                                            #:rator-arity rator-arity)
              #'tail)]
@@ -935,6 +936,7 @@
                                   #:static? static?
                                   #:repetition? repetition?
                                   #:rator-stx rator-stx
+                                  #:srcloc srcloc
                                   #:rator-kind rator-kind
                                   #:rator-arity rator-arity)
   (values
@@ -987,7 +989,9 @@
               [else (cons rator
                           (append extra-rands
                                   (syntax->list #'(arg-form ... ...))))]))
-          (define e (datum->syntax #'here es (span-srcloc rator-in args-stx)))
+          (define e (relocate (or srcloc
+                                  (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
+                              (datum->syntax #'here es)))
           (define result-static-infos (or (rator-static-info/indirect #'#%call-result)
                                           #'()))
           (define all-result-static-infos (or (let-values ([(r indirect?)
@@ -1084,6 +1088,7 @@
                                                  #:static? static?
                                                  #:repetition? repetition?
                                                  #:rator-stx rator-stx
+                                                 #:srcloc srcloc
                                                  #:rator-kind rator-kind
                                                  #:rator-arity rator-arity)
   (define (gen-id) (car (generate-temporaries '(arg))))
@@ -1139,6 +1144,7 @@
                                   #:static? static?
                                   #:repetition? repetition?
                                   #:rator-stx rator-stx
+                                  #:srcloc srcloc
                                   #:rator-kind rator-kind
                                   #:rator-arity rator-arity))
                  term))]

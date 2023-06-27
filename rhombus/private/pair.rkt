@@ -89,8 +89,8 @@
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(first) (field (lambda (x) (add-info #`(car #,x) x #'car)))]
-        [(rest) (field (lambda (x) (add-info #`(cdr #,x) x #'cdr)))]
+        [(first) (field (lambda (x reloc) (add-info (reloc #`(car #,x)) x #'car)))]
+        [(rest) (field (lambda (x reloc) (add-info (reloc #`(cdr #,x)) x #'cdr)))]
         [else #f])))))
 
 (define-for-syntax (add-info e on-e key)

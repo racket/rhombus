@@ -172,14 +172,16 @@
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?
                                                         #:list->map #'list->map))
-     (values (build-setmap stx argss
-                           #'Map-build
-                           #'hash-extend*
-                           #'hash-append
-                           #'hash-assert
-                           map-static-info
-                           #:repetition? repetition?
-                           #:list->setmap #'list->map)
+     (values (relocate-wrapped
+              (respan #`(form-id content))
+              (build-setmap stx argss
+                            #'Map-build
+                            #'hash-extend*
+                            #'hash-append
+                            #'hash-assert
+                            map-static-info
+                            #:repetition? repetition?
+                            #:list->setmap #'list->map))
              #'tail)]
     [(_ . tail) (values (cond
                           [repetition? (identifier-repetition-use #'Map-pair-build)]

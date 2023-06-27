@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      enforest/property
                      enforest/syntax-local
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "srcloc.rkt")
          "expression.rkt"
          "name-root-ref.rkt"
          "indirect-static-info-key.rkt")
@@ -30,6 +31,7 @@
            static-info/indirect
            extract-static-infos
            unwrap-static-infos
+           relocate-wrapped
            static-info-lookup
            static-infos-intersect
            static-infos-union
@@ -49,9 +51,10 @@
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
   (define (wrap-static-info expr key-id val-stx)
-    (quasisyntax/loc expr
-      (begin (quote-syntax (#,key-id #,val-stx))
-             #,expr)))
+    (relocate
+     expr
+     #`(begin (quote-syntax (#,key-id #,val-stx))
+              #,expr)))
 
   (define (wrap-static-info* expr stxes)
     (for/fold ([expr expr]) ([stx (in-list (if (syntax? stxes)
@@ -150,8 +153,17 @@
     (or (indexable-static-info key)
         (let ([id (indexable-static-info indirect-key)])
           (and id
-               (syntax-local-static-info/indirect id key indirect-key))))))
+               (syntax-local-static-info/indirect id key indirect-key)))))
 
+  ;; it's better to relocate and then wrap, since wrapping propagates
+  ;; the location, but sometimes it's so much easier to relocate
+  ;; afterward that it's worth the extra cost
+  (define (relocate-wrapped srcloc e)
+    (syntax-parse e
+      #:literals (begin quote-syntax)
+      [((~and tag begin) (~and qs (quote-syntax (key:identifier val))) e)
+       (relocate srcloc #`(tag qs #,(relocate-wrapped srcloc #'e)))]
+      [_ (relocate srcloc e)])))
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx

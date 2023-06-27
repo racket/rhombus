@@ -196,14 +196,16 @@
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?
                                                         #:list->set #'list->set))
-     (values (build-setmap stx argss
-                           #'Set-build
-                           #'set-extend*
-                           #'set-append
-                           #'set-assert
-                           set-static-info
-                           #:repetition? repetition?
-                           #:list->setmap #'list->set)
+     (values (relocate-wrapped
+              (respan #'(form-id content))
+              (build-setmap stx argss
+                            #'Set-build
+                            #'set-extend*
+                            #'set-append
+                            #'set-assert
+                            set-static-info
+                            #:repetition? repetition?
+                            #:list->setmap #'list->set))
              #'tail)]
     [(_ . tail) (values (if repetition?
                             (identifier-repetition-use #'Set-build*)

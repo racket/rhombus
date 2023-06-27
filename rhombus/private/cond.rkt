@@ -19,19 +19,17 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id test ... (~and all-alts (_::alts alt ...))
-                 . tail)
+       [(form-id test ... (_::alts alt ...))
         (syntax-parse #'(alt ...)
-          #:datum-literals (block)
-          [(((~and tag-thn block) thn ...)
-            ((~and tag-els block) els ...))
+          [((tag-thn::block thn ...)
+            (tag-els::block els ...))
            (values
             (relocate
-             (respan #'(form-id test ... all-alts))
+             (respan stx)
              #'(if (rhombus-expression (group test ...))
                    (rhombus-body-at tag-thn thn ...)
                    (rhombus-body-at tag-els els ...)))
-            #'tail)]
+            #'())]
           [_
            (raise-syntax-error #f
                                "expected two alternatives"
@@ -41,34 +39,38 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts block group)
-       [(form-id (alts
-                  (block (group pred ... ((~and tag block) rhs ...)))
+       #:datum-literals (group)
+       [(form-id (_::alts
+                  (_::block (group pred ... ((~and tag block) rhs ...)))
                   ...
-                  e::else-clause)
-                 . tail)
+                  e::else-clause))
         (values
-         #'(cond
-             [(rhombus-expression (group pred ...))
-              (rhombus-body-at tag rhs ...)]
-             ...
-             [else e.parsed])
-         #'tail)]
-       [(form-id (alts
-                  (block (group pred ... ((~and tag block) rhs ...)))
-                  ...)
-                 . tail)
+         (relocate
+          (respan stx)
+          #'(cond
+              [(rhombus-expression (group pred ...))
+               (rhombus-body-at tag rhs ...)]
+              ...
+              [else e.parsed]))
+         #'())]
+       [(form-id (_::alts
+                  (_::block (group pred ... ((~and tag block) rhs ...)))
+                  ...))
         (values
-         #'(cond
-             [(rhombus-expression (group pred ...))
-              (rhombus-body-at tag rhs ...)]
-             ...
-             [else (cond-fallthrough 'form-id)])
-         #'tail)]
-       [(form-id (block) . tail)
+         (relocate
+          (respan stx)
+          #'(cond
+              [(rhombus-expression (group pred ...))
+               (rhombus-body-at tag rhs ...)]
+              ...
+              [else (cond-fallthrough 'form-id)]))
+         #'())]
+       [(form-id (_::block))
         (values
-         #'(cond-fallthrough 'form-id)
-         #'tail)]))))
+         (relocate
+          (respan stx)
+          #'(cond-fallthrough 'form-id))
+         #'())]))))
 
 (define (cond-fallthrough who)
   (raise-contract-error who "no matching case"))
@@ -85,16 +87,15 @@
 
 (define-for-syntax (parse-when stx racket-form-id)
   (syntax-parse stx
-    #:datum-literals (alts)
-    [(form-id test ... (alts alt ...)
-              . tail)
+    [(form-id test ... (_::alts alt ...))
      (syntax-parse #'(alt ...)
-       #:datum-literals (block)
-       [(((~and tag-thn block) thn ...))
+       [((tag-thn::block thn ...))
         (values
-         #`(#,racket-form-id (rhombus-expression (group test ...))
-            (rhombus-body-at tag-thn thn ...))
-         #'tail)]
+         (relocate
+          (respan stx)
+          #`(#,racket-form-id (rhombus-expression (group test ...))
+             (rhombus-body-at tag-thn thn ...)))
+         #'())]
        [_
         (raise-syntax-error #f
                             "expected a single alternative"

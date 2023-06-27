@@ -206,7 +206,7 @@
          (define-for-syntax name-dot-dispatch
            (lambda (field-sym field-proc ary 0ary nary fail-k)
              (case field-sym
-               [(prop) (field-proc (lambda (e) (build-accessor-call #'prop-proc e)))]
+               [(prop) (field-proc (lambda (e reloc) (build-accessor-call #'prop-proc e reloc)))]
                ...
                [(method) (nary #'method-proc mask #'name-method-proc . method-si)]
                ...
@@ -220,8 +220,8 @@
             (dot-parse-dispatch
              name-dot-dispatch))))]))
 
-(define-for-syntax (build-accessor-call rator rand)
-  (define call #`(#,rator #,rand))
+(define-for-syntax (build-accessor-call rator rand reloc)
+  (define call (reloc #`(#,rator #,rand)))
   (define static-infos (syntax-local-static-info rator #'#%call-result))
   (if static-infos
       (wrap-static-info* call static-infos)

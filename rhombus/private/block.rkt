@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "expression.rkt"
          "parse.rkt")
 
@@ -14,6 +15,8 @@
        [(form-id ((~and tag block) form ...)
                  . tail)
         (values
-         #'(let ()
-             (rhombus-body-at tag form ...))
+         (relocate
+          (respan stx)
+          #'(let ()
+              (rhombus-body-at tag form ...)))
          #'tail)]))))

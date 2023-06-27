@@ -54,7 +54,9 @@
                                #'(clause.rhs ... (parsed e.parsed))
                                #'form-id #'alts-tag))
         (values
-         #`(#,proc (rhombus-expression (group in ...)))
+         (relocate
+          (respan stx)
+          #`(#,proc (rhombus-expression (group in ...))))
          #'())]
        [(form-id in ...+ (alts-tag::alts
                           clause::pattern-clause
@@ -83,12 +85,16 @@
                                    #`(clause.rhs ... (parsed
                                                       (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag))
-            #`(#,proc #,in-expr)))
+            (relocate
+             (respan stx)
+             #`(#,proc #,in-expr))))
          #'())]
        [(form-id in ...+ (block-tag::block))
         (values
-         #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
-            (rhombus-expression (group in ...)))
+         (relocate
+          (respan stx)
+          #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
+             (rhombus-expression (group in ...))))
          #'())]
        [(form-id in ...+ (_::alts clause ...))
         (for ([c (in-list (syntax->list #'(clause ...)))])

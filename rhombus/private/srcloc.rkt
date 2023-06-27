@@ -10,26 +10,30 @@
          relocate-id
          respan-empty
          respan
+         maybe-respan
          with-syntax-error-respan)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
 ;; objects:
 ;;
 ;;  * `group` and `multi` aren't expected to have source locations;
-;;    ideally, the have 'raw as "", but it's best not to rely on that
+;;    ideally, they have 'raw as "", but it's best not to rely on that;
+;;    the S-expression parentheses around `group` from the Shrubbery
+;;    reader will have a spanning srcloc, but not from a Rhombus-level
+;;    template construction
 ;;
-;;  * `parens` and similar are expected to have a source locations that
-;;    spans their content; they have 'raw, 'raw-suffix, etc.
+;;  * `parens` and similar (including `block`) are expected to have a
+;;    source locations that span their content; they have 'raw,
+;;    'raw-suffix, etc.; the reader copies that source location to
+;;    sourringing parentheses, but a Rhombus template construction
+;;    doesn't
 ;;
 ;;  * `op` normally has the same source location as its symbol, but
 ;;    it's best not to rely on that
 ;;
-;;  * `block` has a source location that corresponds to a `:` or `|`
-;;
-;;  * `alts` isn't expected to have a source location
-;;
-;;  * the immediate wrapper of an S-expression pair is generally not
-;;    expected to have a source location or properties
+;;  * `alts` is like `gruop`: it isn't expected to have a source
+;;    location, although the shrubbery reader will associate a
+;;    spanning source location to surrounding parentheses.
 ;;
 ;; "Respan" means to give a syntax object (i.e., the immediate wrapper)
 ;; a source location that corresponds to the content. That may involve
@@ -38,10 +42,18 @@
 ;;
 ;; For most calls to `raise-syntax-error`, `respan` is applied
 ;; automatically to the arguments. When `raise-syntax-error` is called
-;; in a tampolining macro, though, like the way `for` and `class` are
+;; in a trampolining macro, though, like the way `for` and `class` are
 ;; implemented, then explicit `respan` may be needed. In those cases,
 ;; `respan` may also be needed for input to `syntax-parse`, in case it
 ;; is responsible for raising an exception when a match files.
+;;
+;; When a primitive expression form expands to a parsed term, it should
+;; `relocate` the result using a `respan` of the input shrubbery. It's
+;; tempting to try to propagate the raw form of an input shrubbery to
+;; the output, but we don't try, currently. Note that `wrap-static-info`
+;; and `wrap-static-info*` propagate a relocation from the wrapped
+;; expression to the wrapper, so prefer to add the relocation inside,
+;; and that works for both the wrapped and unwrapped forms.
 
 ;; Make a source location that spans `start` to `end`, assuming that
 ;; `end` is after `start`
@@ -66,7 +78,7 @@
   (map no-srcloc (syntax->list stx)))
 
 (define (relocate srcloc stx)
-  (datum->syntax stx (syntax-e stx) srcloc (if (syntax? srcloc) srcloc stx)))
+  (datum->syntax stx (syntax-e stx) srcloc stx #;(if (syntax? srcloc) srcloc stx)))
 
 (define (relocate-id head id)
   (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
@@ -100,11 +112,20 @@
 ;; or `multi` term as constructing a group or multi-group sequence,
 ;; so we against that by treating an identifier with a non-empty 'raw
 ;; property as not constructing a group or multi-gropu sequence.
+(define (maybe-respan stx)
+  (cond
+    [(syntax-srcloc stx) stx]
+    [else (respan stx)]))
+
 (define (respan stx)
   (define e (syntax-e stx))
   (define (not-identifier-term? head)
     (define r (syntax-raw-property head))
     (not (and r (not (null? r)) (not (equal? r "")))))
+  (define (block-tag? a)
+    (and (eq? (syntax-e a) 'block)
+         (or (equal? (syntax-raw-property a) ":")
+             (equal? (syntax-raw-property a) "|"))))
   ;; look inside `stx` for `op` or 
   (define (term->stx stx)
     (define r (syntax-e stx))
@@ -117,12 +138,13 @@
                        [d (if (syntax? d) (syntax-e d) d)])
                   (or (and (pair? d) (car d))
                       a)))
-           (and (and (memq (syntax-e a) '(parens brackets braces quotes alts))
+           (and (and (eq? (syntax-e a) 'alts)
                      (not-identifier-term? a))
-                (respan stx))
-           (and (and (eq? (syntax-e a) 'block)
-                     (equal? (syntax-raw-property a) ":"))
-                (respan stx))
+                (maybe-respan stx))
+           (and (memq (syntax-e a) '(parens brackets braces quotes))
+                (maybe-respan stx))
+           (and (block-tag? a)
+                (maybe-respan stx))
            stx)]
       [else stx]))
   ;; compute span from a list of terms
@@ -175,16 +197,15 @@
         => (lambda (l)
              (from-list stx (cdr l) (lambda (g)
                                       ;; we expect `g` to be a group or block
-                                      (respan g))))]
-       [(and (eq? v 'block)
-             (equal? (syntax-raw-property head) ":")
+                                      (maybe-respan g))))]
+       [(and (block-tag? head)
              (syntax->list stx))
         => (lambda (l)
              (from-list stx l (lambda (g)
                                 ;; we expect `g` to be a group, usually,
                                 ;; but it will be an identifier for the
                                 ;; head of `l`
-                                (respan g))))]
+                                (maybe-respan g))))]
        [(syntax->list stx)
         => (lambda (l)
              ;; assume a list of terms
@@ -201,7 +222,7 @@
   (with-handlers ([exn:fail:syntax?
                    (lambda (exn)
                      (define exprs (exn:fail:syntax-exprs exn))
-                     (define new-exprs (map respan exprs))
+                     (define new-exprs (map maybe-respan exprs))
                      (raise
                       (if (equal? exprs new-exprs)
                           exn

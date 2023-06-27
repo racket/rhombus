@@ -136,7 +136,6 @@
                                   (if more-static?
                                       (raise-syntax-error who (not-static) indexable-in)
                                       #'indexable-index)))
-     (local-require enforest/operator)
      (define-values (assign-expr tail) (build-assign
                                         op
                                         #'assign.name
@@ -148,7 +147,7 @@
                      [index-v (rhombus-expression index)])
                  #,assign-expr)
              tail)]
-    [(_ ((~and head brackets) index) . tail)
+    [(_ (~and args ((~and head brackets) index)) . tail)
      (define (build-ref indexable index indexable-static-info)
        (define indexable-ref-id (or (static-info/indirect indexable-static-info #'#%index-get #'#%index-get-indirect)
                                     (if more-static?
@@ -181,7 +180,8 @@
                      #'(rhombus-expression index)
                      (lambda (key)
                        (syntax-local-static-info indexable key))))
-        (values (wrap-static-info* e result-static-infos)
+        (define reloc-e (relocate (respan #`(#,indexable-in args)) e))
+        (values (wrap-static-info* reloc-e result-static-infos)
                 #'tail)])]))
 
 (define (indexable-index indexable index)

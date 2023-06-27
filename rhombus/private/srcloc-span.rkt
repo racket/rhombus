@@ -1,85 +1,32 @@
 #lang racket/base
 (require shrubbery/property
          syntax/parse/pre
-         racket/syntax-srcloc)
+         racket/syntax-srcloc
+         "srcloc.rkt")
 
 (provide relocate-span
          relocate*
          relevant-source-syntax)
 
-;; Unlike `respan` in "srcloc.rkt", these functions can assume
-;; a shrubbery encoding. Also, they handle 'raw properties in
-;; addition to source locations.
-
+;; Similar to "respan" from "srcloc.rkt", but also propagates
+;; raw-prefix and raw-suffix properties
 (define (relocate-span stx ctx-stxes-in)
-  (define keep-raw-interior? #f) ; expose this as an option?
-  (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))
+  (define new-stx (relocate (if (null? (cdr ctx-stxes-in))
+                                (maybe-respan (car ctx-stxes-in))
+                                (respan (datum->syntax #f (map maybe-respan ctx-stxes-in))))
+                            stx))
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))
-  (let loop ([ctx-stxes (cdr ctx-stxes)]
-             [loc (syntax-srcloc (car ctx-stxes))]
-             [pre (or (syntax-raw-prefix-property (car ctx-stxes)) null)]
-             [raw (if keep-raw-interior?
-                      (or (syntax-raw-property (car ctx-stxes)) null)
-                      null)]
-             [suffix (combine-raw
-                      (if keep-raw-interior?
-                          (or (syntax-raw-tail-property (car ctx-stxes)) null)
-                          null)
-                      (if (or keep-raw-interior?
-                              (null? (cdr ctx-stxes)))
-                          (or (syntax-raw-suffix-property (car ctx-stxes)) null)
-                          null))])
-    (cond
-      [(null? ctx-stxes)
-       (let* ([ctx (datum->syntax #f #f loc)]
-              [ctx (if (null? pre)
-                       ctx
-                       (syntax-raw-prefix-property ctx pre))]
-              [ctx (syntax-raw-property ctx raw)]
-              [ctx (if (null? suffix)
-                       ctx
-                       (syntax-raw-suffix-property ctx suffix))])
-         (relocate* stx ctx))]
-      [(and (pair? (cdr ctx-stxes))
-            (not keep-raw-interior?))
-       (loop (cdr ctx-stxes) loc pre raw suffix)]
-      [else
-       (define empty-raw? (and (null? raw) (null? suffix)))
-       (define ctx (car ctx-stxes))
-       (define new-raw (or (syntax-raw-property ctx) null))
-       (define new-loc (syntax-srcloc ctx))
-       (loop (cdr ctx-stxes)
-             (if (and loc
-                      new-loc
-                      (equal? (srcloc-source loc)
-                              (srcloc-source new-loc)))
-                 (srcloc (srcloc-source loc)
-                         (srcloc-line loc)
-                         (srcloc-column loc)
-                         (srcloc-position loc)
-                         (if (and (srcloc-position new-loc)
-                                  (srcloc-span new-loc)
-                                  (srcloc-position loc))
-                             (max (- (+ (srcloc-position new-loc)
-                                        (srcloc-span new-loc))
-                                     (srcloc-position loc))
-                                  0)
-                             (srcloc-span loc)))
-                 loc)
-             (if empty-raw?
-                 (combine-raw pre (or (syntax-raw-prefix-property ctx) null))
-                 pre)
-             (if empty-raw?
-                 (or (syntax-raw-property ctx) null)
-                 (combine-raw (combine-raw (combine-raw raw suffix)
-                                           (or (syntax-raw-prefix-property ctx) null))
-                              (or (syntax-raw-property ctx) null)))
-             (combine-raw (if keep-raw-interior?
-                              (or (syntax-raw-tail-property ctx) null)
-                              null)
-                          (combine-raw
-                           (or (syntax-raw-tail-suffix-property ctx) null)
-                           (or (syntax-raw-suffix-property ctx) null))))])))
+  (define head (relevant-source-syntax (car ctx-stxes-in)))
+  (define tail (relevant-source-syntax (let loop ([ctx-stxes-in ctx-stxes-in])
+                                         (if (null? (cdr ctx-stxes-in))
+                                             (car ctx-stxes-in)
+                                             (loop (cdr ctx-stxes-in))))))
+  (let* ([new-stx (syntax-raw-prefix-property new-stx (syntax-raw-prefix-property head))]
+         [new-stx (syntax-raw-suffix-property new-stx
+                                              (combine-raw
+                                               (or (syntax-raw-tail-suffix-property tail) null)
+                                               (or (syntax-raw-suffix-property tail) null)))])
+    new-stx))
 
 (define (relocate* stx ctx-stx-in)
   (define ctx-stx (relevant-source-syntax ctx-stx-in))

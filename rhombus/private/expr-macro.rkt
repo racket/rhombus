@@ -57,7 +57,8 @@
 
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information
-  #`(parsed #,(rhombus-local-expand form)))
+  (define loc (maybe-respan form))
+  (relocate loc #`(parsed #,(relocate loc (rhombus-local-expand form)))))
 
 (define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator
@@ -68,7 +69,8 @@
        (lambda (form1 form2 stx)
          (wrap-expression (check-expression-result
                            (proc (parsed-argument form1) (parsed-argument form2) stx)
-                           proc)))
+                           proc)
+                          #:srcloc (span-srcloc form1 form2)))
        (lambda (form1 tail)
          (define-values (form new-tail)
            (tail-returner
@@ -88,8 +90,9 @@
    (if (eq? protocol 'automatic)
        (lambda (form stx)
          (wrap-expression (check-expression-result
-                           (proc #`(parsed #,form) stx)
-                           proc)))
+                           (proc (parsed-argument form) stx)
+                           proc)
+                          #:srcloc (span-srcloc stx form)))
        (lambda (tail)
          (define-values (form new-tail)
            (tail-returner

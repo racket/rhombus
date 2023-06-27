@@ -121,7 +121,7 @@
     [(_ _ () . _)
      (parse #f #'#f #'() #t)]
     [(_ _ (op::annotate-op ret ...) _ _ convert-ok? . _)
-     #:with c::annotation (respan (no-srcloc #`(#,group-tag ret ...)))
+     #:with c::annotation (respan #`(#,group-tag ret ...))
      (syntax-parse #'c.parsed
        [c-parsed::annotation-predicate-form
         (parse (syntax-e #'op.check?) #'c-parsed.predicate #'c-parsed.static-infos #t)]

@@ -138,9 +138,9 @@
 
   (define/arity syntax_meta.error
     (case-lambda
-      [(form) (raise-syntax-error (name-of form) "bad syntax" (respan form))]
-      [(msg form) (raise-syntax-error (name-of form) msg (respan form))]
-      [(msg form detail) (raise-syntax-error (name-of form) msg (respan form) (respan detail))]))
+      [(form) (raise-syntax-error (name-of form) "bad syntax" (maybe-respan form))]
+      [(msg form) (raise-syntax-error (name-of form) msg (maybe-respan form))]
+      [(msg form detail) (raise-syntax-error (name-of form) msg (maybe-respan form) (maybe-respan detail))]))
 
   (define (name-of stx)
     (syntax-parse stx

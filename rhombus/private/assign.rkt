@@ -6,7 +6,8 @@
                      enforest/hier-name-parse
                      enforest/operator
                      "name-path-op.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "srcloc.rkt")
          "binding.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
@@ -154,15 +155,17 @@
    (if (eq? protocol 'automatic)
        (lambda (form1 form2 self-stx)
          (define-values (mv inside) (get-mv form1 self-stx))
-         #`(let ([#,inside #,form2]) ; using `inside` here provides a name to `form2`
-             #,(build-assign/automatic proc
-                                       self-stx
-                                       #`(lambda ()
-                                           #,(mutable-variable-id mv))
-                                       #`(lambda (v)
-                                           (set! #,(mutable-variable-id mv) #,(convert mv #'v)))
-                                       inside
-                                       inside)))
+         (relocate
+          (span-srcloc (maybe-respan form1) (maybe-respan form2))
+          #`(let ([#,inside #,form2]) ; using `inside` here provides a name to `form2`
+              #,(build-assign/automatic proc
+                                        self-stx
+                                        #`(lambda ()
+                                            #,(mutable-variable-id mv))
+                                        #`(lambda (v)
+                                            (set! #,(mutable-variable-id mv) #,(convert mv #'v)))
+                                        inside
+                                        inside))))
        (lambda (form1 tail)
          (syntax-parse tail
            [(head . tail)

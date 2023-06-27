@@ -378,10 +378,12 @@
                       (relocate stx ctx-stx))])
       relocate)))
 
-(define/arity (relocate_span stx ctx-stxes-in)
+(define/arity (relocate_span stx ctx-stxes)
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Syntax" stx))
-  (relocate-span stx ctx-stxes-in))
+  (unless (and (pair? ctx-stxes) (list? ctx-stxes) (andmap syntax? ctx-stxes))
+    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "NonemptyList.of(Syntax)" ctx-stxes))
+  (relocate-span stx ctx-stxes))
 
 (define relocate_span_method
   (lambda (stx)
@@ -397,7 +399,7 @@
 
 (define/arity (Syntax.srcloc stx)
   (unless (syntax? stx) (raise-argument-error* 'Syntax.srcloc rhombus-realm "Syntax" stx))
-  (syntax-srcloc (respan stx)))
+  (syntax-srcloc (maybe-respan stx)))
 
 (define/arity (is_original v)
   (syntax-original? (extract-ctx 'Syntax.srcloc v #:false-ok? #f)))

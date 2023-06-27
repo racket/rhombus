@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx)
+                     syntax/stx
+                     "srcloc.rkt")
          "provide.rkt"
          "composite.rkt"
          "expression.rkt"
@@ -122,10 +123,10 @@
        #:datum-literals (parens group op)
        [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
         #:when (normal-call? #'tag)
-        (parse-list-expression stx)]
+        (parse-list-form stx #:repetition? #f #:span-form-name? #t)]
        [(form-id (tag::parens _ ... (group _::&-expr _ ...)) . tail)
         #:when (normal-call? #'tag)
-        (parse-list-expression stx)]
+        (parse-list-form stx #:repetition? #f #:span-form-name? #t)]
        [(_ . tail)
         (values #'list #'tail)]))))
 
@@ -217,12 +218,12 @@
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'length)]
-        [(first) (field (lambda (e)
-                          (wrap-static-info* #`(car #,e)
+        [(first) (field (lambda (e reloc)
+                          (wrap-static-info* (reloc #`(car #,e))
                                              (or (syntax-local-static-info e #'#%index-result)
                                                  #'()))))]
-        [(rest) (field (lambda (e)
-                         (wrap-static-info* #`(cdr #,e)
+        [(rest) (field (lambda (e reloc)
+                         (wrap-static-info* (reloc #`(cdr #,e))
                                             (datum->syntax #f
                                                            (or (extract-static-infos e)
                                                                '())))))]
@@ -232,7 +233,7 @@
         [(sort) (nary #'List.sort 3 #'List.sort list-static-infos)]
         [(drop_left) (nary #'List.drop_left 2 #'List.drop_left list-static-infos)]
         [(drop_right) (nary #'List.drop_right 2 #'List.drop_right list-static-infos)]
-        [(has_element) (nary #'List.has_element 2 #'List.has_element list-static-infos)]
+        [(has_element) (nary #'List.has_element 2 #'List.has_element #'())]
         [(remove) (nary #'List.remove 2 #'List.remove list-static-infos)]
         [else (fail-k)])))))
 
@@ -413,11 +414,13 @@
                            (= (length v) #,len))))
      (generate-binding #'form-id pred args #'tail)]))
 
-(define-for-syntax (parse-list-form stx #:repetition? repetition?)
+(define-for-syntax (parse-list-form stx
+                                    #:repetition? repetition?
+                                    #:span-form-name? span-form-name?)
   (syntax-parse stx
     #:datum-literals (group)
-    [(form-id (tag arg ...) . tail)
-     ;; a list of syntax, (cons 'splice syntax), and (cons 'seq syntax):
+    [(form-id (~and args (tag arg ...)) . tail)
+     ;; a list of syntax, (cons 'splice syntax), and (cons 'rep syntax):
      (define content
        (let loop ([gs-stx #'(arg ...)] [accum '()])
          (syntax-parse gs-stx
@@ -447,30 +450,35 @@
                           (syntax-parse #'g
                             [e::expression #'e.parsed])))
             (loop #'gs (cons e accum))])))
+     (define src-span (if span-form-name?
+                          (respan #`(form-id args))
+                          (maybe-respan #'args)))
      (values
-      (cond
-        [(and (pair? content) (null? (cdr content))
-              (pair? (car content)) (eq? 'rep (caar content)))
-         ;; special case, especially to expose static info on rest elements
-         (define seq (cadar content))
-         (cond
-           [repetition? (repetition-as-deeper-repetition seq list-static-infos)]
-           [else (wrap-list-static-info seq)])]
-        [(not repetition?)
-         (wrap-list-static-info
-          (build-list-form content))]
-        [else
-         (build-compound-repetition
-          stx
-          content
-          #:is-sequence? (lambda (e) (and (pair? e) (eq? 'rep (car e))))
-          #:extract (lambda (e) (if (pair? e) (cadr e) e))
-          (lambda new-content
-            (let ([content (for/list ([e (in-list content)]
-                                      [new-e (in-list new-content)])
-                             (if (pair? e) (list (car e) new-e) new-e))])
-              (values (build-list-form content)
-                      list-static-infos))))])
+      (relocate-wrapped
+       src-span
+       (cond
+         [(and (pair? content) (null? (cdr content))
+               (pair? (car content)) (eq? 'rep (caar content)))
+          ;; special case, especially to expose static info on rest elements
+          (define seq (cadar content))
+          (cond
+            [repetition? (repetition-as-deeper-repetition seq list-static-infos)]
+            [else (wrap-list-static-info seq)])]
+         [(not repetition?)
+          (wrap-list-static-info
+           (build-list-form content))]
+         [else
+          (build-compound-repetition
+           stx
+           content
+           #:is-sequence? (lambda (e) (and (pair? e) (eq? 'rep (car e))))
+           #:extract (lambda (e) (if (pair? e) (cadr e) e))
+           (lambda new-content
+             (let ([content (for/list ([e (in-list content)]
+                                       [new-e (in-list new-content)])
+                              (if (pair? e) (list (car e) new-e) new-e))])
+               (values (build-list-form content)
+                       list-static-infos))))]))
       #'tail)]))
 
 (define-for-syntax (build-list-form content)
@@ -496,10 +504,10 @@
        (loop (cdr content) (cons (car content) accum) accums)])))
 
 (define-for-syntax (parse-list-expression stx)
-  (parse-list-form stx #:repetition? #f))
+  (parse-list-form stx #:repetition? #f #:span-form-name? #f))
 
 (define-for-syntax (parse-list-repetition stx)
-  (parse-list-form stx #:repetition? #t))
+  (parse-list-form stx #:repetition? #t #:span-form-name? #f))
 
 (define (length-at-least v len)
   (or (eqv? len 0)

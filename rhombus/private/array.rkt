@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx)
+                     syntax/stx
+                     "srcloc.rkt")
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -58,7 +59,7 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values #'vector #'tail)]))))
+       [(form-id . tail) (values (relocate #'form-id #'vector) #'tail)]))))
 
 (define-annotation-constructor (Array of)
   () #'vector? array-static-infos

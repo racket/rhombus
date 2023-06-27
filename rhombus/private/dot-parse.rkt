@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "statically-str.rkt")
+                     "statically-str.rkt"
+                     "srcloc.rkt")
          "parse.rkt"
          "parens.rkt"
          "static-info.rkt")
@@ -19,46 +20,60 @@
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
         #:datum-literals ()
-        [((p-tag::parens g ...) . new-tail)
+        [((~and args (p-tag::parens g ...)) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (cond
            [(bitwise-bit-set? mask (length gs))
-            (success-k (n-k #'(p-tag g ...))
+            (success-k (n-k #'(p-tag g ...)
+                            (lambda (e)
+                              (relocate (respan #`(#,lhs args)) e)))
                        #'new-tail)]
            [else
             (if more-static?
                 (bad (string-append "wrong number of arguments in method call" statically-str))
-                (success-k (no-k) tail))])]
+                (success-k (no-k (lambda (e)
+                                   (relocate (respan #`(#,lhs #,field-stx)) e)))
+                           tail))])]
         [_
          (if more-static?
              (bad "expected parentheses afterward")
-             (success-k (no-k) tail))]))
+             (success-k (no-k (lambda (e)
+                                (relocate (respan #`(#,lhs #,field-stx)) e)))
+                        tail))]))
 
     (define (0ary id [static-infos #'()])
       (ary 1
-           (lambda (no-args) (wrap-static-info*
-                              #`(#,id #,lhs)
-                              static-infos))
-           (lambda () (wrap-static-info*
-                       #`(let ([#,id (lambda () (#,id #,lhs))])
-                           #,id)
-                       static-infos))))
+           (lambda (no-args reloc) (wrap-static-info*
+                                    (relocate
+                                     (respan #`(#,lhs #,field-stx))
+                                     #`(#,id #,lhs))
+                                    static-infos))
+           (lambda (reloc) (wrap-static-info*
+                            (reloc
+                             #`(let ([#,id (lambda () (#,id #,lhs))])
+                                 #,id))
+                            static-infos))))
 
     (define (nary id mask direct-id [static-infos #'()])
       (ary mask
-           (lambda (args) (wrap-static-info*
-                           (let ()
-                             (define-values (proc tail)
-                               (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
-                                                    #:static? more-static?))
-                             proc)
-                           static-infos))
-           (lambda () (wrap-static-info*
-                       #`(let ([#,direct-id (lambda () (#,id #,lhs))])
-                           #,direct-id)
-                       static-infos))))
+           (lambda (args reloc) (wrap-static-info*
+                                 (let ()
+                                   (define-values (proc tail)
+                                     (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
+                                                          #:srcloc (reloc #'#false)
+                                                          #:static? more-static?))
+                                   proc)
+                                 static-infos))
+           (lambda (reloc) (wrap-static-info*
+                            (reloc
+                             #`(let ([#,direct-id (lambda () (#,id #,lhs))])
+                                 #,direct-id))
+                            static-infos))))
 
-    (define (field mk) (success-k (mk lhs) tail))
+    (define (field mk) (success-k (mk lhs
+                                      (lambda (e)
+                                        (relocate (respan #`(#,lhs #,field-stx)) e)))
+                                  tail))
 
     (k (syntax-e field-stx) field ary 0ary nary fail-k)))
 

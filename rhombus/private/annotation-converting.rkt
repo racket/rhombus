@@ -56,7 +56,7 @@
         #:when (free-identifier=? #'func.name #'fun)
         (parse #'form-id
                #'(group arg ...)
-               (respan (no-srcloc #`(#,group-tag result-ann ...)))
+               (respan #`(#,group-tag result-ann ...))
                #'(rhombus-body-at tag body ...)
                (syntax-e #'op.check?)
                #'tail)]

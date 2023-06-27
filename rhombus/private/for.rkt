@@ -40,28 +40,34 @@
      (syntax-parse (respan stx)
        #:datum-literals (block group)
        [(form-id ((~and block-tag block) body ...+ (group #:into red ...)))
-        (values #'(rhombus-expression
-                   (group form-id red ... (block-tag body ...)))
+        (values (relocate
+                 (respan stx)
+                 #'(rhombus-expression
+                    (group form-id red ... (block-tag body ...))))
                 #'())]
        [(form-id (block body ...+))
-        (values #`(for (#:splice (for-clause-step #,stx #,static? [(begin (void))] body ...))
-                    (void))
+        (values (relocate
+                 (respan stx)
+                 #`(for (#:splice (for-clause-step #,stx #,static? [(begin (void))] body ...))
+                     (void)))
                 #'())]
        [(form-id red ... (block body ...+))
         #:with g-tag group-tag
         #:with redr::reducer #'(g-tag red ...)
         #:with f::reducer-form #'redr.parsed
         (values (wrap-static-info*
-                 #`(f.wrapper
-                    f.data
-                    (for/fold f.binds (#:splice (for-clause-step #,stx #,static? [(f.body-wrapper f.data)] body ...))
-                      #,@(if (syntax-e #'f.break-whener)
-                             #`(#:break (f.break-whener f.data))
-                             null)
-                      #,@(if (syntax-e #'f.final-whener)
-                             #`(#:final (f.final-whener f.data))
-                             null)
-                      (f.finisher f.data)))
+                 (relocate
+                  (respan stx)
+                  #`(f.wrapper
+                     f.data
+                     (for/fold f.binds (#:splice (for-clause-step #,stx #,static? [(f.body-wrapper f.data)] body ...))
+                       #,@(if (syntax-e #'f.break-whener)
+                              #`(#:break (f.break-whener f.data))
+                              null)
+                       #,@(if (syntax-e #'f.final-whener)
+                              #`(#:final (f.final-whener f.data))
+                              null)
+                       (f.finisher f.data))))
                  #'f.static-infos)
                 #'())]))))
 

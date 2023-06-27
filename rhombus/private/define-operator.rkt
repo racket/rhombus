@@ -53,10 +53,11 @@
           'automatic
           (lambda (form stx)
             (wrap-static-info*
-             (datum->syntax (quote-syntax here)
-                            (list (quote-syntax prim) form)
-                            (span-srcloc stx form)
-                            stx)
+             (relocate (span-srcloc stx form)
+                       (datum->syntax (quote-syntax here)
+                                      (list (quote-syntax prim) form)
+                                      #f
+                                      stx))
              #`statinfos)))]))
 
   (define-syntax (infix stx)
@@ -92,10 +93,11 @@
           'automatic
           (lambda (form1 form2 stx)
             (wrap-static-info*
-             (datum->syntax (quote-syntax here)
-                            (list (quote-syntax prim) form1 form2)
-                            (span-srcloc form1 form2)
-                            stx)
+             (relocate (span-srcloc form1 form2)
+                       (datum->syntax (quote-syntax here)
+                                      (list (quote-syntax prim) form1 form2)
+                                      #f
+                                      stx))
              #`statinfos))
           assoc)])))
 

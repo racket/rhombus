@@ -146,7 +146,10 @@
                          "expected an identifier for a field or method name, but found something else"
                          #'dot.name
                          #f
-                         (list #'other))]))
+                         (list #'other))]
+    [(dot:identifier . tail)
+     ;; wrap as an operator
+     (parse-dot-provider #'((op dot) . tail) finish)]))
 
 (define-for-syntax (build-dot-access form1 dp-id
                                      more-static? #:repetition? repetition?

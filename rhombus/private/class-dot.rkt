@@ -401,10 +401,12 @@
                     #,assign-expr)
                 tail)]
       [_
-       (define e (datum->syntax (quote-syntax here)
-                                (list (relocate field-id accessor-id) form1)
-                                (span-srcloc form1 field-id)
-                                #'dot))
+       (define e (relocate
+                  (span-srcloc (maybe-respan form1) (maybe-respan field-id))
+                  (datum->syntax (quote-syntax here)
+                                 (list (relocate field-id accessor-id) form1)
+                                 #f
+                                 #'dot)))
        (define static-infos (field-desc-static-infos fld))
        (define more-static-infos (syntax-local-static-info form1 accessor-id))
        (define all-static-infos (if more-static-infos
@@ -420,9 +422,10 @@
           (syntax-parse tail
             [(_:::=-expr . tail)
              #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
-             (values #`(#,(no-srcloc #'parens) (group (parsed e.parsed)))
+             (values (relocate #'e.parsed
+                               #`(#,(no-srcloc #'parens) (group (parsed e.parsed))))
                      #'e.tail)]
-            [_ (values #'(parens) tail)])
+            [_ (values (no-srcloc #'(parens)) tail)])
           (syntax-parse tail
             #:datum-literals (op)
             [((~and args (::parens arg ...)) . tail)
@@ -445,9 +448,10 @@
                (values pos/id obj-id #f (lambda (e)
                                           (define static-infos (extract-static-infos e))
                                           (wrap-static-info*
-                                           #`(let ([#,obj-id #,form1])
-                                               #,(add-check obj-id)
-                                               #,(unwrap-static-infos e))
+                                           (relocate form1
+                                                     #`(let ([#,obj-id #,form1])
+                                                         #,(add-check obj-id)
+                                                         #,(unwrap-static-infos e)))
                                            static-infos)))]
               [else
                (values pos/id form1 #f (lambda (e) e))])]
@@ -475,6 +479,7 @@
        (define-values (call-stx empty-tail)
          (parse-function-call rator (list obj-e) #`(#,obj-e #,args)
                               #:rator-stx field-id
+                              #:srcloc (respan #`(#,obj-e #,field-id #,args))
                               #:static? more-static?
                               #:rator-arity arity
                               #:rator-kind (if property? 'property 'method)))

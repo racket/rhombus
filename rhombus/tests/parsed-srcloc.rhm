@@ -1,0 +1,103 @@
+#lang rhombus/and_meta
+import:
+  rhombus/static
+
+def posn_def:
+  'class Posn(x, y):
+     method m():
+       10
+     property
+     | p:
+         x+y
+     | p := q:
+         #void'
+
+def macro_defs:
+  ['«expr.macro 'my_auto_prefix $('$')x': '$('$')x'»',
+   '«expr.macro '$('$')_ my_auto_infix $('$')x': '$('$')x'»',
+   '«expr.macro 'my_form $('$')x $('...')':
+       ~op_stx self
+       def v = Syntax.relocate_span('$('$')x $('...')', [self, '$('$')x $('...')'])
+       v»']
+
+def op_def:
+  'operator x GT y:
+     x > y'
+
+def var_def:
+  'def mutable box = 10'
+
+def ev = make_rhombus_evaluator()
+parameterize { current_evaluator: ev }:
+  eval('import rhombus/static')
+  // this macro cases the argument expression to be parsed,
+  // and then we can use it in a larger expression without
+  // parentheses
+  eval('«expr.macro 'try_append $('$')arg':
+           ~weaker_than: ~other
+           '$('$')arg static.(++) "y"'»')
+  eval(posn_def)
+  eval.map(macro_defs)
+  eval(op_def)
+  eval(var_def)
+
+fun get_exn(s :: Syntax):
+  try:
+    parameterize { current_evaluator: ev }:
+      eval('try_append $s')
+    ~catch exn :: Exn.Fail.Syntax:
+      exn
+
+expr.macro 'check_exp_loc: $body':
+  let check_id = 'check'.relocate_span([body])
+  'block:
+     let loc = (Syntax.literal '$body').srcloc()
+     let exn :: Exn.Fail.Syntax = get_exn(Syntax.literal '$body')
+     $check_id exn.exprs[0].srcloc() ~is loc'
+
+#//
+parameterize { current_evaluator: ev }:
+  eval('try_append box')
+
+check_exp_loc: 1
+check_exp_loc: my_auto_prefix 1
+check_exp_loc: 2 my_auto_infix 1
+check_exp_loc: my_form 1
+check_exp_loc: box
+check_exp_loc: Posn(1, 2)
+check_exp_loc: Posn(1, 2).x
+check_exp_loc: Posn(1, 2).m()
+check_exp_loc: Posn(1, 2).p
+check_exp_loc: [1, 2, 3].first
+check_exp_loc: [List.repet([1]), ...].first
+check_exp_loc: [1, 2, 3].has_element(1)
+check_exp_loc: [1, 2, 3].has_element
+check_exp_loc: Array(1, 2, 3)[0]
+check_exp_loc: {1: 2}[0]
+check_exp_loc: Map{1: 2}[0]
+check_exp_loc: {1}[0]
+check_exp_loc: Set{1: 2}[0]
+check_exp_loc: Srcloc(1, 2, 3, 4, 5).line
+check_exp_loc: 1+2
+check_exp_loc: 1 GT 2
+check_exp_loc: if #true | 1 | 2
+check_exp_loc: cond | #true: 2
+check_exp_loc: cond | ~else 2
+check_exp_loc: match #true | #true: 2
+check_exp_loc: match #true | ~else 2
+check_exp_loc: fun (x): x
+check_exp_loc: fun | (x): x
+check_exp_loc: block: def x = 5; x
+check_exp_loc: (box := 0) // `:=` claims weaker precedence than everything
+check_exp_loc: Posn(1, 2).p := 0
+
+check_exp_loc: for:
+                 each i: 0..1
+                 i
+check_exp_loc: for values(x = 1):
+                 each i: 0..1
+                 i
+check_exp_loc: for:
+                 each i: 0..1
+                 i
+                 ~into values(x = 1)

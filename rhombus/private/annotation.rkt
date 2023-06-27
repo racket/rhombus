@@ -155,7 +155,7 @@
              #:with (~var ca (:annotation-converted check?)) #'c.parsed
              #:do [(when (and (not check?)
                               (syntax-e #'ca.converter))
-                     (raise-unchecked-disallowed #'op.name (respan (no-srcloc #'(ctc ...)))))]
+                     (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
              #:attr converter #'ca.converter
              #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
              #:attr static-infos #'ca.static-infos))
