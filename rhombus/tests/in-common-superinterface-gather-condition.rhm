@@ -1,0 +1,24 @@
+#lang rhombus
+
+interface S
+
+interface CV:
+  extends S
+  // read-only property
+  property size :: Int
+
+interface MC:
+  extends CV
+  method clear() :: Void
+
+class AVS():
+  nonfinal
+  implements CV
+  override property size: 0
+
+class AMS():
+  extends AVS
+  implements MC
+  override method clear(): #void
+
+check: AMS().size ~is 0
