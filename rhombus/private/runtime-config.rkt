@@ -98,6 +98,7 @@
                  [(path->string) (rhombus 'Path.string)]
                  [(bytes-copy) (rhombus 'Bytes.copy)]
                  [(bytes-copy!) (rhombus 'Bytes.copy_from)]
+                 [(string-append-immutable) (rhombus 'String.append)]
                  [else (values who who-realm)])]
               [else (values who who-realm)]))
           (define-values (new-msg new-msg-realm)

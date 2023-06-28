@@ -14,6 +14,8 @@
                     description
                     operator_description
                     parse_checker
+                    parsed_packer
+                    parsed_unpacker
                     identifier_parser))
 
 (module+ for-space-meta-macro
@@ -40,6 +42,10 @@
   (make-identifier-transformer '#:syntax_class_infix_more))
 (define-space-meta-clause-syntax reflection
   (make-identifier-transformer '#:reflection))
+(define-space-meta-clause-syntax parsed_packer
+  (make-identifier-transformer '#:parsed_packer))
+(define-space-meta-clause-syntax parsed_unpacker
+  (make-identifier-transformer '#:parsed_unpacker))
 
 (define-for-syntax (make-expression-transformer kw)
   (space-meta-clause-transformer
@@ -90,6 +96,14 @@
       [(_ (#:parsed_checker stx e))
        (check "parse-checking function expressions")
        (hash-set options '#:parsed_checker #'e)]
+      [(_ (#:parsed_packer pack))
+       (when (hash-ref options '#:parsed_packer #f)
+         (raise-syntax-error #f "multiple parsed packer names declared" orig-stx #'pack))
+       (hash-set options '#:parsed_packer #'pack)]
+      [(_ (#:parsed_unpacker unpack))
+       (when (hash-ref options '#:parsed_unpacker #f)
+         (raise-syntax-error #f "multiple parsed unpacker names declared" orig-stx #'unpack))
+       (hash-set options '#:parsed_unpacker #'unpack)]
       [(_ (#:identifier_transformer stx e))
        (check "identifier parser expressions" #:enforest-only? #t)
        (hash-set options '#:identifier_transformer #'e)]

@@ -66,6 +66,8 @@ driver and macro-definitions forms.
     #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(identifier_parser, ~space_meta_clause)) $expr
     #,(@rhombus(parse_checker, ~space_meta_clause)) $expr
+    #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
+    #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
     #,(@rhombus(description, ~space_meta_clause)) $expr
     #,(@rhombus(operator_description, ~space_meta_clause)) $expr
     #,(@rhombus(reflection, ~space_meta_clause)) $id
@@ -94,7 +96,7 @@ driver and macro-definitions forms.
  @rhombus(bridge_definer, ~space_clause) are not declared, then there is
  no way to bind in the new namespace except by using lower-level mechanisms.
 
- Also typically among the @rhombus(space_clause_or_body)s, a
+ Also typically among the @rhombus(space_clause_or_body_or_export)s, a
  @rhombus(meta_namespace, ~space_clause) declares the name of a
  compile-time namespace, typically used in macros. The meta namespace's
  name is conventionally @rhombus(_meta, ~datum) appended to the end of
@@ -150,9 +152,25 @@ driver and macro-definitions forms.
  syntax class bound by @rhombus(parse_syntax_class, ~space_meta_clause),
  its @rhombus(parsed, ~datum) field is the result of parsing. No
  constraints are imposed on the result of parsing, except that it must be
- represented as a syntax object. If a
+ represented as a syntax object.
+
+ When just @rhombus(macro_definer, ~space_clause) and
+ @rhombus(parse_syntax_class, ~space_meta_clause) are declared, then each
+ macro effectively must produce a fully expanded term. When a
  @rhombus(parse_checker, ~space_meta_clause) clause is supplied, then it
- can impose a check on the result for every macro in the space.
+ can impose a check and/or conversion on the result for every macro in
+ the space, and that conversion can include recursively expanding when
+ the result is not yet fully expanded. To aid in the distinction of terms
+ that are fully expanded, use @rhombus(parsed_packer, ~space_meta_clause)
+ and @rhombus(parsed_unpacker, ~space_meta_clause). Then, macros that
+ generate expanded terms should pack them using (a function based on) the
+ function declared by @rhombus(parsed_packer, ~space_meta_clause), while
+ the @rhombus(parse_checker, ~space_meta_clause) function can check for a
+ parsed term using the function declared by
+ @rhombus(parsed_unpacker, ~space_meta_clause). Meanwhile, the syntax
+ classes bound by @rhombus(parse_syntax_class, ~space_meta_clause) and similar
+ recognize terms constructed via @rhombus(parsed_packer, ~space_meta_clause)
+ as already parsed.
 
 @itemlist(
 
@@ -191,8 +209,23 @@ driver and macro-definitions forms.
  @item{@rhombus(parse_checker, ~space_meta_clause): supplies a
   compile-time function that is applied to two arguments: the result of
   any macro defined for the space, and a procedure implementing the macro
-  transformer (which is useful for reporting errors); the result is a
+  transformer (which is useful for reporting errors or recursively expanding); the result is a
   syntax object, typically the one that was given, but possibly adjusted.}
+
+ @item{@rhombus(parsed_packer, ~space_meta_clause): declares an
+  identifier to be bound to a function that takes a syntax term and
+  returns a syntax object representing a parsed term. A parsed term parses
+  as itself, and it is opaque except as unpacked via a function declared
+  with @rhombus(parsed_unpacker, ~space_meta_clause).}
+
+ @item{@rhombus(parsed_unpacker, ~space_meta_clause): declares an
+  identifier to be bound to a function that takes a syntax term and
+  optionally either @rhombus(#false) or a procedure of one argument. If
+  the first argument is a parsed term, the declared unpacker acts as the
+  inverse of the function declared with
+  @rhombus(parsed_packer, ~space_meta_clause). For any other value, if a
+  second argument is provided as a procedure, then the procedure is called
+  and the first argument is passed along; otherwise, an error is reported.}
 
  @item{@rhombus(identifier_parser, ~space_meta_clause): supplies a
   compile-time function that is applied to an identifier that is not bound
@@ -262,6 +295,8 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'parse_infix_more_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
   space_meta_clause.macro 'parse_checker $expr'
+  space_meta_clause.macro 'parsed_packer $id'
+  space_meta_clause.macro 'parsed_unpacker $id'
   space_meta_clause.macro 'description $expr'
   space_meta_clause.macro 'operator_description $expr'
   space_meta_clause.macro 'reflection $id'

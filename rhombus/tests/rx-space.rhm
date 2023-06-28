@@ -37,27 +37,35 @@ space.enforest regexp:
   meta_namespace regexp_meta:
     description "regexp"
     parse_syntax_class Parsed
+    parsed_packer do_pack
+    parsed_unpacker do_unpack
     // We'll parse regexp forms directly to the `pregexp` string
     // encoding, so this is a sanity check that makes sure the
     // parsed form is a string:
     parse_checker: fun (stx, who):
                      match stx
-                     | '$(s :: String)': stx
+                     | _ when do_unpack(stx, fun (x): #false): stx
+                     | (_ :: Syntax) && '$(next :: regexp_meta.Parsed)': next
                      | _: syntax_meta.error("bad result", stx)
     // Improve the error for an identifier that isn't an operator
     identifier_parser: fun (id):
                          syntax_meta.error("identifier not allowed", id)
-
+    export pack unpack
+    fun pack(s :: String) :: Syntax:
+      do_pack(s)
+    fun unpack(stx) :: String:
+      do_unpack(stx, #false).unwrap()
+    
 expr.macro '«rx '$(pat :: regexp_meta.Parsed)'»':
-  'pregexp($pat)'
+  'pregexp($(regexp_meta.unpack(pat)))'
 
-regexp.macro 'any': '"."'
+regexp.macro 'any': regexp_meta.pack(".")
 
 // `#%literal` is implicitly added before literals, like strings,
 // that do not have an operator before
 regexp.macro '#%literal $(s :: String)':
   import lib("racket/base.rkt").#{regexp-quote}
-  '$(#{regexp-quote}(s.unwrap()))'
+  regexp_meta.pack(to_string(#{regexp-quote}(s.unwrap())))
 
 // `#%parens` is implicitly added before parentheses
 // that do not have a parsed term or operator before
@@ -68,7 +76,7 @@ regexp.macro '#%parens ($(p :: regexp_meta.Parsed))':
 // parsed and before a non-operator
 regexp.macro '$left #%juxtapose $right':
   ~same_as: #%call
-  '$("" ++ left.unwrap() ++ right.unwrap())'
+  regexp_meta.pack("" ++ regexp_meta.unpack(left) ++ regexp_meta.unpack(right))
 
 // `#%call` is implicitly added between a parsed term
 // and parentheses; we want just the same thing
@@ -78,52 +86,52 @@ regexp.macro '$left #%call $tail ...':
   values('$left', '#%juxtapose $tail ...')
 
 meta:
-  fun atomic(s) :~ String:
-    match s
-    | ".": s
-    | ~else: "(?:" ++ s ++ ")"
+  fun atomic(stx) :~ String:
+    match regexp_meta.unpack(stx)
+    | ".": "."
+    | s: "(?:" ++ s ++ ")"
 
 regexp.macro '$left || $right':
   ~weaker_than: ~other
   ~stronger_than: !
-  '$(atomic(left.unwrap()) ++ "|" ++ atomic(right.unwrap()))'
+  regexp_meta.pack(atomic(left) ++ "|" ++ atomic(right))
 
 regexp.macro '$left *':
   ~stronger_than: #%juxtapose #%call
-  '$(atomic(left.unwrap()) ++ "*")'
+  regexp_meta.pack(atomic(left) ++ "*")
 
 regexp.macro '$left +':
   ~stronger_than: #%juxtapose #%call
-  '$(atomic(left.unwrap()) ++ "+")'
+  regexp_meta.pack(atomic(left) ++ "+")
 
 regexp.macro '$left ?':
   ~stronger_than: #%juxtapose #%call
-  '$(atomic(left.unwrap()) ++ "?")'
+  regexp_meta.pack(atomic(left) ++ "?")
 
 // `#%comp` is implicitly added between a parsed term
 // and curly braces
 regexp.macro #%comp:
   ~stronger_than: #%juxtapose #%call
 | '$left #%comp {$(min :: Int), _}':
-    '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ ",}")'
+    regexp_meta.pack(atomic(left) ++ "{" +& min.unwrap() ++ ",}")
 | '$left #%comp {$(min :: Int), $(max :: Int)}':
-    '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
+    regexp_meta.pack(atomic(left) ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")
 | '$left #%comp {$(count :: Int)}':
-    '$(atomic(left.unwrap()) ++ "{" +& count.unwrap() ++ "}")'
+    regexp_meta.pack(atomic(left) ++ "{" +& count.unwrap() ++ "}")
 
 regexp.macro
 | '^ $right':
     ~weaker_than: #%juxtapose #%call
     ~same_as: $
-    '$("^" +& right.unwrap())'
+    regexp_meta.pack("^" ++ regexp_meta.unpack(right))
 
 regexp.macro
 | '$left $('$')':
     ~weaker_than: #%juxtapose #%call
     ~same_as: ^
-    '$(left.unwrap() +& "$")'
+    regexp_meta.pack(regexp_meta.unpack(left) +& "$")
 
 regexp.macro '! $right':
   ~weaker_than: ~other
   ~stronger_than: #%juxtpapose #%call
-  '$("(?!" ++ right.unwrap() ++ ").")'
+  regexp_meta.pack("(?!" ++ regexp_meta.unpack(right) ++ ").")

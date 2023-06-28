@@ -17,6 +17,7 @@
          "pack.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          (submod "syntax-class-primitive.rkt" for-syntax-class)
+         (submod "syntax-object.rkt" for-quasiquote)
          (for-syntax racket/base)
          "implicit.rkt" ;; needed for `$%body`
          "name-root.rkt"
@@ -25,6 +26,8 @@
          "parse.rkt"
          "forwarding-sequence.rkt"
          "space-meta-clause.rkt"
+         "define-arity.rkt"
+         "call-result-key.rkt"
          (submod "space-meta-clause-primitive.rkt" for-space-meta-macro)
          (submod "namespace.rkt" for-exports)
          "macro-result.rkt"
@@ -98,12 +101,26 @@
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
        (define parsed-tag (string->keyword (symbol->string (syntax-e #'space-path-name))))
        (define macro-result (hash-ref options '#:parsed_checker #'(make-check-syntax (quote name))))
+       (define pack-id (hash-ref options '#:parsed_packer #'#f))
+       (define unpack-id (hash-ref options '#:parsed_unpacker #'#f))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
                                class-name prefix-more-class-name infix-more-class-name
                                #'orig-stx)
+       (define (build-pack-and-unpack)
+         #`((maybe-skip
+             #,pack-id
+             (define/arity (#,pack-id stx)
+               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) syntax-static-infos)))
+               #,(with-syntax ([parsed-tag-kw parsed-tag])
+                   #`#`(parsed parsed-tag-kw #,(unpack-term stx '#,pack-id #f)))))
+            (maybe-skip
+             #,unpack-id
+             (define/arity (#,unpack-id stx [fail-k #f])
+               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) syntax-static-infos)))
+               (unpack-parsed '#,parsed-tag stx fail-k)))))
        (cond
          [(syntax-e #'enforest?)
           #`(begin
@@ -152,6 +169,7 @@
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator))
               (define make-prefix+infix-operator new-prefix+infix-operator)
+              #,@(build-pack-and-unpack)
               (maybe-skip
                #,space-reflect-name
                (define _space (space-name 'space-path-name))))]
@@ -174,7 +192,8 @@
                  #:parsed-tag #,parsed-tag
                  #:in-space in-new-space
                  #:transformer-ref new-transformer-ref
-                 #:check-result #,macro-result))
+                 #:check-result #,macro-result
+                 #:accept-parsed? #t))
               (maybe-skip
                class-name
                (define-syntax _class-name (make-syntax-class #':base
@@ -183,6 +202,7 @@
               (maybe-skip
                class-name
                (define make-transformer (make-make-transformer 'name new-transformer)))
+              #,@(build-pack-and-unpack)
               (maybe-skip
                #,space-reflect-name
                (define _space (space-name 'space-path-name))))])])))
@@ -270,3 +290,11 @@
 
 (define-annotation-syntax SpaceMeta
   (identifier-annotation #'space-name? #'()))
+
+(define (unpack-parsed tag stx [fail-k #f])
+  (syntax-parse (unpack-term stx #f #f)
+    #:datum-literals (parsed)
+    [(parsed kw:keyword form)
+     #:when (eq? (syntax-e #'kw) tag)
+     #'form]
+    [_ #:when fail-k (fail-k stx)]))
