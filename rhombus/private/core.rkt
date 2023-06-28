@@ -151,9 +151,9 @@
   (define (get-info-proc key default make-default)
     (case key
       [(drracket:default-extension) "rhm"]
-      [(drracket:define-popup) '(("def" "def" "δ" [case-sensitive delimited])
-                                 ("fun" "fun" "δ" [case-sensitive delimited])
-                                 ("class" "class" "δ" [case-sensitive delimited]))]
+      [(drracket:define-popup)
+       (dynamic-require 'rhombus/private/define-popup
+                        'define-popup)]
       [else (shrubbery:get-info-proc key default make-default)])))
 
 (module configure-runtime racket/base
