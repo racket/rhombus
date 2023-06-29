@@ -19,7 +19,8 @@
 
 (define-name-root meta
   #:fields
-  (bridge))
+  (bridge
+   [parameter rhombus-parameter]))
 
 (define-syntax meta
   (declaration-transformer

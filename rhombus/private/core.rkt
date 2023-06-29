@@ -126,6 +126,7 @@
         "range.rkt"
         "control.rkt"
         "exn-object.rkt"
+        "parameter.rkt"
         "parameterize.rkt"
         "boolean-pattern.rkt"
         "boolean-annotation.rkt"

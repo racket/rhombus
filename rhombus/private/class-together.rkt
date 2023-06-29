@@ -55,7 +55,7 @@
 (define-syntax (together-finish stx)
   (syntax-parse stx
     #:literals (begin)
-    [(_ (_ (begin defn ... last-defn)) ...)
+    [(_ [(_ (begin defn ... last-defn)) _] ...)
      #`(begin
          defn ... ...
          last-defn ...)]))

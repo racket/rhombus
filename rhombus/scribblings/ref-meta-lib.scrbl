@@ -44,3 +44,4 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-repet-macro.scrbl")
 @include_section("ref-macro-more.scrbl")
 @include_section("ref-stxobj-meta.scrbl")
+@include_section("ref-syntax-parameter.scrbl")

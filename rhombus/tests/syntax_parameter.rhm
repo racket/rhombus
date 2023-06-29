@@ -1,0 +1,79 @@
+#lang rhombus/and_meta
+
+syntax_parameter.bridge today_name:
+  "Thursday"
+expr.macro 'today':
+  '$(syntax_parameter_meta.lookup('today_name'))'
+bind.macro 'today name':
+  '$(syntax_parameter_meta.lookup('today_name'))'
+
+check today ~is "Thursday"
+
+namespace sub:
+  check today ~is "Thursday"
+  syntax_parameter.relet today_name:
+    "Friday"
+  check today ~is "Friday"
+  expr.macro 'now': 'today'
+  check now ~is "Friday"
+  export now
+  
+check sub.now ~is "Thursday"
+block:
+  syntax_parameter.relet today_name:
+    "Saturday"
+  check sub.now ~is "Saturday"
+  block:
+    check sub.now ~is "Saturday"
+  namespace more:
+    check sub.now ~is "Saturday"
+
+check:
+  match "Thursday"
+  | today name: "yes"
+  | ~else "no"
+  ~is "yes"
+check:
+  match "Wednesday"
+  | today name: "yes"
+  | ~else "no"
+  ~is "no"
+block:
+  syntax_parameter.relet today_name:
+    "Wednesday"
+  check:
+    match "Wednesday"
+    | today name: "yes"
+    | ~else "no"
+    ~is "yes"
+
+class Posn(x, y):
+  method now():
+    today
+
+check Posn(1, 2).now() ~is "Thursday"
+
+class LaterPosn(x, y, arg_on, auto_on = today):
+  internal _LaterPosn
+
+  syntax_parameter.relet today_name:
+    "Sunday"
+  constructor (x, y):
+    super(x, y, today)
+  field made_on = today
+  method now():
+    today
+
+  syntax_parameter.relet today_name:
+    "Monday"
+  reconstructor (x, y, arg_on, auto_on):
+    _LaterPosn(x, y, arg_on ++ today, auto_on)
+  method name(day = today):
+    day
+
+check LaterPosn(1, 2).made_on ~is "Sunday"
+check LaterPosn(1, 2).arg_on ~is "Sunday"
+check LaterPosn(1, 2).auto_on ~is "Thursday"
+check LaterPosn(1, 2).now() ~is "Sunday"
+check LaterPosn(1, 2).name() ~is "Monday"
+check (LaterPosn(1, 2) with ()).arg_on ~is "SundayMonday"

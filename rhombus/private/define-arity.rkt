@@ -55,13 +55,21 @@
            si ...))]))
 
 (define-for-syntax (extract-arity args)
-  (let loop ([args args] [mask 1])
+  (let loop ([args args] [mask 1] [allowed-kws '()] [req-kws '()])
     (syntax-parse args
-      [() mask]
-      [(_:identifier . args) (loop #'args (arithmetic-shift mask 1))]
+      [() (if (null? allowed-kws)
+              mask
+              `(,mask #,(sort req-kws keyword<?)  #,(sort allowed-kws keyword<?)))]
+      [(_:identifier . args) (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws)]
       [([_:identifier _] . args) (bitwise-ior mask
-                                              (loop #'args (arithmetic-shift mask 1)))]
-      [_:identifier (bitwise-not (sub1 (arithmetic-shift mask 1)))])))
+                                              (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws))]
+      [_:identifier (loop #'() (bitwise-not (sub1 (arithmetic-shift mask 1))) allowed-kws req-kws)]
+      [(kw:keyword _:identifier . args) (loop #'args (arithmetic-shift mask 1)
+                                              (cons (syntax-e #'kw) allowed-kws)
+                                              (cons (syntax-e #'kw) req-kws))]
+      [(kw:keyword [_:identifier _] . args) (loop #'args (arithmetic-shift mask 1)
+                                                  (cons (syntax-e #'kw) allowed-kws)
+                                                  req-kws)])))
 
 (define-for-syntax function-dot-provider-proc void)
 (define-for-syntax (set-function-dot-provider! proc)

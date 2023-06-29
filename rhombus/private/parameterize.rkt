@@ -2,29 +2,34 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "parens.rkt"
+         (submod "equal.rkt" for-parse))
 
 (provide (rename-out
           [rhombus-parameterize parameterize]))
 
 (begin-for-syntax
   (define-syntax-class :binding
-    #:datum-literals (block group)
-    (pattern
-      (group n ... ((~and block-tag block) body ...))
-      #:attr name (syntax/loc #'(n ...) (group n ...)))))
+    #:attributes (lhs rhs)
+    #:datum-literals (group)
+    (pattern (group n ... (tag::block body ...))
+             #:attr lhs #'(group n ...)
+             #:attr rhs #'(rhombus-body-at tag body ...))
+    #;
+    (pattern (group n::not-equal ... _::equal expr ...)
+             #:attr lhs #'(group n ...)
+             #:attr rhs #'(rhombus-expression (group expr ...)))))
 
 (define-syntax rhombus-parameterize
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (block group braces)
-       [(form-id (braces bindings::binding ...)
-                 ((~and tag-body block) body ...)
-                 . tail)
+       #:datum-literals ()
+       [(form-id (_::braces binding::binding ...)
+                 (tag::block body ...))
         (values
-         #'(parameterize ([(rhombus-expression bindings.name)
-                           (rhombus-body-at bindings.block-tag bindings.body ...)]
+         #'(parameterize ([(rhombus-expression binding.lhs) binding.rhs]
                           ...)
-             (rhombus-body-at tag-body body ...))
-         #'tail)]))))
+             (rhombus-body-at tag body ...))
+         #'())]))))

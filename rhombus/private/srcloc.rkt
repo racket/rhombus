@@ -31,7 +31,7 @@
 ;;  * `op` normally has the same source location as its symbol, but
 ;;    it's best not to rely on that
 ;;
-;;  * `alts` is like `gruop`: it isn't expected to have a source
+;;  * `alts` is like `group`: it isn't expected to have a source
 ;;    location, although the shrubbery reader will associate a
 ;;    spanning source location to surrounding parentheses.
 ;;

@@ -109,10 +109,10 @@
            . _)
           [#:ctx forward-base-ctx forward-ctx]
           exports
-          option ...)
+          [option stx-param] ...)
        #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define stxes #'orig-stx)
-       (define options (parse-annotation-options #'orig-stx #'(option ...)))
+       (define options (parse-annotation-options #'orig-stx #'(option ...) #'(stx-param ...)))
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
 
        (define-values (unexposed-internal-name internal-name extra-internal-names)
@@ -178,7 +178,7 @@
                                           call-statinfo-indirect index-statinfo-indirect
                                           index-set-statinfo-indirect append-statinfo-indirect]
                                 exports
-                                option ...))))])))
+                                [option stx-param] ...))))])))
 
 (define-syntax interface-finish
   (lambda (stx)
@@ -192,9 +192,9 @@
                     call-statinfo-indirect index-statinfo-indirect
                     index-set-statinfo-indirect append-statinfo-indirect]
           exports
-          option ...)
+          [option stx-param] ...)
        (define stxes #'orig-stx)
-       (define options (parse-options #'orig-stx #'(option ...)))
+       (define options (parse-options #'orig-stx #'(option ...) #'(stx-param ...)))
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
        (define parent-names (map interface-desc-id supers))
        (define added-methods (reverse (hash-ref options 'methods '())))
@@ -265,7 +265,7 @@
                    null)
                (build-methods method-results
                               added-methods method-mindex method-names method-private
-                              #f
+                              #f #f
                               #'(name name-instance internal-name? #f
                                       internal-name-ref
                                       ()

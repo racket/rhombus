@@ -6,7 +6,9 @@
                      "expose.rkt")
          (submod "annotation.rkt" for-class)
          "entry-point.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (only-in "syntax-parameter.rkt"
+                  syntax-parameters-key))
 
 (provide (for-syntax extract-internal-ids
                      make-expose
@@ -41,7 +43,7 @@
                          "expected a single entry point in block body"
                          b)]))
 
-(define-for-syntax (parse-annotation-options orig-stx forms)
+(define-for-syntax (parse-annotation-options orig-stx forms stx-paramss)
   (syntax-parse forms
     #:context orig-stx
     [((_ clause-parsed) ...)
@@ -74,12 +76,14 @@
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 
-(define-for-syntax (parse-options orig-stx forms)
+(define-for-syntax (parse-options orig-stx forms stx-paramss)
   (syntax-parse forms
     #:context orig-stx
     [((_ clause-parsed) ...)
      (define clauses (syntax->list #'(clause-parsed ...)))
-     (let loop ([clauses clauses] [options #hasheq()])
+     (let loop ([clauses clauses]
+                [stx-paramss (syntax->list stx-paramss)]
+                [options #hasheq()])
        (cond
          [(null? clauses) options]
          [else
@@ -97,7 +101,8 @@
               [(#:constructor id rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
-               (define rhs-options (hash-set options 'constructor-rhs #'rhs))
+               (define rhs-options (hash-set (hash-set options 'constructor-rhs #'rhs)
+                                             'constructor-stx-params (car stx-paramss)))
                (if (syntax-e #'id)
                    (hash-set rhs-options 'constructor-name #'id)
                    rhs-options)]
@@ -117,7 +122,8 @@
               [(#:reconstructor block)
                (when (hash-has-key? options 'reconstructor-rhs)
                  (raise-syntax-error #f "multiple reconstructor clauses" orig-stx clause))
-               (hash-set options 'reconstructor-rhs (extract-rhs #'block))]
+               (hash-set (hash-set options 'reconstructor-rhs (extract-rhs #'block))
+                         'reconstructor-stx-params (car stx-paramss))]
               [(#:reconstructor_fields orig-id ids rhss)
                (when (hash-has-key? options 'reconstructor-fields)
                  (raise-syntax-error #f "multiple reconstructor-fields clauses" orig-stx clause))
@@ -151,22 +157,24 @@
                options]
               [(#:field id rhs-id ann-seq blk form-id mode)
                (with-syntax ([(converter annotation-str static-infos)
-                              (syntax-parse #'ann-seq
-                                [#f (list #'#f #'#f #'())]
-                                [(c::inline-annotation)
-                                 (list #'c.converter #'c.annotation-str #'c.static-infos)])])
+                              (with-continuation-mark
+                               syntax-parameters-key (car stx-paramss)
+                               (syntax-parse #'ann-seq
+                                 [#f (list #'#f #'#f #'())]
+                                 [(c::inline-annotation)
+                                  (list #'c.converter #'c.annotation-str #'c.static-infos)]))])
                  (hash-set options 'fields (cons (added-field #'id
-                                                              #'rhs-id #'blk #'form-id
+                                                              #'rhs-id #'blk (car stx-paramss) #'form-id
                                                               #'static-infos
                                                               #'converter
                                                               #'annotation-str
                                                               (syntax-e #'mode))
                                                  (hash-ref options 'fields null))))]
               [_
-               (parse-method-clause orig-stx options clause)]))
-          (loop (cdr clauses) new-options)]))]))
+               (parse-method-clause orig-stx options clause (car stx-paramss))]))
+          (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))
 
-(define-for-syntax (parse-method-clause orig-stx options clause)
+(define-for-syntax (parse-method-clause orig-stx options clause stx-params)
   (syntax-parse clause
     [((~and tag (~or #:method #:override #:private #:final #:final-override #:private-override
                      #:property #:override-property
@@ -191,6 +199,7 @@
      (hash-set options 'methods (cons (added-method #'id
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
+                                                    stx-params
                                                     #'maybe-ret
                                                     (and (or (pair? (syntax-e #'maybe-ret))
                                                              (syntax-e #'e-arity.parsed))
@@ -213,6 +222,7 @@
      (hash-set options 'methods (cons (added-method #'id
                                                     '#:abstract
                                                     #'rhs
+                                                    stx-params
                                                     #'maybe-ret
                                                     (and (or (pair? (syntax-e #'maybe-ret))
                                                              (syntax-e #'e-arity.parsed))

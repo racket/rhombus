@@ -43,20 +43,33 @@
 }
 
 @doc(
-  fun current_input_port(),
-  fun current_input_port(in),
+  def current_input_port :: Parameter
+  fun current_input_port()
+  fun current_input_port(in)
 ){
 
- A parameter for the current input port.
+ A @tech{context parameter} for the current input port.
 
 }
 
 @doc(
+  def current_output_port :: Parameter
   fun current_output_port(),
   fun current_output_port(out),
 ){
 
- A parameter for the current output port.
+ A @tech{context parameter} for the current output port.
+
+}
+
+
+@doc(
+  def current_error_port :: Parameter
+  fun current_error_port(),
+  fun current_error_port(out),
+){
+
+ A @tech{context parameter} for the current error output port.
 
 }
 

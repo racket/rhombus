@@ -129,9 +129,9 @@
            . _)
           [#:ctx forward-base-ctx forward-ctx]
           exports
-          option ...)
+          [option stx-params] ...)
        #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
-       (define options (parse-annotation-options #'orig-stx #'(option ...)))
+       (define options (parse-annotation-options #'orig-stx #'(option ...) #'(stx-params ...)))
        (define parent-name (hash-ref options 'extends #f))
        (define super (and parent-name
                           (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
@@ -235,7 +235,7 @@
                          constructor-field-ann-seqs
                          constructor-name-fields]
                exports
-               option ...))))])))
+               [option stx-params] ...))))])))
 
 (define-syntax class-finish
   (lambda (stx)
@@ -254,11 +254,11 @@
                     (constructor-field-ann-seq ...)
                     (constructor-name-field ...)]
           exports
-          option ...)
+          [option stx-params] ...)
        #:with [(constructor-field-converter constructor-field-annotation-str constructor-field-static-infos)
                ...] (parse-field-annotations #'(constructor-field-ann-seq ...))
        (define stxes #'orig-stx)
-       (define options (parse-options #'orig-stx #'(option ...)))
+       (define options (parse-options #'orig-stx #'(option ...) #'(stx-params ...)))
        (define parent-name (hash-ref options 'extends #f))
        (define super (and parent-name
                           (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)))
@@ -273,6 +273,7 @@
        (define final? (hash-ref options 'final? (not prefab?)))
        (define opaque? (hash-ref options 'opaque? #f))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
+       (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
        (define binding-rhs (hash-ref options 'binding-rhs #f))
@@ -400,6 +401,8 @@
                            (hash-ref options 'constructor-rhs #f)
                            abstract-name))
                   'default)))
+       (define reconstructor-stx-params
+         (hash-ref options 'reconstructor-stx-params #f))
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
@@ -522,7 +525,7 @@
               (append
                (build-methods method-results
                               added-methods method-mindex method-names method-private
-                              reconstructor-rhs
+                              reconstructor-rhs reconstructor-stx-params
                               #'(name name-instance name? reconstructor-name
                                       prop-methods-ref
                                       indirect-static-infos
@@ -575,7 +578,7 @@
                                            ((recon-field-name recon-field-acc)
                                             ...)))
                (build-added-field-arg-definitions added-fields)
-               (build-class-constructor super constructor-rhs
+               (build-class-constructor super constructor-rhs given-constructor-stx-params
                                         added-fields constructor-private?s
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords

@@ -15,7 +15,7 @@
 
 ;; interface clause forms are defined in "class-clause-parse.rkt"
 
-(define-for-syntax (parse-annotation-options orig-stx forms)
+(define-for-syntax (parse-annotation-options orig-stx forms stx-paramss)
   (syntax-parse forms
     #:context orig-stx
     [((_ clause-parsed) ...)
@@ -45,12 +45,12 @@
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 
-(define-for-syntax (parse-options orig-stx forms)
+(define-for-syntax (parse-options orig-stx forms stx-paramss)
   (syntax-parse forms
     #:context orig-stx
     [((_ clause-parsed) ...)
      (define clauses (syntax->list #'(clause-parsed ...)))
-     (let loop ([clauses clauses] [options #hasheq()])
+     (let loop ([clauses clauses] [stx-paramss (syntax->list stx-paramss)] [options #hasheq()])
        (cond
          [(null? clauses) options]
          [else
@@ -74,5 +74,5 @@
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_
-               (parse-method-clause orig-stx options clause)]))
-          (loop (cdr clauses) new-options)]))]))
+               (parse-method-clause orig-stx options clause (car stx-paramss))]))
+          (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))

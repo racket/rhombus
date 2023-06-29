@@ -1,0 +1,27 @@
+#lang rhombus
+
+block:
+  def p = Parameter.make(10)
+
+  check:
+    p ~is_a Parameter
+    p() ~is 10
+    p(11) ~is #void
+    p() ~is 11
+
+  parameterize { p: 12 }:
+    check:
+      p() ~is 12
+      p(13) ~is #void
+      p() ~is 13
+
+  check:
+    p() ~is 11
+
+block:
+  def p = Parameter.make("1", ~guard: fun(x): to_string(x))
+
+  check:
+    p() ~is "1"
+    (parameterize { p: 2 }: p()) ~is "2"
+    (block: p(3); p()) ~is "3"

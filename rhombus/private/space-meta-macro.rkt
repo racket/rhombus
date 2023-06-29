@@ -89,7 +89,7 @@
            space-path-name make-prefix-operator make-infix-operator make-prefix+infix-operator]
           [#:ctx forward-base-ctx forward-ctx]
           exports
-          option
+          [option stx-params]
           ...)
        #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define options (parse-space-meta-clause-options #'orig-stx (syntax-e #'transformer?) #'(option ...)))

@@ -27,7 +27,10 @@
          (submod "function-parse.rkt" for-call)
          "is-static.rkt"
          "realm.rkt"
-         "wrap-expression.rkt")
+         "wrap-expression.rkt"
+         (only-in "syntax-parameter.rkt"
+                  with-syntax-parameters
+                  syntax-parameters-key))
 
 (provide (for-syntax extract-method-tables
                      build-interface-vtable
@@ -688,7 +691,7 @@
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private
-                                  reconstructor-rhs
+                                  reconstructor-rhs reconstructor-stx-params
                                   names)
   (with-syntax ([(name name-instance name? reconstructor-name
                        methods-ref
@@ -780,7 +783,7 @@
               #,@(for/list ([added (in-list added-methods)]
                             #:when (not (eq? 'abstract (added-method-body added))))
                    (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
-                   #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
+                   #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
                                                                     name name-instance name?
                                                                     #,(and r (car r)) #,(added-method-id added)
                                                                     new-private-tables
@@ -791,7 +794,7 @@
               #,@(if (and (syntax-e #'reconstructor-name)
                           (not (eq? reconstructor-rhs 'default)))
                      (list
-                      #`(method-block (block #,reconstructor-rhs)
+                      #`(method-block (block #,reconstructor-rhs) #,reconstructor-stx-params
                                       name name-instance #f
                                       #f reconstructor
                                       new-private-tables
@@ -802,7 +805,7 @@
               #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
                             [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
                             #:when (syntax-e rhs))
-                   #`(method-block (block #,rhs)
+                   #`(method-block (block #,rhs) #f ;; FIXME
                                    name name-instance #f
                                    #f acc
                                    new-private-tables
@@ -813,7 +816,7 @@
 (define-syntax (method-block stx)
   (syntax-parse stx
     #:datum-literals (block)
-    [(_ (block expr)
+    [(_ (block expr) stx-params
         name name-instance name?
         result-id method-name
         private-tables-id
@@ -824,37 +827,41 @@
              (cond
                [(not (syntax-e #'result-id)) #f]
                [else (syntax-local-method-result #'result-id)]))]
-     #:with (~var e (:entry-point (entry_point_meta.Adjustment
-                                   (list #'this-obj)
-                                   (lambda (arity stx)
-                                     #`(parsed
-                                        #:rhombus/expr
-                                        (syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
-                                                                                               . super-names))]
-                                                              [private-tables (quote-syntax private-tables-id)])
-                                          ;; This check might be redundant, depending on how the method was called
-                                          #,(if (syntax-e #'name?)
-                                                #`(unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
-                                                #'(void))
-                                          #,(let ([body #`(let ()
-                                                            #,(wrap-expression stx))])
-                                              (cond
-                                                [(and (eq? (syntax-e #'kind) 'property)
-                                                      (eqv? arity 2)) ; mask 2 => 1 argument
-                                                 #`(begin #,body (void))]
-                                                [(and result-desc
-                                                      (method-result-handler-expr result-desc))
-                                                 (if (method-result-predicate? result-desc)
-                                                     #`(let ([result #,body])
-                                                         (unless (#,(method-result-handler-expr result-desc) result)
-                                                           (raise-result-failure 'method-name result))
-                                                         result)
-                                                     #`(let ([result #,body])
-                                                         (#,(method-result-handler-expr result-desc)
-                                                          result
-                                                          (lambda ()
-                                                            (raise-result-failure 'method-name result)))))]
-                                                [else body])))))
-                                   #t)))
-     #'expr
-     #'e.parsed]))
+     (with-continuation-mark
+      syntax-parameters-key #'stx-params
+      (syntax-parse #'expr
+        [(~var e (:entry-point (entry_point_meta.Adjustment
+                                (list #'this-obj)
+                                (lambda (arity stx)
+                                  #`(parsed
+                                     #:rhombus/expr
+                                     (syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
+                                                                                            . super-names))]
+                                                           [private-tables (quote-syntax private-tables-id)])
+                                       ;; This check might be redundant, depending on how the method was called
+                                       #,(if (syntax-e #'name?)
+                                             #`(unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
+                                             #'(void))
+                                       #,(let ([body #`(with-syntax-parameters
+                                                         stx-params
+                                                         (let ()
+                                                           #,(wrap-expression stx)))])
+                                           (cond
+                                             [(and (eq? (syntax-e #'kind) 'property)
+                                                   (eqv? arity 2)) ; mask 2 => 1 argument
+                                              #`(begin #,body (void))]
+                                             [(and result-desc
+                                                   (method-result-handler-expr result-desc))
+                                              (if (method-result-predicate? result-desc)
+                                                  #`(let ([result #,body])
+                                                      (unless (#,(method-result-handler-expr result-desc) result)
+                                                        (raise-result-failure 'method-name result))
+                                                      result)
+                                                  #`(let ([result #,body])
+                                                      (#,(method-result-handler-expr result-desc)
+                                                       result
+                                                       (lambda ()
+                                                         (raise-result-failure 'method-name result)))))]
+                                             [else body])))))
+                                #t)))
+         #'e.parsed]))]))

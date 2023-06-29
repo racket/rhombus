@@ -14,7 +14,10 @@
          "error.rkt"
          "realm.rkt"
          "parse.rkt"
-         "wrap-expression.rkt")
+         "wrap-expression.rkt"
+         (only-in "syntax-parameter.rkt"
+                  syntax-parameters-key
+                  with-syntax-parameters))
 
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
@@ -22,7 +25,7 @@
 
 ;; Note: `constructor.macro` is handed in "class-dot.rkt"
 
-(define-for-syntax (build-class-constructor super constructor-rhs
+(define-for-syntax (build-class-constructor super constructor-rhs constructor-stx-params
                                             added-fields constructor-private?s
                                             constructor-fields super-constructor-fields super-constructor+-fields
                                             keywords super-keywords super-constructor+-keywords
@@ -192,7 +195,7 @@
                  #`(define constructor-name
                      (syntax-parameterize ([this-id (quote-syntax super-this)]
                                            [private-tables private-tables-spec])
-                       (let ([visible-name (wrap-constructor name name? #,constructor-rhs)])
+                       (let ([visible-name (wrap-constructor name name? #,constructor-rhs #,constructor-stx-params)])
                          visible-name))))]
                [else
                 (list
@@ -200,7 +203,7 @@
                      (lambda (make-name)
                        (syntax-parameterize ([this-id (quote-syntax super-this)]
                                              [private-tables private-tables-spec])
-                         (let ([visible-name (wrap-constructor name name? #,constructor-rhs)])
+                         (let ([visible-name (wrap-constructor name name? #,constructor-rhs #,constructor-stx-params)])
                            visible-name))))
                  #`(define constructor-name
                      #,(cond
@@ -266,21 +269,27 @@
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
     #:datum-literals (parsed block)
-    [(_ name predicate-id (parsed #:rhombus/expr e)) #'e]
-    [(_ name predicate-id (block g))
-     #:do [(define adjustments (entry_point_meta.Adjustment
-                                '()
-                                (lambda (arity body)
-                                  #`(parsed
-                                     #:rhombus/expr
-                                     (let ([r #,(wrap-expression body)])
-                                       (if (predicate-id r)
-                                           r
-                                           #,(quasisyntax/loc #'g
-                                               (raise-constructor-result-error 'name r))))))
-                                #f))]
-     #:with (~var lam (:entry-point adjustments)) #'g
-     #'lam.parsed]))
+    [(_ name predicate-id (parsed #:rhombus/expr e) stx-params)
+     #'(with-syntax-parameters stx-params e)]
+    [(_ name predicate-id (block g) stx-params)
+     (define adjustments (entry_point_meta.Adjustment
+                          '()
+                          (lambda (arity body)
+                            #`(parsed
+                               #:rhombus/expr
+                               (let ([r (with-syntax-parameters
+                                          stx-params
+                                          #,(wrap-expression body))])
+                                 (if (predicate-id r)
+                                     r
+                                     #,(quasisyntax/loc #'g
+                                         (raise-constructor-result-error 'name r))))))
+                          #f))
+     (with-continuation-mark
+      syntax-parameters-key #'stx-params
+      (syntax-parse #'g
+        [(~var lam (:entry-point adjustments))
+         #'lam.parsed]))]))
 
 (define (raise-constructor-result-error who val)
   (raise-contract-error who

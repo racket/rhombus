@@ -45,10 +45,11 @@ by an evaluator, for example.
 }
 
 @doc(
-  fun current_evaluator() :: Evaluator,
+  def current_evaluator :: Parameter
+  fun current_evaluator() :: Evaluator
   fun current_evaluator(ns :: Evaluator) :: #void
 ){
 
- A @tech{parameter} for the current evaluator.
+ A @tech{context parameter} for the current evaluator.
 
 }

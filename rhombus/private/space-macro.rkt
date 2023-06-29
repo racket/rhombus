@@ -88,7 +88,7 @@
            define-operator-definition-transformer]
           [#:ctx forward-base-ctx forward-ctx]
           exports
-          option
+          [option stx-params]
           ...)
        #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define options (parse-space-clause-options #'orig-stx #'(option ...)))
