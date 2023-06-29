@@ -12,7 +12,7 @@
  the interaction of annotations and bindings.}
 
 Unless otherwise specified, an @tech{annotation} is a @deftech{predicate
- annotation}. For example, @rhombus(String, ~annot) and @rhombus(StringView, ~annot) are
+ annotation}. For example, @rhombus(String, ~annot) and @rhombus(ReadableString, ~annot) are
 predicate annotations. When a predicate annotation is applied to a value
 with the @rhombus(::) expression operator, the result of the expression
 is the operator's left-hand argument (or an exception is raised).
@@ -22,7 +22,7 @@ whether a corresponding value satisfies the annotation's predicate.
 
 A @deftech{converter annotation} produces a result when applied to a
 value that is potentially different than the value. For example,
-@rhombus(StringViewAsString, ~annot) is a converter annotation that converts a
+@rhombus(ReadableStringAsString, ~annot) is a converter annotation that converts a
 mutable string to an immutable string. When a converter annotation is
 applied to a value with the @rhombus(::) expression operator, the result
 of the expression can be a different value that is derived from the

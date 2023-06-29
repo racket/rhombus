@@ -32,7 +32,7 @@
                       rhombus/namespace)
                      String)
          (for-space rhombus/annot
-                    StringView))
+                    ReadableString))
 
 (module+ for-builtin
   (provide string-method-table))
@@ -46,7 +46,7 @@
      (#%append string-append-immutable)))
 
 (define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
-(define-annotation-syntax StringView (identifier-annotation #'string? string-static-infos))
+(define-annotation-syntax ReadableString (identifier-annotation #'string? string-static-infos))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)

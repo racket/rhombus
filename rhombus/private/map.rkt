@@ -53,7 +53,7 @@
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
-                     MapView))
+                     ReadableMap))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))
@@ -142,7 +142,7 @@
         (values (binding-form #'empty-map-infoer name+hash?-id) #'tail)]))))
   
 (define-binding-syntax empty-map (make-empty-map-binding #'("Map.empty" immutable-hash?)))
-(define-binding-syntax empty-map-view (make-empty-map-binding #'("MapView.empty" hash?)))
+(define-binding-syntax empty-map-view (make-empty-map-binding #'("ReadableMap.empty" hash?)))
 
 (define-syntax (empty-map-infoer stx)
   (syntax-parse stx
@@ -201,7 +201,7 @@
    [ref hash-ref] ; temporary
    of))
 
-(define-name-root MapView
+(define-name-root ReadableMap
   #:fields
   ([empty empty-map-view]))
 
@@ -231,8 +231,8 @@
 
 (define-binding-syntax Map
   (make-map-binding-transformer 'Map))
-(define-binding-syntax MapView
-  (make-map-binding-transformer 'MapView))
+(define-binding-syntax ReadableMap
+  (make-map-binding-transformer 'ReadableMap))
 
 (define-repetition-syntax Map
   (repetition-transformer
@@ -317,7 +317,7 @@
          (hash-set ht-id k v))]))
 
 (define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-info))
-(define-annotation-syntax MapView (identifier-annotation #'hash? map-static-info))
+(define-annotation-syntax ReadableMap (identifier-annotation #'hash? map-static-info))
 
 (define MutableMap-build
   (let ([MutableMap (lambda args
@@ -451,7 +451,7 @@
     [(_ arg-id (mode keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if (eq? (syntax-e #'mode) 'MapView) #'hash? #'immutable-hash?) arg-id)
+     #`(IF (#,(if (eq? (syntax-e #'mode) 'ReadableMap) #'hash? #'immutable-hash?) arg-id)
            #,(let loop ([keys (syntax->list #'keys)]
                         [key-tmp-ids key-tmps]
                         [val-tmp-ids (syntax->list #'tmp-ids)])

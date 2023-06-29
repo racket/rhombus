@@ -137,7 +137,7 @@ block:
 
   check:
     reveal(Int) ~is "predicate"
-    reveal(StringView.to_string) ~is "converter"
+    reveal(ReadableString.to_string) ~is "converter"
 
 check:
   [1, "oops"] is_a converting(fun(_ :: converting(fun ([x, ...]): [x+1, ...])): "ok")
@@ -149,27 +149,27 @@ check:
 
 check:
   ~eval
-  "apple" :~ StringView.to_string
+  "apple" :~ ReadableString.to_string
   ~raises "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
-  def x :~ StringView.to_string = 0
+  def x :~ ReadableString.to_string = 0
   ~raises "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
-  fun (x :~ StringView.to_string): 0
+  fun (x :~ ReadableString.to_string): 0
   ~raises "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
-  fun () :~ StringView.to_string: 0
+  fun () :~ ReadableString.to_string: 0
   ~raises "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
-  fun () :~ values(Int, StringView.to_string): 0
+  fun () :~ values(Int, ReadableString.to_string): 0
   ~raises "converter annotation not allowed in a non-checked position"
 
 block:

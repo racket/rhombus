@@ -823,10 +823,10 @@
         indirect-static-infos
         super-names
         kind)
-     #:do [(define result-desc
-             (cond
-               [(not (syntax-e #'result-id)) #f]
-               [else (syntax-local-method-result #'result-id)]))]
+     (define result-desc
+       (cond
+         [(not (syntax-e #'result-id)) #f]
+         [else (syntax-local-method-result #'result-id)]))
      (with-continuation-mark
       syntax-parameters-key #'stx-params
       (syntax-parse #'expr

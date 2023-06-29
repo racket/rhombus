@@ -40,14 +40,14 @@ it supplies its elements in an unspecified order.
 @doc(
   annot.macro 'Set'
   annot.macro 'Set.of($annot)'
-  annot.macro 'SetView'
+  annot.macro 'ReadableSet'
   annot.macro 'MutableSet'
 ){
 
  Matches any set in the form without @rhombus(of). The @rhombus(of)
  variant matches a set whose values satisfy @rhombus(annot).
 
- @rhombus(SetView, ~annot) matches both mutable and immutable maps,
+ @rhombus(ReadableSet, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableSet) constructor).
 
@@ -102,8 +102,8 @@ it supplies its elements in an unspecified order.
     rest_bind:  def bind
   bind.macro 'Set{$expr, ...}'
   bind.macro 'Set{$expr, ..., $rest}'
-  bind.macro 'SetView{$expr, ...}'
-  bind.macro 'SetView{$expr, ..., $rest}'
+  bind.macro 'ReadableSet{$expr, ...}'
+  bind.macro 'ReadableSet{$expr, ..., $rest}'
   grammar rest:
     & $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
@@ -124,7 +124,7 @@ it supplies its elements in an unspecified order.
  the repetition.
 
  The @rhombus(Set, ~bind) binding forms match only immutable sets, while
- @rhombus(SetView, ~bind) forms match both immutable and mutable sets.
+ @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
 
 @examples(
   def Set{"x", "y"}: {"x", "y"}
@@ -178,16 +178,16 @@ it supplies its elements in an unspecified order.
 @doc(
   bind.macro 'Set.empty'
   expr.macro 'Set.empty'
-  bind.macro 'SetView.empty'
-  expr.macro 'SetView.empty'
+  bind.macro 'ReadableSet.empty'
+  expr.macro 'ReadableSet.empty'
 ){
 
  An empty set. The @rhombus(Set.empty, ~bind) binding form differs from
  from @rhombus(Set{}), because @rhombus(Set.empty, ~bind) matches only an
  empty immutable set, while @rhombus(Set{}) matches any immutable set.
 
- The @rhombus(SetView.empty, ~bind) binding form matches an empty set
- whether it is mutable or immutable. The @rhombus(SetView.empty)
+ The @rhombus(ReadableSet.empty, ~bind) binding form matches an empty set
+ whether it is mutable or immutable. The @rhombus(ReadableSet.empty)
  expression form is equivalent to @rhombus(Set.empty).
 
  An empty set, where the @rhombus(Set.empty, ~bind) binding matches
@@ -202,7 +202,7 @@ it supplies its elements in an unspecified order.
   | Set.empty: "empty immutable set"
   | _: #false
   match MutableSet()
-  | SetView.empty: "empty set for now"
+  | ReadableSet.empty: "empty set for now"
   | _: #false
 )
 
@@ -210,7 +210,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.length(set :: SetView) :: Int
+  fun Set.length(set :: ReadableSet) :: Int
 ){
 
  Returns the number of values in @rhombus(set).
@@ -224,9 +224,9 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.append(set :: SetView, ...) :: Set
-  fun Set.union(set :: SetView, ...) :: Set
-  fun Set.intersect(set :: SetView, ...) :: Set
+  fun Set.append(set :: ReadableSet, ...) :: Set
+  fun Set.union(set :: ReadableSet, ...) :: Set
+  fun Set.intersect(set :: ReadableSet, ...) :: Set
 ){
 
  Returns the union of the @rhombus(set)s in the case of
@@ -270,7 +270,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.copy(set :: SetView) :: MutableSet
+  fun Set.copy(set :: ReadableSet) :: MutableSet
 ){
 
  Creates a mutable set whose initial content matches @rhombus(set).
@@ -279,7 +279,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.snapshot(set :: SetView) :: Set
+  fun Set.snapshot(set :: ReadableSet) :: Set
 ){
 
  Returns an immutable set whose content matches @rhombus(set). If

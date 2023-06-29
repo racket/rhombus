@@ -92,7 +92,7 @@ block:
 block:
   def m = MutableMap{"a": 1, "b": 2}
   def r: match m
-         | MapView{"a": a, & rst}: rst
+         | ReadableMap{"a": a, & rst}: rst
          | _: #false
   m["b"] := 3
   check r ~is {"b": 2}

@@ -50,7 +50,7 @@
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
-                    SetView))
+                    ReadableSet))
 
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))
@@ -225,7 +225,7 @@
    [snapshot Set.snapshot]
    of))
 
-(define-name-root SetView
+(define-name-root ReadableSet
   #:fields
   ([empty empty-set-view]))
 
@@ -245,8 +245,8 @@
 (define-binding-syntax Set
   (make-set-binding-transformer 'Set))
 
-(define-binding-syntax SetView
-  (make-set-binding-transformer 'SetView))
+(define-binding-syntax ReadableSet
+  (make-set-binding-transformer 'ReadableSet))
 
 (define-repetition-syntax Set
   (repetition-transformer
@@ -324,7 +324,7 @@
     [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if (eq? (syntax-e #'mode) 'SetView) #'set? #'immutable-set?) arg-id)
+     #`(IF (#,(if (eq? (syntax-e #'mode) 'ReadableSet) #'set? #'immutable-set?) arg-id)
            #,(let loop ([keys (syntax->list #'keys)]
                         [key-tmp-ids key-tmps])
                (cond
@@ -446,7 +446,7 @@
                         #'tail)]))
 
 (define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-info))
-(define-annotation-syntax SetView (identifier-annotation #'set? set-static-info))
+(define-annotation-syntax ReadableSet (identifier-annotation #'set? set-static-info))
 
 (define-syntax MutableSet
   (expression-transformer
@@ -501,12 +501,12 @@
 
 (define/arity (Set.copy s)
   #:static-infos ((#%call-result #,mutable-set-static-info))
-  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "SetView" s))
+  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "ReadableSet" s))
   (set (hash-copy (set-ht s))))
 
 (define/arity (Set.snapshot s)
   #:static-infos ((#%call-result #,set-static-info))
-  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "SetView" s))
+  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "ReadableSet" s))
   (define ht (set-ht s))
   (if (immutable-hash? ht)
       s
@@ -582,13 +582,13 @@
 
 (define/arity (Set.to_list s [try-sort? #f])
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "SetView" s))
+  (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "ReadableSet" s))
   (hash-keys (set-ht s) try-sort?))
 
 (define set-method-table
   (hash 'length (let ([length (lambda (s)
                                 (unless (set? s)
-                                  (raise-argument-error* 'Set.length rhombus-realm "SetView" s))
+                                  (raise-argument-error* 'Set.length rhombus-realm "ReadableSet" s))
                                 (hash-count (set-ht s)))])
                   (method1 length))
         'copy (method1 Set.copy)

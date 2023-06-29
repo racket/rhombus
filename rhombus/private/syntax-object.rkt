@@ -284,7 +284,7 @@
 (define/arity (make_id str [ctx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (string? str)
-    (raise-argument-error* 'Syntax.make_id rhombus-realm "StringView" str))
+    (raise-argument-error* 'Syntax.make_id rhombus-realm "ReadableString" str))
   (define istr (string->immutable-string str))
   (syntax-raw-property (datum->syntax (extract-ctx 'Syntax.make_id ctx)
                                       (string->symbol istr))

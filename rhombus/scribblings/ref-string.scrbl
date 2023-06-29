@@ -13,7 +13,7 @@ the static guaratee that the result is a string. A string can be used as
 Although Racket supports mutable strings, the @rhombus(String, ~annot)
 annotation recognizes only immutable strings, and Rhombus operations
 generate immutable strings. Some operations allow mutable strings as
-input, and @rhombus(StringView, ~annot) recognizes both mutable and
+input, and @rhombus(ReadableString, ~annot) recognizes both mutable and
 immutable strings.
 
 @dispatch_table(
@@ -39,14 +39,14 @@ immutable strings.
 
 @doc(
   annot.macro 'String'
-  annot.macro 'StringView'
-  annot.macro 'StringView.to_string'
+  annot.macro 'ReadableString'
+  annot.macro 'ReadableString.to_string'
 ){
 
- Matches strings. The @rhombus(StringView, ~annot) annotation allows mutable
+ Matches strings. The @rhombus(ReadableString, ~annot) annotation allows mutable
  Racket strings as well as immutable Rhombus strings.
- The @rhombus(StringView.to_string, ~annot) @tech{converter annotation}
- allows the same strings as @rhombus(StringView, ~annot), but converts
+ The @rhombus(ReadableString.to_string, ~annot) @tech{converter annotation}
+ allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string.
 
 }
@@ -89,7 +89,7 @@ immutable strings.
 
 
 @doc(
-  fun String.length(str :: StringView) :: NonnegInt
+  fun String.length(str :: ReadableString) :: NonnegInt
 ){
 
  Returns the number of characters in @rhombus(str).
@@ -103,7 +103,7 @@ immutable strings.
 
 
 @doc(
-  fun String.substring(str :: StringView,
+  fun String.substring(str :: ReadableString,
                        start :: NonnegInt,
                        end :: NonnegInt = String.length(str)) :: String
 ){
@@ -120,15 +120,15 @@ immutable strings.
 
 
 @doc(
-  fun String.utf8_bytes(str :: StringView,
+  fun String.utf8_bytes(str :: ReadableString,
                         err_byte :: Optional[Byte] = #false,
                         start :: NonnegInt = 0,
                         end :: NonnegInt = String.length(str)) :: Bytes
-  fun String.latin1_bytes(str :: StringView,
+  fun String.latin1_bytes(str :: ReadableString,
                           err_byte :: Optional[Byte] = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
-  fun String.locale_bytes(str :: StringView,
+  fun String.locale_bytes(str :: ReadableString,
                           err_byte :: Optional[Byte] = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
@@ -151,7 +151,7 @@ immutable strings.
 
 
 @doc(
-  fun String.to_int(str :: StringView) :: Optional[Int]
+  fun String.to_int(str :: ReadableString) :: Optional[Int]
 ){
 
  Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
@@ -169,7 +169,7 @@ immutable strings.
 
 
 @doc(
-  fun String.to_number(str :: StringView) :: Optional[Number]
+  fun String.to_number(str :: ReadableString) :: Optional[Number]
 ){
 
  Parses @rhombus(str) as a number, returning @rhombus(#false) if the
@@ -187,22 +187,22 @@ immutable strings.
 
 
 @doc(
-  fun String.to_string(str :: StringView) :: String
-  fun StringView.to_string(str :: StringView) :: String
+  fun String.to_string(str :: ReadableString) :: String
+  fun ReadableString.to_string(str :: ReadableString) :: String
 ){
 
  The same as @rhombus(to_string), but constrained to a
- @rhombus(StringView) argument. This function exists for consistency with
- the @rhombus(StringView.to_string, ~annot) annotation.
+ @rhombus(ReadableString) argument. This function exists for consistency with
+ the @rhombus(ReadableString.to_string, ~annot) annotation.
 
 }
 
 
 @doc(
-  fun String.upcase(str :: StringView) :: String
-  fun String.downcase(str :: StringView) :: String
-  fun String.foldcase(str :: StringView) :: String
-  fun String.titlecase(str :: StringView) :: String
+  fun String.upcase(str :: ReadableString) :: String
+  fun String.downcase(str :: ReadableString) :: String
+  fun String.foldcase(str :: ReadableString) :: String
+  fun String.titlecase(str :: ReadableString) :: String
 ){
 
  Case-conversion functions.
@@ -210,10 +210,10 @@ immutable strings.
 }
 
 @doc(
-  fun String.normalize_nfd(str :: StringView) :: String
-  fun String.normalize_nfkd(str :: StringView) :: String
-  fun String.normalize_nfc(str :: StringView) :: String
-  fun String.normalize_nfkc(str :: StringView) :: String
+  fun String.normalize_nfd(str :: ReadableString) :: String
+  fun String.normalize_nfkd(str :: ReadableString) :: String
+  fun String.normalize_nfc(str :: ReadableString) :: String
+  fun String.normalize_nfkc(str :: ReadableString) :: String
 ){
 
  Unicode normalization functions.
@@ -221,7 +221,7 @@ immutable strings.
 }
 
 @doc(
-  fun String.grapheme_span(str :: StringView,
+  fun String.grapheme_span(str :: ReadableString,
                            start :: NonnegInt = 0,
                            end :: NonnegInt = str.length()) :: NonnegInt
 ){
@@ -238,7 +238,7 @@ immutable strings.
 }
 
 @doc(
-  fun String.grapheme_count(str :: StringView,
+  fun String.grapheme_count(str :: ReadableString,
                             start :: NonnegInt = 0,
                             end :: NonnegInt = str.length()) :: NonnegInt
 ){

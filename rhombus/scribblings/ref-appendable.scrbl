@@ -12,11 +12,11 @@ lists, arrays, sets, strings, and byte strings are all indexable, as are
 instances of classes that implement @rhombus(Appendable, ~class).
 
 @doc(
-  operator ((v1 :: MapView) ++ (v2 :: MapView)) :: Map
-  operator ((v1 :: SetView) ++ (v2 :: SetView)) :: Set
+  operator ((v1 :: ReadableMap) ++ (v2 :: ReadableMap)) :: Map
+  operator ((v1 :: ReadableSet) ++ (v2 :: ReadableSet)) :: Set
   operator ((v1 :: List) ++ (v2 :: List)) :: List
   operator ((v1 :: Array) ++ (v2 :: Array)) :: Array
-  operator ((v1 :: StringView) ++ (v2 :: StringView)) :: String
+  operator ((v1 :: ReadableString) ++ (v2 :: ReadableString)) :: String
   operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: Bytes
   operator ((v1 :: Appendable) ++ (v2 :: Appendable))
 ){

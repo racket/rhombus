@@ -43,7 +43,7 @@ in an unspecified order.
     key_annot: :: annot
   annot.macro 'Map'
   annot.macro 'Map.of($key_annot, $value_annot)'
-  annot.macro 'MapView'
+  annot.macro 'ReadableMap'
   annot.macro 'MutableMap'
 ){
 
@@ -51,7 +51,7 @@ in an unspecified order.
  variant matches a map whose keys satisfy @rhombus(key_annot)
  and whose values satisfy @rhombus(value_annot).
 
- @rhombus(MapView, ~annot) matches both mutable and immutable maps,
+ @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableMap) constructor).
 
@@ -209,9 +209,9 @@ in an unspecified order.
   bind.macro 'Map{$key_expr: $val_bind, ...}'
   bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
   bind.macro 'Map([$key_expr, $val_bind], ...)'
-  bind.macro 'MapView{$key_expr: $val_bind, ...}'
-  bind.macro 'MapView{$key_expr: $val_bind, ..., $rest}'
-  bind.macro 'MapView([$key_expr, $val_bind], ...)'
+  bind.macro 'ReadableMap{$key_expr: $val_bind, ...}'
+  bind.macro 'ReadableMap{$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'ReadableMap([$key_expr, $val_bind], ...)'
   grammar rest:
     & $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
@@ -234,7 +234,7 @@ in an unspecified order.
  the repetitions.
 
  The @rhombus(Map, ~bind) binding forms match only immutable maps, while
- @rhombus(MapView, ~bind) forms match both immutable and mutable maps.
+ @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
 
 @examples(
   def Map{"x": x, "y": y}: {"x": 1, "y": 2}
@@ -289,8 +289,8 @@ in an unspecified order.
 @doc(
   bind.macro 'Map.empty'
   expr.macro 'Map.empty'
-  bind.macro 'MapView.empty'
-  expr.macro 'MapView.empty'
+  bind.macro 'ReadableMap.empty'
+  expr.macro 'ReadableMap.empty'
 ){
 
  An empty map. The @rhombus(Map.empty, ~bind) binding form differs from
@@ -298,8 +298,8 @@ in an unspecified order.
  matches only an empty immutable map, while @rhombus({}) or
  @rhombus(Map()) matches any immutable map.
 
- The @rhombus(MapView.empty, ~bind) binding form matches an empty map
- whether it is mutable or immutable. The @rhombus(MapView.empty)
+ The @rhombus(ReadableMap.empty, ~bind) binding form matches an empty map
+ whether it is mutable or immutable. The @rhombus(ReadableMap.empty)
  expression form is equivalent to @rhombus(Map.empty).
 
 @examples(
@@ -320,14 +320,14 @@ in an unspecified order.
   | Map.empty: "empty immutable map"
   | _: #false
   match MutableMap{}
-  | MapView.empty: "empty map for now"
+  | ReadableMap.empty: "empty map for now"
   | _: #false
 )
 
 }
 
 @doc(
-  fun Map.length(map :: MapView) :: Int
+  fun Map.length(map :: ReadableMap) :: Int
 ){
 
  Returns the number of key--value mappings in @rhombus(map).
@@ -342,7 +342,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: MapView, try_sort = #false) :: List
+  fun Map.keys(map :: ReadableMap, try_sort = #false) :: List
 ){
 
  Returns the keys of @rhombus(map) in a list.  If @rhombus(try_order)
@@ -357,7 +357,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.values(map :: MapView) :: List
+  fun Map.values(map :: ReadableMap) :: List
 ){
 
  Returns the values of @rhombus(map) in a list.
@@ -370,7 +370,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.get(map :: MapView, key, default = #,@rhombus(raise_error, ~var))
+  fun Map.get(map :: ReadableMap, key, default = #,@rhombus(raise_error, ~var))
 ){
 
  Equivalent to @rhombus(map[key]) when @rhombus(default) is not
@@ -391,7 +391,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.has_key(map :: MapView, key) :: Boolean
+  fun Map.has_key(map :: ReadableMap, key) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
@@ -406,7 +406,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.copy(map :: MapView) :: MutableMap
+  fun Map.copy(map :: ReadableMap) :: MutableMap
 ){
 
  Creates a mutable map whose initial content matches @rhombus(map).
@@ -416,7 +416,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.snapshot(set :: MapView) :: Map
+  fun Map.snapshot(set :: ReadableMap) :: Map
 ){
 
  Returns an immutable map whose content matches @rhombus(map). If

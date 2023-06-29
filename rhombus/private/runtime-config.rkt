@@ -60,7 +60,7 @@
                        (let loop ([c (read (open-input-string str))])
                          (case c
                            [(number?) "Number"]
-                           [(string?) "StringView"]
+                           [(string?) "ReadableString"]
                            [(list?) "List"]
                            [(hash?) "Map"]
                            [(vector?) "Array"]

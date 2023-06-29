@@ -51,7 +51,7 @@ joined by capitalizing each word) are used for a name that refers to a
  integers, and much like @rhombus(Identifier, ~annot), it corresponds in
  principle to an interface that is implemented by nonnegative integers.}
 
- @item{The @rhombus(StringView.to_string, ~annot) annotation is a
+ @item{The @rhombus(ReadableString.to_string, ~annot) annotation is a
  @tech{converter annotation}, which means that it does not simply refer
  to an interface (even in principle), so the name @rhombus(to_string) is
  not capitalized.}

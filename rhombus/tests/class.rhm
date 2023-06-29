@@ -809,7 +809,7 @@ check:
 
 block:
   import lib("racket/base.rkt")
-  class Posn(mutable x :: StringView.to_string):
+  class Posn(mutable x :: ReadableString.to_string):
     method assign(v): x := v
   def p = Posn(base.#{string-copy}("apple"))
   check: p.x ~is "apple"

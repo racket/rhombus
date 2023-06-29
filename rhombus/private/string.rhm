@@ -4,15 +4,15 @@ import:
   lib("rhombus/private/core.rkt")
 
 export:
-  StringView
+  ReadableString
 
-namespace StringView:
+namespace ReadableString:
   export:
     to_string
 
-  fun to_string(s :: StringView):
+  fun to_string(s :: ReadableString):
     core.to_string(s)
 
   annot.macro 'to_string':
-    'converting(fun (s :: StringView) :: String:
+    'converting(fun (s :: ReadableString) :: String:
                  to_string(s))'
