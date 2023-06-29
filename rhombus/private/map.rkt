@@ -53,7 +53,9 @@
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
-                     ReadableMap))
+                     ReadableMap
+                     ;; temporary:
+                     (rename-out [ReadableMap MapView])))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))

@@ -32,7 +32,9 @@
                       rhombus/namespace)
                      String)
          (for-space rhombus/annot
-                    ReadableString))
+                    ReadableString
+                    ;; temporary:
+                    (rename-out [ReadableString StringView])))
 
 (module+ for-builtin
   (provide string-method-table))
