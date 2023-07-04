@@ -82,7 +82,7 @@
              #:attr term #'e.term
              #:attr name #'dots.name)))
 
-(define-for-syntax (convert-syntax e make-datum make-literal
+(define-for-syntax (convert-syntax e make-datum make-literal make-void
                                    handle-escape handle-group-escape handle-multi-escape
                                    adjust-escape-siblings deepen-escape deepen-syntax-escape
                                    handle-tail-escape handle-block-tail-escape
@@ -262,6 +262,9 @@
                null null null #f)]
       [id:identifier
        (values (make-literal #'id) null null null #f)]
+      [void-val
+       #:when (eq? (void) (syntax-e #'void-val))
+       (values (make-void e) null null null #f)]
       [_
        (values e null null null #f)])))
 
@@ -324,6 +327,9 @@
                   ;; make-literal
                   (lambda (d)
                     #`(~datum #,d))
+                  ;; make-void
+                  (lambda (e)
+                    #`(~datum #,(void)))
                   ;; handle-escape:
                   (lambda ($-id e in-e tail?)
                     (let-values ([(p new-idrs new-sidrs new-vars)
@@ -501,6 +507,8 @@
                                          (free-identifier=? d (quote-syntax ...)))
                                     #`(#,(quote-syntax ...) #,d)
                                     d))
+                    ;; make-void
+                    (lambda (e) e)
                     ;; handle-escape:
                     (lambda ($-id e in-e tail?)
                       (check-escape e)
