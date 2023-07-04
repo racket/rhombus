@@ -135,7 +135,7 @@
      (case field-sym
        [(map) (nary #'map -2 #'map)]
        [(for_each) (nary #'for-each -2 #'for-each)]
-       [else #f]))))
+       [else (fail-k)]))))
 
 (define-syntax function-instance
   (dot-provider function-instance-proc))
