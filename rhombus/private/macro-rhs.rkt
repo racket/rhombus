@@ -331,6 +331,7 @@
                           (syntax-parse pre-parsed
                             #:datum-literals (pre-parsed)
                             [(pre-parsed id
+                                         _
                                          tail-pattern
                                          rhs)
                              (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)

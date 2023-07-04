@@ -445,6 +445,7 @@
     #:datum-literals (group)
     [(group id::operator-or-identifier-or-$ . tail-pattern)
      #`(pre-parsed id.name
+                   id.extends
                    tail-pattern
                    #,rhs)]))
 
@@ -480,24 +481,24 @@
                                                                           extra-kws
                                                                           extra-shapes)
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx)<
       (parse-identifier-syntax-transformer
        stx
        compiletime-id extra-kws extra-shapes
        (lambda (p ct)
          (define name (pre-parsed-name p))
-         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
-                                      ((space->introducer space-sym) name))
-                   (let ([#,name #,ct])
-                     (values #,@(for/list ([space-sym (in-list space-syms)])
-                                  name))))))
+         (build-syntax-definitions/maybe-extension
+          space-syms name (pre-parsed-extends p)
+          #`(let ([#,name #,ct])
+              (values #,@(for/list ([space-sym (in-list space-syms)])
+                           name)))))
        (lambda (ps ct)
          (define name (pre-parsed-name (car ps)))
-         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
-                                      ((space->introducer space-sym) name))
-                   (let ([#,name #,ct])
-                     (values #,@(for/list ([space-sym (in-list space-syms)])
-                                  name))))))))))
+         (build-syntax-definitions/maybe-extension
+          space-syms name (pre-parsed-extends (car ps))
+          #`(let ([#,name #,ct])
+              (values #,@(for/list ([space-sym (in-list space-syms)])
+                           name)))))))))
 
 (define-for-syntax (parse-identifier-syntax-transformer stx compiletime-id extra-kws extra-shapes k ks)
   (syntax-parse stx
@@ -601,8 +602,11 @@
                                        #:defaults ([self-id #'self]))
                             body ...)))
         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-        (list #`(define-syntax #,((space->introducer space-sym) (pre-parsed-name p))
-                  (#,compiletime-id #,p q.gs self-id)))]))))
+        (define name (pre-parsed-name p))
+        (build-syntax-definitions/maybe-extension
+         (list space-sym) name (pre-parsed-extends p)
+         #`(let ([#,name (#,compiletime-id #,p q.gs self-id)])
+             #,name))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-sequence-transformer-compiletime make-transformer-id)

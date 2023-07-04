@@ -102,3 +102,19 @@ check:
    def dong = "dong")
   [ding, dong]
   ~is ["ding", "dong"]
+
+// namespace extension
+block:
+  namespace n
+
+  defn.macro '(n.dz) $id':
+    'def $id = 0'
+
+  n.dz k
+  check k ~is 0
+
+  block:
+   import .n open
+   dz w
+   check w ~is 0
+ 
