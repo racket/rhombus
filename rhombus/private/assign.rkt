@@ -156,7 +156,7 @@
        (lambda (form1 form2 self-stx)
          (define-values (mv inside) (get-mv form1 self-stx))
          (relocate
-          (span-srcloc (maybe-respan form1) (maybe-respan form2))
+          (respan (datum->syntax #f (list form1 self-stx form2)))
           #`(let ([#,inside #,form2]) ; using `inside` here provides a name to `form2`
               #,(build-assign/automatic proc
                                         self-stx

@@ -59,7 +59,7 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id . tail) (values (relocate #'form-id #'vector) #'tail)]))))
+       [(form-id . tail) (values (relocate+reraw #'form-id #'vector) #'tail)]))))
 
 (define-annotation-constructor (Array of)
   () #'vector? array-static-infos

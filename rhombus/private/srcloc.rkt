@@ -8,9 +8,11 @@
          span-srcloc
          relocate
          relocate-id
+         relocate+reraw
          respan-empty
          respan
          maybe-respan
+         extract-raw
          with-syntax-error-respan)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
@@ -47,13 +49,18 @@
 ;; `respan` may also be needed for input to `syntax-parse`, in case it
 ;; is responsible for raising an exception when a match files.
 ;;
-;; When a primitive expression form expands to a parsed term, it should
-;; `relocate` the result using a `respan` of the input shrubbery. It's
-;; tempting to try to propagate the raw form of an input shrubbery to
-;; the output, but we don't try, currently. Note that `wrap-static-info`
-;; and `wrap-static-info*` propagate a relocation from the wrapped
-;; expression to the wrapper, so prefer to add the relocation inside,
-;; and that works for both the wrapped and unwrapped forms.
+;; "Reraw" means to take the printed form of a syntax object and
+;; attach is as the opaque raw form of another syntax object. An
+;; opaque raw property means that raw-text information of nested
+;; syntax objects is ignored. Note that opaque-raw information is
+;; *not* preserved by default, unlike raw information.
+;;
+;; When a primitive expression form expands to a parsed term, it
+;; should `relocate+reraw` the result using a `respan` of the input
+;; shrubbery. Note that `wrap-static-info` and `wrap-static-info*`
+;; propagate a relocation+reraw from the wrapped expression to the
+;; wrapper, so prefer to add the relocation+reraw inside, and that
+;; works for both the wrapped and unwrapped forms.
 
 ;; Make a source location that spans `start` to `end`, assuming that
 ;; `end` is after `start`
@@ -83,6 +90,36 @@
 (define (relocate-id head id)
   (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
                                               (symbol->string (syntax-e head)))))
+
+(define (relocate+reraw src-stx stx)
+  (syntax-opaque-raw-property (relocate src-stx stx)
+                              (extract-raw src-stx #f #f)))
+
+(define (extract-raw stx pre? suf?)
+  (define (cons-raw a b)
+    (cond
+      [(or (not a) (null? a)) (or b null)]
+      [(or (not b) (null? b)) a]
+      [else (cons a b)]))
+  (cond
+    [(syntax? stx)
+     (cons-raw (cons-raw (if pre? (syntax-raw-prefix-property stx) null)
+                         (or (syntax-opaque-raw-property stx)
+                             (cons-raw (syntax-raw-property stx)
+                                       (extract-raw (or (syntax->list stx)
+                                                        (syntax-e stx))
+                                                    pre? suf?))))
+               (if suf? (syntax-raw-suffix-property stx) null))]
+    [(and (pair? stx) (list? stx))
+     (cons-raw
+      (let loop ([stx stx] [pre? pre?])
+        (if (null? stx)
+            null
+            (cons-raw (extract-raw (car stx) pre? (or (pair? (cdr stx)) suf?))
+                      (loop (cdr stx) #t))))
+      (cons-raw (syntax-raw-tail-property (car stx))
+                (if suf? (syntax-raw-tail-suffix-property (car stx)) null)))]
+    [else null]))
 
 ;; If the tail is empty, give it a source location
 ;; that matches the end of `op-stx`

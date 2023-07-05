@@ -451,7 +451,7 @@
                             [e::expression #'e.parsed])))
             (loop #'gs (cons e accum))])))
      (define src-span (if span-form-name?
-                          (respan #`(form-id args))
+                          (respan (datum->syntax #f (list #'form-id #'args)))
                           (maybe-respan #'args)))
      (values
       (relocate-wrapped

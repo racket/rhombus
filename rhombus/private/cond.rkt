@@ -24,7 +24,7 @@
           [((tag-thn::block thn ...)
             (tag-els::block els ...))
            (values
-            (relocate
+            (relocate+reraw
              (respan stx)
              #'(if (rhombus-expression (group test ...))
                    (rhombus-body-at tag-thn thn ...)
@@ -45,7 +45,7 @@
                   ...
                   e::else-clause))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #'(cond
               [(rhombus-expression (group pred ...))
@@ -57,7 +57,7 @@
                   (_::block (group pred ... ((~and tag block) rhs ...)))
                   ...))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #'(cond
               [(rhombus-expression (group pred ...))
@@ -67,7 +67,7 @@
          #'())]
        [(form-id (_::block))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #'(cond-fallthrough 'form-id))
          #'())]))))
@@ -91,7 +91,7 @@
      (syntax-parse #'(alt ...)
        [((tag-thn::block thn ...))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #`(#,racket-form-id (rhombus-expression (group test ...))
              (rhombus-body-at tag-thn thn ...)))

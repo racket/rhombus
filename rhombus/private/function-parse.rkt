@@ -408,7 +408,7 @@
                           kwrest-arg kwrest-parsed
                           converter
                           rhs
-                          start end)
+                          src-ctx)
     (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds]
                         [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
                         [(arg-info::binding-info ...) #'(arg-impl.info ...)])
@@ -470,8 +470,8 @@
             (append (entry_point_meta.Adjustment-prefix-arguments adjustments)
                     args))
           (values
-           (relocate
-            (span-srcloc (maybe-respan start) (maybe-respan end))
+           (relocate+reraw
+            (respan src-ctx)
             (if (syntax-e kwrest-arg)
                 #`(lambda/kwrest
                    #,(adjust-args #'(arg-form ... ...))
@@ -488,7 +488,7 @@
                                kwrest-args-stx kwrest-parseds-stx
                                converters-stx
                                rhss-stx
-                               start end)
+                               src-ctx)
     (define kwss (map syntax->list (syntax->list kwss-stx)))
     (define argss (map syntax->list (syntax->list argss-stx)))
     (define arg-parsedss (map syntax->list (syntax->list arg-parsedss-stx)))
@@ -534,8 +534,8 @@
                       (arity->mask-syntax pos-arity)
                       `(,(arity->mask-syntax pos-arity) ,required-kws ,allowed-kws)))
     (values
-     (relocate
-      (span-srcloc (maybe-respan start) (maybe-respan end))
+     (relocate+reraw
+      (respan src-ctx)
       (reduce-keyword-arity
        #`(case-lambda/kwrest
           #,@(for/list ([n+same (in-list n+sames)])
@@ -990,9 +990,9 @@
               [else (cons rator
                           (append extra-rands
                                   (syntax->list #'(arg-form ... ...))))]))
-          (define e (relocate (or srcloc
-                                  (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
-                              (datum->syntax #'here es)))
+          (define e (relocate+reraw (or srcloc
+                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
+                                    (datum->syntax #'here es)))
           (define result-static-infos (or (rator-static-info/indirect #'#%call-result)
                                           #'()))
           (define all-result-static-infos (or (let-values ([(r indirect?)

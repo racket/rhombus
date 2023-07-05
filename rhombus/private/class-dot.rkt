@@ -401,8 +401,8 @@
                     #,assign-expr)
                 tail)]
       [_
-       (define e (relocate
-                  (span-srcloc (maybe-respan form1) (maybe-respan field-id))
+       (define e (relocate+reraw
+                  (respan (datum->syntax #f (list form1 dot field-id)))
                   (datum->syntax (quote-syntax here)
                                  (list (relocate field-id accessor-id) form1)
                                  #f
@@ -422,8 +422,8 @@
           (syntax-parse tail
             [(_:::=-expr . tail)
              #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
-             (values (relocate #'e.parsed
-                               #`(#,(no-srcloc #'parens) (group (parsed #:rhombus/expr e.parsed))))
+             (values (relocate+reraw #'e.parsed
+                                     #`(#,(no-srcloc #'parens) (group (parsed #:rhombus/expr e.parsed))))
                      #'e.tail)]
             [_ (values (no-srcloc #'(parens)) tail)])
           (syntax-parse tail
@@ -448,10 +448,10 @@
                (values pos/id obj-id #f (lambda (e)
                                           (define static-infos (extract-static-infos e))
                                           (wrap-static-info*
-                                           (relocate form1
-                                                     #`(let ([#,obj-id #,form1])
-                                                         #,(add-check obj-id)
-                                                         #,(unwrap-static-infos e)))
+                                           (relocate+reraw form1
+                                                           #`(let ([#,obj-id #,form1])
+                                                               #,(add-check obj-id)
+                                                               #,(unwrap-static-infos e)))
                                            static-infos)))]
               [else
                (values pos/id form1 #f (lambda (e) e))])]

@@ -15,7 +15,7 @@
        [(form-id ((~and tag block) form ...)
                  . tail)
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #'(let ()
               (rhombus-body-at tag form ...)))

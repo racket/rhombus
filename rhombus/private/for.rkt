@@ -40,13 +40,13 @@
      (syntax-parse (respan stx)
        #:datum-literals (block group)
        [(form-id ((~and block-tag block) body ...+ (group #:into red ...)))
-        (values (relocate
+        (values (relocate+reraw
                  (respan stx)
                  #'(rhombus-expression
                     (group form-id red ... (block-tag body ...))))
                 #'())]
        [(form-id (block body ...+))
-        (values (relocate
+        (values (relocate+reraw
                  (respan stx)
                  #`(for (#:splice (for-clause-step #,stx #,static? [(begin (void))] body ...))
                      (void)))
@@ -56,7 +56,7 @@
         #:with redr::reducer #'(g-tag red ...)
         #:with f::reducer-form #'redr.parsed
         (values (wrap-static-info*
-                 (relocate
+                 (relocate+reraw
                   (respan stx)
                   #`(f.wrapper
                      f.data

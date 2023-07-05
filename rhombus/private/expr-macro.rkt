@@ -59,7 +59,8 @@
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information
   (define loc (maybe-respan form))
-  (relocate loc #`(parsed #:rhombus/expr #,(relocate loc (rhombus-local-expand form)))))
+  (define expr (relocate+reraw loc (rhombus-local-expand form)))
+  (relocate+reraw expr #`(parsed #:rhombus/expr #,expr)))
 
 (define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator

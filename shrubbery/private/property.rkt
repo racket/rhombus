@@ -4,7 +4,8 @@
          syntax-raw-prefix-property
          syntax-raw-suffix-property
          syntax-raw-tail-property
-         syntax-raw-tail-suffix-property)
+         syntax-raw-tail-suffix-property
+         syntax-opaque-raw-property)
 
 (define syntax-raw-property
   (case-lambda
@@ -34,3 +35,10 @@
   (case-lambda
     [(stx) (syntax-property stx 'raw-tail-suffix)]
     [(stx val) (syntax-property stx 'raw-tail-suffix val #t)]))
+
+;; Hides any nested syntax and ignores an immediate 'raw property when
+;; present and not #f
+(define syntax-opaque-raw-property
+  (case-lambda
+    [(stx) (syntax-property stx 'opaque-raw)]
+    [(stx val) (syntax-property stx 'opaque-raw val)]))

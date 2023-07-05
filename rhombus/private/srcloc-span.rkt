@@ -11,10 +11,10 @@
 ;; Similar to "respan" from "srcloc.rkt", but also propagates
 ;; raw-prefix and raw-suffix properties
 (define (relocate-span stx ctx-stxes-in)
-  (define new-stx (relocate (if (null? (cdr ctx-stxes-in))
-                                (maybe-respan (car ctx-stxes-in))
-                                (respan (datum->syntax #f (map maybe-respan ctx-stxes-in))))
-                            stx))
+  (define ctx-stx (if (null? (cdr ctx-stxes-in))
+                      (maybe-respan (car ctx-stxes-in))
+                      (respan (datum->syntax #f (map maybe-respan ctx-stxes-in)))))
+  (define new-stx (relocate ctx-stx stx))
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))
   (define head (relevant-source-syntax (car ctx-stxes-in)))
   (define tail (relevant-source-syntax (let loop ([ctx-stxes-in ctx-stxes-in])
@@ -25,7 +25,8 @@
          [new-stx (syntax-raw-suffix-property new-stx
                                               (combine-raw
                                                (or (syntax-raw-tail-suffix-property tail) null)
-                                               (or (syntax-raw-suffix-property tail) null)))])
+                                               (or (syntax-raw-suffix-property tail) null)))]
+         [new-stx (syntax-opaque-raw-property new-stx (extract-raw ctx-stx #f #f))])
     new-stx))
 
 (define (relocate* stx ctx-stx-in)

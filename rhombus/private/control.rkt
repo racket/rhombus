@@ -230,7 +230,7 @@
                                                 falses falses
                                                 falses
                                                 (datum->syntax #f rhss)
-                                                (car gs) (car gs)))
+                                                (car gs)))
                          proc]
                         [else
                          (syntax-parse (car bs)
@@ -263,7 +263,7 @@
                                          #'#f #'#f
                                          #'#f
                                          #'rhs
-                                         (car gs) (car gs)))
+                                         (car gs)))
                        proc]
                       [arg::binding
                        (define-values (proc arity)
@@ -274,7 +274,7 @@
                                          #'#f #'#f
                                          #'#f
                                          #'rhs
-                                         (car gs) (car gs)))
+                                         (car gs)))
                        proc]))
                   (loop (cdr gs) rev-gs (hash-set state 'handler handler))]
                  [(group #:catch (tag::block entry))

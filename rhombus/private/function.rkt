@@ -173,7 +173,7 @@
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                 #'(ret.converter ...)
                                 #'(rhs ...)
-                                #'form-id #'alts-tag))
+                                stx))
          (maybe-add-function-result-definition
           the-name (syntax->list #'(ret.static-infos ...)) function-static-infos arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
@@ -199,7 +199,7 @@
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                 #'(ret.converter ...)
                                 #'(rhs ...)
-                                #'form-id #'alts-tag))
+                                stx))
          (maybe-add-function-result-definition
           the-name (list #'main-ret.static-infos) function-static-infos arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
@@ -217,7 +217,7 @@
                            #'rest.kwarg #'rest.kwparsed
                            #'ret.converter
                            #'rhs
-                           #'form-id #'parens-tag))
+                           stx))
          (maybe-add-function-result-definition
           #'name.name (list #'ret.static-infos) function-static-infos arity
           (build-definitions/maybe-extension #f #'name.name #'name.extends
@@ -272,7 +272,7 @@
                             #'(rest.kwarg ...) #'(rest.kwparsed ...)
                             #'(ret.converter ...)
                             #'(rhs ...)
-                            #'form-id stx))
+                            stx))
      (values (wrap-function-static-info
               (if arity
                   (wrap-static-info proc #'#%function-arity arity)
@@ -289,7 +289,7 @@
                        #'rest.kwarg #'rest.kwparsed
                        #'ret.converter
                        #'rhs
-                       #'form-id #'rhs))
+                       stx))
      (values (let* ([fun (if (pair? (syntax-e #'ret.static-infos))
                              (wrap-static-info fun #'#%call-result #'ret.static-infos)
                              fun)]

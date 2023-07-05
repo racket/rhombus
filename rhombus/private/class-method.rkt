@@ -516,7 +516,7 @@
           [(_ make-name)
            (syntax-parse stxs
              [(head . tail)
-              (values (relocate #'head #'make-name) #'tail)])])]
+              (values (relocate+reraw #'head #'make-name) #'tail)])])]
        [else
         ;; in a method
         (define id+dp+isi+supers c-or-id+dp+isi+supers)
@@ -658,7 +658,7 @@
                             #'id
                             #'assign.tail)]
              [(head . tail)
-              (define call (relocate #'head #`(#,rator obj-id)))
+              (define call (relocate+reraw #'head #`(#,rator obj-id)))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (values (add-method-result call r)

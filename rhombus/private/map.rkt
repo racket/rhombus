@@ -175,7 +175,7 @@
                                                         #:repetition? repetition?
                                                         #:list->map #'list->map))
      (values (relocate-wrapped
-              (respan #`(form-id content))
+              (respan (datum->syntax #f (list #'form-id #'content)))
               (build-setmap stx argss
                             #'Map-build
                             #'hash-extend*

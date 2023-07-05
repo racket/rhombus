@@ -199,7 +199,7 @@
                                                         #:repetition? repetition?
                                                         #:list->set #'list->set))
      (values (relocate-wrapped
-              (respan #'(form-id content))
+              (respan (datum->syntax #f (list #'form-id #'content)))
               (build-setmap stx argss
                             #'Set-build
                             #'set-extend*

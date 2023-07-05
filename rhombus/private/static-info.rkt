@@ -51,7 +51,7 @@
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
   (define (wrap-static-info expr key-id val-stx)
-    (relocate
+    (relocate+reraw
      expr
      #`(begin (quote-syntax (#,key-id #,val-stx))
               #,expr)))
@@ -162,8 +162,9 @@
     (syntax-parse e
       #:literals (begin quote-syntax)
       [((~and tag begin) (~and qs (quote-syntax (key:identifier val))) e)
-       (relocate srcloc #`(tag qs #,(relocate-wrapped srcloc #'e)))]
-      [_ (relocate srcloc e)])))
+       (define e2 (relocate-wrapped srcloc #'e))
+       (relocate+reraw e2 #`(tag qs #,e2))]
+      [_ (relocate+reraw srcloc e)])))
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx

@@ -170,7 +170,7 @@
     (syntax-parse #`(group #,arg)
       [arg::binding #'arg.parsed]))
 
-  (define (build-unary-function name args rhss start end ret-predicates)
+  (define (build-unary-function orig-stx name args rhss start end ret-predicates)
     (define arg-parseds (map parse-binding args))
     (define falsess (for/list ([a (in-list args)]) #'(#f)))
     (define (->stx l) (datum->syntax #f l))
@@ -184,7 +184,7 @@
                          #'#f #'#f
                          (car ret-predicates)
                          (car rhss)
-                         start end)]
+                         orig-stx)]
         [else
          (define falses (->stx (for/list ([a (in-list args)]) #'#f)))
          (build-case-function no-adjustments
@@ -194,10 +194,10 @@
                               falses falses
                               (->stx ret-predicates)
                               (->stx rhss)
-                              start end)]))
+                              orig-stx)]))
     proc)
 
-  (define (build-binary-function name lefts rights rhss start end ret-predicates)
+  (define (build-binary-function orig-stx name lefts rights rhss start end ret-predicates)
     (define-values (left-parseds right-parseds)
       (for/lists (left-parseds right-parseds) ([left (in-list lefts)]
                                                [right (in-list rights)])
@@ -217,7 +217,7 @@
                          #'#f #'#f
                          (car ret-predicates)
                          (car rhss)
-                         start end)]
+                         orig-stx)]
         [else
          (define falses (->stx (for/list ([a (in-list lefts)]) #'#f)))
          (build-case-function no-adjustments
@@ -229,19 +229,19 @@
                               falses falses
                               (->stx ret-predicates)
                               (->stx rhss)
-                              start end)]))
+                              orig-stx)]))
     proc)
 
-  (define (generate-prefix form-id gs name extends args prec rhss ret-predicates ret-static-infos)
+  (define (generate-prefix stx form-id gs name extends args prec rhss ret-predicates ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])
       (cons
        #`(define op-proc
-           #,(build-unary-function name args rhss form-id (last gs) ret-predicates))
+           #,(build-unary-function stx name args rhss form-id (last gs) ret-predicates))
        (build-syntax-definitions/maybe-extension
         '(#f rhombus/repet) name extends
         (make-prefix name #'op-proc prec ret-static-infos)))))
 
-  (define (generate-infix form-id gs name extends lefts rights prec assc rhss ret-predicates ret-static-infos)
+  (define (generate-infix stx form-id gs name extends lefts rights prec assc rhss ret-predicates ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])
       (add-top-level
        #'(op-proc)
@@ -251,9 +251,9 @@
          (make-infix name #'op-proc prec assc ret-static-infos))
         (list
          #`(define op-proc
-             #,(build-binary-function name lefts rights rhss form-id (last gs) ret-predicates)))))))
+             #,(build-binary-function stx name lefts rights rhss form-id (last gs) ret-predicates)))))))
     
-  (define (generate-postfix form-id gs name extends args prec rhss ret-predicates ret-static-infos)
+  (define (generate-postfix stx form-id gs name extends args prec rhss ret-predicates ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])
       (add-top-level
        #'(op-proc)
@@ -263,7 +263,7 @@
          (make-postfix name #'op-proc prec ret-static-infos))
         (list
          #`(define op-proc
-             #,(build-unary-function name args rhss form-id (last gs) ret-predicates)))))))
+             #,(build-unary-function stx name args rhss form-id (last gs) ret-predicates)))))))
 
   (define (generate-prefix+infix stx
                                  p-gs p-name p-extends p-args p-prec p-rhss p-ret-predicates p-ret-static-infos
@@ -283,9 +283,9 @@
               (repetition-prefix+infix-operator prefix-repet infix-repet))))
         (list
          #`(define p-op-proc
-             #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
+             #,(build-unary-function stx p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
          #`(define i-op-proc
-             #,(build-binary-function i-name i-lefts i-rights i-rhss (first i-gs) (last i-gs) i-ret-predicates)))))))
+             #,(build-binary-function stx i-name i-lefts i-rights i-rhss (first i-gs) (last i-gs) i-ret-predicates)))))))
 
   (define (generate-prefix+postfix stx
                                    p-gs p-name p-extends p-args p-prec p-rhss p-ret-predicates p-ret-static-infos
@@ -305,9 +305,9 @@
               (repetition-prefix+infix-operator prefix-repet infix-repet))))
         (list
          #`(define p-op-proc
-             #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
+             #,(build-unary-function stx p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
          #`(define a-op-proc
-             #,(build-unary-function a-name a-args a-rhss (first a-gs) (last a-gs) a-ret-predicates)))))))
+             #,(build-unary-function stx a-name a-args a-rhss (first a-gs) (last a-gs) a-ret-predicates)))))))
 
   (define (add-top-level binds defns)
     (if (eq? 'top-level (syntax-local-context))
@@ -331,13 +331,16 @@
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id p::prefix-case)
-         (generate-prefix #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
+         (generate-prefix stx
+                          #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
                           (list #'p.ret-predicate) #'p.ret-static-infos)]
         [(form-id i::infix-case)
-         (generate-infix #'form-id (list #'i.g) #'i.name #'i.extends (list #'i.left) (list #'i.right) #'i.prec #'i.assc (list #'i.rhs)
+         (generate-infix stx
+                         #'form-id (list #'i.g) #'i.name #'i.extends (list #'i.left) (list #'i.right) #'i.prec #'i.assc (list #'i.rhs)
                          (list #'i.ret-predicate) #'i.ret-static-infos)]
         [(form-id p::postfix-case)
-         (generate-postfix #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
+         (generate-postfix stx
+                           #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
                            (list #'p.ret-predicate) #'p.ret-static-infos)]
         [(form-id (_::alts . as))
          (parse-operator-alts stx #'form-id #'as
@@ -437,17 +440,20 @@
                                             main-assc))
   (cond
     [(and (null? ins) (null? posts))
-     (generate-prefix form-id (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
+     (generate-prefix stx
+                      form-id (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
                       (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
                       (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres)))]
     [(and (null? pres) (null? posts))
-     (generate-infix form-id (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
+     (generate-infix stx
+                     form-id (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
                      (map binary-opcase-left ins) (map binary-opcase-right ins)
                      (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                      (map opcase-rhs ins)
                      (map opcase-ret-predicate ins) (intersect-static-infos (map opcase-ret-static-infos ins)))]
     [(and (null? pres) (null? ins))
-     (generate-postfix form-id (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
+     (generate-postfix stx
+                       form-id (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
                        (map unary-opcase-arg posts) (opcase-prec/main (car posts)) (map opcase-rhs posts)
                        (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))]
     [(pair? ins)

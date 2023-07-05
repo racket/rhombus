@@ -79,7 +79,7 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (relocate #'datum #'(quote datum))
+        (values (relocate+reraw #'datum #'(quote datum))
                 #'tail)]))))
 
 (define-binding-syntax #%literal
@@ -127,7 +127,7 @@
              ;; eagerly parse content of parentheses; we could choose to
              ;; delay parsing by using `rhombus-expression`, instead
              (syntax-parse (car args)
-               [e::expression (values (relocate (maybe-respan #'head) #'e.parsed) #'tail)])]))]))))
+               [e::expression (values (relocate+reraw (maybe-respan #'head) #'e.parsed) #'tail)])]))]))))
 
 (define-binding-syntax #%parens
   (binding-transformer

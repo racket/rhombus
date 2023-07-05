@@ -8,7 +8,7 @@
 (provide (for-syntax wrap-expression))
 
 (define-for-syntax (wrap-expression form #:srcloc [loc (maybe-respan form)])
-  (relocate
+  (relocate+reraw
    loc
    (syntax-parse form
      #:datum-literals (parsed group multi)

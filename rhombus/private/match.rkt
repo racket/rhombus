@@ -52,9 +52,9 @@
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...))
                                #'(clause.rhs ... (parsed #:rhombus/expr e.parsed))
-                               #'form-id #'alts-tag))
+                               stx))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #`(#,proc (rhombus-expression (group in ...))))
          #'())]
@@ -84,14 +84,14 @@
                                    (falses #'(b ...))
                                    #`(clause.rhs ... (parsed
                                                       (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
-                                   #'form-id #'alts-tag))
-            (relocate
+                                   stx))
+            (relocate+reraw
              (respan stx)
              #`(#,proc #,in-expr))))
          #'())]
        [(form-id in ...+ (block-tag::block))
         (values
-         (relocate
+         (relocate+reraw
           (respan stx)
           #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
              (rhombus-expression (group in ...))))

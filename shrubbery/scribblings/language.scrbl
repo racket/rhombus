@@ -121,10 +121,13 @@ The property values are trees of strings: a string, an empty list, or a
 pair containing two trees. Raw test can be reconstructed through a
 preorder traversal of the tree.
 
-@defthing[syntax-raw-property 'raw]{
+@deftogether[(
+@defproc*[([(syntax-raw-property [stx syntax?]) syntax?]
+           [(syntax-raw-property [stx syntax?] [val any/c]) syntax?])]
+)]{
 
- The @racket['raw] property records the original text of an atomic
- term, such as a number, string, or identifier.
+ Adjusts or inspects the @racket['raw] preserved property, which records the original
+ text of an atomic term, such as a number, string, or identifier.
 
  For example, the input @litchar{0x11} will be parsed as the number
  @racket[17] with a @racket['raw] property value @racket["0x11"].
@@ -143,13 +146,16 @@ preorder traversal of the tree.
 }
 
 @deftogether[(
-@defthing[syntax-raw-prefix-property 'raw-prefix]
-@defthing[syntax-raw-suffix-property 'raw-suffix]
+@defproc*[([(syntax-raw-prefix-property [stx syntax?]) syntax?]
+           [(syntax-raw-prefix-property [stx syntax?] [val any/c]) syntax?])]
+@defproc*[([(syntax-raw-suffix-property [stx syntax?]) syntax?]
+           [(syntax-raw-suffix-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
- The @racket['raw-prefix] property records original text that is before
- a term and not part of a preceding term, while @racket['raw-suffix]
- reported original text after a term and before the next term. Such text
+ Adjusts or inspects the @racket['raw-prefix] preserved property, which records
+ original text that is before a term and not part of a preceding term,
+ or adjsust or inspects the @racket['raw-suffix] preserved
+ property, which records original text after a term and before the next term. Such text
  is eligible for either the @racket['raw-suffix] property of one term or
  the @racket['raw-prefix] property of a following term;
  @racket['raw-suffix] will be preferred, but @racket['raw-prefix] must be
@@ -172,11 +178,14 @@ preorder traversal of the tree.
 }
 
 @deftogether[(
-@defthing[syntax-raw-tail-property 'raw-tail]
-@defthing[syntax-raw-tail-suffix-property 'raw-tail-suffix]
+@defproc*[([(syntax-raw-tail-property [stx syntax?]) syntax?]
+           [(syntax-raw-tail-property [stx syntax?] [val any/c]) syntax?])]
+@defproc*[([(syntax-raw-tail-suffix-property [stx syntax?]) syntax?]
+           [(syntax-raw-tail-suffix-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
- The @racket['raw-tail] and @racket['raw-tail-suffix] properties are
+ Adjusts or inspects the @racket['raw-tail] and @racket['raw-tail-suffix]
+ preserved properties, which are
  attached to an identifier like @racket[parens] that represents groups
  within an opener--closer pair. The @racket['raw-tail] property holds
  text for the closer, which belongs after the last contained group in the
@@ -195,6 +204,22 @@ preorder traversal of the tree.
  @racket[group] syntax object will have no properties or ones with values
  that are equivalent to empty strings.
 
+}
+
+@deftogether[(
+@defproc*[([(syntax-opaque-raw-property [stx syntax?]) syntax?]
+           [(syntax-opaque-raw-property [stx syntax?] [val any/c]) syntax?])]
+)]{
+
+ Adjusts or inspects the @racket['opaque-raw] non-preserved property,
+ which is like @racket['raw], but intended to be used in place of
+ whatever raw-form information is reported for nested syntax object
+ within @racket[stx].
+
+ The @racket['opaque-raw] property is useful in macro expansion to
+ record a macro's input to its output---not only in source location, but
+ also in source text.
+ 
 }
 
 @section{Writing Shrubbery Notation}

@@ -105,12 +105,15 @@
        (define start-pos (and register-stx-range
                               output
                               (file-location-position output)))
+       (define opaque-r
+         (syntax-opaque-raw-property g))
        (define r
          (cond
            [(render-stx-hook g output)
             => (lambda (raw) raw)]
            [else
-            (syntax-raw-property g)]))
+            (or opaque-r
+                (syntax-raw-property g))]))
        (when output
          (to-output r output max-length))
        (when start-pos
@@ -131,7 +134,9 @@
              (if (null? raw)
                  suffix
                  (cons raw suffix))))
-       (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
+       (define d (if opaque-r
+                     '()
+                     (loop (syntax-e g) tail use-prefix? keep-suffix?)))
        (cond
          [output (void)]
          [else
@@ -145,6 +150,7 @@
   (cond
     [(syntax? s)
      (or (syntax-raw-property s)
+         (syntax-opaque-raw-property s)
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
