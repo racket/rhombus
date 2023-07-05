@@ -57,7 +57,7 @@ expr.macro 'check_exp_loc: $body':
 
 #//
 parameterize { current_evaluator: ev }:
-  eval('try_append fun | (x): x')
+  eval('try_append 1')
 
 check_exp_loc: 1
 check_exp_loc: my_auto_prefix 1

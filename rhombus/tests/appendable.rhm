@@ -80,3 +80,8 @@ block:
     gen() ++ gen() ~raises "cannot append an appendable object and other value"
     dynamic("a") ++ "b" ~is "ab"
     dynamic([]) ++ ["a"] ~is ["a"]
+
+check:
+  def [x :: String, ...] = ["1", "2", "3"]
+  [x ++ "!" ++ "?", ...]
+  ~is ["1!?", "2!?", "3!?"]

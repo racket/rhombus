@@ -69,35 +69,54 @@
                   #'()
                   '(append)))
 
+(define-for-syntax (parse-append form1 form2 self-stx form1-in
+                                 static?
+                                 appendable-static-info
+                                 k)
+  (define direct-append-id (appendable-static-info #'#%append))
+  (define static-append-id (or direct-append-id
+                               (static-info/indirect appendable-static-info #'#%append/checked #'#%append-indirect)))
+  (define append-id (or static-append-id
+                        (if static?
+                            (raise-syntax-error #f
+                                                (string-append "specialization not known" statically-str)
+                                                self-stx
+                                                form1-in)
+                            #'general-append)))
+  (define si (or (syntax-local-static-info/indirect append-id #'#%call-result #'#%function-indirect) #'()))
+  (k append-id
+     (or direct-append-id
+         (not static-append-id))
+     form1 form2
+     si))
+
+(define-for-syntax (build-append append-id direct? form1 form2 orig-stxes)
+  (relocate+reraw
+   (respan (datum->syntax #f orig-stxes))
+   (datum->syntax (quote-syntax here)
+                  (if direct?
+                      (list append-id form1 form2)
+                      `(,#'let ([a1 ,form1]
+                                [a2 ,form2])
+                               (check-appendable a1 a2)
+                               (,append-id a1 a2))))))
+
 (define-for-syntax (make-++-expression name static?)
   (expression-infix-operator
    name
    `((,(expr-quote +&) . same))
    'automatic
-   (lambda (form1-in form2 stx)
+   (lambda (form1-in form2 self-stx)
      (define form1 (rhombus-local-expand form1-in))
-     (define direct-append-id (syntax-local-static-info form1 #'#%append))
-     (define static-append-id (or direct-append-id
-                                  (syntax-local-static-info/indirect form1 #'#%append/checked #'#%append-indirect)))
-     (define append-id (or static-append-id
-                           (if static?
-                               (raise-syntax-error '++
-                                                   (string-append "specialization not known" statically-str)
-                                                   form1-in)
-                               #'general-append)))
-     (define si (or (syntax-local-static-info/indirect append-id #'#%call-result #'#%function-indirect) #'()))
-     (wrap-static-info*
-      (datum->syntax (quote-syntax here)
-                     (if (or direct-append-id
-                             (not static-append-id))
-                         (list append-id form1 form2)
-                         `(,#'let ([a1 ,form1]
-                                   [a2 ,form2])
-                                  (check-appendable a1 a2)
-                                  (,append-id a1 a2)))
-                     (span-srcloc form1 form2)
-                     stx)
-      si))
+     (parse-append
+      form1 form2 self-stx form1-in
+      static?
+      (lambda (key) (syntax-local-static-info form1 key))
+      (lambda (append-id direct? form1 form2 si)
+        (wrap-static-info*
+         (build-append append-id direct? form1 form2
+                       (list form1-in self-stx form2))
+         si))))
    'left))
 
 (define-syntax ++ (make-++-expression (expr-quote ++) #f))
@@ -108,8 +127,23 @@
    name
    `((,(expr-quote +&) . same))
    'automatic
-   (lambda (form1-in form2 stx)
-     (raise-syntax-error #f "not yet ready" stx))
+   (lambda (form1 form2 self-stx)
+     (syntax-parse form1
+       [form1-info::repetition-info
+        (build-compound-repetition
+         self-stx
+         (list form1 form2)
+         (lambda (form1 form2)
+           (parse-append
+            form1 form2 self-stx form1
+            static?
+            (lambda (key)
+              (repetition-static-info-lookup #'form1-info.element-static-infos key))
+            (lambda (append-id direct? form1 form2 si)
+              (values
+               (build-append append-id direct? form1 form2
+                             (list form1 self-stx form2))
+               si)))))]))
    'left))
 
 (define-repetition-syntax ++ (make-++-repetition (expr-quote ++) #f))
