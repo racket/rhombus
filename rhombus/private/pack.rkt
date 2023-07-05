@@ -2,7 +2,8 @@
 (require syntax/stx
          enforest/proc-name
          shrubbery/property
-         "realm.rkt")
+         "realm.rkt"
+         "srcloc.rkt")
 
 ;; We represent Rhombus syntax objects as a syntax object with one of
 ;; the following forms:
@@ -321,7 +322,7 @@
 
 ;; `stx` comes from Racket, so it should be in `parsed`
 (define ((pack-parsed kw) stx)
-  #`(parsed #,kw #,stx))
+  (relocate+reraw stx #`(parsed #,kw #,stx)))
 
 (define ((pack-parsed* kw) r depth)
   (pack* r depth (pack-parsed kw)))

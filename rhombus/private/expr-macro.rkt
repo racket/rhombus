@@ -117,4 +117,6 @@
 
 (define-for-syntax (parse_more s)
   (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
-    [e::expression #`(parsed #:rhombus/expr #,(rhombus-local-expand #'e.parsed))]))
+    [e::expression
+     (define new-e (rhombus-local-expand #'e.parsed))
+     (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))

@@ -50,8 +50,17 @@
     (set! early-unbound? #t))
 
   (define (make-identifier-expression id)
-    (when early-unbound?
-      (unless (identifier-binding id)
+    (unless (identifier-binding id)
+      (when (or (syntax-local-value* (in-defn-space id)
+                                     (lambda (v)
+                                       (or (definition-transformer-ref v)
+                                           (definition-sequence-transformer-ref v))))
+                (syntax-local-value* (in-decl-space id)
+                                     (lambda (v)
+                                       (or (declaration-transformer-ref v)
+                                           (nestable-declaration-transformer-ref v)))))
+        (raise-syntax-error #f "misuse as an expression" id))
+      (when early-unbound?
         ;; within a module, report unbound identifiers early;
         ;; otherwise, enforestation may continue and assume an
         ;; expression where some other kind of form was intended,
@@ -59,15 +68,6 @@
         ;; that we don't compile some things that could (would?)
         ;; end up reporting a use before definition
         (raise-syntax-error #f "unbound identifier" id)))
-    (when (or (syntax-local-value* (in-defn-space id)
-                                   (lambda (v)
-                                     (or (definition-transformer-ref v)
-                                         (definition-sequence-transformer-ref v))))
-              (syntax-local-value* (in-decl-space id)
-                                   (lambda (v)
-                                     (or (declaration-transformer-ref v)
-                                         (nestable-declaration-transformer-ref v)))))
-      (raise-syntax-error #f "misuse as an expression" id))
     id)
 
   (define (check-expression-result form proc)
