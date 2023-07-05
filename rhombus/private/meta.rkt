@@ -45,5 +45,5 @@
               space-sym #'name.name #'name.extends
               #'(rhombus-body-at tag form ...)))]))))
 
-(define-syntax bridge
+(define-defn-syntax bridge
   (make-bridge-definer #f))

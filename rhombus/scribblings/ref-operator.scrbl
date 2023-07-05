@@ -10,8 +10,8 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun
-    op_or_id_name: namespace
+    maybe_res_annot: fun ~defn
+    op_or_id_name: namespace ~defn
 
   defn.macro 'operator $op_case'
   defn.macro 'operator 

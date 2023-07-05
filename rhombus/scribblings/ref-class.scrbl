@@ -514,7 +514,7 @@
 
 @doc(
   ~nonterminal:
-    maybe_annot: class
+    maybe_annot: class ~defn
   class_clause.macro 'field $id $maybe_annot = $expr'
   class_clause.macro 'field $id $maybe_annot: $body; ...'
 ){
@@ -528,7 +528,7 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun
+    maybe_res_annot: fun ~defn
 
   class_clause.macro 'method $method_impl'
   class_clause.macro 'property $property_impl'
@@ -769,7 +769,7 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun
+    maybe_res_annot: fun ~defn
   class_clause.macro 'constructor $maybe_name: $entry_point'
   class_clause.macro 'constructor $maybe_name($kwopt_binding, ...,
                                               $rest, ...) $maybe_res_annot:
@@ -937,7 +937,7 @@
 
 @doc(
   ~nonterminal:
-    field_spec: class
+    field_spec: class ~defn
   class_clause.macro 'prefab'
 ){
 
@@ -1065,7 +1065,7 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun
+    maybe_res_annot: fun ~defn
     field_id: block id
 
   class_clause.macro 'reconstructor reconstructor_impl'

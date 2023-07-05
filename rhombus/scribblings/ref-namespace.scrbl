@@ -36,7 +36,7 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
 
 @doc(
   ~nonterminal:
-    export_clause: export
+    export_clause: export ~decl
   defn.macro 'namespace $id_name'
   defn.macro 'namespace $id_name:
                 $nestable_body

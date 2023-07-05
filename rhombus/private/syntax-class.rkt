@@ -23,7 +23,7 @@
          (rename-in "ellipsis.rkt"
                     [... rhombus...]))
 
-(provide (for-spaces (#f
+(provide (for-spaces (rhombus/defn
                       rhombus/namespace)
                      syntax_class))
 
@@ -71,21 +71,23 @@
     #:property prop:definition-transformer (lambda (self) (definition+syntax-class-parser-def self))
     #:property prop:syntax-class-parser (lambda (self) (definition+syntax-class-parser-pars self))))
 
-(define-syntax syntax_class (definition+syntax-class-parser
-                              (definition-transformer
-                                (lambda (stx)
-                                  (parse-syntax-class stx)))
-                              (syntax-class-parser
-                               (lambda (who stx expected-kind name tail)
-                                 (parse-anonymous-syntax-class who stx expected-kind name tail)))))
+(define-defn-syntax syntax_class
+  (definition+syntax-class-parser
+    (definition-transformer
+      (lambda (stx)
+        (parse-syntax-class stx)))
+    (syntax-class-parser
+     (lambda (who stx expected-kind name tail)
+       (parse-anonymous-syntax-class who stx expected-kind name tail)))))
 
 (define-syntax together
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        #:literals (syntax_class)
-        [(_ (_::block (group (~and form syntax_class) . rest)) ...)
+        [(_ (_::block (group form . rest)) ...)
+         #:when (for/and ([form (in-list (syntax->list #'(form ...)))])
+                  (free-identifier=? (in-defn-space form) (in-defn-space #'syntax_class)))
          (define decls
            (for/list ([g (in-list (syntax->list #'((form . rest) ...)))])
              (parse-syntax-class g #:for-together? #t)))

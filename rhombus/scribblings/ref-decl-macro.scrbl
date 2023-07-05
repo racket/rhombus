@@ -14,13 +14,26 @@
   space.transform decl
 ){
 
-  Alias for the @rhombus(expr, ~space) @tech{space}.
+ The @tech{space} for bindings of identifiers that can be used in
+ declaration and nestable-declaration positions.
 
 }
 
 @doc(
+  def decl_meta.space :: SpaceMeta
+){
+
+@provided_meta()
+
+ A compile-time value that identifies the same space as
+ @rhombus(decl, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
   defn.macro 'decl.macro $prefix_macro_patterns'
 ){
 
@@ -32,7 +45,7 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
   defn.macro 'decl.nestable_macro $prefix_macro_patterns'
 ){
 

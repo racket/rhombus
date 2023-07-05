@@ -108,9 +108,9 @@ normally bound to implement function calls.
     default_body: block body
     list_expr: block expr
     map_expr: block expr
-    list_bind: def bind
-    map_bind: def bind
-    repet_bind: def bind
+    list_bind: def bind ~defn
+    map_bind: def bind ~defn
+    repet_bind: def bind ~defn
 
   defn.macro 'fun $id_name($bind, ...):
                 $body
@@ -347,9 +347,9 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 @doc(
   ~nonterminal:
-    case_maybe_kw_opt: fun
-    case_maybe_kw: fun
-    maybe_res_annot: fun
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
+    maybe_res_annot: fun ~defn
 
   entry_point.macro 'fun ($bind, ...):
                        $body

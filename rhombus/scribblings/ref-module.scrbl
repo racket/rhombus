@@ -17,7 +17,7 @@ different than the enclosing (sub)module.
 
 @doc(
   ~nonterminal:
-    module_path: import
+    module_path: import ~defn
 
   decl.macro 'module $id:
                 $body
@@ -76,7 +76,7 @@ different than the enclosing (sub)module.
 
 @doc(
   ~nonterminal:
-    module_path: import
+    module_path: import ~defn
 
   decl.macro 'pragma $decl'
   decl.macro 'pragma:

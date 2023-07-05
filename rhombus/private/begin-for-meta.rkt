@@ -5,9 +5,10 @@
          (for-meta 2 racket/base)
          "definition.rkt")
 
-(provide begin_for_meta)
+(provide (for-space rhombus/defn
+                    begin_for_meta))
 
-(define-syntax begin_for_meta
+(define-defn-syntax begin_for_meta
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

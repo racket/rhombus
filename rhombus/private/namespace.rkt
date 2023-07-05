@@ -13,13 +13,14 @@
          "name-root.rkt"
          "name-root-ref.rkt")
 
-(provide namespace)
+(provide (for-space rhombus/defn
+                    namespace))
 
 (module+ for-exports
   (provide (for-syntax parse-exports
                        exports->names)))
 
-(define-syntax namespace
+(define-defn-syntax namespace
   (definition-transformer
    (lambda (stx)
      (syntax-parse stx

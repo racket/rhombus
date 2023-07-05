@@ -72,7 +72,7 @@
 
 @doc(
   ~nonterminal:
-    module_path: import
+    module_path: import ~defn
   expo.macro 'all_from($module_path)'
   expo.macro 'all_from(#,(@rhombus(., ~expo)) $id_name)'
 ){
@@ -226,7 +226,7 @@
 
 @doc(
   ~nonterminal:
-    collection_module_path: import
+    collection_module_path: import ~defn
   modpath.macro '$id / $collection_module_path'
 ){
 
@@ -258,7 +258,7 @@
 
 @doc(
   ~nonterminal:
-    module_path: import
+    module_path: import ~defn
   modpath.macro '$module_path ! $id'
 ){
 

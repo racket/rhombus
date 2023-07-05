@@ -65,7 +65,7 @@
          #`((define-syntax #,(in-space #'name.name)
               (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 
-(define-syntax macro
+(define-defn-syntax macro
   (make-static-info-macro-macro in-static-info-space))
    
 (define-for-syntax (convert-static-info who stx)

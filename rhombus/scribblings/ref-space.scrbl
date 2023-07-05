@@ -27,13 +27,13 @@ space-specific operations through the @rhombus(only_space, ~impo) and
 @rhombus(except_space, ~impo) modifiers, so existing bindings can be
 suppressed and then, perhaps, replaced on re-export.
 
-Expressions, definitions, and declarations use the same space,
-@rhombus(expr, ~space), since those contexts tend to overlap.
-Most other contexts have their own spaces, even though some of them also
-overlap with expression positions, such as class and interface clauses.
-The space for expression is special in another way: a binding in that
-space hides any binding for another space in an enclosing scope (but
-not bindings in other spaces in the same scope).
+Most contexts have their own spaces, even though some of them also
+overlap with expression positions, such as definitions, declarations,
+@rhombus(class) clauses, and rhombus(for) clauses. The parsing process
+for such overlapping spaces will check non-expression spaces for
+bindings, first. The space for expression is special in another way: a
+binding in that space hides any binding for another space in an
+enclosing scope (but not bindings in other spaces in the same scope).
 
 The @rhombus(space.enforest) and @rhombus(space.transform)
 forms create a new space along with its associated parser
@@ -253,7 +253,7 @@ driver and macro-definitions forms.
 @doc(
   ~nonterminal:
     space_id: block id
-    space_clause_or_body_or_export: space.enforest
+    space_clause_or_body_or_export: space.enforest ~defn
   defn.macro 'space.transform $space_id:
                 $space_clause_or_body_or_export
                 ...'
@@ -274,7 +274,7 @@ driver and macro-definitions forms.
 @doc(
   ~nonterminal:
     meta_namespace_id: block id
-    space_id_path: space.enforest
+    space_id_path: space.enforest ~defn
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'
   space_clause.macro 'bridge_definer $id'

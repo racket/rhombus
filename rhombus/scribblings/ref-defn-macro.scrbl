@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open
     "nonterminal.rhm":
-      except: defn
+      except: defn expr
       open
     "macro.rhm")
 
@@ -16,7 +16,19 @@
   space.transform defn
 ){
 
-  Alias for the @rhombus(expr, ~space) @tech{space}.
+ The @tech{space} for bindings of identifiers that can be used in
+ definition positions.
+
+}
+
+@doc(
+  def defn_meta.space :: SpaceMeta
+){
+
+@provided_meta()
+
+ A compile-time value that identifies the same space as
+ @rhombus(defn, ~space). See also @rhombus(SpaceMeta, ~annot).
 
 }
 
@@ -85,8 +97,8 @@
 
 @doc(
   ~nonterminal:
-    defined_name: defn.macro
-    option: defn.macro
+    defined_name: defn.macro ~defn
+    option: defn.macro ~defn
   defn.macro '«defn.sequence_macro '$defined_name $pattern ...
                                     $pattern
                                     ...':

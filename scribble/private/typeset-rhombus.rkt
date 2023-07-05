@@ -34,7 +34,7 @@
                           space-name-in)))
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
-  (define (id-space-name* id) (id-space-name id space-name))
+  (define (id-space-name* id) (id-space-name id space-name #:infer? (not space-name-in)))
   (let loop ([stx stx])
     (define (seq open elems-stx close #:sep [sep tt-comma])
       (list (element paren-color open)
@@ -225,7 +225,7 @@
                         (lookup-stx-identifier start end position-stxes stx-ranges))
                    => (lambda (id)
                         (define str (shrubbery-syntax->string id))
-                        (define space-name (id-space-name id))
+                        (define space-name (id-space-name id #:infer? #t))
                         (non-ws
                          (cond
                            [(eq? space-name 'var)
@@ -423,7 +423,7 @@
 (define (lookup-stx-identifier start end position-stxes stx-ranges)
   (lookup-stx (lambda (stx)
                 (and (identifier? stx)
-                     (let ([name (id-space-name stx)])
+                     (let ([name (id-space-name stx #:infer? #t)])
                        (or (eq? name 'var)
                            (eq? name 'value)
                            (identifier-binding (add-space stx name) #f)))))
@@ -435,8 +435,21 @@
        (not (symbol? v))
        (content? v)))
 
-(define (id-space-name id [default-name #f])
-  (or (full-space-name (syntax-property id 'typeset-space-name)) default-name))
+(define (id-space-name id [default-name #f] #:infer? [infer? #f])
+  (let ([prop (syntax-property id 'typeset-space-name)])
+    (cond
+      [prop
+       (full-space-name prop)]
+      [infer?
+       (cond
+         [(identifier-binding id)
+          default-name]
+         [(identifier-binding (add-space id 'rhombus/defn))
+          'rhombus/defn]
+         [(identifier-binding (add-space id 'rhombus/decl))
+          'rhombus/decl]
+         [else default-name])]
+      [else default-name])))
 
 (define (initial-name-ref elems default-space-name)
   (define (dotted-elems? elems)

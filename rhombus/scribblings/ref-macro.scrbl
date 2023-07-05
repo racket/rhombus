@@ -9,7 +9,7 @@
 
 @doc(
   ~nonterminal:
-    op_or_id_name: namespace
+    op_or_id_name: namespace ~defn
     right_parsed_id: block id
     left_parsed_id: block id
 

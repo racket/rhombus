@@ -11,6 +11,8 @@
          "syntax-class-primitive.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
+         (only-in "definition.rkt"
+                  in-defn-space)
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::)
@@ -143,7 +145,7 @@
        #:datum-literals (group)
        [(_ (~and sc (_::parens (group . rest))) . tail)
         #:with (~var sc-hier (:hier-name-seq in-name-root-space in-expression-space name-path-op name-root-ref)) #'rest
-        #:do [(define parser (syntax-local-value* #'sc-hier.name syntax-class-parser-ref))]
+        #:do [(define parser (syntax-local-value* (in-defn-space #'sc-hier.name) syntax-class-parser-ref))]
         #:when parser
         (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
         (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)

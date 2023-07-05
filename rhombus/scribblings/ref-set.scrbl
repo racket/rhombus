@@ -98,8 +98,8 @@ it supplies its elements in an unspecified order.
 
 @doc(
   ~nonterminal:
-    set_bind: def bind
-    rest_bind:  def bind
+    set_bind: def bind ~defn
+    rest_bind:  def bind ~defn
   bind.macro 'Set{$expr, ...}'
   bind.macro 'Set{$expr, ..., $rest}'
   bind.macro 'ReadableSet{$expr, ...}'

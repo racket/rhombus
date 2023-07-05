@@ -30,7 +30,8 @@
          "space-parse.rkt"
          "parens.rkt")
 
-(provide export
+(provide (for-space rhombus/decl
+                    export)
 
          (for-space rhombus/expo
                     rename
@@ -137,7 +138,7 @@
                               "not an export modifier"
                               #'form)])])))
 
-(define-syntax export
+(define-decl-syntax export
   (nestable-declaration-transformer
    (lambda (stx)
      (syntax-parse stx

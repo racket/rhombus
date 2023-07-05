@@ -21,8 +21,10 @@
                      [manual:exec exec]
                      [manual:hash-lang hash_lang])
          doc
-         nonterminal
-         docmodule
+         (for-space rhombus/defn
+                    nonterminal)
+         (for-space rhombus/decl
+                    docmodule)
          rhombusmodname
          examples
          make_rhombus_eval

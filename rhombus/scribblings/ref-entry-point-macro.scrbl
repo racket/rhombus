@@ -24,7 +24,7 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
     mode_id: block id
     adj_id: block id
 

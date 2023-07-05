@@ -80,7 +80,7 @@ block:
 
 // dotted name as macro
 check:
-  defn.macro 'List.three $id $x':
+  defn.macro '(List.three) $id $x':
     'def $id: [$x, $x, $x]'
   List.three bells "ding"
   bells

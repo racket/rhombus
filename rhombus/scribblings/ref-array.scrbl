@@ -61,7 +61,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 @doc(
   ~nonterminal:
-    repet_bind: def bind
+    repet_bind: def bind ~defn
   bind.macro 'Array($bind, ...)'
   bind.macro 'Array($bind, ..., $repet_bind #,(@litchar{,}) $ellipsis)'
 ){

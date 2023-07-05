@@ -8,10 +8,11 @@
          "parens.rkt"
          (submod "equal.rkt" for-parse))
 
-(provide sequence_macro
+(provide (for-space rhombus/defn
+                    sequence_macro)
          (for-syntax make_sequence_constructor))
 
-(define-syntax sequence_macro
+(define-defn-syntax sequence_macro
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

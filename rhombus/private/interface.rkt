@@ -41,12 +41,13 @@
          (submod "namespace.rkt" for-exports)
          "class-able.rkt")
 
-(provide interface)
+(provide (for-space rhombus/defn
+                    interface))
 
 (module+ for-together
   (provide interface_for_together))
 
-(define-syntax interface
+(define-defn-syntax interface
   (definition-transformer
     (lambda (stxes)
       (parse-interface stxes))))

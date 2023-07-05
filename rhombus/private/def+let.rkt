@@ -22,8 +22,9 @@
                   [= rhombus=])
          "parens.rkt")
 
-(provide def
-         (rename-out [rhombus-let let]))
+(provide (for-space rhombus/defn
+                    def
+                    (rename-out [rhombus-let let])))
 
 (module+ for-define
   (provide (for-syntax build-value-definitions
@@ -80,10 +81,10 @@
                              stx
                              #'b)]))))
 
-(define-syntax def
+(define-defn-syntax def
   (make-def))
 
-(define-syntax rhombus-let
+(define-defn-syntax rhombus-let
   (make-def #:wrap-definition (lambda (defn) #`(rhombus-forward #,defn))
             #:check-context (lambda (stx)
                               (when (eq? (syntax-local-context) 'top-level)

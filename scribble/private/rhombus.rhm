@@ -135,6 +135,8 @@ expr.macro
           || kw === #'~value
           || kw === #'~space
           || kw === #'~expr
+          || kw === #'~defn
+          || kw === #'~decl
           || kw === #'~bind
           || kw === #'~impo
           || kw === #'~expo

@@ -31,7 +31,7 @@
 
 @doc(
   ~nonterminal:
-    macro_patterns: expr.macro
+    macro_patterns: expr.macro ~defn
 
   defn.macro 'repet.macro $macro_patterns'
 ){

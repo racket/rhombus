@@ -31,7 +31,7 @@ bindings versus @rhombus(::, ~bind) and
 
 @doc(
   ~nonterminal:
-    macro_patterns: expr.macro
+    macro_patterns: expr.macro ~defn
   defn.macro 'unquote_bind.macro $macro_patterns'
 ){
 

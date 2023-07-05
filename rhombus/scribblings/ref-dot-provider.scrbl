@@ -16,8 +16,8 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
-    defined_name: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
+    defined_name: defn.macro ~defn
 
   defn.macro 'dot.macro $prefix_macro_patterns'
 

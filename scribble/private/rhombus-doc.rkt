@@ -212,21 +212,21 @@
 
 (define-doc decl.nestable_macro decl
   "nestable declaration"
-  #f
+  rhombus/decl
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
 (define-doc decl.macro decl
   "declaration"
-  #f
+  rhombus/decl
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
 (define-doc defn.macro defn
   "definition"
-  #f
+  rhombus/defn
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)

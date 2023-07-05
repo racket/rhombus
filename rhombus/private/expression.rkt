@@ -10,9 +10,14 @@
                      (for-syntax racket/base)
                      "macro-result.rkt")
          (only-in "definition.rkt"
+                  in-defn-space
                   definition-transformer-ref
                   definition-sequence-transformer-ref)
-         (only-in "declaration.rkt" declaration-transformer-ref))
+         (only-in "declaration.rkt"
+                  in-decl-space
+                  declaration-transformer-ref)
+         (only-in "nestable-declaration.rkt"
+                  nestable-declaration-transformer-ref))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -54,10 +59,14 @@
         ;; that we don't compile some things that could (would?)
         ;; end up reporting a use before definition
         (raise-syntax-error #f "unbound identifier" id)))
-    (when (syntax-local-value* id (lambda (v)
-                                    (or (definition-transformer-ref v)
-                                        (definition-sequence-transformer-ref v)
-                                        (declaration-transformer-ref v))))
+    (when (or (syntax-local-value* (in-defn-space id)
+                                   (lambda (v)
+                                     (or (definition-transformer-ref v)
+                                         (definition-sequence-transformer-ref v))))
+              (syntax-local-value* (in-decl-space id)
+                                   (lambda (v)
+                                     (or (declaration-transformer-ref v)
+                                         (nestable-declaration-transformer-ref v)))))
       (raise-syntax-error #f "misuse as an expression" id))
     id)
 

@@ -94,8 +94,8 @@ it supplies its elements in order.
 
 @doc(
   ~nonterminal:
-    list_bind: def bind
-    repet_bind: def bind
+    list_bind: def bind ~defn
+    repet_bind: def bind ~defn
   bind.macro 'List($bind, ...)'
   bind.macro 'List($bind, ..., $rest)'
   bind.macro '#%brackets [$bind, ...]'
@@ -173,8 +173,8 @@ it supplies its elements in order.
 
 @doc(
   ~nonterminal:
-    list_bind: def bind
-    elem_bind: def bind
+    list_bind: def bind ~defn
+    elem_bind: def bind ~defn
   bind.macro 'List.cons($elem_bind, $list_bind)'
 ){
 

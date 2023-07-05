@@ -257,7 +257,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
-    pattern_cases: syntax_class
+    pattern_cases: syntax_class ~defn
 
   bind.macro '$ $stx_pat_bind_term'
 
@@ -382,7 +382,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
-    stx_bind: def bind
+    stx_bind: def bind ~defn
   unquote_bind.macro '$stx_bind && $stx_bind'
   unquote_bind.macro '$stx_bind || $stx_bind'
 ){
@@ -500,7 +500,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
-    pattern_cases: syntax_class
+    pattern_cases: syntax_class ~defn
   unquote_bind.macro 'pattern $pattern_cases'
 ){
 

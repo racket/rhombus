@@ -17,8 +17,8 @@ loops.
 
 @doc(
   ~nonterminal:
-    bind_maybe_kw_opt: fun
-    maybe_res_annot: fun
+    bind_maybe_kw_opt: fun ~defn
+    maybe_res_annot: fun ~defn
 
   expr.macro 'recur $id($bind_maybe_kw_opt, ...) maybe_res_annot:
                 $body

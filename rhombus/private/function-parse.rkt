@@ -17,7 +17,6 @@
          "provide.rkt"
          "parens.rkt"
          "expression.rkt"
-         "expression+definition.rkt"
          "binding.rkt"
          "definition.rkt"
          "entry-point.rkt"

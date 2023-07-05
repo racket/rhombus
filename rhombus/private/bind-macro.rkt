@@ -20,7 +20,6 @@
          "name-root.rkt"
          "definition.rkt"
          "expression.rkt"
-         "expression+definition.rkt"
          "macro-macro.rkt"
          "binding.rkt"
          (for-syntax
@@ -214,7 +213,7 @@
                            "binding-info?"
                            stx)]))
 
-(define-syntax infoer
+(define-defn-syntax infoer
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -258,7 +257,7 @@
                              (pack-info
                               (rhombus-body-at block-tag body ...))))])])])))])])))
 
-(define-syntax matcher
+(define-defn-syntax matcher
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -300,63 +299,66 @@
                               (unwrap-block
                                (rhombus-body-at block-tag body ...))))))])])))])])))
 
-(define-syntax if-bridge
+(define-for-syntax (parse-if-bridge stx)
   ;; depending on `IF`, `if-bridge` will be used in an expression
-  ;; or definition context
-  (let ([parse (lambda (stx)
-                 (syntax-parse stx
-                   #:datum-literals (alts block parsed maybe-definition)
-                   [(form-id e ... (alts (block success ...)
-                                         (block . fail-case)))
-                    (syntax-parse #'fail-case
-                      #:datum-literals (group parsed)
-                      #:literals (if-bridge)
-                      [((group (parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))))
-                       #`(IF (rhombus-expression (group e ...))
-                             (rhombus-body-sequence success ...)
-                             fail)]
-                      [_ (raise-syntax-error #f
-                                             "not the given failure form in the failure branch"
-                                             stx)])]))])
-    (make-expression+definition-transformer
-     (expression-transformer
-      (lambda (stx) (values (parse stx) #'())))
-     (definition-transformer
-       (lambda (stx) (list (parse stx)))))))
+  (syntax-parse stx
+    #:datum-literals (alts block parsed maybe-definition)
+    [(form-id e ... (alts (block success ...)
+                          (block . fail-case)))
+     (syntax-parse #'fail-case
+       #:datum-literals (group parsed)
+       #:literals (if-bridge)
+       [((group (parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))))
+        #`(IF (rhombus-expression (group e ...))
+              (rhombus-body-sequence success ...)
+              fail)]
+       [_ (raise-syntax-error #f
+                              "not the given failure form in the failure branch"
+                              stx)])]))
+
+(define-syntax if-bridge
+  (expression-transformer
+   (lambda (stx) (values (parse-if-bridge stx) #'()))))
+
+(define-defn-syntax if-bridge
+  (definition-transformer
+    (lambda (stx) (list (parse-if-bridge stx)))))
+
+(define-for-syntax (parse-chain-to-matcher rhombus stx)
+  ;; depends on `IF` like `if-bridge` does
+  (syntax-parse stx
+    #:datum-literals (parsed group parens maybe-definition)
+    [(_ (parens (group arg-id:identifier)
+                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))
+                (group if-id)
+                (group success ...)
+                (group fail ...)))
+     (syntax-parse #'(fail ...)
+       #:literals (if-bridge)
+       [((parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
+        #:with rhombus rhombus
+        (syntax-parse #'(success ...)
+          [((_::block g ...))
+           #'(matcher-id arg-id data IF (rhombus g ...) fail)]
+          [_
+           #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)])]
+       [_
+        #:with s-expr (syntax-parse #'(success ...)
+                        [((tag::block g ...))
+                         #'(rhombus-body-at tag g ...)]
+                        [_ #'(rhombus-expression (group success ...))])
+        #'(matcher-id arg-id data
+                      if-via-rhombus
+                      s-expr
+                      (if-reverse-bridge if-id (group fail ...)))])]))
 
 (define-syntax chain-to-matcher
-  ;; depends on `IF` like `if-bridge` does
-  (let ([parse (lambda (rhombus stx)
-                 (syntax-parse stx
-                   #:datum-literals (parsed group parens maybe-definition)
-                   [(_ (parens (group arg-id:identifier)
-                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))
-                               (group if-id)
-                               (group success ...)
-                               (group fail ...)))
-                    (syntax-parse #'(fail ...)
-                      #:literals (if-bridge)
-                      [((parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
-                       #:with rhombus rhombus
-                       (syntax-parse #'(success ...)
-                         [((_::block g ...))
-                          #'(matcher-id arg-id data IF (rhombus g ...) fail)]
-                         [_
-                          #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)])]
-                      [_
-                       #:with s-expr (syntax-parse #'(success ...)
-                                       [((tag::block g ...))
-                                        #'(rhombus-body-at tag g ...)]
-                                       [_ #'(rhombus-expression (group success ...))])
-                       #'(matcher-id arg-id data
-                                     if-via-rhombus
-                                     s-expr
-                                     (if-reverse-bridge if-id (group fail ...)))])]))])
-    (make-expression+definition-transformer
-     (expression-transformer
-      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
-     (definition-transformer
-       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
+  (expression-transformer
+   (lambda (stx) (values (parse-chain-to-matcher #'rhombus-body stx) #'()))))
+
+(define-defn-syntax chain-to-matcher
+  (definition-transformer
+    (lambda (stx) (list (parse-chain-to-matcher #'rhombus-body-sequence stx)))))
 
 (define-syntax (if-via-rhombus stx)
   (syntax-parse stx
@@ -371,37 +373,41 @@
 (define-syntax (if-reverse-bridge stx)
   (raise-syntax-error #f "misuse of binding conditional" stx))
 
-(define-syntax chain-to-committer
+(define-for-syntax (parse-chain-to-committer rhombus stx)
   ;; depends on `IF` like `if-bridge` does
-  (let ([parse (lambda (rhombus stx)
-                 (syntax-parse stx
-                   #:datum-literals (parsed group parens)
-                   #:literals (if-bridge)
-                   [(_ (parens (group arg-id:identifier)
-                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
-                    #:with rhombus rhombus
-                    #`(committer-id arg-id data)]))])
-    (make-expression+definition-transformer
-     (expression-transformer
-      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
-     (definition-transformer
-       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
+  (syntax-parse stx
+    #:datum-literals (parsed group parens)
+    #:literals (if-bridge)
+    [(_ (parens (group arg-id:identifier)
+                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
+     #:with rhombus rhombus
+     #`(committer-id arg-id data)]))
+
+(define-syntax chain-to-committer
+  (expression-transformer
+   (lambda (stx) (values (parse-chain-to-committer #'rhombus-body stx) #'()))))
+
+(define-defn-syntax chain-to-committer
+  (definition-transformer
+    (lambda (stx) (list (parse-chain-to-committer #'rhombus-body-sequence stx)))))
+
+(define-for-syntax (parse-chain-to-binder rhombus stx)
+  ;; depends on `IF` like `if-bridge` does
+  (syntax-parse stx
+    #:datum-literals (parsed group parens)
+    #:literals (if-bridge)
+    [(_ (parens (group arg-id:identifier)
+                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
+     #:with rhombus rhombus
+     #`(binder-id arg-id data)]))
 
 (define-syntax chain-to-binder
-  ;; depends on `IF` like `if-bridge` does
-  (let ([parse (lambda (rhombus stx)
-                 (syntax-parse stx
-                   #:datum-literals (parsed group parens)
-                   #:literals (if-bridge)
-                   [(_ (parens (group arg-id:identifier)
-                               (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
-                    #:with rhombus rhombus
-                    #`(binder-id arg-id data)]))])
-    (make-expression+definition-transformer
-     (expression-transformer
-      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
-     (definition-transformer
-       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
+  (expression-transformer
+   (lambda (stx) (values (parse-chain-to-binder #'rhombus-body stx) #'()))))
+
+(define-defn-syntax chain-to-binder
+  (definition-transformer
+    (lambda (stx) (list (parse-chain-to-binder #'rhombus-body-sequence stx)))))
 
 (define-for-syntax binder-or-committer
   (definition-transformer
@@ -415,8 +421,8 @@
           #`(define-syntax builder-id
               (binder-rhs #,stx)))]))))
 
-(define-syntax binder binder-or-committer)
-(define-syntax committer binder-or-committer)
+(define-defn-syntax binder binder-or-committer)
+(define-defn-syntax committer binder-or-committer)
 
 (begin-for-syntax
   (define-syntax (binder-rhs stx)

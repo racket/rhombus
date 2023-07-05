@@ -19,7 +19,7 @@
 
 @doc(
   ~nonterminal:
-    macro_patterns: expr.macro
+    macro_patterns: expr.macro ~defn
 
   defn.macro 'expo.macro $macro_patterns'
 ){
@@ -49,7 +49,7 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
 
   defn.macro 'expo.modifier $prefix_macro_patterns'
 

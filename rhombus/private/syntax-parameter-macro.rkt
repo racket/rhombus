@@ -41,7 +41,7 @@
     #:fields
     (lookup)))
 
-(define-syntax bridge
+(define-defn-syntax bridge
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

@@ -12,8 +12,9 @@
          (submod "for.rkt" for-dynamic-static))
 
 (provide dynamic
-         use_dynamic
-         use_static)
+         (for-space rhombus/defn
+                    use_dynamic
+                    use_static))
          
 (define dynamic (lambda (v) v))
 
@@ -33,8 +34,8 @@
       (values (mk #f)
               (mk #t)))))
 
-(define-syntax use_dynamic use_dynamic)
-(define-syntax use_static use_static)
+(define-defn-syntax use_dynamic use_dynamic)
+(define-defn-syntax use_static use_static)
 
 (define-for-syntax (build-definitions ctx sym id)
   (define sym-id (datum->syntax ctx sym))

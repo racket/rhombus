@@ -43,8 +43,8 @@
 
 @doc(
   ~nonterminal:
-    macro_pattern: macro
-    option: macro
+    macro_pattern: macro ~defn
+    option: macro ~defn
 
   defn.macro 'expr.macro $macro_patterns'
 

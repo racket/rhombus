@@ -91,8 +91,8 @@
 
 @doc(
   ~nonterminal:
-    left_bind: def bind
-    right_bind: def bind
+    left_bind: def bind ~defn
+    right_bind: def bind ~defn
 
   bind.macro '$left_bind where $right_bind = $expr'
   bind.macro '$left_bind where:

@@ -25,8 +25,9 @@
 ;; operator definition and generates a combination of a transformer and
 ;; a function
 
-(provide (rename-out
-          [rhombus-operator operator]))
+(provide (for-space rhombus/defn
+                    (rename-out
+                     [rhombus-operator operator])))
 
 (begin-for-syntax
 
@@ -324,7 +325,7 @@
         (car static-infoss)
         #'())))
 
-(define-syntax rhombus-operator
+(define-defn-syntax rhombus-operator
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

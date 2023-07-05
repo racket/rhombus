@@ -12,7 +12,6 @@
          "macro-expr-parse.rkt"
          "definition.rkt"
          "expression.rkt"
-         "expression+definition.rkt"
          "entry-point.rkt"
          "macro-macro.rkt"
          "parse.rkt"
@@ -20,69 +19,71 @@
          (submod "expr-macro.rkt" for-define))
 
 (provide (for-spaces (#f
+                      rhombus/defn
                       rhombus/entry_point)
                      macro))
 
 (define-syntax macro
-  (make-expression+definition-transformer
-   (expression-transformer
+  (expression-transformer
+   (lambda (stx)
+     (values (parse-macro-expression stx no-adjustments)
+             #'()))))
+
+(define-defn-syntax macro
+  (definition-transformer
     (lambda (stx)
-      (values (parse-macro-expression stx no-adjustments)
-              #'())))
-   (definition-transformer
-     (lambda (stx)
-       (syntax-parse stx
-         #:datum-literals (group)
-         [(form-id (_::alts (_::block (group (_::quotes (group (_::parens) . pat)) (_::block . _)))
-                            ...+))
-          ;; found () in place of a defined name, so parse as an expression
-          #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
-         [(form-id (_::quotes (group (_::parens) . _))
-                   (_::block . _))
-          ;; another expression case
-          #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
-         [(form-id (_::alts (_::block (group q::operator-syntax-quote
-                                             (~and rhs (_::block body ...))))
-                            ...+))
-          (list
-           (parse-operator-definitions #'form-id
-                                       'rule
-                                       stx
-                                       (syntax->list #'(q.g ...))
-                                       (syntax->list #'(rhs ...))
-                                       '#f
-                                       #'rules-rhs
-                                       #f #f
-                                       #'() #'()))]
-         [(form-id main-op::operator-or-identifier
-                   (~optional (_::block
-                               (~var main-options (:all-operator-options #f))))
-                   (_::alts ~!
-                            (_::block (group q::operator-syntax-quote
-                                             (~and rhs (_::block body ...))))
-                            ...+))
-          (list
-           (parse-operator-definitions #'form-id
-                                       'rule
-                                       stx
-                                       (syntax->list #'(q.g ...))
-                                       (syntax->list #'(rhs ...))
-                                       '#f
-                                       #'rules-rhs
-                                       (if (attribute main-op) #'main-op.name #'#f)
-                                       #'#f
-                                       (if (attribute main-options) #'main-options.prec #'())
-                                       (if (attribute main-options) #'main-options.assc #'())))]
-         [(form-id q::operator-syntax-quote
-                   (~and rhs (_::block body ...)))
-          (list
-           (parse-operator-definition #'form-id
+      (syntax-parse stx
+        #:datum-literals (group)
+        [(form-id (_::alts (_::block (group (_::quotes (group (_::parens) . pat)) (_::block . _)))
+                           ...+))
+         ;; found () in place of a defined name, so parse as an expression
+         #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+        [(form-id (_::quotes (group (_::parens) . _))
+                  (_::block . _))
+         ;; another expression case
+         #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+        [(form-id (_::alts (_::block (group q::operator-syntax-quote
+                                            (~and rhs (_::block body ...))))
+                           ...+))
+         (list
+          (parse-operator-definitions #'form-id
                                       'rule
                                       stx
-                                      #'q.g
-                                      #'rhs
+                                      (syntax->list #'(q.g ...))
+                                      (syntax->list #'(rhs ...))
                                       '#f
-                                      #'rule-rhs))])))))
+                                      #'rules-rhs
+                                      #f #f
+                                      #'() #'()))]
+        [(form-id main-op::operator-or-identifier
+                  (~optional (_::block
+                              (~var main-options (:all-operator-options #f))))
+                  (_::alts ~!
+                           (_::block (group q::operator-syntax-quote
+                                            (~and rhs (_::block body ...))))
+                           ...+))
+         (list
+          (parse-operator-definitions #'form-id
+                                      'rule
+                                      stx
+                                      (syntax->list #'(q.g ...))
+                                      (syntax->list #'(rhs ...))
+                                      '#f
+                                      #'rules-rhs
+                                      (if (attribute main-op) #'main-op.name #'#f)
+                                      #'#f
+                                      (if (attribute main-options) #'main-options.prec #'())
+                                      (if (attribute main-options) #'main-options.assc #'())))]
+        [(form-id q::operator-syntax-quote
+                  (~and rhs (_::block body ...)))
+         (list
+          (parse-operator-definition #'form-id
+                                     'rule
+                                     stx
+                                     #'q.g
+                                     #'rhs
+                                     '#f
+                                     #'rule-rhs))]))))
 
 (define-entry-point-syntax macro
   (entry-point-transformer

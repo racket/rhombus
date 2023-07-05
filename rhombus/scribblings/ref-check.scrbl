@@ -17,7 +17,7 @@
   ~nonterminal:
     expected_expr: block expr
     expected_body: block body
-    expected_bind: def bind
+    expected_bind: def bind ~defn
   expr.macro 'check:
                 $maybe_eval
                 $body

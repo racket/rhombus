@@ -10,6 +10,7 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
                      (for-syntax racket/base))
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "name-root.rkt"
          "declaration.rkt"
@@ -18,7 +19,7 @@
          "parse.rkt"
          "implicit.rkt")
 
-(define+provide-space decl #f
+(define+provide-space decl rhombus/decl
   #:fields
   (macro
    nestable_macro))
@@ -27,11 +28,11 @@
                                 decl_meta)))
 
 (define-identifier-syntax-definition-transformer macro
-  #f
+  rhombus/decl
   #'make-declaration-transformer)
 
 (define-identifier-syntax-definition-transformer nestable_macro
-  #f
+  rhombus/decl
   #'make-nestable-declaration-transformer)
 
 (define-for-syntax (make-declaration-transformer proc)
@@ -61,9 +62,13 @@
 (begin-for-syntax
   (define-name-root decl_meta
     #:fields
-    (Group
+    (space
+     Group
      NestableGroup
      pack_s_exp)))
+
+(define-for-syntax space
+  (space-syntax rhombus/decl))
 
 (begin-for-syntax
   (define-syntax-class :is_declaration

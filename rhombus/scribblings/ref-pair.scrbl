@@ -64,8 +64,8 @@ its ``rest'' is a list.
 
 @doc(
   ~nonterminal:
-    fst_bind: def bind
-    rst_bind: def bind
+    fst_bind: def bind ~defn
+    rst_bind: def bind ~defn
   fun Pair.cons(fst :: Any, rst :: Any) :: Pair
   bind.macro 'Pair.cons($fst_bind, $rst_bind)'
 ){

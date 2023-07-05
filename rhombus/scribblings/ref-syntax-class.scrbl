@@ -12,7 +12,7 @@
 
 @doc(
   ~nonterminal:
-    id_bind: def bind
+    id_bind: def bind ~defn
     rest_id: block id
     syntax_pattern: #%quotes pattern
 
@@ -227,8 +227,8 @@
 
 @doc(
   ~nonterminal:
-    pattern_cases: syntax_class pattern_cases
-    pattern_case: syntax_class pattern_case
+    pattern_cases: syntax_class pattern_cases ~defn
+    pattern_case: syntax_class pattern_case ~defn
                    
   syntax_class_clause.macro 'pattern $pattern_cases'
   bind.macro 'pattern $pattern_cases'

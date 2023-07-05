@@ -107,7 +107,7 @@
                     ((space->introducer space-sym) (car (generate-temporaries (list name-in))))))
      (cons
       #`(define-syntaxes #,tmps (let-values ([#,names #,rhs])
-                                 (values #,@names)))
+                                  (values #,@names)))
       (for/list ([name (in-list names)]
                  [tmp (in-list tmps)])
         #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)

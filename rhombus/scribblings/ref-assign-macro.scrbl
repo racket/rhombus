@@ -9,7 +9,7 @@
 
 @doc(
   ~nonterminal:
-    macro_pattern: macro
+    macro_pattern: macro ~defn
 
   defn.macro 'assign.macro $macro_patterns'
 ){

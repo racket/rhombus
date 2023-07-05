@@ -33,7 +33,7 @@
 
 @doc(
   ~nonterminal:
-    macro_patterns: expr.macro
+    macro_patterns: expr.macro ~defn
 
   defn.macro 'bind.macro $macro_patterns'
 ){
@@ -354,7 +354,7 @@
 
 @doc(
   ~nonterminal:
-    bind_maybe_kw_opt: fun
+    bind_maybe_kw_opt: fun ~defn
 
   syntax_class bind_meta.Argument:
     kind: ~group
@@ -386,7 +386,7 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun
+    maybe_res_annot: fun ~defn
 
   syntax_class bind_meta.Result:
     kind: ~sequence

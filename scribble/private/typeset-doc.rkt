@@ -440,6 +440,10 @@
        (values #'name #'(group root (~@ dot field) ...))]
       [_ (values #f nt-key-g)]))
   (define-values (def-name space-name introducer) (nt-key-expand g))
+  (let ([def-id (if (syntax? def-name) def-name (car def-name))]
+        [introducer (if (syntax? def-name) introducer in-name-root-space)])
+    (unless (identifier-label-binding (introducer def-id))
+      (raise-syntax-error #f "no for-label binding the expected space" def-id)))
   (values sym def-name space-name introducer))
 
 (define-for-syntax (extract-typeset t stx def-id-as-def space-name)

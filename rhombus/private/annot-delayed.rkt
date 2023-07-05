@@ -13,8 +13,9 @@
          "static-info.rkt"
          "indirect-static-info-key.rkt")
 
-(provide delayed_declare
-         delayed_complete)
+(provide (for-space rhombus/defn
+                    delayed_declare
+                    delayed_complete))
 
 (begin-for-syntax
   (struct delayed-annotation annotation-prefix-operator (complete!-id
@@ -34,7 +35,7 @@
 (define (too-early who)
   (raise-arguments-error who "delayed annoation is not yet completed"))
 
-(define-syntax delayed_declare
+(define-defn-syntax delayed_declare
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -60,7 +61,7 @@
                                 #'delayed-static-info)])
                   self))))]))))
 
-(define-syntax delayed_complete
+(define-defn-syntax delayed_complete
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

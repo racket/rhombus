@@ -134,7 +134,7 @@
 
 
 @doc(
-  ~nonterminal_key: def
+  ~nonterminal_key: def ~defn
   grammar bind
 ){
 
@@ -164,7 +164,7 @@
 
 
 @doc(
-  ~nonterminal_key: namespace
+  ~nonterminal_key: namespace ~defn
 
   grammar id_name:
     $id

@@ -22,7 +22,7 @@
 
 @doc(
   ~nonterminal:
-    macro_patterns: expr.macro
+    macro_patterns: expr.macro ~defn
 
   defn.macro 'reducer.macro $macro_patterns'
 ){
@@ -184,7 +184,7 @@
 
 )
 
- See @rhombus(reducer.macro) for an example.
+ See @rhombus(reducer.macro, ~defn) for an example.
 
 }
 

@@ -10,7 +10,6 @@
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
          "expression.rkt"
-         "expression+definition.rkt"
          "annotation.rkt"
          "definition.rkt"
          "entry-point.rkt"
@@ -27,6 +26,7 @@
          "define-arity.rkt")
 
 (provide (for-spaces (#f
+                      rhombus/defn
                       rhombus/entry_point)
                      fun)
          (for-spaces (rhombus/namespace
@@ -145,12 +145,13 @@
     (or (syntax-local-name) who)))
 
 (define-syntax fun
-  (make-expression+definition-transformer
-   (expression-transformer
+  (expression-transformer
+   (lambda (stx)
+     (parse-anonymous-function stx no-adjustments #f))))
+
+(define-defn-syntax fun
+  (definition-transformer
     (lambda (stx)
-      (parse-anonymous-function stx no-adjustments #f)))
-   (definition-transformer
-     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group block alts parens)
         ;; immediate alts case
@@ -227,7 +228,7 @@
                  (~seq _ ... (_::alts . _))))
          (syntax-parse #`(group . #,stx)
            [e::expression
-            (list #'(#%expression e.parsed))])])))))
+            (list #'(#%expression e.parsed))])]))))
 
 (define-entry-point-syntax fun
   (entry-point-transformer

@@ -10,13 +10,14 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
                      (for-syntax racket/base))
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
-(define+provide-space defn #f
+(define+provide-space defn rhombus/defn
   #:fields
   (macro
    sequence_macro))
@@ -27,7 +28,7 @@
 ;; ----------------------------------------
 
 (define-identifier-syntax-definition-transformer macro
-  #f
+  rhombus/defn
   #'make-definition-transformer)
 
 (define-for-syntax (make-definition-transformer proc)
@@ -47,7 +48,7 @@
 ;; ----------------------------------------
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro
-  #f
+  rhombus/defn
   #'make-definition-sequence-transformer)
 
 (define-for-syntax (make-definition-sequence-transformer proc)
@@ -64,9 +65,13 @@
 (begin-for-syntax
   (define-name-root defn_meta
     #:fields
-    (Group
+    (space
+     Group
      SequenceStartGroup
      pack_s_exp)))
+
+(define-for-syntax space
+  (space-syntax rhombus/defn))
 
 (begin-for-syntax
   (define-syntax-class :is_definition

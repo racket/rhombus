@@ -161,12 +161,12 @@ in an unspecified order.
 @doc(
   ~nonterminal:
     key_expr: block expr
-    val_bind: def bind
-    map_bind: def bind
-    set_bind: def bind
-    rest_key_bind:  def bind
-    rest_val_bind:  def bind
-    rest_bind:  def bind
+    val_bind: def bind ~defn
+    map_bind: def bind ~defn
+    set_bind: def bind ~defn
+    rest_key_bind:  def bind ~defn
+    rest_val_bind:  def bind ~defn
+    rest_bind:  def bind ~defn
   bind.macro '#%braces {$key_expr: $val_bind, ...}'
   bind.macro '#%braces {$key_expr: $val_bind, ..., map_rest}'
   grammar map_rest:
@@ -202,10 +202,10 @@ in an unspecified order.
 @doc(
   ~nonterminal:
     key_expr: block expr
-    val_bind: def bind
-    map_bind: def bind
-    rest_key_bind:  def bind
-    rest_val_bind:  def bind
+    val_bind: def bind ~defn
+    map_bind: def bind ~defn
+    rest_key_bind:  def bind ~defn
+    rest_val_bind:  def bind ~defn
   bind.macro 'Map{$key_expr: $val_bind, ...}'
   bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
   bind.macro 'Map([$key_expr, $val_bind], ...)'

@@ -17,7 +17,7 @@
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/space
-                      #f)
+                      rhombus/defn)
                      class))
 
 (define-space-syntax class
@@ -27,9 +27,9 @@
   #:fields
   (together))
 
-(define-syntax class class-transformer)
+(define-defn-syntax class class-transformer)
 
-(define-syntax together
+(define-defn-syntax together
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -39,10 +39,10 @@
                           (syntax-parse defn
                             #:datum-literals (group block)
                             [((~and tag group) id . rest)
-                             #:when (free-identifier=? #'id #'class)
+                             #:when (free-identifier=? (in-defn-space #'id) (in-defn-space #'class))
                              #`(tag #,(datum->syntax #'here 'class_for_together #'id #'id) . rest)]
                             [((~and tag group) id . rest)
-                             #:when (free-identifier=? #'id #'interface)
+                             #:when (free-identifier=? (in-defn-space #'id) (in-defn-space #'interface))
                              #`(tag #,(datum->syntax #'here 'interface_for_together #'id #'id) . rest)]
                             [_
                              (raise-syntax-error #f

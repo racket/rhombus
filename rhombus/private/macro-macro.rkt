@@ -345,7 +345,7 @@
         #'make-infix-id
         #'prefix+infix-id)
      #`(begin
-         (define-syntax id
+         (define-defn-syntax id
            (make-operator-definition-transformer-runtime 'protocol
                                                          'space
                                                          #'compiletime-id))
@@ -456,10 +456,11 @@
         #:extra ([extra-kw extra-static-infos extra-shape] ...)
         #'make-transformer-id)
      #`(begin
-         (define-syntax id (make-identifier-syntax-definition-transformer-runtime '(space ...)
-                                                                                  #'compiletime-id
-                                                                                  '(extra-kw ...)
-                                                                                  '(extra-shape ...)))
+         (define-defn-syntax id
+           (make-identifier-syntax-definition-transformer-runtime '(space ...)
+                                                                  #'compiletime-id
+                                                                  '(extra-kw ...)
+                                                                  '(extra-shape ...)))
          (begin-for-syntax
            (define-syntax compiletime-id
              (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id #'(extra-static-infos ...) '(extra-shape ...)))))]
@@ -481,7 +482,7 @@
                                                                           extra-kws
                                                                           extra-shapes)
   (definition-transformer
-    (lambda (stx)<
+    (lambda (stx)
       (parse-identifier-syntax-transformer
        stx
        compiletime-id extra-kws extra-shapes
@@ -584,8 +585,9 @@
     [(_ id space
         #'make-transformer-id)
      #`(begin
-         (define-syntax id (make-identifier-syntax-definition-sequence-transformer-runtime 'space
-                                                                                           #'compiletime-id))
+         (define-defn-syntax id
+           (make-identifier-syntax-definition-sequence-transformer-runtime 'space
+                                                                           #'compiletime-id))
          (begin-for-syntax
            (define-syntax compiletime-id
              (make-identifier-syntax-definition-sequence-transformer-compiletime #'make-transformer-id))))]))

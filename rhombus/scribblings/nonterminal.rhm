@@ -27,7 +27,7 @@ manual.nonterminal:
   expr: block
   repet: block
   entry_point: block
-  bind: def
+  bind: def ~defn
   annot: ::
   body: block
   nestable_body: block
@@ -36,8 +36,8 @@ manual.nonterminal:
   id: block
   op: block
   id_or_op: block
-  id_name: namespace
-  op_name: namespace
-  op_or_id_name: namespace
+  id_name: namespace ~defn
+  op_name: namespace ~defn
+  op_or_id_name: namespace ~defn
   pattern: #%quotes
   template: #%quotes

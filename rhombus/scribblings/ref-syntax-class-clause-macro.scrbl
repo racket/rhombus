@@ -21,7 +21,7 @@
 
 @doc(
   ~nonterminal:
-    prefix_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro ~defn
 
   defn.macro 'syntax_class_clause.macro $prefix_macro_patterns'
 ){

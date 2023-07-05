@@ -60,7 +60,7 @@
     #:predicate declaration?
     #:desc "declaration"
     #:parsed-tag #:rhombus/decl
-    #:in-space in-expression-space
+    #:in-space in-decl-space
     #:transformer-ref declaration-transformer-ref
     #:check-result check-declaration-result)
 
@@ -70,7 +70,7 @@
     #:predicate nestable-declaration?
     #:desc "nestable declaration"
     #:parsed-tag #:rhombus/decl/nestable
-    #:in-space in-expression-space
+    #:in-space in-decl-space
     #:transformer-ref nestable-declaration-transformer-ref
     #:check-result check-nestable-declaration-result)
 
@@ -80,7 +80,7 @@
     #:predicate definition?
     #:desc "definition"
     #:parsed-tag #:rhombus/defn
-    #:in-space in-expression-space
+    #:in-space in-defn-space
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
 
@@ -90,7 +90,7 @@
     #:apply-transformer apply-definition-sequence-transformer
     #:predicate definition-sequence?
     #:desc "definition sequence"
-    #:in-space in-expression-space
+    #:in-space in-defn-space
     #:transformer-ref definition-sequence-transformer-ref
     #:check-result check-definition-result)
 

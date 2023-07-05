@@ -175,7 +175,7 @@
 
 @doc(
   ~nonterminal:
-    collection_module_path: import
+    collection_module_path: import ~defn
   impo.macro '$id / $collection_module_path'
 ){
 
@@ -187,7 +187,7 @@
 
 @doc(
   ~nonterminal:
-    collection_module_path: import
+    collection_module_path: import ~defn
   impo.macro '. $id'
   impo.macro '$collection_module_path . $id'
   impo.macro '$collection_module_path . ($op)'
@@ -225,7 +225,7 @@
 
 @doc(
   ~nonterminal:
-    module_path: import
+    module_path: import ~defn
   impo.macro '$module_path ! $id'
 ){
 
