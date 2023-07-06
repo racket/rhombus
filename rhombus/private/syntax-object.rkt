@@ -259,7 +259,7 @@
 (define/arity (make_op v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (symbol? v)
-    (raise-argument-error* 'Syntax.make_op "Symbol" v))
+    (raise-argument-error* 'Syntax.make_op rhombus-realm "Symbol" v))
   (do-make 'Syntax.make (list 'op v) ctx-stx #t #f))
 
 (define/arity (make_group v [ctx-stx #f])

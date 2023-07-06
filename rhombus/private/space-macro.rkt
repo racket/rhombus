@@ -132,8 +132,7 @@
               [name #,space-path-name make-prefix-operator make-infix-operator make-prefix+infix-operator]
               #,(cdr meta-namespace))))])))
 
-(define-syntax-rule (define-identifier-syntax-definition-transformer* name
-                      _define-macro
+(define-syntax-rule (define-identifier-syntax-definition-transformer* _define-macro
                       protocol
                       space-path-name
                       make-prefix-operator

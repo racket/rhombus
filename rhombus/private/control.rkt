@@ -11,6 +11,7 @@
          "entry-point.rkt"
          "parse.rkt"
          "realm.rkt"
+         "define-arity.rkt"
          (submod "annotation.rkt" for-class)
          (submod "function-parse.rkt" for-build))
          
@@ -19,8 +20,10 @@
                      Continuation)
          try
          throw
-         (rename-out
-          [rhombus-error error]))
+         (for-spaces (#f
+                      rhombus/statinfo)
+                     (rename-out
+                      [rhombus-error error])))
 
 (define-name-root Continuation
   #:fields
@@ -40,7 +43,7 @@
 (define (current_marks)
   (current-continuation-marks))
 
-(define rhombus-error
+(define/arity rhombus-error
   (case-lambda
     [(msg) (rhombus-error #f msg)]
     [(who msg)

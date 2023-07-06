@@ -88,7 +88,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                                     body_expr))
        $(if all_immediate
          | make_binds_plus_body_for(#'initial,
-                                    '$loop_name($(arg.maybe_expr), ...)')
+                                    '$loop_name($avail_id, ...)')
          | '$loop_name($(undefined(arg_id)), ...)')'
   statinfo_meta.wrap(expr, r.static_info)
 

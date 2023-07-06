@@ -135,6 +135,7 @@
 
 }
 
+
 @doc(
   fun expr_meta.parse_more(group :: Syntax) :: Syntax
 ){
@@ -146,6 +147,25 @@
  reveal immediate static information from parsing and macro expansion.
 
 }
+
+
+@doc(
+  fun expr_meta.parse_all(group :: Syntax) :: values(Syntax, Syntax)
+){
+
+@provided_meta()
+
+ Similar to @rhombus(expr_meta.parse_all), but further forces expansion
+ of all nested forms. Avoid this function, and use it only when control
+ over expansion order is absolutely necessary.
+
+ Two results are returned: the expanded expression in its normal opaque
+ form, and the expanded expression in an form that can be reused only in
+ the current macro's expansion context but without a further expansion
+ traversal (which may be necessary to avoid exponential expansion work).
+
+}
+
 
 
 @doc(

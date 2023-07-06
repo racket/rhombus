@@ -486,7 +486,7 @@
                (raise-syntax-error #f
                                    "field not available from all pattern cases"
                                    stx
-                                   (hash-ref fields-ht k)))
+                                   (declared-field-id (syntax-e (hash-ref fields-ht k)))))
              (unless (or (not (syntax-e (declared-field-depth df)))
                          (= (syntax-e (declared-field-depth df))
                             (pattern-variable-depth var)))

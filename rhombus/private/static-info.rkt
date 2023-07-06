@@ -115,7 +115,10 @@
            ((static-info-get-stxs v))
            null)]
       [(begin (quote-syntax (~and form (key:identifier val))) e)
-       (cons #'form (extract-static-infos #'e))]
+       (cons #'form (let ([si (extract-static-infos #'e)])
+                      (if (syntax? si)
+                          (syntax->list si)
+                          si)))]
       [(quote d) (quoted-static-infos #'d)]
       [_ null]))
   
@@ -236,5 +239,3 @@
      (and (box? b)
           (equal-static-info-value? (unbox a) (unbox b)))]
     [else (equal? a b)]))
-
-        

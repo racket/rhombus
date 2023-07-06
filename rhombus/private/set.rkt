@@ -516,13 +516,13 @@
 
 (define (set-union who s1 ss)
   (unless (set? s1)
-    (raise-argument-error* who "Set" s1))
+    (raise-argument-error* who rhombus-realm "Set" s1))
   (let loop ([s s1] [ss ss])
        (if (null? ss)
            s
            (let ([s1 (car ss)])
              (unless (set? s1)
-               (raise-argument-error* who "Set" s1))
+               (raise-argument-error* who rhombus-realm "Set" s1))
              (loop (set-append s s1) (cdr ss))))))
 
 (define/arity Set.append
@@ -531,7 +531,7 @@
     [() (set #hashalw())]
     [(s)
      (unless (set? s)
-       (raise-argument-error* 'Set.append "Set" s))
+       (raise-argument-error* 'Set.append rhombus-realm "Set" s))
      (Set.snapshot s)]
     [(s1 . ss)
      (set-union 'Set.append s1 ss)]))
@@ -542,7 +542,7 @@
     [() (set #hashalw())]
     [(s)
      (unless (set? s)
-       (raise-argument-error* 'Set.union "Set" s))
+       (raise-argument-error* 'Set.union rhombus-realm "Set" s))
      (Set.snapshot s)]
     [(s1 . ss)
      (set-union 'Set.union s1 ss)]))
@@ -554,12 +554,12 @@
     [(s)
      (define who 'Set.intersect)
      (unless (set? s)
-       (raise-argument-error* who "Set" s))
+       (raise-argument-error* who rhombus-realm "Set" s))
      (Set.snapshot s)]
     [(s1 . ss)
      (define who 'Set.intersect)
      (unless (set? s1)
-       (raise-argument-error* who "Set" s1))
+       (raise-argument-error* who rhombus-realm "Set" s1))
      (define (int a b)
        (if ((hash-count a) . < . (hash-count b))
            (int b a)
@@ -572,7 +572,7 @@
             ht
             (let ([s1 (car ss)])
               (unless (set? s1)
-                (raise-argument-error* who "Set" s1))
+                (raise-argument-error* who rhombus-realm "Set" s1))
               (loop (int ht (set-ht s1))
                     (cdr ss))))))]))
 

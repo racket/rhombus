@@ -198,10 +198,10 @@
                class-name
                (define-syntax _class-name (make-syntax-class #':base
                                                              #:kind 'group
-                                                             #:fields #'((parsed parsed 0 unpack-term*)))))
+                                                             #:fields #'((parsed parsed #f 0 unpack-term*)))))
               (maybe-skip
                class-name
-               (define make-transformer (make-make-transformer 'name new-transformer)))
+               (define make-prefix-operator (make-make-transformer 'name new-transformer)))
               #,@(build-pack-and-unpack)
               (maybe-skip
                #,space-reflect-name

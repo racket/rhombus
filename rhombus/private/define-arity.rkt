@@ -47,7 +47,7 @@
         (~optional (~seq #:static-infos (si ...))
                    #:defaults ([(si 1) '()]))
         . body)
-     #'(begin
+     #`(begin
          (define (id . args) . body)
          (define-static-info-syntax id
            (#%dot-provider function-dot-provider)
@@ -59,15 +59,15 @@
     (syntax-parse args
       [() (if (null? allowed-kws)
               mask
-              `(,mask #,(sort req-kws keyword<?)  #,(sort allowed-kws keyword<?)))]
+              `(,mask ,(sort req-kws keyword<?) ,(sort allowed-kws keyword<?)))]
       [(_:identifier . args) (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws)]
       [([_:identifier _] . args) (bitwise-ior mask
                                               (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws))]
       [_:identifier (loop #'() (bitwise-not (sub1 (arithmetic-shift mask 1))) allowed-kws req-kws)]
-      [(kw:keyword _:identifier . args) (loop #'args (arithmetic-shift mask 1)
+      [(kw:keyword _:identifier . args) (loop #'args mask
                                               (cons (syntax-e #'kw) allowed-kws)
                                               (cons (syntax-e #'kw) req-kws))]
-      [(kw:keyword [_:identifier _] . args) (loop #'args (arithmetic-shift mask 1)
+      [(kw:keyword [_:identifier _] . args) (loop #'args mask
                                                   (cons (syntax-e #'kw) allowed-kws)
                                                   req-kws)])))
 

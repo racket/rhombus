@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/transformer-result
+                     enforest/transformer
                      "srcloc.rkt"
                      "pack.rkt"
                      "pack-s-exp.rkt"
@@ -37,6 +38,7 @@
      AfterPrefixParsed
      AfterInfixParsed
      parse_more
+     parse_all
      pack_s_exp
      pack_expr)))
 
@@ -120,3 +122,10 @@
     [e::expression
      (define new-e (rhombus-local-expand #'e.parsed))
      (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))
+
+(define-for-syntax (parse_all s)
+  (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
+    [e::expression
+     (define-values (expr opaque) (syntax-local-expand-expression (syntax-local-introduce (transform-out #'e.parsed))))
+     (values #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce expr)))
+             #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce opaque))))]))

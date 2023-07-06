@@ -94,3 +94,12 @@ check:
   recur loop(x :: String = "abs") :: (String, Int):
     0
   ~raises "result does not match annotation"
+
+check:
+  def mutable count = 0
+  recur f(v = (block: count := count + 1; #true)):
+    if v
+    | f(#false)
+    | "done"
+  count
+  ~is 1

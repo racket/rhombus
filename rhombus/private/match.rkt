@@ -78,11 +78,12 @@
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'else-infoer
-                                                         #'(#f unmatched))))
+                                                         #'(#t unmatched))))
                                    (falses #'(b ...)) (falses #'(b ...))
                                    (falses #'(b ...)) (falses #'(b ...))
                                    (falses #'(b ...))
                                    #`(clause.rhs ... (parsed
+                                                      #:rhombus/expr
                                                       (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    stx))
             (relocate+reraw
