@@ -55,7 +55,7 @@ space.enforest regexp:
       do_pack(s)
     fun unpack(stx) :: String:
       do_unpack(stx, #false).unwrap()
-    
+
 expr.macro '«rx '$(pat :: regexp_meta.Parsed)'»':
   'pregexp($(regexp_meta.unpack(pat)))'
 

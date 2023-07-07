@@ -179,7 +179,8 @@
                 #:fields
                 #,(filter-missing
                    #`([#,class-name _class-name]
-                      [#,space-reflect-name _space])))
+                      [#,space-reflect-name _space]
+                      . #,exs)))
               (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
               (maybe-skip
                class-name
@@ -198,7 +199,8 @@
                class-name
                (define-syntax _class-name (make-syntax-class #':base
                                                              #:kind 'group
-                                                             #:fields #'((parsed parsed #f 0 unpack-term*)))))
+                                                             #:fields #'((parsed parsed parsed 0 unpack-term*))
+                                                             #:root-swap '(parsed . group))))
               (maybe-skip
                class-name
                (define make-prefix-operator (make-make-transformer 'name new-transformer)))

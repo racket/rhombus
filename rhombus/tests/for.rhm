@@ -215,3 +215,11 @@ check:
     each x: dynamic([1])
     x
   ~raises "no specific iteration implementation available"
+
+check:
+  for Set:
+    each:
+      values(key, [x, ...]): { "x": [1, 2, 3],
+                               "y": [4, 5] }
+    [x, ...].reverse()
+  ~is {[3, 2, 1], [5, 4]}
