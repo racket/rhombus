@@ -127,7 +127,10 @@
            #:attributes (parsed)
            (pattern ((~datum group) . tail)
                     #:cut
-                    #:attr parsed (transform-out (enforest (transform-in #'tail)))))
+                    ;; The calls to `transform-out` and `transform-in` here are in case
+                    ;; of an enclosing macro transformer, analogous to the use of
+                    ;; `syntax-local-introduce` within `local-expand`
+                    #:attr parsed (transform-in (enforest (transform-out #'tail)))))
 
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`
@@ -137,17 +140,17 @@
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
                     #:do [(define op (lookup-operator 'prefix-op+form+tail 'prefix (in-space #'op-name.name) prefix-operator-ref))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
-                    #:attr parsed (transform-out form)
-                    #:attr tail (transform-out new-tail)))
+                          (define-values (form new-tail) (enforest-step (transform-out #'in-tail) op #'op-name.name #t))]
+                    #:attr parsed (transform-in form)
+                    #:attr tail (transform-in new-tail)))
          (define-syntax-class (infix-op+form+tail op-name)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
                     #:do [(define op (lookup-operator 'infix-op+form+tail 'infix (in-space #'op-name.name) infix-operator-ref))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
-                    #:attr parsed (transform-out form)
-                    #:attr tail (transform-out new-tail)))
+                          (define-values (form new-tail) (enforest-step (transform-out #'in-tail) op #'op-name.name #t))]
+                    #:attr parsed (transform-in form)
+                    #:attr tail (transform-in new-tail)))
 
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space prefix-operator-ref infix-operator-ref

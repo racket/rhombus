@@ -71,11 +71,7 @@
                         (define t (entry-point-transformer-ref v))
                         (and t (transformer
                                 (lambda (stx)
-                                  (define new-adjustments
-                                    (struct-copy entry_point_meta.Adjustment adjustments
-                                                 [prefix-arguments (map transform-in
-                                                                        (entry_point_meta.Adjustment-prefix-arguments adjustments))]))
-                                  ((transformer-proc t) stx new-adjustments)))))
+                                  ((transformer-proc t) stx adjustments)))))
     #:check-result check-entry-point-result
     #:accept-parsed? #t)
   

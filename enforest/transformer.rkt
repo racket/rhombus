@@ -60,9 +60,11 @@
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
-                    #:attr parsed (apply-transformer t head-id
-                                                     (datum->syntax #f (cons head-id #'hname.tail))
-                                                     check-result))
+                    #:attr parsed (transform-in ; back to an enclosing transformer, if any
+                                   (apply-transformer t head-id
+                                                      (transform-out ; from an enclosing transformer
+                                                       (datum->syntax #f (cons head-id #'hname.tail)))
+                                                      check-result)))
            #,(if (syntax-e #'accept-parsed?)
                  #`(pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
                             #:cut

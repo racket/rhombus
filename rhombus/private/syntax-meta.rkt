@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
+                     enforest/transformer
                      shrubbery/print
                      racket/phase+space
                      "realm.rkt"
@@ -154,7 +155,7 @@
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,syntax-static-infos))
-    (syntax-local-introduce stx))
+    (transform-in stx))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation #'phase? #'())))

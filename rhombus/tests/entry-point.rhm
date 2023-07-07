@@ -20,7 +20,7 @@ check:
       identity
   C().m("ok")
   ~is "ok"
-  
+
 check:
   entry_point.macro 'identity':
     ~mode mode
@@ -65,4 +65,3 @@ check:
       kw_identity
   C().m(~kw: "ok")
   ~is "ok"
-  

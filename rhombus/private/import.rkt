@@ -120,27 +120,29 @@
     #:make-identifier-form make-identifier-import
     #:name-root-ref name-root-portal-ref)
 
-  (define (make-import-modifier-ref transform-in req)
+  (define (make-import-modifier-ref req)
     ;; "accessor" closes over `req`:
     (lambda (v)
       (define mod (or (import-modifier-ref v)
                       (import-modifier-block-ref v)))
       (and mod
-           (transformer (lambda (stx)
-                          ((transformer-proc mod) (transform-in req) stx))))))
+           (transformer (let ([req (transform-in req)]) ; import transformer scope
+                          (lambda (stx)
+                            ((transformer-proc mod) (transform-in req) ; import-modifier transformer scope
+                                                    stx)))))))
 
   (define-rhombus-transform
     #:syntax-class (:import-modifier parsed-req)
     #:desc "import modifier"
     #:parsed-tag #:rhombus/impo
     #:in-space in-import-space
-    #:transformer-ref (make-import-modifier-ref transform-in (syntax-parse parsed-req
-                                                               #:datum-literals (parsed)
-                                                               [(parsed #:rhombus/impo req) #'req]
-                                                               [_ (raise-arguments-error
-                                                                   'import_meta.ParsedModifier
-                                                                   "given import to modify is not parsed"
-                                                                   "base import" parsed-req)]))
+    #:transformer-ref (make-import-modifier-ref (syntax-parse parsed-req
+                                                  #:datum-literals (parsed)
+                                                  [(parsed #:rhombus/impo req) #'req]
+                                                  [_ (raise-arguments-error
+                                                      'import_meta.ParsedModifier
+                                                      "given import to modify is not parsed"
+                                                      "base import" parsed-req)]))
     #:accept-parsed? #t)
 
   (define (extract-prefixes r #:require-identifier? require-identifier?)

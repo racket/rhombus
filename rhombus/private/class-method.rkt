@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      racket/stxparam-exptime
                      enforest/syntax-local
+                     enforest/transformer
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "tag.rkt"

@@ -35,8 +35,8 @@
     ~op_stx $id
     ~mode: $mode_id
     ~mode $mode_id
-    ~adjustment '$adj_id'
-    ~adjustment: '$adj_id'
+    ~adjustment $adj_id
+    ~adjustment: $adj_id
 
 ){
 

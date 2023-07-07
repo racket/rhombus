@@ -1,0 +1,50 @@
+#lang rhombus/static/and_meta
+
+// same as "transform-intro.rhm", but with `enforest`
+
+space.enforest ident:
+  space_path demo/ident
+  macro_definer macro
+  meta_namespace ident_meta:
+    parse_syntax_class Parsed
+
+meta:
+  def mutable saved :~ List = []
+
+expr.macro 'reset':
+  saved := []
+  '#void'
+
+ident.macro 'same $(x :: Term)':
+  #//
+  block:
+    import lib("racket/base.rkt")
+    println(base.#{syntax-debug-info}(x))
+    println(base.#{syntax-debug-info}(syntax_meta.flip_introduce(x)))
+  saved := [[x, syntax_meta.flip_introduce(x)], & saved]
+  x
+
+expr.macro 'go $(x :: ident_meta.Parsed) $()':
+  import lib("racket/base.rkt")
+  def res:
+    match x.group
+    | '$_ $(x :: Term)':
+        for all:
+          each [plain_x, flipped_x]: saved
+          syntax_meta.equal_name_and_scopes(flipped_x, syntax_meta.flip_introduce(x))
+  '$(res)'
+
+expr.macro 'intro':
+  'go same ey'
+
+check:
+  go same ex
+  ~is #true
+reset
+check:
+  go same ex
+  ~is #true
+reset
+check:
+  intro
+  ~is #true

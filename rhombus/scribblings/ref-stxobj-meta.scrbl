@@ -85,8 +85,8 @@
 @provided_meta()
 
  Returns a syntax object like @rhombus(stx), but where scopes indicating
- that the syntax object is macro-introduced are flipped. This function
- can be called only during the expansion of a macro.
+ that the syntax object is macro-introduced are flipped. The result is
+ @rhombus(stx) unmodified when not during the expansion of a macro.
 
  Macro-introduction is detected by flipping scopes to the input of a
  macro, then flipping scopes on the macro's result, so that the two flip
