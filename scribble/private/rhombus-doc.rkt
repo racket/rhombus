@@ -32,6 +32,10 @@
          (for-space rhombus/doc
                     grammar))
 
+(module+ for-doc
+  (provide (for-syntax
+            (rename-out [rb rhombus-typeset]))))
+
 (define-name-root space_meta_clause
   #:fields
   ())

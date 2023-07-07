@@ -128,6 +128,10 @@ fun relocate_expansion(e, context):
 expr.macro
 | 'rhombus ($(forms :: Group))':
     '#{typeset-rhombus}($(escape_group(forms)))'
+| 'rhombus ($forms, ~at $(name0 :: Name) $(name :: Name) ...)':
+    '#{typeset-rhombus}(~space: #'$(Keyword.from_string(String.append(to_string(name0),
+                                                                      to_string(name), ...))),
+                        $(literal_group(forms)))'
 | 'rhombus ($forms, $(kw_stx :: Keyword))':
     def kw = Syntax.unwrap(kw_stx)
     if (kw === #'~var

@@ -1,4 +1,5 @@
 #lang racket/base
+(require racket/symbol)
 
 (provide full-space-name
          add-space)
@@ -7,7 +8,11 @@
   (case space-name
     [(#f var datum value hide) space-name]
     [(expr) #f]
-    [else (string->symbol (string-append "rhombus/" (symbol->string space-name)))]))
+    [else
+     (define str (symbol->immutable-string space-name))
+     (if (regexp-match? #rx"/" str)
+         space-name
+         (string->symbol (string-append "rhombus/" (symbol->string space-name))))]))
 
 (define (add-space stx space-name/full)
   (cond
