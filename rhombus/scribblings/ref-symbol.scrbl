@@ -21,11 +21,13 @@ they are equal by @rhombus(==) only when they are equal by
 @doc(
   expr.macro '#' $identifier'
   expr.macro '#' $keyword'
+  repet.macro '#' $identifier'
+  repet.macro '#' $keyword'
   bind.macro '#' $identifier'
   bind.macro '#' $keyword'
 ){
 
- As an expression or binding, @rhombus(#') produces or matches a symbol
+ As an expression, repetition, or binding, @rhombus(#') produces or matches a symbol
  or keyword, depending whether @rhombus(#') is followed by an identifier
  or keyword.
 
