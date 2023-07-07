@@ -45,6 +45,9 @@
          define-static-info-syntaxes
          define-static-info-syntax/maybe)
 
+(module+ for-literal
+  (provide (for-syntax quoted-static-infos)))
+
 (begin-for-syntax
   (property static-info (get-stxs))
 

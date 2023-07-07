@@ -13,7 +13,8 @@
          (submod "list.rkt" for-implicit)
          "setmap.rkt"
          "literal.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (submod "static-info.rkt" for-literal))
 
 (provide (for-space #f
                     #%body
@@ -103,7 +104,7 @@
                                       (syntax/loc #'datum (quote datum))
                                       0
                                       0
-                                      #'()
+                                      (quoted-static-infos #'datum)
                                       #t)
                 #'tail)]))))
 
