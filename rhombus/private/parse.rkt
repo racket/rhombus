@@ -245,7 +245,11 @@
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
-  (enforest-rhombus-expression stx))
+  ;; The `enforest-rhombus-expression` function expects to be called
+  ;; during the dynamic extent of a Rhombus transformer; since we're
+  ;; at the Racket expansion level, instead, transform in and out to
+  ;; cancel the corresponding calls in `:expression`
+  (transform-out (enforest-rhombus-expression (transform-in stx))))
 
 (define-for-syntax (enforest-rhombus-expression stx)
   (with-syntax-error-respan

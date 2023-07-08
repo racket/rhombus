@@ -82,9 +82,11 @@
                     #:do [(define implicit-id (datum->syntax ctx implicit-name))]
                     #:do [(define t (syntax-local-value* (in-space implicit-id) transformer-ref))]
                     #:when t
-                    #:attr parsed (apply-transformer t implicit-id
-                                                     (datum->syntax #f (list* implicit-id #'head #'tail))
-                                                     check-result)))
+                    #:attr parsed (transform-in
+                                   (apply-transformer t implicit-id
+                                                      (transform-out
+                                                       (datum->syntax #f (list* implicit-id #'head #'tail)))
+                                                      check-result))))
 
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
