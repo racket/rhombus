@@ -142,7 +142,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
                       dest_start :: NonnegInt,
                       src_arr :: Array,
                       src_start :: NonnegInt = 0,
-                      src_end :: NonnegInt = Bytes.length(src_bstr)) :: Void
+                      src_end :: NonnegInt = Array.length(src_arr)) :: Void
 ){
 
  Copies bytes from @rhombus(src_arr) at @rhombus(src_start) (inclusive) to
