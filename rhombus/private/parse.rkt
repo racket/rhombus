@@ -144,43 +144,45 @@
 ;; Trampoline variant where `top` for return is provided first
 (define-syntax (rhombus-top-step stx)
   (with-syntax-error-respan
-    (syntax-local-introduce
-     (syntax-parse (syntax-local-introduce stx)
-       [(_ top decl-ok? data) #`(begin)]
-       [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) #:rhombus/decl decl)) . forms)
-        #`(begin decl (top data ... . forms))]
-       ;; note that we may perform hierarchical name resolution
-       ;; up to four times, since resolution in `:declaration`,
-       ;; `:definition`, etc., doesn't carry over
-       [(_ top decl-ok? (data ...) e::definition-sequence . tail)
-        (define-values (parsed new-tail)
-          (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
-        #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
-       [(_ top decl-ok? (data ...) form . forms)
-        (define (nestable-parsed)
-          (syntax-parse #'form
-            [e::nestable-declaration #'(begin . e.parsed)]
-            [e::definition #'(begin . e.parsed)]
-            [_ #`(#%expression (rhombus-expression form))]))
-        (define parsed
-          (if (syntax-e #'decl-ok?)
-              (syntax-parse #'form
-                [e::declaration #'(begin . e.parsed)]
-                [_ (nestable-parsed)])
-              (nestable-parsed)))
-        (syntax-parse #'forms
-          [() parsed]
-          [_ #`(begin #,parsed (top data ... . forms))])]))))
+    (transform-out ; see `enforest-rhombus-expression`
+     (syntax-local-introduce
+      (syntax-parse (syntax-local-introduce (transform-in stx))
+        [(_ top decl-ok? data) #`(begin)]
+        [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) #:rhombus/decl decl)) . forms)
+         #`(begin decl (top data ... . forms))]
+        ;; note that we may perform hierarchical name resolution
+        ;; up to four times, since resolution in `:declaration`,
+        ;; `:definition`, etc., doesn't carry over
+        [(_ top decl-ok? (data ...) e::definition-sequence . tail)
+         (define-values (parsed new-tail)
+           (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
+         #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
+        [(_ top decl-ok? (data ...) form . forms)
+         (define (nestable-parsed)
+           (syntax-parse #'form
+             [e::nestable-declaration #'(begin . e.parsed)]
+             [e::definition #'(begin . e.parsed)]
+             [_ #`(#%expression (rhombus-expression form))]))
+         (define parsed
+           (if (syntax-e #'decl-ok?)
+               (syntax-parse #'form
+                 [e::declaration #'(begin . e.parsed)]
+                 [_ (nestable-parsed)])
+               (nestable-parsed)))
+         (syntax-parse #'forms
+           [() parsed]
+           [_ #`(begin #,parsed (top data ... . forms))])])))))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
   (with-syntax-error-respan
-    (syntax-local-introduce
-     (syntax-parse (syntax-local-introduce stx)
-       [(_) #'(begin)]
-       [(_ ((~datum group) ((~datum parsed) #:rhombus/defn defn))) #'defn]
-       [(_ e::definition) #'(begin . e.parsed)]
-       [(_ form) #'(#%expression (rhombus-expression form))]))))
+    (transform-out ; see `enforest-rhombus-expression`
+     (syntax-local-introduce
+      (syntax-parse (syntax-local-introduce (transform-in stx))
+        [(_) #'(begin)]
+        [(_ ((~datum group) ((~datum parsed) #:rhombus/defn defn))) #'defn]
+        [(_ e::definition) #'(begin . e.parsed)]
+        [(_ form) #'(#%expression (rhombus-expression form))])))))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
@@ -215,28 +217,29 @@
 ;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body-sequence stx)
   (with-syntax-error-respan
-    (syntax-parse (syntax-local-introduce stx)
-      #:datum-literals (group parsed)
-      [(_) #'(begin)]
-      [(_ (group (parsed #:rhombus/expr ((~literal maybe-definition) e))) . tail)
-       #`(begin e . tail)]
-      [(_ e::definition-sequence . tail)
-       (define-values (parsed new-tail)
-         (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
-       (syntax-local-introduce
-        #`(begin
-            (begin . #,parsed)
-            (rhombus-body-sequence . #,new-tail)))]
-      [(_ e::definition . tail)
-       (syntax-local-introduce
-        #`(begin
-            (begin . e.parsed)
-            (rhombus-body-sequence . tail)))]
-      [(_ g . tail)
-       (syntax-local-introduce
-        #`(begin
-            (#%expression (rhombus-expression g))
-            (rhombus-body-sequence . tail)))])))
+    (transform-out ; see `enforest-rhombus-expression`
+     (syntax-parse (syntax-local-introduce (transform-in stx))
+       #:datum-literals (group parsed)
+       [(_) #'(begin)]
+       [(_ (group (parsed #:rhombus/expr ((~literal maybe-definition) e))) . tail)
+        #`(begin e . tail)]
+       [(_ e::definition-sequence . tail)
+        (define-values (parsed new-tail)
+          (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
+        (syntax-local-introduce
+         #`(begin
+             (begin . #,parsed)
+             (rhombus-body-sequence . #,new-tail)))]
+       [(_ e::definition . tail)
+        (syntax-local-introduce
+         #`(begin
+             (begin . e.parsed)
+             (rhombus-body-sequence . tail)))]
+       [(_ g . tail)
+        (syntax-local-introduce
+         #`(begin
+             (#%expression (rhombus-expression g))
+             (rhombus-body-sequence . tail)))]))))
 
 ;; Wraps a `parsed` term that can be treated as a definition:
 (define-syntax (maybe-definition stx)
@@ -248,7 +251,7 @@
   ;; The `enforest-rhombus-expression` function expects to be called
   ;; during the dynamic extent of a Rhombus transformer; since we're
   ;; at the Racket expansion level, instead, transform in and out to
-  ;; cancel the corresponding calls in `:expression`
+  ;; cancel the corresponding calls in `:expression`.
   (transform-out (enforest-rhombus-expression (transform-in stx))))
 
 (define-for-syntax (enforest-rhombus-expression stx)
