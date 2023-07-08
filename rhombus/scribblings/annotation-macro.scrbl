@@ -170,29 +170,5 @@ identifier or operator, not a more funciton-like pattern, because it's
 mean to define a constant association between a name and static
 information.
 
-
-A dot provider like @rhombus(vector_dot_provider) normally would not be
-exposed outside of the module that implements @rhombus(Vector). But if a
-dot provider is used directly, then it receives itself as the left
-argument:
-
-@rhombusblock(
-  dot.macro 'hello $left . $right':
-    match right
-    | 'english': '"Hi"'
-    | 'chinese': '"你好"'
-    | 'spanish': '"Hola"'
-
-  hello.chinese  // prints "你好"
-  hello.spanish  // prints "Hola"
-  hello.english  // prints "Hello"
-  // hello.greek  // would be a compile-time match error
-)
-
-A direct use like this makes sense when a dot provider is not associated
-with a run-time value. Attempting to use @rhombus(hello) in an
-expression position other than before a @rhombus(.) results in a static
-error.
-
 @close_eval(ann_eval)
 
