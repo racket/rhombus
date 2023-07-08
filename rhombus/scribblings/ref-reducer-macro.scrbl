@@ -139,7 +139,7 @@
   reducer as it receives a stream of input values. As internal state,
   these identifiers generally should not be directly visible to clients of
   the reducer. The @rhombus(accum_expr, ~var)s determine the initial
-  values, the @rhombus(step_id, ~var) determins how each is updated for an
+  values, the @rhombus(step_id, ~var) determines how each is updated for an
   input. When no further inputs are available, @rhombus(complete_id, ~var)
   receives the final state to convert it in to the result value.}
 
@@ -154,7 +154,7 @@
   indicates whether to stop the iteration with the value(s) accumulated
   through previous steps, not accumulating in this step. Supplying
   @rhombus(#false) for @rhombus(break_id) is a hint that breaking is never
-  needed before the interation would otherwise complete, which might
+  needed before the iteration would otherwise complete, which might
   enable a more efficient compilation.}
 
  @item{The optional @rhombus(final_id, ~var) identifier should refer to
