@@ -88,7 +88,7 @@ a match-generator, commit-generator, and binding-generator function,
 plus data to be passed to those functions (effectively: the fused
 closure for those three functions).
 
-In full detail, a low-level pared binding result from @rhombus(bind.macro)
+In full detail, a low-level parsed binding result from @rhombus(bind.macro)
 transformer is represented as a syntax object with two parts:
 
 @itemlist(
