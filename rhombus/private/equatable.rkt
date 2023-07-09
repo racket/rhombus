@@ -9,7 +9,8 @@
          "realm.rkt"
          "class-dot.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         "static-info.rkt")
+         "static-info.rkt"
+         "define-arity.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/namespace)
@@ -56,10 +57,18 @@
 
 (define-name-root Equatable
   #:fields
-  (hash_code_combine
+  ([hash Equatable.hash]
+   identity_hash
+   hash_code_combine
    hash_code_combine_unordered))
 
-(define hash_code_combine
+(define/arity (Equatable.hash v)
+  (equal-always-hash-code v))
+
+(define/arity (identity_hash v)
+  (eq-hash-code v))
+
+(define/arity hash_code_combine
   (case-lambda
     [() (hash-code-combine)]
     [(a)
@@ -77,10 +86,8 @@
        (unless (exact-integer? e)
          (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Int" e)))
      (hash-code-combine* lst)]))
-
-(define-static-info-syntax hash_code_combine (#%function-arity -1))
                                                                
-(define hash_code_combine_unordered
+(define/arity hash_code_combine_unordered
   (case-lambda
     [() (hash-code-combine-unordered)]
     [(a)
@@ -98,5 +105,3 @@
        (unless (exact-integer? e)
          (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Int" e)))
      (hash-code-combine-unordered* lst)]))
-
-(define-static-info-syntax hash_code_combine_unoredered (#%function-arity -1))

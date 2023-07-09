@@ -165,6 +165,24 @@
 }
 
 @doc(
+  fun Equatable.hash(v) :: Int
+){
+
+ Returns a hash code for @rhombus(v) that is consistent with
+ @rhombus(==).
+
+}
+
+@doc(
+  fun Equatable.identity_hash(v) :: Int
+){
+
+ Returns a hash code for @rhombus(v) that is consistent with
+ @rhombus(===).
+
+}
+
+@doc(
   fun Equatable.hash_code_combine(hc :: Int, ...) :: Int
   fun Equatable.hash_code_combine_unordered(hc :: Int, ...) :: Int
 ){
