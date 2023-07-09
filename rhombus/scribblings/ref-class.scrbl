@@ -707,7 +707,7 @@
  methods). A @tech{final} class cannot have an abstract method or property.
 
  A method or property can be both @rhombus(abstract, ~class_clause) and
- @rhombus(override, ~class_clause). In that case, if the overriden method or property
+ @rhombus(override, ~class_clause). In that case, if the overridden method or property
  is not abstract, then the method or property becomes abstract and most be overridden
  in a subclass before instantiation. Even if the overidden method or property is
  already abstract, an @rhombus(abstract, ~class_clause)
