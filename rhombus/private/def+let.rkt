@@ -111,20 +111,22 @@
      (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
            [uses (in-list (syntax->list #'(lhs-i.bind-uses ...)))])
        (check-bind-uses form-id #'lhs id uses))
-     (list
-      #'(define tmp-id (let ([lhs-i.name-id rhs])
-                         lhs-i.name-id))
-      #`(lhs-i.matcher-id tmp-id
-                          lhs-i.data
-                          flattened-if
-                          (void)
-                          (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
-      #`(lhs-i.committer-id tmp-id lhs-i.data)
-      (wrap-definition
-       #`(begin
-           (lhs-i.binder-id tmp-id lhs-i.data)
-           (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-           ...)))]))
+     (append
+      (top-level-decls #'(lhs-i.bind-id ...))
+      (list
+       #'(define tmp-id (let ([lhs-i.name-id rhs])
+                          lhs-i.name-id))
+       #`(lhs-i.matcher-id tmp-id
+                           lhs-i.data
+                           flattened-if
+                           (void)
+                           (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
+       #`(lhs-i.committer-id tmp-id lhs-i.data)
+       (wrap-definition
+        #`(begin
+            (lhs-i.binder-id tmp-id lhs-i.data)
+            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+            ...))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
                                              #:show-values? [show-values? #f]
@@ -160,26 +162,35 @@
              [id (in-list (syntax->list ids))]
              [uses (in-list (syntax->list usess))])
          (check-bind-uses form-id lhs id uses)))
-     (list
-      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
-                                      (values lhs-i.name-id ...)))
-      #`(begin
-          (lhs-i.matcher-id tmp-id
-                            lhs-i.data
-                            flattened-if
-                            (begin)
-                            (rhs-binding-failure '#,form-id tmp-id 'lhs-str))
-          ...
-          (lhs-i.committer-id tmp-id lhs-i.data)
-          ...)
-      (wrap-definition
+     (append
+      (top-level-decls #'(lhs-i.bind-id ... ...))
+      (list
+       #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
+                                       (values lhs-i.name-id ...)))
        #`(begin
-           (lhs-i.binder-id tmp-id lhs-i.data)
+           (lhs-i.matcher-id tmp-id
+                             lhs-i.data
+                             flattened-if
+                             (begin)
+                             (rhs-binding-failure '#,form-id tmp-id 'lhs-str))
            ...
-           (begin
-             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-             ...)
-           ...)))]))
+           (lhs-i.committer-id tmp-id lhs-i.data)
+           ...)
+       (wrap-definition
+        #`(begin
+            (lhs-i.binder-id tmp-id lhs-i.data)
+            ...
+            (begin
+              (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+              ...)
+            ...))))]))
+
+(define-for-syntax (top-level-decls ids-stx)
+  (cond
+    [(eq? 'top-level (syntax-local-context))
+     (list
+      #`(define-syntaxes #,ids-stx (values)))]
+    [else null]))
 
 (define-syntax (flattened-if stx)
   (syntax-parse stx

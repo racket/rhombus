@@ -87,8 +87,8 @@
                  (adjust-top-srcloc (quote-syntax (top e-form))))
            ...)))]))
 
-(define (make-rhombus-eval)
-  (define eval (make-base-eval #:lang 'rhombus
+(define (make-rhombus-eval [lang 'rhombus])
+  (define eval (make-base-eval #:lang lang
                                '(top)))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
   (call-in-sandbox-context eval (lambda () (error-print-source-location #f)))
