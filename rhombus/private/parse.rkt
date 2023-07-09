@@ -200,9 +200,13 @@
   (syntax-parse stx
     [(_ tag . tail)
      (quasisyntax/loc #'tag
-       (rhombus-expression (group #,(datum->syntax #'tag '#%body #'tag #'tag)
-                                  (#,(syntax-property (datum->syntax #f 'block #'tag) 'raw "")
-                                   . tail))))]))
+       (rhombus-expression (group
+                            ;; dropping srcloc here, because it spans the
+                            ;; whole block content, and makes it look like
+                            ;; a binding refers to the whole block
+                            #,(datum->syntax #'tag '#%body #f #'tag)
+                            (#,(syntax-property (datum->syntax #f 'block #'tag) 'raw "")
+                             . tail))))]))
 
 ;; Like `(rhombus-expression (group _))`, but recognizes `block` forms
 (define-syntax (rhombus-body-expression stx)
