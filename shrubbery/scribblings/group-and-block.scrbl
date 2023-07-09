@@ -11,7 +11,7 @@
 @(def closer: @emph{closer})
 @(def opener_closer: @elem{@opener--@italic{closer}})
 @(fun annote(content, note): [content,
-                              @elem(~style: style(#false, [#{color-property}("gray")]),
+                              @elem(~style: style(#false, [#{color-property}([127,127,127])]),
                                     hspace(4), "---", " ", italic(note))])
 @(fun nogood(content, ...): @elem(~style: style(#false, [#{color-property}("red")]),
                                   tt(content, ...)))
