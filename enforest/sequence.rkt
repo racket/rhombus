@@ -43,7 +43,9 @@
               (~optional (~seq #:transformer-ref transformer-ref)
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
-                         #:defaults ([check-result #'check-is-syntax])))
+                         #:defaults ([check-result #'check-is-syntax]))
+              (~optional (~seq #:track-origin track-origin)
+                         #:defaults ([track-origin #'syntax-track-origin])))
         ...)
      #`(begin
          (define-syntax-class form
@@ -53,12 +55,16 @@
                     #:when t
                     #:attr id head-id
                     #:attr tail #'hname.tail))
-         (define (apply-transformer head-id head-tail tail-tail)
-           (define t (syntax-local-value* (in-space head-id) transformer-ref))
-           (apply-sequence-transformer t head-id
-                                       (datum->syntax #f (cons head-id head-tail))
-                                       tail-tail
-                                       check-result))
+         (define (apply-transformer head-name head-tail tail-tail)
+           (define head-id (in-space head-name))
+           (define t (syntax-local-value* head-id transformer-ref))
+           (define-values (parsed remaining-tail)
+             (apply-sequence-transformer t (transform-out head-id)
+                                         (transform-out (datum->syntax #f (cons head-name head-tail)))
+                                         tail-tail
+                                         track-origin
+                                         check-result))
+           (values (transform-in parsed) (transform-in remaining-tail)))
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e
@@ -68,10 +74,11 @@
                        [_ #f])))
                 '()))]))
 
-(define (apply-sequence-transformer t id stx tail checker)
+(define (apply-sequence-transformer t id stx tail track-origin checker)
   (define proc (sequence-transformer-proc t))
   (call-as-transformer
    id
+   track-origin
    (lambda (in out)
      (define-values (forms new-tail) (proc (in stx) (in tail)))
      (check-transformer-result (out (datum->syntax #f (checker forms proc)))

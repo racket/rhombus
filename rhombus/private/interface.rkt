@@ -65,9 +65,10 @@
      #:with name #'full-name.name
      #:with orig-stx stxes
      (define body #'(options.form ...))
+     (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx) #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx) #,for-together?
                                       full-name name]
                             ;; data accumulated from parsed clauses:
                             ()))
@@ -78,7 +79,7 @@
             [else
              #`(rhombus-mixed-nested-forwarding-sequence
                 (interface-annotation+finish #,finish-data) rhombus-class
-                (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body)))]))]))
+                (interface-body-step (#,interface-data-stx ()) . #,(intro body)))]))]))
 
 (define-syntax interface-body-step
   (lambda (stx)

@@ -67,6 +67,7 @@
                            (let ([form (transform-in #'form)])
                              (call-as-transformer
                               #'infoer-id
+                              syntax-track-origin
                               (lambda (in out)
                                 (out (proc (in form)))))))
                           proc)))

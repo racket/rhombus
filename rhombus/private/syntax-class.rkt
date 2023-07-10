@@ -38,7 +38,7 @@
   (syntax-parse stx
     ;; just immediate-patterns shorthand
     [(form-id class-name args::class-args (_::alts alt ...))
-     (build-syntax-class stx (syntax->list #'(alt ...))
+     (build-syntax-class stx (syntax->list #'(alt ...)) null
                          #:define-class-id #'define-syntax
                          #:class/inline-name #'class-name
                          #:class-formals #'args.formals
@@ -46,15 +46,16 @@
                          #:for-together? for-together?)]
     ;; patterns within `pattern` or as shorthand
     [(form-id class-name args::class-args
-              ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
+              ;; syntax-class clauses are implemented in "syntax-class-clause-primitive.rkt"
               (_::block clause::syntax-class-clause ...)
-              (~optional (_::alts alt ...)))
+              (~optional (_::alts alt ...)))     
+     (define parsed-clauses (syntax->list #'(clause.parsed ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
        (extract-clauses stx
-                        (syntax->list #'(clause.parsed ...))
+                        parsed-clauses
                         (and (attribute alt)
                              (syntax->list #'(alt ...)))))
-     (build-syntax-class stx pattern-alts
+     (build-syntax-class stx pattern-alts parsed-clauses
                          #:define-class-id #'define-syntax
                          #:class/inline-name #'class-name
                          #:class-formals #'args.formals
@@ -100,18 +101,19 @@
   (syntax-parse tail
     ;; immediate-patterns shorthand
     [((_::alts alt ...))
-     (build-syntax-class orig-stx (syntax->list #'(alt ...))
+     (build-syntax-class orig-stx (syntax->list #'(alt ...)) null
                          #:class/inline-name name
                          #:expected-kind expected-kind)]
     ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...)
       (~optional (_::alts alt ...)))
+     (define parsed-clauses (syntax->list #'(clause.parsed ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
        (extract-clauses orig-stx
-                        (syntax->list #'(clause.parsed ...))
+                        parsed-clauses
                         (and (attribute alt)
                              (syntax->list #'(alt ...)))))
-     (build-syntax-class orig-stx pattern-alts
+     (build-syntax-class orig-stx pattern-alts parsed-clauses
                          #:class/inline-name name
                          #:kind-kw kind-kw
                          #:description-expr class-desc
@@ -131,12 +133,13 @@
        (list #'(block (group pat b)))]
       [(_ (~and pat (_::quotes . _)))
        (list #'(block (group pat)))]))
-  (build-syntax-class stx alts #:expected-kind expected-kind))
+  (build-syntax-class stx alts null #:expected-kind expected-kind))
 
 ;; returns a `rhombus-syntax-class` if `define-syntax-id` is #f, otherwise
 ;; returns a list of definitions
 (define-for-syntax (build-syntax-class stx
                                        alts
+                                       track-stxes
                                        #:define-class-id [define-syntax-id #f]
                                        #:class/inline-name [class/inline-name #f]
                                        #:class-formals [class-formals #'#f]
@@ -208,17 +211,20 @@
         (define define-class (if splicing?
                                  #'define-splicing-syntax-class
                                  #'define-syntax-class))
+        (define (track-all stx) (for/fold ([stx stx]) ([track-stx (in-list track-stxes)])
+                                  (syntax-track-origin stx track-stx #'none)))
         ;; in `for-together?` mode, expects a list of 2 definitions:
         (list
          ;; return a list of definitions
-         #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-            (rhombus-syntax-class '#,kind
-                                  (quote-syntax #,internal-class-name)
-                                  (quote-syntax #,(for/list ([var (in-list attributes)])
-                                                    (pattern-variable->list var #:keep-id? #f)))
-                                  #,splicing?
-                                  '#,class-arity
-                                  '#,swap-root))
+         (track-all
+          #`(#,define-syntax-id #,(in-syntax-class-space class-name)
+             (rhombus-syntax-class '#,kind
+                                   (quote-syntax #,internal-class-name)
+                                   (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                     (pattern-variable->list var #:keep-id? #f)))
+                                   #,splicing?
+                                   '#,class-arity
+                                   '#,swap-root)))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)

@@ -5,7 +5,8 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "track-parsed.rkt")
          "enforest.rkt")
 
 (provide define-interface-clause-syntax)
@@ -44,7 +45,8 @@
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-interface-clause-space
     #:transformer-ref (make-interface-clause-transformer-ref intf-data)
-    #:check-result check-interface-clause-result))
+    #:check-result check-interface-clause-result
+    #:track-origin track-parsed-sequence-origin))
 
 (define-syntax (define-interface-clause-syntax stx)
   (syntax-parse stx

@@ -105,6 +105,8 @@
                          #:defaults ([infix-operator-ref #'infix-operator-ref]))
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
+              (~optional (~seq #:track-origin track-origin)
+                         #:defaults ([track-origin #'syntax-track-origin]))
               (~optional (~seq #:make-identifier-form make-identifier-form)
                          #:defaults ([make-identifier-form #'values]))
               (~optional (~seq #:make-operator-form make-operator-form)
@@ -148,14 +150,14 @@
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
                     #:do [(define op (lookup-operator 'infix-op+form+tail 'infix (in-space #'op-name.name) infix-operator-ref))
-                          (define-values (form new-tail) (enforest-step (transform-out #'in-tail) op #'op-name.name #t))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-in form)
                     #:attr tail (transform-in new-tail)))
 
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space prefix-operator-ref infix-operator-ref
                                                    name-path-op in-name-root-space name-root-ref 
-                                                   check-result 'parsed-tag
+                                                   check-result track-origin 'parsed-tag
                                                    make-identifier-form
                                                    make-operator-form
                                                    -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name
@@ -186,7 +188,7 @@
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space prefix-operator-ref infix-operator-ref
                             name-path-op in-name-root-space name-root-ref
-                            check-result parsed-tag
+                            check-result track-origin parsed-tag
                             make-identifier-form
                             make-operator-form
                             select-prefix-implicit select-infix-implicit juxtapose-implicit-name
@@ -243,13 +245,13 @@
           (cond
             [(eq? (operator-protocol op) 'macro)
              ;; it's up to the transformer to consume whatever it wants after the operator
-             (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes check-result))
+             (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes track-origin check-result))
              (enforest-step form new-tail current-op current-op-stx stop-on-unbound?)]
             [else
              ;; new operator sets precedence, defer application of operator until a suitable
              ;; argument is parsed
              (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx stop-on-unbound?))
-             (enforest-step (apply-prefix-direct-operator op form op-stx check-result)
+             (enforest-step (apply-prefix-direct-operator op form op-stx track-origin check-result)
                             new-tail
                             current-op
                             current-op-stx
@@ -308,13 +310,13 @@
              (cond
                [(eq? (operator-protocol op) 'macro)
                 ;; it's up to the transformer to consume whatever it wants after the operator
-                (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes check-result))
+                (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes track-origin check-result))
                 (enforest-step form new-tail current-op current-op-stx stop-on-unbound?)]
                [else
                 ;; new operator sets precedence, defer application of operator until a suitable
                 ;; right-hand argument is parsed
                 (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx stop-on-unbound?))
-                (enforest-step (apply-infix-direct-operator op init-form form op-stx check-result)
+                (enforest-step (apply-infix-direct-operator op init-form form op-stx track-origin check-result)
                                new-tail
                                current-op
                                current-op-stx

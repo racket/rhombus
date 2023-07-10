@@ -71,9 +71,10 @@
      #:with name #'full-name.name
      #:with orig-stx stxes
      (define body #'(options.form ...))
+     (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `class-annotation+finish`
      ;; and "class-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx) #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx) #,for-together?
                                       full-name name
                                       (field.name ...)
                                       (field.keyword ...)
@@ -89,7 +90,7 @@
             [else
              #`(rhombus-mixed-nested-forwarding-sequence
                 (class-annotation+finish #,finish-data) rhombus-class
-                (class-body-step #,finish-data . #,(syntax-local-introduce body)))]))]))
+                (class-body-step #,finish-data . #,(intro body)))]))]))
 
 (define-syntax class-body-step
   (lambda (stx)

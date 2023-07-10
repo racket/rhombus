@@ -6,6 +6,7 @@
                      enforest/proc-name
                      "introducer.rkt"
                      "macro-result.rkt"
+                     "track-parsed.rkt"
                      (for-syntax racket/base))
          "enforest.rkt")
 
@@ -49,7 +50,8 @@
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-class-clause-space
     #:transformer-ref (make-class-clause-transformer-ref class-data)
-    #:check-result check-class-clause-result))
+    #:check-result check-class-clause-result
+    #:track-origin track-parsed-sequence-origin))
 
 (define-syntax (define-class-clause-syntax stx)
   (syntax-parse stx

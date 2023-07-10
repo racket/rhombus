@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "syntax-parameter.rkt")
 
 ;; The `rhombus-forwarding-sequence` form handles definitions that are
@@ -108,7 +109,10 @@
          [(define-syntax-parameter key rhs)
           (with-syntax ([stx-params (syntax-parameter-update #'key #'rhs #'stx-params)])
             #`(sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params . forms))]
-         [(begin form ...)
+         [(begin form-in ...)
+          #:with (form ...) (map (lambda (form)
+                                   (shift-origin form exp-form))
+                                 (syntax->list #'(form-in ...)))
           (define seq #`(sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params form ... . forms))
           (if (null? accum)
               seq
@@ -144,7 +148,7 @@
              #`(sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms)]
             [else
              #`(begin
-                 (#%require #,@reqs)
+                 #,(syntax-track-origin #`(#%require #,@reqs) exp-form #'none)
                  (sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms))])]
          [(provide prov ...)
           #:when (not (keyword? (syntax-e #'ctx)))
@@ -163,14 +167,20 @@
                   (syntax-parse #'ctx
                     [(head #:stop-at stop-id . tail)
                      (free-identifier=? #'id #'stop-id)
-                     #`(begin
-                         #,@(reverse accum)
-                         (sequence (head #:stop-at stop-id [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))]
+                     (syntax-track-origin
+                      #`(begin
+                          #,@(reverse accum)
+                          (sequence (head #:stop-at stop-id [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))
+                      exp-form
+                      #'none)]
                     [(head #:stop-at* stop-id binds . tail)
                      (free-identifier=? #'id #'stop-id)
-                     #`(begin
-                         #,@(reverse accum)
-                         (sequence (head #:stop-at* stop-id binds [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))]
+                     (syntax-track-origin
+                      #`(begin
+                          #,@(reverse accum)
+                          (sequence (head #:stop-at* stop-id binds [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))
+                      exp-form
+                      #'none)]
                     [_ #f]))]
           #:when next
           next]

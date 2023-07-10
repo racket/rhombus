@@ -19,6 +19,7 @@
   (define proc (name-root-proc lxc))
   (call-as-transformer
    op-stx
+   syntax-track-origin
    (lambda (in out)
      (define-values (target tail) (proc in-space (in stxes)))
      (unless (or (identifier? target)

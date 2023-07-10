@@ -22,6 +22,8 @@
          transform-out
          call-as-transformer
 
+         track-sequence-origin
+
          define-transform)
 
 (struct transformer (proc))
@@ -48,6 +50,8 @@
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
+              (~optional (~seq #:track-origin track-origin)
+                         #:defaults ([track-origin #'syntax-track-origin]))
               (~optional (~seq #:accept-parsed? accept-parsed?)
                          #:defaults ([accept-parsed? #'#f])))
         ...)
@@ -57,13 +61,15 @@
            #:description form-kind-str
            (pattern ((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                     #:cut
-                    #:do [(define head-id #'hname.name)]
-                    #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
+                    #:do [(define head-id (in-space #'hname.name))
+                          (define t (syntax-local-value* head-id transformer-ref))]
                     #:when t
                     #:attr parsed (transform-in ; back to an enclosing transformer, if any
-                                   (apply-transformer t head-id
-                                                      (transform-out ; from an enclosing transformer
-                                                       (datum->syntax #f (cons head-id #'hname.tail)))
+                                   (apply-transformer t (transform-out head-id)
+                                                      (begin
+                                                        (transform-out ; from an enclosing transformer
+                                                         (datum->syntax #f (cons #'hname.name #'hname.tail))))
+                                                      track-origin
                                                       check-result)))
            #,(if (syntax-e #'accept-parsed?)
                  #`(pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
@@ -78,14 +84,16 @@
                             #:when #f
                             #:attr parsed #'#f))
            (pattern ((~datum group) head . tail)
-                    #:do [(define-values (implicit-name ctx) (select-prefix-implicit #'head))]
-                    #:do [(define implicit-id (datum->syntax ctx implicit-name))]
-                    #:do [(define t (syntax-local-value* (in-space implicit-id) transformer-ref))]
+                    #:do [(define-values (implicit-name* ctx) (select-prefix-implicit #'head))
+                          (define implicit-name (datum->syntax ctx implicit-name*))
+                          (define implicit-id (in-space implicit-name))
+                          (define t (syntax-local-value* implicit-id transformer-ref))]
                     #:when t
                     #:attr parsed (transform-in
-                                   (apply-transformer t implicit-id
+                                   (apply-transformer t (transform-out implicit-id)
                                                       (transform-out
-                                                       (datum->syntax #f (list* implicit-id #'head #'tail)))
+                                                       (datum->syntax #f (list* implicit-name #'head #'tail)))
+                                                      track-origin
                                                       check-result))))
 
          #,@(if (syntax-e #'form?)
@@ -97,16 +105,17 @@
                        [((~datum group) ((~datum parsed) tag . _) . _) (and accept-parsed?
                                                                             (eq? (syntax-e #'tag) 'parsed-tag))]
                        [((~datum group) head . _)
-                        (define-values (implicit-name ctx) (select-prefix-implicit #'head))
-                        (define implicit-id (datum->syntax ctx implicit-name))
-                        (and (syntax-local-value* (in-space implicit-id) transformer-ref)
+                        (define-values (implicit-name* ctx) (select-prefix-implicit #'head))
+                        (define implicit-name (datum->syntax ctx implicit-name*))
+                        (and (syntax-local-value* (in-space implicit-name) transformer-ref)
                              #t)])))
                 '()))]))
 
-(define (apply-transformer t id stx checker)
+(define (apply-transformer t id stx track-origin checker)
   (define proc (transformer-proc t))
   (call-as-transformer
    id
+   track-origin
    (lambda (in out)
      (define forms (checker (proc (in stx)) proc))
      (datum->syntax #f (out forms)))))

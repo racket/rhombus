@@ -213,34 +213,38 @@
 (define (lookup-space-description space-sym)
   #f)
 
-(define (apply-prefix-direct-operator op form stx checker)
+(define (apply-prefix-direct-operator op form stx track-origin checker)
   (call-as-transformer
    stx
+   track-origin
    (lambda (in out)
      (define proc (operator-proc op))
      (out (checker (proc (in form) stx) proc)))))
 
-(define (apply-infix-direct-operator op form1 form2 stx checker)
+(define (apply-infix-direct-operator op form1 form2 stx track-origin checker)
   (call-as-transformer
    stx
+   track-origin
    (lambda (in out)
      (define proc (operator-proc op))
      (checker (out (proc (in form1) (in form2) stx)) proc))))
 
-(define (apply-prefix-transformer-operator op op-stx tail checker)
+(define (apply-prefix-transformer-operator op op-stx tail track-origin checker)
   (define proc (operator-proc op))
   (call-as-transformer
    op-stx
+   track-origin
    (lambda (in out)
      (define-values (form new-tail) (proc (in tail)))
      (check-transformer-result (out (checker form proc))
                                (out new-tail)
                                proc))))
 
-(define (apply-infix-transformer-operator op op-stx form1 tail checker)
+(define (apply-infix-transformer-operator op op-stx form1 tail track-origin checker)
   (define proc (operator-proc op))
   (call-as-transformer
    op-stx
+   track-origin
    (lambda (in out)
      (define-values (form new-tail) (proc (in form1) (in tail)))
      (check-transformer-result (out (checker form proc))

@@ -4,6 +4,7 @@
                      racket/symbol
                      (prefix-in enforest: enforest/name-root)
                      enforest/syntax-local
+                     enforest/transformer
                      shrubbery/property
                      "srcloc.rkt"
                      "id-binding.rkt")
@@ -39,13 +40,16 @@
                       (cons #f (syntax-parse stxes
                                  [(form-id . _) #'form-id])))])
            (define (build-name prefix field-id)
-             (datum->syntax prefix
-                            (string->symbol
-                             (string-append (symbol->immutable-string (syntax-e prefix))
-                                            "."
-                                            (symbol->immutable-string (syntax-e field-id))))
-                            field-id
-                            field-id))
+             (syntax-property
+              (datum->syntax prefix
+                             (string->symbol
+                              (string-append (symbol->immutable-string (syntax-e prefix))
+                                             "."
+                                             (symbol->immutable-string (syntax-e field-id))))
+                             field-id
+                             field-id)
+              'disappeared-use
+              (transform-out (in-name-root-space prefix))))
            (define (next form-id field-id what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -211,16 +215,19 @@
     [_ #f]))
 
 (define-for-syntax (relocate-field root-id field-id new-field-id)
-  (syntax-property (datum->syntax new-field-id
-                                  (syntax-e new-field-id)
-                                  (span-srcloc root-id field-id)
-                                  field-id)
-                   'rhombus-dotted-name
-                   (string->symbol
-                    (format "~a.~a"
-                            (or (syntax-property root-id 'syntax-error-name)
-                                (syntax-e root-id))
-                            (syntax-e field-id)))))
+  (syntax-property
+   (syntax-property (datum->syntax new-field-id
+                                   (syntax-e new-field-id)
+                                   (span-srcloc root-id field-id)
+                                   field-id)
+                    'rhombus-dotted-name
+                    (string->symbol
+                     (format "~a.~a"
+                             (or (syntax-property root-id 'syntax-error-name)
+                                 (syntax-e root-id))
+                             (syntax-e field-id))))
+   'disappeared-use
+   (transform-out (in-name-root-space root-id))))
 
 (define-for-syntax (replace-head-dotted-name stx)
   (define head (car (syntax-e stx)))

@@ -62,7 +62,8 @@
     #:parsed-tag #:rhombus/decl
     #:in-space in-decl-space
     #:transformer-ref declaration-transformer-ref
-    #:check-result check-declaration-result)
+    #:check-result check-declaration-result
+    #:track-origin track-sequence-origin)
 
   ;; Form at the top of a module or in a `nested` block:
   (define-rhombus-transform
@@ -72,7 +73,8 @@
     #:parsed-tag #:rhombus/decl/nestable
     #:in-space in-decl-space
     #:transformer-ref nestable-declaration-transformer-ref
-    #:check-result check-nestable-declaration-result)
+    #:check-result check-nestable-declaration-result
+    #:track-origin track-sequence-origin)
 
   ;; Form in a definition context:
   (define-rhombus-transform
@@ -82,7 +84,8 @@
     #:parsed-tag #:rhombus/defn
     #:in-space in-defn-space
     #:transformer-ref definition-transformer-ref
-    #:check-result check-definition-result)
+    #:check-result check-definition-result
+    #:track-origin track-sequence-origin)
 
   ;; Form in a definition context that can consume extra groups:
   (define-rhombus-sequence-transform
@@ -92,7 +95,8 @@
     #:desc "definition sequence"
     #:in-space in-defn-space
     #:transformer-ref definition-sequence-transformer-ref
-    #:check-result check-definition-result)
+    #:check-result check-definition-result
+    #:track-origin track-sequence-origin)
 
   ;; Form in an expression context:
   (define-rhombus-enforest

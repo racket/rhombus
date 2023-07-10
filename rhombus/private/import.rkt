@@ -180,6 +180,7 @@
         (regexp-replace #rx"[.].*$"
                         (regexp-replace #rx"^.*/" (syntax-e mp) "")
                         ""))
+       mp
        mp))
     (cond
       [(null? prefixes)
@@ -192,6 +193,7 @@
                          (string->symbol (regexp-replace #rx"^.*/"
                                                          (symbol->string (syntax-e mp))
                                                          ""))
+                         mp
                          mp)]
           [(lib str) (extract-string-prefix #'str)]
           [(import-root id . _) #'id]
@@ -266,9 +268,11 @@
      (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
                                        #'r.parsed))
      (define-values (mod-path-stx r-stx) (import-invert r-parsed #'orig #'r))
-     #`(begin
-         (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
-         (rhombus-import orig mods . more))]))
+     (shift-origin
+      #`(begin
+          (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
+          (rhombus-import orig mods . more))
+      #'r.parsed)]))
 
 ;; Uses a continuation form to thread through the module path that
 ;; accessed-via-dots module paths are relative to and to thread

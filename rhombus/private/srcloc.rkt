@@ -13,7 +13,8 @@
          respan
          maybe-respan
          extract-raw
-         with-syntax-error-respan)
+         with-syntax-error-respan
+         shift-origin)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
 ;; objects:
@@ -266,3 +267,10 @@
                           (struct-copy exn:fail:syntax exn
                                        [exprs new-exprs]))))])
     (thunk)))
+
+(define (shift-origin stx from-stx)
+  (let ([o (syntax-property from-stx 'origin)])
+    (if o
+        (let ([o2 (syntax-property stx 'origin)])
+          (syntax-property stx 'origin (if o2 (cons o o2) o)))
+        stx)))
