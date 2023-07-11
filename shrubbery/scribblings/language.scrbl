@@ -227,17 +227,71 @@ preorder traversal of the tree.
 @defmodule[shrubbery/write]
 
 @defproc[(write-shrubbery [v any/c]
-                          [port output-port? (current-output-port)])
+                          [port output-port? (current-output-port)]
+                          [#:pretty? pretty? any/c #f]
+                          [#:multi-line? multi-line? any/c #f]
+                          [#:armor? armor? any/c #f])
          void?]{
 
  Prints @racket[v], which must be a valid S-expression representation of
- a shrubbery (see @secref["parsed-rep"]). Reading the printed form back
- in with @racket[parse-all] produces the same S-expression representation
- as @racket[v].
+ a shrubbery (see @secref["parsed-rep"]). Reading the
+ printed form back in with @racket[parse-all] produces the same
+ S-expression representation as @racket[v].
+
+ The default mode with @racket[pretty?] as @racket[#false] prints in a
+ simple and relatively fast way (compared to @racket[pretty-shrubbery]).
+ Even with @racket[pretty?] as a true value, the output is a single line
+ unless @racket[multi-line?] is a true value, while @racket[multi-line?]
+ produces newlines eagerly. Use @racket[pretty-shrubbery] to gain more
+ control over line choices when printing.
+
+ If @racket[pretty?] is @racket[#false] or @racket[armor?] is a true
+ value, then the printed form is @seclink["guillemet"]{line- and
+  column-insensitive}.
 
  Note that @racket[write-shrubbery] expects an S-expression, not a
  syntax object, so it cannot use @seclink["raw-text"]{raw-text properties}.
  See also @racket[shrubbery-syntax->string].
+
+}
+
+@defproc[(pretty-shrubbery [v any/c]
+                           [#:armor? armor? any/c #f])
+         any/c]{
+
+ Produces a description of how to print @racket[v] with newlines and
+ indentation. The printed form is @seclink["guillemet"]{line- and
+  column-insensitive} if @racket[armor?] is a true value.
+
+ The description is an S-expression DAG (direct, acyclic graph) that
+ represents pretty-printing instructions and alternatives:
+
+ @itemlist[
+
+ @item{@racket[_string] or @racket[_bytes]: print literally.}
+
+ @item{@racket['nl]: print a newline followed by spaces corresponding to
+   the current indentation.}
+
+ @item{@racket[`(seq ,_doc ...)]: print each @racket[_doc] in sequence,
+   each with the same indentation.}
+
+ @item{@racket[`(nest ,_n ,_doc)]: print @racket[_doc] with the current
+   indentation increased by @racket[_n].}
+
+ @item{@racket[`(align ,_doc)]: print @racket[_doc] with the current
+   indentation set to the current output column.}
+
+ @item{@racket[`(or ,_doc ,_doc)]: print either @racket[_doc]; always
+   taking the first @racket[_doc] in an @racket['or] will produce
+   single-line output, while always taking the second @racket[_doc] will
+   print a maximal number of lines.}
+
+]
+
+ The description can be a DAG because @racket['or] alternatives might
+ have components in common. In the worst case, a tree view of the
+ instructions can be exponentially larger than the DAG representation.
 
 }
 

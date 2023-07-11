@@ -341,11 +341,13 @@ local:
 
 -: :: ::: :~
 
+next: to: last
+done: end
+
 INPUT
 ))
 
 (define input1 (apply string-append input1s))
-
 (define expected1
   '(top
     (group
@@ -1098,6 +1100,8 @@ INPUT
     (group #%call #%juxtapose #%end)
     (group (parens (group #%inside)))
     (group (op -) (block (group (op ::) (op :::) (op :~))))
+    (group next (block (group to (block (group last)))))
+    (group done (block (group end)))
     ))
 
 ;; has « », so unarmoring won't work

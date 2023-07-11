@@ -4,6 +4,7 @@
          "../parse.rkt"
          "../print.rkt"
          "../write.rkt"
+         "../private/simple-pretty.rkt"
          "input.rkt")
 
 (define (check which input expected)
@@ -28,40 +29,66 @@
       (out "expected" input display)
       (out "printed" printed display)
       (error "print failed"))
-    (define (check-reparse mode)
+    (define (check-reparse mode #:add-newlines? [add-newlines? #f])
       (define (add-newlines bstr)
         (define in (open-input-bytes bstr))
         (define out (open-output-bytes))
-        (display ";«" out)
+        (unless (eq? mode 'pretty-multi)
+          (display ";«" out))
         (for ([tok (in-list (lex-all in error))])
           (define loc (token-srcloc tok))
           (define pos (sub1 (srcloc-position loc)))
           (display (subbytes bstr pos (+ pos (srcloc-span loc))) out)
           (newline out))
-        (display "»" out)
+        (unless (eq? mode 'pretty-multi)
+          (display "»" out))
         (get-output-bytes out))
-      (define reparsed (let ([o (open-output-bytes)])
-                         (write-shrubbery parsed o)
-                         (define new-in (let ([bstr (get-output-bytes o)])
-                                          (cond
-                                            [(eq? mode 'add-newlines) (add-newlines bstr)]
-                                            [else bstr])))
-                         (or (with-handlers ([exn:fail? (lambda (exn) (eprintf "~a\n" (exn-message exn)) #f)])
-                               (define in (open-input-bytes new-in))
-                               (when (eq? mode 'count)
-                                 (port-count-lines! in))
-                               (syntax->datum (parse-all in)))
-                             (begin
-                               (out "wrote" new-in displayln)
-                               (error "parse of wrote failed")))))
+      (define new-in
+        (let ([o (open-output-bytes)])
+          (cond
+            [(eq? mode 'pretty)
+             (define doc `(seq ,@(for/list ([g (in-list (cdr parsed))])
+                                   `(seq ,(pretty-shrubbery g) nl))))
+             (render-pretty doc o #:multi-line? (or (eq? mode 'pretty-multi)
+                                                    (eq? mode 'pretty-multi-armored)))]
+            [(eq? mode 'pretty-one)
+             (write-shrubbery parsed o #:pretty? #t)]
+            [(eq? mode 'pretty-multi)
+             (write-shrubbery parsed o #:pretty? #t #:multi-line? #t)]
+            [(eq? mode 'pretty-multi-armored)
+             (write-shrubbery parsed o #:pretty? #t #:multi-line? #t #:armor? #t)]
+            [else
+             (write-shrubbery parsed o)])
+          (let ([bstr (get-output-bytes o)])
+            (cond
+              [add-newlines?
+               (add-newlines bstr)]
+              [else bstr]))))
+      (define reparsed
+        (or (with-handlers ([exn:fail? (lambda (exn) (eprintf "~a\n" (exn-message exn)) #f)])
+              (define in (open-input-bytes new-in))
+              (when (or (eq? mode 'count)
+                        (eq? mode 'pretty)
+                        (eq? mode 'pretty-multi))
+                (port-count-lines! in))
+              (syntax->datum (parse-all in)))
+            (begin
+              (out "wrote" new-in displayln)
+              (error "parse of wrote failed" mode))))
       (unless (equal? parsed reparsed)
         (out "expected" parsed pretty-print)
         (out "reparsed" reparsed pretty-print)
-        (out "printed" printed display)
-        (error "print failed")))
+        (out "wrote" new-in display)
+        (error "print failed" mode)))
     (check-reparse 'count)
     (check-reparse 'no-count)
-    (check-reparse 'add-newlines)))
+    (check-reparse 'count #:add-newlines? #t)
+    (check-reparse 'pretty)
+    (check-reparse 'pretty-one)
+    (check-reparse 'pretty-one #:add-newlines? #t)
+    (check-reparse 'pretty-multi)
+    (check-reparse 'pretty-multi-armored)
+    (check-reparse 'pretty-multi-armored #:add-newlines? #t)))
 
 (define (check-fail input rx)
   (let ([in (open-input-string input)])
