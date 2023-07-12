@@ -8,7 +8,7 @@
   ~eval: check_eval
   ~hidden:
     import lib("racket/base.rkt").#{error-display-handler}
-    #{error-display-handler}(fun(msg, exn): display(msg, current_error_port()))
+    #{error-display-handler}(fun(msg, exn): print(msg, Port.current_error()))
 )
 
 @title{Unit Testing}

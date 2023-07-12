@@ -23,7 +23,7 @@ from a starting integer (inclusive) to an ending integer (exclusive):
 @demo(
   for:
     each i: 1..4
-    displayln(i)
+    println(i)
 )
 
 If a @rhombus(for) body includes multiple @rhombus(each, ~for_clause) clauses, they
@@ -34,7 +34,7 @@ all elements are used for the second @rhombus(each, ~for_clause) clause, and so 
   for:
     each friend: ["Alice", "Bob", "Carol"]
     each say: ["Hello", "Goodbye"]
-    displayln(say +& ", " +& friend +& "!")
+    println(say +& ", " +& friend +& "!")
 )
 
 An advantage of having @rhombus(each, ~for_clause) clauses in the body of
@@ -47,7 +47,7 @@ languages, is that definitions or expressions can be written among
     each friend: ["Alice", "Bob", "Carol"]
     def dear_friend = "dear " +& friend
     each say: ["Hello", "Goodbye"]
-    displayln(say +& ", " +& dear_friend +& "!")
+    println(say +& ", " +& dear_friend +& "!")
 )
 
 To draw elements from sequences in parallel, use a block of bindings
@@ -58,7 +58,7 @@ immediately after @rhombus(each, ~for_clause).
     each:
       friend: ["Alice", "Bob", "Carol"]
       index: 1..4
-    displayln(index +& ". " +& friend)
+    println(index +& ". " +& friend)
 )
 
 In this latest example, the sequence for @rhombus(index) could be

@@ -93,28 +93,28 @@
   ~repl:
     for:
       each v: ["a", "b", "c"]
-      displayln(v)
+      println(v)
     for:
       each v: ["a", "b", "c"]
       keep_when v == "b"
-      displayln(v)
+      println(v)
     for:
       each v: ["a", "b", "c"]
       skip_when v == "b"
-      displayln(v)
+      println(v)
     for:
       each v: ["a", "b", "c"]
       break_when v == "b"
-      displayln(v)
+      println(v)
     for:
       each v: ["a", "b", "c"]
       final_when v == "b"
-      displayln(v)
+      println(v)
     for:
       each:
         v: ["a", "b", "c"]
         i: 0..
-      displayln(i +& ". " +& v)
+      println(i +& ". " +& v)
   ~repl:
     fun grid(m, n):
       for List:
@@ -180,7 +180,7 @@
   for:
     each v: ["a", "b", "c"]
     skip_when v == "b"
-    displayln(v),
+    println(v),
 )
 
 }

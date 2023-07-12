@@ -119,8 +119,8 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
   if ok
   | #void
   | fun
-    | values_str([v]): print_to_string(v)
-    | values_str(lst): "values " +& print_to_string(lst)
+    | values_str([v]): to_string(v, ~mode: #'expr)
+    | values_str(lst): "values " +& to_string(lst, ~mode: #'expr)
     def msg:
       (if #{error-print-source-location}()
        | srcloc.source +& ":" +& srcloc.line

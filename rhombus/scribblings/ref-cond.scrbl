@@ -85,10 +85,10 @@
 
 @examples(
   when #true
-  | displayln("yes")
+  | println("yes")
 
   when #false
-  | displayln("no")
+  | println("no")
 )
 
 }
@@ -106,10 +106,10 @@
 
 @examples(
   unless #true
-  | displayln("yes")
+  | println("yes")
   
   unless #false
-  | displayln("no")
+  | println("no")
 )
 
 }

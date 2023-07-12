@@ -8,7 +8,8 @@
                   ==
                   ===)
          (only-in (submod "print.rkt" for-string)
-                  [display rhombus:display])
+                  [display rhombus:display]
+                  [print rhombus:print])
          "realm.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
@@ -58,22 +59,30 @@
   (string-append-immutable (to_string a)
                            (to_string b)))
 
-(define/arity (to_string a)
+(define/arity (to_string a #:mode [mode 'text])
   #:static-infos ((#%call-result #,string-static-infos))
   (cond
-    [(string? a) (string->immutable-string a)]
-    [(symbol? a) (symbol->immutable-string a)]
-    [(keyword? a) (keyword->immutable-string a)]
-    [(and (syntax? a)
-          (let ([t (unpack-term a #f #f)])
-            (and (identifier? t)
-                 t)))
-     => (lambda (t)
-          (symbol->immutable-string (syntax-e t)))]
-    [else
+    [(eq? mode 'text)
+     (cond
+       [(string? a) (string->immutable-string a)]
+       [(symbol? a) (symbol->immutable-string a)]
+       [(keyword? a) (keyword->immutable-string a)]
+       [(and (syntax? a)
+             (let ([t (unpack-term a #f #f)])
+               (and (identifier? t)
+                    t)))
+        => (lambda (t)
+             (symbol->immutable-string (syntax-e t)))]
+       [else
+        (define o (open-output-string))
+        (rhombus:display a o)
+        (string->immutable-string (get-output-string o))])]
+    [(eq? mode 'expr)
      (define o (open-output-string))
-     (rhombus:display a o)
-     (string->immutable-string (get-output-string o))]))
+     (rhombus:print a o)
+     (string->immutable-string (get-output-string o))]
+    [else
+     (raise-argument-error* 'to_string rhombus-realm "#'text || #'expr" mode)]))
 
 (define/arity (String.to_string s)
   #:static-infos ((#%call-result #,string-static-infos))

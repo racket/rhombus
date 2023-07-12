@@ -28,7 +28,7 @@ fun call_with_memory_use(proc):
                      fun
                      | (x): values(runtime.cumulative_memory_use(), [x])
                      | (& xs): values(runtime.cumulative_memory_use(), xs))
-  displayln("allocated: " +& (after - before))
+  println("allocated: " +& (after - before))
   values(& results)
 
 expr.macro 'time_and_memory: $body':

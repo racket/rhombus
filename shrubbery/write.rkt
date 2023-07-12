@@ -106,7 +106,9 @@
           (define mt? (null? (cdr v)))
           (define a/mt? (or armor? mt?))
           (define a/nt? (or armor? non-tail? (not (symbol? op))))
-          (define-values (align? q-open q-line-open sep sep+space block-sep+space q-line-close q-close
+          (define-values (align? q-open q-line-open
+                                 sep sep+space block-sep+space
+                                 q-line-close q-close
                                  one-line? is-quotes? use-non-tail? can-tail? wraps?)
             (case (car v)
               [(group) (values #t "" "" "" " " "" "" ""
@@ -164,7 +166,7 @@
                                          (pair? (car l))
                                          (eq? (car (car l)) 'block))
                                     ;; must be a block with alts after
-                                    (list `(or (seq ,semi)
+                                    (list `(or (seq ,@semi)
                                                (seq ,inside-multi
                                                     ,@insides-semi)))]
                                    [else semi]))

@@ -830,8 +830,8 @@ Metadata for a syntax object can include a source location and the raw
   fun Syntax.to_source_string(stx :: Syntax) :: String
 ){
 
- Converts to a string with content similar to @rhombus(display) of
- @rhombus(stx), but using source text as available through
+ Converts to a string with content similar to @rhombus(print) of
+ @rhombus(stx) in @rhombus(#'text) mode, but using source text as available through
  @rhombus(#'raw) and related properties attached to @rhombus(stx).
 
 }

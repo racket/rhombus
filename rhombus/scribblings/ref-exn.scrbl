@@ -56,15 +56,15 @@
 @examples(
   ~repl:
     try:
-      ~initially: displayln("in")
+      ~initially: println("in")
       "ok"
-      ~finally: displayln("out")
+      ~finally: println("out")
   ~repl:
     ~error:
       try:
-        ~initially: displayln("in")
+        ~initially: println("in")
         1/0
-        ~finally: displayln("out")
+        ~finally: println("out")
   ~repl:
     try:
       1/0
@@ -72,20 +72,20 @@
         "handled"
   ~repl:
     try:
-      ~initially: displayln("in")
+      ~initially: println("in")
       1/0
       ~catch _:
-        displayln("ignoring all exceptions!")
+        println("ignoring all exceptions!")
         0
-      ~finally: displayln("out")
+      ~finally: println("out")
 
   ~repl:
     def k:
       Continuation.prompt:
         try:
-          ~initially: displayln("in")
+          ~initially: println("in")
           Continuation.capture k: k
-          ~finally: displayln("out")
+          ~finally: println("out")
     k("again")
 )
 

@@ -52,19 +52,20 @@ immutable strings.
 }
 
 @doc(
-  fun to_string(v) :: String
+  fun to_string(v, ~mode: mode :: #'text || #'expr = #'text) :: String
 ){
 
  Coerces @rhombus(v)  to a string.
 
- The string for of a value corresponds to the way that @rhombus(display)
- would print it, which means that strings, symbols, identifiers, and
- keywords convert as their character content.
+ The string for of a value corresponds to the way that @rhombus(print)
+ would print, which means that strings, symbols, identifiers, and
+ keywords convert as their character content in the default @rhombus(#'text) mode.
 
 @examples(
   to_string(10)
   to_string('hello')
   to_string([1, 2, 3])
+  to_string('hello', ~mode: #'expr)  
 )
 
 }

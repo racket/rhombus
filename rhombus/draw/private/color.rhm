@@ -10,8 +10,6 @@ module private:
     _Color
     unwrap_color
 
-def _display = display
-
 class Color(handle):
   internal _Color
   
@@ -41,13 +39,12 @@ class Color(handle):
     Color(red, green, blue, alpha)
 
   implements Printable
-  override print(o):
-    _display("Color("
-               +& red +& ", "
-               +& green +& ", "
-               +& blue +& ", "
-               +& alpha +& ")",
-             o)
+  override describe(mode, recur):
+    "Color("
+      +& red +& ", "
+      +& green +& ", "
+      +& blue +& ", "
+      +& alpha +& ")"
 
 fun
 | unwrap_color(c :: Color): c.handle

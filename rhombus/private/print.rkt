@@ -2,6 +2,7 @@
 (require racket/symbol
          racket/keyword
          shrubbery/write
+         shrubbery/private/simple-pretty
          "provide.rkt"
          (submod "set.rkt" for-ref)
          "adjust-name.rkt"
@@ -10,20 +11,15 @@
          "function-arity-key.rkt"
          "static-info.rkt"
          "expression.rkt"
-         "mutability.rkt")
+         "mutability.rkt"
+         "realm.rkt"
+         "print-desc.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
                      (rename-out
-                      [rhombus-print print]
-                      [rhombus-display display])
-                     println
-                     displayln
-                     print_to_string
-                     (rename-out
-                      [current-input-port current_input_port]
-                      [current-output-port current_output_port]
-                      [current-error-port current_error_port])))
+                      [rhombus-print print])
+                     println))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
@@ -32,194 +28,254 @@
   (provide prop:print-field-shapes))
 
 (module+ for-string
-  (provide (rename-out [do-display display])))
+  (provide (rename-out [do-print print]
+                       [do-display display])))
 
 (module+ for-runtime
   (provide (rename-out [do-print print])))
 
+(module+ for-printable
+  (provide pretty
+           render-pretty
+           check-output-port
+           check-mode))
+
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
 
-(define/arity #:name print (rhombus-print v [op (current-output-port)])
-  (do-print v op 'print))
+(define (check-output-port who op)
+  (unless (output-port? op)
+    (raise-argument-error* who rhombus-realm "Port.Output" op)))
 
-(define/arity #:name display (rhombus-display v [op (current-output-port)])
-  (do-print v op 'display))
+(define (check-mode who mode)
+  (unless (or (eq? mode 'expr)
+              (eq? mode 'text))
+    (raise-argument-error* who rhombus-realm "#'text || #'expr" mode)))
+  
+(define/arity #:name print (rhombus-print v [op (current-output-port)]
+                                          #:mode [mode 'text])
+  (check-output-port 'print op)
+  (check-mode 'print mode)
+  (do-print v op mode))
 
-(define/arity (println v [op (current-output-port)])
-  (do-print v op 'print)
+(define/arity (println v [op (current-output-port)]
+                       #:mode [mode 'text])
+  (check-output-port 'println op)
+  (check-mode 'println mode)
+  (do-print v op mode)
   (newline op))
-
-(define/arity (displayln v [op (current-output-port)])
-  (do-print v op 'display)
-  (newline op))
-
-(define/arity (print_to_string v)
-  (define op (open-output-string))
-  (do-print v op 'print)
-  (get-output-string op))
 
 (define (do-display v op)
-  (do-print v op 'display))
+  (do-print v op 'text))
 
-(define (do-print v op [mode 'print])
-  (let loop ([v v] [mode mode])
-    (define (display?) (eq? mode 'display))
-    (define (print v) (loop v 'print))
+;; Fast path for simple printing: either call `display`, `write`,
+;; of `other` once, or return results of multiple calls through `concat`
+(define (maybe-print-immediate v display write concat other mode op)
+  (define (display?) (eq? mode 'text))
+  (cond
+    [(flonum? v)
+     (cond
+       [(eqv? v +inf.0) (display "#inf" op)]
+       [(eqv? v -inf.0) (display "#neginf" op)]
+       [(eqv? v +nan.0) (display "#nan" op)]
+       [else (write v op)])]
+    [(or (and (string? v) (immutable? v))
+         (and (bytes? v) (immutable? v))
+         (exact-integer? v))
+     (cond
+       [(display?) (display v op)]
+       [else (write v op)])]
+    [(exact-integer? v)
+     (write v op)]
+    [(boolean? v)
+     (display (if v "#true" "#false") op)]
+    [(void? v)
+     (display "#void" op)]
+    [(path? v)
+     (cond
+       [(display?)
+        (display v op)]
+       [else
+        (write v op)])]
+    [(procedure? v)
+     (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
+     (cond
+       [name
+        (concat
+         (display "#<function:" op)
+         (display name op)
+         (display ">" op))]
+       [else
+        (display "#<function>" op)])]
+    [(symbol? v)
+     (cond
+       [(display?)
+        (display (symbol->immutable-string v) op)]
+       [else
+        (concat
+         (display "#'" op)
+         (write-shrubbery* v display write op))])]
+    [(keyword? v)
+     (cond
+       [(display?)
+        (display (keyword->immutable-string v) op)]
+       [else
+        (concat
+         (display "#'" op)
+         (write-shrubbery* v display write op))])]
+    [(and (identifier? v)
+          (display?))
+     (display (syntax->datum v) op)]
+    [else (other v mode op)]))
+
+(define (write-shrubbery* v use-display use-write op)
+  (cond
+    [(and (eq? use-display display)
+          (eq? use-write write))
+     (write-shrubbery v op)]
+    [else
+     (define s-op (open-output-string))
+     (write-shrubbery v s-op)
+     (use-display (get-output-string s-op) op)]))
+
+(define (do-print v op [mode 'expr])
+  (maybe-print-immediate v display write void print-other mode op))
+
+(define (print-other v mode op)
+  (define ht (make-hasheq))
+  (define doc (pretty v mode ht))
+  (render-pretty (resolve-references doc) op))
+
+(define (pretty v mode ht)
+  (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))
+
+(define (pretty-other v mode ht)
+  (define (display?) (eq? mode 'text))
+  (define (print v) (pretty v 'expr ht))
+  (define (fresh-ref #:when [when? #t] v thunk)
     (cond
-      [(flonum? v)
-       (cond
-         [(eqv? v +inf.0) (display "#inf" op)]
-         [(eqv? v -inf.0) (display "#neginf" op)]
-         [(eqv? v +nan.0) (display "#nan" op)]
-         [else (write v op)])]
-      [(or (and (string? v) (immutable? v))
-           (and (bytes? v) (immutable? v))
-           (exact-integer? v))
-       (cond
-         [(display?) (display v op)]
-         [else (write v op)])]
-      [(exact-integer? v)
-       (write v op)]
-      [(boolean? v)
-       (display (if v "#true" "#false") op)]
-      [(void? v)
-       (display "#void" op)]
-      [(printer-ref v #f)
-       => (lambda (printer)
-            (printer v op mode))]
-      [(path? v)
-       (cond
-         [(eq? mode 'display)
-          (display v op)]
-         [else
-          (write v op)])]
-      [(struct? v)
-       (define vec (struct->vector v))
-       (write (if (srcloc? v)
-                  'Srcloc
-                  (object-name v))
-              op)
-       (display "(" op)
-       (cond
-         [(print-field-shapes-ref v #f)
-          => (lambda (shapes)
-               (cond
-                 [(eq? shapes 'opaque)
-                  (display "..." op)]
-                 [else
-                  (void
-                   (for/fold ([did? #f]) ([i (in-range 1 (vector-length vec))]
-                                          [s (in-list shapes)]
-                                          #:when s)
-                     (when did? (display ", " op))
-                     (when (keyword? s)
-                       (display (string-append "~" (keyword->immutable-string s) ": ") op))
-                     (print (vector-ref vec i))
-                     #t))]))]
-         [else
-          (for ([i (in-range 1 (vector-length vec))])
-            (unless (eqv? i 1) (display ", " op))
-            (print (vector-ref vec i)))])
-       (display ")" op)]
-      [(list? v)
-       (display "[" op)
-       (for/fold ([first? #t]) ([e (in-list v)])
-         (unless first? (display ", " op))
-         (print e)
-         #f)
-       (display "]" op)]
-      [(pair? v)
-       (display "cons(" op)
+      [when?
+       (define v-ref (pretty-ref #f))
+       (hash-set! ht v v-ref)
+       (set-pretty-ref-doc! v-ref (thunk))
+       v-ref]
+      [else (thunk)]))
+  (cond
+    [(hash-ref ht v #f)
+     => (lambda (ref) ref)]
+    [(printer-ref v #f)
+     => (lambda (printer)
+          (fresh-ref
+           v
+           (lambda ()
+             (printer v mode (lambda (v [mode 'expr])
+                               (check-mode 'describe_recur mode)
+                               (PrintDesc (pretty v mode ht)))))))]
+    [(struct? v)
+     (define vec (struct->vector v))
+     (fresh-ref
+      v
+      (lambda ()
+        (pretty-listlike
+         (pretty-concat
+          (pretty-write (if (srcloc? v)
+                            'Srcloc
+                            (object-name v)))
+          (pretty-text "("))
+         (cond
+           [(print-field-shapes-ref v #f)
+            => (lambda (shapes)
+                 (cond
+                   [(eq? shapes 'opaque)
+                    (list (pretty-text "..."))]
+                   [else
+                    (for/list ([i (in-range 1 (vector-length vec))]
+                               [s (in-list shapes)]
+                               #:when s)
+                      (if (keyword? s)
+                          (pretty-blocklike (pretty-text (string-append "~" (keyword->immutable-string s)))
+                                            (print (vector-ref vec i)))
+                          (print (vector-ref vec i))))]))]
+           [else
+            (for/list ([i (in-range 1 (vector-length vec))])
+              (print (vector-ref vec i)))])
+         (pretty-text ")"))))]
+    [(list? v)
+     (pretty-listlike
+      (pretty-text "[")
+      (for/list ([e (in-list v)])
+        (print e))
+      (pretty-text "]"))]
+    [(pair? v)
+     (pretty-listlike
+      (pretty-text "cons(")
+      (list
        (print (car v))
-       (display ", " op)
-       (print (cdr v))
-       (display ")" op)]
-      [(vector? v)
-       (display "Array(" op)
-       (for/fold ([first? #t]) ([e (in-vector v)])
-         (unless first? (display ", " op))
-         (print e)
-         #f)
-       (display ")" op)]
-      [(hash? v)
-       (when (mutable-hash? v)
-         (display "MutableMap" op))
-       (display "{" op)
-       (for/fold ([first? #t]) ([k+v (hash-map v cons #t)])
-         (define k (car k+v))
-         (define v (cdr k+v))
-         (unless first? (display ", " op))
-         (print k)
-         (display ": " op)
-         (print v)
-         #f)
-       (display "}" op)]
-      [(set? v)
-       (cond
-         [(eqv? 0 (hash-count (set-ht v)))
-          (when (mutable-hash? (set-ht v))
-            (display "Mutable" op))
-          (display "Set{}" op)]
-         [else
-          (when (mutable-hash? (set-ht v))
-            (display "MutableSet" op))
-          (display "{" op)
-          (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
-            (unless first? (display ", " op))
-            (print v)
-            #f)
-          (display "}" op)])]
-      [(syntax? v)
-       (define s (syntax->datum v))
-       (define maybe-nested? (let loop ([s s ])
-                               (and (pair? s)
-                                    (case (car s)
-                                      [(quotes) #t]
-                                      [(op s) #f]
-                                      [else (ormap loop (cdr s))]))))
-       (unless (display?)
-         (display (if maybe-nested? "'«" "'") op))
+       (print (cdr v)))
+      (pretty-text ")"))]
+    [(vector? v)
+     (pretty-listlike
+      (pretty-text "Array(")
+      (for/list ([e (in-vector v)])
+        (print e))
+      (pretty-text ")"))]
+    [(hash? v)
+     (fresh-ref
+      #:when (mutable-hash? v)
+      v
+      (lambda ()
+        (pretty-listlike
+         (pretty-text (if (mutable-hash? v)
+                          "MutableMap{"
+                          "{"))
+         (for/list ([k+v (hash-map v cons #t)])
+           (define k (car k+v))
+           (define v (cdr k+v))
+           (pretty-blocklike (print k) (print v)))
+         (pretty-text "}"))))]
+    [(set? v)
+     (fresh-ref
+      #:when (mutable-hash? (set-ht v))
+      v
+      (lambda ()
+        (cond
+          [(eqv? 0 (hash-count (set-ht v)))
+           (if (mutable-hash? (set-ht v))
+               (pretty-text "MutableSet{}")
+               (pretty-text "Set{}"))]
+          [else
+           (pretty-listlike
+            (pretty-text (if (mutable-hash? (set-ht v))
+                             "MutableSet{"
+                             "{"))
+            (for/list ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
+              (print v))
+            (pretty-text "}"))])))]
+    [(syntax? v)
+     (define s (syntax->datum v))
+     (define qs
        (cond
          [(and (pair? s) (eq? 'multi (car s)))
-          (write-shrubbery (cons 'top (cdr s)) op)]
+          (cons (if (display?) 'top 'quotes)
+                (cdr s))]
          [(and (pair? s) (eq? 'group (car s)))
-          (write-shrubbery (list 'top s) op)]
-         [else
-          (write-shrubbery s op)])
-       (unless (display?)
-         (display (if maybe-nested? "»'" "'") op))]
-      [(procedure? v)
-       (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
-       (cond
-         [name
-          (display "#<function:" op)
-          (display name op)
-          (display ">" op)]
-         [else
-          (display "#<function>" op)])]
-      [(symbol? v)
-       (cond
-         [(display?)
-          (display (symbol->immutable-string v) op)]
-         [else
-          (display "#'" op)
-          (write-shrubbery v op)])]
-      [(keyword? v)
-       (cond
-         [(display?)
-          (display (keyword->immutable-string v) op)]
-         [else
-          (display "#'" op)
-          (write-shrubbery v op)])]
-      [else
-       (cond
-         [(display?)
-          (display v op)]
-         [else
-          (display "#{'" op)
-          (racket-print (racket-print-redirect v) op 1)
-          (display "}" op)])])))
+          (if (display?)
+              s
+              (list 'quotes s))]
+         [else (if (display?)
+                   s
+                   (list 'quotes (list 'group s)))]))
+     (pretty-shrubbery qs #:armor? #t)]
+    [else
+     (cond
+       [(display?)
+        (pretty-display v)]
+       [else
+        (define rop (open-output-bytes))
+        (display "#{'" rop)
+        (racket-print (racket-print-redirect v) rop 1)
+        (display "}" rop)
+        (pretty-text (get-output-bytes rop))])]))
 
 (define (racket-print v op mode)
   (print v op mode))
@@ -228,6 +284,3 @@
   #:property prop:custom-write
   (lambda (r op mode)
     (racket-print (racket-print-redirect-val r) op mode)))
-
-(define-static-info-syntaxes (current-input-port current-output-port current-error-port)
-  (#%function-arity 3))

@@ -61,8 +61,11 @@
               mask
               `(,mask ,(sort req-kws keyword<?) ,(sort allowed-kws keyword<?)))]
       [(_:identifier . args) (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws)]
-      [([_:identifier _] . args) (bitwise-ior mask
-                                              (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws))]
+      [([_:identifier _] . args)
+       (define r (loop #'args (arithmetic-shift mask 1) allowed-kws req-kws))
+       (if (integer? r)
+           (bitwise-ior mask r)
+           (cons (bitwise-ior mask (car r)) (cdr r)))]
       [_:identifier (loop #'() (bitwise-not (sub1 (arithmetic-shift mask 1))) allowed-kws req-kws)]
       [(kw:keyword _:identifier . args) (loop #'args mask
                                               (cons (syntax-e #'kw) allowed-kws)
