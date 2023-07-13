@@ -1,5 +1,6 @@
 #lang racket/base
-(require racket/symbol
+(require (for-syntax racket/base)
+         racket/symbol
          racket/keyword
          racket/unsafe/undefined
          shrubbery/write
@@ -42,7 +43,10 @@
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
 
-(define default-pretty (gensym))
+(define default-pretty
+  (let-syntax ([ct-gensym (lambda (stx)
+                            (datum->syntax stx `(quote ,(gensym))))])
+    (ct-gensym)))
 
 (define (check-output-port who op)
   (unless (output-port? op)
@@ -55,14 +59,14 @@
   
 (define/arity #:name print (rhombus-print v [op (current-output-port)]
                                           #:mode [mode 'text]
-                                          #:as_pretty [pretty? default-pretty])
+                                          #:pretty [pretty? default-pretty])
   (check-output-port 'print op)
   (check-mode 'print mode)
   (do-print v op mode pretty?))
 
 (define/arity (println v [op (current-output-port)]
                        #:mode [mode 'text]
-                       #:as_pretty [pretty? default-pretty])
+                       #:pretty [pretty? default-pretty])
   (check-output-port 'println op)
   (check-mode 'println mode)
   (do-print v op mode pretty?)
@@ -141,7 +145,7 @@
      (write-shrubbery v s-op)
      (use-display (get-output-string s-op) op)]))
 
-(define (do-print v op [mode 'expr] [pretty? #t])
+(define (do-print v op [mode 'expr] [pretty? default-pretty])
   (maybe-print-immediate v display write void
                          (if (eq? pretty? default-pretty)
                              print-other

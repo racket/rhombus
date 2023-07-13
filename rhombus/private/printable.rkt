@@ -55,8 +55,10 @@
   ([describe Printable.describe]
    [render Printable.render]
 
+   [current_page_width current-page-width]
    [current_show_graph print-graph]
-   [current_as_pretty current-print-as-pretty]))
+   [current_pretty current-print-as-pretty]
+   [current_optimal current-pretty-as-optimal]))
 
 (define-name-root PrintDesc
   #:fields   
@@ -148,22 +150,18 @@
 
 (define/arity (Printable.describe v
                                   #:mode [mode 'text]
-                                  #:as_pretty [pretty? #t])
+                                  #:pretty [pretty? #t])
   (check-mode  'Printable.describe mode)
   (parameterize ([current-print-as-pretty pretty?])
     (PrintDesc (pretty v mode (make-hasheq)))))
 
 (define/arity (Printable.render pd
                                 [op (current-output-port)]
-                                #:indent [indent 0]
                                 #:column [column 0])
   (define who 'Printable.render)
   (define doc (print-description-unwrap who pd))
   (check-output-port who op)
-  (unless (exact-nonnegative-integer? indent)
-    (raise-argument-error* who rhombus-realm "NonnegInt" indent))
   (unless (exact-nonnegative-integer? column)
     (raise-argument-error* who rhombus-realm "NonnegInt" column))
   (render-pretty doc op
-                 #:indent indent
                  #:column column))

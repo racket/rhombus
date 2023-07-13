@@ -21,7 +21,7 @@
   fun print(v,
             out = Port.current_output() :: Port.Output,
             ~mode: mode :: (#'text || #'expr) = #'expr,
-            ~as_pretty: as_pretty = Printable.current_as_pretty())
+            ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
 
@@ -35,10 +35,10 @@
  @rhombus(Printable, ~class) so that its instances print differently in
  different modes.
 
- When @rhombus(as_pretty) is @rhombus(#false), then printing tends to
+ When @rhombus(pretty) is @rhombus(#false), then printing tends to
  use a single line, but also prints faster. The value of the
- @rhombus(Printable.current_as_pretty) @tech{context parameter} is
- to match @rhombus(as_pretty) while printing, which affects functions
+ @rhombus(Printable.current_pretty) @tech{context parameter} is
+ to match @rhombus(pretty) while printing, which affects functions
  like @rhombus(PrintDesc.list).
 
 }
@@ -47,7 +47,7 @@
   fun println(v,
               out = Port.output_port() :: Port.Output,
               ~mode: mode :: (#'text || #'expr) = #'expr,
-              ~as_pretty: as_pretty = Printable.current_as_pretty())
+              ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
 
@@ -138,7 +138,6 @@
 @doc(
   fun Printable.render(pd :: PrintDesc,
                        out = Port.output_port() :: Port.Output,
-                       ~indent: indent :: NonnegInt = 0,
                        ~column: column :: NonnegInt = 0)
     :: Void
 ){
@@ -283,7 +282,7 @@
 
  Description-building helpers for list-like and block-like forms where
  the printing options include a single-variant and multi-line variants,
- but the latter only when @rhombus(Printable.current_as_pretty) is set to
+ but the latter only when @rhombus(Printable.current_pretty) is set to
  @rhombus(#true).
 
  The single-line variant constrains @rhombus(pre_pd), @rhombus(head),
@@ -304,14 +303,40 @@
 
 
 @doc(
-  def Printable.current_as_pretty :: Parameter
-  fun Printable.current_as_pretty() :: Boolean
-  fun Printable.current_as_pretty(on)
+  def Printable.current_pretty :: Parameter
+  fun Printable.current_pretty() :: Boolean
+  fun Printable.current_pretty(on)
 ){
 
  A @tech{context parameter} that determines the default printing mode.
  The parameter's value is used by @rhombus(print), @rhombus(println), and
  @rhombus(PrintDesc.list), for example.
+
+}
+
+
+@doc(
+  def Printable.current_optimal :: Parameter
+  fun Printable.current_optimal() :: Boolean
+  fun Printable.current_optimal(on)
+){
+
+ A @tech{context parameter} that determines whether pretty printing uses
+ a faster but non-optimal strategy or a slower, optimal strategy. The
+ parameter's value is not used when @rhombus(Printable.current_pretty) is
+ @rhombus(#false).
+
+}
+
+
+@doc(
+  def Printable.current_page_width :: Parameter
+  fun Printable.current_page_width() :: Boolean
+  fun Printable.current_page_width(on)
+){
+
+ A @tech{context parameter} for pretty printing that determines the
+ maximum number of columns that printing should use, if possible.
 
 }
 

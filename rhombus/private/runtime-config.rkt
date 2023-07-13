@@ -47,7 +47,7 @@
      (lambda (v op [mode 0])
        (if (racket-print-redirect? v)
            (orig (racket-print-redirect-val v) op 1)
-           (rhombus:print v op)))))
+           (rhombus:print v op 'expr #t)))))
 
   (current-error-message-adjuster
    (lambda (mode)

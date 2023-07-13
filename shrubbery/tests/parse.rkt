@@ -49,14 +49,16 @@
             [(eq? mode 'pretty)
              (define doc `(seq ,@(for/list ([g (in-list (cdr parsed))])
                                    `(seq ,(pretty-shrubbery g) nl))))
-             (render-pretty doc o #:multi-line? (or (eq? mode 'pretty-multi)
-                                                    (eq? mode 'pretty-multi-armored)))]
+             (render-pretty doc o #:width (if (or (eq? mode 'pretty-multi)
+                                                  (eq? mode 'pretty-multi-armored))
+                                              0
+                                              #f))]
             [(eq? mode 'pretty-one)
              (write-shrubbery parsed o #:pretty? #t)]
             [(eq? mode 'pretty-multi)
-             (write-shrubbery parsed o #:pretty? #t #:multi-line? #t)]
+             (write-shrubbery parsed o #:pretty? #t #:width 0)]
             [(eq? mode 'pretty-multi-armored)
-             (write-shrubbery parsed o #:pretty? #t #:multi-line? #t #:armor? #t)]
+             (write-shrubbery parsed o #:pretty? #t #:width 0 #:armor? #t)]
             [else
              (write-shrubbery parsed o)])
           (let ([bstr (get-output-bytes o)])

@@ -36,8 +36,9 @@ block:
     override describe(mode, recur):
       import .PrintDesc open
       // using newline() forces multi-line rendering of `Posn`
-      list("(", [concat(recur(x, mode), newline(), "!"), recur(y)], ")")      
-  check "" +& Posn(1, 2) ~is "(1\n !,\n 2)"
+      list("(", [concat(recur(x, mode), newline(), "!"), recur(y)], ")")
+  parameterize { Printable.current_pretty: #true }:
+    check "" +& Posn(1, 2) ~is "(\n  1\n  !,\n  2\n)"
 
 check:
   class Posn(x, y):

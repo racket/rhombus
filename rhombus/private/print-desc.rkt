@@ -1,10 +1,14 @@
 #lang racket/base
+(require "realm.rkt"
+         (prefix-in pe: pretty-expressive)
+         (prefix-in sp: shrubbery/private/simple-pretty))
 
-(require (prefix-in pe: pretty-expressive))
 
 (provide (struct-out PrintDesc)
          (struct-out pretty-ref)
          current-print-as-pretty
+         current-pretty-as-optimal
+         current-page-width
 
          pretty-display
          pretty-write
@@ -27,9 +31,19 @@
 
 (struct pretty-ref ([doc #:mutable]))
 
-(define current-print-as-pretty (make-parameter #t
+(define current-print-as-pretty (make-parameter #f
                                                 (lambda (v) (and v #t))
-                                                'Printable.current_as_pretty))
+                                                'Printable.current_pretty))
+(define current-pretty-as-optimal (make-parameter #f
+                                                  (lambda (v) (and v #t))
+                                                  'Printable.current_optimal))
+(define current-page-width
+  (make-parameter 80
+                  (lambda (v)
+                    (unless (exact-nonnegative-integer? v)
+                      (raise-argument-error* 'Printable.current_page_width rhombus-realm "NonnegInt" v))
+                    v)
+                  'Printable.current_page_width))
 
 (define (pretty-display v [op/ht #f])
   (cond
@@ -108,22 +122,43 @@
                   (pretty-nest 2 (pretty-concat (pretty-newline)
                                                 body)))))
 
-(define (resolve-references doc)
+(define (resolve-references doc
+                            build-text
+                            built-nl
+                            build-concat
+                            build-alt
+                            build-nest
+                            build-align)
   (define ht (make-hasheq))
   (define graph? (print-graph))
-  ;; to use dumb printer, uncomment and also change `render-pretty`
-  #;
-  (begin
-    (define (pe:text str) str)
-    (define pe:nl 'nl)
-    (define (pe:u-concat lst) (cons 'seq lst))
-    (define (pe:alt a b) (list 'or a b))
-    (define (pe:nest n doc) (list 'nest n doc))
-    (define (pe:align doc) (list 'align doc))
-    (define (pe:flat doc) doc))
+  (define (obviously-non-cyclic?)
+    ;; a quick pre-test to see whether we need an extra pass
+    (let loop ([doc doc] [saw-ht #hasheq()] [fuel 128])
+      (cond
+        [(eqv? fuel 0) #f]
+        [(pretty-ref? doc)
+         (and (not (hash-ref saw-ht doc #f))
+              (loop (pretty-ref-doc doc) (hash-set saw-ht doc #t) fuel))]
+        [(pair? doc)
+         (case (car doc)
+           [(or) (let ([fuel (loop (cadr doc) saw-ht (sub1 fuel))])
+                   (and fuel (loop (caddr doc) saw-ht fuel)))]
+           [(align flat) (loop (cadr doc) saw-ht (sub1 fuel))]
+           [(nest) (loop (caddr doc) saw-ht (sub1 fuel))]
+           [(seq)
+            (let seq-loop ([docs (cdr doc)] [fuel (sub1 fuel)])
+              (cond
+                [(null? docs) fuel]
+                [else (let ([fuel (loop (car docs) saw-ht fuel)])
+                        (and fuel (seq-loop (cdr docs) fuel)))]))]
+           [else
+            (error 'resolve-references "oops ~s" doc)])]
+        [else (sub1 fuel)])))
+  ;; a pass detects sharing and cycles, and it also removes/resolved `flat`
+  ;; while ordering `or` to have a flat case as the first option
   (define (pass build?)
     (define memo-ht (make-hash))
-    (let loop ([doc doc] [saw-ht #hasheq()] [doc-ht-in #f])
+    (let loop ([doc doc] [saw-ht #hasheq()] [flat? #f] [doc-ht-in #f])
       (cond
         [(pretty-ref? doc)
          (cond
@@ -131,89 +166,133 @@
             (define n (hash-ref ht doc (hash-count ht)))
             (hash-set! ht doc n)
             (values saw-ht
-                    (and build?
-                         (pe:text (string-append "#" (number->string n) "#"))))]
+                    (if build?
+                        (build-text (string-append "#" (number->string n) "#"))
+                        'ok)
+                    #t)]
            [else
-            (define-values (new-saw-ht new-doc)
-              (loop (pretty-ref-doc doc) (hash-set saw-ht doc #t) #f))
+            (define-values (new-saw-ht new-doc is-flat?)
+              (loop (pretty-ref-doc doc) (hash-set saw-ht doc #t) flat? #f))
             (values (if graph? new-saw-ht saw-ht)
-                    (and build?
-                         (cond
-                           [(hash-ref ht doc #f)
-                            => (lambda (n)
-                                 (pe:u-concat
-                                  (list
-                                   (pe:text (string-append "#" (number->string n) "="))
-                                   new-doc)))]
-                           [else new-doc])))])]
-        [(list? doc)
+                    (and new-doc
+                         (if build?
+                             (cond
+                               [(hash-ref ht doc #f)
+                                => (lambda (n)
+                                     (build-concat
+                                      (list
+                                       (build-text (string-append "#" (number->string n) "="))
+                                       new-doc)))]
+                               [else new-doc])
+                             'ok))
+                    is-flat?)])]
+        [(pair? doc)
          (define doc-ht (or doc-ht-in
-                            (hash-ref memo-ht saw-ht (lambda ()
-                                                       (define ht (make-hasheq))
-                                                       (hash-set! memo-ht saw-ht ht)
-                                                       ht))))
+                            (hash-ref memo-ht (cons saw-ht flat?)
+                                      (lambda ()
+                                        (define ht (make-hasheq))
+                                        (hash-set! memo-ht (cons saw-ht flat?) ht)
+                                        ht))))
          (cond
            [(hash-ref doc-ht doc #f)
             => (lambda (p)
-                 (values (car p) (cdr p)))]
+                 (values (caar p) (cdr p) (cdar p)))]
            [else
-            (define-values (new-saw-ht new-doc)
+            (define-values (new-saw-ht new-doc is-flat?)
               (case (car doc)
                 [(or)
-                 (define-values (left-saw-ht left-doc)
-                   (loop (cadr doc) saw-ht doc-ht))
-                 (define-values (right-saw-ht right-doc)
-                   (loop (caddr doc) saw-ht doc-ht))
-                 (values left-saw-ht
-                         (and build?
-                              (pe:alt left-doc right-doc)))]
+                 (define-values (left-saw-ht left-doc left-is-flat?)
+                   (loop (cadr doc) saw-ht flat? doc-ht))
+                 (define-values (right-saw-ht right-doc right-is-flat?)
+                   (loop (caddr doc) saw-ht flat? doc-ht))
+                 (cond
+                   [(not left-doc) (values right-saw-ht right-doc right-is-flat?)]
+                   [(not right-doc) (values left-saw-ht left-doc left-is-flat?)]
+                   [else (values left-saw-ht
+                                 (if build?
+                                     ;; put flat option on left to cooperate with
+                                     ;; a greedy rendering algorithm
+                                     (if (or left-is-flat? (not right-is-flat?))
+                                         (build-alt left-doc right-doc)
+                                         (build-alt right-doc left-doc))
+                                     'ok)
+                                 (and right-is-flat? left-is-flat?))])]
                 [(align)
-                 (define-values (new-saw-ht new-doc) (loop (cadr doc) saw-ht doc-ht-in))
+                 (define-values (new-saw-ht new-doc is-flat?) (loop (cadr doc) saw-ht flat? doc-ht-in))
                  (values new-saw-ht
-                         (and build?
-                              (pe:align new-doc)))]
+                         (and new-doc
+                              (if build?
+                                  (build-align new-doc)
+                                  'ok))
+                         is-flat?)]
                 [(nest)
-                 (define-values (new-saw-ht new-doc) (loop (caddr doc) saw-ht doc-ht-in))
+                 (define-values (new-saw-ht new-doc is-flat?) (loop (caddr doc) saw-ht flat? doc-ht-in))
                  (values new-saw-ht
-                         (and build?
-                              (pe:nest (cadr doc) new-doc)))]
+                         (and new-doc
+                              (if build?
+                                  (build-nest (cadr doc) new-doc)
+                                  'ok))
+                         is-flat?)]
                 [(flat)
-                 (define-values (new-saw-ht new-doc) (loop (cadr doc) saw-ht doc-ht-in))
-                 (values new-saw-ht
-                         (and build?
-                              (pe:flat new-doc)))]
+                 (define-values (new-saw-ht new-doc is-flat?) (loop (cadr doc) saw-ht #t (and flat? doc-ht-in)))
+                 (values new-saw-ht new-doc #t)]
                 [(seq)
-                 (define-values (new-saw-ht rev-new-doc new-doc-ht)
-                   (for/fold ([saw-ht saw-ht] [rev-doc null] [doc-ht-in doc-ht]) ([doc (in-list (cdr doc))])
-                     (define-values (new-saw new-doc) (loop doc saw-ht doc-ht-in))
-                     (values new-saw (cons new-doc rev-doc) (and (eq? saw-ht new-saw) doc-ht-in))))
+                 (define-values (new-saw-ht rev-new-docs is-flat?)
+                   (let seq-loop ([docs (cdr doc)] [saw-ht saw-ht] [rev-docs null] [is-flat? #t] [doc-ht-in doc-ht])
+                     (cond
+                       [(null? docs) (values saw-ht rev-docs is-flat?)]
+                       [else
+                        (define doc (car docs))
+                        (define-values (new-saw new-doc new-is-flat?) (loop doc saw-ht flat? doc-ht-in))
+                        (if new-doc
+                            (seq-loop (cdr docs) new-saw (cons new-doc rev-docs) (and is-flat? new-is-flat?)
+                                      (and (eq? saw-ht new-saw) doc-ht-in))
+                            (values #f #f #f))])))
                  (values new-saw-ht
-                         (and build?
-                              (pe:u-concat (reverse rev-new-doc))))]
+                         (and rev-new-docs
+                              (if build?
+                                  (build-concat (reverse rev-new-docs))
+                                  'ok))
+                         is-flat?)]
                 [else
                  (error 'resolve-references "oops ~s" doc)]))
-            (hash-set! doc-ht doc (cons new-saw-ht new-doc))
-            (values new-saw-ht new-doc)])]
-        [(eq? doc 'nl) (values saw-ht pe:nl)]
-        [(bytes? doc) (values saw-ht (and build? (pe:text (bytes->string/utf-8 doc))))]
-        [else (values saw-ht (and build? (pe:text doc)))])))
+            (hash-set! doc-ht doc (cons (cons new-saw-ht is-flat?) new-doc))
+            (values new-saw-ht new-doc is-flat?)])]
+        [(eq? doc 'nl) (if flat?
+                           (values #f #f #f)
+                           (values saw-ht built-nl #f))]
+        [(bytes? doc) (values saw-ht (if build? (build-text (bytes->string/utf-8 doc)) 'ok) #t)]
+        [else (values saw-ht (if build? (build-text doc) 'ok) #t)])))
   ;; discover graph references:
-  (pass #f)
+  (when (or graph?
+            (not (obviously-non-cyclic?)))
+    (pass #f))
   ;; add graph tags:
-  (define-values (final-saw-ht new-doc) (pass #t))
+  (define-values (final-saw-ht new-doc is-flat?) (pass #t))
+  (unless new-doc (error 'print "no valid flat rendering"))
   new-doc)
 
 (define (render-pretty doc o
-                       #:column [col 0]
-                       #:indent [indent 0])
-  ;; to use dumb printer, uncomment and also change `resolve-references`
-  #;
-  (begin
-    (define (pe:pretty-print pe-doc #:out o #:offset col)
-      (local-require shrubbery/private/simple-pretty)
-      (render-pretty pe-doc o
-                     #:multi-line? #t
-                     #:column col)))
-  (pe:pretty-print (resolve-references doc)
-                   #:out o
-                   #:offset col))
+                       #:column [col 0])
+  (if (current-pretty-as-optimal)
+      (pe:pretty-print (resolve-references doc
+                                           pe:text
+                                           pe:nl
+                                           pe:u-concat
+                                           pe:alt
+                                           pe:nest
+                                           pe:align)
+                        #:out o
+                        #:offset col
+                        #:page-width (current-page-width))
+      (sp:render-pretty (resolve-references doc
+                                            (lambda (str) str)
+                                            'nl
+                                            (lambda (lst) (cons 'seq lst))
+                                            (lambda (a b) (list 'or a b))
+                                            (lambda (n doc) (list 'nest n doc))
+                                            (lambda (doc) (list 'align doc)))
+                        o
+                        #:width (and (current-print-as-pretty)
+                                     (current-page-width))
+                        #:column col)))

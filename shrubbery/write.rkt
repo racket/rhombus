@@ -13,11 +13,11 @@
 (define (write-shrubbery v [op (current-output-port)]
                          #:pretty? [pretty? #f]
                          #:armor? [armor? #f]
-                         #:multi-line? [multi-line? #f])
+                         #:width [width #f])
   (cond
     [pretty?
      (define doc (pretty-shrubbery v #:armor? armor?))
-     (render-pretty doc op #:multi-line? multi-line?)]
+     (render-pretty doc op #:width width)]
     [else
      (do-write-shrubbery-term v op)]))
 
