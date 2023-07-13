@@ -19,7 +19,7 @@
 
 @doc(
   fun print(v,
-            out = Port.current_output() :: Port.Output,
+            out :: Port.Output = Port.current_output(),
             ~mode: mode :: (#'text || #'expr) = #'expr,
             ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -45,7 +45,7 @@
 
 @doc(
   fun println(v,
-              out = Port.output_port() :: Port.Output,
+              out :: Port.Output = Port.output_port(),
               ~mode: mode :: (#'text || #'expr) = #'expr,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -137,7 +137,7 @@
 
 @doc(
   fun Printable.render(pd :: PrintDesc,
-                       out = Port.output_port() :: Port.Output,
+                       out :: Port.Output = Port.output_port(),
                        ~column: column :: NonnegInt = 0)
     :: Void
 ){
