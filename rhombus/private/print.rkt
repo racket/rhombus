@@ -1,8 +1,8 @@
 #lang racket/base
 (require racket/symbol
          racket/keyword
+         racket/unsafe/undefined
          shrubbery/write
-         shrubbery/private/simple-pretty
          "provide.rkt"
          (submod "set.rkt" for-ref)
          "adjust-name.rkt"
@@ -36,12 +36,13 @@
 
 (module+ for-printable
   (provide pretty
-           render-pretty
            check-output-port
            check-mode))
 
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
+
+(define default-pretty (gensym))
 
 (define (check-output-port who op)
   (unless (output-port? op)
@@ -53,16 +54,18 @@
     (raise-argument-error* who rhombus-realm "#'text || #'expr" mode)))
   
 (define/arity #:name print (rhombus-print v [op (current-output-port)]
-                                          #:mode [mode 'text])
+                                          #:mode [mode 'text]
+                                          #:as_pretty [pretty? default-pretty])
   (check-output-port 'print op)
   (check-mode 'print mode)
-  (do-print v op mode))
+  (do-print v op mode pretty?))
 
 (define/arity (println v [op (current-output-port)]
-                       #:mode [mode 'text])
+                       #:mode [mode 'text]
+                       #:as_pretty [pretty? default-pretty])
   (check-output-port 'println op)
   (check-mode 'println mode)
-  (do-print v op mode)
+  (do-print v op mode pretty?)
   (newline op))
 
 (define (do-display v op)
@@ -138,13 +141,26 @@
      (write-shrubbery v s-op)
      (use-display (get-output-string s-op) op)]))
 
-(define (do-print v op [mode 'expr])
-  (maybe-print-immediate v display write void print-other mode op))
+(define (do-print v op [mode 'expr] [pretty? #t])
+  (maybe-print-immediate v display write void
+                         (if (eq? pretty? default-pretty)
+                             print-other
+                             (if pretty?
+                                 print-other-pretty
+                                 print-other-nonpretty))
+                         mode op))
+
+(define (print-other-pretty v mode op)
+  (parameterize ([current-print-as-pretty #t])
+    (print-other v mode op)))
+
+(define (print-other-nonpretty v mode op)
+  (parameterize ([current-print-as-pretty #f])
+    (print-other v mode op)))
 
 (define (print-other v mode op)
-  (define ht (make-hasheq))
-  (define doc (pretty v mode ht))
-  (render-pretty (resolve-references doc) op))
+  (define doc (pretty v mode (make-hasheq)))
+  (render-pretty doc op))
 
 (define (pretty v mode ht)
   (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))

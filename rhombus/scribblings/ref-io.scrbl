@@ -20,7 +20,8 @@
 @doc(
   fun print(v,
             out = Port.current_output() :: Port.Output,
-            ~mode: mode :: (#'text || #'expr) = #'expr)
+            ~mode: mode :: (#'text || #'expr) = #'expr,
+            ~as_pretty: as_pretty = Printable.current_as_pretty())
     :: Void
 ){
 
@@ -34,16 +35,23 @@
  @rhombus(Printable, ~class) so that its instances print differently in
  different modes.
 
+ When @rhombus(as_pretty) is @rhombus(#false), then printing tends to
+ use a single line, but also prints faster. The value of the
+ @rhombus(Printable.current_as_pretty) @tech{context parameter} is
+ to match @rhombus(as_pretty) while printing, which affects functions
+ like @rhombus(PrintDesc.list).
+
 }
 
 @doc(
   fun println(v,
               out = Port.output_port() :: Port.Output,
-              ~mode: mode :: (#'text || #'expr) = #'expr)
+              ~mode: mode :: (#'text || #'expr) = #'expr,
+              ~as_pretty: as_pretty = Printable.current_as_pretty())
     :: Void
 ){
 
- Prints @rhombus(v) to @rhombus(out), then prints a newline.
+ Prints like @rhombus(print), then prints a newline.
 
 }
 
@@ -274,10 +282,15 @@
 ){
 
  Description-building helpers for list-like and block-like forms where
- the printing options include a single-variant and a multi-line variant.
- The single-line option disallows a multi-line @rhombus(pre_pd),
- @rhombus(head), or any member of @rhombus(elements) other than the last
- one.
+ the printing options include a single-variant and multi-line variants,
+ but the latter only when @rhombus(Printable.current_as_pretty) is set to
+ @rhombus(#true).
+
+ The single-line variant constrains @rhombus(pre_pd), @rhombus(head),
+ and any member of @rhombus(elements) other than the last one to be
+ printed as a single-line, too. If one of those has no single-line
+ option, then the combined single-line variant will not be used (which
+ can cause the description to be unprintable).
 
 @examples(
   Printable.render(PrintDesc.list("Posn(", ["x", "y"], ")"))
@@ -286,5 +299,38 @@
                                                     PrintDesc.newline(),
                                                     "two")))
 )
+
+}
+
+
+@doc(
+  def Printable.current_as_pretty :: Parameter
+  fun Printable.current_as_pretty() :: Boolean
+  fun Printable.current_as_pretty(on)
+){
+
+ A @tech{context parameter} that determines the default printing mode.
+ The parameter's value is used by @rhombus(print), @rhombus(println), and
+ @rhombus(PrintDesc.list), for example.
+
+}
+
+
+@doc(
+  def Printable.current_show_graph :: Parameter
+  fun Printable.current_show_graph() :: Boolean
+  fun Printable.current_show_graph(on)
+){
+
+ A @tech{context parameter} that determines whether printing shows
+ sharing of objects in terms of @rhombus(===) identity.
+
+ Sharing is reported by a @litchar{#}@italic{n}@litchar{=} prefix on a
+ printed value, and then @litchar{#}@italic{n}@litchar{#} with the same
+ number @italic{n} is used for later occurrences of the value.
+
+ The same notation is used to show cyclic data, which is shown
+ independent of the value of the @rhombus(Printable.current_show_graph)
+ parameter.
 
 }

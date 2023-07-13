@@ -37,7 +37,7 @@ block:
       import .PrintDesc open
       // using newline() forces multi-line rendering of `Posn`
       list("(", [concat(recur(x, mode), newline(), "!"), recur(y)], ")")      
-  check "" +& Posn(1, 2) ~is "(1\n !, 2)"
+  check "" +& Posn(1, 2) ~is "(1\n !,\n 2)"
 
 check:
   class Posn(x, y):
