@@ -342,9 +342,9 @@
 
 
 @doc(
-  def Printable.current_show_graph :: Parameter
-  fun Printable.current_show_graph() :: Boolean
-  fun Printable.current_show_graph(on)
+  def Printable.current_graph :: Parameter
+  fun Printable.current_graph() :: Boolean
+  fun Printable.current_graph(on)
 ){
 
  A @tech{context parameter} that determines whether printing shows
@@ -355,7 +355,7 @@
  number @italic{n} is used for later occurrences of the value.
 
  The same notation is used to show cyclic data, which is shown
- independent of the value of the @rhombus(Printable.current_show_graph)
+ independent of the value of the @rhombus(Printable.current_graph)
  parameter.
 
 }

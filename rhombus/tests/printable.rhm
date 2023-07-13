@@ -58,7 +58,7 @@ block:
     def b = Box(3, #false)
     check to_string([b, b]) ~is "[Box(3, #false), Box(3, #false)]"
     check to_string({1: b, 2: b}) ~is "{1: Box(3, #false), 2: Box(3, #false)}"
-    parameterize { Printable.current_show_graph: #true }:
+    parameterize { Printable.current_graph: #true }:
       check to_string([b, b]) ~is "[#0=Box(3, #false), #0#]"
       check to_string({1: b, 2: b}) ~is "{1: #0=Box(3, #false), 2: #0#}"
   block:

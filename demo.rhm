@@ -535,7 +535,7 @@ fun enumerate(l :: List):
     each:
       v: l
       i: 0..
-    displayln(i +& ". " +& v)
+    println(i +& ". " +& v)
 
 enumerate(["a", "b", "c"])
 

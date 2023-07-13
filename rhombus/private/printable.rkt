@@ -56,7 +56,7 @@
    [render Printable.render]
 
    [current_page_width current-page-width]
-   [current_show_graph print-graph]
+   [current_graph print-graph]
    [current_pretty current-print-as-pretty]
    [current_optimal current-pretty-as-optimal]))
 
