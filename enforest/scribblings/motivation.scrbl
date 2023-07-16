@@ -35,10 +35,10 @@ to support:
   | should_take_cab(#false): #false
 )
 
-The intent here is that @rhombus(val) and @rhombus(fun) are
+The intent here is that @rhombus(def) and @rhombus(fun) are
 macro-implemented and recognize various forms of definitions, including
 simple binding, functions, and functions that have pattern-matching
-cases. The @rhombus(val) and @rhombus(fun) forms are not meant to
+cases. The @rhombus(def) and @rhombus(fun) forms are not meant to
 know about @rhombus(::) specifically; the @rhombus(::) is meant to be a
 binding operator that checks whether the value flowing to the binding
 satisfies a predicate, and it may also associate compile-time
@@ -46,7 +46,7 @@ information to a binding, such as the information that @rhombus(p) is a
 @rhombus(Posn) instance. The name @rhombus(Posn) works in an expression
 to construct a position value, while in a binding position,
 @rhombus(Posn) works to construct a pattern-matching binding (again,
-without @rhombus(val) or @rhombus(fun) knowing anything specific about
+without @rhombus(def) or @rhombus(fun) knowing anything specific about
 @rhombus(Posn)). Meanwhile, @rhombus(.), @rhombus(-), @rhombus(+),
 @rhombus(*), @rhombus(<), and @rhombus(||) are the obvious operators
 with the usual precedence. Unlike the other operators, the @rhombus(.)
