@@ -414,7 +414,7 @@
                         rev-attrs)])])]
            [else
             (loop (cdr body) (cons g rev-do) rev-body rev-attrs)])])))
-  
+
   (with-syntax ([((attr ...) ...)
                  (map (lambda (var)
                         #`(#:attr

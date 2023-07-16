@@ -348,8 +348,8 @@
                 (list
                  (if swap-to-root
                      (pattern-variable->list (struct-copy pattern-variable swap-to-root-var
-                                                          [sym swap-to-root]
-                                                          [id #f]))
+                                                          [sym (syntax-e #'id)]
+                                                          [id #'id]))
                      (list #'id #'id temp-id pack-depth unpack*)))
                 null)
             (if (not open-attributes)

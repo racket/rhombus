@@ -680,3 +680,14 @@ check:
   | '$(mp :: ModPath)':
       [mp.elem, ...]
   ~prints_like ['a', 'b', 'c']
+
+
+// field name in root-swapped syntax class should not be
+// confused with a pattern variable using the syntax
+check:
+  syntax_class C:
+    root_swap: a term
+  | '$(a :: Term)'
+  syntax_class D
+  | '$(c :: C) $a' // `c :: C` doesn;t bind `a`
+  ~completes
