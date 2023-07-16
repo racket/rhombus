@@ -126,7 +126,13 @@
           #`(begin
               #,@(reverse accum)
               #,(datum->syntax exp-form
-                               (syntax-e #'(def (new-id ...) rhs))
+                               (syntax-e #`(def (new-id ...)
+                                             #,(if (eq? (syntax-e #'def) 'define-syntaxes)
+                                                   #`(with-continuation-mark
+                                                      syntax-parameters-key (quote-syntax stx-params)
+                                                      rhs)
+                                                   #'(with-syntax-parameters stx-params
+                                                       rhs))))
                                exp-form
                                exp-form)
               (sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params . forms))]

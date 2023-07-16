@@ -77,3 +77,21 @@ check LaterPosn(1, 2).auto_on ~is "Thursday"
 check LaterPosn(1, 2).now() ~is "Sunday"
 check LaterPosn(1, 2).name() ~is "Monday"
 check (LaterPosn(1, 2) with ()).arg_on ~is "SundayMonday"
+
+check:
+  syntax_parameter.relet today_name:
+    "Monday"
+  syntax_parameter.relet today_name:
+    "on " ++ syntax_parameter_meta.lookup('today_name')
+  today
+  ~is "on Monday"
+
+check:
+  syntax_parameter.relet today_name:
+    "Monday"
+  fun f ():
+    syntax_parameter.relet today_name:
+      "on " ++ syntax_parameter_meta.lookup('today_name')
+    today
+  f()
+  ~is "on Monday"

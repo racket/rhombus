@@ -34,6 +34,6 @@
        [else
         (define-values (no-expr opaque-expr)
           (with-continuation-mark
-         syntax-parameters-key #'stx-params
-         (syntax-local-expand-expression #'expr #t)))
+           syntax-parameters-key #'stx-params
+           (syntax-local-expand-expression #'expr #t)))
         opaque-expr])]))
