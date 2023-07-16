@@ -15,9 +15,9 @@ to support:
   import:
     weather
 
-  struct Posn(x, y)  
+  class Posn(x, y)
 
-  val home :: Posn:
+  def home :: Posn:
     Posn(3, 7)
 
   fun abs(n): if n < 0 | -n | n
@@ -38,7 +38,7 @@ to support:
 The intent here is that @rhombus(val) and @rhombus(fun) are
 macro-implemented and recognize various forms of definitions, including
 simple binding, functions, and functions that have pattern-matching
-cases. The @rhombus(val) and @rhombus(function) forms are not meant to
+cases. The @rhombus(val) and @rhombus(fun) forms are not meant to
 know about @rhombus(::) specifically; the @rhombus(::) is meant to be a
 binding operator that checks whether the value flowing to the binding
 satisfies a predicate, and it may also associate compile-time
@@ -77,7 +77,7 @@ macro as
 
 @rhombusblock(
   expr.macro '$x -> $y $tail ...':
-    values('$x . $y', tail)
+    values('$x . $y', '$tail ...')
 
   home->x + 1 // same as home.x + 1
 )
@@ -94,7 +94,7 @@ operator to make it work in binding positions:
 
 @rhombusblock(
   bind.macro '$x <> $y $tail ...':
-    values('Posn($x, $y)', tail)
+    values('Posn($x, $y)', '$tail ...')
 
   // uses <> both for argument binding and result expression:
   fun flip(x <> y):

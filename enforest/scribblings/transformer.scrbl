@@ -20,28 +20,32 @@ operator's context. For example, the left-hand argument to an infix
 expression operator @rhombus(+) or @rhombus(.) is always parsed as an
 expression. For the right-hand (or only, in the case of prefix)
 argument, the operator's mapping selects one of two protocols:
-_automatic_, where the right-hand argument is also parsed in the same
-context, or _macro_, where the operator's transformer receives the full
+@deftech(~key: "automatic protocol"){automatic},
+where the right-hand argument is also parsed in the same
+context, or @deftech(~key: "macro protocol"){macro},
+where the operator's transformer receives the full
 sequence of terms remaining in the enclosing group. An operator using
-the macro protocol parses remaining terms as it sees fit, and then it
+the @tech{macro protocol} parses remaining terms as it sees fit, and then it
 returns the still-remaining terms that it does not consume. For example,
-@rhombus(+) for expressions is likely implemented as an automatic infix
+@rhombus(+) for expressions is likely implemented as
+an @tech(~key: "automatic protocol"){automatic} infix
 operator, since both of its arguments are also expressions, while
-@rhombus(.) is likely implemented as a macro infix operator so that it's
+@rhombus(.) is likely implemented as
+a @tech(~key: "macro protocol"){macro} infix operator so that it's
 right-hand ``argument'' is always parsed as a field identifier. In the
 earlier @rhombus(<>) and @rhombus(->) examples, @rhombus(<>) is
-implemented as an automatic infix operator for expressions, while
-@rhombus(<>) for bindings and @rhombus(->) for expressions were
-implemented as macro infix operators.
+implemented as an @tech(~key: "automatic protocol"){automatic} infix operator
+for expressions, while @rhombus(<>) for bindings and @rhombus(->) for expressions were
+implemented as @tech(~key: "macro protocol"){macro} infix operators.
 
-Roughly, an operator that uses the macro protocol takes on some of the
+Roughly, an operator that uses the @tech{macro protocol} takes on some of the
 burden of dealing with precedence, at least for terms after the
 operator. For operators like @rhombus(.) or @rhombus(->), this is no
 problem, because the right-hand side has a fixed shape. Other operators
 may need to call back into the enforestation algorithm, and the Rhombus
 expander provides facilities to enable that.
 
-A postfix operator is implemented as a macro infix operator that
+A postfix operator is implemented as a @tech(~key: "macro protocol"){macro} infix operator that
 consumes no additional terms after the operator. For example, a postfix
 @rhombus(!) might be defined (shadowing the normal @rhombus(!) for
 ``not'') as follows:
@@ -52,14 +56,14 @@ consumes no additional terms after the operator. For example, a postfix
   | factorial(n): n*factorial(n-1)
        
   expr.macro '$a ! $tail ...':
-    values('factorial($a)', tail)
+    values('factorial($a)', '$tail ...')
 
   10! + 1 // = 3628801
 )
 
 Since the Rhombus expander provides a way for macro transformers to
 resume enforestation, all operators could be implemented with the
-macro protocol. The automatic protocol is just a convenient shortcut.
+@tech{macro protocol}. The @tech{automatic protocol} is just a convenient shortcut.
 
 Some contexts might constrain the allowed forms of operators to prefix
 or infix, constrain the names used for operators, and/or eschew one of
