@@ -49,6 +49,6 @@ can be put back together into a parsed form using @rhombus(bind.pack).
 Some contexts may oblige a macro transformer to consume all of the
 remaining terms in a group. For example, a definition or declaration
 context based on prefix identifiers like @rhombus(import),
-@rhombus(val), @rhombus(fun), and @rhombus(struct) might report an error
+@rhombus(def), @rhombus(fun), and @rhombus(class) might report an error
 if a transformer does not consume all available terms (and that's the
 case in @Rhombus).
