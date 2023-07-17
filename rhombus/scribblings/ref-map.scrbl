@@ -370,7 +370,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.get(map :: ReadableMap, key, default = #,@rhombus(raise_error, ~var))
+  fun Map.get(map :: ReadableMap, key, default = #,(@rhombus(raise_error, ~var)))
 ){
 
  Equivalent to @rhombus(map[key]) when @rhombus(default) is not
