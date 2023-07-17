@@ -2,7 +2,7 @@
 
 import:
   lib("scribble/manual.rkt") expose:
-    defmodule racketmodname
+    defmodule racketmodlink
   "rhombus.rhm" open
   meta:
     lib("racket/base.rkt")
@@ -13,17 +13,23 @@ import:
 export:
   docmodule
   rhombusmodname
+  rhombuslangname
+  racketmodname
 
 meta:
-  fun translate_mod(mod):
+  fun as_racket_mod_name(mod):
     match mod
     | '$(a :: Identifier)': mod
     | '$a / $b ...':
         Syntax.make_id(Syntax.unwrap(a)
                          +& "/"
-                         +& translate_mod('$b ...'))
+                         +& as_racket_mod_name('$b ...'))
     | 'lib($str)':
         ['lib', str]
+
+  fun
+  | pack_tree([v, ...]): [pack_tree(v), ...]
+  | pack_tree(v): Syntax.make(v, #false)
 
   syntax_class Option:
     pattern
@@ -32,15 +38,34 @@ meta:
     | '~no_declare':
         field [form, ...]: ['#{#:no-declare}']
     | '~use_sources: $modpath; ...':
-        field [form, ...]: ['#{#:use-sources}', [translate_mod(modpath), ...]]
+        field [form, ...]: ['#{#:use-sources}',
+                            pack_tree([ModulePath.s_exp(ModulePath('$modpath')),
+                                       ...])]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
+  def is_lang: (match '[$option, ...]'
+                | '[$_, ..., ~lang, $_, ...]': #true
+                | ~else: #false)
   '$(decl_meta.pack_s_exp(['defmodule',
                            '#{#:require-form}',
-                           expr_meta.pack_expr('fun (mod): @rhombus(import: #,(mod))'),
-                           translate_mod('$mod ...'),
+                           expr_meta.pack_expr('fun (t_mod): @rhombus(import: $mod ...)'),
+                           if is_lang
+                           | as_racket_mod_name('$mod ...')
+                           | pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
                            option.form, ..., ...]))'
   
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
-  values(expr_meta.pack_s_exp(['racketmodname', translate_mod('$mod ...')]),
+  values(expr_meta.pack_s_exp(['racketmodlink',
+                               pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
+                               expr_meta.pack_expr('@rhombus($mod ...)')]),
          '$tail ...')
+
+expr.macro 'rhombuslangname ($mod ...) $tail ...':
+  values(expr_meta.pack_s_exp(['racketmodlink',
+                               as_racket_mod_name('$mod ...'),
+                               expr_meta.pack_expr('@rhombus($mod ...)')]))
+
+expr.macro 'racketmodname ($mod ...) $tail ...':
+  values(expr_meta.pack_s_exp(['racketmodlink',
+                               as_racket_mod_name('$mod ...'),
+                               expr_meta.pack_expr('@rhombus($mod ...)')]))

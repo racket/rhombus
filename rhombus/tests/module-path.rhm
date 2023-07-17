@@ -1,0 +1,43 @@
+#lang rhombus
+
+// syntax form
+check:
+  ModulePath 'm' +& "" ~is "ModulePath('lib (\"m/main.rhm\")')"
+  ModulePath 'm/n' +& "" ~is "ModulePath('lib (\"m/n.rhm\")')"
+  ModulePath '.m' +& "" ~is "ModulePath('. m')"
+  ModulePath '"m"' +& "" ~is "ModulePath('\"m\"')"
+  ModulePath '"m/n"' +& "" ~is "ModulePath('\"m/n\"')"
+  ModulePath 'file("m")' +& "" ~is "ModulePath('file (\"m\")')"
+  ModulePath 'file("/m")' +& "" ~is "ModulePath('file (\"/m\")')"
+  ModulePath 'lib("m/n.rkt")' +& "" ~is "ModulePath('lib (\"m/n.rkt\")')"
+  ModulePath 'lib("m/n.rkt")' +& "" ~is "ModulePath('lib (\"m/n.rkt\")')"
+  ModulePath 'lib("m/n.rkt")!x' +& "" ~is "ModulePath('lib (\"m/n.rkt\") ! x')"
+  ModulePath 'm!x' +& "" ~is "ModulePath('lib (\"m/main.rhm\") ! x')"
+  ModulePath 'm!x!y!z' +& "" ~is "ModulePath('lib (\"m/main.rhm\") ! x ! y ! z')"
+  ModulePath 'm/n!x' +& "" ~is "ModulePath('lib (\"m/n.rhm\") ! x')"
+  ModulePath '.m ! x' +& "" ~is "ModulePath('. m ! x')"
+  ModulePath 'self!x' +& "" ~is "ModulePath('self ! x')"
+  ModulePath 'parent' +& "" ~is "ModulePath('parent')"
+  ModulePath 'parent!x' +& "" ~is "ModulePath('parent ! x')"
+  ModulePath 'parent!x!y' +& "" ~is "ModulePath('parent ! x ! y')"
+
+// function form
+check:
+  ModulePath('m') ~is ModulePath 'lib ("m/main.rhm")'
+  ModulePath('m/n') ~is ModulePath 'lib ("m/n.rhm")'
+  ModulePath('.m') ~is ModulePath '. m'
+  ModulePath('"m"') ~is ModulePath '"m"'
+  ModulePath('"m/n"') ~is ModulePath '"m/n"'
+  ModulePath('file("m")') ~is ModulePath 'file ("m")'
+  ModulePath('file("/m")') ~is ModulePath 'file ("/m")'
+  ModulePath('lib("m/n.rkt")') ~is ModulePath 'lib ("m/n.rkt")'
+  ModulePath('lib("m/n.rkt")') ~is ModulePath 'lib ("m/n.rkt")'
+  ModulePath('lib("m/n.rkt")!x') ~is ModulePath 'lib ("m/n.rkt") ! x'
+  ModulePath('m!x') ~is ModulePath 'lib ("m/main.rhm") ! x'
+  ModulePath('m!x!y!z') ~is ModulePath 'lib ("m/main.rhm") ! x ! y ! z'
+  ModulePath('m/n!x') ~is ModulePath 'lib ("m/n.rhm") ! x'
+  ModulePath('.m ! x') ~is ModulePath '. m ! x'
+  ModulePath('self!x') ~is ModulePath 'self ! x'
+  ModulePath('parent') ~is ModulePath 'parent'
+  ModulePath('parent!x') ~is ModulePath 'parent ! x'
+  ModulePath('parent!x!y') ~is ModulePath 'parent ! x ! y'

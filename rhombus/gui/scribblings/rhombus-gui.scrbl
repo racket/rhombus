@@ -7,7 +7,7 @@
            rhombus/gui)
 
 The @rhombusmodname(rhombus/gui) library is based on
-@rhombusmodname(racket/gui/easy).
+@racketmodname(racket/gui/easy).
 
 @table_of_contents()
 

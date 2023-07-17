@@ -8,8 +8,7 @@
 
 @title(~style: #'toc){Measure}
 
-@docmodule(~use_sources: lib("rhombus/measure.rhm"),
-           rhombus/measure)
+@docmodule(rhombus/measure)
 
 @doc(
   expr.macro 'time:

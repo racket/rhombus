@@ -10,7 +10,8 @@
                      "srcloc.rkt"
                      "introducer.rkt"
                      "name-path-op.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "module-path-parse.rkt")
          "provide.rkt"
          (only-in "implicit.rkt"
                   #%literal)
@@ -31,7 +32,8 @@
                                 [rhombus-self self]
                                 [rhombus-parent parent]
                                 [rhombus-file file]
-                                [rhombus-lib lib])))
+                                [rhombus-lib lib]
+                                [rhombus. |.|])))
 
 (module+ for-import-export
   (provide (for-syntax make-module-path-literal-operator
@@ -88,10 +90,7 @@
 (define-for-syntax (convert-symbol-module-path mp)
   (cond
     [(identifier? mp)
-     (define str (symbol->string (syntax-e mp)))
-     (define name (if (regexp-match? #rx"/" str)
-                      (string-append str ".rhm")
-                      (string-append str "/main.rhm")))
+     (define name (module-symbol-to-lib-string (syntax-e mp)))
      (datum->syntax mp `(,#'lib ,name) mp mp)]
     [else mp]))
 
@@ -185,10 +184,8 @@
   (make-module-path-string-arg-operator
    prefix-operator #'rhombus-lib #'lib
    (lambda (str)
-     (define (maybe-add-rhm-suffix s)
-       (if (regexp-match? #rx"[.]" s) s (string-append s ".rhm")))
-     (define new-str (maybe-add-rhm-suffix (syntax->datum str)))
-     (unless (module-path? `(lib ,new-str))
+     (define new-str (module-lib-string-to-lib-string (syntax-e str)))
+     (unless new-str
        (raise-syntax-error (current-module-path-context)
                            "not a valid library path"
                            str))
@@ -293,3 +290,14 @@
 (define-name-root modpath
   #:fields ([macro modpath-macro]))
 (define-syntax modpath-macro 'placeholder)
+
+(define-module-path-syntax rhombus.
+  (module-path-prefix-operator
+   (in-module-path-space #'rhombus.)
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ id:identifier . tail)
+        (values #'(quote id)
+                #'tail)]))))

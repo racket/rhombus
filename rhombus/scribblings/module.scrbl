@@ -6,11 +6,11 @@
 @title(~tag: "Modules"){Modules, Variables, and Functions}
 
 A Rhombus module, which implements a program or a library, always starts
-@rhombus(#,(@hash_lang()) #,(@rhombusmodname(rhombus))). If you write an
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))). If you write an
 expression at the top of a module, then its value gets printed out.
 
 @rhombusblock(
-  #,(hash_lang()) #,(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   1+4  // prints 5
   
@@ -31,7 +31,7 @@ produces a function) followed by comma-separated arguments in
 parentheses.
 
 @rhombusblock(
-  #,(hash_lang()) #,(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   def fahrenheit_freezing = 32
                            
@@ -70,14 +70,14 @@ interchangable for @litchar{:} only in certain forms, like
 A Rhombus module can export definitions to other modules using
 @rhombus(export), and it can import other modules using
 @rhombus(import). The
-@rhombus(#,(@hash_lang()) #,(@rhombusmodname(rhombus))) line is a kind
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))) line is a kind
 of @rhombus(import) already, so normally more @rhombus(import)s are
 written at the top of a module, and then @rhombus(export)s, and then the
 definitions.
 
 @rhombusblock(
   // f2c.rhm
-  #,(hash_lang()) #,(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   export:
     fahrenheit_freezing
@@ -91,7 +91,7 @@ definitions.
 
 @rhombusblock(
   // freezing.rhm
-  #,(hash_lang()) #,(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   import:
     "f2c.rhm"

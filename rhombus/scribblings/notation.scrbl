@@ -21,7 +21,7 @@ summary of shrubbery notation, but see @(shrubbery_notation) for
 complete details.
 
 @margin_note{To explore shrubbery notation independent of Rhombus, try
- @rhombus(#,(@hash_lang()) #,(@rhombusmodname(shrubbery))). The parsed
+ @rhombus(#,(@hash_lang()) #,(@rhombuslangname(shrubbery))). The parsed
  form is represented as an S-expression, so the output is only useful if
  you're familiar with S-expression notation.}
 

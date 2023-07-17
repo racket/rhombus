@@ -35,11 +35,11 @@
 
  In syntax descriptions, @rhombus(expr) stands for any expression form.
  Function calls, arithmetic, @rhombus(block), and @rhombus(match) are
- some examples of expression forms, but @rhombusmodname(rhombus) provides
+ some examples of expression forms, but @rhombuslangname(rhombus) provides
  many more.
 
  Besides all of the expression forms provided by
- @rhombusmodname(rhombus), new ones can be defined with @rhombus(macro)
+ @rhombuslangname(rhombus), new ones can be defined with @rhombus(macro)
  or @rhombus(expr.macro, ~expr).
 
  Unless otherwise specified, a name like @rhombus(fun_expr, ~var) is an
@@ -55,10 +55,10 @@
  In syntax descriptions, @rhombus(repet) stands for any
  @tech{repetition} form. Identifiers (especailly ones bound as
  repetitions), function calls, and arithmetic are some examples of
- repetition forms, but @rhombusmodname(rhombus) provides many more.
+ repetition forms, but @rhombuslangname(rhombus) provides many more.
 
  Besides all of the expression forms provided by
- @rhombusmodname(rhombus), new ones can be defined with
+ @rhombuslangname(rhombus), new ones can be defined with
  @rhombus(repet.macro, ~expr).
 
 }
@@ -86,7 +86,7 @@
  examples of definition forms.
 
  Besides all of the expression forms provided by
- @rhombusmodname(rhombus), new ones can be defined with
+ @rhombuslangname(rhombus), new ones can be defined with
  @rhombus(defn.macro, ~expr).
 
 }
@@ -127,7 +127,7 @@
  module.
 
  Besides forms provided by
- @rhombusmodname(rhombus), new ones can be defined with
+ @rhombuslangname(rhombus), new ones can be defined with
  @rhombus(decl.macro, ~expr) and @rhombus(decl.nestable_macro, ~expr).
 
 }
@@ -142,7 +142,7 @@
  which might be simply an identifier, a binding form annotated with
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
 
- Besides all of the binding forms provided by @rhombusmodname(rhombus),
+ Besides all of the binding forms provided by @rhombuslangname(rhombus),
  new ones can be defined with @rhombus(bind.macro, ~expr).
 
 }
@@ -157,7 +157,7 @@
  @tech{annotation} form.
 
  Besides all of the expression forms provided by
- @rhombusmodname(rhombus), new ones can be defined with
+ @rhombuslangname(rhombus), new ones can be defined with
  @rhombus(annot.macro, ~expr).
 
 }

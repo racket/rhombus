@@ -8,7 +8,7 @@
 ){
 
  An @deftech{renderer} corresponds to @rhombus(#{renderer?}) from
- @rhombusmodname(racket/gui/easy).
+ @racketmodname(racket/gui/easy).
 
 }
 

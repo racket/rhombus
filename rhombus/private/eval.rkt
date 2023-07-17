@@ -7,20 +7,29 @@
          "define-arity.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
-         (submod "annotation.rkt" for-class))
+         (submod "annotation.rkt" for-class)
+         "name-root.rkt"
+         "realm.rkt"
+         (submod "module-path-object.rkt" for-primitive))
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
-                     make_rhombus_evaluator
-                     make_rhombus_empty_evaluator
-                     (rename-out [rhombus-eval eval]
-                                 [current-namespace current_evaluator]))
-         (for-spaces (rhombus/annot)
+                     (rename-out
+                      [rhombus-eval eval]))
+         (for-spaces (rhombus/annot
+                      rhombus/namespace)
                      Evaluator))
 
 (define-annotation-syntax Evaluator (identifier-annotation #'namespace? #'()))
 
-(define/arity (make_rhombus_empty_evaluator)
+(define-name-root Evaluator
+  #:fields
+  (make_rhombus_empty
+   make_rhombus
+   [current current-namespace]
+   import))
+
+(define/arity (make_rhombus_empty)
   (define this-ns (variable-reference->empty-namespace (#%variable-reference)))
   (define ns (make-base-empty-namespace))
   (namespace-attach-module this-ns
@@ -28,16 +37,20 @@
                            ns)
   ns)
 
-(define/arity (make_rhombus_evaluator)
-  (define ns (make_rhombus_empty_evaluator))
+(define/arity (make_rhombus)
+  (define ns (make_rhombus_empty))
   (parameterize ([current-namespace ns])
     (namespace-require 'rhombus))
   ns)
 
 (define/arity #:name eval (rhombus-eval e)
   (unless (syntax? e)
-    (raise-argument-error 'eval "Syntax" e))
+    (raise-argument-error* 'eval rhombus-realm "Syntax" e))
   (eval #`(rhombus-top #,@(unpack-multi e 'eval #f))))
 
 (define-static-info-syntaxes (current-namespace)
   (#%function-arity 6))
+
+(define/arity (import mod-path)
+  (unless (module-path? mod-path) (raise-argument-error* 'eval rhombus-realm "ModulePath" mod-path))
+  (namespace-require (module-path-raw mod-path)))

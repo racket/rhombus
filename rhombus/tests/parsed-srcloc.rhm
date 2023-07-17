@@ -27,8 +27,8 @@ def op_def:
 def var_def:
   'def mutable box = 10'
 
-def ev = make_rhombus_evaluator()
-parameterize { current_evaluator: ev }:
+def ev = Evaluator.make_rhombus()
+parameterize { Evaluator.current: ev }:
   eval('import rhombus/static')
   // this macro cases the argument expression to be parsed,
   // and then we can use it in a larger expression without
@@ -43,7 +43,7 @@ parameterize { current_evaluator: ev }:
 
 fun get_exn(s :: Syntax):
   try:
-    parameterize { current_evaluator: ev }:
+    parameterize { Evaluator.current: ev }:
       eval('try_append $s')
     ~catch exn :: Exn.Fail.Syntax:
       exn

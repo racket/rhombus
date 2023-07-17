@@ -86,6 +86,7 @@
         "export.rkt"
         "namespace.rkt"
         "module-path.rkt"
+        "module-path-object.rkt"
         "operator.rkt"
         "annotation.rkt"
         "annotation-converting.rkt"

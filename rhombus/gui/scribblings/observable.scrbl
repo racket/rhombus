@@ -14,7 +14,7 @@
 ){
 
  An @deftech{observable} corresponds to @rhombus(#{obs?}) from
- @rhombusmodname(racket/gui/easy).
+ @racketmodname(racket/gui/easy).
 
  The annotation @rhombus(#,(@rhombus(Obs.of, ~annot))(annot)) is
  satisfied by an annotation whose current value satisfies

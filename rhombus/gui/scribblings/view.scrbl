@@ -8,7 +8,7 @@
 ){
 
  A @deftech{view} corresponds to @rhombus(#{view<%>}) from
- @rhombusmodname(racket/gui/easy).
+ @racketmodname(racket/gui/easy).
 
  Implementations of @rhombus(View, ~class) include
  @rhombus(Button, ~class) and @rhombus(Canvas, ~class).
@@ -20,7 +20,7 @@
 ){
 
  Returns an Racket object that corresponds to the view for use directly
- with @rhombusmodname(racket/gui/easy).
+ with @racketmodname(racket/gui/easy).
 
 }
 
@@ -31,7 +31,7 @@
 ){
 
  A @deftech{window view} corresponds to @rhombus(#{window-view<%>}) from
- @rhombusmodname(racket/gui/easy).
+ @racketmodname(racket/gui/easy).
 
  Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class).
 

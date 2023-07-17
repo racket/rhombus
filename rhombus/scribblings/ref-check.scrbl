@@ -18,6 +18,7 @@
     expected_expr: block expr
     expected_body: block body
     expected_bind: def bind ~defn
+    evaluator_expr: block expr
   expr.macro 'check:
                 $maybe_eval
                 $body
@@ -30,6 +31,7 @@
 
   grammar maybe_eval:
     ~eval
+    ~eval: $evaluator_expr
     #,(epsilon)
   
   grammar expected_result:
@@ -88,7 +90,10 @@
 
  If @rhombus(~eval) is present, then @rhombus(body) is quoted to be
  parsed and evaluated using @rhombus(eval) at run time. A typical use of
- @rhombus(~eval) is to test syntax errors.
+ @rhombus(~eval) is to test syntax errors. When @rhombus(evaluator_expr)
+ is provided, then its result is installed as the current evaluator for
+ @rhombus(eval); otherwise, an evaluator is created with
+ @rhombus(Evaluator.make_rhombus).
 
  Providing multiple @rhombus(expr expected_result) groups in a single
  @rhombus(check) form is the same as providing each group to a separate

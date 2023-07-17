@@ -247,7 +247,7 @@
   (definition-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ (block r ...))
+       [(_ (_::block r ...))
         #`((rhombus-import #,stx () r ...))]
        [(_ r ...)
         #`((rhombus-import #,stx () (#,group-tag r ...)))]))))

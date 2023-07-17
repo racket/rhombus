@@ -46,7 +46,7 @@ macro is defined. The above macro definition starts with an unescaped
 
 The @rhombus(expr.macro) form must be imported from
 @rhombusmodname(rhombus/meta), but a @rhombus(macro) is
-available in just @rhombusmodname(rhombus). The @rhombus(macro) form
+available in just @rhombuslangname(rhombus). The @rhombus(macro) form
 is more limited, because it's body must be a template written with @quotes,
 instead of an arbitrary compile-time expression.
 
@@ -80,7 +80,7 @@ additional terms after the operator. For example, a postfix
 With @rhombus(expr.macro) (but not @rhombus(macro)), the
 macro implementation after @colon is compile-time code. Importing
 @rhombusmodname(rhombus/meta) imports all of the same bindings as
-@rhombusmodname(rhombus) into the compile-time phase, in addition to making
+@rhombuslangname(rhombus) into the compile-time phase, in addition to making
 forms like @rhombus(expr.macro) available. Normally,
 @rhombusmodname(rhombus/meta) should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time

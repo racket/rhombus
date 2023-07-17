@@ -6,7 +6,7 @@
 @title(~tag: "submodules"){Modules and Submodules}
 
 A @deftech{module} is normally written as its own file starting with
-@rhombus(#,(@hash_lang()) #,(@rhombusmodname(rhombus))) or similar. In an
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))) or similar. In an
 interactive context, the @rhombus(module) form can declare a module; in
 that case, the module decared as @rhombus(id) can be referenced using
 @rhombus(self!, ~impo)@rhombus(id).

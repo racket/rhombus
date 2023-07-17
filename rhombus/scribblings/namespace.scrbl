@@ -10,7 +10,7 @@
 A dotted module import as @rhombus(convert.fahrenheit_to_celsius) or class
 field accessors as @rhombus(Posn.x) and @rhombus(Posn.y) demonstrate
 the use of hierarchical names. Other hierarchical names provided by
-@rhombusmodname(rhombus) include @rhombus(List.length) and
+@rhombuslangname(rhombus) include @rhombus(List.length) and
 @rhombus(List.cons) via @rhombus(List) (where lists will discussed more
 in @secref("list")):
 

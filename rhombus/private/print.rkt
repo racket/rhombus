@@ -133,6 +133,7 @@
     [(and (identifier? v)
           (display?))
      (display (syntax->datum v) op)]
+    [(namespace? v) (display "#<evaluator>" op)]
     [else (other v mode op)]))
 
 (define (write-shrubbery* v use-display use-write op)

@@ -28,26 +28,35 @@ by an evaluator, for example.
 }
 
 @doc(
-  fun make_rhombus_evaluator() :: Evaluator
+  fun Evaluator.make_rhombus() :: Evaluator
 ){
 
- Creates a fresh evaluator with @rhombusmodname(rhombus) imported.
+ Creates a fresh evaluator with @rhombuslangname(rhombus) imported.
 
 }
 
 @doc(
-  fun make_rhombus_empty_evaluator() :: Evaluator
+  fun Evaluator.make_rhombus_empty() :: Evaluator
 ){
 
- Creates a fresh evaluator with the @rhombusmodname(rhombus) module
+ Creates a fresh evaluator with the @rhombuslangname(rhombus) module
  attached, but not imported.
 
 }
 
 @doc(
-  def current_evaluator :: Parameter
-  fun current_evaluator() :: Evaluator
-  fun current_evaluator(ns :: Evaluator) :: #void
+  fun Evaluator.import(mod :: ModulePath) :: Evaluator
+){
+
+ Imports @rhombus(mod) into the evaluator, even if the @rhombus(import)
+ definition form is not available in the evaluator itself.
+
+}
+
+@doc(
+  def Evaluator.current :: Parameter
+  fun Evaluator.current() :: Evaluator
+  fun Evaluator.current(ns :: Evaluator) :: #void
 ){
 
  A @tech{context parameter} for the current evaluator.

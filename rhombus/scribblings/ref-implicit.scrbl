@@ -35,19 +35,19 @@ Here are all of the implicit forms:
 
  @item{@rhombus(#%comp) --- used as an infix form when a
        parsed form is followed immediately by a @rhombus({}) term;
-       this implicit form is not bound by @rhombusmodname(rhombus)}
+       this implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%juxtapose) --- used as an infix form when a
        parsed form is followed immediately by a non-compound term;
-       this implicit form is not bound by @rhombusmodname(rhombus)}
+       this implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%block) --- used for a block formed with
        @litchar{:} (by itself as a would-be parsed term); this
-       implicit form is not bound by @rhombusmodname(rhombus)}
+       implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%alts) --- used for a block formed with
        @litchar{|} (by itself as a would-be parsed term); this
-       implicit form is not bound by @rhombusmodname(rhombus)}
+       implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%body) --- used by forms that contain a
         @rhombus(body) sequence, such as @rhombus(begin), the body of

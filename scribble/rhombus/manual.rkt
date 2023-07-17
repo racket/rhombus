@@ -26,6 +26,8 @@
          (for-space rhombus/decl
                     docmodule)
          rhombusmodname
+         rhombuslangname
+         racketmodname
          examples
          make_rhombus_eval
          close_eval

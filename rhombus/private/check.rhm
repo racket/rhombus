@@ -11,7 +11,7 @@ export:
  check
 
 meta:
-  syntax_class result_mode:
+  syntax_class ResultMode:
     kind: ~term
     pattern
     | '~is'
@@ -20,12 +20,13 @@ meta:
     | '~prints_like'
     | '~raises'
     | '~matches'
-  syntax_class result:
+      
+  syntax_class Result:
     kind: ~sequence
     pattern
-    | '$(mode :: result_mode): $body':
+    | '$(mode :: ResultMode): $body':
         field [suffix, ...]: []
-    | '$(mode :: result_mode) $g ...':
+    | '$(mode :: ResultMode) $g ...':
         field body: '$g ...'
         field [suffix, ...]: []
     | '~completes':
@@ -33,30 +34,38 @@ meta:
         field body: '#void'
         field [suffix, ...]: ['#void']
 
+  syntax_class EvalClause:
+    fields: make_eval
+  | '~eval':
+      field make_eval = 'Evaluator.make_rhombus()'
+  | '~eval: $(block :: Block)':
+      field make_eval = 'block $block'
+
 expr.macro '«located '$w'»':
   '[#' $w, $(w.srcloc())]'
 
 expr.macro
 // `~eval` case
 | 'check:
-     ~eval
+     $(eval :: EvalClause)
      $result1
      ...
-     $(result2 :: result)':
+     $(result2 :: Result)':
     ~op_stx: check_id
     'check_same(located '$(check_id)',
                 fun():
                   eval_test(Syntax.literal '$result1
                                             ...
                                             $result2.suffix
-                                            ...'),
+                                            ...',
+                            $eval.make_eval),
                 fun(): $result2.body,
                 located '$result2.mode')'
 // normal block
 | 'check:
      $result1
      ...
-     $(result2 :: result)':
+     $(result2 :: Result)':
     ~op_stx: check_id
     'check_same(located'$(check_id)',
                 fun ():
@@ -67,7 +76,7 @@ expr.macro
                 matcher($result2.mode, : $result2.body),
                 #'$result2.mode)'
 // single lines in block
-| 'check: $result1 ... $(result2 :: result); ...':
+| 'check: $result1 ... $(result2 :: Result); ...':
     ~op_stx: check_id
     'block:
        check_same(located'$(check_id)',
@@ -76,7 +85,7 @@ expr.macro
                   located'$result2.mode')
        ...'
 // single line
-| 'check $result1 ... $(result2 :: result)':
+| 'check $result1 ... $(result2 :: Result)':
     ~op_stx: check_id
     'check_same(located'$(check_id)',
                 fun (): $result1 ...; $result2.suffix; ...,
@@ -140,6 +149,6 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
                               | ~else: values_str(expected))
     display_as_exn(msg, srcloc)
 
-fun eval_test(stx):
-  parameterize {current_evaluator: make_rhombus_evaluator()}:
+fun eval_test(stx, evalor):
+  parameterize { Evaluator.current: evalor }:
     eval(Syntax.strip_scopes(stx))

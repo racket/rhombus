@@ -3,10 +3,10 @@
 
 @title(~tag: "naming-convention"){Naming Conventions}
 
-The @rhombusmodname(rhombus) language's bindings follow certain naming
+The @rhombuslangname(rhombus) language's bindings follow certain naming
 conventions. While Rhombus does not impose a naming convention
 syntactically, authors are new libraries are encouraged to stick to
-@rhombusmodname(rhombus) conventions where possible.
+@rhombuslangname(rhombus) conventions where possible.
 
 Most names use ``snake case,'' where the leading character is lowercase
 and multiple words are joined by @litchar{_}. Spelled-out words are

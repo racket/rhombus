@@ -132,7 +132,8 @@
  @item{@rhombus(#,(@rhombus(lib, ~impo))(string)): refers to an installed collection library,
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
-   by itself, with the additional constraint that @litchar{.} and
+   by itself, with additional constraints: at least one @litchar{/}
+   is required, and @litchar{.} and
    @litchar{..} directory indicators are disallowed. When @rhombus(string)
    does not end with a file suffix, @filepath{.rhm} is added.},
 
@@ -399,5 +400,37 @@
  treat juxtaposed sequences as an import and modifier.
 
  @see_implicit(@rhombus(#%juxtapose, ~impo), "an import", "import", ~is_infix: #true)
+
+}
+
+@doc(
+  ~nonterminal:
+    module_path: import ~defn
+  annot.macro 'ModulePath'
+  fun ModulePath(mod_stx :: Group) :: ModulePath
+  expr.macro '«ModulePath '$module_path'»'
+  fun ModulePath.s_exp(modmath :: ModulePath)
+){
+
+ The @rhombus(ModulePath, ~annot) annotation recognizes values that
+ represent module paths, and the @rhombus(ModulePath) function and
+ expression form create such a value for a syntax-object
+ @rhombus(mod_stx) or a quoted @rhombus(module_path).
+
+ The format of a @rhombus(module_path) or the content of
+ @rhombus(mod_stx) is the same as for @rhombus(import, ~defn), except
+ that @rhombus(., ~impo) is supoprted only at the very beginning of a
+ module path in @rhombus(ModulePath).
+
+ The @rhombus(ModulePath) expression form (which has immediate quotes
+ instead of a parenthesized argument expression) statically checks that
+ @rhombus(module_path) is well-formed, while the @rhombus(ModulePath)
+ funciton can check only when it is called. In both cases, however, the
+ generated module path is relative to the top-level environment, not the
+ enclosing context.
+
+ The @rhombus(ModulePath.s_exp) function produces the Racket form of a
+ Rhombus module path, which is suitable for use with Racket functions
+ that expect a module path.
 
 }

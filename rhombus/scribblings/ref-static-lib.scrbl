@@ -21,11 +21,11 @@
 
 @docmodule(~lang, ~no_declare, rhombus/static/and_meta)
 
-The @rhombusmodname(rhombus/static),
+The @rhombuslangname(rhombus/static),
 @rhombusmodname(rhombus/static/meta), and
-@rhombusmodname(rhombus/static/and_meta) modules re-export the
-bindings of @rhombusmodname(rhombus), @rhombusmodname(rhombus/meta),
-and @rhombusmodname(rhombus/and_meta), respectively, except that
+@rhombuslangname(rhombus/static/and_meta) modules re-export the
+bindings of @rhombuslangname(rhombus), @rhombusmodname(rhombus/meta),
+and @rhombuslangname(rhombus/and_meta), respectively, except that
 bindings from @rhombus(use_static) are exported in place of the
 dynamic variants.
 

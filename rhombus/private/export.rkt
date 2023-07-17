@@ -326,7 +326,7 @@
                    (unless (null? (syntax-e #'name.tail))
                      (raise-syntax-error #f
                                          "unexpected after `.`"
-                                         #'name-tail))
+                                         #'name.tail))
                    form)]
              [else
               (raise-syntax-error #f
