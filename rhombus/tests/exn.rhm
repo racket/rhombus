@@ -4,7 +4,8 @@ block:
   use_static
   def v:
     try:
-      eval('fun')
+      parameterize { Evaluator.current: Evaluator.make_rhombus() }:
+        eval('fun')
       ~catch x:
         x
   check:

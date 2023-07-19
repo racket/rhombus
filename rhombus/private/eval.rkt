@@ -43,10 +43,13 @@
     (namespace-require 'rhombus))
   ns)
 
-(define/arity #:name eval (rhombus-eval e)
+(define/arity #:name eval (rhombus-eval e
+                                        #:as_interaction [as_interaction #f])
   (unless (syntax? e)
     (raise-argument-error* 'eval rhombus-realm "Syntax" e))
-  (eval #`(rhombus-top #,@(unpack-multi e 'eval #f))))
+  (if as_interaction
+      (eval `(#%top-interaction . ,#`(top #,@(unpack-multi e 'eval #f))))
+      (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
 
 (define-static-info-syntaxes (current-namespace)
   (#%function-arity 6))

@@ -93,7 +93,9 @@
  @rhombus(~eval) is to test syntax errors. When @rhombus(evaluator_expr)
  is provided, then its result is installed as the current evaluator for
  @rhombus(eval); otherwise, an evaluator is created with
- @rhombus(Evaluator.make_rhombus).
+ @rhombus(Evaluator.make_rhombus). The @rhombus(body) sequence is
+ evaluated as an interactive form (i.e., @rhombus(eval) is called with
+ @rhombus(~as_interactive: #true)).
 
  Providing multiple @rhombus(expr expected_result) groups in a single
  @rhombus(check) form is the same as providing each group to a separate

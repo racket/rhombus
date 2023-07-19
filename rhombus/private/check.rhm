@@ -151,4 +151,4 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
 
 fun eval_test(stx, evalor):
   parameterize { Evaluator.current: evalor }:
-    eval(Syntax.strip_scopes(stx))
+    eval(Syntax.strip_scopes(stx), ~as_interaction: #true)
