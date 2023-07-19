@@ -66,3 +66,9 @@ block:
     str ~is "apple"
     str := base.#{string-copy}("banana") ~completes
     str ~is "banana"
+
+block:
+  def mutable x = 0
+  macro 'y': 'x'
+  y := 1
+  check x ~is 1

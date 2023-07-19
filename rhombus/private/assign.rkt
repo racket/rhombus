@@ -135,7 +135,11 @@
 
 (define-for-syntax (make-assign-infix-operator name prec assc protocol proc)
   (define (get-mv form1 self-stx)
-    (define inside (unwrap-static-infos form1))
+    (define inside (syntax-parse (unwrap-static-infos form1)
+                     #:literals (rhombus-expression)
+                     #:datum-literals (group)
+                     [(rhombus-expression (group iform)) #'iform]
+                     [iform #'iform]))
     (define mv (and (identifier? inside)
                     (syntax-local-value* inside mutable-variable-ref)))
     (unless mv
