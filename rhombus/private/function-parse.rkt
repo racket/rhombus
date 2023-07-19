@@ -992,7 +992,7 @@
                                   (syntax->list #'(arg-form ... ...))))]))
           (define e (relocate+reraw (or srcloc
                                         (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
-                                    (datum->syntax #'here es)))
+                                    (datum->syntax #'here (map discard-static-infos es))))
           (define result-static-infos (or (rator-static-info/indirect #'#%call-result)
                                           #'()))
           (define all-result-static-infos (or (let-values ([(r indirect?)

@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-         "syntax-parameter.rkt")
+         "syntax-parameter.rkt"
+         "static-info.rkt")
 
 ;; The `rhombus-forwarding-sequence` form handles definitions that are
 ;; only visible to later terms (as created with Rhombus `let`, say,
@@ -131,8 +132,8 @@
                                                    #`(with-continuation-mark
                                                       syntax-parameters-key (quote-syntax stx-params)
                                                       rhs)
-                                                   #'(with-syntax-parameters stx-params
-                                                       rhs))))
+                                                   #`(with-syntax-parameters stx-params
+                                                       #,(discard-static-infos #'rhs)))))
                                exp-form
                                exp-form)
               (sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params . forms))]
@@ -199,7 +200,7 @@
                         [((~or #%declare begin-for-syntax module module*) . _)
                          exp-form]
                         [_ #`(#%expression
-                              (with-syntax-parameters stx-params #,exp-form))]))
+                              (with-syntax-parameters stx-params #,(discard-static-infos exp-form)))]))
                 (sequence ctx #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))])])))
 
 (define-syntax (rhombus-forward stx)

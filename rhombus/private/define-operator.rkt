@@ -55,7 +55,8 @@
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list stx form)))
                              (datum->syntax (quote-syntax here)
-                                            (list (quote-syntax prim) form)
+                                            (list (relocate-id stx (quote-syntax prim))
+                                                  (discard-static-infos form))
                                             #f
                                             stx))
              #`statinfos)))]))
@@ -95,7 +96,9 @@
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list form1 stx form2)))
                              (datum->syntax (quote-syntax here)
-                                            (list (quote-syntax prim) form1 form2)
+                                            (list (relocate-id stx (quote-syntax prim))
+                                                  (discard-static-infos form1)
+                                                  (discard-static-infos form2))
                                             #f
                                             stx))
              #`statinfos))

@@ -31,6 +31,7 @@
            static-info/indirect
            extract-static-infos
            unwrap-static-infos
+           discard-static-infos
            relocate-wrapped
            static-info-lookup
            static-infos-intersect
@@ -137,6 +138,11 @@
       [(begin (quote-syntax (~and form (key:identifier val))) e)
        (unwrap-static-infos #'e)]
       [_ e]))
+
+  ;; use on subterms when constructing a parsed primitive form
+  ;; with the goal of simplifying the result expansion
+  (define (discard-static-infos e)
+    (unwrap-static-infos e))
 
   (define (static-info-lookup static-infos find-key)
     (for/or ([static-info (in-list (if (syntax? static-infos)

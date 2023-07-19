@@ -7,7 +7,8 @@
                      "static-info-pack.rkt"
                      "macro-result.rkt"
                      "name-path-op.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "srcloc.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root.rkt"
@@ -90,8 +91,9 @@
   #`(group . #,(map unpack-static-infos (syntax->list v))))
 
 (define-for-syntax (wrap form info)
-  (pack-term #`(parsed #:rhombus/expr #,(wrap-static-info* (wrap-expression form)
-                                                           (pack info)))))
+  (define e (wrap-static-info* (wrap-expression form)
+                               (pack info)))
+  (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
 (define-for-syntax (lookup form key)
   (define who 'statinfo_meta.lookup)
