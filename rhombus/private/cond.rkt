@@ -39,7 +39,7 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group)
+       #:datum-literals (group block)
        [(form-id (_::alts
                   (_::block (group pred ... ((~and tag block) rhs ...)))
                   ...

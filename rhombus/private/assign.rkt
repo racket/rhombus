@@ -125,7 +125,7 @@
                           [(self . tail)
                            (values (wrap-static-info* #'self static-infos)
                                    #'tail)]))
-                      id
+                      (syntax-property id 'not-free-identifier=? #t)
                       converter-id
                       static-infos))
   (define (mutable-variable-ref v) (and (mutable-variable? v) v)))
