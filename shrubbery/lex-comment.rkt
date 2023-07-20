@@ -166,8 +166,13 @@
        [(lex-nested-status? new-inner-status)
         (finish-plain pending new-stack new-stack-for-end)]
        [else
+        ;; White doesn't affect the commenting state. It would make sense
+        ;; to treat a comment like whitespace, but an outdented comment
+        ;; normally applies to subsequent things, so heuristically treat comments
+        ;; like other things (and lave it to a programmer to use a better
+        ;; comment style if that's not what they wanted).
         (case (token-name tok)
-          [(comment whitespace)
+          [(whitespace #;comment)
            (finish pending new-stack #:whitespace? #t)]
           [else
            (finish-plain pending new-stack new-stack-for-end)])])]))

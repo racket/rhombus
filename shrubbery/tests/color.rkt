@@ -151,6 +151,11 @@ three
 ^| x^
 (the end)
 
+#//
+^a^
+^| x^
+// the end
+
 a
 | x
 #//
