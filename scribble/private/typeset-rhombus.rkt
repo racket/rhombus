@@ -118,6 +118,7 @@
           (cond
             [(eq? space-name 'datum) (element tt-style str)]
             [(eq? space-name 'value) (element variable-color str)]
+            [(eq? space-name 'result) (element result-color str)]
             [else
              (define space-name (id-space-name* #'id))
              (if (identifier-binding (add-space #'id space-name) #f)
@@ -135,6 +136,8 @@
              (element tt-style str)]
             [(eq? space-name 'value)
              (element value-color str)]
+            [(eq? space-name 'result)
+             (element result-color str)]
             [(identifier-binding (add-space stx space-name) #f)
              (element tt-style (make-id-element (add-space stx space-name) str #f
                                                 #:space space-name
@@ -232,6 +235,8 @@
                             (element variable-color str)]
                            [(eq? space-name 'value)
                             (element value-color str)]
+                           [(eq? space-name 'result)
+                            (element result-color str)]
                            [else
                             (element tt-style (make-id-element (add-space id space-name) str #f
                                                                #:space space-name
@@ -426,6 +431,7 @@
                      (let ([name (id-space-name stx #:infer? #t)])
                        (or (eq? name 'var)
                            (eq? name 'value)
+                           (eq? name 'result)
                            (identifier-binding (add-space stx name) #f)))))
               start end position-stxes stx-ranges))
 

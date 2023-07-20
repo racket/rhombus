@@ -169,25 +169,6 @@
 
 
 @doc(
-  fun expr_meta.pack_expr(group :: Syntax) :: Syntax
-){
-
-@provided_meta()
-
- Converts a syntax object, which can be a multi-term syntax object, into
- an @tech{parsed} term, but one that represents an expression with
- delayed parsing. The function is intended for use in combination with
- @rhombus(expr_meta.pack_s_exp).
-
-@examples(
-  ~eval: macro_meta_eval
-  expr_meta.pack_expr('x + 1')
-)
-
-}
-
-
-@doc(
   fun expr_meta.pack_s_exp(tree) :: Syntax
 ){
 
@@ -210,6 +191,42 @@
   expr_meta.pack_s_exp(['lambda', ['x'], 'x'])
   expr_meta.pack_s_exp(['lambda', ['x'], expr_meta.pack_expr('x + 1')])
 )
+
+}
+
+@doc(
+  fun expr_meta.pack_expr(group :: Syntax) :: Syntax
+){
+
+@provided_meta()
+
+ Converts a syntax object, which can be a multi-term syntax object, into
+ an @tech{parsed} term, but one that represents a run-time expression with
+ delayed parsing. The function is intended for use in combination with
+ @rhombus(expr_meta.pack_s_exp).
+
+@examples(
+  ~eval: macro_meta_eval
+  expr_meta.pack_expr('x + 1')
+)
+
+}
+
+
+@doc(
+  fun expr_meta.pack_meta_expr(group :: Syntax) :: Syntax
+  fun expr_meta.pack_and_meta_expr(group :: Syntax) :: Syntax
+){
+
+@provided_meta()
+
+ Like @rhombus(expr_meta.pack_expr), but for an expression to be used in
+ a compile-time position or @emph{both} a run-time and compile-time
+ position.
+
+ Although there are cases where @rhombus(expr_meta.pack_and_meta_expr)
+ is the right choice, either @rhombus(expr_meta.pack_expr) or
+ @rhombus(expr_meta.pack_meta_expr) is almost always more appropriate.
 
 }
 

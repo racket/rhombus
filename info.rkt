@@ -23,4 +23,4 @@
     "draw-doc"
     "gui-easy"))
 
-(define version "0.3")
+(define version "0.4")

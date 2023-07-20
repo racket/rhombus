@@ -19,7 +19,8 @@
                      [manual:math math]
                      [manual:filepath filepath]
                      [manual:exec exec]
-                     [manual:hash-lang hash_lang])
+                     [manual:hash-lang hash_lang]
+                     [manual:onscreen onscreen])
          doc
          (for-space rhombus/defn
                     nonterminal)

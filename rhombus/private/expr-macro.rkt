@@ -17,7 +17,9 @@
          "expression.rkt"
          "parse.rkt"
          "wrap-expression.rkt"
-         (for-syntax "name-root.rkt"))
+         (for-syntax "name-root.rkt")
+         "parse-meta.rkt"
+         "parse-and-meta.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 expr_meta)))
@@ -40,7 +42,9 @@
      parse_more
      parse_all
      pack_s_exp
-     pack_expr)))
+     pack_expr
+     pack_meta_expr
+     pack_and_meta_expr)))
 
 (define-for-syntax space
   (space-syntax #f))
@@ -116,6 +120,16 @@
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
   #`(parsed #:rhombus/expr (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
+
+(define-for-syntax (pack_meta_expr s)
+  (unless (syntax? s)
+    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
+  #`(parsed #:rhombus/expr (rhombus-expression/meta #,(unpack-group s 'expr.pack_expr #f))))
+
+(define-for-syntax (pack_and_meta_expr s)
+  (unless (syntax? s)
+    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
+  #`(parsed #:rhombus/expr (rhombus-expression/both #,(unpack-group s 'expr.pack_expr #f))))
 
 (define-for-syntax (parse_more s)
   (syntax-parse (unpack-group s 'expr_meta.parse_more #f)

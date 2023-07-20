@@ -49,6 +49,9 @@
        (datum->syntax #f (list #'m (cons (relocate #'g) #'rest)))]
       [((~and tag op) o)
        (datum->syntax #f (list #'tag (relocate #'o)))]
+      [((~and tag parsed) space o)
+       (define r (relocate #'o))
+       (datum->syntax #f (list #'tag #'space r) r r)]
       [_
        (relocate stx)])))
 

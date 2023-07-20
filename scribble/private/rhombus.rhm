@@ -137,6 +137,7 @@ expr.macro
     if (kw === #'~var
           || kw === #'~datum
           || kw === #'~value
+          || kw === #'~result
           || kw === #'~space
           || kw === #'~expr
           || kw === #'~defn

@@ -6,3 +6,4 @@
 
 @include_section("ref-runtime.scrbl")
 @include_section("ref-measure.scrbl")
+@include_section("ref-runtime-path.scrbl")

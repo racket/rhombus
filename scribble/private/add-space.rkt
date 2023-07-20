@@ -6,7 +6,7 @@
 
 (define (full-space-name space-name)
   (case space-name
-    [(#f var datum value hide) space-name]
+    [(#f var datum value result hide) space-name]
     [(expr) #f]
     [else
      (define str (symbol->immutable-string space-name))
