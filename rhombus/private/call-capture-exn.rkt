@@ -9,7 +9,13 @@
   (with-handlers ([exn:fail?
                    (lambda (exn)
                      (values #f (exn-message exn)))])
-    (values (call-with-values thunk list) #f)))
+    (values (call-with-values
+             (lambda ()
+               (call-with-continuation-prompt
+                thunk
+                (default-continuation-prompt-tag)))
+             list)
+            #f)))
 
 (define (call_capturing_values thunk)
   (call-with-values thunk list))
