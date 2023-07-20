@@ -293,7 +293,9 @@
         (pretty-display v)]
        [else
         (define rop (open-output-bytes))
-        (display "#{'" rop)
+        (display "#{" rop)
+        (unless (or (number? v) (char? v))
+          (display "'" rop))
         (racket-print (racket-print-redirect v) rop 1)
         (display "}" rop)
         (pretty-text (get-output-bytes rop))])]))

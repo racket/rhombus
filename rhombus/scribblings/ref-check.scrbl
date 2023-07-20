@@ -102,6 +102,9 @@
  @rhombus(check) form. The @rhombus(~eval) mode is not supported in the
  shorthand forms of @rhombus(check).
 
+ The evaluation of an @rhombus(expr) or @rhombus(body) sequence is
+ wrapped with a prompt for the default continuation prompt tag.
+
  When a test fails, a failure message is printed to the current error
  port, but using the current error display handler when a source location
  is available. No output is printed for a successful test.
