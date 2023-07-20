@@ -76,6 +76,7 @@
   (car l))
 
 (define/arity (rest l)
+  #:static-infos ((#%call-result #,list-static-infos))
   (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
   (cdr l))
 

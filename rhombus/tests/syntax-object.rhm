@@ -171,3 +171,12 @@ check:
          $expr'
     check: (with_y: y) ~is 2
   ~completes
+
+// check some static information
+check:
+  use_static
+  Syntax.unwrap_group('x y z')[1].unwrap()
+  'x y z'.unwrap_group()[1].unwrap()
+  Syntax.srcloc('x').line
+  'x'.srcloc().line
+  ~completes

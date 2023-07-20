@@ -152,3 +152,8 @@ check:
   List.drop_left([1, 2, 3], 2) ~is [3]
   [1, 2, 3].drop_right(2) ~is [1]
   List.drop_right([1, 2, 3], 2) ~is [1]
+
+check:
+  use_static
+  List.rest([1, 2, 3]).map(math.abs)
+  ~is [2, 3]

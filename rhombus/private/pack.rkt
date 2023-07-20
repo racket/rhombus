@@ -131,7 +131,7 @@
      (define l (syntax->list r))
      (cond
        [(= 2 (length l)) (cadr l)]
-       [else (raise-error who "multi-group syntax not allowed in group context" r)])]
+       [else (and who (raise-error who "multi-group syntax not allowed in group context" r))])]
     [(group-syntax? r) r]
     [(null? r) (cannot-coerce-empty-list who r)]
     [(list? r) (datum->syntax

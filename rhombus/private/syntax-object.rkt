@@ -21,9 +21,12 @@
          "define-arity.rkt"
          "srcloc-span.rkt"
          "srcloc.rkt"
+         "call-result-key.rkt"
+         "index-result-key.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info)
-         (submod "string.rkt" static-infos))
+         (submod "string.rkt" static-infos)
+         (submod "list.rkt" for-compound-repetition))
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -325,7 +328,12 @@
                                 "syntax object does not have just an operator"
                                 "syntax object" v)])]))
 
+(define-for-syntax list-of-syntax-static-infos
+  #`((#%index-result #,syntax-static-infos)
+     #,@list-static-infos))
+
 (define/arity (unwrap_group v)
+  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.unwrap_group rhombus-realm "Syntax" v)]
@@ -333,6 +341,7 @@
      (syntax->list (unpack-tail v 'Syntax.unwrap_group #f))]))
   
 (define/arity (unwrap_sequence v)
+  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.unwrap_sequence rhombus-realm "Syntax" v)]
@@ -340,11 +349,24 @@
      (syntax->list (unpack-multi-tail v 'Syntax.unwrap_sequence #f))]))
 
 (define/arity (unwrap_all v)
+  (define who 'Syntax.unwrap_all)
   (cond
     [(not (syntax? v))
-     (raise-argument-error* 'Syntax.unwrap_all rhombus-realm "Syntax" v)]
+     (raise-argument-error* who rhombus-realm "Syntax" v)]
     [else
-     (syntax->datum v)]))
+     (define (normalize s)
+       (cond
+         [(not (pair? s)) s]
+         [(eq? (car s) 'group)
+          (if (null? (cddr s))
+              (cadr s)
+              s)]
+         [(eq? (car s) 'multi)
+          (if (and (pair? (cdr s)) (null? (cddr s)))
+              (normalize (cadr s))
+              s)]
+         [else s]))
+     (normalize (syntax->datum v))]))
 
 (define/arity (strip_scopes v)
   #:static-infos ((#%call-result #,syntax-static-infos))
@@ -396,8 +418,8 @@
   (unless (syntax? stx) (raise-argument-error* 'Syntax.to_source_string rhombus-realm "Syntax" stx))
   (string->immutable-string (shrubbery-syntax->string stx)))
 
-
 (define/arity (Syntax.srcloc stx)
+  #:static-infos ((#%call-result #,srcloc-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.srcloc rhombus-realm "Syntax" stx))
   (syntax-srcloc (maybe-respan stx)))
 
@@ -425,14 +447,14 @@
       (case field-sym
         [(unwrap) (0ary #'unwrap)]
         [(unwrap_op) (0ary #'unwrap_op)]
-        [(unwrap_group) (0ary #'unwrap_group)]
-        [(unwrap_sequence) (0ary #'unwrap_sequence)]
+        [(unwrap_group) (0ary #'unwrap_group list-of-syntax-static-infos)]
+        [(unwrap_sequence) (0ary #'unwrap_sequence list-of-syntax-static-infos)]
         [(unwrap_all) (0ary #'unwrap_all)]
-        [(strip_scopes) (0ary #'strip_scopes)]
-        [(replace_scopes) (nary #'replace_scopes 2 #'replace_scopes)]
-        [(relocate) (nary #'relocate_method 2 #'relocate)]
-        [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
-        [(srcloc) (0ary #'Syntax.srcloc)]
+        [(strip_scopes) (0ary #'strip_scopes syntax-static-infos)]
+        [(replace_scopes) (nary #'replace_scopes 2 #'replace_scopes syntax-static-infos)]
+        [(relocate) (nary #'relocate_method 2 #'relocate syntax-static-infos)]
+        [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span syntax-static-infos)]
+        [(srcloc) (0ary #'Syntax.srcloc srcloc-static-infos)]
         [(is_original) (0ary #'is_original)]
         [(to_source_string) (0ary #'to_source_string)]
         [else (fail-k)])))))
