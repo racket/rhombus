@@ -23,7 +23,8 @@
                   nested-flow
                   style
                   plain)
-         "rhombus.rhm")
+         "rhombus.rhm"
+         "hspace.rkt")
 
 (provide typeset-examples
          make-rhombus-eval
@@ -171,7 +172,7 @@
                           [else
                            (define o (open-output-string))
                            (call-in-sandbox-context eval (lambda () (print v o)))
-                           (format-lines (get-output-string o) (lambda (s) (racketresultfont s #:decode? #f)) indent)])))]))))]))))))))
+                           (format-lines (get-output-string o) (lambda (s) (racketresultfont (keep-spaces s) #:decode? #f)) indent)])))]))))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]

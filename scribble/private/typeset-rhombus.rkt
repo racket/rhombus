@@ -21,7 +21,8 @@
          (for-template "typeset-help.rkt")
          "typeset-key-help.rkt"
          "add-space.rkt"
-         "line-shape.rkt")
+         "line-shape.rkt"
+         "hspace.rkt")
 
 (provide typeset-rhombus
          typeset-rhombusblock)
@@ -114,7 +115,7 @@
          [(braces elem ...) (seq "{" #'(elem ...) "}")]
          [(quotes elem ...) (seq "'" #'(elem ...) "'" #:sep tt-semicolon)]
          [(op id)
-          (define str (shrubbery-syntax->string stx))
+          (define str (keep-spaces (shrubbery-syntax->string stx)))
           (cond
             [(eq? space-name 'datum) (element tt-style str)]
             [(eq? space-name 'value) (element variable-color str)]
@@ -127,7 +128,7 @@
                                                     #:unlinked-ok? #t))
                  (element tt-style str))])]
          [id:identifier
-          (define str (shrubbery-syntax->string stx))
+          (define str (keep-spaces (shrubbery-syntax->string stx)))
           (define space-name (id-space-name* #'id))
           (cond
             [(eq? space-name 'var)
@@ -150,7 +151,7 @@
                      [(symbol? d) symbol-color]
                      [(keyword? d) paren-color]
                      [else value-color])
-            (shrubbery-syntax->string stx))])])))
+            (keep-spaces (shrubbery-syntax->string stx)))])])))
 
 (define (typeset-rhombusblock stx
                               #:inset [inset? #t]
@@ -284,7 +285,9 @@
                                       (shape-loop (+ sp-start ws-len) (line-shape-step line-shape e))])
                           (values (cons e es) line-shape))]
                        [else
-                        (define e (element style show-str))
+                        (define e (element style (if (eq? style 'white-space)
+                                                     show-str
+                                                     (keep-spaces show-str))))
                         (values (if (eqv? sp-start 0)
                                     e
                                     (list e))
@@ -364,9 +367,7 @@
       (nested-flow (style 'code-inset null) (list output-block))
       output-block))
   
-
 (define tt-style (style 'tt null))
-(define hspace-style (style 'hspace null))
 
 (define tt-space (element tt-style " "))
 (define tt-comma (element tt-style ", "))
