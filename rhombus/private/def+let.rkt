@@ -18,8 +18,6 @@
          (only-in "values.rkt"
                   [values rhombus-values])
          (submod "equal.rkt" for-parse)
-         (only-in "equal.rkt"
-                  [= rhombus=])
          "parens.rkt")
 
 (provide (for-space rhombus/defn
@@ -39,12 +37,7 @@
       (syntax-parse stx
         #:datum-literals (parens group)
         [(_ ... a::equal _ ... b::equal . _)
-         (raise-syntax-error #f
-                             (string-append "multiple immediate equals not allowed in this group"
-                                            "\n use parentheses to disambiguate")
-                             stx
-                             #'a
-                             (list #'b))]
+         (raise-too-many-equals stx #'a #'b)]
         [(form-id (~optional op::name) (parens g ...) (~and rhs (_::block body ...)))
          #:when (or (not (attribute op))
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))

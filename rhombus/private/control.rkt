@@ -13,7 +13,8 @@
          "realm.rkt"
          "define-arity.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "function-parse.rkt" for-build))
+         (submod "function-parse.rkt" for-build)
+         (submod "equal.rkt" for-parse))
          
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -34,7 +35,9 @@
    escape
    default_prompt_tag
    make_prompt_tag
-   call_in))
+   call_in
+   with_mark
+   call_with_immediate_mark))
 
 (define-annotation-syntax Continuation (identifier-annotation #'continuation? #'()))
 
@@ -358,3 +361,20 @@
   (if tst (let () thn) els))
 
 (define (always-true x) #t)
+
+(define-syntax with_mark
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group)
+       [(_ ... a::equal _ ... b::equal . _)
+        (raise-too-many-equals stx #'a #'b)]
+       [(_ lhs ... _::equal rhs ... (tag::block g ...))
+        (values #'(with-continuation-mark
+                    (rhombus-expression (group lhs ...))
+                    (rhombus-expression (group rhs ...))
+                    (rhombus-body-at tag g ...))
+                #'())]))))
+
+(define/arity (call_with_immediate_mark key proc #:default [default #f])
+  (call-with-immediate-continuation-mark key proc default))

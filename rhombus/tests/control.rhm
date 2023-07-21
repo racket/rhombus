@@ -94,3 +94,32 @@ check:
   Continuation.prompt:
     3 + saved(4)
   ~is 8
+
+check:
+  Continuation.with_mark #'check_me = 7:
+    Continuation.call_with_immediate_mark(
+      #'check_me,
+      fun (x): x
+    )
+  ~is 7
+
+check:
+  Continuation.with_mark #'check_me = 7:
+    [Continuation.call_with_immediate_mark(
+      #'check_me,
+      fun (x): x
+     )]
+  ~is [#false]
+
+check:
+  Continuation.with_mark #'check_me = 7:
+    [Continuation.call_with_immediate_mark(
+      #'check_me,
+      ~default: #'none,
+      fun (x): x
+     )]
+  ~is [#'none]
+
+    
+    
+    

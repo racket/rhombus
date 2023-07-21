@@ -12,7 +12,8 @@
 
 (module+ for-parse
   (provide (for-syntax :equal
-                       :not-equal)))
+                       :not-equal
+                       raise-too-many-equals)))
 
 (define-syntax rhombus=
   (expression-infix-operator
@@ -53,3 +54,11 @@
   (define-syntax-class :not-equal
     #:attributes ()
     (pattern (~not _::equal))))
+
+(define-for-syntax (raise-too-many-equals stx a b)
+  (raise-syntax-error #f
+                      (string-append "multiple immediate equals not allowed in this group"
+                                     "\n use parentheses to disambiguate")
+                      stx
+                      a
+                      (list b)))

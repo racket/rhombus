@@ -124,3 +124,34 @@
  Returns the marks of the current continuation.
 
 }
+
+
+@doc(
+  ~nonterminal:
+    key_expr: block expr
+    val_expr: block expr
+  expr.macro 'Continuation.with_mark $key_expr = $val_expr:
+                $body
+                ...'
+){
+
+ Sets the current frame's continuation mark for the result of
+ @rhombus(key_expr) to the result of @rhombus(val_expr) and evaluates the
+ @rhombus(body) sequence in tail postion.
+
+}
+
+
+@doc(
+  fun Continuation.call_with_immediate_mark(
+    key,
+    ~default: default = #false,
+    proc :: Function.of_arity(1)
+  )
+){
+
+ Calls @rhombus(proc) in tail position, providing as its argument the
+ current frame's mark value for @rhombus(key), or @rhombus(default) if the
+ current frame has no mark for @rhombus(key).
+
+}
