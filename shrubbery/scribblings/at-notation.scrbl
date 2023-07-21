@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
-    "quote.rhm" open)
+    "quote.rhm" open
+    "at-exp.rkt" open)
 
 @title(~tag: "at-notation"){At-Notation Using @litchar("@")}
 
@@ -12,7 +13,7 @@ text, but they're awkward for representing multi-line paragraphs and
 interpolated text formatting.
 
 To better support free-form text and escapes, shrubbery notation
-includes a text support that is based on @rhombusmodname(#{at-exp})
+includes a text support that is based on @at_exp_link
 notation for S-expressions. A @litchar("@") in shrubbery notation
 starts a term that normally includes @litchar("{") and @litchar("}"),
 where @litchar("@") changes the meaning of @litchar("{") and
