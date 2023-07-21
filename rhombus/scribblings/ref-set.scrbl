@@ -25,16 +25,27 @@ immutable set.) These uses of @brackets are implemented by
 it supplies its elements in an unspecified order.
 
 @dispatch_table(
-  "set (immutable or mutable)"
+  "readable set (immutable or mutable)"
   @rhombus(Set)
   [set.length(), Set.length(set)]
-  [set.append(set2, ...), Set.length(set, set2, ...)]
-  [set.union(set2, ...), Set.union(set, set2, ...)]
-  [set.intersect(set2, ...), Set.intersect(set, set2, ...)]
-  [set.remove(v), Set.remove(set, v)]
   [set.to_list(), Set.to_list(set)]
   [set.copy(), Set.copy(set)]
   [set.snapshot(), Set.snapshot(set)]
+)
+
+@dispatch_table(
+  "set (immutable only)"
+  @rhombus(Set)
+  [set.append(set2, ...), Set.append(set, set2, ...)]
+  [set.union(set2, ...), Set.union(set, set2, ...)]
+  [set.intersect(set2, ...), Set.intersect(set, set2, ...)]
+  [set.remove(v), Set.remove(set, v)]  
+)
+
+@dispatch_table(
+  "mutable set"
+  @rhombus(MutableSet)
+  [set.delete(v), MutableSet.delete(set, v)]
 )
 
 @doc(
@@ -224,9 +235,9 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.append(set :: ReadableSet, ...) :: Set
-  fun Set.union(set :: ReadableSet, ...) :: Set
-  fun Set.intersect(set :: ReadableSet, ...) :: Set
+  fun Set.append(set :: Set, ...) :: Set
+  fun Set.union(set :: Set, ...) :: Set
+  fun Set.intersect(set :: Set, ...) :: Set
 ){
 
  Returns the union of the @rhombus(set)s in the case of
@@ -253,6 +264,22 @@ it supplies its elements in an unspecified order.
 )
 
 }
+
+
+@doc(
+  fun MutableSet.delete(set :: MutableSet, v) :: Void
+){
+
+ Changes @rhombus(set) to remove @rhombus(v), if it is present.
+
+@examples(
+  def s = MutableSet{1, 2, 3}
+  s.delete(2)
+  s
+)
+
+}
+
 
 @doc(
   fun Set.to_list(set :: Set, try_order = #false) :: List

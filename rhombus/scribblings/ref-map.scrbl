@@ -26,7 +26,7 @@ it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
 @dispatch_table(
-  "map (immutable or mutable)"
+  "readbale map (immutable or mutable)"
   @rhombus(Map)
   [map.length(), Map.length(map)]
   [map.keys(try_sort, ...), Map.keys(map, try_sort, ...)]
@@ -35,6 +35,18 @@ in an unspecified order.
   [map.has_key(k), Map.has_key(map, k)]
   [map.copy(), Map.copy(map)]
   [map.snapshot(), Map.snapshot(map)]
+)
+
+@dispatch_table(
+  "map (immutable only)"
+  @rhombus(Map)
+  [map.remove(k), Map.remove(map, k)]
+)
+
+@dispatch_table(
+  "mutable map"
+  @rhombus(MutableMap)
+  [map.delete(k), MutableMap.delete(map, k)]
 )
 
 @doc(
@@ -385,6 +397,38 @@ in an unspecified order.
   Map.get({"a": 1, "b": 2}, "c", #inf)
   ~error:
     Map.get({"a": 1, "b": 2}, "c", fun(): error("no value"))
+)
+
+}
+
+
+@doc(
+  fun Map.remove(map :: Map, key) :: Map
+){
+
+ Returns a map like @rhombus(map), but without a mapping for
+ @rhombus(key) is @rhombus(map) has one.
+
+@examples(
+  Map.remove({"a": 1, "b": 2}, "a")
+  Map.remove({"a": 1, "b": 2}, "c")
+)
+
+}
+
+
+@doc(
+  fun MutableMap.delete(map :: MutableMap, key) :: Void
+){
+
+ Changes @rhombus(map) to remove a mapping for @rhombus(key), if any.
+
+@examples(
+  def m = MutableMap{"a": 1, "b": 2}
+  m.delete("c")
+  m
+  m.delete("a")
+  m
 )
 
 }

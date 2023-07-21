@@ -9,6 +9,8 @@ block:
     Map.values(m)
     Map.has_key(m, k)
     Map.get(m, k, [default])
+    Map.remove(m, k)
+    MutableMap.delete(m, k)
 
 check:
   {"a": 1, #'~b: 2}
@@ -165,3 +167,40 @@ check:
 
 check:
   {1: "a", 2: 2, 3: 3}.keys(#true) ~is [1, 2, 3]
+
+block:
+  use_static
+  check {1: "a", 2: "b"}.remove(1) ~is {2: "b"}
+  check {1: "a", 2: "b"}.remove(3) ~is {1: "a", 2: "b"}
+  check {1: "a", 2: "b"}.remove(1)[2] ~is "b"
+  check Map.remove({1: "a", 2: "b"}, 1) ~is {2: "b"}
+  check Map.remove({1: "a", 2: "b"}, 3) ~is {1: "a", 2: "b"}
+  check Map.remove({1: "a", 2: "b"}, 1)[2] ~is "b"
+  block:
+    use_dynamic
+    check dynamic({1: "a", 2: "b"}).remove(1) ~is {2: "b"}
+    check dynamic({1: "a", 2: "b"}).remove(3) ~is {1: "a", 2: "b"}
+    check MutableMap{1: "a", 2: "b"}.remove ~raises "no such field or method"
+    check MutableMap{1: "a", 2: "b"}.remove(1) ~raises "no such field or method"
+    
+block:
+  use_static
+  let m = MutableMap{1: "a", 2: "b"}
+  m.delete(1)
+  check m ~is_now MutableMap{2: "b"}
+  m.delete(3)
+  check m ~is_now MutableMap{2: "b"}
+  m[1] := "a"
+  check m ~is_now MutableMap{1: "a", 2: "b"}  
+  check MutableMap.delete(m, 1) ~is #void
+  check m ~is_now MutableMap{2: "b"}
+  check MutableMap.delete(m, 3) ~is #void
+  check m ~is_now MutableMap{2: "b"}
+  m[1] := "a"
+  check m ~is_now MutableMap{1: "a", 2: "b"}  
+  block:
+    use_dynamic
+    check dynamic(m).delete(1) ~is #void
+    check m ~is_now MutableMap{2: "b"}
+    check {1: "a", 2: "b"}.delete ~raises "no such field or method"
+    check {1: "a", 2: "b"}.delete(1) ~raises "no such field or method"

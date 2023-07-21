@@ -43,7 +43,8 @@
                       rhombus/reducer
                       rhombus/annot)
                      Set)
-         (for-spaces (#f
+         (for-spaces (rhombus/namespace
+                      #f
                       rhombus/repet
                       rhombus/annot)
                      MutableSet)
@@ -64,7 +65,9 @@
 
 (module+ for-builtin
   (provide set?
-           set-method-table))
+           mutable-set?
+           set-method-table
+           mutable-set-method-table))
 
 (module+ for-info
   (provide (for-syntax set-static-info)
@@ -101,20 +104,38 @@
 (define/arity #:name Set.length (set-count s)
   (hash-count (set-ht s)))
 
+(define-for-syntax readable-set-instance-dispatch
+  (lambda (field-sym field ary 0ary nary fail-k)
+    (case field-sym
+      [(length) (0ary #'set-count)]
+      [(copy) (0ary #'Set.copy mutable-set-static-info)]
+      [(snapshot) (0ary #'Set.snapshot set-static-info)]
+      [(to_list) (nary #'Set.to_list 3 #'Set.to_list list-static-infos)]
+      [else (fail-k)])))
+
+(define-syntax readable-set-instance
+  (dot-provider
+   (dot-parse-dispatch
+    readable-set-instance-dispatch)))
+
 (define-syntax set-instance
   (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(length) (0ary #'set-count)]
-        [(copy) (0ary #'Set.copy mutable-set-static-info)]
-        [(snapshot) (0ary #'Set.snapshot set-static-info)]
-        [(remove) (nary #'Set.remove 2 #'Set.remove set-static-info)]
         [(append) (nary #'Set.append -1 #'Set.append set-static-info)]
         [(union) (nary #'Set.union -1 #'Set.union set-static-info)]
         [(intersect) (nary #'Set.intersect -1 #'Set.intersect set-static-info)]
-        [(to_list) (nary #'Set.to_list 3 #'Set.to_list list-static-infos)]
-        [else (fail-k)])))))
+        [(remove) (nary #'Set.remove 2 #'Set.remove set-static-info)]
+        [else (readable-set-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
+
+(define-syntax mutable-set-instance
+  (dot-provider
+   (dot-parse-dispatch
+    (lambda (field-sym field ary 0ary nary fail-k)
+      (case field-sym
+        [(delete) (nary #'MutableSet.delete 2 #'MutableSet.delete)]
+        [else (readable-set-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -230,6 +251,10 @@
 (define-name-root ReadableSet
   #:fields
   ([empty empty-set-view]))
+
+(define-name-root MutableSet
+  #:fields
+  ([delete MutableSet.delete]))
 
 (define-syntax Set
   (expression-transformer
@@ -377,15 +402,23 @@
 
 (define (in-set* s) (in-hash-keys (set-ht s)))
 
-(define-for-syntax set-static-info
+(define-for-syntax any-set-static-info
   #'((#%index-get set-member?)
+     (#%sequence-constructor in-set)))
+
+(define-for-syntax readable-set-static-info
+  #`((#%dot-provider readable-set-instance)
+     . #,any-set-static-info))
+
+(define-for-syntax set-static-info
+  #`((#%dot-provider set-instance)
      (#%append set-append)
-     (#%sequence-constructor in-set)
-     (#%dot-provider set-instance)))
+     . #,any-set-static-info))
 
 (define-for-syntax mutable-set-static-info
   #`((#%index-set set-member!)
-     . #,set-static-info))
+     (#%dot-provider mutable-set-instance)
+     . #,any-set-static-info))
 
 (define-annotation-constructor (Set of)
   ()
@@ -448,7 +481,7 @@
                         #'tail)]))
 
 (define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-info))
-(define-annotation-syntax ReadableSet (identifier-annotation #'set? set-static-info))
+(define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-info))
 
 (define-syntax MutableSet
   (expression-transformer
@@ -582,12 +615,17 @@
     (raise-argument-error* 'Set.remove rhombus-realm "Set" s))
   (set (hash-remove (set-ht s) v)))
 
+(define/arity (MutableSet.delete s v)
+  (unless (mutable-set? s)
+    (raise-argument-error* 'MutableSet.delete rhombus-realm "MutableSet" s))
+  (hash-remove! (set-ht s) v))
+
 (define/arity (Set.to_list s [try-sort? #f])
   #:static-infos ((#%call-result #,list-static-infos))
   (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "ReadableSet" s))
   (hash-keys (set-ht s) try-sort?))
 
-(define set-method-table
+(define readable-set-method-table
   (hash 'length (let ([length (lambda (s)
                                 (unless (set? s)
                                   (raise-argument-error* 'Set.length rhombus-realm "ReadableSet" s))
@@ -595,10 +633,17 @@
                   (method1 length))
         'copy (method1 Set.copy)
         'snapshot (method1 Set.snapshot)
-        'remove (method2 Set.remove)
-        'append (method* Set.append)
-        'union (method* Set.union)
-        'intersect (method* Set.intersect)
         'to_list (lambda (s)
                    (lambda ([try-sort? #f])
                      (Set.to_list s try-sort?)))))
+
+(define set-method-table
+  (hash-set* readable-set-method-table
+             'remove (method2 Set.remove)
+             'append (method* Set.append)
+             'union (method* Set.union)
+             'intersect (method* Set.intersect)))
+
+(define mutable-set-method-table
+  (hash-set readable-set-method-table
+            'delete (method2 MutableSet.delete)))

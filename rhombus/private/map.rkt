@@ -46,7 +46,8 @@
                       rhombus/annot
                       rhombus/reducer)
                      Map)
-         (for-spaces (#f
+         (for-spaces (rhombus/namespace
+                      #f
                       rhombus/repet
                       rhombus/annot)
                      MutableMap)
@@ -65,7 +66,8 @@
            Map-build))
 
 (module+ for-builtin
-  (provide map-method-table))
+  (provide map-method-table
+           mutable-map-method-table))
 
 (module+ for-build
   (provide hash-append
@@ -74,7 +76,7 @@
            hash-assert
            list->map))
 
-(define map-method-table
+(define readable-map-method-table
   (hash 'length (method1 hash-count)
         'values (method1 hash-values)
         'keys (lambda (ht)
@@ -88,6 +90,14 @@
                             [(key default) (hash-ref ht key default)])])
                  get))
         'hash-snapshot (method1 hash-snapshot)))
+
+(define map-method-table
+  (hash-set readable-map-method-table
+            'remove (method2 hash-remove)))
+
+(define mutable-map-method-table
+  (hash-set readable-map-method-table
+        'delete (method2 hash-remove!)))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
 
@@ -201,7 +211,12 @@
    [snapshot hash-snapshot]
    [get hash-ref]
    [ref hash-ref] ; temporary
+   [remove hash-remove]
    of))
+
+(define-name-root MutableMap
+  #:fields
+  ([delete hash-remove!]))
 
 (define-name-root ReadableMap
   #:fields
@@ -240,15 +255,23 @@
   (repetition-transformer
    (lambda (stx) (parse-map stx #t))))
 
-(define-for-syntax map-static-info
+(define-for-syntax any-map-static-info
   #'((#%index-get hash-ref)
+     (#%sequence-constructor in-hash)))
+
+(define-for-syntax readable-map-static-info
+  #`((#%dot-provider readable-hash-instance)
+     . #,any-map-static-info))
+
+(define-for-syntax map-static-info
+  #`((#%dot-provider hash-instance)
      (#%append hash-append)
-     (#%sequence-constructor in-hash)
-     (#%dot-provider hash-instance)))
+     . #,any-map-static-info))
 
 (define-for-syntax mutable-map-static-info
   #`((#%index-set hash-set!)
-     . #,map-static-info))
+     (#%dot-provider mutable-hash-instance)
+     . #,any-map-static-info))
 
 (define-annotation-constructor (Map of)
   ()
@@ -277,19 +300,38 @@
           (lambda () #f)))
        (lambda () #f))))
 
+(define-for-syntax readable-hash-instance-dispatch
+  (lambda (field-sym field ary 0ary nary fail-k)
+    (case field-sym
+      [(length) (0ary #'hash-count)]
+      [(keys) (nary #'hash-keys 3 #'hash-keys list-static-infos)]
+      [(values) (0ary #'hash-values)]
+      [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
+      [(copy) (0ary #'hash-copy mutable-map-static-info)]
+      [(snapshot) (0ary #'hash-snapshot map-static-info)]
+      [(get) (nary #'hash-ref 6 #'hash-ref)]
+      [else (fail-k)])))
+
+(define-syntax readable-hash-instance
+  (dot-provider
+   (dot-parse-dispatch
+    readable-hash-instance-dispatch)))
+
 (define-syntax hash-instance
   (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(length) (0ary #'hash-count)]
-        [(keys) (nary #'hash-keys 3 #'hash-keys list-static-infos)]
-        [(values) (0ary #'hash-values)]
-        [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
-        [(copy) (0ary #'hash-copy mutable-map-static-info)]
-        [(snapshot) (0ary #'hash-snapshot map-static-info)]
-        [(get) (nary #'hash-ref 6 #'hash-ref)]
-        [else (fail-k)])))))
+        [(remove) (nary #'hash-remove 2 #'hash-remove map-static-info)]
+        [else (readable-hash-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
+
+(define-syntax mutable-hash-instance
+  (dot-provider
+   (dot-parse-dispatch
+    (lambda (field-sym field ary 0ary nary fail-k)
+      (case field-sym
+        [(delete) (nary #'hash-remove! 2 #'hash-remove! map-static-info)]
+        [else (readable-hash-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
 
 (define-static-info-syntax Map-pair-build
   (#%call-result #,map-static-info)
@@ -319,7 +361,7 @@
          (hash-set ht-id k v))]))
 
 (define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-info))
-(define-annotation-syntax ReadableMap (identifier-annotation #'hash? map-static-info))
+(define-annotation-syntax ReadableMap (identifier-annotation #'hash? readable-map-static-info))
 
 (define MutableMap-build
   (let ([MutableMap (lambda args
@@ -544,3 +586,10 @@
   
 (define-static-info-syntaxes (hash-ref)
   (#%function-arity 12))
+
+(define-static-info-syntaxes (hash-remove)
+  (#%function-arity 4)
+  (#%call-result #,map-static-info))
+
+(define-static-info-syntaxes (hash-remove!)
+  (#%function-arity 4))
