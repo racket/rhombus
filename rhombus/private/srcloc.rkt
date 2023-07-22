@@ -233,9 +233,11 @@
              (not-identifier-term? head)
              (syntax->list stx))
         => (lambda (l)
-             (from-list stx (cdr l) (lambda (g)
-                                      ;; we expect `g` to be a group or block
-                                      (maybe-respan g))))]
+             (if (null? (cdr l))
+                 stx  ;; only happens with 'multi
+                 (from-list stx (cdr l) (lambda (g)
+                                          ;; we expect `g` to be a group or block
+                                          (maybe-respan g)))))]
        [(and (block-tag? head)
              (syntax->list stx))
         => (lambda (l)

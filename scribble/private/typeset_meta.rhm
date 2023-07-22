@@ -1,29 +1,37 @@
-#lang rhombus
+#lang rhombus/static/and_meta
 
 import:
-  lib("racket/base.rkt")
-  meta -1:
-    lib("rhombus/private/space.rkt").#{space-name}
+  meta:
+    lib("racket/base.rkt")
+  lib("rhombus/private/space.rkt").#{space-name}
 
 export:
-  Transformer
-  make_Transformer
-  Spacer
-  make_Spacer
-  in_space
-  space
+  typeset
+  meta:
+    Transformer
+    make_Transformer
+    Spacer
+    make_Spacer
+    in_space
+    rename:
+      also_space as space
 
-class Transformer(proc)
-class Spacer(proc)
+space.transform typeset:
+  space_path rhombus/scribble/typeset
+  meta_namespace typeset_meta:
+    reflection space
 
-fun in_space(stx):
-  base.#{make-interned-syntax-introducer}(#'#{rhombus/scribble/typeset})(stx)
+meta:
+  class Transformer(proc)
+  class Spacer(contexts :~ List, proc)
 
-def space:
-  #{space-name}(#'#{rhombus/scribble/typeset})
+  fun make_Transformer(proc):
+    Transformer(proc)
 
-fun make_Transformer(proc):
-  Transformer(proc)
+  fun make_Spacer(contexts, proc):
+    Spacer(contexts, proc)
 
-fun make_Spacer(proc):
-  Spacer(proc)
+  fun in_space(stx):
+    base.#{make-interned-syntax-introducer}(#'#{rhombus/scribble/typeset})(stx)
+
+  def also_space = typeset_meta.space

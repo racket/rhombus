@@ -1,0 +1,143 @@
+#lang rhombus/static/and_meta
+import:
+  "typeset_meta.rhm"
+  meta:
+    "add-space.rkt".#{full-space-names}
+
+export:
+  meta:
+    adjust_group
+    adjust_term
+    adjust_sequence
+    adjust_multi
+    rename:
+      set_space as set
+  bridge
+  typeset_meta.typeset
+    
+meta:
+  fun set_space(stx, context):
+    let context = (if context is_a Keyword | Symbol.from_string(to_string(context)) | context)
+    match stx
+    | '$(_ :: Term)':
+        Syntax.property(stx, #'#{typeset-space-name}, context, #true)
+    | '$(t :: Term) ...':
+        '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate(stx)
+
+  fun is_relevant_context(context, in_contexts :~ List):
+    let nows :~ List = #{full-space-names}(context)
+    for any:
+      each now: nows
+      each in: in_contexts
+      now == in
+
+  fun head_context(stxs):
+    match stxs
+    | '$head $_ ...':
+        Syntax.relocate('#false', head)
+
+  fun adjust_term(t, context, esc) :~ Syntax:
+    match t
+    | '($(g :: Group), ...)':
+        '($(adjust_group(g, context, esc)), ...)'.relocate(t)
+    | '[$(g :: Group), ...]':
+        '[$(adjust_group(g, context, esc)), ...]'.relocate(t)
+    | '{$(g :: Group), ...}':
+        '[$(adjust_group(g, context, esc)), ...]'.relocate(t)
+    | '«'$(g:: Group); ...'»':
+        '«'$(adjust_group(g, context, esc)); ...'»'.relocate(t)
+    | ': $_':
+        adjust_block(t, context, esc)
+    | '| $(b :: Block) | ...':
+        Syntax.make(List.cons(#'alts, [adjust_block(b, context, esc), ...]), t).relocate(t)
+    | '$(id :: Name)':
+        set_space(t, context)
+    | ~else:
+        t
+
+  fun adjust_block(b, context, esc) :~ Syntax:
+    match b
+    | ': $g; ...':
+        Syntax.relocate(': $(adjust_group(g, context, esc)); ...', head_context(b))
+
+  fun adjust_group(g, context, esc) :~ Syntax:
+    fun ensure_group(stx):
+      if stx is_a Term
+      | Syntax.make_group([stx])
+      | stx
+    Syntax.relocate(ensure_group(adjust_sequence(g, context, esc)), g)
+
+  fun adjust_sequence(seq, context, esc) :~ Syntax:
+    fun default():
+      match seq
+      | '$head $tail ...':
+          cond
+          | head.unwrap() == Syntax.unwrap(esc):
+              match '$tail ...'
+              | '$(n :: Name) $tail ...':
+                  let '$new_tail ...' = adjust_sequence('$tail ...', context, esc)
+                  '$head $n $new_tail ...'
+              | '$t $tail ...':
+                  let '$new_tail ...' = adjust_sequence('$tail ...', context, esc)
+                  '$head $t $new_tail ...'
+              | '$(t :: Term)':
+                  '$(adjust_term(t, context, esc))'
+          | ~else:
+              def new_head = adjust_term(head, context, esc)
+              let '$new_tail ...' = adjust_sequence('$tail ...', context, esc)
+              '$new_head $new_tail ...'
+      | ~else:
+          ''
+    match seq
+    | '$(id :: Name) $tail ...':
+        def mv = syntax_meta.value(id, typeset_meta.space, #false)
+        match mv
+        | typeset_meta.Spacer(in_contexts, proc) when is_relevant_context(context, in_contexts):
+            let res:
+              try:
+                let id:
+                  cond
+                  | in_contexts.length() == 1:
+                      set_space(id, in_contexts[0])
+                  | ~else:
+                      let contexts :~ List = #{full-space-names}(context)    
+                      cond
+                      | contexts.length() == 1:
+                          set_space(id, contexts[0])
+                      | ~else:
+                          id
+                proc(id, '$tail ...', context, esc)
+                ~catch x :: Exn.Fail:
+                  error("error from " +& to_string(id, ~mode: #'expr) +& " spacer\n"
+                          +& "  message: " +& Exn.message(x))
+            match res
+            | '$_ ...': res
+            | ~else:
+                error(#false, "spacer " +& proc +& " returned wrong value " +& to_string(res, ~mode: #'value))
+        | ~else:
+            // `id` might be a dotted name, so don't treat it as a term
+            default()
+    | ~else:
+        default()
+
+  fun adjust_multi(m, context, esc) :~ Syntax:
+    match m
+    | '$g; ...':
+        '$(adjust_group(g,context, esc)); ...'
+
+defn.macro 'bridge $(name :: Name)($(self :: Identifier),
+                                   $(tail :: Identifier),
+                                   $(mode :: Identifier),
+                                   $(esc :: Identifier)):
+                   ~in: $space ...
+                   $body
+                   ...':
+  let [space_name, ...] = List.append(&[#{full-space-names}(space.unwrap()), ...])
+  fun quote(s): if s | '#' $s' | s
+  'meta.bridge $(typeset_meta.in_space(name)):
+     typeset_meta.Spacer(
+       [$(quote(space_name)), ...],
+       fun ($self :: Syntax, $tail :: Syntax, $mode, $esc :: Syntax):
+         $body
+         ...
+     )'

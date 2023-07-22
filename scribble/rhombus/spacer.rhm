@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  "../private/spacer.rhm"
+
+export:
+  all_from(.spacer)

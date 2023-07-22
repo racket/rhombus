@@ -1,0 +1,202 @@
+#lang rhombus/static/and_meta
+import:
+  "spacer.rhm"
+
+export:
+  only_space spacer.typeset:
+    def
+    let
+    fun
+    class
+    interface
+    match
+    ::
+    :~
+    #'
+    for
+    import
+
+meta:
+  fun do_def(self, tail, context, esc):
+    match tail
+    | '$bind ... $(op && '=') $exp ...':
+        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
+        let new_exp = spacer.adjust_sequence('$exp ...', context, esc)
+        '$self $new_bind $op $new_exp'
+    | '$bind ... : $(b :: Block)':
+        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
+        '$self $new_bind $(spacer.adjust_term(b, context, esc))'
+    | '$bind ...':
+        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
+        '$self $new_bind'        
+
+spacer.bridge def(self, tail, context, esc):
+  ~in: ~defn
+  do_def(self, tail, context, esc)
+
+spacer.bridge let(self, tail, context, esc):
+  ~in: ~defn
+  do_def(self, tail, context, esc)
+
+spacer.bridge fun(self, tail, context, esc):
+  ~in: ~expr ~defn
+  fun make_self(names):
+    match names
+    | '': spacer.set(self, #'~expr)
+    | ~else: '$(spacer.set(self, #'~defn)) $names'
+  recur loop (tail = tail):
+    fun recur_block(b):
+      match b
+      | ': $(g :: Group)':
+          let '$_ $tail ...' = loop(g)
+          ': $tail ...'.relocate(b)
+      | ~else : b // ill-forms, so bail out
+    match tail
+    | '':
+        self
+    | '| $(b :: Block) | ...':        
+        let '$(a :: Term)' = tail
+        let new_self = (match '[$b, ...]'
+                        | '[($_) $_ ..., $_, ...]': spacer.set(self, #'~expr)
+                        | ~else: spacer.set(self, #'~defn))
+        '$new_self $(Syntax.make([#'alts, recur_block(b), ...]).relocate(a))'
+    | '$name ... $(parens && '($arg, ...)') $(op && ('::' || ':~')) $ann ...:
+         $(b :: Block)':
+        let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
+        '$(make_self('$name ...')) $args $(spacer.adjust_term(b, context, esc))'  
+    | '$name ... $(parens && '($arg, ...)') $tail ...':
+        let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
+        let '$new_tail ...' = spacer.adjust_sequence('$tail ...', context, esc)
+        '$(make_self('$name ...')) $args $new_tail ...'
+    | '$name ...':
+        '$(make_self('$name ...'))'
+
+meta:
+  fun adjust_arg(arg, context, esc) :~ Syntax:
+    match arg
+    | '$(kw :: Keyword) $(b && ': $(g :: Group)')':        
+        '$kw $(': $(adjust_arg(g, context, esc).relocate(g))'.relocate(b))'.relocate(arg)
+    | '$(kw :: Keyword): $(b :: Block)':
+        '$kw $(spacer.adjust_term(b, #'~bind, esc))'.relocate(arg)
+    | '$bind_ann ... $(op && '=') $exp ...':
+        let new_bind_ann = adjust_arg('$bind_ann ...', context, esc)
+        let new_exp = adjust_arg('$exp ...', #'~expr, esc)
+        '$new_bind_ann $(spacer.adjust_term(op, #'~expr, esc)) $new_exp'.relocate(arg)
+    | ~else:
+        spacer.adjust_group(arg, #'~bind, esc)
+
+spacer.bridge class(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$name ... $(parens && '($field, ...)') $tail ...':
+      let fields = '($(adjust_arg(field, context, esc)), ...)'.relocate(parens)
+      let new_tail = adjust_class_sequence('$tail ...', #'#{rhombus/class_clause}, context, esc)
+      '$self $name ... $fields $new_tail'
+  | '$name ...':
+      '$self $name ...'
+
+spacer.bridge interface(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$name ... : $(b :: Block)':
+      let new_block = adjust_class_sequence(b, #'#{rhombus/interface_clause}, context, esc)
+      '$self $name ... $new_block'
+  | '$name ...':
+      '$self $name ...'
+
+meta:
+  fun adjust_class_sequence(tail, clause_space, context, esc):
+    match tail
+    | ': $g; ...':
+        let ': $(b :: Block)' = tail
+        ': $(spacer.adjust_group(g, [clause_space, #'#{rhombus/defn}, #false], esc)); ...'.relocate(b)
+    | ~else:
+        spacer.adjust_sequence(tail, context, esc)
+
+spacer.bridge extends(self, tail, context, esc):
+  ~in: ~class_clause
+  adjust_extends(self, tail, context, esc)
+
+spacer.bridge implements(self, tail, context, esc):
+  ~in: ~class_clause
+  adjust_extends(self, tail, context, esc)
+
+meta:
+  fun adjust_extends(self, tail, context, esc):
+    match tail
+    | ': $(b :: Block)':
+        '$self $(': $(spacer.adjust_term(b, #'~class, esc))'.relocate(b))'
+    | '$tail ...':
+        '$self $(spacer.adjust_sequence('$tail ...', #'~class, esc))'
+
+spacer.bridge match(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$expr ... $(alts && '| $(clause :: Block) | ...')':
+      let new_clauses = [adjust_match_clause(clause, context, esc), ...]
+      let new_clauses = Syntax.make([#'alts, & new_clauses], #false).relocate(alts)
+      let new_expr = spacer.adjust_sequence('$expr ...', context, esc)
+      '$self $new_expr $new_clauses'
+  | '$tail ...':
+      '$self $tail ...'
+
+meta:
+  fun adjust_match_clause(clause, context, esc):
+    match clause
+    | ': $bind ... : $(b :: Block)': 
+        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
+        let new_body = spacer.adjust_term(b, context, esc)
+        ': $new_bind $new_body'.relocate(clause)
+    | ~else:
+        spacer.adjust_term(clause, context, esc)
+
+spacer.bridge ::(self, tail, context, esc):
+  ~in: ~expr ~bind
+  '$self $(spacer.adjust_sequence(tail, #'~annot, esc))'
+
+spacer.bridge :~(self, tail, context, esc):
+  ~in: ~expr ~bind
+  '$self $(spacer.adjust_sequence(tail, #'~annot, esc))'
+
+spacer.bridge #'(self, tail, context, esc):
+  ~in: ~expr ~bind
+  match tail
+  | '$t $tail ...':
+      '$self $(spacer.set(t, #'~value)) $(spacer.adjust_sequence('$tail ...', context, esc))'
+  | '':
+      '$self'
+
+spacer.bridge for(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | ': $g; ...; $(into && '$(kw && '~into') $reduce ...')':
+      let ': $(b :: Block)' = tail
+      let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
+      let [new_g, ...] = [adjust_for_clause(g, context, esc), ...]
+      '$self $(': $new_g; ...; $('$kw $new_reduce'.relocate(into))'.relocate(b))'
+  | '$reduce ... : $(b :: Block)':
+      let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
+      let new_body:
+        let ': $g; ...' = b
+        ': $(adjust_for_clause(g, context, esc)); ...'.relocate(b)
+      '$self $new_reduce $new_body'
+  | '$tail ...':
+      '$self $tail ...'
+
+meta:
+  fun adjust_for_clause(g, context, esc):
+    spacer.adjust_group(g, [#'#{rhombus/for_clause}, #'#{rhombus/defn}, #false], esc)
+
+spacer.bridge import(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | ': $clause; ...':
+      let ': $(b :: Block)' = tail
+      let [new_clause, ...] = [adjust_import_clause(clause, context, esc), ...]
+      '$self $(': $new_clause; ...'.relocate(b))'
+  | '$clause; ...':
+      '$self $(adjust_import_clause('$clause ...', context, esc))'
+
+meta:
+  fun adjust_import_clause(g, context, esc):
+    spacer.adjust_group(g, #'~impo, esc)

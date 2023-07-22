@@ -8,8 +8,7 @@ import:
   meta_label:
     rhombus open
     rhombus/meta open
-  meta:
-    lib("scribble/private/typeset_meta.rhm") open
+  lib("scribble/private/typeset_meta.rhm") open
 
 export:
   all_from(rhombus/meta)

@@ -134,6 +134,7 @@
    relocate_span
    to_source_string
    [srcloc Syntax.srcloc]
+   [property Syntax.property]
    is_original))
 
 (define-syntax literal
@@ -159,7 +160,9 @@
 
 ;; ----------------------------------------
 
-(define (extract-ctx who ctx-stx #:false-ok? [false-ok? #t])
+(define (extract-ctx who ctx-stx
+                     #:false-ok? [false-ok? #t]
+                     #:update [update #f])
   (and (or (not false-ok?) ctx-stx)
        (let ([t (and (syntax? ctx-stx)
                      (unpack-term ctx-stx #f #f))])
@@ -167,9 +170,15 @@
            (raise-argument-error* who rhombus-realm (if false-ok? "maybe(Term)" "Term") ctx-stx))
          (syntax-parse t
            #:datum-literals (op)
-           [(op id) #'id]
-           [(head . _) #'head]
-           [_ t]))))
+           [((~and tag op) id) (if update
+                                   (datum->syntax t (list #'tag (update #'id)) t t)
+                                   #'id)]
+           [(head . tail) (if update
+                              (datum->syntax t (cons (update #'head) #'tail) t t)
+                              #'head)]
+           [_ (if update
+                  (update t)
+                  t)]))))
 
 (define (do-make who v ctx-stx tail? group?)
   ;; assume that any syntax objects are well-formed, while list structure
@@ -422,6 +431,16 @@
   #:static-infos ((#%call-result #,srcloc-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.srcloc rhombus-realm "Syntax" stx))
   (syntax-srcloc (maybe-respan stx)))
+
+(define/arity Syntax.property
+  (case-lambda
+    [(stx prop) (syntax-property (extract-ctx 'Syntax.property stx) prop)]
+    [(stx prop val) (extract-ctx 'Syntax.property stx
+                                 #:update (lambda (t)
+                                            (syntax-property t prop val)))]
+    [(stx prop val preserved?) (extract-ctx 'Syntax.property stx
+                                            #:update (lambda (t)
+                                                       (syntax-property t prop val preserved?)))]))
 
 (define/arity (is_original v)
   (syntax-original? (extract-ctx 'Syntax.srcloc v #:false-ok? #f)))

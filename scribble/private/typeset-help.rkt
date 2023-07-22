@@ -33,7 +33,8 @@
                   t))
   (syntax-raw-prefix-property t/s (syntax-raw-prefix-property pre)))
 
-(define-for-syntax (resolve-name-ref space-name root fields
+;; returns #f or (list target rest space-name)
+(define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f])
   (let loop ([root root] [fields fields])
     (cond
@@ -42,10 +43,28 @@
        (define field (car fields))
        (define p (identifier-binding-portal-syntax (in-name-root-space root) #f))
        (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
-       (define intro (if space-name
-                         (make-interned-syntax-introducer space-name)
-                         (lambda (x) x)))
-       (define dest (and lookup (lookup #f "identifier" field intro)))
+       (define (make-intro space-name)
+         (if space-name
+             (make-interned-syntax-introducer space-name)
+             (lambda (x) x)))
+       (define dest+space-name
+         (cond
+           [(= 1 (length space-names))
+            (define space-name (car space-names))
+            (define intro (make-intro space-name))
+            (define dest (and lookup (lookup #f "identifier" field intro)))
+            (and dest (cons dest space-name))]
+           [else
+            (for/or ([space-name (in-list space-names)])
+              (define intro (make-intro space-name))
+              (define dest (and lookup (lookup #f "identifier" field intro)))
+              (and dest
+                   (or (not space-name)
+                       (identifier-distinct-binding (intro dest) dest #f)
+                       (identifier-distinct-binding ((make-intro 'rhombus/namespace) dest) dest #f))
+                   (cons dest space-name)))]))
+       (define dest (and dest+space-name (car dest+space-name)))
+       (define space-name (and dest+space-name (cdr dest+space-name)))
        (define parens? (and ptag (null? (cdr fields))))
        (define raw (format "~a.~a~a~a"
                            (or (syntax-raw-property root)
@@ -59,7 +78,7 @@
                                             (or (syntax-raw-suffix-property p) '())
                                             (syntax-raw-tail-suffix-property ptag)))
              p))
-       (define (add-rest p) (and p (cons p (cdr fields))))
+       (define (add-rest p) (and p (list p (cdr fields) space-name)))
        (cond
          [dest
           (define loc-stx
@@ -74,7 +93,7 @@
           (or (loop named-dest (cdr fields))
               (add-rest named-dest))]
          [else
-          (define id (intro (datum->syntax root (string->symbol raw))))
+          (define id ((make-intro space-name) (datum->syntax root (string->symbol raw))))
           (and (identifier-binding id #f)
                (let ([named-id (transfer-parens-suffix
                                 (syntax-raw-property

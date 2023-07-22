@@ -70,7 +70,7 @@
 }
 
 @doc(
-  bind.macro '$bin :~ $annot'
+  bind.macro '$bind :~ $annot'
 ){
 
  Associates static information to @rhombus(bind) the same as

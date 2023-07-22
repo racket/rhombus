@@ -99,8 +99,8 @@
                 (syntax-parse g
                   #:datum-literals (group)
                   [(group . (~var name (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref/maybe)))
-                   (and (null? (syntax-e #'name.tail))
-                        (in-space #'name.name))]
+                   #:when (null? (syntax-e #'name.tail))
+                   (in-space #'name.name)]
                   [(group n::dotted-operator-or-identifier-sequence)
                    (cond
                      [build-dotted?

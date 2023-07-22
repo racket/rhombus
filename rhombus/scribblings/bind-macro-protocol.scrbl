@@ -116,7 +116,7 @@ seven parts:
 
  @item{A string that is used for reporting a failed match. The string is
   used as an annotation, and it should omit information that is local to
-  the binding. For example, when @rhombus(List.cons(x, y)) is used as a binding
+  the binding. For example, when @rhombus(List.cons(x, y), ~bind) is used as a binding
   pattern, a suitable annotation string might be
   @rhombus("matching(List.cons(_, _))") to phrase the binding constraint as an
   annotation and omit local variable names being bound (which should not
@@ -139,7 +139,7 @@ seven parts:
    example, @rhombus(Posn(x, y)) binds @rhombus(x) and @rhombus(y), and it may not have any
    particular static information for @rhombus(x) and @rhombus(y), but a matching value
    has static information suitable for @rhombus(Posn), anyway; so, using
-   @rhombus(p :: matching(Posn(_, _))) makes @rhombus(p) have @rhombus(Posn)
+   @rhombus(p :: matching(Posn(_, _)), ~bind) makes @rhombus(p) have @rhombus(Posn)
    static information.}
 
  @item{A list of invdidual names that are bound by the overall binding,

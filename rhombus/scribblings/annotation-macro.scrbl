@@ -166,7 +166,7 @@ representation.
 )
 
 The @rhombus(statinfo.macro) form expects @rhombus('') containing an
-identifier or operator, not a more funciton-like pattern, because it's
+identifier or operator, not a more function-like pattern, because it's
 mean to define a constant association between a name and static
 information.
 

@@ -1,8 +1,7 @@
 #lang rhombus/and_meta
 import:
   "rhombus.rhm" open
-  meta:
-    "typeset_meta.rhm"
+  "typeset_meta.rhm"
 
 export:
   rhombus_typeset

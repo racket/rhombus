@@ -34,26 +34,26 @@ Rhombus uses several built-in static-information keys:
    gets @rhombus(statinfo_meta.dot_provider_key) that makes @rhombus(Posn(1, 2).x)
    select the @rhombus(1).},
 
-  @item{@rhombus(statinfo_meta.ref_result_key) --- provides static information to be
-   attached to a @litchar{[}...@litchar{]} map reference where E is to the left
-   of the @litchar{[}...@litchar{]}. (The index expression inside @litchar{[}...@litchar{]} does
+  @item{@rhombus(statinfo_meta.index_result_key) --- provides static information to be
+   attached to a @brackets indexing reference where E is to the left
+   of the @brackets. (The index expression inside @brackets does
    not matter.) For example @rhombus(ps :: List.of(Posn)) associates
-   @rhombus(statinfo_meta.ref_result_key) to @rhombus(ps), where the associated value
+   @rhombus(statinfo_meta.index_result_key) to @rhombus(ps), where the associated value
    includes is static information with @rhombus(statinfo_meta.dot_provider_key). So,
-   @rhombus(ps[i].x) is allowed an selects an @rhombus(x) field from the @rhombus(Posn)
+   @rhombus(ps[i].x) is allowed and selects an @rhombus(x) field from the @rhombus(Posn)
    instance produced by @rhombus(ps[i]).},
 
-  @item{@rhombus(statinfo_meta.map_ref_key) and @rhombus(statinfo_meta.map_set_key) --- names a form to
-   use for a @litchar{[}...@litchar{]} map-like reference or assignment where E is to
-   the left of the @litchar{[}...@litchar{]}. (The index expression inside
-   @litchar{[}...@litchar{]} does not matter.) For example, @rhombus(p :: Array) associates
-   @rhombus(statinfo_meta.map_ref_key) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
-   referencing operation, and it associates @rhombus(statinfo_meta.map_ref) to
+  @item{@rhombus(statinfo_meta.index_ref_key) and @rhombus(statinfo_meta.index_set_key) --- names a form to
+   use for a @brackets indexing reference or assignment where E is to
+   the left of the @brackets. (The index expression inside
+   @brackets does not matter.) For example, @rhombus(p :: Array) associates
+   @rhombus(statinfo_meta.index_ref_key) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
+   referencing operation, and it associates @rhombus(statinfo_meta.index_set_key) to
    @rhombus(p) so that @rhombus(p[i] = n) uses an array-specific assignment operation.},
 
-  @item{@rhombus(statinfo_meta.map_append_key) --- names a form to specialize the
+  @item{@rhombus(statinfo_meta.append_key) --- names a form to specialize the
    @rhombus(++) operator for appending maps, lists, and similar values. For example,
-   @rhombus(p :: Array) associates @rhombus(statinfo_meta.map_append_key) to @rhombus(p)
+   @rhombus(p :: Array) associates @rhombus(statinfo_meta.append_key) to @rhombus(p)
    so that @rhombus(p ++ q) uses an array-specific appending operation.}
 
 )
@@ -65,7 +65,7 @@ information to its parsed form (i.e., expansion). For example, the
 @rhombus(::) operator associates static information through an annotation. An
 annotation pairs a predicate with a set of static information to
 associate with any variable that is bound with the annotation. That's
-why a binding @rhombus(p :: Posn) makes every reference to @rhombus(p) a dot provider: the annotation
+why a binding @rhombus(p :: Posn, ~bind) makes every reference to @rhombus(p) a dot provider: the annotation
 @rhombus(Posn) indicates that every binding with the annotation gets a dot
 provider to access @rhombus(x) and @rhombus(y). When @rhombus(::) is used in an expression,
 then static information indicated by the annotation is similarly

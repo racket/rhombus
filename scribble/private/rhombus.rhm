@@ -3,10 +3,13 @@ import:
   "typeset-rhombus.rkt" open
   "rebuild.rhm" open
   meta:
-    "typeset_meta.rhm"
     "rebuild.rhm" open
+  "typeset_meta.rhm"
+  "spacer.rhm" 
   lib("scribble/base.rkt") as scribble:
     expose: elem
+  meta:
+    "add-space.rkt".#{full-space-names}
 
 export:
   rhombus
@@ -74,9 +77,8 @@ meta:
         'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
                               Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
-        def values(a_head, a_tail) = adjust_spaces(head, '$tail ...')
-        def new_head = escape_term(a_head)
-        def new_tail = escape_tail(a_tail)
+        def new_head = escape_term(head)
+        def new_tail = escape_tail('$tail ...')
         if is_literal_term(new_head) && is_literal_group(new_tail)
         | literal_group(sequence_append_syntax(extract_literal(new_head), extract_literal(new_tail)))
         | 'sequence_append_syntax($new_head, $new_tail)'
@@ -105,16 +107,6 @@ meta:
         | ~else: literal_term(stxs)
     | ~else: literal_term(stxs)
 
-  fun adjust_spaces(head, tail):
-    match '$head'
-    | '$(id :: Name)':
-        def mv = syntax_meta.value(id, typeset_meta.space, #false)
-        match mv
-        | typeset_meta.Spacer(proc):
-            proc(head, tail, '#,')                
-        | ~else: values(head, tail)
-    | ~else: values(head, tail)
-
 fun sequence_cons_syntax(a, d, context):
   let a_r: Syntax.relocate(Syntax.make(a), context);
   match d
@@ -127,41 +119,46 @@ fun relocate_expansion(e, context):
 
 expr.macro
 | 'rhombus ($(forms :: Group))':
-    '#{typeset-rhombus}($(escape_group(forms)))'
+    '#{typeset-rhombus}($(escape_group(spacer.adjust_group(forms, #false, '#''))))'
 | 'rhombus ($forms, ~at $(name0 :: Name) $(name :: Name) ...)':
-    '#{typeset-rhombus}(~space: #'$(Keyword.from_string(String.append(to_string(name0),
-                                                                      to_string(name), ...))),
-                        $(literal_group(forms)))'
+    let sp = [Symbol.from_string(String.append(to_string(name0),
+                                               to_string(name), ...))]
+    '#{typeset-rhombus}(~space: #'$sp,
+                        $(escape_group(spacer.adjust_group(forms, sp, '#''))))'
 | 'rhombus ($forms, $(kw_stx :: Keyword))':
     def kw = Syntax.unwrap(kw_stx)
-    if (kw === #'~var
-          || kw === #'~datum
-          || kw === #'~value
-          || kw === #'~result
-          || kw === #'~space
-          || kw === #'~expr
-          || kw === #'~defn
-          || kw === #'~decl
-          || kw === #'~bind
-          || kw === #'~impo
-          || kw === #'~expo
-          || kw === #'~modpath
-          || kw === #'~annot
-          || kw === #'~repet
-          || kw === #'~stxclass
-          || kw === #'~reducer
-          || kw === #'~class
-          || kw === #'~for_clause
-          || kw === #'~class_clause
-          || kw === #'~interface_clause
-          || kw === #'~entry_point
-          || kw === #'~unquote_bind
-          || kw === #'~syntax_class_clause
-          || kw === #'~pattern_clause
-          || kw === #'~space_clause
-          || kw === #'~space_meta_clause)
-    | '#{typeset-rhombus}(~space: #'$kw, $(literal_group(forms)))'
-    | syntax_meta.error("invalid space", kw_stx)
+    cond
+    | (kw === #'~var
+         || kw === #'~datum
+         || kw === #'~value
+         || kw === #'~result):
+        '#{typeset-rhombus}(~space: #'$kw, $(literal_group(forms)))'
+    | (kw === #'~expr
+         || kw === #'~defn
+         || kw === #'~decl
+         || kw === #'~bind
+         || kw === #'~impo
+         || kw === #'~expo
+         || kw === #'~modpath       
+         || kw === #'~annot
+         || kw === #'~repet
+         || kw === #'~stxclass
+         || kw === #'~reducer
+         || kw === #'~class
+         || kw === #'~space
+         || kw === #'~for_clause
+         || kw === #'~class_clause
+         || kw === #'~interface_clause
+         || kw === #'~entry_point
+         || kw === #'~unquote_bind
+         || kw === #'~syntax_class_clause
+         || kw === #'~pattern_clause
+         || kw === #'~space_clause
+         || kw === #'~space_meta_clause):
+        let sp = #{full-space-names}(kw)
+        '#{typeset-rhombus}(~space: #'$kw, $(escape_group(spacer.adjust_group(forms, sp, '#''))))'
+    | ~else:
+        syntax_meta.error("invalid space", kw_stx)
 
 expr.macro 'rhombusblock_etc $tail ...':
   ~op_stx: me
@@ -169,7 +166,7 @@ expr.macro 'rhombusblock_etc $tail ...':
     match fin_tail
     | ': $_':
         def [opt, ...] = options
-        '#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))'
+        '#{typeset-rhombusblock}($opt, ..., $(escape_term(spacer.adjust_term(fin_tail, #false, '#''))))'
     | ~else: syntax_meta.error("expected a block", '$me $tail ...')
   fun check_options(options):
     match options
@@ -185,4 +182,4 @@ expr.macro 'rhombusblock_etc $tail ...':
   | ~else: finish([], '$tail ...')
 
 expr.macro 'rhombusblock ($args)':
-  '#{typeset-rhombusblock}($(escape_term(': $args')))'
+  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#''))))'

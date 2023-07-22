@@ -29,13 +29,11 @@
 
 (define (typeset-rhombus stx
                          #:space [space-name-in #f])
-  (define space-name (full-space-name
-                      (if (keyword? space-name-in)
-                          (string->symbol (keyword->string space-name-in))
-                          space-name-in)))
+  (define space-names (full-space-names space-name-in))
+  (define one-space-name (and (pair? space-names) (car space-names)))
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
-  (define (id-space-name* id) (id-space-name id space-name #:infer? (not space-name-in)))
+  (define (id-space-name* id) (id-space-name id space-names))
   (let loop ([stx stx])
     (define (seq open elems-stx close #:sep [sep tt-comma])
       (list (element paren-color open)
@@ -46,7 +44,7 @@
       (let g-loop ([elems (syntax->list elems-stx)] [pre-space? #f] [check-prefix? #f])
         (cond
           [(null? elems) null]
-          [(initial-name-ref elems space-name) ; detect `root.field` paths
+          [(initial-name-ref elems space-names) ; detect `root.field` paths
            => (lambda (new-elems)
                 (g-loop new-elems pre-space? check-prefix?))]
           [else
@@ -117,9 +115,9 @@
          [(op id)
           (define str (keep-spaces (shrubbery-syntax->string stx)))
           (cond
-            [(eq? space-name 'datum) (element tt-style str)]
-            [(eq? space-name 'value) (element variable-color str)]
-            [(eq? space-name 'result) (element result-color str)]
+            [(eq? one-space-name 'datum) (element tt-style str)]
+            [(eq? one-space-name 'value) (element variable-color str)]
+            [(eq? one-space-name 'result) (element result-color str)]
             [else
              (define space-name (id-space-name* #'id))
              (if (identifier-binding (add-space #'id space-name) #f)
@@ -229,7 +227,7 @@
                         (lookup-stx-identifier start end position-stxes stx-ranges))
                    => (lambda (id)
                         (define str (shrubbery-syntax->string id))
-                        (define space-name (id-space-name id #:infer? #t))
+                        (define space-name (id-space-name id (full-space-names #f)))
                         (non-ws
                          (cond
                            [(eq? space-name 'var)
@@ -429,7 +427,7 @@
 (define (lookup-stx-identifier start end position-stxes stx-ranges)
   (lookup-stx (lambda (stx)
                 (and (identifier? stx)
-                     (let ([name (id-space-name stx #:infer? #t)])
+                     (let ([name (id-space-name stx (full-space-names #f))])
                        (or (eq? name 'var)
                            (eq? name 'value)
                            (eq? name 'result)
@@ -442,23 +440,28 @@
        (not (symbol? v))
        (content? v)))
 
-(define (id-space-name id [default-name #f] #:infer? [infer? #f])
-  (let ([prop (syntax-property id 'typeset-space-name)])
+(define (id-space-name id space-names #:as-list? [as-list? #f])
+  (let* ([prop (syntax-property id 'typeset-space-name)]
+         [space-names (if prop
+                          (full-space-names prop)
+                          space-names)])
     (cond
-      [prop
-       (full-space-name prop)]
-      [infer?
-       (cond
-         [(identifier-binding id)
-          default-name]
-         [(identifier-binding (add-space id 'rhombus/defn))
-          'rhombus/defn]
-         [(identifier-binding (add-space id 'rhombus/decl))
-          'rhombus/decl]
-         [else default-name])]
-      [else default-name])))
+      [as-list? space-names]
+      [(and (pair? space-names)
+            (null? (cdr space-names)))
+       (car space-names)]
+      [else
+       (define space-name* (for/or ([space-name (in-list space-names)])
+                             (and (identifier-distinct-binding (add-space id space-name)
+                                                               id
+                                                               #f)
+                                  ;; note; `space-name` might be #f
+                                  (or space-name #t))))
+       (if space-name*
+           (if (eq? space-name* #t) #f space-name*)
+           (last space-names))])))
 
-(define (initial-name-ref elems default-space-name)
+(define (initial-name-ref elems space-names)
   (define (dotted-elems? elems)
     (and (identifier? (car elems))
          (pair? (cdr elems))
@@ -500,19 +503,21 @@
                 (values (list a) #f)
                 (values (list (extract-op a))
                         (extract-ptag a)))])))
-     (define space-name (id-space-name (car elems) default-space-name))
-     (define target+rest (resolve-name-ref space-name
-                                           (add-space (car elems)
-                                                      (if (pair? (cdr elems))
-                                                          'rhombus/namespace
-                                                          space-name))
-                                           dotted-elems
-                                           #:parens ptag))
-     (define target (and target+rest (car target+rest)))
+     (define use-space-names (id-space-name (car elems) space-names
+                                            #:as-list? #t))
+     (define target+rest+space (resolve-name-ref use-space-names
+                                                 (if (pair? (cdr elems))
+                                                     (add-space (car elems)
+                                                                'rhombus/namespace)
+                                                     (car elems))
+                                                 dotted-elems
+                                                 #:parens ptag))
+     (define target (and target+rest+space (car target+rest+space)))
      (cond
        [target
-        (define skip (add1 (* 2 (- (length dotted-elems) (length (cdr target+rest))))))
+        (define skip (add1 (* 2 (- (length dotted-elems) (length (cadr target+rest+space))))))
         (define id (car elems))
+        (define space-name (caddr target+rest+space))
         (cons (datum->syntax target
                              (element tt-style
                                (make-id-element (add-space id (if (pair? (cdr elems))
@@ -544,7 +549,7 @@
     (let loop ([elems (syntax->list ts)])
       (cond
         [(null? elems) null]
-        [(initial-name-ref elems #f) ; detect `root.field` paths
+        [(initial-name-ref elems (full-space-names #f)) ; detect `root.field` paths
          => (lambda (new-elems) (loop new-elems))]
         [else
          (cons (replace-in-term (car elems))

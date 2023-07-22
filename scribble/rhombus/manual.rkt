@@ -7,7 +7,7 @@
          "../private/docmodule.rhm"
          "../private/example.rhm"
          "../private/rhombus-doc.rkt"
-         "../private/rhombus-spacer.rkt")
+         "../private/rhombus-spacer.rhm")
 
 (provide (all-from-out scribble/rhombus
                        "../private/rhombus-doc.rkt")
@@ -32,7 +32,7 @@
          examples
          make_rhombus_eval
          close_eval
-         (all-from-out "../private/rhombus-spacer.rkt"))
+         (all-from-out "../private/rhombus-spacer.rhm"))
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual

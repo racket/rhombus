@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/property
-                     (prefix-in typeset-meta: "typeset_meta.rhm"))
+                     shrubbery/property)
+         (prefix-in typeset-meta: "typeset_meta.rhm")
          "doc.rkt"
          "typeset-help.rkt"
          racket/list
@@ -87,22 +87,22 @@
     #:attributes (name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
-             #:do [(define target+remains (resolve-name-ref space-name
-                                                            (in-name-root-space #'root)
-                                                            (syntax->list #'(field ...))))]
-             #:when target+remains
-             #:attr name (datum->syntax #f (list #'root (car target+remains))))
+             #:do [(define target+remains+space (resolve-name-ref (list space-name)
+                                                                  (in-name-root-space #'root)
+                                                                  (syntax->list #'(field ...))))]
+             #:when target+remains+space
+             #:attr name (datum->syntax #f (list #'root (car target+remains+space))))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
     #:attributes (name)
     #:datum-literals (|.| op parens group)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ... (op |.|) ((~and ptag parens) (group (op opname))))
-             #:do [(define target+remains (resolve-name-ref space-name
-                                                            (in-name-root-space #'root)
-                                                            (syntax->list #'(field ... opname))
-                                                            #:parens #'ptag))]
-             #:when target+remains
-             #:attr name (datum->syntax #f (list #'root (car target+remains))))
+             #:do [(define target+remains+space (resolve-name-ref (list space-name)
+                                                                  (in-name-root-space #'root)
+                                                                  (syntax->list #'(field ... opname))
+                                                                  #:parens #'ptag))]
+             #:when target+remains+space
+             #:attr name (datum->syntax #f (list #'root (car target+remains+space))))
     (pattern (~seq (op id:identifier))
              #:attr name #'id)
     (pattern (~seq (~var id (identifier-target space-name)))
@@ -377,10 +377,10 @@
 
 (begin-for-syntax
   (define (build-dotted root name)
-    (define target+remains (resolve-name-ref #f root (list name)))
-    (unless target+remains
+    (define target+remains+space (resolve-name-ref (list #f) root (list name)))
+    (unless target+remains+space
       (raise-syntax-error #f "no label binding" root name))
-    (define target (car target+remains))
+    (define target (car target+remains+space))
     (datum->syntax #f (list root
                             ;; 'raw property used to typeset object
                             (datum->syntax target (syntax-e target) name name)

@@ -3,11 +3,11 @@
                      syntax/parse/pre
                      enforest/syntax-local
                      enforest/hier-name-parse
-                     (prefix-in typeset-meta: "typeset_meta.rhm")
                      shrubbery/property
                      rhombus/private/name-path-op
                      "add-space.rkt"
                      "typeset-key-help.rkt")
+         (prefix-in typeset-meta: "typeset_meta.rhm")
          "doc.rkt"
          (submod "doc.rkt" for-class)
          "typeset-help.rkt"
@@ -121,7 +121,9 @@
                                                 (in-name-root-space (car (syntax-e def-name)))))
                              (unless (identifier-binding def-id #f)
                                (raise-syntax-error 'doc
-                                                   "identifier to document has no for-label binding"
+                                                   (format
+                                                    "identifier to document has no for-label binding in space ~s"
+                                                    space-name)
                                                    def-id))))
                          def-name))
      (define-values (nt-def-name nt-space-name nt-introducer)
@@ -390,45 +392,53 @@
      #`(parsed #:rhombus/expr (racketvarfont #,(symbol->string (syntax-e id)))))))
 
 (define-for-syntax (nt-key-expand nt-key-g)
-  (define-values (root fields space-name)
+  (define-values (root fields space-names)
     (syntax-parse nt-key-g
       #:datum-literals (op |.| parens group)
       [(_ root:identifier (~seq (op |.|) field:identifier) ... space:keyword)
        (values #'root
                (syntax->list #'(field ...))
-               (full-space-name (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ...  (op |.|) (parens (group (op name:identifier))) space:keyword)
        (values #'root
                (syntax->list #'(field ... name))
-               (full-space-name (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ...)
        (values #'root
                (syntax->list #'(field ...))
-               #f)]
+               '(#f))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ... (op |.|) (parens (group (op name:identifier))))
        (values #'root
                (syntax->list #'(field ... name))
-               #f)]
+               '(#f))]
       [(_ (op name:identifier) space:keyword)
        (values #'name
                '()
-               (full-space-name (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
       [(_ (op name:identifier))
        (values #'name
                '()
-               #f)]))
-  (values (cond
-            [(null? fields) root]
-            [else
-             (define target+remains
-               (resolve-name-ref space-name
-                                 (in-name-root-space root)
-                                 fields))
-             (cons root target+remains)])
-          space-name
-          (if space-name
-              (make-interned-syntax-introducer space-name)
-              (lambda (x) x))))
+               '(#f))]))
+  (define (make-intro space-name)
+    (if space-name
+        (make-interned-syntax-introducer space-name)
+        (lambda (x) x)))
+  (cond
+    [(null? fields)
+     (define space-name (car space-names))
+     (values root
+             space-name
+             (make-intro space-name))]
+    [else
+     (define target+remains+space
+       (resolve-name-ref space-names
+                         (in-name-root-space root)
+                         fields))
+     (define space-name (caddr target+remains+space))
+     (values (cons root (cons (car target+remains+space)
+                              (cadr target+remains+space)))
+             space-name
+             (make-intro space-name))]))
 
 (define-for-syntax (nt-key-ref-expand nt-key-g)
   (define-values (sym g)

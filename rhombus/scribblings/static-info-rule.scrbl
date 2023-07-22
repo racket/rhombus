@@ -27,14 +27,14 @@ Here's a summary of the static-information behavior of classes:
    information for fields accessed from the binding or exression
    through a dot. For example, assuming a
    @rhombus(class Rect(top_left, side)) declaration,
-   @rhombus(r :: Rect.of(Posn, Int)) causes
+   @rhombus(r :: Rect.of(Posn, Int), ~bind) causes
    @rhombus(r.top_left) to have @rhombus(Posn) information, with means that
    @rhombus(r.top_left.x) works.},
 
   @item{When a class field has an annotation, then that annotation's
    static information is associated with a field accessed through the @rhombus(.) operator.
    In the @rhombus(Line) example, the @rhombus(p2) field of @rhombus(Line) has a @rhombus(Posn)
-   annotation, so a @rhombus(l1 :: Line) binding means that @rhombus(l1.p2) is a dot
+   annotation, so a @rhombus(l1 :: Line, ~bind) binding means that @rhombus(l1.p2) is a dot
    provider to access @rhombus(x) and @rhombus(y).},
 
   @item{When a class field has an annotation, then that annotation's
@@ -96,19 +96,19 @@ The @rhombus(List), @rhombus(Array), and @rhombus(Map) expression and
 binding forms are analogous to class-name forms. For example,
 @rhombus(Array) as a constructor in an expression form associates
 reference-result information to the overall @rhombus(Array) expression,
-as does @litchar{[}...@litchar{]} for constructing a list. In a list
-binding pattern, when @rhombus(...) is used after a binding subpattern,
+as does @brackets for constructing a list. In a list
+binding pattern, when @rhombus(..., ~bind) is used after a binding subpattern,
 the ``upward'' static information of the subpattern for each identifier
 wrapped as reference-result information for the identifier outside the
-list pattern, since each; for example @rhombus([p :: Posn, ...]) as a
+list pattern, since each; for example @rhombus([p :: Posn, ...], ~bind) as a
 binding pattern causes @rhombus(p) to have static information that says
 its reference result as @rhombus(Posn)-annotation information. The
-@rhombus(List.of), @rhombus(Array.of), and @rhombus(Map.of) annotation
+@rhombus(List.of, ~annot), @rhombus(Array.of, ~annot), and @rhombus(Map.of, ~annot) annotation
 forms in bindings propagate ``downward'' reference-result information to
 nested annotations. ``Downward'' static information is used by
-@rhombus(List) or @litchar{[}...@litchar{]} pattern constructions only
+@rhombus(List, ~bind) or @brackets pattern constructions only
 in the case that there's a single element binding pattern followed by
-@rhombus(...), while @rhombus(Array) and @rhombus(Map) as pattern
+@rhombus(..., ~bind), while @rhombus(Array, ~bind) and @rhombus(Map, ~bind) as pattern
 constructors cannot use ``downward'' information.
 
 The @rhombus(::, ~bind) binding form and the @rhombus(matching, ~annot) annotation form
