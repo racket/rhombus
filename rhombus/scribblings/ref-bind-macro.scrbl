@@ -38,7 +38,7 @@
   defn.macro 'bind.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but defines an identifier or operator as a
+ Like @rhombus(expr.macro), but defines an identifier or operator as a
  binding form in the @rhombus(bind, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
  binding description created with @rhombus(bind_meta.pack).
@@ -102,7 +102,7 @@
                  ...»'
 ){
 
- Defines @rhombus(identifier) as the infoer ``continuation'' of a
+ Defines @rhombus(id) as the infoer ``continuation'' of a
  binding macro's implementation. The inforer is invoked with ``upward''
  static information provided by the context of a use of the binding form,
  plus the same data syntax object that was supplied as part of the
@@ -261,7 +261,7 @@
                  ...»'
 ){
 
- Defines @rhombus(identifier) as the matcher ``continuation'' of a
+ Defines @rhombus(id) as the matcher ``continuation'' of a
  binding form's expansion. The result is an expression that inspects the
  value of the identifier matched to @rhombus(id_pattern) and uses the
  pieces matched by @rhombus(IF_pattern), @rhombus(success_pattern), and
@@ -286,7 +286,7 @@
                  ...»'
 ){
 
- Defines @rhombus(identifier) as the committer ``continuation'' of a
+ Defines @rhombus(id) as the committer ``continuation'' of a
  binding form's expansion. The result is an sequence of definitions for
  intermediate variables, where
  @rhombus(id_pattern) holds the value that was matched by a matcher. If
@@ -311,7 +311,7 @@
                  ...»'
 ){
 
- Defines @rhombus(identifier) as the binder ``continuation'' of a
+ Defines @rhombus(id) as the binder ``continuation'' of a
  binding form's expansion. The result is an sequence of definitions for
  the variables that are bound by the expander form, where
  @rhombus(id_pattern) holds the value that was matched by a matcher. If

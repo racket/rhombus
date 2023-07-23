@@ -8,6 +8,8 @@
                      "add-space.rkt"
                      "typeset-key-help.rkt")
          (prefix-in typeset-meta: "typeset_meta.rhm")
+         "metavar.rkt"
+         "nonterminal.rkt"
          "doc.rkt"
          (submod "doc.rkt" for-class)
          "typeset-help.rkt"
@@ -52,10 +54,25 @@
          (only-in scribble/manual-struct
                   thing-index-desc)
          (only-in scribble/private/manual-vars
-                  add-background-label))
+                  add-background-label)
+         ;; for `extract-binding-metavariables`, etc.
+         (only-in rhombus
+                  :: |.| $
+                  [= rhombus-=]))
 
 (provide typeset-doc
-         define-nonterminal)
+         define-nonterminal
+         typeset-nontermref
+
+         define-doc-syntax
+         (for-syntax
+          make-doc-transformer
+          doc-typeset-rhombusblock
+          add-metavariable
+          extract-term-metavariables
+          extract-group-metavariables
+          extract-binding-metavariables
+          extract-pattern-metavariables))
 
 (define-syntax (typeset-doc stx)
   (syntax-parse stx
@@ -234,8 +251,14 @@
                         (extract-typeset t form def-id-as-def space-name)))
      (with-syntax ([(typeset ...) typesets]
                    [(kind-str ...) kind-strs])
-       #`(let-syntax (#,@(for/list ([id (in-hash-values vars)])
-                           #`[#,(typeset-meta:in_space id) (make-meta-id-transformer (quote-syntax #,id))])
+       #`(let-syntax (#,@(for/list ([mv (in-hash-values vars)])
+                           (define id (metavar-id mv))
+                           (define nt (and (metavar-nonterm? mv)
+                                           (syntax-local-value* (in-nonterminal-space id) nonterminal-ref)))
+                           #`[#,(typeset-meta:in_space id)
+                              #,(if nt
+                                    (nonterminal-transformer-id nt)
+                                    #`(make-meta-id-transformer (quote-syntax #,id)))])
                       #,@(for/list ([id (in-hash-values nonterm-vars)])
                            #`[#,(typeset-meta:in_space id)
                               #,(nonterm-id-transformer id id nt-def-name nt-space-name)])
@@ -263,12 +286,36 @@
         (block (group nt-id (block nt-id-key-g))
                ...))
      #`(begin
-         #,@(for/list ([nt-id (in-list (syntax->list #'(nt-id ...)))]
-                       [nt-id-key-g (in-list (syntax->list #'(nt-id-key-g ...)))])
-              (define-values (nt-sym nt-def-name nt-space-name nt-introducer) (nt-key-ref-expand nt-id-key-g))
-              #`(define-syntax #,(typeset-meta:in_space nt-id)
-                  #,(nonterm-id-transformer nt-id nt-sym nt-def-name nt-space-name))))]))
+         #,@(apply
+             append
+             (for/list ([nt-id (in-list (syntax->list #'(nt-id ...)))]
+                        [nt-id-key-g (in-list (syntax->list #'(nt-id-key-g ...)))])
+               (define-values (nt-sym nt-def-name nt-space-name nt-introducer) (nt-key-ref-expand nt-id-key-g))
+               (with-syntax ([(tmp-id) (generate-temporaries (list nt-id))])
+                 (list
+                  #`(define-for-syntax tmp-id
+                      #,(nonterm-id-transformer nt-id nt-sym nt-def-name nt-space-name))
+                  #`(define-syntax #,(in-nonterminal-space nt-id)
+                      (nonterminal (quote-syntax tmp-id))))))))]))
 
+(define-syntax (typeset-nontermref stx)
+  (syntax-parse stx
+    [(_ context id)
+     (define nt (syntax-local-value* (in-nonterminal-space #'id) nonterminal-ref))
+     (cond
+       [nt
+        #`(let-syntax ([gen (lambda (stx)
+                              (call-nonterminal-transformer
+                               #,(nonterminal-transformer-id nt)
+                               (quote-syntax id)))])
+            gen)]
+       [else
+        (raise-syntax-error 'nontermref "not bound as a nonterminal" #'id)])]))
+
+(define-for-syntax (call-nonterminal-transformer nt id)
+  (syntax-parse ((typeset-meta:Transformer_proc nt) id)
+    [(parsed _ e) #'e]))
+        
 (define-for-syntax (make-ellipsis-transformer)
   (typeset-meta:make_Transformer
    (lambda (use-stx)
@@ -513,3 +560,119 @@
                 [(null? (cdr strs)) (string-append "and " (car strs))]
                 [else
                  (string-append (car strs) ", " (loop (cdr strs)))]))])))
+
+;; ----------------------------------------
+
+(define-for-syntax (add-metavariable vars id nonterm?)
+  (hash-set vars (syntax-e id) (let ([mv (hash-ref vars (syntax-e id) #f)])
+                                 (if mv
+                                     (struct-copy metavar mv
+                                                  [nonterm? (or nonterm?
+                                                                (metavar-nonterm? mv))])
+                                     (metavar id nonterm?)))))
+
+(define-for-syntax (extract-binding-metavariables stx vars)
+  (syntax-parse stx
+    #:literals (:: rhombus-=)
+    #:datum-literals (parens group op)
+    [(group _:keyword (block g)) (extract-binding-metavariables #'g vars)]
+    [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
+    [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
+    [(group (parens g)) (extract-binding-metavariables #'g vars)]
+    [(group id:identifier) (add-metavariable vars #'id #F)]
+    [_ vars]))
+
+(define-for-syntax (extract-group-metavariables g vars nonterm?)
+  (syntax-parse g
+    #:datum-literals (group)
+    [(group t ...)
+     (for/fold ([vars vars]) ([t (in-list (syntax->list #'(t ...)))])
+       (extract-term-metavariables t vars nonterm?))]))
+
+(define-for-syntax (extract-term-metavariables t vars nonterm?)
+  (syntax-parse t
+    #:datum-literals (parens brackets braces block quotes alts)
+    [((~or parens brackets braces block quotes) g ...)
+     (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
+       (extract-group-metavariables g vars nonterm?))]
+    [((~datum alts) b ...)
+     (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
+       (extract-term-metavariables b vars nonterm?))]
+    [id:identifier
+     (if (identifier-binding (typeset-meta:in_space #'id))
+         vars
+         (add-metavariable vars #'id nonterm?))]
+    [_ vars]))
+
+(define-for-syntax (extract-pattern-metavariables g vars)
+  (syntax-parse g
+    #:datum-literals (group block)
+    [(group t ...)
+     (for/fold ([vars vars] [after-$? #f] #:result vars) ([t (in-list (syntax->list #'(t ...)))])
+       (syntax-parse t
+         #:datum-literals (op parens brackets braces block quotes alts)
+         #:literals ($)
+         [(op $) (values vars #t)]
+         [_:identifier (if after-$?
+                           (values (extract-term-metavariables t vars #t) #f)
+                           (values vars #f))]
+         [((~or parens brackets braces quotes block) g ...)
+          (values (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
+                    (extract-pattern-metavariables g vars))
+                  #f)]
+         [(alts b ...)
+          (values (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
+                    (extract-pattern-metavariables #`(group #,b) vars))
+                  #f)]
+         [_ (values vars #f)]))]))
+
+;; ----------------------------------------
+
+(define-for-syntax (doc-typeset-rhombusblock
+                    form
+                    #:at [at-form form]
+                    #:pattern? [pattern? #f]
+                    #:options [options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))))])
+  (with-syntax ([t-form (if pattern?
+                            (drop-pattern-escapes form)
+                            form)]
+                [t-block (syntax-raw-property
+                          (datum->syntax #f 'block
+                                         (syntax-parse at-form
+                                           #:datum-literals (op parens)
+                                           [(_ (op a) . _) #'a]
+                                           [(_ (seq . _) . _) #'seq] 
+                                           [(_ a . _) #'a]))
+                          "")]
+                [(option ...) options])
+    #'(rhombus-expression (group rhombusblock_etc option ... (t-block t-form)))))
+
+(define-for-syntax (drop-pattern-escapes g)
+  (syntax-parse g
+    #:datum-literals (group)
+    [((~and g group) t ...)
+     (define new-ts
+       (let loop ([ts (syntax->list #'(t ...))])
+         (cond
+           [(null? ts) null]
+           [else
+            (syntax-parse (car ts)
+              #:datum-literals (op parens brackets braces quotes block alts)
+              #:literals ($)
+              [(op (~and esc $))
+               #:when (pair? (cdr ts))
+               (define pre #'esc)
+               (define t (cadr ts))
+               (cons (append-consecutive-syntax-objects (syntax-e t) pre t)
+                     (loop (cddr ts)))]
+              [((~and tag (~or parens brackets braces quotes block)) g ...)
+               (cons #`(tag
+                        #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
+                             (drop-pattern-escapes g)))
+                     (loop (cdr ts)))]
+              [((~and tag alts) b ...)
+               (cons #`(tag #,@(for/list ([b (in-list (syntax->list #'(b ...)))])
+                                 (car (loop (list b)))))
+                     (loop (cdr ts)))]
+              [_ (cons (car ts) (loop (cdr ts)))])])))
+     #`(g #,@new-ts)]))

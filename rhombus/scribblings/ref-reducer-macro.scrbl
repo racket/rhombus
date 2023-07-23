@@ -27,7 +27,7 @@
   defn.macro 'reducer.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but defines an identifier or operator
+ Like @rhombus(expr.macro), but defines an identifier or operator
  as a reducer form in the @rhombus(reducer, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
  reducer description created with @rhombus(reducer_meta.pack).

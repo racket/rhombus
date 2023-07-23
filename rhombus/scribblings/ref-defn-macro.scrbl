@@ -1,9 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm":
-      except: defn expr
-      open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -107,7 +105,7 @@
                  ...»'
 ){
 
- Similar to @rhombus(defn.macro, ~expr), but defines a macro for a definition
+ Similar to @rhombus(defn.macro), but defines a macro for a definition
  context that is matched against all of the remaining groups in the
  context, so the pattern is a multi-group pattern.
 
@@ -141,7 +139,7 @@
  Syntax class that matches only groups that start with an identifier
  that is bound as a definition form.
 
- Unlike @rhombus(expr_meta.Parsed), @rhombus(defn_meta.Group) does not
+ Unlike @rhombus(expr_meta.Parsed, ~stxclass), @rhombus(defn_meta.Group, ~stxclass) does not
  parse the definition form, because the form normally needs to be parsed
  within a definition context. This syntax class can be used to
  distinguish definitions from other forms that need to be treated

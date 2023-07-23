@@ -24,6 +24,7 @@
          doc
          (for-space rhombus/defn
                     nonterminal)
+         nontermref
          (for-space rhombus/decl
                     docmodule)
          rhombusmodname

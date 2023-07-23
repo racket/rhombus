@@ -40,7 +40,7 @@
 
 ){
 
- Like @rhombus(defn.macro, ~expr), but defines an identifier as an
+ Like @rhombus(defn.macro), but defines an identifier as an
  @tech{entry point} form in the @rhombus(entry_point, ~space)
  @tech{space}. Also, in addition to the @rhombus(~op_stx) option, the
  @rhombus(~mode) and/or @rhombus(~adjustment) ``options'' can be
@@ -161,8 +161,8 @@
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but for entry
  points to run in either @rhombus(#'function) mode with
- @rhombus(entry_point_meta.Parsed) or @rhombus(#'arity) mode via
- @rhombus(entry_point_meta.Arity).
+ @rhombus(entry_point_meta.Parsed, ~stxclass) or @rhombus(#'arity) mode via
+ @rhombus(entry_point_meta.Arity, ~stxclass).
 
 }
 

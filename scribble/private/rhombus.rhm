@@ -119,12 +119,12 @@ fun relocate_expansion(e, context):
 
 expr.macro
 | 'rhombus ($(forms :: Group))':
-    '#{typeset-rhombus}($(escape_group(spacer.adjust_group(forms, #false, '#''))))'
+    '#{typeset-rhombus}($(escape_group(spacer.adjust_group(forms, #false, '#,'))))'
 | 'rhombus ($forms, ~at $(name0 :: Name) $(name :: Name) ...)':
     let sp = [Symbol.from_string(String.append(to_string(name0),
                                                to_string(name), ...))]
     '#{typeset-rhombus}(~space: #'$sp,
-                        $(escape_group(spacer.adjust_group(forms, sp, '#''))))'
+                        $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
 | 'rhombus ($forms, $(kw_stx :: Keyword))':
     def kw = Syntax.unwrap(kw_stx)
     cond
@@ -156,7 +156,7 @@ expr.macro
          || kw === #'~space_clause
          || kw === #'~space_meta_clause):
         let sp = #{full-space-names}(kw)
-        '#{typeset-rhombus}(~space: #'$kw, $(escape_group(spacer.adjust_group(forms, sp, '#''))))'
+        '#{typeset-rhombus}(~space: #'$kw, $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
     | ~else:
         syntax_meta.error("invalid space", kw_stx)
 
@@ -166,7 +166,7 @@ expr.macro 'rhombusblock_etc $tail ...':
     match fin_tail
     | ': $_':
         def [opt, ...] = options
-        '#{typeset-rhombusblock}($opt, ..., $(escape_term(spacer.adjust_term(fin_tail, #false, '#''))))'
+        '#{typeset-rhombusblock}($opt, ..., $(escape_term(spacer.adjust_term(fin_tail, #false, '#,'))))'
     | ~else: syntax_meta.error("expected a block", '$me $tail ...')
   fun check_options(options):
     match options
@@ -182,4 +182,4 @@ expr.macro 'rhombusblock_etc $tail ...':
   | ~else: finish([], '$tail ...')
 
 expr.macro 'rhombusblock ($args)':
-  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#''))))'
+  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#,'))))'

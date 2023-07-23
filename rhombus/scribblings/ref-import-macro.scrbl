@@ -24,7 +24,7 @@
   defn.macro 'impo.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but defines a macro for use in
+ Like @rhombus(expr.macro), but defines a macro for use in
  @rhombus(import).
 
 @examples(
@@ -54,7 +54,7 @@
     ~import $imp_id
 ){
 
- Like @rhombus(defn.macro, ~expr), but defines an identifier as an
+ Like @rhombus(defn.macro), but defines an identifier as an
  import modifier, and an optional @rhombus(~import) declaration provides
  an @rhombus(imp_id) to be bound to the (opaque) import that is being
  modified.

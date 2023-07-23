@@ -48,7 +48,7 @@
     ~info: $id
 ){
 
- Like @rhombus(defn.macro, ~expr), but defines a name in the
+ Like @rhombus(defn.macro), but defines a name in the
  @rhombus(class_clause, ~space) @tech{space} as a clause form for use
  within a @rhombus(class) body.
 

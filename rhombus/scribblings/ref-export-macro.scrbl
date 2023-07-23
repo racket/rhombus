@@ -24,7 +24,7 @@
   defn.macro 'expo.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but defines a macro for use in
+ Like @rhombus(expr.macro), but defines a macro for use in
  @rhombus(export).
 
 @examples(
@@ -60,7 +60,7 @@
     ~export $imp_id
 ){
 
- Like @rhombus(defn.macro, ~expr), but defines an identifier as an
+ Like @rhombus(defn.macro), but defines an identifier as an
  export modifier, and an optional @rhombus(~export) declaration provides
  an @rhombus(imp_id) to be bound to the (opaque) export that is being
  modified.

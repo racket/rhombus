@@ -3,15 +3,17 @@
                      syntax/parse/pre
                      shrubbery/property)
          (prefix-in typeset-meta: "typeset_meta.rhm")
+         "metavar.rkt"
          "doc.rkt"
+         (rename-in "typeset-doc.rkt"
+                    [doc-typeset-rhombusblock rb])
          "typeset-help.rkt"
          racket/list
          rhombus/private/name-root
          (only-in rhombus/private/name-root-space
                   in-name-root-space)
          (only-in rhombus
-                  :: |.| $
-                  [= rhombus-=])
+                  :: |.| $)
          (only-in "rhombus.rhm"
                   rhombusblock_etc
                   [rhombus one-rhombus])
@@ -31,10 +33,6 @@
                     space_meta_clause)
          (for-space rhombus/doc
                     grammar))
-
-(module+ for-doc
-  (provide (for-syntax
-            (rename-out [rb rhombus-typeset]))))
 
 (define-name-root space_meta_clause
   #:fields
@@ -405,15 +403,15 @@
         #:datum-literals (group parens alts block :: |.| := op)
         [(group tag (parens (group self (op ::) class)) (op |.|) name (~and p (parens . _)) . _)
          (parens-extract-metavariables #'(group tag name p) space-name
-                                       (add-metavariable vars #'self))]
+                                       (add-metavariable vars #'self #F))]
         [(group tag (parens (group self (op ::) class)) (op |.|) name . _)
-         (add-metavariable vars #'self)]
+         (add-metavariable vars #'self #f)]
         [(group _ (alts (block (group (parens (group self (op ::) class)) (op |.|) name . _))
                         (block (group (parens (group _ (op ::) _)) (op |.|) _ (op :=) . rhs))))
          (extract-binding-metavariables #'(group . rhs)
-                                        (add-metavariable vars #'self))]
+                                        (add-metavariable vars #'self #f))]
         [(group _ (alts (block (group (parens (group self (op ::) class)) (op |.|) name . _)) . _))
-         (add-metavariable vars #'self)]
+         (add-metavariable vars #'self #f)]
         [_ (parens-extract-metavariables stx space-name vars)])))
 
   (define method-extract-typeset
@@ -597,116 +595,6 @@
                                        #:at g
                                        #:pattern? #t
                                        #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))]))))
-
-;; ----------------------------------------
-
-(define-for-syntax (add-metavariable vars id)
-  (hash-set vars (syntax-e id) (or (hash-ref vars (syntax-e id) #f) id)))
-
-(define-for-syntax (extract-binding-metavariables stx vars)
-  (syntax-parse stx
-    #:literals (:: rhombus-=)
-    #:datum-literals (parens group op)
-    [(group _:keyword (block g)) (extract-binding-metavariables #'g vars)]
-    [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
-    [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
-    [(group (parens g)) (extract-binding-metavariables #'g vars)]
-    [(group id:identifier) (add-metavariable vars #'id)]
-    [_ vars]))
-
-(define-for-syntax (extract-group-metavariables g vars)
-  (syntax-parse g
-    #:datum-literals (group)
-    [(group t ...)
-     (for/fold ([vars vars]) ([t (in-list (syntax->list #'(t ...)))])
-       (extract-term-metavariables t vars))]))
-
-(define-for-syntax (extract-term-metavariables t vars)
-  (syntax-parse t
-    #:datum-literals (parens brackets braces block quotes alts)
-    [((~or parens brackets braces block quotes) g ...)
-     (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
-       (extract-group-metavariables g vars))]
-    [((~datum alts) b ...)
-     (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
-       (extract-term-metavariables b vars))]
-    [id:identifier
-     (if (identifier-binding (typeset-meta:in_space #'id))
-         vars
-         (add-metavariable vars #'id))]
-    [_ vars]))
-
-(define-for-syntax (extract-pattern-metavariables g vars)
-  (syntax-parse g
-    #:datum-literals (group block)
-    [(group t ...)
-     (for/fold ([vars vars] [after-$? #f] #:result vars) ([t (in-list (syntax->list #'(t ...)))])
-       (syntax-parse t
-         #:datum-literals (op parens brackets braces block quotes alts)
-         #:literals ($)
-         [(op $) (values vars #t)]
-         [_:identifier (if after-$?
-                           (values (extract-term-metavariables t vars) #f)
-                           (values vars #f))]
-         [((~or parens brackets braces quotes block) g ...)
-          (values (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
-                    (extract-pattern-metavariables g vars))
-                  #f)]
-         [(alts b ...)
-          (values (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
-                    (extract-pattern-metavariables #`(group #,b) vars))
-                  #f)]
-         [_ (values vars #f)]))]))
-
-;; ----------------------------------------
-
-(define-for-syntax (rb form
-                       #:at [at-form form]
-                       #:pattern? [pattern? #f]
-                       #:options [options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))))])
-  (with-syntax ([t-form (if pattern?
-                            (drop-pattern-escapes form)
-                            form)]
-                [t-block (syntax-raw-property
-                          (datum->syntax #f 'block
-                                         (syntax-parse at-form
-                                           #:datum-literals (op parens)
-                                           [(_ (op a) . _) #'a]
-                                           [(_ (seq . _) . _) #'seq] 
-                                           [(_ a . _) #'a]))
-                          "")]
-                [(option ...) options])
-    #'(rhombus-expression (group rhombusblock_etc option ... (t-block t-form)))))
-
-(define-for-syntax (drop-pattern-escapes g)
-  (syntax-parse g
-    #:datum-literals (group)
-    [((~and g group) t ...)
-     (define new-ts
-       (let loop ([ts (syntax->list #'(t ...))])
-         (cond
-           [(null? ts) null]
-           [else
-            (syntax-parse (car ts)
-              #:datum-literals (op parens brackets braces quotes block alts)
-              #:literals ($)
-              [(op (~and esc $))
-               #:when (pair? (cdr ts))
-               (define pre #'esc)
-               (define t (cadr ts))
-               (cons (append-consecutive-syntax-objects (syntax-e t) pre t)
-                     (loop (cddr ts)))]
-              [((~and tag (~or parens brackets braces quotes block)) g ...)
-               (cons #`(tag
-                        #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
-                             (drop-pattern-escapes g)))
-                     (loop (cdr ts)))]
-              [((~and tag alts) b ...)
-               (cons #`(tag #,@(for/list ([b (in-list (syntax->list #'(b ...)))])
-                                 (car (loop (list b)))))
-                     (loop (cdr ts)))]
-              [_ (cons (car ts) (loop (cdr ts)))])])))
-     #`(g #,@new-ts)]))
 
 (define (typeset-grammar id . prods)
   (define (p c) (paragraph plain c))

@@ -35,7 +35,7 @@ bindings versus @rhombus(::, ~bind) and
   defn.macro 'unquote_bind.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but for binding an identifier or operator
+ Like @rhombus(expr.macro), but for binding an identifier or operator
  that works within a @rhombus($, ~bind) escape for a syntax pattern.
  The macro is bound in the @rhombus(unquote_bind, ~space) @tech{space}.
 

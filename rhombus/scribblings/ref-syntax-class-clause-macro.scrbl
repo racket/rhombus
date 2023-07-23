@@ -26,7 +26,7 @@
   defn.macro 'syntax_class_clause.macro $prefix_macro_patterns'
 ){
 
- Similar to @rhombus(defn.macro, ~expr), but defines a name in the
+ Similar to @rhombus(defn.macro), but defines a name in the
  @rhombus(syntax_class_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(syntax_class) body.
 

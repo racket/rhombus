@@ -48,8 +48,8 @@
  some other kind of value that is accessed with
  @rhombus(syntax_meta.value).
 
- For example, forms like @rhombus(expr.macro, ~expr), @rhombus(bind.macro, ~expr),
- and @rhombus(annot.macro, ~expr) expand to @rhombus(meta.bridge). In
+ For example, forms like @rhombus(expr.macro), @rhombus(bind.macro),
+ and @rhombus(annot.macro) expand to @rhombus(meta.bridge). In
  those cases, the generated @rhombus(body) block produces an
  expression transformer, binding transformer, or annotation
  transformer. Some forms that expand to @rhombus(meta.bridge) enrich

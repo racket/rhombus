@@ -10,6 +10,7 @@ export:
   meta:
     Transformer
     make_Transformer
+    Transformer_proc
     Spacer
     make_Spacer
     in_space
@@ -27,6 +28,9 @@ meta:
 
   fun make_Transformer(proc):
     Transformer(proc)
+
+  fun Transformer_proc(t):
+    Transformer.proc(t)
 
   fun make_Spacer(contexts, proc):
     Spacer(contexts, proc)

@@ -191,6 +191,17 @@
 
 
 @doc(
+  ~nonterminal_key: block
+  grammar keyword
+){
+
+ In syntax descriptions, @rhombus(keyword) stands for any keyword in the
+ shrubbery sense. For example, @rhombus(~weaker_than) and
+ @rhombus(~op_stx) are keywords.
+
+}
+
+@doc(
   ~nonterminal_key: #%quotes
   grammar pattern
   grammar template

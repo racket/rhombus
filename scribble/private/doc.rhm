@@ -6,6 +6,7 @@ import:
 export:
   doc
   nonterminal
+  nontermref
 
 expr.macro 'doc $parens $tail ...':
   ~op_stx: me
@@ -19,3 +20,7 @@ expr.macro 'doc $parens $tail ...':
 defn.macro 'nonterminal: $nts':
   ~op_stx: me
   defn_meta.pack_s_exp(['#{define-nonterminal}', me, ': $nts'])
+
+expr.macro 'nontermref($(id :: Identifier))':
+  ~op_stx: me
+  expr_meta.pack_s_exp(['#{typeset-nontermref}', me, id])

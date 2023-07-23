@@ -36,7 +36,7 @@
   defn.macro 'repet.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro, ~expr), but defines an identifier or operator as a
+ Like @rhombus(expr.macro), but defines an identifier or operator as a
  repetition form in the @rhombus(repet, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
  binding description created with @rhombus(repet_meta.pack_list).
