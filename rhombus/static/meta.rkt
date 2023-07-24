@@ -8,21 +8,7 @@
 (begin-for-syntax
   (rhombus-definition (group use_static)))
 
-(bounce #:except (|.| #%index #%call ++ with for)
+(bounce #:except (#%dynamism)
         "../meta.rkt")
-(bounce-meta #:only (|.|)
-             #:spaces (rhombus/impo rhombus/expo)
-             "../meta.rkt")
 (provide (for-syntax
-          (for-space #f
-                     |.|
-                     #%index
-                     #%call
-                     ++
-                     with
-                     for)
-          (for-space rhombus/repet
-                     |.|
-                     #%index
-                     #%call
-                     ++)))
+          #%dynamism))

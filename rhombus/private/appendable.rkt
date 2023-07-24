@@ -25,18 +25,15 @@
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          (only-in "class-method-result.rkt" method-result)
-         "vector-append.rkt")
+         "vector-append.rkt"
+         "is-static.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
                      Appendable)
-         ++)
-
-(module+ for-dynamic-static
-  (provide (for-spaces (#f
-                        rhombus/repet)
-                       ++
-                       static-++)))
+         (for-spaces (#f
+                      rhombus/repet)
+                     ++))
 
 (define-values (prop:Appendable Appendable? Appendable-ref)
   (make-struct-type-property 'Appendable))
@@ -101,12 +98,13 @@
                                (check-appendable a1 a2)
                                (,append-id a1 a2))))))
 
-(define-for-syntax (make-++-expression name static?)
+(define-syntax ++
   (expression-infix-operator
-   name
+   (expr-quote ++)
    `((,(expr-quote +&) . same))
    'automatic
    (lambda (form1-in form2 self-stx)
+     (define static? (is-static-context? self-stx))
      (define form1 (rhombus-local-expand form1-in))
      (parse-append
       form1 form2 self-stx form1-in
@@ -119,15 +117,13 @@
          si))))
    'left))
 
-(define-syntax ++ (make-++-expression (expr-quote ++) #f))
-(define-syntax static-++ (make-++-expression (expr-quote static-++) #t))
-
-(define-for-syntax (make-++-repetition name static?)
+(define-repetition-syntax ++
   (repetition-infix-operator
-   name
-   `((,(expr-quote +&) . same))
+   (repet-quote ++)
+   `((,(repet-quote +&) . same))
    'automatic
    (lambda (form1 form2 self-stx)
+     (define static? (is-static-context? self-stx))
      (syntax-parse form1
        [form1-info::repetition-info
         (build-compound-repetition
@@ -145,9 +141,6 @@
                              (list form1 self-stx form2))
                si)))))]))
    'left))
-
-(define-repetition-syntax ++ (make-++-repetition (expr-quote ++) #f))
-(define-repetition-syntax static-++ (make-++-repetition (expr-quote static-++) #t))
 
 ;; checking for the same `append` method relies on the fact that `class`
 ;; will generate a new procedure each time that `append` is overridden

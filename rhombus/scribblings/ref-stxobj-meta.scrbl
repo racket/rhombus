@@ -101,6 +101,16 @@
 
 }
 
+@doc(
+  fun syntax_meta.is_static(stx :: Operator || Identifier) :: Boolean
+){
+
+ Check whether the identifier @rhombus(#%dynamism) using the scopes of
+ @rhombus(stx) is bound to indicate static mode. See @rhombus(use_static)
+ for more information.
+
+}
+
 
 @doc(
   annot.macro 'SyntaxPhase'

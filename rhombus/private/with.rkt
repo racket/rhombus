@@ -12,17 +12,14 @@
          "parens.rkt"
          "realm.rkt"
          (submod "equal.rkt" for-parse)
-         (only-in "assign.rkt" :=))
+         (only-in "assign.rkt" :=)
+         "is-static.rkt")
 
 (provide with)
 
 (module+ for-update
   (provide define-update-syntax
            (for-syntax update-transformer)))
-
-(module+ for-dynamic-static
-  (provide with
-           static-with))
 
 (begin-for-syntax
   (define in-update-space (make-interned-syntax-introducer 'rhombus/update))
@@ -35,13 +32,14 @@
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
 
-(define-for-syntax (make-with more-static?)
+(define-syntax with
   (expression-infix-operator
-   (quote-syntax with)
+   (expr-quote with)
    `((,(quote-syntax :=) . stronger)
      (default . weaker))
    'macro
    (lambda (orig-form1 tail)
+     (define more-static? (is-static-context/tail? tail))
      (syntax-parse tail
        #:datum-literals (group)
        [(with-id (_parens (group name:id _::equal rhs ...) ...) . tail)
@@ -81,9 +79,6 @@
        [(with-id . _)
         (raise-syntax-error #f "expected parentheses afterward" #'with-id)]))
    'left))
-
-(define-syntax with (make-with #f))
-(define-syntax static-with (make-with #t))
 
 (define (dynamic-update who obj field-map field-vals)
   (define r (reconstructor-ref obj #f))

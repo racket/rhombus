@@ -2,16 +2,10 @@
 @(import:
    rhombus/meta open
    "common.rhm" open:
-     except: . #%index
+     except: #%dynamism
    meta_label:
      rhombus/static open:
-       only: . #%index)
-
-@(defn.macro 'def_dynamics $dynamic_dot $dynamic_ref':
-    'import: meta_label: rhombus open
-     def $dynamic_dot: @rhombus(.)
-     def $dynamic_ref: @rhombus(#%index)')
-@(def_dynamics dynamic_dot dynamic_ref)
+       only: #%dynamism)
 
 @title(~tag: "static-lib"){Rhombus Static by Default}
 
@@ -26,22 +20,14 @@ The @rhombuslangname(rhombus/static),
 @rhombuslangname(rhombus/static/and_meta) modules re-export the
 bindings of @rhombuslangname(rhombus), @rhombusmodname(rhombus/meta),
 and @rhombuslangname(rhombus/and_meta), respectively, except that
-bindings from @rhombus(use_static) are exported in place of the
-dynamic variants.
+@rhombus(#%dynamism) is exported to indicate static mode.
 
 @doc(
-  expr.macro '$target . $identifier'
+  expr.macro '#%dynamism'
 ){
 
- The static variant of the @(dynamic_dot) operator. See @rhombus(use_static).
-
-}
-
-@doc(
-  expr.macro '$expr #%index [$at_expr]',
-  expr.macro '$expr #%index [$at_expr] := $rhs_expr',
-){
-
- The static variant of @(dynamic_ref). See @rhombus(use_static).
+ Initially indicates dynamic mode, but intended to be redefined by
+ @rhombus(use_static) or @rhombus(use_dynamic). See @rhombus(use_static)
+ for more information.
 
 }

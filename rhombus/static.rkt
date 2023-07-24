@@ -3,25 +3,11 @@
          (only-in "private/parse.rkt" rhombus-definition)
          (only-in "private/dynamic-static.rkt" use_static))
 
-(rhombus-definition (group use_static))
+(rhombus-definition (group use_static)) ;; defines `#%dynamism`
 
-(bounce #:except (|.| #%index #%call ++ with for)
+(bounce #:except (#%dynamism)
         "main.rkt")
-(bounce #:only (|.|)
-        #:spaces (rhombus/impo rhombus/expo)
-        "main.rkt")
-(provide (for-space #f
-                    |.|
-                    #%index
-                    #%call
-                    ++
-                    with
-                    for)
-         (for-space rhombus/repet
-                    |.|
-                    #%index
-                    #%call
-                    ++))
+(provide #%dynamism)
 
 (module reader syntax/module-reader
   #:language 'rhombus/static

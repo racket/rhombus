@@ -20,11 +20,8 @@
          "parse.rkt"
          "parens.rkt"
          (rename-in "values.rkt"
-                    [values rhombus-values]))
-
-(module+ for-dynamic-static
-  (provide (rename-out [rhombus-for for])
-           static-for))
+                    [values rhombus-values])
+         "is-static.rkt")
 
 (provide (rename-out [rhombus-for for])
          (for-space rhombus/for_clause
@@ -34,7 +31,7 @@
                     break_when
                     final_when))
 
-(define-for-syntax (make-for static?)
+(define-syntax rhombus-for
   (expression-transformer
    (lambda (stx)
      (syntax-parse (respan stx)
@@ -46,6 +43,7 @@
                     (group form-id red ... (block-tag body ...))))
                 #'())]
        [(form-id (block body ...+))
+        (define static? (is-static-context? #'form-id))
         (values (relocate+reraw
                  (respan stx)
                  #`(for (#:splice (for-clause-step #,stx #,static? [(begin (void))] body ...))
@@ -55,6 +53,7 @@
         #:with g-tag group-tag
         #:with redr::reducer #'(g-tag red ...)
         #:with f::reducer-form #'redr.parsed
+        (define static? (is-static-context? #'form-id))
         (values (wrap-static-info*
                  (relocate+reraw
                   (respan stx)
@@ -70,9 +69,6 @@
                        (f.finisher f.data))))
                  #'f.static-infos)
                 #'())]))))
-
-(define-syntax rhombus-for (make-for #f))
-(define-syntax static-for (make-for #t))
 
 (define-splicing-for-clause-syntax for-clause-step
   (lambda (stx)

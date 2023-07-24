@@ -273,7 +273,7 @@
                        (syntax-local-method-result ret-info-id)))
         (define-values (call new-tail)
           (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))
-                               #:static? (is-static-call-context? #'tag)
+                               #:static? (is-static-context? #'tag)
                                #:rator-stx (datum->syntax #f name #'rator-id)
                                #:rator-arity (and r (method-result-arity r))))
         (values (let ([call #`(let ([#,obj-id (rhombus-expression self)])
@@ -283,7 +283,7 @@
                       call))
                 #'tail)]
        [(head (tag::parens) . _)
-        #:when (is-static-call-context? #'tag)
+        #:when (is-static-context? #'tag)
         (raise-syntax-error #f
                             (string-append "wrong number of arguments in function call" statically-str)
                             (datum->syntax #f name #'head))]
@@ -300,7 +300,7 @@
         (define obj-id #'this)
         (define-values (call new-tail)
           (parse-function-call proc-id (list obj-id) #'(#,obj-id (tag arg ...))
-                               #:static? (is-static-call-context? #'tag)
+                               #:static? (is-static-context? #'tag)
                                #:rator-stx (datum->syntax #f name #'rator-id)))
         (values (wrap-static-info*
                  #`(let ([#,obj-id (rhombus-expression self)])
@@ -309,7 +309,7 @@
                  (datum->syntax #f (extract-static-infos call)))
                 #'tail)]
        [(head (tag::parens) . _)
-        #:when (is-static-call-context? #'tag)
+        #:when (is-static-context? #'tag)
         (raise-syntax-error #f
                             (string-append "wrong number of arguments in function call" statically-str)
                             (datum->syntax #f name #'head))]

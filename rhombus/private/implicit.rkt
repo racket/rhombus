@@ -14,7 +14,8 @@
          "setmap.rkt"
          "literal.rkt"
          "parens.rkt"
-         (submod "static-info.rkt" for-literal))
+         (submod "static-info.rkt" for-literal)
+         "is-static.rkt")
 
 (provide (for-space #f
                     #%body
@@ -39,14 +40,6 @@
                     #%brackets
                     #%braces
                     #%call))
-
-(module+ for-dynamic-static
-  (provide (for-spaces (#f
-                        rhombus/repet)
-                       #%index
-                       static-#%index
-                       #%call
-                       static-#%call)))
 
 (define-syntax #%body
   (expression-transformer
@@ -160,29 +153,25 @@
              (syntax-parse (car args)
                [r::repetition (values #'r.parsed #'tail)])]))]))))
 
-(define-for-syntax (make-#%call-expression name static?)
+(define-syntax #%call
   (expression-infix-operator
-   name
+   (expr-quote #%call)
    '((default . stronger))
    'macro
    (lambda (rator stxes)
+     (define static? (is-static-context/tail? stxes))
      (parse-function-call rator '() stxes #:static? static?))
    'left))
 
-(define-syntax #%call (make-#%call-expression (expr-quote #%call) #f))
-(define-syntax static-#%call (make-#%call-expression (expr-quote static-#%call) #t))
-
-(define-for-syntax (make-#%call-repetition name static?)
+(define-repetition-syntax #%call
   (repetition-infix-operator
-   name
+   (repet-quote #%call)
    '((default . stronger))
    'macro
    (lambda (rator stxes)
+     (define static? (is-static-context/tail? stxes))
      (parse-function-call rator '() stxes #:static? static? #:repetition? #t))
    'left))
-
-(define-repetition-syntax #%call (make-#%call-repetition (repet-quote #%call) #f))
-(define-repetition-syntax static-#%call (make-#%call-repetition (repet-quote static-#%call) #t))
 
 (define-syntax #%brackets
   (expression-transformer
@@ -206,33 +195,25 @@
   (syntax-parse stxes
     [(_ (_::brackets . _) . _) (void)]))
 
-(define-for-syntax (make-#%index name more-static?)
+(define-syntax #%index
   (expression-infix-operator
-   name
+   (expr-quote #%index)
    '((default . stronger))
    'macro
    (lambda (array stxes)
+     (define more-static? (is-static-context/tail? stxes))
      (parse-indexable-ref-or-set array stxes more-static?))
    'left))
 
-(define-syntax #%index
-  (make-#%index (expr-quote #%index) #f))
-(define-syntax static-#%index
-  (make-#%index (expr-quote #%static-ref) #t))
-
-(define-for-syntax (make-repetition-#%index name more-static?)
+(define-repetition-syntax #%index
   (repetition-infix-operator
-   name
+   (repet-quote #%index)
    '((default . stronger))
    'macro
    (lambda (array stxes)
+     (define more-static? (is-static-context/tail? stxes))
      (parse-indexable-ref-or-set array stxes more-static? #:repetition? #t))
    'left))
-
-(define-repetition-syntax #%index
-  (make-repetition-#%index (repet-quote #%index) #f))
-(define-repetition-syntax static-#%index
-  (make-repetition-#%index (repet-quote static-#%index) #t))
 
 (define-syntax #%braces
   (expression-transformer

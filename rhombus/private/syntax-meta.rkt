@@ -19,7 +19,8 @@
                      "srcloc.rkt")
          "space.rkt"
          "name-root-space.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "is-static.rkt")
 
 (module+ for-unquote
   (provide (for-syntax syntax_meta.equal_binding)))
@@ -39,7 +40,8 @@
      expanding_phase
      [error syntax_meta.error]
      [value syntax_meta.value]
-     [flip_introduce syntax_meta.flip_introduce]))
+     [flip_introduce syntax_meta.flip_introduce]
+     is_static))
 
   (define expr-space-path (space-syntax #f))
 
@@ -156,6 +158,19 @@
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,syntax-static-infos))
     (transform-in stx))
+
+  (define/arity (is_static id/op)
+    (define s (unpack-term id/op #f #f))
+    (cond
+      [(identifier? s)
+       (is-static-context? s)]
+      [else
+       (or (and s
+                (syntax-parse s
+                  #:datum-literals (op)
+                  [(op id) (is-static-context? #'id)]
+                  [_ #f]))
+           (raise-argument-error* 'synatx_meta.is_static rhombus-realm "Identifier || Operator" id/op))]))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation #'phase? #'())))

@@ -4,13 +4,23 @@
 @title{Static and Dynamic Lookup}
 
 @doc(
+  expr.macro '#%dynamism'
+){
+
+ Initially indicates dynamic mode, but intended to be redefined by
+ or @rhombus(use_dynamic).
+
+ This binding is not exported by @rhombuslangname(rhombus/static), and
+ a binding to indicate static mode is exported, instead.
+
+}
+
+@doc(
   defn.macro 'use_static'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#%index), @rhombus(++), @rhombus(#%call),
- @rhombus(with), and @rhombus(for)
- to require certain static information and consistency with static
- information:
+ (Re-)defines @rhombus(#%dynamism) to require certain static
+ information and consistency with static information:
 
 @itemlist(
 
@@ -46,6 +56,14 @@
 
 )
 
+ For each of these forms, static mode is detected by checking the
+ binding of @rhombus(#%dynamism) using the scopes of form's operator or
+ identifier.
+
+ Other forms not provided by @rhombuslangname(rhombus) might also be
+ sensitive to dynamic mode versus static mode. Macro implementations
+ can use @rhombus(syntax_meta.is_static) to determine a mode.
+
  See also @secref("static-lib").
 
 @examples(
@@ -73,10 +91,9 @@
   defn.macro 'use_dynamic'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#%index), and @rhombus(#%parens)
- to their default bindings, which allow either static or dynamic
- resolution of a component access or lookup specialization with no
- complaints about argument mismatches.
+ (Re-)defines @rhombus(#%dynamism) to not require certain static
+ information and consistency with static information. See
+ @rhombus(use_static).
 
 @examples(
   class Posn(x, y)

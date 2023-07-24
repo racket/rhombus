@@ -19,6 +19,7 @@
          "realm.rkt"
          "parse.rkt"
          "assign.rkt"
+         "is-static.rkt"
          (submod "assign.rkt" for-assign))
 
 (provide (for-spaces (#f
@@ -43,12 +44,6 @@
 (module+ for-builtin
   (provide set-builtin->accessor-ref!))
 
-(module+ for-dynamic-static
-  (provide (for-spaces (#f
-                        rhombus/repet)
-                       |.|
-                       static-|.|)))
-
 (begin-for-syntax
   (property dot-provider (handler))
 
@@ -65,12 +60,13 @@
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
 
-(define-for-syntax (make-|.|-expression more-static?)
+(define-syntax |.|
   (expression-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
+     (define more-static? (is-static-context/tail? tail))
      (parse-dot-provider
       tail
       (lambda (dot dot-name field-id tail)
@@ -84,12 +80,13 @@
                             dot dot-name field-id tail)))))
    'left))
 
-(define-for-syntax (make-|.|-repetition more-static?)
+(define-repetition-syntax |.|
   (repetition-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
+     (define more-static? (is-static-context/tail? tail))
      (parse-dot-provider
       tail
       (lambda (dot dot-name field-id tail)
@@ -114,13 +111,6 @@
            (values rep
                    tail)]))))
    'left))
-
-
-(define-syntax |.| (make-|.|-expression #f))
-(define-syntax static-|.| (make-|.|-expression #t))
-
-(define-repetition-syntax |.| (make-|.|-repetition #f))
-(define-repetition-syntax static-|.| (make-|.|-repetition #t))
 
 ;; annotation, declared explicitly to create a syntax error
 ;; for something like `"a" :: String.length()`   

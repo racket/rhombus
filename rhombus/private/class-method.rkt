@@ -552,7 +552,7 @@
               (define shape+arity (vector-ref (super-method-shapes super) pos))
               (define shape (if (vector? shape+arity) (vector-ref shape+arity 0) shape+arity))
               (define shape-arity (and (vector? shape+arity) (vector-ref shape+arity 1)))
-              (define static? (is-static-call-context? #'dot-op))
+              (define static? (is-static-context? #'dot-op))
               (cond
                 [(pair? shape)
                  ;; a property
@@ -678,7 +678,7 @@
                              (syntax-local-method-result result-id)))
               (define-values (call new-tail)
                 (parse-function-call rator (list #'id) #'(head args)
-                                     #:static? (is-static-call-context? #'tag)
+                                     #:static? (is-static-context? #'tag)
                                      #:rator-stx #'head
                                      #:rator-arity (and r (method-result-arity r))
                                      #:rator-kind 'method))
