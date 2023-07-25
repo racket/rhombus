@@ -254,4 +254,8 @@ check:
   [index, ...]
   ~is [1, 2, 3]
 
-
+// make sure `_` works right as a repetition binding
+check:
+  def [x, _, ...] = [1, 2, 3]
+  x
+  ~is 1

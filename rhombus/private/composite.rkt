@@ -269,7 +269,9 @@
      (define get-rest #`(let ([rest.name-id (#,accessor #,c-arg-id)])
                           rest.name-id))
      (if (free-identifier=? #'always-succeed #'rest.matcher-id)
-         #`(lambda () #,get-rest)
+         (if (null? (syntax-e #'(rest.bind-id ...)))
+             #`(lambda () (values))
+             #`(lambda () #,get-rest))
          #`(get-rest-getters
             '(rest.bind-id ...)
             #,get-rest
