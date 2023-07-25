@@ -76,7 +76,8 @@
          repack-as-term
          repack-as-multi
 
-         insert-multi-front-group)
+         insert-multi-front-group
+         check-valid-group)
 
 (define multi-blank (syntax-property (syntax-raw-property (datum->syntax #f 'multi) "") 'from-pack #t #t))
 (define group-blank (syntax-property (syntax-raw-property (datum->syntax #f 'group) "") 'from-pack #t #t))
@@ -134,13 +135,52 @@
        [else (and who (raise-error who "multi-group syntax not allowed in group context" r))])]
     [(group-syntax? r) r]
     [(null? r) (cannot-coerce-empty-list who r)]
-    [(list? r) (datum->syntax
-                at-stx
-                (cons group-blank
-                      (for/list ([e (in-list r)])
-                        (unpack-term e who at-stx))))]
+    [(list? r)
+     (define elems (for/list ([e (in-list r)])
+                     (unpack-term e who at-stx)))
+     (check-valid-group who elems)
+     (and elems
+          (datum->syntax at-stx (cons group-blank elems)))]
     [else (datum->syntax at-stx (list group-blank r))]))
 
+;; make sure 'block or 'alts doesn't end up mid-group:
+(define (check-valid-group who terms)
+  (let loop ([terms terms])
+    (cond
+      [(null? terms) (void)]
+      [else
+       (define e (car terms))
+       (define rest-terms (cdr terms))
+       (define d (syntax-e e))
+       (cond
+         [(not (pair? d)) (loop rest-terms)]
+         [else
+          (define t (syntax-e (car d)))
+          (cond
+            [(eq? t 'alts)
+             (cond
+               [(null? rest-terms) #t]
+               [else
+                (and who (raise-error who
+                                      "alternatives not allowed in non-tail position of a group"
+                                      e))])]
+            [(eq? t 'block)
+             (cond
+               [(null? rest-terms) #t]
+               [else
+                (define b (syntax-e (car rest-terms)))
+                (cond
+                  [(and (pair? b)
+                        (eq? 'alts (syntax-e (car b))))
+                   (loop rest-terms)]
+                  [else
+                   (and who (raise-error who
+                                         "block not allowed in non-tail position of a group and not before alternatives"
+                                         e))])])]
+            [else (loop rest-terms)])])])))
+
+;; this function doesn't try to make sure the list is valid as a group
+;; (i.e., has no 'block or 'alts in non-tail position)
 (define (unpack-term-list r who at-stx)
   (cond
     [(syntax? r)

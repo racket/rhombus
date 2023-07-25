@@ -7,7 +7,7 @@ defn.macro 'define_eight $e ...':
   match '$e ...'
   | '$name':
       'def $name = 8'
-       
+
 define_eight ate
 check:
   ate
@@ -117,4 +117,3 @@ block:
    import .n open
    dz w
    check w ~is 0
- 

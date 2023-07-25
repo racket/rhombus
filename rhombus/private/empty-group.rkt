@@ -1,8 +1,10 @@
 #lang racket/base
+(require "pack.rkt")
 
 (provide convert-empty-group
          convert-empty-alts
-         error-empty-group)
+         error-misformed-group
+         error-empty-or-misformed-group)
 
 (define (convert-empty-group at-depth l)
   (cond
@@ -28,13 +30,24 @@
     [else (for/list ([g (in-list (syntax->list l))])
             (convert-empty-alts (sub1 at-depth) g))]))
 
-(define (error-empty-group at-depth l)
+(define (error-empty-or-misformed-group at-depth l)
   (cond
     [(zero? at-depth)
-     (define u (cdr (syntax-e l)))
-     (when (or (null? u)
-               (and (syntax? u) (null? (syntax-e u))))
+     (define u (cdr (syntax->list l)))
+     (when (null? u)
        (error '|'| "generated an empty group"))
+     (unless (check-valid-group #f u)
+       (error '|'| "generated a misformed group with a non-tail block or alternative"))
      l]
     [else (for/list ([g (in-list (syntax->list l))])
-            (error-empty-group (sub1 at-depth) g))]))
+            (error-empty-or-misformed-group (sub1 at-depth) g))]))
+
+(define (error-misformed-group at-depth l)
+  (cond
+    [(zero? at-depth)
+     (define u (cdr (syntax->list l)))
+     (unless (check-valid-group #f u)
+       (error '|'| "generated a misformed group with a non-tail block or alternative"))
+     l]
+    [else (for/list ([g (in-list (syntax->list l))])
+            (error-misformed-group (sub1 at-depth) g))]))

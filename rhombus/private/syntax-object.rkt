@@ -180,7 +180,23 @@
                   (update t)
                   t)]))))
 
-(define (do-make who v ctx-stx tail? group?)
+(define (starts-alts? ds)
+  (and (pair? ds)
+       (let ([a (car ds)])
+         (define e (if (syntax? a)
+                       (let ([t (unpack-term a #f #f)])
+                         (and t (syntax-e t)))
+                       a))
+         (cond
+           [(pair? e)
+            (define head-stx (car e))
+            (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+            (case head
+              [(alts) #t]
+              [else #f])]
+           [else #f]))))
+
+(define (do-make who v ctx-stx pre-alts? tail? group?)
   ;; assume that any syntax objects are well-formed, while list structure
   ;; needs to be validated
   (define ctx-stx-t (extract-ctx who ctx-stx))
@@ -208,14 +224,16 @@
                      [(null? es) null]
                      [else
                       (define ds (cdr es))
-                      (cons (loop (car es) (null? ds))
+                      (cons (loop (car es)
+                                  (starts-alts? ds)
+                                  (null? ds))
                             (l-loop ds))])))
            (invalid))]
       [(syntax? e)
        (or (unpack-group e #f #f)
            (invalid))]
       [else (invalid)]))
-  (define (loop v tail?)
+  (define (loop v pre-alt? tail?)
     (cond
       [(null? v) (invalid)]
       [(list? v)
@@ -225,7 +243,7 @@
          [(parens brackets braces quotes)
           (cons head-stx (group-loop (cdr v)))]
          [(block)
-          (if tail?
+          (if (or tail? pre-alt?)
               (cons head-stx (group-loop (cdr v)))
               (invalid))]
          [(alts)
@@ -238,7 +256,7 @@
                          (define head-stx (car e))
                          (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
                          (if (eq? head 'block)
-                             (loop e #t)
+                             (loop e #f #t)
                              (invalid))]
                         [(syntax? e)
                          (define u (unpack-term e #f #f))
@@ -259,39 +277,56 @@
               (invalid))]
          [else (invalid)])]
       [(pair? v) (invalid)]
-      [(syntax? v) (or (unpack-term v #f #f)
-                       (invalid))]
+      [(syntax? v) (let ([t (unpack-term v #f #f)])
+                     (cond
+                       [t
+                        (define e (syntax-e t))
+                        (cond
+                          [(pair? e)
+                           (define head-stx (car e))
+                           (define head (syntax-e head-stx))
+                           (case head
+                             [(block)
+                              (unless (or pre-alt? tail?) (invalid))]
+                             [(alts)
+                              (unless tail? (invalid))])])
+                        t]
+                       [else (invalid)]))]
       [else v]))
-  (datum->syntax ctx-stx-t (if group? (group v) (loop v tail?))))
+  (datum->syntax ctx-stx-t (if group? (group v) (loop v pre-alts? tail?))))
 
 (define/arity (make v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (do-make 'Syntax.make v ctx-stx #t #f))
+  (do-make 'Syntax.make v ctx-stx #t #t #f))
 
 (define/arity (make_op v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (symbol? v)
     (raise-argument-error* 'Syntax.make_op rhombus-realm "Symbol" v))
-  (do-make 'Syntax.make (list 'op v) ctx-stx #t #f))
+  (do-make 'Syntax.make (list 'op v) ctx-stx #t #t #f))
 
 (define/arity (make_group v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (and (pair? v)
                (list? v))
     (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
-  (datum->syntax #f (cons group-tag (let loop ([es v])
-                                      (cond
-                                        [(null? es) null]
-                                        [else
-                                         (define ds (cdr es))
-                                         (cons (do-make 'Syntax.make_group (car es) ctx-stx (null? ds) #f)
-                                               (loop ds))])))))
+  (define terms (let loop ([es v])
+                  (cond
+                    [(null? es) null]
+                    [else
+                     (define ds (cdr es))
+                     (cons (do-make 'Syntax.make_group (car es) ctx-stx
+                                    (starts-alts? ds)
+                                    (null? ds)
+                                    #f)
+                           (loop ds))])))
+  (datum->syntax #f (cons group-tag terms)))
 
 (define/arity (make_sequence v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
   (pack-multi (for/list ([e (in-list v)])
-                (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
+                (do-make 'Syntax.make_sequence e ctx-stx #t #t #t))))
 
 (define/arity (make_id str [ctx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))

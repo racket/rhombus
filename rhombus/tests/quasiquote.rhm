@@ -162,4 +162,24 @@ check:
 
 check:
   '#void'.unwrap() ~is #void
-  
+
+// prevent construction of ill-formed groups
+block:
+  def a = '| 12 | 13'
+  def b = ': 1'
+  let [ts, ...] = [b, b]
+  check:
+    '$b $a' ~prints_like ':« 1 » | 12 | 13'
+    'head $b $a' ~prints_like 'head:« 1 » | 12 | 13'
+    'apple $[a, '8']' ~raises "generated a misformed group"
+    'apple $[b, '8']' ~raises "generated a misformed group"
+    '$b $b' ~raises "generated a misformed group"
+    'head $b $b' ~raises "generated a misformed group"
+    '$a $a' ~raises "generated a misformed group"
+    'head $a $a' ~raises "generated a misformed group"
+    '$[b, b]' ~raises "block not allowed in non-tail"
+    'head $[b, b]' ~raises "generated a misformed group"
+    'head $[a, a]' ~raises "generated a misformed group"
+    '$ts ...' ~raises "generated a misformed group"
+    'head $ts ...' ~raises "generated a misformed group"
+    '$[ts] ...' ~raises "generated a misformed group"

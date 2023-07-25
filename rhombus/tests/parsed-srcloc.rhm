@@ -55,9 +55,8 @@ expr.macro 'check_exp_loc: $body':
      let exn :: Exn.Fail.Syntax = get_exn(Syntax.literal '$body')
      $check_id exn.exprs[0].srcloc() ~is loc'
 
-#//
-parameterize { current_evaluator: ev }:
-  eval('try_append 1')
+parameterize { Evaluator.current: ev }:
+  eval('my_form 1')
 
 check_exp_loc: 1
 check_exp_loc: my_auto_prefix 1
