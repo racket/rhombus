@@ -85,12 +85,13 @@
 (define (no-srcloc* stx)
   (map no-srcloc (syntax->list stx)))
 
-(define (relocate srcloc stx)
-  (datum->syntax stx (syntax-e stx) srcloc stx #;(if (syntax? srcloc) srcloc stx)))
+(define (relocate srcloc stx [prop-stx stx])
+  (datum->syntax stx (syntax-e stx) srcloc prop-stx))
 
+;; unlike `relocate`, copies props and potentially updates 'raw
 (define (relocate-id head id)
-  (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
-                                              (symbol->string (syntax-e head)))))
+  (syntax-raw-property (relocate head id head) (or (syntax-raw-property head)
+                                                   (symbol->string (syntax-e head)))))
 
 (define (relocate+reraw src-stx stx)
   (syntax-opaque-raw-property (relocate src-stx stx)

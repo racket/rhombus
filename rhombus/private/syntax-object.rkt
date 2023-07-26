@@ -20,7 +20,8 @@
          "static-info.rkt"
          "define-arity.rkt"
          "srcloc-span.rkt"
-         "srcloc.rkt"
+         (except-in "srcloc.rkt"
+                    relocate)
          "call-result-key.rkt"
          "index-result-key.rkt"
          (submod "dot.rkt" for-dot-provider)

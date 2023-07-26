@@ -34,26 +34,26 @@
   #;(log-error "?? ~s" (syntax->datum stx))
   #;(log-error " : ~s" (syntax->datum ctx-stx-in))
   #;(log-error " = ~s" (syntax->datum ctx-stx))
-  (define (relocate stx)
+  (define (relocate** stx)
     #;(log-error " ! ~s" (syntax->datum stx))
     (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx))
   (let loop ([stx stx])
     (syntax-parse stx
       #:datum-literals (group block alts parens brackets braces quotes multi op)
       [((~and head (~or group block alts parens brackets braces quotes)) . rest)
-       (datum->syntax #f (cons (relocate #'head) #'rest))]
+       (datum->syntax #f (cons (relocate** #'head) #'rest))]
       [((~and m multi) (g t))
        #:when (syntax-property #'g 'from-pack)
        (loop #'t)]
       [((~and m multi) (g . rest))
-       (datum->syntax #f (list #'m (cons (relocate #'g) #'rest)))]
+       (datum->syntax #f (list #'m (cons (relocate** #'g) #'rest)))]
       [((~and tag op) o)
-       (datum->syntax #f (list #'tag (relocate #'o)))]
+       (datum->syntax #f (list #'tag (relocate** #'o)))]
       [((~and tag parsed) space o)
-       (define r (relocate #'o))
+       (define r (relocate** #'o))
        (datum->syntax #f (list #'tag #'space r) r r)]
       [_
-       (relocate stx)])))
+       (relocate** stx)])))
 
 (define (relevant-source-syntax ctx-stx-in)
   (syntax-parse ctx-stx-in
