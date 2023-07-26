@@ -37,8 +37,9 @@
                                 #:defaults ([label-expr #'(group (parsed #:rhombus/expr #f))]))
                      (~optional (group (~and no-prompt #:no_prompt))
                                 #:defaults ([no-prompt #'#f]))
-                     (~optional (group #:eval (block eval-expr))
+                     (~optional (group (~and eval-kw #:eval) (block eval-expr))
                                 #:defaults ([eval-expr #'(group (parsed #:rhombus/expr (make-rhombus-eval)))]))
+                     (~optional (group (~and once-kw #:once)))
                      (~optional (group #:hidden (block hidden-expr))
                                 #:defaults ([hidden-expr #'(group (parsed #:rhombus/expr #f))]))
                      (~optional (group #:indent (block indent-expr))
@@ -78,8 +79,9 @@
                          #`(#,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...))
                             (tag2 answer ...))]
                         [_ #`(#,(rb form) #,form)]))])
-       #'(examples
+       #`(examples
           #:eval (rhombus-expression eval-expr)
+          #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
           #:label (rhombus-expression label-expr)
           #:hidden? (rhombus-expression hidden-expr)
           #:indent (rhombus-expression indent-expr)
@@ -96,6 +98,7 @@
   eval)
 
 (define (examples #:eval eval
+                  #:once? once?
                   #:label label
                   #:hidden? hidden?
                   #:indent indent
@@ -173,6 +176,7 @@
                            (define o (open-output-string))
                            (call-in-sandbox-context eval (lambda () (print v o)))
                            (format-lines (get-output-string o) (lambda (s) (racketresultfont (keep-spaces s) #:decode? #f)) indent)])))]))))]))))))))
+  (when once? (close-eval eval))
   (cond
     [hidden? null]
     [label (list label example-block)]
