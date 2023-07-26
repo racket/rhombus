@@ -43,6 +43,7 @@
      is_converter
      pack_converter
      unpack_converter
+     parse_to_packed_statinfo
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
@@ -142,7 +143,7 @@
 (define-for-syntax (pack_converter binding body [static-infos #'(parens)])
   (syntax-parse (if (syntax? binding) binding #'no)
     [(parsed #:rhombus/bind _::binding-form)
-     (unless (syntax? body) (raise-argument-error* 'annot.pack_converter rhombus-realm "Syntax" body))
+     (unless (syntax? body) (raise-argument-error* 'annot_meta.pack_converter rhombus-realm "Syntax" body))
      #`(parsed #:rhombus/annot
                #,(annotation-binding-form binding
                                           (wrap-expression body)
@@ -166,3 +167,11 @@
                              rhombus-realm
                              "syntax object is not a parsed annotation that is a converter"
                              "syntax object" stx)]))
+
+(define-for-syntax (parse_to_packed_statinfo stx)
+  (define who 'annot_meta.parse_to_packed_statinfo)
+  (syntax-parse (or (unpack-group stx #f #f)
+                    (raise-argument-error* who rhombus-realm "Group" stx))
+    [a::annotation
+     #:with ab::annotation-binding-form #'a.parsed
+     #'ab.static-infos]))

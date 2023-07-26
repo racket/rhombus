@@ -12,9 +12,11 @@
 
 @doc(
   ~nonterminal:
+    outer_bind: def bind ~defn
     outer_expr: block expr
     recur_id: block id
     recur_init_expr: block expr
+    inner_bind: def bind ~defn
     inner_expr: block expr
     outer_check_body: block body
     head_guard_body: block body
@@ -23,6 +25,8 @@
     recur_arg_expr: block expr
     loop_body: block body
     done_expr: block expr
+    each_id: block id
+    each_expr: block expr
 
   class_clause.macro '«sequence '$pattern':
                          $body
@@ -40,9 +44,9 @@
  Normally, @rhombus(sequence, ~class_clause) should be used in a class
  that implements @rhombus(Sequenceable, ~class) as the non-optimizing implementation.
 
- The input @rhombus(pattern) is matched to @rhombus(id ...: expr) where
- @rhombus(expr) is a @tech{parsed} expression for the right-hand side of
- @rhombus(each, ~for_clause), and the number of @rhombus(id)s reflects
+ The input @rhombus(pattern) is matched to @rhombus(each_id ...: each_expr) where
+ @rhombus(each_expr) is a @tech{parsed} expression for the right-hand side of
+ @rhombus(each, ~for_clause), and the number of @rhombus(each_id)s reflects
  the number of expected result values. The result of the @rhombus(body)
  sequence must be either @rhombus(#false), in which case the
  implementation falls back to dynamic mode, or a syntax object of the
@@ -50,7 +54,7 @@
 
 @rhombusblock(
   '(~outer_binds:
-      #,(@rhombus(outer_ids, ~var)): outer_expr
+      outer_bind: outer_expr // @litchar{=} allowed instead of @litchar{:}
       ...,
     ~outer_check:
       outer_check_body
@@ -62,7 +66,7 @@
       head_guard_body
       ...,
     ~inner_binds:
-      #,(@rhombus(inner_ids, ~var)): inner_expr
+      inner_bind: inner_expr // @litchar{=} allowed instead of @litchar{:}
       ...,
     ~pre_guard:
       pre_guard_body
@@ -74,9 +78,7 @@
       (recur_arg_expr, ...))'
 )
 
- where each @rhombus(inner_ids, ~var) and @rhombus(outer_ids, ~var) is
- either an identifier or a parenthsized sequence of comma-separated
- identifiers. The keywords in this shape must appear in the shown order,
+ The keywords in this shape must appear in the shown order,
  but each is optional and defaults to either an empty binding sequence
  or a body sequence that produces @rhombus(#true).
 
@@ -86,7 +88,7 @@
 
 @rhombusblock(
   // bind and/or unpack the sequence
-  let #,(@rhombus(outer_ids, ~var)) = outer_expr
+  def outer_bind: outer_expr
   ...
   // maybe check that sequence is valid
   outer_check_body 
@@ -96,7 +98,7 @@
   ...
   fun loop(recur_id = recur_id, ...):
     if (block: head_guard_body; ...) // check continues at this position
-    | let #,(@rhombus(inner_ids, ~var)) = inner_expr // bind variables for element 
+    | def inner_bind: inner_expr // bind variables for element 
       ...
       if (block: pre_guard_body; ...) // check continues for this element
       | loop_body
@@ -109,14 +111,18 @@
   loop()
 )
 
- Typically, @rhombus(inner_ids, ~var) includes the the @rhombus(id)s
+ Typically, @rhombus(inner_binds) includes the the @rhombus(each_id)s
  supplied to the match for @rhombus(pattern), so they can be referenced
- in @rhombus(loop_body).
+ in @rhombus(loop_body). However, the @rhombus(each_id)s are not the same
+ as the identifiers used in the triggerring @rhombus(each) form; static
+ information from those identifiers comes from
+ @rhombus(statinfo_meta.index_result_key) static information for the
+ enclosing class or interface.
 
 @examples(
   ~eval: macro_eval
   ~defn:
-    class Posn(x, y):
+    class Posn(x :: Int, y :: Int):
       implements Sequenceable
       override method to_sequence():
         Sequence.make(~initial_position: 0,
@@ -135,6 +141,9 @@
             $lhs = if pos == 0 | Posn.y(p) | Posn.x(p),
           ~recur_args:
             (pos + 1))'
+      static_info:
+        '(($statinfo_meta.index_result_key,
+           $(annot_meta.parse_to_packed_statinfo('Int'))))'
   ~repl:
     for List:
       each j: dynamic(Posn(1, 2)) // uses `to_sequence`

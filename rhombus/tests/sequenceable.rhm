@@ -102,3 +102,34 @@ check:
     each j: Posn4(1, 2)
     j
   ~is [20, 10]
+
+// make sure static info is propagated from `~outer_binds`
+// and `~inner_binds`, at least when the `each` binding
+// is immediate
+check:
+  class Posn(x, y):
+    sequence '$lhs: $rhs':
+      '(~outer_binds:
+          df0 = $rhs
+          df = [[df0.x, df0.y]]
+          nr :: List = df[0],
+        ~outer_check:
+          "ok",
+        ~recur_binds:
+          i = 0,
+        ~head_guard:
+          i < nr[0],
+        ~inner_binds:
+          $lhs = df[i], // :~ List here would not propagate to body
+        ~recur_args:
+          (i + 1))'
+    static_info:
+      let list_info:
+        let '$(a :: annot_meta.Parsed)': 'List.of(String)'
+        let values(_, _, si) = annot_meta.unpack_converter(a)
+        si
+      '(($statinfo_meta.index_result_key, $(statinfo_meta.pack(list_info))))'
+  for List:
+    each elem: Posn(1, 2)
+    elem[0]
+  ~is [1]

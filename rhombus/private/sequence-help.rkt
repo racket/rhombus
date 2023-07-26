@@ -1,12 +1,17 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
+                     version/utils
                      "parse.rkt"
                      "pack.rkt")
          "definition.rkt"
          "parse.rkt"
          "parens.rkt"
-         (submod "equal.rkt" for-parse))
+         (submod "equal.rkt" for-parse)
+         (only-in "equal.rkt"
+                  [= rhombus=])
+         (only-in "def+let.rkt" def)
+         (only-in "block.rkt" block))
 
 (provide (for-space rhombus/defn
                     sequence_macro)
@@ -23,16 +28,20 @@
               (rhombus-expression rhs-g)))]))))
 
 (begin-for-syntax
-  (define-syntax-class :identifiers
-    #:attributes ([id 1])
+  (define-syntax-class :binding+rhs
+    #:attributes ([bind 1] [rhs 1])
     #:datum-literals (group)
-    (pattern idx:identifier
-             #:attr [id 1] (list #'idx))
-    (pattern (_::parens (group idx:identifier) ...)
-             #:attr [id 1] (syntax->list #'(idx ...)))))
+    (pattern (~and stx (group _ ... a::equal _ ... b::equal . _))
+             #:attr (bind 1) #f
+             #:attr (rhs 1) '()
+             #:do [(raise-too-many-equals #'stx #'a #'b)])
+    (pattern (group bind ... _::equal rhs ...))
+    (pattern (group bind ... (btag::block body ...))
+             #:attr (rhs 1) (list #'(group block (b-tag body ...))))))
 
 (define-for-syntax (make_sequence_constructor proc)
   (lambda (stx)
+    (define approx-for-old-racket? (version<? (version) "8.10.0.3"))
     (syntax-parse stx
       [[(lhs:identifier ...) (_ expr)]
        (define s (proc #`(group lhs ... (block (group (parsed #:rhombus/expr expr))))))
@@ -44,10 +53,8 @@
               (~optional (group
                           #:outer_binds
                           (_::block
-                           (group outer-ids::identifiers _::equal outer-rhs ...)
-                           ...))
-                         #:defaults ([(outer-ids 1) '()]
-                                     [(outer-rhs 2) '()]))
+                           outer::binding+rhs
+                           ...)))
               (~optional (group
                           #:outer_check
                           (outer-tag::block
@@ -72,10 +79,8 @@
               (~optional (group
                           #:inner_binds
                           (_::block
-                           (group inner-ids::identifiers _::equal inner-rhs ...)
-                           ...))
-                         #:defaults ([(inner-ids 1) '()]
-                                     [(inner-rhs 2) '()]))
+                           inner::binding+rhs
+                           ...)))
               (~optional (group
                           #:pre_guard
                           (pre-tag::block
@@ -96,13 +101,31 @@
                                          recur-g
                                          ...))))
                          #:defaults ([(recur-g 1) '()])))
-             #'[(lhs ...)
+             #`[(lhs ...)
                 (:do-in
-                 ([(outer-ids.id ...) (rhombus-expression (group outer-rhs ...))] ...)
-                 (rhombus-body-at* outer-tag outer-check-g ...)
+                 ()
+                 (begin
+                   #,(if (attribute outer)
+                         #'(rhombus-body-sequence
+                            (group def outer.bind ... rhombus= outer.rhs ...)
+                            ...)
+                         #'(begin))
+                   (rhombus-body-at* outer-tag outer-check-g ...))
                  ([loop-id (rhombus-expression (group loop-rhs ...))] ...)
                  (rhombus-body-at* head-tag head-guard-g ...)
-                 ([(inner-ids.id ...) (rhombus-expression (group inner-rhs ...))] ...)
+                 #,(if (and (attribute inner)
+                            approx-for-old-racket?)
+                       #`([(inner.bind ...) (rhombus-expression (group inner.rhs ...))]
+                          ...)
+                       #'())
+                 #,@(if (and (attribute inner)
+                             (not approx-for-old-racket?))
+                        (list
+                         #'(begin
+                             (rhombus-body-sequence
+                              (group def inner.bind ... rhombus= inner.rhs ...)
+                              ...)))
+                        null)
                  (rhombus-body-at* pre-tag pre-guard-g ...)
                  (rhombus-body-at* post-tag post-guard-g ...)
                  ((rhombus-expression recur-g) ...))]])]

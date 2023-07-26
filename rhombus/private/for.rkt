@@ -200,7 +200,8 @@
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (form-id . _) orig-stx
-     #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
+     #:with (tmp-id ...) (for/list ([name-id (syntax->list #'(lhs-i.name-id ...))])
+                           ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id) name-id)))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
      (when (and static? (not seq-ctr))
        (raise-syntax-error #f

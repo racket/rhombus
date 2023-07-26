@@ -130,6 +130,17 @@
 
 }
 
+@doc(
+  fun annot_meta.parse_to_packed_statinfo(stx :: Group) :: Syntax
+){
+
+@provided_meta()
+
+ A convenience function that parses @rhombus(stx) as an annotation and
+ returns just its static-information component in packed form.formation.
+
+}
+
 
 @doc(
   defn.macro 'annot.delayed_declare $id'
