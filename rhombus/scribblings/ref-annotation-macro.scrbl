@@ -137,7 +137,7 @@
 @provided_meta()
 
  A convenience function that parses @rhombus(stx) as an annotation and
- returns just its static-information component in packed form.formation.
+ returns just its static-information component in packed form.
 
 }
 

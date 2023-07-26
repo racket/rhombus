@@ -13,11 +13,11 @@
 @doc(
   ~nonterminal:
     outer_bind: def bind ~defn
-    outer_expr: block expr
+    outer_body: block body
     recur_id: block id
     recur_init_expr: block expr
     inner_bind: def bind ~defn
-    inner_expr: block expr
+    inner_body: block body
     outer_check_body: block body
     head_guard_body: block body
     pre_guard_body: block body
@@ -54,7 +54,7 @@
 
 @rhombusblock(
   '(~outer_binds:
-      outer_bind: outer_expr // @litchar{=} allowed instead of @litchar{:}
+      outer_bind: outer_body; ... // `=` allowed instead of `:`
       ...,
     ~outer_check:
       outer_check_body
@@ -66,7 +66,7 @@
       head_guard_body
       ...,
     ~inner_binds:
-      inner_bind: inner_expr // @litchar{=} allowed instead of @litchar{:}
+      inner_bind: inner_body; ... // `=` allowed instead of `:`
       ...,
     ~pre_guard:
       pre_guard_body
@@ -88,17 +88,18 @@
 
 @rhombusblock(
   // bind and/or unpack the sequence
-  def outer_bind: outer_expr
+  def outer_bind: outer_body; ...
   ...
   // maybe check that sequence is valid
-  outer_check_body 
-  ...
+  block:
+    outer_check_body 
+    ...
   // bind loop arguments, especially as the iteration position
   let recur_id = recur_init_expr
   ...
   fun loop(recur_id = recur_id, ...):
     if (block: head_guard_body; ...) // check continues at this position
-    | def inner_bind: inner_expr // bind variables for element 
+    | def inner_bind: inner_body; ... // bind variables for element 
       ...
       if (block: pre_guard_body; ...) // check continues for this element
       | loop_body
@@ -111,11 +112,12 @@
   loop()
 )
 
- Typically, @rhombus(inner_binds) includes the the @rhombus(each_id)s
+ Typically, the @rhombus(inner_bind)s include the the @rhombus(each_id)s
  supplied to the match for @rhombus(pattern), so they can be referenced
  in @rhombus(loop_body). However, the @rhombus(each_id)s are not the same
- as the identifiers used in the triggerring @rhombus(each) form; static
- information from those identifiers comes from
+ as the identifiers used in the triggerring @rhombus(each, ~for_clause)
+ form. Static information for identifier bounds by
+ @rhombus(each, ~for_clause) comes from
  @rhombus(statinfo_meta.index_result_key) static information for the
  enclosing class or interface.
 
