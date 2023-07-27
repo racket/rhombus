@@ -5,7 +5,8 @@
                      "srcloc.rkt")
          "parse.rkt"
          "parens.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         (submod "assign.rkt" for-assign))
 
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!)
@@ -70,10 +71,34 @@
                                  #,direct-id))
                             static-infos))))
 
-    (define (field mk) (success-k (mk lhs
-                                      (lambda (e)
-                                        (relocate (respan #`(#,lhs #,field-stx)) e)))
-                                  tail))
+    (define field
+      (let ([just-access
+             (lambda (mk)
+               (success-k (mk lhs
+                              (lambda (e)
+                                (relocate (respan #`(#,lhs #,field-stx)) e)))
+                          tail))])
+        (case-lambda
+          [(mk) (just-access mk)]
+          [(mk mk-set)
+           (syntax-parse tail
+             [assign::assign-op-seq
+              (call-with-values
+               success-k
+               (lambda ()
+                 (build-assign
+                  (attribute assign.op)
+                  #'assign.name
+                  #`(lambda ()
+                      #,(mk lhs (lambda (e)
+                                  (relocate (respan #`(#,lhs #,field-stx)) e))))
+                  #`(lambda (v)
+                      #,(mk-set lhs #'v
+                                (lambda (e)
+                                  (relocate (respan #`(#,lhs #,field-stx)) e))))
+                  #'value
+                  #'assign.tail)))]
+             [_ (just-access mk)])])))
 
     (k (syntax-e field-stx) field ary 0ary nary fail-k)))
 

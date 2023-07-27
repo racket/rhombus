@@ -93,6 +93,7 @@
         "list.rkt"
         "pair.rkt"
         "array.rkt"
+        "box.rkt"
         "map.rkt"
         "set.rkt"
         "indexable.rkt"

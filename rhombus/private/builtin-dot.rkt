@@ -5,6 +5,7 @@
          (submod "set.rkt" for-builtin)
          (submod "list.rkt" for-builtin)
          (submod "array.rkt" for-builtin)
+         (submod "box.rkt" for-builtin)
          (submod "syntax-object.rkt" for-builtin)
          (submod "pair.rkt" for-builtin)
          (submod "string.rkt" for-builtin)
@@ -33,4 +34,11 @@
      [(path? v) path-method-table]
      [(srcloc? v) srcloc-method-table]
      [(exn? v) (get-exn-method-table v)]
+     [(box? v) box-method-table]
+     [else #f])))
+
+(set-builtin->mutator-ref!
+ (lambda (v)
+   (cond
+     [(box? v) box-mutator-method-table]
      [else #f])))

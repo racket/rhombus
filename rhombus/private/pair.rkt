@@ -78,9 +78,9 @@
   #`(#,(car build-convert-stxs)
      (car arg-id)
      (lambda (a)
-       #,(cadr build-convert-stxs)
-       (cdr arg-id)
-       (lambda (d) (cons a d))
+       (#,(cadr build-convert-stxs)
+        (cdr arg-id)
+        (lambda (d) (cons a d)))
        (lambda () #f))
      (lambda () #f)))
 

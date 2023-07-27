@@ -42,7 +42,8 @@
            curry-method))
 
 (module+ for-builtin
-  (provide set-builtin->accessor-ref!))
+  (provide set-builtin->accessor-ref!
+           set-builtin->mutator-ref!))
 
 (begin-for-syntax
   (property dot-provider (handler))
@@ -189,7 +190,9 @@
 
 ;; To tie a loop with built-in data structures:
 (define builtin->accessor-ref (lambda (v) #f))
+(define builtin->mutator-ref (lambda (v) #f))
 (define (set-builtin->accessor-ref! proc) (set! builtin->accessor-ref proc))
+(define (set-builtin->mutator-ref! proc) (set! builtin->mutator-ref proc))
 
 (define (dot-lookup-by-name v field)
   (define ht (or (field-name->accessor-ref v #f)
@@ -205,7 +208,8 @@
     [else (fail)]))
 
 (define (dot-assign-by-name v field new-val)
-  (define ht (field-name->mutator-ref v #f))
+  (define ht (or (field-name->mutator-ref v #f)
+                 (builtin->mutator-ref v)))
   (define (fail)
     (raise-arguments-error* field
                             rhombus-realm

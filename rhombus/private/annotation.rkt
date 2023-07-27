@@ -235,7 +235,10 @@
                         [_ 'does-not-happen])))))
   
   (define (parse-annotation-of stx predicate-stx static-infos
-                               sub-n kws predicate-maker info-maker
+                               sub-n kws
+                               ;; predicate-maker can be #f if only a converter is supported
+                               predicate-maker info-maker
+                               ;; binding-maker-id can be #f or an error string if a converter is not supported
                                binding-maker-id binding-maker-data)
     (syntax-parse stx
       #:datum-literals (parens)
@@ -252,6 +255,7 @@
        (values
         (syntax-parse c-parseds
           [(c::annotation-predicate-form ...)
+           #:when predicate-maker
            (define c-predicates (syntax->list #'(c.predicate ...)))
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
            (annotation-predicate-form #`(lambda (v)
@@ -260,10 +264,11 @@
                                       #`(#,@(info-maker c-static-infoss)
                                          . #,static-infos))]
           [(c::annotation-binding-form ...)
-           (unless binding-maker-id
+           (unless (identifier? binding-maker-id)
              (raise-syntax-error #f
-                                 (string-append "converter annotations not supported for fields;"
-                                                "\n default annotation form combined with expression syntax")
+                                 (or binding-maker-id
+                                     (string-append "converter annotations not supported for fields;"
+                                                    "\n default annotation form combined with expression syntax"))
                                  #'(form-id (tag g ...))))
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
            (annotation-binding-form
@@ -304,11 +309,13 @@
       (lambda (stx)
         (parse-annotation-of (replace-head-dotted-name stx)
                              predicate-stx static-infos
-                             sub-n kws predicate-maker info-maker
+                             sub-n kws
+                             predicate-maker info-maker
                              binding-maker-id binding-maker-data)))))
 
   (define (annotation-of-constructor name predicate-stx static-infos
-                                     sub-n kws predicate-maker info-maker
+                                     sub-n kws
+                                     predicate-maker info-maker
                                      binding-maker-id binding-maker-data
                                      parse-annotation-of)
     (annotation-prefix-operator
@@ -321,7 +328,8 @@
           [(form-id (op |.|) (~and of-id of) . tail)
            (parse-annotation-of #`(of-id . tail)
                                 predicate-stx static-infos
-                                sub-n kws predicate-maker info-maker
+                                sub-n kws
+                                predicate-maker info-maker
                                 binding-maker-id binding-maker-data)]
           [(form-id (op |.|) other:identifier . tail)
            (raise-syntax-error #f
@@ -360,8 +368,9 @@
      #:with annot-name (in-annotation-space #'name)
      #'(define-syntaxes (annot-name of-name)
          (let binds
-             (annotation-constructor #'annot-<name predicate-stx static-infos
-                                     sub-n 'kws predicate-maker info-maker
+             (annotation-constructor #'annot-name predicate-stx static-infos
+                                     sub-n 'kws
+                                     predicate-maker info-maker
                                      binding-maker-id binding-maker-data
                                      parse-annotation-of-id)))]))
 

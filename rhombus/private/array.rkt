@@ -53,7 +53,8 @@
    [length vector-length]
    copy
    copy_from
-   of))
+   of
+   now_of))
 
 (define-syntax Array
   (expression-transformer
@@ -65,21 +66,38 @@
   () #'vector? array-static-infos
   1
   (#f)
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-vector #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  #f ;; no predicate form
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'array-build-convert #'())
 
+(define-annotation-constructor (Array/again now_of)
+  () #'vector? array-static-infos
+  1
+  (#f)
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([e (in-vector #,arg-id)])
+        (#,(car predicate-stxs) e)))
+  (lambda (static-infoss)
+    ;; no static info, since mutable and content is checked only initially
+    #'())
+  "converting annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
+
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
-  #`(for/fold ([lst '()] #:result (and lst (apply vector (reverse lst))))
-              ([v (in-list #,arg-id)])
-      #:break (not lst)
-      (#,(car build-convert-stxs)
-       v
-       (lambda (v) (cons v lst))
-       (lambda () #f))))
+  #`(let ([cvt (lambda (v success-k fail-k)
+                 (#,(car build-convert-stxs) v success-k fail-k))])
+      (impersonate-vector #,arg-id
+                          (make-reelementer cvt "current ")
+                          (make-reelementer cvt "new "))))
+
+(define (make-reelementer cvt prefix)
+  (lambda (vec idx val)
+    (cvt
+     val
+     (lambda (v) val)
+     (lambda ()
+       (raise-arguments-error 'Array (string-append prefix "element does not satisfy the array's annotation")
+                              "element" val)))))
 
 (define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
 (define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))

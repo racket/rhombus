@@ -26,20 +26,55 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 @doc(
   annot.macro 'Array'
+  annot.macro 'Array.now_of($annot)'
   annot.macro 'Array.of($annot)'
   annot.macro 'MutableArray'
   annot.macro 'ImmutableArray'
 ){
 
- Matches any array in the form without @rhombus(of). The @rhombus(of)
- variant matches an array whose elements satisfy @rhombus(annotation).
+ The @rhombus(Array, ~annot) annotation (without @rhombus(of) or
+ @rhombus(now_of)) matches any array.
+ 
+ The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
+  annotation} that matches an array whose elements all currently satisfy
+ @rhombus(annot), but it does not ensure in any way that future
+ values installed into will satisfy @rhombus(annot). The given
+ @rhombus(annot) must not be a converting annotation. Static
+ information from @rhombus(annot) is not propagated to accesses of
+ the array, since there's no gauarantee that the value will still satisfy
+ the annotation.
 
- @rhombus(MutableArray, ~annot) matches only mutable arrays, and and
+ The @rhombus(Array.of, ~annot) form constructs a @tech{converter
+  annotation} that immediately matches an array @emph{without checking
+  that its elements currently satisfy} @rhombus(annot). The conversion
+ result of the annotation is a view of the original array, but one where
+ @rhombus(annot) is checked against a value that would be returned by
+ accessing an element of the array or a value to be installed into the
+ array. (A different view of the array might changes an element to one that
+ does not astisfy @rhombus(annot).) Static information from
+ @rhombus(annot) is propagated to accesses of the array.
+
+ @rhombus(MutableArray, ~annot) matches only mutable arrays, and
  @rhombus(ImmutableArray, ~annot) matches only immutable arrays (that may
  originate from Racket).
 
  Static information associated by @rhombus(Array, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.
+
+@examples(
+  ~repl:
+    Array(1, 2, 3) :: Array.now_of(Number)
+    ~error:
+      Array(1, "b", 3) :: Array.now_of(Number)
+  ~defn:
+    def a :: Array.of(Number) = Array(1, "b", 3)
+  ~repl:
+    a[0]
+    ~error:
+      a[1]
+    ~error:
+      a[2] := "c"
+)
 
 }
 

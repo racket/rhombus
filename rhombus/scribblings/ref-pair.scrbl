@@ -25,8 +25,8 @@ its ``rest'' is a list.
 ){
 
  Matches any pair in the form without @rhombus(of). The @rhombus(of)
- variant matches a pair whose components satisfy @rhombus(fst_annotation)
- and @rhombus(rst_annotation).
+ variant matches a pair whose components satisfy @rhombus(fst_annot)
+ and @rhombus(rst_annot).
 
 }
 
@@ -34,7 +34,7 @@ its ``rest'' is a list.
   fun Pair(fst_v :: Any, rst_v :: Any) :: Pair
 ){
 
- Constructs a pair containg @rhombus(fst_v) and @rhombus(rst_v).
+ Constructs a pair containing @rhombus(fst_v) and @rhombus(rst_v).
 
 @examples(
   def pr: Pair(1, 2)

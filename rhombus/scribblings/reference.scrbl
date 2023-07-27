@@ -49,6 +49,7 @@
 @include_section("ref-array.scrbl")
 @include_section("ref-map.scrbl")
 @include_section("ref-set.scrbl")
+@include_section("ref-box.scrbl")
 @include_section("ref-indexable.scrbl")
 @include_section("ref-sequence.scrbl")
 @include_section("ref-appendable.scrbl")

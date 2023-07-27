@@ -80,3 +80,53 @@ block:
        let s = Array(4, 5, 6, 7, 8)
        dynamic(s).copy_from(2, Array(0, 9, 10, 11), 1, 3)
        s) ~is_now Array(4, 5, 9, 10, 8)
+
+
+check:
+  def a :: Array.now_of(String) = Array(1)
+  #void
+  ~raises "does not satisfy annotation"
+
+check:
+  def a :: Array.now_of(String) = Array(1)
+  #void
+  ~raises "does not satisfy annotation"
+
+check:
+  def a :: Array.of(String) = Array(1)
+  #void
+  ~completes
+
+check:
+  def a :: Array.of(String) = Array(1)
+  a[0]
+  ~raises "current element does not satisfy the array's annotation"
+
+check:
+  def a :: Array.of(String) = Array(1, "ok")
+  a[1]
+  ~is "ok"
+
+check:
+  def a :: Array.of(String) = Array("apple")
+  a[0]
+  a[0] := #'oops
+  ~raises "new element does not satisfy the array's annotation"
+
+check:
+  ~eval
+  def a :: Array.now_of(Array.of(String)) = Array(Array("apple"))
+  ~raises "converting annotation not supported for element"
+
+check:
+  use_static
+  def a :: Array.of(String) = Array("apple")
+  a[0] ++ "jack"
+  ~is "applejack"
+
+check:
+  ~eval
+  use_static
+  def a :: Array.now_of(String) = Array("apple")
+  a[0] ++ "jack"
+  ~raises "specialization not known"

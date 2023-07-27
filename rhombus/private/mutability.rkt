@@ -7,7 +7,9 @@
          immutable-vector?
          mutable-vector?
          immutable-hash?
-         mutable-hash?)
+         mutable-hash?
+         immutable-box?
+         mutable-box?)
 
 ;; TODO: use `racket/mutability` at the point where it makes sense to
 ;; depend on a newer Racket
@@ -23,3 +25,6 @@
 
 (define (immutable-hash? v) (and (hash? v) (immutable? v)))
 (define (mutable-hash? v) (and (hash? v) (not (immutable? v))))
+
+(define (immutable-box? v) (and (box? v) (immutable? v)))
+(define (mutable-box? v) (and (box? v) (not (immutable? v))))

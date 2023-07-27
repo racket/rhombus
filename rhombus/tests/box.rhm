@@ -1,0 +1,97 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Box(v)
+
+check:
+  Box(1) ~is_now Box(1)
+  Box(1) == Box(1) ~is #false
+  Box(1) is_a Box ~is #true
+  10 is_a Box ~is #false
+  Box(1) is_a MutableBox ~is #true
+  Box(1) is_a ImmutableBox ~is #false
+  10 is_a MutableBox ~is #false
+  10 is_a ImmutableBox ~is #false
+
+check:
+  use_static
+  def bx = Box(10)
+  bx.value
+  ~is 10
+
+check:
+  use_static
+  def bx = Box(10)
+  bx.value := 11
+  bx.value
+  ~is 11
+
+check:
+  use_static
+  (dynamic(Box(10)) :~ Box).value
+  ~is 10
+
+check:
+  use_static
+  def bx = dynamic(Box(10))
+  (bx :~ Box).value := 11
+  (bx :~ Box).value
+  ~is 11
+
+check:
+  def bx = Box(10)
+  dynamic(bx).value
+  ~is 10
+
+check:
+  use_dynamic
+  def bx = Box(10)
+  dynamic(bx).value := 11
+  dynamic(bx).value
+  ~is 11
+
+check:
+  def bx :: Box = 10
+  #void
+  ~raises "does not satisfy annotation"
+
+check:
+  def bx :: Box.now_of(String) = Box(1)
+  #void
+  ~raises "does not satisfy annotation"
+
+check:
+  def bx :: Box.of(String) = Box(1)
+  #void
+  ~completes
+
+check:
+  def bx :: Box.of(String) = Box(1)
+  bx.value
+  ~raises "current value does not satisfy the box's annotation"
+
+check:
+  def bx :: Box.of(String) = Box("apple")
+  bx.value
+  bx.value := #'oops
+  ~raises "new value does not satisfy the box's annotation"
+
+check:
+  ~eval
+  def bx :: Box.now_of(Box.of(String)) = Box(Box("apple"))
+  ~raises "converting annotation not supported for value"
+
+check:
+  use_static
+  def bx :: Box.of(String) = Box("apple")
+  bx.value ++ "jack"
+  ~is "applejack"
+
+check:
+  ~eval
+  use_static
+  def bx :: Box.now_of(String) = Box("apple")
+  bx.value ++ "jack"
+  ~raises "specialization not known"
