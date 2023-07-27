@@ -20,7 +20,7 @@
 @doc(
   fun print(v,
             out :: Port.Output = Port.current_output(),
-            ~mode: mode :: (#'text || #'expr) = #'expr,
+            ~mode: mode :: (#'text || #'expr) = #'text,
             ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
@@ -46,7 +46,7 @@
 @doc(
   fun println(v,
               out :: Port.Output = Port.output_port(),
-              ~mode: mode :: (#'text || #'expr) = #'expr,
+              ~mode: mode :: (#'text || #'expr) = #'text,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
@@ -122,7 +122,7 @@
 
 @doc(
   fun Printable.describe(v,
-                         ~mode: mode :: (#'text || #'expr) = #'expr)
+                         ~mode: mode :: (#'text || #'expr) = #'text)
     :: PrintDesc
 ){
 
