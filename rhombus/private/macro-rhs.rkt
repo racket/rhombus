@@ -82,6 +82,7 @@
     (define-values (pattern idrs sidrs vars can-be-empty?)
       (if implicit-tail?
           (convert-pattern #`(group (op $) _Term #,@tail-pattern (op $) tail (op rhombus...))
+                           #:as-tail? #t
                            #:splice? #t
                            #:splice-pattern values)
           (convert-pattern #`(group (op $) _Term . #,tail-pattern)
@@ -97,11 +98,11 @@
            (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...))))])
              (if implicit-tail?
                  #`(values #,(convert-rule-template rhs ids)
-                           (tail-rule-template (multi (group (op $) tail (op rhombus...)))))
+                           (tail-rule-template tail))
                  (convert-rule-template rhs ids)))]
           [implicit-tail?
            #`(values (single-valued '#,who (lambda () (rhombus-body-expression #,rhs)))
-                     (tail-rule-template (multi (group (op $) tail (op rhombus...)))))]
+                     (tail-rule-template tail))]
           [else
            #`(rhombus-body-expression #,rhs)]))
       (with-syntax ([(left-id-static ...) (map in-static-info-space (syntax->list #'(left-id ...)))])
@@ -219,8 +220,8 @@
 
 (define-syntax (tail-rule-template stx)
   (syntax-parse stx
-    [(_ template)
-     (convert-template #'template)]))
+    [(_ tail)
+     (convert-template #'(multi (group (op $) tail (op rhombus...))))]))
 
 ;; combine previously parsed cases (possibly the only case) in a macro
 ;; definition that are all either prefix or infix

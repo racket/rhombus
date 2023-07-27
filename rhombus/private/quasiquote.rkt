@@ -508,136 +508,154 @@
                                      #:check-escape [check-escape (lambda (e) (void))]
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression]
                                      #:repetition? [repetition? #f])
-  (define-values (template idrs sidrs vars can-be-empty?)
-    (convert-syntax e
-                    #:in-space in-expression-space
-                    #:tail-any-escape? #t
-                    #:allow-fltten? #t
-                    ;; make-datum
-                    (lambda (d) d)
-                    ;; make-literal
-                    (lambda (d) (if (and (identifier? d)
-                                         (free-identifier=? d (quote-syntax ...)))
-                                    #`(#,(quote-syntax ...) #,d)
-                                    d))
-                    ;; make-void
-                    (lambda (e) e)
-                    ;; handle-escape:
-                    (lambda ($-id e in-e tail?)
-                      (check-escape e)
-                      (define id (car (generate-temporaries (list e))))
-                      (values (if tail? id #`(#,(quote-syntax ~@) . #,id))
-                              (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
-                    ;; handle-group-escape:
-                    (lambda ($-id e in-e)
-                      (check-escape e)
-                      (define id (car (generate-temporaries (list e))))
-                      (values #`(#,(quote-syntax ~@) . #,id)
-                              (list #`[#,id (pending-unpack #,e unpack-group-list* (quote-syntax #,$-id))]) null null))
-                    ;; handle-multi-escape:
-                    (lambda ($-id e in-e splice?)
-                      (check-escape e)
-                      (define id (car (generate-temporaries (list e))))
-                      (with-syntax ([(tag . _) in-e])
-                        (values (quasisyntax/loc e (tag . #,id)) (list #`[#,id (pending-unpack #,e unpack-multi* (quote-syntax #,$-id))]) null null)))
-                    ;; adjust-escape-siblings
-                    (lambda (idrs)
-                      ;; adapt to allow repetitions at different depths where
-                      ;; shallower reptitions are copied to match deeper ones
-                      (adjust-template-sibling-depths idrs))
-                    ;; deepen-escape
-                    (lambda (idrs)
-                      (deepen-template-escapes idrs))
-                    ;; deepen-syntax-escape
-                    (lambda (sidr)
-                      (error "should have no sidrs for template"))
-                    ;; handle-tail-escape:
-                    (lambda (name e in-e)
-                      (define id (car (generate-temporaries (list e))))
-                      (syntax-parse #`(group #,e)
-                        [rep::repetition
-                         (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-tail* (quote-syntax #,name))]) null null)]))
-                    ;; handle-block-tail-escape:
-                    (lambda (name e in-e)
-                      (define id (car (generate-temporaries (list e))))
-                      (syntax-parse #`(group #,e)
-                        [rep::repetition
-                         (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-multi-tail* (quote-syntax #,name))]) null null)]))
-                    ;; handle-maybe-empty-sole-group
-                    (lambda (tag template idrs sidrs vars)
-                      ;; if `template` generates `(group)`, then instead of `(tag (group))`,
-                      ;; produce `(tag)`
-                      (define id (car (generate-temporaries '(group))))
-                      (values (no-srcloc #`(#,tag #,id (... ...)))
-                              (cons #`[(#,id (... ...))
-                                       (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
-                                    idrs)
-                              sidrs
-                              vars
-                              #f))
-                    ;; handle-maybe-empty-alts
-                    (lambda (tag ts idrs sidrs vars)
-                      ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
-                      (define id (car (generate-temporaries '(alts))))
-                      (values id
-                              (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts))))]
-                                    idrs)
-                              sidrs
-                              vars
-                              #f))
-                    ;; handle-maybe-misformed-group
-                    (lambda (tag ts tail idrs sidrs vars can-be-empty? empty-ok?)
-                      ;; Need to check that `ts` followed by an optional tail is well formed
-                      ;; (e.g., no alnternativs in the middle of the group); the `tail` is
-                      ;; provided separately, because we can assume that its well-formed and
-                      ;; shouldn't be checked (otherwise we may create quadratic work);
-                      ;; unless `empty-ok?`, then error if the group would be empty
-                      (define id (car (generate-temporaries '(group))))
-                      (define check-id (if empty-ok? #'check-misformed-group #'check-empty-or-misformed-group))
-                      ;; all the idrs in `idrs` contribute toward the amount of repetition that is
-                      ;; possible for `ts`; so record the dependency for use in `deepen-template-escapes`
-                      (define ids (map extract-idr-name idrs))
-                      (values id
-                              (cons #`[#,id (dependent-unpack
-                                             #,ids
-                                             (#,check-id
-                                              0
-                                              ;; `check-misformed-group` or `check-empty-or-misformed-group`
-                                              ;; expects a syntax-list of three parts to check and assemble
-                                              (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag #,ts #,(or tail null))))))]
-                                    idrs)
-                              sidrs
-                              vars
-                              can-be-empty?))))
+  (syntax-parse (and (not repetition?) e)
+    #:datum-literals (group multi)
+    [(group (~var _ (:$ in-expression-space)) tail:identifier (~var dots (:... in-expression-space)))
+     (convert-direct-tail-template #'tail #'dots)]
+    [(multi (group (~var _ (:$ in-expression-space)) tail:identifier (~var dots (:... in-expression-space))))
+     (convert-direct-tail-template #'tail #'dots)]
+    [_
+     (define-values (template idrs sidrs vars can-be-empty?)
+       (convert-syntax e
+                       #:in-space in-expression-space
+                       #:tail-any-escape? #t
+                       #:allow-fltten? #t
+                       ;; make-datum
+                       (lambda (d) d)
+                       ;; make-literal
+                       (lambda (d) (if (and (identifier? d)
+                                            (free-identifier=? d (quote-syntax ...)))
+                                       #`(#,(quote-syntax ...) #,d)
+                                       d))
+                       ;; make-void
+                       (lambda (e) e)
+                       ;; handle-escape:
+                       (lambda ($-id e in-e tail?)
+                         (check-escape e)
+                         (define id (car (generate-temporaries (list e))))
+                         (values (if tail? id #`(#,(quote-syntax ~@) . #,id))
+                                 (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
+                       ;; handle-group-escape:
+                       (lambda ($-id e in-e)
+                         (check-escape e)
+                         (define id (car (generate-temporaries (list e))))
+                         (values #`(#,(quote-syntax ~@) . #,id)
+                                 (list #`[#,id (pending-unpack #,e unpack-group-list* (quote-syntax #,$-id))]) null null))
+                       ;; handle-multi-escape:
+                       (lambda ($-id e in-e splice?)
+                         (check-escape e)
+                         (define id (car (generate-temporaries (list e))))
+                         (with-syntax ([(tag . _) in-e])
+                           (values (quasisyntax/loc e (tag . #,id)) (list #`[#,id (pending-unpack #,e unpack-multi* (quote-syntax #,$-id))]) null null)))
+                       ;; adjust-escape-siblings
+                       (lambda (idrs)
+                         ;; adapt to allow repetitions at different depths where
+                         ;; shallower reptitions are copied to match deeper ones
+                         (adjust-template-sibling-depths idrs))
+                       ;; deepen-escape
+                       (lambda (idrs)
+                         (deepen-template-escapes idrs))
+                       ;; deepen-syntax-escape
+                       (lambda (sidr)
+                         (error "should have no sidrs for template"))
+                       ;; handle-tail-escape:
+                       (lambda (name e in-e)
+                         (define id (car (generate-temporaries (list e))))
+                         (syntax-parse #`(group #,e)
+                           [rep::repetition
+                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-tail* (quote-syntax #,name))]) null null)]))
+                       ;; handle-block-tail-escape:
+                       (lambda (name e in-e)
+                         (define id (car (generate-temporaries (list e))))
+                         (syntax-parse #`(group #,e)
+                           [rep::repetition
+                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-multi-tail* (quote-syntax #,name))]) null null)]))
+                       ;; handle-maybe-empty-sole-group
+                       (lambda (tag template idrs sidrs vars)
+                         ;; if `template` generates `(group)`, then instead of `(tag (group))`,
+                         ;; produce `(tag)`
+                         (define id (car (generate-temporaries '(group))))
+                         (values (no-srcloc #`(#,tag #,id (... ...)))
+                                 (cons #`[(#,id (... ...))
+                                          (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
+                                       idrs)
+                                 sidrs
+                                 vars
+                                 #f))
+                       ;; handle-maybe-empty-alts
+                       (lambda (tag ts idrs sidrs vars)
+                         ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
+                         (define id (car (generate-temporaries '(alts))))
+                         (values id
+                                 (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts))))]
+                                       idrs)
+                                 sidrs
+                                 vars
+                                 #f))
+                       ;; handle-maybe-misformed-group
+                       (lambda (tag ts tail idrs sidrs vars can-be-empty? empty-ok?)
+                         ;; Need to check that `ts` followed by an optional tail is well formed
+                         ;; (e.g., no alnternativs in the middle of the group); the `tail` is
+                         ;; provided separately, because we can assume that its well-formed and
+                         ;; shouldn't be checked (otherwise we may create quadratic work);
+                         ;; unless `empty-ok?`, then error if the group would be empty
+                         (define id (car (generate-temporaries '(group))))
+                         (define check-id (if empty-ok? #'check-misformed-group #'check-empty-or-misformed-group))
+                         ;; all the idrs in `idrs` contribute toward the amount of repetition that is
+                         ;; possible for `ts`; so record the dependency for use in `deepen-template-escapes`
+                         (define ids (map extract-idr-name idrs))
+                         (values id
+                                 (cons #`[#,id (dependent-unpack
+                                                #,ids
+                                                (#,check-id
+                                                 0
+                                                 ;; `check-misformed-group` or `check-empty-or-misformed-group`
+                                                 ;; expects a syntax-list of three parts to check and assemble
+                                                 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag #,ts #,(or tail null))))))]
+                                       idrs)
+                                 sidrs
+                                 vars
+                                 can-be-empty?))))
 
-  (define-values (depth new-idrs new-template)
-    (cond
-      [repetition? (deepen-for-repetition idrs template)]
-      [else (values 0 idrs template)]))
-  (define (wrap-bindings idrs body)
-    (cond
-      [(null? idrs) body]
-      [else
-       (wrap-bindings (cdr idrs)
-                      (syntax-parse (car idrs)
-                        [(id-pat e)
-                         #`(with-syntax ([id-pat e])
-                             #,body)]))]))
-  (define template-e
-    (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
-  (cond
-    [repetition? (make-repetition-info e
-                                       #'template
-                                       #`(pack-element* #,template-e #,depth)
-                                       depth
-                                       0
-                                       syntax-static-infos
-                                       #f)]
-    [else (wrap-static-info* template-e
-                             syntax-static-infos)]))
+     (define-values (depth new-idrs new-template)
+       (cond
+         [repetition? (deepen-for-repetition idrs template)]
+         [else (values 0 idrs template)]))
+     (define (wrap-bindings idrs body)
+       (cond
+         [(null? idrs) body]
+         [else
+          (wrap-bindings (cdr idrs)
+                         (syntax-parse (car idrs)
+                           [(id-pat e)
+                            #`(with-syntax ([id-pat e])
+                                #,body)]))]))
+     (define template-e
+       (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
+     (cond
+       [repetition? (make-repetition-info e
+                                          #'template
+                                          #`(pack-element* #,template-e #,depth)
+                                          depth
+                                          0
+                                          syntax-static-infos
+                                          #f)]
+       [else (wrap-static-info* template-e
+                                syntax-static-infos)])]))
 
 (define-for-syntax (convert-repetition-template e)
   (convert-template e #:repetition? #t))
+
+;; optimization for `'$tail ...'`
+(define-for-syntax (convert-direct-tail-template tail-id name)
+  (define unpack (unwrap-static-infos
+                  (repetition-as-list/unchecked #`(group #,tail-id) 1)))
+  (wrap-static-info*
+   (syntax-parse unpack
+     #:datum-literals (unpack-tail-list*)
+     [(unpack-tail-list* _ id 1) #'id]
+     [_ #`(pack-tail (unpack-list-tail* (quote-syntax name) #,unpack 0))])
+   syntax-static-infos))
 
 (define-for-syntax (deepen-template-escapes idrs)
   (for/fold ([new-idrs null]
