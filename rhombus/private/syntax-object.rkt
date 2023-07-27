@@ -338,9 +338,25 @@
                                       (string->symbol istr))
                        istr))
 
-(define/arity (make_temp_id [v #false])
+(define/arity (make_temp_id [v #false] #:keep_name [keep-name? #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (define id (car (generate-temporaries (list v))))
+  (define id
+    (cond
+      [keep-name?
+       (define sym
+         (or (cond
+               [(symbol? v) v]
+               [(string? v) (string->symbol v)]
+               [(syntax? v)
+                (define sym (unpack-term v #f #f))
+                (and (identifier? sym) (syntax-e sym))]
+               [else #f])
+             (raise-arguments-error* 'Syntax.make_temp_id rhombus-realm
+                                     "name for ~keep_name is not an identifier, symbol, or string"
+                                     "name" v)))
+       ((make-syntax-introducer) (datum->syntax #f sym))]
+      [else
+       (car (generate-temporaries (list v)))]))
   (syntax-raw-property id (symbol->immutable-string (syntax-e id))))
 
 (define/arity (unwrap v)

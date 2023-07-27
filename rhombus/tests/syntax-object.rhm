@@ -8,6 +8,8 @@ block:
     Syntax.make_sequence(t, [ctx])
     Syntax.unwrap(stx)
     Syntax.unwrap_sequence(stx)
+    Syntax.make_id(t, [ctx])
+    Syntax.make_temp_id([t])
 
 check:
   Syntax.make(1) ~prints_like '1'
@@ -33,6 +35,9 @@ check:
 
 check:
   Syntax.make_group([]) ~raises "NonemptyList"
+
+check:
+  Syntax.make_temp_id("hello", ~keep_name: #true) ~prints_like 'hello'
 
 check:
   Syntax.make([#'parens, Syntax.make_group([1])])

@@ -643,17 +643,23 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.make_temp_id(name = #false) :: Identifier
+  fun Syntax.make_temp_id(name = #false,
+                          ~keep_name keep_name = #false) :: Identifier
 ){
 
  Creates an identifier with a fresh scope, which is useful for creating
- a temporary binding. The @rhombus(name) argument can be any value, and
- the name of the generated identifier may be derived from @rhombus(name)
- for debugging purposes (especially if it is a string, symbol, or
- identifier).
+ a temporary binding.
+
+ Unless @rhombus(keep_name) is true, the @rhombus(name) argument can be
+ any value, and the name of the generated identifier may be derived from
+ @rhombus(name) for debugging purposes (especially if it is a string,
+ symbol, or identifier). If @rhombus(keep_name) is true, the
+ @rhombus(name) argument must be an identifier, symbol, or (readable)
+ string, and the result identifier has exactly the given name.
 
 @examples(
   Syntax.make_temp_id("hello")
+  Syntax.make_temp_id("hello", ~keep_name: #true)
 )
 
 }
