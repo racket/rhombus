@@ -1,10 +1,11 @@
 #lang racket/base
-(require "pack.rkt")
+(require syntax/stx
+         "pack.rkt")
 
 (provide convert-empty-group
          convert-empty-alts
-         error-misformed-group
-         error-empty-or-misformed-group)
+         check-misformed-group
+         check-empty-or-misformed-group)
 
 (define (convert-empty-group at-depth l)
   (cond
@@ -30,24 +31,22 @@
     [else (for/list ([g (in-list (syntax->list l))])
             (convert-empty-alts (sub1 at-depth) g))]))
 
-(define (error-empty-or-misformed-group at-depth l)
+(define (check-group at-depth l empty-ok?)
   (cond
     [(zero? at-depth)
-     (define u (cdr (syntax->list l)))
-     (when (null? u)
+     (define parts (syntax->list l))
+     (define tag (car parts))
+     (define u (syntax->list (cadr parts)))
+     (define tail (caddr parts))
+     (when (and (not empty-ok?) (null? u) (stx-null? tail))
        (error '|'| "generated an empty group"))
-     (unless (check-valid-group #f u)
-       (error '|'| "generated a misformed group with a non-tail block or alternative"))
-     l]
+     (check-valid-group '|'| u tail)
+     (datum->syntax #f (cons tag (if (stx-null? tail) u (append u tail))) #f #f)]
     [else (for/list ([g (in-list (syntax->list l))])
-            (error-empty-or-misformed-group (sub1 at-depth) g))]))
+            (check-group (sub1 at-depth) g empty-ok?))]))
+  
+(define (check-empty-or-misformed-group at-depth l)
+  (check-group at-depth l #f))
 
-(define (error-misformed-group at-depth l)
-  (cond
-    [(zero? at-depth)
-     (define u (cdr (syntax->list l)))
-     (unless (check-valid-group #f u)
-       (error '|'| "generated a misformed group with a non-tail block or alternative"))
-     l]
-    [else (for/list ([g (in-list (syntax->list l))])
-            (error-misformed-group (sub1 at-depth) g))]))
+(define (check-misformed-group at-depth l)
+  (check-group at-depth l #t))

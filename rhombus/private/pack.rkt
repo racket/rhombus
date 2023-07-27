@@ -138,13 +138,15 @@
     [(list? r)
      (define elems (for/list ([e (in-list r)])
                      (unpack-term e who at-stx)))
-     (check-valid-group who elems)
+     (check-valid-group who elems '())
      (and elems
-          (datum->syntax at-stx (cons group-blank elems)))]
-    [else (datum->syntax at-stx (list group-blank r))]))
+          (datum->syntax #f (cons group-blank elems)))]
+    [else (datum->syntax #f (list group-blank (datum->syntax at-stx r)))]))
 
-;; make sure 'block or 'alts doesn't end up mid-group:
-(define (check-valid-group who terms)
+;; make sure 'block or 'alts doesn't end up mid-group in the list `terms`
+;; where `tail` (list or syntax) does not need to be checked but supplies
+;; a continuation of the list
+(define (check-valid-group who terms tail)
   (let loop ([terms terms])
     (cond
       [(null? terms) (void)]
@@ -159,28 +161,38 @@
           (cond
             [(eq? t 'alts)
              (cond
-               [(null? rest-terms) #t]
+               [(and (null? rest-terms) (stx-null? tail))
+                #t]
                [else
                 (and who (raise-error who
                                       "alternatives not allowed in non-tail position of a group"
                                       e))])]
             [(eq? t 'block)
              (cond
-               [(null? rest-terms) #t]
+               [(and (null? rest-terms)
+                     (stx-null? tail))
+                (void)]
                [else
-                (define b (syntax-e (car rest-terms)))
+                (define b (syntax-e (car (if (null? rest-terms)
+                                             (if (syntax? tail)
+                                                 (syntax-e tail)
+                                                 tail)
+                                             rest-terms))))
                 (cond
                   [(and (pair? b)
                         (eq? 'alts (syntax-e (car b))))
-                   (loop rest-terms)]
+                   (when (pair? rest-terms)
+                     (loop rest-terms))]
                   [else
                    (and who (raise-error who
-                                         "block not allowed in non-tail position of a group and not before alternatives"
+                                         "block not allowed in non-tail position of a group (unless just before alternatives)"
                                          e))])])]
             [else (loop rest-terms)])])])))
 
-;; this function doesn't try to make sure the list is valid as a group
-;; (i.e., has no 'block or 'alts in non-tail position)
+;; this function makes sure the list is valid as a group
+;; (i.e., has no 'block or 'alts in non-tail position), although
+;; that check may be redundant with an enclosing check when
+;; used in the missle of a template
 (define (unpack-term-list r who at-stx)
   (cond
     [(syntax? r)
@@ -193,8 +205,11 @@
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
        [(group-syntax? r) (cdr (syntax->list r))]
        [else (list r)])]
-    [(list? r) (for/list ([e (in-list r)])
-                 (unpack-term e who at-stx))]
+    [(list? r)
+     (define terms (for/list ([e (in-list r)])
+                     (unpack-term e who at-stx)))
+     (check-valid-group who terms '())
+     terms]
     [else (list (datum->syntax at-stx r))]))
 
 ;; Unpacks a multi-group sequence into a list of groups,
@@ -230,7 +245,7 @@
      ;; this means that we don't really have a multi-group splicing form,
      ;; but it avoid ambiguity
      (list (unpack-group r who at-stx))]
-    [else (list (datum->syntax at-stx (list group-blank r)))]))
+    [else (list (datum->syntax #f (list group-blank (datum->syntax at-stx r))))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
 ;; an empty list turns into `multi` with no groups
@@ -315,6 +330,8 @@
                         (and form
                              (unpack-term form who at-stx)))))
 
+;; responsible for checking group validity, although the
+;; check is redundant when used in a non-tail position
 (define (unpack-term-list* qs r depth)
   (unpack* qs r depth unpack-term-list))
 
@@ -342,14 +359,14 @@
 (define (pack-tagged-multi* stxes depth)
   (pack* stxes depth pack-tagged-multi))
 
-;; Unpacks a multi to a `multi` form instead of a 
+;; Unpacks a multi to a list
 (define (unpack-multi* qs r depth)
   (unpack* qs r depth unpack-multi))
 
-;; Unpacks a multi to a `multi` form instead of a 
+;; Unpacks a multi to a `multi` form, instead of a list
 (define (unpack-multi-as-term* qs r depth)
   (unpack* qs r depth (lambda (r name qs)
-                        (datum->syntax qs (cons multi-blank (unpack-multi r name qs))))))
+                        (datum->syntax #f (cons multi-blank (unpack-multi r name qs))))))
 
 (define (pack-element* r depth)
   (pack* r depth (lambda (r) r)))
@@ -410,10 +427,13 @@
 (define (pack-multi-tail-list* stxes depth)
   (pack* stxes (sub1 depth) pack-multi-tail))
 
-;; similar to `unpack-tail*`, but each leaf is a plain list of term splices
+;; similar to `unpack-tail*`, but each leaf is a plain list of term splices;
+;; also responsible for checking validity of the result
 (define (unpack-list-tail* qs r depth)
   (unpack* qs r depth (lambda (r name qs)
-                        (apply append (unpack-term-list* qs r 1)))))
+                        (define terms (apply append (unpack-term-list* qs r 1)))
+                        (check-valid-group (syntax-e qs) terms '())
+                        terms)))
 
 ;; similar to `unpack-multi-tail*`, but each leaf is a plain list of groups
 (define (unpack-multi-list-tail* qs r depth)

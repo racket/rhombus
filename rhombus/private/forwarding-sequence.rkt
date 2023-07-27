@@ -129,9 +129,11 @@
               #,(datum->syntax exp-form
                                (syntax-e #`(def (new-id ...)
                                              #,(if (eq? (syntax-e #'def) 'define-syntaxes)
-                                                   #`(with-continuation-mark
-                                                      syntax-parameters-key (quote-syntax stx-params)
-                                                      rhs)
+                                                   (if (eqv? 0 (hash-count (syntax-e #'stx-params)))
+                                                       #'rhs
+                                                       #`(with-continuation-mark
+                                                           syntax-parameters-key (quote-syntax stx-params)
+                                                           rhs))
                                                    #`(with-syntax-parameters stx-params
                                                        #,(discard-static-infos #'rhs)))))
                                exp-form

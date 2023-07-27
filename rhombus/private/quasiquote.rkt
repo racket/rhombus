@@ -158,30 +158,29 @@
                     (append (or pend-vars '()) vars)
                     (list* p1 p0 ps) really-can-be-empty? #f #f depth
                     needs-group-check?)]))
-         (define (finish ps idrs sidrs vars can-be-empty? needs-group-check?)
+         (define (finish ps tail idrs sidrs vars can-be-empty? needs-group-check?)
+           (define (ps+tail) (if tail (append ps tail) ps))
            (cond
              [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
-              (handle-maybe-empty-alts #'tag ps idrs sidrs vars)]
+              (handle-maybe-empty-alts #'tag (ps+tail) idrs sidrs vars)]
              [(and (eq? (syntax-e #'tag) 'group) (or (and needs-group-check? allow-flatten? (not splice?))
                                                      (and can-be-empty? (not empty-ok?))))
-              (handle-maybe-misformed-group #'tag ps idrs sidrs vars can-be-empty? empty-ok?)]
+              (handle-maybe-misformed-group #'tag ps tail idrs sidrs vars can-be-empty? empty-ok?)]
              [else
-              (values
-               (if splice?
-                   (if splice-pattern
-                       (splice-pattern ps)
-                       (quasisyntax/loc e (~seq . #,ps)))
-                   (no-srcloc #`(#,(make-datum #'tag) . #,ps)))
-               idrs
-               sidrs
-               vars
-               can-be-empty?)]))
+              (let ([ps (ps+tail)])
+                (values
+                 (if splice?
+                     (if splice-pattern
+                         (splice-pattern ps)
+                         (quasisyntax/loc e (~seq . #,ps)))
+                     (no-srcloc #`(#,(make-datum #'tag) . #,ps)))
+                 idrs
+                 sidrs
+                 vars
+                 can-be-empty?))]))
          (syntax-parse gs
            [()
-            (finish (let ([ps (reverse ps)])
-                      (if tail
-                          (append ps tail)
-                          ps))
+            (finish (reverse ps) tail
                     (append (or pend-idrs '()) idrs)
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
@@ -199,7 +198,8 @@
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth
-                  #t)]
+                  ;; tail escape is responsible for making sure it's valid
+                  needs-group-check?)]
            [((~var op (:block-tail-repetition in-space tail-any-escape?)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
@@ -210,7 +210,7 @@
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth
-                  #t)]
+                  #f)]
            [((~var op (list-repetition in-space)) . gs)
             #:when (zero? depth)
             (unless pend-idrs
@@ -245,12 +245,13 @@
                (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id.name #'esc.term e tail?))
                (cond
                  [tail?
-                  (finish (append (reverse ps) pat)
+                  (finish (reverse ps) pat
                           (append new-idrs (or pend-idrs '()) idrs)
                           (append new-sidrs (or pend-sidrs '()) sidrs)
                           (append new-vars (or pend-vars '()) vars)
                           really-can-be-empty?
-                          #t)]
+                          ;; tail escape is responsible for ensuring its own validity
+                          needs-group-check?)]
                  [else
                   (loop #'n-gs new-idrs new-sidrs new-vars
                         (append (or pend-idrs '()) idrs)
@@ -425,10 +426,11 @@
                             vars
                             #t))
                   ;; handle-maybe-misformed-group
-                  (lambda (tag ps idrs sidrs vars can-be-empty? empty-ok?)
-                    ;; the `(tag . ps)` could match `(group)` or an otherwise misformed group,
-                    ;; but that shouldn't be an input
-                    (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t))
+                  (lambda (tag ps tail idrs sidrs vars can-be-empty? empty-ok?)
+                    (let ([ps (if tail (append ps tail) ps)])
+                      ;; the `(tag . ps)` could match `(group)` or an otherwise misformed group,
+                      ;; but that shouldn't be an input
+                      (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t)))
                   #:make-describe-op
                   (lambda (e name)
                     #`(~describe #,(format "the operator `~a`"
@@ -584,17 +586,25 @@
                               vars
                               #f))
                     ;; handle-maybe-misformed-group
-                    (lambda (tag ts idrs sidrs vars can-be-empty? empty-ok?)
-                      ;; if `(tag . ts)` generates `(group)`, then error
+                    (lambda (tag ts tail idrs sidrs vars can-be-empty? empty-ok?)
+                      ;; Need to check that `ts` followed by an optional tail is well formed
+                      ;; (e.g., no alnternativs in the middle of the group); the `tail` is
+                      ;; provided separately, because we can assume that its well-formed and
+                      ;; shouldn't be checked (otherwise we may create quadratic work);
+                      ;; unless `empty-ok?`, then error if the group would be empty
                       (define id (car (generate-temporaries '(group))))
-                      (define check-id (if empty-ok? #'error-misformed-group #'error-empty-or-misformed-group))
+                      (define check-id (if empty-ok? #'check-misformed-group #'check-empty-or-misformed-group))
                       ;; all the idrs in `idrs` contribute toward the amount of repetition that is
                       ;; possible for `ts`; so record the dependency for use in `deepen-template-escapes`
                       (define ids (map extract-idr-name idrs))
                       (values id
                               (cons #`[#,id (dependent-unpack
                                              #,ids
-                                             (#,check-id 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts)))))]
+                                             (#,check-id
+                                              0
+                                              ;; `check-misformed-group` or `check-empty-or-misformed-group`
+                                              ;; expects a syntax-list of three parts to check and assemble
+                                              (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag #,ts #,(or tail null))))))]
                                     idrs)
                               sidrs
                               vars
