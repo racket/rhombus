@@ -131,3 +131,15 @@ block:
   use_dynamic
   check:
     (dynamic(A0()))().v ~is "A0"
+
+block:
+  class Proc(name):
+    private implements Callable
+    private override
+    | call(): #void
+    private implements Printable
+    private override describe(mode, recur):
+      "#<function:" +& name +& ">"
+  check:
+    Proc("ok")() ~is #void
+    to_string(Proc("ok")) ~is "#<function:ok>"

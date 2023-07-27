@@ -104,7 +104,8 @@
         (display v op)]
        [else
         (write v op)])]
-    [(procedure? v)
+    [(and (procedure? v)
+          (not (printer-ref v #f)))
      (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
      (cond
        [name
