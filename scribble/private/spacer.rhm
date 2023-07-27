@@ -43,7 +43,7 @@ meta:
     | '[$(g :: Group), ...]':
         '[$(adjust_group(g, context, esc)), ...]'.relocate(t)
     | '{$(g :: Group), ...}':
-        '[$(adjust_group(g, context, esc)), ...]'.relocate(t)
+        '{$(adjust_group(g, context, esc)), ...}'.relocate(t)
     | '«'$(g:: Group); ...'»':
         '«'$(adjust_group(g, context, esc)); ...'»'.relocate(t)
     | ': $_':
