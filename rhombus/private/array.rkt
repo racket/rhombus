@@ -53,6 +53,7 @@
    [length vector-length]
    copy
    copy_from
+   [of now_of] ;; TEMPORARY
    now_of
    later_of))
 
