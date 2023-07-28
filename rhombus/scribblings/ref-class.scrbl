@@ -88,10 +88,12 @@
 
  @item{in the @rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
-  and an annotation constructor @rhombus(id_name.of), which by
+  and by default an annotation constructor @rhombus(id_name.of) or
+  @rhombus(id_name.now_of), which
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause) @rhombus(field_spec)s in
-  parentheses;},
+  parentheses; the name is @rhombus(id_name.of) if all such
+  @rhombus(field_spec)s are for immutable fields;},
 
  @item{in the @rhombus(bind, ~space) space,
   a binding-pattern constructor, which by default takes as many

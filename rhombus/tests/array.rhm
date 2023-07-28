@@ -35,7 +35,7 @@ block:
     arr.length()
     ~is 3
   check:
-    def arr :: Array.of(Int) = dynamic(Array(1, 2, 3))
+    def arr :: Array.later_of(Int) = dynamic(Array(1, 2, 3))
     arr.length()
     ~is 3
   check:
@@ -44,7 +44,7 @@ block:
     ~is 3
   check:
     class Posn(x, y)
-    def arr :: Array.of(Posn) = Array(Posn(1, 2))
+    def arr :: Array.later_of(Posn) = Array(Posn(1, 2))
     arr[0].x
     ~is 1
   check:
@@ -93,34 +93,34 @@ check:
   ~raises "does not satisfy annotation"
 
 check:
-  def a :: Array.of(String) = Array(1)
+  def a :: Array.later_of(String) = Array(1)
   #void
   ~completes
 
 check:
-  def a :: Array.of(String) = Array(1)
+  def a :: Array.later_of(String) = Array(1)
   a[0]
   ~raises "current element does not satisfy the array's annotation"
 
 check:
-  def a :: Array.of(String) = Array(1, "ok")
+  def a :: Array.later_of(String) = Array(1, "ok")
   a[1]
   ~is "ok"
 
 check:
-  def a :: Array.of(String) = Array("apple")
+  def a :: Array.later_of(String) = Array("apple")
   a[0]
   a[0] := #'oops
   ~raises "new element does not satisfy the array's annotation"
 
 check:
   ~eval
-  def a :: Array.now_of(Array.of(String)) = Array(Array("apple"))
+  def a :: Array.now_of(Array.later_of(String)) = Array(Array("apple"))
   ~raises "converting annotation not supported for element"
 
 check:
   use_static
-  def a :: Array.of(String) = Array("apple")
+  def a :: Array.later_of(String) = Array("apple")
   a[0] ++ "jack"
   ~is "applejack"
 

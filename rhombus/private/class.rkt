@@ -158,6 +158,14 @@
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
 
+       (define prefab? (hash-ref options 'prefab? #f))
+       (define final? (hash-ref options 'final? (not prefab?)))
+       (define has-mutable-field? (or (hash-ref options 'has-mutable-field? #f)
+                                      (for/or ([mut (in-list (syntax->list #'constructor-field-mutables))])
+                                        (syntax-e mut))
+                                      (and super
+                                           (super-has-mutable-field? super))))
+
        (define intro (make-syntax-introducer))
        (define constructor-name-fields
          (make-accessor-names #'name
@@ -192,6 +200,8 @@
                      [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [name-of (intro (datum->syntax #'name (string->symbol (format "~a-of" (syntax-e #'name))) #'name))]
                      [make-converted-name (and (not expression-macro-rhs)
+                                               final?
+                                               (not has-mutable-field?)
                                                (intro (datum->syntax #'name
                                                                      (string->symbol (format "make-converted-~a" (syntax-e #'name)))
                                                                      #'name)))]
@@ -204,6 +214,19 @@
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
                                                                         '())]
+                     [((super-public-name-field super-public-field-keyword) ...) (if super
+                                                                                     (for/list ([fld (in-list (class-desc-fields super))]
+                                                                                                #:unless (identifier? (field-desc-constructor-arg fld)))
+                                                                                       (list
+                                                                                        (field-desc-accessor-id fld)
+                                                                                        (let ([arg (field-desc-constructor-arg fld)])
+                                                                                          (cond
+                                                                                            [(keyword? (syntax-e arg)) arg]
+                                                                                            [(box? (syntax-e arg))
+                                                                                             (define c (unbox (syntax-e arg)))
+                                                                                             (and (keyword? (syntax-e c)) c)]
+                                                                                            [else #f]))))
+                                                                                     '())]
                      [indirect-static-infos indirect-static-infos]
                      [internal-indirect-static-infos internal-indirect-static-infos]
                      [instance-static-infos instance-static-infos])
@@ -218,8 +241,10 @@
                                               #'(name name-instance name? name-of
                                                       internal-name-instance indirect-static-infos internal-indirect-static-infos
                                                       make-converted-name make-converted-internal
-                                                      constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
-                                                      constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
+                                                      constructor-name-fields [constructor-public-name-field ...]
+                                                      [super-name-field ...] [super-public-name-field ...]
+                                                      constructor-field-keywords [constructor-public-field-keyword ...]
+                                                      [super-field-keyword ...] [super-public-field-keyword ...]))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
@@ -413,6 +438,17 @@
        (define has-private?
          (or has-private-fields?
              ((hash-count method-private) . > . 0)))
+
+       (define has-mutable-constructor-arg?
+         (or (for/or ([mut (in-list (syntax->list #'(constructor-field-mutable ...)))]
+                      [priv (in-list (syntax->list #'(constructor-field-private ...)))])
+               (and (syntax-e mut)
+                    (not (syntax-e priv))))
+             (and super
+                  (super-has-mutable-constructor-field? super))))
+       (define has-mutable-internal-constructor-arg?
+         (for/or ([mut (in-list (syntax->list #'(constructor-field-mutable ...)))])
+           (syntax-e mut)))
 
        (define-values (callable? here-callable? public-callable?)
          (able-method-status 'call super interfaces method-mindex method-vtable method-private))
@@ -611,10 +647,18 @@
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
+               ;; includes defining the namespace:
                (build-class-dot-handling method-mindex method-vtable method-results final?
                                          has-private? method-private exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
-                                         (not annotation-rhs) dot-provider-rhss parent-dot-providers
+                                         (and (not annotation-rhs)
+                                              (if has-mutable-constructor-arg?
+                                                  #'now_of
+                                                  #'of))
+                                         (if has-mutable-internal-constructor-arg?
+                                             #'now_of
+                                             #'of)
+                                         dot-provider-rhss parent-dot-providers
                                          #'(name name? constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
                                                  indirect-static-infos

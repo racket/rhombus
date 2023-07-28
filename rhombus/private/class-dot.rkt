@@ -40,7 +40,8 @@
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
                                              has-private? method-private exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
-                                             export-of? dot-provider-rhss parent-dot-providers
+                                             exported-of internal-exported-of
+                                             dot-provider-rhss parent-dot-providers
                                              names)
   (with-syntax ([(name name? constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
@@ -84,8 +85,8 @@
                        [dot-id dot-class-id]
                        ...
                        ex ...
-                       #,@(if export-of?
-                              #`([of name-of])
+                       #,@(if exported-of
+                              #`([#,exported-of name-of])
                               null))))
         (syntax->list
          #`((define-syntaxes (dot-class-id dot-rhs-id)
@@ -120,7 +121,7 @@
                              ...
                              [private-method-name private-method-id]
                              ...
-                             [of #,internal-of-id]))
+                             [#,internal-exported-of #,internal-of-id]))
                #`(define-dot-provider-syntax internal-name-instance
                    (dot-provider (make-handle-class-instance-dot (quote-syntax name)
                                                                  (hasheq

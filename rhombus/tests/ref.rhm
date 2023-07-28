@@ -22,7 +22,8 @@ check:
 
 def nums_a = Array(1, 2, 3)
 def yes_nums_a :: Array: nums_a
-def yep_nums_a :: Array.of(Int): nums_a
+def yep_nums_a :: Array.now_of(Int): nums_a
+def yeah_nums_a :: Array.later_of(Int): nums_a
 
 check:
   nums_a[1]

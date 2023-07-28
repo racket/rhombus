@@ -512,7 +512,6 @@ check:
        [1, 2, 3, 6]]
   
 check:
-  import rhombus/meta open
   class Posn(x, ~y):
     nonfinal
   class Posn3D(z):
@@ -529,7 +528,46 @@ check:
   p :: Posn4D
   p :: Posn4D.of(Int, ~y: String, Symbol, Keyword)
   ~completes
-  
+
+check:
+  // mutable field => `now_of`
+  class Posn(mutable x, ~y):
+    internal _Posn
+    nonfinal
+  class Posn3D(z):
+    internal _Posn3D
+    extends Posn
+    nonfinal
+  class Posn4D(w):
+    extends Posn3D
+    nonfinal
+  def p = Posn4D(1, ~y: "2", #'three, #'~four)
+  p :: Posn.now_of(Int, ~y: String)
+  p :: _Posn.now_of(Int, ~y: String)
+  p :: Posn3D.now_of(Int, ~y: String, Symbol)
+  p :: _Posn3D.of(Symbol)
+  p :: Posn4D.now_of(Int, ~y: String, Symbol, Keyword)
+  ~completes
+
+check:
+  // mutable field => `now_of`, but only for public constructor
+  class Posn(x, ~y, private mutable other = 0):
+    nonfinal
+    internal _Posn    
+    field also_other = 1
+  class Posn3D(mutable z):
+    extends Posn
+    nonfinal
+  class Posn4D(w):
+    extends Posn3D
+    nonfinal
+  def p = Posn4D(1, ~y: "2", #'three, #'~four)
+  p :: Posn.of(Int, ~y: String)
+  p :: _Posn.now_of(Int, ~y: String, Int)
+  p :: Posn3D.now_of(Int, ~y: String, Symbol)
+  p :: Posn4D.now_of(Int, ~y: String, Symbol, Keyword)
+  ~completes
+
 check:
   import rhombus/meta open
   class Posn(x, ~y):

@@ -267,8 +267,7 @@
            (unless (identifier? binding-maker-id)
              (raise-syntax-error #f
                                  (or binding-maker-id
-                                     (string-append "converter annotations not supported for fields;"
-                                                    "\n default annotation form combined with expression syntax"))
+                                     "argument converter annotations are not supported")
                                  #'(form-id (tag g ...))))
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
            (annotation-binding-form

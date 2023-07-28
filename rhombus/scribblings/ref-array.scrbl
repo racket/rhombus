@@ -27,7 +27,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 @doc(
   annot.macro 'Array'
   annot.macro 'Array.now_of($annot)'
-  annot.macro 'Array.of($annot)'
+  annot.macro 'Array.later_of($annot)'
   annot.macro 'MutableArray'
   annot.macro 'ImmutableArray'
 ){
@@ -38,15 +38,15 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches an array whose elements all currently satisfy
  @rhombus(annot), but it does not ensure in any way that future
- values installed into will satisfy @rhombus(annot). The given
+ values installed into the array will satisfy @rhombus(annot). The given
  @rhombus(annot) must not be a converting annotation. Static
  information from @rhombus(annot) is not propagated to accesses of
  the array, since there's no gauarantee that the value will still satisfy
  the annotation.
 
- The @rhombus(Array.of, ~annot) form constructs a @tech{converter
-  annotation} that immediately matches an array @emph{without checking
-  that its elements currently satisfy} @rhombus(annot). The conversion
+ The @rhombus(Array.later_of, ~annot) form constructs a @tech{converter
+  annotation} that immediately matches an array without checking
+  that its elements currently satisfy @rhombus(annot). The conversion
  result of the annotation is a view of the original array, but one where
  @rhombus(annot) is checked against a value that would be returned by
  accessing an element of the array or a value to be installed into the
@@ -67,7 +67,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
     ~error:
       Array(1, "b", 3) :: Array.now_of(Number)
   ~defn:
-    def a :: Array.of(Number) = Array(1, "b", 3)
+    def a :: Array.later_of(Number) = Array(1, "b", 3)
   ~repl:
     a[0]
     ~error:

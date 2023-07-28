@@ -22,7 +22,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
     val_annot: :: annot
   annot.macro 'Box'
   annot.macro 'Box.now_of($val_annot)'
-  annot.macro 'Box.of($val_annot)'
+  annot.macro 'Box.later_of($val_annot)'
   annot.macro 'MutableBox'
   annot.macro 'ImmutableBox'
 
@@ -40,11 +40,11 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  the box's values, since there's no gauarantee that the value will still
  satisfy the annotation.
 
- The @rhombus(Array.of, ~annot) form constructs a @tech{converter
-  annotation} that immediately matches an array @emph{without checking
-  that its value currently satisfies} @rhombus(annot). The conversion
+ The @rhombus(Box.later_of, ~annot) form constructs a @tech{converter
+  annotation} that immediately matches a box without checking
+  that its value currently satisfies @rhombus(annot). The conversion
  result of the annotation is a view on the original box, but one where
- @rhombus(annotation) is checked against a value when it is accessed from
+ @rhombus(annot) is checked against a value when it is accessed from
  the box or for a value to be installed into the box. (A different view
  of the box might changes its value to one that does not astisfy
  @rhombus(annot).) Static information from @rhombus(annot) is propagated
@@ -53,6 +53,21 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  @rhombus(MutableBox, ~annot) matches only mutable boxes, and
  @rhombus(ImmutableBox, ~annot) matches only immutable boxes (that may
  originate from Racket).
+
+@examples(
+  ~repl:
+    Box(1) :: Box.now_of(Number)
+    ~error:
+      Box("a") :: Box.now_of(Number)
+  ~defn:
+    def a :: Box.later_of(Number) = Box("b")
+  ~repl:
+    ~error:
+      a.value
+    ~error:
+      a.value := "c"
+)
+
 }
 
 @doc(

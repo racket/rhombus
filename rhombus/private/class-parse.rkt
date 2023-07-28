@@ -44,6 +44,9 @@
          extract-super-constructor-fields
          extract-super-internal-constructor-fields
 
+         super-has-mutable-field?
+         super-has-mutable-constructor-field?
+
          print-field-shapes
 
          make-accessor-names)
@@ -331,7 +334,8 @@
           (loop (cdr all-fields) fields rev-fields rev-keywords rev-defaults)]
          [(pair? (car all-fields)) ; private field in internal constructor, only
           (define f (car (generate-temporaries (list (caar all-fields)))))
-          (define arg (cdar all-fields))
+          (define arg/v (cdar all-fields))
+          (define arg (if (vector? arg/v) (vector-ref arg/v 0) arg/v))
           (define k (datum->syntax #f (if (box? arg) (unbox arg) arg)))
           (define d (if (box? arg) #'(unsafe-undefined) #'#f))
           (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]
@@ -342,6 +346,22 @@
           (loop (cdr all-fields) (cdr fields) (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
     [else
      (values super-constructor-fields super-keywords super-defaults)]))
+
+(define (super-has-mutable-field? super)
+  (or (for/or ([fld (in-list (class-desc-fields super))])
+        (and (field-desc-mutator-id fld)
+             (syntax-e (field-desc-mutator-id fld))))
+      (and (class-desc-all-fields super)
+           (for/or ([af (in-list (class-desc-all-fields super))])
+             (and (pair? af)
+                  (or (vector? (cdr af))
+                      (identifier? (cdr af))))))))
+
+(define (super-has-mutable-constructor-field? super)
+  (for/or ([fld (in-list (class-desc-fields super))])
+    (and (field-desc-mutator-id fld)
+         (syntax-e (field-desc-mutator-id fld))
+         (not (identifier? (field-desc-constructor-arg fld))))))
 
 (define (print-field-shapes super fields keywords private?s)
   (append

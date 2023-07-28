@@ -26,19 +26,22 @@
   (with-syntax ([(name name-instance name? name-of
                        internal-name-instance indirect-static-infos internal-indirect-static-infos
                        make-converted-name make-converted-internal
-                       constructor-name-fields constructor-public-name-fields super-name-fields
-                       field-keywords public-field-keywords super-field-keywords)
+                       constructor-name-fields constructor-public-name-fields super-name-fields super-public-name-fields
+                       field-keywords public-field-keywords super-field-keywords super-public-field-keywords)
                  names])
     (with-syntax ([core-ann-name (if annotation-rhs
                                      (car (generate-temporaries #'(name)))
                                      #'name)])
-      (define (make-ann-defs id of-id no-super? name-fields keywords name-instance-stx
+      (define (make-ann-defs id of-id no-super?
+                             name-fields keywords
+                             super-name-fields super-field-keywords
+                             name-instance-stx
                              make-converted-id indirect-static-infos-stx)
         (define len (length (syntax->list name-fields)))
         (with-syntax ([(constructor-name-field ...) name-fields]
                       [(field-keyword ...) keywords]
-                      [(super-name-field ...) (if no-super? '() #'super-name-fields)]
-                      [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)]
+                      [(super-name-field ...) (if no-super? '() super-name-fields)]
+                      [(super-field-keyword ...) (if no-super? '() super-field-keywords)]
                       [name-instance name-instance-stx]
                       [name-build-convert (and
                                            (syntax-e make-converted-id)
@@ -58,8 +61,9 @@
                 (super-field-keyword ... field-keyword ...)
                 (make-class-instance-predicate accessors)
                 (make-class-instance-static-infos accessors)
-                #,(and (syntax-e #'name-build-convert)
-                       #'(quote-syntax name-build-convert))
+                #,(if (syntax-e #'name-build-convert)
+                      #'(quote-syntax name-build-convert)
+                      not-supported-due-to-internal-reasons)
                 #,(and (syntax-e #'name-build-convert)
                        #'accessors)))
            (if (syntax-e #'name-build-convert)
@@ -69,7 +73,9 @@
                null))))
       (append
        (if exposed-internal-id
-           (make-ann-defs exposed-internal-id internal-of-id #t #'constructor-name-fields #'field-keywords
+           (make-ann-defs exposed-internal-id internal-of-id #t
+                          #'constructor-name-fields #'field-keywords
+                          #'super-name-fields #'super-field-keywords
                           #'internal-name-instance
                           #'make-converted-internal
                           #'internal-indirect-static-infos)
@@ -83,7 +89,9 @@
                                        make-annotation-prefix-operator
                                        "class")))]
          [else
-          (make-ann-defs #'name #'name-of #f #'constructor-public-name-fields #'public-field-keywords
+          (make-ann-defs #'name #'name-of #f
+                         #'constructor-public-name-fields #'public-field-keywords
+                         #'super-public-name-fields #'super-public-field-keywords
                          #'name-instance
                          #'make-converted-name
                          #'indirect-static-infos)])))))
@@ -163,3 +171,7 @@
     #`(define-syntax #,extra (make-rename-transformer (quote-syntax #,internal)))))
 
       
+(define-for-syntax not-supported-due-to-internal-reasons
+  (string-append "converter annotations are not supported for fields;\n"
+                 " internally, the class may be non-final, have a mutable field, or\n"
+                 " have a non-default expression form but default annotation form"))

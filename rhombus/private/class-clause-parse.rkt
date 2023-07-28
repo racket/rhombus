@@ -71,6 +71,18 @@
               [(#:expression block)
                ;; needed to determine whether default `.of` annotation can work
                (hash-set options 'expression-rhs #t)]
+              [(#:nonfinal)
+               ;; needed for whether to support converting field annotations;
+               ;; leave checking to `parse-options'
+               (hash-set options 'final? #f)]
+              [(#:prefab)
+               ;; needed for whether to support converting field annotations;
+               ;; leave checking to `parse-options'
+               (hash-set options 'prefab? #t)]
+              [(#:field . _)
+               ;; needed for whether to support converting field annotations;
+               ;; leave general handling to `parse-options'
+               (hash-set options 'has-mutable-field? #t)]
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_ options]))

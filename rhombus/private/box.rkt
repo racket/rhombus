@@ -38,8 +38,8 @@
 
 (define-name-root Box
   #:fields
-  (of
-   now_of))
+  (now_of
+   later_of))
 
 (define/arity (Box v)
   #:static-infos ((#%call-result #,box-static-infos))
@@ -53,17 +53,7 @@
                                        (list #'unbox)
                                        (list #'()))))
 
-(define-annotation-constructor (Box of)
-  ()
-  #'box? box-static-infos
-  1
-  #f
-  #f ; no predicate maker
-  (lambda (static-infoss)
-    #`((unbox #,(car static-infoss))))
-  #'box-build-convert #'())
-
-(define-annotation-constructor (Box/again now_of)
+(define-annotation-constructor (Box now_of)
   ()
   #'box? box-static-infos
   1
@@ -74,6 +64,16 @@
     ;; no static info, since mutable and content is checked only initially
     #'())
   "converting annotation not supported for value;\n immediate checking needs a predicate annotation for the box content" #'())
+
+(define-annotation-constructor (Box/again later_of)
+  ()
+  #'box? box-static-infos
+  1
+  #f
+  #f ;; no predicate maker, so uses converter builder
+  (lambda (static-infoss)
+    #`((unbox #,(car static-infoss))))
+  #'box-build-convert #'())
 
 (define-syntax (box-build-convert arg-id build-convert-stxs kws data)
   #`(let ([cvt (lambda (v success-k fail-k)

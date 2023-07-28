@@ -53,8 +53,8 @@
    [length vector-length]
    copy
    copy_from
-   of
-   now_of))
+   now_of
+   later_of))
 
 (define-syntax Array
   (expression-transformer
@@ -62,16 +62,7 @@
      (syntax-parse stx
        [(form-id . tail) (values (relocate+reraw #'form-id #'vector) #'tail)]))))
 
-(define-annotation-constructor (Array of)
-  () #'vector? array-static-infos
-  1
-  (#f)
-  #f ;; no predicate form
-  (lambda (static-infoss)
-    #`((#%index-result #,(car static-infoss))))
-  #'array-build-convert #'())
-
-(define-annotation-constructor (Array/again now_of)
+(define-annotation-constructor (Array now_of)
   () #'vector? array-static-infos
   1
   (#f)
@@ -82,6 +73,15 @@
     ;; no static info, since mutable and content is checked only initially
     #'())
   "converting annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
+
+(define-annotation-constructor (Array/again later_of)
+  () #'vector? array-static-infos
+  1
+  (#f)
+  #f ;; no predicate maker, so uses converter builder
+  (lambda (static-infoss)
+    #`((#%index-result #,(car static-infoss))))
+  #'array-build-convert #'())
 
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
   #`(let ([cvt (lambda (v success-k fail-k)
