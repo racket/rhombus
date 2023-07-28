@@ -4,6 +4,10 @@ check to_string("apple") ~is "apple"
 check to_string("apple", ~mode: #'expr) ~is "\"apple\""
 
 check:
+  println(1)
+  ~prints "1\n"
+
+check:
   class Posn(x, y):
     implements Printable
     override describe(mode, recur):

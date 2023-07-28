@@ -18,6 +18,7 @@ meta:
     | '~is_now'
     | '~is_a'
     | '~prints_like'
+    | '~prints'
     | '~raises'
     | '~matches'
       
@@ -106,12 +107,14 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
     match maybe_loc_mode
     | [mode, srcloc]: maybe_loc_mode
     | mode: [mode, loc_where[1]]
-  def values(got, exn_msg) = call_capturing_exn(thunk)
+  def values(got, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
   def expected = call_capturing_values(expected_thunk)
   def ok:
     match mode
+    | #'~prints:
+        !exn_msg && (output == expected[0])
     | #'~prints_like:
-        !exn_msg && (("" +& got) == ("" +& expected))
+        !exn_msg && (to_string(got) == to_string(expected))
     | #'~is:
         !exn_msg && (got == expected)
     | #'~is_now:
@@ -139,13 +142,16 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         +& (match mode
             | #'~is_a: "     "
             | ~else: "")
-        +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
+        +& (if exn_msg | "exception " | "") +& (exn_msg
+                                                  || (output && to_string(output, ~mode: #'expr))
+                                                  || values_str(got))
         +&  "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"
                               | #'~raises: "exception " +& values_str(expected)
                               | #'~matches: "matching " +& expected_thunk(#false)
                               | #'~is_a: "satisfying " +& expected_thunk(#false)
+                              | #'~prints: "output " +& values_str(expected)
                               | ~else: values_str(expected))
     display_as_exn(msg, srcloc)
 

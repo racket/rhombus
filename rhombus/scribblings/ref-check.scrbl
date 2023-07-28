@@ -45,6 +45,8 @@
     ~prints_like: $expected_body; ...
     ~matches $expected_bind
     ~matches: $expected_bind; ...
+    ~prints $expected_expr
+    ~prints: $expected_body; ...
     ~raises $expected_expr
     ~raises: $expected_body; ...
     ~completes
@@ -69,12 +71,17 @@
  @item{In @rhombus(~prints_like) mode, evaluates the
   @rhombus(expected_expr) or @rhombus(expected_body), then checks that the
   original result is not an exception and has the same printed form as
-  expected result.}
+  the expected result.}
 
  @item{In @rhombus(~matches) mode, checks that the original result is
   not an exception, that the number of result values matches the number of
   supplied @rhombus(expected_bind)s, and that each value matches the
   corresponding @rhombus(expected_bind).}
+
+ @item{In @rhombus(~prints) mode, evaluates the @rhombus(expected_expr)
+  or @rhombus(expected_body) in a mode that captures output to
+  @rhombus(Port.current_output()) to a string, then checks that there is
+  no exception and the output string is the same as the expected result.}
 
  @item{In @rhombus(~raises) mode, obtains one or more strings (as
   multiple values) by evaluating @rhombus(expected_body) or

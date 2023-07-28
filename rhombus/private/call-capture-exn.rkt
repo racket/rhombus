@@ -5,17 +5,25 @@
          does_contain_each
          display_as_exn)
 
-(define (call_capturing_exn thunk)
-  (with-handlers ([exn:fail?
-                   (lambda (exn)
-                     (values #f (exn-message exn)))])
-    (values (call-with-values
-             (lambda ()
-               (call-with-continuation-prompt
-                thunk
-                (default-continuation-prompt-tag)))
-             list)
-            #f)))
+(define (call_capturing_exn thunk capture-output?)
+  (define s (and capture-output? (open-output-string)))
+  (define (get-output) (and s (string->immutable-string (get-output-string s))))
+  (let ([thunk (if capture-output?
+                   (lambda ()
+                     (parameterize ([current-output-port s])
+                       (thunk)))
+                   thunk)])
+    (with-handlers ([exn:fail?
+                     (lambda (exn)
+                       (values #f (exn-message exn) (get-output)))])
+      (values (call-with-values
+               (lambda ()
+                 (call-with-continuation-prompt
+                  thunk
+                  (default-continuation-prompt-tag)))
+               list)
+              #f
+              (get-output)))))
 
 (define (call_capturing_values thunk)
   (call-with-values thunk list))
