@@ -603,38 +603,41 @@
                                                          ...)))]
                                                   [else
                                                    #'(#f () ())])])
-                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
-                                 #,(wrap-adapted-arguments
-                                    #`(nested-bindings
-                                       #,function-name
-                                       try-next
-                                       argument-binding-failure
-                                       (this-arg-id arg-info arg #f)
-                                       ...
-                                       maybe-match-rest
-                                       maybe-match-kwrest
-                                       (begin
-                                         (arg-info.committer-id this-arg-id arg-info.data) ...
-                                         (arg-info.binder-id this-arg-id arg-info.data) ...
-                                         (begin
-                                           (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                                           ...)
-                                         ...
-                                         maybe-bind-rest-seq ...
-                                         maybe-bind-rest ...
-                                         maybe-bind-kwrest-seq ...
-                                         maybe-bind-kwrest ...
-                                         #,(wrap-expression
-                                            ((entry_point_meta.Adjustment-wrap-body adjustments)
-                                             (summarize-arity (fcase-kws fc) (for/list ([kw (in-list (fcase-kws fc))])
-                                                                               #'#f)
-                                                              (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))
-                                             #`(parsed
-                                                #:rhombus/expr
-                                                (add-annotation-check
-                                                 #,function-name
-                                                 converter #,main-converter-stx
-                                                 (rhombus-body-expression rhs))))))))))]))])))))
+                             ;; use `((lambda` to keep code in original order, in case
+                             ;; of expansion errors.
+                             #`((lambda (try-next)
+                                  #,(wrap-adapted-arguments
+                                     #`(nested-bindings
+                                        #,function-name
+                                        try-next
+                                        argument-binding-failure
+                                        (this-arg-id arg-info arg #f)
+                                        ...
+                                        maybe-match-rest
+                                        maybe-match-kwrest
+                                        (begin
+                                          (arg-info.committer-id this-arg-id arg-info.data) ...
+                                          (arg-info.binder-id this-arg-id arg-info.data) ...
+                                          (begin
+                                            (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                            ...)
+                                          ...
+                                          maybe-bind-rest-seq ...
+                                          maybe-bind-rest ...
+                                          maybe-bind-kwrest-seq ...
+                                          maybe-bind-kwrest ...
+                                          #,(wrap-expression
+                                             ((entry_point_meta.Adjustment-wrap-body adjustments)
+                                              (summarize-arity (fcase-kws fc) (for/list ([kw (in-list (fcase-kws fc))])
+                                                                                #'#f)
+                                                               (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))
+                                              #`(parsed
+                                                 #:rhombus/expr
+                                                 (add-annotation-check
+                                                  #,function-name
+                                                  converter #,main-converter-stx
+                                                  (rhombus-body-expression rhs)))))))))
+                                (lambda () #,(loop (cdr same)))))]))])))))
      arity))
 
   (define (maybe-add-function-result-definition name static-infoss static-infos arity defns)
