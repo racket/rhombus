@@ -40,6 +40,8 @@ let (x = 1, y = 2): x+y
 
 define pi: 3.14
 
+'1 + -2'
+
 define fib(n):
   log_error("fib called")
   cond | n == 0: 0
@@ -359,6 +361,7 @@ INPUT
      (parens (group x (op =) 1) (group y (op =) 2))
      (block (group x (op +) y)))
     (group define pi (block (group 3.14)))
+    (group (quotes (group 1 (op +) -2)))
     (group
      define
      fib

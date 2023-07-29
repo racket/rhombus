@@ -415,7 +415,7 @@
                              pending-backup)]
                     [(or (eq? status 'continuing)
                          (and (in-quotes? status)
-                              (in-quotes-status status)))
+                              (eq? (in-quotes-status status) 'continuing)))
                      ;; normal mode, after a form
                      (adjust-for-quotes shrubbery-lexer-continuing/status in status)]
                     [else
