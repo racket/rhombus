@@ -193,6 +193,9 @@
   (syntax-parse stx
     [(_)
      (raise-syntax-error #f "block has no expressions" stx)]
+    [(_ g) ; try shortcut for a single expression
+     #:when (not (definition? #'g))
+     #`(rhombus-expression g)]
     [(_ . tail)
      #`(let ()
          (rhombus-forwarding-sequence

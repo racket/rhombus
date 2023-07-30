@@ -45,9 +45,9 @@
   (expression-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
+       [(_ (tag::block . body))
         (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-body #'tag #'tag) #'body) #'tag)
-                #'tail)]))))
+                #'())]))))
 
 (define-syntax #%block
   (expression-transformer
@@ -110,7 +110,7 @@
   (expression-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ (~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head (_::parens . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
@@ -127,7 +127,7 @@
   (binding-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ (~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head (_::parens . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
@@ -142,7 +142,7 @@
   (repetition-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ (~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head (_::parens . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
