@@ -433,7 +433,8 @@
                       (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t)))
                   #:make-describe-op
                   (lambda (e name)
-                    #`(~describe #,(format "the operator `~a`"
+                    #`(~describe #:opaque
+                                 #,(format "the operator `~a`"
                                            (or (syntax-raw-property name)
                                                (syntax-e name)))
                                  #,e))))
