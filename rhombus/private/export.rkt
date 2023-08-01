@@ -112,8 +112,7 @@
                                                                [_ (raise-arguments-error
                                                                    'export_meta.ParsedModifier
                                                                    "given export to modify is not parsed"
-                                                                   "base export" parsed-ex)]))
-    #:accept-parsed? #t)
+                                                                   "base export" parsed-ex)])))
 
   (define-syntax-class :modified-export
     #:datum-literals (group block)

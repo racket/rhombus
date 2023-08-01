@@ -193,8 +193,7 @@
                  #:parsed-tag #,parsed-tag
                  #:in-space in-new-space
                  #:transformer-ref new-transformer-ref
-                 #:check-result #,macro-result
-                 #:accept-parsed? #t))
+                 #:check-result #,macro-result))
               (maybe-skip
                class-name
                (define-syntax _class-name (make-syntax-class #':base

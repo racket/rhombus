@@ -51,9 +51,7 @@
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
               (~optional (~seq #:track-origin track-origin)
-                         #:defaults ([track-origin #'syntax-track-origin]))
-              (~optional (~seq #:accept-parsed? accept-parsed?)
-                         #:defaults ([accept-parsed? #'#f])))
+                         #:defaults ([track-origin #'syntax-track-origin])))
         ...)
      #`(begin
          (define-syntax-class form
@@ -71,18 +69,12 @@
                                                          (datum->syntax #f (cons #'hname.name #'hname.tail))))
                                                       track-origin
                                                       check-result)))
-           #,(if (syntax-e #'accept-parsed?)
-                 #`(pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
-                            #:cut
-                            #:do [(unless (eq? (syntax-e #'tag) 'parsed-tag)
-                                    (parsed-wrong-context-error form-kind-str #'head))]
-                            #:with () #'inside-tail
-                            #:with () #'tail
-                            #:attr parsed #'inside)
-                 #`(pattern ((~datum group) (~and head ((~datum parsed) _ . _)) . _)
-                            #:cut
-                            #:when #f
-                            #:attr parsed #'#f))
+           (pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
+                    #:when (eq? (syntax-e #'tag) 'parsed-tag)
+                    #:cut
+                    #:with () #'inside-tail
+                    #:with () #'tail
+                    #:attr parsed #'inside)
            (pattern ((~datum group) head . tail)
                     #:do [(define-values (implicit-name* ctx) (select-prefix-implicit #'head))
                           (define implicit-name (datum->syntax ctx implicit-name*))
@@ -102,8 +94,7 @@
                        [((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
-                       [((~datum group) ((~datum parsed) tag . _) . _) (and accept-parsed?
-                                                                            (eq? (syntax-e #'tag) 'parsed-tag))]
+                       [((~datum group) ((~datum parsed) tag . _) . _) (eq? (syntax-e #'tag) 'parsed-tag)]
                        [((~datum group) head . _)
                         (define-values (implicit-name* ctx) (select-prefix-implicit #'head))
                         (define implicit-name (datum->syntax ctx implicit-name*))

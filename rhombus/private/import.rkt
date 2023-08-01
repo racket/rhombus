@@ -142,8 +142,7 @@
                                                   [_ (raise-arguments-error
                                                       'import_meta.ParsedModifier
                                                       "given import to modify is not parsed"
-                                                      "base import" parsed-req)]))
-    #:accept-parsed? #t)
+                                                      "base import" parsed-req)])))
 
   (define (extract-prefixes r #:require-identifier? require-identifier?)
     (let extract ([r r] [accum null])

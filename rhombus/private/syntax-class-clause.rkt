@@ -24,8 +24,7 @@
     #:desc "syntax class clause"
     #:parsed-tag #:rhombus/syntax_class_clause
     #:in-space in-syntax-class-clause-space
-    #:transformer-ref syntax-class-clause-transformer-ref
-    #:accept-parsed? #t))
+    #:transformer-ref syntax-class-clause-transformer-ref))
 
 (define-syntax (define-syntax-class-clause-syntax stx)
   (syntax-parse stx

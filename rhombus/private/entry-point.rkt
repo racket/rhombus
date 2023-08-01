@@ -72,8 +72,7 @@
                         (and t (transformer
                                 (lambda (stx)
                                   ((transformer-proc t) stx adjustments)))))
-    #:check-result check-entry-point-result
-    #:accept-parsed? #t)
+    #:check-result check-entry-point-result)
   
   (define-rhombus-transform
     #:syntax-class :entry-point-arity
@@ -83,8 +82,7 @@
     #:transformer-ref (lambda (v)
                         (define t (entry-point-transformer-ref v))
                         (and t (transformer (entry-point-transformer-arity-extract t))))
-    #:check-result check-entry-point-arity-result
-    #:accept-parsed? #t))
+    #:check-result check-entry-point-arity-result))
 
 (define-syntax (define-entry-point-syntax stx)
   (syntax-parse stx
