@@ -970,7 +970,7 @@
          (define-syntaxes (sid ...) sid-ref)
          ...)]))
 
-(define-for-syntax (handle-syntax-parse-dispatch who in-expr binds-stx rhss-stx default-k)
+(define-for-syntax (handle-syntax-parse-dispatch stx who in-expr binds-stx rhss-stx default-k)
   (define binds (syntax->list binds-stx))
   (cond
     [(for/and ([bind-stx (in-list binds)])
@@ -986,25 +986,27 @@
             (syntax-parse #'b.data
               [(annotation-str pattern repack . _)
                (free-identifier=? #'repack #'repack-as-multi)])])))
-     #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,in-expr)
-         #:context '#,who
-         #,@(for/list ([bind (in-list binds)]
-                       [rhs (in-list (syntax->list rhss-stx))])
-              (syntax-parse bind
-                [b::binding-form
-                 #:with b-impl::binding-impl #'(b.infoer-id () b.data)
-                 (syntax-parse #'b-impl.info
-                   [b::binding-info
-                    (syntax-parse #'b.data
-                      [(pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...))
-                       #`[#,(if (and repack-multi?
-                                     (free-identifier=? #'repack #'repack-as-term))
-                                #`((~datum multi) ((~datum group) pattern))
-                                #'pattern)
-                          (define id id-ref) ...
-                          (define-syntaxes (sid ...) sid-ref)
-                          ...
-                          #,(syntax-parse rhs
-                              [(block-tag g ...)
-                               #'(rhombus-body-at block-tag g ...)])]])])])))]
+     (relocate+reraw
+      (respan stx)
+      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,in-expr)
+          #:context '#,who
+          #,@(for/list ([bind (in-list binds)]
+                        [rhs (in-list (syntax->list rhss-stx))])
+               (syntax-parse bind
+                 [b::binding-form
+                  #:with b-impl::binding-impl #'(b.infoer-id () b.data)
+                  (syntax-parse #'b-impl.info
+                    [b::binding-info
+                     (syntax-parse #'b.data
+                       [(pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...))
+                        #`[#,(if (and repack-multi?
+                                      (free-identifier=? #'repack #'repack-as-term))
+                                 #`((~datum multi) ((~datum group) pattern))
+                                 #'pattern)
+                           (define id id-ref) ...
+                           (define-syntaxes (sid ...) sid-ref)
+                           ...
+                           #,(syntax-parse rhs
+                               [(block-tag g ...)
+                                #'(rhombus-body-at block-tag g ...)])]])])]))))]
     [else (default-k)]))

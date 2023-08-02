@@ -48,7 +48,7 @@
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (binding-form #'literal-infoer
-                              #'q)
+                              #'(q))
                 #'tail)]))))
 
 (define-for-syntax (check-quotable form-name q)

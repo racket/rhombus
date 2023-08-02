@@ -84,6 +84,8 @@ check_exp_loc: cond | #true: 2
 check_exp_loc: cond | ~else 2
 check_exp_loc: match #true | #true: 2
 check_exp_loc: match #true | ~else 2
+check_exp_loc: match #true | _ :: Boolean: 2
+check_exp_loc: match 'x' | 'x': 2
 check_exp_loc: fun (x): x
 check_exp_loc: fun | (x): x
 check_exp_loc: block: def x = 5; x

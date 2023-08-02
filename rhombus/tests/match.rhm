@@ -15,3 +15,27 @@ check:
   | '(x $a)': a
   | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
   ~prints_like ['z', '10', '11', '12']
+
+check:
+  fun f(x):
+    // literals for all patterns should be converted to `case` internally
+    match x
+    | 0: 1
+    | 1: 1
+    | 2: 3
+    | 3: 3
+    | 4: 5
+    | 5: 5
+    | 10: 1
+    | 11: 1
+    | 12: 3
+    | 13: 3
+    | 14: 5
+    | 15: 5
+    | #'apple: "other"
+  [f(0), f(5), f(10), f(#'apple)]
+  ~is [1, 5, 1, "other"]
+
+check (match 1 | 1 || 2: "yes") ~is "yes"
+check (match 2 | 1 || 2: "yes") ~is "yes"
+check (match 3 | 1 || 2: "yes") ~raises "no matching case"

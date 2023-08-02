@@ -83,7 +83,7 @@
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (binding-form #'literal-infoer
-                              #'datum)
+                              #'(datum))
                 #'tail)]))))
 
 (define-repetition-syntax #%literal

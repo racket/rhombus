@@ -1,10 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "with-syntax.rkt")
          "binding.rkt"
          "parse.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "literal.rkt")
 
 (provide (for-space rhombus/bind
                     &&
@@ -78,9 +80,18 @@
    null
    'automatic
    (lambda (lhs rhs stx)
-     (binding-form
-      #'or-infoer
-      #`(#,lhs #,rhs)))
+     (with-syntax-parse ([lhs-i::binding-form lhs]
+                         [rhs-i::binding-form rhs])
+       (cond
+         [(and (free-identifier=? #'lhs-i.infoer-id  #'literal-infoer)
+               (free-identifier=? #'rhs-i.infoer-id  #'literal-infoer))
+          (binding-form
+           #'literal-infoer
+           #`(#,@#'lhs-i.data #,@#'rhs-i.data))]
+         [else
+          (binding-form
+           #'or-infoer
+           #`(#,lhs #,rhs))])))
    'left))
 
 (define-syntax (or-infoer stx)

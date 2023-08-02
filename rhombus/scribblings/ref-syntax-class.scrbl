@@ -202,8 +202,8 @@
 
  Declares syntax classes that can refer to themselves and each other.
  Unlike a @rhombus(syntax_class) form in other contexts, each
- @rhombus(syntax_class) form within @rhombus(syntax_class.together) is
- required to declare its fields with @rhombus(field, ~syntax_class_clause),
+ @rhombus(syntax_class) form within @rhombus(syntax_class.together, ~defn) is
+ required to declare its fields with @rhombus(fields, ~syntax_class_clause),
  otherwise no fields are available from the syntax class.
 
 @examples(

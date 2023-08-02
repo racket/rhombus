@@ -53,8 +53,13 @@
  If no @rhombus(target_expr) produces a true value and there is no
  @rhombus(~else) clause, a run-time exception is raised. In that case,
  when all of the @rhombus(bind) forms are syntax-object patterns, the
- generated exception's message may be specialized to report the expcted
+ generated exception's message may be specialized to report the expected
  pattern, instead of just reporting that no cases matched.
+
+ If all @rhombus(bind) patterns are literals or combinations of literals
+ with @rhombus(||, ~bind), then the match is implemented as a case
+ dispatch, and a match is found with logarithmic rather than linear
+ time complexity in the number of literals.
 
 @examples(
   match 1+2
