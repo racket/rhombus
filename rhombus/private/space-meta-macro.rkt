@@ -100,9 +100,14 @@
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
        (define parsed-tag (string->keyword (symbol->string (syntax-e #'space-path-name))))
-       (define macro-result (hash-ref options '#:parsed_checker #'(make-check-syntax (quote name))))
        (define pack-id (hash-ref options '#:parsed_packer #'#f))
        (define unpack-id (hash-ref options '#:parsed_unpacker #'#f))
+       (define pack-and-unpack? (or (syntax-e pack-id) (syntax-e unpack-id)))
+       (define macro-result (hash-ref options '#:parsed_checker
+                                      #`(make-check-syntax (quote name)
+                                                           (quote #,parsed-tag)
+                                                           #,(and pack-and-unpack?
+                                                                  #`(lambda (e) (parse-group e))))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
@@ -130,7 +135,9 @@
                      #`([#,class-name _class-name]
                         [#,prefix-more-class-name _prefix-more-class-name]
                         [#,infix-more-class-name _infix-more-class-name]
-                        [#,space-reflect-name _space]))
+                        [#,space-reflect-name _space]
+                        [#,pack-id #,pack-id]
+                        [#,unpack-id #,unpack-id]))
                  . #,exs))
               (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
               (property new-prefix-operator prefix-operator)
@@ -140,6 +147,7 @@
                 #:property prop:new-infix-operator (lambda (self) (new-prefix+infix-operator-infix self)))
               (define-rhombus-enforest
                 #:syntax-class :base
+                #:enforest parse-group
                 #:prefix-more-syntax-class :prefix-more
                 #:infix-more-syntax-class :infix-more
                 #:desc #,desc
@@ -166,8 +174,10 @@
                                                                                    (tail #f tail tail unpack-tail-list*))
                                                                        #:root-swap '(parsed . group)
                                                                        #:arity 2))
-              (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
-              (define make-infix-operator (make-make-infix-operator new-infix-operator))
+              (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
+                                                                      (quote #,(and pack-and-unpack? parsed-tag))))
+              (define make-infix-operator (make-make-infix-operator new-infix-operator
+                                                                    (quote #,(and pack-and-unpack? parsed-tag))))
               (define make-prefix+infix-operator new-prefix+infix-operator)
               #,@(build-pack-and-unpack)
               (maybe-skip
@@ -189,6 +199,7 @@
                class-name
                (define-rhombus-transform
                  #:syntax-class :base
+                 #:transform parse-group
                  #:desc #,desc
                  #:parsed-tag #,parsed-tag
                  #:in-space in-new-space
@@ -215,13 +226,30 @@
                       [_ #t]))
     fld))
 
-(define ((make-make-prefix-operator new-prefix-operator) name prec protocol proc)
+(define (tag form parsed-tag)
+  ;; input to macro might or might not be tagged; it's not tagged when
+  ;; the enforest engine found a `parsed` term
+  (if parsed-tag
+      (syntax-parse form
+        [(parsed tag _)
+         #:when (eq? (syntax-e #'tag) parsed-tag)
+         form]
+        [_
+         (datum->syntax #f (list 'parsed parsed-tag form))])
+      form))
+
+(define ((make-make-prefix-operator new-prefix-operator parsed-tag) name prec protocol proc)
   (new-prefix-operator
    name
    prec
    protocol
    (cond
-     [(eq? protocol 'automatic) proc]
+     [(eq? protocol 'automatic)
+      (if parsed-tag
+          (procedure-rename
+           (lambda (form stx) (proc (tag form parsed-tag) stx))
+           (object-name proc))
+          proc)]
      [else
       (procedure-rename
        (lambda (tail)
@@ -230,19 +258,24 @@
                  proc))
        (object-name proc))])))
 
-(define ((make-make-infix-operator new-infix-operator) name prec protocol proc assc)
+(define ((make-make-infix-operator new-infix-operator parsed-tag) name prec protocol proc assc)
   (new-infix-operator
    name
    prec
    protocol
    (cond
-     [(eq? protocol 'automatic) proc]
+     [(eq? protocol 'automatic)
+      (if parsed-tag
+          (procedure-rename
+           (lambda (form1 form2 stx) (proc (tag form2 parsed-tag) (tag form2 parsed-tag) stx))
+           (object-name proc))
+          proc)]
      [else
       (procedure-rename
        (lambda (form1 tail)
          (finish
           (lambda () (syntax-parse tail
-                       [(head . tail) (proc form1 (pack-tail #'tail #:after #'head) #'head)]))
+                       [(head . tail) (proc (tag form1 parsed-tag) (pack-tail #'tail #:after #'head) #'head)]))
           proc))
        (object-name proc))])
    assc))
@@ -250,10 +283,8 @@
 (define ((make-make-transformer name new-transformer) proc)
   (new-transformer
    (lambda (stx)
-     (define r (syntax-parse stx
-                 [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     ((make-check-syntax name) r proc)
-     r)))
+     (syntax-parse stx
+       [(head . tail) (proc (pack-tail #'tail) #'head)]))))
 
 (define (finish thunk proc)
   (define-values (form new-tail)
@@ -265,10 +296,22 @@
   (values form
           (unpack-tail new-tail proc #f)))
 
-(define ((make-check-syntax name) form proc)
+(define ((make-check-syntax name parsed-tag recur) form proc)
   (unless (syntax? form)
     (raise-bad-macro-result (proc-name proc) (symbol->string name) form))
-  form)
+  (if recur
+      (syntax-parse form
+        #:datum-literals (parsed)
+        [(parsed tag e)
+         #:when (eq? (syntax-e #'tag) parsed-tag)
+         form]
+        [_
+         (cond
+           [(unpack-tail form #f #f)
+            => (lambda (g) (recur g))]
+           [else
+            (raise-bad-macro-result (proc-name proc) (symbol->string name) form)])])
+      form))
 
 (define-for-syntax (check-distinct-exports ex-ht
                                            class-name prefix-more-class-name infix-more-class-name

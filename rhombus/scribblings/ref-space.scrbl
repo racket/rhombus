@@ -142,36 +142,69 @@ driver and macro-definitions forms.
   ~defn:
     new_thing.macro 'the':
       '"the new thing"'
+  ~repl:
+    print_new_thing: the
 )
 
  The identifier supplied for
  @rhombus(parse_syntax_class, ~space_meta_clause) is defined as a
- @rhombus(~group) syntax class with a @rhombus(parsed, ~datum) field.
+ @rhombus(~group) syntax class with a @rhombus(group, ~datum) field.
  The syntax class triggers parsing of a group using macros bindings,
  which are defined using the identifier bound by
  @rhombus(macro_definer, ~space_clause). For a pattern variable using the
  syntax class bound by @rhombus(parse_syntax_class, ~space_meta_clause),
- its @rhombus(parsed, ~datum) field is the result of parsing. No
+ its value is the result of parsing, while the @rhombus(group, ~datum)
+ field holds the terms that were parsed. No
  constraints are imposed on the result of parsing, except that it must be
  represented as a syntax object.
 
  When just @rhombus(macro_definer, ~space_clause) and
  @rhombus(parse_syntax_class, ~space_meta_clause) are declared, then each
- macro effectively must produce a fully expanded term. When a
- @rhombus(parse_checker, ~space_meta_clause) clause is supplied, then it
- can impose a check and/or conversion on the result for every macro in
- the space, and that conversion can include recursively expanding when
- the result is not yet fully expanded. To aid in the distinction of terms
- that are fully expanded, use @rhombus(parsed_packer, ~space_meta_clause)
- and @rhombus(parsed_unpacker, ~space_meta_clause). Then, macros that
- generate expanded terms should pack them using (a function based on) the
- function declared by @rhombus(parsed_packer, ~space_meta_clause), while
- the @rhombus(parse_checker, ~space_meta_clause) function can check for a
- parsed term using the function declared by
- @rhombus(parsed_unpacker, ~space_meta_clause). Meanwhile, the syntax
- classes bound by @rhombus(parse_syntax_class, ~space_meta_clause) and similar
- recognize terms constructed via @rhombus(parsed_packer, ~space_meta_clause)
- as already parsed.
+ macro effectively must produce a fully parsed term. To enable macros in
+ the space that expand to uses of other macros in the space, a
+ distinction is needed between fully parsed and still-to-be-expanded
+ terms. Use @rhombus(parsed_packer, ~space_meta_clause) and
+ @rhombus(parsed_unpacker, ~space_meta_clause) to introduce that
+ distinction, use the packer name in macros that produce fully parsed
+ terms, and use the unpacker name to access parsed content. Meanwhile,
+ the syntax classes bound by
+ @rhombus(parse_syntax_class, ~space_meta_clause) and similar recognize
+ terms constructed via @rhombus(parsed_packer, ~space_meta_clause) as
+ already parsed.
+
+@examples(
+  ~eval: macro_eval
+  ~defn:
+    space.enforest newer_thing:
+      space_path my_collection/new_thing
+      macro_definer macro
+      meta_namespace newer_thing_meta:
+        parse_syntax_class Parsed
+        parsed_packer pack
+        parsed_unpacker unpack
+  ~defn:
+    expr.macro 'print_newer_thing: $(thing :: newer_thing_meta.Parsed)':
+      'println($(newer_thing_meta.unpack(thing)))'
+  ~defn:
+    newer_thing.macro 'the':
+      newer_thing_meta.pack('"the newer thing"')
+    newer_thing.macro 'THE':
+      'the'
+  ~repl:
+    print_newer_thing: the
+    print_newer_thing: THE
+)
+
+
+ When a @rhombus(parse_checker, ~space_meta_clause) clause is supplied,
+ then it can impose a check and/or conversion on the result for every
+ macro in the space. That conversion should include recursively expanding
+ when the result is not yet fully expanded, which can be detected by
+ supplying a second argument to the function bound by
+ @rhombus(parsed_unpacker, ~space_meta_clause). The default parse checker
+ performs this recursive parsing step.
+
+ More details on space clauses and meta clauses:
 
 @itemlist(
 
@@ -210,8 +243,11 @@ driver and macro-definitions forms.
  @item{@rhombus(parse_checker, ~space_meta_clause): supplies a
   compile-time function that is applied to two arguments: the result of
   any macro defined for the space, and a procedure implementing the macro
-  transformer (which is useful for reporting errors or recursively expanding); the result is a
-  syntax object, typically the one that was given, but possibly adjusted.}
+  transformer (which is useful for reporting errors or recursively
+  expanding); the result is a syntax object, typically the one that was
+  given, but possibly adjusted. The default checker recursively expands
+  when either @rhombus(parsed_packer, ~space_meta_clause) or
+  @rhombus(parsed_unpacker, ~space_meta_clause) is supplied.}
 
  @item{@rhombus(parsed_packer, ~space_meta_clause): declares an
   identifier to be bound to a function that takes a syntax term and

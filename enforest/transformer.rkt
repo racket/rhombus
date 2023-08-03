@@ -32,6 +32,8 @@
   (syntax-parse stx
     [(_ (~alt (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
+              (~optional (~seq #:transform transform-id)
+                         #:defaults ([transform-id #'#f]))
               (~optional (~seq #:predicate form?)
                          #:defaults ([form? #'#f]))
               (~optional (~seq #:desc form-kind-str)
@@ -87,6 +89,12 @@
                                                        (datum->syntax #f (list* implicit-name #'head #'tail)))
                                                       track-origin
                                                       check-result))))
+
+         #,@(if (syntax-e #'transform-id)
+                #`((define (transform-id e)
+                     (syntax-parse #`(group . #,e)
+                       [(~var p form) #'p.parsed])))
+                #`())
 
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
