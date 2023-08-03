@@ -11,7 +11,7 @@
          "dotted-sequence-parse.rkt")
 
 (provide (for-spaces (rhombus/namespace
-                      #f)
+                      rhombus/decl)
                      meta))
 
 (module+ for-bridge
@@ -21,7 +21,7 @@
   #:fields
   (bridge))
 
-(define-syntax meta
+(define-decl-syntax meta
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx

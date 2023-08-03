@@ -3,6 +3,12 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
+@// Use `top_rhombus` to avoid a local nonterminal binding,
+@// such as when referring to `expr.macro` when `expr` is a
+@// locally bound nonterminal
+@(expr.macro 'top_rhombus($g)':
+    'rhombus($(g.replace_scopes('here')))')
+
 @title{General Forms}
 
 @doc(
@@ -40,7 +46,7 @@
 
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with @rhombus(macro)
- or @rhombus(expr.macro, ~expr).
+ or @top_rhombus(expr.macro).
 
  Unless otherwise specified, a name like @rhombus(fun_expr, ~var) is an
  alias for @rhombus(expr), similar to the rule for @rhombus(id).
@@ -59,7 +65,7 @@
 
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
- @rhombus(repet.macro, ~expr).
+ @top_rhombus(repet.macro).
 
 }
 
@@ -87,7 +93,7 @@
 
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
- @rhombus(defn.macro, ~expr).
+ @top_rhombus(defn.macro).
 
 }
 
@@ -128,7 +134,7 @@
 
  Besides forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
- @rhombus(decl.macro, ~expr) and @rhombus(decl.nestable_macro, ~expr).
+ @top_rhombus(decl.macro) and @top_rhombus(decl.nestable_macro).
 
 }
 
@@ -143,7 +149,7 @@
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
 
  Besides all of the binding forms provided by @rhombuslangname(rhombus),
- new ones can be defined with @rhombus(bind.macro, ~expr).
+ new ones can be defined with @top_rhombus(bind.macro).
 
 }
 
@@ -158,7 +164,7 @@
 
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
- @rhombus(annot.macro, ~expr).
+ @top_rhombus(annot.macro).
 
 }
 

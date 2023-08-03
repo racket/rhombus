@@ -14,8 +14,8 @@ specific @deftech{space}. Example spaces include
 @rhombus(expr, ~space) and @rhombus(bind, ~space), which
 generally correspond to a @tech{namespace} that provides a binding
 form for the space.
-Binding forms like @rhombus(def), @rhombus(expr.macro, ~expr), and
-@rhombus(bind.macro, ~expr) bind an identifier in the corresponding space.
+Binding forms like @rhombus(def), @rhombus(expr.macro), and
+@rhombus(bind.macro) bind an identifier in the corresponding space.
 
 Forms that bind in different spaces can be used on the same name to give
 that name a meaning in multiple contexts. The @rhombus(class) form binds
@@ -29,7 +29,7 @@ suppressed and then, perhaps, replaced on re-export.
 
 Most contexts have their own spaces, even though some of them also
 overlap with expression positions, such as definitions, declarations,
-@rhombus(class) clauses, and rhombus(for) clauses. The parsing process
+@rhombus(class) clauses, and @rhombus(for) clauses. The parsing process
 for such overlapping spaces will check non-expression spaces for
 bindings, first. The space for expression is special in another way: a
 binding in that space hides any binding for another space in an
@@ -43,7 +43,7 @@ driver and macro-definitions forms.
   ~nonterminal:
     space_id: block id
 
-  defn.macro 'space.enforest $space_id:
+  decl.macro 'space.enforest $space_id:
                 $space_clause_or_body_or_export
                 ...'
 
@@ -80,12 +80,13 @@ driver and macro-definitions forms.
  @rhombus(space_id_path) declared with
  @rhombus(space_path, ~space_clause) should be globally unique, typically
  based on the module path of the enclosing module, but the intent is that
- this identifying path is always referenced as
- @rhombus(space_id).
+ this identifying path is normally referenced as
+ @rhombus(space_id) or through the identifier bound by
+ @rhombus(reflection, ~space_meta_clause).
 
  Besides being defined as a space, @rhombus(space_id) is
  defined as a @tech{namespace}. Among the
- @rhombus(space_clause_or_body_or_export)s, @rhombus(body) and @rhombus(export)
+ @rhombus(space_clause_or_body_or_export)s, @rhombus(nestable_body)
  forms can add definitions and exports to the namespace, the same as for
  @rhombus(namespace). However, the namespace is particularly intended to
  export the name specified by @rhombus(macro_definer, ~space_clause).
@@ -253,8 +254,8 @@ driver and macro-definitions forms.
 @doc(
   ~nonterminal:
     space_id: block id
-    space_clause_or_body_or_export: space.enforest ~defn
-  defn.macro 'space.transform $space_id:
+    space_clause_or_body_or_export: space.enforest ~decl
+  decl.macro 'space.transform $space_id:
                 $space_clause_or_body_or_export
                 ...'
 ){
@@ -274,7 +275,7 @@ driver and macro-definitions forms.
 @doc(
   ~nonterminal:
     meta_namespace_id: block id
-    space_id_path: space.enforest ~defn
+    space_id_path: space.enforest ~decl
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'
   space_clause.macro 'bridge_definer $id'

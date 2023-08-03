@@ -34,7 +34,7 @@
   #:fields
   ())
 
-(define-syntax enforest
+(define-decl-syntax enforest
   (declaration-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -46,7 +46,7 @@
              (enforest-finish #,data) rhombus-space-clause
              (enforest-body-step . #,(syntax-local-introduce #'clauses))))]))))
 
-(define-syntax transform
+(define-decl-syntax transform
   (declaration-transformer
     (lambda (stx)
       (syntax-parse stx
