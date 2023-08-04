@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open  
+    "nonterminal.rhm" open)
 
 @title{Booleans}
 
@@ -33,6 +35,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    left_bind: def bind ~defn
+    right_bind: def bind ~defn
   bind.macro '$left_bind || $right_bind'
 ){
 
@@ -52,6 +57,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    left_annot: :: annot
+    right_annot: :: annot
   annot.macro '$left_annot || $right_annot'
 ){
 

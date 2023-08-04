@@ -6,18 +6,20 @@
 @title{Definitions}
 
 @doc(
-  defn.macro 'def $bind = $expr'
+  ~nonterminal:
+    rhs_expr: block expr
+  defn.macro 'def $bind = $rhs_expr'
   defn.macro 'def $bind:
                 $body
                 ...'
 ){
 
- Binds the identifiers of @rhombus(bind) to the value of @rhombus(expr) or the
+ Binds the identifiers of @rhombus(bind) to the value of @rhombus(rhs_expr) or the
  @rhombus(body) sequence. The @rhombus(body) itself can include
  definitions, and it normally ends with an expression to provide the
  result value.
 
- A @rhombus(bind) can be just an identifier or @rhombus(id_name), or it
+ A @rhombus(bind) can be just an identifier or @nontermref(id_name), or it
  can be constructed with a binding operator, such as a pattern form or
  @rhombus(::) for annotations.
 
@@ -51,7 +53,9 @@
 
 
 @doc(
-  defn.macro 'let $bind = $expr'
+  ~nonterminal:
+    rhs_expr: block expr
+  defn.macro 'let $bind = $rhs_expr'
   defn.macro 'let $bind:
                 $body
                 ...'

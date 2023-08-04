@@ -93,7 +93,7 @@ it supplies its elements in an unspecified order.
  @rhombus(#%braces)).
 
  Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
- while @rhombus({}) does not, since @rhombus({}) produces an empty map
+ while @braces does not, since @rhombus({}) produces an empty map
  instead.
 
 @examples(

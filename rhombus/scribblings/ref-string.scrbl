@@ -122,15 +122,15 @@ immutable strings.
 
 @doc(
   fun String.utf8_bytes(str :: ReadableString,
-                        err_byte :: Optional[Byte] = #false,
+                        err_byte :: maybe(Byte) = #false,
                         start :: NonnegInt = 0,
                         end :: NonnegInt = String.length(str)) :: Bytes
   fun String.latin1_bytes(str :: ReadableString,
-                          err_byte :: Optional[Byte] = #false,
+                          err_byte :: maybe(Byte) = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
   fun String.locale_bytes(str :: ReadableString,
-                          err_byte :: Optional[Byte] = #false,
+                          err_byte :: maybe(Byte) = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
 ){
@@ -152,7 +152,7 @@ immutable strings.
 
 
 @doc(
-  fun String.to_int(str :: ReadableString) :: Optional[Int]
+  fun String.to_int(str :: ReadableString) :: maybe(Int)
 ){
 
  Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
@@ -170,7 +170,7 @@ immutable strings.
 
 
 @doc(
-  fun String.to_number(str :: ReadableString) :: Optional[Number]
+  fun String.to_number(str :: ReadableString) :: maybe(Number)
 ){
 
  Parses @rhombus(str) as a number, returning @rhombus(#false) if the

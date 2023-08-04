@@ -74,7 +74,7 @@ it supplies its elements in order.
 
  Constructs a list of the given @rhombus(v)s values or results of the
  @rhombus(expr_or_splice)s. A @rhombus(&) or @dots_expr form
- can appear within @rhombus([]) to splice a @tech{repetition} or existing list
+ can appear within @brackets to splice a @tech{repetition} or existing list
  into the constructed list, the same as in a function call (see
  @rhombus(#%call)). List constructions can also serve as
  repetitions, where @rhombus(repet_or_splice) is like
@@ -119,7 +119,7 @@ it supplies its elements in order.
  repetition for the tail a new list similarly avoids traversing the
  elements.
 
- @see_implicit(@rhombus(#%brackets, ~bind), @rhombus([]), "binding")
+ @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")
 
 @examples(
   def List(1, x, y): [1, 2, 3]

@@ -46,7 +46,7 @@
   annot.macro 'Int.in($lo $inclusivity, $hi $inclusivity)'
   
   grammar inclusivity:
-    #,epsilon
+    #,(epsilon)
     ~inclusive
     ~exclusive  
 ){
@@ -82,7 +82,7 @@
   annot.macro 'Real.in($lo $inclusivity, $hi $inclusivity)'
 
   grammar inclusivity:
-    #,epsilon
+    #,(epsilon)
     ~inclusive
     ~exclusive  
 ){

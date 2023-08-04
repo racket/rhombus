@@ -156,8 +156,8 @@ in an unspecified order.
 
  Constructs an immutable map containing given keys mapped to the given
  values, equivalent to using @rhombus({key_val_or_splice, ...}) for the
- @rhombus({}) form, or @rhombus({key: value, ...}) for the function form.
- The @rhombus({}) form works as a repetition, where @rhombus(key_val_or_splice_repet)
+ @braces form, or @rhombus({key: value, ...}) for the function form.
+ The @braces form works as a repetition, where @rhombus(key_val_or_splice_repet)
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
 @examples(

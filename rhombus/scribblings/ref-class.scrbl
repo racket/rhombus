@@ -80,7 +80,7 @@
 
 @itemlist(
 
- @item{in the @rhombus(expr, ~space) space,
+ @item{in the @top_rhombus(expr, ~space) space,
   a constructor function or form, which by default is a function that
   takes as many arguments
   as the supplied non-@rhombus(private, ~class_clause) @rhombus(field_spec)s

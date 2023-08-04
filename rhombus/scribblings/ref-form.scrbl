@@ -3,12 +3,6 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@// Use `top_rhombus` to avoid a local nonterminal binding,
-@// such as when referring to `expr.macro` when `expr` is a
-@// locally bound nonterminal
-@(expr.macro 'top_rhombus($g)':
-    'rhombus($(g.replace_scopes('here')))')
-
 @title{General Forms}
 
 @doc(

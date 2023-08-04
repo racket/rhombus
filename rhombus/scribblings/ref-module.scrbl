@@ -46,7 +46,7 @@ different than the enclosing (sub)module.
  imports the enclosing module. The enclosing module cannot directly
  import the submodule, in contrast, since that would create a import
  cycle. The same @rhombus(id) can be declared multiple times this
- way using @rhombus(submodule), and all of the @rhombus(body) forms for
+ way using @rhombus(module), and all of the @rhombus(body) forms for
  the same @rhombus(id) are combined (in the order as the appear)
  to create one submodule. The expansion of the @rhombus(body) forms is
  delayed until the enclosing module is fully expanded.

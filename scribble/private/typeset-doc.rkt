@@ -599,7 +599,7 @@
      (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
        (extract-term-metavariables b vars nonterm?))]
     [id:identifier
-     (if (identifier-binding (typeset-meta:in_space #'id))
+     (if (and (not nonterm?) (identifier-binding (typeset-meta:in_space #'id)))
          vars
          (add-metavariable vars #'id nonterm?))]
     [_ vars]))

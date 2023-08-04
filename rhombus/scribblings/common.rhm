@@ -24,6 +24,7 @@ export:
   provided_interface_and_namespace_only
   provided_interface_and_other_annotation_only
   demo
+  top_rhombus
   epsilon
   Z
   parens
@@ -65,6 +66,12 @@ fun provided_interface_and_other_annotation_only():
   @provided_note{Provided only in the @scribble.rhombus(class, ~space) space
    and @scribble.rhombus(annot, ~space) space, not
    the @scribble.rhombus(namespace, ~space) space.}
+
+// Use `top_rhombus` to avoid a local nonterminal binding,
+// such as when referring to `expr.macro` when `expr` is a
+// locally bound nonterminal
+expr.macro 'top_rhombus($g, ...)':
+  'scribble.rhombus($(g.replace_scopes('here')), ...)'
 
 // suppressed a label, but `examples` now does that, anyway, so maybe
 // we'll end up removing this alias:

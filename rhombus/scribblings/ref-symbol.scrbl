@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Symbols}
 
@@ -19,11 +21,11 @@ they are equal by @rhombus(==) only when they are equal by
 }
 
 @doc(
-  expr.macro '#' $identifier'
+  expr.macro '#' $id'
   expr.macro '#' $keyword'
-  repet.macro '#' $identifier'
+  repet.macro '#' $id'
   repet.macro '#' $keyword'
-  bind.macro '#' $identifier'
+  bind.macro '#' $id'
   bind.macro '#' $keyword'
 ){
 

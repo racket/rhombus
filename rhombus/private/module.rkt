@@ -5,11 +5,12 @@
          "declaration.rkt"
          "parens.rkt")
 
-(provide (rename-out
-          [rhombus:module module])
+(provide (for-space rhombus/decl
+                    (rename-out
+                     [rhombus:module module]))
          pragma)
 
-(define-syntax rhombus:module
+(define-decl-syntax rhombus:module
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx

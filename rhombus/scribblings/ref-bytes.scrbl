@@ -57,7 +57,7 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 @doc(
   fun Bytes.subbytes(bstr :: Bytes,
                      start :: NonnegInt,
-                     end :: NonnegInt = Bytes.length(str)) :: Bytes
+                     end :: NonnegInt = Bytes.length(bstr)) :: Bytes
 ){
 
  Returns the substring of @rhombus(bstr) from @rhombus(start) (inclusive)

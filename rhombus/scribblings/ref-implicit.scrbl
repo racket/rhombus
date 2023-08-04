@@ -19,22 +19,22 @@ Here are all of the implicit forms:
  @item{@rhombus(#%literal) --- used for anything other than an
        identifier, keyword, operator, or compound form}
 
- @item{@rhombus(#%parens) --- used for @rhombus(())}
+ @item{@rhombus(#%parens) --- used for @parens}
 
- @item{@rhombus(#%brackets) --- used for @rhombus([])}
+ @item{@rhombus(#%brackets) --- used for @brackets}
  
- @item{@rhombus(#%braces) --- used for @rhombus({})}
+ @item{@rhombus(#%braces) --- used for @braces}
 
- @item{@rhombus(#%quotes) --- used for @rhombus('')}
+ @item{@rhombus(#%quotes) --- used for @quotes}
 
  @item{@rhombus(#%call) --- used as an infix form when a parsed form
-       is followed immediately by a @rhombus(()) term}
+       is followed immediately by a @parens term}
 
  @item{@rhombus(#%index) --- used as an infix form when a parsed form
-       is followed immediately by a @rhombus([]) term}
+       is followed immediately by a @brackets term}
 
  @item{@rhombus(#%comp) --- used as an infix form when a
-       parsed form is followed immediately by a @rhombus({}) term;
+       parsed form is followed immediately by a @braces term;
        this implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%juxtapose) --- used as an infix form when a
@@ -73,8 +73,8 @@ Here are all of the implicit forms:
  greater depth.
 
  A @rhombus(literal) is any individual term other than an identifier,
- keyword, operator, parenthesized term, bracketed term, quoted term,
- or braced term.
+ keyword, operator, parenthesized term, bracketed term, braced term,
+ quoted term, block, or alternatives.
 
 @examples(
   7

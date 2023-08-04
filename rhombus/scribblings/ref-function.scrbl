@@ -216,9 +216,9 @@ normally bound to implement function calls.
  as rejecting a non-matching argument) left-to-right, except that the
  result of a @rhombus(default_expr) is subject to the same constraints
  imposed by annotations and patterns for its argument as an explicitly
- supplied argument would be. An argument form @rhombus($keyword = $default_expr)
- is equivalent to the form @rhombus($keyword: $id = $default_expr)
- for the @rhombus($id) with the same string form as @rhombus($keyword).
+ supplied argument would be. An argument form @rhombus(keyword = default_expr)
+ is equivalent to the form @rhombus(keyword: #,(@nontermref(id)) = default_expr)
+ for the @nontermref(id) with the same string form as @rhombus(keyword).
  A @rhombus(::) or @rhombus(:~) is not allowed in @rhombus(default_expr),
  unless it is nested in another term, since that might be misread or
  confused as an annotation in @rhombus(bind) for an identifier; for similar

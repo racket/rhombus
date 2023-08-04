@@ -85,3 +85,17 @@ its ``rest'' is a list.
 
 }
 
+@doc(
+  fun Pair.first(pr :: Pair)
+  fun Pair.rest(pr :: Pair)
+){
+
+ Returns the first or second component of @rhombus(pr).
+
+@examples(
+  Pair.first(Pair("a", "b"))
+  Pair.rest(Pair("a", "b"))
+)
+
+}
+

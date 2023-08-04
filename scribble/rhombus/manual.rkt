@@ -11,8 +11,10 @@
 
 (provide (all-from-out scribble/rhombus
                        "../private/rhombus-doc.rkt")
-         (rename-out [rhombus:if if]
-                     [rhombus:module module])
+         (rename-out [rhombus:if if])
+         (for-space rhombus/decl
+                    (rename-out
+                     [rhombus:module module]))
          litchar
          (rename-out [manual:deftech deftech]
                      [manual:tech tech]

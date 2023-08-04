@@ -9,8 +9,8 @@
   bind.macro 'mutable $id $maybe_annot'
 
   grammar maybe_annot:
-    :: annot
-    :~ annot
+    :: $annot
+    :~ $annot
     #,(epsilon)
 ){
 

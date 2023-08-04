@@ -107,7 +107,7 @@
             message :: String)
 ){
 
- Throws the @rhombus(Exn.Fail) exception with @rhombus(message) as the
+ Throws the @rhombus(Exn.Fail, ~class) exception with @rhombus(message) as the
  message and @rhombus(Continuation.current_marks()) as the continuation
  marks. If @rhombus(who) is not @rhombus(#false), it is added to the
  beginning of the message, and a @litchar{: } separator is added in
