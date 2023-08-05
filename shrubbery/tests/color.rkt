@@ -155,6 +155,22 @@ three
 ^a^
 ^| x^
 // the end
+done
+
+#//
+^// not the end^
+^a^
+
+(1,
+ #//
+^// not the end^
+ ^a^)
+
+(1,
+ #//
+ ^2^
+ // not the end, as it turns out
+   ^+ a^)
 
 a
 | x

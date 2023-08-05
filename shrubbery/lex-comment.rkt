@@ -71,6 +71,8 @@
           (define (continue-running)
             (finish (struct-copy pending-comment pending [so-far 'running]) new-stack))
           (case name
+            [(comment)
+             (finish pending new-stack #:whitespace? #t)]
             [(bar-operator)
              (if (not-line-sensitive?)
                  (continue-running)
@@ -97,6 +99,8 @@
              ;; same line or in nested => continue comment, usually
              (case (and (token? tok)
                         (token-name tok))
+               [(comment)
+                (finish pending new-stack #:whitespace? #t)]
                [(comma-operator semicolon-operator)
                 (finish (if (null? stack) #f pending) new-stack)]
                [(closer)
@@ -118,9 +122,19 @@
                                     0))
                       (pending-comment-column pending))
                   (not (not-line-sensitive?)))
-             (finish #f (pending-comment-stack pending))]
+             (case (and (token? tok)
+                        (token-name tok))
+               [(comment)
+                (finish pending new-stack #:whitespace? #t #:comment? #f)]
+               [else
+                (finish #f (pending-comment-stack pending))])]
             [else
-             (finish pending new-stack)])]))
+             (case (and (token? tok)
+                        (token-name tok))
+               [(comment)
+                (finish pending new-stack #:whitespace? #t)]
+               [else
+                (finish pending new-stack)])])]))
      (define (ends-only-pending? pending new-stack-for-end)
        ;; Duplicates some of `finish-plain`, peeking ahead for what the function
        ;; will do with `pending` in the case that `tok` is a 'group-comment
@@ -166,13 +180,11 @@
        [(lex-nested-status? new-inner-status)
         (finish-plain pending new-stack new-stack-for-end)]
        [else
-        ;; White doesn't affect the commenting state. It would make sense
-        ;; to treat a comment like whitespace, but an outdented comment
-        ;; normally applies to subsequent things, so heuristically treat comments
-        ;; like other things (and lave it to a programmer to use a better
-        ;; comment style if that's not what they wanted).
+        ;; Whitespace and comments doesn't affect the commenting state,
+        ;; but we need to heuristcially choose whether to count as comment
+        ;; as itself faded or not
         (case (token-name tok)
-          [(whitespace #;comment)
+          [(whitespace)
            (finish pending new-stack #:whitespace? #t)]
           [else
            (finish-plain pending new-stack new-stack-for-end)])])]))
