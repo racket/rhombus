@@ -18,12 +18,16 @@
                      (only-in "implicit.rkt"
                               #%parens)
                      "syntax-parse-config.rkt")
+         (only-in "declaration.rkt"
+                  in-decl-space)
          racket/interaction-info
          "builtin-dot.rkt"
          "bounce.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
-         (submod "expression.rkt" for-top-expand))
+         (submod "expression.rkt" for-top-expand)
+         (only-in (submod "module.rkt" for-module-begin)
+                  rhombus:module))
 
 (provide (rename-out [rhombus-module-begin #%module-begin])
          #%top-interaction
@@ -179,12 +183,17 @@
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
-        (module configure-runtime racket/base (require rhombus/runtime-config))
         (#%declare #:realm rhombus
                    #:require=define)
         (rhombus-forwarding-sequence
          #:module #f #f
-         (rhombus-top . content)))]))
+         (rhombus-top . content))
+        #,(let ([mode (ormap contigure-runtime-module-mode (syntax->list #'content))])
+            (if mode
+                #`(#,mode configure-runtime racket/base
+                   (require (submod ".." configure_runtime)))
+                #'(module configure-runtime racket/base
+                    (require rhombus/runtime-config)))))]))
 
 ;; splices content of any block as its own top-level group:
 (define-syntax (#%top-interaction stx)
@@ -195,3 +204,16 @@
      #'(form-id . (top form ... inner-form ... . content))]
     [(_ . (top . content))
      #'(rhombus-top . content)]))
+
+(define-for-syntax (contigure-runtime-module-mode g)
+  (define (rhombus-mod? mod-id)
+    (free-identifier=? (in-decl-space #'rhombus:module)
+                       (in-decl-space mod-id)))
+  (syntax-parse g
+    #:datum-literals (group parsed configure_runtime)
+    #:literals (module module*)
+    [(group mod #:early configure_runtime . _) #:when (rhombus-mod? #'mod) #'module]
+    [(group mod #:late configure_runtime . _) #:when (rhombus-mod? #'mod) #'module*]
+    [(group (parsed #:rhombus/decl (module configure_runtime . _))) #'module]
+    [(group (parsed #:rhombus/decl (module* configure_runtime . _))) #'module*]
+    [_ #f]))

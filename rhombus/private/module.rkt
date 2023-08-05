@@ -10,6 +10,10 @@
                      [rhombus:module module]))
          pragma)
 
+(module+ for-module-begin
+  (provide (for-space rhombus/decl
+                      rhombus:module)))
+
 (define-decl-syntax rhombus:module
   (declaration-transformer
    (lambda (stx)
