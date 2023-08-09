@@ -12,7 +12,12 @@
          (only-in "ellipsis.rkt"
                   [... rhombus...])
          (only-in "unquote-binding-primitive.rkt"
-                  #%parens)
+                  #%parens
+                  &&
+                  [:: uq::])
+         (only-in "syntax-class-primitive.rkt"
+                  Sequence
+                  Term)
          "dollar.rkt"
          "parse.rkt"
          "srcloc.rkt"
@@ -40,7 +45,9 @@
   (struct parsed (fixity name opts-stx prec-stx assc-stx parsed-right?
                          ;; implementation is function stx if< `parsed-right?`,
                          ;; or a clause over #'self and maybe #'left otherwise
-                         impl)))
+                         impl))
+  (define (maybe-cons id ids) (if (syntax-e id) (cons id ids) ids)))
+(define (make-all l) (pack-tail l))
 
 (define-unquote-binding-syntax _Term
   (unquote-binding-transformer
@@ -60,7 +67,7 @@
   (define-values (who kind)
     (syntax-parse pre-parsed
       [(_ name _ _ kind . _) (values #'name (syntax-e #'kind))]))
-  (define (macro-clause self-id left-ids tail-pattern-in rhs)
+  (define (macro-clause self-id all-id left-ids tail-pattern-in rhs)
     (define-values (tail-pattern implicit-tail?)
       (syntax-parse tail-pattern-in
         #:datum-literals (group)
@@ -75,7 +82,11 @@
          ;; note that this enables returning two values from the macro, instead
          ;; of just one
          (values tail-pattern-in #f)]
-        [_ (values tail-pattern-in #t)]))
+        [_ (values (if (syntax-e all-id)
+                       #`((op $) (parens (group #%quotes (quotes (group #,@tail-pattern-in))
+                                                && #%parens (parens (group all_tail uq:: Sequence)))))
+                       tail-pattern-in)
+                   #t)]))
     (syntax-parse tail-pattern
       [(dots::...-bind . _) (raise-syntax-error #f
                                                 "misplaced repetition"
@@ -97,7 +108,8 @@
       (define body
         (cond
           [(eq? kind 'rule)
-           (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...))))])
+           (let ([ids (maybe-cons all-id
+                                  (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...)))))])
              (if implicit-tail?
                  #`(values #,(convert-rule-template rhs ids)
                            (tail-rule-template tail))
@@ -114,6 +126,13 @@
              ...
              (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
              (let-syntaxes ([(sid ...) sid-ref] ...)
+               #,@(if (syntax-e all-id)
+                      #`((define #,all-id
+                           #,(if implicit-tail?
+                                 #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
+                                 #`(make-all (list* left-id ... self tail))))
+                         (define-syntax #,(in-static-info-space #'all-id) (make-static-infos syntax-static-infos)))
+                      '())
                #,body))])))
   (define (convert-rule-template block ids)
     (syntax-parse block
@@ -135,6 +154,7 @@
                  parsed-right-id
                  [tail-pattern
                   self-id
+                  all-id
                   left
                   (tag rhs ...)])
      (parsed 'infix
@@ -151,15 +171,19 @@
                     (define-syntax #,(in-static-info-space #'left) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space right-id) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
+                    #,@(if (syntax-e #'all-id)
+                           #`((define all-id (make-all (list left self-id #,right-id)))
+                              (define-syntax #,(in-static-info-space #'all-id) (make-static-infos syntax-static-infos)))
+                           '())
                     #,(adjust-result
                        adjustments
                        2
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
-                                                  (list #'left right-id #'self-id))
+                                                  (maybe-cons #'all-id (list #'left right-id #'self-id)))
                            #'(rhombus-body-expression (tag rhs ...)))))]
                [else
-                (macro-clause #'self-id (list #'left)
+                (macro-clause #'self-id #'all-id (list #'left)
                               #'tail-pattern
                               #'(tag rhs ...))]))]
     ;; prefix protocol
@@ -173,6 +197,7 @@
                  parsed-right-id
                  [tail-pattern
                   self-id
+                  all-id
                   (tag rhs ...)])
      (parsed 'prefix
              #'name
@@ -187,12 +212,16 @@
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     (define-syntax #,(in-static-info-space arg-id) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
+                    #,@(if (syntax-e #'all-id)
+                           #`((define all-id (make-all (list self-id #,arg-id)))
+                              (define-syntax #,(in-static-info-space #'all-id) (make-static-infos syntax-static-infos)))
+                           '())
                     #,(adjust-result
                        adjustments
                        2
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
-                                                  (list arg-id #'self-id))
+                                                  (maybe-cons #'all-id (list arg-id #'self-id)))
                            #`(rhombus-body-expression (tag rhs ...)))))]
                [else
                 (cond
@@ -200,16 +229,17 @@
                    ;; shortcut for a simple identifier macro; `self` and `tail` are bound
                    #`[#t (let ([self-id self])
                            (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
+                           #,@(maybe-bind-all #'all-id #'self-id #'make-all #'tail-pattern #'tail)
                            #,@(maybe-bind-tail #'tail-pattern #'tail)
                            #,(maybe-return-tail
                               (if (eq? kind 'rule)
                                   (convert-rule-template #'(tag rhs ...)
-                                                         (list #'self-id))
+                                                         (maybe-cons #'all-id (list #'self-id)))
                                   #`(rhombus-body-expression (tag rhs ...)))
                               #'tail-pattern
                               #'tail))]]
                   [else
-                   (macro-clause #'self-id '()
+                   (macro-clause #'self-id #'all-id '()
                                  #'tail-pattern
                                  #'(tag rhs ...))])]))]))
 
@@ -329,7 +359,8 @@
           (when (for*/or ([d (syntax->list (parsed-opts-stx p))]
                           [d (in-list (or (syntax->list d) (list d)))])
                   (and (keyword? (syntax-e d))
-                       (not (eq? '#:op_stx (syntax-e d)))))
+                       (not (eq? '#:op_stx (syntax-e d)))
+                       (not (eq? '#:all_stx (syntax-e d)))))
             (raise-syntax-error #f
                                 (format "~a options not allowed after first ~a case"
                                         options what)
@@ -355,7 +386,7 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-bindss
+(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids all-ids extra-bindss
                                                      make-transformer-id
                                                      extra-static-infoss-stx
                                                      extra-shapes
@@ -373,7 +404,8 @@
                         ;; shortcut for simple patterns
                         #`(cond
                             #,@(for/list ([pre-parsed (in-list pre-parseds)]
-                                          [self-id (in-list self-ids)])
+                                          [self-id (in-list self-ids)]
+                                          [all-id (in-list all-ids)])
                                  (syntax-parse pre-parsed
                                    #:datum-literals (pre-parsed)
                                    [(pre-parsed id
@@ -382,6 +414,7 @@
                                                 rhs)
                                     #`[#t (let ([#,self-id self])
                                             (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
+                                            #,@(maybe-bind-all all-id self-id #'make-all #'tail-pattern #'tail)
                                             #,@(maybe-bind-tail #'tail-pattern #'tail)
                                             #,(wrap-for-tail
                                                #`(rhombus-body-expression rhs)))]]))
@@ -393,6 +426,7 @@
                         #`(syntax-parse (insert-multi-front-group self tail)
                             #,@(for/list ([pre-parsed (in-list pre-parseds)]
                                           [self-id (in-list self-ids)]
+                                          [all-id (in-list all-ids)]
                                           [extra-binds-stx (in-list extra-bindss)])
                                  (syntax-parse pre-parsed
                                    #:datum-literals (pre-parsed)
@@ -414,6 +448,10 @@
                                          #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
                                          (define #,self-id self)
                                          (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
+                                         #,@(if (syntax-e all-id)
+                                                #`((define #,all-id (make-all (cons self tail)))
+                                                   (define-syntax #,(in-static-info-space all-id) (make-static-infos syntax-static-infos)))
+                                                '())
                                          #,(wrap-extra
                                             #`(let ([p-id id-ref] ...)
                                                 (let-syntaxes ([(s-id ...) sid-ref] ...)
@@ -424,10 +462,10 @@
                                    null))]))])
          id))))
 
-(define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
+(define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id all-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'())
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list all-id) (list #'())
                                     make-transformer-id #'() (list)
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail

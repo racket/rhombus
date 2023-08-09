@@ -100,6 +100,22 @@ block:
     listly 1
     ~is [1]
 
+check:
+  ~eval
+  macro listly:
+    ~stronger_than: +&
+  | '$a listly $b':
+      ~all_stx stx
+      '[$a, $b, '$stx'.to_source_string()]'
+  | 'listly $c':
+      ~all_stx stx
+      '[$c, '$stx'.to_source_string()]'
+
+  [1 listly 5 +& 7,
+   listly 1]
+  ~is ["[1, 5, \"1 listly 5\"]7",
+       [1, "listly 1"]]
+
 block:
   expr.macro 'go ($(right :: expr_meta.AfterInfixParsed('*'): tail))':
     '$([tail, ...]
@@ -152,9 +168,38 @@ check:
   ~prints_like '1 + 2'
 
 check:
+  expr.macro 'quote $(x :: Group) $()':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  quote  1 + 2
+  ~is "quote  1 + 2"
+
+check:
   expr.macro 'quote $(x :: Group) $()': '($x)'
   quote 1 + 2
   ~is 3
+
+check:
+  expr.macro 'quote $x $tail ...':
+    ~all_stx stx
+    values('$(stx.to_source_string())', '$tail ...')
+  quote 1  +&  200
+  ~is "quote 1  +&  200200"
+
+check:
+  expr.macro 'quote $(x :: Term)':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  quote 1  +&  200
+  ~is "quote 1200"
+
+check:
+  expr.macro 'quote $x $(y :: Term)':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  quote 1 3  +&  200
+  ~is "quote 1 3200"
+
 
 // check pattern forms that should match parsed arguments
 block:

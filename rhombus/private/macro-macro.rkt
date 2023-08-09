@@ -128,7 +128,10 @@
     #:datum-literals (group)
     (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
                                              (_::block (group self-id:identifier))))
-                     #:defaults ([self-id #'self]))))
+                     #:defaults ([self-id #'self]))
+          (~optional (group #:all_stx ~! (~or all-id:identifier
+                                              (_::block (group all-id:identifier))))
+                     #:defaults ([all-id #'#f]))))
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
     operator-options)
@@ -148,11 +151,13 @@
     (pattern (~var o (:self-operator-options space-sym))
              #:when (not prec?)
              #:attr prec #'()
-             #:attr self-id #'o.self-id)
+             #:attr self-id #'o.self-id
+             #:attr all-id #'o.all-id)
     (pattern (~var o (:macro-prefix-operator-options space-sym))
              #:when prec?
              #:attr prec #'o.prec
-             #:attr self-id #'o.self-id))
+             #:attr self-id #'o.self-id
+             #:attr all-id #'o.all-id))
 
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (group)
@@ -270,6 +275,7 @@
                         #,parsed-right-id
                         [tail-pattern
                          opt.self-id
+                         opt.all-id
                          left.id
                          (tag rhs ...)])])]
       ;; prefix protocol
@@ -293,6 +299,7 @@
                         #,parsed-right-id
                         [tail-pattern
                          opt.self-id
+                         opt.all-id
                          (tag rhs ...)])])])))
 
 (define-for-syntax (pre-parsed-name pre-parsed)
@@ -509,6 +516,9 @@
                          (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
                                                                   (_::block (group self-id:identifier))))
                                           #:defaults ([self-id #'self]))
+                               (~optional (group #:all_stx ~! (~or all-id:identifier
+                                                                   (_::block (group all-id:identifier))))
+                                          #:defaults ([all-id #'#f]))
                                (group (~var kw (:keyword-matching extra-kws))
                                       ~!
                                       (~or (_::block (group extra))
@@ -516,8 +526,8 @@
                          ...
                          body ...)))
      (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-     (k p #`(#,compiletime-id (#,p) (self-id) (#,(extract-extra-binds stx extra-kws extra-shapes #'(kw ...)
-                                                                      #'(extra ...)))))]
+     (k p #`(#,compiletime-id (#,p) (self-id) (all-id) (#,(extract-extra-binds stx extra-kws extra-shapes #'(kw ...)
+                                                                               #'(extra ...)))))]
     [(form-id (_::alts
                (_::block
                 (group
@@ -526,6 +536,9 @@
                             (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
                                                                          (_::block (group self-id:identifier))))
                                              #:defaults ([self-id #'self]))
+                                  (~optional (group #:all_stx ~! (~or all-id:identifier
+                                                                      (_::block (group all-id:identifier))))
+                                             #:defaults ([all-id #'#f]))
                                   (group (~var kw (:keyword-matching extra-kws))
                                              ~!
                                              (~or (_::block (group extra))
@@ -539,8 +552,8 @@
          (check-consistent stx
                            (map pre-parsed-name ps)
                            "operator")
-         (ks ps #`(#,compiletime-id #,ps (self-id ...) #,(extract-extra-bindss stx extra-kws extra-shapes #'((kw ...) ...)
-                                                                               #'((extra ...) ...))))]))
+         (ks ps #`(#,compiletime-id #,ps (self-id ...) (all-id ...) #,(extract-extra-bindss stx extra-kws extra-shapes #'((kw ...) ...)
+                                                                                            #'((extra ...) ...))))]))
 
 (begin-for-syntax
   (define (extract-extra-binds stx extra-kws extra-shapes kws-stx binds-stx)
@@ -571,9 +584,10 @@
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infoss-stx extra-shapes)
     (lambda (stx)
       (syntax-parse stx
-        [(_ pre-parseds self-ids extra-argument-binds)
+        [(_ pre-parseds self-ids all-ids extra-argument-binds)
          (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
                                            (syntax->list #'self-ids)
+                                           (syntax->list #'all-ids)
                                            (syntax->list #'extra-argument-binds)
                                            make-transformer-id
                                            extra-static-infoss-stx
@@ -602,19 +616,21 @@
                  (~and rhs (tag::block
                             (~optional (group #:op_stx (_::block (group self-id:identifier)))
                                        #:defaults ([self-id #'self]))
+                            (~optional (group #:all_stx (_::block (group all-id:identifier)))
+                                       #:defaults ([all-id #'#f]))
                             body ...)))
         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
         (define name (pre-parsed-name p))
         (build-syntax-definitions/maybe-extension
          (list space-sym) name (pre-parsed-extends p)
-         #`(let ([#,name (#,compiletime-id #,p q.gs self-id)])
+         #`(let ([#,name (#,compiletime-id #,p q.gs self-id all-id)])
              #,name))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-sequence-transformer-compiletime make-transformer-id)
     (lambda (stx)
       (syntax-parse stx
-        [(_ pre-parsed gs self-id)
-         (parse-transformer-definition-sequence-rhs #'pre-parsed #'self-id
+        [(_ pre-parsed gs self-id all-id)
+         (parse-transformer-definition-sequence-rhs #'pre-parsed #'self-id #'all-id
                                                     make-transformer-id
                                                     #'gs)]))))

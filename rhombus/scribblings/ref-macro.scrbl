@@ -67,6 +67,8 @@
     ~associativity: $assoc
     ~op_stx $id
     ~op_stx: $id
+    ~all_stx $id
+    ~all_stx: $id
   grammar other:
     $id
     $op
@@ -152,12 +154,17 @@
  stands for any operator not otherwise mentioned. The
  @rhombus(~associativity) option is allowed only with an infix
  @rhombus(macro_pattern). The @rhombus(~op_stx) option binds an
- identifier or operator as it appears in a use of the macro (which cannot be
+ identifier to an identifier or operator syntax object as it appears
+ in a use of the macro (which cannot be
  matched directly in the @rhombus(macro_pattern), since that position
  is used for the name that @rhombus(expr.macro) binds).
- In a defined with @litchar{|} alternatives,
+ The @rhombus(~all_stx) option binds an
+ identifier to the input that is matched by the @rhombus(macro_pattern),
+ which includes the identifier or operator that  @rhombus(~op_stx)
+ would capture.
+ In a definition with @litchar{|} alternatives,
  most @rhombus(option)s are allowed only in the first case, but
- @rhombus(~op_stx) is allowed and separate in each case.
+ @rhombus(~op_stx) and @rhombus(~all_stx) are allowed and separate in each case.
 
  When multiple cases are written with @vbar, they can appear after a block
  that supplies @rhombus(option)s that apply to all

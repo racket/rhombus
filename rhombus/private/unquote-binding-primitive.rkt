@@ -302,7 +302,10 @@
           var))
       #`(#,(if sc
                (if (identifier? sc)
-                   #`(~var #,instance-id #,sc-call)
+                   (let ([p #`(~var #,instance-id #,sc-call)])
+                     (if (rhombus-syntax-class-splicing? rsc)
+                         #`(~seq #,p) ;; communicates to `&&`
+                         p))
                    #`(~and #,(if dotted-bind?
                                  #`(~seq #,instance-id (... ...))
                                  instance-id)

@@ -75,9 +75,10 @@
 
   (define-syntax (dot-transformer-compiletime stx)
     (syntax-parse stx
-      [(_ pre-parseds self-ids extra-argument-binds)
+      [(_ pre-parseds self-ids all-ids extra-argument-binds)
        (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
                                          (syntax->list #'self-ids)
+                                         (syntax->list #'all-ids)
                                          (syntax->list #'extra-argument-binds)
                                          #'values
                                          #`(syntax-static-infos #'() syntax-static-infos)

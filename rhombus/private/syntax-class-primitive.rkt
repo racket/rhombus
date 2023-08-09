@@ -17,6 +17,7 @@
                     Operator
                     Name
                     IdentifierName
+                    Sequence
                     Group
                     Block
                     Multi
@@ -88,6 +89,9 @@
                              #:root-swap [root-swap #f])
     (rhombus-syntax-class kind pat fields splicing? arity root-swap)))
 
+(define-splicing-syntax-class :sequence
+  (pattern (~seq _ ...)))
+
 (define-syntax (define-syntax-class-syntax stx)
   (syntax-parse stx
     [(_ name:id rhs)
@@ -106,6 +110,7 @@
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
 (define-syntax-class-syntax Int (make-syntax-class #'exact-integer))
+(define-syntax-class-syntax Sequence (make-syntax-class #':sequence #:splicing? #t #:kind 'term))
 (define-syntax-class-syntax Group (make-syntax-class #f #:kind 'group))
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
