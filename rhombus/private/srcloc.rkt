@@ -12,7 +12,6 @@
          respan-empty
          respan
          maybe-respan
-         extract-raw
          with-syntax-error-respan
          shift-origin)
 
@@ -42,6 +41,10 @@
 ;; a source location that corresponds to the content. That may involve
 ;; moving out a `parens`, etc., tag or walking through a `group` content
 ;; to create a source location that spans all the content, for example.
+;; A "respan" operation can make sense for a group or unwrapped term
+;; sequence, since the span can be reconstructed if the immediate wrapper
+;; is lost; attaching information to the wrapper can act as a kind of
+;; cache.
 ;;
 ;; For most calls to `raise-syntax-error`, `respan` is applied
 ;; automatically to the arguments. When `raise-syntax-error` is called
@@ -50,11 +53,23 @@
 ;; `respan` may also be needed for input to `syntax-parse`, in case it
 ;; is responsible for raising an exception when a match files.
 ;;
+;; "Relocate" means to take source location from one syntax object and
+;; use it for another. The target of a relocation is normally a
+;; Racket-level expression or a single term, since relocating a group
+;; or term/group sequence is fragile. Note, however, that
+;; `Syntax.relocate` works on a group syntax object, especially to
+;; transfer prefix and suffix information from one group to another
+;; for especially careful transfers (e.g., as in the `rhombus` macro
+;; in Scribble to preserve source formatting).
+;;
 ;; "Reraw" means to take the printed form of a syntax object and
-;; attach is as the opaque raw form of another syntax object. An
+;; attach it as the opaque raw form of another syntax object. An
 ;; opaque raw property means that raw-text information of nested
 ;; syntax objects is ignored. Note that opaque-raw information is
-;; *not* preserved by default, unlike raw information.
+;; *not* preserved by default, unlike raw information. The target of a
+;; reraw operation should be a Racket expression or an invidual term,
+;; so there's a clear place to attach and so the information does not
+;; get lost.
 ;;
 ;; When a primitive expression form expands to a parsed term, it
 ;; should `relocate+reraw` the result using a `respan` of the input
@@ -93,35 +108,66 @@
   (syntax-raw-property (relocate head id head) (or (syntax-raw-property head)
                                                    (symbol->string (syntax-e head)))))
 
+;; `stx` should be a Racket expression, while `src-stx` can be a srcloc
+;; or a shrubbery form
 (define (relocate+reraw src-stx stx)
-  (syntax-opaque-raw-property (relocate src-stx stx)
-                              (extract-raw src-stx #f #f)))
+  (cond
+    [(syntax? src-stx)
+     (define-values (pfx raw sfx) (extract-raw src-stx))
+     (let* ([stx (syntax-opaque-raw-property (relocate (maybe-respan src-stx) stx) raw)]
+            [stx (if (null? pfx)
+                     stx
+                     (syntax-raw-prefix-property stx pfx))]
+            [stx (if (null? sfx)
+                     stx
+                     (syntax-raw-suffix-property stx sfx))])
+       stx)]
+    [else (relocate src-stx stx)]))
 
-(define (extract-raw stx pre? suf?)
+(define (extract-raw stx)
   (define (cons-raw a b)
     (cond
-      [(or (not a) (null? a)) (or b null)]
-      [(or (not b) (null? b)) a]
+      [(or (not a) (null? a) (equal? a "")) (or b null)]
+      [(or (not b) (null? b) (equal? b "")) a]
       [else (cons a b)]))
   (cond
     [(syntax? stx)
-     (cons-raw (cons-raw (if pre? (syntax-raw-prefix-property stx) null)
-                         (or (syntax-opaque-raw-property stx)
-                             (cons-raw (syntax-raw-property stx)
-                                       (extract-raw (or (syntax->list stx)
-                                                        (syntax-e stx))
-                                                    pre? suf?))))
-               (if suf? (syntax-raw-suffix-property stx) null))]
+     (cond
+       [(syntax-opaque-raw-property stx)
+        (values (or (syntax-raw-prefix-property stx) null)
+                (syntax-opaque-raw-property stx)
+                (or (syntax-raw-suffix-property stx) null))]
+       [(syntax->list stx)
+        => (lambda (l) (extract-raw l))]
+       [else
+        (values (or (syntax-raw-prefix-property stx) null)
+                (syntax-raw-property stx)
+                (or (syntax-raw-suffix-property stx) null))])]
     [(and (pair? stx) (list? stx))
-     (cons-raw
-      (let loop ([stx stx] [pre? pre?])
-        (if (null? stx)
-            null
-            (cons-raw (extract-raw (car stx) pre? (or (pair? (cdr stx)) suf?))
-                      (loop (cdr stx) #t))))
-      (cons-raw (syntax-raw-tail-property (car stx))
-                (if suf? (syntax-raw-tail-suffix-property (car stx)) null)))]
-    [else null]))
+     (define tail (syntax-raw-tail-property (car stx)))
+     (define tail-sfx (syntax-raw-tail-suffix-property (car stx)))
+     (let loop ([stx stx] [accum null] [pre? #t] [sfx null])
+       (cond
+         [(null? stx)
+          (if (null? (cons-raw tail '()))
+              (values null accum (cons-raw sfx tail-sfx))
+              (values null (cons-raw accum (cons-raw sfx tail)) tail-sfx))]
+         [else
+          (define-values (pfx raw new-sfx) (extract-raw (car stx)))
+          (cond
+            [pre?
+             (define-values (no-pfx all-raw sfx) (loop (cdr stx)
+                                                       (cons-raw accum raw)
+                                                       #f
+                                                       new-sfx))
+             (values pfx all-raw sfx)]
+            [else
+             (loop (cdr stx)
+                   (cons-raw (cons-raw accum sfx)
+                             (cons-raw pfx raw))
+                   #f
+                   new-sfx)])]))]
+    [else (values null null null)]))
 
 ;; If the tail is empty, give it a source location
 ;; that matches the end of `op-stx`
@@ -145,17 +191,17 @@
        [else tail])]
     [else tail]))
 
-;; This function should work reliably when `stx` is a shrubbery
-;; representation. It should also handle a syntax object that is
-;;  list of terms; there's a danger of misinterpreting a `group`
-;; or `multi` term as constructing a group or multi-group sequence,
-;; so we against that by treating an identifier with a non-empty 'raw
-;; property as not constructing a group or multi-gropu sequence.
 (define (maybe-respan stx)
   (cond
     [(syntax-srcloc stx) stx]
     [else (respan stx)]))
 
+;; This function should work reliably when `stx` is a shrubbery
+;; representation. It should also handle a syntax object that is
+;; list of terms; there's a danger of misinterpreting a `group`
+;; or `multi` term as constructing a group or multi-group sequence,
+;; so we against that by treating an identifier with a non-empty 'raw
+;; property as not constructing a group or multi-gropu sequence.
 (define (respan stx)
   (define e (syntax-e stx))
   (define (not-identifier-term? head)
@@ -178,6 +224,11 @@
                   (or (and (pair? d) (car d))
                       a)))
            (and (and (eq? (syntax-e a) 'alts)
+                     (not-identifier-term? a))
+                (maybe-respan stx))
+           ;; concession to using `datum->syntax` in `Syntax.relocate_span`
+           (and (and (or (eq? (syntax-e a) 'multi)
+                         (eq? (syntax-e a) 'group))
                      (not-identifier-term? a))
                 (maybe-respan stx))
            (and (memq (syntax-e a) '(parens brackets braces quotes))

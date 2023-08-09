@@ -4,6 +4,7 @@
                      syntax/stx
                      enforest
                      enforest/transformer
+                     shrubbery/property
                      "srcloc.rkt"
                      "name-path-op.rkt")
          "enforest.rkt"
@@ -263,7 +264,16 @@
   ;; during the dynamic extent of a Rhombus transformer; since we're
   ;; at the Racket expansion level, instead, transform in and out to
   ;; cancel the corresponding calls in `:expression`.
-  (transform-out (enforest-rhombus-expression (transform-in stx))))
+  (define new-stx (transform-out (enforest-rhombus-expression (transform-in stx))))
+  ;; We don't want an 'opaque-raw property to be duplicated. So,
+  ;; if it exists on the input, discard any such property on the
+  ;; output.
+  (if (syntax-opaque-raw-property stx)
+      (let* ([new-stx (syntax-opaque-raw-property new-stx "")]
+             [new-stx (syntax-raw-suffix-property new-stx '())]
+             [new-stx (syntax-raw-prefix-property new-stx '())])
+        new-stx)
+      new-stx))
 
 (define-for-syntax (enforest-rhombus-expression stx)
   (with-syntax-error-respan

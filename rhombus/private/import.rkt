@@ -18,8 +18,7 @@
                      "import-invert.rkt"
                      "tag.rkt"
                      "id-binding.rkt"
-                     "operator-parse.rkt"
-                     "srcloc-span.rkt")
+                     "operator-parse.rkt")
          "enforest.rkt"
          "name-root.rkt"
          "name-root-space.rkt"
@@ -885,13 +884,15 @@
      (syntax-parse stx
        [(form-id (~and kw #:none))
         (datum->syntax #f
-                       (list (relocate-span #'rhombus-prefix-in (list #'form-id #'kw))
+                       (list (relocate+reraw (datum->syntax #f (list #'form-id #'kw))
+                                             #'rhombus-prefix-in)
                              req
                              #'kw
                              #f))]
        [(form-id name::name)
         (datum->syntax #f
-                       (list (relocate-span #'rhombus-prefix-in (list #'form-id #'name.name))
+                       (list (relocate+reraw (datum->syntax #f (list #'form-id #'name.name))
+                                             #'rhombus-prefix-in)
                              req
                              #'name.name
                              #f))]))))
@@ -978,12 +979,12 @@
      (syntax-parse stx
        #:datum-literals (block group)
        [(_ #:scope_like id:identifier)
-        (datum->syntax #f (list (relocate-span #'rhombus-prefix-in (syntax->list stx))
+        (datum->syntax #f (list (relocate+reraw stx #'rhombus-prefix-in)
                                 req
                                 #f
                                 #'id))]
        [(form-id)
-        (datum->syntax #f (list (relocate* #'rhombus-prefix-in #'form-id)
+        (datum->syntax #f (list (relocate+reraw #'form-id #'rhombus-prefix-in)
                                 req
                                 #f
                                 #f))]))))
@@ -1010,13 +1011,13 @@
         (define ph (syntax-e #'phase))
         (unless (exact-integer? ph)
           (raise-syntax-error #f "not a valid phase" stx #'phase))
-        (datum->syntax #f (list (relocate-span (syntax/loc #'form for-meta)
-                                               (list #'form #'phase))
+        (datum->syntax #f (list (relocate+reraw (datum->syntax #f (list #'form #'phase))
+                                                #'for-meta)
                                 #'phase
                                 req))]
        [(form) 
-        (datum->syntax #f (list (relocate* (syntax/loc #'form for-meta)
-                                           #'form)
+        (datum->syntax #f (list (relocate+reraw #'form
+                                                #'for-meta)
                                 #'1
                                 req))]))))
 
@@ -1025,7 +1026,7 @@
    (lambda (req stx)
      (syntax-parse stx
        [(form) 
-        (datum->syntax #f (list (relocate* (syntax/loc #'form for-meta)
-                                           #'form)
+        (datum->syntax #f (list (relocate+reraw #'form
+                                                #'for-meta)
                                 #f
                                 req))]))))

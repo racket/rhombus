@@ -60,11 +60,11 @@ expr.macro 'examples($form, ...)':
                             | '~hidden': ['~hidden: #true']
                             | _: []
       def label: if i == 0 | find_label() | #false
-      Syntax.relocate_span('@examples_stanza(~label: $label,
-                                             ~eval: eval,
-                                             ~indent: indent,
-                                             $no_prompt, ...,
-                                             $(List.repet(j[1])), ...)',
+      Syntax.relocate_span('(@examples_stanza(~label: $label,
+                                              ~eval: eval,
+                                              ~indent: indent,
+                                              $no_prompt, ...,
+                                              $(List.repet(j[1])), ...))',
                            j[1])
   def eval = find_eval()
   'block:

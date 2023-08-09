@@ -78,7 +78,7 @@
          (wrap-expression (check-expression-result
                            (proc (parsed-argument form1) (parsed-argument form2) stx)
                            proc)
-                          #:srcloc (span-srcloc form1 form2)))
+                          #:srcloc (datum->syntax #f (list form1 stx form2))))
        (lambda (form1 tail)
          (define-values (form new-tail)
            (tail-returner
@@ -100,7 +100,7 @@
          (wrap-expression (check-expression-result
                            (proc (parsed-argument form) stx)
                            proc)
-                          #:srcloc (span-srcloc stx form)))
+                          #:srcloc (datum->syntax #f (list stx form))))
        (lambda (tail)
          (define-values (form new-tail)
            (tail-returner
@@ -119,17 +119,20 @@
 (define-for-syntax (pack_expr s)
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  #`(parsed #:rhombus/expr (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
+  (define g (unpack-group s 'expr.pack_expr #f))
+  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g))))
 
 (define-for-syntax (pack_meta_expr s)
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  #`(parsed #:rhombus/expr (rhombus-expression/meta #,(unpack-group s 'expr.pack_expr #f))))
+  (define g (unpack-group s 'expr.pack_expr #f))
+  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g))))
 
 (define-for-syntax (pack_and_meta_expr s)
   (unless (syntax? s)
     (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  #`(parsed #:rhombus/expr (rhombus-expression/both #,(unpack-group s 'expr.pack_expr #f))))
+  (define g (unpack-group s 'expr.pack_expr #f))
+  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
 
 (define-for-syntax (parse_more s)
   (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
@@ -141,5 +144,5 @@
   (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
     [e::expression
      (define-values (expr opaque) (syntax-local-expand-expression (syntax-local-introduce (transform-out #'e.parsed))))
-     (values #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce expr)))
-             #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce opaque))))]))
+     (values (relocate+reraw expr #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce expr))))
+             (relocate+reraw expr #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce opaque)))))]))

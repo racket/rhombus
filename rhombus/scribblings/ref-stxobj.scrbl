@@ -820,12 +820,12 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.relocate_span(stx :: Syntax,
+  fun Syntax.relocate_span(stx :: Term,
                            like_stxes :: List.of(Syntax)) :: Syntax
 ){
 
- Similar to @rhombus(Syntax.relocate), but that the metadata of syntax
- objects in @rhombus(like_stxes) are merged to replace the metadata of
+ Similar to @rhombus(Syntax.relocate), but the metadata of syntax
+ objects in @rhombus(like_stxes) is merged to replace the metadata of
  @rhombus(stx). Merging combines raw source text in sequence, and it
  combines compatible source locations to describe a region containing
  all of the locations.

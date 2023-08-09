@@ -19,9 +19,8 @@
          "dotted-sequence.rkt"
          "static-info.rkt"
          "define-arity.rkt"
-         "srcloc-span.rkt"
-         (except-in "srcloc.rkt"
-                    relocate)
+         (rename-in "srcloc.rkt"
+                    [relocate srcloc:relocate])
          "call-result-key.rkt"
          "index-result-key.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -449,11 +448,17 @@
                             (replace_scopes v ctx))])
       replace_scopes)))
 
-(define/arity (relocate stx ctx-stx-in)
+(define/arity (relocate stx ctx-stx)
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" stx))
-  (unless (syntax? ctx-stx-in) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" ctx-stx-in))
-  (relocate* stx ctx-stx-in))
+  (unless (syntax? ctx-stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" ctx-stx))
+  (let ([ctx-stx (relevant-source-syntax ctx-stx)])
+    (at-relevant-dest-syntax
+     stx
+     (lambda (stx)
+       (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx))
+     (lambda (stx inner-stx)
+       stx))))
 
 (define relocate_method
   (lambda (stx)
@@ -461,12 +466,75 @@
                       (relocate stx ctx-stx))])
       relocate)))
 
-(define/arity (relocate_span stx ctx-stxes)
+(define (relevant-source-syntax ctx-stx-in)
+  (syntax-parse ctx-stx-in
+    #:datum-literals (group block alts parens brackets braces quotes multi op)
+    [((~and head (~or group block alts parens brackets braces quotes)) . _) #'head]
+    [(multi (g t))
+     #:when (syntax-property #'g 'from-pack)
+     (relevant-source-syntax #'t)]
+    [(multi (g . _)) #'g]
+    [(op o) #'o]
+    [_ ctx-stx-in]))
+
+;; Extracts from a suitable syntax object inside the source (e.g., a
+;; `parens` tag or `group` tag) and similarly applies to a suitable
+;; syntax object in the target.
+(define (at-relevant-dest-syntax stx proc proc-outer)
+  (let loop ([stx stx])
+    (syntax-parse stx
+      #:datum-literals (group block alts parens brackets braces quotes multi op)
+      [((~and head (~or group block alts parens brackets braces quotes)) . rest)
+       (define inner (proc #'head))
+       (proc-outer (datum->syntax #f (cons inner #'rest)) inner)]
+      [((~and m multi) (g t))
+       #:when (syntax-property #'g 'from-pack)
+       (loop #'t)]
+      [((~and m multi) (g . rest))
+       (define inner (proc #'g))
+       (proc-outer (datum->syntax #f (list #'m (cons inner #'rest))) inner)]
+      [((~and tag op) o)
+       (define inner (proc #'o))
+       (proc-outer (datum->syntax #f (list #'tag inner)) inner)]
+      [((~and tag parsed) space o)
+       (define inner (proc #'o))
+       (datum->syntax #f (list #'tag #'space inner) inner inner)]
+      [_
+       (proc stx)])))
+
+;; also reraws:
+(define/arity (relocate_span stx-in ctx-stxes)
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Syntax" stx))
-  (unless (and (pair? ctx-stxes) (list? ctx-stxes) (andmap syntax? ctx-stxes))
-    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "NonemptyList.of(Syntax)" ctx-stxes))
-  (relocate-span stx ctx-stxes))
+  (define stx (and (syntax? stx-in) (unpack-term stx-in #f #f)))
+  (unless stx (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Term" stx-in))
+  (unless (and (list? ctx-stxes) (andmap syntax? ctx-stxes))
+    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "List.of(Syntax)" ctx-stxes))
+  
+  (at-relevant-dest-syntax
+   stx
+   (lambda (stx)
+     (if (null? ctx-stxes)
+         (let* ([stx (syntax-opaque-raw-property (syntax->datum stx (syntax-e stx) #f stx) '())]
+                [stx (if (syntax-raw-prefix-property stx)
+                         (syntax-raw-prefix-property stx '())
+                         stx)]
+                [stx (if (syntax-raw-suffix-property stx)
+                         (syntax-raw-suffix-property stx '())
+                         stx)])
+           stx)
+         (relocate+reraw (datum->syntax #f ctx-stxes) stx)))
+   (lambda (stx inner-stx)
+     (let ([stx (syntax-opaque-raw-property (datum->syntax #f (syntax-e stx) inner-stx)
+                                            (syntax-opaque-raw-property inner-stx))])
+       (let ([pfx (syntax-raw-prefix-property inner-stx)]
+             [sfx (syntax-raw-suffix-property inner-stx)])
+         (let* ([stx (if pfx
+                         (syntax-raw-prefix-property stx pfx)
+                         stx)]
+                [stx (if sfx
+                         (syntax-raw-suffix-property stx sfx)
+                         stx)])
+           stx))))))
 
 (define relocate_span_method
   (lambda (stx)
