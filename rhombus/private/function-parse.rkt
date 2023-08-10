@@ -886,7 +886,7 @@
                                         #:srcloc [srcloc #f] ; for `relocate` on result
                                         #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
                                         #:rator-arity [rator-arity #f])
-  (define (generate extra-rands rands rsts dots kwrsts tail)
+  (define (generate extra-rands rands rsts dots kwrsts tag tail)
     (syntax-parse stxes
       [(_ args . _)
        (generate-call rator-in #'args extra-rands rands rsts dots kwrsts tail
@@ -895,13 +895,14 @@
                       #:rator-stx rator-stx
                       #:srcloc srcloc
                       #:rator-kind rator-kind
-                      #:rator-arity rator-arity)]))
+                      #:rator-arity rator-arity
+                      #:props-stx tag)])) ; intended to capture originalness or errortraceness
   (define (check-complex-allowed)
     (when (eq? rator-kind '|syntax class|)
       (raise-syntax-error #f "syntax class call cannot have splicing arguments" rator-stx)))
   (syntax-parse stxes
     #:datum-literals (group)
-    [(_ (~and args (_::parens rand ...)) . tail)
+    [(_ (~and args (tag::parens rand ...)) . tail)
      #:when (complex-argument-splice? #'(rand ...))
      (check-complex-allowed)
      (values (complex-argument-splice-call rator-in #'args extra-args #'(rand ...)
@@ -910,31 +911,32 @@
                                            #:rator-stx rator-stx
                                            #:srcloc srcloc
                                            #:rator-kind rator-kind
-                                           #:rator-arity rator-arity)
+                                           #:rator-arity rator-arity
+                                           #:props-stx #'tag)
              #'tail)]
-    [(_ (_::parens rand ...
-                   (group _::&-expr rst ...)
-                   (group _::~&-expr kwrst ...))
+    [(_ (tag::parens rand ...
+                     (group _::&-expr rst ...)
+                     (group _::~&-expr kwrst ...))
         . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tail)]
-    [(_ (_::parens rand ...
-                   rep (group (~var dots (:... in-expression-space)))
-                   (group _::&-expr kwrst ...))
+     (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tag #'tail)]
+    [(_ (tag::parens rand ...
+                     rep (group (~var dots (:... in-expression-space)))
+                     (group _::&-expr kwrst ...))
         . tail)
      (check-complex-allowed)
-     (generate #'(rand ...) #'rep #'dots.name #'(group kwrst ...) #'tail)]
-    [(_ (_::parens rand ... (group _::&-expr rst ...)) . tail)
+     (generate #'(rand ...) #'rep #'dots.name #'(group kwrst ...) #'tag #'tail)]
+    [(_ (tag::parens rand ... (group _::&-expr rst ...)) . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tail)]
-    [(_ (_::parens rand ... rep (group (~var dots (:... in-expression-space)))) . tail)
+     (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tag #'tail)]
+    [(_ (tag::parens rand ... rep (group (~var dots (:... in-expression-space)))) . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'rep #'dots.name #f #'tail)]
-    [(_ (_::parens rand ... (group _::~&-expr kwrst ...)) . tail)
+     (generate extra-args #'(rand ...) #'rep #'dots.name #f #'tag #'tail)]
+    [(_ (tag::parens rand ... (group _::~&-expr kwrst ...)) . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
-    [(_ (_::parens rand ...) . tail)
-     (generate extra-args #'(rand ...) #f #f #f #'tail)]))
+     (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tag #'tail)]
+    [(_ (tag::parens rand ...) . tail)
+     (generate extra-args #'(rand ...) #f #f #f #'tag #'tail)]))
 
 (define-for-syntax (generate-call rator-in args-stx extra-rands rands rsts dots kwrsts tail
                                   #:static? static?
@@ -942,7 +944,8 @@
                                   #:rator-stx rator-stx
                                   #:srcloc srcloc
                                   #:rator-kind rator-kind
-                                  #:rator-arity rator-arity)
+                                  #:rator-arity rator-arity
+                                  #:props-stx props-stx)
   (values
    (with-syntax-parse ([(rand::kw-argument ...) rands])
      (handle-repetition
@@ -995,7 +998,7 @@
                                   (syntax->list #'(arg-form ... ...))))]))
           (define e (relocate+reraw (or srcloc
                                         (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
-                                    (datum->syntax #'here (map discard-static-infos es))))
+                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx)))
           (define result-static-infos (or (rator-static-info/indirect #'#%call-result)
                                           #'()))
           (define all-result-static-infos (or (let-values ([(r indirect?)
@@ -1094,7 +1097,8 @@
                                                  #:rator-stx rator-stx
                                                  #:srcloc srcloc
                                                  #:rator-kind rator-kind
-                                                 #:rator-arity rator-arity)
+                                                 #:rator-arity rator-arity
+                                                 #:props-stx props-stx)
   (define (gen-id) (car (generate-temporaries '(arg))))
   (let loop ([gs-stx gs-stx]
              [rev-args '()])
@@ -1151,7 +1155,8 @@
                                   #:rator-stx rator-stx
                                   #:srcloc srcloc
                                   #:rator-kind rator-kind
-                                  #:rator-arity rator-arity))
+                                  #:rator-arity rator-arity
+                                  #:props-stx props-stx))
                  term))]
       [(((~and tag group) _::&-expr rand ...+) . gs)
        (loop #'gs

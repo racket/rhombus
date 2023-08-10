@@ -6,7 +6,8 @@
                      enforest/operator
                      "operator-parse.rkt"
                      "tag.rkt"
-                     "statically-str.rkt")
+                     "statically-str.rkt"
+                     "srcloc.rkt")
          "provide.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -153,7 +154,8 @@
                            field-id)]
       [else
        (define (lookup)
-         (values #`(dot-lookup-by-name #,form1 '#,field-id)
+         (values (relocate+reraw (datum->syntax #f (list form1 dot field-id))
+                                 #`(dot-lookup-by-name #,form1 '#,field-id))
                  tail))
        (cond
          [repetition? (lookup)]
