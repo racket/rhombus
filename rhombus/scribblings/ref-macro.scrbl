@@ -185,8 +185,8 @@
  @rhombus(template) and the tail of an enclosing group that follows the
  match to @rhombus(pattern). The @rhombus(defined_name) position must be
  @rhombus(()), the pattern form must be a prefix (not infix) pattern,
-  and the only allowed
- @rhombus(option) is @rhombus(~op_stx). For the purpose of matching a
+ and the only allowed @rhombus(option)s are @rhombus(~op_stx) and
+ @rhombus(~all_stx). For the purpose of matching a
  syntax object passed to the function produced by @rhombus(macro), the
  leading @rhombus(()) in each pattern is replaced by @rhombus(_, ~bind).
  In addition, unless the pattern ends with @rhombus(#,(@rhombus($, ~bind))())
