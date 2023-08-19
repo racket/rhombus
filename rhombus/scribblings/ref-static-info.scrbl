@@ -184,7 +184,7 @@
         indicate that no wrapper is needed}
 
   @item{@rhombus(statinfo_meta.values_key) --- a packed group of
-        static infoformation (see @rhombus(statinfo_meta.pack_group)),
+        static information (see @rhombus(statinfo_meta.pack_group)),
         one for each value produced by a multiple-value expression}
 
 )
