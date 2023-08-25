@@ -63,7 +63,8 @@ spacer.bridge fun(self, tail, context, esc):
     | '$name ... $(parens && '($arg, ...)') $(op && ('::' || ':~')) $ann ...:
          $(b :: Block)':
         let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
-        '$(make_self('$name ...')) $args $(spacer.adjust_term(b, context, esc))'  
+        let new_ann = spacer.adjust_sequence('$op $ann ...', #'~expr, esc)
+        '$(make_self('$name ...')) $args $new_ann $(spacer.adjust_term(b, context, esc))'  
     | '$name ... $(parens && '($arg, ...)') $tail ...':
         let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
         let '$new_tail ...' = spacer.adjust_sequence('$tail ...', context, esc)
