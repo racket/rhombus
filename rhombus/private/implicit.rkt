@@ -73,7 +73,7 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (relocate+reraw #'datum #'(quote datum))
+        (values (relocate #'datum #'(quote datum) #'datum) ; copies all props, including originalness
                 #'tail)]))))
 
 (define-binding-syntax #%literal
