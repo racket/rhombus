@@ -41,10 +41,10 @@
         (syntax-parse stxes
           #:datum-literals (group)
           [(form-id space ... (_::block (group (_::quotes (group bound::dotted-operator-or-identifier-sequence)))))
-           (values #`((~var _ (:free=-in-space
-                               (quote-syntax (group . bound))
-                               (rhombus-expression (group space ...))
-                               'form-id))
+           (values #`((~seq (~var _ (:free=-in-space
+                                     (quote-syntax (group . bound))
+                                     (rhombus-expression (group space ...))
+                                     'form-id)))
                       ()
                       ()
                       ())

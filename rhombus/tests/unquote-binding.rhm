@@ -132,3 +132,11 @@ block:
   check:
     get_area_code('+ 65 (801) 555 - 1212')
     ~raises "argument does not satisfy annotation"
+
+check:
+  expr.macro 'm':
+    match 'List'
+    | '$(name && bound_as expr_meta.space: 'List')':
+        name
+  m
+  ~is List
