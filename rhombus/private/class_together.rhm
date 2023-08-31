@@ -1,0 +1,47 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+export:
+  only_space namespace:
+    class
+
+namespace class:
+  export together
+
+defn.macro 'together:
+              $defn
+              ...':
+  ~all_stx all_stx
+  def [[id, tmp_id], ...]:
+    for List (defn: [defn, ...]):
+      fun temp_id(id):
+        Syntax.make_temp_id("ns")
+      match defn
+      | '$(bound_as defn_meta.space: 'class') $id $_ ...':
+          [id, temp_id(id)]
+      | '$(bound_as defn_meta.space: 'interface') $id $_ ...':
+          [id, temp_id(id)]
+      | ~else:
+          syntax_meta.error("not a class or interface definition",
+                            all_stx,
+                            defn)
+  'annot.delayed_declare $id
+   ...
+   $(Syntax.make_sequence(
+       List.reverse(
+         for values(accum = []) (id: [id, ...],
+                                 tmp_id: [tmp_id, ...],
+                                 defn: [defn, ...]):
+           ['annot.delayed_complete $id: $tmp_id . $tmp_id',
+            'import . $tmp_id . $id',
+            'namespace $tmp_id:
+               export:
+                 except_space annot:
+                   $id
+                 rename:
+                   $id as $tmp_id
+               $defn']
+             ++ accum
+       )
+     ))'

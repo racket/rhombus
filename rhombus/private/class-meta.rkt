@@ -52,7 +52,6 @@
 (define (class-expand-data-internal-info-name data)
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
-        for-together?
         full-name name
         . _)
      #'name]))
@@ -60,7 +59,6 @@
 (define (class-expand-data-internal-info-fields data)
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
-        for-together?
         full-name name
         constructor-field-names
         constructor-field-keywords

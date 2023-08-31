@@ -8,4 +8,5 @@
         "when_unless.rhm"
         "where.rhm"
         "described_as.rhm"
-        "sequence.rhm")
+        "sequence.rhm"
+        "class_together.rhm")

@@ -109,7 +109,6 @@
         "class-clause-primitive.rkt"
         "with.rkt"
         "interface.rkt"
-        "class-together.rkt"
         "block.rkt"
         "cond.rkt"
         "match.rkt"

@@ -418,15 +418,13 @@
 ){
 
  Defines the same bindings as the @rhombus(class_or_interface)s, but
- reorders the expansion so that the defined class and interface names can
- be used as field, method, and property-result annotations and in all of the other
- class and interface declarations.
+ with an indirection on annotations so that the defined class and
+ interface names can be used as field, method, and property-result
+ annotations and in all of the other class and interface declarations.
 
- Definitions and expressions within each @rhombus(class) and
- @rhombus(interface) form (i.e., forms that are not @tech{class clauses}
- or @tech{interface clauses}) are ordered before all of the class and
- interface definitions, so using @rhombus(class.together) does not make
- the class and interface names more available in those terms.
+ The @rhombus(class.together) form expands to a combination of
+ @rhombus(namespace), @rhombus(annot.delayed_declare), and
+ @rhombus(annot.delayed_complete) declarations.
 
 @examples(
   class.together:

@@ -30,3 +30,35 @@ check:
   Foo([Foo([])])
   ~raises "does not satisfy annotation"
 
+check:
+  class.together:
+    class Tree(x :: List.of(Node))
+    class Node(val, children :: Tree)
+
+  class.together:
+    class Base():
+      nonfinal
+    class Extend():
+      extends Base
+
+  class.together:
+    interface IBase
+    interface IExtend:
+      extends IBase
+
+  class.together:
+    interface Interface
+    class Class():
+      implements Interface
+
+  ~completes
+
+block:
+  class.together:
+    class Foo():
+      export: helper
+      fun helper() :: Foo:
+        Foo()
+  check:
+    Foo.helper()
+    ~is Foo()

@@ -61,4 +61,8 @@ defined outside the @rhombus(class) form.
     Posn.origin.x
 )
 
+Another solution is to use @rhombus(class.together), as described in the
+next section, but putting helper definitions after the class can avoid a
+small amount of overhead for instance checks.
+
 @close_eval(method_eval)

@@ -100,8 +100,16 @@ they canot be ordered differently. To enable mutual references, use the
 
 The @rhombus(class.together) form can also be used when references among
 classes only go in one way, but you'd prefer to define the referencing
-class before the referenced class. The @rhombus(class.together) form is
-no help for the problem of referencing a class from definitions within
-the @rhombus(class) form as discussed in @secref("class-namespace"),
-however. In general, definitions that need to refer to defined classes
-may need to be written after the @rhombus(class.together) form.
+class before the referenced class, and it can resolve the problem of
+referencing a class from definitions within the @rhombus(class) form as
+discussed in @secref("class-namespace").
+
+The @rhombus(class.together) form works by using
+@rhombus(annot.delayed_declare) and @rhombus(annot.delayed_complete).
+You can use @rhombus(annot.delayed_declare) and
+@rhombus(annot.delayed_complete) directly instead of
+@rhombus(class.together), and that approach allows declarations to span
+different modules. Within a module, prefer @rhombus(class.together),
+because it avoids potential pitfalls of using
+@rhombus(annot.delayed_declare) and @rhombus(annot.delayed_complete)
+directly.

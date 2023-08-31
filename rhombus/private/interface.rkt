@@ -25,7 +25,6 @@
          "interface-clause.rkt"
          "interface-clause-parse.rkt"
          "class-top-level.rkt"
-         "class-together-parse.rkt"
          "class-clause-tag.rkt"
          "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
@@ -44,20 +43,12 @@
 (provide (for-space rhombus/defn
                     interface))
 
-(module+ for-together
-  (provide interface_for_together))
-
 (define-defn-syntax interface
   (definition-transformer
     (lambda (stxes)
       (parse-interface stxes))))
 
-(define-syntax interface_for_together
-  (definition-transformer
-    (lambda (stxes)
-      (parse-interface stxes #t))))
-
-(define-for-syntax (parse-interface stxes [for-together? #f])
+(define-for-syntax (parse-interface stxes)
   (syntax-parse stxes
     #:datum-literals (group block)
     [(_ name-seq::dotted-identifier-sequence options::options-block)
@@ -68,7 +59,7 @@
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx) #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
                                       full-name name]
                             ;; data accumulated from parsed clauses:
                             ()))
@@ -106,7 +97,7 @@
 (define-syntax interface-annotation+finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ ([orig-stx base-stx init-scope-stx for-together?
+      [(_ ([orig-stx base-stx init-scope-stx
                      full-name name]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
@@ -161,8 +152,7 @@
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id])
-         (wrap-for-together
-          #'for-together?
+         (values
           #`(begin
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-interface-annotation internal-name

@@ -12,11 +12,13 @@
                      "class-field-parse.rkt"
                      "interface-parse.rkt"
                      "expose.rkt")
+         "provide.rkt"
          racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "space.rkt"
          "call-result-key.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
@@ -31,7 +33,6 @@
          "class-method.rkt"
          "class-desc.rkt"
          "class-top-level.rkt"
-         "class-together-parse.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
@@ -43,26 +44,21 @@
          "append-property.rkt"
          "reconstructor.rkt")
 
-;; the `class` form is provided by "class-together.rkt"
 (provide this
-         super)
+         super
+         (for-spaces (rhombus/space
+                      rhombus/defn)
+                     class))
 
-(module+ for-together
-  (provide (for-syntax class-transformer)
-           class_for_together
-           class-finish))
+(define-space-syntax class
+  (space-syntax rhombus/class))
 
-(define-for-syntax class-transformer
+(define-defn-syntax class
   (definition-transformer
     (lambda (stxes)
       (parse-class stxes))))
       
-(define-syntax class_for_together
-  (definition-transformer
-    (lambda (stxes)
-      (parse-class stxes #t))))
-
-(define-for-syntax (parse-class stxes [for-together? #f])
+(define-for-syntax (parse-class stxes)
   (syntax-parse stxes
     #:datum-literals (group block)
     [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
@@ -74,7 +70,7 @@
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `class-annotation+finish`
      ;; and "class-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx) #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
                                       full-name name
                                       (field.name ...)
                                       (field.keyword ...)
@@ -119,7 +115,7 @@
 (define-syntax class-annotation+finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ ([orig-stx base-stx init-scope-stx for-together?
+      [(_ ([orig-stx base-stx init-scope-stx
                      full-name name
                      constructor-field-names
                      constructor-field-keywords
@@ -230,8 +226,7 @@
                      [indirect-static-infos indirect-static-infos]
                      [internal-indirect-static-infos internal-indirect-static-infos]
                      [instance-static-infos instance-static-infos])
-         (wrap-for-together
-          #'for-together?
+         (values
           #`(begin
               #,@(top-level-declare #'(name? . constructor-name-fields))
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
