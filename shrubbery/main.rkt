@@ -62,4 +62,7 @@
       [(drracket:keystrokes)
        (dynamic-require 'shrubbery/keystroke
                         'shrubbery-keystrokes)]
+      [(drracket:comment-delimiters)
+       '((line "//" " ")
+         (region "/*" " *" "*/" " "))]
       [else (make-default key default)])))
