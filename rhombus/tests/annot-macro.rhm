@@ -51,7 +51,7 @@ check:
   import: rhombus/meta open
   annot.delayed_declare Forward
   fun (): (10 :: Forward).x
-  ~raises "no such field or method (based on static information)"
+  ~raises "static information needed before completed"
 
 check:
   ~eval

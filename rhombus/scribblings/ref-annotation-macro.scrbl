@@ -159,12 +159,12 @@
 
  If a value is tested against a delayed annotation @rhombus(id) before
  it is completed via @rhombus(annot.delayed_complete) at run time, then
- an exception is reported. At compile time, the static information
- associated @rhombus(id) is empty until after it is completed via
- @rhombus(annot.delayed_complete, ~expr).
+ an exception is reported. At compile time, attempting to use the static information
+ associated @rhombus(id) raises a syntax error until it is completed via
+ @rhombus(annot.delayed_complete).
 
- These forms should be used as last resort because they inherently
- involve a side effect, and potentially across module boundaries. When a
+ These forms should be used as last resort, because they inherently
+ involve a side effect, and because that effect is potentially across module boundaries. When a
  module uses an imported delayed annotation, the run-time component of
  that delayed annotation might be initialized as a side effect of
  requiring some other module, which potentially makes the reference

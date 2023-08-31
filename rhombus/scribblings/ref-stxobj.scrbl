@@ -644,7 +644,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_temp_id(name = #false,
-                          ~keep_name keep_name = #false) :: Identifier
+                          ~keep_name: keep_name = #false) :: Identifier
 ){
 
  Creates an identifier with a fresh scope, which is useful for creating

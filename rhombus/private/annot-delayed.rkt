@@ -35,6 +35,11 @@
 (define (too-early who)
   (raise-arguments-error who "delayed annoation is not yet completed"))
 
+(define-for-syntax (static-info-too-early who)
+  (raise-syntax-error #f
+                      "annotation static information needed before completed"
+                      'name))
+
 (define-defn-syntax delayed_declare
   (definition-transformer
     (lambda (stx)
@@ -44,9 +49,11 @@
               (define delayed-predicate (lambda (v) (too-early 'name)))
               (define (set-delayed-predicate! proc) (set! delayed-predicate proc))
               (define-syntax delayed-static-info (static-info
-                                                  (let ([static-infos null])
+                                                  (let ([static-infos #f])
                                                     (case-lambda
-                                                      [() static-infos]
+                                                      [()
+                                                       (unless static-infos (static-info-too-early 'name))
+                                                       static-infos]
                                                       [(si) (set! static-infos si)]))))
               (define-syntax #,(in-annotation-space #'name)
                 (letrec ([self (make-delayed-annotation
