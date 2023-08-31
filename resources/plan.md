@@ -146,7 +146,7 @@ Failure is still an option. If the project leader is never able to
 identify such a result, the project will be declared a failure. 
 
 
-Phase 3: Conversion (months or years) 
+Phase 3: Integration (months or years) 
 ------------------- 
 
 GOAL AND OUTPUT: Complete language, libraries, and documentation, 
