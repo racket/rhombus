@@ -112,14 +112,23 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ #:length e ...+)
-        (values (reducer/no-break #'build-array-reduce
-                                  #'([i 0])
-                                  #'build-array-assign
-                                  array-static-infos
-                                  #'[dest
-                                     (rhombus-expression (group e ...))
-                                     i])
-                '())]
+        ;; If `e` ends with parentheses after at least one term, then
+        ;; let those parentheses be for the initial `each` shorthand,
+        ;; instead of treating it as part of the length expression
+        (define (finish len-g tail)
+          (values (reducer/no-break #'build-array-reduce
+                                    #'([i 0])
+                                    #'build-array-assign
+                                    array-static-infos
+                                    #`[dest
+                                       (rhombus-expression #,len-g)
+                                       i])
+                  tail))
+        (syntax-parse #'(e ...)
+          [(e ...+ (~and p (_::parens . _)))
+           (finish #'(group e ...) #'(p))]
+          [_
+           (finish #'(group e ...) #'())])]
        [(_ . tail)
         (values
          (reducer/no-break #'build-array-reduce-list

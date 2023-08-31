@@ -6,19 +6,25 @@
 @title{Iteration}
 
 @doc(
-  expr.macro 'for:
+  expr.macro 'for $maybe_each:
                 $clause_or_body
                 ...
                 $body'
-  expr.macro 'for $reducer:
+  expr.macro 'for $reducer $maybe_each:
                 $clause_or_body
                 ...
                 $body'
-  expr.macro 'for:
+  expr.macro 'for $maybe_each:
                 $clause_or_body
                 ...
                 $body
                 ~into $reducer'
+  grammar maybe_each:
+    ($bind:
+       $body
+       ...,
+     ...)
+    #,(epsilon)
   grammar clause_or_body:
     #,(@rhombus(each, ~for_clause)) $bind:
       $body
@@ -40,8 +46,10 @@
     : : $body; ...      
 ){
 
- Iterates as determined by @rhombus(each, ~for_clause) clauses among the
- @rhombus(clause_or_body)s. An @rhombus(each, ~for_clause) clause forms one layer
+ Iterates as determined by @rhombus(maybe_each) and @rhombus(each, ~for_clause) clauses among the
+ @rhombus(clause_or_body)s, where a non-empty @rhombus(maybe_each) is converted to
+ an initial @rhombus(each, ~for_clause) before all @rhombus(clause_or_body)s.
+ An @rhombus(each, ~for_clause) clause forms one layer
  of iteration; each subsequent part of the body is evaluated once per
  iteration, and additional @rhombus(each, ~for_clause) groups form nested
  iterations.
@@ -91,6 +99,8 @@
 
 @examples(
   ~repl:
+    for (v: ["a", "b", "c"]):
+      println(v)
     for:
       each v: ["a", "b", "c"]
       println(v)
@@ -110,6 +120,9 @@
       each v: ["a", "b", "c"]
       final_when v == "b"
       println(v)
+    for (v: ["a", "b", "c"],
+         i: 0..):
+      println(i +& ". " +& v)
     for:
       each:
         v: ["a", "b", "c"]

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -36,7 +37,7 @@
 (define-reducer-syntax values
   (reducer-transformer
    (lambda (stx)
-     (syntax-parse stx
+     (syntax-parse (respan stx)
        #:datum-literals (group op)
        [(_ (parens (group id:identifier _::equal rhs ...) ...) . tail)
         #:with (e::expression ...) #'((group rhs ...) ...)

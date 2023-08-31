@@ -26,6 +26,14 @@ from a starting integer (inclusive) to an ending integer (exclusive):
     println(i)
 )
 
+As a shorthand, an initial @rhombus(each, ~for_clause) form can be written
+using parentheses before the @rhombus(for) body block:
+
+@demo(
+  for (i: 1..4):
+    println(i)
+)
+
 If a @rhombus(for) body includes multiple @rhombus(each, ~for_clause) clauses, they
 are nested. That is, for each element of the first @rhombus(each, ~for_clause) clause,
 all elements are used for the second @rhombus(each, ~for_clause) clause, and so on.
@@ -61,6 +69,16 @@ immediately after @rhombus(each, ~for_clause).
     println(index +& ". " +& friend)
 )
 
+Note that the shorthand form using parentheses for an initial
+@rhombus(each, ~for_clause) clause corresponds to this parallel mode,
+since the short is for a single @rhombus(each, ~for_clause) clause:
+
+@demo(
+  for (friend: ["Alice", "Bob", "Carol"],
+       index: 1..4):
+    println(index +& ". " +& friend)
+)
+
 In this latest example, the sequence for @rhombus(index) could be
 @rhombus(1..) to avoid needing the length of the list for
 @rhombus(friend). When @rhombus(..) has no second argument, it creates
@@ -74,8 +92,7 @@ accumulating the values produced by each iteration of the @rhombus(for)
 body.
 
 @demo(
-  for List:
-    each i: 1..4
+  for List (i: 1..4):
     "number " +& i
   for List:
     each i: [1, 2]
@@ -87,8 +104,7 @@ If you prefer, you can put the reducer at the end of a @rhombus(for)
 body with @rhombus(~into).
 
 @demo(
-  for:
-    each i: 1..4
+  for (i: 1..4):
     "number " +& i
     ~into List
 )
@@ -98,10 +114,8 @@ body with @rhombus(~into).
 a value.
 
 @demo(
-  for Map:
-    each:
-      friend: ["alice", "bob", "carol"]
-      index: 1..
+  for Map (friend: ["alice", "bob", "carol"],
+           index: 1..):
     values(index, friend)
 )
 

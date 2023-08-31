@@ -8,6 +8,11 @@ block:
       accum := List.cons(i, accum)
     accum
     ~is [1, 0]
+  check:
+    for (i: 0..2):
+      accum := List.cons(i + 10, accum)
+    accum
+    ~is [11, 10, 1, 0]
 
 check:
   for List:
@@ -16,8 +21,18 @@ check:
   ~is [0, 1]
 
 check:
+  for List (i: 0..2):
+    i
+  ~is [0, 1]
+
+check:
   for Map:
     each i: 0..2
+    values(i, "" +& i)
+  ~is {0: "0", 1: "1"}
+
+check:
+  for Map (i: 0..2):
     values(i, "" +& i)
   ~is {0: "0", 1: "1"}
 
@@ -29,8 +44,7 @@ check:
   ~is [0, 1]
 
 check:
-  for:
-    each i: 0..2
+  for (i: 0..2):
     i
     ~into List
   ~is [0, 1]
@@ -47,6 +61,12 @@ check:
     each:
       i: 0..2
       j: 0..2
+    [i, -j-1]
+  ~is [[0, -1], [1, -2]]
+
+check:
+  for List (i: 0..2,
+            j: 0..2):
     [i, -j-1]
   ~is [[0, -1], [1, -2]]
 
@@ -68,6 +88,13 @@ check:
   ~is [[1, -1], [1, -2], [2, -1], [2, -2]]
 
 check:
+  for List (i: 0..2):
+    def i_plus = i+1
+    each j: 0..2
+    [i_plus, -j-1]
+  ~is [[1, -1], [1, -2], [2, -1], [2, -2]]
+
+check:
   for List:
     each i: 0..2
     def i_len = i+1
@@ -78,6 +105,11 @@ check:
 check:
   for values(sum = 0):
     each i: 0..4
+    sum + i
+  ~is 6
+
+check:
+  for values(sum = 0) (i: 0..4):
     sum + i
   ~is 6
 
@@ -149,6 +181,11 @@ check:
   ~is {"3 -> c", "4 -> d"}
 
 check:
+  for Set ((key, val): {3: "c", 4: "d"}):
+    key +& " -> " +& val
+  ~is {"3 -> c", "4 -> d"}
+
+check:
   for Map:
     each key: {3, 4}
     values(key, key+1)
@@ -163,6 +200,17 @@ check:
 check:
   for Array ~length 6:
     each i: 3..7
+    i
+  ~prints_like Array(3, 4, 5, 6, 0, 0)
+
+check:
+  for Array ~length (1 + 5):
+    each i: 3..7
+    i
+  ~prints_like Array(3, 4, 5, 6, 0, 0)
+
+check:
+  for Array ~length 6 (i: 3..7):
     i
   ~prints_like Array(3, 4, 5, 6, 0, 0)
 
@@ -223,3 +271,31 @@ check:
                                "y": [4, 5] }
     [x, ...].reverse()
   ~is {[3, 2, 1], [5, 4]}
+
+check:
+  for values() ():
+    each i: 1..2
+    values()
+  ~is values()
+
+check:
+  for values():
+    each i: 1..2
+    values()
+  ~is values()
+
+check:
+  for values() ():
+    values()
+  ~is values()
+
+check:
+  for values():
+    values()
+  ~is values()
+
+check:
+  for values() ():
+    each:«»
+    values()
+  ~is values()

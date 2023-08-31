@@ -38,6 +38,7 @@
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
                   [= rhombus=])
+         "not-block.rkt"
          "dotted-sequence-parse.rkt"
          "lambda-kwrest.rkt"
          "error.rkt"
@@ -205,15 +206,6 @@
                            #f
                            (list #'eq2))]
       [_ (void)]))
-  
-  (define-syntax-class :not-block
-    #:datum-literals (op parens braces brackets quotes)
-    (pattern _:identifier)
-    (pattern (op . _))
-    (pattern (parens . _))
-    (pattern (braces . _))
-    (pattern (brackets . _))
-    (pattern (quotes . _)))
 
   (define-splicing-syntax-class :ret-annotation
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results

@@ -5,6 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
+                     (for-syntax racket/base)
                      "macro-result.rkt")
          "enforest.rkt")
 
@@ -19,8 +20,10 @@
            reducer-transformer
            :reducer
            :reducer-form
+           :infix-op+reducer+tail
            reducer
-           reducer/no-break)
+           reducer/no-break
+           reducer-quote)
 
   (property reducer-prefix-operator prefix-operator)
   (property reducer-infix-operator infix-operator)
@@ -58,6 +61,9 @@
       [_ (raise-bad-macro-result (proc-name proc) "reducer" form)]))
 
   (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
+  (define-syntax (reducer-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/reducer) #'id))]))
   
   (define-rhombus-enforest
     #:syntax-class :reducer
