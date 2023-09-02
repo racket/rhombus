@@ -29,6 +29,8 @@ expr.macro 'examples($form, ...)':
         [['~hidden', [repl, ...]], &split(rest)]
     | ['~error: $repl', &rest]:
         [['~repl', forms]]
+    | ['~check: $repl', &rest]:
+        [['~repl', forms]]
     | ['~fake: $repl', &rest]:
         [['~repl', forms]]
     | ['$(kw :: Keyword) $_ ...', &rest]:

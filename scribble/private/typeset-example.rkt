@@ -74,6 +74,12 @@
                          #`((list (quote #:error)
                                   #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
                             (tag form ...))]
+                        [(group #:check (block ((~and tag group) form ...)
+                                               (group #:is expect ...)))
+                         #`((list (quote #:check)
+                                  #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
+                            ((tag form ...)
+                             (group expect ...)))]
                         [(group #:fake (block ((~and tag group) form ...)
                                               ((~and tag2 group) answer ...)))
                          #`(#,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...))
@@ -123,6 +129,8 @@
                 (cond
                   [(and (pair? rb) (eq? (car rb) '#:error))
                    (values (cadr rb) 'error)]
+                  [(and (pair? rb) (eq? (car rb) '#:check))
+                   (values (cadr rb) 'check)]
                   [else (values rb 'success)]))
               (define expr (cadr rb+expr))
               (cons
@@ -152,6 +160,22 @@
                              [(eq? mode 'error) (begin
                                                   (eval (strip-context expr))
                                                   '(oops))]
+                             [(eq? mode 'check)
+                              (define exprs (syntax->list (cadr (syntax->list expr))))
+                              (define vals
+                                (call-with-values
+                                 (lambda () (eval (strip-context #`(top #,(car exprs)))))
+                                 list))
+                              (define expects
+                                (call-with-discarded-output
+                                 eval
+                                 (lambda ()
+                                   (call-with-values
+                                    (lambda () (eval (strip-context #`(top #,(cadr exprs)))))
+                                    list))))
+                              (unless (equal-always? vals expects)
+                                (error "check failed"))
+                              vals]
                              [else (call-with-values
                                     (lambda () (eval (strip-context expr)))
                                     list)]))])
@@ -209,3 +233,12 @@
                  (cons (syntax-property (car l) 'raw "")
                        (cdr l))
                  (cadr l)))
+
+(define (call-with-discarded-output eval thunk)
+  (define orig (call-in-sandbox-context eval current-output-port))
+  (dynamic-wind
+   (lambda ()
+     (call-in-sandbox-context eval (lambda () (current-output-port (open-output-bytes)))))
+   thunk
+   (lambda ()
+     (call-in-sandbox-context eval (lambda () (current-output-port orig))))))

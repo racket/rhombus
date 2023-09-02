@@ -29,10 +29,18 @@
  mutually exclusive.
 
 @examples(
-  5 is_a Exact
-  5.0 is_a Inexact
-  5.0 is_a Exact
-  5 is_a Inexact
+  ~check:
+    5 is_a Exact
+    ~is #true
+  ~check:
+    5.0 is_a Inexact
+    ~is #true
+  ~check:
+    5.0 is_a Exact
+    ~is #false
+  ~check:
+    5 is_a Inexact
+    ~is #false
 )
 
 }
