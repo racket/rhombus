@@ -58,7 +58,9 @@ collections, stream processing, and asynchronous programming.
 By “on top of the Racket platform,” we mean that Rhombus should be a
 `#lang` like any other, and it should be possible for users to combine
 Rhombus code and libraries with ordinary Racket code and libraries
-seamlessly. Where we are now
+seamlessly.
+
+# Where we are now
 
 A few surface syntax proposals have been brainstormed, and the
 proposals fit into two broad categories:
