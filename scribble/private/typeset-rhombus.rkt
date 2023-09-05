@@ -73,7 +73,7 @@
            (define (suffixed? stx)
              (not (null? (or (eq? 'space (ends (syntax-raw-suffix-property stx)))
                              (syntax-case stx ()
-                               [(head . _) (eq? 'space (ends (syntax-raw-tail-property #'head)))]
+                               [(head . _) (eq? 'space (ends (syntax-raw-tail-suffix-property #'head)))]
                                [_ #f])
                              '()))))
            (define add-space?
