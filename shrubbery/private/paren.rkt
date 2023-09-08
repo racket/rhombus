@@ -11,4 +11,4 @@
     (« »)))
 
 (define shrubbery-quote-matches
-  '(#\"))
+  '(#\" #\'))
