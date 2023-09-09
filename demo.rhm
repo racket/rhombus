@@ -531,10 +531,8 @@ check_later()
 // for
 
 fun enumerate(l :: List):
-  for:
-    each:
-      v: l
-      i: 0..
+  for (v: l,
+       i: 0..):
     println(i +& ". " +& v)
 
 enumerate(["a", "b", "c"])
@@ -548,8 +546,7 @@ fun grid(m, n):
 grid(2, 3)
 
 fun loop_sum(l :: List):
-  for values(sum = 0):
-    each i: l
+  for values(sum = 0) (i: l):
     sum+i
 
 loop_sum([2, 3, 4])
