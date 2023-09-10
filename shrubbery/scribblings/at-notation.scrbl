@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
 @(import:
+    "grammar.rhm" open
     "quote.rhm" open
     "at-exp.rkt" open)
 
@@ -64,13 +65,15 @@ Overall, @litchar("@") notation has three key properties:
 Each input of the form
 
 @verbatim(~indent: 2){
- @litchar("@")@italic{command}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{text} @litchar("}")...
+ @bseq(@litchar("@"), @italic{command},
+       @litchar{(}, @italic{arg}, @litchar{,}, @elem{...}, @litchar{)},
+       @litchar("{"), @italic{text}, @litchar("}"), @elem{...})
 }
 
 is parsed into the same representation as
 
 @verbatim(~indent: 2){
- @italic{command}@litchar{(}@italic{arg}@litchar{,} ...@litchar{,} @litchar{[}@italic{converted_text}, ...@litchar{]}, ...@litchar{)}
+ @italic{command}@litchar{(}@italic{arg}@litchar{,} @elem{...}@litchar{,} @litchar{[}@italic{converted_text}, @elem{...}@litchar{]}, @elem{...}@litchar{)}
 }
 
 Each component of the original form---@italic{command}, parenthesized
@@ -78,12 +81,12 @@ Each component of the original form---@italic{command}, parenthesized
 component is present, and as long as @italic{command} is present
 before parenthesized @italic{arg}s. The @italic{command} and
 @italic{arg} components are in shrubbery notation, while @italic{text}
-is in text mode and converted to @italic{converted_text}. The
+is in text mode and converted to @italic{converted_text} lists. The
 @italic{converted_text} translation includes elements that are not
 string literals in places where @italic{text} has escapes. An
 @litchar("@") form can have multiple @braces @italic{text}
 blocks, in which case the translation has multiple
-@italic{converted_list} list arguments.
+@italic{converted_text} list arguments.
 
 More examples:
 
@@ -113,21 +116,21 @@ Some additional @litchar("@") rules:
 
  @item{While the @italic{command} component itself can be parenthesized, it
        can also have the form
-       @rhombus(#,(@litchar("«")) #,(@italic{command}) ... #,(@litchar{»})),
+       @bseq(@litchar{«}, @italic{command}, @elem{...}, @litchar{»})
        for a multi-part command component that is spliced into the translation
        without surrounding parentheses.},
 
  @item{A multi-part @italic{command} that is a sequence of
        identifiers separated by operators (usually @litchar{.}) can be
-       written without grouping @litchar{«»}, as long as no space
+       written without grouping @guillemets, as long as no space
        appears between the identifiers and operators.},
 
- @item{When @litchar{(} @italic{arg} @litchar{,} ... @litchar{)} is
+ @item{When @bseq(@litchar{(}, @italic{arg}, @litchar{,}, @elem{...}, @litchar{)}) is
        present, the separating commas are optional. That is, arguments
        can be provided as different newline-separated groups without a
        @litchar{,} in between.}
 
- @item{The form @rhombus(#,(@litchar("@(«")) #,(@italic{command}) ... #,(@litchar{»)}))
+ @item{The form @bseq(@litchar("@(«"), @italic{command}, @elem{...}, @litchar{»})
        splices as-is with no arguments, even if the subsequent text has
        the shape of parenthesed @italic{arg}s or braced @italic{text}.},
 

@@ -1,0 +1,9 @@
+#lang rhombus/static
+import:
+  scribble/rhombus as scribble
+  meta_label:
+    rhombus.import
+
+export: #{rhm-import}
+
+def #{rhm-import} = scribble.rhombus(import)

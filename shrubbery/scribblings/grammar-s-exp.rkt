@@ -14,6 +14,7 @@
              @racket[(group @#,nonterm{item} ... @#,nonterm{block} @#,nonterm{alts})])
        (list @nonterm{item}
              @nonterm{atom}
+             @racket[(op @#,nonterm{symbol})]
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
              @racket[(braces @#,nonterm{group} ...)]
