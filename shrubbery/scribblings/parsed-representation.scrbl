@@ -13,7 +13,7 @@ The parse of a shrubbery can be represented by an S-expression:
  @item{Each group is represented as a list that starts @litchar{'group}, and
    the rest of the list are the elements of the group.}
 
- @item{Atom elements are represented as “themselves” within a group,
+ @item{Atom elements are represented as ``themselves'' within a group,
    including identifers a symbols, except that an operator is
    represented as a 2-element list that is @litchar{'op} followed by the operator name
    as a symbol.}
@@ -79,55 +79,46 @@ Here are some example shrubberies with their S-expression parsed
 representations:
 
 @verbatim(~indent: 2){
-def pi: 3.14
+def pi = 3.14
 
-(group de pi (block (group 3.14)))
+(group def pi (op =) 3.14)
 
-def fourth(n: integer):
-  def m: n*n
-  def v: m*m
-  printf("~a^4 = ~a\n", n, v)
+fun fourth(n :: Int):
+  let m = n*n
+  let v = m*m
+  println(n +& "^4 = " +& v)
   v
 
-(group def
-       fourth
-       (parens (group n (block (group integer))))
+(group fun fourth (parens (group n (op ::) Int))
        (block
-        (group def m (block (group n (op *) n)))
-        (group def v (block (group m (op *) m)))
-        (group printf
-               (parens (group "\"~a^4 = ~a\\n\"") (group n) (group v)))
+        (group let m (op =) n (op *) n)
+        (group let v (op =) m (op *) m)
+        (group println (parens (group n (op +&) "^4 = " (op +&) v)))
         (group v)))
 
-if x = y
-| same
-| different
+if x == y
+| #'same
+| #'different
 
-(group if x (op =) y (alts (block (group same))
-                           (block (group different))))
+(group if x (op ==) y
+       (alts (block (group (op |#'|) same))
+             (block (group (op |#'|) different))))
 
-define fib(n):
+fun fib(n):
   match n
   | 0: 0
   | 1: 1
   | n: fib(n-1) + fib(n-2)
 
-(group define
-       fib
-       (parens (group n))
+(group fun fib (parens (group n))
        (block
-        (group match
-               n
+        (group match n
                (alts
                 (block (group 0 (block (group 0))))
                 (block (group 1 (block (group 1))))
-                (block
-                 (group n
-                        (block
-                         (group fib
-                                (parens (group n (op -) 1))
-                                (op +)
-                                fib
-                                (parens (group n (op -) 2))))))))))))
+                (block (group n (block
+                                 (group fib (parens (group n (op -) 1))
+                                        (op +)
+                                        fib (parens (group n (op -) 2))))))))))))
 }
 

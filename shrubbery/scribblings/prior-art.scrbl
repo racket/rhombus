@@ -7,9 +7,9 @@
 Indentation-sensitive parsing and the use of @litchar{:} is obviously
 informed by Python.
 
-Sampling notation's rules relating indentation, lines, @litchar{;}, and
+Shrubbery notation's rules relating indentation, lines, @litchar{;}, and
 @litchar{:} are originally based on the
-@hyperlink("https://github.com/tonyg/racket-something"){#lang something}
+@hyperlink("https://github.com/tonyg/racket-something"){@tt{#lang something}}
 reader, which also targets an underlying expander that
 further groups tokens. Shrubbery notation evolved away from using
 @braces for blocks, however, because @litchar{:} was nearly always
@@ -38,7 +38,7 @@ needed in sapling notation.
 
 More generally, shrubbery notation takes inspiration from
 S-expressions and alternative S-expression notations. The idea that,
-even in an S-expression-like setting, some parsing can be deferred a
+even in an S-expression-like setting, some parsing can be deferred to a
 later parser has many precedents, including Clojure's choice of where
 to put parentheses and notations that use something like @litchar{$} to escape
 to infix mode.

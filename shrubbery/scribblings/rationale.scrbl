@@ -1,4 +1,5 @@
 #lang scribble/rhombus/manual
+@(import: "quote.rhm" open)
 
 @title{Rationale}
 
@@ -76,7 +77,7 @@ width. Counting the @litchar{\} itself is consistent with ignoring
 @litchar{\} when it appears within a line, so grouping stays the same
 whether there's a newline or the continue line immediately after
 @litchar{\}. The whitespace role of @litchar{\} also means that spaces
-can be turned into @litchar{\} to “harden” code for transfer via media
+can be turned into @litchar{\} to ``harden'' code for transfer via media
 (such as email) that might mangle consecutive spaces.
 
 Using @litchar{~} for keywords has a precedent in OCaml. Reserving
@@ -88,7 +89,7 @@ been liberating for Racket syntax (particularly since keywords can be
 kept disintinct from expressions more generally), and we expect
 similar benefits for having keywords in shrubbery notation.
 
-The @litchar{#{....}} escape to S-expressions provides a bridge between
+The @s_exp_braces escape to S-expressions provides a bridge between
 shrubbery notation and Racket identifiers. For example,
 @litchar{#{exact-integer?}} is an identifier with @litchar{-} and
 @litchar{?} as part of the identifier. Shrubbery notation could be

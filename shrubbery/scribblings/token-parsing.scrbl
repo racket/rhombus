@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "grammar.rhm" open)
+@(import:
+    "grammar.rhm" open
+    "quote.rhm" open)
 
 @(def notecol = italic)
 
@@ -15,9 +17,9 @@ Other tokens are described by the grammar below, where a
 star (★) in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
-@deftech{Numbers} are supported directly in in simple forms---decimal integers,
+@deftech{Numbers} are supported directly in simple forms---decimal integers,
 decimal floating point, and hexadecimal/octal/binary integers---in all cases allowing
-@litchar{_}s between digits. A @litchar("#{")...@litchar("}") escape
+@litchar{_}s between digits. A @s_exp_braces escape
 provides access to the full Racket S-expression number grammar. Special
 floating-point values use a @litchar{#} notation: @litchar{#inf},
 @litchar{#neginf}, and @litchar{#nan}.
@@ -71,10 +73,10 @@ with no whitespace in between. For example, @litchar{1+2} is
 @litchar{1} plus @litchar{2}, but @litchar{1 +2} is @litchar{1}
 followed by the number @litchar{+2}.
 
-When a @litchar("#{")...@litchar("}") escape describes an identifier
+When a @s_exp_braces escape describes an identifier
 S-expression, it is an identifier in the same sense as a
 shrubbery-notation identifier. The same holds for numbers, booleans,
-strings, byte strings, and keywords. A @litchar("#{")...@litchar("}")
+strings, byte strings, and keywords. A @s_exp_braces
 escape must @emph{not} describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
 ill-formed representations.
@@ -219,7 +221,7 @@ but the table below describes the shape of @litchar("@") forms.
     [is_lex, @nonterm{comment}, bis, bseq(@litchar{//}, kleenestar(@nonterm{nonnlchar})), ""],
     ["", "", bor, bseq(@litchar{/*}, kleenestar(@nonterm{anychar}), @litchar{*/}), @notecol{nesting allowed}],
     ["", "", bor, bseq(@litchar("@//"), kleenestar(@nonterm{nonnlchar})), @elem{@notecol{only within} @nonterm{text}}],
-    ["", "", bor, bseq(@litchar("@//"), @nonterm{atopen}, kleenestar(@nonterm{anychar}), @nonterm{atopen}), @elem{only within @nonterm{text}}],
+    ["", "", bor, bseq(@litchar("@//"), @nonterm{atopen}, kleenestar(@nonterm{anychar}), @nonterm{atopen}), @elem{@notecol{only within} @nonterm{text}}],
     ["", "", bor, bseq(@litchar{#! }, kleenestar(@nonterm{nonnlchar}), kleenestar(@nonterm{continue})), ""],
     empty_line,
     [no_lex, @nonterm{nonnlchar}, bis, @italic{any character other than newline}, ""],

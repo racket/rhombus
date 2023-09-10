@@ -81,7 +81,7 @@ same indentation create separate @tech{groups}, one for each line.
 )
 
 Comments and lines with only whitespace are ignored. They don't count
-when this document says “the previous line” or “the next line.”
+when this document says ``the previous line'' or ``the next line.''
 
 @section{Grouping by Opener--Closer Pairs}
 
@@ -319,7 +319,7 @@ immediately within @quotes, @brackets, or @braces, or if is
 the first group of the sequence immediately within @quotes. Like
 @litchar{:}, the group-sequence content after @litchar{|} cannot be
 empty (unless explicit-grouping @guillemets are used
-immediately after @litchar{|}, as desctibed in @secref("guillemet")).
+immediately after @litchar{|}, as described in @secref("guillemet")).
 
 If a @litchar{|} appears on the same line as an earlier @litchar{|} and
 is not more nested inside @parens, @brackets, or @braces,
@@ -495,7 +495,7 @@ The following five groups are the same:
     »
 )
 
-Using @guillemets can “armor” a shrubbery for transport from one
+Using @guillemets can ``armor'' a shrubbery for transport from one
 context to another where its line breaks or indentation might get
 mangled. For example, an editor might offer an operation to armor a
 range of text in perparation for moving or copying the text, and then
@@ -594,12 +594,12 @@ inside:« fruit » more
 As a last resort, @litchar{\} can be used at the end of a line (optionally
 followed by whitespace and coments on the line) to continue the next
 line as it if were one line continuing with the next line. The itself
-@litchar{\} does not appear in the parsed form. A that is not at the end of a
+@litchar{\} does not appear in the parsed form. A @litchar{\} that is not at the end of a
 line (followed by whitespace and coments) is treated the same as
 whitespace.
 
 Lines containing only whitespace and (non-term) comments do not count
-as “the next line” even for @litchar{\} continuations, so any number of
+as ``the next line'' even for @litchar{\} continuations, so any number of
 whitespace and comment lines can appear between @litchar{\} and the line that
 it continues.
 

@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "grammar.rhm" open)
+@(import:
+    "grammar.rhm" open
+    "quote.rhm" open)
 
 @title(~tag: "at-parsing"){At-Notation Parsing}
 
@@ -18,7 +20,7 @@ one of these forms:
       }
 
       where @italic{command_splice} is the same as @italic{command}, except
-      that an immediately wrapping @litchar("«»") (if any) is removed, and the
+      that an immediately wrapping @guillemets (if any) is removed, and the
       conversion of @italic{braced_text} is described below.
 
       The allowed form of @italic{command} is described in
@@ -36,7 +38,7 @@ one of these forms:
       are allowed.
 
       Although a character other than @litchar{(} after
-      @italic{command} would normally, mean that one of the other @litchar("@")
+      @italic{command} would normally mean that one of the other @litchar("@")
       forms is being used, a @litchar("[") in that position is treated
       as a parse error. (This prohibition is intended to support
       better error reporting when S-expression @litchar("@") syntax is
@@ -59,7 +61,7 @@ one of these forms:
 
       Converts to 
       @verbatim(~indent: 2){
-        @litchar{(}@litchar{[}@italic{converted_text}, ...@litchar{]}, ...@litchar{)}
+        @litchar{(}@litchar{[}@italic{converted_text}, @elem{...}@litchar{]}, @elem{...}@litchar{)}
       }
 
       The allowed forms of @italic{braced_text} and the spacing rules
@@ -198,7 +200,7 @@ and @italic{closer}:
        literal element, if it is not a separate element already.
 
        Note that a line that originally contained only whitespace will
-       have just a newline at this point (not not even that, if it's
+       have just a newline at this point (not even that, if it's
        the last line), since trailing whitespace was previously
        discarded.},
 

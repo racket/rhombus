@@ -1,7 +1,8 @@
 #lang scribble/manual
-@(require (for-label racket/base
+@(require "rhm_id.rhm"
+          (for-label racket/base
                      racket/contract/base
-                     (only-in rhombus import)
+                     syntax/parse
                      shrubbery/parse
                      shrubbery/write
                      shrubbery/print))
@@ -28,14 +29,14 @@ running the module prints the S-expression form of the parsed shrubbery
 
 prints @racketresult['(top (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
 
-@racketblock[  
- @#,hash-lang[] @#,racketmodname[racket/base]
+@racketmod[#:file "demo.rkt"
+ racket/base
  (require (for-syntax racket/base
                       syntax/parse))
- 
+
  (provide (rename-out [module-begin #%module-begin])
           + - * /)
- 
+
  (define-syntax (module-begin stx)
    (syntax-parse stx
      #:datum-literals (top group op)
@@ -55,7 +56,7 @@ prints the result @racketresult[3].
 A same-line module language for @racketmodname[shrubbery] is determined
 by using @racket[parse-all] in @racket['line] mode. As long as the
 resulting shrubbery is not empty, it is parsed in the same way that
-@racketmodname[rhombus] parses module names for @racket[import].
+@racketmodname[rhombus] parses module names for @|rhm-import|.
 
 @section{Parsing API}
 
@@ -64,29 +65,30 @@ resulting shrubbery is not empty, it is parsed in the same way that
 @defproc[(parse-all [in input-port?]
                     [#:source source any/c]
                     [#:mode mode (or/c 'top 'interactive 'line 'text) 'top])
-         (or/c eof-object syntax?)]{
+         (or/c eof-object? syntax?)]{
 
- Parses shrubbery notation frmo @racket[in] and returns an S-expression
- representation as descirbed in @secref["parsed-rep"] in syntax-object.
+ Parses shrubbery notation from @racket[in] and returns an S-expression
+ representation as described in @secref["parsed-rep"] as a syntax object.
 
- The result syntax objects has no scopes, but it had source-location
+ The result syntax object has no scopes, but it has source-location
  information and @seclink["raw-text"]{raw-text properties}.
  Source-location information is never associated with the ``parentheses''
- of the syntax object. Instead, location information and other properties
+ of the syntax object. Instead, source-location information and other properties
  for a shrubbery @litchar{()}, @litchar{[]}, @litchar["{}"], or
  @litchar{''} is associated with the @racket[parens],
- @racket[brackets], @racket[brackets], or @racket[quotes] identifier.
- Similarly, block and alternative source locations and properties are
- record on a @racket[block] or @racket[alts] identifier. A
+ @racket[brackets], @racket[braces], or @racket[quotes] identifier.
+ Similarly, source-location information and properties for a
+ @litchar{:} block or @litchar{|} alternatives are
+ recorded on a @racket[block] or @racket[alts] identifier. A
  @racket[group] identifier in the representation has only
- @seclink["raw-text"]{raw-text properties} for test before and after the
- group elements. For an operator, source-location and property
- information is associated to the operator identifier, and not the
+ @seclink["raw-text"]{raw-text properties} for text before and after the
+ group elements. For an operator, source-location information and properties
+ are associated to the operator identifier, and not the
  wrapper @racket[op] identifier.
 
  The default @racket['top] mode read @racket[in] until an end-of-file,
- and it expects a sequence of groups that are indented consistent with
- each other (i.e., all starting at the same column). The @racket['text]
+ and it expects a sequence of groups that are indented consistently
+ throughout (i.e., all starting at the same column). The @racket['text]
  mode is similar, but it starts in ``text'' mode, as if the entire input
  is inside curly braces of an @litchar["@"] form (see
  @secref["at-notation"]).
@@ -108,17 +110,17 @@ resulting shrubbery is not empty, it is parsed in the same way that
 
 @defmodule[shrubbery/property]
 
-A syntax object produced by @racket[parse] includes properties that
+A syntax object produced by @racket[parse-all] includes properties that
 allow the original shrubbery text to be reconstructed from the syntax
-objects. Furthermore, this raw-text information is distributed among
+object. Furthermore, this raw-text information is distributed among
 syntax objects in a way that helps it stay preserved to a useful degree
 on subterms as they are rearranged by enforestation and macro expansion.
-The @racketmodname[shrubbery/property] exports identifiers bound to the
+The @racketmodname[shrubbery/property] module exports identifiers bound to the
 property-key symbols, which can be helpful to avoid a typo in a quoted
 symbol.
 
 The property values are trees of strings: a string, an empty list, or a
-pair containing two trees. Raw test can be reconstructed through a
+pair containing two trees. Raw text can be reconstructed through a
 preorder traversal of the tree.
 
 @deftogether[(
@@ -139,8 +141,8 @@ preorder traversal of the tree.
 
  For @racket[op] and @racket[group] wrapper identifiers, an empty
  @racket['raw] property is associated with the identifier. An explicit
- empty cooperates with inference in
- @racket[property shrubbery-syntax->string] for whether raw-text
+ empty property cooperates with inference in
+ @racket[shrubbery-syntax->string] for whether raw-text
  properties should be used.
 
 }
@@ -154,7 +156,7 @@ preorder traversal of the tree.
 
  Adjusts or inspects the @racket['raw-prefix] preserved property, which records
  original text that is before a term and not part of a preceding term,
- or adjsust or inspects the @racket['raw-suffix] preserved
+ or adjusts or inspects the @racket['raw-suffix] preserved
  property, which records original text after a term and before the next term. Such text
  is eligible for either the @racket['raw-suffix] property of one term or
  the @racket['raw-prefix] property of a following term;
@@ -263,7 +265,7 @@ preorder traversal of the tree.
  indentation. The printed form is @seclink["guillemet"]{line- and
   column-insensitive} if @racket[armor?] is a true value.
 
- The description is an S-expression DAG (direct, acyclic graph) that
+ The description is an S-expression DAG (directed acyclic graph) that
  represents pretty-printing instructions and alternatives:
 
  @itemlist[
@@ -336,7 +338,7 @@ preorder traversal of the tree.
  text.
 
  If @racket[infer-starting-indentation?] is true, then a consistent
- amount of leading whitespace is removed frmo ech line of the result
+ amount of leading whitespace is removed from each line of the result
  string.
 
  The @racket[register-stx-range] and @racket[render-stx-hook] arguments
