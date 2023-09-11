@@ -1,9 +1,9 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm": open)
+@(import: "common.rhm" open)
 
-@title{Macro protocol}
+@title{Macro Protocols}
 
-When an operator's mapping indicates a macro protocol, then the
+When an operator's mapping indicates a @tech{macro protocol}, then the
 operator's transformer procedure is called with a parsed left-hand
 argument (in the case of an infix operator) and all of the remaining
 terms in the operator's group starting with the operator. The
@@ -24,27 +24,27 @@ as an already-parsed term and need not conform to the shrubbery
 grammar's representation. Since the list starting @racket_q_parsed
 itself has no shrubbery representation, it's conveniently opaque to a
 shrubbery layer of patterning matching. For example, in the earlier
-example implementing the @rhombus(->) macro infix operator,
+example implementing the @rhombus(->) @tech(~key: "macro protocol"){macro} infix operator,
 
 @rhombusblock(
-  expr.macro '($x -> $y $tail ...)':
-    values('($x . $y)', tail)
+  expr.macro '$x -> $y $tail ...':
+    values('$x . $y', '$tail ...')
 )
 
-the macro transformer receives an syntax-object representing the
+the macro transformer receives a syntax object representing the
 already-parsed left-hand argument @rhombus(x) as a @racket_q_parsed
 list. The macro therefore has no way to pull the expression apart,
 inspect it, or rearrange it. Of course, such facilities could be made
 available to the macro transformer in lower-level form. Meanwhile,
-@rhombus(y) and @rhombus(tail) are likely unparsed terms, that can be
+@rhombus(y) and @rhombus(tail) are likely unparsed terms, which can be
 inspected—although it's possible that some other macro constructs a
 @rhombus(->) expression using already-parsed terms, in which case they
 are similarly opaque to the @rhombus(->) transformer.
 
-For binding-operator macros, @Rhombus includes @rhombus(bind.unpack) to
+For binding-operator macros, @Rhombus includes @rhombus(bind_meta.unpack) to
 expose certain pieces of a binding's implementation, which allows the
 macro to compose or adjust other binding expansions. New binding pieces
-can be put back together into a parsed form using @rhombus(bind.pack).
+can be put back together into a parsed form using @rhombus(bind_meta.pack).
 
 Some contexts may oblige a macro transformer to consume all of the
 remaining terms in a group. For example, a definition or declaration

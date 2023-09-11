@@ -21,6 +21,7 @@
     "rackunit-lib"
     "scribble-doc"
     "draw-doc"
-    "gui-easy"))
+    "gui-easy"
+    "compatibility"))
 
 (define version "0.18")

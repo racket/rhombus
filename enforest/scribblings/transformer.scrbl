@@ -5,7 +5,7 @@
 
 Some contexts in a Rhombus language (likely including expression
 contexts) will support infix, prefix, and postfix operators. The Rhombus
-expander provides an _enforestation_ framework for parsing forms that
+expander provides an @emph{enforestation} framework for parsing forms that
 involve multiple operators, each with a declared precedence and
 associativity. The enforestation process also allows an operator
 transformer to completely take over parsing of terms that follow the
@@ -68,7 +68,7 @@ resume enforestation, all operators could be implemented with the
 Some contexts might constrain the allowed forms of operators to prefix
 or infix, constrain the names used for operators, and/or eschew one of
 the operator protocols. For example, declaration and definition contexts
-might allow only macro prefix operators with identifier names. The
+might allow only @tech(~key: "macro protocol"){macro} prefix operators with identifier names. The
 @Rhombus implementation makes that choice, and it also allows
 expression forms with operators to appear in the same places as
 declaration and definition forms.

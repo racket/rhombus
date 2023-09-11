@@ -3,12 +3,18 @@
 import:
   scribble/rhombus/manual open
   "racket.rkt" open
+  meta_label:
+    rhombus open
+    rhombus/meta open
 
 export:
   all_from("racket.rkt")
   shrubbery_doc
   rhombus_doc
   Rhombus
+  meta_label:
+    all_from(rhombus)
+    all_from(rhombus/meta)
 
 def shrubbery_doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"]
 def rhombus_doc: [#'lib, "rhombus/scribblings/rhombus.scrbl"]
