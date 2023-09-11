@@ -1,5 +1,9 @@
 #lang scribble/manual
-@(require (only-in "common.rhm" Rhombus))
+@(require (only-in "common.rhm" Rhombus)
+          "rhm_id.rhm"
+          (for-label compatibility/package
+                     racket/base
+                     syntax/parse))
 
 @title{Implementation Examples}
 
@@ -10,7 +14,8 @@ The prototype @Rhombus implementation starts with a
 
 @racketblock[
 (define-syntax (rhombus-module-begin stx)
-  (syntax-case stx ()
+  (syntax-parse stx
+    #:datum-literals (top)
     [(_ (top . content))
      #`(#%module-begin
         (rhombus-top . content))]))
@@ -60,16 +65,16 @@ makes sure that the low-level transformer returns at least a
 list-shaped syntax object, but that's just for earlier error
 detection.
 
-A simple implementation of the @racket[val] definition form could be like
+A simple implementation of the @racket[def] definition form could be like
 this:
 
 @racketblock[
-(define-syntax val
+(define-syntax def
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (block)
-        (code:comment "match `val <binding>: <form> ...`, where")
+        (code:comment "match `def <binding>: <form> ...`, where")
         (code:comment "`:` grouping is represented by `block`")
         [(_ b::binding (block rhs ...))
          (build-values-definitions #'b.parsed
@@ -141,10 +146,9 @@ An infix expression operator like @racket[+] is defined roughly like this:
 ]
 
 The actual implementation has more layers of abstraction, deals with
-macro scope introductions, supports a @racket[define*]-like @racket[forward]
+macro scope introductions, supports a @racket[define*]-like forward
 definition form, implements more complicated syntax, and so on. Some
 part of the language would be built in this low-level way, including
-operator- and macro-defining forms like @racket[operator] and
-@racket[expr.macro], and then more of the Rhombus prototype language
-could be built using the Rhombus prototype language.
+operator- and macro-defining forms like @rhm-operator and
+@rhm-expr-macro, and then more of @Rhombus could be built using @|Rhombus|.
 

@@ -25,7 +25,7 @@ types and one macro:
    property value must be a function that takes a structure
    implementing the property and returns a @racket[name-root] instance. The
    @racket[name-root] structure implements @racket[prop:name-root] with a function that
-   results the structure instance itself.}
+   results in the structure instance itself.}
 
  @item{An @racket[operator] structure type with @racket[infix-operator]
   and @racket[prefix-operator] structure subtypes. An @racket[operator]

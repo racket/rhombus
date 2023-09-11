@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    meta_label:
+      rhombus/meta open)
 
 @title{Hierarchical Naming}
 

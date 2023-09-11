@@ -1,0 +1,14 @@
+#lang rhombus/static
+import:
+  scribble/rhombus as scribble
+  meta_label:
+    rhombus open
+    rhombus/meta open
+
+export:
+  #{rhm-operator}
+  #{rhm-expr-macro}
+
+def #{rhm-operator} = scribble.rhombus(operator)
+
+def #{rhm-expr-macro} = scribble.rhombus(expr.macro)

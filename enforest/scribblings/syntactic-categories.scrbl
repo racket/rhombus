@@ -12,7 +12,7 @@ possible contexts:
   @item{declarations (in a module's immediate body or at the top level)},
   @item{definitions},
   @item{expressions},
-  @item{bindings (like @rhombus(match) patterns, but everywhere)}
+  @item{bindings (like @racket_match patterns, but everywhere)}
 )
 
 In Racket's expander, a few core contexts are reflected by
@@ -27,8 +27,8 @@ The Rhombus expander is parameterized over the way that different
 kinds of compile-time values for different contexts are recognized,
 but they are expected to be implemented through structure-type
 properties. A compile-time value can then implement multiple kinds of
-transformers to create a mapping that is works in multiple contexts.
-For example, the example @rhombus(<>) operator is useful in both expression
+transformers to create a mapping that works in multiple contexts.
+For example, the previous @rhombus(<>) operator is useful in both expression
 and binding contexts, with a suitable meaning in each context.
 
 Different contexts may also consult different mapping spaces in the
@@ -43,7 +43,7 @@ the way that mapping spaces are used.
 
 The relevant syntactic category for a shrubbery is determined by its
 surrounding forms, and not inherent to the shrubbery. For example,
-@rhombus(Posn(x, y)) or @rhombus(x <> y) in the example mean one thing
+@rhombus(Posn(x, y)) or @rhombus(x <> y) in the example means one thing
 as an expression and another as a binding. Exactly where the contexts
 reside in a module depends on a specific Rhombus language that is built
 on the Rhombus expander. Meanwhile, a full Rhombus language can have

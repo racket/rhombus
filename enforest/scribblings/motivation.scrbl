@@ -54,7 +54,7 @@ operator's right-hand side is not an expression; it must always be an
 identifier. The @rhombus(weather.currently_raining) form looks like a
 use of the @rhombus(.) operator, but it's meant here to be a use of the
 namer @rhombus(weather) that is bound by @rhombus(import) and recognizes
-@rhombus(.) to access the imported @rhombus(currently_raining) binding,
+@litchar{.} to access the imported @rhombus(currently_raining) binding,
 which might be a macro instead of a variable that is bound to a
 function.
 
@@ -82,9 +82,9 @@ macro as
   home->x + 1 // same as home.x + 1
 )
 
-The intent here is that @rhombus(expr.macro) (the @rhombus(.) there is
-like using an import, accessing the @rhombus(macro) form within an
-@rhombus(expr) group of bindings) allows a macro to consume as many
+The intent here is that @rhombus(expr.macro) (the @litchar{.} there is
+like using an import, accessing the @rhombus(macro, ~datum) form within an
+@rhombus(expr, ~datum) group of bindings) allows a macro to consume as many
 terms after the operator as it wants, and the macro must return two
 values: a quoted expression for the expansion plus leftover terms for
 further expression parsing (i.e., @rhombus(tail) in the example use will
@@ -115,11 +115,11 @@ principle, the variant could be minimal, corresponding to the core forms
 that all Racket modules expand into, but some larger variant (including
 keyword arguments, for example) is likely a better choice of
 interoperability with Racket modules. The enforestation and expansion
-process here are defined in terms of the S-expression form of parsed
+processes here are defined in terms of the S-expression form of parsed
 shrubbery notation (really, syntax-object form, so it can include scopes
 to determine a mapping for identifiers and operators). The @rhombus(<>)
 and @rhombus(->) examples above use operator- and macro-definition forms
-in terms of shrubbery notation, but this proposal focused on the
+in terms of shrubbery notation, but this proposal focuses on the
 lower-level mechanisms that allow such shrubbery-native forms to be
 implemented.
 

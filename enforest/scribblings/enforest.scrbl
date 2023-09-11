@@ -16,7 +16,7 @@ For brevity, we call this parsing layer @deftech{Rhombus expansion},
 even though it does not define a full candidate Rhombus language, and
 although it's in many ways independent of a specific language. That's
 similar to referring to @emph{Racket expansion}, by which we do not
-necessarily mean something involving @litchar{#lang racket}.
+necessarily mean something involving @rhombus(#,(hash_lang()) #,(@rhombuslangname(racket))).
 
 @table_of_contents()
 
@@ -26,6 +26,7 @@ necessarily mean something involving @litchar{#lang racket}.
 @include_section("transformer.scrbl")
 @include_section("precedence.scrbl")
 @include_section("implicit-operator.scrbl")
+@include_section("macro-protocol.scrbl")
 @include_section("enforest-algorithm.scrbl")
 @include_section("api.scrbl")
 @include_section("example.scrbl")
