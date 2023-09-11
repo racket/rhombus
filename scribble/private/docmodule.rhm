@@ -43,29 +43,33 @@ meta:
                                        ...])]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
-  def is_lang: (match '[$option, ...]'
-                | '[$_, ..., ~lang, $_, ...]': #true
-                | ~else: #false)
-  '$(decl_meta.pack_s_exp(['defmodule',
-                           '#{#:require-form}',
-                           expr_meta.pack_expr('fun (t_mod): @rhombus(import: $mod ...)'),
-                           if is_lang
-                           | as_racket_mod_name('$mod ...')
-                           | pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
-                           option.form, ..., ...]))'
-  
+  let is_lang:
+    match '[$option, ...]'
+    | '[$_, ..., ~lang, $_, ...]': #true
+    | ~else: #false
+  decl_meta.pack_s_exp(
+    if is_lang
+    | ['defmodule',
+       as_racket_mod_name('$mod ...'),
+       option.form, ..., ...]
+    | ['defmodule',
+       '#{#:require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
+       expr_meta.pack_expr('@rhombusmodname($mod ...)'),
+       '#{#:module-paths}', pack_tree([ModulePath.s_exp(ModulePath('$mod ...'))]),
+       option.form, ..., ...])
+
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
   values(expr_meta.pack_s_exp(['racketmodlink',
                                pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
-                               expr_meta.pack_expr('@rhombus($mod ...)')]),
+                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]),
          '$tail ...')
 
 expr.macro 'rhombuslangname ($mod ...) $tail ...':
   values(expr_meta.pack_s_exp(['racketmodlink',
                                as_racket_mod_name('$mod ...'),
-                               expr_meta.pack_expr('@rhombus($mod ...)')]))
+                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]))
 
 expr.macro 'racketmodname ($mod ...) $tail ...':
   values(expr_meta.pack_s_exp(['racketmodlink',
                                as_racket_mod_name('$mod ...'),
-                               expr_meta.pack_expr('@rhombus($mod ...)')]))
+                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]))
