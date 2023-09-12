@@ -2,6 +2,8 @@
 @(require (only-in "common.rhm" Rhombus)
           "rhm_id.rhm"
           (for-label compatibility/package
+                     enforest
+                     enforest/transformer
                      racket/base
                      syntax/parse))
 

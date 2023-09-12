@@ -17,7 +17,8 @@
 ;; precedence than the one referenced by the identifier. An operator
 ;; is implicitly the 'same as itself (i.e., not covered by 'default).
 
-(provide operator?
+(provide operator
+         operator?
          operator-name
          operator-precedences
          operator-protocol
