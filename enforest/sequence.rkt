@@ -17,10 +17,13 @@
 (provide sequence-transformer?
          sequence-transformer-proc
          sequence-transformer
+         sequence-transformer-ref
 
          define-sequence-transform)
 
 (struct sequence-transformer (proc))
+
+(define (sequence-transformer-ref v) (and (sequence-transformer? v) v))
 
 (define-syntax (define-sequence-transform stx)
   (syntax-parse stx
@@ -41,7 +44,7 @@
               (~optional (~seq #:in-name-root-space in-name-root-space)
                          #:defaults ([in-name-root-space #'values]))
               (~optional (~seq #:transformer-ref transformer-ref)
-                         #:defaults ([transformer-ref #'transformer-ref]))
+                         #:defaults ([transformer-ref #'sequence-transformer-ref]))
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
               (~optional (~seq #:track-origin track-origin)
