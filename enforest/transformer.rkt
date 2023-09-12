@@ -17,6 +17,7 @@
 (provide transformer?
          transformer-proc
          transformer
+         transformer-ref
 
          transform-in
          transform-out
@@ -27,6 +28,8 @@
          define-transform)
 
 (struct transformer (proc))
+
+(define (transformer-ref v) (and (transformer? v) v))
 
 (define-syntax (define-transform stx)
   (syntax-parse stx
