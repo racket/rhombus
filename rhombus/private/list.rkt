@@ -454,6 +454,7 @@
      (define src-span (if span-form-name?
                           (respan (datum->syntax #f (list #'form-id #'args)))
                           (maybe-respan #'args)))
+     (define (tag-props stx) (datum->syntax stx (syntax-e stx) stx #'tag))
      (values
       (relocate-wrapped
        src-span
@@ -467,7 +468,8 @@
             [else (wrap-list-static-info seq)])]
          [(not repetition?)
           (wrap-list-static-info
-           (build-list-form content))]
+           (tag-props
+            (build-list-form content)))]
          [else
           (build-compound-repetition
            stx
@@ -478,7 +480,7 @@
              (let ([content (for/list ([e (in-list content)]
                                        [new-e (in-list new-content)])
                               (if (pair? e) (list (car e) new-e) new-e))])
-               (values (build-list-form content)
+               (values (tag-props (build-list-form content))
                        list-static-infos))))]))
       #'tail)]))
 
