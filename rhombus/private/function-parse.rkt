@@ -47,7 +47,10 @@
          "realm.rkt"
          "compound-repetition.rkt"
          "function-arity.rkt"
-         "wrap-expression.rkt")
+         "wrap-expression.rkt"
+         "rest-bind.rkt"
+         (submod "list.rkt" for-compound-repetition)
+         (submod "map.rkt" for-info))
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -321,7 +324,8 @@
     #:attributes [arg parsed]
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
-             #:with arg::non-...-binding #'(group a ...)
+             #:with arg::non-...-binding #`(#,group-tag rest-bind #,list-static-infos
+                                            (#,group-tag a ...))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (~and ooo (group _::...-bind)))
              #:with (::pos-rest)
@@ -331,7 +335,8 @@
     #:attributes [kwarg kwparsed]
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind a ...))
-             #:with kwarg::non-...-binding #'(group a ...)
+             #:with kwarg::non-...-binding #`(#,group-tag rest-bind #,map-static-info
+                                              (#,group-tag a ...))
              #:with kwparsed #'kwarg.parsed
              #:attr arg #'#f
              #:attr parsed #'#f))

@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/stx
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "tag.rkt")
          "provide.rkt"
          "composite.rkt"
          "expression.rkt"
@@ -27,7 +28,8 @@
          "dot-parse.rkt"
          "realm.rkt"
          "parens.rkt"
-         "define-arity.rkt")
+         "define-arity.rkt"
+         "rest-bind.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -395,7 +397,9 @@
      (define pred #`(lambda (v)
                       (and (list? v)
                            (length-at-least v #,len))))
-     (generate-binding #'form-id pred args #'tail #'(group rest-arg ...)
+     (generate-binding #'form-id pred args #'tail
+                       #`(#,group-tag rest-bind #,list-static-infos
+                          (#,group-tag rest-arg ...))
                        (if (null? args) #'values #'cdr)
                        #f)]
     [(form-id (_ arg ... rest-arg (group _::...-bind)) . tail)

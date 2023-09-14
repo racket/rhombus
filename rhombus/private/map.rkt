@@ -37,7 +37,8 @@
          (only-in "pair.rkt"
                   Pair)
          "hash-snapshot.rkt"
-         "mutability.rkt")
+         "mutability.rkt"
+         "rest-bind.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -426,7 +427,8 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
-                           #'(group rst ...)
+                           #`(#,group-tag rest-bind #,map-static-info
+                              (#,group-tag rst ...))
                            #'tail
                            mode)]
     [(form-id (_ (group key-e ... (block (group val ...))) ...) . tail)

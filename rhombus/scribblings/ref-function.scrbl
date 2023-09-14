@@ -270,7 +270,8 @@ function or function alternative accepts any number of additional
 by-position arguments.
 For @rhombus(& list_bind), the additional arguments are collected
 into a list value, and that list value is bound to the
-@rhombus(list_bind).
+@rhombus(list_bind). Static information associated by @rhombus(List)
+is propagated to @rhombus(list_bind).
 For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
 variable in @rhombus(repet_bind) is bound to a repetition that
 repeats access to that piece of each additional argument.
@@ -282,7 +283,8 @@ When a @rhombus(rest) sequence contains @rhombus(~& map_bind), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
 values are collected into a map value to be bound to
-@rhombus(map_bind).
+@rhombus(map_bind). Static information associated by @rhombus(Map) is
+propagated to @rhombus(map_bind).
 Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 @examples(

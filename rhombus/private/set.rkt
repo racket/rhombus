@@ -34,7 +34,8 @@
          (only-in "lambda-kwrest.rkt" hash-remove*)
          "op-literal.rkt"
          "hash-snapshot.rkt"
-         "mutability.rkt")
+         "mutability.rkt"
+         "rest-bind.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -296,7 +297,8 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
-                           #`(#,group-tag rst ...)
+                           #`(#,group-tag rest-bind #,set-static-info
+                              (#,group-tag rst ...))
                            #'tail
                            mode)]
     [(form-id (_ (group elem-e ...) ...) . tail)

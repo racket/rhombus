@@ -126,6 +126,7 @@ it supplies its elements in an unspecified order.
  The matched set may have additional values.
  If @rhombus(& set_bind) is supplied, the rest of the set excluding
  the values of the given @rhombus(expr)s must match the @rhombus(set_bind).
+ Static information associated by @rhombus(Set) is propagated to @rhombus(set_bind).
  If @rhombus(rest_bind) followed by @dots is
  supplied, the rest of the set excluding the given @rhombus(expr)s
  must have individual values that match @rhombus(rest_bind), and identifiers in
