@@ -526,10 +526,15 @@
                    #:at-mode [at-mode (state-at-mode s)]
                    #:suffix? [suffix? #t])
        (check-block-mode)
+       ;; a `literal` as an S-expression) can span lines, so we check
+       ;; the next token's start to decide the token's ending line
+       (define post-line (if (pair? (cdr l))
+                             (token-line (cadr l))
+                             line))
        (define-values (suffix-raw suffix-l suffix-line suffix-delta)
          (if suffix?
-             (get-suffix-comments (cdr l) line delta)
-             (values null (cdr l) line delta)))
+             (get-suffix-comments (cdr l) post-line delta)
+             (values null (cdr l) post-line delta)))
        (define-values (at-adjust new-at-mode at-l at-line at-delta)
          (continue-at at-mode #f suffix-l suffix-line suffix-delta (state-count? s)))
        (define-values (g rest-l end-line end-delta tail-commenting tail-raw)

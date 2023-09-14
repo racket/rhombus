@@ -16,6 +16,9 @@
          input3
          expected3
 
+         input3b
+         expected3b
+
          input4
          expected4
 
@@ -1968,6 +1971,19 @@ INPUT
     (group tail (alts (block (group then)) (block (group else))))
     (group (parens (group (quotes (group x (quotes (group x)))))))
     (group The end)))
+
+(define input3b
+#<<INPUT
+x:
+  #{#(let
+        f)}
+  ~subst
+INPUT
+  )
+
+(define expected3b
+  '(top
+    (group x (block (group #(let f)) (group #:subst)))))
 
 (define input4
 #<<INPUT

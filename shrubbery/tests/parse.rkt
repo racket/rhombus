@@ -7,7 +7,7 @@
          "../private/simple-pretty.rkt"
          "input.rkt")
 
-(define (check which input expected)
+(define (check which input expected #:check-print? [check-print? #t])
   (printf "checking ~s\n" which)
   (let ([in (open-input-string input)])
     (define (out name parsed write)
@@ -25,10 +25,11 @@
       (out "parsed" parsed pretty-write)
       (error "parse failed"))
     (define printed (shrubbery-syntax->string parsed-stx))
-    (unless (equal? input printed)
-      (out "expected" input display)
-      (out "printed" printed display)
-      (error "print failed"))
+    (when check-print?
+      (unless (equal? input printed)
+        (out "expected" input display)
+        (out "printed" printed display)
+        (error "print failed")))
     (define (check-reparse mode #:add-newlines? [add-newlines? #f])
       (define (add-newlines bstr)
         (define in (open-input-bytes bstr))
@@ -108,6 +109,7 @@
 (check '1b input1b expected1b)
 (check 2 input2 expected2)
 (check 3 input3 expected3)
+(check 3 input3b expected3b #:check-print? #f)
 (check 4 input4 expected4)
 (check 5 input5 expected5)
 (check 6 input6 expected6)
