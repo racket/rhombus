@@ -401,7 +401,7 @@
                           #rx"^[:\n]")
                       str)
        (shift-stxes! 0 1)
-       (values (substring str 1) (+ (or col 0) 1))]
+       (values (substring str 1) (+ (or col 0) (if indent-from-block? 1 0)))]
       [(and (not indent-from-block?)
             (regexp-match? #rx"^:" str))
        (shift-stxes! 0 1)
