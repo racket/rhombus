@@ -61,8 +61,9 @@ Metadata for a syntax object can include a source location and the raw
   [stx.is_original(), Syntax.is_original(stx)]
   [stx.strip_scopes(), Syntax.strip_scopes(stx)]
   [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
-  [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
+  [stx.relocate(to), Syntax.relocate(stx, to)]
   [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
+  [stx.property(key, ...), Syntax.property(stx, key, ...)]
   [stx.to_source_string(), Syntax.to_source_string(stx)]
 )
 
@@ -798,13 +799,15 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.relocate(stx :: Syntax, like_stx :: Syntax) :: Syntax
+  fun Syntax.relocate(stx :: Syntax, to :: Syntax || Srcloc || False) :: Syntax
 ){
 
- Returns a syntax object like @rhombus(stx), except that the metadata
- of @rhombus(like_stx) replaces metadata in @rhombus(stx).
+ Returns a syntax object like @rhombus(stx), except that the metadata of
+ @rhombus(to) replaces metadata in @rhombus(stx) when @rhombus(to) is a
+ syntax object, or just the source location is changed to match
+ @rhombus(to) when it is not a syntax object.
 
- The specific source of metadata from @rhombus(like_stx) depends on
+ When @rhombus(to) is a syntax object, the specific source of metadata from @rhombus(to) depends on
  its shape. If it is a single-term parenthesis, brackets, braces,
  quotes, block or alternatives form, then metadata is taken from the
  leading tag in the representation of the form. In the case of a
@@ -814,7 +817,7 @@ Metadata for a syntax object can include a source location and the raw
 
  In the same way, metadata is applied to @rhombus(stx) based on its
  shape. Transferring metadata thus makes the most sense when
- @rhombus(stx) and @rhombus(like_stx) have the same shape.
+ @rhombus(stx) and @rhombus(to) have the same shape.
 
 }
 
@@ -831,6 +834,20 @@ Metadata for a syntax object can include a source location and the raw
  all of the locations.
 
 }
+
+@doc(
+  fun Syntax.property(stx :: Syntax, key) :: Any
+  fun Syntax.property(stx :: Syntax, key, val, is_preserved = #false) :: Syntax
+){
+
+ Returns the value of the @rhombus(key) syntax property of @rhombus(stx)
+ or returns a syntax object with the property set to @rhombus(val). When
+ @rhombus(val) is supplied, the property value is preserved in a compiled
+ quoted form of the syntax object only when @rhombus(is_preserved) is
+ true.
+
+}
+
 
 @doc(
   fun Syntax.to_source_string(stx :: Syntax) :: String
