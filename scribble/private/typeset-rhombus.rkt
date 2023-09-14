@@ -154,7 +154,8 @@
 (define (typeset-rhombusblock stx
                               #:inset [inset? #t]
                               #:indent [indent-amt 0]
-                              #:prompt [prompt ""])
+                              #:prompt [prompt ""]
+                              #:indent_from_block [indent-from-block? #t])
   ;; Go back to a string, then parse again using the
   ;; colorer. Why didn't we use a string to start with?
   ;; Because having `rhombusblock` work on implicitly quoted syntax
@@ -181,10 +182,16 @@
                                                                            (display "ELEM" output)
                                                                            #t]
                                                                           [else #f])))
-                                            (syntax-case block-stx ()
+                                            (syntax-parse block-stx
+                                              [(_ one . _)
+                                               #:when (not indent-from-block?)
+                                               (syntax-parse #'one
+                                                 #:datum-literals (group)
+                                                 [(group a . _) (syntax-column #'a)])]
                                               [(b . _) (syntax-column #'b)])
                                             (syntax-case block-stx ()
-                                              [(b . _) (syntax-raw-property #'b)])
+                                              [(b . _) (and indent-from-block? (syntax-raw-property #'b))])
+                                            indent-from-block?
                                             stx-ranges))
   (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])
                            (hash-set ht (car v) (cons k (hash-ref ht (car v) '())))))
@@ -371,7 +378,7 @@
 (define tt-comma (element tt-style ", "))
 (define tt-semicolon (element tt-style "; "))
 
-(define (block-string->content-string str/crlf col raw-str stx-ranges)
+(define (block-string->content-string str/crlf col raw-str indent-from-block? stx-ranges)
   (define str (regexp-replace* #rx"\r\n" str/crlf "\n"))
   ;; strip `:` from the beginning, add spaces
   ;; corresponding to `col`, then strip any blank newlines
@@ -395,6 +402,10 @@
                       str)
        (shift-stxes! 0 1)
        (values (substring str 1) (+ (or col 0) 1))]
+      [(and (not indent-from-block?)
+            (regexp-match? #rx"^:" str))
+       (shift-stxes! 0 1)
+       (values (substring str 1) (or col 0))]
       [else
        (values str (or col 0))]))
   (shift-stxes! -1 (- prefix-len))

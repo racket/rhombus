@@ -451,12 +451,16 @@
 (define/arity (relocate stx ctx-stx)
   #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" stx))
-  (unless (syntax? ctx-stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" ctx-stx))
-  (let ([ctx-stx (relevant-source-syntax ctx-stx)])
+  (unless (or (syntax? ctx-stx) (srcloc? ctx-stx) (not ctx-stx))
+    (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax || Srcloc || False" ctx-stx))
+  (let ([ctx-stx (and (syntax? ctx-stx)
+                      (relevant-source-syntax ctx-stx))])
     (at-relevant-dest-syntax
      stx
      (lambda (stx)
-       (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx))
+       (if (syntax? ctx-stx)
+           (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx)
+           (datum->syntax stx (syntax-e stx) ctx-stx stx)))
      (lambda (stx inner-stx)
        stx))))
 
@@ -562,6 +566,14 @@
                                             #:update (lambda (t)
                                                        (syntax-property t prop val preserved?)))]))
 
+(define property_method
+  (lambda (stx)
+    (let ([property (case-lambda
+                      [(prop) (Syntax.property stx prop)]
+                      [(prop val) (Syntax.property stx prop val)]
+                      [(prop val preserved?) (Syntax.property stx prop val preserved?)])])
+      property)))
+
 (define/arity (is_original v)
   (syntax-original? (extract-ctx 'Syntax.srcloc v #:false-ok? #f)))
 
@@ -577,7 +589,8 @@
         'relocate_span relocate_span_method
         'srcloc (method1 Syntax.srcloc)
         'is_original (method1 is_original)
-        'to_source_string (method1 to_source_string)))
+        'to_source_string (method1 to_source_string)
+        'property property_method))
 
 (define-syntax syntax-instance
   (dot-provider
@@ -596,4 +609,8 @@
         [(srcloc) (0ary #'Syntax.srcloc srcloc-static-infos)]
         [(is_original) (0ary #'is_original)]
         [(to_source_string) (0ary #'to_source_string)]
+        [(property) (nary #'Syntax.property 14 #'Syntax.property (lambda (n)
+                                                                   (if (not (eqv? n 1))
+                                                                       syntax-static-infos
+                                                                       #'())))]
         [else (fail-k)])))))

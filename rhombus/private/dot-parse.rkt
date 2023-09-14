@@ -23,9 +23,11 @@
         #:datum-literals ()
         [((~and args (p-tag::parens g ...)) . new-tail)
          (define gs (syntax->list #'(g ...)))
+         (define n (length gs))
          (cond
-           [(bitwise-bit-set? mask (length gs))
+           [(bitwise-bit-set? mask n)
             (success-k (n-k #'(p-tag g ...)
+                            n
                             (lambda (e)
                               (relocate (respan #`(#,lhs args)) e)))
                        #'new-tail)]
@@ -44,11 +46,11 @@
 
     (define (0ary id [static-infos #'()])
       (ary 1
-           (lambda (no-args reloc) (wrap-static-info*
-                                    (relocate
-                                     (respan #`(#,lhs #,field-stx))
-                                     #`(#,id #,lhs))
-                                    static-infos))
+           (lambda (no-args n reloc) (wrap-static-info*
+                                      (relocate
+                                       (respan #`(#,lhs #,field-stx))
+                                       #`(#,id #,lhs))
+                                      static-infos))
            (lambda (reloc) (wrap-static-info*
                             (reloc
                              #`(let ([#,id (lambda () (#,id #,lhs))])
@@ -57,19 +59,23 @@
 
     (define (nary id mask direct-id [static-infos #'()])
       (ary mask
-           (lambda (args reloc) (wrap-static-info*
-                                 (let ()
-                                   (define-values (proc tail)
-                                     (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
-                                                          #:srcloc (reloc #'#false)
-                                                          #:static? more-static?))
-                                   proc)
-                                 static-infos))
+           (lambda (args n reloc) (wrap-static-info*
+                                   (let ()
+                                     (define-values (proc tail)
+                                       (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
+                                                            #:srcloc (reloc #'#false)
+                                                            #:static? more-static?))
+                                     proc)
+                                 (if (procedure? static-infos)
+                                     (static-infos n)
+                                     static-infos)))
            (lambda (reloc) (wrap-static-info*
                             (reloc
                              #`(let ([#,direct-id (lambda () (#,id #,lhs))])
                                  #,direct-id))
-                            static-infos))))
+                            (if (procedure? static-infos)
+                                (static-infos #f)
+                                static-infos)))))
 
     (define field
       (let ([just-access

@@ -182,4 +182,5 @@ expr.macro 'rhombusblock_etc $tail ...':
   | ~else: finish([], '$tail ...')
 
 expr.macro 'rhombusblock ($args)':
-  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#,'))))'
+  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#,'))),
+                           ~indent_from_block: #false)'
