@@ -112,6 +112,10 @@ it supplies its elements in order.
  @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
  rest of the list.
 
+ When @rhombus(& list_bind) is used, the rest of the list must match
+ the @rhombus(list_bind). Static information associated by
+ @rhombus(List) is propagated to @rhombus(list_bind).
+
  When @rhombus(repet_bind) is used and does not impose a predicate or
  conversion on a matching value (e.g., @rhombus(repet_bind) is an
  identifier), then the corresponding elements of a matching value are not

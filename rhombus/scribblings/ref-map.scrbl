@@ -236,6 +236,7 @@ in an unspecified order.
  The matched map may have additional keys and values.
  If @rhombus(& map_bind) is supplied, the rest of the map excluding
  the given @rhombus(key_expr)s must match the @rhombus(map_bind).
+ Static information associated by @rhombus(Map) is propagated to @rhombus(map_bind).
  If @rhombus(rest_key_bind: rest_val_bind) followed by @dots is
  supplied, the rest of the map excluding the given @rhombus(key_expr)s
  must have individual keys that match @rhombus(rest_key_bind) and
