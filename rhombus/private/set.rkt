@@ -102,6 +102,7 @@
       (hash-remove! (set-ht s) v)))
 
 (define/arity #:name Set.length (set-count s)
+  (unless (set? s) (raise-argument-error* 'Set.length rhombus-realm "ReadableSet" s))
   (hash-count (set-ht s)))
 
 (define-for-syntax readable-set-instance-dispatch
@@ -541,57 +542,57 @@
 
 (define/arity (Set.snapshot s)
   #:static-infos ((#%call-result #,set-static-info))
-  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "ReadableSet" s))
+  (unless (set? s) (raise-argument-error* 'Set.snapshot rhombus-realm "ReadableSet" s))
   (define ht (set-ht s))
   (if (immutable-hash? ht)
       s
       (set (hash-snapshot ht))))
 
 (define (set-union who s1 ss)
-  (unless (set? s1)
+  (unless (immutable-set? s1)
     (raise-argument-error* who rhombus-realm "Set" s1))
   (let loop ([s s1] [ss ss])
        (if (null? ss)
            s
            (let ([s1 (car ss)])
-             (unless (set? s1)
+             (unless (immutable-set? s1)
                (raise-argument-error* who rhombus-realm "Set" s1))
-             (loop (set-append s s1) (cdr ss))))))
+             (loop (set-append/proc s s1) (cdr ss))))))
 
 (define/arity Set.append
-  #:static-infos ((#%call-result #,mutable-set-static-info))
+  #:static-infos ((#%call-result #,set-static-info))
   (case-lambda
     [() (set #hashalw())]
     [(s)
-     (unless (set? s)
+     (unless (immutable-set? s)
        (raise-argument-error* 'Set.append rhombus-realm "Set" s))
-     (Set.snapshot s)]
+     s]
     [(s1 . ss)
      (set-union 'Set.append s1 ss)]))
 
 (define/arity Set.union
-  #:static-infos ((#%call-result #,mutable-set-static-info))
+  #:static-infos ((#%call-result #,set-static-info))
   (case-lambda
     [() (set #hashalw())]
     [(s)
-     (unless (set? s)
+     (unless (immutable-set? s)
        (raise-argument-error* 'Set.union rhombus-realm "Set" s))
-     (Set.snapshot s)]
+     s]
     [(s1 . ss)
      (set-union 'Set.union s1 ss)]))
 
 (define/arity Set.intersect
-  #:static-infos ((#%call-result #,mutable-set-static-info))
+  #:static-infos ((#%call-result #,set-static-info))
   (case-lambda
     [() (set #hashalw())]
     [(s)
      (define who 'Set.intersect)
-     (unless (set? s)
+     (unless (immutable-set? s)
        (raise-argument-error* who rhombus-realm "Set" s))
-     (Set.snapshot s)]
+     s]
     [(s1 . ss)
      (define who 'Set.intersect)
-     (unless (set? s1)
+     (unless (immutable-set? s1)
        (raise-argument-error* who rhombus-realm "Set" s1))
      (define (int a b)
        (if ((hash-count a) . < . (hash-count b))
@@ -604,13 +605,13 @@
         (if (null? ss)
             ht
             (let ([s1 (car ss)])
-              (unless (set? s1)
+              (unless (immutable-set? s1)
                 (raise-argument-error* who rhombus-realm "Set" s1))
               (loop (int ht (set-ht s1))
                     (cdr ss))))))]))
 
 (define/arity (Set.remove s v)
-  #:static-infos ((#%call-result #,mutable-set-static-info))
+  #:static-infos ((#%call-result #,set-static-info))
   (unless (immutable-set? s)
     (raise-argument-error* 'Set.remove rhombus-realm "Set" s))
   (set (hash-remove (set-ht s) v)))
