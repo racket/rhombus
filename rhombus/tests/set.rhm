@@ -10,11 +10,9 @@ check:
   Set.length({10, 20})
   ~is 2
 
-// FIXME
-#//
 check:
   Set.length([1, 2, 3])
-  ~raises values("contract violation", "expected: Set")
+  ~raises values("contract violation", "expected: ReadableSet")
 
 block:
   use_static
@@ -158,6 +156,17 @@ check:
   {1, 3}.union() ~is {1, 3}
   {1, 3}.union({2, 3}) ~is {1, 2, 3}
   {1, 3}.union({2, 3}, {3, 4}) ~is {1, 2, 3, 4}
+
+block:
+  check:
+    Set.append(MutableSet{1, 2, 3}, {4}, {5, 6})
+    ~raises values("contract violation", "expected: Set")
+  check:
+    Set.intersect(MutableSet{1, 3}, {2, 3}, {3, 4})
+    ~raises values("contract violation", "expected: Set")
+  check:
+    Set.union(MutableSet{1, 3}, {2, 3}, {3, 4})
+    ~raises values("contract violation", "expected: Set")
 
 block:
   use_static
