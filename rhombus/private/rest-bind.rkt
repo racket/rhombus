@@ -3,7 +3,8 @@
                      syntax/parse/pre)
          "provide.rkt"
          "binding.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/bind)
                      rest-bind))
@@ -25,6 +26,7 @@
 
 (define-syntax (rest-bind-infoer stx)
   (syntax-parse stx
-    [(_ _ [static-infos rest-infoer-id rest-data])
-     #:with rest-impl::binding-impl #'(rest-infoer-id static-infos rest-data)
+    [(_ up-static-infos [static-infos rest-infoer-id rest-data])
+     #:with all-static-infos (static-infos-union #'static-infos #'up-static-infos)
+     #:with rest-impl::binding-impl #'(rest-infoer-id all-static-infos rest-data)
      #'rest-impl.info]))

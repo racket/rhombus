@@ -94,15 +94,24 @@
        (syntax-parse #'rest-data
          [#f (values #'#f #'() #'rest #f #'() #f)]
          [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
-          #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
+          #:do [(define-values (maybe-static-infos maybe-index-result)
+                  (cond
+                    [(and (syntax-e #'index-result-info?)
+                          (static-info-lookup #'static-infos #'#%index-result))
+                     => (lambda (index-result)
+                          (values (if (syntax-e #'rest-repetition?)
+                                      '()
+                                      #`((#%index-result #,index-result)))
+                                  index-result))]
+                    [else (values '() '())]))]
+          #:with rest-impl::binding-impl #`(rest-infoer-id #,maybe-static-infos rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
           #:with rest-seq-tmp-ids (and (syntax-e #'rest-repetition?)
                                        (generate-temporaries #'(rest-info.bind-id ...)))
           (values #`(rest-tmp-id rest-accessor rest-repetition? rest-info
                                  rest-seq-tmp-ids
-                                 #,(or (static-info-lookup #'static-infos #'#%index-result)
-                                       '()))
+                                 #,maybe-index-result)
                   #'rest-info.static-infos
                   #'rest-info.name-id
                   #'rest-info.annotation-str
