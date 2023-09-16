@@ -17,7 +17,7 @@
                               [datums (syntax->list #'(datum ...))]
                               [first? #t])
                      (if (null? datums)
-                         (apply string-append (reverse (cons "(" l)))
+                         (apply string-append (reverse (cons ")" l)))
                          (loop (cons (shrubbery-syntax->string (car datums))
                                      (if first?
                                          l
