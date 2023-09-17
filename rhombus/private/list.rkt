@@ -66,7 +66,19 @@
 
 (define-binding-syntax List.cons
   (binding-transformer
-   (make-composite-binding-transformer "cons" #'nonempty-list? (list #'car #'cdr) (list #'() list-static-infos))))
+   (let ([composite (make-composite-binding-transformer
+                     "List.cons" #'nonempty-list? (list #'car) (list #'())
+                     #:index-result-info? #t
+                     #:rest-accessor #'cdr
+                     #:rest-repetition? #f)])
+     (lambda (tail)
+       (syntax-parse tail
+         #:datum-literals (parens)
+         [(form-id ((~and tag parens) elem list) . new-tail)
+          (composite #'(form-id (tag elem) . new-tail)
+                     #`(#,group-tag rest-bind #,list-static-infos
+                        #:annot-prefix? #f
+                        list))])))))
 
 (define/arity (List.cons a d)
   #:static-infos ((#%call-result #,list-static-infos))

@@ -375,7 +375,6 @@
                                 (or (not (pair? c-str))
                                     (null? (cdr c-str))))
                            "" ", ")
-                       (if rest-repetition? "" "& ")
                        (annotation-string-to-pattern
                         (if (eq? rest-repetition? 'pair)
                             (annotation-string-convert-pair (syntax-e rest-annotation-str))

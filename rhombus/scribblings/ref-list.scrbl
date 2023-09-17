@@ -184,7 +184,8 @@ it supplies its elements in order.
 
  Matches a non-empty list where @rhombus(elem_bind) matches the
  first element of the list and @rhombus(list_bind) matches the
- rest of the list.
+ rest of the list. Static information associated by @rhombus(List) is
+ propagated to @rhombus(list_bind).
 
 @examples(
   def List.cons(x, y): [1, 2, 3]
