@@ -325,6 +325,7 @@
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
              #:with arg::non-...-binding #`(#,group-tag rest-bind #,list-static-infos
+                                            #:annot-prefix? #f
                                             (#,group-tag a ...))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (~and ooo (group _::...-bind)))
@@ -336,6 +337,7 @@
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind a ...))
              #:with kwarg::non-...-binding #`(#,group-tag rest-bind #,map-static-info
+                                              #:annot-prefix? #f
                                               (#,group-tag a ...))
              #:with kwparsed #'kwarg.parsed
              #:attr arg #'#f
