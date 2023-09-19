@@ -25,9 +25,9 @@
 ;;    template construction
 ;;
 ;;  * `parens` and similar (including `block`) are expected to have a
-;;    source locations that span their content; they have 'raw,
+;;    source location that spans the content; they have 'raw,
 ;;    'raw-suffix, etc.; the reader copies that source location to
-;;    sourringing parentheses, but a Rhombus template construction
+;;    surrounding parentheses, but a Rhombus template construction
 ;;    doesn't
 ;;
 ;;  * `op` normally has the same source location as its symbol, but

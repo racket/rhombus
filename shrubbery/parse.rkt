@@ -1470,8 +1470,13 @@
                             (if (and (pair? a)
                                      (syntax? (car a))
                                      (not (eq? (syntax-e (car a)) 'group)))
-                                ;; found a tag like `block`
-                                (car a)
+                                ;; found a tag like `block` or `alts`
+                                (if (eq? (syntax-e (car a)) 'alts)
+                                    (loop (let last ([a a])
+                                            (if (null? (cdr a))
+                                                (car a)
+                                                (last (cdr a)))))
+                                    (car a))
                                 (loop a))]
                            [else (loop (cdr e))]))))
   (define s-loc (cond
