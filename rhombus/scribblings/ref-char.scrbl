@@ -91,7 +91,7 @@ A @deftech{character} is Unicode code point.
  @item{whitespace: Unicode ``White_Space'' property}
 
  @item{blank (horizontal whitespace): Unicode general category is
-  @UCat{Zs} or the Tab characher}
+  @UCat{Zs} or the Tab character}
 
  @item{ISO control: Unicode value between @rhombus(0x0) and
   @rhombus(0x1F) (inclusive) or between @rhombus(0x7F) and @rhombus(0x9F)

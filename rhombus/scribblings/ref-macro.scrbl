@@ -141,7 +141,7 @@
  The body after each @rhombus(macro_pattern) must be an immediate
  @quotes template, and any @rhombus($) escape within the template
  can only refer to an input pattern variable or a literal syntax
- object, optionally parenthesized, for an operator (e.g.,
+ object, optionally parenthesized, or an operator (e.g.,
  @rhombus($('$')) to generate a literal @rhombus($)). More general
  compile-time expressions are not allowed; use @rhombus(expr.macro)
  or @rhombus(expr.macro), instead, to enable compile-time expressions.
