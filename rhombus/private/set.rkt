@@ -317,13 +317,13 @@
                                            #'(lambda (v) #t) ; predicate built into set-matcher
                                            '()
                                            '()
+                                           #:static-infos set-static-info
                                            #:rest-accessor
                                            (and maybe-rest
                                                 (if rest-repetition?
                                                     #`(lambda (v) (set->list #,rest-tmp))
                                                     #`(lambda (v) #,rest-tmp)))
-                                           #:rest-repetition? (and rest-repetition?
-                                                                   'pair))
+                                           #:rest-repetition? rest-repetition?)
        #`(form-id (parens) . tail)
        maybe-rest))
     (with-syntax-parse ([composite::binding-form composite])

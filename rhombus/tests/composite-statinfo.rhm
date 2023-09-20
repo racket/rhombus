@@ -1,0 +1,72 @@
+#lang rhombus
+
+block:
+  use_static
+  check:
+    fun print_all_rst(& rst):
+      for (v: rst):
+        println(v)
+    fun print_all_lst(lst):
+      let [& rst] && all = lst
+      for (v: all):
+        println(v)
+      for (v: rst):
+        println(v)
+    fun print_all_set(set):
+      let Set{& rst} && all = set
+      for (v: all):
+        println(v)
+      for (v: rst):
+        println(v)
+    fun print_all_map(map):
+      let Map{& rst} && all = map
+      for ((k, v): all):
+        println(k +& ": " +& v)
+      for ((k, v): rst):
+        println(k +& ": " +& v)
+    fun print_all_cons_lst(lst):
+      let List.cons(_, rst) && all = lst
+      for (v: all):
+        println(v)
+      for (v: rst):
+        println(v)
+    ~completes
+
+  check:
+    def [x, ...] = (["a", "b", "cd"] :: List.of(String))
+    [x.length(), ...]
+    ~is [1, 1, 2]
+
+  check:
+    def [& xs :: List.of(String)] = ["a", "b", "cd"]
+    for List (x: xs):
+      x.length()
+    ~is [1, 1, 2]
+
+  check:
+    def [x :: String, ...] && xs = ["a", "b", "cd"]
+    [x.length(), ...] == (for List (x: xs):
+                            x.length())
+    ~is #true
+
+  check:
+    def List.cons(_, lst) = (["a", "b", "cd"] :: List.of(String))
+    lst[0].length()
+    ~is 1
+
+  check:
+    def {_: val, ...} = ({1: "a", 2: "b", 3: "cd"} :: Map.of(Any, String))
+    {val.length(), ...}
+    ~is {1, 2}
+
+  check:
+    def {& map :: Map.of(Any, String)} = {1: "a", 2: "b", 3: "cd"}
+    for Set ((_, val): map):
+      val.length()
+    ~is {1, 2}
+
+  check:
+    def {_: val :: String, ...} && map = {1: "a", 2: "b", 3: "cd"}
+    {val.length(), ...} == (for Set ((_, val): map):
+                              val.length())
+    ~is #true

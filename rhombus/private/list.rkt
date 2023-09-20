@@ -68,6 +68,7 @@
   (binding-transformer
    (let ([composite (make-composite-binding-transformer
                      "List.cons" #'nonempty-list? (list #'car) (list #'())
+                     #:static-infos list-static-infos
                      #:index-result-info? #t
                      #:rest-accessor #'cdr
                      #:rest-repetition? #f)])
