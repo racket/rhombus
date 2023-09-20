@@ -183,3 +183,25 @@ block:
     '$ts ...' ~raises "block not allowed in non-tail position of a group"
     'head $ts ...' ~raises "block not allowed in non-tail position of a group"
     '$[ts] ...' ~raises "block not allowed in non-tail position of a group"
+
+
+check:
+  match '1 2: a b'
+  | '$_ ...: a': "ok"
+  ~raises "unexpected term" // not "expected more terms"
+check:
+  match '1 2: a b'
+  | '$_ ... $_ ...: a': "ok"
+  ~raises "unexpected term" // not "expected more terms"
+check:
+  match '1 2: a b'
+  | '$_ ... 1 ...: a': "ok"
+  ~raises "unexpected term" // not "expected more terms"
+check:
+  match '1 2 | a b'
+  | '$_ ... | a': "ok"
+  ~raises "unexpected term" // not "expected more terms"
+check:
+  match '1 2 | a b'
+  | '$_ ...: a': "ok"
+  ~raises "expected a `:` block"

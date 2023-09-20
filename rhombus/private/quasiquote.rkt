@@ -94,7 +94,8 @@
                                    #:splice? [splice? #f]
                                    #:splice-pattern [splice-pattern #f]
                                    #:allow-fltten? [allow-flatten? #f]
-                                   #:make-describe-op [make-describe-op (lambda (e name) e)])
+                                   #:make-describe-op [make-describe-op (lambda (e name) e)]
+                                   #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
@@ -231,12 +232,15 @@
                       vars
                       (cons (quote-syntax ...) ps) can-be-empty? #t #f depth
                       #t)
-                (loop #'gs #f #f #f
-                      (append new-pend-idrs idrs)
-                      (append new-pend-sidrs sidrs)
-                      (append new-pend-vars vars)
-                      (cons (quote-syntax ...) ps) can-be-empty? #f #f depth
-                      #t))]
+                (let ([ps (if (eq? (syntax-e #'tag) 'group)
+                              (improve-repetition-constraints ps #'gs)
+                              ps)])
+                  (loop #'gs #f #f #f
+                        (append new-pend-idrs idrs)
+                        (append new-pend-sidrs sidrs)
+                        (append new-pend-vars vars)
+                        (cons (quote-syntax ...) ps) can-be-empty? #f #f depth
+                        #t)))]
            [(((~datum op) (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
               [(zero? depth)
@@ -437,7 +441,31 @@
                                  #,(format "the operator `~a`"
                                            (or (syntax-raw-property name)
                                                (syntax-e name)))
-                                 #,e))))
+                                 #,e))
+                  #:improve-repetition-constraints
+                  (lambda (ps gs)
+                    ;; The first pattern in `ps` is followed by `...`.
+                    ;; If there's more in the remaining pattern `gs`, then we
+                    ;; may know that repetition matches can't be `block` or `alts`
+                    ;; terms, and specifying that constraint up front can avoid
+                    ;; "expected more terms" messages where more terms are not
+                    ;; possible. For example, when matching, '$a ...: 1' a block
+                    ;; that isn't ': 1' should not be treated as an '$a' match.
+                    ;; The analysis here is approximate, but should cover useful
+                    ;; cases.
+                    (define (no-wrap) ps)
+                    (define (wrap-non-alts) (cons #`(~and (~not ((~datum alts) . _)) #,(car ps)) (cdr ps)))
+                    (define (wrap-non-block-non-alts) (cons #`(~and (~not ((~or (~datum block) (~datum alts)) . _)) #,(car ps)) (cdr ps)))
+                    (let loop ([gs gs])
+                      (syntax-parse gs
+                        #:datum-literals (block alts)
+                        [() (no-wrap)]
+                        [((block . _) . _) (wrap-non-block-non-alts)]
+                        [((alts . _) . _) (wrap-non-alts)]
+                        [((~var _ (:$ in-binding-space)) _  (~var _ (:... in-binding-space)) . gs) (loop #'gs)]
+                        [((~var _ (:$ in-binding-space)) . gs) (loop #'gs)]
+                        [(_ (~var _ (:... in-binding-space)) . gs) (loop #'gs)]
+                        [_ (wrap-non-block-non-alts)])))))
 
 (define-unquote-binding-syntax #%quotes
   (unquote-binding-prefix-operator
