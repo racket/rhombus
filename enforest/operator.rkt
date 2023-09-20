@@ -141,11 +141,11 @@
   (unless op
     (raise-syntax-error #f
                         (format (string-append
-                                 "misplaced ~a;\n"
-                                 " no infix operator is between this ~a and the previous one"
+                                 "misplaced term;\n"
+                                 " no infix operator is between this term and the preceeding ~a"
                                  #;
                                  ",\n and `~a` is not bound as an implicit prefix ~a")
-                                form-kind form-kind
+                                form-kind
                                 #;
                                 alone-name
                                 #;
@@ -181,11 +181,11 @@
        (raise-syntax-error #f
                            (format
                             (string-append
-                             "misplaced ~a;\n"
-                             " no infix operator is between this ~a and the previous one"
+                             "misplaced term;\n"
+                             " no infix operator is between this term and the preceeding ~a"
                              #;
                              ",\n and `~a` is not bound as an implicit infix ~a")
-                            form-kind form-kind
+                            form-kind
                             #;
                             adjacent-name
                             #;
