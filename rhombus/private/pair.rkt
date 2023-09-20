@@ -36,7 +36,7 @@
 (define-for-syntax pair-binding
   (make-composite-binding-transformer "Pair"
                                       #'pair?
-                                      #:static-infos #'((#%dot-provider pair-instance))
+                                      #:static-infos pair-static-infos
                                       (list #'car #'cdr)
                                       (list #'() #'())
                                       #:accessor->info? #t))

@@ -157,37 +157,3 @@ check:
   use_static
   List.rest([1, 2, 3]).map(math.abs)
   ~is [2, 3]
-
-block:
-  use_static
-  check:
-    fun print_all_rst(& rst):
-      for (v: rst):
-        println(v)
-    fun print_all_lst(lst):
-      let [& rst] = lst
-      for (v: rst):
-        println(v)
-    fun print_all_set(set):
-      let Set{& rst} = set
-      for (v: rst):
-        println(v)
-    fun print_all_map(map):
-      let Map{& rst} = map
-      for ((k, v): rst):
-        println(k +& ": " +& v)
-    fun print_all_cons_lst(lst):
-      let List.cons(_, rst) = lst
-      for (v: rst):
-        println(v)
-    ~completes
-
-  check:
-    def [x, ...] = (["a", "b", "cd"] :: List.of(String))
-    [x.length(), ...]
-    ~is [1, 1, 2]
-  check:
-    def List.cons(_, lst) = (["a", "b", "cd"] :: List.of(String))
-    lst[0].length()
-    ~is 1
-

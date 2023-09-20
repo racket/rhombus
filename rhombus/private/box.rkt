@@ -49,7 +49,7 @@
   (binding-transformer
    (make-composite-binding-transformer "Box"
                                        #'box?
-                                       #:static-infos #'((#%dot-provider box-instance))
+                                       #:static-infos box-static-infos
                                        (list #'unbox)
                                        (list #'()))))
 

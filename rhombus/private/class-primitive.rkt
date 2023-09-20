@@ -139,7 +139,8 @@
                                                          (list (quote-syntax parent-static-infos)
                                                                ...
                                                                #`field-static-info
-                                                               ...)))))]
+                                                               ...)
+                                                         #:static-infos name-static-infos))))]
               [else null])
 
          #,@(for/list ([name-field (in-list (syntax->list #'(name-field ...)))]

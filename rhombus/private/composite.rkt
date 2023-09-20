@@ -132,7 +132,15 @@
               [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos
-                                          #`((#%index-result #,rest-static-infos) . #,composite-static-infos))]
+                                          #`(#,@(if rest-repetition?
+                                                    (if (syntax-e #'index-result-info?)
+                                                        (list #`(#%index-result
+                                                                 #,(if (eq? rest-repetition? 'pair)
+                                                                       (static-info-lookup rest-static-infos #'cdr)
+                                                                       rest-static-infos)))
+                                                        '())
+                                                    rest-static-infos)
+                                             . #,composite-static-infos))]
               [composite-static-infos (cond
                                         [(syntax-e #'accessor->info?)
                                          #`(#,@(for/list ([accessor (syntax->list #'accessors)]

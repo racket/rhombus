@@ -455,6 +455,7 @@
                                              #`(lambda (v) #,tmp-id))
                                            (for/list ([arg (in-list tmp-ids)])
                                              #'())
+                                           #:static-infos map-static-info
                                            #:index-result-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
