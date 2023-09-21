@@ -22,7 +22,7 @@
     (define (expose v) (vector v))
     (define (expose? v) (vector? v))
     (define (expose-id v) (vector-ref v 0))
-    (define-values (r-phase+spaces syms new-covered-ht phase-shift renames revnames only-mentioned?)
+    (define-values (r-phase+spaces syms new-covered-ht phase-shift renames revnames only-mentioned? only-phase)
       ;; A call to `extract` returns
       ;;  - phases+spaces: relevant phase+space combinations
       ;;  - syms: all names imported at relevant phase+space by the specification so far, mapped to spaces where it resides
@@ -46,7 +46,7 @@
                                     ([phase+space+syms (in-list phase+space+symss)]
                                      [sym (in-list (cdr phase+space+syms))])
                            (hash-set syms sym (hash-set (hash-ref syms sym #hasheq()) (phase+space-space (car phase+space+syms)) #t))))
-            (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f))
+            (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f '#:all))
           (define (get-not-here revnames only-mentioned?)
             (string-append " is not provided"
                            (if (and (= (hash-count revnames) 0)
@@ -55,12 +55,14 @@
                                " or was previously renamed or excluded")))
           (syntax-parse r
             #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
-                                        rhombus-prefix-in only-spaces-in except-spaces-in only-space-in)
+                                        rhombus-prefix-in only-spaces-in except-spaces-in
+                                        only-space-in only-meta-in)
             [#f (if outer-r
                     (loop outer-r #f)
                     (root))]
             [(rename-in mp [orig bind] ...)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space (add1 step)))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space (add1 step)))
              (define-values (new-renames new-revnames removed-syms new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -105,9 +107,10 @@
                  (if spaces
                      (hash-set new-syms bind spaces)
                      new-syms)))
-             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned?)]
+             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(only-in mp id ...)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space (add1 step)))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space (add1 step)))
              (define-values (new-renames new-revnames new-syms new-covered-ht)
                (for/fold ([new-renames #hasheq()]
                           [new-revnames #hasheq()]
@@ -146,9 +149,10 @@
                             (if spaces
                                 (cover covered-ht id step)
                                 covered-ht))])))
-             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames #t)]
+             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames #t only-phase)]
             [(except-in mp id ...)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space (add1 step)))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space (add1 step)))
              (define-values (new-renames new-revnames new-syms new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -185,9 +189,10 @@
                             (if (hash-ref syms orig #f)
                                 (cover covered-ht orig step)
                                 covered-ht))])))
-             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned?)]
+             (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(expose-in mp id ...)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space (add1 step)))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space (add1 step)))
              (define-values (new-renames new-revnames new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -215,18 +220,34 @@
                             (cover covered-ht orig step))]
                    [else
                     (raise-syntax-error 'import "identifier to expose was previously excluded" id-s)])))
-             (values phase+spaces syms new-covered-ht shift new-renames new-revnames only-mentioned?)]
+             (values phase+spaces syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(for-meta phase mp)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space step))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space step))
              (define new-shift (and shift (syntax-e #'phase)
                                     (+ shift (syntax-e #'phase))))
-             (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned?)]
+             (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned? only-phase)]
             [(for-label mp)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space step))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space step))
              (define new-shift #f)
-             (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned?)]
+             (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned? only-phase)]
+            [(only-meta-in phase mp)
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space step))
+             (define new-phase+spaces
+               (for/list ([phase+space (in-list phase+spaces)]
+                          #:when (eq? (syntax-e #'phase) (phase+space-phase phase+space)))
+                 phase+space))
+             (define new-only-phase
+               (if (< (length new-phase+spaces)
+                      (length phase+spaces))
+                   (syntax-e #'phase)
+                   only-phase))
+             (values phase+spaces syms covered-ht shift renames revnames only-mentioned? new-only-phase)]
             [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
-             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space step))
+             (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
+               (extract #'mp space step))
              (define the-spaces
                (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
                  (values (syntax-e a-space) #t)))
@@ -261,7 +282,7 @@
                                        (hash-ref the-spaces space #f)
                                        (not (hash-ref the-spaces space #f)))))
                  phase+space))
-             (values new-phase+spaces new-syms covered-ht shift new-renames new-revnames only-mentioned?)]
+             (values new-phase+spaces new-syms covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(only-space-in new-space mp)
              (unless (eq? space '#:all)
                (raise-syntax-error 'import "duplicate or conflicting space" #'new-space))
@@ -273,13 +294,13 @@
     (define (strip-prefix r mp)
       (let strip ([r r])
         (syntax-parse r
-          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in
+          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in only-meta-in
                                 only-spaces-in except-spaces-in)
           [#f mp]
           [((~and tag (~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in))
             mp . rest)
            #`(tag #,(strip #'mp) . rest)]
-          [((~and tag for-meta) phase mp)
+          [((~and tag (~or for-meta only-meta-in)) phase mp)
            #`(tag phase #,(strip #'mp))]
           [((~and tag only-space-in) space mp)
            #`(tag space #,(strip #'mp))]
@@ -307,7 +328,7 @@
             ;; only specific ids, none exposed or renamed
             (if for-expose?
                 '()
-                (list #'(only #,mod-path
+                (list #`(only #,mod-path
                               #,@(for/list ([k (in-hash-keys renames)]
                                             #:when (hash-ref syms k #f))
                                    (if open-id
@@ -356,10 +377,14 @@
                                  (hash-ref syms (syntax-e (plain-id v)) #f)))
             #`(rename #,mod-path #,(plain-id v) #,k)))]))
     (define (make-ins for-expose?)
-      (if any-space-limited?
-          (for/list ([(space ids) (in-hash space->ids)])
-            #`(just-space #,space #,@(make-ins* ids for-expose?)))
-          (make-ins* syms for-expose?)))
+      (define ins
+        (if any-space-limited?
+            (for/list ([(space ids) (in-hash space->ids)])
+              #`(just-space #,space #,@(make-ins* ids for-expose?)))
+            (make-ins* syms for-expose?)))
+      (if (eq? only-phase '#:all)
+          ins
+          (map (lambda (in) #`(just-meta #,only-phase #,in)) ins)))
     (define prefix-intro (and prefix-id (make-syntax-introducer)))
     (define module? (not (list? (syntax-local-context))))
     (define reqs+defss
@@ -377,7 +402,9 @@
            (for/list ([phase (in-hash-keys
                               (for/hasheqv ([phase+space (in-list r-phase+spaces)]
                                             #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
-                                (values (phase+space-phase phase+space) #t)))])
+                                (values (phase+space-phase phase+space) #t)))]
+                      #:when (or (eq? only-phase '#:all)
+                                 (eqv? only-phase phase)))
              (define s-prefix-id prefix-id)
              (define portal-id (in-name-root-space s-prefix-id))
              (list

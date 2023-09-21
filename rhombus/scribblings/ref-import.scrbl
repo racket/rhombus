@@ -56,6 +56,8 @@
     #,(@rhombus(except, ~impo)) $except_decl
     #,(@rhombus(meta, ~impo)) $meta_decl
     #,(@rhombus(meta_label, ~impo))
+    #,(@rhombus(only_meta, ~impo)) $meta_decl
+    #,(@rhombus(only_meta_label, ~impo))
     #,(@rhombus(only_space, ~impo)) $only_space_decl
     #,(@rhombus(except_space, ~impo)) $except_space_decl
     $other_modifier
@@ -154,7 +156,8 @@
   sequence is allowed to be an export that is not a namespace, in which
   case the dotted form is a shorthand for exposing just
   @rhombus(id) from @rhombus(module_path). This form can be modified by
-  @rhombus(meta, ~impo) or @rhombus(meta_label, ~impo) only when
+  @rhombus(meta, ~impo), @rhombus(meta_label, ~impo), @rhombus(only_meta, ~impo),
+  or @rhombus(only_meta_label, ~impo) only when
   a single dot is used and @rhombus(module_path) does not refer to a
   namespace.}
 
@@ -374,6 +377,21 @@
  This modifier is valid only for module fies that refer to modules,
  as opposed to @rhombus(namespace) bindings, and it is not currently
  supported for module paths that use the @rhombus(., ~impo) operator
+
+}
+
+@doc(
+  impo.modifier 'only_meta $phase'
+  impo.modifier 'only_meta_label'
+){
+
+ Modifies an @rhombus(import) clause so that only imports exported at
+ the indicated phase are imported.
+
+ This modifier is valid only for module paths that refer to modules, as
+ opposed to @rhombus(namespace) bindings, and it is not currently
+ supported for module paths that use the @rhombus(., ~impo) operator
+ unless @rhombus(phase) is @rhombus(0).
 
 }
 

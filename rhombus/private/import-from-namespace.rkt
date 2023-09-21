@@ -37,7 +37,8 @@
       (define (root) (values ht #hasheq() covered-ht #t))
       (syntax-parse r
         #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
-                                    only-spaces-in except-spaces-in rhombus-prefix-in only-space-in)
+                                    only-spaces-in except-spaces-in rhombus-prefix-in
+                                    only-space-in only-meta-in)
         [#f (root)]
         [(rename-in mp [orig bind] ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
@@ -135,6 +136,11 @@
          (if phase-shift-ok?
              (extract #'mp ht step)
              (raise-syntax-error 'import "cannot shift phase of namespace content" r))]
+        [(only-meta-in phase mp)
+         (if (or phase-shift-ok?
+                 (eqv? 0 (syntax-e #'phase)))
+             (extract #'mp ht step)
+             (raise-syntax-error 'import "cannot prune phase of namespace content" r))]
         [(rhombus-prefix-in mp . _) (extract #'mp ht step)]
         [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
@@ -167,13 +173,16 @@
   (let loop ([r r])
     (syntax-parse r
       #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
-                                  only-spaces-in except-spaces-in rhombus-prefix-in only-space-in)
+                                  only-spaces-in except-spaces-in rhombus-prefix-in
+                                  only-space-in only-meta-in)
       [#f (void)]
       [((~or rename-in only-in except-in expose-in only-spaces-in except-spaces-in rhombus-prefix-in) mp . _)
        (loop #'mp)]
       [((~or for-meta for-label) . _)
        (raise-syntax-error 'import "cannot shift phase with dotted-import shorthand" r)]
       [(only-space-in space mp)
+       (loop #'mp)]
+      [(only-meta-in phase mp)
        (loop #'mp)]
       [_ (raise-syntax-error 'import "don't know how to check" r)])))
 
@@ -182,7 +191,8 @@
   (let loop ([r r])
     (syntax-parse r
       #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
-                                  only-spaces-in except-spaces-in rhombus-prefix-in only-space-in)
+                                  only-spaces-in except-spaces-in rhombus-prefix-in
+                                  only-space-in only-meta-in)
       [#f #f]
       [((~or rename-in only-in except-in expose-in rhombus-prefix-in) mp . _)
        (loop #'mp)]
@@ -195,6 +205,7 @@
                (not (hash-ref the-spaces space-sym #f))
                (hash-ref the-spaces space-sym #f))
            (loop #'mp))]
+      [(only-meta-in phase mp) (loop #'mp)]
       [_ (raise-syntax-error 'import "don't know how to check exclusion" r)])))
 
 (define-for-syntax (expose-spaces id/id+spaces only-space-sym)

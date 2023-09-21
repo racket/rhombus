@@ -61,7 +61,9 @@
                     only_space
                     except_space
                     meta
-                    meta_label))
+                    meta_label
+                    only_meta
+                    only_meta_label))
 
 (module+ for-meta
   (provide (for-syntax import-modifier
@@ -147,7 +149,7 @@
     (let extract ([r r] [accum null])
       (syntax-parse r
         #:datum-literals (rename-in only-in except-in expose-in rhombus-prefix-in for-meta for-label
-                                    only-space-in only-spaces-in except-spaces-in
+                                    only-space-in only-spaces-in except-spaces-in only-meta-in
                                     submod)
         [#f (reverse accum)]
         [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
@@ -164,7 +166,7 @@
                  (syntax-parse #'name
                    [(_ op) (extract #'mp (cons #'(tag mp op ctx)
                                                accum))])))]
-        [((~or for-meta only-space-in) _ mp) (extract #'mp accum)]
+        [((~or for-meta only-space-in only-meta-in) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
@@ -441,7 +443,7 @@
        (let loop ([r r] [prefixed? #f])
          (syntax-parse r
            #:datum-literals (rename-in only-in except-in expose-in rhombus-prefix-in for-meta for-label
-                                       only-space-in only-spaces-in except-spaces-in
+                                       only-space-in only-spaces-in except-spaces-in only-meta-in
                                        submod)
            [#f (values #`(expose-in #,r #,id) #f)]
            [((~and tag (~or only-spaces-in except-spaces-in)) mp . tail)
@@ -459,7 +461,7 @@
                          new-r
                          #`(rename-in #,new-r [#,id name]))
                     meta)]
-           [((~and tag (~or only-space-in)) sp mp)
+           [((~and tag (~or only-space-in only-meta-in)) sp mp)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values (and new-r
                          #`(tag sp #,new-r))
@@ -1028,5 +1030,28 @@
        [(form) 
         (datum->syntax #f (list (relocate+reraw #'form
                                                 #'for-meta)
+                                #f
+                                req))]))))
+
+(define-import-syntax only_meta
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       [(form phase)
+        (define ph (syntax-e #'phase))
+        (unless (exact-integer? ph)
+          (raise-syntax-error #f "not a valid phase" stx #'phase))
+        (datum->syntax #f (list (relocate+reraw (datum->syntax #f (list #'form #'phase))
+                                                #'only-meta-in)
+                                #'phase
+                                req))]))))
+
+(define-import-syntax only_meta_label
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       [(form) 
+        (datum->syntax #f (list (relocate+reraw #'form
+                                                #'only-meta-in)
                                 #f
                                 req))]))))
