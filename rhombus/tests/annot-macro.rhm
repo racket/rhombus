@@ -59,7 +59,7 @@ check:
   import: rhombus/meta open
   annot.delayed_declare Forward
   class Posn(x, y)
-  annot.delayed_complete Forward: Posn  
+  annot.delayed_complete Forward: Posn
   fun (): (10 :: Forward).x
   ~completes
 

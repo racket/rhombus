@@ -54,7 +54,7 @@ check:
   ~is 4
 
 // checking some static-info propagation cases
-  
+
 dot.macro 'myint_dot_provider $left $dot $right $tail ...':
   match right
   | 'is_zero': '$left .= 0'

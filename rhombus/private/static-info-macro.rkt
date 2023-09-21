@@ -45,7 +45,7 @@
      unpack_group
      wrap
      lookup
-     
+
      call_result_key
      index_result_key
      index_get_key
@@ -68,7 +68,7 @@
 
 (define-defn-syntax macro
   (make-static-info-macro-macro in-static-info-space))
-   
+
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
     (raise-bad-macro-result who "static info" stx))
