@@ -84,7 +84,7 @@
     (pattern form::non-...
              #:with arg::binding #'form
              #:with parsed #'arg.parsed))
-  
+
   (define (keyword->binding kw)
     #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw)))
 
@@ -119,7 +119,7 @@
     (pattern (group kw:keyword))
     (pattern arg::non-...
              #:attr kw #'#f))
-  
+
   (define-syntax-class :kw-opt-binding
     #:attributes [kw parsed default]
     #:datum-literals (block group)
@@ -350,7 +350,7 @@
               (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
                     (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
               ...)))
-  
+
   ;; used when just extracting an arity:
   (define-splicing-syntax-class :pos-arity-rest
     #:attributes [rest?]
@@ -446,7 +446,7 @@
                             (list (list arg+default) default)]
                            [else
                             (list (list kw arg+default) default)]))])
-          (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))               
+          (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))
           (define body
             (wrap-expression
              ((entry_point_meta.Adjustment-wrap-body adjustments)

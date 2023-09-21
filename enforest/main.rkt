@@ -156,7 +156,7 @@
 
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space prefix-operator-ref infix-operator-ref
-                                                   name-path-op in-name-root-space name-root-ref 
+                                                   name-path-op in-name-root-space name-root-ref
                                                    check-result track-origin 'parsed-tag
                                                    make-identifier-form
                                                    make-operator-form
@@ -200,7 +200,7 @@
                         #f
                         null
                         (information-about-bindings op-stx lookup-space-description)))
-  
+
   ;; Takes 3 or 4 arguments, depending on whether a preceding expression is available
   (define enforest-step
     (case-lambda
@@ -299,7 +299,7 @@
            (define-values (implicit-name ctx) (select-infix-implicit #'head))
            (dispatch-infix-implicit implicit-name ctx #'head)])
 
-        . where . 
+        . where .
 
         (define (dispatch-infix-operator op tail stxes op-stx)
           (define rel-prec (if (not current-op)
@@ -345,7 +345,7 @@
                [(eq? rel-prec 'same-on-left)
                 (raise-syntax-error #f
                                     (format
-                                     (string-append 
+                                     (string-append
                                       "combination of ~as at same precedence, but only in the other order;\n"
                                       " needs explicit parenthesization\n"
                                       "  earlier operator: ~a")
@@ -357,7 +357,7 @@
                [else
                 (raise-syntax-error #f
                                     (format
-                                     (string-append 
+                                     (string-append
                                       "combination of ~as without declared relative precedence;\n"
                                       " needs explicit parenthesization\n"
                                       "  other operator: ~a")
