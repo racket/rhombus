@@ -16,10 +16,14 @@ check:
   | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
   ~prints_like ['z', '10', '11', '12']
 
-check:
+block:
+  let mutable cnt = 0
   fun f(x):
-    // literals for all patterns should be converted to `case` internally
-    match x
+    // literals for initial patterns should be converted to `case` internally
+    match (block:
+             // check whether expression is repeatedly evaluated
+             cnt := cnt + 1
+             x)
     | 0: 1
     | 1: 1
     | 2: 3
@@ -33,8 +37,9 @@ check:
     | 14: 5
     | 15: 5
     | #'apple: "other"
-  [f(0), f(5), f(10), f(#'apple)]
-  ~is [1, 5, 1, "other"]
+    | [_, ...]: "list"
+  check [f(0), f(5), f(10), f(#'apple), f([])] ~is [1, 5, 1, "other", "list"]
+  check cnt ~is 5
 
 check (match 1 | 1 || 2: "yes") ~is "yes"
 check (match 2 | 1 || 2: "yes") ~is "yes"

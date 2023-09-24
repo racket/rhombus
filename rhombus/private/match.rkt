@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/list
                      syntax/parse/pre
                      enforest/name-parse
                      "srcloc.rkt"
@@ -23,17 +24,27 @@
     #:attributes ([bind 1] rhs)
     #:datum-literals (group)
     (pattern (_::block (group bind ...
-                              (~and rhs (_::block . _))))))
-
-  (define (falses l-stx)
-    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
-
-  (define (l1falses l-stx)
-    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx))))))
+                              (~and rhs (_::block . _)))))))
 
 (define-syntax match
   (expression-transformer
    (lambda (stx)
+     (define ((make-fallback-k else else-parsed else-rhs) val bs b-parseds rhss)
+       (define (make-consts-stx const)
+         (datum->syntax #f (cons const (map (lambda (x) const) bs))))
+       (define falses-stx (make-consts-stx #f))
+       (define-values (proc arity)
+         (build-case-function no-adjustments
+                              #'match #'#f
+                              (make-consts-stx '(#f))
+                              #`(#,@(map list bs) (#,else))
+                              #`(#,@(map list b-parseds) (#,else-parsed))
+                              falses-stx falses-stx
+                              falses-stx falses-stx
+                              falses-stx
+                              #`(#,@rhss #,else-rhs)
+                              stx))
+       #`(#,proc #,val))
      (syntax-parse stx
        #:datum-literals (block group)
        [(form-id in ...+ (alts-tag::alts
@@ -41,67 +52,39 @@
                           ...
                           e::else-clause))
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
-        (define in-expr #'(rhombus-expression (group in ...)))
         (values
          (handle-literal-case-dispatch
           stx
-          #'form-id
-          in-expr
+          #'(rhombus-expression (group in ...))
+          #'(b ...)
           #'(b.parsed ...)
           #'(clause.rhs ...)
-          #'e.parsed
-          ;; thunk is called if any `b.parsed` is not a literal pattern
-          (lambda ()
-            (define-values (proc arity)
-              (build-case-function no-adjustments
-                                   #'match #'#f
-                                   (l1falses #'(b ...))
-                                   #'((b) ... (ignored))
-                                   #`((b.parsed) ... (#,(binding-form
-                                                         #'else-infoer
-                                                         #'(#t ignored))))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...))
-                                   #'(clause.rhs ... (parsed #:rhombus/expr e.parsed))
-                                   stx))
-            (relocate+reraw
-             (respan stx)
-             #`(#,proc #,in-expr))))
+          ;; fallback-k is called with the remaining non-literal patterns
+          (make-fallback-k #'ignored
+                           (binding-form #'else-infoer #'(#t ignored))
+                           #'(parsed #:rhombus/expr e.parsed)))
          #'())]
        [(form-id in ...+ (alts-tag::alts
                           clause::pattern-clause
                           ...))
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (define in-expr #'(rhombus-expression (group in ...)))
+        (define b-parseds-stx #'(b.parsed ...))
+        (define rhss-stx #'(clause.rhs ...))
         (values
-         (handle-syntax-parse-or-literal-case-dispatch
-          stx
-          #'form-id
-          in-expr
-          #'(b.parsed ...)
-          #'(clause.rhs ...)
-          #f
+         (handle-syntax-parse-dispatch
+          stx #'form-id in-expr b-parseds-stx rhss-stx
           ;; thunk is called if any `b.parsed` is not a syntax pattern
           (lambda ()
-            (define-values (proc arity)
-              (build-case-function no-adjustments
-                                   #'match #'#f
-                                   (l1falses #'(b ...))
-                                   #'((b) ... (unmatched))
-                                   #`((b.parsed) ... (#,(binding-form
-                                                         #'else-infoer
-                                                         #'(#t unmatched))))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...))
-                                   #`(clause.rhs ... (parsed
-                                                      #:rhombus/expr
-                                                      (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
-                                   stx))
-            (relocate+reraw
-             (respan stx)
-             #`(#,proc #,in-expr))))
+            (handle-literal-case-dispatch
+             stx in-expr
+             #'(b ...) b-parseds-stx rhss-stx
+             ;; fallback-k is called with the remaining non-literal patterns
+             (make-fallback-k #'unmatched
+                              (binding-form #'else-infoer #'(#t unmatched))
+                              #`(parsed
+                                 #:rhombus/expr
+                                 (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx))))))))
          #'())]
        [(form-id in ...+ (block-tag::block))
         (values
@@ -118,33 +101,37 @@
                                    "expected a pattern followed by a result block"
                                    c)]))]))))
 
-(define-for-syntax (handle-literal-case-dispatch stx form-id in-expr binds-stx rhss-stx else-parsed thunk)
-  (define binds (syntax->list binds-stx))
+(define-for-syntax (handle-literal-case-dispatch stx in-expr
+                                                 bs-stx b-parseds-stx rhss-stx
+                                                 fallback-k)
+  (define bs (syntax->list bs-stx))
+  (define b-parseds (syntax->list b-parseds-stx))
+  (define rhss (syntax->list rhss-stx))
+  (define maybe-idx
+    (for/first ([parsed (in-list b-parseds)]
+                [idx (in-naturals 0)]
+                #:unless (syntax-parse parsed
+                           [b::binding-form
+                            (free-identifier=? #'b.infoer-id #'literal-infoer)]))
+      idx))
   (cond
-    [(for/and ([bind-stx (in-list binds)])
-       (syntax-parse bind-stx
-         [b::binding-form
-          (free-identifier=? #'b.infoer-id #'literal-infoer)]))
+    [maybe-idx
+     (define rst-bs (list-tail bs maybe-idx))
+     (define-values (lit-parseds rst-parseds) (split-at b-parseds maybe-idx))
+     (define-values (lit-rhss rst-rhss) (split-at rhss maybe-idx))
      (relocate+reraw
       (respan stx)
       #`(let ([val #,in-expr])
           (case val
-            #,@(for/list ([bind-stx (in-list binds)]
-                          [rhs (in-list (syntax->list rhss-stx))])
-                 (syntax-parse bind-stx
+            #,@(for/list ([parsed (in-list lit-parseds)]
+                          [rhs (in-list lit-rhss)])
+                 (syntax-parse parsed
                    [b::binding-form
                     #`[b.data (rhombus-body-expression #,rhs)]]))
-            [else #,(or else-parsed
-                        #`(match-fallthrough '#,form-id val #,(syntax-srcloc (respan stx))))])))]
-    [else (thunk)]))
-
-(define-for-syntax (handle-syntax-parse-or-literal-case-dispatch stx form-id in-expr binds-stx rhss-stx else-parsed thunk)
-  (handle-syntax-parse-dispatch
-   stx form-id in-expr binds-stx rhss-stx 
-   (lambda ()
-     (handle-literal-case-dispatch
-      stx form-id in-expr binds-stx rhss-stx else-parsed
-      thunk))))
+            [else #,(fallback-k #'val rst-bs rst-parseds rst-rhss)])))]
+    [else (relocate+reraw
+           (respan stx)
+           (fallback-k in-expr bs b-parseds rhss))]))
 
 (struct exn:fail:contract:srcloc exn:fail:contract (srclocs)
   #:property prop:exn:srclocs (lambda (exn) (exn:fail:contract:srcloc-srclocs exn)))

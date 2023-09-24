@@ -56,10 +56,11 @@
  generated exception's message may be specialized to report the expected
  pattern, instead of just reporting that no cases matched.
 
- If all @rhombus(bind) patterns are literals or combinations of literals
+ If an initial segment of @rhombus(bind) patterns are literals or combinations of literals
  with @rhombus(||, ~bind), then the match is implemented as a case
  dispatch, and a match is found with logarithmic rather than linear
- time complexity in the number of literals.
+ time complexity in the number of literals. The remaining patterns are
+ handled as usual.
 
 @examples(
   match 1+2
