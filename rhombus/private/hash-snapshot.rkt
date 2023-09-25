@@ -3,12 +3,12 @@
 (provide hash-snapshot)
 
 (define (hash-snapshot ht)
-  (cond
-    [(hash-equal-always? ht) (for/hashalw ([(k v) (in-hash ht)])
-                               (values k v))]
-    [(hash-eq? ht) (for/hasheq ([(k v) (in-hash ht)])
-                     (values k v))]
-    [(hash-eqv? ht) (for/hasheqv ([(k v) (in-hash ht)])
-                      (values k v))]
-    [else (for/hash ([(k v) (in-hash ht)])
-            (values k v))]))
+  (if (immutable? ht)
+      ht
+      (for/fold ([new-ht (cond
+                           [(hash-equal-always? ht) #hashalw()]
+                           [(hash-eq? ht) #hasheq()]
+                           [(hash-eqv? ht) #hasheqv()]
+                           [else #hash()])])
+                ([(key val) (in-hash ht)])
+        (hash-set new-ht key val))))

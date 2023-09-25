@@ -204,3 +204,25 @@ block:
     check m ~is_now MutableSet{2}
     check {1, 2}.delete ~raises "no such field or method"
     check {1, 2}.delete(1) ~raises "no such field or method"
+
+block:
+  let m = MutableSet{1, 2}
+  let n = m.copy()
+  check m is_now n ~is #true
+  check m == n ~is #false
+  m[2] := #false
+  n[1] := #false
+  check m ~is_now MutableSet{1}
+  check n ~is_now MutableSet{2}
+
+block:
+  let m = {1, 2}
+  let n = m.snapshot()
+  check m === n ~is #true
+
+block:
+  let m = MutableSet{1, 2}
+  let n = m.snapshot()
+  check m == n ~is #false
+  check m.snapshot() == n ~is #true
+  check m.snapshot() === n ~is #false
