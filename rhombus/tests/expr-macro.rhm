@@ -262,22 +262,22 @@ check:
 check:
   expr.macro 'two_of $(n :: Name)':
     '[$n, $n]'
-  two_of List.empty
+  two_of ConsList.empty
   ~is [[], []]
 
 check:
-  import rhombus.List.cons
+  import rhombus.ConsList.cons
   expr.macro 'go':
     match 'cons'
-    | '$(bound_as expr_meta.space: 'List.cons')': '"ok"'
+    | '$(bound_as expr_meta.space: 'ConsList.cons')': '"ok"'
   go
   ~is "ok"
 
 check:
-  import rhombus.List.cons
+  import rhombus.ConsList.cons
   expr.macro 'go':
-    match 'List.cons'
-    | '$(bound_as expr_meta.space: 'List.cons')': '"also ok"'
+    match 'ConsList.cons'
+    | '$(bound_as expr_meta.space: 'ConsList.cons')': '"also ok"'
   go
   ~is "also ok"
 

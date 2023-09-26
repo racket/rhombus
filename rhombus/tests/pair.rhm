@@ -30,7 +30,7 @@ check:
   ~raises "does not satisfy annotation"
 
 check:
-  ["ok", "fine"] :: Pair.of(String, List)
+  ["ok", "fine"] :: Pair.of(String, ConsList)
   ~is ["ok", "fine"]
 
 block:
@@ -56,17 +56,17 @@ block:
     x
     ~is 1
   check:
-    (["ok", "fine"] :: Pair.of(String, List)).rest
+    (["ok", "fine"] :: Pair.of(String, ConsList)).rest
     ~is ["fine"]
   check:
-    def Pair(x :: List, y) = [[1, 2, 3]]
+    def Pair(x :: ConsList, y) = [[1, 2, 3]]
     x.length()
     ~is 3
   check:
-    (["ok", "fine"] :: Pair.of(String, List)).rest.length()
+    (["ok", "fine"] :: Pair.of(String, ConsList)).rest.length()
     ~is 1
   check:
-    def x :: Pair.of(List, Any) = [[1, 2, 3]]
+    def x :: Pair.of(ConsList, Any) = [[1, 2, 3]]
     x.first.length()
     ~is 3
 

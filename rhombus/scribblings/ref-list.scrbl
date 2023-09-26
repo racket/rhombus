@@ -22,31 +22,31 @@ it supplies its elements in order.
 
 @dispatch_table(
   "list"
-  @rhombus(List)
-  [lst.length(), List.length(lst)]
-  [lst.first, List.first(lst)]
-  [lst.rest, List.rest(lst)]
-  [lst.reverse(), List.reverse(lst)]
-  [lst.append(lst2, ...), List.append(lst, lst2, ...)]
-  [list.drop_left(lst, n), List.drop_left(lst, n)]
-  [list.drop_right(lst, n), List.drop_right(lst, n)]
-  [list.has_element(lst, v), List.has_element(lst, v)]
-  [list.remove(lst, v), List.remove(lst, v)]
-  [lst.map(func), List.map(lst, func)]
-  [lst.for_each(func), List.for_each(lst, func)]
-  [lst.sort(arg, ...), List.sort(lst, arg, ...)]
+  @rhombus(ConsList)
+  [lst.length(), ConsList.length(lst)]
+  [lst.first, ConsList.first(lst)]
+  [lst.rest, ConsList.rest(lst)]
+  [lst.reverse(), ConsList.reverse(lst)]
+  [lst.append(lst2, ...), ConsList.append(lst, lst2, ...)]
+  [list.drop_left(lst, n), ConsList.drop_left(lst, n)]
+  [list.drop_right(lst, n), ConsList.drop_right(lst, n)]
+  [list.has_element(lst, v), ConsList.has_element(lst, v)]
+  [list.remove(lst, v), ConsList.remove(lst, v)]
+  [lst.map(func), ConsList.map(lst, func)]
+  [lst.for_each(func), ConsList.for_each(lst, func)]
+  [lst.sort(arg, ...), ConsList.sort(lst, arg, ...)]
 )
 
 @doc(
-  annot.macro 'List'
-  annot.macro 'List.of($annot)'
+  annot.macro 'ConsList'
+  annot.macro 'ConsList.of($annot)'
 ){
 
  Matches any list in the form without @rhombus(of). The @rhombus(of)
  variant matches a list whose elements satisfy @rhombus(annot).
 
- Static information associated by @rhombus(List, ~annot) or
- @rhombus(List.of, ~annot) makes an expression acceptable as a sequence
+ Static information associated by @rhombus(ConsList, ~annot) or
+ @rhombus(ConsList.of, ~annot) makes an expression acceptable as a sequence
  to @rhombus(for) in static mode.
 
 }
@@ -54,7 +54,7 @@ it supplies its elements in order.
 @doc(
   ~nonterminal:
     list_expr: block expr
-  fun List(v :: Any, ...) :: List
+  fun ConsList(v :: Any, ...) :: ConsList
   expr.macro '#%brackets [$expr_or_splice, ...]'
   repet.macro '#%brackets [$repet_or_splice, ...]'
 
@@ -83,7 +83,7 @@ it supplies its elements in order.
  @see_implicit(@rhombus(#%brackets), @brackets, "expression")
 
 @examples(
-  def lst = List(1, 2, 3)
+  def lst = ConsList(1, 2, 3)
   lst
   lst[0]
   lst ++ [4, 5]
@@ -96,8 +96,8 @@ it supplies its elements in order.
   ~nonterminal:
     list_bind: def bind ~defn
     repet_bind: def bind ~defn
-  bind.macro 'List($bind, ...)'
-  bind.macro 'List($bind, ..., $rest)'
+  bind.macro 'ConsList($bind, ...)'
+  bind.macro 'ConsList($bind, ..., $rest)'
   bind.macro '#%brackets [$bind, ...]'
   bind.macro '#%brackets [$bind, ..., $rest]'
   grammar rest:
@@ -114,7 +114,7 @@ it supplies its elements in order.
 
  When @rhombus(& list_bind) is used, the rest of the list must match
  the @rhombus(list_bind). Static information associated by
- @rhombus(List) is propagated to @rhombus(list_bind).
+ @rhombus(ConsList) is propagated to @rhombus(list_bind).
 
  When @rhombus(repet_bind) is used and does not impose a predicate or
  conversion on a matching value (e.g., @rhombus(repet_bind) is an
@@ -126,13 +126,13 @@ it supplies its elements in order.
  @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")
 
 @examples(
-  def List(1, x, y): [1, 2, 3]
+  def ConsList(1, x, y): [1, 2, 3]
   y
   def [1, also_x, also_y]: [1, 2, 3]
   also_y
-  def List(1, & xs): [1, 2, 3]
+  def ConsList(1, & xs): [1, 2, 3]
   xs
-  def List(1, x, ...): [1, 2, 3]
+  def ConsList(1, x, ...): [1, 2, 3]
   [x, ...]
 )
 
@@ -143,7 +143,7 @@ it supplies its elements in order.
   annot.macro 'NonemptyList.of($annot)'
 ){
 
- Like @rhombus(List, ~annot) as an annotation, but matches only non-empty
+ Like @rhombus(ConsList, ~annot) as an annotation, but matches only non-empty
  lists.
 
 @examples(
@@ -154,7 +154,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  reducer.macro 'List'
+  reducer.macro 'ConsList'
 ){
 
  A @tech{reducer} used with @rhombus(for), accumulates each result of a
@@ -163,14 +163,14 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.cons(elem :: Any, lst :: List) :: List
+  fun ConsList.cons(elem :: Any, lst :: ConsList) :: ConsList
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to
  the front.
 
 @examples(
-  List.cons(1, [2, 3])
+  ConsList.cons(1, [2, 3])
 )
 
 }
@@ -179,16 +179,16 @@ it supplies its elements in order.
   ~nonterminal:
     list_bind: def bind ~defn
     elem_bind: def bind ~defn
-  bind.macro 'List.cons($elem_bind, $list_bind)'
+  bind.macro 'ConsList.cons($elem_bind, $list_bind)'
 ){
 
  Matches a non-empty list where @rhombus(elem_bind) matches the
  first element of the list and @rhombus(list_bind) matches the
- rest of the list. Static information associated by @rhombus(List) is
+ rest of the list. Static information associated by @rhombus(ConsList) is
  propagated to @rhombus(list_bind).
 
 @examples(
-  def List.cons(x, y): [1, 2, 3]
+  def ConsList.cons(x, y): [1, 2, 3]
   x
   y
 )
@@ -197,8 +197,8 @@ it supplies its elements in order.
 
 
 @doc(
-  def List.empty :: []
-  bind.macro 'List.empty'
+  def ConsList.empty :: []
+  bind.macro 'ConsList.empty'
 ){
 
   A name and pattern for the empty list.
@@ -207,38 +207,38 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.first(lst :: NonemptyList)
+  fun ConsList.first(lst :: NonemptyList)
 ){
 
  Returns the first element of @rhombus(lst).
 
 @examples(
-  List.first(["a", "b", "c"])
+  ConsList.first(["a", "b", "c"])
 )
 
 }
 
 @doc(
-  fun List.rest(lst :: NonemptyList) :: List
+  fun ConsList.rest(lst :: NonemptyList) :: ConsList
 ){
 
  Returns a list like @rhombus(lst), but without its first element.
 
 @examples(
-  List.rest(["a", "b", "c"])
+  ConsList.rest(["a", "b", "c"])
 )
 
 }
 
 @doc(
-  fun List.length(lst :: List) :: NonnegInt
+  fun ConsList.length(lst :: ConsList) :: NonnegInt
 ){
 
  Returns the number of items in @rhombus(lst).
 
 @examples(
-  List.length([1, 4, 8])
-  List.length([])
+  ConsList.length([1, 4, 8])
+  ConsList.length([])
   [1, 4, 8].length
 )
 
@@ -246,14 +246,14 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.reverse(lst :: List) :: List
+  fun ConsList.reverse(lst :: ConsList) :: ConsList
 ){
 
  Returns a list with the same items as @rhombus(lst). but in reversed
  order.
 
 @examples(
-  List.reverse([1, 4, 8])
+  ConsList.reverse([1, 4, 8])
   [1, 4, 8].reverse
 )
 
@@ -261,13 +261,13 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.append(lst :: List, ...) :: List
+  fun ConsList.append(lst :: ConsList, ...) :: ConsList
 ){
 
  Appends the @rhombus(lst)s in order. See also @rhombus(++).
 
 @examples(
-  List.append([1, 2, 3], [4, 5], [6])
+  ConsList.append([1, 2, 3], [4, 5], [6])
   [1, 2, 3].append([4, 5], [6])
 )
 
@@ -275,13 +275,13 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.drop_left(lst :: List, n :: NonnegInt) :: List
-  fun List.drop_right(lst :: List, n :: NonnegInt) :: List
+  fun ConsList.drop_left(lst :: ConsList, n :: NonnegInt) :: ConsList
+  fun ConsList.drop_right(lst :: ConsList, n :: NonnegInt) :: ConsList
 ){
 
  Returns a list like @rhombus(lst), but without the first @rhombus(n)
- elements in the case of @rhombus(List.drop_left), or without the last
- @rhombus(n) elements in the case of @rhombus(List.drop_right). The given
+ elements in the case of @rhombus(ConsList.drop_left), or without the last
+ @rhombus(n) elements in the case of @rhombus(ConsList.drop_right). The given
  @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
  @rhombus(Exn.Fail.Contract, ~class) exception is raised.
 
@@ -296,7 +296,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.has_element(lst :: List, v) :: List
+  fun ConsList.has_element(lst :: ConsList, v) :: ConsList
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
@@ -311,7 +311,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.remove(lst :: List, v) :: List
+  fun ConsList.remove(lst :: ConsList, v) :: ConsList
 ){
 
  Returns a list like @rhombus(lst), but with the first element equal to
@@ -324,15 +324,15 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.map(lst :: List, f :: Function.of_arity(1)) :: List,
-  fun List.for_each(lst :: List, f :: Function.of_arity(1)) :: List,
+  fun ConsList.map(lst :: ConsList, f :: Function.of_arity(1)) :: ConsList,
+  fun ConsList.for_each(lst :: ConsList, f :: Function.of_arity(1)) :: ConsList,
 ){
 
  Like @rhombus(Function.map) and @rhombus(Function.for_each), but with a
  single list of arguments first, with the function supplied second.
 
 @examples(
-  List.map([1, 2, 3], fun (x): x + 1)
+  ConsList.map([1, 2, 3], fun (x): x + 1)
   [1, 2, 3].map(fun (x): x + 1)
   [1, 2, 3].for_each(println)
 )
@@ -341,29 +341,29 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.sort(lst :: List, less :: Function.of_arity(2) = math.less) :: List,
+  fun ConsList.sort(lst :: ConsList, less :: Function.of_arity(2) = math.less) :: ConsList,
 ){
 
  Sorts @rhombus(lst) using @rhombus(less) to compare elements.
 
 @examples(
-  List.sort([1, 3, 2])
-  List.sort([1, 3, 2], math.greater)
+  ConsList.sort([1, 3, 2])
+  ConsList.sort([1, 3, 2], math.greater)
 )
 
 }
 
 
 @doc(
-  fun List.iota(n :: NonnegInt) :: List.of(NonnegInt)
+  fun ConsList.iota(n :: NonnegInt) :: ConsList.of(NonnegInt)
 ){
 
  Returns a list containing the integers 0 to @rhombus(n) (exclusive) in
  order.
 
 @examples(
-  List.iota(3)
-  List.iota(0)
+  ConsList.iota(3)
+  ConsList.iota(0)
 )
 
 }

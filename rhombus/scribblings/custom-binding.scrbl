@@ -30,7 +30,7 @@ consistent with that choice, we should also customize the binding, so
 that @rhombus(Sandwich(top, bottom)) would match instead of
 @rhombus(Sandwich([top, bottom])). Similarly,
 @rhombus(Sandwich.of(String)) would be preferable to
-@rhombus(Sandwich.of(List.of(String))), which requires adding an
+@rhombus(Sandwich.of(ConsList.of(String))), which requires adding an
 @rhombus(of, ~datum) annotation form that is exported from
 @rhombus(Sandwhich) as a namespace.
 
@@ -50,7 +50,7 @@ and annotation expansion:
         '_Sandwich([$ingredient, ...])'
       annotation 'Sandwich': '_Sandwich'
       annot.macro 'of($ingredient)':
-        '_Sandwich.of(List.of($ingredient))'
+        '_Sandwich.of(ConsList.of($ingredient))'
       export: of
   ~repl:
     def blt: Sandwich("bacon", "lettuce", "tomato")

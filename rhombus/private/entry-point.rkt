@@ -55,7 +55,7 @@
            #hasheq())
     #:guard (lambda (args wrap is-method? info)
               (unless (and (list? args) (andmap identifier? args))
-                (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "List.of(Identifier)" args))
+                (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "ConsList.of(Identifier)" args))
               (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
                 (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Function.of_arity(2)" wrap))
               (values args wrap (and is-method? #t))))

@@ -11,19 +11,19 @@ use_static
 check:
   math.sqrt(& [25]) ~is 5
   math.expt(& [2, 3]) ~is 8
-  List(& [5, 6, 7, 8]) ~is [5, 6, 7, 8]
+  ConsList(& [5, 6, 7, 8]) ~is [5, 6, 7, 8]
   math.sqrt(25, & []) ~is 5
   math.expt(2, & [3]) ~is 8
-  List(5, 6, & [7, 8]) ~is [5, 6, 7, 8]
+  ConsList(5, 6, & [7, 8]) ~is [5, 6, 7, 8]
 
-fun prlist(& xs :: List): xs
+fun prlist(& xs :: ConsList): xs
 
 check:
   prlist(1, 2, 3)
   ~is [1, 2, 3]
 
 fun
-| altprlist(& xs :: List): xs
+| altprlist(& xs :: ConsList): xs
 
 check:
   altprlist(4, 5, 6)
@@ -106,7 +106,7 @@ block:
 
 block:
   fun avg(a, & bs):
-    (a + more_math.sum(bs)) / (1 + List.length(bs))
+    (a + more_math.sum(bs)) / (1 + ConsList.length(bs))
   check avg(1, 5) ~is 3
   check avg(7, 9) ~is 8
   check avg(-2, 4) ~is 1
@@ -240,7 +240,7 @@ check:
 block:
   def [x, ...] = [2, 3]
   check math.expt(x, ...) ~is 8
-  check List(x, ...) ~is [2, 3]
+  check ConsList(x, ...) ~is [2, 3]
 
 fun rrlist(x, ...):
   [x, ...]
@@ -271,7 +271,7 @@ check:
   ~is 61
 
 check:
-  add(1, List.repet([10, 20, 30]), ...)
+  add(1, ConsList.repet([10, 20, 30]), ...)
   ~is 61
 
 check:
@@ -285,25 +285,25 @@ check:
   ~prints_like '(hi "a") (hi "b") (hi "c")'
   
 check:
-  '(hi $(List.repet(["a", "b", "c"]))) ...'
+  '(hi $(ConsList.repet(["a", "b", "c"]))) ...'
   ~prints_like '(hi "a") (hi "b") (hi "c")'
 
 class Posn(x, y)
 
-def List(p :: Posn, ...) = [Posn(1, 2), Posn(3, 4)]
+def ConsList(p :: Posn, ...) = [Posn(1, 2), Posn(3, 4)]
 check:
   [p, ...][0].x
   ~is 1
 
 fun posns_y1(& rst):
-  def List(p :: Posn, ...) = rst
+  def ConsList(p :: Posn, ...) = rst
   [p, ...][1].y
 
 check:
   posns_y1(Posn(1, 2), Posn(3, 4), Posn(5, 6))
   ~is 4
 
-fun posns_y2(& List(p :: Posn, ...)):
+fun posns_y2(& ConsList(p :: Posn, ...)):
   [p, ...][1].y
      
 check:
@@ -376,7 +376,7 @@ check:
   [anyargs(& (block: s := [1, s]; [9, 10, 11]),
            ~& (block: s := [2, s]; { #'~height: 10 }),
            ~base: (block: s := [3, s]; 1),
-           List.repet(block: s := [4, s]; [8, 88]), ...),
+           ConsList.repet(block: s := [4, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
@@ -386,7 +386,7 @@ check:
            ~& (block: s := [2, s]; { #'~height: 10 }),
            ~base: (block: s := [3, s]; 1),
            ~& (block: s := [4, s]; { #'~width: 20 }),
-           List.repet(block: s := [5, s]; [8, 88]), ...),
+           ConsList.repet(block: s := [5, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10, #'~width: 20}],
        [5, [4, [3, [2, [1, 0]]]]]]
@@ -430,7 +430,7 @@ for:
 
 block:
 
-  fun f_rest(x, & ys :: List):
+  fun f_rest(x, & ys :: ConsList):
     ys
 
   fun f_elrest(x, y :: Int, ...):

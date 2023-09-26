@@ -92,7 +92,7 @@ More rules about static information in general:
 
 )
 
-The @rhombus(List), @rhombus(Array), and @rhombus(Map) expression and
+The @rhombus(ConsList), @rhombus(Array), and @rhombus(Map) expression and
 binding forms are analogous to class-name forms. For example,
 @rhombus(Array) as a constructor in an expression form associates
 reference-result information to the overall @rhombus(Array) expression,
@@ -103,10 +103,10 @@ wrapped as reference-result information for the identifier outside the
 list pattern, since each; for example @rhombus([p :: Posn, ...], ~bind) as a
 binding pattern causes @rhombus(p) to have static information that says
 its reference result as @rhombus(Posn)-annotation information. The
-@rhombus(List.of, ~annot), @rhombus(Array.of, ~annot), and @rhombus(Map.of, ~annot) annotation
+@rhombus(ConsList.of, ~annot), @rhombus(Array.of, ~annot), and @rhombus(Map.of, ~annot) annotation
 forms in bindings propagate ``downward'' reference-result information to
 nested annotations. ``Downward'' static information is used by
-@rhombus(List, ~bind) or @brackets pattern constructions only
+@rhombus(ConsList, ~bind) or @brackets pattern constructions only
 in the case that there's a single element binding pattern followed by
 @rhombus(..., ~bind), while @rhombus(Array, ~bind) and @rhombus(Map, ~bind) as pattern
 constructors cannot use ``downward'' information.

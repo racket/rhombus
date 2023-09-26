@@ -13,7 +13,7 @@
                                                      _ :: Button.LabelPosition])),
                  ~action: action :: Function.of_arity(0) = fun (): #void,
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(Button.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
@@ -60,13 +60,13 @@
 @doc(
   class Choice():
     implements View
-    constructor (choices :: MaybeObs.of(List),
+    constructor (choices :: MaybeObs.of(ConsList),
                  ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
                  ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                  ~selection: selection :: MaybeObs.of(Any) = #false,
                  ~action: action :: maybe(Function.of_arity(1)) = #false,
                  ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-                 ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(Choice.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
@@ -115,7 +115,7 @@
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal])
+                 ~style: style :: ConsList.of(Slider.StyleSymbol) = [#'horizontal])
 
   property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
 ){

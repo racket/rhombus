@@ -94,7 +94,7 @@
  @rhombus(body) is combined to produce a result of the overall
  @rhombus(for) expression, otherwise the result of the last
  @rhombus(body) is ignored and the @rhombus(for) expression's value is
- @rhombus(#void). Example reducers include @rhombus(List, ~reducer),
+ @rhombus(#void). Example reducers include @rhombus(ConsList, ~reducer),
  @rhombus(Map, ~reducer), and @rhombus(values, ~reducer).
 
 @examples(
@@ -130,13 +130,13 @@
       println(i +& ". " +& v)
   ~repl:
     fun grid(m, n):
-      for List:
+      for ConsList:
         each i: 0..m
         each j: 0..n
         [i, j]
     grid(2, 3)
   ~repl:
-    fun sum(l :: List):
+    fun sum(l :: ConsList):
       for values(sum = 0):
         each i: l
         sum+i
@@ -146,14 +146,14 @@
       each i: [1, 2, 3]
       each j: 10..10+3
       [i, j]
-      ~into List
+      ~into ConsList
   ~repl:
     for values(x = 0, y = 2):
       each j: 0..3
       values(x + y, j)
   ~repl:
     fun grid2(m, n):
-      for List:
+      for ConsList:
         each i: 0..m
         def k: i + 1
         each j: 0..n

@@ -80,7 +80,7 @@ check:
   s.color ~is 110
 
 def mutable ref = [0]
-expr.macro 'refcar $(a :: assign_meta.AssignParsed('fun () : List.first(ref)',
+expr.macro 'refcar $(a :: assign_meta.AssignParsed('fun () : ConsList.first(ref)',
                                                    'fun (v): ref := [v]',
                                                    'reffed')) $()':
   values(a, '$a.tail ...')

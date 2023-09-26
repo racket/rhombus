@@ -37,7 +37,7 @@ annotations.
 @rhombusblock(
   use_static
 
-  annot.macro 'PosnList': 'List.of(Posn)'
+  annot.macro 'PosnList': 'ConsList.of(Posn)'
 
   fun nth_x(ps :~ PosnList, n):
     ps[n].x

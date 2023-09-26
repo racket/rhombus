@@ -127,7 +127,7 @@
   ~defn:
     def mutable reflist = [0]
     expr.macro 'refcar
-                  $(a :: assign_meta.AssignParsed('fun () : List.first(reflist)',
+                  $(a :: assign_meta.AssignParsed('fun () : ConsList.first(reflist)',
                                                   'fun (v): reflist := [v]',
                                                   'refelem'))
                   $()':

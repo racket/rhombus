@@ -25,9 +25,9 @@ check:
   ~is "chocolate"
 
 check:
-  food.bridge List.cake:
+  food.bridge ConsList.cake:
     "tiered"
   expr.macro 'go':
-    '$(syntax_meta.value('List.cake', food_meta.space))'
+    '$(syntax_meta.value('ConsList.cake', food_meta.space))'
   go
   ~is "tiered"

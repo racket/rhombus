@@ -7,8 +7,8 @@ use_static
 class Posn(x, y)
 
 def nums = [1, 2, 3]
-def yes_nums :: List = nums
-def yep_nums :: List.of(Int) = nums
+def yes_nums :: ConsList = nums
+def yep_nums :: ConsList.of(Int) = nums
 
 check:
   nums[1]
@@ -180,7 +180,7 @@ check:
 
 check:
  def [n, ...] = [3, 4]
- List(1, 2, n, ...)
+ ConsList(1, 2, n, ...)
  ~is [1, 2, 3, 4]
 
 def nested_p :: Posn.of(Int, Posn.of(Int, Int)) = Posn(1, Posn(3, 4))

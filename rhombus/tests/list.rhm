@@ -3,23 +3,23 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    List(l, ...)
-    List.length(lst)
-    List.cons(a, d)
-    List.map(lst, proc)
-    List.for_each(lst, proc)
-    List.has_element(lst, val)
-    List.remove(lst, val)
-    List.drop_left(lst, n)
-    List.drop_right(lst, n)
+    ConsList(l, ...)
+    ConsList.length(lst)
+    ConsList.cons(a, d)
+    ConsList.map(lst, proc)
+    ConsList.for_each(lst, proc)
+    ConsList.has_element(lst, val)
+    ConsList.remove(lst, val)
+    ConsList.drop_left(lst, n)
+    ConsList.drop_right(lst, n)
 
 check:
-  List.length([1, 2, 3])
+  ConsList.length([1, 2, 3])
   ~is 3
 
 check:
-  List.length({1, 2, 3})
-  ~raises values("contract violation", "expected: List")
+  ConsList.length({1, 2, 3})
+  ~raises values("contract violation", "expected: ConsList")
 
 check:
   [1] :: NonemptyList
@@ -44,22 +44,22 @@ block:
     [1, 2, 3].rest
     ~is [2, 3]
   check:
-    List(1, 2, 3).length()
+    ConsList(1, 2, 3).length()
     ~is 3
   check:
     def lst = [1, 2, 3]
     lst.length()
     ~is 3
   check:
-    def lst :: List = dynamic([1, 2, 3])
+    def lst :: ConsList = dynamic([1, 2, 3])
     lst.length()
     ~is 3
   check:
-    def lst :~ List = dynamic([1, 2, 3])
+    def lst :~ ConsList = dynamic([1, 2, 3])
     lst.length()
     ~is 3
   check:
-    def lst :: List.of(Int) = dynamic([1, 2, 3])
+    def lst :: ConsList.of(Int) = dynamic([1, 2, 3])
     lst.length()
     ~is 3
   check:
@@ -67,22 +67,22 @@ block:
     [v, ...].length()
     ~is 3
   check:
-    def lst :: List.of(List) = dynamic([[1, 2, 3]])
+    def lst :: ConsList.of(ConsList) = dynamic([[1, 2, 3]])
     lst.first.length()
     ~is 3
   check:
-    def lst :: List.of(Int) = dynamic([1, 2, 3])
+    def lst :: ConsList.of(Int) = dynamic([1, 2, 3])
     lst.rest.length()
     ~is 2
   check:
-    def lst :: NonemptyList.of(List) = dynamic([[1, 2, 3]])
+    def lst :: NonemptyList.of(ConsList) = dynamic([[1, 2, 3]])
     lst.first.length()
     ~is 3
   check:
-    List.cons(1, [2, 3])
+    ConsList.cons(1, [2, 3])
     ~is [1, 2, 3]
   check:
-    List.cons(1, [2, 3]).length()
+    ConsList.cons(1, [2, 3]).length()
     ~is 3
 
 block:
@@ -101,13 +101,13 @@ block:
 
 check:
   match []
-  | List.empty: "empty"
+  | ConsList.empty: "empty"
   | ~else: "other"
   ~is "empty"
 
 check:
   match [1]
-  | List.empty: "empty"
+  | ConsList.empty: "empty"
   | ~else: "other"
   ~is "other"
 
@@ -124,7 +124,7 @@ block:
     check sum ~is 3
 
 check:
-  List.append(&[[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]
+  ConsList.append(&[[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]
   [1, 2].append() ~is [1, 2]
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
@@ -132,7 +132,7 @@ check:
 
 check:
   match []
-  | List.cons(hd,tl): "no"
+  | ConsList.cons(hd,tl): "no"
   | []: "empty"
   ~is "empty"
 
@@ -149,11 +149,11 @@ check:
 
 check:
   [1, 2, 3].drop_left(2) ~is [3]
-  List.drop_left([1, 2, 3], 2) ~is [3]
+  ConsList.drop_left([1, 2, 3], 2) ~is [3]
   [1, 2, 3].drop_right(2) ~is [1]
-  List.drop_right([1, 2, 3], 2) ~is [1]
+  ConsList.drop_right([1, 2, 3], 2) ~is [1]
 
 check:
   use_static
-  List.rest([1, 2, 3]).map(math.abs)
+  ConsList.rest([1, 2, 3]).map(math.abs)
   ~is [2, 3]

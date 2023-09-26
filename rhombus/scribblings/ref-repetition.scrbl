@@ -138,7 +138,7 @@ positions.
 
  The @rhombus(&) expression operator and binding operator can only be
  used in places where its specifically recognized, normally either to
- reference or bind the ``rest'' of a data structure. The @rhombus(List)
+ reference or bind the ``rest'' of a data structure. The @rhombus(ConsList)
  constructor, @rhombus(Map) constructor, @rhombus(fun) form, and the
  @rhombus(#%call) form are among the places that recognize
  @rhombus(&).

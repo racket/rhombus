@@ -6,7 +6,7 @@ namespace home:
   export:
     x
     Posn
-    rename: List as XList
+    rename: ConsList as XList
 
 check:
   home.x

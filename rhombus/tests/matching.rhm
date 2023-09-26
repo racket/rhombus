@@ -21,10 +21,10 @@ check:
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-annot.macro 'ListOf ($contract ...)':
+annot.macro 'ConsListOf ($contract ...)':
   'matching([_ :: ($contract ...), $('...')])'
 
-fun get_pts_x2(pts :~ ListOf(Posn)):
+fun get_pts_x2(pts :~ ConsListOf(Posn)):
   pts[0].x
 
 check:

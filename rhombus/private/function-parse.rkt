@@ -33,7 +33,7 @@
          "rest-marker.rkt"
          "op-literal.rkt"
          (submod "ellipsis.rkt" for-parse)
-         (only-in "list.rkt" List)
+         (only-in "cons-list.rkt" ConsList)
          (submod "annotation.rkt" for-class)
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
@@ -49,7 +49,7 @@
          "function-arity.rkt"
          "wrap-expression.rkt"
          "rest-bind.rkt"
-         (submod "list.rkt" for-compound-repetition)
+         (submod "cons-list.rkt" for-compound-repetition)
          (submod "map.rkt" for-info))
 
 (module+ for-build
@@ -324,13 +324,13 @@
     #:attributes [arg parsed]
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
-             #:with arg::non-...-binding #`(#,group-tag rest-bind #,list-static-infos
+             #:with arg::non-...-binding #`(#,group-tag rest-bind #,cons-list-static-infos
                                             #:annot-prefix? #f
                                             (#,group-tag a ...))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (~and ooo (group _::...-bind)))
              #:with (::pos-rest)
-             #'((group & List (parens e ooo)))))
+             #'((group & ConsList (parens e ooo)))))
 
   (define-splicing-syntax-class :kwp-rest
     #:attributes [kwarg kwparsed]

@@ -26,7 +26,7 @@
          (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
-         (submod "list.rkt" for-compound-repetition))
+         (submod "cons-list.rkt" for-compound-repetition))
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -324,7 +324,7 @@
 
 (define/arity (make_sequence v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
+  (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "ConsList" v))
   (pack-multi (for/list ([e (in-list v)])
                 (do-make 'Syntax.make_sequence e ctx-stx #t #t #t))))
 
@@ -390,7 +390,7 @@
 
 (define-for-syntax list-of-syntax-static-infos
   #`((#%index-result #,syntax-static-infos)
-     #,@list-static-infos))
+     #,@cons-list-static-infos))
 
 (define/arity (unwrap_group v)
   #:static-infos ((#%call-result #,list-of-syntax-static-infos))
@@ -512,7 +512,7 @@
   (define stx (and (syntax? stx-in) (unpack-term stx-in #f #f)))
   (unless stx (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Term" stx-in))
   (unless (and (list? ctx-stxes) (andmap syntax? ctx-stxes))
-    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "List.of(Syntax)" ctx-stxes))
+    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "ConsList.of(Syntax)" ctx-stxes))
   
   (at-relevant-dest-syntax
    stx

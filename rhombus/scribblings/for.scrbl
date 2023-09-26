@@ -87,14 +87,14 @@ sequences in parallel, it stops when the shortest sequence stops.
 
 The @rhombus(for) form acts as a comprehension form when a
 @deftech{reducer} is specified before the @rhombus(for) body block.
-@rhombus(List, ~reducer) serves as a reducer to generate a list,
+@rhombus(ConsList, ~reducer) serves as a reducer to generate a list,
 accumulating the values produced by each iteration of the @rhombus(for)
 body.
 
 @demo(
-  for List (i: 1..4):
+  for ConsList (i: 1..4):
     "number " +& i
-  for List:
+  for ConsList:
     each i: [1, 2]
     each j: ["a", "b", "c"]
     [i, j]
@@ -106,7 +106,7 @@ body with @rhombus(~into).
 @demo(
   for (i: 1..4):
     "number " +& i
-    ~into List
+    ~into ConsList
 )
 
 @rhombus(Map, ~reducer) works as a reducer where the body of the
@@ -128,14 +128,14 @@ returns as many values as identifiers to provide new values for the
 identifiers.
 
 @demo(
-  fun sum(l :~ List):
+  fun sum(l :~ ConsList):
     for values(sum = 0):
       each i: l
       sum+i
   sum([2, 3, 4])
 )
 
-In the same way that a @rhombus(List, ~annot) annotation specializes
+In the same way that a @rhombus(ConsList, ~annot) annotation specializes
 element access via @litchar{[}...@litchar{]}, it also specializes how
 @rhombus(each, ~for_clause) within @rhombus(for) iterates through a list. In the
 following example, @rhombus(ll) is annotated as a list of lists, so both
@@ -143,7 +143,7 @@ the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
 
 @demo(
-  fun sum2d(ll :~ List.of(List.of(Number))):
+  fun sum2d(ll :~ ConsList.of(ConsList.of(Number))):
     for values(sum = 0):
       each l: ll
       each i: l

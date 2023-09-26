@@ -272,7 +272,7 @@
 
 @doc(
   fun PrintDesc.list(pre_pd :: PrintDesc,
-                     elements :: List.of(PrintDesc),
+                     elements :: ConsList.of(PrintDesc),
                      post_pd :: PrintDesc)
     :: PrintDesc
   fun PrintDesc.block(head_pd :: PrintDesc,

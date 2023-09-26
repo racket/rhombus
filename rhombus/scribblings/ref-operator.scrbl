@@ -124,11 +124,11 @@
     ~error:
       1 ^^^ 2
   ~defn:      
-    operator x List.(^^^) y:
+    operator x ConsList.(^^^) y:
       x ++ y ++ x
   ~repl:
     block:
-      import: .List open
+      import: .ConsList open
       [1, 2] ^^^ [3]
   ~defn:
     operator

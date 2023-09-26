@@ -68,7 +68,7 @@ check_exp_loc: Posn(1, 2).x
 check_exp_loc: Posn(1, 2).m()
 check_exp_loc: Posn(1, 2).p
 check_exp_loc: [1, 2, 3].first
-check_exp_loc: [List.repet([1]), ...].first
+check_exp_loc: [ConsList.repet([1]), ...].first
 check_exp_loc: [1, 2, 3].has_element(1)
 check_exp_loc: [1, 2, 3].has_element
 check_exp_loc: Array(1, 2, 3)[0]

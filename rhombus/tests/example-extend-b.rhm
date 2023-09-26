@@ -1,6 +1,6 @@
 #lang rhombus
 
 export:
-  List
+  ConsList
 
-def List.b = "b"
+def ConsList.b = "b"

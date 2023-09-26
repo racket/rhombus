@@ -12,7 +12,7 @@ export:
 
 expr.macro 'examples($form, ...)':
   ~op_stx: self
-  fun split(forms) :~ List:
+  fun split(forms) :~ ConsList:
     match forms
     | []: []
     | ['~eval: $_', &rest]:
@@ -53,9 +53,9 @@ expr.macro 'examples($form, ...)':
   fun find_label(): find_kw([form, ...], #'~label, #false)
   fun find_indent(): find_kw([form, ...], #'~indent, #false) || '0'
   def [new_form, ...]:
-    for List:
+    for ConsList:
       each:
-        j :~ List: split([form, ...])
+        j :~ ConsList: split([form, ...])
         i: 0..
       def [no_prompt, ...]: match j[0]
                             | '~defn': ['~no_prompt']
@@ -66,7 +66,7 @@ expr.macro 'examples($form, ...)':
                                               ~eval: eval,
                                               ~indent: indent,
                                               $no_prompt, ...,
-                                              $(List.repet(j[1])), ...))',
+                                              $(ConsList.repet(j[1])), ...))',
                            j[1])
   def eval = find_eval()
   'block:

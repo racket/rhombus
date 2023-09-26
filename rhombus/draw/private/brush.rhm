@@ -30,10 +30,10 @@ class LinearGradient(handle):
                                     pt1.x, pt1.y,
                                     pt2.x, pt2.y,
                                     [[stop, color.handle], ...]))
-  property line :: List.of(Point):
+  property line :: ConsList.of(Point):
     let values(x1, y1, x2, y2): rkt.send handle.#{get-line}()
     [Point(x1, y1), Point(x2, y2)]
-  property stops :: List.of(matching([_ :: Real, _ :: Color])):
+  property stops :: ConsList.of(matching([_ :: Real, _ :: Color])):
     def [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
   
@@ -47,10 +47,10 @@ class RadialGradient(handle):
                                     pt1.x, pt1.y, r1,
                                     pt2.x, pt2.y, r2,
                                     [[stop, color.handle], ...]))
-  property circles:: List.of(matching([_ :: Point, _ :: Real])):
+  property circles:: ConsList.of(matching([_ :: Point, _ :: Real])):
     let values(x0, y0, r0, x1, y1, r1): rkt.send handle.#{get-circles}()
     [[Point(x0, y0), r0], [Point(x1, y1), r1]]
-  property stops :: List.of(matching([_ :: Real, _ :: Color])):
+  property stops :: ConsList.of(matching([_ :: Real, _ :: Color])):
     def [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
     

@@ -26,7 +26,7 @@ expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg
   expr_meta.pack_s_exp(['rkt_send',
                         expr_meta.pack_expr('$target ...'),
                         method,
-                        &(for List:
+                        &(for ConsList:
                             each p: [[kw, expr_meta.pack_expr(kw_arg)], ...]
                             each i: p
                             i),

@@ -3,7 +3,7 @@
 use_static
 
 class.together:
-  class Foo(x :: List.of(Bar))
+  class Foo(x :: ConsList.of(Bar))
   class Bar(x :: Foo)
 
 check:
@@ -32,7 +32,7 @@ check:
 
 check:
   class.together:
-    class Tree(x :: List.of(Node))
+    class Tree(x :: ConsList.of(Node))
     class Node(val, children :: Tree)
 
   class.together:

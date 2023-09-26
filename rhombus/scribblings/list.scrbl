@@ -21,35 +21,35 @@ A @brackets form as an expression creates a list:
   [0, "apple", Posn(1, 2)]
 )
 
-Operations on lists include functions like @rhombus(List.length), and
+Operations on lists include functions like @rhombus(ConsList.length), and
 some of those operations can be applied using @rhombus(.) directly on an
 expression that produces a list. The @rhombus(++) operator appends
 lists.
 
 @demo(
-   List.length(["a", "b", "c"])
+   ConsList.length(["a", "b", "c"])
    ["a", "b", "c"].length()
    ["a", "b"] ++ ["c", "d", "e"]
 )
 
-You can also use the @rhombus(List) constructor, which takes any number of
+You can also use the @rhombus(ConsList) constructor, which takes any number of
 arguments:
 
 @demo(
-  List(1, 2, 3)
+  ConsList(1, 2, 3)
 )
 
 A list is a ``linked list,'' in the sense that getting the @math{n}th element
 takes @math{O(n)} time, and adding to the front takes constant time. A
 list is immutable.
 
-@rhombus(List, ~annot) works as an annotation with @rhombus(:~, ~bind) and
+@rhombus(ConsList, ~annot) works as an annotation with @rhombus(:~, ~bind) and
 @rhombus(::, ~bind):
 
 @demo(
   ~defn:
     fun
-    | classify(_ :: List): "list"
+    | classify(_ :: ConsList): "list"
     | classify(_ :: Number): "number"
     | classify(_): "other"
   ~repl:
@@ -59,7 +59,7 @@ list is immutable.
 )
 
 As pattern, @brackets matches a list, and list elements
-can be matched with specific subpatterns. The @rhombus(List, ~bind) binding
+can be matched with specific subpatterns. The @rhombus(ConsList, ~bind) binding
 operator works the same in bindings, too.
 
 @demo(
@@ -90,7 +90,7 @@ Each variable in a pattern preceding @rhombus(..., ~bind) is bound as a
 @tech{repetition}, which cannot be used like a plain variable.
 Instead, a repetition variable must be used in an expression form that
 supports using repetitions, typically with before @rhombus(...). For
-example, a @brackets or @rhombus(List) expression (as
+example, a @brackets or @rhombus(ConsList) expression (as
 opposed to binding) supports @rhombus(...) in place of an element,
 in which case the preceding element form is treated as a repetition
 that supplies elements for the new list.
@@ -122,7 +122,7 @@ be used multiple times.
 )
 
 Instead of using @rhombus(...) in @brackets
-or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
+or @rhombus(ConsList) to bind or use a repetition, use @rhombus(&) to bind
 or reference a plain list value whose elements are the rest of the list.
 
 @demo(
@@ -165,14 +165,14 @@ function’s argument can use a binding pattern that indicates a list of
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
 )
 
-An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~annot)
+An equivalent way to write @rhombus(nth_x) is with the @rhombus(ConsList.of, ~annot)
 annotation constructor. It expects an annotation that every element of
 the list must satisfy:
 
 @demo(
   ~eval: list_eval
   ~defn:
-    fun nth_x(ps :~ List.of(Posn), n):
+    fun nth_x(ps :~ ConsList.of(Posn), n):
       ps[n].x
 )
 

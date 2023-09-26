@@ -162,7 +162,7 @@ check:
   import: 
     lib("rhombus/tests/example-extend-a.rhm") open
     lib("rhombus/tests/example-extend-b.rhm") open
-  List(List.a, List.b, ExList.a)
+  ConsList(ConsList.a, ConsList.b, ExList.a)
   ~is ["a", "b", "a"]
 
 check:

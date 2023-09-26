@@ -31,7 +31,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
   def ['($_, $a_name, $_, ...)', ...]: [bind_meta.unpack_info(arg_info), ...]
   def [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
   def [avail_id, ...] = [Syntax.make_id(a_name +& "_ready_arg"), ...]
-  def [recur_arg, ...] = (for List:
+  def [recur_arg, ...] = (for ConsList:
                             each:
                               kw: [arg.maybe_keyword, ...]
                               id: [arg_id, ...]
@@ -107,7 +107,7 @@ meta:
                           fun (): bad_result(#' $name,
                                              #%literal $annotation_string))'
       | def [arg, ...]:
-          for List:
+          for ConsList:
             each i: 0..count
             Syntax.make_id("arg" +& i)
         'block:

@@ -10,7 +10,7 @@ check:
     | 2
     | check:
         adj ~is_a entry_point_meta.Adjustment
-        adj.prefix_arguments ~is_a List.of(Syntax)
+        adj.prefix_arguments ~is_a ConsList.of(Syntax)
       match 'fun(x): x'
       | '$(e :: entry_point_meta.Parsed(adj))':
           e

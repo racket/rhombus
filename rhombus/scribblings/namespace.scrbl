@@ -10,12 +10,12 @@
 A dotted module import as @rhombus(convert.fahrenheit_to_celsius) or class
 field accessors as @rhombus(Posn.x) and @rhombus(Posn.y) demonstrate
 the use of hierarchical names. Other hierarchical names provided by
-@rhombuslangname(rhombus) include @rhombus(List.length) and
-@rhombus(List.cons) via @rhombus(List) (where lists will discussed more
+@rhombuslangname(rhombus) include @rhombus(ConsList.length) and
+@rhombus(ConsList.cons) via @rhombus(ConsList) (where lists will discussed more
 in @secref("list")):
 
 @demo(
-  List.length(["a", "b", "c"])
+  ConsList.length(["a", "b", "c"])
 )
 
 Use the @rhombus(namespace) form to create a namespace without creating a
@@ -87,7 +87,7 @@ reach a nested binding without making intemediate bindings visible.
 @demo(
   ~eval: ns_eval
   block:
-    import: rhombus.List open
+    import: rhombus.ConsList open
     length(["a", "b", "c"])
 )
 

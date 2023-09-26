@@ -58,7 +58,7 @@ check:
 
 check:
   match 1
-  | x where y :~ List = [0, 0, 0, x+1]:
+  | x where y :~ ConsList = [0, 0, 0, x+1]:
       y.length()
   ~is 4
 

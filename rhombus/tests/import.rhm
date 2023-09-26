@@ -81,10 +81,10 @@ check:
 
 check:
   ~eval
-  import: .List: 
+  import: .ConsList: 
             rename: cons as kons
-  List.kons(1, [2])
-  ~is List.cons(1, [2])
+  ConsList.kons(1, [2])
+  ~is ConsList.cons(1, [2])
 
 check:
   ~eval
@@ -92,8 +92,8 @@ check:
   import: .ExList: 
             rename: cons as kons
   [ExList.kons(1, [2]),
-   List.cons(1, [2])]
-  ~is [List.cons(1, [2]), List.cons(1, [2])]
+   ConsList.cons(1, [2])]
+  ~is [ConsList.cons(1, [2]), ConsList.cons(1, [2])]
 
 check:
   ~eval
@@ -102,8 +102,8 @@ check:
     import: .ExList: 
               rename: cons as kons
     [ExList.kons(1, [2]),
-     List.cons(1, [2])]
-  ~is [List.cons(1, [2]), List.cons(1, [2])]
+     ConsList.cons(1, [2])]
+  ~is [ConsList.cons(1, [2]), ConsList.cons(1, [2])]
 
 check:
   ~eval

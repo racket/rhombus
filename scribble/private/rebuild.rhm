@@ -30,7 +30,7 @@ fun quotes_syntax(ts, context):
   | ['$t', ...]: Syntax.relocate('«'$t; ...'»', context)
 
 fun alts_syntax(ts, context):
-  Syntax.relocate(Syntax.make(List.cons(#'alts, ts)), context)
+  Syntax.relocate(Syntax.make(ConsList.cons(#'alts, ts)), context)
 
 fun sequence_append_syntax(d1, d2):
   match d1

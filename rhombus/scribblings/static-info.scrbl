@@ -37,7 +37,7 @@ Rhombus uses several built-in static-information keys:
   @item{@rhombus(statinfo_meta.index_result_key) --- provides static information to be
    attached to a @brackets indexing reference where E is to the left
    of the @brackets. (The index expression inside @brackets does
-   not matter.) For example @rhombus(ps :: List.of(Posn)) associates
+   not matter.) For example @rhombus(ps :: ConsList.of(Posn)) associates
    @rhombus(statinfo_meta.index_result_key) to @rhombus(ps), where the associated value
    includes is static information with @rhombus(statinfo_meta.dot_provider_key). So,
    @rhombus(ps[i].x) is allowed and selects an @rhombus(x) field from the @rhombus(Posn)

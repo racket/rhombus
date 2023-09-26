@@ -68,7 +68,7 @@
 
 @examples(
   class Posn(x, y)
-  fun ok_lookup(ps :~ List.of(Posn)):
+  fun ok_lookup(ps :~ ConsList.of(Posn)):
     use_static
     ps[0].x
   ~error:
@@ -76,7 +76,7 @@
       use_static
       ps[0].x
   ~error:
-    fun still_bad_lookup(ps :~ List):
+    fun still_bad_lookup(ps :~ ConsList):
       use_static
       ps[0].x
   ~error:
@@ -118,14 +118,14 @@
 @examples(
   class Posn(x, y)
   ~error:
-    fun bad_lookup(ps :~ List.of(Posn)):
+    fun bad_lookup(ps :~ ConsList.of(Posn)):
       use_static
       dynamic(ps)[0].x
   ~error:
-    fun still_bad_lookup(ps :~ List.of(Posn)):
+    fun still_bad_lookup(ps :~ ConsList.of(Posn)):
       use_static
       dynamic(ps[0]).x
-  fun (ps :~ List.of(Posn)):
+  fun (ps :~ ConsList.of(Posn)):
     dynamic(dynamic(ps)[0]).x
 )
 

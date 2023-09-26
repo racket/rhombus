@@ -81,6 +81,6 @@ check:
     match right
     | 'content': statinfo_meta.wrap('box_content($left)', infos)
 
-  def v :: BoxOf(List) = Array([1, 2, 3])
+  def v :: BoxOf(ConsList) = Array([1, 2, 3])
   v.content[0]
   ~is 1

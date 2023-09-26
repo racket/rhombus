@@ -138,7 +138,7 @@ check:
   class Posn(x, y):
     nonfinal
     abstract m
-  Posn is_a List
+  Posn is_a ConsList
   ~is #false
 
 check:

@@ -42,7 +42,7 @@
       'def three: 3
        each $id: 0..three'
   ~repl:
-    for List:
+    for ConsList:
       each_in_three i
       i
 )

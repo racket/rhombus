@@ -45,7 +45,7 @@
     def [x, y, z] = [1+2, 3+4, 5+6]
     y
   ~repl:
-    def ns :: List = [1+2, 3+4, 5+6]
+    def ns :: ConsList = [1+2, 3+4, 5+6]
     ns
 )
 

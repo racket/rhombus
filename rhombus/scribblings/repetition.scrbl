@@ -102,7 +102,7 @@ given other repetitions to start with.
 
 @demo(
   class Posn(x, y)
-  fun mirror(Posn(x, y)) :~ List.of(Posn):
+  fun mirror(Posn(x, y)) :~ ConsList.of(Posn):
     [Posn(x, y), Posn(y, x)]
   def [p, ...] = [Posn(1, 2), Posn(3, 4), Posn(5, 6)]
   ['z + $(mirror(p)[1].x)', ...]

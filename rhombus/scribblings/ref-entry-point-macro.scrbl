@@ -117,8 +117,8 @@
   class entry_point_meta.Adjustment(
     arity :: (False || Int
                 || matching([mask :: Int,
-                             allowed :: List.of(Keyword) || False,
-                             required :: List.of(Keyword)])),
+                             allowed :: ConsList.of(Keyword) || False,
+                             required :: ConsList.of(Keyword)])),
     wrap_body :: Function.of_arity(2),
     is_method :: Boolean
   )

@@ -7,7 +7,7 @@ space.transform ident:
     parse_syntax_class Parsed
 
 meta:
-  def mutable saved :~ List = []
+  def mutable saved :~ ConsList = []
 
 expr.macro 'reset':
   saved := []

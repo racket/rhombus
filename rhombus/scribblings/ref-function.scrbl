@@ -96,8 +96,8 @@ normally bound to implement function calls.
  @see_implicit(@rhombus(#%call), @parens, "expression", ~is_infix: #true)
 
 @examples(
-  List.length([1, 2, 3])
-  List.length #%call ([1, 2, 3])
+  ConsList.length([1, 2, 3])
+  ConsList.length #%call ([1, 2, 3])
 )
 
 }
@@ -192,10 +192,10 @@ normally bound to implement function calls.
   ~repl:
     f(0)
   ~defn:
-    fun List.number_of_items(l):
-      List.length(l)
+    fun ConsList.number_of_items(l):
+      ConsList.length(l)
   ~repl:
-    List.number_of_items(["a", "b", "c"])
+    ConsList.number_of_items(["a", "b", "c"])
   ~defn:
     def identity = fun (x): x
   ~repl:
@@ -270,7 +270,7 @@ function or function alternative accepts any number of additional
 by-position arguments.
 For @rhombus(& list_bind), the additional arguments are collected
 into a list value, and that list value is bound to the
-@rhombus(list_bind). Static information associated by @rhombus(List)
+@rhombus(list_bind). Static information associated by @rhombus(ConsList)
 is propagated to @rhombus(list_bind).
 For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
 variable in @rhombus(repet_bind) is bound to a repetition that
@@ -379,8 +379,8 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  fun Function.map(f :: Function, args :: List, ...) :: List,
-  fun Function.for_each(f :: Function, args :: List, ...) :: Void,
+  fun Function.map(f :: Function, args :: ConsList, ...) :: ConsList,
+  fun Function.for_each(f :: Function, args :: ConsList, ...) :: Void,
 ){
 
  Applies @rhombus(f) to each element of each @rhombus(args), iterating

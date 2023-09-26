@@ -94,7 +94,7 @@
         "operator.rkt"
         "annotation.rkt"
         "annotation-converting.rkt"
-        "list.rkt"
+        "cons-list.rkt"
         "pair.rkt"
         "array.rkt"
         "box.rkt"

@@ -27,13 +27,13 @@ class Posn3D(z):
   extends Posn
 
 check:
-  for List:
+  for ConsList:
     each j: Posn(1, 2)
     j
   ~is [2, 1]
 
 check:
-  for List:
+  for ConsList:
     each j: Posn3D(1, 2, 3)
     j
   ~is [2, 1]
@@ -63,7 +63,7 @@ class Posn2(x, y):
   override property why: -y
 
 check:
-  for List:
+  for ConsList:
     each j: Posn2(1, 2)
     j
   ~is [-2, -1]
@@ -78,7 +78,7 @@ class Posn3(x, y):
   private override property why: -y
 
 check:
-  for List:
+  for ConsList:
     each j: (Posn3(1, 2) :: _Posn3)
     j
   ~is [-2, -1]
@@ -98,7 +98,7 @@ class Posn4(x, y):
     #false
 
 check:
-  for List:
+  for ConsList:
     each j: Posn4(1, 2)
     j
   ~is [20, 10]
@@ -112,7 +112,7 @@ check:
       '(~outer_binds:
           df0 = $rhs
           df = [[df0.x, df0.y]]
-          nr :: List = df[0],
+          nr :: ConsList = df[0],
         ~outer_check:
           "ok",
         ~recur_binds:
@@ -120,16 +120,16 @@ check:
         ~head_guard:
           i < nr[0],
         ~inner_binds:
-          $lhs = df[i], // :~ List here would not propagate to body
+          $lhs = df[i], // :~ ConsList here would not propagate to body
         ~recur_args:
           (i + 1))'
     static_info:
       let list_info:
-        let '$(a :: annot_meta.Parsed)': 'List.of(String)'
+        let '$(a :: annot_meta.Parsed)': 'ConsList.of(String)'
         let values(_, _, si) = annot_meta.unpack_converter(a)
         si
       '(($statinfo_meta.index_result_key, $(statinfo_meta.pack(list_info))))'
-  for List:
+  for ConsList:
     each elem: Posn(1, 2)
     elem[0]
   ~is [1]

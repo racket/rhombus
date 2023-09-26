@@ -135,8 +135,8 @@ block:
 
 check:
   expr.macro 'm':
-    match 'List'
-    | '$(name && bound_as expr_meta.space: 'List')':
+    match 'ConsList'
+    | '$(name && bound_as expr_meta.space: 'ConsList')':
         name
   m
-  ~is List
+  ~is ConsList

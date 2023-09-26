@@ -21,7 +21,7 @@ check:
 def Posn(px, py) :~ Posn = Posn(1, 2)
 
 check:
-  List(px, py)
+  ConsList(px, py)
   ~is [1, 2]
 
 def identity = fun (x): x
@@ -140,7 +140,7 @@ block:
     ~is [0, 1]
   check:
     use_static
-    fun f() :: (Int, List):
+    fun f() :: (Int, ConsList):
       values(0, [1, 2])
     def (x, y) = f()
     y[0]
@@ -164,7 +164,7 @@ block:
       use_static
 
       // make sure values are not propagated through a single-value context
-      fun f():: (Int, List):
+      fun f():: (Int, ConsList):
         values(1, [2])
 
       def x = f()

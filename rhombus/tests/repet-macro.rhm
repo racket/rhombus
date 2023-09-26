@@ -20,10 +20,10 @@ repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
   def '($orig, $name, $expr, $depth, $use_depth, $statinfos, $is_immed)':
     repet_meta.unpack_list(sub)
   def (pred, si):
-    annot_meta.unpack_predicate(match 'List' | '$(p :: annot_meta.Parsed)': p)
+    annot_meta.unpack_predicate(match 'ConsList' | '$(p :: annot_meta.Parsed)': p)
   repet_meta.pack_list('($self(),
                          $name,
-                         for List:
+                         for ConsList:
                            each:
                              elem: $expr
                              i: $from..

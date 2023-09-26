@@ -47,7 +47,7 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
   def [[b_keep_statinfo, ...], ...]:
     // keep only last b's statinfos, since others are bound early
     def len = [[b_statinfo, ...], ...].length()
-    for List:
+    for ConsList:
       each:
         statinfos: [[b_statinfo, ...], ...]
         i: 0..

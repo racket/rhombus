@@ -31,7 +31,7 @@ class Window(hand):
                ~position: position :: MaybeObs.of(Position) = #'center,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
+               ~style: style :: MaybeObs.of(ConsList.of(Window.StyleSymbol)) = [],
                ~mixin: mix :: Function = values,
                child :: MaybeObs.of(View),
                ...):

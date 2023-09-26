@@ -14,7 +14,7 @@
          "compound-repetition.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
-         (submod "list.rkt" for-compound-repetition)
+         (submod "cons-list.rkt" for-compound-repetition)
          "name-root.rkt"
          "static-info.rkt"
          "reducer.rkt"
@@ -112,7 +112,7 @@
       [(length) (0ary #'set-count)]
       [(copy) (0ary #'Set.copy mutable-set-static-info)]
       [(snapshot) (0ary #'Set.snapshot set-static-info)]
-      [(to_list) (nary #'Set.to_list 3 #'Set.to_list list-static-infos)]
+      [(to_list) (nary #'Set.to_list 3 #'Set.to_list cons-list-static-infos)]
       [else (fail-k)])))
 
 (define-syntax readable-set-instance
@@ -624,7 +624,7 @@
   (hash-remove! (set-ht s) v))
 
 (define/arity (Set.to_list s [try-sort? #f])
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,cons-list-static-infos))
   (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "ReadableSet" s))
   (hash-keys (set-ht s) try-sort?))
 

@@ -3,7 +3,7 @@
          (submod "dot.rkt" for-builtin)
          (submod "map.rkt" for-builtin)
          (submod "set.rkt" for-builtin)
-         (submod "list.rkt" for-builtin)
+         (submod "cons-list.rkt" for-builtin)
          (submod "array.rkt" for-builtin)
          (submod "box.rkt" for-builtin)
          (submod "syntax-object.rkt" for-builtin)
@@ -24,7 +24,7 @@
      [(set? v) (if (mutable-set? v)
                    mutable-set-method-table
                    set-method-table)]
-     [(list? v) list-method-table]
+     [(list? v) cons-list-method-table]
      [(vector? v) array-method-table]
      [(syntax? v) syntax-method-table]
      [(pair? v) pair-method-table]

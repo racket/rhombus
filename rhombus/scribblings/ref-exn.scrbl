@@ -131,13 +131,13 @@
     extends Exn.Fail.Contract
   class Exn.Fail.Contract.Variable(id :: Symbol):
     extends Exn.Fail.Contract
-  class Exn.Fail.Syntax(exprs :: Listof(Syntax)):
+  class Exn.Fail.Syntax(exprs :: ConsListof(Syntax)):
     extends Exn.Fail
   class Exn.Fail.Syntax.Unbound():
     extends Exn.Fail.Syntax
   class Exn.Fail.Syntax.MissingModule(path):
     extends Exn.Fail.Syntax
-  class Exn.Fail.Read(srclocs :: Listof(Srcloc)):
+  class Exn.Fail.Read(srclocs :: ConsListof(Srcloc)):
     extends Exn.Fail
   class Exn.Fail.Read.EOF():
     extends Exn.Fail.Read

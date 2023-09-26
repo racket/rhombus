@@ -428,7 +428,7 @@
 
 @examples(
   class.together:
-    class Tree(x :: List.of(Node))
+    class Tree(x :: ConsList.of(Node))
     class Node(val, children :: Tree)
   class.together:
     class Even():

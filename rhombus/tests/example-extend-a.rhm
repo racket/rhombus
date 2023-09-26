@@ -1,7 +1,7 @@
 #lang rhombus
 
 export:
-  List
-  rename: List as ExList
+  ConsList
+  rename: ConsList as ExList
 
-def List.a = "a"
+def ConsList.a = "a"

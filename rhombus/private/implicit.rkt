@@ -9,8 +9,8 @@
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
          (submod "indexable.rkt" for-ref)
-         (submod "list.rkt" for-binding)
-         (submod "list.rkt" for-implicit)
+         (submod "cons-list.rkt" for-binding)
+         (submod "cons-list.rkt" for-implicit)
          "setmap.rkt"
          "literal.rkt"
          "parens.rkt"
@@ -177,19 +177,19 @@
   (expression-transformer
    (lambda (stxes)
      (check-brackets stxes)
-     (parse-list-expression stxes))))
+     (parse-cons-list-expression stxes))))
 
 (define-binding-syntax #%brackets
   (binding-transformer
    (lambda (stxes)
      (check-brackets stxes)
-     (parse-list-binding stxes))))
+     (parse-cons-list-binding stxes))))
 
 (define-repetition-syntax #%brackets
   (repetition-transformer
    (lambda (stxes)
      (check-brackets stxes)
-     (parse-list-repetition stxes))))
+     (parse-cons-list-repetition stxes))))
 
 (define-for-syntax (check-brackets stxes)
   (syntax-parse stxes

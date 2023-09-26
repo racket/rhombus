@@ -80,9 +80,9 @@ block:
 
 // dotted name as macro
 check:
-  defn.macro '(List.three) $id $x':
+  defn.macro '(ConsList.three) $id $x':
     'def $id: [$x, $x, $x]'
-  List.three bells "ding"
+  ConsList.three bells "ding"
   bells
   ~is ["ding", "ding", "ding"]
 

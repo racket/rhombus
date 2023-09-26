@@ -5,11 +5,11 @@ check:
   ~is "apple"
 
 check:
-  [[1, "apple"]] :: List.of(converting(fun ([_, y :: String]): y))
+  [[1, "apple"]] :: ConsList.of(converting(fun ([_, y :: String]): y))
   ~is ["apple"]
 
 check:
-  [[1, 2]] :: List.of(converting(fun ([_, y :: String]): y))
+  [[1, 2]] :: ConsList.of(converting(fun ([_, y :: String]): y))
   ~raises "does not satisfy annotation"
 
 class Posn(x, y)
@@ -144,7 +144,7 @@ check:
   ~is #true
 
 check:
-  [1, "oops"] is_a matching((_ :: List) :: converting(fun ([x, ...]): [x+1, ...]))
+  [1, "oops"] is_a matching((_ :: ConsList) :: converting(fun ([x, ...]): [x+1, ...]))
   ~raises "+: contract violation"
 
 check:

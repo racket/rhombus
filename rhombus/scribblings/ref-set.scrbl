@@ -283,7 +283,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.to_list(set :: ReadableSet, try_order = #false) :: List
+  fun Set.to_list(set :: ReadableSet, try_order = #false) :: ConsList
 ){
 
  Returns the elements of @rhombus(set) in a list. If @rhombus(try_order)

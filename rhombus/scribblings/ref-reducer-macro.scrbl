@@ -66,7 +66,7 @@
     expr.macro 'build_finish [$count, $wrap, $step, $break, $final, $finish, $data]':
       'values($finish $data, $count + 1)'
   ~repl:
-    for WithCount(List):
+    for WithCount(ConsList):
       each i: 0..3
       i
     for WithCount(Map):
@@ -111,7 +111,7 @@
  termination of the iteration depending on element values or an
  accumulated value.
 
- As an example, for the @rhombus(List, ~reducer),
+ As an example, for the @rhombus(ConsList, ~reducer),
  @rhombus(complete_id, ~var) reverses an accumulated list, one
  @rhombus(accum_id, ~var) is initialized to @rhombus([]) and represents
  an accumulated (in reverse) list, @rhombus(step_id, ~var) adds a new

@@ -147,7 +147,7 @@
   @rhombus(id) is used as the default import prefix.},
 
  @item{@rhombus(#,(@rhombus(., ~impo))id): refers to a namespace
-  @rhombus(id), which might be predefined like @rhombus(List), or
+  @rhombus(id), which might be predefined like @rhombus(ConsList), or
   might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
  @item{@rhombus(module_path#,(@rhombus(.,~impo))id): a shorthand for importing only

@@ -24,7 +24,7 @@
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "composite.rkt"
-         (submod "list.rkt" for-compound-repetition)
+         (submod "cons-list.rkt" for-compound-repetition)
          "parse.rkt"
          "realm.rkt"
          "reducer.rkt"
@@ -305,7 +305,7 @@
   (lambda (field-sym field ary 0ary nary fail-k)
     (case field-sym
       [(length) (0ary #'hash-count)]
-      [(keys) (nary #'hash-keys 3 #'hash-keys list-static-infos)]
+      [(keys) (nary #'hash-keys 3 #'hash-keys cons-list-static-infos)]
       [(values) (0ary #'hash-values)]
       [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
       [(copy) (0ary #'hash-copy mutable-map-static-info)]

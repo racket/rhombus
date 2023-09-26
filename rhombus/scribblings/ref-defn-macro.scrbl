@@ -81,7 +81,7 @@
   defn.macro 'enum:
                 $(id :: Group)
                 ...':
-    def [n, ...]: List.iota([id, ...].length())
+    def [n, ...]: ConsList.iota([id, ...].length())
     'def $id: $n
      ...'
   enum:

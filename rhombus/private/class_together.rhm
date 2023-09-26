@@ -14,7 +14,7 @@ defn.macro 'together:
               ...':
   ~all_stx all_stx
   def [[id, tmp_id], ...]:
-    for List (defn: [defn, ...]):
+    for ConsList (defn: [defn, ...]):
       fun temp_id(id):
         Syntax.make_temp_id("ns")
       match defn
@@ -29,7 +29,7 @@ defn.macro 'together:
   'annot.delayed_declare $id
    ...
    $(Syntax.make_sequence(
-       List.reverse(
+       ConsList.reverse(
          for values(accum = []) (id: [id, ...],
                                  tmp_id: [tmp_id, ...],
                                  defn: [defn, ...]):

@@ -128,11 +128,11 @@
       def '($orig, $name, $expr, $depth, $use_depth, $statinfos, $is_immed)':
         repet_meta.unpack_list(sub)
       def (_, si):
-        def '$(p :: annot_meta.Parsed)': 'List'
+        def '$(p :: annot_meta.Parsed)': 'ConsList'
         annot_meta.unpack_predicate(p)                                       
       repet_meta.pack_list('($self(),
                              $name,
-                             for List:
+                             for ConsList:
                                each:
                                  elem: $expr
                                  i: $from..

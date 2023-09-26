@@ -187,10 +187,10 @@ block:
       import:
         .ADT . $name
     »'
-  datatype List
+  datatype ConsList
   check:
-    [1, 2] is_a List ~is #false
-    List(1, 2) ~is [1, 2]
+    [1, 2] is_a ConsList ~is #false
+    ConsList(1, 2) ~is [1, 2]
 
 block:
   // similar, but for `expose`
@@ -203,18 +203,18 @@ block:
         .ADT as ignored:
           expose: $name
     »'
-  datatype List
+  datatype ConsList
   check:
-    [1, 2] is_a List ~is #false
-    List(1, 2) ~is [1, 2]
+    [1, 2] is_a ConsList ~is #false
+    ConsList(1, 2) ~is [1, 2]
 
 check:
-  import .List.iota
+  import .ConsList.iota
   iota(2)
   ~is [0, 1]
 
 check:
-  import rhombus.List.iota
+  import rhombus.ConsList.iota
   iota(2)
   ~is [0, 1]
 

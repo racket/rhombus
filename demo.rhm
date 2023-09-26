@@ -24,10 +24,10 @@ use_static
 // `+&` turns things into strings, then appends
 "example: " +& (0 + 1) +& " world "
 
-// Lists
+// Cons lists
 
 [1, 2, 3]
-List.cons(0, [1, 2, 3])
+ConsList.cons(0, [1, 2, 3])
 
 // `++` is append on lists
 [1, 2, 3] ++ [4, 5]
@@ -37,7 +37,7 @@ def π = 3.14
 π
 
 // a pattern-matching definition
-def [ca, cb] = List.cons(1, List.cons(2, List.empty))
+def [ca, cb] = ConsList.cons(1, ConsList.cons(2, ConsList.empty))
 ca
 
 // parentheses around a pattern do not matter
@@ -118,7 +118,7 @@ first_one(["alpha", "beta"])
 //  first_one("oops")
 
 // a `::` constrains a match to a data type
-fun also_first_one(x :: List): List.first(x)
+fun also_first_one(x :: ConsList): ConsList.first(x)
 
 also_first_one([1, 2, 3, 4])
 // would be an error, since a string doesn't match:
@@ -190,11 +190,11 @@ operator
 ** 10 // = 2 ** 10
 
 // ------------------------------------------------------------
-"Lists, arrays, maps, sets, and repetitions"
+"ConsLists, arrays, maps, sets, and repetitions"
 
 def nums = [1, 2, 3]
-def yes_nums :: List = nums
-def yep_nums :: List.of(Int) = nums
+def yes_nums :: ConsList = nums
+def yep_nums :: ConsList.of(Int) = nums
 
 // `[]` on a list accesses by a 0-based index
 nums[1]
@@ -530,7 +530,7 @@ check_later()
 
 // for
 
-fun enumerate(l :: List):
+fun enumerate(l :: ConsList):
   for (v: l,
        i: 0..):
     println(i +& ". " +& v)
@@ -538,14 +538,14 @@ fun enumerate(l :: List):
 enumerate(["a", "b", "c"])
 
 fun grid(m, n):
-  for List:
+  for ConsList:
     each i: 0..m
     each j: 0..n
     [i, j]
 
 grid(2, 3)
 
-fun loop_sum(l :: List):
+fun loop_sum(l :: ConsList):
   for values(sum = 0) (i: l):
     sum+i
 

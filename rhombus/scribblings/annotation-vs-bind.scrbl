@@ -30,7 +30,7 @@ specialization, but the @rhombus(Map) binding pattern can.
   ~eval: ann_eval
   ~defn:
     annot.macro 'PersonList': 
-      'List.of(matching({"name": (_ :: String),
+      'ConsList.of(matching({"name": (_ :: String),
                          "location": (_ :: Posn)}))'
 
     def players :: PersonList:
@@ -38,13 +38,13 @@ specialization, but the @rhombus(Map) binding pattern can.
        {"name": "bob", "location": Posn(3, 4)}]
 )
 
-As another example, here’s how a @rhombus(ListOf) annotation constructor
-could be implemented if @rhombus(List.of, ~bind) did not exist already:
+As another example, here’s how a @rhombus(ConsListOf) annotation constructor
+could be implemented if @rhombus(ConsList.of, ~bind) did not exist already:
 
 @demo(
   ~eval: ann_eval
   ~defn:
-    annot.macro 'ListOf ($annotation ...)':
+    annot.macro 'ConsListOf ($annotation ...)':
       'matching([_ :: ($annotation ...), $('...')])'
 )
 

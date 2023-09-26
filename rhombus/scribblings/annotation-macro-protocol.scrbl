@@ -66,7 +66,7 @@ sorted.
   ~eval: bind_eval
   ~defn:
     annot.macro 'AscendingIntList':
-      'converting(fun (ints :: List.of(Int)) :: List:
+      'converting(fun (ints :: ConsList.of(Int)) :: ConsList:
                     ints.sort())'
   ~repl:
     [3, 1, 2] :: AscendingIntList
@@ -75,7 +75,7 @@ sorted.
     descending([1, 4, 0, 3, 2])
     ~error:
       [3, 1, 2] :~ AscendingIntList
-    [[1, 0], [4, 3, 2]] :: List.of(AscendingIntList)
+    [[1, 0], [4, 3, 2]] :: ConsList.of(AscendingIntList)
 )
 
 When a converting annotation is used in a position that depends only on
@@ -88,7 +88,7 @@ be computed to apply a predicate (even the @rhombus(Any, ~annot)
 predicate) or further conversion. The nested-annotation strategy is used
 in the following example for @rhombus(UTF8BytesAsString), where is
 useful because checking whether a byte string is a UTF-8 encoding might
-as well decode it. Annotation constructors like @rhombus(List.of, ~annot)
+as well decode it. Annotation constructors like @rhombus(ConsList.of, ~annot)
 similarly convert eagerly when given a converting annotation for
 elements, rather than checking and converting separately.
 

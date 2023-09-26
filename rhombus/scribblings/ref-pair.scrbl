@@ -73,7 +73,7 @@ its ``rest'' is a list.
  Aliases for @rhombus(Pair) in expression and binding positions.
 
  Note that the difference between @rhombus(Pair.cons) and
- @rhombus(List.cons) is that @rhombus(List.cons) requires a list as is
+ @rhombus(ConsList.cons) is that @rhombus(ConsList.cons) requires a list as is
  second argument, which means that it always forms a @tech{list}. In
  contrast, @rhombus(Pair.cons) allows any value as its second
  argument---but it creates a list if that argument is a list.

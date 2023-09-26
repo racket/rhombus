@@ -4,7 +4,7 @@ export:
   alpha
   beta
   rename:
-    List as ExList
+    ConsList as ExList
 
 def alpha: "alpha"
 def beta: "beta"

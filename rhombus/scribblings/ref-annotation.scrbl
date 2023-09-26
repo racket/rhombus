@@ -12,7 +12,7 @@
  @rhombus(annot), and returns the value if so.
 
 @examples(
-  [1, 2, 3] :: List
+  [1, 2, 3] :: ConsList
 )
 
 }
@@ -31,7 +31,7 @@
  committing to the match).
 
 @examples(
-  def x :: List: [1, 2, 3]
+  def x :: ConsList: [1, 2, 3]
 )
 
 }
@@ -63,8 +63,8 @@
   annotation}.
 
 @examples(
-  [1, 2, 3] :~ List
-  "oops" :~ List
+  [1, 2, 3] :~ ConsList
+  "oops" :~ ConsList
 )
 
 }
@@ -78,8 +78,8 @@
  must specify a @tech{predicate annotation}.
 
 @examples(
-  def x :~ List: [1, 2, 3]
-  def x :~ List: "oops"
+  def x :~ ConsList: [1, 2, 3]
+  def x :~ ConsList: "oops"
 )
 
 }
@@ -97,8 +97,8 @@
  used. See also @secref("annotation-macro-protocol").
 
 @examples(
-  [1, 2, 3] is_a List
-  "oops" is_a List
+  [1, 2, 3] is_a ConsList
+  "oops" is_a ConsList
 )
 
 }

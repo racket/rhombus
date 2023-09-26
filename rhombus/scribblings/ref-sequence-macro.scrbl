@@ -147,10 +147,10 @@
         '(($statinfo_meta.index_result_key,
            $(annot_meta.parse_to_packed_statinfo('Int'))))'
   ~repl:
-    for List:
+    for ConsList:
       each j: dynamic(Posn(1, 2)) // uses `to_sequence`
       j
-    for List:
+    for ConsList:
       each j: Posn(1, 2) // uses `sequence` expansion
       j
 )

@@ -677,13 +677,13 @@ block:
 // refer to class as annotation for a field
 check:
   class Posn(x, y)
-  class Dir(loc :~ Posn, content :: List.of(Dir))
+  class Dir(loc :~ Posn, content :: ConsList.of(Dir))
   Dir(Posn(0, 0), [Dir(Posn(1, 2), [])]).content[0].loc.x
   ~is 1
 
 check:
   class Posn(x, y)
-  class Dir(loc :~ Posn, content :: List.of(Dir)):
+  class Dir(loc :~ Posn, content :: ConsList.of(Dir)):
     method get() :: Dir: this
   Dir(Posn(0, 0), [Dir(Posn(1, 2), [])]).content[0].get().loc.x
   ~is 1

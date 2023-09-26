@@ -170,7 +170,7 @@ Metadata for a syntax object can include a source location and the raw
  portion of a candidate syntax object.
  A @dots_bind in @rhombus(term,~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
- are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
+ are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(ConsList),
  @dots_bind can appear before the end of a sequence, and
  multiple @dots_bind can be used in the same group; when matching
  is ambiguous, matching prefers earlier @dots_bind repetitions to
@@ -582,7 +582,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_group(terms :: List,
+  fun Syntax.make_group(terms :: ConsList,
                         ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
@@ -599,7 +599,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_sequence(groups :: List,
+  fun Syntax.make_sequence(groups :: ConsList,
                            ctx_stx :: maybe(Term) = #false) :: Syntax
 ){
 
@@ -702,7 +702,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap_group(stx :: Group) :: List.of(Syntax)
+  fun Syntax.unwrap_group(stx :: Group) :: ConsList.of(Syntax)
 ){
 
  Unwraps a multi-term, single-group syntax object by one layer. The
@@ -722,7 +722,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap_sequence(stx :: Syntax) :: List.of(Syntax)
+  fun Syntax.unwrap_sequence(stx :: Syntax) :: ConsList.of(Syntax)
 ){
 
  Unwraps a multi-group syntax object by one layer. The result is a
@@ -824,7 +824,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.relocate_span(stx :: Term,
-                           like_stxes :: List.of(Syntax)) :: Syntax
+                           like_stxes :: ConsList.of(Syntax)) :: Syntax
 ){
 
  Similar to @rhombus(Syntax.relocate), but the metadata of syntax

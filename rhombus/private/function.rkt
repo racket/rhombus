@@ -7,7 +7,7 @@
          racket/unsafe/undefined
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
-         (submod "list.rkt" for-compound-repetition)
+         (submod "cons-list.rkt" for-compound-repetition)
          "parens.rkt"
          "expression.rkt"
          "annotation.rkt"
@@ -54,7 +54,7 @@
         'for_each (lambda (f) (lambda lists (apply for-each f lists)))))
 
 (define-static-info-syntax map
-  (#%call-result #,list-static-infos)
+  (#%call-result #,cons-list-static-infos)
   (#%function-arity -2))
 
 (define-static-info-syntax for-each

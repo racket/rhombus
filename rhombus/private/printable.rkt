@@ -128,7 +128,7 @@
   (define pre-pd (print-description-unwrap 'PrintDesc.list pre))
   (define (bad-elems)
     (raise-argument-error* 'PrintDesc.list rhombus-realm
-                           (format "List.of(~a)" description-ann-str)
+                           (format "ConsList.of(~a)" description-ann-str)
                            elems))
   (define elem-pds (if (list? elems)
                        (for/list ([elem (in-list elems)])

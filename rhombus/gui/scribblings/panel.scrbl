@@ -7,7 +7,7 @@
   class HPanel():
     implements View
     constructor (~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(HPanel.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(HPanel.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -18,7 +18,7 @@
   class VPanel():
     implements View
     constructor (~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(VPanel.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(VPanel.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -38,7 +38,7 @@
     implements View
     constructor (label :: MaybeObs.of(LabelString),
                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(Group.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(Group.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -55,13 +55,13 @@
 @doc(
   class TabsPanel():
     implements View
-    constructor (choices :: MaybeObs.of(List),
+    constructor (choices :: MaybeObs.of(ConsList),
                  ~selection: selection :: MaybeObs.of(Any),
                  ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
                  ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
                  ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(TabsPanel.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -95,7 +95,7 @@
 
 @rhombusblock(
   action(#,(@rhombus(what, ~var)) :: Any.of(#'select, #'new, #'close, #'reorder),
-         choices :: List,
+         choices :: ConsList,
          #,(@rhombus(selected, ~var)) :: maybe(Any))
 )
 

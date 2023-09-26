@@ -12,7 +12,7 @@
                  ~key: key :: Function.of_arity(1) = Function.pass,
                  ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(ConsList.of(Canvas.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],

@@ -315,7 +315,7 @@
     (cond
       [(eqv? depth 0) (unpack r (syntax-e qs) qs)]
       [(not (list? r))
-       (raise-argument-error* (syntax-e qs) rhombus-realm "List" r)]
+       (raise-argument-error* (syntax-e qs) rhombus-realm "ConsList" r)]
       [else (for/list ([r (in-list r)])
               (unpack* r (sub1 depth)))])))
 

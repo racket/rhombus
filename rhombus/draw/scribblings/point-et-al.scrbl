@@ -35,7 +35,7 @@
  @item{@rhombus(Point, ~annot): a @rhombus(Point, ~class) instance;}
 
  @item{@rhombus(matching([_ :: Real, _ :: Real]), ~annot): a
-  @rhombus(List) containing two @rhombus(Real, ~annot) values; or}
+  @rhombus(ConsList) containing two @rhombus(Real, ~annot) values; or}
 
  @item{@rhombus(matching({#'x: _ :: Real, #'y: _ :: Real}), ~annot):
   a @rhombus(Map) containing at least the keys @x_sym and
@@ -78,7 +78,7 @@
  @item{@rhombus(Size, ~annot); a @rhombus(Size, ~class) instance;}
 
  @item{@rhombus(matching([_ :: NonnegReal, _ :: NonnegReal]), ~annot):
-  a @rhombus(List) containing two @rhombus(NonnegReal, ~annot)
+  a @rhombus(ConsList) containing two @rhombus(NonnegReal, ~annot)
   values; or}
 
  @item{@rhombus(matching({#'width: _ :: NonnegReal, #'height: _ :: NonnegReal}), ~annot):
@@ -122,11 +122,11 @@
  @item{a @rhombus(Rect, ~class) instance;}
 
  @item{@rhombus(matching([_ :: Real, _ :: Real, _ :: NonnegReal, _ :: NonnegReal]), ~annot):
-  a @rhombus(List) containing two @rhombus(Real, ~annot) values for the top-left point
+  a @rhombus(ConsList) containing two @rhombus(Real, ~annot) values for the top-left point
   followed by two @rhombus(NonnegReal, ~annot) values for the size;}
 
  @item{@rhombus(matching([_ :: PointLike, _ :: SizeLike]), ~annot):
-  a @rhombus(List) containing a @rhombus(PointLike, ~annot) value
+  a @rhombus(ConsList) containing a @rhombus(PointLike, ~annot) value
   followed by a @rhombus(SizeLike, ~annot) value;}
 
  @item{@rhombus(matching({#'x: _ :: Real, #'y: _ :: Real, #'width: _ :: NonnegReal, #'height: _ :: NonnegReal}), ~annot):

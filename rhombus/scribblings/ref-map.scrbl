@@ -355,7 +355,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: ReadableMap, try_sort = #false) :: List
+  fun Map.keys(map :: ReadableMap, try_sort = #false) :: ConsList
 ){
 
  Returns the keys of @rhombus(map) in a list.  If @rhombus(try_order)
@@ -370,7 +370,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.values(map :: ReadableMap) :: List
+  fun Map.values(map :: ReadableMap) :: ConsList
 ){
 
  Returns the values of @rhombus(map) in a list.

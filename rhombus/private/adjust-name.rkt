@@ -3,7 +3,7 @@
 (provide adjust-procedure-name)
 
 (define renames
-  #hasheq((length . List.length)
+  #hasheq((length . ConsList.length)
           (vector-length . Array.length)
           (hash-count . Map.count)))
 

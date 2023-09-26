@@ -32,7 +32,7 @@
   ~defn:
     expo.macro 'range $(from :: Int) .. $(to :: Int): $id':
       'names:
-         $(for List:
+         $(for ConsList:
              each i: from.unwrap() .. to.unwrap()
              Syntax.make_id(id +& i, id))'
   ~repl:

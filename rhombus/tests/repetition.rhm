@@ -168,7 +168,7 @@ block:
 block:
   use_static
   class Posn(x, y)
-  def a :: List.of(Posn):
+  def a :: ConsList.of(Posn):
     [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
   def [x, ...] = [3, 2, 1]
   check:
@@ -179,8 +179,8 @@ block:
 block:
   def [i, ...] = [1, 2, 3]
   check:
-    [[List.length, i], ...]
-    ~is [[List.length, 1], [List.length, 2], [List.length, 3]]
+    [[ConsList.length, i], ...]
+    ~is [[ConsList.length, 1], [ConsList.length, 2], [ConsList.length, 3]]
   check:
     namespace M:
       export: N

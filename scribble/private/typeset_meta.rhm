@@ -24,7 +24,7 @@ space.transform typeset:
 
 meta:
   class Transformer(proc)
-  class Spacer(contexts :~ List, proc)
+  class Spacer(contexts :~ ConsList, proc)
 
   fun make_Transformer(proc):
     Transformer(proc)

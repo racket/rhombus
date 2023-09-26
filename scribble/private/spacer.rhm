@@ -24,8 +24,8 @@ meta:
     | '$(t :: Term) ...':
         '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate(stx)
 
-  fun is_relevant_context(context, in_contexts :~ List):
-    let nows :~ List = #{full-space-names}(context)
+  fun is_relevant_context(context, in_contexts :~ ConsList):
+    let nows :~ ConsList = #{full-space-names}(context)
     for any:
       each now: nows
       each in: in_contexts
@@ -49,7 +49,7 @@ meta:
     | ': $_':
         adjust_block(t, context, esc)
     | '| $(b :: Block) | ...':
-        Syntax.make(List.cons(#'alts, [adjust_block(b, context, esc), ...]), t).relocate(t)
+        Syntax.make(ConsList.cons(#'alts, [adjust_block(b, context, esc), ...]), t).relocate(t)
     | '$(id :: Name)':
         set_space(t, context)
     | ~else:
@@ -100,7 +100,7 @@ meta:
                   | in_contexts.length() == 1:
                       set_space(id, in_contexts[0])
                   | ~else:
-                      let contexts :~ List = #{full-space-names}(context)    
+                      let contexts :~ ConsList = #{full-space-names}(context)    
                       cond
                       | contexts.length() == 1:
                           set_space(id, contexts[0])
@@ -132,7 +132,7 @@ defn.macro 'bridge $(name :: Name)($(self :: Identifier),
                    ~in: $space ...
                    $body
                    ...':
-  let [space_name, ...] = List.append(&[#{full-space-names}(space.unwrap()), ...])
+  let [space_name, ...] = ConsList.append(&[#{full-space-names}(space.unwrap()), ...])
   fun quote(s): if s | '#' $s' | s
   'meta.bridge $(typeset_meta.in_space(name)):
      typeset_meta.Spacer(

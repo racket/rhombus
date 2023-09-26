@@ -40,7 +40,7 @@ fun interp(e, env :~ Map):
   // Ints
   | '$(x :: Int)':
       x.unwrap()
-  // Lists
+  // ConsLists
   | '[$x, ...]':
       [interp(x, env), ...]
   // Operators (no attempt at precedence)
@@ -55,9 +55,9 @@ fun interp(e, env :~ Map):
 
 // Some primitives in an initial environment
 def init_env:
-  {'cons'.unwrap(): List.cons,
-   'first'.unwrap(): List.first,
-   'rest'.unwrap(): List.rest,
+  {'cons'.unwrap(): ConsList.cons,
+   'first'.unwrap(): ConsList.first,
+   'rest'.unwrap(): ConsList.rest,
    '+'.unwrap_op(): fun(x, y): x + y,
    '-'.unwrap_op(): fun(x, y): x - y,
    '*'.unwrap_op(): fun(x, y): x * y}

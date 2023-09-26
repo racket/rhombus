@@ -26,7 +26,7 @@ internal state, and the state can even be specific to a particular
  Static information associated by @rhombus(Sequence, ~annot) makes an
  expression acceptable as a sequence to @rhombus(for) in static mode, and
  it is suitable when a more specialized annotation (such as
- @rhombus(List) or @rhombus(Array)) is not available.
+ @rhombus(ConsList) or @rhombus(Array)) is not available.
 
 }
 
@@ -135,7 +135,7 @@ internal state, and the state can even be specific to a particular
                     ~position_to_element: to_string,
                     ~position_to_next: fun (i): i + 2)
   ~repl:
-    for List:
+    for ConsList:
       each i: even_strings_up_to(5)
       i
 )
@@ -163,7 +163,7 @@ internal state, and the state can even be specific to a particular
                                ~position_to_next: fun (pos): i := i + 2)
       )
   ~repl:
-    for List:
+    for ConsList:
       each i: even_strings_up_to(5)
       i
 )
@@ -215,7 +215,7 @@ internal state, and the state can even be specific to a particular
       private override method to_sequence():
         [x, y]
   ~repl:
-    for List:
+    for ConsList:
       each i: Posn(10, 20)
       i
 )
