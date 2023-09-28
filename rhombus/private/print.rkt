@@ -242,11 +242,14 @@
         (print e))
       (pretty-text ")"))]
     [(box? v)
-     (pretty-listlike
-      (pretty-text "Box(")
-      (list
-       (print (unbox v)))
-      (pretty-text ")"))]
+     (fresh-ref
+      v
+      (lambda ()
+        (pretty-listlike
+         (pretty-text "Box(")
+         (list
+          (print (unbox v)))
+         (pretty-text ")"))))]
     [(hash? v)
      (fresh-ref
       #:when (mutable-hash? v)

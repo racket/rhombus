@@ -95,3 +95,9 @@ check:
   def bx :: Box.now_of(String) = Box("apple")
   bx.value ++ "jack"
   ~raises "specialization not known"
+
+check:
+  def b = Box(0)
+  b.value := b
+  to_string(b)
+  ~is "#0=Box(#0#)"
