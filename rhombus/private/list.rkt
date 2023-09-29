@@ -348,7 +348,7 @@
   (unless (list? l) (raise-argument-error* 'drop_right rhombus-realm "List" l))
   (unless (exact-nonnegative-integer? n) (raise-argument-error* 'drop_right rhombus-realm "NonnegInt" n))
   (define len (length l))
-  (when (n . >= . len)
+  (when (n . > . len)
     (raise-arguments-error* 'drop_right rhombus-realm
                             "list is shorter than the number of elements to drop"
                             "list length" len
