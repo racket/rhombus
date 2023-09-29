@@ -52,7 +52,6 @@
      | ...
     $op_or_id_name:
       $option; ...
-      match
       | $macro_case
       | ...
 
@@ -117,9 +116,9 @@
     :
       // an infix `no_fail` that works without a right-hand side
       // expression, and that has weak precendence
-      expr.macro
+      expr.macro no_fail:
+        ~weaker_than ~other
       | '$left no_fail $()':
-          ~weaker_than: ~other
           'try: $left; ~catch _: #false'
       | '$left no_fail $(right :: expr_meta.AfterInfixParsed('no_fail')) $()':
            values('try: $left; ~catch _: $right', '$right.tail ...')
