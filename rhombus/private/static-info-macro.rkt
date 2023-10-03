@@ -27,6 +27,7 @@
          "index-result-key.rkt"
          "dot-provider-key.rkt"
          "values-key.rkt"
+         "sequence-element-key.rkt"
          "sequence-constructor-key.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
@@ -55,7 +56,8 @@
      append_key
      dot_provider_key
      values_key
-     sequence_constructor_key)))
+     sequence_constructor_key
+     sequence_element_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space)
   (definition-transformer

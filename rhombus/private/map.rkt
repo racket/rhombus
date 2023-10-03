@@ -23,6 +23,8 @@
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
+         "sequence-element-key.rkt"
+         "values-key.rkt"
          "composite.rkt"
          (submod "list.rkt" for-compound-repetition)
          "parse.rkt"
@@ -284,7 +286,9 @@
         (and (#,(car predicate-stxs) k)
              (#,(cadr predicate-stxs) v))))
   (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))))
+    #`((#%index-result #,(cadr static-infoss))
+       (#%sequence-element ((#%values (#,(car static-infoss)
+                                       #,(cadr static-infoss)))))))
   #'map-build-convert #'())
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)

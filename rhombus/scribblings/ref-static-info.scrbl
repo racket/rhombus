@@ -140,6 +140,7 @@
   def statinfo_meta.append_key
   def statinfo_meta.dot_provider_key
   def statinfo_meta.sequence_constructor_key
+  def statinfo_meta.sequence_element_key
   def statinfo_meta.values_key
 ){
 
@@ -182,6 +183,15 @@
         bound as a variable or a macro that is wrapped around an expression
         to create or specialize a sequence for @rhombus(for), or @rhombus(#true) to
         indicate that no wrapper is needed}
+
+  @item{@rhombus(statinfo_meta.sequence_element_key) --- packed static information
+        for the elements of the expression as a sequence used with
+        @rhombus(each, ~for_clause); for a sequence with
+        multiple values in each element, the static information can
+        map @rhombus(statinfo_meta.values_key) to a group of per-value
+        static information; when @rhombus(statinfo_meta.sequence_element_key)
+        is not specified, @rhombus(each, ~for_clause) uses
+        @rhombus(statinfo_meta.index_result_key)}
 
   @item{@rhombus(statinfo_meta.values_key) --- a packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),
