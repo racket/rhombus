@@ -60,7 +60,7 @@ in an unspecified order.
 ){
 
  Matches any immutable map in the form without @rhombus(of). The @rhombus(of)
- variant matches a map whose keys satisfy @rhombus(key_annot)
+ variant matches an immutable map whose keys satisfy @rhombus(key_annot)
  and whose values satisfy @rhombus(value_annot).
 
  @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
