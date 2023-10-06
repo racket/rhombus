@@ -226,3 +226,19 @@ block:
   check m == n ~is #false
   check m.snapshot() == n ~is #true
   check m.snapshot() === n ~is #false
+
+check:
+  use_static
+  class Posn(x, y)
+  def set :: Set.of(Posn) = {Posn(1, 2), Posn(3, 4), Posn(4, 5)}
+  for Set (val: set):
+    val.x + val.y
+  ~is {3, 7, 9}
+
+check:
+  ~eval
+  use_static
+  // make sure sequence element static info isn't confused for index
+  def set :: Set.of(String) = {"foo", "1", "Box(2)"}
+  set["foo"].length()
+  ~raises "no such field or method (based on static information)"
