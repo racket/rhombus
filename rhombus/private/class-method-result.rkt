@@ -14,7 +14,8 @@
          "function-arity-key.rkt"
          "index-result-key.rkt"
          "index-key.rkt"
-         "append-indirect-key.rkt")
+         "append-indirect-key.rkt"
+         "if-blocked.rkt")
 
 (provide define-method-result-syntax)
 
@@ -147,6 +148,3 @@
                                                        c-parsed.body)
                                                      (fail-k))))
           (parse (syntax-e #'op.check?) converter #'c-parsed.static-infos #f))])]))
-
-(define-syntax-rule (if/blocked tst thn els)
-  (if tst (let () thn) els))

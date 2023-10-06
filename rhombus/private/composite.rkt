@@ -10,7 +10,8 @@
          "static-info.rkt"
          "index-result-key.rkt"
          (submod "annotation.rkt" for-class)
-         "repetition.rkt")
+         "repetition.rkt"
+         "if-blocked.rkt")
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
 ;; to a composite datatype, but the `rest` support is currently
@@ -70,8 +71,6 @@
       [_ (raise-syntax-error #f
                              "bad syntax"
                              (or stx-in tail))])))
-
-(require (for-syntax racket/pretty))
 
 (define-syntax (composite-infoer stx)
   (syntax-parse stx
@@ -309,9 +308,6 @@
      ;; unchecked, because this may be an internal identifier where expansion
      ;; hasn't bothered to bind the identifier as a repetition
      (repetition-as-list/unchecked #'(group id) (syntax-e #'depth))]))
-
-(define-syntax-rule (if/blocked tst thn els)
-  (if tst (let () thn) els))
 
 ;; run-time support for "rest" matching
 (define (get-rest-getters rest-syms rest-val get-one-getter)

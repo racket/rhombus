@@ -14,7 +14,8 @@
          "define-arity.rkt"
          (submod "annotation.rkt" for-class)
          (submod "function-parse.rkt" for-build)
-         (submod "equal.rkt" for-parse))
+         (submod "equal.rkt" for-parse)
+         "if-blocked.rkt")
          
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -356,9 +357,6 @@
                            (arg.binder-id arg-id arg.data)
                            #,body)
                          (#,(get-fail) arg-id)))]))
-
-(define-syntax-rule (if/blocked tst thn els)
-  (if tst (let () thn) els))
 
 (define (always-true x) #t)
 

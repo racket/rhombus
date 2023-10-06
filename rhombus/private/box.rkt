@@ -94,11 +94,6 @@
 (define-annotation-syntax MutableBox (identifier-annotation #'mutable-box? box-static-infos))
 (define-annotation-syntax ImmutableBox (identifier-annotation #'immutable-box? box-static-infos))
 
-(define-syntax (build-array-assign stx)
-  (syntax-parse stx
-    [(_ (dest-id len-expr i) v)
-     #'(begin (vector-set! dest-id i v) (add1 i))]))
-
 (define box-method-table
   (hash 'value unbox))
 

@@ -301,11 +301,6 @@
                                      (cdr rhs-blk-stxs)
                                      static?)]))
 
-(define-syntax-rule (void-result e)
-  (begin
-    e
-    (void)))
-
 (define-syntax (flattened-if stx)
   (syntax-parse stx
     [(_ check-expr success-expr fail-expr)
