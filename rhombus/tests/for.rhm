@@ -299,3 +299,23 @@ check:
     each:«»
     values()
   ~is values()
+
+check:
+  for List (val: dynamic([1, 2, 3])):
+    val
+  ~is [1, 2, 3]
+
+check:
+  for Array (val: dynamic(Array(1, 2, 3))):
+    val
+  ~is_now Array(1, 2, 3)
+
+check:
+  for Map ((key, val): {1: 2, 2: 3, 3: 4}):
+    values(key, val)
+  ~is {1: 2, 2: 3, 3: 4}
+
+check:
+  for Set (val: dynamic({1, 2, 3})):
+    val
+  ~is {1, 2, 3}
