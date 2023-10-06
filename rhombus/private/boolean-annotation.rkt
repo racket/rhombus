@@ -7,7 +7,8 @@
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "if-blocked.rkt")
 
 (provide (for-space rhombus/annot
                     &&
@@ -138,14 +139,14 @@
      #`(begin
          (define finish-id
            (let ()
-             (lhs.matcher-id arg-id lhs.data block-if
+             (lhs.matcher-id arg-id lhs.data if/blocked
                              (lambda ()
                                (lhs.committer-id arg-id lhs.data)
                                (lhs.binder-id arg-id lhs.data)
                                (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                                ...
                                left-body)
-                             (rhs.matcher-id arg-id rhs.data block-if
+                             (rhs.matcher-id arg-id rhs.data if/blocked
                                              (lambda ()
                                                (rhs.committer-id arg-id rhs.data)
                                                (rhs.binder-id arg-id rhs.data)
@@ -154,11 +155,6 @@
                                                right-body)
                                              #f))))
          (IF finish-id success fail))]))
-
-(define-syntax-rule (block-if a b c)
-  (if (let () a)
-      (let () b)
-      (let () c)))
 
 (define-syntax (or-committer stx)
   (syntax-parse stx

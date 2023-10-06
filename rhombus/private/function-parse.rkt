@@ -50,7 +50,8 @@
          "wrap-expression.rkt"
          "rest-bind.rkt"
          (submod "list.rkt" for-compound-repetition)
-         (submod "map.rkt" for-info))
+         (submod "map.rkt" for-info)
+         "if-blocked.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -1219,9 +1220,6 @@
                                 "duplicate keyword in in keyword-argument maps"
                                 "keyword" kw))
       (hash-set accum-ht kw arg))))
-
-(define-syntax-rule (if/blocked tst thn els)
-  (if tst (let () thn) els))
 
 (begin-for-syntax
  (set-parse-function-call! parse-function-call))

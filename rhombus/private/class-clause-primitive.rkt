@@ -135,9 +135,6 @@
        [((~var f (:field 'public)))
         #'f.form]))))
 
-(define-syntax-rule (if/blocked tst thn els)
-  (if tst (let () thn) els))
-
 (begin-for-syntax
   (define-splicing-syntax-class :maybe-ret
     #:attributes (seq)

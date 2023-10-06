@@ -6,7 +6,8 @@
          "binding.rkt"
          "parse.rkt"
          "static-info.rkt"
-         "literal.rkt")
+         "literal.rkt"
+         "if-blocked.rkt")
 
 (provide (for-space rhombus/bind
                     &&
@@ -117,23 +118,18 @@
      #`(begin
          (define finish-id
            (let ()
-             (lhs.matcher-id arg-id lhs.data block-if
+             (lhs.matcher-id arg-id lhs.data if/blocked
                              (lambda ()
                                (lhs.committer-id arg-id lhs.data)
                                (lhs.binder-id arg-id lhs.data)
                                (void))
-                             (rhs.matcher-id arg-id rhs.data block-if
+                             (rhs.matcher-id arg-id rhs.data if/blocked
                                              (lambda ()
                                                (rhs.committer-id arg-id rhs.data)
                                                (rhs.binder-id arg-id rhs.data)
                                                (void))
                                              #f))))
          (IF finish-id success fail))]))
-
-(define-syntax-rule (block-if a b c)
-  (if (let () a)
-      (let () b)
-      (let () c)))
 
 (define-syntax (or-committer stx)
   (syntax-parse stx
