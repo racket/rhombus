@@ -387,7 +387,7 @@
      #`(composite-binder-id 'set composite-data)]))
 
 (define-sequence-syntax in-set
-  (lambda (stx) #'in-set*)
+  (lambda () #'in-set*)
   (lambda (stx)
     (syntax-case stx ()
       [[(d) (_ s)]
