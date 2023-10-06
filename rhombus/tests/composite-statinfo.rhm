@@ -33,6 +33,12 @@ block:
     ~completes
 
   check:
+    def [& xs] = (["a", "b", "cd"] :: List.of(String))
+    for List (x: xs):
+      x.length()
+    ~is [1, 1, 2]
+
+  check:
     def [x, ...] = (["a", "b", "cd"] :: List.of(String))
     [x.length(), ...]
     ~is [1, 1, 2]
@@ -55,18 +61,51 @@ block:
     ~is 1
 
   check:
-    def {_: val, ...} = ({1: "a", 2: "b", 3: "cd"} :: Map.of(Any, String))
-    {val.length(), ...}
-    ~is {1, 2}
+    def {& map}:
+      ({Box(1): "a", Box(2): "b", Box(3): "cd"} :: Map.of(Box, String))
+    for Set ((key, val): map):
+      key.value + val.length()
+    ~is {2, 3, 5}
 
   check:
-    def {& map :: Map.of(Any, String)} = {1: "a", 2: "b", 3: "cd"}
-    for Set ((_, val): map):
+    def {key: val, ...}:
+      ({Box(1): "a", Box(2): "b", Box(3): "cd"} :: Map.of(Box, String))
+    {key.value + val.length(), ...}
+    ~is {2, 3, 5}
+
+  check:
+    def {& map :: Map.of(Box, String)}:
+      {Box(1): "a", Box(2): "b", Box(3): "cd"}
+    for Set ((key, val): map):
+      key.value + val.length()
+    ~is {2, 3, 5}
+
+  check:
+    def {key :: Box: val :: String, ...} && map:
+      {Box(1): "a", Box(2): "b", Box(3): "cd"}
+    {key.value + val.length(), ...} == (for Set ((key, val): map):
+                                          key.value + val.length())
+    ~is #true
+
+  check:
+    def Set{& set} = ({"a", "b", "cd"} :: Set.of(String))
+    for Set (val: set):
       val.length()
     ~is {1, 2}
 
   check:
-    def {_: val :: String, ...} && map = {1: "a", 2: "b", 3: "cd"}
-    {val.length(), ...} == (for Set ((_, val): map):
+    def {val, ...} = ({"a", "b", "cd"} :: Set.of(String))
+    {val.length(), ...}
+    ~is {1, 2}
+
+  check:
+    def Set{& set :: Set.of(String)} = {"a", "b", "cd"}
+    for Set(val: set):
+      val.length()
+    ~is {1, 2}
+
+  check:
+    def {val :: String, ...} && set = {"a", "b", "cd"}
+    {val.length(), ...} == (for Set (val: set):
                               val.length())
     ~is #true

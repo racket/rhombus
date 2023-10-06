@@ -23,6 +23,7 @@
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
+         "sequence-element-key.rkt"
          "parse.rkt"
          "literal.rkt"
          "realm.rkt"
@@ -318,6 +319,7 @@
                                            '()
                                            '()
                                            #:static-infos set-static-info
+                                           #:sequence-element-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
                                                 (if rest-repetition?
@@ -432,7 +434,7 @@
     #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
         (#,(car predicate-stxs) v)))
   (lambda (static-infoss)
-    #`())
+    #`((#%sequence-element #,(car static-infoss))))
   #'set-build-convert #'())
 
 (define-syntax (set-build-convert arg-id build-convert-stxs kws data)

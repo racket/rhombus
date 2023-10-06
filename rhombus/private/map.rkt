@@ -461,6 +461,7 @@
                                              #'())
                                            #:static-infos map-static-info
                                            #:index-result-info? #t
+                                           #:sequence-element-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
                                                 (if rest-repetition?

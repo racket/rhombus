@@ -9,6 +9,8 @@
          "repetition.rkt"
          "static-info.rkt"
          "index-result-key.rkt"
+         "sequence-element-key.rkt"
+         "values-key.rkt"
          (submod "annotation.rkt" for-class)
          "repetition.rkt")
 
@@ -27,6 +29,7 @@
                                                        #:static-infos [composite-static-infos #'()] ; for the composite value
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:index-result-info? [index-result-info? #f]
+                                                       #:sequence-element-info? [sequence-element-info? #f]
                                                        #:rest-accessor [rest-accessor #f] ; for a list "rest"
                                                        #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (lambda (tail [rest-arg #f] [stx-in #f])
@@ -60,7 +63,7 @@
             #,static-infoss
             (a-parsed.infoer-id ... )
             (a-parsed.data ...)
-            #,accessor->info? #,index-result-info?
+            #,accessor->info? #,index-result-info? #,sequence-element-info?
             #,(and rest-arg
                    #`(#,rest-accessor
                       #,rest-repetition?
@@ -78,14 +81,22 @@
     [(_ static-infos (constructor-str predicate (composite-static-info ...)
                                       steppers accessors ((static-info ...) ...)
                                       (infoer-id ...) (data ...)
-                                      accessor->info? index-result-info?
+                                      accessor->info? index-result-info? sequence-element-info?
                                       rest-data))
-     #:with (arg-static-infos ...) (for/list ([accessor (in-list (syntax->list #'accessors))])
-                                     (or (and (syntax-e #'accessor->info?)
-                                              (static-info-lookup #'static-infos accessor))
-                                         (and (syntax-e #'index-result-info?)
-                                              (static-info-lookup #'static-infos #'#%index-result))
-                                         '()))
+     #:with (arg-static-infos ...) (cond
+                                     [(syntax-e #'accessor->info?)
+                                      (for/list ([accessor (in-list (syntax->list #'accessors))])
+                                        (or (static-info-lookup #'static-infos accessor)
+                                            #'()))]
+                                     [else
+                                      (define infos
+                                        (or (and (syntax-e #'index-result-info?)
+                                                 (static-info-lookup #'static-infos #'#%index-result))
+                                            (and (syntax-e #'sequence-element-info?)
+                                                 (static-info-lookup #'static-infos #'#%sequence-element))
+                                            #'()))
+                                      (for/list ([accessor (in-list (syntax->list #'accessors))])
+                                        infos)])
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
@@ -94,24 +105,44 @@
        (syntax-parse #'rest-data
          [#f (values #'#f #'() #'rest #f #'() #f)]
          [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
-          #:do [(define-values (maybe-static-infos maybe-index-result)
-                  (cond
-                    [(and (syntax-e #'index-result-info?)
-                          (static-info-lookup #'static-infos #'#%index-result))
-                     => (lambda (index-result)
-                          (values (if (syntax-e #'rest-repetition?)
-                                      '()
-                                      #`((#%index-result #,index-result)))
-                                  index-result))]
-                    [else (values '() '())]))]
-          #:with rest-impl::binding-impl #`(rest-infoer-id #,maybe-static-infos rest-a-data)
+          #:with rest-static-infos
+          (case (syntax-e #'rest-repetition?)
+            [(pair)
+             (define (static-info-lookup/pair infos key)
+               (define maybe-infos (static-info-lookup infos key))
+               (and maybe-infos
+                    (syntax-parse maybe-infos
+                      #:literals (#%values)
+                      [((#%values (car-infos cdr-infos))) #'((car car-infos) (cdr cdr-infos))]
+                      [_ #f])))
+             (or (and (syntax-e #'index-result-info?)
+                      (static-info-lookup/pair #'static-infos #'#%index-result))
+                 (and (syntax-e #'sequence-element-info?)
+                      (static-info-lookup/pair #'static-infos #'#%sequence-element))
+                 #'())]
+            [(#t)
+             (or (and (syntax-e #'index-result-info?)
+                      (static-info-lookup #'static-infos #'#%index-result))
+                 (and (syntax-e #'sequence-element-info?)
+                      (static-info-lookup #'static-infos #'#%sequence-element))
+                 #'())]
+            [(#f)
+             (define (static-info-lookup/wrap infos key)
+               (define maybe-infos (static-info-lookup infos key))
+               (and maybe-infos (list #`(#,key #,maybe-infos))))
+             (append
+              (or (and (syntax-e #'index-result-info?)
+                       (static-info-lookup/wrap #'static-infos #'#%index-result))
+                  '())
+              (or (and (syntax-e #'sequence-element-info?)
+                       (static-info-lookup/wrap #'static-infos #'#%sequence-element))
+                  '()))])
+          #:with rest-impl::binding-impl #'(rest-infoer-id rest-static-infos rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
           #:with rest-seq-tmp-ids (and (syntax-e #'rest-repetition?)
                                        (generate-temporaries #'(rest-info.bind-id ...)))
-          (values #`(rest-tmp-id rest-accessor rest-repetition? rest-info
-                                 rest-seq-tmp-ids
-                                 #,maybe-index-result)
+          (values #'(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
                   #'rest-info.static-infos
                   #'rest-info.name-id
                   #'rest-info.annotation-str
@@ -132,14 +163,31 @@
               [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos
-                                          #`(#,@(if rest-repetition?
+                                          #`(#,@(case rest-repetition?
+                                                  [(pair)
+                                                   (define car-infos
+                                                     (or (static-info-lookup rest-static-infos #'car)
+                                                         #'()))
+                                                   (define cdr-infos
+                                                     (or (static-info-lookup rest-static-infos #'cdr)
+                                                         #'()))
+                                                   (append
                                                     (if (syntax-e #'index-result-info?)
-                                                        (list #`(#%index-result
-                                                                 #,(if (eq? rest-repetition? 'pair)
-                                                                       (static-info-lookup rest-static-infos #'cdr)
-                                                                       rest-static-infos)))
+                                                        (list #`(#%index-result #,cdr-infos))
                                                         '())
-                                                    rest-static-infos)
+                                                    (if (syntax-e #'sequence-element-info?)
+                                                        (list #`(#%sequence-element
+                                                                 ((#%values (#,car-infos #,cdr-infos)))))
+                                                        '()))]
+                                                  [(#t)
+                                                   (append
+                                                    (if (syntax-e #'index-result-info?)
+                                                        (list #`(#%index-result #,rest-static-infos))
+                                                        '())
+                                                    (if (syntax-e #'sequence-element-info?)
+                                                        (list #`(#%sequence-element #,rest-static-infos))
+                                                        '()))]
+                                                  [(#f) rest-static-infos])
                                              . #,composite-static-infos))]
               [composite-static-infos (cond
                                         [(syntax-e #'accessor->info?)
@@ -147,13 +195,6 @@
                                                           [static-infos (syntax->list #'(a-info.static-infos ...))])
                                                  #`(#,accessor #,static-infos))
                                             . #,composite-static-infos)]
-                                        [else composite-static-infos])]
-              [composite-static-infos (cond
-                                        [(and (syntax-e #'index-result-info?)
-                                              (static-info-lookup #'static-infos #'#%index-result))
-                                         => (lambda (index-result)
-                                              #`((#%index-result #,index-result)
-                                                 . #,composite-static-infos))]
                                         [else composite-static-infos])])
          composite-static-infos))
      (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str
@@ -187,7 +228,7 @@
                  [(null? name-ids)
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
-                    [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids down-static-infos)
+                    [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
                      (cond
                        [(syntax-e #'rest-repetition?)
                         #`(begin
@@ -231,7 +272,7 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids down-static-infos)
+              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
                    #'((define-values rest-seq-tmp-ids (rest-tmp-id)))
@@ -247,7 +288,7 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids down-static-infos)
+              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
                    (with-syntax ([(depth ...) (for/list ([uses (syntax->list #'(rest.bind-uses ...))])
@@ -257,7 +298,7 @@
                      #'((define-syntaxes (rest.bind-id rep-bind-id)
                           (make-expression+repetition (quote-syntax rest.bind-id)
                                                       (quote-syntax rest-seq-tmp-id)
-                                                      (quote-syntax (rest.bind-static-info ... . down-static-infos))
+                                                      (quote-syntax (rest.bind-static-info ...))
                                                       #:depth depth))
                         ...))
                    #'((rest.binder-id rest-tmp-id rest.data)))]))]))
