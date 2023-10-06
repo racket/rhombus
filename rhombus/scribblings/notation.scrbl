@@ -191,9 +191,8 @@ Each line within a block forms a @deftech{group}. Groups are important,
 because parsing and macro expansion are constrained to operate on groups
 (although a group can contain nested blocks, etc.). Groups at the same
 level of indentation as a previous line continue that group’s block. A
-@litchar{|} can have multiple groups in the subblock to its right, but
-the block started by @litchar{|} turns out to be the only thing in its
-own group. A @litchar{:} block or sequence of @litchar{|} alternatives
+@litchar{|} can have multiple groups in the subblock to its right.
+A @litchar{:} block or sequence of @litchar{|} alternatives
 can only be at the end of an enclosing group.
 
 A @litchar{:} doesn’t have to be followed by a new line, but it starts a
@@ -208,7 +207,7 @@ previous examples:
   if is_rotten(apple) | get_another() | take_bite()
                                         be_happy()
 
-  match x | 0: def zero: x
+  match x | 0: def zero = x
                x + zero
           | n: n + 1
 
@@ -226,8 +225,7 @@ a new group, so these examples also parse the same:
 
   if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
-  match x | 0: def zero: x
-               x + zero
+  match x | 0: def zero = x; x + zero
           | n: n + 1
 
   cond | is_raining(): take_umbrella()
@@ -242,13 +240,14 @@ Finally, anything that can be written with newlines and indentation can
 be written on a single line, but @litchar{«} and @litchar{»} may be
 required to delimit a block using @litchar{«} just after @litchar{:} or
 @litchar{|} and @litchar{»} at the end of the block. Normally,
-parentheses work just as well, but the @rhombus(match) example above illustrates
-a rare case where @litchar{«} and @litchar{»} would be needed to fit on
+parentheses work just as well, since they can be wrapped around any
+expression---but definitions, for example, can create a situation
+where @litchar{«} and @litchar{»} are needed to fit on
 a single line. Without @litchar{«} and @litchar{»}, the following form
-would put @rhombus(x + zero) inside the definition of @rhombus(zero):
+would put @rhombus(x + zero()) inside the definition of @rhombus(zero):
 
 @rhombusblock(
-  match x | 0: def zero:« x »; x + zero | n: n + 1
+  match x | 0: fun zero():« x »; x + zero() | n: n + 1
 )
 
 Parentheses @parens, square brackets @brackets, and curly braces @braces combine a

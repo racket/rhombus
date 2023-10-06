@@ -35,8 +35,10 @@ itself remains quoted.
   '1 + $('$') 2'
 )
 
-@aside{Nesting @quotes does not increase the quoting level, unlike
- Racket quasiquotation.}
+Nesting quotes do not require a corresponding nesting of escaping
+@rhombus($) to escape outside the original quotes. For example,
+@rhombus('('$(1+2)')') is the same as @rhombus('('3')') in Rhombus,
+even though the escape is inside two layers of quotes.
 
 Like @rhombus($), @rhombus(...) is treated specially within a @(quotes)-quoted term (except,
 like @rhombus($), when it’s the only thing in the term). When @rhombus(...) immediately
