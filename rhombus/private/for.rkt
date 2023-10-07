@@ -230,17 +230,22 @@
   (syntax-parse lhs-parsed-stxes
     [(lhs-e::binding-form ...)
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
-     #:with all-static-infos (or (syntax-local-static-info #'rhs #'#%sequence-element)
-                                 (syntax-local-static-info #'rhs #'#%index-result)
-                                 #'())
-     #:with (static-infos ...) (syntax-parse #'all-static-infos
-                                 #:literals (#%values)
-                                 [((#%values (si ...)))
-                                  #:when (= (length (syntax->list #'(si ...)))
-                                            (length (syntax->list #'(lhs-e ...))))
-                                  #'(si ...)]
-                                 [_ (for/list ([lhs-e (in-list (syntax->list #'(lhs-e ...)))])
-                                      #'all-static-infos)])
+     #:with (static-infos ...) (cond
+                                 [(or (syntax-local-static-info #'rhs #'#%sequence-element)
+                                      (syntax-local-static-info #'rhs #'#%index-result))
+                                  => (lambda (infos)
+                                       (define number-of-vals (length (syntax->list #'(lhs-e ...))))
+                                       (define infoss
+                                         (syntax-parse infos
+                                           #:literals (#%values)
+                                           [((#%values (si ...))) (syntax->list #'(si ...))]
+                                           [_ (list infos)]))
+                                       (if (= (length infoss) number-of-vals)
+                                           infoss
+                                           (for/list ([idx (in-range number-of-vals)])
+                                             #'())))]
+                                 [else (for/list ([lhs-e (in-list (syntax->list #'(lhs-e ...)))])
+                                         #'())])
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (form-id . _) orig-stx
