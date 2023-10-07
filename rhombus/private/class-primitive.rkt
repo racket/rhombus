@@ -69,7 +69,7 @@
                                         (syntax-local-value
                                          (datum->syntax #'parent (string->symbol (format "~a-field-list" (syntax-e #'parent)))))
                                         null)
-     #:with (parent-static-infos ...) (for/list ([proc-id (syntax->list #'(parent-name-field ...))])
+     #:with (parent-static-infos ...) (for/list ([proc-id (in-list (syntax->list #'(parent-name-field ...)))])
                                         (extract-static-infos #'proc-id))
      #:with name-static-infos (datum->syntax #'name (string->symbol (format "~a-static-infos" (syntax-e #'name))))
      #:with Name-str (datum->syntax #'here (symbol->string (syntax-e #'Name)))

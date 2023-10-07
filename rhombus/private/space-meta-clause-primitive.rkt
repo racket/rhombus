@@ -66,7 +66,7 @@
   (make-expression-transformer '#:identifier_transformer))
 
 (define-for-syntax (parse-space-meta-clause-options orig-stx enforest? options-stx)
-  (for/fold ([options #hasheq()]) ([option (syntax->list options-stx)])
+  (for/fold ([options #hasheq()]) ([option (in-list (syntax->list options-stx))])
     (define (check what #:enforest-only? [enforest-only? #f])
       (syntax-parse option
         [(kw stx . _)

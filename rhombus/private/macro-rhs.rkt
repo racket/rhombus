@@ -356,7 +356,7 @@
                                       what)
                               orig-stx))
         (unless (zero? i)
-          (when (for*/or ([d (syntax->list (parsed-opts-stx p))]
+          (when (for*/or ([d (in-list (syntax->list (parsed-opts-stx p)))]
                           [d (in-list (or (syntax->list d) (list d)))])
                   (and (keyword? (syntax-e d))
                        (not (eq? '#:op_stx (syntax-e d)))

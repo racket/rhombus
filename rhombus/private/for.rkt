@@ -239,12 +239,12 @@
                                   #:when (= (length (syntax->list #'(si ...)))
                                             (length (syntax->list #'(lhs-e ...))))
                                   #'(si ...)]
-                                 [_ (for/list ([lhs-e (syntax->list #'(lhs-e ...))])
+                                 [_ (for/list ([lhs-e (in-list (syntax->list #'(lhs-e ...)))])
                                       #'all-static-infos)])
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (form-id . _) orig-stx
-     #:with (tmp-id ...) (for/list ([name-id (syntax->list #'(lhs-i.name-id ...))])
+     #:with (tmp-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs-i.name-id ...)))])
                            ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id) name-id)))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
      (when (and static? (not seq-ctr))

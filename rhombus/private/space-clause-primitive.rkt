@@ -66,7 +66,7 @@
         (wrap-clause #`(#:meta_namespace id content))]))))
 
 (define-for-syntax (parse-space-clause-options orig-stx options-stx)
-  (for/fold ([options #hasheq()]) ([option (syntax->list options-stx)])
+  (for/fold ([options #hasheq()]) ([option (in-list (syntax->list options-stx))])
     (syntax-parse option
       [(_ (#:space_path space-path-name orig-clause))
        (when (hash-ref options '#:space_path #f)
