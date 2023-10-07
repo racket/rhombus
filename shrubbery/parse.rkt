@@ -1721,7 +1721,7 @@
     (unless (eof-object? e)
       (cond
         [(or show-raw? show-property?)
-         (for ([s (syntax->list e)])
+         (for ([s (in-list (syntax->list e))])
            (when show-raw?
              (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s)))
            (when show-property?

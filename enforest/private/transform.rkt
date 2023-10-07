@@ -47,7 +47,7 @@
 
 (define (track-sequence-origin stx from-stx id)
   (datum->syntax stx
-                 (for/list ([e (syntax->list stx)])
+                 (for/list ([e (in-list (syntax->list stx))])
                    (syntax-track-origin e from-stx id))
                  stx
                  stx))

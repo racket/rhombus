@@ -383,7 +383,7 @@
                (loop #'internal-proto #f))]
       [(arg-desc ...)
        (apply append
-              (for/list ([desc (syntax->list #'(arg-desc ...))])
+              (for/list ([desc (in-list (syntax->list #'(arg-desc ...)))])
                 (define id (car (generate-temporaries '(arg))))
                 (define arg (if (and optionals?
                                      (box? (syntax-e desc)))

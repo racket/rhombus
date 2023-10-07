@@ -143,8 +143,8 @@
                                              . #,composite-static-infos))]
               [composite-static-infos (cond
                                         [(syntax-e #'accessor->info?)
-                                         #`(#,@(for/list ([accessor (syntax->list #'accessors)]
-                                                          [static-infos (syntax->list #'(a-info.static-infos ...))])
+                                         #`(#,@(for/list ([accessor (in-list (syntax->list #'accessors))]
+                                                          [static-infos (in-list (syntax->list #'(a-info.static-infos ...)))])
                                                  #`(#,accessor #,static-infos))
                                             . #,composite-static-infos)]
                                         [else composite-static-infos])]
@@ -250,7 +250,7 @@
               [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids down-static-infos)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
-                   (with-syntax ([(depth ...) (for/list ([uses (syntax->list #'(rest.bind-uses ...))])
+                   (with-syntax ([(depth ...) (for/list ([uses (in-list (syntax->list #'(rest.bind-uses ...)))])
                                                 (add1 (uses->depth uses)))]
                                  [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids]
                                  [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))])

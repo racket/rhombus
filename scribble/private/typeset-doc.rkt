@@ -367,8 +367,8 @@
        ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
         (make-id-element id str defn? #:space id-space #:suffix str+space)))
      (define content (annote-exporting-library (make-content #t)))
-     (for/fold ([content content]) ([id (cons id (syntax->list extra-ids))]
-                                    [space (cons space extra-spaces)]
+     (for/fold ([content content]) ([id (in-list (cons id (syntax->list extra-ids)))]
+                                    [space (in-list (cons space extra-spaces))]
                                     [idx (in-naturals)])
        (define id-space (get-id-space space))
        (define str+space (get-str+space space))

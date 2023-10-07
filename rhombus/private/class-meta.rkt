@@ -144,7 +144,7 @@
                    (map (lambda (n) #f)
                         (class-clause-extract who (class-expand-data-accum-stx info) 'field-names)))]
           [(field_mutabilities)
-           (append (for/list ([mutable? (syntax->list constructor-mutables)])
+           (append (for/list ([mutable? (in-list (syntax->list constructor-mutables))])
                      (if (syntax-e mutable?) 'mutable 'immutable))
                    (map (lambda (n) 'mutable)
                         (class-clause-extract who (class-expand-data-accum-stx info) 'field-names)))]
