@@ -189,7 +189,9 @@
         @rhombus(each, ~for_clause); for a sequence with
         multiple values in each element, the static information can
         map @rhombus(statinfo_meta.values_key) to a group of per-value
-        static information; when @rhombus(statinfo_meta.sequence_element_key)
+        static information; the number of static information must be
+        consistent with the bindings, otherwise no static information
+        will be propageted at all; when @rhombus(statinfo_meta.sequence_element_key)
         is not specified, @rhombus(each, ~for_clause) uses
         @rhombus(statinfo_meta.index_result_key)}
 
