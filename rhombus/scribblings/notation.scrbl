@@ -110,7 +110,7 @@ Booleans are written with a leading @litchar{#} followed immediately by
 )
 
 
-Strings of Unicode characters use single quotes, and byte strings are
+Strings of Unicode characters use double quotes, and byte strings are
 similar, but with a @litchar{#} prefix. Strings and byte string support
 the usual escapes, such as @litchar{\n} for a newline character or byte.
 
