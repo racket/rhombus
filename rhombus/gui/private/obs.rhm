@@ -31,7 +31,9 @@ annot.macro 'of($(ann :: annot_meta.Parsed))':
                                 | '$(a :: annot_meta.Parsed)': a)
   annot_meta.pack_predicate('block:
                                def pred = $pred
-                               fun (v :: Obs): pred(v.peek())',
+                               fun
+                               | (v :: Obs): pred(v.peek())
+                               | (_): #false',
                             obs_info)
 
 class Obs(handle):
