@@ -18,6 +18,7 @@
                                  [rhombus- -]
                                  [rhombus* *]
                                  [rhombus/ /]
+                                 [rhombus** **]
                                  [rhombus< <]
                                  [rhombus<= <=]
                                  [rhombus>= >=]
@@ -39,13 +40,13 @@
                      is_now))
 
 (define-infix rhombus+ +
-  #:weaker-than (rhombus* rhombus/ div mod rem)
+  #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
   #:same-as (rhombus-))
 
 (define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
-  (prefix rhombus- - #:weaker-than (rhombus* rhombus/ div mod rem)))
+  (prefix rhombus- - #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)))
 (define-values-for-syntax (minus-expr-infix minus-repet-infix)
-  (infix rhombus- - #:weaker-than (rhombus* rhombus/ div mod rem)))
+  (infix rhombus- - #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)))
 
 (define-syntax rhombus-
   (expression-prefix+infix-operator
@@ -58,27 +59,35 @@
    minus-repet-infix))
 
 (define-infix rhombus* *
+  #:weaker-than (rhombus**)
   #:same-on-left-as (rhombus/ div mod rem))
 
-(define-infix rhombus/ /)
+(define-infix rhombus/ /
+  #:weaker-than (rhombus**))
 
-(define-infix div quotient)
-(define-infix mod modulo)
-(define-infix rem remainder)
+(define-infix rhombus** expt
+  #:associate 'right)
+
+(define-infix div quotient
+  #:weaker-than (rhombus**))
+(define-infix mod modulo
+  #:weaker-than (rhombus**))
+(define-infix rem remainder
+  #:weaker-than (rhombus**))
 
 (define-prefix ! not
   #:stronger-than (&& \|\|))
 
 (define-infix && and
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem)
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
   #:stronger-than (\|\|))
 
 (define-infix \|\| or
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem))
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**))
 
 (define-syntax-rule (define-comp-infix name racket-name)
   (define-infix name racket-name
-    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem)
+    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
     #:same-as (rhombus> rhombus>= .= rhombus<=)
     #:stronger-than (\|\| &&)
     #:associate 'none))
@@ -91,7 +100,7 @@
 
 (define-syntax-rule (define-eql-infix name racket-name)
   (define-infix name racket-name
-    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem |.|)
+    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus** |.|)
     #:stronger-than (\|\| &&)
     #:associate 'none))
 
