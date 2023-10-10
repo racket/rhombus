@@ -69,16 +69,20 @@
 
  Captures the continuation of the @rhombus(Continuation.capture)
  expression, binds it to @rhombus(id), and then evaluates the
- @rhombus(body) sequence in tail position. The captured continuation is
- composable and delimited, and it is represented as a procedure that
+ @rhombus(body) sequence in tail position.
+ The continuation is represented as a procedure that
  accepts values to deliver to the continuation.
 
- If @rhombus(tag_expr) is present, is determines the tag used to
- delimite the continuation, otherwise
- @rhombus(Continuation.default_prompt_tag) is used. A prompt with the
- designated tag must be present in the current continuation at te time of
- capture. Since the captured continuation is composable, no prompt is
- required for invocation.
+ The captured continuation is delimited by a prompt with the tag
+ specified by @rhombus(tag_expr), where
+ @rhombus(Continuation.default_prompt_tag) is used if
+ @rhombus(tag_expr) is not present. A prompt with the designated tag
+ must be present in the current continuation at the time of capture.
+
+ The captured continuation is composable, which means that the capture
+ continuation extends the current one when it is called, and no prompt
+ is required in the continuation of the call to the capture
+ continuation.
 
 }
 
