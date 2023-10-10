@@ -191,6 +191,7 @@
   operator ((x :: Number) - (y :: Number)) :: Number
   operator ((x :: Number) * (y :: Number)) :: Number
   operator ((x :: Number) / (y :: Number)) :: Number
+  operator ((x :: Number) ** (y :: Number)) :: Number
 ){
 
  The usual arithmetic operators with the usual precedence, except that
@@ -203,6 +204,7 @@
   5*6
   8/2
   1+2*3
+  2**10
 )
 
 }
