@@ -9,6 +9,8 @@ export:
     fun
     class
     interface
+    extends
+    implements
     match
     ::
     :~
@@ -115,7 +117,7 @@ meta:
         spacer.adjust_sequence(tail, context, esc)
 
 spacer.bridge extends(self, tail, context, esc):
-  ~in: ~class_clause
+  ~in: ~class_clause ~interface_clause
   adjust_extends(self, tail, context, esc)
 
 spacer.bridge implements(self, tail, context, esc):
@@ -126,7 +128,7 @@ meta:
   fun adjust_extends(self, tail, context, esc):
     match tail
     | ': $(b :: Block)':
-        '$self $(': $(spacer.adjust_term(b, #'~class, esc))'.relocate(b))'
+        '$self $(spacer.adjust_term(b, #'~class, esc).relocate(b))'
     | '$tail ...':
         '$self $(spacer.adjust_sequence('$tail ...', #'~class, esc))'
 
