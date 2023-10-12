@@ -51,6 +51,19 @@ spacer.bridge fun(self, tail, context, esc):
           let '$_ $tail ...' = loop(g)
           ': $tail ...'.relocate(b)
       | ~else : b // ill-forms, so bail out
+    syntax_class res_ann:
+      kind ~sequence
+      root_swap: adjusted group
+    | '$(op && ('::' || ':~')) $ann ...':
+        field adjusted = spacer.adjust_sequence('$op $ann ...', #'~bind, esc)
+    | '': field adjusted = ''
+    syntax_class maybe_body:
+      kind ~group
+      root_swap: adjusted group
+    | ': $(b :: Block)':
+        field adjusted = spacer.adjust_term(b, context, esc)
+    | '$tail':
+        field adjusted = spacer.adjust_sequence(tail, context, esc)
     match tail
     | '':
         self
@@ -60,15 +73,9 @@ spacer.bridge fun(self, tail, context, esc):
                         | '[($_) $_ ..., $_, ...]': spacer.set(self, #'~expr)
                         | ~else: spacer.set(self, #'~defn))
         '$new_self $(Syntax.make([#'alts, recur_block(b), ...]).relocate(a))'
-    | '$name ... $(parens && '($arg, ...)') $(op && ('::' || ':~')) $ann ...:
-         $(b :: Block)':
+    | '$name ... $(parens && '($arg, ...)') $(res_ann :: res_ann) $(maybe_body :: maybe_body)':
         let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
-        let new_ann = spacer.adjust_sequence('$op $ann ...', #'~expr, esc)
-        '$(make_self('$name ...')) $args $new_ann $(spacer.adjust_term(b, context, esc))'  
-    | '$name ... $(parens && '($arg, ...)') $tail ...':
-        let args = '($(adjust_arg(arg, context, esc)), ...)'.relocate(parens)
-        let '$new_tail ...' = spacer.adjust_sequence('$tail ...', context, esc)
-        '$(make_self('$name ...')) $args $new_tail ...'
+        '$(make_self('$name ...')) $args $res_ann $maybe_body'
     | '$name ...':
         '$(make_self('$name ...'))'
 
