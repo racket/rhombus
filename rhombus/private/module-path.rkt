@@ -215,8 +215,8 @@
                                     (syntax->list #'(submod base path ... id))]
                                    [else
                                     (list #'submod mp #'id)])
-                                 (span-srcloc #'form-id #'tag)
-                                 #'form-id)
+                                 #'id
+                                 #'id)
                   #'tail)])))
    'left))
 
