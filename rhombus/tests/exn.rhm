@@ -45,3 +45,7 @@ block:
     v.message ~is "oops"
     v.index ~is 75
     v is_a Exn ~is #true
+
+check:
+  error(#'example, "~a oops")
+  ~raises "~a oops"

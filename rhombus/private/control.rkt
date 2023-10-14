@@ -81,7 +81,7 @@
      (define-values (err-who error-who-realm adj-msg msg-realm)
        ((or (adj 'message) values) adj-who who-realm msg-str rhombus-realm))
      (if err-who
-         (error err-who adj-msg)
+         (error err-who "~a" adj-msg)
          (error adj-msg))]))
 
 (define-syntax try
