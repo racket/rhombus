@@ -1,0 +1,8 @@
+#lang rhombus
+
+export: x
+def x = 1
+
+module nested:
+  export: x
+  def x = 2

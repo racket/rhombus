@@ -1,0 +1,60 @@
+#lang rhombus
+import:
+  lib("racket/base.rkt") as racket
+
+parameterize { racket.#{error-print-source-location}: #true }:
+  check:
+    ~eval
+    module m ~lang rhombus:
+      module ~early nested1 ~lang rhombus:
+        export x; def x = 1
+      module ~early nested2 ~lang rhombus:
+        export x; def x = 2
+      import:
+        self!nested1 open
+        self!nested2 open
+    ~raises values("identifier already required",
+                   "self!nested1",
+                   "self!nested2")
+
+  check:
+    ~eval
+    module m ~lang rhombus:
+      module ~early nested1 ~lang rhombus:
+        export x; def x = 1
+      module ~early nested2 ~lang rhombus:
+        export x; def x = 2
+      module ~early nested3 ~lang rhombus:
+        import:
+          parent!nested1 open
+          parent!nested2 open
+    ~raises values("identifier already required",
+                   "parent!nested1",
+                   "parent!nested2")
+
+  check:
+    ~eval
+    module m ~lang rhombus:
+      module ~early nested1 ~lang rhombus:
+        export x; def x = 1
+      module ~early nested2 ~lang rhombus:
+        export x; def x = 2
+      module ~early nested3 ~lang rhombus:
+        module ~early subnested3 ~lang rhombus:
+          import:
+            parent ! ! nested1 open
+            parent ! ! nested2 open
+    ~raises values("identifier already required",
+                   "parent ! ! nested1",
+                   "parent ! ! nested2")
+
+  // Needs the current directory to be this module's directory:
+  check:
+    ~eval
+    module m ~lang rhombus:
+      import:
+        "example-e.rhm"!nested open
+        file("example-e.rhm") open
+    ~raises values("identifier already required",
+                   "\"example-e.rhm\"!nested",
+                   "file(\"example-e.rhm\")")

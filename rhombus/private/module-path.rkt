@@ -138,13 +138,13 @@
           (raise-syntax-error (current-module-path-context)
                               "not a valid module path element"
                               #'a))
-        (values (datum->syntax #'a
-                               (string->symbol
-                                (format "~a/~a"
-                                        (syntax-e form1)
-                                        (syntax-e #'a)))
-                               (span-srcloc form1 #'a)
-                               #'a)
+        (values (relocate+reraw
+                 (datum->syntax #f (list form1 #'a))
+                 (datum->syntax #'a
+                                (string->symbol
+                                 (format "~a/~a"
+                                         (syntax-e form1)
+                                         (syntax-e #'a)))))
                 #'tail)]))
    'left))
 
@@ -159,12 +159,12 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group)
-       [(form-id ((~and tag parens) (group str:string)) . tail)
+       [(form-id (~and arg ((~and tag parens) (group str:string))) . tail)
         (define new-str (check #'str))
-        (values (datum->syntax #'str
-                               (list mp-form-id new-str)
-                               (span-srcloc #'form-id #'tag)
-                               #'form-id)
+        (values (relocate+reraw
+                 (datum->syntax #f (list #'form-id #'arg))
+                 (datum->syntax #'str
+                                (list mp-form-id new-str)))
                 #'tail)]))))
 
 (define-for-syntax (make-module-path-file-operator prefix-operator)
@@ -208,15 +208,15 @@
        (syntax-parse stx
          #:datum-literals ()
          [(form-id id:identifier . tail)
-          (values (datum->syntax #'id
-                                 (syntax-parse mp
-                                   #:datum-literals (submod)
-                                   [(submod base path ...)
-                                    (syntax->list #'(submod base path ... id))]
-                                   [else
-                                    (list #'submod mp #'id)])
-                                 (span-srcloc #'form-id #'tag)
-                                 #'form-id)
+          (values (relocate+reraw
+                   (datum->syntax #f (list mp #'form-id #'id))
+                   (datum->syntax #'id
+                                  (syntax-parse mp
+                                    #:datum-literals (submod)
+                                    [(submod base path ...)
+                                     (syntax->list #'(submod base path ... id))]
+                                    [else
+                                     (list #'submod mp #'id)])))
                   #'tail)])))
    'left))
 
@@ -239,12 +239,12 @@
      (syntax-parse stx
        #:datum-literals ()
        [(form-id name::! id:identifier . tail)
-        (values (datum->syntax #'id
-                               (if (eq? 'top-level (syntax-local-context))
-                                   (list #'quote #'id)
-                                   (list #'submod "." #'id))
-                               #'id
-                               #'id)
+        (values (relocate+reraw
+                 (datum->syntax #f (list #'form-id #'name #'id))
+                 (datum->syntax #'id
+                                (if (eq? 'top-level (syntax-local-context))
+                                    (list #'quote #'id)
+                                    (list #'submod "." #'id))))
                 #'tail)]))))
 
 (define-module-path-syntax rhombus-self
@@ -259,21 +259,21 @@
      (syntax-parse stx
        #:datum-literals ()
        [(form-id name::! ...+ id:identifier . tail)
-        (values (datum->syntax #'id
-                               (append (list #'submod)
-                                       (for/list ([name (in-list (syntax->list #'(name ...)))])
-                                         "..")
-                                       (list #'id))
-                               #'id
-                               #'id)
+        (values (relocate+reraw
+                 (datum->syntax #f (cons #'form-id #'(name ... id)))
+                 (datum->syntax #'id
+                                (append (list #'submod)
+                                        (for/list ([name (in-list (syntax->list #'(name ...)))])
+                                          "..")
+                                        (list #'id))))
                 #'tail)]
        [(form-id name::! ...+)
-        (values (datum->syntax #'form-id
-                               (append (list #'submod)
-                                       (for/list ([name (in-list (syntax->list #'(name ...)))])
-                                         ".."))
-                               #'form-id
-                               #'form-id)
+        (values (relocate+reraw
+                 (datum->syntax #f (cons #'form-id #'(name ...)))
+                 (datum->syntax #'form-id
+                                (append (list #'submod)
+                                        (for/list ([name (in-list (syntax->list #'(name ...)))])
+                                          ".."))))
                 #'())]
        [(form-id  . tail)
         (values (datum->syntax #'form-id
