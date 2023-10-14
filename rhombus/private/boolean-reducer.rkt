@@ -14,7 +14,7 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_)
+       [(_ . tail)
         (values (reducer
                  #'build-result
                  #'([result #true])
@@ -24,13 +24,13 @@
                  #'build-accum-result
                  #'()
                  #'elem)
-                #'())]))))
+                #'tail)]))))
 
 (define-reducer-syntax any
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_)
+       [(_ . tail)
         (values (reducer
                  #'build-result
                  #'([result #f])
@@ -40,7 +40,7 @@
                  #'build-accum-result
                  #'()
                  #'elem)
-                #'())]))))
+                #'tail)]))))
 
 (define-syntax (build-result stx)
   (syntax-parse stx
