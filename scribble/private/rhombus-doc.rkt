@@ -17,6 +17,7 @@
          (only-in "rhombus.rhm"
                   rhombusblock_etc
                   [rhombus one-rhombus])
+         (submod "rhombus-spacer.rhm" for_doc)
          (only-in rhombus/parse
                   rhombus-expression)
          (only-in scribble/manual
@@ -420,7 +421,8 @@
         #:datum-literals (group parens alts block :: |.| op)
         [(group tag ((~and p-tag parens) (group lhs (~and cc (op ::)) class)) (~and dot (op |.|)) name . more)
          (rb #:at stx
-             #`(group tag (p-tag (group lhs cc class)) dot #,@(subst #'name) . more))]
+             #`(group as_class_clause
+                      tag (p-tag (group lhs cc class)) dot #,@(subst #'name) . more))]
         [(group tag ((~and a-tag alts)
                      ((~and b-tag block)
                       ((~and g-tag group)
@@ -433,7 +435,8 @@
                         (for/list ([name2 (in-list (syntax->list #'(name2 ...)))])
                           (subst name2 #:redef? #t))])
            (rb #:at stx
-               #`(group tag (a-tag
+               #`(group as_class_clause
+                        tag (a-tag
                              (b-tag
                               (g-tag
                                (p-pag (group lhs cc class)) dot #,@(subst #'name) . more))
@@ -441,7 +444,10 @@
                               (g2-tag
                                (p2-pag (group lhs2 cc2 class2)) dot name2 ... . more2))
                              ...))))]
-        [_ (head-extract-typeset stx space-name subst)]))))
+        [(group tag (~var id (identifier-target space-name)) e ...)
+         (rb #:at stx
+             #`(group as_class_clause
+                      tag #,@(subst #'id.name) e ...))]))))
   
 (define-doc method
   "method"
@@ -476,7 +482,8 @@
       #:datum-literals (group parens :: |.| op)
       [(group tag ((~and p-tag parens) (group self cc class)) dot name . more)
        (rb #:at stx
-           #`(group tag (p-tag (group self cc class)) dot #,@(subst #'name) . more))])))
+           #`(group as_class_clause
+                    tag (p-tag (group self cc class)) dot #,@(subst #'name) . more))])))
 
 (define-doc def
   "value"
