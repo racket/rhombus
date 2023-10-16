@@ -13,7 +13,7 @@
   (define-values (pack* unpack*)
     (case kind
       [(term) (values #'pack-term* #'unpack-term*)]
-      [(group) (values #'pack-group* #'unpack-group*)]
+      [(group) (values #'pack-group-or-empty* #'unpack-group-or-empty*)]
       [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
   (let* ([temps (generate-temporaries (list id id))]
          [temp1 (car temps)]

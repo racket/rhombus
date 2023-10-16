@@ -40,7 +40,10 @@
          unpack-tail
          pack-multi-tail
          unpack-multi-tail
-         
+
+         pack-group-or-empty
+         unpack-group-or-empty
+
          pack-term*
          unpack-term*
          unpack-maybe-term*
@@ -59,6 +62,9 @@
          unpack-tail*
          pack-multi-tail*
          unpack-multi-tail*
+
+         pack-group-or-empty*
+         unpack-group-or-empty*
 
          pack-tail-list*
          unpack-tail-list*
@@ -121,6 +127,13 @@
 ;; "Packs" to a `group` form, but `r` starts with `group` already
 (define (pack-group r) r)
 
+;; "Packs" to a `group` or empty `multi` form, where `r` starts with `group` already,
+;; but it might be empty
+(define (pack-group-or-empty r)
+  (if (stx-null? (cdr (syntax-e r)))
+      (datum->syntax #f (list multi-blank))
+      r))
+
 ;; "Unpacks" to a `(group term ...)` form, as opposed to just `(term
 ;; ...)`, which makes it symmetric with `pack-group` and preserves
 ;; properties on the `group` tag. So, unpacking here is really about
@@ -142,6 +155,13 @@
      (and elems
           (datum->syntax #f (cons group-blank elems)))]
     [else (datum->syntax #f (list group-blank (datum->syntax at-stx r)))]))
+
+;; "Unpacks" to a `group` form that might be empty
+(define (unpack-group-or-empty r who at-stx)
+  (if (and (multi-syntax? r)
+           (stx-null? (cdr (syntax-e r))))
+      (datum->syntax #f (list group-blank))
+      (unpack-group r who at-stx)))
 
 ;; make sure 'block or 'alts doesn't end up mid-group in the list `terms`
 ;; where `tail` (list or syntax) does not need to be checked but supplies
@@ -339,9 +359,17 @@
 (define (pack-group* stx depth)
   (pack* stx depth pack-group))
 
+;; Packs to a `group` or empty `multi` form
+(define (pack-group-or-empty* stx depth)
+  (pack* stx depth pack-group-or-empty))
+
 ;; "Unpacks" to a `group` form, which is really more about coercsions
 (define (unpack-group* qs r depth)
   (unpack* qs r depth unpack-group))
+
+;; "Unpacks" to a `group` form, potentially empty
+(define (unpack-group-or-empty* qs r depth)
+  (unpack* qs r depth unpack-group-or-empty))
 
 (define (unpack-maybe-group* qs r depth)
   (unpack* qs r depth (lambda (form who at-stx)
