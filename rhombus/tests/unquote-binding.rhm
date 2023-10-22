@@ -140,3 +140,18 @@ check:
         name
   m
   ~is List
+
+check:
+  match 'foo.bar.baz'
+  | '$('$_ .') ... $(who :: Term)': who
+  ~prints_like 'baz'
+
+check:
+  match '(1 0)'
+  | '($((a :: Sequence) && '1' && '1') 0)': a
+  ~prints_like '1'
+
+check:
+  match '1 1 baz'
+  | '$((a :: Sequence) && '1' && '1') ... $(who :: Term)': who
+  ~prints_like 'baz'

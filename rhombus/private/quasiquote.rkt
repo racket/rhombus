@@ -25,7 +25,8 @@
          "pattern-variable.rkt"
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
-         "tag.rkt") ; for use in `~parse`
+         "tag.rkt" ; for use in `~parse`
+         "sequence-pattern.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -454,8 +455,13 @@
                     ;; The analysis here is approximate, but should cover useful
                     ;; cases.
                     (define (no-wrap) ps)
-                    (define (wrap-non-alts) (cons #`(~and (~not ((~datum alts) . _)) #,(car ps)) (cdr ps)))
-                    (define (wrap-non-block-non-alts) (cons #`(~and (~not ((~or (~datum block) (~datum alts)) . _)) #,(car ps)) (cdr ps)))
+                    (define (wrap not-pat) (cons #`(~and #,(if (is-sequence-pattern? (car ps))
+                                                               #`(~seq #,not-pat (... ...))
+                                                               not-pat)
+                                                         #,(car ps))
+                                                 (cdr ps)))
+                    (define (wrap-non-alts) (wrap #`(~not ((~datum alts) . _))))
+                    (define (wrap-non-block-non-alts) (wrap #`(~not ((~or (~datum block) (~datum alts)) . _))))
                     (let loop ([gs gs])
                       (syntax-parse gs
                         #:datum-literals (block alts)

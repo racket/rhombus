@@ -28,7 +28,8 @@
          (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
-         (submod "syntax-class.rkt" for-pattern-clause))
+         (submod "syntax-class.rkt" for-pattern-clause)
+         "sequence-pattern.rkt")
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -401,11 +402,15 @@
       form))
 
 (define-for-syntax (norm-seq pat like-pat)
-  (syntax-parse pat
-    [((~datum ~seq) . _) pat]
-    [_ (syntax-parse like-pat
-         [((~datum ~seq) . _) #`(~seq #,pat)]
-         [_ pat])]))
+  (cond
+    [(is-sequence-pattern? pat)
+     pat]
+    [(is-sequence-pattern? like-pat)
+     #`(~seq #,pat)]
+    [else pat]))
+
+(define-for-syntax (norm-seq2 pat like-pat1 like-pat2)
+  (norm-seq (norm-seq pat like-pat1) like-pat2))
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
@@ -419,7 +424,10 @@
         (syntax-parse (normalize-id form2)
           [#f #'#f]
           [(pat2 idrs2 sidrs2 vars2)
-           #`((~and #,(norm-seq #'pat1 #'pat2) #,(norm-seq #'pat2 #'pat1))
+           #`(#,(norm-seq2 #`(~and #,(norm-seq #'pat1 #'pat2)
+                                   #,(norm-seq #'pat2 #'pat1))
+                           #'pat1
+                           #'pat2)
               (idr1 ... . idrs2)
               (sidr1 ... . sidrs2)
               (var1 ... . vars2))])]))
@@ -437,8 +445,10 @@
         (syntax-parse (normalize-id form2)
           [#f #'#f]
           [(pat2 idrs2 sidrs2 vars2)
-           #`((~or #,(norm-seq #'pat1 #'pat2)
-                   #,(norm-seq #'pat2 #'pat1))
+           #`(#,(norm-seq2 #`(~or #,(norm-seq #'pat1 #'pat2)
+                                  #,(norm-seq #'pat2 #'pat1))
+                           #'pat1
+                           #'pat2)
               ()
               ()
               ())])]))
