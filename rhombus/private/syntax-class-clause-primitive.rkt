@@ -31,7 +31,7 @@
       (for/fold ([options init-options]) ([clause (in-list clauses)])
         (define (check what)
           (syntax-parse clause
-            [(kw (~and orig-stx (_ id . _)) . _)
+            [(kw orig-stx . _)
              (when (hash-ref options (syntax-e #'kw) #f)
                (raise-syntax-error #f
                                    (string-append "found second " what "clause, but only one is allowed")
@@ -151,9 +151,9 @@
        #`(#:fields #,stx #,ht))
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ (tag::block (group fld ...) ...))
+       [(_ (_::block (group fld ...) ...))
         (parse-fields #'((fld ...) ...))]
-       [(_ (tag::block fld ...))
+       [(_ fld ...)
         (parse-fields #'((fld ...)))]))))
 
 (define-syntax-class-clause-syntax root_swap
