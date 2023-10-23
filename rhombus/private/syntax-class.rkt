@@ -27,8 +27,8 @@
                       rhombus/namespace)
                      syntax_class))
 
-(module+ for-pattern-clause
-  (provide (for-syntax parse-pattern-clause)))
+(module+ for-anonymous-syntax-class
+  (provide (for-syntax parse-anonymous-syntax-class)))
 
 (define-name-root syntax_class
   #:fields
@@ -36,19 +36,19 @@
 
 (define-for-syntax (parse-syntax-class stx #:for-together? [for-together? #f])
   (syntax-parse stx
-    ;; just immediate-patterns shorthand
-    [(form-id class-name args::class-args (_::alts alt ...))
+    [(form-id class-name args::class-args
+              (_::alts alt ...))
      (build-syntax-class stx (syntax->list #'(alt ...)) null
                          #:define-class-id #'define-syntax
                          #:class/inline-name #'class-name
                          #:class-formals #'args.formals
                          #:class-arity #'args.arity
                          #:for-together? for-together?)]
-    ;; patterns within `pattern` or as shorthand
     [(form-id class-name args::class-args
               ;; syntax-class clauses are implemented in "syntax-class-clause-primitive.rkt"
               (_::block clause::syntax-class-clause ...)
-              (~optional (_::alts alt ...)))     
+              ;; patterns can be spliced by one of the macros
+              (~optional (_::alts alt ...)))
      (define parsed-clauses (syntax->list #'(clause.parsed ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
        (extract-clauses stx
@@ -99,13 +99,12 @@
 ;; returns a `rhombus-syntax-class`
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
   (syntax-parse tail
-    ;; immediate-patterns shorthand
     [((_::alts alt ...))
      (build-syntax-class orig-stx (syntax->list #'(alt ...)) null
                          #:class/inline-name name
                          #:expected-kind expected-kind)]
-    ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...)
+      ;; patterns can be spliced by one of the macros
       (~optional (_::alts alt ...)))
      (define parsed-clauses (syntax->list #'(clause.parsed ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
@@ -122,18 +121,6 @@
                          #:opaque? opaque?
                          #:expected-kind expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
-
-;; returns a `rhombus-syntax-class`
-(define-for-syntax (parse-pattern-clause stx expected-kind)
-  (define alts
-    (syntax-parse stx
-      [(_ (_::alts alt ...))
-       (syntax->list #'(alt ...))]
-      [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
-       (list #'(block (group pat b)))]
-      [(_ (~and pat (_::quotes . _)))
-       (list #'(block (group pat)))]))
-  (build-syntax-class stx alts null #:expected-kind expected-kind))
 
 ;; returns a `rhombus-syntax-class` if `define-syntax-id` is #f, otherwise
 ;; returns a list of definitions

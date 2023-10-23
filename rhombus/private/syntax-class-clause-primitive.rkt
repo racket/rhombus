@@ -10,7 +10,6 @@
          "pack.rkt")
 
 (provide (for-space rhombus/syntax_class_clause
-                    pattern
                     description
                     kind
                     error_mode
@@ -22,69 +21,68 @@
     (provide extract-clauses
              (struct-out declared-field))))
 
-(define-for-syntax (extract-clauses stx clauses patterns)
-  (define init-options (if patterns
-                           (hasheq '#:pattern patterns)
-                           #hasheq()))
-  (define options
-    (let loop ([options init-options] [clauses clauses])
-      (for/fold ([options init-options]) ([clause (in-list clauses)])
+(define-for-syntax (extract-clauses stx clauses orig-pats)
+  (define-values (options spliced-pats)
+    (let loop ([orig-stx #f]
+               [options #hasheq()]
+               [spliced-pats #f]
+               [clauses clauses])
+      (for/fold ([options options]
+                 [spliced-pats spliced-pats])
+                ([clause (in-list clauses)])
         (define (check what)
           (syntax-parse clause
-            [(kw orig-stx . _)
+            [(kw . _)
              (when (hash-ref options (syntax-e #'kw) #f)
                (raise-syntax-error #f
-                                   (string-append "found second " what "clause, but only one is allowed")
+                                   (string-append "found second " what " clause, but only one is allowed")
                                    stx
-                                   #'orig-stx))]))
+                                   (or orig-stx
+                                       (syntax-parse clause
+                                         [(_ orig-stx . _) #'orig-stx]))))]))
+        (define (check-splice orig-stx)
+          (when orig-pats
+            (raise-syntax-error #f "patterns already supplied" stx orig-stx))
+          (when spliced-pats
+            (raise-syntax-error #f "duplicate spliced patterns" stx orig-stx)))
         (syntax-parse clause
-          [(#:pattern _ alts)
-           (when patterns
-             (raise-syntax-error #f
-                                 (string-append "found pattern clause, but patterns also supplied directly as alternatives")
-                                 stx
-                                 #'orig-stx))
-           (check "pattern")
-           (hash-set options '#:pattern (syntax->list #'alts))]
           [(#:description _ e)
            (check "description")
-           (hash-set options '#:description #'e)]
+           (values (hash-set options '#:description #'e)
+                   spliced-pats)]
           [(#:fields _ ht)
            (check "fields")
-           (hash-set options '#:fields (syntax-e #'ht))]
+           (values (hash-set options '#:fields (syntax-e #'ht))
+                   spliced-pats)]
           [(#:root_swap _ to-root root-to)
            (check "root_swap")
-           (hash-set options '#:root_swap (cons #'to-root #'root-to))]
+           (values (hash-set options '#:root_swap (cons #'to-root #'root-to))
+                   spliced-pats)]
           [(#:kind _ kw)
            (check "kind")
-           (hash-set options '#:kind (syntax-e #'kw))]
+           (values (hash-set options '#:kind (syntax-e #'kw))
+                   spliced-pats)]
           [(#:error-mode _ kw)
            (check "error mode")
-           (hash-set options '#:error-mode (syntax-e #'kw))]
-          [(#:splice cl ...)
-           (loop options (syntax->list #'(cl ...)))]))))
-  (define alts (hash-ref options '#:pattern #f))
-  (unless alts
-    (raise-syntax-error #f
-                        "missing a pattern clause"
-                        stx))
-  (values alts
+           (values (hash-set options '#:error-mode (syntax-e #'kw))
+                   spliced-pats)]
+          [(#:splice orig-stx (~and cls (_ ...)))
+           (loop #'orig-stx options spliced-pats (syntax->list #'cls))]
+          [(#:splice/alts orig-stx (~and alts (_ ...)))
+           (check-splice #'orig-stx)
+           (values options (syntax->list #'alts))]
+          [(#:splice/alts orig-stx (~and cls (_ ...)) (~and alts (_ ...)))
+           (check-splice #'orig-stx)
+           (loop #'orig-stx options (syntax->list #'alts) (syntax->list #'cls))]))))
+  (define pats (or orig-pats spliced-pats))
+  (unless pats
+    (raise-syntax-error #f "no patterns supplied" stx))
+  (values pats
           (hash-ref options '#:kind #f)
           (hash-ref options '#:description #f)
           (hash-ref options '#:fields #f)
           (hash-ref options '#:root_swap #f)
           (eq? (hash-ref options '#:error-mode #f) '#:opaque)))
-
-(define-syntax-class-clause-syntax pattern
-  (syntax-class-clause-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(_ (_::alts b ...))
-        #`(#:pattern #,stx (b ...))]
-       [(_ (~and pat (_::quotes . _)))
-        #`(#:pattern #,stx ((block (group pat))))]
-       [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
-        #`(#:pattern #,stx ((block (group pat b))))]))))
 
 (define-syntax-class-clause-syntax description
   (syntax-class-clause-transformer

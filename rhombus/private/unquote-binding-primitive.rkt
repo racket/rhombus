@@ -28,7 +28,7 @@
          (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
-         (submod "syntax-class.rkt" for-pattern-clause)
+         (submod "syntax-class.rkt" for-anonymous-syntax-class)
          "sequence-pattern.rkt")
 
 (provide (for-space rhombus/unquote_bind
@@ -178,17 +178,23 @@
 (define-unquote-binding-syntax pattern
   (unquote-binding-transformer
    (lambda (stx)
-     (define inline-id #f)
-     (define rsc (parse-pattern-clause stx (current-unquote-binding-kind)))
-     (values (if rsc
-                 (build-syntax-class-pattern stx
-                                             rsc
-                                             #'#f
-                                             (syntax-parse stx [(form-id . _) #'form-id])
-                                             #f
-                                             inline-id)
-                 #'#f)
-             #'()))))
+     (syntax-parse stx
+       [(form-id (~optional form1:identifier) . tail)
+        (define rsc
+          (parse-anonymous-syntax-class (syntax-e #'form-id)
+                                        stx
+                                        (current-unquote-binding-kind)
+                                        #f
+                                        #'tail))
+        (values (if rsc
+                    (build-syntax-class-pattern stx
+                                                rsc
+                                                #'#f
+                                                #'form-id
+                                                (attribute form1)
+                                                #f)
+                    #'#f)
+                #'())]))))
 
 (begin-for-syntax
   (struct open-attrib (sym bind-id var)))

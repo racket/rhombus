@@ -84,19 +84,7 @@ spliced sequences that have different lengths.
 Although Rhombus supports new binding operators through
 @rhombus(unquote_bind.macro), syntax classes provide a better way to
 organize most syntax abstractions. To define a new syntax class, use the
-@rhombus(syntax_class) form with a block that contains
-@rhombus(pattern) with pattern alternatives:
-
-@demo(
-  ~defn:
-    syntax_class Arithmetic:
-      pattern
-      | '$x + $y'
-      | '$x - $y'
-)
-
-An equivalent shorthand omits the use of @rhombus(pattern, ~syntax_class_clause)
-and inlines alternatives into the immediate @rhombus(syntax_class) form:
+@rhombus(syntax_class) form:
 
 @demo(
   ~defn:

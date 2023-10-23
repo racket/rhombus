@@ -257,9 +257,6 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  ~nonterminal:
-    pattern_cases: syntax_class ~defn
-
   bind.macro '$ $stx_pat_bind_term'
 
   grammar stx_pat_bind_term:
@@ -274,7 +271,7 @@ Metadata for a syntax object can include a source location and the raw
     $id #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
     $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
-    #,(@rhombus(pattern, ~unquote_bind)) $pattern_cases
+    #,(@rhombus(pattern, ~unquote_bind)) $pattern_spec
     $other_stx_bind
 ){
 
@@ -418,18 +415,24 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
+    arg_expr: block expr
     field_id: block id
     pattern_id: block id
+    class_clause: syntax_class ~defn
+    pattern_case: syntax_class ~defn
 
-  unquote_bind.macro '$id :: $syntax_class $maybe_args'
-  unquote_bind.macro '$id :: $syntax_class $maybe_args:
+  unquote_bind.macro '$id :: $syntax_class_ref $maybe_args'
+  unquote_bind.macro '$id :: $syntax_class_ref $maybe_args:
                         $field_expose
                         ...'
 
-  grammar syntax_class:
+  grammar syntax_class_ref:
     $id
-    (syntax_class | $pattern_case | ...)
-    (syntax_class: $class_clause; ...)
+    (syntax_class:
+       $class_clause
+       ...
+     | $pattern_case
+     | ...)
 
   grammar maybe_args:
     ($arg, ...)
@@ -450,7 +453,7 @@ Metadata for a syntax object can include a source location and the raw
  Unquote binding operator for use with @rhombus($, ~bind) that binds
  @rhombus(id) for a match to @rhombus(syntax_class).
 
- The @rhombus(syntax_class) can be a predefined class such as
+ The @rhombus(syntax_class_ref) can be a predefined class such as
  @rhombus(Term, ~stxclass), @rhombus(Identifier, ~stxclass), or
  @rhombus(Group, ~stxclass), among others, it can be a class defined with
  @rhombus(syntax_class), or it can be an parenthesized inline
@@ -465,7 +468,7 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(id) is @rhombus(_, ~unquote_bind), then it is not
  bound.
 
- A block supplied after @rhombus(syntax_class) exposes fields of match
+ A block supplied after @rhombus(syntax_class_ref) exposes fields of match
  as directly bound pattern identifier. For each
  @rhombus(field_id #,(@rhombus(as, ~impo)) pattern_id)
  that is supplied, then @rhombus(pattern_id) is bound directly to
@@ -479,7 +482,7 @@ Metadata for a syntax object can include a source location and the raw
   ~defn:
     syntax_class Wrapped:
       kind: ~term
-      pattern '($content)'
+    | '($content)'
   ~repl:
     match '1 + (2) + 3'
     | '1 + $(y :: Wrapped) + 3': [y, y.content]
@@ -493,7 +496,7 @@ Metadata for a syntax object can include a source location and the raw
     match '(hello there)'
     | '$(whole :: (syntax_class:
                      kind: ~term
-                     pattern '($content)'))':
+                   | '($content)'))':
         [whole, whole.content]
 )
 
@@ -501,15 +504,59 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
-    pattern_cases: syntax_class ~defn
-  unquote_bind.macro 'pattern $pattern_cases'
+    class_clause: syntax_class ~defn
+    pattern_case: syntax_class ~defn
+
+  bind.macro 'pattern $maybe_id:
+                $class_clause
+                ...
+              | $pattern_case
+              | ...'
+  unquote_bind.macro 'pattern $maybe_id:
+                        $class_clause
+                        ...
+                      | $pattern_case
+                      | ...'
+
+  grammar maybe_id:
+    $id
+    #,(epsilon)
 ){
 
- Unquote binding operator for use with @rhombus($, ~bind) that is like
- the @rhombus(pattern, ~bind) binding form---which, in turn, has the
- same syntax and matching rules as a
- @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax_class).
- See @rhombus(pattern, ~bind).
+ The @rhombus(pattern, ~unquote_bind) form acts as a shorthand for
+ matching with an inline @rhombus(syntax_class) form. It has the same
+ grammar as inline @rhombus(syntax_class), except that an @rhombus(id)
+ can be present with the same meaning as in
+ @rhombus(::, ~unquote_bind). The @rhombus(id) can also be omitted, in
+ which case the match isn't bound but all fields are available.
+
+ When directly used in a binding context, @rhombus(pattern, ~bind)
+ acts as a shorthand for a syntax pattern with the
+ @rhombus(pattern, ~unquote_bind) form as the only term.
+
+@examples(
+  ~defn:
+    fun simplify(e):
+      match e
+      | '($e)': simplify(e)
+      | '0 + $e': simplify(e)
+      | '$e + 0': simplify(e)
+      | (pattern
+         | '$a + $b - $c':
+             match_when same(simplify(b), simplify(c))):
+          simplify(a)
+      | (pattern
+         | '$a - $b + $c':
+             match_when same(simplify(b), simplify(c))):
+          simplify(a)
+      | ~else: e
+  ~defn:
+    fun same(b, c):
+      b.unwrap() == c.unwrap()
+  ~repl:
+    simplify('(1 + (2 + 0) - 2)')
+    simplify('1 + 2 + 2')
+)
 
 }
 
