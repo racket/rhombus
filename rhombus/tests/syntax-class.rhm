@@ -75,6 +75,24 @@ check:
 check:
   ~eval
   syntax_class Arithmetic:
+    fields x y
+  | '$x $op $y'
+  match '1+2'
+  | '$(exp :: Arithmetic)': exp.op
+  ~raises "no such field"
+
+check:
+  ~eval
+  syntax_class Any:
+    fields
+  | '$x'
+  match '1'
+  | '$(any :: Any)': any.x
+  ~raises "no such field"
+
+check:
+  ~eval
+  syntax_class Arithmetic:
     fields: [x, ...] y
   | '$x $op $y'
   match '1+2'

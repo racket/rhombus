@@ -275,9 +275,8 @@
 }
 
 @doc(
-  syntax_class_clause.macro 'fields:
-                               $spec ...
-                               ...'
+  syntax_class_clause.macro 'fields $spec ...'
+  syntax_class_clause.macro 'fields: $spec ...; ...'
 
   grammar spec:
     $id_maybe_rep
@@ -294,7 +293,8 @@
  Limits the set of fields that are provided by a syntax class to the
  listed @rhombus(id)s. See @rhombus(syntax_class). A field's repetition
  depth is declared by wrapping it within @brackets with
- @rhombus(..., ~bind) like a repetition binding.
+ @rhombus(..., ~bind) like a repetition binding. If no @rhombus(spec)
+ is present at all, no fields will be provided.
 
  If a @rhombus(kind, ~syntax_class_clause) is not declared for a field
  identifier, then the context kind is inferred from patterns within the
