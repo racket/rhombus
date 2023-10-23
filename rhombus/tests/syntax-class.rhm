@@ -772,6 +772,120 @@ block:
     matcher x
     ~prints_like '2'
 
+// check (not) `open`ing named `pattern`s
+check:
+  ~eval
+  match '1'
+  | '$(pattern any | '$x')': x
+  ~raises "cannot reference an identifier before its definition"
+
+check:
+  ~eval
+  match '1'
+  | (pattern any | '$x'): x
+  ~raises "cannot reference an identifier before its definition"
+
+// check generated attributes in inline `pattern`s
+block:
+  fun m(stx):
+    match stx
+    | (pattern
+       | '$_ $_': field one = 1; field two = 2
+       | '$_': field two = 1):
+        two
+  check:
+    m('foo')
+    ~is 1
+  check:
+    m('foo bar')
+    ~is 2
+
+block:
+  fun m(stx):
+    syntax_class Rhs:
+      kind ~sequence
+    | '= $_ ...'
+    match stx
+    | (pattern
+       | '$lhs ... $(rhs :: Rhs)'
+       | '$lhs ...: $(rhs :: Block)'):
+        '($lhs ..., $rhs)'
+  check:
+    m('foo bar = baz')
+    ~prints_like '(foo bar, = baz)'
+  check:
+    m('foo bar: baz')
+    ~prints_like '(foo bar, :« baz »)'
+
+// check handling of nested `pattern`s
+block:
+  fun m(stx):
+    match stx
+    | (pattern
+       | '$(pattern
+            | '$who'
+            | '$_ $who')'):
+        who
+  check:
+    m('foo')
+    ~prints_like 'foo'
+  check:
+    m('foo bar')
+    ~prints_like 'bar'
+
+block:
+  fun m(stx):
+    match stx
+    | (pattern
+       | '$(pattern
+            | '$who')'
+       | '$_ $who'):
+        who
+  check:
+    m('foo')
+    ~prints_like 'foo'
+  check:
+    m('foo bar')
+    ~prints_like 'bar'
+
+// check handling of `open`ed syntax classes
+block:
+  fun m(op):
+    syntax_class Header:
+      kind ~sequence
+    | '$lbind $name $rbind'
+    | '$name $rbind': field lbind = #false
+    match op
+    | (pattern:
+         kind ~group
+       | '$(_ :: Header: open): $_'
+       | '($(_ :: Header: open)): $_'):
+        '$(lbind || '') $name $rbind'
+  check:
+    m('x + y: add(x, y)')
+    ~prints_like 'x + y'
+  check:
+    m('(+ y): add(x, y)')
+    ~prints_like '+ y'
+
+block:
+  fun m(op):
+    syntax_class Header:
+      kind ~sequence
+    | '$lbind $name $rbind'
+    match op
+    | (pattern:
+         kind ~group
+       | '$(_ :: Header: open): $_'
+       | '($name $rbind): $_': field lbind = #false):
+        '$(lbind || '') $name $rbind'
+  check:
+    m('x + y: add(x, y)')
+    ~prints_like 'x + y'
+  check:
+    m('(+ y): add(x, y)')
+    ~prints_like '+ y'
+
 // infer ~multi mode
 check:
   syntax_class C

@@ -40,6 +40,9 @@
                     #%literal
                     #%block))
 
+(module+ for-parse-pattern
+  (provide (for-syntax parse-pattern)))
+
 ;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
 ;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
 ;; matched literally, and plain identifiers are implemented in
@@ -175,26 +178,32 @@
                    tail)])]))
    'none))
 
+(define-for-syntax (parse-pattern stx)
+  (syntax-parse stx
+    [(form-id (~optional form1:identifier) . tail)
+     (parameterize ([inline-attr-depth (cond
+                                         [(inline-attr-depth) => add1]
+                                         [else 0])]
+                    [inline-form-id #'form-id])
+       (define rsc
+         (parse-anonymous-syntax-class (syntax-e #'form-id)
+                                       stx
+                                       (current-unquote-binding-kind)
+                                       #f
+                                       #'tail))
+       (values (if rsc
+                   (build-syntax-class-pattern stx
+                                               rsc
+                                               #'#f
+                                               (and (not (attribute form1))
+                                                    #'form-id)
+                                               (attribute form1)
+                                               #f)
+                   #'#f)
+               #'()))]))
+
 (define-unquote-binding-syntax pattern
-  (unquote-binding-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id (~optional form1:identifier) . tail)
-        (define rsc
-          (parse-anonymous-syntax-class (syntax-e #'form-id)
-                                        stx
-                                        (current-unquote-binding-kind)
-                                        #f
-                                        #'tail))
-        (values (if rsc
-                    (build-syntax-class-pattern stx
-                                                rsc
-                                                #'#f
-                                                #'form-id
-                                                (attribute form1)
-                                                #f)
-                    #'#f)
-                #'())]))))
+  (unquote-binding-transformer parse-pattern))
 
 (begin-for-syntax
   (struct open-attrib (sym bind-id var)))
@@ -222,13 +231,12 @@
                                swap-root-to-id))
       (define-values (attribute-bindings attribute-vars)
         (for/lists (bindings descs) ([var (in-list vars)]
-                                     [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))]
-                                     [bind-counter (in-naturals)])
+                                     [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))])
           (define name (pattern-variable-sym var))
           (define id (pattern-variable-id var))
           (define depth (pattern-variable-depth var))
           (define unpack*-form (pattern-variable-unpack* var))
-          (define id-with-attr (compose-attr-name match-id name id bind-counter))
+          (define id-with-attr (compose-attr-name match-id name id))
           (values #`[#,temp-attr #,(cond
                                      [(eq? depth 'tail)
                                       ;; bridge from a primitive syntax class, where we don't want to convert to
@@ -302,7 +310,7 @@
               (open-attrib (syntax-e id) id var)))]))
       (define pack-depth 0)
       (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
-      (define instance-id (or match-id (car (generate-temporaries '(inline)))))
+      (define instance-id (or match-id (car (generate-temporaries (list (inline-form-id))))))
       (define swap-to-root-var
         (for/first ([var (in-list attribute-vars)]
                     #:when (eq? (pattern-variable-sym var) swap-to-root))

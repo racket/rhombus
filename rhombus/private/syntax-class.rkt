@@ -406,7 +406,10 @@
                  (map (lambda (var)
                         #`(#:attr
                            [#,(if keep-attr-id?
-                                  (pattern-variable-id var)
+                                  (or (pattern-variable-id var)
+                                      ;; fallback for `open`ed syntax classes
+                                      (datum->syntax (inline-form-id)
+                                                     (pattern-variable-sym var)))
                                   (pattern-variable-sym var))
                             #,(pattern-variable-depth var)]
                            (#,(pattern-variable-unpack* var)
@@ -423,30 +426,30 @@
 ;; converts a `pattern` clause for `syntax-case` into a pattern suitable
 ;; for directly inlinding into a larger pattern
 (define-for-syntax (syntax-class-body->inline patterns inline-name)
-  #`(~or #,@(for/list ([pattern (in-list patterns)])
-              (syntax-parse pattern
-                [(_ pat body ...)
-                 #`(~and pat
-                         #,@(let loop ([body (syntax->list #'(body ...))]
-                                       [bind-counter 0])
-                              (cond
-                                [(null? body) '()]
-                                [(eq? (syntax-e (car body)) '#:do)
-                                 (cons #`(~do . #,(cadr body))
-                                       (loop (cddr body) bind-counter))]
-                                [(eq? (syntax-e (car body)) '#:with)
-                                 (cons #`(~parse #,(cadr body) #,(caddr body))
-                                       (loop (cdddr body) bind-counter))]
-                                [(eq? (syntax-e (car body)) '#:when)
-                                 (cons #`(~fail #:unless #,(cadr body))
-                                       (loop (cddr body)
-                                             bind-counter))]
-                                [(eq? (syntax-e (car body)) '#:attr)
-                                 (with-syntax ([[name depth] (cadr body)])
-                                   (define id.name (compose-attr-name inline-name (syntax-e #'name) #'name bind-counter))
-                                   (cons #`(~bind ([#,id.name depth] #,(caddr body)))
-                                         (loop (cdddr body) (add1 bind-counter))))]
-                                [else (error "unhandled pattern body" body)])))]))))
+  (define (convert-body body)
+    (if (null? body)
+        '()
+        (case (syntax-e (car body))
+          [(#:do)
+           (cons #`(~do . #,(cadr body))
+                 (convert-body (cddr body)))]
+          [(#:with)
+           (cons #`(~post (~parse #,(cadr body) #,(caddr body)))
+                 (convert-body (cdddr body)))]
+          [(#:when)
+           (cons #`(~post (~fail #:unless #,(cadr body)))
+                 (convert-body (cddr body)))]
+          [(#:attr)
+           (with-syntax ([[name depth] (cadr body)])
+             (define id.name (compose-attr-name inline-name (syntax-e #'name) #'name))
+             (cons #`(~bind ([#,id.name depth] #,(caddr body)))
+                   (convert-body (cdddr body))))]
+          ;; should not reach
+          [else (raise-syntax-error #f "unhandled pattern body" patterns body)])))
+  #`(~or* #,@(for/list ([pattern (in-list patterns)])
+               (syntax-parse pattern
+                 [(_ pat body ...)
+                  #`(~and pat #,@(convert-body (syntax->list #'(body ...))))]))))
 
 ;; ----------------------------------------
 
