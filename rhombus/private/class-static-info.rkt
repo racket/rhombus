@@ -107,7 +107,9 @@
                        internal-name-instance make-internal-name
                        indirect-static-infos
                        [name-field ...]
-                       [field-static-infos ...])
+                       [field-static-infos ...]
+                       [public-name-field/mutate ...] [public-maybe-set-name-field! ...]
+                       [public-field-static-infos ...])
                  names])
     (append
      (list
@@ -133,9 +135,20 @@
      (list
       #'(begin
           (define-static-info-syntax/maybe* name-field (#%call-result field-static-infos))
-          ...)))))
+          ...))
+     (with-syntax ([((si ...) ...) (for/list ([maybe-set (syntax->list #'(public-maybe-set-name-field! ...))]
+                                              [si (syntax->list #'(public-field-static-infos ...))])
+                                     (if (syntax-e maybe-set)
+                                         #`((#%function-arity 6)
+                                            (#%call-results-at-arities ((1 #,si))))
+                                         #`((#%function-arity 2)
+                                            (#%call-result #,si))))])
+       (list
+        #'(begin
+            (define-static-info-syntax public-name-field/mutate si ...)
+            ...))))))
 
 (define-syntax (define-static-info-syntax/maybe* stx)
   (syntax-parse stx
-    [(_ id (_)) #'(begin)]
+    [(_ id (_ ())) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))

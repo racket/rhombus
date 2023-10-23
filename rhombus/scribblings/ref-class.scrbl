@@ -268,7 +268,8 @@
  @rhombus(.), the procedure expects an extra by-position argument that
  must be an instance of the class, and the extra argument is supplied before
  all other arguments. A field accessor from a class (as a
- namespace) via @rhombus(.) similarly takes an instance of the class.
+ namespace) via @rhombus(.) similarly takes an instance of the class,
+ and it accepts a second argument to act as a mutator if the field is mutable.
  A property accessor from a class (as a
  namespace) via @rhombus(.) takes an instance of the class, and it accepts
  an additional value to assign to the property (if the property supports assignment).

@@ -520,6 +520,11 @@
                        [((public-field-name ...) (private-field-name ...)) (list public-field-names private-field-names)]
                        [((public-name-field ...) (private-name-field ...)) (list public-name-fields private-name-fields)]
                        [((public-maybe-set-name-field! ...) (private-maybe-set-name-field! ...)) (partition-fields #'(maybe-set-name-field! ...))]
+                       [(public-name-field/mutate ...) (let-values ([(maybe-sets _) (partition-fields #'(maybe-set-name-field! ...) #:result values)])
+                                                         (for/list ([maybe-set (in-list maybe-sets)]
+                                                                    [name-field (in-list public-name-fields)])
+                                                           (or (and maybe-set (car (generate-temporaries (list name-field))))
+                                                               name-field)))]
                        [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
                        [((public-field-argument ...) (private-field-argument ...)) (list public-field-arguments private-field-arguments)]
                        [(constructor-public-name-field ...) (partition-fields all-name-fields constructor-private?s
@@ -598,7 +603,9 @@
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
                                            reconstructor-name
                                            [public-field-name ...]
+                                           [public-name-field ...]
                                            [public-maybe-set-name-field! ...]
+                                           [public-name-field/mutate ...]
                                            [field-name ...]
                                            [name-field ...]
                                            [set-name-field! ...]
@@ -659,6 +666,7 @@
                                                  indirect-static-infos
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
                                                  [public-name-field ...] [name-field ...]
+                                                 [public-name-field/mutate ...]
                                                  [dot-id ...]
                                                  [(list 'private-field-name
                                                         (quote-syntax private-name-field)
@@ -678,7 +686,10 @@
                                                  internal-name-instance make-internal-name
                                                  indirect-static-infos
                                                  [name-field ...]
-                                                 [field-static-infos ...]))
+                                                 [field-static-infos ...]
+                                                 [public-name-field/mutate ...]
+                                                 [public-maybe-set-name-field! ...]
+                                                 [public-field-static-infos ...]))
                (build-class-desc exposed-internal-id super options
                                  constructor-public-keywords super-keywords ; public field for constructor
                                  constructor-public-defaults super-defaults
@@ -732,7 +743,9 @@
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
                        reconstructor-name
                        [public-field-name ...]
+                       [public-name-field ...]
                        [public-maybe-set-name-field! ...]
+                       [public-name-field/mutate ...]
                        [field-name ...]
                        [name-field ...]
                        [set-name-field! ...]
@@ -892,6 +905,18 @@
             (define vtable (prop-methods-ref v #f))
             (or vtable
                 (raise-not-an-instance 'name v))))
+       (for/list ([def (syntax->list
+                        #'((define public-name-field/mutate
+                             (let ([public-name-field
+                                    (case-lambda
+                                      [(v) (public-name-field v)]
+                                      [(v val) (public-maybe-set-name-field! v val)])])
+                               public-name-field))
+                           ...))]
+                  #:when (syntax-parse def
+                           [(_ n (_ ([n2 . _]) . _)) (not (free-identifier=? #'n #'n2))]
+                           [_ #t]))
+         def)
        (if (syntax-e #'prefab-guard-name)
            (list
             #`(define prefab-guard-name #,guard-expr)

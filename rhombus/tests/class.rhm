@@ -423,6 +423,8 @@ block:
     Posn(1, 2) != Posn(1, 2) ~is #true
     Posn(1, 2) is_now Posn(1, 2) ~is #true
     Posn(1, 2) ~is_now Posn(1, 2)
+    Posn.x(Posn(1, 2)) ~is 1
+    Posn.x(Posn(1, 2), 3) ~is #void
 
 check:
   class Posn(mutable x :: Int, y :: Int):
@@ -902,3 +904,17 @@ block:
   c := 1
   check p with (x = 10) ~is_now Posn(10, 2)
   check p with (x = 10).get_z() ~is 1
+
+block:
+  use_static
+  class Pack(mutable vs :: List.of(Int))
+  check Pack([1, 2]).vs[0] ~is 1
+  check Pack.vs(Pack([1, 2]))[1] ~is 2
+  check Pack.vs(Pack([1, 2]), [0]) ~is #void
+
+check:
+  ~eval
+  use_static
+  class Pack(mutable vs :: List.of(Int))
+  Pack.vs(1, 2, 3)
+  ~raises "wrong number of arguments in function call (based on static information)"

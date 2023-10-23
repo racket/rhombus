@@ -48,6 +48,7 @@
                        indirect-static-infos
                        [public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
+                       [public-name-field/mutate ...]
                        [dot-id ...]
                        [private-field-desc ...]
                        [ex ...])
@@ -78,7 +79,7 @@
             #`(define-syntaxes (name #,(in-repetition-space #'name))
                 (class-expression-transformers (quote-syntax name) (quote-syntax constructor-name)))])
          #`(define-name-root name
-             #:fields ([public-field-name public-name-field]
+             #:fields ([public-field-name public-name-field/mutate]
                        ...
                        [method-name method-id]
                        ...
