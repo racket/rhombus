@@ -57,8 +57,7 @@ check:
     fields:
       x: kind ~term
       y
-    pattern
-    | '$x $op $y'
+  | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': [exp.x, exp.y]
   ~prints_like ['1', '2']
@@ -179,9 +178,8 @@ block:
     meta:
       syntax_class Arithmetic:
         description: "an expression with addition or subtraction"
-        pattern
-        | '$x + $y'
-        | '$x - $y'
+      | '$x + $y'
+      | '$x - $y'
     expr.macro 'right_operand $(e :: Arithmetic)':
       values(e.y, '')
     right_operand 1 +
@@ -214,8 +212,7 @@ check:
 block:
   syntax_class Foo:
     kind: ~sequence
-    pattern
-    | '$x + $y'
+  | '$x + $y'
   check:
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
@@ -224,8 +221,7 @@ block:
 block:
   syntax_class Foo:
     kind: ~term
-    pattern
-    | '($x + $y)'
+  | '($x + $y)'
   check:
     match '0 + (1 + 2)'
     | '0 + $(f :: Foo)': [f.x, f.y]
@@ -235,8 +231,7 @@ check:
   ~eval
   syntax_class Foo:
     kind: ~term
-    pattern
-    | '$x + $y'
+  | '$x + $y'
   ~raises "not a single-term pattern"
 
 block:
@@ -295,9 +290,8 @@ block:
 block:
   syntax_class Foo:
     kind: ~block
-    pattern
-    | ': $x + $y
-         $z - $w'
+  | ': $x + $y
+       $z - $w'
   check:
     match ': 1 + 2
              3 - 4'
@@ -308,16 +302,14 @@ check:
   ~eval
   syntax_class Foo:
     kind: ~block
-    pattern
-    | '($x + $y,
-        $z - $w)'
+  | '($x + $y,
+      $z - $w)'
   ~raises "not a block pattern"
 
 block:
   syntax_class Foo:
     kind: ~multi
-    pattern
-    | '($x, $y)'
+  | '($x, $y)'
   check:
     match '((1 + 2, 3 - 4))'
     | '($(f :: Foo))': f
@@ -336,8 +328,7 @@ block:
 block:
   syntax_class Foo:
     kind: ~multi
-    pattern
-    | '$x'
+  | '$x'
   check:
     match '(1 + 2, 3 - 4)'
     | '($(f :: Foo))': f
@@ -348,16 +339,15 @@ block:
     ~prints_like '1 + 2; 3 - 4; 5 / 6'
 
 block:
-  syntax_class Foo:
-    pattern
-    | '$x $y':
-        match_when y.unwrap() == 1
-        field case: '1'
-    | '$x $y':
-        match_unless y.unwrap() == 5
-        field case: '2'
-    | '$x $y':
-        field case: '3'
+  syntax_class Foo
+  | '$x $y':
+      match_when y.unwrap() == 1
+      field case: '1'
+  | '$x $y':
+      match_unless y.unwrap() == 5
+      field case: '2'
+  | '$x $y':
+      field case: '3'
   check:
     def '$(f :: Foo)': 'a 1'
     [f.x, f.y, f.case]
@@ -372,18 +362,17 @@ block:
     ~prints_like ['c', '5', '3']
    
 block:
-  syntax_class Foo:
-    pattern
-    | '$x $y':
-        match_def '(1 + 1)': y
-        field case: '1'
-        field z: '0'
-    | '$x $y':
-        match_def '(1 + $z)': y
-        field case: '2'
-    | '$x $y':
-        field case: '3'
-        field z: 'no'
+  syntax_class Foo
+  | '$x $y':
+      match_def '(1 + 1)': y
+      field case: '1'
+      field z: '0'
+  | '$x $y':
+      match_def '(1 + $z)': y
+      field case: '2'
+  | '$x $y':
+      field case: '3'
+      field z: 'no'
   check:
     def '$(f :: Foo)': 'a 1'
     [f.x, f.y, f.case, f.z]
@@ -400,20 +389,18 @@ block:
 check:
   syntax_class Option:
     kind: ~term
-    pattern
-    | '~lang':
-        field form: '~lang'
+  | '~lang':
+      field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form, ...]
   ~prints_like ['~lang', '~lang']
 
 check:
-  syntax_class Option:
-    pattern
-    | '~lang':
-        field form: '~lang'
-    | '~lang ~and':
-        field form: '~and'
+  syntax_class Option
+  | '~lang':
+      field form: '~lang'
+  | '~lang ~and':
+      field form: '~and'
   match '(~lang, ~lang ~and)'
   | '($(o :: Option), ...)': [o.form, ...]
   ~prints_like ['~lang', '~and']
@@ -422,19 +409,17 @@ check:
   ~eval
   syntax_class Option:
     kind: ~term
-    pattern
-    | '~lang':
-        field form: '~lang'
+  | '~lang':
+      field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
   ~raises "field is a repetition"
 
 check:
   ~eval
-  syntax_class Option:
-    pattern
-    | '~lang':
-        field form: '~lang'
+  syntax_class Option
+  | '~lang':
+      field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
   ~raises "field is a repetition"
@@ -491,10 +476,9 @@ block:
 
 // empty pattern is a special case
 block:
-  syntax_class Maybe:
-    pattern
-    | '1'
-    | ''
+  syntax_class Maybe
+  | '1'
+  | ''
 
   check:
     def '$(x :: Maybe) 2' = '2'
@@ -529,21 +513,19 @@ check:
 
 // field value does not have to be syntax
 check:
-  syntax_class Foo:
-    pattern
-    | '$x':
-        field [y, ...] = [1, #'~q, 3]
+  syntax_class Foo
+  | '$x':
+      field [y, ...] = [1, #'~q, 3]
   match 'x'
   | '$(f :: Foo)': [f.y, ...]
   ~is [1, #'~q, 3]    
 
 // a field used both as a non-syntax and a sytax field
 block:
-  syntax_class Foo:
-    pattern
-    | '$x':
-        field [y, ...] = [1, #'~q, 3]
-    | '$x $y ...'
+  syntax_class Foo
+  | '$x':
+      field [y, ...] = [1, #'~q, 3]
+  | '$x $y ...'
   check:
     match 'x'
     | '$(f :: Foo)': [f.y, ...]
@@ -562,9 +544,8 @@ block:
 block:
   syntax_class Foo:
     kind: ~group
-    pattern
-    | '$x ($y + 1) ...'
-    | '$x $y ...'
+  | '$x ($y + 1) ...'
+  | '$x $y ...'
   check:
     match 'x (1 + 1) (2 + 1) 3'
     | '$(f :: Foo)': [f.y, ...]
@@ -578,10 +559,9 @@ block:
 block:
   fun m(stx):
     def '$(f2 :: (syntax_class:
-                    pattern
-                    | '9 $x $_'
-                    | '8 $x':
-                        match_when #true)); ...' = stx  
+                  | '9 $x $_'
+                  | '8 $x':
+                      match_when #true)); ...' = stx
     [f2.x, ...]
   check:
     m('8 1')
@@ -600,10 +580,9 @@ block:
 block:
   fun m(stx):
     def '$(f2 :: (syntax_class:
-                    pattern
-                    | '9 $x $_'
-                    | '8 $x':
-                        match_when #true):
+                  | '9 $x $_'
+                  | '8 $x':
+                      match_when #true):
              open); ...' = stx  
     [x, ...]
   check:
@@ -613,33 +592,185 @@ block:
     m('8 1; 9 2 3')
     ~prints_like ['1', '2']
 
+// pattern shorthand unquote
+block:
+  fun m(stx):
+    def '$(pattern
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [x, ...]
+  check:
+    m('8 1')
+    ~prints_like ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~prints_like ['1', '2']
+
+block:
+  fun m(stx):
+    def '$(pattern:
+             kind ~sequence
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [x, ...]
+  check:
+    m('8 1')
+    ~prints_like ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~prints_like ['1', '2']
+
+block:
+  fun m(stx):
+    def '$(pattern match
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [match.x, ...]
+  check:
+    m('8 1')
+    ~prints_like ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~prints_like ['1', '2']
+
+block:
+  fun m(stx):
+    def '$(pattern match:
+             kind ~sequence
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [match.x, ...]
+  check:
+    m('8 1')
+    ~prints_like ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~prints_like ['1', '2']
+
+// pattern shorthand binding
+block:
+  fun m(stx):
+    def [pattern
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [x, ...]
+  check:
+    m(['8 1'])
+    ~prints_like ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~prints_like ['1', '2']
+
+block:
+  fun m(stx):
+    def [pattern:
+           kind ~sequence
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [x, ...]
+  check:
+    m(['8 1'])
+    ~prints_like ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~prints_like ['1', '2']
+
+// The following two tests currently do not work due to how
+// repetitions are handled.  If these are to be fixed, the
+// corresponding `::` forms should also be fixed.
+#//
+block:
+  fun m(stx):
+    def [pattern match
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [match.x, ...]
+  check:
+    m(['8 1'])
+    ~prints_like ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~prints_like ['1', '2']
+
+#//
+block:
+  fun m(stx):
+    def [pattern match:
+           kind ~sequence
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [match.x, ...]
+  check:
+    m(['8 1'])
+    ~prints_like ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~prints_like ['1', '2']
+
 // check interaction of macro introduction and pattern variables
 block:
   import rhombus/meta open
   check:
     expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
-        | (pattern '$('$')x $('$')$ex'): x»'
+        | (pattern | '$('$')x $('$')$ex'): x»'
     matcher x
     ~prints_like '1'
   check:
     expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
-        | (pattern '$('$')x $('$')$ex'): $ex»'
-    matcher x
-    ~prints_like '2'  
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern '$('$')$ex $('$')x'): x»'
+        | (pattern | '$('$')x $('$')$ex'): $ex»'
     matcher x
     ~prints_like '2'
   check:
     expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
-        | (pattern '$('$')$ex $('$')x'): $ex»'
+        | (pattern | '$('$')$ex $('$')x'): x»'
+    matcher x
+    ~prints_like '2'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern | '$('$')$ex $('$')x'): $ex»'
     matcher x
     ~prints_like '1'
+
+// field names are recognized symbolically
+// Is this the expected behavior?  I think it is.
+block:
+  import rhombus/meta open
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern who | '$('$')x $('$')$ex'): who.x»'
+    matcher x
+    ~prints_like '2'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern who | '$('$')x $('$')$ex'): who . $ex»'
+    matcher x
+    ~prints_like '2'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern who | '$('$')$ex $('$')x'): who.x»'
+    matcher x
+    ~prints_like '2'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern who | '$('$')$ex $('$')x'): who . $ex»'
+    matcher x
+    ~prints_like '2'
 
 // infer ~multi mode
 check:
@@ -660,8 +791,7 @@ check:
 check:
   syntax_class C:
     root_swap: second terms
-    pattern
-    | '$_ $second'
+  | '$_ $second'
   match '1 2'
   | '$(c :: C)':
       [c, c.terms]
@@ -671,16 +801,14 @@ check:
   ~eval
   syntax_class C:
     root_swap: unknown terms
-    pattern
-    | '$_ $second'
+  | '$_ $second'
   ~raises "field to swap as root not found"
 
 check:
   ~eval
   syntax_class C:
     root_swap: second first
-    pattern
-    | '$first $second'
+  | '$first $second'
   ~raises "field for root already exists"
 
 
@@ -689,11 +817,10 @@ check:
     syntax_class ModPath:
       fields:
         [elem, ...]
-      pattern
-      | '$head':
-          field [elem, ...]: [head]
-      | '$head / $(mp :: ModPath)':
-          field [elem, ...] = [head, mp.elem, ...]
+    | '$head':
+        field [elem, ...]: [head]
+    | '$head / $(mp :: ModPath)':
+        field [elem, ...] = [head, mp.elem, ...]
   match 'a / b / c'
   | '$(mp :: ModPath)':
       [mp.elem, ...]

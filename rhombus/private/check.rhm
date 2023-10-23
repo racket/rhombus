@@ -13,27 +13,25 @@ export:
 meta:
   syntax_class ResultMode:
     kind: ~term
-    pattern
-    | '~is'
-    | '~is_now'
-    | '~is_a'
-    | '~prints_like'
-    | '~prints'
-    | '~raises'
-    | '~matches'
+  | '~is'
+  | '~is_now'
+  | '~is_a'
+  | '~prints_like'
+  | '~prints'
+  | '~raises'
+  | '~matches'
       
   syntax_class Result:
     kind: ~sequence
-    pattern
-    | '$(mode :: ResultMode): $body':
-        field [suffix, ...]: []
-    | '$(mode :: ResultMode) $g ...':
-        field body: '$g ...'
-        field [suffix, ...]: []
-    | '~completes':
-        field mode: '~completes'
-        field body: '#void'
-        field [suffix, ...]: ['#void']
+  | '$(mode :: ResultMode): $body':
+      field [suffix, ...]: []
+  | '$(mode :: ResultMode) $g ...':
+      field body: '$g ...'
+      field [suffix, ...]: []
+  | '~completes':
+      field mode: '~completes'
+      field body: '#void'
+      field [suffix, ...]: ['#void']
 
   syntax_class EvalClause:
     fields: make_eval

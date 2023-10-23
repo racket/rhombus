@@ -31,15 +31,15 @@
  for use within a @rhombus(syntax_class) body.
 
  The compile-time @rhombus(body, ~var) block returns the expansion result. The
- result must be a sequence of groups to be spliced in place of the macro
- use within a @rhombus(syntax_class) body.
+ result must be a block of groups optionally followed by syntax patterns
+ to be spliced in place of the macro use within a @rhombus(syntax_class) body.
+ The spliced syntax patterns can be supplied at most once.
 
 @examples(
   ~eval: macro_eval
   ~defn:
     syntax_class_clause.macro 'maybe_block $id $rhs_id':
-      '«fields: [$rhs_id, $('...')]
-        pattern
+      '«: fields: [$rhs_id, $('...')]
         | '$id: $('$')$rhs_id; $('...')'
         | '$id $('$')rhs0 $('...')':
             field [$rhs_id, $('...')] = ['$('$')rhs0 $('...')']»'

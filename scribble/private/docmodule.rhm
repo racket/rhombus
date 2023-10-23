@@ -31,16 +31,15 @@ meta:
   | pack_tree([v, ...]): [pack_tree(v), ...]
   | pack_tree(v): Syntax.make(v, #false)
 
-  syntax_class Option:
-    pattern
-    | '~lang':
-        field [form, ...]: ['~lang']
-    | '~no_declare':
-        field [form, ...]: ['#{#:no-declare}']
-    | '~use_sources: $modpath; ...':
-        field [form, ...]: ['#{#:use-sources}',
-                            pack_tree([ModulePath.s_exp(ModulePath('$modpath')),
-                                       ...])]
+  syntax_class Option
+  | '~lang':
+      field [form, ...]: ['~lang']
+  | '~no_declare':
+      field [form, ...]: ['#{#:no-declare}']
+  | '~use_sources: $modpath; ...':
+      field [form, ...]: ['#{#:use-sources}',
+                          pack_tree([ModulePath.s_exp(ModulePath('$modpath')),
+                                     ...])]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   let is_lang:

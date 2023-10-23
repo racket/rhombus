@@ -9,7 +9,8 @@
          "name-root.rkt"
          "syntax-class-clause.rkt"
          "macro-macro.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "parens.rkt")
 
 (define+provide-space syntax_class_clause rhombus/syntax_class_clause
   #:fields
@@ -26,7 +27,11 @@
                        [(head . tail) (proc (pack-tail #'tail) #'head)]))
      (unless (syntax? clauses)
        (raise-bad-macro-result (proc-name proc) "syntax class clauses" clauses))
-     #`(#:splice
-        #,@(for/list ([clause (in-list (unpack-multi clauses proc #f))])
-             (syntax-parse clause
-               [cl::syntax-class-clause #'cl.parsed]))))))
+     (syntax-parse (unpack-group clauses proc #f)
+       [(_ (_::alts alt ...))
+        #`(#:splice/alts #,stx (alt ...))]
+       [(_ (_::block clause::syntax-class-clause ...))
+        #`(#:splice #,stx (clause.parsed ...))]
+       [(_ (_::block clause::syntax-class-clause ...)
+           (_::alts alt ...))
+        #`(#:splice/alts #,stx (clause.parsed ...) (alt ...))]))))

@@ -28,17 +28,11 @@
     #,(epsilon)
 
   grammar class_clause:
-    #,(@rhombus(pattern, ~syntax_class_clause)) $pattern_cases
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
     #,(@rhombus(fields, ~syntax_class_clause)): $field_decl
     #,(@rhombus(root_swap, ~syntax_class_clause)): $id $id
-
-  grammar pattern_cases:
-    $pattern_case
-    Z| $pattern_case
-     | ...
 
   grammar pattern_case:
     $syntax_pattern
@@ -63,14 +57,8 @@
  syntax classes.
 
  Syntax forms matched by the syntax class are described by
- @rhombus(pattern_case) alternatives. The
- @rhombus(pattern, ~syntax_class_clause) clause is optional in the sense
- that pattern alternatives can be inlined directly in the
- @rhombus(syntax_class) form, in which case @rhombus(pattern, ~syntax_class_clause)
- must not appear as a clause. Each kind of
- @rhombus(class_clause) alternative can be supplied at most once, and
- @rhombus(pattern, ~syntax_class_clause) is required if no @rhombus(pattern_case)
- alternatives are supplied inline.
+ @rhombus(pattern_case) alternatives. Each kind of
+ @rhombus(class_clause) alternative can be supplied at most once.
 
  An optional @rhombus(description,  ~syntax_class_clause) clause
  provides a description of the syntax class, which is used to produce
@@ -211,65 +199,14 @@
     syntax_class.together:
       syntax_class ModPath:
         fields: [elem, ...]
-        pattern
-        | '$head':
-            field [elem, ...]: [head]
-        | '$head / $(mp :: ModPath)':
-            field [elem, ...] = [head, mp.elem, ...]
+      | '$head':
+          field [elem, ...]: [head]
+      | '$head / $(mp :: ModPath)':
+          field [elem, ...] = [head, mp.elem, ...]
   ~repl:
     match 'a / b / c'
     | '$(mp :: ModPath)':
         [mp.elem, ...]
-)
-
-}
-
-
-@doc(
-  ~nonterminal:
-    pattern_cases: syntax_class pattern_cases ~defn
-    pattern_case: syntax_class pattern_case ~defn
-                   
-  syntax_class_clause.macro 'pattern $pattern_cases'
-  bind.macro 'pattern $pattern_cases'
-){
-
- The @rhombus(pattern, ~syntax_class_clause) clause form in
- @rhombus(syntax_class) describes the patterns that the class matches;
- see @rhombus(syntax_class) for more information. A
- @rhombus(pattern, ~syntax_class_clause) class with only a
- @rhombus(pattern_case) is a shorthand for writing the
- @rhombus(pattern_case) in a single @litchar{|} alternative.
-
- The binding variant of @rhombus(pattern , ~syntax_class_clause) (for
- direct use in a binding context) has the same syntax and matching rules
- as a @rhombus(pattern, ~syntax_class_clause) form in
- @rhombus(syntax_class), but with all fields exposed. In particular, a
- @rhombus(pattern_case) can have a block with
- @rhombus(match_def, ~pattern_clause),
- @rhombus(match_when, ~pattern_clause), and
- @rhombus(match_unless, ~pattern_clause) clauses that refine the match.
-
-@examples(
-  ~defn:
-    fun simplify(e):
-      match e
-      | '($e)': simplify(e)
-      | '0 + $e': simplify(e)
-      | '$e + 0': simplify(e)
-      | (pattern '$a + $b - $c':
-           match_when same(simplify(b), simplify(c))):
-          simplify(a)
-      | (pattern '$a - $b + $c':
-           match_when same(simplify(b), simplify(c))):
-          simplify(a)
-      | ~else: e
-  ~defn:
-    fun same(b, c):
-      b.unwrap() == c.unwrap()
-  ~repl:
-    simplify('(1 + (2 + 0) - 2)')
-    simplify('1 + 2 + 2')
 )
 
 }
@@ -321,8 +258,7 @@
   ~defn:
     syntax_class Parenthesized:
       root_swap: content group
-      pattern
-      | '($content)'
+    | '($content)'
   ~repl:
     match '(1 2 3)'
     | '$(p :: Parenthesized)':
