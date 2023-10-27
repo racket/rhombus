@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx
                      "srcloc.rkt"
                      "tag.rkt")
          "provide.rkt"
@@ -15,7 +14,6 @@
          "append-key.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
-         "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "op-literal.rkt"
          "literal.rkt"
@@ -23,12 +21,12 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          "name-root.rkt"
-         (submod "dot.rkt" for-dot-provider)
          "parse.rkt"
-         "dot-parse.rkt"
          "realm.rkt"
          "parens.rkt"
          "define-arity.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt"
          "rest-bind.rkt")
 
 (provide (for-spaces (rhombus/namespace
@@ -58,11 +56,51 @@
 (module+ normal-call
   (provide (for-syntax normal-call?)))
 
-(define-for-syntax list-static-infos
-  #'((#%index-get list-ref)
-     (#%append List.append)
-     (#%sequence-constructor in-list)
-     (#%dot-provider list-instance)))
+(define-primitive-class List list
+  #:lift-declaration
+  #:constructor-arity -1
+  #:instance-static-info ((#%index-get List.get)
+                          (#%append List.append)
+                          (#%sequence-constructor in-list))
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([cons List.cons]
+   [empty null]
+   [iota List.iota]
+   repet ; TODO undocumented
+   of
+   )
+  #:properties
+  ([first List.first
+          (lambda (e)
+            (syntax-local-static-info e #'#%index-result))]
+   [rest List.rest
+         (lambda (e)
+           (define maybe-index-result
+             (syntax-local-static-info e #'#%index-result))
+           (if maybe-index-result
+               #`((#%index-result #,maybe-index-result)
+                  . #,list-static-infos)
+               list-static-infos))]
+   )
+  #:methods
+  (length
+   reverse
+   append
+   drop_left
+   drop_right
+   has_element
+   remove
+   map
+   for_each
+   sort
+   ))
+
+(define-name-root NonemptyList
+  #:fields
+  ([of NonemptyList.of]))
 
 (define-binding-syntax List.cons
   (binding-transformer
@@ -81,52 +119,52 @@
                         #:annot-prefix? #f
                         list))])))))
 
+(set-primitive-contract! 'list? "List")
+
+(define (check-list who l)
+  (unless (list? l)
+    (raise-argument-error* who rhombus-realm "List" l)))
+
 (define/arity (List.cons a d)
+  #:inline
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))
+  (check-list who d)
   (cons a d))
 
-(define/arity (first l)
-  (unless (list? l) (raise-argument-error* 'List.first rhombus-realm "List" l))
+(define (check-nonempty-list who l)
+  (unless (and (pair? l) (list? l))
+    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
+
+(define/arity (List.first l)
+  #:inline
+  (check-nonempty-list who l)
   (car l))
 
-(define/arity (rest l)
+(define/arity (List.rest l)
+  #:inline
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
+  (check-nonempty-list who l)
   (cdr l))
 
-(define iota
-  (lambda (n)
-    (unless (exact-nonnegative-integer? n)
-      (raise-argument-error* 'List.iota rhombus-realm "NonnegInt" n))
-    (for/list ([i (in-range n)])
-      i)))
+(define (check-nonneg-int who n)
+  (unless (exact-nonnegative-integer? n)
+    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
 
-(define-static-info-syntax length
-  (#%function-arity 2))
+(define/arity (List.iota n)
+  #:static-infos ((#%call-result #,list-static-infos))
+  (check-nonneg-int who n)
+  (for/list ([i (in-range n)])
+    i))
 
-(define-static-info-syntax reverse
-  (#%function-arity 2))
+(define/method (List.length l)
+  #:inline
+  #:primitive (length)
+  (length l))
 
-(define-name-root List
-  #:fields
-  (length
-   [cons List.cons]
-   first
-   rest
-   [empty null]
-   reverse
-   iota
-   [map List.map]
-   [for_each List.for_each]
-   [sort List.sort]
-   [drop_left List.drop_left]
-   [drop_right List.drop_right]
-   [has_element List.has_element]
-   [remove List.remove]
-   repet
-   of
-   [append List.append]))
+(define/method (List.reverse l)
+  #:static-infos ((#%call-result #,list-static-infos))
+  (check-list who l)
+  (reverse l))
 
 (define-syntax List
   (expression-transformer
@@ -203,10 +241,6 @@
 (define (nonempty-list? l)
   (and (pair? l) (list? l)))
 
-(define-name-root NonemptyList
-  #:fields
-  ([of NonemptyList.of]))
-
 (define-annotation-constructor (NonemptyList NonemptyList.of)
   ()
   #'nonempty-list? list-static-infos
@@ -227,31 +261,6 @@
        v
        (lambda (v) (cons v lst))
        (lambda () #f))))
-
-(define-syntax list-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(length) (0ary #'length)]
-        [(first) (field (lambda (e reloc)
-                          (wrap-static-info* (reloc #`(car #,e))
-                                             (or (syntax-local-static-info e #'#%index-result)
-                                                 #'()))))]
-        [(rest) (field (lambda (e reloc)
-                         (wrap-static-info* (reloc #`(cdr #,e))
-                                            (datum->syntax #f
-                                                           (or (extract-static-infos e)
-                                                               '())))))]
-        [(reverse) (0ary #'reverse list-static-infos)]
-        [(map) (nary #'List.map 2 #'List.map list-static-infos)]
-        [(for_each) (nary #'List.for_each 2 #'List.for_each)]
-        [(sort) (nary #'List.sort 3 #'List.sort list-static-infos)]
-        [(drop_left) (nary #'List.drop_left 2 #'List.drop_left list-static-infos)]
-        [(drop_right) (nary #'List.drop_right 2 #'List.drop_right list-static-infos)]
-        [(has_element) (nary #'List.has_element 2 #'List.has_element #'())]
-        [(remove) (nary #'List.remove 2 #'List.remove list-static-infos)]
-        [else (fail-k)])))))
 
 (define-reducer-syntax List
   (reducer-transformer
@@ -289,67 +298,81 @@
                                       #f)
                 #'tail)]))))
 
-(define (check-repetition-list who v)
-  (unless (list? v)
-    (raise-argument-error who "List" v))
-  v)
+(define (check-repetition-list who l)
+  (check-list who l)
+  l)
 
-(define-static-info-syntax list
-  (#%call-result #,list-static-infos)
-  (#%function-arity -1))
+(define (check-function-of-arity n who proc)
+  (unless (and (procedure? proc)
+               (procedure-arity-includes? proc n))
+    (raise-argument-error* who rhombus-realm
+                           (string-append "Function.of_arity("
+                                          (number->string n)
+                                          ")")
+                           proc)))
 
-(define-static-info-syntax iota
-  (#%call-result #,list-static-infos)
-  (#%function-arity 2))
-
-(define/arity (List.map lst proc)
+(define/method (List.map lst proc)
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (procedure? proc)
-    (raise-argument-error* 'List.map rhombus-realm "Function" proc))
+  (check-list who lst)
+  (check-function-of-arity 1 who proc)
   (map proc lst))
 
-(define/arity (List.for_each lst proc)
-  (unless (procedure? proc)
-    (raise-argument-error* 'List.for_each rhombus-realm "Function" proc))
+(define/method (List.for_each lst proc)
+  (check-list who lst)
+  (check-function-of-arity 1 who proc)
   (for-each proc lst))
 
-(define/arity (List.sort lst [less-than? <])
+(define/method (List.sort lst [less-than? <])
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (and (procedure? less-than?)
-               (procedure-arity-includes? less-than? 2))
-    (raise-argument-error* 'List.sort rhombus-realm "Function.of_arity(2)" less-than?))
+  (check-list who lst)
+  (check-function-of-arity 2 who less-than?)
   (sort lst less-than?))
 
-(define/arity List.append
+;; only check that the *last* argument is list here
+(define/method List.append
+  #:inline
+  #:primitive (append)
   #:static-infos ((#%call-result #,list-static-infos))
   (case-lambda
     [() null]
     [(a)
-     (unless (list? a) (raise-argument-error* 'List.append rhombus-realm "List" a))
+     (check-list who a)
      a]
     [(a b)
-     (cond
-       [(list? b) (append a b)]
-       [else
-        (unless (list? a) (raise-argument-error* 'List.append rhombus-realm "List" a))
-        (raise-argument-error* 'List.append rhombus-realm "List" b)])]
+     (unless (list? b)
+       (check-list who a)
+       (raise-argument-error* who rhombus-realm "List" b))
+     (append a b)]
     [ls
-     (if (list? (let loop ([ls ls]) (if (pair? (cdr ls)) (loop (cdr ls)) (car ls))))
-         (apply append ls)
+     (let ([ln (let loop ([ls ls])
+                 (if (pair? (cdr ls)) (loop (cdr ls)) (car ls)))])
+       (unless (list? ln)
          (for ([l (in-list ls)])
-           (unless (list? l) (raise-argument-error* 'List.append rhombus-realm "List" l))))]))
+           (check-list who l))
+         (raise-argument-error* who rhombus-realm "List" ln)))
+     (apply append ls)]))
 
-(define/arity (List.drop_left l n)
+;; these primitives don't check for listness
+(define/arity (List.get l n)
+  #:inline
+  #:primitive (list-ref)
+  (check-list who l)
+  (list-ref l n))
+
+(define/method (List.drop_left l n)
+  #:inline
+  #:primitive (list-tail)
   #:static-infos ((#%call-result #,list-static-infos))
+  (check-list who l)
   (list-tail l n))
 
-(define/arity (List.drop_right l n)
+(define/method (List.drop_right l n)
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (list? l) (raise-argument-error* 'drop_right rhombus-realm "List" l))
-  (unless (exact-nonnegative-integer? n) (raise-argument-error* 'drop_right rhombus-realm "NonnegInt" n))
+  (check-list who l)
+  (check-nonneg-int who n)
   (define len (length l))
   (when (n . > . len)
-    (raise-arguments-error* 'drop_right rhombus-realm
+    (raise-arguments-error* who rhombus-realm
                             "list is shorter than the number of elements to drop"
                             "list length" len
                             "number to drop" n))
@@ -357,25 +380,14 @@
              [i (in-range 0 (- len n))])
     a))
 
-(define/arity (List.remove l n)
+(define/method (List.remove l v)
   #:static-infos ((#%call-result #,list-static-infos))
-  (remove n l equal-always?))
+  (check-list who l)
+  (remove v l equal-always?))
 
-(define/arity (List.has_element l n)
-  (and (member n l equal-always?) #t))
-
-(define list-method-table
-  (hash 'length (method1 length)
-        'first car
-        'rest cdr
-        'reverse (method1 reverse)
-        'drop_left (method2 List.drop_left)
-        'drop_right (method2 List.drop_right)
-        'has_element (method2 List.has_element)
-        'remove (method2 List.remove)
-        'append (method* List.append)
-        'map (method1 List.map)
-        'for_each (method1 List.for_each)))
+(define/method (List.has_element l v)
+  (check-list who l)
+  (and (member v l equal-always?) #t))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))

@@ -1,65 +1,72 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre
-                     syntax/stx
-                     "srcloc.rkt")
+(require (for-syntax racket/base)
          "provide.rkt"
          "composite.rkt"
-         "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "call-result-key.rkt"
-         "function-arity-key.rkt"
-         "name-root.rkt"
-         (submod "dot.rkt" for-dot-provider)
-         "parse.rkt"
-         "dot-parse.rkt"
-         "realm.rkt")
+         "define-arity.rkt"
+         "realm.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
                       rhombus/bind
-                      rhombus/annot)
+                      rhombus/annot
+                      rhombus/statinfo)
                      Pair))
 
 (module+ for-builtin
   (provide pair-method-table))
 
-(define pair-method-table
-  (hash 'first car
-        'rest cdr))
+(define-primitive-class Pair pair
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([cons Pair]
+   of
+   )
+  #:properties
+  ([first Pair.first
+          (lambda (e)
+            (syntax-local-static-info e #'car))]
+   [rest Pair.rest
+         (lambda (e)
+           (syntax-local-static-info e #'cdr))]
+   )
+  #:methods
+  ())
 
-(define-for-syntax pair-static-infos
-  #'((#%dot-provider pair-instance)))
+(set-primitive-contract! 'pair? "Pair")
 
-(define-for-syntax pair-binding
-  (make-composite-binding-transformer "Pair"
-                                      #'pair?
-                                      #:static-infos pair-static-infos
-                                      (list #'car #'cdr)
-                                      (list #'() #'())
-                                      #:accessor->info? #t))
+(define/arity (Pair a d)
+  #:inline
+  #:static-infos ((#%call-result #,pair-static-infos))
+  (cons a d))
 
-(define-binding-syntax cons (binding-transformer
-                             pair-binding))
+(define/arity (Pair.first p)
+  #:inline
+  #:primitive (car)
+  (car p))
 
-(define-name-root Pair
-  #:fields
-  (cons
-   [first car]
-   [rest cdr]
-   of))
-
-(define-syntax Pair
-  (expression-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(head . tail) (values (relocate-id #'head #'cons) #'tail)]))))
+(define/arity (Pair.rest p)
+  #:inline
+  #:primitive (cdr)
+  (cdr p))
 
 (define-binding-syntax Pair
   (binding-transformer
-   pair-binding))
+   (make-composite-binding-transformer "Pair"
+                                       #'pair?
+                                       #:static-infos pair-static-infos
+                                       (list #'car #'cdr)
+                                       (list #'() #'())
+                                       #:accessor->info? #t)))
 
 (define-annotation-constructor (Pair of)
   ()
@@ -83,22 +90,3 @@
         (lambda (d) (cons a d)))
        (lambda () #f))
      (lambda () #f)))
-
-(define-syntax pair-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(first) (field (lambda (x reloc) (add-info (reloc #`(car #,x)) x #'car)))]
-        [(rest) (field (lambda (x reloc) (add-info (reloc #`(cdr #,x)) x #'cdr)))]
-        [else #f])))))
-
-(define-for-syntax (add-info e on-e key)
-  (define result-static-infos (syntax-local-static-info on-e key))
-  (if result-static-infos
-      (wrap-static-info* e result-static-infos)
-      e))
-
-(define-static-info-syntax cons
-  (#%call-result #,pair-static-infos)
-  (#%function-arity 4))

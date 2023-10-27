@@ -1,15 +1,12 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre
-                     "srcloc.rkt")
+(require (for-syntax racket/base)
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
          "define-operator.rkt"
-         "static-info.rkt"
-         "mutability.rkt"
          (only-in "dot.rkt"
-                  |.|))
+                  |.|)
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -37,6 +34,8 @@
 
                      ===
                      is_now))
+
+(set-primitive-contract! 'number? "Number")
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus* rhombus/ div mod rem)
@@ -82,6 +81,8 @@
     #:same-as (rhombus> rhombus>= .= rhombus<=)
     #:stronger-than (\|\| &&)
     #:associate 'none))
+
+(set-primitive-who! '= '.=)
 
 (define-comp-infix rhombus< <)
 (define-comp-infix rhombus<= <=)

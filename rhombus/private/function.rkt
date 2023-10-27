@@ -1,29 +1,25 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     racket/syntax
                      syntax/parse/pre
-                     "srcloc.rkt"
-                     "consistent.rkt")
-         racket/unsafe/undefined
+                     "consistent.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
          "expression.rkt"
-         "annotation.rkt"
          "definition.rkt"
          "entry-point.rkt"
          "parse.rkt"
-         "name-root.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          "dotted-sequence-parse.rkt"
-         (submod "dot.rkt" for-dot-provider)
          "dot-parse.rkt"
          "realm.rkt"
-         "define-arity.rkt")
+         "define-arity.rkt"
+         "class-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -31,10 +27,7 @@
                      fun)
          (for-spaces (rhombus/namespace
                       rhombus/annot)
-                     Function)
-         (for-spaces (rhombus/statinfo)
-                     map
-                     (rename-out [for-each for_each])))
+                     Function))
 
 (module+ for-method
   (provide fun/read-only-property))
@@ -42,26 +35,59 @@
 (module+ for-builtin
   (provide function-method-table))
 
-(define-name-root Function
-  #:fields
+(define-primitive-class Function function
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  (of_arity
+   pass
+   )
+  #:properties
+  ()
+  #:methods
   (map
-   [for_each for-each]
-   of_arity
-   pass))
+   for_each
+   ))
 
-(define function-method-table
-  (hash 'map (lambda (f) (lambda lists (apply map f lists)))
-        'for_each (lambda (f) (lambda lists (apply for-each f lists)))))
+(define (check-proc who proc)
+  (unless (procedure? proc)
+    (raise-argument-error* who rhombus-realm "Function" proc)))
 
-(define-static-info-syntax map
-  (#%call-result #,list-static-infos)
-  (#%function-arity -2))
+(define (check-list who l)
+  (unless (list? l)
+    (raise-argument-error* who rhombus-realm "List" l)))
 
-(define-static-info-syntax for-each
-  (#%function-arity -2))
+(define-syntax (define-map stx)
+  (syntax-parse stx
+    [(_ Map map
+        (~optional (~seq #:static-infos static-infos)))
+     #:with method-name (datum->syntax #'Map (string->symbol (format "Function.~a" (syntax-e #'Map))))
+     #'(define/method method-name
+         (~? (~@ #:static-infos static-infos))
+         (case-lambda
+           [(fn lst)
+            (check-proc who fn)
+            (check-list who lst)
+            (map fn lst)]
+           [(fn lst1 lst2)
+            (check-proc who fn)
+            (check-list who lst1)
+            (check-list who lst2)
+            (map fn lst1 lst2)]
+           ;; TODO fix documented arity
+           [(fn lst1 . lsts)
+            (check-proc who fn)
+            (check-list who lst1)
+            (for ([lst (in-list lsts)])
+              (check-list who lst))
+            (apply map fn lst1 lsts)]))]))
 
-(define-for-syntax function-static-infos
-  #'((#%dot-provider function-instance)))
+(define-map map map
+  #:static-infos ((#%call-result #,list-static-infos)))
+(define-map for_each for-each)
 
 (define-for-syntax (wrap-function-static-info expr)
   (wrap-static-info* expr function-static-infos))
@@ -128,17 +154,6 @@
   (and (or (not allow)
            (kw-subset allow kws))
        (kw-subset kws req)))
-
-(define-for-syntax function-instance-proc
-  (dot-parse-dispatch
-   (lambda (field-sym field ary 0ary nary fail-k)
-     (case field-sym
-       [(map) (nary #'map -2 #'map)]
-       [(for_each) (nary #'for-each -2 #'for-each)]
-       [else (fail-k)]))))
-
-(define-syntax function-instance
-  (dot-provider function-instance-proc))
 
 (begin-for-syntax  
   (define (get-local-name who)
@@ -306,5 +321,4 @@
      pass)))
 
 (begin-for-syntax
-  (set-function-dot-provider! function-instance-proc))
-
+  (set-function-dot-provider! (dot-parse-dispatch function-dot-dispatch)))

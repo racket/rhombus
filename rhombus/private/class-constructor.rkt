@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "class-parse.rkt"
-                     "with-syntax.rkt")
+                     "with-syntax.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          racket/unsafe/undefined
          racket/stxparam
          "call-result-key.rkt"
@@ -272,7 +273,7 @@
     [(_ name predicate-id (parsed #:rhombus/expr e) stx-params)
      #'(with-syntax-parameters stx-params e)]
     [(_ name predicate-id (block g) stx-params)
-     (define adjustments (entry_point_meta.Adjustment
+     (define adjustments (entry-point-adjustment
                           '()
                           (lambda (arity body)
                             #`(parsed

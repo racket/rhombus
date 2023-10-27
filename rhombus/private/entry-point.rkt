@@ -5,9 +5,7 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "macro-result.rkt"
-                     "dot-property.rkt"
-                     "realm.rkt")
+                     "macro-result.rkt")
          "enforest.rkt")
 
 (module+ for-class
@@ -19,9 +17,7 @@
   (provide (property-out entry-point-transformer)
            :entry-point
            :entry-point-arity
-           (struct-out entry_point_meta.Adjustment)
-           check-entry-point-arity-result
-           no-adjustments)
+           check-entry-point-arity-result)
 
   (property entry-point-transformer transformer (arity-extract))
 
@@ -45,22 +41,6 @@
     (datum->syntax #f form))
 
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))
-
-  (struct entry_point_meta.Adjustment (prefix-arguments wrap-body method?)
-    #:property prop:field-name->accessor
-    (list* null
-           (hasheq 'prefix_arguments (lambda (a) (entry_point_meta.Adjustment-prefix-arguments a))
-                   'wrap_body (lambda (a) (entry_point_meta.Adjustment-wrap-body a))
-                   'is_method (lambda (a) (entry_point_meta.Adjustment-method? a)))
-           #hasheq())
-    #:guard (lambda (args wrap is-method? info)
-              (unless (and (list? args) (andmap identifier? args))
-                (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "List.of(Identifier)" args))
-              (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
-                (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Function.of_arity(2)" wrap))
-              (values args wrap (and is-method? #t))))
-    
-  (define no-adjustments (entry_point_meta.Adjustment '() (lambda (arity stx) stx) #f))
   
   (define-rhombus-transform
     #:syntax-class (:entry-point adjustments)

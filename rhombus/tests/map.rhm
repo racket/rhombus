@@ -22,7 +22,7 @@ check:
 
 check:
   Map.length({1, 2, 3})
-  ~raises values("contract violation", "expected: Map")
+  ~raises values("contract violation", "expected: ReadableMap")
 
 block:
   use_static

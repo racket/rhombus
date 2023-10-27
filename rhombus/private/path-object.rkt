@@ -1,11 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre)
+(require (for-syntax racket/base)
          "provide.rkt"
          "class-primitive.rkt"
-         "dot-parse.rkt"
          "realm.rkt"
-         "function-arity-key.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
          (submod "string.rkt" static-infos)
@@ -23,37 +20,37 @@
 (module+ for-static-info
   (provide (for-syntax path-static-infos)))
 
-(define path
-  (let ([Path (lambda (c)
-                (cond
-                  [(path? c) c]
-                  [(bytes? c) (bytes->path c)]
-                  [(string? c) (string->path c)]
-                  [else (raise-argument-error* 'Path
-                                               rhombus-realm
-                                               "String || Bytes || Path"
-                                               c)]))])
-    Path))
-
-(define/arity #:name Path.bytes (path-bytes s)
-  #:static-infos ((#%call-result #,bytes-static-infos))
-  (bytes->immutable-bytes (path->bytes s)))
-
-(define/arity #:name Path.string (path-string s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (path->string s)))
-
-(define path-bytes/method (method1 path-bytes))
-(define path-string/method (method1 path-string))
-
 (define-primitive-class Path path
-  #:constructor-static-info ()
+  #:lift-declaration
+  #:no-constructor-static-info
   #:existing
   #:translucent
   #:fields
-  ([bytes ()])
+  ([bytes Path.bytes #,bytes-static-infos])
   #:properties
   ()
   #:methods
-  ([bytes 1 path-bytes path-bytes/method bytes-static-infos]
-   [string 1 path-string path-string/method string-static-infos]))
+  (bytes
+   string
+   ))
+
+(define/arity #:name Path (path c)
+  #:static-infos ((#%call-result #,path-static-infos))
+  (cond
+    [(path? c) c]
+    [(bytes? c) (bytes->path c)]
+    [(string? c) (string->path c)]
+    [else (raise-argument-error* who rhombus-realm
+                                 "String || Bytes || Path" c)]))
+
+(define/method (Path.bytes s)
+  #:inline
+  #:primitive (path->bytes)
+  #:static-infos ((#%call-result #,bytes-static-infos))
+  (bytes->immutable-bytes (path->bytes s)))
+
+(define/method (Path.string s)
+  #:inline
+  #:primitive (path->string)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (string->immutable-string (path->string s)))

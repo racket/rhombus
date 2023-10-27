@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "tag.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          syntax/parse/pre
          "provide.rkt"
          "name-root.rkt"

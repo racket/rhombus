@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "tag.rkt"
                      "with-syntax.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          "parse.rkt"
          "entry-point.rkt"
          "pack.rkt"

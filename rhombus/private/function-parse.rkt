@@ -12,14 +12,14 @@
                      "with-syntax.rkt"
                      "tag.rkt"
                      "same-expression.rkt"
-                     "static-info-pack.rkt")
+                     "static-info-pack.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          racket/unsafe/undefined
          "provide.rkt"
          "parens.rkt"
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
-         "entry-point.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
          "name-root.rkt"
@@ -337,7 +337,7 @@
     #:attributes [kwarg kwparsed]
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind a ...))
-             #:with kwarg::non-...-binding #`(#,group-tag rest-bind #,map-static-info
+             #:with kwarg::non-...-binding #`(#,group-tag rest-bind #,map-static-infos
                                               #:annot-prefix? #f
                                               (#,group-tag a ...))
              #:with kwparsed #'kwarg.parsed
@@ -450,7 +450,7 @@
           (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))
           (define body
             (wrap-expression
-             ((entry_point_meta.Adjustment-wrap-body adjustments)
+             ((entry-point-adjustment-wrap-body adjustments)
               arity
               #`(parsed
                  #:rhombus/expr
@@ -467,7 +467,7 @@
                      #,function-name #,converter #f
                      (rhombus-body-expression rhs))))))))
           (define (adjust-args args)
-            (append (entry_point_meta.Adjustment-prefix-arguments adjustments)
+            (append (entry-point-adjustment-prefix-arguments adjustments)
                     args))
           (values
            (relocate+reraw
@@ -503,7 +503,7 @@
        (map fcase kwss argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds converters rhss)))
     (define pos-arity
       (normalize-arity
-       (let ([adj (length (entry_point_meta.Adjustment-prefix-arguments adjustments))])
+       (let ([adj (length (entry-point-adjustment-prefix-arguments adjustments))])
          (for/list ([n+same (in-list n+sames)])
            (define n (car n+same))
            (cond
@@ -556,7 +556,7 @@
                              [maybe-kwrest-tmp-use (if kws?
                                                        #'kwrest-tmp
                                                        #''#hashalw())])
-                 #`[(#,@(entry_point_meta.Adjustment-prefix-arguments adjustments) pos-arg-id ...)
+                 #`[(#,@(entry-point-adjustment-prefix-arguments adjustments) pos-arg-id ...)
                     maybe-rest-tmp ... maybe-kwrest-tmp ...
                     #,(let loop ([same same])
                         (cond
@@ -627,7 +627,7 @@
                                           maybe-bind-kwrest-seq ...
                                           maybe-bind-kwrest ...
                                           #,(wrap-expression
-                                             ((entry_point_meta.Adjustment-wrap-body adjustments)
+                                             ((entry-point-adjustment-wrap-body adjustments)
                                               (summarize-arity (fcase-kws fc) (for/list ([kw (in-list (fcase-kws fc))])
                                                                                 #'#f)
                                                                (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))

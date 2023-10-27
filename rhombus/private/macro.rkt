@@ -6,7 +6,8 @@
                      "macro-rhs.rkt"
                      "operator-parse.rkt"
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          syntax/parse/pre
          "provide.rkt"
          "macro-expr-parse.rkt"

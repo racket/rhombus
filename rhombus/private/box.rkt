@@ -1,23 +1,15 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre
-                     "srcloc.rkt")
+(require (for-syntax racket/base)
          "provide.rkt"
-         "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
          "define-arity.rkt"
-         "index-key.rkt"
          "call-result-key.rkt"
-         "index-result-key.rkt"
          "composite.rkt"
-         "op-literal.rkt"
-         "name-root.rkt"
-         "dot-parse.rkt"
-         "realm.rkt"
-         "mutability.rkt")
+         "mutability.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -33,17 +25,39 @@
   (provide box-method-table
            box-mutator-method-table))
 
-(define-for-syntax box-static-infos
-  #'((#%dot-provider box-instance)))
-
-(define-name-root Box
-  #:fields
+(define-primitive-class Box box
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
   (now_of
-   later_of))
+   later_of
+   )
+  #:properties
+  ;; TODO undocumented (as function)
+  ([value Box.value #:mutator Box.value
+          (lambda (e)
+            (syntax-local-static-info e #'unbox))]
+   )
+  #:methods
+  ())
+
+(set-primitive-contract! 'box? "Box")
+(set-primitive-contract! '(and/c box? (not/c immutable?)) "MutableBox")
 
 (define/arity (Box v)
+  #:inline
   #:static-infos ((#%call-result #,box-static-infos))
   (box v))
+
+(define/arity Box.value
+  #:inline
+  #:primitive (unbox set-box!)
+  (case-lambda
+    [(b) (unbox b)]
+    [(b v) (set-box! b v)]))
 
 (define-binding-syntax Box
   (binding-transformer
@@ -93,24 +107,3 @@
 
 (define-annotation-syntax MutableBox (identifier-annotation #'mutable-box? box-static-infos))
 (define-annotation-syntax ImmutableBox (identifier-annotation #'immutable-box? box-static-infos))
-
-(define box-method-table
-  (hash 'value unbox))
-
-(define box-mutator-method-table
-  (hash 'value set-box!))
-
-(define-syntax box-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(value) (field (lambda (x reloc) (add-info (reloc #`(unbox #,x)) x #'unbox))
-                        (lambda (x v reloc) (reloc #`(set-box! #,x #,v))))]
-        [else (fail-k)])))))
-
-(define-for-syntax (add-info e on-e key)
-  (define result-static-infos (syntax-local-static-info on-e key))
-  (if result-static-infos
-      (wrap-static-info* e result-static-infos)
-      e))

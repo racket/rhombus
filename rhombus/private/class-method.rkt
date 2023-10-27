@@ -8,7 +8,8 @@
                      "interface-parse.rkt"
                      "tag.rkt"
                      "srcloc.rkt"
-                     "statically-str.rkt")
+                     "statically-str.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          racket/stxparam
          "expression.rkt"
          "parse.rkt"
@@ -831,7 +832,7 @@
      (with-continuation-mark
       syntax-parameters-key #'stx-params
       (syntax-parse #'expr
-        [(~var e (:entry-point (entry_point_meta.Adjustment
+        [(~var e (:entry-point (entry-point-adjustment
                                 (list #'this-obj)
                                 (lambda (arity stx)
                                   #`(parsed

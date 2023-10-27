@@ -1,11 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          syntax/parse/pre
          "pack.rkt"
          "macro-rhs.rkt"
-         "entry-point.rkt"
          "macro-macro.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
@@ -60,7 +60,7 @@
 (define-for-syntax (expose-arity adjustments e)
   (wrap-static-info e
                     #'#%function-arity
-                    #`(#,(+ 1 (length (entry_point_meta.Adjustment-prefix-arguments adjustments)))
+                    #`(#,(+ 1 (length (entry-point-adjustment-prefix-arguments adjustments)))
                        ()
                        ())))
 
