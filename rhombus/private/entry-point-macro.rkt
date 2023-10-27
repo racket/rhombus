@@ -10,8 +10,7 @@
                      "entry-point-adjustment.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
-         (except-in "entry-point.rkt"
-                    entry_point_meta.Adjustment)
+         "entry-point.rkt"
          "space.rkt"
          "name-root.rkt"
          "macro-macro.rkt"
@@ -35,7 +34,7 @@
 (define-identifier-syntax-definition-transformer macro
   rhombus/entry_point
   #:extra ([#:mode (quote-syntax ()) value]
-           [#:adjustment entry_point_meta.Adjustment-static-infos value])
+           [#:adjustment entry-point-adjustment-static-infos value])
   #'make-entry-point-transformer)
 
 (begin-for-syntax

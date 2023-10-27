@@ -1,5 +1,6 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse/pre)
          racket/symbol
          racket/keyword
          "provide.rkt"
@@ -15,13 +16,13 @@
          "index-key.rkt"
          "append-key.rkt"
          "define-arity.rkt"
-         "name-root.rkt"
          "static-info.rkt"
-         "dot-parse.rkt"
-         (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
          "mutability.rkt"
-         "pack.rkt")
+         "pack.rkt"
+         "define-arity.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -43,13 +44,82 @@
 (module+ static-infos
   (provide (for-syntax string-static-infos)))
 
-(define-for-syntax string-static-infos
-  #'((#%dot-provider string-instance)
-     (#%index-get string-ref)
-     (#%append string-append-immutable)))
+(define-for-syntax any-string-static-infos
+  #'((#%index-get String.get)
+     (#%append String.append)))
+
+(define-primitive-class ReadableString readable-string
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,any-string-static-infos
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  (;; `to_string` is in "string.rhm"
+   #:no-methods)
+  #:properties
+  ()
+  #:methods
+  ([length String.length]
+   [append String.append] ; TODO undocumented
+   [substring String.substring]
+   [utf8_bytes String.utf8_bytes]
+   [latin1_bytes String.latin1_bytes]
+   [locale_bytes String.locale_bytes]
+   [to_int String.to_int]
+   [to_number String.to_number]
+   [to_string String.to_string]
+   [upcase String.upcase]
+   [downcase String.downcase]
+   [foldcase String.foldcase]
+   [titlecase String.titlecase]
+   [normalize_nfd String.normalize_nfd]
+   [normalize_nfkd String.normalize_nfkd]
+   [normalize_nfc String.normalize_nfc]
+   [normalize_nfkc String.normalize_nfkc]
+   ;; TODO undocumented (as dot methods)
+   [grapheme_span String.grapheme_span]
+   [grapheme_count String.grapheme_count]
+   ))
+
+(define-primitive-class String string
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,any-string-static-infos
+  #:existing
+  #:opaque
+  #:parent #f readable-string
+  #:fields ()
+  #:namespace-fields
+  ([to_string String.to_string]
+   [append String.append] ; TODO undocumented
+   [length String.length]
+   [substring String.substring]
+   [utf8_bytes String.utf8_bytes]
+   [latin1_bytes String.latin1_bytes]
+   [locale_bytes String.locale_bytes]
+   [to_int String.to_int]
+   [to_number String.to_number]
+   [to_string String.to_string]
+   [upcase String.upcase]
+   [downcase String.downcase]
+   [foldcase String.foldcase]
+   [titlecase String.titlecase]
+   [normalize_nfd String.normalize_nfd]
+   [normalize_nfkd String.normalize_nfkd]
+   [normalize_nfc String.normalize_nfc]
+   [normalize_nfkc String.normalize_nfkc]
+   [grapheme_span String.grapheme_span]
+   [grapheme_count String.grapheme_count]
+   )
+  #:properties
+  ()
+  #:methods
+  ())
 
 (define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
-(define-annotation-syntax ReadableString (identifier-annotation #'string? string-static-infos))
+(define-annotation-syntax ReadableString (identifier-annotation #'string? readable-string-static-infos))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)
@@ -61,8 +131,12 @@
 
 (define/arity (to_string a #:mode [mode 'text])
   #:static-infos ((#%call-result #,string-static-infos))
-  (cond
-    [(eq? mode 'text)
+  (define (print-to-string a print)
+    (define o (open-output-string))
+    (print a o)
+    (string->immutable-string (get-output-string o)))
+  (case mode
+    [(text)
      (cond
        [(string? a) (string->immutable-string a)]
        [(symbol? a) (symbol->immutable-string a)]
@@ -73,166 +147,126 @@
                     t)))
         => (lambda (t)
              (symbol->immutable-string (syntax-e t)))]
-       [else
-        (define o (open-output-string))
-        (rhombus:display a o)
-        (string->immutable-string (get-output-string o))])]
-    [(eq? mode 'expr)
-     (define o (open-output-string))
-     (rhombus:print a o)
-     (string->immutable-string (get-output-string o))]
+       [else (print-to-string a rhombus:display)])]
+    [(expr)
+     (print-to-string a rhombus:print)]
     [else
-     (raise-argument-error* 'to_string rhombus-realm "#'text || #'expr" mode)]))
+     ;; TODO correct this annotation (and in `print{,ln}`)
+     (raise-argument-error* who rhombus-realm "#'text || #'expr" mode)]))
 
-(define/arity (String.to_string s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (cond
-    [(string? s) (string->immutable-string s)]
-    [else (raise-argument-error* 'String.to_string rhombus-realm "String" s)]))
-  
-(define-name-root String
-  #:fields
-  ([length string-length]
-   to_int
-   to_number
-   [substring sub_string]
-   [append string-append-immutable]
-   upcase
-   downcase
-   foldcase
-   titlecase
-   normalize_nfd
-   normalize_nfkd
-   normalize_nfc
-   normalize_nfkc
-   utf8_bytes
-   latin1_bytes
-   locale_bytes
-   grapheme_span
-   grapheme_count
-   [to_string String.to_string]))
+(set-primitive-contract! 'string? "ReadableString")
 
-(define/arity (to_int s)
+(define (check-readable-string who s)
   (unless (string? s)
-    (raise-argument-error* 'to_int rhombus-realm "String" s))
+    (raise-argument-error* who rhombus-realm "ReadableString" s)))
+
+(define/arity (String.get s i)
+  #:inline
+  #:primitive (string-ref)
+  (string-ref s i))
+
+(define/method (String.length s)
+  #:inline
+  #:primitive (string-length)
+  (string-length s))
+
+(define/method (String.to_string s)
+  #:inline
+  #:primitive (string->immutable-string)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (string->immutable-string s))
+
+(define/method (String.to_int s)
+  (check-readable-string who s)
   (define n (string->number s))
   (and (exact-integer? n)
        n))
 
-(define/arity (to_number s)
-  (unless (string? s)
-    (raise-argument-error* 'to_number rhombus-realm "String" s))
+(define/method (String.to_number s)
+  (check-readable-string who s)
   (string->number s))
 
-(define/arity #:name substring (sub_string str [start 0] [end (and (string? str) (string-length str))])
+(define/method (String.substring str [start 0] [end (and (string? str) (string-length str))])
+  #:inline
+  #:primitive (substring)
   #:static-infos ((#%call-result #,string-static-infos))
   (string->immutable-string (substring str start end)))
 
-(define-static-info-syntax string-append-immutable
-  (#%call-result #,string-static-infos))
+(define/method String.append
+  #:inline
+  #:primitive (string-append-immutable)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (case-lambda
+    [() ""]
+    [(s) s]
+    [(str1 str2) (string-append-immutable str1 str2)]
+    [strs (apply string-append-immutable strs)]))
 
-(define/arity (upcase s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-upcase s)))
-(define/arity (downcase s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-downcase s)))
-(define/arity (foldcase s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-foldcase s)))
-(define/arity (titlecase s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-titlecase s)))
+(define-syntax (define-upcase stx)
+  (syntax-parse stx
+    [(_ upcase)
+     #:do [(define (format-name fmt)
+             (datum->syntax #'upcase (string->symbol (format fmt (syntax-e #'upcase)))))]
+     #:with method-name (format-name "String.~a")
+     #:with fn-name (format-name "string-~a")
+     #'(define/method (method-name s)
+         #:inline
+         #:primitive (fn-name)
+         #:static-infos ((#%call-result #,string-static-infos))
+         (string->immutable-string (fn-name s)))]))
 
-(define/arity (normalize_nfd s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-normalize-nfd s)))
-(define/arity (normalize_nfkd s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-normalize-nfkd s)))
-(define/arity (normalize_nfc s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-normalize-nfc s)))
-(define/arity (normalize_nfkc s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (string-normalize-nfkc s)))
+(define-upcase upcase)
+(define-upcase downcase)
+(define-upcase titlecase)
+(define-upcase foldcase)
 
-(define/arity (utf8_bytes s [err-byte #f] [start 0] [end (and (string? s) (string-length s))])
-  #:static-infos ((#%call-result #,indirect-bytes-static-infos))
-  (bytes->immutable-bytes (string->bytes/utf-8 s err-byte start end)))
-(define/arity (latin1_bytes s [err-byte #f] [start 0] [end (and (string? s) (string-length s))])
-  #:static-infos ((#%call-result #,indirect-bytes-static-infos))
-  (bytes->immutable-bytes (string->bytes/latin-1 s err-byte start end)))
-(define/arity (locale_bytes s [err-byte #f] [start 0] [end (and (string? s) (string-length s))])
-  #:static-infos ((#%call-result #,indirect-bytes-static-infos))
-  (bytes->immutable-bytes (string->bytes/locale s err-byte start end)))
+(define-syntax (define-normalize stx)
+  (syntax-parse stx
+    [(_ nfd)
+     #:do [(define (format-name fmt)
+             (datum->syntax #'nfd (string->symbol (format fmt (syntax-e #'nfd)))))]
+     #:with method-name (format-name "String.normalize_~a")
+     #:with fn-name (format-name "string-normalize-~a")
+     #'(define/method (method-name s)
+         #:inline
+         #:primitive (fn-name)
+         #:static-infos ((#%call-result #,string-static-infos))
+         (string->immutable-string (fn-name s)))]))
 
-(define/arity (grapheme_span s [start 0] [end (and (string? s) (string-length s))])
-  (string-grapheme-span s start end))
-(define/arity (grapheme_count s [start 0] [end (and (string? s) (string-length s))])
-  (string-grapheme-count s start end))
+(define-normalize nfd)
+(define-normalize nfkd)
+(define-normalize nfc)
+(define-normalize nfkc)
 
-(define string-method-table
-  (hash 'length (method1 string-length)
-        'to_int (method1 to_int)
-        'to_number (method1 to_number)
-        'to_string (method1 String.to_string)
-        'substring (lambda (str)
-                     (lambda (start [end (and (string? str) (string-length str))])
-                       (string->immutable-string (substring str start end))))
-        'append (lambda (str)
-                  (let ([append (lambda strs
-                                  (apply string-append-immutable str strs))])
-                    append))
-        'upcase (method1 upcase)
-        'downcase (method1 downcase)
-        'foldcase (method1 foldcase)
-        'titlecase (method1 titlecase)
-        'normalize_nfd (method1 normalize_nfd)
-        'normalize_nfkd (method1 normalize_nfkd)
-        'normalize_nfc (method1 normalize_nfc)
-        'normalize_nfkc (method1 normalize_nfkc)
-        'utf8_bytes (lambda (str)
-                      (lambda ([err-byte #f] [start 0] [end (and (string? str) (string-length str))])
-                        (bytes->immutable-bytes (string->bytes/utf-8 str err-byte start end))))
-        'latin1_bytes (lambda (str)
-                        (lambda ([err-byte #f] [start 0] [end (and (string? str) (string-length str))])
-                          (bytes->immutable-bytes (string->bytes/latin-1 str err-byte start end))))
-        'locale_bytes (lambda (str)
-                        (lambda ([err-byte #f] [start 0] [end (and (string? str) (string-length str))])
-                          (bytes->immutable-bytes (string->bytes/locale str err-byte start end))))
-        'grapheme_span (lambda (str)
-                         (lambda (start [end (and (string? str) (string-length str))])
-                           (string-grapheme-span str start end)))
-        'grapheme_count (lambda (str)
-                          (lambda (start [end (and (string? str) (string-length str))])
-                            (string-grapheme-count str start end)))))
+(define-syntax (define-bytes stx)
+  (syntax-parse stx
+    [(_ utf8 utf-8)
+     #:with method-name (datum->syntax #'utf8 (string->symbol (format "String.~a_bytes" (syntax-e #'utf8))))
+     #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "string->bytes/~a" (syntax-e #'utf-8))))
+     #'(define/method (method-name str [err-byte #f] [start 0] [end (and (string? str) (string-length str))])
+         #:inline
+         #:primitive (fn-name)
+         #:static-infos ((#%call-result #,indirect-bytes-static-infos))
+         (bytes->immutable-bytes (fn-name str err-byte start end)))]))
 
-(define-syntax string-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(length) (0ary #'string-length)]
-        [(to_int) (0ary #'to_int)]
-        [(to_number) (0ary #'to_number)]
-        [(to_string) (0ary #'String.to_string)]
-        [(substring) (nary #'sub_string 6 #'sub_string string-static-infos)]
-        [(append) (nary #'string-append-immutable -2 #'string-append-immutable string-static-infos)]
-        [(upcase) (0ary #'upcase)]
-        [(downcase) (0ary #'downcase)]
-        [(foldcase) (0ary #'foldcase)]
-        [(titlecase) (0ary #'titlecase)]
-        [(normalize_nfd) (0ary #'normalize_nfd)]
-        [(normalize_nfkd) (0ary #'normalize_nfkd)]
-        [(normalize_nfc) (0ary #'normalize_nfc)]
-        [(normalize_nfkc) (0ary #'normalize_nfkc)]
-        [(utf8_bytes) (nary #'utf8_bytes 15 #'utf8_bytes indirect-bytes-static-infos)]
-        [(latin1_bytes) (nary #'utf8_bytes 15 #'latin1_bytes indirect-bytes-static-infos)]
-        [(locale_bytes) (nary #'utf8_bytes 15 #'locale_bytes indirect-bytes-static-infos)]
-        [(grapheme_span) (nary #'grapheme_span 6 #'grapheme_span)]
-        [(grapheme_count) (nary #'grapheme_count 6 #'grapheme_count)]
-        [else (fail-k)])))))
+(define-bytes utf8 utf-8)
+(define-bytes latin1 latin-1)
+(define-bytes locale locale)
+
+(define-syntax (define-grapheme stx)
+  (syntax-parse stx
+    [(_ span)
+     #:do [(define (format-name fmt)
+             (datum->syntax #'span (string->symbol (format fmt (syntax-e #'span)))))]
+     #:with method-name (format-name "String.grapheme_~a")
+     #:with fn-name (format-name "string-grapheme-~a")
+     #'(define/method (method-name str [start 0] [end (and (string? str) (string-length str))])
+         #:inline
+         #:primitive (fn-name)
+         (fn-name str start end))]))
+
+(define-grapheme span)
+(define-grapheme count)
 
 (begin-for-syntax
   (install-static-infos! 'string string-static-infos))

@@ -20,13 +20,12 @@
   (provide get-exn-method-table))
 
 (define-primitive-class Exn exn
-  #:constructor-static-info ()
   #:existing
   #:class
   #:transparent
   #:fields
-  ([message ()]
-   [(continuation-marks marks) ()])
+  ([(message)]
+   [(marks continuation-marks)])
   #:namespace-fields
   (Fail
    Break)
@@ -40,7 +39,6 @@
                       #:fields (field ...)
                       #:children (child ...))
   (define-primitive-class Name name
-    #:constructor-static-info ()
     #:existing
     #:class
     #:transparent
@@ -97,13 +95,13 @@
 
 (define-exn Variable exn:fail:contract:variable
   #:parent Contract exn:fail:contract
-  #:fields ([id ()])
+  #:fields ([(id)])
   #:children ())
 
 (define-exn Syntax exn:fail:syntax
   #:parent Fail exn:fail
-  #:fields ([exprs ((#%index-result #,syntax-static-infos)
-                    . #,list-static-infos)])
+  #:fields ([(exprs) ((#%index-result #,syntax-static-infos)
+                      . #,list-static-infos)])
   #:children (Unbound
               MissingModule))
 
@@ -114,13 +112,13 @@
 
 (define-exn MissingModule exn:fail:syntax:missing-module
   #:parent Syntax exn:fail:syntax
-  #:fields ([path ()])
+  #:fields ([(path)])
   #:children ())
 
 (define-exn Read exn:fail:read
   #:parent Fail exn:fail
-  #:fields ([srclocs ((#%index-result #,srcloc-static-infos)
-                      . #,list-static-infos)])
+  #:fields ([(srclocs) ((#%index-result #,srcloc-static-infos)
+                        . #,list-static-infos)])
   #:children (EOF
               NonChar))
 
@@ -154,12 +152,12 @@
 
 (define-exn Errno exn:fail:filesystem:errno
   #:parent Filesystem exn:fail:filesystem
-  #:fields ([errno ()])
+  #:fields ([(errno)])
   #:children ())
 
 (define-exn fs_MissingModule exn:fail:filesystem:missing-module
   #:parent Filesystem exn:fail:filesystem
-  #:fields ([path ()])
+  #:fields ([(path)])
   #:children ())
 
 (define-exn Network exn:fail:network
@@ -169,7 +167,7 @@
 
 (define-exn new_Errno exn:fail:network:errno
   #:parent Network exn:fail:network
-  #:fields ([errno ()])
+  #:fields ([(errno)])
   #:children ())
 
 (define-exn OutOfMemory exn:fail:out-of-memory
@@ -189,7 +187,7 @@
 
 (define-exn Break exn:break
   #:parent Exn exn
-  #:fields ([continuation ()])
+  #:fields ([(continuation)])
   #:children (HangUp
               Terminate))
 

@@ -13,9 +13,7 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "dot.rkt" for-dot-provider)
          (submod "list.rkt" for-compound-repetition)
-         "name-root.rkt"
          "static-info.rkt"
          "reducer.rkt"
          "index-key.rkt"
@@ -28,7 +26,6 @@
          "literal.rkt"
          "realm.rkt"
          "setmap-parse.rkt"
-         "dot-parse.rkt"
          "parens.rkt"
          "composite.rkt"
          "define-arity.rkt"
@@ -36,6 +33,8 @@
          "op-literal.rkt"
          "hash-snapshot.rkt"
          "mutability.rkt"
+         "define-arity.rkt"
+         "class-primitive.rkt"
          "rest-bind.rkt")
 
 (provide (for-spaces (rhombus/namespace
@@ -72,7 +71,7 @@
            mutable-set-method-table))
 
 (module+ for-info
-  (provide (for-syntax set-static-info)
+  (provide (for-syntax set-static-infos)
            Set-build))
 
 (module+ for-build
@@ -92,6 +91,72 @@
   (lambda (s)
     (in-set s)))
 
+(define-for-syntax any-set-static-infos
+  #'((#%index-get set-member?)
+     (#%sequence-constructor in-set)))
+
+(define-primitive-class ReadableSet readable-set
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,any-set-static-infos
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([empty empty-readable-set]
+   #:no-methods)
+  #:properties
+  ()
+  #:methods
+  ([length Set.length]
+   [to_list Set.to_list]
+   [copy Set.copy]
+   [snapshot Set.snapshot]
+   ))
+
+(define-primitive-class Set set
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info ((#%append set-append)
+                          . #,any-set-static-infos)
+  #:existing
+  #:opaque
+  #:parent #f readable-set
+  #:fields ()
+  #:namespace-fields
+  ([empty empty-set]
+   [length Set.length]
+   [to_list Set.to_list]
+   [copy Set.copy]
+   [snapshot Set.snapshot]
+   of
+   )
+  #:properties
+  ()
+  #:methods
+  (append
+   union
+   intersect
+   remove
+   ))
+
+(define-primitive-class MutableSet mutable-set
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info ((#%index-set set-member!)
+                          . #,any-set-static-infos)
+  #:existing
+  #:opaque
+  #:parent #f readable-set
+  #:fields ()
+  #:namespace-fields
+  ()
+  #:properties
+  ()
+  #:methods
+  (delete
+   ))
+
 (define (immutable-set? v) (and (set? v) (immutable-hash? (set-ht v))))
 (define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
 
@@ -103,42 +168,13 @@
       (hash-set! (set-ht s) v #t)
       (hash-remove! (set-ht s) v)))
 
-(define/arity #:name Set.length (set-count s)
-  (unless (set? s) (raise-argument-error* 'Set.length rhombus-realm "ReadableSet" s))
+(define (check-readable-set who s)
+  (unless (set? s)
+    (raise-argument-error* who rhombus-realm "ReadableSet" s)))
+
+(define/method (Set.length s)
+  (check-readable-set who s)
   (hash-count (set-ht s)))
-
-(define-for-syntax readable-set-instance-dispatch
-  (lambda (field-sym field ary 0ary nary fail-k)
-    (case field-sym
-      [(length) (0ary #'set-count)]
-      [(copy) (0ary #'Set.copy mutable-set-static-info)]
-      [(snapshot) (0ary #'Set.snapshot set-static-info)]
-      [(to_list) (nary #'Set.to_list 3 #'Set.to_list list-static-infos)]
-      [else (fail-k)])))
-
-(define-syntax readable-set-instance
-  (dot-provider
-   (dot-parse-dispatch
-    readable-set-instance-dispatch)))
-
-(define-syntax set-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(append) (nary #'Set.append -1 #'Set.append set-static-info)]
-        [(union) (nary #'Set.union -1 #'Set.union set-static-info)]
-        [(intersect) (nary #'Set.intersect -1 #'Set.intersect set-static-info)]
-        [(remove) (nary #'Set.remove 2 #'Set.remove set-static-info)]
-        [else (readable-set-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
-
-(define-syntax mutable-set-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(delete) (nary #'MutableSet.delete 2 #'MutableSet.delete)]
-        [else (readable-set-instance-dispatch field-sym field ary 0ary nary fail-k)])))))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -156,7 +192,7 @@
 
 (define (set->list s) (hash-keys (set-ht s)))
 
-(define-syntaxes (empty-set empty-set-view)
+(define-syntaxes (empty-set empty-readable-set)
   (let ([t (expression-transformer
             (lambda (stx)
               (syntax-parse stx
@@ -172,7 +208,7 @@
         (values (binding-form #'empty-set-infoer hash?-id) #'tail)]))))
 
 (define-binding-syntax empty-set (make-empty-set-binding #'immutable-hash?))
-(define-binding-syntax empty-set-view (make-empty-set-binding #'hash?))
+(define-binding-syntax empty-readable-set (make-empty-set-binding #'hash?))
 
 (define-syntax (empty-set-infoer stx)
   (syntax-parse stx
@@ -202,7 +238,7 @@
          (reducer/no-break #'build-set-reduce
                            #'([ht #hashalw()])
                            #'build-set-add
-                           set-static-info
+                           set-static-infos
                            #'ht)
          #'tail)]))))
 
@@ -229,7 +265,7 @@
                             #'set-extend*
                             #'set-append
                             #'set-assert
-                            set-static-info
+                            set-static-infos
                             #:repetition? repetition?
                             #:list->setmap #'list->set))
              #'tail)]
@@ -237,27 +273,6 @@
                             (identifier-repetition-use #'Set-build*)
                             #'Set-build*)
                         #'tail)]))
-
-(define-name-root Set
-  #:fields
-  ([empty empty-set]
-   [length set-count]
-   [append Set.append]
-   [union Set.union]
-   [intersect Set.intersect]
-   [remove Set.remove]
-   [to_list Set.to_list]
-   [copy Set.copy]
-   [snapshot Set.snapshot]
-   of))
-
-(define-name-root ReadableSet
-  #:fields
-  ([empty empty-set-view]))
-
-(define-name-root MutableSet
-  #:fields
-  ([delete MutableSet.delete]))
 
 (define-syntax Set
   (expression-transformer
@@ -298,7 +313,7 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
-                           #`(#,group-tag rest-bind #,set-static-info
+                           #`(#,group-tag rest-bind #,set-static-infos
                               (#,group-tag rst ...))
                            #'tail
                            mode)]
@@ -318,7 +333,7 @@
                                            #'(lambda (v) #t) ; predicate built into set-matcher
                                            '()
                                            '()
-                                           #:static-infos set-static-info
+                                           #:static-infos set-static-infos
                                            #:sequence-element-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
@@ -407,27 +422,9 @@
 
 (define (in-set* s) (in-hash-keys (set-ht s)))
 
-(define-for-syntax any-set-static-info
-  #'((#%index-get set-member?)
-     (#%sequence-constructor in-set)))
-
-(define-for-syntax readable-set-static-info
-  #`((#%dot-provider readable-set-instance)
-     . #,any-set-static-info))
-
-(define-for-syntax set-static-info
-  #`((#%dot-provider set-instance)
-     (#%append set-append)
-     . #,any-set-static-info))
-
-(define-for-syntax mutable-set-static-info
-  #`((#%index-set set-member!)
-     (#%dot-provider mutable-set-instance)
-     . #,any-set-static-info))
-
 (define-annotation-constructor (Set of)
   ()
-  #'immutable-set? set-static-info
+  #'immutable-set? set-static-infos
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -447,7 +444,7 @@
        (lambda () #f))))
 
 (define-static-info-syntax Set-build*
-  (#%call-result #,set-static-info)
+  (#%call-result #,set-static-infos)
   (#%function-arity -1))
 
 (define (MutableSet-build . vals)
@@ -474,19 +471,19 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (MutableSet-build #,@args))
-                           mutable-set-static-info)))]
+                           mutable-set-static-infos)))]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
                         (MutableSet-build #,@(if (null? argss) null (car argss))))
-                      mutable-set-static-info)])
+                      mutable-set-static-infos)])
              #'tail)]
     [(_ . tail) (values (if repetition?
                             (identifier-repetition-use #'MutableSet-build)
                             #'MutableSet-build)
                         #'tail)]))
 
-(define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-info))
-(define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-info))
+(define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-infos))
+(define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-infos))
 
 (define-syntax MutableSet
   (expression-transformer
@@ -497,7 +494,7 @@
    (lambda (stx) (parse-mutable-set stx #t))))
 
 (define-static-info-syntax MutableSet-build
-  (#%call-result #,mutable-set-static-info))
+  (#%call-result #,mutable-set-static-infos))
 
 (define (set-ref s v)
   (hash-ref (set-ht s) v #f))
@@ -512,6 +509,10 @@
         #'(set (hash-set (set-ht set1) v #t))]
        [_
         #'(set-append/proc set1 set2)])]))
+
+;; for `++`
+(define-static-info-syntax set-append
+  (#%call-result #,set-static-infos))
 
 (define (set-append/proc set1 set2)
   (define ht1 (set-ht set1))
@@ -539,65 +540,61 @@
                             "value" v))
   v)
 
-(define/arity (Set.copy s)
-  #:static-infos ((#%call-result #,mutable-set-static-info))
-  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "ReadableSet" s))
+(define/method (Set.copy s)
+  #:static-infos ((#%call-result #,mutable-set-static-infos))
+  (check-readable-set who s)
   (set (hash-copy (set-ht s))))
 
-(define/arity (Set.snapshot s)
-  #:static-infos ((#%call-result #,set-static-info))
-  (unless (set? s) (raise-argument-error* 'Set.snapshot rhombus-realm "ReadableSet" s))
+(define/method (Set.snapshot s)
+  #:static-infos ((#%call-result #,set-static-infos))
+  (check-readable-set who s)
   (define ht (set-ht s))
   (if (immutable-hash? ht)
       s
       (set (hash-snapshot ht))))
 
+(define (check-set who s)
+  (unless (immutable-set? s)
+    (raise-argument-error* who rhombus-realm "Set" s)))
+
 (define (set-union who s1 ss)
-  (unless (immutable-set? s1)
-    (raise-argument-error* who rhombus-realm "Set" s1))
+  (check-set who s1)
   (let loop ([s s1] [ss ss])
        (if (null? ss)
            s
            (let ([s1 (car ss)])
-             (unless (immutable-set? s1)
-               (raise-argument-error* who rhombus-realm "Set" s1))
+             (check-set who s1)
              (loop (set-append/proc s s1) (cdr ss))))))
 
-(define/arity Set.append
-  #:static-infos ((#%call-result #,set-static-info))
+(define/method Set.append
+  #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
     [() (set #hashalw())]
     [(s)
-     (unless (immutable-set? s)
-       (raise-argument-error* 'Set.append rhombus-realm "Set" s))
+     (check-set who s)
      s]
     [(s1 . ss)
-     (set-union 'Set.append s1 ss)]))
+     (set-union who s1 ss)]))
 
-(define/arity Set.union
-  #:static-infos ((#%call-result #,set-static-info))
+(define/method Set.union
+  #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
     [() (set #hashalw())]
     [(s)
-     (unless (immutable-set? s)
-       (raise-argument-error* 'Set.union rhombus-realm "Set" s))
+     (check-set who s)
      s]
     [(s1 . ss)
-     (set-union 'Set.union s1 ss)]))
+     (set-union who s1 ss)]))
 
-(define/arity Set.intersect
-  #:static-infos ((#%call-result #,set-static-info))
+(define/method Set.intersect
+  #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
     [() (set #hashalw())]
     [(s)
-     (define who 'Set.intersect)
-     (unless (immutable-set? s)
-       (raise-argument-error* who rhombus-realm "Set" s))
+     (check-set who s)
      s]
     [(s1 . ss)
-     (define who 'Set.intersect)
-     (unless (immutable-set? s1)
-       (raise-argument-error* who rhombus-realm "Set" s1))
+     (check-set who s1)
      (define (int a b)
        (if ((hash-count a) . < . (hash-count b))
            (int b a)
@@ -609,46 +606,24 @@
         (if (null? ss)
             ht
             (let ([s1 (car ss)])
-              (unless (immutable-set? s1)
-                (raise-argument-error* who rhombus-realm "Set" s1))
+              (check-set who s1)
               (loop (int ht (set-ht s1))
                     (cdr ss))))))]))
 
-(define/arity (Set.remove s v)
-  #:static-infos ((#%call-result #,set-static-info))
-  (unless (immutable-set? s)
-    (raise-argument-error* 'Set.remove rhombus-realm "Set" s))
+(define/method (Set.remove s v)
+  #:static-infos ((#%call-result #,set-static-infos))
+  (check-set who s)
   (set (hash-remove (set-ht s) v)))
 
-(define/arity (MutableSet.delete s v)
+(define (check-mutable-set who s)
   (unless (mutable-set? s)
-    (raise-argument-error* 'MutableSet.delete rhombus-realm "MutableSet" s))
+    (raise-argument-error* who rhombus-realm "MutableSet" s)))
+
+(define/method (MutableSet.delete s v)
+  (check-mutable-set who s)
   (hash-remove! (set-ht s) v))
 
-(define/arity (Set.to_list s [try-sort? #f])
+(define/method (Set.to_list s [try-sort? #f])
   #:static-infos ((#%call-result #,list-static-infos))
-  (unless (set? s) (raise-argument-error* 'Set.to_list rhombus-realm "ReadableSet" s))
+  (check-set who s)
   (hash-keys (set-ht s) try-sort?))
-
-(define readable-set-method-table
-  (hash 'length (let ([length (lambda (s)
-                                (unless (set? s)
-                                  (raise-argument-error* 'Set.length rhombus-realm "ReadableSet" s))
-                                (hash-count (set-ht s)))])
-                  (method1 length))
-        'copy (method1 Set.copy)
-        'snapshot (method1 Set.snapshot)
-        'to_list (lambda (s)
-                   (lambda ([try-sort? #f])
-                     (Set.to_list s try-sort?)))))
-
-(define set-method-table
-  (hash-set* readable-set-method-table
-             'remove (method2 Set.remove)
-             'append (method* Set.append)
-             'union (method* Set.union)
-             'intersect (method* Set.intersect)))
-
-(define mutable-set-method-table
-  (hash-set readable-set-method-table
-            'delete (method2 MutableSet.delete)))

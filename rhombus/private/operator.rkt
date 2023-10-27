@@ -5,7 +5,8 @@
                      "operator-parse.rkt"
                      "srcloc.rkt"
                      "consistent.rkt"
-                     "same-expression.rkt")
+                     "same-expression.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          "expression.rkt"
          (only-in "repetition.rkt"
                   in-repetition-space
@@ -18,8 +19,7 @@
          "definition.rkt"
          "static-info.rkt"
          "parens.rkt"
-         (submod "function-parse.rkt" for-build)
-         (only-in "entry-point.rkt" no-adjustments))
+         (submod "function-parse.rkt" for-build))
 
 ;; The `operator` form takes something that looks like a function-style
 ;; operator definition and generates a combination of a transformer and

@@ -4,7 +4,6 @@
                      "pack.rkt")
          syntax/parse/pre
          syntax/strip-context
-         racket/syntax-srcloc
          racket/symbol
          shrubbery/property
          shrubbery/print
@@ -13,17 +12,13 @@
          (submod "annotation.rkt" for-class)
          "pack.rkt"
          "realm.rkt"
-         "name-root.rkt"
          "tag.rkt"
-         "dot-parse.rkt"
          "dotted-sequence.rkt"
-         "static-info.rkt"
          "define-arity.rkt"
-         (rename-in "srcloc.rkt"
-                    [relocate srcloc:relocate])
+         "class-primitive.rkt"
+         "srcloc.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
-         (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
          (submod "list.rkt" for-compound-repetition))
@@ -45,8 +40,43 @@
 (module+ for-quasiquote
   (provide (for-syntax syntax-static-infos)))
 
-(define-for-syntax syntax-static-infos
-  #'((#%dot-provider syntax-instance)))
+(define-primitive-class Syntax syntax
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  (literal
+   literal_group
+   [make Syntax.make]
+   [make_op Syntax.make_op]
+   [make_group Syntax.make_group]
+   [make_sequence Syntax.make_sequence]
+   [make_id Syntax.make_id]
+   [make_temp_id Syntax.make_temp_id]
+   )
+  #:properties
+  ()
+  #:methods
+  (unwrap
+   unwrap_op
+   unwrap_group
+   unwrap_sequence
+   unwrap_all
+   srcloc
+   is_original
+   strip_scopes
+   replace_scopes
+   relocate
+   relocate_span
+   property
+   to_source_string
+   ))
+
+(define-for-syntax list-of-syntax-static-infos
+  #`((#%index-result #,syntax-static-infos)
+     . #,list-static-infos))
 
 (define-annotation-syntax Syntax
   (identifier-annotation #'syntax? syntax-static-infos))
@@ -112,30 +142,6 @@
   (and (syntax? s)
        (unpack-group s #f #f)
        #t))
-
-(define-name-root Syntax
-  #:fields
-  (literal
-   literal_group
-   make
-   make_op
-   make_group
-   make_sequence
-   make_id
-   make_temp_id
-   unwrap
-   unwrap_op
-   unwrap_group
-   unwrap_sequence
-   unwrap_all
-   strip_scopes
-   replace_scopes
-   relocate
-   relocate_span
-   to_source_string
-   [srcloc Syntax.srcloc]
-   [property Syntax.property]
-   is_original))
 
 (define-syntax literal
   (expression-transformer
@@ -295,49 +301,61 @@
       [else v]))
   (datum->syntax ctx-stx-t (if group? (group v) (loop v pre-alts? tail?))))
 
-(define/arity (make v [ctx-stx #f])
+(define/arity (Syntax.make v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (do-make 'Syntax.make v ctx-stx #t #t #f))
+  (do-make who v ctx-stx #t #t #f))
 
-(define/arity (make_op v [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+(define (check-symbol who v)
   (unless (symbol? v)
-    (raise-argument-error* 'Syntax.make_op rhombus-realm "Symbol" v))
-  (do-make 'Syntax.make (list 'op v) ctx-stx #t #t #f))
+    (raise-argument-error* who rhombus-realm "Symbol" v)))
 
-(define/arity (make_group v [ctx-stx #f])
+(define/arity (Syntax.make_op v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (and (pair? v)
-               (list? v))
-    (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
+  (check-symbol who v)
+  (do-make who (list 'op v) ctx-stx #t #t #f))
+
+(define (check-nonempty-list who l)
+  (unless (and (pair? l) (list? l))
+    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
+
+(define/arity (Syntax.make_group v [ctx-stx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (check-nonempty-list who v)
   (define terms (let loop ([es v])
                   (cond
                     [(null? es) null]
                     [else
                      (define ds (cdr es))
-                     (cons (do-make 'Syntax.make_group (car es) ctx-stx
+                     (cons (do-make who (car es) ctx-stx
                                     (starts-alts? ds)
                                     (null? ds)
                                     #f)
                            (loop ds))])))
   (datum->syntax #f (cons group-tag terms)))
 
-(define/arity (make_sequence v [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
-  (pack-multi (for/list ([e (in-list v)])
-                (do-make 'Syntax.make_sequence e ctx-stx #t #t #t))))
+(define (check-list who l)
+  (unless (list? l)
+    (raise-argument-error* who rhombus-realm "List" l)))
 
-(define/arity (make_id str [ctx #f])
+(define/arity (Syntax.make_sequence v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (string? str)
-    (raise-argument-error* 'Syntax.make_id rhombus-realm "ReadableString" str))
+  (check-list who v)
+  (pack-multi (for/list ([e (in-list v)])
+                (do-make who e ctx-stx #t #t #t))))
+
+(define (check-readable-string who s)
+  (unless (string? s)
+    (raise-argument-error* who rhombus-realm "ReadableString" s)))
+
+(define/arity (Syntax.make_id str [ctx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (check-readable-string who str)
   (define istr (string->immutable-string str))
-  (syntax-raw-property (datum->syntax (extract-ctx 'Syntax.make_id ctx)
+  (syntax-raw-property (datum->syntax (extract-ctx who ctx)
                                       (string->symbol istr))
                        istr))
 
-(define/arity (make_temp_id [v #false] #:keep_name [keep-name? #f])
+(define/arity (Syntax.make_temp_id [v #false] #:keep_name [keep-name? #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (define id
     (cond
@@ -350,7 +368,7 @@
                 (define sym (unpack-term v #f #f))
                 (and (identifier? sym) (syntax-e sym))]
                [else #f])
-             (raise-arguments-error* 'Syntax.make_temp_id rhombus-realm
+             (raise-arguments-error* who rhombus-realm
                                      "name for ~keep_name is not an identifier, symbol, or string"
                                      "name" v)))
        ((make-syntax-introducer) (datum->syntax #f sym))]
@@ -358,101 +376,78 @@
        (car (generate-temporaries (list v)))]))
   (syntax-raw-property id (symbol->immutable-string (syntax-e id))))
 
-(define/arity (unwrap v)
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* 'Syntax.unwrap rhombus-realm "Syntax" v)]
-    [else
-     (define unpacked (unpack-term v 'Syntax.unwrap #f))
-     (define u (syntax-e unpacked))
-     (cond
-       [(and (pair? u)
-             (eq? (syntax-e (car u)) 'parsed))
-        v]
-       [else
-        (if (and (pair? u)
-                 (not (list? u)))
-            (syntax->list unpacked)
-            u)])]))
-
-(define/arity (unwrap_op v)
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* 'Syntax.unwrap_up rhombus-realm "Syntax" v)]
-    [else
-     (syntax-parse (unpack-term v 'Syntax.unwrap #f)
-       #:datum-literals (op)
-       [(op o) (syntax-e #'o)]
-       [else
-        (raise-arguments-error* 'Syntax.unwrap_up rhombus-realm
-                                "syntax object does not have just an operator"
-                                "syntax object" v)])]))
-
-(define-for-syntax list-of-syntax-static-infos
-  #`((#%index-result #,syntax-static-infos)
-     #,@list-static-infos))
-
-(define/arity (unwrap_group v)
-  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* 'Syntax.unwrap_group rhombus-realm "Syntax" v)]
-    [else
-     (syntax->list (unpack-tail v 'Syntax.unwrap_group #f))]))
-  
-(define/arity (unwrap_sequence v)
-  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* 'Syntax.unwrap_sequence rhombus-realm "Syntax" v)]
-    [else
-     (syntax->list (unpack-multi-tail v 'Syntax.unwrap_sequence #f))]))
-
-(define/arity (unwrap_all v)
-  (define who 'Syntax.unwrap_all)
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* who rhombus-realm "Syntax" v)]
-    [else
-     (define (normalize s)
-       (cond
-         [(not (pair? s)) s]
-         [(eq? (car s) 'group)
-          (if (null? (cddr s))
-              (cadr s)
-              s)]
-         [(eq? (car s) 'multi)
-          (if (and (pair? (cdr s)) (null? (cddr s)))
-              (normalize (cadr s))
-              s)]
-         [else s]))
-     (normalize (syntax->datum v))]))
-
-(define/arity (strip_scopes v)
-  #:static-infos ((#%call-result #,syntax-static-infos))
-  (cond
-    [(not (syntax? v))
-     (raise-argument-error* 'Syntax.strip_scopes rhombus-realm "Syntax" v)]
-    [else
-     (strip-context v)]))
-
-(define/arity (replace_scopes v ctx)
-  #:static-infos ((#%call-result #,syntax-static-infos))
+(define (check-syntax who v)
   (unless (syntax? v)
-    (raise-argument-error* 'Syntax.replace_scopes rhombus-realm "Syntax" v))
-  (replace-context (extract-ctx 'Syntax.replace_scopes ctx #:false-ok? #f) v))
+    (raise-argument-error* who rhombus-realm "Syntax" v)))
 
-(define replace_scopes_method
-  (lambda (v)
-    (let ([replace_scopes (lambda (ctx)
-                            (replace_scopes v ctx))])
-      replace_scopes)))
+(define/method (Syntax.unwrap v)
+  (check-syntax who v)
+  (define unpacked (unpack-term v who #f))
+  (define u (syntax-e unpacked))
+  (cond
+    [(and (pair? u)
+          (eq? (syntax-e (car u)) 'parsed))
+     v]
+    [else
+     (if (and (pair? u)
+              (not (list? u)))
+         (syntax->list unpacked)
+         u)]))
 
-(define/arity (relocate stx ctx-stx)
+(define/method (Syntax.unwrap_op v)
+  (check-syntax who v)
+  (syntax-parse (unpack-term v who #f)
+    #:datum-literals (op)
+    [(op o) (syntax-e #'o)]
+    [else
+     (raise-arguments-error* who rhombus-realm
+                             "syntax object does not have just an operator"
+                             "syntax object" v)]))
+
+(define/method (Syntax.unwrap_group v)
+  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
+  (check-syntax who v)
+  (syntax->list (unpack-tail v who #f)))
+  
+(define/method (Syntax.unwrap_sequence v)
+  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
+  (check-syntax who v)
+  (syntax->list (unpack-multi-tail v who #f)))
+
+(define/method (Syntax.unwrap_all v)
+  (check-syntax who v)
+  (define (normalize s)
+    (cond
+      [(not (pair? s)) s]
+      [(eq? (car s) 'group)
+       (if (null? (cddr s))
+           (cadr s)
+           s)]
+      [(eq? (car s) 'multi)
+       (if (and (pair? (cdr s)) (null? (cddr s)))
+           (normalize (cadr s))
+           s)]
+      [else s]))
+  (normalize (syntax->datum v)))
+
+(define/method (Syntax.strip_scopes v)
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" stx))
-  (unless (or (syntax? ctx-stx) (srcloc? ctx-stx) (not ctx-stx))
-    (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax || Srcloc || False" ctx-stx))
+  (check-syntax who v)
+  (strip-context v))
+
+(define/method (Syntax.replace_scopes v ctx)
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (check-syntax who v)
+  (replace-context (extract-ctx who ctx #:false-ok? #f) v))
+
+(define (check-valid-srcloc who ctx)
+  (unless (or (syntax? ctx) (srcloc? ctx) (not ctx))
+    (raise-argument-error* who rhombus-realm "Syntax || Srcloc || False" ctx)))
+
+(define/method (Syntax.relocate stx ctx-stx)
+  #:static-infos ((#%call-result #,syntax-static-infos))
+  (check-syntax who stx)
+  (check-valid-srcloc who ctx-stx)
   (let ([ctx-stx (and (syntax? ctx-stx)
                       (relevant-source-syntax ctx-stx))])
     (at-relevant-dest-syntax
@@ -463,12 +458,6 @@
            (datum->syntax stx (syntax-e stx) ctx-stx stx)))
      (lambda (stx inner-stx)
        stx))))
-
-(define relocate_method
-  (lambda (stx)
-    (let ([relocate (lambda (ctx-stx)
-                      (relocate stx ctx-stx))])
-      relocate)))
 
 (define (relevant-source-syntax ctx-stx-in)
   (syntax-parse ctx-stx-in
@@ -506,14 +495,17 @@
       [_
        (proc stx)])))
 
+(define (check-list-of-stx who stxs)
+  (unless (and (list? stxs) (andmap syntax? stxs))
+    (raise-argument-error* who rhombus-realm "List.of(Syntax)" stxs)))
+
 ;; also reraws:
-(define/arity (relocate_span stx-in ctx-stxes)
+(define/method (Syntax.relocate_span stx-in ctx-stxes)
   #:static-infos ((#%call-result #,syntax-static-infos))
   (define stx (and (syntax? stx-in) (unpack-term stx-in #f #f)))
-  (unless stx (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Term" stx-in))
-  (unless (and (list? ctx-stxes) (andmap syntax? ctx-stxes))
-    (raise-argument-error* 'Syntax.relocate_span rhombus-realm "List.of(Syntax)" ctx-stxes))
-  
+  (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
+  (check-list-of-stx who ctx-stxes)
+
   (at-relevant-dest-syntax
    stx
    (lambda (stx)
@@ -540,77 +532,33 @@
                          stx)])
            stx))))))
 
-(define relocate_span_method
-  (lambda (stx)
-    (let ([relocate_span (lambda (ctx-stxes)
-                           (relocate_span stx ctx-stxes))])
-      relocate_span)))
-
-(define/arity (to_source_string stx)
-  #:static-infos ((#%call-result #,string-static-infos))  
-  (unless (syntax? stx) (raise-argument-error* 'Syntax.to_source_string rhombus-realm "Syntax" stx))
+(define/method (Syntax.to_source_string stx)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (check-syntax who stx)
   (string->immutable-string (shrubbery-syntax->string stx)))
 
-(define/arity (Syntax.srcloc stx)
+(define/method (Syntax.srcloc stx)
   #:static-infos ((#%call-result #,srcloc-static-infos))
-  (unless (syntax? stx) (raise-argument-error* 'Syntax.srcloc rhombus-realm "Syntax" stx))
+  (check-syntax who stx)
   (syntax-srcloc (maybe-respan stx)))
 
-(define/arity Syntax.property
+(define/method Syntax.property
+  #:static-infos ((#%call-results-at-arities
+                   ((3 #,syntax-static-infos)
+                    (4 #,syntax-static-infos))))
   (case-lambda
-    [(stx prop) (syntax-property (extract-ctx 'Syntax.property stx) prop)]
-    [(stx prop val) (extract-ctx 'Syntax.property stx
-                                 #:update (lambda (t)
-                                            (syntax-property t prop val)))]
-    [(stx prop val preserved?) (extract-ctx 'Syntax.property stx
-                                            #:update (lambda (t)
-                                                       (syntax-property t prop val preserved?)))]))
+    [(stx prop)
+     (syntax-property (extract-ctx who stx #:false-ok? #f) prop)]
+    [(stx prop val)
+     (extract-ctx who stx
+                  #:false-ok? #f
+                  #:update (lambda (t)
+                             (syntax-property t prop val)))]
+    [(stx prop val preserved?)
+     (extract-ctx who stx
+                  #:false-ok? #f
+                  #:update (lambda (t)
+                             (syntax-property t prop val preserved?)))]))
 
-(define property_method
-  (lambda (stx)
-    (let ([property (case-lambda
-                      [(prop) (Syntax.property stx prop)]
-                      [(prop val) (Syntax.property stx prop val)]
-                      [(prop val preserved?) (Syntax.property stx prop val preserved?)])])
-      property)))
-
-(define/arity (is_original v)
-  (syntax-original? (extract-ctx 'Syntax.srcloc v #:false-ok? #f)))
-
-(define syntax-method-table
-  (hash 'unwrap (method1 unwrap)
-        'unwrap_op (method1 unwrap_op)
-        'unwrap_group (method1 unwrap_group)
-        'unwrap_sequence (method1 unwrap_sequence)
-        'unwrap_all (method1 unwrap_all)
-        'strip_scopes (method1 strip_scopes)
-        'replace_scopes replace_scopes_method
-        'relocate relocate_method
-        'relocate_span relocate_span_method
-        'srcloc (method1 Syntax.srcloc)
-        'is_original (method1 is_original)
-        'to_source_string (method1 to_source_string)
-        'property property_method))
-
-(define-syntax syntax-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(unwrap) (0ary #'unwrap)]
-        [(unwrap_op) (0ary #'unwrap_op)]
-        [(unwrap_group) (0ary #'unwrap_group list-of-syntax-static-infos)]
-        [(unwrap_sequence) (0ary #'unwrap_sequence list-of-syntax-static-infos)]
-        [(unwrap_all) (0ary #'unwrap_all)]
-        [(strip_scopes) (0ary #'strip_scopes syntax-static-infos)]
-        [(replace_scopes) (nary #'replace_scopes 2 #'replace_scopes syntax-static-infos)]
-        [(relocate) (nary #'relocate_method 2 #'relocate syntax-static-infos)]
-        [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span syntax-static-infos)]
-        [(srcloc) (0ary #'Syntax.srcloc srcloc-static-infos)]
-        [(is_original) (0ary #'is_original)]
-        [(to_source_string) (0ary #'to_source_string)]
-        [(property) (nary #'Syntax.property 14 #'Syntax.property (lambda (n)
-                                                                   (if (not (eqv? n 1))
-                                                                       syntax-static-infos
-                                                                       #'())))]
-        [else (fail-k)])))))
+(define/method (Syntax.is_original v)
+  (syntax-original? (extract-ctx who v #:false-ok? #f)))

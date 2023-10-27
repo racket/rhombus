@@ -7,6 +7,7 @@
          "function-arity-key.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
+         "realm.rkt"
          (submod "string.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
@@ -21,27 +22,24 @@
 (module+ for-static-info
   (provide (for-syntax srcloc-static-infos)))
 
-(define/arity #:name Srcloc.to_report_string (srcloc->report-string s)
-  #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (srcloc->string s)))
-
-(define srcloc->report-string/method (method1 srcloc->report-string))
-
-(define (srcloc->string/method s)
-  (lambda ()
-    (srcloc->string s)))
-
 (define-primitive-class Srcloc srcloc
-  #:constructor-static-info ()
+  #:lift-declaration
   #:existing
   #:transparent
   #:fields
-  ([source ()]
-   [line ()]
-   [column ()]
-   [position ()]
-   [span ()])
+  ([(source)]
+   [(line)]
+   [(column)]
+   [(position)]
+   [(span)])
   #:properties
   ()
   #:methods
-  ([to_report_string 1 srcloc->report-string srcloc->report-string/method string-static-infos]))
+  (to_report_string
+   ))
+
+(define/method (Srcloc.to_report_string v)
+  #:inline
+  #:primitive (srcloc->string)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (string->immutable-string (srcloc->string v)))

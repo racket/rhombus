@@ -36,7 +36,7 @@
                  (if (eq? shape 'set) #'set-extend* #'hash-extend*)
                  (if (eq? shape 'set) #'set-append #'hash-append)
                  (if (eq? shape 'set) #'set-assert #'hash-assert)
-                 (if (eq? shape 'set) set-static-info map-static-info)
+                 (if (eq? shape 'set) set-static-infos map-static-infos)
                  #:repetition? repetition?
                  #:list->setmap (if (eq? shape 'set) #'list->set #'list->map))))
   

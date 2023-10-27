@@ -1,7 +1,7 @@
 #lang rhombus/private/core
 import:
   "core-meta.rkt" open
-  lib("rhombus/private/core.rkt")
+  lib("racket/base.rkt").#{string->immutable-string}
 
 export:
   ReadableString
@@ -10,9 +10,9 @@ namespace ReadableString:
   export:
     to_string
 
-  fun to_string(s :: ReadableString):
-    core.to_string(s)
+  fun to_string(s :: ReadableString) :~ String:
+    #{string->immutable-string}(s)
 
   annot.macro 'to_string':
-    'converting(fun (s :: ReadableString) :: String:
-                 to_string(s))'
+    'converting(fun (s :: ReadableString) :~ String:
+                 #{string->immutable-string}(s))'

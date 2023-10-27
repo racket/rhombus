@@ -2,9 +2,9 @@
 (require (for-syntax racket/base)
          syntax/parse/pre
          enforest/syntax-local
+         "define-arity.rkt"
          "class-primitive.rkt"
          "name-root.rkt"
-         (submod "annotation.rkt" for-class)
          "interface-parse.rkt"
          (only-in "class-parse.rkt"
                   in-class-desc-space)
@@ -30,15 +30,10 @@
   [Info
    describe])
 
-(define (interface_meta.Info.lookup info key)
-  (lookup info key))
-
-(define (interface_meta.Info.lookup/method info)
-  (let ([lookup (lambda (key) (lookup info key))])
-    lookup))
+(define/method (interface_meta.Info.lookup info key)
+  (lookup who info key))
 
 (define-primitive-class Info interface-data
-  #:constructor-static-info ()
   #:new
   #:opaque
   #:fields
@@ -46,7 +41,8 @@
   #:properties
   ()
   #:methods
-  ([lookup 2 interface_meta.Info.lookup interface_meta.Info.lookup/method]))
+  ([lookup interface_meta.Info.lookup]
+   ))
 
 (struct interface-expand-data interface-data (stx accum-stx))
 (struct interface-describe-data interface-data (desc include-private?))
@@ -59,8 +55,7 @@
         . _)
      #'name]))
 
-(define (lookup info key)
-  (define who 'interface_meta.Info.lookup)
+(define (lookup who info key)
   (unless (interface-data? info)
     (raise-argument-error* who rhombus-realm "interface_meta.Info" info))
   (unless (symbol? key)

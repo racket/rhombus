@@ -1,31 +1,30 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx
                      "srcloc.rkt")
+         (only-in racket/base
+                  [vector array])
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
          "define-arity.rkt"
          "index-key.rkt"
          "append-key.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
-         "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "composite.rkt"
          "op-literal.rkt"
-         "name-root.rkt"
-         "dot-parse.rkt"
          "reducer.rkt"
          "parens.rkt"
          "parse.rkt"
          "realm.rkt"
          "mutability.rkt"
-         "vector-append.rkt")
+         "vector-append.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -40,28 +39,35 @@
 (module+ for-builtin
   (provide array-method-table))
 
-(define-for-syntax array-static-infos
-  #'((#%index-get vector-ref)
-     (#%index-set vector-set!)
-     (#%append vector-append)
-     (#%sequence-constructor in-vector)
-     (#%dot-provider array-instance)))
-
-(define-name-root Array
-  #:fields
-  ([make make-vector]
-   [length vector-length]
-   copy
-   copy_from
+(define-primitive-class Array array
+  #:lift-declaration
+  #:constructor-arity -1
+  #:instance-static-info ((#%index-get Array.get)
+                          (#%index-set Array.set)
+                          (#%append Array.append)
+                          (#%sequence-constructor in-vector))
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([make Array.make]
    [of now_of] ;; TEMPORARY
    now_of
-   later_of))
+   later_of
+   )
+  #:properties
+  ()
+  #:methods
+  (length
+   copy
+   copy_from
+   ))
 
 (define-syntax Array
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id . tail) (values (relocate+reraw #'form-id #'vector) #'tail)]))))
+       [(form-id . tail) (values (relocate+reraw #'form-id #'array) #'tail)]))))
 
 (define-annotation-constructor (Array now_of)
   () #'vector? array-static-infos
@@ -102,10 +108,6 @@
 
 (define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
 (define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))
-
-(define-static-info-syntax vector
-  (#%call-result #,array-static-infos)
-  (#%function-arity -1))
 
 (define-reducer-syntax Array
   (reducer-transformer
@@ -159,41 +161,53 @@
   (syntax-parse stx
     [(_ accum v) #'(cons v accum)]))
 
-(define-syntax array-reduce-wrap
-  (lambda (stx)
-    (syntax-parse stx
-      [(_ dest-id len-expr body)
-       #'(let ([dest-id (make-vector len-expr)])
-           body
-           dest-id)])))
+;; TODO fix mutability in docs
+(set-primitive-contract! 'vector? "Array")
+(set-primitive-contract! '(and/c vector? (not/c immutable?)) "MutableArray")
 
-(define/arity (copy v)
+(define/arity (Array.get v i)
+  #:inline
+  #:primitive (vector-ref)
+  (vector-ref v i))
+
+(define/arity (Array.set v i x)
+  #:inline
+  #:primitive (vector-set!)
+  (vector-set! v i x))
+
+(define (check-array who v)
+  (unless (vector? v)
+    (raise-argument-error* who rhombus-realm "Array" v)))
+
+(define/arity (Array.append v1 v2)
   #:static-infos ((#%call-result #,array-static-infos))
-  (unless (vector? v) (raise-argument-error* 'Vector.copy rhombus-realm "Array" v))
+  (check-array who v1)
+  (check-array who v2)
+  (vector-append v1 v2))
+
+(define/arity (Array.make len [val 0])
+  #:inline
+  #:primitive (make-vector)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (make-vector len val))
+
+(define/method (Array.length v)
+  #:inline
+  #:primitive (vector-length)
+  (vector-length v))
+
+(define/method (Array.copy v)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (check-array who v)
   (define len (vector-length v))
   (define new-v (make-vector len))
   (vector-copy! new-v 0 v 0 len)
   new-v)
-(define/arity (copy_from v dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
-  #:static-infos ((#%call-result #,array-static-infos))
+
+(define/method (Array.copy_from v dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
+  #:inline
+  #:primitive (vector-copy!)
   (vector-copy! v dest-start src src-start src-end))
-
-(define array-method-table
-  (hash 'length (method1 vector-length)
-        'copy (method1 copy)
-        'copy_from (lambda (vec)
-                     (lambda (dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
-                       (vector-copy! vec dest-start src src-start src-end)))))
-
-(define-syntax array-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(length) (0ary #'vector-length)]
-        [(copy) (0ary #'copy array-static-infos)]
-        [(copy_from) (nary #'copy_from 28 #'copy_from #'())]
-        [else (fail-k)])))))
 
 (define-binding-syntax Array
   (binding-prefix-operator
@@ -231,17 +245,6 @@
                          (and (vector? v)
                               (= (vector-length v) #,len))))
         (build args len pred #f #'form-id #'tail)]))))
-
-(define-static-info-syntax make-vector
-  (#%call-result #,array-static-infos)
-  (#%function-arity 6))
-
-(define-static-info-syntax vector-length
-  (#%function-arity 2))
-
-(define-static-info-syntax vector-append
-  (#%call-result #,array-static-infos)
-  (#%function-arity 4))
 
 (define (vector-suffix->list v start)
   (for/list ([i (in-range start (vector-length v))])

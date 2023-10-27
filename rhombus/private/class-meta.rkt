@@ -2,9 +2,9 @@
 (require (for-syntax racket/base)
          syntax/parse/pre
          enforest/syntax-local
+         "define-arity.rkt"
          "class-primitive.rkt"
          "name-root.rkt"
-         (submod "annotation.rkt" for-class)
          "class-parse.rkt"
          (for-template
           (only-in "class-clause-parse.rkt"
@@ -28,15 +28,10 @@
   [Info
    describe])
 
-(define (class_meta.Info.lookup info key)
-  (lookup info key))
-
-(define (class_meta.Info.lookup/method info)
-  (let ([lookup (lambda (key) (lookup info key))])
-    lookup))
+(define/method (class_meta.Info.lookup info key)
+  (lookup who info key))
 
 (define-primitive-class Info class-data
-  #:constructor-static-info ()
   #:new
   #:opaque
   #:fields
@@ -44,7 +39,8 @@
   #:properties
   ()
   #:methods
-  ([lookup 2 class_meta.Info.lookup class_meta.Info.lookup/method]))
+  ([lookup class_meta.Info.lookup]
+   ))
 
 (struct class-expand-data class-data (stx accum-stx))
 (struct class-describe-data class-data (desc private-idesc))
@@ -72,8 +68,7 @@
              #'constructor-field-mutables
              #'constructor-field-privates)]))
 
-(define (lookup info key)
-  (define who 'class_meta.Info.lookup)
+(define (lookup who info key)
   (unless (class-data? info)
     (raise-argument-error* who rhombus-realm "class_meta.Info" info))
   (unless (symbol? key)

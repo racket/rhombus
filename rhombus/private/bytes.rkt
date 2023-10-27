@@ -1,16 +1,18 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse/pre)
          "provide.rkt"
-         "name-root.rkt"
-         "dot-parse.rkt"
-         (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
          "define-arity.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
          "append-key.rkt"
          (submod "annotation.rkt" for-class)
-         "mutability.rkt")
+         "mutability.rkt"
+         "realm.rkt"
+         "define-arity.rkt"
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -25,79 +27,95 @@
 (module+ static-infos
   (provide (for-syntax bytes-static-infos)))
 
-(define-for-syntax bytes-static-infos
-  #'((#%dot-provider bytes-instance)
-     (#%index-get bytes-ref)
-     (#%index-set bytes-set!)
-     (#%append bytes-append)))
+(define-primitive-class Bytes bytes
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info ((#%index-get Bytes.get)
+                          (#%index-set Bytes.set)
+                          (#%append Bytes.append))
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([make Bytes.make] ; TODO undocumented
+   )
+  #:properties
+  ()
+  #:methods
+  (length
+   subbytes
+   copy
+   copy_from
+   utf8_string
+   latin1_string
+   locale_string
+   ))
 
 (define-annotation-syntax Bytes (identifier-annotation #'bytes? bytes-static-infos))
 (define-annotation-syntax MutableBytes (identifier-annotation #'mutable-bytes? bytes-static-infos))
 (define-annotation-syntax ImmutableBytes (identifier-annotation #'immutable-bytes? bytes-static-infos))
 
-(define-name-root Bytes
-  #:fields
-  ([make make-bytes]
-   [length bytes-length]
-   [subbytes sub_bytes]
-   copy
-   copy_from
-   utf8_string
-   latin1_string
-   locale_string))
+(set-primitive-contract! 'bytes? "Bytes")
+(set-primitive-contract! '(and/c bytes? (not/c immutable?)) "MutableBytes")
 
-(define/arity #:name subbytes (sub_bytes str [start 0] [end (and (bytes? str) (bytes-length str))])
+(define/arity (Bytes.get b i)
+  #:inline
+  #:primitive (bytes-ref)
+  (bytes-ref b i))
+
+(define/arity (Bytes.set b i x)
+  #:inline
+  #:primitive (bytes-set!)
+  (bytes-set! b i x))
+
+(define/arity (Bytes.append b1 b2)
+  #:inline
+  #:primitive (bytes-append)
+  (bytes-append b1 b2))
+
+(define/arity (Bytes.make len [val 0])
+  #:inline
+  #:primitive (make-bytes)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (subbytes str start end))
+  (make-bytes len val))
 
-(define/arity (utf8_string s [err-char #f] [start 0] [end (and (bytes? s) (bytes-length s))])
-  #:static-infos ((#%call-result #,indirect-string-static-infos))
-  (string->immutable-string (bytes->string/utf-8 s err-char start end)))
-(define/arity (latin1_string s [err-char #f] [start 0] [end (and (bytes? s) (bytes-length s))])
-  #:static-infos ((#%call-result #,indirect-string-static-infos))
-  (string->immutable-string (bytes->string/latin-1 s err-char start end)))
-(define/arity (locale_string s [err-char #f] [start 0] [end (and (bytes? s) (bytes-length s))])
-  #:static-infos ((#%call-result #,indirect-string-static-infos))
-  (string->immutable-string (bytes->string/locale s err-char start end)))
-(define/arity (copy s)
+(define/method (Bytes.length bstr)
+  #:inline
+  #:primitive (bytes-length)
+  (bytes-length bstr))
+
+(define/method (Bytes.subbytes bstr [start 0] [end (and (bytes? bstr) (bytes-length bstr))])
+  #:inline
+  #:primitive (subbytes)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (bytes-copy s))
-(define/arity (copy_from s dest-start src [src-start 0] [src-end (and (bytes? src) (bytes-length src))])
+  (subbytes bstr start end))
+
+(define-syntax (define-string stx)
+  (syntax-parse stx
+    [(_ utf8 utf-8)
+     #:with method-name (datum->syntax #'utf8 (string->symbol (format "Bytes.~a_string" (syntax-e #'utf8))))
+     #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "bytes->string/~a" (syntax-e #'utf-8))))
+     #'(define/method (method-name bs [err-char #f] [start 0] [end (and (bytes? bs) (bytes-length bs))])
+         #:inline
+         #:primitive (fn-name)
+         #:static-infos ((#%call-result #,indirect-string-static-infos))
+         (string->immutable-string (fn-name bs err-char start end)))]))
+
+(define-string utf8 utf-8)
+(define-string latin1 latin-1)
+(define-string locale locale)
+
+(define/method (Bytes.copy bstr)
+  #:inline
+  #:primitive (bytes-copy)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (bytes-copy! s dest-start src src-start src-end))
+  (bytes-copy bstr))
 
-(define bytes-method-table
-  (hash 'length (method1 bytes-length)
-        'subbytes (lambda (str)
-                    (lambda (start [end (and (bytes? str) (bytes-length str))])
-                      (subbytes str start end)))
-        'copy (method1 bytes-copy)
-        'copy_from (lambda (str)
-                     (lambda (dest-start src [src-start 0] [src-end (and (bytes? src) (bytes-length src))])
-                       (bytes-copy! str dest-start src src-start src-end)))
-        'utf8_string (lambda (str)
-                       (lambda ([err-char #f] [start 0] [end (and (bytes? str) (bytes-length str))])
-                         (string->immutable-string (bytes->string/utf-8 str err-char start end))))
-        'latin1_string (lambda (str)
-                         (lambda ([err-char #f] [start 0] [end (and (bytes? str) (bytes-length str))])
-                           (string->immutable-string (bytes->string/latin-1 str err-char start end))))
-        'locale_string (lambda (str)
-                         (lambda ([err-char #f] [start 0] [end (and (bytes? str) (bytes-length str))])
-                           (string->immutable-string (bytes->string/locale str err-char start end))))))
-
-(define-syntax bytes-instance
-  (dot-provider
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(length) (0ary #'bytes-length)]
-        [(subbytes) (nary #'sub_bytes 6 #'sub_bytes bytes-static-infos)]
-        [(copy) (0ary #'copy bytes-static-infos)]
-        [(copy_from) (nary #'copy_from 28 #'copy_from #'())]
-        [(utf8_string) (nary #'utf8_string 15 #'utf8_string indirect-string-static-infos)]
-        [(latin1_string) (nary #'utf8_string 15 #'latin1_string indirect-string-static-infos)]
-        [(locale_string) (nary #'utf8_string 15 #'locale_string indirect-string-static-infos)]
-        [else (fail-k)])))))
+(define/method (Bytes.copy_from bstr dest-start src [src-start 0] [src-end (and (bytes? src) (bytes-length src))])
+  #:inline
+  #:primitive (bytes-copy!)
+  #:static-infos ((#%call-result #,bytes-static-infos))
+  (bytes-copy! bstr dest-start src src-start src-end))
 
 (begin-for-syntax
   (install-static-infos! 'bytes bytes-static-infos))

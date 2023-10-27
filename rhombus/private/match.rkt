@@ -5,7 +5,8 @@
                      enforest/name-parse
                      "srcloc.rkt"
                      "annotation-string.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     (submod "entry-point-adjustment.rkt" for-struct))
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -13,7 +14,6 @@
          (submod "function-parse.rkt" for-build)
          "realm.rkt"
          "parens.rkt"
-         (only-in "entry-point.rkt" no-adjustments)
          (submod "quasiquote.rkt" for-match)
          (only-in "literal.rkt" literal-infoer))
 

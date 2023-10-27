@@ -1,14 +1,12 @@
 #lang racket/base
-(require racket/runtime-config
-         racket/port
+(require racket/port
          racket/interaction-info
-         racket/symbol
          shrubbery/parse
          shrubbery/print
-         "set.rkt"
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)
-         "syntax-parse-config.rkt")
+         "syntax-parse-config.rkt"
+         "rhombus-primitive.rkt")
 
 (provide install-runtime-config!
          parameters)
@@ -57,20 +55,9 @@
           (case realm
             [(racket/primitive)
              (values (with-handlers ([exn:fail:read? (lambda (exn) str)])
-                       (let loop ([c (read (open-input-string str))])
-                         (case c
-                           [(number?) "Number"]
-                           [(string?) "ReadableString"]
-                           [(list?) "List"]
-                           [(hash?) "Map"]
-                           [(vector?) "Array"]
-                           [((and/c vector? (not/c immutable?))) "MutableArray"]
-                           [(pair?) "Pair"]
-                           [(bytes?) "Bytes"]
-                           [((and/c bytes? (not/c immutable?))) "MutableBytes"]
-                           [(path?) "Path"]
-                           [(srcloc?) "Srcloc"]
-                           [else (format "~s" c)])))
+                       (define c (read (open-input-string str)))
+                       (or (get-primitive-contract c)
+                           (format "~s" c)))
                      'rhombus/primitive)]
             [else (values str realm)]))]
        [(message)
@@ -78,27 +65,10 @@
           (define-values (new-who new-who-realm)
             (case who-realm
               [(racket/primitive)
-               (define (rhombus n) (values n 'rhombus/primitive))
-               (case who
-                 [(application) (rhombus '|function call|)]
-                 [(=) (rhombus '.=)]
-                 [(hash-ref) (rhombus 'Map.get)]
-                 [(list-ref) (rhombus 'List.get)]
-                 [(list-tail) (rhombus 'List.drop_left)]
-                 [(vector-ref) (rhombus 'Array.get)]
-                 [(vector-set!) (rhombus 'Array.set)]
-                 [(srcloc-source) (rhombus 'Srcloc.source)]
-                 [(srcloc-line) (rhombus 'Srcloc.line)]
-                 [(srcloc-column) (rhombus 'Srcloc.column)]
-                 [(srcloc-position) (rhombus 'Srcloc.position)]
-                 [(srcloc-span) (rhombus 'Srcloc.span)]
-                 [(bytes->path) (rhombus 'Path)]
-                 [(string->path) (rhombus 'Path)]
-                 [(path->bytes) (rhombus 'Path.bytes)]
-                 [(path->string) (rhombus 'Path.string)]
-                 [(bytes-copy) (rhombus 'Bytes.copy)]
-                 [(bytes-copy!) (rhombus 'Bytes.copy_from)]
-                 [(string-append-immutable) (rhombus 'String.append)]
+               (cond
+                 [(get-primitive-who who)
+                  => (lambda (new-who)
+                       (values new-who 'rhombus/primitive))]
                  [else (values who who-realm)])]
               [else (values who who-realm)]))
           (define-values (new-msg new-msg-realm)

@@ -9,10 +9,7 @@
          (submod "assign.rkt" for-assign))
 
 (provide (for-syntax dot-parse-dispatch
-                     set-parse-function-call!)
-         method1
-         method2
-         method*)
+                     set-parse-function-call!))
 
 (define-for-syntax (dot-parse-dispatch k)
   (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
@@ -44,38 +41,34 @@
                                 (relocate (respan #`(#,lhs #,field-stx)) e)))
                         tail))]))
 
-    (define (0ary id [static-infos #'()])
-      (ary 1
-           (lambda (no-args n reloc) (wrap-static-info*
-                                      (relocate
-                                       (respan #`(#,lhs #,field-stx))
-                                       #`(#,id #,lhs))
-                                      static-infos))
-           (lambda (reloc) (wrap-static-info*
-                            (reloc
-                             #`(let ([#,id (lambda () (#,id #,lhs))])
-                                 #,id))
-                            static-infos))))
-
-    (define (nary id mask direct-id [static-infos #'()])
+    (define (nary mask direct-id id [static-infos #f])
+      (define (wrap n stx)
+        (define maybe-static-infos
+          (if (procedure? static-infos)
+              (static-infos n)
+              static-infos))
+        (if maybe-static-infos
+            (wrap-static-info* stx maybe-static-infos)
+            stx))
       (ary mask
-           (lambda (args n reloc) (wrap-static-info*
-                                   (let ()
-                                     (define-values (proc tail)
-                                       (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
-                                                            #:srcloc (reloc #'#false)
-                                                            #:static? more-static?))
-                                     proc)
-                                 (if (procedure? static-infos)
-                                     (static-infos n)
-                                     static-infos)))
-           (lambda (reloc) (wrap-static-info*
-                            (reloc
-                             #`(let ([#,direct-id (lambda () (#,id #,lhs))])
-                                 #,direct-id))
-                            (if (procedure? static-infos)
-                                (static-infos #f)
-                                static-infos)))))
+           (if (eqv? mask 1)
+               ;; fast path given no args
+               (lambda (no-args n reloc)
+                 (wrap 0
+                       (relocate
+                        (respan #`(#,lhs #,field-stx))
+                        #`(#,direct-id #,lhs))))
+               (lambda (args n reloc)
+                 (wrap n
+                       (let ()
+                         (define-values (proc tail)
+                           (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
+                                                #:srcloc (reloc #'#false)
+                                                #:static? more-static?))
+                         proc))))
+           ;; return partially applied method
+           (lambda (reloc)
+             (reloc #`(#,id #,lhs)))))
 
     (define field
       (let ([just-access
@@ -106,22 +99,7 @@
                   #'assign.tail)))]
              [_ (just-access mk)])])))
 
-    (k (syntax-e field-stx) field ary 0ary nary fail-k)))
-
-(define (method1 proc)
-  (lambda (v)
-    (lambda ()
-      (proc v))))
-
-(define (method2 proc)
-  (lambda (v)
-    (lambda (arg)
-      (proc v arg))))
-
-(define (method* proc)
-  (lambda (v)
-    (lambda args
-      (apply proc v args))))
+    (k (syntax-e field-stx) field ary nary fail-k)))
 
 (define-for-syntax parse-function-call #f)
 (define-for-syntax (set-parse-function-call! proc)
