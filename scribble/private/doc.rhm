@@ -8,12 +8,11 @@ export:
   nonterminal
   nontermref
 
-expr.macro 'doc $parens $tail ...':
+expr.macro 'doc $(parens :: Term)':
   ~op_stx: me
   match parens
   | '($_ ..., ..., [$_ ..., ...])':
-      values(expr_meta.pack_s_exp(['#{typeset-doc}', me, parens]),
-             '$tail ...')
+      expr_meta.pack_s_exp(['#{typeset-doc}', me, parens])
   | ~else:
       syntax_meta.error("expected forms and documentation content", '$me $parens')
 
