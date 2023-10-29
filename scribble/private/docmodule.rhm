@@ -57,18 +57,17 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
        '#{#:module-paths}', pack_tree([ModulePath.s_exp(ModulePath('$mod ...'))]),
        option.form, ..., ...])
 
-expr.macro 'rhombusmodname ($mod ...) $tail ...':
-  values(expr_meta.pack_s_exp(['racketmodlink',
-                               pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
-                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]),
-         '$tail ...')
+expr.macro 'rhombusmodname ($mod ...)':
+  expr_meta.pack_s_exp(['racketmodlink',
+                        pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
+                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
 
-expr.macro 'rhombuslangname ($mod ...) $tail ...':
-  values(expr_meta.pack_s_exp(['racketmodlink',
-                               as_racket_mod_name('$mod ...'),
-                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]))
+expr.macro 'rhombuslangname ($mod ...)':
+  expr_meta.pack_s_exp(['racketmodlink',
+                        as_racket_mod_name('$mod ...'),
+                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
 
-expr.macro 'racketmodname ($mod ...) $tail ...':
-  values(expr_meta.pack_s_exp(['racketmodlink',
-                               as_racket_mod_name('$mod ...'),
-                               expr_meta.pack_expr('@rhombus($mod ..., ~datum)')]))
+expr.macro 'racketmodname ($mod ...)':
+  expr_meta.pack_s_exp(['racketmodlink',
+                        as_racket_mod_name('$mod ...'),
+                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
