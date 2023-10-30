@@ -35,6 +35,17 @@ export:
     matching
     converting
     maybe
+    syntax_class
+    description
+    error_mode
+    kind
+    fields
+    root_swap
+    match_def
+    match_when
+    match_unless
+    $
+    pattern
 
 module for_doc:
   export:
@@ -43,6 +54,10 @@ module for_doc:
 
 meta:
   def body_spaces = [#'#{rhombus/defn}, #false]
+  fun adjust_expr_or_body(expr_or_body, esc):
+    match expr_or_body
+    | ': $(body :: Block)': spacer.adjust_term(body, body_spaces, esc)
+    | ~else: spacer.adjust_sequence(expr_or_body, #'~expr, esc)
   syntax_class Rhs:
     kind ~group
   | '= $_'
@@ -79,6 +94,8 @@ meta:
   syntax_class Args:
     kind ~term
   | '($_)'
+  fun adjust_args(args && '($arg, ...)', adjust_arg):
+    '($(adjust_arg(arg)), ...)'.relocate(args)
   syntax_class Name(esc):
     kind ~sequence
   | '$('$_ .') ...
@@ -109,6 +126,19 @@ meta:
     '$new_op $new_res_ann'.relocate(stx)
 
 meta:
+  fun adjust_kw_opt_arg(arg, esc, adjust_bind):
+    match arg
+    | '$(kw :: Keyword) $(rhs :: Rhs)':
+        let new_rhs = adjust_rhs(rhs, esc)
+        '$kw $new_rhs'.relocate(arg)
+    | '$(kw :: Keyword): $(b :: Block)':
+        match b
+        | ': $(bind :: Group)':
+            let new_b = ': $(adjust_bind(bind))'.relocate(b)
+            '$kw $new_b'.relocate(arg)
+        | ~else: arg
+    | '$(_ :: Keyword)': arg
+    | ~else: adjust_bind(arg)
   fun adjust_fun(fn, esc, ~find_name = #false):
     fun adjust_fun_case(case, adjust_arg):
       match case
@@ -119,28 +149,11 @@ meta:
              | '$(res_ann :: ResAnn)': field body = #false
              | ': $(body :: Block)': field res_ann = #false
              | '$()': field res_ann = #false; field body = #false)':
-          let new_args:
-            let '($arg, ...)' = args
-            '($(adjust_arg(arg)), ...)'.relocate(args)
+          let new_args = adjust_args(args, adjust_arg)
           let new_res_ann = if res_ann | adjust_res_ann(res_ann, esc) | ''
           let new_body = if body | spacer.adjust_term(body, body_spaces, esc) | ''
           '$new_args $new_res_ann $new_body'.relocate(case)
       | ~else: case
-    fun adjust_plain_fun(fn):
-      fun adjust_arg(arg):
-        match arg
-        | '$(kw :: Keyword) $(rhs :: Rhs)':
-            let new_rhs = adjust_rhs(rhs, esc)
-            '$kw $new_rhs'.relocate(arg)
-        | '$(kw :: Keyword): $(b :: Block)':
-            match b
-            | ': $(def :: Group)':
-                let new_b = ': $(adjust_def(def, esc))'.relocate(b)
-                '$kw $new_b'.relocate(arg)
-            | ~else: arg
-        | '$(_ :: Keyword)': arg
-        | ~else: adjust_def(arg, esc)
-      adjust_fun_case(fn, adjust_arg)
     fun adjust_fun_cases(cases):
       fun adjust_arg(arg):
         match arg
@@ -183,7 +196,12 @@ meta:
               let new_res_ann = if res_ann | adjust_res_ann(res_ann, esc) | ''
               let new_cases = adjust_fun_cases(cases)
               '$new_res_ann $new_cases'
-          | ~else: adjust_plain_fun(tail)
+          | ~else:
+              fun adjust_bind(bind):
+                adjust_def(bind, esc)
+              fun adjust_arg(arg):
+                adjust_kw_opt_arg(arg, esc, adjust_bind)
+              adjust_fun_case(tail, adjust_arg)
         '$name $new_tail'.relocate(fn)
     | ~else: fn
 
@@ -344,42 +362,39 @@ module for_doc:
 
 spacer.bridge class(self, tail, context, esc):
   ~in: ~defn
-  fun adjust_args(args):
-    fun adjust_spec(spec):
-      match spec
-      | '$(pattern:
-             kind ~sequence
-           | '$(priv && 'private') $(mut && 'mutable')'
-           | '$(priv && 'private')': field mut = #false
-           | '$(mut && 'mutable')': field priv = #false
-           | '': field priv = #false; field mut = #false)
-           $fld':
-          let new_priv = if priv | spacer.set(priv, #'~class_clause) | ''
-          let new_mut = if mut | spacer.set(mut, #'~bind) | ''
-          let new_fld = adjust_field(fld, esc)
-          '$new_priv $new_mut $new_fld'.relocate(spec)
-      | ~else: spec
-    fun adjust_arg(arg):
-      match arg
-      | '$(kw :: Keyword): $(b :: Block)':
-          match b
-          | ': $(spec :: Group)':
-              let new_b = ': $(adjust_spec(spec))'.relocate(b)
-              '$kw $new_b'.relocate(arg)
-          | ~else: arg
-      | '$(kw :: Keyword) $(rhs :: Rhs)':
-          let new_rhs = adjust_rhs(rhs, esc)
-          '$kw $new_rhs'.relocate(arg)
-      | ~else: adjust_spec(arg)
-    let '($arg, ...)' = args
-    '($(adjust_arg(arg)), ...)'.relocate(args)
+  fun adjust_spec(spec):
+    match spec
+    | '$(pattern:
+           kind ~sequence
+         | '$(priv && 'private') $(mut && 'mutable')'
+         | '$(priv && 'private')': field mut = #false
+         | '$(mut && 'mutable')': field priv = #false
+         | '': field priv = #false; field mut = #false)
+         $fld':
+        let new_priv = if priv | spacer.set(priv, #'~class_clause) | ''
+        let new_mut = if mut | spacer.set(mut, #'~bind) | ''
+        let new_fld = adjust_field(fld, esc)
+        '$new_priv $new_mut $new_fld'.relocate(spec)
+    | ~else: spec
+  fun adjust_arg(arg):
+    match arg
+    | '$(kw :: Keyword): $(b :: Block)':
+        match b
+        | ': $(spec :: Group)':
+            let new_b = ': $(adjust_spec(spec))'.relocate(b)
+            '$kw $new_b'.relocate(arg)
+        | ~else: arg
+    | '$(kw :: Keyword) $(rhs :: Rhs)':
+        let new_rhs = adjust_rhs(rhs, esc)
+        '$kw $new_rhs'.relocate(arg)
+    | ~else: adjust_spec(arg)
   match tail
   | '$(name :: Name(esc)) $(args :: Args)
        $(pattern:
            kind ~group
          | ': $(body :: Block)'
          | '$()': field body = #false)':
-      let new_args = adjust_args(args)
+      let new_args = adjust_args(args, adjust_arg)
       let new_body = if body | adjust_class_body(body, #'#{rhombus/class_clause}, esc) | ''
       '$self $name $new_args $new_body'
   | ~else: '$self $tail'
@@ -405,7 +420,11 @@ spacer.bridge implements(self, tail, context, esc):
   '$self $(spacer.adjust_sequence(tail, #'~class, esc))'
 
 spacer.bridge field(self, tail, context, esc):
-  ~in: ~class_clause
+  ~in: ~class_clause ~pattern_clause
+  let adjust_field:
+    match get_space(self)
+    | #'#{rhombus/pattern_clause}: adjust_syntax_field
+    | ~else: adjust_field
   '$self $(adjust_field(tail, esc))'
 
 meta:
@@ -566,17 +585,25 @@ spacer.bridge match(self, tail, context, esc):
       '$self $new_expr $new_a'
   | ~else: '$self $tail'
 
+meta:
+  fun adjust_colon(tail, esc):
+    spacer.adjust_sequence(tail, #'~annot, esc)
+
 spacer.bridge ::(self, tail, context, esc):
-  ~in: ~expr ~bind
-  '$self $(spacer.adjust_sequence(tail, #'~annot, esc))'
+  ~in: ~expr ~bind ~unquote_bind
+  let adjust_colon:
+    match get_space(self)
+    | #'#{rhombus/unquote_bind}: adjust_syntax_colon
+    | ~else: adjust_colon
+  '$self $(adjust_colon(tail, esc))'
 
 spacer.bridge :~(self, tail, context, esc):
   ~in: ~expr ~bind
-  '$self $(spacer.adjust_sequence(tail, #'~annot, esc))'
+  '$self $(adjust_colon(tail, esc))'
 
 spacer.bridge is_a(self, tail, context, esc):
   ~in: ~expr
-  '$self $(spacer.adjust_sequence(tail, #'~annot, esc))'
+  '$self $(adjust_colon(tail, esc))'
 
 meta:
   fun adjust_one(tail, context, esc, adjust):
@@ -668,3 +695,204 @@ spacer.bridge maybe(self, tail, context, esc):
     | '($(_ :: Group))': spacer.adjust_term(t, #'~annot, esc)
     | ~else: t
   '$self $(adjust_one(tail, context, esc, adjust))'
+
+meta:
+  def pattern_spaces = [#'#{rhombus/pattern_clause}, & body_spaces]
+  fun adjust_patterns(pats, esc):
+    fun adjust_block(b):
+      let ': $(g :: Group)': b
+      match g
+      | '$(pat && '«'$_'»')
+           $(pattern:
+               kind ~group
+             | ': $(body :: Block)'
+             | '$()': field body = #false)':
+          let new_g:
+            let new_pat = spacer.adjust_term(pat, #'~bind, esc)
+            let new_body = if body | spacer.adjust_term(body, pattern_spaces, esc) | ''
+            '$new_pat $new_body'.relocate(g)
+          ': $new_g'.relocate(b)
+      | ~else: b
+    match pats
+    | '| $(b :: Block) | ...' && '| $(_ :: Group) | ...':
+        Syntax.make([#'alts, adjust_block(b), ...]).relocate(pats)
+    | ~else: pats
+
+meta:
+  fun adjust_syntax_class(stx_cls, esc, adjust_name):
+    match stx_cls
+    | (pattern:
+         kind ~group
+       | '$name ... $(opts && ': $_') $(pats && '| $_ | ...')'
+       | '$name ... $(opts && ': $_')': field pats = #false
+       | '$name ... $(pats && '| $_ | ...')': field opts = #false
+       | '$name ...': field opts = #false; field pats = #false):
+        let new_name = adjust_name('$name ...')
+        if new_name
+        | let new_opts:
+            if opts | spacer.adjust_term(opts, #'~syntax_class_clause, esc) | ''
+          let new_pats:
+            if pats | adjust_patterns(pats, esc) | ''
+          '$new_name $new_opts $new_pats'.relocate(stx_cls)
+        | stx_cls
+    | ~else: stx_cls
+
+spacer.bridge syntax_class(self, tail, context, esc):
+  ~in: ~defn
+  fun adjust_bind(bind):
+    match bind
+    | (pattern:
+         kind ~group
+       | '$id ... $(rhs :: Rhs)'
+       | '$id ...: $(rhs :: Block)'):
+        let new_rhs = adjust_rhs(rhs, esc)
+        '$id ... $new_rhs'.relocate(bind)
+    | ~else: bind
+  fun adjust_name(name):
+    match name
+    | '$(name :: Name(esc))
+         $(pattern:
+             kind ~group
+           | '$(args :: Args)'
+           | '$()': field args = #false)':
+        let new_args:
+          fun adjust_arg(arg):
+            adjust_kw_opt_arg(arg, esc, adjust_bind)
+          if args | adjust_args(args, adjust_arg) | ''
+        '$name $new_args'
+    | ~else: #false
+  '$self $(adjust_syntax_class(tail, esc, adjust_name))'
+
+spacer.bridge description(self, tail, context, esc):
+  ~in: ~syntax_class_clause
+  '$self $(adjust_expr_or_body(tail, esc))'
+
+spacer.bridge error_mode(self, tail, context, esc):
+  ~in: ~syntax_class_clause
+  '$self $tail'
+
+spacer.bridge kind(self, tail, context, esc):
+  ~in: ~syntax_class_clause
+  '$self $tail'
+
+meta:
+  syntax_class.together:
+    syntax_class NameRepet(esc):
+      kind ~sequence
+    | '[$(_ :: NameRepet(esc)), ...]'
+    | '$(_ :: Name(esc))'
+  fun adjust_name_repet(repet, esc):
+    match repet
+    | '[$inner, $dots]':
+        let new_inner = adjust_name_repet(inner, esc)
+        let new_dots = spacer.set(dots, #'~bind)
+        Syntax.make([#'brackets, new_inner, new_dots]).relocate(repet)
+    | ~else: repet
+
+spacer.bridge fields(self, tail, context, esc):
+  ~in: ~syntax_class_clause
+  fun adjust_kind(kind):
+    let ': $(g :: Group)' = kind
+    match g
+    | '$(tag && 'kind') $tail':
+        let new_g:
+          let new_tag = spacer.set(tag, #'~syntax_class_clause)
+          '$new_tag $tail'.relocate(g)
+        ': $new_g'.relocate(kind)
+    | ~else: kind
+  fun adjust_specs(specs):
+    match specs
+    | '$(spec :: NameRepet(esc)) ...
+         $(pattern:
+             kind ~group
+           | '$(kind && ': $(_ :: Group)')'
+           | '$()': field kind = #false)':
+        let [new_spec, ...] = [adjust_name_repet(spec, esc), ...]
+        let new_kind = if kind | adjust_kind(kind) | ''
+        '$new_spec ... $new_kind'.relocate(specs)
+    | ~else: specs
+  match tail
+  | '$(b && ': $specs; ...')':
+      let new_b = ': $(adjust_specs(specs)); ...'.relocate(b)
+      '$self $new_b'
+  | ~else: '$self $(adjust_specs(tail))'
+
+spacer.bridge root_swap(self, tail, context, esc):
+  ~in: ~syntax_class_clause
+  '$self $tail'
+
+meta:
+  fun adjust_syntax_field(fld, esc):
+    match fld
+    | '$(spec :: NameRepet(esc))
+         $(pattern:
+             kind ~group
+           | '$(rhs :: Rhs)'
+           | ': $(rhs :: Block)'
+           | '$()': field rhs = #false)':
+        let new_spec = adjust_name_repet(spec, esc)
+        let new_rhs = if rhs | adjust_rhs(rhs, esc) | ''
+        '$new_spec $new_rhs'.relocate(fld)
+    | ~else: fld
+
+spacer.bridge match_def(self, tail, context, esc):
+  ~in: ~pattern_clause
+  '$self $(adjust_syntax_field(tail, esc))'
+
+spacer.bridge match_when(self, tail, context, esc):
+  ~in: ~pattern_clause
+  '$self $(adjust_expr_or_body(tail, esc))'
+
+spacer.bridge match_unless(self, tail, context, esc):
+  ~in: ~pattern_clause
+  '$self $(adjust_expr_or_body(tail, esc))'
+
+meta:
+  def unquote_spaces = [#'#{rhombus/unquote_bind}, #'#{rhombus/bind}]
+
+spacer.bridge $(self, tail, context, esc):
+  ~in: ~bind
+  fun adjust(t):
+    spacer.adjust_term(t, unquote_spaces, esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+meta:
+  fun adjust_syntax_colon(tail, esc):
+    match tail
+    | '$(pattern ref:
+           kind ~sequence
+         | '$(_ :: Name(esc))'
+         | '($(_ :: Group))')
+         $(pattern:
+             kind ~group
+           | '$(args :: Args): $(expose :: Block)': field tail = ''
+           | '$(args :: Args) $tail': field expose = #false
+           | ': $(expose :: Block)': field args = #false; field tail = ''
+           | '$tail': field args = #false; field expose = #false)':
+        let new_ref:
+          match ref
+          | '($inner)':
+              let new_inner:
+                fun adjust_name(name):
+                  match name
+                  | '$(tag && 'syntax_class')': spacer.set(tag, #'~defn)
+                  | ~else: #false
+                adjust_syntax_class(inner, esc, adjust_name)
+              '($new_inner)'.relocate(ref)
+          | ~else: spacer.set(ref, #'~stxclass)
+        let new_args:
+          fun adjust_arg(arg):
+            spacer.adjust_group(arg, #'~expr, esc)
+          if args | adjust_args(args, adjust_arg) | ''
+        let new_expose = if expose | spacer.adjust_term(expose, #'~impo, esc) | ''
+        let new_tail = spacer.adjust_sequence(tail, unquote_spaces, esc)
+        '$new_ref $new_args $new_expose $new_tail'
+    | ~else: tail
+
+spacer.bridge pattern(self, tail, context, esc):
+  ~in: ~bind ~unquote_bind
+  fun adjust_name(name):
+    match name
+    | '$(_ :: Name(esc))' || '': name
+    | ~else: #false
+  '$self $(adjust_syntax_class(tail, esc, adjust_name))'

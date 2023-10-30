@@ -535,9 +535,9 @@
   (lambda (stx space-name subst)
     (syntax-parse stx
       #:datum-literals (group)
-      [(group _ (~var id (identifier-target space-name)) e ...)
+      [(group tag (~var id (identifier-target space-name)) e ...)
        (rb #:at stx
-           #`(group #,@(subst #'id.name) e ...))])))
+           #`(group tag #,@(subst #'id.name) e ...))])))
 
 (define-doc class
   "class"
