@@ -104,7 +104,7 @@ meta:
          | '$(p && '($_)')': field tag = #false):
           let new_tag = if tag | spacer.set(tag, #'~expr) | ''
           let new_p = spacer.adjust_term(p, #'~annot, esc)
-          '$new_tag new_p'
+          '$new_tag $new_p'
       | ~else: spacer.adjust_sequence(res_ann, #'~annot, esc)
     '$new_op $new_res_ann'.relocate(stx)
 
