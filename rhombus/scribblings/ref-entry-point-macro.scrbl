@@ -151,10 +151,12 @@
 @doc(
   syntax_class entry_point_meta.Parsed(adj :: Adjustment):
     kind: ~group
-    field group
+    fields:
+      group
   syntax_class entry_point_meta.Arity:
     kind: ~group
-    field group
+    fields:
+      group
 ){
 
  @provided_meta()

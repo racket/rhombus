@@ -206,15 +206,18 @@
 @doc(
   syntax_class reducer_meta.Parsed:
     kind: ~group
-    field group
+    fields:
+      group
   syntax_class reducer_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
   syntax_class reducer_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
 ){
 
  @provided_meta()

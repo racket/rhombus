@@ -195,15 +195,18 @@
 @doc(
   syntax_class annot_meta.Parsed:
     kind: ~group
-    field group
+    fields:
+      group
   syntax_class annot_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
   syntax_class annot_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
 ){
 
 @provided_meta()

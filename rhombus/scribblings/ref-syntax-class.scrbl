@@ -409,17 +409,17 @@
 }
 
 @doc(
-  syntax_class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Identifier: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Operator: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Name: #,(@rhombus(kind, ~syntax_class_clause)): ~sequence
-  syntax_class IdentifierName: #,(@rhombus(kind, ~syntax_class_clause)): ~sequence
-  syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Int: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
-  syntax_class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
-  syntax_class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block
+  syntax_class Term: kind: ~term
+  syntax_class Identifier: kind: ~term
+  syntax_class Operator: kind: ~term
+  syntax_class Name: kind: ~sequence
+  syntax_class IdentifierName: kind: ~sequence
+  syntax_class Keyword: kind: ~term
+  syntax_class String: kind: ~term
+  syntax_class Int: kind: ~term
+  syntax_class Group: kind: ~group
+  syntax_class Multi: kind: ~multi
+  syntax_class Block: kind: ~block
 ){
 
 @provided_also_meta()

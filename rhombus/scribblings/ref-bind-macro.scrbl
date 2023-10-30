@@ -335,15 +335,18 @@
 @doc(
   syntax_class bind_meta.Parsed:
     kind: ~group
-    field group
+    fields:
+      group
   syntax_class bind_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
   syntax_class bind_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
 ){
 
  @provided_meta()
@@ -358,9 +361,10 @@
 
   syntax_class bind_meta.Argument:
     kind: ~group
-    field parsed
-    field maybe_keyword
-    field maybe_expr
+    fields:
+      parsed
+      maybe_keyword
+      maybe_expr
 ){
 
  @provided_meta()
@@ -390,10 +394,11 @@
 
   syntax_class bind_meta.Result:
     kind: ~sequence
-    field count
-    field maybe_converter
-    field static_info
-    field annotation_string
+    fields:
+      count
+      maybe_converter
+      static_info
+      annotation_string
 ){
 
  @provided_meta()

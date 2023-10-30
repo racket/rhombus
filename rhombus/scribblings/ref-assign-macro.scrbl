@@ -102,8 +102,9 @@
 @doc(
   syntax_class assign_meta.AssignParsed(ref, set, name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
 ){
 
 @provided_meta()

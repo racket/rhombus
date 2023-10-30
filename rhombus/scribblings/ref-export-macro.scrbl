@@ -88,15 +88,18 @@
 @doc(
   syntax_class expo_meta.Parsed:
     kind: ~group
-    field group
+    fields:
+      group
   syntax_class expo_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
   syntax_class expo_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field group
-    field [tail, ...]
+    fields:
+      group
+      [tail, ...]
 ){
 
  @provided_meta()
@@ -111,7 +114,8 @@
 @doc(
   syntax_class expo_meta.ParsedModifier(exp):
     kind: ~group
-    field group
+    fields:
+      group
 ){
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but parses an
