@@ -196,7 +196,7 @@
 
  The usual arithmetic operators with the usual precedence, except that
  @rhombus(/) does not have the same precedence as @rhombus(*) when it
- appears to the right of @rhombus(*).
+ appears to the left of @rhombus(*).
 
 @examples(
   1+2
@@ -205,6 +205,8 @@
   8/2
   1+2*3
   2**10
+  ~error:
+    6/2*3
 )
 
 }
