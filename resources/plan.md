@@ -172,11 +172,11 @@ Failure is not yet ruled out. If the Racket project leadership never
 approves the language for direct support, then the project fails. 
 
 
-Phase 4: Transition (years) 
+Phase 4: Production (years)
 ------------------- 
 
 GOAL AND OUTPUT: Unified distribution and presentation for the new 
-language and the existing Racket ecosystem. 
+language, possibly prominently branded in the Racket ecosystem.
 
 PROCESS: If Rhombus is likely to appeal to a large number of people, 
 the team will make adjustments to the existing Racket infrastructure: 
@@ -191,15 +191,16 @@ the team will make adjustments to the existing Racket infrastructure:
 
 - other outward-facing aspects. 
 
-It's difficult to say what transition will be needed without knowing 
-what the actual language will look like, but it's easy to predict that 
-some transition will be needed if the Rhombus project manages to 
-progress to this point. 
+It's difficult to say what adjustments will be needed without knowing
+what the actual language will look like, but it's easy to predict that
+some new and unifying material will be needed if the Rhombus project
+manages to progress to this point.
 
 Racket project leadership, expanded with leaders emerging from the 
 Rhombus project, will make the calls at this phase. 
 
-Failure is no longer an option at this point. 
+Failure is no longer an option at this point for the new language,
+but its prominence within Racket will depend on the community.
 
 CONCLUSION: The new language is at least as well supported and 
 available as `#lang racket`. 
