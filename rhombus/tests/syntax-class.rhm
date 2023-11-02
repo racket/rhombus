@@ -715,6 +715,11 @@ block:
     m(['8 1', '9 2 3'])
     ~prints_like ['1', '2']
 
+def is_old_racket:
+  import lib("racket/base.rkt")
+  import lib("version/utils.rkt")
+  utils.#{version<?}(base.version(), "8.10")
+
 // check interaction of macro introduction and pattern variables
 block:
   import rhombus/meta open
@@ -730,18 +735,24 @@ block:
         | (pattern | '$('$')x $('$')$ex'): $ex»'
     matcher x
     ~prints_like '2'
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern | '$('$')$ex $('$')x'): x»'
-    matcher x
-    ~prints_like '2'
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern | '$('$')$ex $('$')x'): $ex»'
-    matcher x
-    ~prints_like '1'
+  unless is_old_racket
+  | check:
+      ~eval
+      import rhombus/meta open
+      expr.macro 'matcher $(ex :: Term)':
+        '«match '1 2'
+          | (pattern | '$('$')$ex $('$')x'): x»'
+      matcher x
+      ~prints_like '2'
+  unless is_old_racket
+  | check:
+      ~eval
+      import rhombus/meta open
+      expr.macro 'matcher $(ex :: Term)':
+        '«match '1 2'
+          | (pattern | '$('$')$ex $('$')x'): $ex»'
+      matcher x
+      ~prints_like '1'
 
 // field names are recognized symbolically
 // Is this the expected behavior?  I think it is.
@@ -759,18 +770,24 @@ block:
         | (pattern who | '$('$')x $('$')$ex'): who . $ex»'
     matcher x
     ~prints_like '2'
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern who | '$('$')$ex $('$')x'): who.x»'
-    matcher x
-    ~prints_like '2'
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern who | '$('$')$ex $('$')x'): who . $ex»'
-    matcher x
-    ~prints_like '2'
+  unless is_old_racket
+  | check:
+      ~eval
+      import rhombus/meta open
+      expr.macro 'matcher $(ex :: Term)':
+        '«match '1 2'
+          | (pattern who | '$('$')$ex $('$')x'): who.x»'
+      matcher x
+      ~prints_like '2'
+  unless is_old_racket
+  | check:
+      ~eval
+      import rhombus/meta open
+      expr.macro 'matcher $(ex :: Term)':
+        '«match '1 2'
+          | (pattern who | '$('$')$ex $('$')x'): who . $ex»'
+      matcher x
+      ~prints_like '2'
 
 // check (not) `open`ing named `pattern`s
 check:
