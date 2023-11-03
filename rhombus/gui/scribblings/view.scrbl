@@ -16,7 +16,7 @@
 }
 
 @doc(
-  property View.handle(v :: View)
+  property (v :: View).handle
 ){
 
  Returns an Racket object that corresponds to the view for use directly

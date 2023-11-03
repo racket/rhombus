@@ -341,23 +341,40 @@ meta:
 module for_doc:
   spacer.bridge as_class_clause(self, tail, context, esc):
     ~in: ~defn
+    fun adjust_lhs_method(tail, esc):
+      match tail
+      | '$(p && '($(_ :: Group))') $(dot && '.') $new_tail':
+          let new_p = spacer.adjust_term(p, #'~expr, esc)
+          let new_dot = spacer.set(dot, #'~expr)
+          '$new_p $new_dot $new_tail'.relocate(tail)
+      | ~else: tail
+    fun adjust_lhs_property(tail, esc):
+      match tail
+      | '$(a && '| $(b1 :: Block) | $(b2 :: Block)')':
+          fun adjust_block(b):
+            let ': $(g :: Group)' = b
+            ': $(adjust_lhs_method(g, esc))'.relocate(b)
+          let new_b1 = adjust_block(b1)
+          let new_b2 = adjust_block(b2)
+          Syntax.make([#'alts, new_b1, new_b2]).relocate(a)
+      | ~else: adjust_lhs_method(tail, esc)
     match tail
     | '$(pattern who:
            kind ~term
-         | 'method': field adjust = adjust_method
-         | 'property': field adjust = adjust_property
-         | 'dot': field adjust = fun (tail, esc):
-                    spacer.adjust_sequence(tail, body_spaces, esc))
-         $(pattern:
-             kind ~sequence
-           | '$(p && '($(_ :: Group))') $(dot && '.')'
-           | '': field p = #false; field dot = #false)
+         | 'method':
+             field adjust = adjust_method
+             field adjust_lhs = adjust_lhs_method
+         | 'property':
+             field adjust = adjust_property
+             field adjust_lhs = adjust_lhs_property
+         | 'dot':
+             field adjust = fun (tail, esc):
+               spacer.adjust_sequence(tail, body_spaces, esc)
+             field adjust_lhs = adjust_lhs_method)
          $tail':
         let new_who = spacer.set(who, #'~class_clause)
-        let new_p = if p | spacer.adjust_term(p, #'~expr, esc) | ''
-        let new_dot = if dot | spacer.set(dot, #'~expr) | ''
-        let new_tail = who.adjust(tail, esc)
-        '$new_who $new_p $new_dot $new_tail'
+        let new_tail = who.adjust_lhs(who.adjust(tail, esc), esc)
+        '$new_who $new_tail'
     | ~else: tail
 
 spacer.bridge class(self, tail, context, esc):

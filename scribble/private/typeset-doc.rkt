@@ -16,17 +16,13 @@
          "typeset-key-help.rkt"
          "defining-element.rkt"
          shrubbery/print
-         racket/list
          (only-in rhombus/private/name-root-ref
                   name-root-ref)
          (only-in rhombus/private/name-root-space
                   in-name-root-space
                   name-root-quote)
-         (only-in (submod rhombus/private/module-path for-meta)
-                  modpath)
          (only-in "rhombus.rhm"
-                  rhombusblock_etc
-                  [rhombus one-rhombus])
+                  rhombusblock_etc)
          (only-in rhombus/parse
                   rhombus-expression)
          (only-in scribble/manual
@@ -54,11 +50,7 @@
          (only-in scribble/manual-struct
                   thing-index-desc)
          (only-in scribble/private/manual-vars
-                  add-background-label)
-         ;; for `extract-binding-metavariables`, etc.
-         (only-in rhombus
-                  :: |.| $
-                  [= rhombus-=]))
+                  add-background-label))
 
 (provide typeset-doc
          define-nonterminal
@@ -572,14 +564,75 @@
                                      (metavar id nonterm?)))))
 
 (define-for-syntax (extract-binding-metavariables stx vars)
+  (define (extract-binding-group stx vars)
+    (syntax-parse stx
+      #:datum-literals (group block op :: :~ =)
+      [(group t . (~or* ((op (~or* :: :~ =)) . _)
+                        ((block . _))
+                        ()))
+       (extract-binding-term #'t vars)]
+      [_ vars]))
+  (define (extract-binding-term stx vars)
+    (define-splicing-syntax-class rst/dot
+      #:datum-literals (group op ...)
+      (pattern (~seq _ (group (op ...)))))
+    (define-splicing-syntax-class rst/and
+      #:datum-literals (group op &)
+      (pattern (~seq (group (op &) . _))))
+    (define (extract-rest stx vars rst/dot-k)
+      (if stx
+          (syntax-parse stx
+            [(g _) (rst/dot-k #'g)]
+            [((tag _ . more)) (extract-binding-group #'(tag . more) vars)])
+          vars))
+    (define (extract-list-rest stx vars)
+      (extract-rest
+       stx vars
+       (lambda (stx) (extract-binding-group stx vars))))
+    (define (maybe-extract-group stx vars)
+      (syntax-parse stx
+        [(g) (extract-binding-group #'g vars)]
+        [_ vars]))
+    (define (extract-map-rest stx vars)
+      (extract-rest
+       stx vars
+       (lambda (stx)
+         (syntax-parse stx
+           #:datum-literals (block)
+           [(tag t ... (block . gs))
+            (maybe-extract-group
+             #'gs
+             (extract-binding-group #'(tag t ...) vars))]))))
+    (syntax-parse stx
+      #:datum-literals (brackets braces parens)
+      [(brackets . (~or* (g ... rst:rst/dot)
+                         (g ... rst:rst/and)
+                         (g ...)))
+       (extract-list-rest
+        (attribute rst)
+        (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
+          (extract-binding-group g vars)))]
+      [(braces . more)
+       (syntax-parse #'more
+         #:datum-literals (block)
+         [(~or* ((_ ... (block . gs)) ... rst:rst/dot)
+                ((_ ... (block . gs)) ... rst:rst/and)
+                ((_ ... (block . gs)) ...))
+          (extract-map-rest
+           (attribute rst)
+           (for/fold ([vars vars]) ([gs (in-list (syntax->list #'(gs ...)))])
+             (maybe-extract-group gs vars)))]
+         [(~or* (_ ... rst:rst/dot)
+                (_ ... rst:rst/and)
+                _)
+          (extract-list-rest (attribute rst) vars)])]
+      [(parens b) (extract-binding-term #'b vars)]
+      [id:identifier (add-metavariable vars #'id #f)]
+      [_ vars]))
   (syntax-parse stx
-    #:literals (:: rhombus-=)
-    #:datum-literals (parens group op)
-    [(group _:keyword (block g)) (extract-binding-metavariables #'g vars)]
-    [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
-    [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
-    [(group (parens g)) (extract-binding-metavariables #'g vars)]
-    [(group id:identifier) (add-metavariable vars #'id #F)]
+    #:datum-literals (group block)
+    [(~or* (group _:keyword (block g)) g)
+     (extract-binding-group #'g vars)]
     [_ vars]))
 
 (define-for-syntax (extract-group-metavariables g vars nonterm?)
@@ -610,8 +663,7 @@
     [(group t ...)
      (for/fold ([vars vars] [after-$? #f] #:result vars) ([t (in-list (syntax->list #'(t ...)))])
        (syntax-parse t
-         #:datum-literals (op parens brackets braces block quotes alts)
-         #:literals ($)
+         #:datum-literals (op parens brackets braces block quotes alts $)
          [(op $) (values vars #t)]
          [_:identifier (if after-$?
                            (values (extract-term-metavariables t vars #t) #f)
@@ -657,8 +709,7 @@
            [(null? ts) null]
            [else
             (syntax-parse (car ts)
-              #:datum-literals (op parens brackets braces quotes block alts)
-              #:literals ($)
+              #:datum-literals (op parens brackets braces quotes block alts $)
               [(op (~and esc $))
                #:when (pair? (cdr ts))
                (define pre #'esc)

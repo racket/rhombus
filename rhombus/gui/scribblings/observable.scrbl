@@ -133,7 +133,7 @@
 
 @doc(
   fun Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs
-  fun Obs.combine({#,(@rhombus(key, ~var)): obs :: Obs, ...}) :: Obs
+  fun Obs.combine({key: obs :: Obs, ...}) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
