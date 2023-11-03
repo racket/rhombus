@@ -1,25 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     shrubbery/property)
-         (prefix-in typeset-meta: "typeset_meta.rhm")
-         "metavar.rkt"
-         "doc.rkt"
+                     syntax/parse/pre)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
          "typeset-help.rkt"
-         racket/list
          rhombus/private/name-root
          (only-in rhombus/private/name-root-space
                   in-name-root-space)
-         (only-in rhombus
-                  :: |.| $)
-         (only-in "rhombus.rhm"
-                  rhombusblock_etc
-                  [rhombus one-rhombus])
-         (submod "rhombus-spacer.rhm" for_doc)
-         (only-in rhombus/parse
-                  rhombus-expression)
+         (submod "rhombus-spacer.rhm" for_doc) ; for spacer bindings
          (only-in scribble/manual
                   hspace)
          (only-in scribble/core
@@ -117,12 +105,19 @@
     #:datum-literals (group parens)
     [(group _ (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]))
 
-(define-for-syntax (parens-extract-metavariables stx space-name vars)
-  (syntax-parse stx
-    #:datum-literals (parens group)
-    [(group _ (~var id (identifier-target space-name)) (parens g ...) . _)
-     (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
-       (extract-binding-metavariables g vars))]))
+(define-for-syntax (parens-extract-metavariables stx space-name vars #:just-parens? [just-parens? #f])
+  (define (extract-groups stx)
+    (for/fold ([vars vars]) ([g (in-list (syntax->list stx))])
+      (extract-binding-metavariables g vars)))
+  (if just-parens?
+      (syntax-parse stx
+        #:datum-literals (parens)
+        [(parens . gs)
+         (extract-groups #'gs)])
+      (syntax-parse stx
+        #:datum-literals (parens group)
+        [(group _ (~var _ (identifier-target space-name)) (parens . gs) . _)
+         (extract-groups #'gs)])))
 
 (define-for-syntax (identifier-macro-extract-name stx space-name)
   (syntax-parse stx
@@ -374,81 +369,72 @@
   parens-extract-metavariables
   head-extract-typeset)
 
-(begin-for-syntax
-  (define (build-dotted root name)
-    (define target+remains+space (resolve-name-ref (list #f) root (list name)))
-    (unless target+remains+space
-      (raise-syntax-error #f "no label binding" root name))
-    (define target (car target+remains+space))
-    (datum->syntax #f (list root
-                            ;; 'raw property used to typeset object
-                            (datum->syntax target (syntax-e target) name name)
-                            ;; string for key, index, and search:
-                            (format "~a.~a"
-                                    (syntax-e root)
-                                    (syntax-e name)))))
+(define-for-syntax (build-dotted root name)
+  (define target+remains+space (resolve-name-ref (list #f) root (list name)))
+  (unless target+remains+space
+    (raise-syntax-error #f "no label binding" root name))
+  (define target (car target+remains+space))
+  (datum->syntax #f (list root
+                          ;; 'raw property used to typeset object
+                          (datum->syntax target (syntax-e target) name name)
+                          ;; string for key, index, and search:
+                          (format "~a.~a"
+                                  (syntax-e root)
+                                  (syntax-e name)))))
 
-  (define method-extract-name
-    (lambda (stx space-name)
-      (syntax-parse stx
-        #:datum-literals (group parens alts block :: |.| op)
-        [(group _ (parens (group _ (op ::) class)) (op |.|) name . _)
-         (build-dotted #'class #'name)]
-        [(group _ (alts (block (group (parens (group _ (op ::) class)) (op |.|) name . _)) . _))
-         (build-dotted #'class #'name)]
-        [_ (parens-extract-name stx space-name)])))
+(define-for-syntax (method-extract-name stx space-name #:property? [property? #f])
+  (syntax-parse stx
+    #:datum-literals (group parens alts block :: |.| op)
+    [(~and (~fail #:unless property?)
+           (group _ (alts (block (group (parens (group _ (op ::) class)) (op |.|) name . _)) . _)))
+     (build-dotted #'class #'name)]
+    [(group _ (parens (group _ (op ::) class)) (op |.|) name . _)
+     (build-dotted #'class #'name)]))
 
-  (define method-extract-metavariables
-    (lambda (stx space-name vars)
-      (syntax-parse stx
-        #:datum-literals (group parens alts block :: |.| := op)
-        [(group tag (parens (group self (op ::) class)) (op |.|) name (~and p (parens . _)) . _)
-         (parens-extract-metavariables #'(group tag name p) space-name
-                                       (add-metavariable vars #'self #F))]
-        [(group tag (parens (group self (op ::) class)) (op |.|) name . _)
-         (add-metavariable vars #'self #f)]
-        [(group _ (alts (block (group (parens (group self (op ::) class)) (op |.|) name . _))
-                        (block (group (parens (group _ (op ::) _)) (op |.|) _ (op :=) . rhs))))
-         (extract-binding-metavariables #'(group . rhs)
-                                        (add-metavariable vars #'self #f))]
-        [(group _ (alts (block (group (parens (group self (op ::) class)) (op |.|) name . _)) . _))
-         (add-metavariable vars #'self #f)]
-        [_ (parens-extract-metavariables stx space-name vars)])))
+(define-for-syntax (method-extract-metavariables stx space-name vars #:property? [property? #f])
+  (syntax-parse stx
+    #:datum-literals (group parens alts block :: |.| op)
+    [(~and (~fail #:unless property?)
+           (group _ (alts (block (group (parens (group self (op ::) _)) (op |.|) . _)) . more)))
+     (define vars+self (add-metavariable vars #'self #f))
+     (syntax-parse #'more
+       #:datum-literals (group parens block :: |.| := op)
+       [((block (group (parens (group _ (op ::) _)) (op |.|) _ (op :=) . rhs)) . _)
+        (extract-binding-metavariables #'(group . rhs) vars+self)]
+       [_ vars+self])]
+    [(group _ (parens (group self (op ::) _)) (op |.|) name . more)
+     (define vars+self (add-metavariable vars #'self #f))
+     (syntax-parse #'more
+       #:datum-literals (parens)
+       [((~and p (parens . _)) . _)
+        (parens-extract-metavariables #'p space-name vars+self #:just-parens? #t)]
+       [_ vars+self])]))
 
-  (define method-extract-typeset
-    (lambda (stx space-name subst)
-      (syntax-parse stx
-        #:datum-literals (group parens alts block :: |.| op)
-        [(group tag ((~and p-tag parens) (group lhs (~and cc (op ::)) class)) (~and dot (op |.|)) name . more)
-         (rb #:at stx
-             #`(group as_class_clause
-                      tag (p-tag (group lhs cc class)) dot #,@(subst #'name) . more))]
-        [(group tag ((~and a-tag alts)
-                     ((~and b-tag block)
-                      ((~and g-tag group)
-                       ((~and p-pag parens) (group lhs (~and cc (op ::)) class)) (~and dot (op |.|)) name . more))
-                     ((~and b2-tag block)
-                      ((~and g2-tag group)
-                       ((~and p2-pag parens) (group lhs2 (~and cc2 (op ::)) class2)) (~and dot2 (op |.|)) name2 . more2))
-                     ...))
-         (with-syntax ([((name2 ...) ...)
-                        (for/list ([name2 (in-list (syntax->list #'(name2 ...)))])
-                          (subst name2 #:redef? #t))])
-           (rb #:at stx
-               #`(group as_class_clause
-                        tag (a-tag
-                             (b-tag
-                              (g-tag
-                               (p-pag (group lhs cc class)) dot #,@(subst #'name) . more))
-                             (b2-tag
-                              (g2-tag
-                               (p2-pag (group lhs2 cc2 class2)) dot name2 ... . more2))
-                             ...))))]
-        [(group tag (~var id (identifier-target space-name)) e ...)
-         (rb #:at stx
-             #`(group as_class_clause
-                      tag #,@(subst #'id.name) e ...))]))))
-  
+(define-for-syntax (method-extract-typeset stx space-name subst #:property? [property? #f])
+  (syntax-parse stx
+    #:datum-literals (group parens alts block :: |.| op)
+    [(~and (~fail #:unless property?)
+           (group tag ((~and a-tag alts)
+                       ((~and b-tag block)
+                        ((~and g-tag group)
+                         (~and lhs (parens (group _ (op ::) _)))
+                         (~and dot (op |.|))
+                         name . more))
+                       ((~and b2-tag block)
+                        ((~and g2-tag group)
+                         (~and lhs2 (parens (group _ (op ::) _)))
+                         (~and dot2 (op |.|))
+                         name2 . more2)))))
+     (rb #:at stx
+         #`(group as_class_clause
+                  tag (a-tag
+                       (b-tag (g-tag lhs dot #,@(subst #'name) . more))
+                       (b2-tag (g2-tag lhs2 dot2 #,@(subst #'name2 #:redef? #t) . more2)))))]
+    [(group tag (~and lhs (parens (group _ (op ::) _))) (~and dot (op |.|)) name . more)
+     (rb #:at stx
+         #`(group as_class_clause
+                  tag lhs dot #,@(subst #'name) . more))]))
+
 (define-doc method
   "method"
   #f
@@ -459,9 +445,12 @@
 (define-doc property
   "property"
   #f
-  method-extract-name
-  method-extract-metavariables
-  method-extract-typeset)
+  (lambda (stx space-name)
+    (method-extract-name stx space-name #:property? #t))
+  (lambda (stx space-name vars)
+    (method-extract-metavariables stx space-name vars #:property? #t))
+  (lambda (stx space-name subst)
+    (method-extract-typeset stx space-name subst #:property? #t)))
 
 (define-doc dot
   "expression"
@@ -474,16 +463,16 @@
   (lambda (stx space-name vars)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group _ (parens (group self (op ::) class)) (op |.|) name . more)
-       (extract-pattern-metavariables #'(group . more)
-                                      vars)]))
+      [(group _ (parens (group _ (op ::) _)) (op |.|) _ . more)
+       (extract-pattern-metavariables #'(group . more) vars)]))
   (lambda (stx space-name subst)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group tag ((~and p-tag parens) (group self cc class)) dot name . more)
+      [(group tag (~and lhs (parens (group _ (op ::) _))) (~and dot (op |.|)) name . more)
        (rb #:at stx
+           #:pattern? #t
            #`(group as_class_clause
-                    tag (p-tag (group self cc class)) dot #,@(subst #'name) . more))])))
+                    tag lhs dot #,@(subst #'name) . more))])))
 
 (define-doc def
   "value"
@@ -557,9 +546,15 @@
     [(group _ _ (parens . _) (block g ...))
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (syntax-parse g
-         #:datum-literals (constructor parens)
-         [(_ constructor (~and p (parens . _)))
-          (parens-extract-metavariables #'(group ctr ctr p) space-name vars)]
+         #:datum-literals (constructor)
+         [(_ constructor . more)
+          (syntax-parse #'more
+            #:datum-literals (alts block group parens)
+            [((~and p (parens . _)) . _)
+             (parens-extract-metavariables #'p space-name vars #:just-parens? #t)]
+            [((alts (block (group (~and p (parens . _))) . _) ...))
+             (for/fold ([vars vars]) ([p (in-list (syntax->list #'(p ...)))])
+               (parens-extract-metavariables p space-name vars #:just-parens? #t))])]
          [_ vars]))]
     [_ vars]))
 
