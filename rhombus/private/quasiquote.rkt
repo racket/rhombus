@@ -304,6 +304,7 @@
       [(alts) #'_::alts]
       [(braces) #'_::braces]
       [(brackets) #'_::brackets]
+      [(quotes) #'_::quotes]
       [else #`(~datum #,d)]))
   (define (handle-escape $-id e in-e kind)
     (define parsed
