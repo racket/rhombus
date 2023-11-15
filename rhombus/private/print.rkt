@@ -76,7 +76,7 @@
   (do-print v op 'text))
 
 ;; Fast path for simple printing: either call `display`, `write`,
-;; of `other` once, or return results of multiple calls through `concat`
+;; or `other` once, or return results of multiple calls through `concat`
 (define (maybe-print-immediate v display write concat other mode op)
   (define (display?) (eq? mode 'text))
   (cond
@@ -86,12 +86,13 @@
        [(eqv? v -inf.0) (display "#neginf" op)]
        [(eqv? v +nan.0) (display "#nan" op)]
        [else (write v op)])]
-    [(or (and (string? v) (immutable? v))
-         (and (bytes? v) (immutable? v))
-         (exact-integer? v))
+    [(or (string? v)
+         (bytes? v))
      (cond
        [(display?) (display v op)]
-       [else (write v op)])]
+       ;; only print immutable (byte) strings as literals
+       [(immutable? v) (write v op)]
+       [else (other v mode op)])]
     [(exact-integer? v)
      (write v op)]
     [(boolean? v)
@@ -222,6 +223,16 @@
             (for/list ([i (in-range 1 (vector-length vec))])
               (print (vector-ref vec i)))])
          (pretty-text ")"))))]
+    ;; (byte) strings at this point are mutable
+    ;; refer to `maybe-print-immediate`
+    ;; TODO think of a better printed form
+    [(or (and (string? v) "racket.#{string-copy}(")
+         (and (bytes? v) "Bytes.copy("))
+     => (lambda (pre)
+          (pretty-listlike
+           (pretty-text pre)
+           (list (pretty-write v))
+           (pretty-text ")")))]
     [(list? v)
      (pretty-listlike
       (pretty-text "[")
@@ -230,7 +241,7 @@
       (pretty-text "]"))]
     [(pair? v)
      (pretty-listlike
-      (pretty-text "cons(")
+      (pretty-text "Pair(")
       (list
        (print (car v))
        (print (cdr v)))
