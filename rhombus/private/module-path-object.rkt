@@ -107,11 +107,10 @@
 
 (define/arity (ModulePath.s_exp mp)
   (unless (module-path? mp)
-    (raise-argument-error* 'ModulePath.s_exp rhombus-realm "ModulePath" mp))
+    (raise-argument-error* who rhombus-realm "ModulePath" mp))
   (module-path-raw mp))
 
 (define/arity (ModulePath stx)
-  (define who 'ModulePath)
   (define g (and (syntax? stx) (unpack-group stx #f #f)))
   (unless g (raise-argument-error* who rhombus-realm "Group" stx))
   (define (bad)
@@ -159,4 +158,4 @@
                                                                  "/"
                                                                  accum))])))))
                      #'(sub ...))]
-    [else (bad)]))
+    [_ (bad)]))

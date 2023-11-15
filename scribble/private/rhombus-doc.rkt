@@ -107,8 +107,23 @@
 
 (define-for-syntax (parens-extract-metavariables stx space-name vars #:just-parens? [just-parens? #f])
   (define (extract-groups stx)
-    (for/fold ([vars vars]) ([g (in-list (syntax->list stx))])
-      (extract-binding-metavariables g vars)))
+    (define-syntax-class and
+      #:datum-literals (group op &)
+      (pattern ((~and tag group) (op &) . g)))
+    (define-syntax-class kw-and
+      #:datum-literals (group op ~&)
+      (pattern ((~and tag group) (op ~&) . g)))
+    (syntax-parse stx
+      #:datum-literals (group op [ooo ...])
+      [(~or* (~and (g ... dot-g (group (op ooo)))
+                   (~parse gs #'(g ... dot-g)))
+             (~and (g ... and:and (~optional kw-and:kw-and))
+                   (~parse gs #'(g ... (and.tag . and.g) (~? (kw-and.tag . kw-and.g)))))
+             (~and (g ... kw-and:kw-and (~optional and:and))
+                   (~parse gs #'(g ... (kw-and.tag . kw-and.g) (~? (and.tag . and.g)))))
+             gs)
+       (for/fold ([vars vars]) ([g (in-list (syntax->list #'gs))])
+         (extract-binding-metavariables g vars))]))
   (if just-parens?
       (syntax-parse stx
         #:datum-literals (parens)

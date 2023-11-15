@@ -1,17 +1,14 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base ; for `default-pretty`
+                     )
          racket/symbol
          racket/keyword
-         racket/unsafe/undefined
          shrubbery/write
          "provide.rkt"
          (submod "set.rkt" for-ref)
          "adjust-name.rkt"
          "printer-property.rkt"
          "define-arity.rkt"
-         "function-arity-key.rkt"
-         "static-info.rkt"
-         "expression.rkt"
          "mutability.rkt"
          "realm.rkt"
          "print-desc.rkt")
@@ -55,20 +52,20 @@
 (define (check-mode who mode)
   (unless (or (eq? mode 'expr)
               (eq? mode 'text))
-    (raise-argument-error* who rhombus-realm "#'text || #'expr" mode)))
-  
+    (raise-argument-error* who rhombus-realm "Any.of(#'text, #'expr)" mode)))
+
 (define/arity #:name print (rhombus-print v [op (current-output-port)]
                                           #:mode [mode 'text]
                                           #:pretty [pretty? default-pretty])
-  (check-output-port 'print op)
-  (check-mode 'print mode)
+  (check-output-port who op)
+  (check-mode who mode)
   (do-print v op mode pretty?))
 
 (define/arity (println v [op (current-output-port)]
                        #:mode [mode 'text]
                        #:pretty [pretty? default-pretty])
-  (check-output-port 'println op)
-  (check-mode 'println mode)
+  (check-output-port who op)
+  (check-mode who mode)
   (do-print v op mode pretty?)
   (newline op))
 

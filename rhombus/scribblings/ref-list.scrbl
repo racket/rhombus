@@ -230,6 +230,25 @@ it supplies its elements in order.
 
 }
 
+
+@doc(
+  repet.macro 'List.repet($lst)'
+){
+
+ Creates a repetition from a list. This is a shorthand for using
+ @rhombus(..., ~bind) with a @rhombus(List, ~bind) binding.
+
+@examples(
+  def lst = [1, 2, 3]
+  block:
+    let [x, ...] = lst
+    [x+1, ...]
+  [List.repet(lst) + 1, ...]
+)
+
+}
+
+
 @doc(
   fun List.length(lst :: List) :: NonnegInt
 ){

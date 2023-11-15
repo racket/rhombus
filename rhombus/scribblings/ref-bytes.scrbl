@@ -41,6 +41,20 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 
 
 @doc(
+  fun Bytes.make(length :: NonnegInt, byte :: Byte = 0) :: MutableBytes
+){
+
+ Creates a fresh byte string with @rhombus(length) bytes, where each
+ byte is initialized to @rhombus(byte).
+
+@examples(
+  Bytes.make(5, 33)
+)
+
+}
+
+
+@doc(
   fun Bytes.length(bstr :: Bytes) :: NonnegInt
 ){
 
@@ -57,7 +71,8 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 @doc(
   fun Bytes.subbytes(bstr :: Bytes,
                      start :: NonnegInt,
-                     end :: NonnegInt = Bytes.length(bstr)) :: Bytes
+                     end :: NonnegInt = Bytes.length(bstr))
+    :: MutableBytes
 ){
 
  Returns the substring of @rhombus(bstr) from @rhombus(start) (inclusive)
@@ -96,17 +111,17 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 
 @doc(
   fun Bytes.utf8_string(bstr :: Bytes,
-                        err_char :: Optional[Char] = #false,
+                        err_char :: maybe(Char) = #false,
                         start :: NonnegInt = 0,
                         end :: NonnegInt = Bytes.length(bstr)) :: String
   fun Bytes.latin1_string(bstr :: Bytes,
-                          err_char :: Optional[Char] = #false,
+                          err_char :: maybe(Char) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr)) :: Bytes
-  fun Bytes.locale_string(str :: String,
-                          err_char :: Optional[Char] = #false,
+                          end :: NonnegInt = Bytes.length(bstr)) :: String
+  fun Bytes.locale_string(bstr :: Bytes,
+                          err_char :: maybe(Char) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr)) :: Bytes
+                          end :: NonnegInt = Bytes.length(bstr)) :: String
 ){
 
  Converts a byte string to a string, decoding as UTF-8, Latin-1, or the

@@ -70,7 +70,7 @@
  Captures the continuation of the @rhombus(Continuation.capture)
  expression, binds it to @rhombus(id), and then evaluates the
  @rhombus(body) sequence in tail position.
- The continuation is represented as a procedure that
+ The continuation is represented as a function that
  accepts values to deliver to the continuation.
 
  The captured continuation is delimited by a prompt with the tag
@@ -99,7 +99,7 @@
 }
 
 @doc(
-  fun Continuation.make_prompt_tag(name :: String || Symbol || False)
+  fun Continuation.make_prompt_tag(name :: ReadableString || Symbol || False)
   def Continuation.default_prompt_tag
 ){
 
@@ -150,12 +150,26 @@
   fun Continuation.call_with_immediate_mark(
     key,
     ~default: default = #false,
-    proc :: Function.of_arity(1)
+    fn :: Function.of_arity(1)
   )
 ){
 
- Calls @rhombus(proc) in tail position, providing as its argument the
+ Calls @rhombus(fn) in tail position, providing as its argument the
  current frame's mark value for @rhombus(key), or @rhombus(default) if the
  current frame has no mark for @rhombus(key).
+
+}
+
+
+@doc(
+  fun Continuation.call_in(
+    cont :: Continuation,
+    fn :: Function.of_arity(0)
+  )
+){
+
+ Calls @rhombus(fn) with the current continuation extended with
+ @rhombus(cont). This means the extension happens before the call, not
+ after.
 
 }

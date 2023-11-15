@@ -47,9 +47,9 @@ they are equal by @rhombus(==) only when they are equal by
 }
 
 @doc(
-  fun Symbol.from_string(str :: String) :: Symbol
-  fun Symbol.uninterned_from_string(str :: String) :: Symbol
-  fun Symbol.unreadable_from_string(str :: String) :: Symbol
+  fun Symbol.from_string(str :: ReadableString) :: Symbol
+  fun Symbol.uninterned_from_string(str :: ReadableString) :: Symbol
+  fun Symbol.unreadable_from_string(str :: ReadableString) :: Symbol
 ){
 
  Converts a string to a symbol with the same character content. An
@@ -72,7 +72,7 @@ they are equal by @rhombus(==) only when they are equal by
 
 @doc(
   fun Symbol.gen() :: Symbol
-  fun Symbol.gen(name :: String || Symbol) :: Symbol
+  fun Symbol.gen(name :: ReadableString || Symbol) :: Symbol
 ){
 
  Produces an @tech{uninterned} symbol with a character content optionally derived

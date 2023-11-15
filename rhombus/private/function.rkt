@@ -77,7 +77,6 @@
             (check-list who lst1)
             (check-list who lst2)
             (map fn lst1 lst2)]
-           ;; TODO fix documented arity
            [(fn lst1 . lsts)
             (check-proc who fn)
             (check-list who lst1)

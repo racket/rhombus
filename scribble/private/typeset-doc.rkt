@@ -604,7 +604,7 @@
              #'gs
              (extract-binding-group #'(tag t ...) vars))]))))
     (syntax-parse stx
-      #:datum-literals (brackets braces parens)
+      #:datum-literals (brackets braces parens [hole _])
       [(brackets . (~or* (g ... rst:rst/dot)
                          (g ... rst:rst/and)
                          (g ...)))
@@ -627,6 +627,7 @@
                 _)
           (extract-list-rest (attribute rst) vars)])]
       [(parens b) (extract-binding-term #'b vars)]
+      [hole vars]
       [id:identifier (add-metavariable vars #'id #f)]
       [_ vars]))
   (syntax-parse stx

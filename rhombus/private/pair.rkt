@@ -7,7 +7,6 @@
          "static-info.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
-         "realm.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt")
 

@@ -8,8 +8,8 @@
 
 @doc(
   fun syntax_meta.error(at_stx :: Syntax)
-  fun syntax_meta.error(message :: String, at_stx :: Syntax)
-  fun syntax_meta.error(message :: String, in_stx :: Syntax, at_stx :: Syntax)
+  fun syntax_meta.error(message :: ReadableString, at_stx :: Syntax)
+  fun syntax_meta.error(message :: ReadableString, in_stx :: Syntax, at_stx :: Syntax)
 ){
 
 @provided_meta()

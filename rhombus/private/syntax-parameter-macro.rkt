@@ -73,10 +73,10 @@
     (define id (or (unpack-term id-in #f #f)
                    id-in))
     (unless (identifier? id)
-      (raise-argument-error* 'syntax_parameter_meta.lookup rhombus-realm "Identifier" id))
+      (raise-argument-error* who rhombus-realm "Identifier" id))
     (define p (syntax-local-value* (in-syntax-parameter-space id) syntax-parameter-ref))
     (unless p
-      (raise-arguments-error* 'syntax_parameter_meta.lookup rhombus-realm
+      (raise-arguments-error* who rhombus-realm
                               "identifier is not bound as a syntax parameter"
                               "identifier" id))
     (let loop ([iter (current-syntax-parameters-iterator)])

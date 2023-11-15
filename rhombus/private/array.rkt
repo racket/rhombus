@@ -161,7 +161,6 @@
   (syntax-parse stx
     [(_ accum v) #'(cons v accum)]))
 
-;; TODO fix mutability in docs
 (set-primitive-contract! 'vector? "Array")
 (set-primitive-contract! '(and/c vector? (not/c immutable?)) "MutableArray")
 
@@ -185,11 +184,13 @@
   (check-array who v2)
   (vector-append v1 v2))
 
-(define/arity (Array.make len [val 0])
+(define/arity Array.make
   #:inline
   #:primitive (make-vector)
   #:static-infos ((#%call-result #,array-static-infos))
-  (make-vector len val))
+  (case-lambda
+    [(len) (make-vector len)]
+    [(len val) (make-vector len val)]))
 
 (define/method (Array.length v)
   #:inline
@@ -204,10 +205,13 @@
   (vector-copy! new-v 0 v 0 len)
   new-v)
 
-(define/method (Array.copy_from v dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
+(define/method Array.copy_from
   #:inline
   #:primitive (vector-copy!)
-  (vector-copy! v dest-start src src-start src-end))
+  (case-lambda
+    [(v dest-start src) (vector-copy! v dest-start src)]
+    [(v dest-start src src-start) (vector-copy! v dest-start src src-start)]
+    [(v dest-start src src-start src-end) (vector-copy! v dest-start src src-start src-end)]))
 
 (define-binding-syntax Array
   (binding-prefix-operator

@@ -20,7 +20,7 @@ See also @rhombus(#'), which works for keywords as well as symbols.
 
 
 @doc(
-  fun Keyword.from_string(str :: String) :: Keyword
+  fun Keyword.from_string(str :: ReadableString) :: Keyword
   fun Keyword.from_symbol(sym :: Symbol) :: Keyword
 ){
 

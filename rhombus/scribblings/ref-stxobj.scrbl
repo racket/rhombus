@@ -678,7 +678,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_id(str :: String, ctx_stx :: maybe(Term) = #false) :: Identifier
+  fun Syntax.make_id(str :: ReadableString, ctx_stx :: maybe(Term) = #false) :: Identifier
 ){
 
  Composes @rhombus(Syntax.make) and @rhombus(Symbol.from_string).

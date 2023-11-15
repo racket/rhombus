@@ -45,45 +45,42 @@
 
 (define-annotation-syntax Marks (identifier-annotation #'continuation-mark-set? #'()))
 
-(define (current_marks)
+(define/arity (current_marks)
   (current-continuation-marks))
 
-(define/arity rhombus-error
+(define/arity #:name error rhombus-error
   (case-lambda
-    [(msg) (rhombus-error #f msg)]
-    [(who msg)
-     (define who-sym (cond
-                       [(not who) #f]
-                       [(symbol? who) who]
-                       [(string? who) (string->symbol who)]
-                       [(identifier? who) who]
-                       [(and (syntax? who)
-                             (syntax-parse who
-                               #:datum-literals (op)
-                               [(op id) (syntax-e #'id)]
-                               [_ #f]))
-                        => (lambda (sym) sym)]
-                       [else (raise-argument-error* 'error
-                                                    rhombus-realm
-                                                    "String || Symbol || Identifier || Operator || False"
-                                                    who)]))
-     (define msg-str
-       (cond
-         [(string? msg) msg]
-         [else (raise-argument-error* 'error
-                                      rhombus-realm
-                                      "String"
-                                      msg)]))
-     (define adj (current-error-message-adjuster))
-     (define-values (adj-who who-realm)
-       (if who-sym
-           ((or (adj 'name) values) who-sym rhombus-realm)
-           (values #f rhombus-realm)))
-     (define-values (err-who error-who-realm adj-msg msg-realm)
-       ((or (adj 'message) values) adj-who who-realm msg-str rhombus-realm))
-     (if err-who
-         (error err-who "~a" adj-msg)
-         (error adj-msg))]))
+    [(msg) (do-error who #f msg)]
+    [(who-in msg) (do-error who who-in msg)]))
+
+(define (do-error e-who who msg)
+  (define who-sym
+    (cond
+      [(not who) #f]
+      [(symbol? who) who]
+      [(string? who) (string->symbol who)]
+      [(identifier? who) (syntax-e who)]
+      [(and (syntax? who)
+            (syntax-parse who
+              #:datum-literals (op)
+              [(op id) (syntax-e #'id)]
+              [_ #f]))]
+      [else (raise-argument-error* e-who
+                                   rhombus-realm
+                                   "ReadableString || Symbol || Identifier || Operator || False"
+                                   who)]))
+  (unless (string? msg)
+    (raise-argument-error* e-who rhombus-realm "ReadableString" msg))
+  (define adj (current-error-message-adjuster))
+  (define-values (adj-who who-realm)
+    (if who-sym
+        ((or (adj 'name) values) who-sym rhombus-realm)
+        (values #f rhombus-realm)))
+  (define-values (err-who error-who-realm adj-msg msg-realm)
+    ((or (adj 'message) values) adj-who who-realm msg rhombus-realm))
+  (if err-who
+      (error err-who "~a" adj-msg)
+      (error adj-msg)))
 
 (define-syntax try
   (expression-transformer
@@ -307,42 +304,38 @@
                             null)))
                 #'())]))))
 
-(define (escape #:tag [prompt-tag (default-continuation-prompt-tag)] . vals)
+(define/arity (escape #:tag [prompt-tag (default-continuation-prompt-tag)] . vals)
   (apply abort-current-continuation prompt-tag vals))
 
 (define default_prompt_tag (default-continuation-prompt-tag))
 
-(define (make_prompt_tag [name-in #f])
+(define/arity (make_prompt_tag [name-in #f])
   (define name
     (cond
       [(not name-in) #f]
       [(symbol? name-in) name-in]
       [(string? name-in) (string->symbol name-in)]
-      [else (raise-argument-error* 'make_prompt_tag
+      [else (raise-argument-error* who
                                    rhombus-realm
-                                   "String || Symbol || False"
+                                   "ReadableString || Symbol || False"
                                    name-in)]))
   (if name
       (make-continuation-prompt-tag name)
       (make-continuation-prompt-tag)))
 
-(define (call_in k proc)
+(define/arity (call_in k proc)
   (unless (continuation? k)
-    (raise-argument-error* 'Continuation.call_in
+    (raise-argument-error* who
                            rhombus-realm
                            "Continuation"
                            k))
-  (unless (procedure? proc)
-    (raise-argument-error* 'Continuation.call_in
+  (unless (and (procedure? proc)
+               (procedure-arity-includes? proc 0))
+    (raise-argument-error* who
                            rhombus-realm
-                           "Function"
+                           "Function.of_arity(0)"
                            proc))
-  (unless (procedure-arity-includes? proc 1)
-    (raise-arguments-error 'Continuation.call_in
-                           "given function does not accept 0 arguments"
-                           "function" proc))
   (call-in-continuation k proc))
-
 
 (define-for-syntax (binding-to-function binds body get-fail)
   (syntax-parse binds

@@ -36,7 +36,6 @@
    later_of
    )
   #:properties
-  ;; TODO undocumented (as function)
   ([value Box.value #:mutator Box.value
           (lambda (e)
             (syntax-local-static-info e #'unbox))]

@@ -69,7 +69,7 @@
   ([cons List.cons]
    [empty null]
    [iota List.iota]
-   repet ; TODO undocumented
+   repet
    of
    )
   #:properties

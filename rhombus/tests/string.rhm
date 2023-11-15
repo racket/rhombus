@@ -85,3 +85,11 @@ check:
   String.grapheme_count("Hello", 2) ~is 3
   String.grapheme_span("Hello", 2, 4) ~is 1
   String.grapheme_count("Hello", 2, 4) ~is 2
+
+block:
+  import:
+    lib("racket/base.rkt").#{string-copy} as copy
+  check:
+    String.append() ~is ""
+    String.append(copy("this")) ~is "this"
+    String.append(copy("this"), " and ", copy("that")) ~is "this and that"

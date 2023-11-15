@@ -120,6 +120,12 @@ check:
      )]
   ~is [#'none]
 
-    
-    
-    
+check:
+  Continuation.call_in(
+    Continuation.prompt:
+      1 + (Continuation.capture cont:
+             Continuation.escape(cont))
+      ~catch cont: cont,
+    fun (): 2
+  )
+  ~is 3

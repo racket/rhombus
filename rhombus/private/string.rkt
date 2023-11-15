@@ -62,7 +62,7 @@
   ()
   #:methods
   ([length String.length]
-   [append String.append] ; TODO undocumented
+   [append String.append]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
@@ -78,7 +78,6 @@
    [normalize_nfkd String.normalize_nfkd]
    [normalize_nfc String.normalize_nfc]
    [normalize_nfkc String.normalize_nfkc]
-   ;; TODO undocumented (as dot methods)
    [grapheme_span String.grapheme_span]
    [grapheme_count String.grapheme_count]
    ))
@@ -93,7 +92,7 @@
   #:fields ()
   #:namespace-fields
   ([to_string String.to_string]
-   [append String.append] ; TODO undocumented
+   [append String.append]
    [length String.length]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
@@ -151,8 +150,7 @@
     [(expr)
      (print-to-string a rhombus:print)]
     [else
-     ;; TODO correct this annotation (and in `print{,ln}`)
-     (raise-argument-error* who rhombus-realm "#'text || #'expr" mode)]))
+     (raise-argument-error* who rhombus-realm "Any.of(#'text, #'expr)" mode)]))
 
 (set-primitive-contract! 'string? "ReadableString")
 
@@ -186,11 +184,14 @@
   (check-readable-string who s)
   (string->number s))
 
-(define/method (String.substring str [start 0] [end (and (string? str) (string-length str))])
+(define/method String.substring
   #:inline
   #:primitive (substring)
   #:static-infos ((#%call-result #,string-static-infos))
-  (string->immutable-string (substring str start end)))
+  (case-lambda
+    [(str) (string->immutable-string (substring str))]
+    [(str start) (string->immutable-string (substring str start))]
+    [(str start end) (string->immutable-string (substring str start end))]))
 
 (define/method String.append
   #:inline
@@ -198,7 +199,7 @@
   #:static-infos ((#%call-result #,string-static-infos))
   (case-lambda
     [() ""]
-    [(s) s]
+    [(s) (string->immutable-string s)]
     [(str1 str2) (string-append-immutable str1 str2)]
     [strs (apply string-append-immutable strs)]))
 
@@ -243,11 +244,15 @@
     [(_ utf8 utf-8)
      #:with method-name (datum->syntax #'utf8 (string->symbol (format "String.~a_bytes" (syntax-e #'utf8))))
      #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "string->bytes/~a" (syntax-e #'utf-8))))
-     #'(define/method (method-name str [err-byte #f] [start 0] [end (and (string? str) (string-length str))])
+     #'(define/method method-name
          #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,indirect-bytes-static-infos))
-         (bytes->immutable-bytes (fn-name str err-byte start end)))]))
+         (case-lambda
+           [(str) (bytes->immutable-bytes (fn-name str))]
+           [(str err-byte) (bytes->immutable-bytes (fn-name str err-byte))]
+           [(str err-byte start) (bytes->immutable-bytes (fn-name str err-byte start))]
+           [(str err-byte start end) (bytes->immutable-bytes (fn-name str err-byte start end))]))]))
 
 (define-bytes utf8 utf-8)
 (define-bytes latin1 latin-1)
@@ -260,10 +265,13 @@
              (datum->syntax #'span (string->symbol (format fmt (syntax-e #'span)))))]
      #:with method-name (format-name "String.grapheme_~a")
      #:with fn-name (format-name "string-grapheme-~a")
-     #'(define/method (method-name str [start 0] [end (and (string? str) (string-length str))])
+     #'(define/method method-name
          #:inline
          #:primitive (fn-name)
-         (fn-name str start end))]))
+         (case-lambda
+           [(str) (fn-name str)]
+           [(str start) (fn-name str start)]
+           [(str start end) (fn-name str start end)]))]))
 
 (define-grapheme span)
 (define-grapheme count)
