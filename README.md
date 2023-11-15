@@ -12,6 +12,8 @@ and builds documentation for the prototype.
 * [Prototype documentation](https://plt.cs.northwestern.edu/pkg-build/doc/rhombus/index.html)
   as rendered by the snapshot package build
 
+* [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
+
 * [State of Rhombus](resources/state-of-rhombus.md)
 
 * [Project plan](resources/plan.md)
