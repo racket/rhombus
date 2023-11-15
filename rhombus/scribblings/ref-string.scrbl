@@ -19,6 +19,7 @@ immutable strings.
 @dispatch_table(
   "string"
   @rhombus(String)
+  [str.append(more_str, ...), String.append(str, more_str, ...)]
   [str.length(), String.length(str)]
   [str.substring(arg, ...), String.substring(str, arg, ...)]
   [str.utf8_bytes(arg, ...), String.utf8_bytes(str, arg, ...)]
@@ -35,6 +36,8 @@ immutable strings.
   [str.normalize_nfkd(), String.normalize_nfkd(str)]
   [str.normalize_nfc(), String.normalize_nfc(str)]
   [str.normalize_nfkc(), String.normalize_nfkc(str)]
+  [str.grapheme_span(arg, ...), String.grapheme_span(str, arg, ...)]
+  [str.grapheme_count(arg, ...), String.grapheme_count(str, arg, ...)]
 )
 
 @doc(
@@ -52,7 +55,7 @@ immutable strings.
 }
 
 @doc(
-  fun to_string(v, ~mode: mode :: #'text || #'expr = #'text) :: String
+  fun to_string(v, ~mode: mode :: Any.of(#'text, #'expr) = #'text) :: String
 ){
 
  Coerces @rhombus(v)  to a string.
@@ -84,6 +87,21 @@ immutable strings.
   "hello" +& "world"
   "it goes to " +& 11
   "the list " +& [1, 2, 3] +& " has " +& 3 +& " elements"
+)
+
+}
+
+
+@doc(
+  fun String.append(str :: ReadableString, ...) :: String
+){
+
+ Appends all @rhombus(str)s to create a new string.
+
+@examples(
+  String.append()
+  String.append("this")
+  String.append("this", " and ", "that")
 )
 
 }

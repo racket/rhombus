@@ -8,8 +8,9 @@ A @deftech{box} is an object with a single value field, which can be
 accessed from a box @rhombus(bx) as
 @rhombus(#,(@rhombus(bx, ~var)).value) or set to the value of
 @nontermref(expr) using
-@rhombus(#,(@rhombus(bx, ~var)).value := @nontermref(expr))
-or other @tech{assignment operators} like @rhombus(:=).
+@rhombus(#,(@rhombus(bx, ~var)).value := #,(@nontermref(expr)))
+or other @tech{assignment operators} like @rhombus(:=). The function
+@rhombus(Box.value) can also be directly used.
 
 A box is normally mutable, but immutable boxes can originate from
 Racket. Assignment is statically allowed by fails dynamically for an
@@ -96,6 +97,23 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
   def Box(x): Box(1)
   x
   ~error: def Box(sv :: String): Box(1)
+)
+
+}
+
+
+@doc(
+  fun Box.value(box :: Box) :: Any
+  fun Box.value(box :: Box, val :: Any) :: Void
+){
+
+ Accesses or updates the value field of @rhombus(box).
+
+@examples(
+  def box: Box(1)
+  Box.value(box)
+  Box.value(box, 2)
+  Box.value(box)
 )
 
 }

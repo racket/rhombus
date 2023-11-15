@@ -2,13 +2,10 @@
 (require (for-syntax racket/base
                      "interface-parse.rkt")
          "provide.rkt"
-         "annotation.rkt"
          "printer-property.rkt"
          "name-root.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "dot.rkt" for-dot-provider)
          "realm.rkt"
-         "class-dot.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
          "static-info.rkt"
@@ -100,50 +97,50 @@
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc
    `(seq ,@(for/list ([pd (in-list pds)])
-             (print-description-unwrap 'PrintDesc.concat pd)))))
-       
+             (print-description-unwrap who pd)))))
+
 (define/arity (PrintDesc.newline)
   (PrintDesc (pretty-newline)))
-       
+
 (define/arity (PrintDesc.nest n pd)
   (unless (exact-integer? n)
-    (raise-argument-error* rhombus-realm "Integer" pd))
+    (raise-argument-error* who rhombus-realm "Integer" pd))
   (PrintDesc
-   (pretty-nest n (print-description-unwrap 'PrintDesc.nest pd))))
+   (pretty-nest n (print-description-unwrap who pd))))
 
 (define/arity (PrintDesc.align pd)
   (PrintDesc
-   (pretty-align (print-description-unwrap 'PrintDesc.align pd))))
+   (pretty-align (print-description-unwrap who pd))))
 
 (define/arity (PrintDesc.or pd1 pd2)
   (PrintDesc
-   (pretty-or (print-description-unwrap 'PrintDesc.or pd1)
-              (print-description-unwrap 'PrintDesc.or pd2))))
+   (pretty-or (print-description-unwrap who pd1)
+              (print-description-unwrap who pd2))))
 
 (define/arity (PrintDesc.flat pd)
   (PrintDesc
-   (pretty-flat (print-description-unwrap 'PrintDesc.flat pd))))
+   (pretty-flat (print-description-unwrap who pd))))
 
 (define/arity (PrintDesc.list pre elems post)
-  (define pre-pd (print-description-unwrap 'PrintDesc.list pre))
+  (define pre-pd (print-description-unwrap who pre))
   (define (bad-elems)
-    (raise-argument-error* 'PrintDesc.list rhombus-realm
+    (raise-argument-error* who rhombus-realm
                            (format "List.of(~a)" description-ann-str)
                            elems))
   (define elem-pds (if (list? elems)
                        (for/list ([elem (in-list elems)])
                          (or (print-description-unwrap #f elem)
                              (bad-elems)))
-                       (bad-elems)))  
+                       (bad-elems)))
   (PrintDesc
    (pretty-listlike pre-pd
                     elem-pds
-                    (print-description-unwrap 'PrintDesc.list post))))
+                    (print-description-unwrap who post))))
 
 (define/arity (PrintDesc.block head body)
   (PrintDesc
-   (pretty-blocklike (print-description-unwrap 'PrintDesc.block head)
-                     (print-description-unwrap 'PrintDesc.block body))))
+   (pretty-blocklike (print-description-unwrap who head)
+                     (print-description-unwrap who body))))
 
 (define-static-info-syntaxes (print-graph)
   (#%function-arity 3))
@@ -151,14 +148,13 @@
 (define/arity (Printable.describe v
                                   #:mode [mode 'text]
                                   #:pretty [pretty? #t])
-  (check-mode  'Printable.describe mode)
+  (check-mode who mode)
   (parameterize ([current-print-as-pretty pretty?])
     (PrintDesc (pretty v mode (make-hasheq)))))
 
 (define/arity (Printable.render pd
                                 [op (current-output-port)]
                                 #:column [column 0])
-  (define who 'Printable.render)
   (define doc (print-description-unwrap who pd))
   (check-output-port who op)
   (unless (exact-nonnegative-integer? column)

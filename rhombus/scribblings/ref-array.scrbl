@@ -138,7 +138,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array.make(length :: Int, val = 0) :: Array
+  fun Array.make(length :: NonnegInt, val :: Any = 0) :: MutableArray
 ){
 
   Creates a fresh array with @rhombus(length) slots, where each slot
@@ -164,7 +164,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 
 @doc(
-  fun Array.copy(arr :: Array) :: Array
+  fun Array.copy(arr :: Array) :: MutableArray
 ){
 
  Returns a fresh array string with the same initial content as
@@ -173,7 +173,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array.copy_from(dest_arr :: Array,
+  fun Array.copy_from(dest_arr :: MutableArray,
                       dest_start :: NonnegInt,
                       src_arr :: Array,
                       src_start :: NonnegInt = 0,

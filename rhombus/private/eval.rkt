@@ -3,7 +3,6 @@
          "provide.rkt"
          "parse.rkt"
          "pack.rkt"
-         "expression.rkt"
          "define-arity.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
@@ -46,7 +45,7 @@
 (define/arity #:name eval (rhombus-eval e
                                         #:as_interaction [as_interaction #f])
   (unless (syntax? e)
-    (raise-argument-error* 'eval rhombus-realm "Syntax" e))
+    (raise-argument-error* who rhombus-realm "Syntax" e))
   (if as_interaction
       (eval `(#%top-interaction . ,#`(top #,@(unpack-multi e 'eval #f))))
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
@@ -55,5 +54,6 @@
   (#%function-arity 6))
 
 (define/arity (import mod-path)
-  (unless (module-path? mod-path) (raise-argument-error* 'eval rhombus-realm "ModulePath" mod-path))
+  (unless (module-path? mod-path)
+    (raise-argument-error* who rhombus-realm "ModulePath" mod-path))
   (namespace-require (module-path-raw mod-path)))

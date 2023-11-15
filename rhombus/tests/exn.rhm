@@ -49,3 +49,17 @@ block:
 check:
   error(#'example, "~a oops")
   ~raises "~a oops"
+
+block:
+  check:
+    error("who-str", "message")
+    ~raises values("who-str: ", "message")
+  check:
+    error(#'who_sym, "message")
+    ~raises values("who_sym: ", "message")
+  check:
+    error(Syntax.make(#'who_id), "message")
+    ~raises values("who_id: ", "message")
+  check:
+    error(Syntax.make_op(#'who_op), "message")
+    ~raises values("who_op: ", "message")

@@ -102,9 +102,9 @@
 }
 
 @doc(
-  fun error(message :: String)
-  fun error(who :: String || Symbol || Identifier || Operator || False,
-            message :: String)
+  fun error(message :: ReadableString)
+  fun error(who :: ReadableString || Symbol || Identifier || Operator || False,
+            message :: ReadableString)
 ){
 
  Throws the @rhombus(Exn.Fail, ~class) exception with @rhombus(message) as the
@@ -116,7 +116,7 @@
 }
 
 @doc(
-  class Exn(message :: String, marks :: Continuation.Marks)
+  class Exn(message :: ReadableString, marks :: Continuation.Marks)
   class Exn.Fail():
     extends Exn
   class Exn.Fail.Contract():
@@ -131,13 +131,13 @@
     extends Exn.Fail.Contract
   class Exn.Fail.Contract.Variable(id :: Symbol):
     extends Exn.Fail.Contract
-  class Exn.Fail.Syntax(exprs :: Listof(Syntax)):
+  class Exn.Fail.Syntax(exprs :: List.of(Syntax)):
     extends Exn.Fail
   class Exn.Fail.Syntax.Unbound():
     extends Exn.Fail.Syntax
   class Exn.Fail.Syntax.MissingModule(path):
     extends Exn.Fail.Syntax
-  class Exn.Fail.Read(srclocs :: Listof(Srcloc)):
+  class Exn.Fail.Read(srclocs :: List.of(Srcloc)):
     extends Exn.Fail
   class Exn.Fail.Read.EOF():
     extends Exn.Fail.Read
@@ -165,7 +165,7 @@
     extends Exn.Fail
   class Exn.Fail.User():
     extends Exn.Fail
-  class Exn.Break(continuation :: continuation):
+  class Exn.Break(continuation :: Continuation):
     extends Exn
   class Exn.Break.HangUp():
     extends Exn.Break

@@ -63,8 +63,11 @@
     (with-syntax ([name-sym (syntax-e name/id)])
       (syntax-parse rhs
         #:literals (lambda case-lambda)
-        [(lambda args . body)
-         #'(lambda args
+        [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
+                  ... . rst)
+           . body)
+         #'(lambda ((~@ (~? kw) (~? [id (syntax-parameterize ([who-sym 'name-sym]) expr)] id))
+                    ... . rst)
              (syntax-parameterize ([who-sym 'name-sym])
                . body))]
         [(case-lambda [args . body] ...)

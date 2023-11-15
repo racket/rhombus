@@ -9,7 +9,6 @@
          "append-key.rkt"
          (submod "annotation.rkt" for-class)
          "mutability.rkt"
-         "realm.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt")
@@ -37,7 +36,7 @@
   #:opaque
   #:fields ()
   #:namespace-fields
-  ([make Bytes.make] ; TODO undocumented
+  ([make Bytes.make]
    )
   #:properties
   ()
@@ -73,33 +72,42 @@
   #:primitive (bytes-append)
   (bytes-append b1 b2))
 
-(define/arity (Bytes.make len [val 0])
+(define/arity Bytes.make
   #:inline
   #:primitive (make-bytes)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (make-bytes len val))
+  (case-lambda
+    [(len) (make-bytes len)]
+    [(len val) (make-bytes len val)]))
 
 (define/method (Bytes.length bstr)
   #:inline
   #:primitive (bytes-length)
   (bytes-length bstr))
 
-(define/method (Bytes.subbytes bstr [start 0] [end (and (bytes? bstr) (bytes-length bstr))])
+(define/method Bytes.subbytes
   #:inline
   #:primitive (subbytes)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (subbytes bstr start end))
+  (case-lambda
+    [(bstr) (subbytes bstr)]
+    [(bstr start) (subbytes bstr start)]
+    [(bstr start end) (subbytes bstr start end)]))
 
 (define-syntax (define-string stx)
   (syntax-parse stx
     [(_ utf8 utf-8)
      #:with method-name (datum->syntax #'utf8 (string->symbol (format "Bytes.~a_string" (syntax-e #'utf8))))
      #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "bytes->string/~a" (syntax-e #'utf-8))))
-     #'(define/method (method-name bs [err-char #f] [start 0] [end (and (bytes? bs) (bytes-length bs))])
+     #'(define/method method-name
          #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,indirect-string-static-infos))
-         (string->immutable-string (fn-name bs err-char start end)))]))
+         (case-lambda
+           [(bstr) (string->immutable-string (fn-name bstr))]
+           [(bstr err-char) (string->immutable-string (fn-name bstr err-char))]
+           [(bstr err-char start) (string->immutable-string (fn-name bstr err-char start))]
+           [(bstr err-char start end) (string->immutable-string (fn-name bstr err-char start end))]))]))
 
 (define-string utf8 utf-8)
 (define-string latin1 latin-1)
@@ -111,11 +119,14 @@
   #:static-infos ((#%call-result #,bytes-static-infos))
   (bytes-copy bstr))
 
-(define/method (Bytes.copy_from bstr dest-start src [src-start 0] [src-end (and (bytes? src) (bytes-length src))])
+(define/method Bytes.copy_from
   #:inline
   #:primitive (bytes-copy!)
   #:static-infos ((#%call-result #,bytes-static-infos))
-  (bytes-copy! bstr dest-start src src-start src-end))
+  (case-lambda
+    [(bstr dest-start src) (bytes-copy! bstr dest-start src)]
+    [(bstr dest-start src src-start) (bytes-copy! bstr dest-start src src-start)]
+    [(bstr dest-start src src-start src-end) (bytes-copy! bstr dest-start src src-start src-end)]))
 
 (begin-for-syntax
   (install-static-infos! 'bytes bytes-static-infos))

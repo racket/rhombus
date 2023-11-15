@@ -379,11 +379,13 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  fun Function.map(f :: Function, args :: List, ...) :: List,
-  fun Function.for_each(f :: Function, args :: List, ...) :: Void,
+  fun Function.map(f :: Function, args0 :: List, args :: List, ...)
+    :: List,
+  fun Function.for_each(f :: Function, args0 :: List, args :: List, ...)
+    :: Void,
 ){
 
- Applies @rhombus(f) to each element of each @rhombus(args), iterating
+ Applies @rhombus(f) to each element of each @rhombus(args) (including @rhombus(args0)), iterating
  through the @rhombus(args) lists together, so @rhombus(f) must take as
  many arguments as the number of given @rhombus(args) lists. For
  @rhombus(Function.map), the result is a list constaining the result of
@@ -400,7 +402,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 }
 
 @doc(
-  fun Function.pass(& args, &~ kw_args) :: Void
+  fun Function.pass(& _, ~& _) :: Void
 ){
 
  Accepts any arguments and returns @rhombus(#void).

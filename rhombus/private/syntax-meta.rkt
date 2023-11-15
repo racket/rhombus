@@ -48,40 +48,48 @@
   (define/arity (syntax_meta.value id/op
                                    [sp expr-space-path]
                                    [fail (lambda ()
-                                           (raise-syntax-error 'syntax_meta.value "no binding" id/op))])
-    (define id (extract-name 'syntax_meta.value id/op sp))
+                                           (raise-syntax-error who "no binding" id/op))])
+    (define id (extract-name who id/op sp))
     (syntax-local-value id (if (and (procedure? fail)
                                     (procedure-arity-includes? fail 0))
                                fail
                                (lambda () fail))))
 
-  (define (extract-free-name stx sp)
-    (extract-name 'syntax_meta.equal_binding stx sp #:build-dotted? #t))
+  (define (extract-free-name who stx sp)
+    (extract-name who stx sp #:build-dotted? #t))
 
   (define/arity syntax_meta.equal_binding
     (case-lambda
-      [(id1 id2) (free-identifier=? (extract-free-name id1 expr-space-path) (extract-free-name id2 expr-space-path))]
-      [(id1 id2 sp) (free-identifier=? (extract-free-name id1 sp) (extract-free-name id2 sp))]
-      [(id1 id2 sp phase1) (free-identifier=? (extract-free-name id1 sp) (extract-free-name id2 sp) phase1)]
-      [(id1 id2 sp phase1 phase2) (free-identifier=? (extract-free-name id1 sp) (extract-free-name id2 sp) phase1 phase2)]))
+      [(id1 id2)
+       (free-identifier=? (extract-free-name who id1 expr-space-path)
+                          (extract-free-name who id2 expr-space-path))]
+      [(id1 id2 sp)
+       (free-identifier=? (extract-free-name who id1 sp)
+                          (extract-free-name who id2 sp))]
+      [(id1 id2 sp phase1)
+       (free-identifier=? (extract-free-name who id1 sp)
+                          (extract-free-name who id2 sp)
+                          phase1)]
+      [(id1 id2 sp phase1 phase2)
+       (free-identifier=? (extract-free-name who id1 sp)
+                          (extract-free-name who id2 sp)
+                          phase1
+                          phase2)]))
 
-  (define/arity syntax_meta.equal_name_and_scopes
-    (case-lambda
-      [(id1 id2) (syntax_meta.equal_name_and_scopes id1 id2 (syntax-local-phase-level))]
-      [(id1 id2 phase)
-       (define who 'syntax_meta.equal_name_and_scopes)
-       (define l1 (extract-name-components who id1))
-       (define l2 (extract-name-components who id2))
-       (unless (phase? phase)
-         (raise-argument-error* who rhombus-realm "SyntaxPhase" phase))
-       (and (= (length l1) (length l2))
-            (for/and ([n1 (in-list l1)]
-                      [n2 (in-list l2)])
-              (bound-identifier=? n1 n2 phase)))]))
+  (define/arity (syntax_meta.equal_name_and_scopes id1
+                                                   id2
+                                                   [phase (syntax-local-phase-level)])
+    (define l1 (extract-name-components who id1))
+    (define l2 (extract-name-components who id2))
+    (unless (phase? phase)
+      (raise-argument-error* who rhombus-realm "SyntaxPhase" phase))
+    (and (= (length l1) (length l2))
+         (for/and ([n1 (in-list l1)]
+                   [n2 (in-list l2)])
+           (bound-identifier=? n1 n2 phase))))
 
   (define (extract-name who stx sp
-                        #:lookup-dotted? [lookup-dotted? #t]
-                        #:build-dotted? [build-dotted? #f])  
+                        #:build-dotted? [build-dotted? #f])
     (unless (space-name? sp) (raise-argument-error* who rhombus-realm "SpaceMeta" sp))
     (define in-space (let ([space-sym (space-name-symbol sp)])
                        (if space-sym
@@ -147,30 +155,31 @@
 
   (define (name-of stx)
     (syntax-parse stx
-      #:datum-literals (group)
+      #:datum-literals (multi group)
       [who:identifier (string->symbol (shrubbery-syntax->string #'who))]
       [(group who:identifier . _) (name-of #'who)]
       [(group . _) '?]
       [(multi (group who:identifier . _) . _) (name-of #'who)]
       [(multi . _) '?]
-      [else #f]))
+      [_ #f]))
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,syntax-static-infos))
     (transform-in stx))
 
   (define/arity (is_static id/op)
+    (define (fail)
+      (raise-argument-error* who rhombus-realm "Identifier || Operator" id/op))
     (define s (unpack-term id/op #f #f))
     (cond
       [(identifier? s)
        (is-static-context? s)]
-      [else
-       (or (and s
-                (syntax-parse s
-                  #:datum-literals (op)
-                  [(op id) (is-static-context? #'id)]
-                  [_ #f]))
-           (raise-argument-error* 'synatx_meta.is_static rhombus-realm "Identifier || Operator" id/op))]))
+      [s
+       (syntax-parse s
+         #:datum-literals (op)
+         [(op id) (is-static-context? #'id)]
+         [_ (fail)])]
+      [else (fail)]))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation #'phase? #'())))
