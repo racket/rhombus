@@ -3,32 +3,25 @@
                      (only-in racket/function normalize-arity)
                      racket/syntax
                      syntax/parse/pre
-                     enforest/name-parse
-                     shrubbery/property
                      shrubbery/print
                      "hash-set.rkt"
                      "srcloc.rkt"
-                     "consistent.rkt"
                      "with-syntax.rkt"
                      "tag.rkt"
                      "same-expression.rkt"
                      "static-info-pack.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
          racket/unsafe/undefined
-         "provide.rkt"
          "parens.rkt"
          "expression.rkt"
          "binding.rkt"
-         "definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
-         "name-root.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-indirect-key.rkt"
          "values-key.rkt"
          "static-info.rkt"
-         "annotation.rkt"
          "repetition.rkt"
          "rest-marker.rkt"
          "op-literal.rkt"
@@ -36,13 +29,8 @@
          (only-in "list.rkt" List)
          (submod "annotation.rkt" for-class)
          (submod "equal.rkt" for-parse)
-         (only-in "equal.rkt"
-                  [= rhombus=])
          "not-block.rkt"
-         "dotted-sequence-parse.rkt"
          "lambda-kwrest.rkt"
-         "error.rkt"
-         (submod "dot.rkt" for-dot-provider)
          "dot-parse.rkt"
          "realm.rkt"
          "compound-repetition.rkt"
@@ -51,7 +39,8 @@
          "rest-bind.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "map.rkt" for-info)
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "realm.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -780,16 +769,30 @@
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))
 
+(define (raise-bindings-failure who msg what vals)
+  (raise
+   (exn:fail:contract
+    (error-message->adjusted-string
+     who
+     rhombus-realm
+     (apply string-append
+            msg
+            "\n  " what "...:"
+            (if (null? vals)
+                (list " [none]")
+                (for/list ([v (in-list vals)])
+                  (string-append "\n   "
+                                 ((error-value->string-handler)
+                                  v
+                                  (error-print-width))))))
+     rhombus-realm)
+    (current-continuation-marks))))
+
 (define (cases-failure who rest-args kwrest-args . base-args)
-  (define args (append base-args rest-args))
-  (apply
-   raise-contract-error
-   who
-   (apply string-append "no matching case for arguments\n"
-          "  arguments...:"
-          (for/list ([arg (in-list args)])
-            "\n   ~e"))
-   args))
+  (raise-bindings-failure who
+                          "no matching case for arguments"
+                          "arguments"
+                          (append base-args rest-args)))
 
 (define-syntax (add-annotation-check stx)
   (syntax-parse stx
@@ -853,23 +856,15 @@
        [else #'e])]))
 
 (define (raise-result-failure who val)
-  (raise-contract-error
-   who
-   (string-append "result does not satisfy annotation\n"
-                  "  result: ~v")
-   val))
+  (raise-arguments-error* who rhombus-realm
+                          "result does not satisfy annotation"
+                          "result" val))
 
 (define (raise-results-failure who vals)
-  (raise-contract-error
-   who
-   (string-append "results do not satisfy annotation\n"
-                  "  results...:"
-                  (if (null? vals)
-                      " [none]"
-                      (apply
-                       string-append
-                       (for/list ([v (in-list vals)])
-                         (format "\n   ~v" v)))))))
+  (raise-bindings-failure who
+                          "results do not satisfy annotation"
+                          "results"
+                          vals))
 
 (begin-for-syntax
   (define-syntax-class :kw-argument

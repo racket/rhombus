@@ -8,14 +8,12 @@
          racket/stxparam
          "call-result-key.rkt"
          "dot-provider-key.rkt"
-         "expression.rkt"
          "static-info.rkt"
          "class-this.rkt"
          "entry-point.rkt"
-         "error.rkt"
          "realm.rkt"
-         "parse.rkt"
          "wrap-expression.rkt"
+         "realm.rkt"
          (only-in "syntax-parameter.rkt"
                   syntax-parameters-key
                   with-syntax-parameters))
@@ -293,10 +291,9 @@
          #'lam.parsed]))]))
 
 (define (raise-constructor-result-error who val)
-  (raise-contract-error who
-                        (string-append "constructor result does not satisfy annotation\n"
-                                       "  result: ~v")
-                        val))
+  (raise-arguments-error* who rhombus-realm
+                          "constructor result does not satisfy annotation"
+                          "result" val))
 
 ;; Beware that this function generates code that is quadratic in the
 ;; length of `makers` (i.e., in the depth of subclassing with custom

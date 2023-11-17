@@ -5,10 +5,8 @@
          "expression.rkt"
          "parse.rkt"
          "else-clause.rkt"
-         (only-in "underscore.rkt"
-                  [_ rhombus-_])
          "parens.rkt"
-         "error.rkt")
+         "realm.rkt")
 
 (provide (rename-out [rhombus-if if]
                      [rhombus-cond cond]
@@ -73,7 +71,7 @@
          #'())]))))
 
 (define (cond-fallthrough who)
-  (raise-contract-error who "no matching case"))
+  (raise-arguments-error* who rhombus-realm "no matching case"))
 
 (define-syntax rhombus-when
   (expression-transformer
