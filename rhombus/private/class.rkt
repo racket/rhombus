@@ -2,24 +2,16 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
-                     enforest/hier-name-parse
-                     "srcloc.rkt"
-                     "name-path-op.rkt"
-                     "introducer.rkt"
-                     "tag.rkt"
                      "class-parse.rkt"
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
                      "interface-parse.rkt"
                      "expose.rkt")
          "provide.rkt"
-         racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"
-         "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          "space.rkt"
-         "call-result-key.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
          "class-clause-tag.rkt"
@@ -36,7 +28,6 @@
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
-         "error.rkt"
          (submod "namespace.rkt" for-exports)
          (submod "print.rkt" for-class)
          "class-able.rkt"

@@ -6,17 +6,13 @@
                      enforest/property
                      enforest/proc-name
                      enforest/syntax-local
-                     enforest/hier-name-parse
                      "introducer.rkt"
                      "annotation-string.rkt"
-                     "name-path-op.rkt"
                      (for-syntax racket/base)
                      "macro-result.rkt")
-         "static-info.rkt"
          "realm.rkt"
-         "error.rkt"
-         "name-root-ref.rkt"
-         "dotted-sequence-parse.rkt")
+         "dotted-sequence-parse.rkt"
+         "realm.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -172,14 +168,10 @@
        (define-syntax #,(in-binding-space #'name) rhs))]))
 
 (define (raise-binding-failure who what val annotation-str)
-  (raise-contract-error
-   who
-   (string-append "~a does not satisfy annotation\n"
-                  "  ~a: ~v\n"
-                  "  annotation: ~a")
-   what
-   what
-   val
-   (error-contract->adjusted-string
-    annotation-str
-    rhombus-realm)))
+  (raise-arguments-error* who rhombus-realm
+                          (string-append what " does not satisfy annotation")
+                          what val
+                          "annotation" (unquoted-printing-string
+                                        (error-contract->adjusted-string
+                                         annotation-str
+                                         rhombus-realm))))
