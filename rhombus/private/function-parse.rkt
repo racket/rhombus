@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      (only-in racket/function normalize-arity)
-                     racket/syntax
+                     racket/keyword
                      syntax/parse/pre
                      shrubbery/print
                      "hash-set.rkt"
@@ -23,7 +23,6 @@
          "values-key.rkt"
          "static-info.rkt"
          "repetition.rkt"
-         "rest-marker.rkt"
          "op-literal.rkt"
          (submod "ellipsis.rkt" for-parse)
          (only-in "list.rkt" List)
@@ -59,108 +58,97 @@
   (provide (for-syntax parse-function-call)
            raise-result-failure))
 
-(define-annotation-syntax Function (identifier-annotation #'procedure? #'()))
-
 (begin-for-syntax
   (define-syntax-class :non-...
-    #:attributes ()
-    (pattern form
-             #:when (syntax-parse #'form
-                      #:datum-literals (group)
-                      [(group _::...-bind) #f]
-                      [(group (~or _::&-bind _::~&-bind) . _) #f]
-                      [_ #t])))
+    #:datum-literals (group)
+    (pattern (~and (~not (group _::...-bind))
+                   (~not (group (~or* _::&-bind _::~&-bind) . _))
+                   (group . _))))
   (define-syntax-class :non-...-binding
+    #:attributes (parsed)
     (pattern form::non-...
-             #:with arg::binding #'form
-             #:with parsed #'arg.parsed))
+             #:with ::binding #'form))
 
   (define (keyword->binding kw)
-    #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw)))
+    #`(#,group-tag
+       #,(datum->syntax kw
+                        (string->symbol (keyword->immutable-string (syntax-e kw)))
+                        kw)))
 
   (define-syntax-class :has-kw-binding
-    #:attributes [kw parsed]
+    #:attributes (kw parsed)
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a ...+)))
              #:cut
-             #:with arg::binding #'(group a ...)
-             #:attr parsed #'arg.parsed)
+             #:with ::binding #'(group a ...))
     (pattern (group kw:keyword)
              #:cut
-             #:with arg::binding (keyword->binding #'kw)
-             #:attr parsed #'arg.parsed))
+             #:with ::binding (keyword->binding #'kw)))
 
   (define-syntax-class :plain-binding
-    #:attributes [kw parsed]
-    (pattern arg::non-...-binding
-             #:attr kw #'#f
-             #:attr parsed #'arg.parsed))
+    #:attributes (kw parsed)
+    (pattern ::non-...-binding
+             #:with kw #'#f))
 
   (define-syntax-class :kw-binding
-    #:attributes [kw parsed]
+    #:attributes (kw parsed)
     (pattern ::has-kw-binding)
     (pattern ::plain-binding))
 
   ;; used when just extracting an arity:
   (define-syntax-class :kw-arity-arg
-    #:attributes [kw]
+    #:attributes (kw)
     #:datum-literals (block group)
     (pattern (group kw:keyword . _))
     (pattern (group kw:keyword))
-    (pattern arg::non-...
-             #:attr kw #'#f))
+    (pattern _::non-...
+             #:with kw #'#f))
 
   (define-syntax-class :kw-opt-binding
-    #:attributes [kw parsed default]
+    #:attributes (kw parsed default)
     #:datum-literals (block group)
     (pattern (group kw:keyword (block (group a::not-equal ...+ eq::equal e ...+)))
              #:cut
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with arg::binding #'(group a ...)
-             #:attr parsed #'arg.parsed)
+             #:with ::binding #'(group a ...))
     (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
              #:cut
-             #:with arg::binding #'(group a ...)
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
-             #:attr parsed #'arg.parsed)
+             #:with ::binding #'(group a ...))
     (pattern (group kw:keyword eq::equal e ...+)
              #:cut
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with arg::binding (keyword->binding #'kw)
-             #:attr parsed #'arg.parsed)
+             #:with ::binding (keyword->binding #'kw))
     (pattern ::has-kw-binding
-             #:attr default #'#f)
+             #:with default #'#f)
     (pattern (group a::not-equal ...+ eq::equal e ...+)
              #:cut
+             #:with kw #'#f
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with arg::binding #'(group a ...)
-             #:attr kw #'#f
-             #:attr parsed #'arg.parsed)
+             #:with ::binding #'(group a ...))
     (pattern (group a ...+ (b-tag::block b ...))
              #:cut
              #:with (~not (_:keyword)) #'(a ...)
-             #:with arg::binding #'(group a ...)
+             #:with kw #'#f
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
-             #:attr kw #'#f
-             #:attr parsed #'arg.parsed)
+             #:with ::binding #'(group a ...))
     (pattern ::plain-binding
-             #:attr default #'#f))
+             #:with default #'#f))
 
   (define-syntax-class :rhombus-kw-opt-binding
-    #:attributes [maybe_keyword parsed maybe_expr]
-    (pattern arg::kw-opt-binding
-             #:attr parsed #'arg.parsed
-             #:attr maybe_keyword (and (syntax-e #'arg.kw)
-                                       #'arg.kw)
-             #:attr maybe_expr (and (syntax-e #'arg.default)
-                                    #'arg.default)))
+    #:attributes (parsed maybe_keyword maybe_expr)
+    (pattern ::kw-opt-binding
+             #:attr maybe_keyword (and (syntax-e #'kw)
+                                       #'kw)
+             #:attr maybe_expr (and (syntax-e #'default)
+                                    #'default)))
 
   ;; used when just extracting an arity:
   (define-syntax-class :kw-opt-arity-arg
-    #:attributes [kw default]
+    #:attributes (kw default)
     #:datum-literals (block group)
     (pattern (group kw:keyword (block (group _::not-equal ...+ _::equal _ ...+)))
              #:with default #'#t)
@@ -170,13 +158,13 @@
              #:with default #'#t)
     (pattern (group _::not-equal ...+ _::equal _ ...+)
              #:with default #'#t
-             #:attr kw #'#f)
-    (pattern (group a ...+ (b-tag::block . _))
+             #:with kw #'#f)
+    (pattern (group a ...+ (block . _))
              #:with (~not (_:keyword)) #'(a ...)
              #:with default #'#t
-             #:attr kw #'#f)
+             #:with kw #'#f)
     (pattern ::kw-arity-arg
-             #:attr default #'#f))
+             #:with default #'#f))
 
   (define (check-argument-annot g eq-op)
     (syntax-parse g
@@ -184,16 +172,16 @@
       [(group _ ... ann-op::annotate-op _ ...)
        (raise-syntax-error #f
                            (string-append
-                            "immediate annotation operator not allowed in default-value expression;\n"
-                            " use parentheses around the expression if the annotation was intended,\n"
-                            " since parentheses avoid the appearance of annotating the binding\n"
-                            " instead of the expression")
+                            "immediate annotation operator not allowed in default-value expression;"
+                            "\n use parentheses around the expression if the annotation was intended,"
+                            "\n since parentheses avoid the appearance of annotating the binding"
+                            "\n instead of the expression")
                            #'ann-op.name
                            #f
                            (list eq-op))]
       [(group _ ... eq2::equal _ ...)
        (raise-syntax-error #f
-                           (string-append "multiple immediate equals not allowed in this group"
+                           (string-append "multiple immediate equals not allowed in this group;"
                                           "\n use parentheses to disambiguate")
                            eq-op
                            #f
@@ -229,7 +217,6 @@
                                     [_ (raise-unchecked-disallowed #'ann-op.name c)])))]
                         #:with (arg-parsed::binding-form ...) #'(c-parsed.binding ...)
                         #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
-                        #:with (all-arg-info::binding-info ...) #'(arg-impl.info ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
                                 #`(lambda (arg ... success-k fail-k)
                                     #,(let loop ([args (syntax->list #'(arg ...))]
@@ -252,8 +239,8 @@
                                                                       (let ([#,(car args) #,(car bodys)])
                                                                         #,(loop (cdr args) (cdr arg-impl-infos) (cdr bodys))))
                                                                     (fail-k)))]))))]))]
-             #:attr static-infos sis
-             #:attr converter cvtr)
+             #:with static-infos sis
+             #:with converter cvtr)
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
              #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
              #:do [(define-values (sis cvtr)
@@ -286,11 +273,11 @@
                                                               ...
                                                               (success-k c-parsed.body))
                                                             (fail-k))))])]))]
-             #:attr static-infos sis
-             #:attr converter cvtr)
+             #:with static-infos sis
+             #:with converter cvtr)
     (pattern (~seq)
-             #:attr static-infos #'()
-             #:attr converter #'#f))
+             #:with static-infos #'()
+             #:with converter #'#f))
 
   (define-splicing-syntax-class :rhombus-ret-annotation
     #:attributes (count
@@ -305,13 +292,15 @@
                             [_ 1])
              #:attr maybe_converter (and (syntax-e #'r.converter)
                                          #'(parsed #:rhombus/expr r.converter))
-             #:attr static_info (unpack-static-infos #'r.static-infos)
-             #:attr annotation_string (syntax-parse (and (syntax-e #'r.converter) #'r)
-                                        [(_ . t) (shrubbery-syntax->string #`(#,group-tag . t))]
-                                        [_ "Any"])))
+             #:with static_info (unpack-static-infos #'r.static-infos)
+             #:attr annotation_string (or (and (syntax-e #'r.converter)
+                                               (syntax-parse #'r
+                                                 [(_ . t) (shrubbery-syntax->string #`(#,group-tag . t))]
+                                                 [_ #f]))
+                                          "Any")))
 
   (define-splicing-syntax-class :pos-rest
-    #:attributes [arg parsed]
+    #:attributes (arg parsed)
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
              #:with arg::non-...-binding #`(#,group-tag rest-bind #,list-static-infos
@@ -319,22 +308,20 @@
                                             (#,group-tag a ...))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (~and ooo (group _::...-bind)))
-             #:with (::pos-rest)
-             #'((group & List (parens e ooo)))))
+             #:with arg::non-...-binding #`(#,group-tag List (parens e ooo))
+             #:with parsed #'arg.parsed))
 
   (define-splicing-syntax-class :kwp-rest
-    #:attributes [kwarg kwparsed]
+    #:attributes (kwarg kwparsed)
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind a ...))
              #:with kwarg::non-...-binding #`(#,group-tag rest-bind #,map-static-infos
                                               #:annot-prefix? #f
                                               (#,group-tag a ...))
-             #:with kwparsed #'kwarg.parsed
-             #:attr arg #'#f
-             #:attr parsed #'#f))
+             #:with kwparsed #'kwarg.parsed))
 
   (define-splicing-syntax-class :maybe-arg-rest
-    #:attributes [arg parsed kwarg kwparsed]
+    #:attributes (arg parsed kwarg kwparsed)
     #:datum-literals (group)
     (pattern (~seq
               (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
@@ -343,19 +330,19 @@
 
   ;; used when just extracting an arity:
   (define-splicing-syntax-class :pos-arity-rest
-    #:attributes [rest?]
+    #:attributes (rest?)
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind _ ...))
-             #:attr rest? #'#t)
+             #:with rest? #'#t)
     (pattern (~seq _::non-... (group _::...-bind))
-             #:attr rest? #'#t))
+             #:with rest? #'#t))
   (define-splicing-syntax-class :kwp-arity-rest
-    #:attributes [kwrest?]
+    #:attributes (kwrest?)
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind _ ...))
-             #:attr kwrest? #'#t))
+             #:with kwrest? #'#t))
   (define-splicing-syntax-class :maybe-rest-arity-arg
-    #:attributes [rest? kwrest?]
+    #:attributes (rest? kwrest?)
     #:datum-literals (group)
     (pattern (~seq
               (~alt (~optional ::pos-arity-rest #:defaults ([rest? #'#f]))
@@ -714,7 +701,7 @@
                    wrap)]
           [(not (syntax-e kw))
            (unless (negative? n) (error "assert failed in wrap-adapted: n"))
-           (define tmp (generate-temporary arg))
+           (define tmp (car (generate-temporaries (list arg))))
            (values pos-arg-ids-rem
                    (cons tmp new-arg-ids-rev)
                    (lambda (body)
@@ -726,7 +713,7 @@
                             (#,try-next)))))]
           [else
            (unless kwrest-tmp (error "assert failed in wrap-adapted: kwrest-tmp 1"))
-           (define tmp (generate-temporary arg))
+           (define tmp (car (generate-temporaries (list arg))))
            (values pos-arg-ids-rem
                    (cons tmp new-arg-ids-rev)
                    (lambda (body)
@@ -797,63 +784,31 @@
 (define-syntax (add-annotation-check stx)
   (syntax-parse stx
     [(_ name converter main-converter e)
-     (cond
-       [(or (syntax-e #'converter)
-            (syntax-e #'main-converter))
-        (define (multi-result? e) (syntax-parse e
-                                    #:literals (lambda)
-                                    [(lambda (_ _ . _) . _) #t]
-                                    [(lambda () . _) #t]
-                                    [_ #f]))
-        (cond
-          [(or (multi-result? #'converter)
-               (multi-result? #'main-converter))
-           (define (wrap-values converter e)
-             (define (simple)
-               #`(let ([result #,e])
-                   (#,converter result
-                    (lambda (v) v)
+     (define (wrap-values converter e)
+       (cond
+         [(syntax-e converter)
+          (define (simple)
+            #`(let ([result #,e])
+                (#,converter result
+                 (lambda (v) v)
+                 (lambda ()
+                   (raise-result-failure 'name result)))))
+          (syntax-parse converter
+            #:literals (lambda)
+            [(lambda (_ _ _) . _) (simple)]
+            [(lambda (arg ... _ _) . _)
+             #`(call-with-values
+                (lambda () #,e)
+                (case-lambda
+                  [(arg ...)
+                   (#,converter arg ...
+                    (lambda (arg ...) (values arg ...))
                     (lambda ()
-                      (raise-result-failure 'name result)))))
-             (syntax-parse converter
-               #:literals (lambda)
-               [(lambda (arg success-k fail-k) . _) (simple)]
-               [(lambda (arg ... success-k fail-k) . _)
-                #`(call-with-values
-                   (lambda () #,e)
-                   (case-lambda
-                     [(arg ...)
-                      (#,converter arg ...
-                       values
-                       (lambda ()
-                         (raise-results-failure 'name (list arg ...))))]
-                     [args (raise-results-failure 'name args)]))]
-               [_ (simple)]))
-           (cond
-             [(and (syntax-e #'converter)
-                   (syntax-e #'main-converter))
-              (wrap-values #'main-converter (wrap-values #'converter #'e))]
-             [(syntax-e #'converter)
-              (wrap-values #'converter #'e)]
-             [else
-              (wrap-values #'main-converter #'e)])]
-          [else
-           #`(let ([result e])
-               #,(let ([succcess-k #'(lambda (x) x)]
-                       [fail-k #'(lambda () (raise-result-failure 'name result))])
-                   (cond
-                     [(and (syntax-e #'converter)
-                           (syntax-e #'main-converter))
-                      #'(let ([fail-k #,fail-k])
-                          (converter result
-                                     (lambda (result)
-                                       (main-converter #,success-k fail-k))
-                                     fail-k))]
-                     [(syntax-e #'converter)
-                      #'(converter result #,success-k #,fail-k)]
-                     [else
-                      #'(main-converter result #,success-k #,fail-k)])))])]
-       [else #'e])]))
+                      (raise-results-failure 'name (list arg ...))))]
+                  [args (raise-results-failure 'name args)]))]
+            [_ (simple)])]
+         [else e]))
+     (wrap-values #'main-converter (wrap-values #'converter #'e))]))
 
 (define (raise-result-failure who val)
   (raise-arguments-error* who rhombus-realm
@@ -872,7 +827,7 @@
     #:datum-literals (block group)
     (pattern (group kw:keyword (block exp)))
     (pattern exp
-             #:attr kw #'#f)))
+             #:with kw #'#f)))
 
 (define-for-syntax (parse-function-call rator-in extra-args stxes
                                         #:static? [static? #f]
