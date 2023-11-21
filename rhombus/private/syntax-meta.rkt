@@ -151,7 +151,15 @@
     (case-lambda
       [(form) (raise-syntax-error (name-of form) "bad syntax" (maybe-respan form))]
       [(msg form) (raise-syntax-error (name-of form) msg (maybe-respan form))]
-      [(msg form detail) (raise-syntax-error (name-of form) msg (maybe-respan form) (maybe-respan detail))]))
+      [(msg form detail)
+       (define details (map maybe-respan (if (list? detail) detail (list detail))))
+       (if (pair? details)
+           (raise-syntax-error (name-of form) msg
+                               (maybe-respan form)
+                               (car details)
+                               (cdr details))
+           (raise-syntax-error (name-of form) msg
+                               (maybe-respan form)))]))
 
   (define (name-of stx)
     (syntax-parse stx

@@ -9,7 +9,12 @@
 @doc(
   fun syntax_meta.error(at_stx :: Syntax)
   fun syntax_meta.error(message :: ReadableString, at_stx :: Syntax)
-  fun syntax_meta.error(message :: ReadableString, in_stx :: Syntax, at_stx :: Syntax)
+  fun syntax_meta.error(message :: ReadableString,
+                        in_stx :: Syntax,
+                        at_stx :: Syntax)
+  fun syntax_meta.error(message :: ReadableString,
+                        in_stx :: Syntax,
+                        at_stx :: List(Syntax))
 ){
 
 @provided_meta()
