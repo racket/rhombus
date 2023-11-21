@@ -228,7 +228,11 @@
                                  (syntax-e root-id))
                              (syntax-e field-id))))
    'disappeared-use
-   (transform-out (in-name-root-space root-id))))
+   (cons (transform-out (in-name-root-space root-id))
+         (datum->syntax new-field-id
+                        (syntax-e new-field-id)
+                        field-id
+                        field-id))))
 
 (define-for-syntax (replace-head-dotted-name stx)
   (define head (car (syntax-e stx)))
