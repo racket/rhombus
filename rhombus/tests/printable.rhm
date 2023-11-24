@@ -69,3 +69,16 @@ block:
     def b = Box(2, #false)
     b.val := b
     check to_string(b) ~is "#0=Box(2, #0#)"
+
+check:
+  parameterize { Printable.current_graph: #true }:
+    def a = #"apple".copy()
+    print([a, a, a])
+  ~prints "[#0=Bytes.copy(#\"apple\"), #0#, #0#]"
+
+check:
+  def b = Box(5)
+  println([b, b, b])
+  b.value := b
+  println([b, b, b])
+  ~prints "[Box(5), Box(5), Box(5)]\n[#0=Box(#0#), #0#, #0#]\n"

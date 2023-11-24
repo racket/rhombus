@@ -156,7 +156,7 @@
         [else (sub1 fuel)])))
   ;; a pass detects sharing and cycles, and it also removes/resolved `flat`
   ;; while ordering `or` to have a flat case as the first option
-  (define (pass build?)
+  (define (pass build? graph?)
     (define memo-ht (make-hash))
     (let loop ([doc doc] [saw-ht #hasheq()] [flat? #f] [doc-ht-in #f])
       (cond
@@ -266,9 +266,9 @@
   ;; discover graph references:
   (when (or graph?
             (not (obviously-non-cyclic?)))
-    (pass #f))
+    (pass #f graph?))
   ;; add graph tags:
-  (define-values (final-saw-ht new-doc is-flat?) (pass #t))
+  (define-values (final-saw-ht new-doc is-flat?) (pass #t (positive? (hash-count ht))))
   (unless new-doc (error 'print "no valid flat rendering"))
   new-doc)
 

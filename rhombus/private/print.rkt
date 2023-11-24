@@ -226,10 +226,13 @@
     [(or (and (string? v) "racket.#{string-copy}(")
          (and (bytes? v) "Bytes.copy("))
      => (lambda (pre)
-          (pretty-listlike
-           (pretty-text pre)
-           (list (pretty-write v))
-           (pretty-text ")")))]
+          (fresh-ref
+           v
+           (lambda ()
+             (pretty-listlike
+              (pretty-text pre)
+              (list (pretty-write v))
+              (pretty-text ")")))))]
     [(list? v)
      (pretty-listlike
       (pretty-text "[")
