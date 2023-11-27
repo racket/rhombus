@@ -142,7 +142,7 @@
     (raise-syntax-error #f
                         (format (string-append
                                  "misplaced term;\n"
-                                 " no infix operator is between this term and the preceeding ~a"
+                                 " no infix operator is between this term and the preceding ~a"
                                  #;
                                  ",\n and `~a` is not bound as an implicit prefix ~a")
                                 form-kind
@@ -182,7 +182,7 @@
                            (format
                             (string-append
                              "misplaced term;\n"
-                             " no infix operator is between this term and the preceeding ~a"
+                             " no infix operator is between this term and the preceding ~a"
                              #;
                              ",\n and `~a` is not bound as an implicit infix ~a")
                             form-kind
