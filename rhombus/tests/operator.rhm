@@ -242,3 +242,90 @@ check:
   def [a, ...] = [1, 2, 3]
   [a??, ...]
   ~is [1, 2, 3]
+
+// check result annotations
+block:
+  use_static
+  check:
+    operator (>< (xs :: List)) :: List:
+      xs.reverse()
+    (>< [1, 2, 3])[0]
+    ~is 3
+  check:
+    operator >< :: List
+    | >< (xs :: List):
+        xs.reverse()
+    (>< [1, 2, 3])[0]
+    ~is 3
+  check:
+    operator
+    | (>< (xs :: List)) :: List:
+        xs.reverse()
+    (>< [1, 2, 3])[0]
+    ~is 3
+  check:
+    operator ((xs :: List) ><) :: List:
+      xs.reverse()
+    ([1, 2, 3] ><)[0]
+    ~is 3
+  check:
+    operator >< :: List
+    | (xs :: List) ><:
+        xs.reverse()
+    ([1, 2, 3] ><)[0]
+    ~is 3
+  check:
+    operator
+    | ((xs :: List) ><) :: List:
+        xs.reverse()
+    ([1, 2, 3] ><)[0]
+    ~is 3
+  check:
+    operator ((xs :: List) <> (ys :: List)) :: List:
+      xs ++ ys
+    ([1, 2, 3] <> [4, 5, 6])[0]
+    ~is 1
+  check:
+    operator <> :: List
+    | (xs :: List) <> (ys :: List):
+        xs ++ ys
+    ([1, 2, 3] <> [4, 5, 6])[0]
+    ~is 1
+  check:
+    operator
+    | ((xs :: List) <> (ys :: List)) :: List:
+        xs ++ ys
+    ([1, 2, 3] <> [4, 5, 6])[0]
+    ~is 1
+
+check:
+  operator ? :: converting(fun (_): println("main"))
+  | (? #false) :: converting(fun (_): println("prefix: false")):
+      #void
+  | (? #true) :: converting(fun (_): println("prefix: true")):
+      #void
+  | (#false ?) :: converting(fun (_): println("postfix: false")):
+      #void
+  | (#true ?) :: converting(fun (_): println("postfix: true")):
+      #void
+  ?#false
+  ?#true
+  #false?
+  #true?
+  ~prints "prefix: false\nmain\nprefix: true\nmain\npostfix: false\nmain\npostfix: true\nmain\n"
+
+check:
+  operator ? :: converting(fun (_): println("main"))
+  | (? #false) :: converting(fun (_): println("prefix: false")):
+      #void
+  | (? #true) :: converting(fun (_): println("prefix: true")):
+      #void
+  | (#false ? #false) :: converting(fun (_): println("infix: false")):
+      #void
+  | (#true ? #true) :: converting(fun (_): println("infix: true")):
+      #void
+  ?#false
+  ?#true
+  #false?#false
+  #true?#true
+  ~prints "prefix: false\nmain\nprefix: true\nmain\ninfix: false\nmain\ninfix: true\nmain\n"
