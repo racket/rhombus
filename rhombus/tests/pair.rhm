@@ -33,13 +33,6 @@ check:
   ["ok", "fine"] :: Pair.of(String, List)
   ~is ["ok", "fine"]
 
-check:
-  Pair(1, 2) :: Pair.of(
-    converting(fun (1): 2),
-    converting(fun (2): 1)
-  )
-  ~is Pair(2, 1)
-
 block:
   use_static
   check:
@@ -84,6 +77,26 @@ block:
     def x :: Pair.of(List, Any) = [[1, 2, 3]]
     x.first.length()
     ~is 3
+
+block:
+  check:
+    Pair(1, 2) :: Pair.of(
+      converting(fun (1): 2),
+      converting(fun (2): 1)
+    )
+    ~is Pair(2, 1)
+  check:
+    1 :: Pair
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Pair.of(Any, Any)
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Pair.of(
+      converting(fun (_): #false),
+      converting(fun (_): #false)
+    )
+    ~raises "does not satisfy annotation"
 
 block:
   check:

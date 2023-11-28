@@ -32,8 +32,8 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   annot.macro 'ImmutableArray'
 ){
 
- The @rhombus(Array, ~annot) annotation (without @rhombus(of) or
- @rhombus(now_of)) matches any array.
+ The @rhombus(Array, ~annot) annotation (without @rhombus(now_of) or
+ @rhombus(later_of)) matches any array.
  
  The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches an array whose elements all currently satisfy
@@ -52,7 +52,8 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  accessing an element of the array or a value to be installed into the
  array. (A different view of the array might changes an element to one that
  does not astisfy @rhombus(annot).) Static information from
- @rhombus(annot) is propagated to accesses of the array.
+ @rhombus(annot) is propagated to accesses of the array. Note that a
+ converter @rhombus(annot) is applied for each access or update.
 
  @rhombus(MutableArray, ~annot) matches only mutable arrays, and
  @rhombus(ImmutableArray, ~annot) matches only immutable arrays (that may

@@ -87,8 +87,26 @@ block:
 
 block:
   check:
+    1 :: List
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: List.of(Any)
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: List.of(converting(fun (_): #false))
+    ~raises "does not satisfy annotation"
+  check:
     [1, 2, 3] :: List.of(converting(fun (n :: Int): n+1))
     ~is [2, 3, 4]
+  check:
+    1 :: NonemptyList
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: NonemptyList.of(Any)
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: NonemptyList.of(converting(fun (_): #false))
+    ~raises "does not satisfy annotation"
   check:
     [1, 2, 3] :: NonemptyList.of(converting(fun (n :: Int): n+1))
     ~is [2, 3, 4]

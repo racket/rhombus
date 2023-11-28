@@ -72,39 +72,59 @@
 (define-annotation-constructor (Array now_of)
   () #'vector? array-static-infos
   1
-  (#f)
+  #f
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-vector #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
     ;; no static info, since mutable and content is checked only initially
     #'())
-  "converting annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
+  "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
 
 (define-annotation-constructor (Array/again later_of)
   () #'vector? array-static-infos
   1
-  (#f)
-  #f ;; no predicate maker, so uses converter builder
+  #f
+  (lambda (predicate-stxes annot-strs)
+    (define (make-reelementer what)
+      #`(lambda (vec idx v)
+          (unless (pred v)
+            (raise-reelementer-error '#,what idx v '#,(car annot-strs)))
+          v))
+    #`(lambda (vec)
+        (let ([pred #,(car predicate-stxes)])
+          (chaperone-vector vec
+                            #,(make-reelementer "current")
+                            #,(make-reelementer "new")))))
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
-  #'array-build-convert #'())
+  #'array-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
 
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
-  #`(let ([cvt (lambda (v success-k fail-k)
-                 (#,(car build-convert-stxs) v success-k fail-k))])
-      (impersonate-vector #,arg-id
-                          (make-reelementer cvt "current ")
-                          (make-reelementer cvt "new "))))
+  (with-syntax ([[(annot-str . _) _] data])
+    (define (make-reelementer what)
+      #`(lambda (vec idx val)
+          (cvt
+           val
+           (lambda (v) v)
+           (lambda ()
+             (raise-reelementer-error '#,what idx val 'annot-str)))))
+    #`(let ([cvt #,(car build-convert-stxs)])
+        (impersonate-vector #,arg-id
+                            #,(make-reelementer "current")
+                            #,(make-reelementer "new")))))
 
-(define (make-reelementer cvt prefix)
-  (lambda (vec idx val)
-    (cvt
-     val
-     (lambda (v) val)
-     (lambda ()
-       (raise-arguments-error 'Array (string-append prefix "element does not satisfy the array's annotation")
-                              "element" val)))))
+(define (raise-reelementer-error what idx v annot-str)
+  (raise-arguments-error*
+   'Array rhombus-realm
+   (string-append what " element does not satisfy the array's annotation")
+   "element" v
+   "position" (unquoted-printing-string (number->string idx))
+   "annotation" (unquoted-printing-string
+                 (error-contract->adjusted-string
+                  annot-str
+                  rhombus-realm))))
 
 (define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
 (define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))

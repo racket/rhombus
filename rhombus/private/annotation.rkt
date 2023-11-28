@@ -1,28 +1,19 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx
                      shrubbery/print
-                     enforest
-                     enforest/operator
-                     enforest/syntax-local
                      enforest/property
                      enforest/proc-name
                      enforest/name-parse
-                     enforest/operator
                      "srcloc.rkt"
-                     "pack.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "keyword-sort.rkt"
-                     "with-syntax.rkt"
-                     "tag.rkt"
                      "macro-result.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
          "annotation-operator.rkt"
-         "definition.rkt"
          "expression.rkt"
          "binding.rkt"
          "name-root.rkt"
@@ -90,6 +81,7 @@
              annotation-binding-form
 
              parse-annotation-of
+             parse-annotation-of/chaperone
 
              build-annotated-expression
              raise-unchecked-disallowed))
@@ -233,56 +225,105 @@
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
-  
+
+  (define (parse-annotation-of/one stx sub-n kws)
+    (syntax-parse stx
+      [(form-id (~and subs (_::parens g ...)) . tail)
+       (define new-stx #'(form-id subs))
+       (define unsorted-gs (syntax->list #'(g ...)))
+       (unless (eqv? (length unsorted-gs) sub-n)
+         (raise-syntax-error #f
+                             "wrong number of subannotations in parentheses"
+                             new-stx))
+       (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx))
+       (values new-stx
+               gs
+               (for/list ([g (in-list gs)])
+                 (syntax-parse g
+                   [c::annotation #'c.parsed]))
+               #'tail)]))
+
   (define (parse-annotation-of stx predicate-stx static-infos
                                sub-n kws
                                ;; predicate-maker can be #f if only a converter is supported
                                predicate-maker info-maker
                                ;; binding-maker-id can be #f or an error string if a converter is not supported
                                binding-maker-id binding-maker-data)
-    (syntax-parse stx
-      #:datum-literals (parens)
-      [(form-id ((~and tag parens) g ...) . tail)
-       (define unsorted-gs (syntax->list #'(g ...)))
-       (unless (= (length unsorted-gs) sub-n)
-         (raise-syntax-error #f
-                             "wrong number of subannotations in parentheses"
-                             #'(form-id (tag g ...))))
-       (define gs (sort-with-respect-to-keywords kws unsorted-gs stx))
-       (define c-parseds (for/list ([g (in-list gs)])
-                           (syntax-parse g
-                             [c::annotation #'c.parsed])))
-       (values
+    (define-values (new-stx gs c-parseds tail)
+      (parse-annotation-of/one stx sub-n kws))
+    (values
+     (cond
+       [(and predicate-maker
+             (syntax-parse c-parseds
+               [(c::annotation-predicate-form ...)
+                (define c-predicates (syntax->list #'(c.predicate ...)))
+                (define c-static-infoss (syntax->list #'(c.static-infos ...)))
+                (annotation-predicate-form #`(lambda (v)
+                                               (and (#,predicate-stx v)
+                                                    #,(predicate-maker #'v c-predicates)))
+                                           #`(#,@(info-maker c-static-infoss)
+                                              . #,static-infos))]
+               [_ #f]))]
+       [else
+        (unless (identifier? binding-maker-id)
+          (raise-syntax-error #f
+                              (or binding-maker-id
+                                  "argument converter annotations are not supported")
+                              new-stx))
         (syntax-parse c-parseds
-          [(c::annotation-predicate-form ...)
-           #:when predicate-maker
-           (define c-predicates (syntax->list #'(c.predicate ...)))
-           (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-           (annotation-predicate-form #`(lambda (v)
-                                          (and (#,predicate-stx v)
-                                               #,(predicate-maker #'v c-predicates)))
-                                      #`(#,@(info-maker c-static-infoss)
-                                         . #,static-infos))]
           [(c::annotation-binding-form ...)
-           (unless (identifier? binding-maker-id)
-             (raise-syntax-error #f
-                                 (or binding-maker-id
-                                     "argument converter annotations are not supported")
-                                 #'(form-id (tag g ...))))
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
            (annotation-binding-form
             (binding-form #'annotation-of-infoer
-                          #`[#,(shrubbery-syntax->string #'(form-id (tag g ...)))
-                             #,binding-maker-id
-                             #,binding-maker-data
-                             ([c.binding c.body] ...)
-                             #,static-infos
-                             result
+                          #`[#,(shrubbery-syntax->string new-stx)
+                             #,predicate-stx #,binding-maker-id #,binding-maker-data
+                             ([c.binding c.body] ...) #,static-infos result
                              #,kws])
             #'result
             #`(#,@(info-maker c-static-infoss)
-               . #,static-infos))])
-        #'tail)]))
+               . #,static-infos))])])
+     tail))
+
+  ;; This one is for converters that produce chaperones/impersonators.
+  ;; The predicate case also produces a converter, because it has to
+  ;; chaperone the original value.  Also, the makers receive the raw
+  ;; text of subannotations so that they can compose a better error
+  ;; message.
+  (define (parse-annotation-of/chaperone stx predicate-stx static-infos
+                                         sub-n kws
+                                         predicate-maker info-maker
+                                         binding-maker-id binding-maker-data)
+    (define-values (new-stx gs c-parseds tail)
+      (parse-annotation-of/one stx sub-n kws))
+    (define annot-strs (map shrubbery-syntax->string gs))
+    (values
+     (syntax-parse c-parseds
+       [(c::annotation-predicate-form ...)
+        (define c-predicates (syntax->list #'(c.predicate ...)))
+        (define c-static-infoss (syntax->list #'(c.static-infos ...)))
+        (annotation-binding-form
+         (binding-form #'annotation-of-infoer/chaperone
+                       #`[#,(shrubbery-syntax->string new-stx)
+                          (lambda (val-in)
+                            (and (#,predicate-stx val-in)
+                                 (#,(predicate-maker c-predicates annot-strs) val-in)))
+                          #,static-infos
+                          result])
+         #'result
+         #`(#,@(info-maker c-static-infoss)
+            . #,static-infos))]
+       [(c::annotation-binding-form ...)
+        (define c-static-infoss (syntax->list #'(c.static-infos ...)))
+        (annotation-binding-form
+         (binding-form #'annotation-of-infoer
+                       #`[#,(shrubbery-syntax->string new-stx)
+                          #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
+                          ([c.binding c.body] ...) #,static-infos result
+                          #,kws])
+         #'result
+         #`(#,@(info-maker c-static-infoss)
+            . #,static-infos))])
+     tail))
 
   (define (annotation-constructor name predicate-stx static-infos
                                   sub-n kws predicate-maker info-maker
@@ -311,35 +352,6 @@
                              sub-n kws
                              predicate-maker info-maker
                              binding-maker-id binding-maker-data)))))
-
-  (define (annotation-of-constructor name predicate-stx static-infos
-                                     sub-n kws
-                                     predicate-maker info-maker
-                                     binding-maker-id binding-maker-data
-                                     parse-annotation-of)
-    (annotation-prefix-operator
-      name
-      '((default . stronger))
-      'macro
-      (lambda (stx)
-        (syntax-parse stx
-          #:datum-literals (op |.| parens of)
-          [(form-id (op |.|) (~and of-id of) . tail)
-           (parse-annotation-of #`(of-id . tail)
-                                predicate-stx static-infos
-                                sub-n kws
-                                predicate-maker info-maker
-                                binding-maker-id binding-maker-data)]
-          [(form-id (op |.|) other:identifier . tail)
-           (raise-syntax-error #f
-                               "field not provided by annotation"
-                               #'form-id
-                               #'other)]
-          [(_ . tail)
-           ;; we don't get here when used specifically as `of`
-           (values (annotation-predicate-form predicate-stx
-                                              static-infos)
-                   #'tail)]))))
 
   (define (remove-tail t tail)
     (define l (syntax->list t))
@@ -640,39 +652,55 @@
 
 (define-syntax (annotation-of-infoer stx)
   (syntax-parse stx
-    [(_ rhs-static-infos (annotation-str binding-maker-id binding-maker-data ([c-binding c-body] ...) static-infos result-id kws))
+    [(_ rhs-static-infos [annotation-str
+                          predicate-stx binding-maker-id binding-maker-data
+                          ([c-binding c-body] ...) static-infos result-id kws])
      (define binding-maker (syntax-local-value #'binding-maker-id))
      (define converter
        #`(lambda (val-in)
-           #,(binding-maker #'val-in
-                            (for/list ([c-binding (in-list (syntax->list #'(c-binding ...)))]
-                                       [c-body (in-list (syntax->list #'(c-body ...)))])
-                              (syntax-parse c-binding
-                                [arg-parsed::binding-form
-                                 #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-                                 #:with arg-info::binding-info #'arg-impl.info
-                                 #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
-                                 #`(lambda (val-in success-k fail-k)
-                                     (arg-info.matcher-id val-in
-                                                          arg-info.data
-                                                          if/blocked
-                                                          (begin
-                                                            (arg-info.committer-id val-in arg-info.data)
-                                                            (arg-info.binder-id val-in arg-info.data)
-                                                            (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                                                            ...
-                                                            (success-k #,c-body))
-                                                          (fail-k)))]))
-                            (syntax->datum #'kws)
-                            #'binding-maker-data)))
+           (and (predicate-stx val-in)
+                #,(binding-maker
+                   #'val-in
+                   (for/list ([c-binding (in-list (syntax->list #'(c-binding ...)))]
+                              [c-body (in-list (syntax->list #'(c-body ...)))])
+                     (syntax-parse c-binding
+                       [arg-parsed::binding-form
+                        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+                        #:with arg-info::binding-info #'arg-impl.info
+                        #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
+                        #`(lambda (val-in success-k fail-k)
+                            (arg-info.matcher-id val-in
+                                                 arg-info.data
+                                                 if/blocked
+                                                 (begin
+                                                   (arg-info.committer-id val-in arg-info.data)
+                                                   (arg-info.binder-id val-in arg-info.data)
+                                                   (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                                                   ...
+                                                   (success-k #,c-body))
+                                                 (fail-k)))]))
+                   (syntax->datum #'kws)
+                   #'binding-maker-data))))
      (binding-info #'annotation-str
                    #'composite
                    #'static-infos
-                   #`((result-id (0)))
+                   #'((result-id (0)))
                    #'annotation-of-matcher
                    #'annotation-of-committer
                    #'annotation-of-binder
                    #`[result-id temp #,converter])]))
+
+(define-syntax (annotation-of-infoer/chaperone stx)
+  (syntax-parse stx
+    [(_ rhs-static-infos [annotation-str convert static-infos result-id])
+     (binding-info #'annotation-str
+                   #'composite
+                   #'static-infos
+                   #'((result-id (0)))
+                   #'annotation-of-matcher
+                   #'annotation-of-committer
+                   #'annotation-of-binder
+                   #'[result-id temp convert])]))
 
 (define-syntax (annotation-of-matcher stx)
   (syntax-parse stx

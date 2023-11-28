@@ -7,6 +7,7 @@
          "define-arity.rkt"
          "call-result-key.rkt"
          "composite.rkt"
+         "realm.rkt"
          "mutability.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt")
@@ -76,33 +77,52 @@
   (lambda (static-infoss)
     ;; no static info, since mutable and content is checked only initially
     #'())
-  "converting annotation not supported for value;\n immediate checking needs a predicate annotation for the box content" #'())
+  "converter annotation not supported for value;\n immediate checking needs a predicate annotation for the box content" #'())
 
 (define-annotation-constructor (Box/again later_of)
   ()
   #'box? box-static-infos
   1
   #f
-  #f ;; no predicate maker, so uses converter builder
+  (lambda (predicate-stxes annot-strs)
+    (define (make-reboxer what)
+      #`(lambda (bx v)
+          (unless (pred v)
+            (raise-reboxer-error '#,what v '#,(car annot-strs)))
+          v))
+    #`(lambda (bx)
+        (let ([pred #,(car predicate-stxes)])
+          (chaperone-box bx
+                         #,(make-reboxer "current")
+                         #,(make-reboxer "new")))))
   (lambda (static-infoss)
     #`((unbox #,(car static-infoss))))
-  #'box-build-convert #'())
+  #'box-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
 
 (define-syntax (box-build-convert arg-id build-convert-stxs kws data)
-  #`(let ([cvt (lambda (v success-k fail-k)
-                 (#,(car build-convert-stxs) v success-k fail-k))])
-      (impersonate-box #,arg-id
-                       (make-reboxer cvt "current ")
-                       (make-reboxer cvt "new "))))
+  (with-syntax ([[(annot-str . _) _] data])
+    (define (make-reboxer what)
+      #`(lambda (bx val)
+          (cvt
+           val
+           (lambda (v) v)
+           (lambda ()
+             (raise-reboxer-error '#,what val 'annot-str)))))
+    #`(let ([cvt #,(car build-convert-stxs)])
+        (impersonate-box #,arg-id
+                         #,(make-reboxer "current")
+                         #,(make-reboxer "new")))))
 
-(define (make-reboxer cvt prefix)
-  (lambda (bx val)
-    (cvt
-     val
-     (lambda (v) val)
-     (lambda ()
-       (raise-arguments-error 'Box (string-append prefix "value does not satisfy the box's annotation")
-                              "value" val)))))
+(define (raise-reboxer-error what v annot-str)
+  (raise-arguments-error*
+   'Box rhombus-realm
+   (string-append what " value does not satisfy the box's annotation")
+   "value" v
+   "annotation" (unquoted-printing-string
+                 (error-contract->adjusted-string
+                  annot-str
+                  rhombus-realm))))
 
 (define-annotation-syntax MutableBox (identifier-annotation #'mutable-box? box-static-infos))
 (define-annotation-syntax ImmutableBox (identifier-annotation #'immutable-box? box-static-infos))
