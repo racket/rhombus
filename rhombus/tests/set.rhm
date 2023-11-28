@@ -47,7 +47,16 @@ block:
 
 block:
   check:
-    {1, 2, 3} :: Set.of(converting (fun (n :: Int): n+1))
+    1 :: Set
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Set.of(Any)
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Set.of(converting(fun (_): #false))
+    ~raises "does not satisfy annotation"
+  check:
+    {1, 2, 3} :: Set.of(converting(fun (n :: Int): n+1))
     ~is {2, 3, 4}
 
 block:

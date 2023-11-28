@@ -53,35 +53,61 @@ check:
   ~is 11
 
 check:
-  def bx :: Box = 10
-  #void
+  10 :: Box
   ~raises "does not satisfy annotation"
 
 check:
-  def bx :: Box.now_of(String) = Box(1)
-  #void
+  10 :: Box.now_of(Any)
   ~raises "does not satisfy annotation"
 
 check:
-  def bx :: Box.later_of(String) = Box(1)
-  #void
+  10 :: Box.later_of(Any)
+  ~raises "does not satisfy annotation"
+
+check:
+  10 :: Box.later_of(converting(fun (_): #false))
+  ~raises "does not satisfy annotation"
+
+check:
+  Box(1) :: Box.now_of(String)
+  ~raises "does not satisfy annotation"
+
+check:
+  Box(1) :: Box.later_of(String)
   ~completes
+
+check:
+  def bx :: Box.later_of(
+    converting(fun (n :: Int):
+                 println("run")
+                 n+1)):
+    Box(1)
+  println(bx.value)
+  bx.value := 1
+  println(bx.value)
+  ~prints "run\n2\nrun\nrun\n3\n"
 
 check:
   def bx :: Box.later_of(String) = Box(1)
   bx.value
-  ~raises "current value does not satisfy the box's annotation"
+  ~raises values(
+    "current value does not satisfy the box's annotation",
+    "String",
+  )
 
 check:
   def bx :: Box.later_of(String) = Box("apple")
   bx.value
   bx.value := #'oops
-  ~raises "new value does not satisfy the box's annotation"
+  ~raises values(
+    "new value does not satisfy the box's annotation",
+    "String",
+  )
 
 check:
   ~eval
-  def bx :: Box.now_of(Box.later_of(String)) = Box(Box("apple"))
-  ~raises "converting annotation not supported for value"
+  Box(Box("apple")) :: Box.now_of(Box.later_of(String))
+  ~raises "converter annotation not supported for value"
 
 check:
   use_static

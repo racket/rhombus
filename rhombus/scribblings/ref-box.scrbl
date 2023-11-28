@@ -19,18 +19,16 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 @rhombus(ImmutableBox, ~annot) require one or the other.
 
 @doc(
-  ~nonterminal:
-    val_annot: :: annot
   annot.macro 'Box'
-  annot.macro 'Box.now_of($val_annot)'
-  annot.macro 'Box.later_of($val_annot)'
+  annot.macro 'Box.now_of($annot)'
+  annot.macro 'Box.later_of($annot)'
   annot.macro 'MutableBox'
   annot.macro 'ImmutableBox'
 
 ){
 
- The @rhombus(Box, ~annot) annotation (without @rhombus(of) or
- @rhombus(now_of)) matches any box.
+ The @rhombus(Box, ~annot) annotation (without @rhombus(now_of) or
+ @rhombus(later_of)) matches any box.
  
  The @rhombus(Box.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches a box whose values satisfies
@@ -49,7 +47,8 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  the box or for a value to be installed into the box. (A different view
  of the box might changes its value to one that does not astisfy
  @rhombus(annot).) Static information from @rhombus(annot) is propagated
- to accesses of the box's value.
+ to accesses of the box's value. Note that a converter @rhombus(annot)
+ is applied for each access or update.
 
  @rhombus(MutableBox, ~annot) matches only mutable boxes, and
  @rhombus(ImmutableBox, ~annot) matches only immutable boxes (that may

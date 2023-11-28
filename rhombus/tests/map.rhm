@@ -65,6 +65,18 @@ block:
 
 block:
   check:
+    1 :: Map
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Map.of(Any, Any)
+    ~raises "does not satisfy annotation"
+  check:
+    1 :: Map.of(
+      converting(fun (_): #false),
+      converting(fun (_): #false)
+    )
+    ~raises "does not satisfy annotation"
+  check:
     {1: 2, 2: 3, 3: 4} :: Map.of(
       converting(fun (n :: Int): n+1),
       converting(fun (n :: Int): n-1)

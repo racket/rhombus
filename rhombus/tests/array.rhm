@@ -83,24 +83,48 @@ block:
 
 
 check:
-  def a :: Array.now_of(String) = Array(1)
-  #void
+  10 :: Array
   ~raises "does not satisfy annotation"
 
 check:
-  def a :: Array.now_of(String) = Array(1)
-  #void
+  10 :: Array.now_of(Any)
   ~raises "does not satisfy annotation"
 
 check:
-  def a :: Array.later_of(String) = Array(1)
-  #void
+  10 :: Array.later_of(Any)
+  ~raises "does not satisfy annotation"
+
+check:
+  10 :: Array.later_of(converting(fun (_): #false))
+  ~raises "does not satisfy annotation"
+
+check:
+  Array(1) :: Array.now_of(String)
+  ~raises "does not satisfy annotation"
+
+check:
+  Array(1) :: Array.later_of(String)
   ~completes
+
+check:
+  def a :: Array.later_of(
+    converting(fun (n :: Int):
+                 println("run")
+                 n+1)):
+    Array(1)
+  println(a[0])
+  a[0] := 1
+  println(a[0])
+  ~prints "run\n2\nrun\nrun\n3\n"
 
 check:
   def a :: Array.later_of(String) = Array(1)
   a[0]
-  ~raises "current element does not satisfy the array's annotation"
+  ~raises values(
+    "current element does not satisfy the array's annotation",
+    "0",
+    "String",
+  )
 
 check:
   def a :: Array.later_of(String) = Array(1, "ok")
@@ -111,12 +135,16 @@ check:
   def a :: Array.later_of(String) = Array("apple")
   a[0]
   a[0] := #'oops
-  ~raises "new element does not satisfy the array's annotation"
+  ~raises values(
+    "new element does not satisfy the array's annotation",
+    "0",
+    "String",
+  )
 
 check:
   ~eval
-  def a :: Array.now_of(Array.later_of(String)) = Array(Array("apple"))
-  ~raises "converting annotation not supported for element"
+  Array(Array("apple")) :: Array.now_of(Array.later_of(String))
+  ~raises "converter annotation not supported for element"
 
 check:
   use_static
