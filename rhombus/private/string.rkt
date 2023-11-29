@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         (only-in racket/string string-contains?)
          racket/symbol
          racket/keyword
          "provide.rkt"
@@ -63,6 +64,7 @@
   #:methods
   ([length String.length]
    [get String.get]
+   [contains String.contains]
    [append String.append]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
@@ -95,6 +97,7 @@
    [append String.append]
    [length String.length]
    [get String.get]
+   [contains String.contains]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
@@ -183,6 +186,11 @@
 (define/method (String.to_number s)
   (check-readable-string who s)
   (string->number s))
+
+(define/method (String.contains s1 s2)
+  (check-readable-string who s1)
+  (check-readable-string who s2)
+  (string-contains? s1 s2))
 
 (define/method String.substring
   #:inline

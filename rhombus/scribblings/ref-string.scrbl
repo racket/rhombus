@@ -24,6 +24,7 @@ immutable strings.
   str.length()
   str.get(n)
   str.substring(arg, ...)
+  str.contains(substr)
   str.utf8_bytes(arg, ...)
   str.latin1_bytes(arg, ...)
   str.locale_bytes(arg, ...)
@@ -120,6 +121,25 @@ immutable strings.
 @examples(
   String.length("hello")
   "hello".length()
+)
+
+}
+
+
+@doc(
+  fun String.contains(str :: ReadableString,
+                      substr :: ReadableString)
+    :: Boolean
+){
+
+ Checks whether @rhombus(str) contains @rhombus(substr) as a
+ substring.
+
+@examples(
+  String.contains("howdy", "how")
+  "howdy".contains("how")
+  String.contains("howdy", "nope")
+  "howdy".contains("nope")
 )
 
 }
