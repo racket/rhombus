@@ -1,0 +1,80 @@
+#lang rhombus/and_meta
+import:
+  lib("rackunit/log.rkt")
+
+fun check_error(thunk, is_ok, form_str, should_str):
+  let str:
+    let out = Port.Output.open_string()
+    parameterize { Port.Output.current_error: out,
+                   log.#{test-log-enabled?}: #false }:
+      thunk()
+    out.get_string()
+  let ok = is_ok(str)
+  log.#{test-log!}(ok)
+  unless ok
+  | print("`" ++ form_str ++ "` did not " ++ should_str
+            ++ "\n" ++ str,
+          Port.Output.current_error())
+
+expr.macro 'check_check:
+              $what
+              ~success:
+                $success_mode $success ...
+                ...
+              ~failure:
+                $failure_mode $failure ... ~expected $expected
+                ...':
+  ~op_stx self
+  let check = 'check'.relocate(self)
+  fun make_check(mode, rhs, is_ok, should):
+    fun make_one(spec):
+      'check_error(fun (): $check: $what; $spec,
+                   $is_ok,
+                   #%literal $(to_string(spec)),
+                   #%literal $should)'
+    'block:
+       $(make_one('$mode $rhs'))
+       $(if rhs matches '' | '' | make_one('$mode: $rhs'))'
+  fun make_success(mode, rhs):
+    make_check(mode, rhs,
+               'fun (str): str == ""',
+               "succeed")
+  fun make_failure(mode, rhs, expected):
+    let expected = "  expected: " ++ expected
+    make_check(mode, rhs,
+               'fun (str :~ String): str.contains(#%literal $expected)',
+               "fail with expected message")
+  'block:
+     $(make_success(success_mode, '$success ...'))
+     ...
+     $(make_failure(failure_mode, '$failure ...', expected.unwrap()))
+     ...'
+
+check_check:
+  [1, 2, 3]
+  ~success:
+    ~is [1, 2, 3]
+    ~is_now [1, 2, 3]
+    ~is_a List.of(PosInt)
+    ~prints_like [1, 2, 3]
+    ~matches [1, 2, 3]
+    ~completes
+  ~failure:
+    ~is PairList[1, 2, 3] ~expected "PairList[1, 2, 3]"
+    ~is_now PairList[1, 2, 3] ~expected "PairList[1, 2, 3]"
+    ~is_a PairList.of(PosInt) ~expected "satisfying PairList . of (PosInt)"
+    ~prints_like PairList[1, 2, 3] ~expected "PairList[1, 2, 3]"
+    ~matches PairList[1, 2, 3] ~expected "matching PairList [1, 2, 3]"
+    ~throws "anything" ~expected "exception \"anything\""
+
+check_check:
+  values(1, [2, 3])
+  ~success:
+    ~matches values(a, [b, c])
+    ~matches (a, [b, c])
+    ~completes
+  ~failure:
+    ~matches a ~expected "matching a"
+    ~matches [b, c] ~expected "matching [b, c]"
+    ~matches (a, [b, c], d) ~expected "matching (a, [b, c], d)"
+    ~throws "anything" ~expected "exception \"anything\""
