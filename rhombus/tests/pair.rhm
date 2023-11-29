@@ -33,6 +33,13 @@ check:
   ["ok", "fine"] :: Pair.of(String, List)
   ~is ["ok", "fine"]
 
+check:
+  Pair(1, 2) :: Pair.of(
+    converting(fun (1): 2),
+    converting(fun (2): 1)
+  )
+  ~is Pair(2, 1)
+
 block:
   use_static
   check:
@@ -56,10 +63,18 @@ block:
     x
     ~is 1
   check:
+    def Pair.cons(x, y) = [1, 2, 3]
+    x
+    ~is 1
+  check:
     (["ok", "fine"] :: Pair.of(String, List)).rest
     ~is ["fine"]
   check:
     def Pair(x :: List, y) = [[1, 2, 3]]
+    x.length()
+    ~is 3
+  check:
+    def Pair.cons(x :: List, y) = [[1, 2, 3]]
     x.length()
     ~is 3
   check:

@@ -47,6 +47,11 @@ block:
 
 block:
   check:
+    {1, 2, 3} :: Set.of(converting (fun (n :: Int): n+1))
+    ~is {2, 3, 4}
+
+block:
+  check:
     dynamic({"a", "b"}).length()
     ~is 2
   check:
