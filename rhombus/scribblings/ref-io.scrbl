@@ -11,6 +11,8 @@ input, while an @deftech{output port} is specifically for output.
 @dispatch_table(
   "output port"
   Port.Output
+  out.get_bytes()
+  out.get_string()
   out.flush()
 )
 
@@ -92,6 +94,39 @@ input, while an @deftech{output port} is specifically for output.
 
 }
 
+
+@doc(
+  fun Port.Output.open_bytes(name :: Symbol) :: Port.Output
+  fun Port.Output.open_string(name :: Symbol) :: Port.Output
+){
+
+ Creates an @tech{output port} that accumulates the output into a
+ @tech{byte string}. The optional @rhombus(name) argument is used as
+ the name for the returned port.
+
+ @rhombus(Port.Output.open_string) does the same as
+ @rhombus(Port.Output.open_bytes), but can be used to clarify the
+ intention together with @rhombus(Port.Output.get_string).
+
+}
+
+@doc(
+  fun Port.Output.get_bytes(out :: Port.Output) :: Bytes
+  fun Port.Output.get_string(out :: Port.Output) :: String
+){
+
+ @rhombus(Port.Output.get_bytes) returns the bytes accumulated in the
+ @tech{output port} @rhombus(out) so far in a freshly allocated
+ @tech{byte string} (including any bytes written after the port's
+ current position, if any).
+
+ @rhombus(Port.Output.get_string) is like
+ @rhombus(Port.Output.get_bytes), but returns a string converted from
+ the byte string instead.
+
+}
+
+
 @doc(
   fun Port.Output.flush(out :: Port.Output = Port.Output.current())
     :: Void
@@ -100,6 +135,7 @@ input, while an @deftech{output port} is specifically for output.
  Flushes the content of @rhombus(out)'s buffer.
 
 }
+
 
 @doc(
   interface Printable

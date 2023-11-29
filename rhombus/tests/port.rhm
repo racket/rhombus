@@ -4,6 +4,10 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Port.Input.current([in])
+    Port.Output.open_bytes([name])
+    Port.Output.open_string([name])
+    Port.Output.get_bytes(out) ~method
+    Port.Output.get_string(out) ~method
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
