@@ -2,7 +2,6 @@
 import:
   "core-meta.rkt" open
   "call-capture-exn.rkt" open
-  lib("racket/syntax-srcloc.rkt") as srcloc
   lib("racket/base.rkt").#{error-print-source-location}
   lib("rackunit/log.rkt").#{test-log!}
   lib("racket/base.rkt")
@@ -97,12 +96,16 @@ expr.macro
                 #'$result2.mode)'
 
 expr.macro
-| 'matcher(~matches, : $binding)':
-    'fun | (): (fun | ($binding): #true | (& _): #false)
-         | (x): $("" +& '$binding')'
+| 'matcher(~matches, : $(pattern g:
+                           kind ~group
+                         | '$(bound_as bind_meta.space: 'values') ($bind, ...) $()'
+                         | '($bind, ...) $()'
+                         | '$b': field [bind, ...] = [b]))':
+    'fun | (): (fun | ($g.bind, ...): #true | (& _): #false)
+         | (_): #%literal $(to_string(g))'
 | 'matcher(~is_a, : $ann)':
     'fun | (): (fun (x): x is_a ($ann))
-         | (x): $("" +& '$ann')'
+         | (_): #%literal $(to_string(ann))'
 | 'matcher($_, $body)': 'fun () $body'
 
 fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
@@ -110,7 +113,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
     match maybe_loc_mode
     | [mode, srcloc]: maybe_loc_mode
     | mode: [mode, loc_where[1]]
-  let values(got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
+  let (got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
   let expected :~ List = call_capturing_values(expected_thunk)
   let ok:
     match mode
@@ -131,8 +134,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
     | #'~matches:
         !exn_msg && expected[0](& got)
   #{test-log!}(ok)
-  if ok
-  | #void
+  unless ok
   | fun
     | values_str([v]): to_string(v, ~mode: #'expr)
     | values_str(lst): "values " +& to_string(lst, ~mode: #'expr)

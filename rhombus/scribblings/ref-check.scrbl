@@ -18,7 +18,7 @@
   ~nonterminal:
     expected_expr: block expr
     expected_body: block body
-    expected_bind: def bind ~defn
+    expected_bind: def lhs_bind ~defn
     evaluator_expr: block expr
   expr.macro 'check:
                 $maybe_eval
@@ -45,7 +45,7 @@
     ~prints_like $expected_expr
     ~prints_like: $expected_body; ...
     ~matches $expected_bind
-    ~matches: $expected_bind; ...
+    ~matches: $expected_bind
     ~prints $expected_expr
     ~prints: $expected_body; ...
     ~throws $expected_expr
