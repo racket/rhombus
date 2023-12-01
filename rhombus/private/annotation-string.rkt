@@ -10,6 +10,8 @@
 (define annotation-any-string "Any")
 (define annotation-complex-any-string "(_ :: Any)")
 
+(define annotation-none-string "None")
+
 (define (annotation-string-from-pattern p)
   (string-append "matching(" p ")"))
 
@@ -17,23 +19,31 @@
   (cond
     [(regexp-match #rx"^matching[(](.*)[)]$" s)
      => (lambda (m) (cadr m))]
-    [(string=? s annotation-any-string) "_"]
+    [(equal? s annotation-any-string) "_"]
     [else
      (string-append "(_ :: " s ")")]))
 
 (define (annotation-string-and a b)
   (cond
-    [(equal? a annotation-any-string) b]
-    [(equal? b annotation-any-string) a]
+    [(or (equal? a annotation-any-string)
+         (equal? b annotation-none-string))
+     b]
+    [(or (equal? a annotation-none-string)
+         (equal? b annotation-any-string))
+     a]
     [else
-     (string-append "and(" a ", " b ")")]))
+     (string-append a " && " b)]))
 
 (define (annotation-string-or a b)
   (cond
-    [(equal? a annotation-any-string) a]
-    [(equal? b annotation-any-string) b]
+    [(or (equal? a annotation-any-string)
+         (equal? b annotation-none-string))
+     a]
+    [(or (equal? a annotation-none-string)
+         (equal? b annotation-any-string))
+     b]
     [else
-     (string-append "or(" a ", " b ")")]))
+     (string-append a " || " b)]))
 
 (define (annotation-string-convert-pair s)
   (define p (annotation-string-to-pattern s))
@@ -68,6 +78,6 @@
     [else s]))
 
 (define (simplify-any s)
-  (if (string=? annotation-complex-any-string s)
+  (if (equal? annotation-complex-any-string s)
       "_"
       s))
