@@ -1,28 +1,19 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx
                      shrubbery/print
-                     enforest
-                     enforest/operator
-                     enforest/syntax-local
                      enforest/property
                      enforest/proc-name
                      enforest/name-parse
-                     enforest/operator
                      "srcloc.rkt"
-                     "pack.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "keyword-sort.rkt"
-                     "with-syntax.rkt"
-                     "tag.rkt"
                      "macro-result.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
          "annotation-operator.rkt"
-         "definition.rkt"
          "expression.rkt"
          "binding.rkt"
          "name-root.rkt"
@@ -40,6 +31,7 @@
                      :~)
          (for-space rhombus/annot
 
+                    None
                     Boolean
                     PosInt
                     NegInt
@@ -735,6 +727,7 @@
 (define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
 
 (define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
+(define-annotation-syntax None (identifier-annotation #'(lambda (x) #f) #'()))
 (define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
 (define-annotation-syntax Int (identifier-annotation #'exact-integer? #'()))
 (define-annotation-syntax PosInt (identifier-annotation #'exact-positive-integer? #'()))

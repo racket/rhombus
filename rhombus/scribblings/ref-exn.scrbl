@@ -103,8 +103,10 @@
 
 @doc(
   fun error(message :: ReadableString)
+    :: None
   fun error(who :: ReadableString || Symbol || Identifier || Operator || False,
             message :: ReadableString)
+    :: None
 ){
 
  Throws the @rhombus(Exn.Fail, ~class) exception with @rhombus(message) as the

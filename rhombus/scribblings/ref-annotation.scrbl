@@ -39,16 +39,24 @@
 @doc(
   annot.macro 'Any'
   annot.macro 'Any.of($expr, ...)'
+  annot.macro 'None'
 ){
 
  The @rhombus(Any, ~annot) annotation matches any value. An
  @rhombus(Any.of, ~annot) annotaton matches any value that is equal (in
  the sense of @rhombus(==)) to one of the @rhombus(expr) results.
 
+ The @rhombus(None, ~annot) annotation matches no values, or in other
+ words, is equivalent to @rhombus(Any.of(), ~annot). It is useful for
+ asserting that something never returns, such as a function that
+ always throws.
+
 @examples(
   "hello" is_a Any
   "hello" is_a Any.of("hello", "goodbye")
   "hola" is_a Any.of("hello", "goodbye")
+  "will not match" is_a None
+  "will not match" is_a Any.of()
 )
 
 }
