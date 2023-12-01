@@ -28,6 +28,11 @@ module test:
   check:
     rx'^ "https://" ((! "/"||"#")+ "/"?)* ("#" any*)? $'
     ~completes
+  check:
+    import lib("racket/base.rkt").#{regexp-match?}
+    def p = rx'"apple" || "banana"'
+    #{regexp-match?}(p, "apple") && #{regexp-match?}(p, "banana")
+    ~is #true    
 
 // Instantiate enforestation and macro machinery for the
 // regexp sublanguage:
