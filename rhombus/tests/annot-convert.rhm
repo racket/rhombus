@@ -96,10 +96,13 @@ check:
     method m() :: String
   class Hello():
     implements Greeter
-    override method m() :: converting(fun (_::String): 0):
+    override method m() :: converting(fun (_ :: String): 0):
       "100"
   Hello().m()
-  ~raises "result does not satisfy annotation"
+  ~raises values(
+    "result does not satisfy annotation",
+    "converting(fun (_ :: String): 0)",
+  )
 
 check:
   ~eval

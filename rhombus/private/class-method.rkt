@@ -1,12 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/stxparam-exptime
                      enforest/syntax-local
-                     enforest/transformer
                      "class-parse.rkt"
                      "interface-parse.rkt"
-                     "tag.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
@@ -17,7 +14,6 @@
          "entry-point.rkt"
          "class-this.rkt"
          "class-method-result.rkt"
-         "dot-provider-key.rkt"
          "function-indirect-key.rkt"
          "index-key.rkt"
          "append-indirect-key.rkt"
@@ -25,7 +21,6 @@
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
          "parens.rkt"
-         "op-literal.rkt"
          (submod "function-parse.rkt" for-call)
          "is-static.rkt"
          "realm.rkt"
@@ -857,13 +852,17 @@
                                               (if (method-result-predicate? result-desc)
                                                   #`(let ([result #,body])
                                                       (unless (#,(method-result-handler-expr result-desc) result)
-                                                        (raise-result-failure 'method-name result))
+                                                        (raise-result-failure 'method-name
+                                                                              result
+                                                                              '#,(method-result-annot-str result-desc)))
                                                       result)
                                                   #`(let ([result #,body])
                                                       (#,(method-result-handler-expr result-desc)
                                                        result
                                                        (lambda ()
-                                                         (raise-result-failure 'method-name result)))))]
+                                                         (raise-result-failure 'method-name
+                                                                               result
+                                                                               '#,(method-result-annot-str result-desc))))))]
                                              [else body])))))
                                 #t)))
          #'e.parsed]))]))

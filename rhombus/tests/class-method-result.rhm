@@ -20,10 +20,16 @@ block:
     ~is 3
   check:
     Posn(1, 2).n()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "String",
+    )
   check:
     Posn(1, 2).n_f()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "String",
+    )
   check:
     Posn(1, 2).p()
     ~is 3
@@ -32,14 +38,17 @@ block:
     class Posn3D(z):
       extends Posn
       override m():
-        "oops"   
+        "oops"
       override n():
         "ok"
       override p():
-        0 
+        0
     check:
       Posn3D(1, 2, 3).m()
-      ~raises "result does not satisfy annotation"
+      ~raises values(
+        "result does not satisfy annotation",
+        "Int",
+      )
     check:
       Posn3D(1, 2, 3).p()
       ~is 0
@@ -89,17 +98,29 @@ block:
     ~is Magenta()
   check:
     Bottom().m(Magenta())
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Green",
+    )
 
   check:
     Top().m(Cyan())
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Red",
+    )
   check:
     Middle().m(Cyan())
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Blue",
+    )
   check:
     Bottom().m(Cyan())
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Green",
+    )
 
 // class self-reference
 block:
@@ -153,10 +174,16 @@ block:
     ~is #true
   check:
     Point(1, 2).visible()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Boolean",
+    )
   check:
     Point(1, 2).invisible()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Boolean",
+    )
   check:
     Point(1, 2).really_invisible()
     ~is #false
@@ -181,16 +208,19 @@ block:
 
   check:
     Apple().example(#false)
-    ~is Apple()    
+    ~is Apple()
   check:
     Sky().example(#false)
-    ~is Sky()    
+    ~is Sky()
   check:
     RacketLogo().example()
-    ~is RacketLogo()    
+    ~is RacketLogo()
   check:
     RacketLogo().example(#false)
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Red", "Blue",
+    )
 
 // alternate method forms, internal versus external annotations
 block:
@@ -204,29 +234,35 @@ block:
         x
   class Bottom():
     extends Top
-    override m (x):
+    override m(x):
       x
-    override m2 (x):
+    override m2(x):
       x
   check:
     [Top().m(1), Top().m2(2)]
     ~is [1, 2]
   check:
     Top().m("apple")
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Int",
+    )
   check:
     Bottom().m("apple")
     ~is "apple"
   check:
     Bottom().m2("apple")
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Int",
+    )
 
 // abstract override
 block:
   interface Left
   interface Right
   class Both():
-    implements: Left Right    
+    implements: Left Right
   class LeftC():
     implements: Left
   class RightC():
@@ -251,10 +287,19 @@ block:
     ~is Both()
   check:
     C(#false).m()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Right",
+    )
   check:
     C(LeftC()).m()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Right",
+    )
   check:
     C(RightC()).m()
-    ~raises "result does not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "Right",
+    )

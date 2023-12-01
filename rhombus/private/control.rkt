@@ -17,7 +17,7 @@
          (submod "function-parse.rkt" for-build)
          (submod "equal.rkt" for-parse)
          "if-blocked.rkt")
-         
+
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
                      Continuation)
@@ -195,7 +195,7 @@
                      (rhombus-body-at tag g ...))
                    (rhombus-expression (#,group-tag tag-expr ...)))
                 #'())]))))
-       
+
 (define-syntax prompt
   (expression-transformer
    (lambda (stx)
@@ -222,18 +222,20 @@
                          (define argss (reverse rev-argss))
                          (define arg-parsedss (reverse rev-arg-parsedss))
                          (define rhss (reverse rev-rhss))
-                         (define falses (datum->syntax #f (map (lambda (f) #f) argss)))
+                         (define falses (map (lambda (f) #f) argss))
+                         (define falses-stx (datum->syntax #f (map (lambda (f) #'#f) argss)))
                          (define-values (proc arity)
                            (build-case-function no-adjustments
-                                                #'prompt_handler #'#f
+                                                #'prompt_handler
+                                                #f #f
                                                 (datum->syntax #f
                                                                (for/list ([args (in-list argss)])
                                                                  (for/list ([arg (in-list (syntax->list args))])
-                                                                   #f)))
+                                                                   #'#f)))
                                                 (datum->syntax #f argss) (datum->syntax #f arg-parsedss)
+                                                falses-stx falses-stx
+                                                falses-stx falses-stx
                                                 falses falses
-                                                falses falses
-                                                falses
                                                 (datum->syntax #f rhss)
                                                 (car gs)))
                          proc]
@@ -259,14 +261,14 @@
                   (define handler
                     (syntax-parse #`(#,group-tag bind ...)
                       [(parens-tag::parens arg::binding ...)
-                       (define falses (datum->syntax #f (map (lambda (a) #f) (syntax->list #'(arg ...)))))
+                       (define falses (datum->syntax #f (map (lambda (a) #'#f) (syntax->list #'(arg ...)))))
                        (define-values (proc arity)
                          (build-function no-adjustments
                                          #'prompt_handler
                                          falses #'(arg ...) #'(arg.parsed ...) falses
                                          #'#f #'#f
                                          #'#f #'#f
-                                         #'#f
+                                         #f #f
                                          #'rhs
                                          (car gs)))
                        proc]
@@ -277,7 +279,7 @@
                                          #'(#f) #'(arg) #'(arg.parsed) #'(#f)
                                          #'#f #'#f
                                          #'#f #'#f
-                                         #'#f
+                                         #f #f
                                          #'rhs
                                          (car gs)))
                        proc]))

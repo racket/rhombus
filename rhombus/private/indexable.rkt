@@ -1,27 +1,20 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/syntax-local
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt")
          "provide.rkt"
-         "expression.rkt"
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
          "parse.rkt"
-         (submod "map.rkt" for-build)
          "index-key.rkt"
          "index-result-key.rkt"
          "index-indirect-key.rkt"
          "call-result-key.rkt"
          "static-info.rkt"
          (submod "assign.rkt" for-assign)
-         "op-literal.rkt"
-         (only-in "string.rkt"
-                  +&)
          (submod "set.rkt" for-ref)
-         (submod "set.rkt" for-build)
          "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
@@ -112,8 +105,7 @@
                   '(get set)))
 
 (define-syntax void-result
-  (method-result #'void? #t #'() 0))
-
+  (method-result #'void? #t "Void" #'() 0))
 
 (define-for-syntax (parse-indexable-ref-or-set indexable-in stxes more-static?
                                                #:repetition? [repetition? #f])

@@ -10,7 +10,8 @@
                      "tag.rkt"
                      "same-expression.rkt"
                      "static-info-pack.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     (submod "entry-point-adjustment.rkt" for-struct)
+                     (only-in "annotation-string.rkt" annotation-any-string))
          racket/unsafe/undefined
          "parens.rkt"
          "expression.rkt"
@@ -190,10 +191,11 @@
 
   (define-splicing-syntax-class :ret-annotation
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
-                  converter)   ; `(lambda (arg ... success-k fail-k) ....)` with one ` arg` for each result
+                  converter    ; `(lambda (arg ... success-k fail-k) ....)` with one `arg` for each result, or `#f`
+                  annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
     #:datum-literals (block group)
-    (pattern (~seq ann-op::annotate-op (~optional vls:identifier) (_::parens g ...))
+    (pattern (~seq ann-op::annotate-op (~optional vls:identifier) (~and p (_::parens g ...)))
              #:when (or (not (attribute vls))
                         (free-identifier=? #'vls #'values))
              #:with (c::annotation ...) #'(g ...)
@@ -202,12 +204,11 @@
                      (syntax-parse #'(c.parsed ...)
                        [(c-parsed::annotation-predicate-form ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
-                                (if (syntax-e #'ann-op.check?)
-                                    #'(lambda (arg ... success-k fail-k)
-                                        (if (and (c-parsed.predicate arg) ...)
-                                            (success-k arg ...)
-                                            (fail-k)))
-                                    #'#f))]
+                                (and (syntax-e #'ann-op.check?)
+                                     #'(lambda (arg ... success-k fail-k)
+                                         (if (and (c-parsed.predicate arg) ...)
+                                             (success-k arg ...)
+                                             (fail-k)))))]
                        [(c-parsed::annotation-binding-form ...)
                         #:do [(unless (syntax-e #'ann-op.check?)
                                 (for ([c (in-list (syntax->list #'(c ...)))]
@@ -240,19 +241,20 @@
                                                                         #,(loop (cdr args) (cdr arg-impl-infos) (cdr bodys))))
                                                                     (fail-k)))]))))]))]
              #:with static-infos sis
-             #:with converter cvtr)
+             #:attr converter cvtr
+             #:attr annot-str (shrubbery-syntax->string #`(#,group-tag (~? vls) p)))
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
-             #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
+             #:do [(define annot #`(#,group-tag ctc0 ctc ...))]
+             #:with c::annotation (no-srcloc annot)
              #:do [(define-values (sis cvtr)
                      (syntax-parse #'c.parsed
                        [c-parsed::annotation-predicate-form
                         (values #'c-parsed.static-infos
-                                (if (syntax-e #'ann-op.check?)
-                                    #'(lambda (v success-k fail-k)
-                                        (if (c-parsed.predicate v)
-                                            (success-k v)
-                                            (fail-k)))
-                                    #'#f))]
+                                (and (syntax-e #'ann-op.check?)
+                                     #'(lambda (v success-k fail-k)
+                                         (if (c-parsed.predicate v)
+                                             (success-k v)
+                                             (fail-k)))))]
                        [c-parsed::annotation-binding-form
                         #:do [(unless (syntax-e #'ann-op.check?)
                                 (raise-unchecked-disallowed #'ann-op.name #'c))]
@@ -274,10 +276,12 @@
                                                               (success-k c-parsed.body))
                                                             (fail-k))))])]))]
              #:with static-infos sis
-             #:with converter cvtr)
+             #:attr converter cvtr
+             #:attr annot-str (shrubbery-syntax->string annot))
     (pattern (~seq)
              #:with static-infos #'()
-             #:with converter #'#f))
+             #:attr converter #f
+             #:attr annot-str #f))
 
   (define-splicing-syntax-class :rhombus-ret-annotation
     #:attributes (count
@@ -290,14 +294,12 @@
                             [((#%values (si ...)))
                              (length (syntax->list #'(si ...)))]
                             [_ 1])
-             #:attr maybe_converter (and (syntax-e #'r.converter)
+             #:attr maybe_converter (and (attribute r.converter)
                                          #'(parsed #:rhombus/expr r.converter))
              #:with static_info (unpack-static-infos #'r.static-infos)
-             #:attr annotation_string (or (and (syntax-e #'r.converter)
-                                               (syntax-parse #'r
-                                                 [(_ . t) (shrubbery-syntax->string #`(#,group-tag . t))]
-                                                 [_ #f]))
-                                          "Any")))
+             #:attr annotation_string (cond
+                                        [(attribute r.annot-str) => string->immutable-string]
+                                        [else annotation-any-string])))
 
   (define-splicing-syntax-class :pos-rest
     #:attributes (arg parsed)
@@ -368,7 +370,10 @@
 
 (begin-for-syntax
 
-  (struct fcase (kws args arg-parseds rest-arg rest-arg-parsed kwrest-arg kwrest-arg-parsed converter rhs))
+  (struct fcase (kws
+                 args arg-parseds rest-arg rest-arg-parsed kwrest-arg kwrest-arg-parsed
+                 converter annot-str
+                 rhs))
 
   ;; usage: (fcase-pos fcase-args fc) or (fcase-pos fcase-arg-parseds fc)
   (define (fcase-pos get-args fc)
@@ -382,7 +387,7 @@
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
                           kwrest-arg kwrest-parsed
-                          converter
+                          converter annot-str
                           rhs
                           src-ctx)
     (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds]
@@ -390,7 +395,6 @@
                         [(arg-info::binding-info ...) #'(arg-impl.info ...)])
       (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))]
                     [(arg ...) args]
-                    [rhs rhs]
                     [(maybe-rest-tmp (maybe-rest-tmp* ...) maybe-match-rest)
                      (if (syntax-e rest-arg)
                          (with-syntax-parse ([rest::binding-form rest-parsed]
@@ -439,9 +443,9 @@
                   maybe-match-rest
                   maybe-match-kwrest
                   (begin
-                    (add-annotation-check
-                     #,function-name #,converter #f
-                     (rhombus-body-expression rhs))))))))
+                    #,(add-annotation-check
+                       function-name converter annot-str
+                       #`(rhombus-body-expression #,rhs))))))))
           (define (adjust-args args)
             (append (entry-point-adjustment-prefix-arguments adjustments)
                     args))
@@ -458,11 +462,12 @@
            arity)))))
 
   (define (build-case-function adjustments
-                               function-name main-converter-stx
+                               function-name
+                               main-converter main-annot-str
                                kwss-stx argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
                                kwrest-args-stx kwrest-parseds-stx
-                               converters-stx
+                               converters annot-strs
                                rhss-stx
                                src-ctx)
     (define kwss (map syntax->list (syntax->list kwss-stx)))
@@ -472,11 +477,14 @@
     (define rest-parseds (syntax->list rest-parseds-stx))
     (define kwrest-args (syntax->list kwrest-args-stx))
     (define kwrest-parseds (syntax->list kwrest-parseds-stx))
-    (define converters (syntax->list converters-stx))
     (define rhss (syntax->list rhss-stx))
     (define n+sames
       (group-by-counts
-       (map fcase kwss argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds converters rhss)))
+       (map fcase
+            kwss
+            argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds
+            converters annot-strs
+            rhss)))
     (define pos-arity
       (normalize-arity
        (let ([adj (length (entry-point-adjustment-prefix-arguments adjustments))])
@@ -549,8 +557,6 @@
                                                [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
                                                [(arg-info::binding-info ...) #'(arg-impl.info ...)]
                                                [(this-arg-id ...) this-args]
-                                               [converter (fcase-converter fc)]
-                                               [rhs (fcase-rhs fc)]
                                                [(maybe-match-rest (maybe-bind-rest-seq ...) (maybe-bind-rest ...))
                                                 (cond
                                                   [(syntax-e (fcase-rest-arg fc))
@@ -609,10 +615,11 @@
                                                                (syntax-e (fcase-rest-arg fc)) (syntax-e (fcase-kwrest-arg fc)))
                                               #`(parsed
                                                  #:rhombus/expr
-                                                 (add-annotation-check
-                                                  #,function-name
-                                                  converter #,main-converter-stx
-                                                  (rhombus-body-expression rhs)))))))))
+                                                 #,(add-annotation-check
+                                                    function-name main-converter main-annot-str
+                                                    (add-annotation-check
+                                                     function-name (fcase-converter fc) (fcase-annot-str fc)
+                                                     #`(rhombus-body-expression #,(fcase-rhs fc)))))))))))
                                 (lambda () #,(loop (cdr same)))))]))])))))
      arity))
 
@@ -756,7 +763,7 @@
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))
 
-(define (raise-bindings-failure who msg what vals)
+(define (raise-bindings-failure who msg what vals annot-str)
   (raise
    (exn:fail:contract
     (error-message->adjusted-string
@@ -765,13 +772,20 @@
      (apply string-append
             msg
             "\n  " what "...:"
-            (if (null? vals)
-                (list " [none]")
-                (for/list ([v (in-list vals)])
-                  (string-append "\n   "
-                                 ((error-value->string-handler)
-                                  v
-                                  (error-print-width))))))
+            (append
+             (if (null? vals)
+                 (list " [none]")
+                 (for/list ([v (in-list vals)])
+                   (string-append "\n   "
+                                  ((error-value->string-handler)
+                                   v
+                                   (error-print-width)))))
+             (if annot-str
+                 (list "\n  annotation: "
+                       (error-contract->adjusted-string
+                        annot-str
+                        rhombus-realm))
+                 '())))
      rhombus-realm)
     (current-continuation-marks))))
 
@@ -779,47 +793,47 @@
   (raise-bindings-failure who
                           "no matching case for arguments"
                           "arguments"
-                          (append base-args rest-args)))
+                          (append base-args rest-args)
+                          #f))
 
-(define-syntax (add-annotation-check stx)
-  (syntax-parse stx
-    [(_ name converter main-converter e)
-     (define (wrap-values converter e)
-       (cond
-         [(syntax-e converter)
-          (define (simple)
-            #`(let ([result #,e])
-                (#,converter result
-                 (lambda (v) v)
-                 (lambda ()
-                   (raise-result-failure 'name result)))))
-          (syntax-parse converter
-            #:literals (lambda)
-            [(lambda (_ _ _) . _) (simple)]
-            [(lambda (arg ... _ _) . _)
-             #`(call-with-values
-                (lambda () #,e)
-                (case-lambda
-                  [(arg ...)
-                   (#,converter arg ...
-                    (lambda (arg ...) (values arg ...))
-                    (lambda ()
-                      (raise-results-failure 'name (list arg ...))))]
-                  [args (raise-results-failure 'name args)]))]
-            [_ (simple)])]
-         [else e]))
-     (wrap-values #'main-converter (wrap-values #'converter #'e))]))
+(define-for-syntax (add-annotation-check who converter annot-str e)
+  (cond
+    [(not converter) e]
+    [else
+     (syntax-parse converter
+       #:literals (lambda)
+       [(~or* (lambda (arg ... _ _) . _)
+              (~parse (arg ...) (list #'result)))
+        (define single-valued?
+          (eqv? (length (syntax->list #'(arg ...))) 1))
+        #`(call-with-values
+           (lambda () #,e)
+           (case-lambda
+             #,@(if single-valued?
+                    (list #`[(val)
+                             (#,converter
+                              val
+                              (lambda (v) v)
+                              (lambda ()
+                                (raise-result-failure '#,who val '#,annot-str)))])
+                    (list #`[(arg ...)
+                             (#,converter
+                              arg ...
+                              (lambda (arg ...) (values arg ...))
+                              (lambda ()
+                                (raise-results-failure '#,who (list arg ...) '#,annot-str)))]
+                          #`[(val) (raise-result-failure '#,who val '#,annot-str)]))
+             [vals (raise-results-failure '#,who vals '#,annot-str)]))])]))
 
-(define (raise-result-failure who val)
-  (raise-arguments-error* who rhombus-realm
-                          "result does not satisfy annotation"
-                          "result" val))
+(define (raise-result-failure who val annot-str)
+  (raise-binding-failure who "result" val annot-str))
 
-(define (raise-results-failure who vals)
+(define (raise-results-failure who vals annot-str)
   (raise-bindings-failure who
                           "results do not satisfy annotation"
                           "results"
-                          vals))
+                          vals
+                          annot-str))
 
 (begin-for-syntax
   (define-syntax-class :kw-argument
