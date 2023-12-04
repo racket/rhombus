@@ -22,6 +22,9 @@ class Posn(x, y):
         $lhs = if pos == 0 | Posn.y(p) | Posn.x(p),
       ~recur_args:
         (pos + 1))'
+  method self_iterate():
+    for (x: this):
+      x
 
 class Posn3D(z):
   extends Posn
