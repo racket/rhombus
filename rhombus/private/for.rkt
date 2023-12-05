@@ -5,10 +5,12 @@
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/syntax-local
+                     enforest/transformer
                      "tag.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "with-syntax.rkt")
+                     "with-syntax.rkt"
+                     "for-clause-expand.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -24,7 +26,9 @@
          "parens.rkt"
          (rename-in "values.rkt"
                     [values rhombus-values])
-         "is-static.rkt")
+         "is-static.rkt"
+         "forwarding-sequence.rkt"
+         "syntax-parameter.rkt")
 
 (provide (rename-out [rhombus-for for])
          (for-space rhombus/for_clause
@@ -111,81 +115,99 @@
       #:datum-literals (group block parens)
       [(_ orig static? [finish] . bodys)
        ;; initialize state
-       #`(#:splice (for-clause-step orig static? [finish () () (void) (void)]
+       #`(#:splice (for-clause-step orig static? [finish () () (void) (void) #hasheq()]
                                     . bodys))]
-      [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher binder])
+      [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher binder stx-params])
        (when (null? (syntax-e #'rev-bodys))
          (raise-syntax-error #f
                              "empty body (after any clauses such as `each`)"
                              (respan #'orig)))
-       #`(#,@(reverse (syntax->list #'rev-clauses))
+       #`(#,@(reverse (map (add-clause-stx-params #'stx-params) (syntax->list #'rev-clauses)))
           #:do [matcher
                 binder
                 (body-wrapper
                  data
-                 (rhombus-body
-                  . #,(reverse (syntax->list #'rev-bodys))))])]
-      [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher binder])
+                 (with-syntax-parameters
+                  stx-params
+                   (rhombus-body
+                    . #,(reverse (syntax->list #'rev-bodys)))))])]
+      [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher binder stx-params])
           body0
           . bodys)
        #:when (for-clause? #'body0)
        (cond
-         [(pair? (syntax-e #'rev-bodys))
-          ;; emit accumulated body and clauses before starting more clauses
-          #`(#,@(reverse (syntax->list #'rev-clauses))
-             #:do (matcher
-                   binder
-                   (rhombus-body-sequence
-                    . #,(reverse (syntax->list #'rev-bodys))))
+         [(pair? (syntax-e #'rev-clauses))
+          ;; emit clauses and bind before processing a (potentially non-empty) body
+          #`(#,@(reverse (map (add-clause-stx-params #'stx-params) (syntax->list #'rev-clauses)))
+             #:do [matcher
+                   binder]
              #:splice (for-clause-step orig static?
-                                       [finish () () (void) (void)]
+                                       [finish () rev-bodys (void) (void) stx-params]
                                        body0 . bodys))]
-         [(pair? (syntax-e #'rev-clauses)) ; assert: empty rev-bodys
-          ;; emit clauses before starting a new group
-          #`(#,@(reverse (syntax->list #'rev-clauses))
-             #:do [matcher binder]
-             #:splice (for-clause-step orig static?
-                                       [finish () () (void) (void)]
-                                       body0 . bodys))]
+         [(pair? (syntax-e #'rev-bodys)) ; assert: empty rev-clauses
+          ;; emit accumulated body with forward-sequence expansion
+          (expand-forwarding-sequence
+           #`((rhombus-body-sequence
+               . #,(reverse (syntax->list #'rev-bodys))))
+           #'(body0 . bodys)
+           #'#hasheq()
+           syntax-local-splicing-for-clause-introduce
+           ;; continue when some expr+defns are ready:
+           (lambda (exprs+defns state)
+             #`(#:do (#,@exprs+defns)
+                ;; `for-clause-forwaring-step` will  use
+                ;; `expand-forwarding-sequence-continue`
+                ;; and eventually get back to `for-clause-step` mode:
+                #:splice (for-clause-forwarding-step
+                          orig static? finish
+                          #,state)))
+           ;; continue when no more exprs and defns:
+           (lambda (exprs+defns bodys stx-params)
+             #`(#:do (#,@exprs+defns)
+                #:splice (for-clause-step orig static?
+                                          [finish () () (void) (void) #,stx-params]
+                                          . #,bodys))))]
          [else
-          (syntax-parse #'body0
-            #:datum-literals (group block parens)
-            #:literals (prim-for-clause)
-            [(group prim-for-clause #:each any ...+ rhs-blk)
-             ;; parse binding as binding group
-             #`(#:splice (for-clause-step
-                          orig static?
-                          #,(build-binding-clause/values #'orig
-                                                         #'state
-                                                         #`((#,group-tag any ...))
-                                                         #'rhs-blk
-                                                         (syntax-e #'static?))
-                          . bodys))]
-            [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
-                                                  ...))
-             ;; parse binding as binding group
-             #`(#:splice (for-clause-step
-                          orig static?
-                          #,(build-binding-clause*/values #'orig
+          (with-continuation-mark
+           syntax-parameters-key #'stx-params
+           (syntax-parse #'body0
+             #:datum-literals (group block parens)
+             #:literals (prim-for-clause)
+             [(group prim-for-clause #:each any ...+ rhs-blk)
+              ;; parse binding as binding group
+              #`(#:splice (for-clause-step
+                           orig static?
+                           #,(build-binding-clause/values #'orig
                                                           #'state
-                                                          (syntax->list #`(((#,group-tag any ...)) ...))
-                                                          (syntax->list #'(rhs-blk ...))
+                                                          #`((#,group-tag any ...))
+                                                          #'rhs-blk
                                                           (syntax-e #'static?))
-                          . bodys))]
-            [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
-                    rhs)
-             #:with new-kw (case (syntax-e #'kw)
-                             [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
-                             [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
-                             [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
-                             [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
-                             [else #'kw])
-             #`(new-kw rhs
-                       #:splice (for-clause-step orig static? state . bodys))]
-            [body0::for-clause
-             #:with f::for-clause-form #'body0.parsed
-             #`(#:splice (for-clause-step orig static? state f.parsed ... . bodys))])])]
-      [(_ orig static? [finish rev-clauses rev-bodys matcher binder]
+                           . bodys))]
+             [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
+                                                   ...))
+              ;; parse binding as binding group
+              #`(#:splice (for-clause-step
+                           orig static?
+                           #,(build-binding-clause*/values #'orig
+                                                           #'state
+                                                           (syntax->list #`(((#,group-tag any ...)) ...))
+                                                           (syntax->list #'(rhs-blk ...))
+                                                           (syntax-e #'static?))
+                           . bodys))]
+             [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
+                     rhs)
+              #:with new-kw (case (syntax-e #'kw)
+                              [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
+                              [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
+                              [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
+                              [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
+                              [else #'kw])
+              #`(new-kw rhs
+                        #:splice (for-clause-step orig static? state . bodys))]
+             [body0::for-clause
+              #:with f::for-clause-form #'body0.parsed
+              #`(#:splice (for-clause-step orig static? state f.parsed ... . bodys))]))])]
+      [(_ orig static? [finish rev-clauses rev-bodys matcher binder stx-params]
           body0
           . bodys)
        #`(#:splice (for-clause-step
@@ -194,8 +216,31 @@
                      rev-clauses
                      (body0 . rev-bodys)
                      matcher
-                     binder]
+                     binder
+                     stx-params]
                     . bodys))])))
+
+;; trampoline back into `expand-forwarding-sequence-continue`, eventually
+;; returning to the `for-clause-step` trampoline:
+(define-splicing-for-clause-syntax for-clause-forwarding-step
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ orig static? finish state)
+       (expand-forwarding-sequence-continue
+        #'state
+        syntax-local-splicing-for-clause-introduce
+        ;; continue when another expr or defn is ready:
+        (lambda (exprs+defns state)
+          #`(#:do (#,@exprs+defns)
+             #:splice (for-clause-forwarding-step
+                       orig static? finish
+                       #,state)))
+        ;; continue when no more exprs and defns:
+        (lambda (exprs+defns bodys stx-params)
+          #`(#:do (#,@exprs+defns)
+             #:splice (for-clause-step orig static?
+                                       [finish () () (void) (void) #,stx-params]
+                                       . #,bodys))))])))
 
 (define-for-syntax (build-binding-clause/values orig-stx
                                                 state-stx
@@ -258,7 +303,7 @@
                            (respan orig-stx)
                            (respan rhs-blk-stx)))
      (syntax-parse state-stx
-       [[finish rev-clauses rev-bodys matcher binder]
+       [[finish rev-clauses rev-bodys matcher binder stx-params]
         #`[finish
            ([(tmp-id ...) #,(cond
                               [(identifier? seq-ctr)
@@ -285,7 +330,8 @@
                (lhs-i.binder-id tmp-id lhs-i.data)
                (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
                ...)
-             ...)]])]))
+             ...)
+           stx-params]])]))
 
 (define-for-syntax (build-binding-clause*/values orig-stx
                                                  state-stx
@@ -315,6 +361,17 @@
 
 (define (rhs-binding-failure who val binding-str)
   (raise-binding-failure who "element" val binding-str))
+
+(define-for-syntax ((add-clause-stx-params stx-params) clause)
+  (cond
+    [(zero? (hash-count (syntax-e stx-params))) clause]
+    [else
+     (syntax-parse clause
+       [[bind rhs]
+        ;; since `for` uses `local-expand` to recognize optimized patterns,
+        ;; and since `with-syntax-parameters` also uses `local-expand-expression`,
+        ;; this `with-syntax-parameters` wrapper doesn't interfere with optimization
+        #`[bind (with-syntax-parameters #,stx-params rhs)]])]))
 
 ;; ----------------------------------------
 

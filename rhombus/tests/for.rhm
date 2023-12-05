@@ -1,4 +1,6 @@
-#lang rhombus
+#lang rhombus/and_meta
+import:
+  "version_guard.rhm"
 
 block:
   def mutable accum = []
@@ -371,3 +373,81 @@ check:
   for (val: ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
     val.length()
   ~raises "no such field or method (based on static information)"
+
+// check `let` across clause boundary
+check:
+  for List:
+    each num_str: ["1","2","3","4","5", "a"]
+    let num = String.to_number(num_str)
+    skip_when !num
+    num
+  ~is [1, 2, 3, 4, 5]
+
+version_guard.at_least "8.11.1.4":
+  // check `import` across clause boundary
+  check:
+    for List:
+      each num_str: ["1","2","3","4","5"]
+      import: rhombus.List as L
+      skip_when !num_str
+      L(num_str)
+    ~is [["1"], ["2"], ["3"], ["4"], ["5"]]
+
+  // combine `import` and `let` across clause boundary
+  check:
+    for List:
+      each num_str: ["1","2","3","4","5", "a"]
+      import: rhombus.List as L
+      let num = String.to_number(num_str)
+      skip_when !num
+      L(num)
+    ~is [[1], [2], [3], [4], [5]]
+
+  syntax_parameter.bridge today_name:
+    "Thursday"
+  expr.macro 'today':
+    '$(syntax_parameter_meta.lookup('today_name'))'
+
+  // check syntax parameter withn body
+  check:
+    for List:
+      each num_str: ["1","2","3"]
+      skip_when !num_str
+      syntax_parameter.relet today_name:
+        "Friday"
+      [num_str, today]
+    ~is [["1", "Friday"], ["2", "Friday"], ["3", "Friday"]]
+
+  // check syntax parameter across clause boundary
+  check:
+    def mutable accum = []
+    [for List:
+       each num_str: ["1","2","3"]
+       syntax_parameter.relet today_name:
+         "Friday"
+       def now = today
+       accum := List.cons(today, accum)
+       skip_when !num_str
+       accum := List.cons(today, accum)
+       [num_str, now],
+     accum]
+    ~is [[["1", "Friday"], ["2", "Friday"], ["3", "Friday"]],
+         ["Friday", "Friday", "Friday", "Friday", "Friday", "Friday"]]
+
+  // check syntax parameter used in sequence expression
+  check:
+    for List:
+      syntax_parameter.relet today_name:
+        "Friday"
+      each day_str: [today, today]
+      [day_str, today]
+    ~is [["Friday", "Friday"], ["Friday", "Friday"]]
+
+  // check syntax parameter used sequence expression, but delayed
+  check:
+    for List:
+      syntax_parameter.relet today_name:
+        "Friday"
+      each day_str: [fun (): today, fun (): today]
+      [day_str(), today]
+    ~is [["Friday", "Friday"], ["Friday", "Friday"]]
