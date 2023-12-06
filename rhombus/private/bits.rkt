@@ -2,8 +2,9 @@
 (require "name-root.rkt"
          "static-info.rkt"
          "define-operator.rkt"
-         "define-arity.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt")
 
 (provide (for-space rhombus/namespace
                     bits))
@@ -44,8 +45,10 @@
 
 (define-infix ? bitwise-bit-set?)
 
-(define-static-info-syntaxes (length)
-  (#%function-arity 2))
+(define-static-info-syntaxes (integer-length)
+  (#%function-arity 2)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (bitwise-bit-field)
-  (#%function-arity 8))
+  (#%function-arity 8)
+  (#%indirect-static-info indirect-function-static-info))
