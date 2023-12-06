@@ -3,13 +3,14 @@
                      syntax/parse/pre
                      "srcloc.rkt")
          "provide.rkt"
-         "expression.rkt"
          "binding.rkt"
          "reducer.rkt"
          "parse.rkt"
          "static-info.rkt"
          "function-arity-key.rkt"
-         (submod "equal.rkt" for-parse))
+         (submod "equal.rkt" for-parse)
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -64,7 +65,9 @@
          e)]))
 
 (define-static-info-syntax values
-  (#%function-arity -1))
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntax call-with-values
-  (#%function-arity 4))
+  (#%function-arity 4)
+  (#%indirect-static-info indirect-function-static-info))

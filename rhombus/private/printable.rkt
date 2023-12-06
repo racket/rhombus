@@ -8,6 +8,8 @@
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "static-info.rkt"
          "print-desc.rkt"
          (submod "print.rkt" for-printable))
@@ -143,7 +145,8 @@
                      (print-description-unwrap who body))))
 
 (define-static-info-syntaxes (print-graph)
-  (#%function-arity 3))
+  (#%function-arity 3)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define/arity (Printable.describe v
                                   #:mode [mode 'text]

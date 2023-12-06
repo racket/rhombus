@@ -15,6 +15,8 @@
          "composite.rkt"
          "class-desc.rkt"
          "define-arity.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "rhombus-primitive.rkt")
 
 (provide define-primitive-class)
@@ -181,11 +183,14 @@
          #,@(if (attribute constructor-static-infos)
                 (with-syntax ([arity-mask
                                (or (attribute constructor-arity)
-                                   (arithmetic-shift 1 (length (syntax->list #'field-list))))])
+                                   (arithmetic-shift 1 (length (syntax->list #'field-list))))]
+                              [(si ...)
+                               #'constructor-static-infos])
                   (list #'(define-static-info-syntax name
+                            si ...
                             (#%call-result #,name-static-infos)
                             (#%function-arity #,arity-mask)
-                            . constructor-static-infos)))
+                            (#%indirect-static-info indirect-function-static-info))))
                 '())
 
          #,@(if (or transparent? translucent?)

@@ -16,9 +16,9 @@
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          "dotted-sequence-parse.rkt"
-         "dot-parse.rkt"
          "realm.rkt"
          "define-arity.rkt"
+         (submod "define-arity.rkt" for-info)
          "class-primitive.rkt")
 
 (provide (for-spaces (#f
@@ -320,4 +320,4 @@
      pass)))
 
 (begin-for-syntax
-  (set-function-dot-provider! (dot-parse-dispatch function-dot-dispatch)))
+  (install-function-static-infos! function-static-infos))

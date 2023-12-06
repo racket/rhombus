@@ -1,13 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/syntax-local
-                     enforest/hier-name-parse
                      "class-parse.rkt"
                      (only-in "interface-parse.rkt" interface-desc-static-infos)
                      "static-info-pack.rkt")
          (submod "dot.rkt" for-dot-provider)
          "entry-point.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-indirect-key.rkt"
@@ -122,27 +122,34 @@
                                      (syntax->datum #'e-arity.parsed)])
                                   (summarize-arity constructor-keywords
                                                    constructor-defaults
-                                                   #f #f)))))
+                                                   #f #f)))
+          (#%indirect-static-info indirect-function-static-info)))
      (if exposed-internal-id
          (list
           #`(define-static-info-syntax make-internal-name
               #,(let ([info #'(#%call-result ((#%dot-provider internal-name-instance)))])
                   (if super
                       ;; internal constructor is curried
-                      #`(#%call-result (#,info))
-                      info))))
+                      #`(#%call-result (#,info
+                                        (#%indirect-static-info indirect-function-static-info)))
+                      info))
+              (#%indirect-static-info indirect-function-static-info)))
          '())
      (list
       #'(begin
-          (define-static-info-syntax/maybe* name-field (#%call-result field-static-infos))
+          (define-static-info-syntax/maybe* name-field
+            (#%call-result field-static-infos)
+            (#%indirect-static-info indirect-function-static-info))
           ...))
      (with-syntax ([((si ...) ...) (for/list ([maybe-set (syntax->list #'(public-maybe-set-name-field! ...))]
                                               [si (syntax->list #'(public-field-static-infos ...))])
-                                     (if (syntax-e maybe-set)
-                                         #`((#%function-arity 6)
-                                            (#%call-results-at-arities ((1 #,si))))
-                                         #`((#%function-arity 2)
-                                            (#%call-result #,si))))])
+                                     (append
+                                      (if (syntax-e maybe-set)
+                                          (list #`(#%call-results-at-arities ((1 #,si)))
+                                                #'(#%function-arity 6))
+                                          (list #`(#%call-result #,si)
+                                                #'(#%function-arity 2)))
+                                      (list #'(#%indirect-static-info indirect-function-static-info))))])
        (list
         #'(begin
             (define-static-info-syntax public-name-field/mutate si ...)
@@ -150,5 +157,6 @@
 
 (define-syntax (define-static-info-syntax/maybe* stx)
   (syntax-parse stx
-    [(_ id (_ ())) #'(begin)]
-    [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
+    [(~or* (_ id (_ ()) . tail)
+           (_ id . tail))
+     #'(define-static-info-syntax id . tail)]))

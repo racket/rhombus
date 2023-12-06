@@ -9,7 +9,9 @@
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
          "realm.rkt"
-         (submod "module-path-object.rkt" for-primitive))
+         (submod "module-path-object.rkt" for-primitive)
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -51,7 +53,8 @@
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
 
 (define-static-info-syntaxes (current-namespace)
-  (#%function-arity 6))
+  (#%function-arity 6)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define/arity (import mod-path)
   (unless (module-path? mod-path)

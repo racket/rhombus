@@ -5,13 +5,14 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      "with-syntax.rkt")
-         (only-in "annotation.rkt" ::)
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
-         "dot-provider-key.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
+         ;; see `gen-bounce`
          "index-result-key.rkt"
          "index-key.rkt"
          "append-indirect-key.rkt"
@@ -97,7 +98,8 @@
                            #`(#%call-result all-static-infos))
                      #,@(if (syntax-e #'arity)
                             #`((#%function-arity arity))
-                            #'())))
+                            #'())
+                     (#%indirect-static-info indirect-function-static-info)))
                 #'()))
           (define (gen-bounce ind-id+id key result-key)
             (if (syntax-e ind-id+id)
