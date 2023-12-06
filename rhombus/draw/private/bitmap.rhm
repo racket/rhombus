@@ -16,6 +16,8 @@ interface BitmapDC:
 class _BitmapDC():
   extends: SomeDC
   implements BitmapDC
+  constructor (hand):
+    super(hand)
 
 class Bitmap():
   internal _Bitmap
