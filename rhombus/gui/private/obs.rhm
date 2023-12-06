@@ -10,6 +10,8 @@ export:
   unwrap_list
   unwrap_convert
   to_obs
+  <~
+  ~>
 
 def anon_str = "anon"
 
@@ -100,3 +102,9 @@ fun
 fun
 | to_obs(o :: Obs) :: Obs: o
 | to_obs(v) :: Obs: Obs(v)
+
+operator ((o :: Obs) <~ (f :: Function.of_arity(1))):
+  o.update(f)
+
+operator ((o :: Obs) ~> (f :: Function.of_arity(1))) :: Obs:
+  o.map(f)

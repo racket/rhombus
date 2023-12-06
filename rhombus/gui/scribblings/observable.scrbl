@@ -71,6 +71,7 @@
 
 @doc(
   method (obs :: Obs).update(f :: Function.of_arity(1))
+  operator ((obs :: Obs) <~ (f :: Function.of_arity(1)))
 ){
 
  Changes the value @rhombus(v, ~var) of @rhombus(obs) to
@@ -103,6 +104,7 @@
 
 @doc(
   method (obs :: Obs).map(f :: Function.of_arity(1)) :: Obs
+  operator ((obs :: Obs) ~> (f :: Function.of_arity(1))) :: Obs
 ){
 
  Returns an observer whose value changes each time that @rhombus(obs)'s
