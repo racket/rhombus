@@ -10,6 +10,8 @@
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          ;; see `gen-bounce`
@@ -108,7 +110,8 @@
                            #`(#%call-result all-static-infos))
                      #,@(if (syntax-e #'arity)
                             #`((#%function-arity arity))
-                            #'())))
+                            #'())
+                     (#%indirect-static-info indirect-function-static-info)))
                 #'()))
           (define (gen-bounce ind-id+id key result-key)
             (if (syntax-e ind-id+id)

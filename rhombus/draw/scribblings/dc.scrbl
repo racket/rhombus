@@ -241,3 +241,15 @@
 )
 
 }
+
+@doc(
+  property (dc :: DC).handle
+  fun DC.from_handle(h) :: DC
+){
+
+ The @rhombus(DC.handle) property returns a Racket object that
+ corresponds to the @tech{drawing context} for use directly with
+ @racketmodname(racket/draw). The @rhombus(DC.from_handle) function
+ creates a @rhombus(DC) from such a Racket object.
+
+}

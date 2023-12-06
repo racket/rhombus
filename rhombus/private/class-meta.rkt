@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base) ; for `unsyntax` binding
          syntax/parse/pre
          enforest/syntax-local
          "define-arity.rkt"
@@ -11,7 +11,6 @@
                    class-clause-extract
                    method-shape-extract))
          "call-result-key.rkt"
-         "static-info.rkt"
          "realm.rkt")
 
 (provide (for-space rhombus/namespace
@@ -249,8 +248,8 @@
                              "unrecognized key symbol"
                              "symbol" key)]))
 
-(define (describe id)
-  (define who 'class_meta.describe)
+(define/arity (describe id)
+  #:static-infos ((#%call-result #,class-data-static-infos))
   (unless (identifier? id)
     (raise-argument-error* who rhombus-realm "Identifier" id))
   (define desc (syntax-local-value* (in-class-desc-space id) class-desc-ref))
@@ -270,5 +269,3 @@
                                "could not find class description for internal class name"
                                "internal name" id))
      (class-describe-data desc idesc)]))
-
-(define-static-info-syntax describe (#%call-result #,class-data-static-infos))

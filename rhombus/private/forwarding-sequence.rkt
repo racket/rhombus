@@ -20,18 +20,21 @@
          ;; wrap `rhombus-forward` around a sequence of declarations
          ;; to make any bindings among the  declarations visible only
          ;; after the declarations
-         rhombus-forward)
+         rhombus-forward
+
+         (for-syntax expand-forwarding-sequence
+                     expand-forwarding-sequence-continue))
 
 (define-syntax (rhombus-forwarding-sequence stx)
   (syntax-parse stx
     [(_ ctx mode orig . tail)
-     #`(sequence ctx mode orig base-ctx add-ctx remove-ctx #hasheq() . tail)]))
+     #`(sequence [ctx mode orig base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-nested-forwarding-sequence stx)
   ;; Used for something like `namespace`
   (syntax-parse stx
     [(_ final . tail)
-     #`(sequence [final] #f #f base-ctx add-ctx remove-ctx #hasheq() . tail)]))
+     #`(sequence [[final] #f #f base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-mixed-forwarding-sequence stx)
   ;; Used for something like `class`, where non-expression, non-definition
@@ -39,24 +42,51 @@
   ;; be passed along to `final`
   (syntax-parse stx
     [(_ (final . data) stop-id . tail)
-     #`(sequence [(final . data) #:stop-at stop-id] #f #f base-ctx add-ctx remove-ctx #hasheq() . tail)]))
+     #`(sequence [[(final . data) #:stop-at stop-id] #f #f base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-mixed-nested-forwarding-sequence stx)
   ;; Actually used by `class`, which acts like `namespace`, too
   (syntax-parse stx
     [(_ (final . data) stop-id . tail)
-     #`(sequence [(final . data) #:stop-at* stop-id ()] #f #f base-ctx add-ctx remove-ctx #hasheq() . tail)]))
+     #`(sequence [[(final . data) #:stop-at* stop-id ()] #f #f base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
 (define-syntax (sequence stx)
+  (forwarding-sequence-step stx syntax-local-context syntax-local-introduce))
+
+;; A step for `sequence` takes a syntax object of the form
+;;
+;;    (_ sequence-state expr-or-defn ...)
+;;
+;; and produces one of the following:
+;;
+;;  * (sequence sequence-state expr-or-defn ...)
+;;    to continue
+;;
+;;  * (begin
+;;      expr-or-defn
+;;      ...
+;;      (sequence sequence-state expr-or-defn ...)
+;;    to continue after the handled exprs and defns
+;;
+;;  * (final ....)
+;;    to complete where `final` is provided when constructing
+;;    an initial state
+;;
+;;  * (begin
+;;      expr-or-defn
+;;      ...
+;;      (final ....))
+;;
+(define-for-syntax (forwarding-sequence-step stx get-expand-context local-introduce)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
-      [(_ ctx mode orig base-ctx add-ctx remove-ctx stx-params)
+      [(_ [ctx mode orig base-ctx add-ctx remove-ctx stx-params])
        (when (and (eq? (syntax-e #'mode) '#:need-end-expr)
                   (syntax-e #'orig))
          (raise-syntax-error #f "block does not end with an expression" #'orig))
        (define forms #`(begin #,@(reverse accum)))
        (syntax-parse #'ctx
-         [[(final ...) #:stop-at _ accum ...]
+         [[(final ...) (~or #:stop-at #:block-stop-at) _ accum ...]
           #`(begin
               #,forms
               (final ... #,@(reverse (syntax->list #'(accum ...)))))]
@@ -69,10 +99,10 @@
               #,forms
               (final ... [#:ctx base-ctx remove-ctx] #,@(reverse (syntax->list #'(bind ...)))))]
          [_ forms])]
-      [(_ ctx mode orig base-ctx add-ctx remove-ctx stx-parsm (~and form ((~literal quote) v)) . forms)
+      [(_ [ctx mode orig base-ctx add-ctx remove-ctx stx-params] (~and form ((~literal quote) v)) . forms)
        (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms)
              (cons #'form accum))]
-      [(_ ctx mode orig base-ctx add-ctx remove-ctx stx-params form . forms)
+      [(_ [ctx mode orig base-ctx add-ctx remove-ctx stx-params] form . forms)
        (define exp-form (syntax-parse #'form
                           #:literals (module module*)
                           [(module . _) #'form]
@@ -81,7 +111,7 @@
                            (with-continuation-mark
                             syntax-parameters-key #'stx-params
                             (local-expand #'form
-                                          (syntax-local-context)
+                                          (get-expand-context)
                                           (list #'rhombus-forward
                                                 #'pop-forward
                                                 #'define-values
@@ -101,20 +131,20 @@
           (define introducer (make-syntax-introducer #t))
           #`(begin
               #,@(reverse accum)
-              (sequence ctx #f #f base-ctx #,(introducer #'add-ctx) base-ctx stx-params
+              (sequence [ctx #f #f base-ctx #,(introducer #'add-ctx) base-ctx stx-params]
                         sub-form ...
                         (pop-forward mode orig base-ctx add-ctx #,(introducer #'remove-ctx)
                                      . #,(introducer #'forms))))]
          [(pop-forward mode orig base-ctx add-ctx remove-ctx . forms)
-          #`(sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms)]
+          #`(sequence [ctx mode orig base-ctx add-ctx remove-ctx stx-params] . forms)]
          [(define-syntax-parameter key rhs)
           (with-syntax ([stx-params (syntax-parameter-update #'key #'rhs #'stx-params)])
-            #`(sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params . forms))]
+            #`(sequence [ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params] . forms))]
          [(begin form-in ...)
           #:with (form ...) (map (lambda (form)
                                    (shift-origin form exp-form))
                                  (syntax->list #'(form-in ...)))
-          (define seq #`(sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params form ... . forms))
+          (define seq #`(sequence [ctx mode orig base-ctx add-ctx remove-ctx stx-params] form ... . forms))
           (if (null? accum)
               seq
               #`(begin #,@(reverse accum) #,seq))]
@@ -138,7 +168,7 @@
                                                        #,(discard-static-infos #'rhs)))))
                                exp-form
                                exp-form)
-              (sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params . forms))]
+              (sequence [ctx #:need-end-expr orig base-ctx add-ctx remove-ctx stx-params] . forms))]
          [(#%require req ...)
           (define intro (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)]
                               [add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
@@ -150,15 +180,15 @@
                 #:datum-literals (portal)
                 [((~and tag portal) id content) #`(tag #,(intro #'id) content)]
                 [_ (intro req)])))
-          (cond
-            [(eq? (syntax-e #'ctx) '#:block)
+          (syntax-parse #'ctx
+            [(~or #:block (_ #:block-stop-at . _))
              (for ([req (in-list reqs)])
-               (syntax-local-lift-require (syntax-local-introduce req) #'use #f))
-             #`(sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms)]
-            [else
+               (syntax-local-lift-require (local-introduce req) #'use #f))
+             #`(sequence [ctx mode orig base-ctx add-ctx remove-ctx stx-params] . forms)]
+            [_
              #`(begin
                  #,(syntax-track-origin #`(#%require #,@reqs) exp-form #'none)
-                 (sequence ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms))])]
+                 (sequence [ctx mode orig base-ctx add-ctx remove-ctx stx-params] . forms))])]
          [(provide prov ...)
           #:when (not (keyword? (syntax-e #'ctx)))
           (define rev-prov (reverse (syntax->list #'(prov ...))))
@@ -168,18 +198,18 @@
                #`(head #:stop-at* stop-id (#,@rev-prov . binds-tail) . tail)]
               [(head . tail)
                #`(head #,@rev-prov . tail)]))
-          #`(sequence #,new-ctx mode orig base-ctx add-ctx remove-ctx stx-params . forms)]
+          #`(sequence [#,new-ctx mode orig base-ctx add-ctx remove-ctx stx-params] . forms)]
          [(#%provide . _)
           (raise-syntax-error #f "shouldn't happen" exp-form)]
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
           #:do [(define next
                   (syntax-parse #'ctx
-                    [(head #:stop-at stop-id . tail)
+                    [(head (~and ctx-tag (~or #:stop-at #:block-stop-at)) stop-id . tail)
                      (free-identifier=? #'id #'stop-id)
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence (head #:stop-at stop-id [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))
+                          (sequence [(head ctx-tag stop-id [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params] . forms))
                       exp-form
                       #'none)]
                     [(head #:stop-at* stop-id binds . tail)
@@ -187,7 +217,7 @@
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence (head #:stop-at* stop-id binds [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))
+                          (sequence [(head #:stop-at* stop-id binds [keep stx-params] . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params] . forms))
                       exp-form
                       #'none)]
                     [_ #f]))]
@@ -203,7 +233,7 @@
                          exp-form]
                         [_ #`(#%expression
                               (with-syntax-parameters stx-params #,(discard-static-infos exp-form)))]))
-                (sequence ctx #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params . forms))])])))
+                (sequence [ctx #:saw-non-defn #f base-ctx add-ctx remove-ctx stx-params] . forms))])])))
 
 (define-syntax (rhombus-forward stx)
   (raise-syntax-error #f
@@ -214,3 +244,40 @@
   (raise-syntax-error #f
                       "should not get expanded"
                       stx))
+
+(define-for-syntax (expand-forwarding-sequence bodys accum-scopes stx-params local-introduce expr-k done-k)
+  (expand-forwarding-sequence-continue
+   #`[;; state:
+      [[(expanded) #:block-stop-at expanded-accum] #f #f base-ctx add-ctx remove-ctx #,stx-params]
+      ;; bodys:
+      (#,@bodys (quote-syntax (expanded-accum . #,accum-scopes) #:local))
+      ;; expand-context:
+      #,(list (gensym 'expand))]
+   local-introduce
+   ;; should lead to `expand-forwarding-sequence-continue`:
+   expr-k
+   ;; back to regularly scheduled expansion:
+   done-k))
+
+(define-for-syntax (expand-forwarding-sequence-continue all-state local-introduce expr-k done-k)
+  (syntax-parse all-state
+    [(state bodys expand-context)
+     (define step-stx (forwarding-sequence-step #`(sequence state . bodys)
+                                                (lambda () (syntax->datum #'expand-context))
+                                                local-introduce))
+     (syntax-parse step-stx
+       #:literals (begin expanded)
+       [(expanded [(-expanded-accum . accum-scopes) stx-params])
+        (done-k null #'accum-scopes #'stx-params)]
+       [(begin s-body ... (expanded [(-expanded-accum . accum-scopes) stx-params]))
+        (done-k (syntax->list #'(s-body ...)) #'accum-scopes #'stx-params)]
+       [(begin s-body ... (_ state . bodys))
+        ;; should lead to `expand-forwarding-sequence-continue`:
+        (expr-k (syntax->list #'(s-body ...))
+                #`[state bodys expand-context])]
+       [(_ state . bodys)
+        (expand-forwarding-sequence-continue #`[state bodys expand-context] local-introduce expr-k done-k)])]))
+
+;; sentinels for `expand-fowarding-sequence`
+(define-syntax expanded #f)
+(define-syntax expanded-accum #f)

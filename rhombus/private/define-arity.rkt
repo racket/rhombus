@@ -5,18 +5,16 @@
          "static-info.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
-         (only-in (submod "dot.rkt" for-dot-provider)
-                  dot-provider)
-         "dot-provider-key.rkt"
+         "indirect-static-info-key.rkt"
          "rhombus-primitive.rkt")
 
 (provide who
          define/arity
-         define/method
-         (for-syntax set-function-dot-provider!))
+         define/method)
 
-(module+ dot-provider
-  (provide function-dot-provider))
+(module+ for-info
+  (provide indirect-function-static-info
+           (for-syntax install-function-static-infos!)))
 
 (define-syntax-parameter who-sym #f)
 
@@ -84,9 +82,9 @@
                (syntax-property def 'compiler-hint:cross-module-inline #t)
                def))
          #`(define-static-info-syntax #,id
-             (#%dot-provider function-dot-provider)
+             #,@(or static-infos '())
              (#%function-arity #,(or arity-mask (extract-arity-mask rhs)))
-             . #,(or static-infos '())))))
+             (#%indirect-static-info indirect-function-static-info)))))
 
 (define-for-syntax (build-define/method id name inline? primitive-ids static-infos rhs)
   (define (format-id fmt)
@@ -180,9 +178,10 @@
                                                   (cons (syntax-e #'kw) allowed-kws)
                                                   req-kws)])))
 
-(define-for-syntax function-dot-provider-proc void)
-(define-for-syntax (set-function-dot-provider! proc)
-  (set! function-dot-provider-proc proc))
+(define-for-syntax function-static-infos #f)
 
-(define-syntax function-dot-provider
-  (dot-provider (lambda args (apply function-dot-provider-proc args))))
+(define-syntax indirect-function-static-info
+  (static-info (lambda () function-static-infos)))
+
+(define-for-syntax (install-function-static-infos! static-infos)
+  (set! function-static-infos static-infos))

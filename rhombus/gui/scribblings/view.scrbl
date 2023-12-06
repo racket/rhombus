@@ -19,7 +19,7 @@
   property (v :: View).handle
 ){
 
- Returns an Racket object that corresponds to the view for use directly
+ Returns a Racket object that corresponds to the view for use directly
  with @racketmodname(racket/gui/easy).
 
 }

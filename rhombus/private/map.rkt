@@ -38,6 +38,8 @@
          "hash-snapshot.rkt"
          "mutability.rkt"
          "define-arity.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "rest-bind.rkt")
@@ -314,7 +316,8 @@
 
 (define-static-info-syntax Map-pair-build
   (#%call-result #,map-static-infos)
-  (#%function-arity -1))
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-reducer-syntax Map
   (reducer-transformer
@@ -387,7 +390,9 @@
    (lambda (stx) (parse-mutable-map stx #t))))
 
 (define-static-info-syntax MutableMap-build
-  (#%call-result #,mutable-map-static-infos))
+  (#%call-result #,mutable-map-static-infos)
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode 'Map])
   (syntax-parse stx

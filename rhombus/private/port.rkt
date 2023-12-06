@@ -1,13 +1,13 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre)
+(require (for-syntax racket/base)
          "provide.rkt"
          "name-root.rkt"
          (submod "annotation.rkt" for-class)
          "function-arity-key.rkt"
          "static-info.rkt"
-         "expression.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "define-arity.rkt"
+         (submod "define-arity.rkt" for-info))
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -27,4 +27,5 @@
 (define-annotation-syntax Output (identifier-annotation #'output-port? #'()))
 
 (define-static-info-syntaxes (current-input-port current-output-port current-error-port)
-  (#%function-arity 3))
+  (#%function-arity 3)
+  (#%indirect-static-info indirect-function-static-info))

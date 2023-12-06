@@ -267,7 +267,7 @@
      [(eq? protocol 'automatic)
       (if parsed-tag
           (procedure-rename
-           (lambda (form1 form2 stx) (proc (tag form2 parsed-tag) (tag form2 parsed-tag) stx))
+           (lambda (form1 form2 stx) (proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx))
            (object-name proc))
           proc)]
      [else

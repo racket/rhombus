@@ -137,12 +137,10 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
        | loc_where[0])
         +& ": failed\n"
         +& "  got: "
-        +& (match mode
-            | #'~is_a: "     "
-            | ~else: "")
-        +& (if exn_msg | "exception " | "") +& (exn_msg
-                                                  || (output && to_string(output, ~mode: #'expr))
-                                                  || values_str(got))
+        // magic number is length of "  got: exception "
+        +& (exn_msg && ("exception " +& reindent_exn_msg(exn_msg, 17))
+              || output && to_string(output, ~mode: #'expr)
+              || values_str(got))
         +&  "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"

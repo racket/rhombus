@@ -111,11 +111,12 @@
   (define b-parseds (syntax->list b-parseds-stx))
   (define rhss (syntax->list rhss-stx))
   (define maybe-idx
-    (for/first ([parsed (in-list b-parseds)]
-                [idx (in-naturals 0)]
-                #:unless (syntax-parse parsed
-                           [b::binding-form
-                            (free-identifier=? #'b.infoer-id #'literal-infoer)]))
+    (for/fold ([maybe-idx #f])
+              ([parsed (in-list b-parseds)]
+               [idx (in-naturals 0)])
+      #:break (syntax-parse parsed
+                [b::binding-form
+                 (not (free-identifier=? #'b.infoer-id #'literal-infoer))])
       idx))
   (cond
     [maybe-idx

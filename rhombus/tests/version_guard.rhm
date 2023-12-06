@@ -1,0 +1,14 @@
+#lang rhombus/and_meta
+
+import:
+  meta:
+    lib("racket/base.rkt")
+    lib("version/utils.rkt")
+  
+export:
+  at_least
+
+defn.macro 'at_least $vers: $body':
+  if utils.#{version<?}(base.version(), vers.unwrap())
+  | ''
+  | '$body'

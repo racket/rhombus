@@ -28,12 +28,13 @@
          "setmap-parse.rkt"
          "parens.rkt"
          "composite.rkt"
-         "define-arity.rkt"
          (only-in "lambda-kwrest.rkt" hash-remove*)
          "op-literal.rkt"
          "hash-snapshot.rkt"
          "mutability.rkt"
          "define-arity.rkt"
+         (submod "define-arity.rkt" for-info)
+         "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rest-bind.rkt")
 
@@ -445,7 +446,8 @@
 
 (define-static-info-syntax Set-build*
   (#%call-result #,set-static-infos)
-  (#%function-arity -1))
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define (MutableSet-build . vals)
   (define ht (make-hashalw))
@@ -494,7 +496,9 @@
    (lambda (stx) (parse-mutable-set stx #t))))
 
 (define-static-info-syntax MutableSet-build
-  (#%call-result #,mutable-set-static-infos))
+  (#%call-result #,mutable-set-static-infos)
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
 
 (define (set-ref s v)
   (hash-ref (set-ht s) v #f))

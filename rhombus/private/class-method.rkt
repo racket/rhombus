@@ -832,8 +832,10 @@
                                 (lambda (arity stx)
                                   #`(parsed
                                      #:rhombus/expr
-                                     (syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
-                                                                                            . super-names))]
+                                     (syntax-parameterize ([this-id (quasisyntax (this-obj name-instance
+                                                                                           ;; can include `unsyntax`:
+                                                                                           indirect-static-infos
+                                                                                           . super-names))]
                                                            [private-tables (quote-syntax private-tables-id)])
                                        ;; This check might be redundant, depending on how the method was called
                                        #,(if (syntax-e #'name?)

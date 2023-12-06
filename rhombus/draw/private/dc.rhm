@@ -31,6 +31,11 @@ module internal:
     DCer
 
 interface DC:
+  export:
+    from_handle
+
+  property handle: get_dc()
+
   private method get_dc():
     (this :: _DCer).dc
 
@@ -86,7 +91,7 @@ interface DC:
   property
   | clipping_region :: maybe(Region):
       let r = rkt.send get_dc().#{get-clipping-region}()
-      r && _Region(r)
+      r && _Region(r)()
   | clipping_region := region :: maybe(Region):
       rkt.send get_dc().#{set-clipping-region}(region && Region.handle(region))
     
@@ -210,6 +215,11 @@ interface DC:
                     _ :: Real, _ :: Real,
                     _ :: Real, _ :: Real))'
 
+fun from_handle(handle) :: DC:
+  unless handle rkt.is_a rkt.#{dc<%>}
+  | error("DC.from_handle", "not a DC handle: " +& handle)
+  SomeDC(handle)
+
 namespace main:
   export: DC
 
@@ -218,12 +228,16 @@ namespace some_dc:
     rename: DC as SomeDC
 
   // defined as `DC` for default printer, then exported as `SomeDC`
-  class DC(handle):
+  class DC(private hand):
     nonfinal
     opaque
     implements main.DC
+    internal _DC
     private implements DCer
-    private override property dc: handle
+    private override property dc: hand
+
+    constructor (handle):
+      _DC(handle)
 
     private field states = []
 
