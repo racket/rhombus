@@ -1,9 +1,11 @@
 #lang racket/base
+(require racket/string)
 
 (provide call_capturing_exn
          call_capturing_values
          does_contain_each
-         display_as_exn)
+         display_as_exn
+         reindent_exn_msg)
 
 (define (call_capturing_exn thunk capture-output?)
   (define s (and capture-output? (open-output-string)))
@@ -58,3 +60,7 @@
                                               (current-continuation-marks)
                                               loc))
       (displayln msg (current-error-port))))
+
+(define (reindent_exn_msg msg len)
+  (define newline (string-append "\n" (make-string len #\space)))
+  (string-join (regexp-split #rx"\n" msg) newline))
