@@ -11,6 +11,7 @@
          "class-method.rkt"
          "class-method-result.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "dotted-sequence-parse.rkt"
          "parens.rkt"
          "static-info.rkt"
          "expression.rkt"
@@ -43,7 +44,8 @@
                                              exported-of internal-exported-of
                                              dot-provider-rhss parent-dot-providers
                                              names)
-  (with-syntax ([(name name? constructor-name name-instance name-ref name-of
+  (with-syntax ([(name name-extends tail-name
+                       name? constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
                        indirect-static-infos
                        [public-field-name ...] [private-field-name ...] [field-name ...]
@@ -63,22 +65,29 @@
       (append
        method-defns
        (append
+        ;; build `(define-syntax name ....)`, but supporting `name-extends`
+        (cond
+          [expression-macro-rhs
+           (list
+            (build-syntax-definition/maybe-extension
+             #f #'name #'name-extends
+             #`(wrap-class-transformer name tail-name
+                                       #,(intro expression-macro-rhs)
+                                       make-expression-prefix-operator
+                                       "class")))]
+          [(and constructor-given-name
+                (not (free-identifier=? #'name constructor-given-name)))
+           (list
+            (build-syntax-definition/maybe-extension
+             #f #'name #'name-extends
+             #'no-constructor-transformer))]
+          [else
+           (build-syntax-definitions/maybe-extension
+            (list #f 'rhombus/repet) #'name #'name-extends
+            #`(class-expression-transformers (quote-syntax name) (quote-syntax constructor-name)))])
         (list
-         (cond
-           [expression-macro-rhs
-            #`(define-syntax name
-                (wrap-class-transformer name
-                                        #,(intro expression-macro-rhs)
-                                        make-expression-prefix-operator
-                                        "class"))]
-           [(and constructor-given-name
-                 (not (free-identifier=? #'name constructor-given-name)))
-            #`(define-syntax name
-                no-constructor-transformer)]
-           [else
-            #`(define-syntaxes (name #,(in-repetition-space #'name))
-                (class-expression-transformers (quote-syntax name) (quote-syntax constructor-name)))])
          #`(define-name-root name
+             #:extends name-extends
              #:fields ([public-field-name public-name-field/mutate]
                        ...
                        [method-name method-id]
@@ -140,7 +149,8 @@
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
                                                  names)
-  (with-syntax ([(name name? name-instance name-ref static-name-ref
+  (with-syntax ([(name name-extends tail-name
+                       name? name-instance name-ref static-name-ref
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
                        [ex ...])
@@ -155,15 +165,17 @@
       (append
        method-defns
        (list
-        #`(define-syntax name
-            #,(cond
-                [expression-macro-rhs
-                 #`(wrap-class-transformer name
-                                           #,((make-syntax-introducer) expression-macro-rhs)
-                                           make-expression-prefix-operator
-                                           "interface")]
-                [else #'no-constructor-transformer]))
+        (build-syntax-definition/maybe-extension
+         #f #'name #'name-extends
+         (cond
+           [expression-macro-rhs
+            #`(wrap-class-transformer name tail-name
+                                      #,((make-syntax-introducer) expression-macro-rhs)
+                                      make-expression-prefix-operator
+                                      "interface")]
+           [else #'no-constructor-transformer]))
         #`(define-name-root name
+            #:extends name-extends 
             #:fields ([method-name method-id]
                       ...
                       [dot-id dot-intf-id]

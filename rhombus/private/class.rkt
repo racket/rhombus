@@ -56,13 +56,15 @@
         options::options-block)
      #:with full-name::dotted-identifier #'name-seq
      #:with name #'full-name.name
+     #:with name-extends #'full-name.extends
+     #:with tail-name #'full-name.tail-name
      #:with orig-stx stxes
      (define body #'(options.form ...))
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `class-annotation+finish`
      ;; and "class-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      full-name name
+                                      name name-extends tail-name
                                       (field.name ...)
                                       (field.keyword ...)
                                       (field.default ...)
@@ -107,7 +109,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     full-name name
+                     name name-extends tail-name
                      constructor-field-names
                      constructor-field-keywords
                      constructor-field-defaults
@@ -224,7 +226,8 @@
               #,@(build-class-annotation-form super annotation-rhs
                                               super-constructor-fields
                                               exposed-internal-id internal-of-id intro
-                                              #'(name name-instance name? name-of
+                                              #'(name name-extends tail-name
+                                                      name-instance name? name-of
                                                       internal-name-instance indirect-static-infos internal-indirect-static-infos
                                                       make-converted-name make-converted-internal
                                                       constructor-name-fields [constructor-public-name-field ...]
@@ -234,7 +237,8 @@
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
-                         full-name name name? name-of make-converted-name
+                         name name-extends tail-name
+                         name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
                          indirect-static-infos
@@ -253,7 +257,8 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    full-name name name? name-of make-converted-name
+                    name name-extends tail-name
+                    name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
                     indirect-static-infos
@@ -608,6 +613,7 @@
                                            ((recon-field-name recon-field-acc)
                                             ...)))
                (build-added-field-arg-definitions added-fields)
+               ;; note: class name as expression is bound via `build-class-dot-handling`
                (build-class-constructor super constructor-rhs given-constructor-stx-params
                                         added-fields constructor-private?s
                                         constructor-fields super-constructor-fields super-constructor+-fields
@@ -635,12 +641,13 @@
                                                  ...]))
                (build-class-binding-form super binding-rhs
                                          exposed-internal-id intro
-                                         #'(name name-instance name?
+                                         #'(name name-extends tail-name
+                                                 name-instance name?
                                                  indirect-static-infos
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-               ;; includes defining the namespace:
+               ;; includes defining the namespace and constructor name:
                (build-class-dot-handling method-mindex method-vtable method-results final?
                                          has-private? method-private exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
@@ -652,7 +659,8 @@
                                              #'now_of
                                              #'of)
                                          dot-provider-rhss parent-dot-providers
-                                         #'(name name? constructor-name name-instance name-ref name-of
+                                         #'(name name-extends tail-name
+                                                 name? constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
                                                  indirect-static-infos
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
@@ -696,7 +704,7 @@
                                  here-appendable? public-appendable?
                                  (or (hash-ref options 'reconstructor-fields #f)
                                      (and super (class-desc-reconstructor-fields super)))
-                                 #'(name class:name constructor-maker-name name-defaults name-ref
+                                 #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name prefab-guard-name
                                          instance-static-infos
                                          (list (list 'super-field-name
@@ -934,7 +942,7 @@
                                      here-appendable? public-appendable?
                                      force-custom-recon?
                                      names)
-  (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
+  (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name prefab-guard-name
                        instance-static-infos
                        fields
@@ -943,95 +951,96 @@
                  names])
     (append
      (list
-      #`(define-class-desc-syntax name
-          (class-desc #,final?
-                      (quote-syntax name)
-                      #,(and parent-name #`(quote-syntax #,parent-name))
-                      (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
-                      (quote-syntax class:name)
-                      (quote-syntax name-ref)
-                      fields
-                      #,(and (or has-private-fields?
-                                 (and super (class-desc-all-fields super)))
-                             #`(list #,@(map (lambda (i)
-                                               (define (wrap i)
-                                                 (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
-                                               (if (pair? i)
-                                                   #`(cons (quote #,(car i)) #,(wrap (cdr i)))
-                                                   (wrap i)))
-                                             (append (if super
-                                                         (or (class-desc-all-fields super)
-                                                             ;; symbol means "inherited from superclass"
-                                                             (for/list ([f (in-list (class-desc-fields super))])
-                                                               (field-desc-name f)))
-                                                         '())
-                                                     (for/list ([name (in-list (syntax->list #'(field-name ...)))]
-                                                                [arg (in-list (syntax->list #'(field-argument ...)))]
-                                                                [mutator (in-list (syntax->list #'(maybe-set-name-field! ...)))]
-                                                                [private? (in-list private?s)])
-                                                       (cond
-                                                         [private? (cons (syntax-e name)
-                                                                         (if (and (not (identifier? arg))
-                                                                                  (syntax-e mutator))
-                                                                             (vector arg)
-                                                                             arg))]
-                                                         [else (syntax-e name)]))))))
-                      #,(if super
-                            (if (class-desc-all-fields super)
-                                (length (class-desc-all-fields super))
-                                (length (class-desc-fields super)))
-                            0)
-                      '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
-                      (quote-syntax #,method-vtable)
-                      '#,(build-quoted-method-map method-mindex)
-                      #,(build-method-result-expression method-results)
-                      #,(cond
-                          [(syntax-e #'constructor-maker-name)
-                           #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
-                                                                constructor-keywords constructor-defaults)
-                                             constructor-maker-name]
-                                            #,@(if super
-                                                   (or (class-desc-constructor-makers super)
-                                                       (list (list (encode-protocol super-keywords super-defaults
-                                                                                    super-constructor+-keywords super-constructor+-defaults)
-                                                                   #f)))
-                                                   '())))]
-                          [else #'#f])
-                      #,(and (or (hash-ref options 'expression-rhs #f)
-                                 (hash-ref options 'constructor-rhs #f))
-                             #t)
-                      #,(and (hash-ref options 'binding-rhs #f) #t)
-                      #,(and (hash-ref options 'annotation-rhs #f) #t)
-                      #,(if force-custom-recon?
-                            #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
-                            #f)
-                      '#,(map car dots)
-                      #,(and (syntax-e #'dot-provider-name)
-                             #'(quote-syntax dot-provider-name))
-                      #,(and (syntax-e #'name-defaults)
-                             #'(quote-syntax name-defaults))
-                      (#,(quote-syntax quasisyntax) instance-static-infos)
-                      #,(able-method-for-class-desc 'call here-callable? public-callable?
-                                                    super
-                                                    method-mindex method-vtable method-private)
-                      #,(able-method-for-class-desc 'get here-indexable? public-indexable?
-                                                    super
-                                                    method-mindex method-vtable method-private)
-                      #,(able-method-for-class-desc 'set here-setable? public-setable?
-                                                    super
-                                                    method-mindex method-vtable method-private)
-                      #,(able-method-for-class-desc 'append here-appendable? public-appendable?
-                                                    super
-                                                    method-mindex method-vtable method-private)
-                      #,(and (syntax-e #'prefab-guard-name)
-                             #`(quote-syntax prefab-guard-name))
-                      '(#,@(if authentic? '(authentic) null)
-                        #,@(if prefab? '(prefab) null)
-                        #,@(if no-recon? '(no-recon) null)
-                        #,@(if public-callable? '(call) null)
-                        #,@(if public-indexable? '(get) null)
-                        #,@(if public-setable? '(set) null)
-                        #,@(if public-appendable? '(append) null)))))
+      (build-syntax-definition/maybe-extension
+       'rhombus/class #'name #'name-extends
+       #`(class-desc #,final?
+                     (quote-syntax name)
+                     #,(and parent-name #`(quote-syntax #,parent-name))
+                     (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
+                     (quote-syntax class:name)
+                     (quote-syntax name-ref)
+                     fields
+                     #,(and (or has-private-fields?
+                                (and super (class-desc-all-fields super)))
+                            #`(list #,@(map (lambda (i)
+                                              (define (wrap i)
+                                                (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
+                                              (if (pair? i)
+                                                  #`(cons (quote #,(car i)) #,(wrap (cdr i)))
+                                                  (wrap i)))
+                                            (append (if super
+                                                        (or (class-desc-all-fields super)
+                                                            ;; symbol means "inherited from superclass"
+                                                            (for/list ([f (in-list (class-desc-fields super))])
+                                                              (field-desc-name f)))
+                                                        '())
+                                                    (for/list ([name (in-list (syntax->list #'(field-name ...)))]
+                                                               [arg (in-list (syntax->list #'(field-argument ...)))]
+                                                               [mutator (in-list (syntax->list #'(maybe-set-name-field! ...)))]
+                                                               [private? (in-list private?s)])
+                                                      (cond
+                                                        [private? (cons (syntax-e name)
+                                                                        (if (and (not (identifier? arg))
+                                                                                 (syntax-e mutator))
+                                                                            (vector arg)
+                                                                            arg))]
+                                                        [else (syntax-e name)]))))))
+                     #,(if super
+                           (if (class-desc-all-fields super)
+                               (length (class-desc-all-fields super))
+                               (length (class-desc-fields super)))
+                           0)
+                     '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
+                     (quote-syntax #,method-vtable)
+                     '#,(build-quoted-method-map method-mindex)
+                     #,(build-method-result-expression method-results)
+                     #,(cond
+                         [(syntax-e #'constructor-maker-name)
+                          #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
+                                                               constructor-keywords constructor-defaults)
+                                            constructor-maker-name]
+                                           #,@(if super
+                                                  (or (class-desc-constructor-makers super)
+                                                      (list (list (encode-protocol super-keywords super-defaults
+                                                                                   super-constructor+-keywords super-constructor+-defaults)
+                                                                  #f)))
+                                                  '())))]
+                         [else #'#f])
+                     #,(and (or (hash-ref options 'expression-rhs #f)
+                                (hash-ref options 'constructor-rhs #f))
+                            #t)
+                     #,(and (hash-ref options 'binding-rhs #f) #t)
+                     #,(and (hash-ref options 'annotation-rhs #f) #t)
+                     #,(if force-custom-recon?
+                           #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
+                           #f)
+                     '#,(map car dots)
+                     #,(and (syntax-e #'dot-provider-name)
+                            #'(quote-syntax dot-provider-name))
+                     #,(and (syntax-e #'name-defaults)
+                            #'(quote-syntax name-defaults))
+                     (#,(quote-syntax quasisyntax) instance-static-infos)
+                     #,(able-method-for-class-desc 'call here-callable? public-callable?
+                                                   super
+                                                   method-mindex method-vtable method-private)
+                     #,(able-method-for-class-desc 'get here-indexable? public-indexable?
+                                                   super
+                                                   method-mindex method-vtable method-private)
+                     #,(able-method-for-class-desc 'set here-setable? public-setable?
+                                                   super
+                                                   method-mindex method-vtable method-private)
+                     #,(able-method-for-class-desc 'append here-appendable? public-appendable?
+                                                   super
+                                                   method-mindex method-vtable method-private)
+                     #,(and (syntax-e #'prefab-guard-name)
+                            #`(quote-syntax prefab-guard-name))
+                     '(#,@(if authentic? '(authentic) null)
+                       #,@(if prefab? '(prefab) null)
+                       #,@(if no-recon? '(no-recon) null)
+                       #,@(if public-callable? '(call) null)
+                       #,@(if public-indexable? '(get) null)
+                       #,@(if public-setable? '(set) null)
+                       #,@(if public-appendable? '(append) null)))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

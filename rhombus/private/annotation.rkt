@@ -18,6 +18,7 @@
          "binding.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
+         "dotted-sequence-parse.rkt"
          "static-info.rkt"
          "parse.rkt"
          "realm.rkt"
@@ -355,15 +356,23 @@
         sub-n kws predicate-maker info-maker
         binding-maker-id binding-maker-data
         (~optional (~seq #:parse-of parse-annotation-of-id)
-                   #:defaults ([parse-annotation-of-id #'parse-annotation-of])))
+                   #:defaults ([parse-annotation-of-id #'parse-annotation-of]))
+        (~optional (~seq #:extends name-extends)
+                   #:defaults ([name-extends #'#f])))
      #:with annot-name (in-annotation-space #'name)
-     #'(define-syntaxes (annot-name of-name)
-         (let binds
-             (annotation-constructor #'annot-name predicate-stx static-infos
-                                     sub-n 'kws
-                                     predicate-maker info-maker
-                                     binding-maker-id binding-maker-data
-                                     parse-annotation-of-id)))]))
+     (define defs
+       ;; usually `(define-syntaxes (annot-name of-name) ....)`:
+       (build-syntax-definitions/maybe-extension
+        (list 'rhombus/annot) #'name #:extra-names (list #'of-name) #'name-extends
+        #'(let binds
+              (annotation-constructor #'annot-name predicate-stx static-infos
+                                      sub-n 'kws
+                                      predicate-maker info-maker
+                                      binding-maker-id binding-maker-data
+                                      parse-annotation-of-id))))
+     (if (= 1 (length defs))
+         (car defs)
+         #`(begin #,@defs))]))
 
 (define-for-syntax (make-annotation-apply-expression-operator name checked?)
   (expression-infix-operator

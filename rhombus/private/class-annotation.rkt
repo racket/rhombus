@@ -12,7 +12,8 @@
          (submod "annot-macro.rkt" for-class)
          "parens.rkt"
          (for-syntax "class-transformer.rkt")
-         (submod "dot.rkt" for-dot-provider))
+         (submod "dot.rkt" for-dot-provider)
+         "dotted-sequence-parse.rkt")
 
 (provide (for-syntax build-class-annotation-form
                      build-guard-expr
@@ -23,7 +24,8 @@
                                                 super-constructor-fields
                                                 exposed-internal-id internal-of-id intro
                                                 names)
-  (with-syntax ([(name name-instance name? name-of
+  (with-syntax ([(name name-extends tail-name
+                       name-instance name? name-of
                        internal-name-instance indirect-static-infos internal-indirect-static-infos
                        make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields super-name-fields super-public-name-fields
@@ -65,7 +67,8 @@
                       #'(quote-syntax name-build-convert)
                       not-supported-due-to-internal-reasons)
                 #,(and (syntax-e #'name-build-convert)
-                       #'accessors)))
+                       #'accessors)
+                #:extends name-extends))
            (if (syntax-e #'name-build-convert)
                (list
                 #`(define-syntax name-build-convert
@@ -83,11 +86,13 @@
        (cond
          [annotation-rhs
           (list
-           #`(define-annotation-syntax name
-               (wrap-class-transformer name
-                                       #,(intro annotation-rhs)
-                                       make-annotation-prefix-operator
-                                       "class")))]
+           ;; build `(define-annotation-syntax name ...)`:
+           (build-syntax-definition/maybe-extension
+            'rhombus/annot #'name #'name-extends
+            #`(wrap-class-transformer name tail-name
+                                      #,(intro annotation-rhs)
+                                      make-annotation-prefix-operator
+                                      "class")))]
          [else
           (make-ann-defs #'name #'name-of #f
                          #'constructor-public-name-fields #'public-field-keywords

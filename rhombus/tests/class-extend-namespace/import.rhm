@@ -1,0 +1,35 @@
+#lang rhombus
+import:
+  "export.rhm" open
+
+check:
+  prefix.something
+  ~is "yes"
+
+check:
+  prefix.Something.x(prefix.Something(13))
+  ~is 13
+
+check:
+  def prefix.Something(v) = prefix.Something(12)
+  v
+  ~is 12
+
+check:
+  prefix.Something(0) :: prefix.Something
+  ~is prefix.Something(0)
+
+check:
+  class More():
+    extends prefix.Something
+    implements prefix.Stuff
+  More(5) is_a prefix.Stuff
+  ~is #true
+
+check:
+  prefix.Stuff.nested
+  ~is #true
+
+check:
+  prefix.Stuff()
+  ~is "Stuff"

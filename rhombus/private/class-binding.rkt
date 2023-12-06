@@ -12,14 +12,16 @@
          "parens.rkt"
          (submod "boolean-pattern.rkt" for-class)
          (for-syntax "class-transformer.rkt")
-         (submod "dot.rkt" for-dot-provider))
+         (submod "dot.rkt" for-dot-provider)
+         "dotted-sequence-parse.rkt")
 
 (provide (for-syntax build-class-binding-form))
 
 (define-for-syntax (build-class-binding-form super binding-rhs
                                              exposed-internal-id intro
                                              names)
-  (with-syntax ([(name name-instance name?
+  (with-syntax ([(name name-extends tail-name
+                       name-instance name?
                        indirect-static-infos
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        constructor-field-static-infoss constructor-public-field-static-infoss super-field-static-infoss
@@ -55,15 +57,17 @@
      (cond
        [binding-rhs
         (list
-         #`(define-binding-syntax name
-             (wrap-class-transformer name #,(intro binding-rhs) make-binding-prefix-operator "class")))]
+         (build-syntax-definition/maybe-extension
+          'rhombus/bind #'name #'name-extends
+          #`(wrap-class-transformer name tail-name #,(intro binding-rhs) make-binding-prefix-operator "class")))]
        [else
         (list
-         #`(define-binding-syntax name
-             #,(make-binding-transformer #f
-                                         #'constructor-public-name-fields
-                                         #'constructor-public-field-static-infoss
-                                         #'public-field-keywords)))]))))
+         (build-syntax-definition/maybe-extension
+          'rhombus/bind #'name #'name-extends
+          (make-binding-transformer #f
+                                    #'constructor-public-name-fields
+                                    #'constructor-public-field-static-infoss
+                                    #'public-field-keywords)))]))))
 
 (define-for-syntax (make-curried-binding-transformer super-binding-id
                                                      constructor-str predicate accessors static-infoss

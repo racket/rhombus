@@ -54,13 +54,15 @@
     [(_ name-seq::dotted-identifier-sequence options::options-block)
      #:with full-name::dotted-identifier #'name-seq
      #:with name #'full-name.name
+     #:with name-extends #'full-name.extends
+     #:with tail-name #'full-name.tail-name
      #:with orig-stx stxes
      (define body #'(options.form ...))
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognzied in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      full-name name]
+                                      name name-extends tail-name]
                             ;; data accumulated from parsed clauses:
                             ()))
      (define interface-data-stx #f)
@@ -98,7 +100,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     full-name name]
+                     name name-extends tail-name]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
           exports
@@ -157,12 +159,13 @@
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-interface-annotation internal-name
                                              annotation-rhs
-                                             #'(name name? name-instance
+                                             #'(name name-extends tail-name
+                                                     name? name-instance
                                                      internal-name? internal-name-instance
                                                      indirect-static-infos))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
               (interface-finish [orig-stx base-stx scope-stx
-                                          full-name name
+                                          name name-extends tail-name
                                           name? name-instance
                                           #,internal-name internal-name? internal-name-instance
                                           #,internal-internal-name
@@ -176,7 +179,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    full-name name
+                    name name-extends tail-name
                     name? name-instance
                     maybe-internal-name internal-name? internal-name-instance
                     internal-internal-name-id
@@ -275,7 +278,8 @@
                (build-interface-dot-handling method-mindex method-vtable method-results
                                              internal-name
                                              expression-macro-rhs dot-provider-rhss parent-dot-providers
-                                             #'(name name? name-instance internal-name-ref name-ref-or-error
+                                             #'(name name-extends tail-name
+                                                     name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]
                                                      [export ...]))
@@ -283,7 +287,7 @@
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
                                      callable? indexable? setable? appendable?
-                                     #'(name prop:name name-ref name-ref-or-error
+                                     #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name
                                              instance-static-infos))
@@ -321,7 +325,8 @@
               (raise-not-an-instance 'name v)))))))
 
 (define-for-syntax (build-interface-annotation internal-name annotation-rhs names)
-  (with-syntax ([(name name? name-instance
+  (with-syntax ([(name name-extends tail-name
+                       name? name-instance
                        internal-name? internal-name-instance
                        indirect-static-infos)
                  names])
@@ -332,24 +337,24 @@
             #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name?)
                                                                              (quote-syntax ((#%dot-provider internal-name-instance)))))))
          null)
-     (if annotation-rhs
-         (list
-          #`(define-annotation-syntax name
-              (wrap-class-transformer name
-                                      #,((make-syntax-introducer) annotation-rhs)
-                                      make-annotation-prefix-operator
-                                      "interface")))
-         (list
-          #`(define-annotation-syntax name (identifier-annotation (quote-syntax name?)
-                                                                  (quasisyntax ((#%dot-provider name-instance)
-                                                                                . indirect-static-infos)))))))))
-  
+     (list
+      (build-syntax-definition/maybe-extension
+       'rhombus/annot #'name #'name-extends
+       (if annotation-rhs
+           #`(wrap-class-transformer name tail-name
+                                     #,((make-syntax-introducer) annotation-rhs)
+                                     make-annotation-prefix-operator
+                                     "interface")
+           #`(identifier-annotation (quote-syntax name?)
+                                    (quasisyntax ((#%dot-provider name-instance)
+                                                  . indirect-static-infos)))))))))
+
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
                                          callable? indexable? setable? appendable?
                                          names)
-  (with-syntax ([(name prop:name name-ref name-ref-or-error
+  (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
                        dot-provider-name
                        instance-static-infos)
@@ -382,26 +387,27 @@
                                          (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
        (list
-        #`(define-syntax #,(in-class-desc-space #'name)
-            (interface-desc (quote-syntax name)
-                            #,(and internal-name
-                                   #`(quote-syntax #,internal-name))
-                            (quote-syntax #,parent-names)
-                            (quote-syntax prop:name)
-                            #,(and (syntax-e #'prop:internal-name)
-                                   #'(quote-syntax prop:internal-name))
-                            (quote-syntax name-ref-or-error)
-                            '#,method-shapes
-                            (quote-syntax #,method-vtable)
-                            '#,method-map
-                            #,method-result-expr
-                            #,custom-annotation?
-                            '#,(map car dots)
-                            #,(and (syntax-e #'dot-provider-name)
-                                   #'(quote-syntax dot-provider-name))
-                            (#,(quote-syntax quasisyntax) instance-static-infos)
-                            '#,(append
-                                (if callable? '(call) '())
-                                (if indexable? '(get) '())
-                                (if setable? '(set) '())
-                                (if appendable? '(append) '())))))))))
+        (build-syntax-definition/maybe-extension
+         'rhombus/class #'name #'name-extends
+         #`(interface-desc (quote-syntax name)
+                           #,(and internal-name
+                                  #`(quote-syntax #,internal-name))
+                           (quote-syntax #,parent-names)
+                           (quote-syntax prop:name)
+                           #,(and (syntax-e #'prop:internal-name)
+                                  #'(quote-syntax prop:internal-name))
+                           (quote-syntax name-ref-or-error)
+                           '#,method-shapes
+                           (quote-syntax #,method-vtable)
+                           '#,method-map
+                           #,method-result-expr
+                           #,custom-annotation?
+                           '#,(map car dots)
+                           #,(and (syntax-e #'dot-provider-name)
+                                  #'(quote-syntax dot-provider-name))
+                           (#,(quote-syntax quasisyntax) instance-static-infos)
+                           '#,(append
+                               (if callable? '(call) '())
+                               (if indexable? '(get) '())
+                               (if setable? '(set) '())
+                               (if appendable? '(append) '())))))))))

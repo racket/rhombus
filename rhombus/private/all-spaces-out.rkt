@@ -85,7 +85,7 @@
                                   #:when (identifier-extension-binding? id name-root-id)
                                   #:when (or (not space)
                                              (identifier-distinct-binding* id id* phase)))
-                         (make-export phase space (datum->syntax int-id sym int-id) (adjust-prefix sym prefix))))]
+                         (make-export phase space (intro (datum->syntax out-int-id sym out-int-id)) (adjust-prefix sym prefix))))]
                  [else null])))))))))))
 
 (define-syntax all-spaces-defined-out

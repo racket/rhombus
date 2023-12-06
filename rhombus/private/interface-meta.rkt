@@ -50,7 +50,7 @@
   (syntax-parse (interface-expand-data-stx data)
     [(_ base-stx scope-stx
         for-together?
-        full-name name
+        name
         . _)
      #'name]))
 

@@ -22,7 +22,8 @@
                      import-root-ref
                      extensible-name-root
                      portal-syntax->lookup
-                     portal-syntax->import))
+                     portal-syntax->import
+                     portal-syntax->extends))
 
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f]
                                        #:non-portal-ref [non-portal-ref #f]
