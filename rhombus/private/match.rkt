@@ -117,7 +117,7 @@
       #:break (syntax-parse parsed
                 [b::binding-form
                  (not (free-identifier=? #'b.infoer-id #'literal-infoer))])
-      idx))
+      (add1 idx)))
   (cond
     [maybe-idx
      (define rst-bs (list-tail bs maybe-idx))
