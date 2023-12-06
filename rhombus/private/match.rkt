@@ -29,18 +29,22 @@
   (expression-transformer
    (lambda (stx)
      (define ((make-fallback-k else else-parsed else-rhs) val bs b-parseds rhss)
+       (define (make-consts const)
+         (cons const (map (lambda (x) const) bs)))
        (define (make-consts-stx const)
-         (datum->syntax #f (cons const (map (lambda (x) const) bs))))
-       (define falses-stx (make-consts-stx #f))
+         (datum->syntax #f (make-consts const)))
+       (define falses (make-consts #f))
+       (define falses-stx (make-consts-stx #'#f))
        (define-values (proc arity)
          (build-case-function no-adjustments
-                              #'match #'#f
-                              (make-consts-stx '(#f))
+                              #'match
+                              #f #f
+                              (make-consts-stx #'(#f))
                               #`(#,@(map list bs) (#,else))
                               #`(#,@(map list b-parseds) (#,else-parsed))
                               falses-stx falses-stx
                               falses-stx falses-stx
-                              falses-stx
+                              falses falses
                               #`(#,@rhss #,else-rhs)
                               stx))
        #`(#,proc #,val))

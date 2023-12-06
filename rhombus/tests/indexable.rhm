@@ -38,7 +38,7 @@ class A2():
 
 interface I3:
   extends MutableIndexable
-  
+
 class A3():
   implements I3
   field saved = #false
@@ -48,7 +48,7 @@ class A3():
     saved := [index, val]
     if index == "bad"
     | "bad"
-    | #void  
+    | #void
 
 class A4():
   private implements Indexable
@@ -62,19 +62,22 @@ check:
   C()[4].v ~is 4
   A2()[3].v ~is 3
   A2()["good"] := #'ok ~is #void
-  A2()["bad"] := #'no ~raises "result does not satisfy annotation"
+  A2()["bad"] := #'no ~raises values(
+    "result does not satisfy annotation",
+    "Void",
+  )
   A3()[0].v ~is 0
   (A3() :: I3)[0] ~is O(0)
   A4()[10].v ~is 10
 
 block:
-  def b = B()  
+  def b = B()
   check:
     b[0] := 1 ~is #void
     b.saved ~is [0, 1]
 
 block:
-  def c = C()  
+  def c = C()
   check:
     c[0] := 1 ~is #void
     c.saved ~is [0, 1]
@@ -108,4 +111,3 @@ check:
   { 1: 2 }.copy() is_a MutableIndexable ~is #true
   { 1, 2 }.copy() is_a MutableIndexable ~is #true
   #"apple".copy() is_a MutableIndexable ~is #true
-  

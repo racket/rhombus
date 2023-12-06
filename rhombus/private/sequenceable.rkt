@@ -17,7 +17,7 @@
                                (lambda (self)
                                  (define s ((vector-ref (Sequenceable-ref self) 0) self))
                                  (unless (sequence? s)
-                                   (raise-result-failure 'to_sequence s))
+                                   (raise-result-failure 'to_sequence s "Sequence"))
                                  s))))))
 
 (define-class-desc-syntax Sequenceable

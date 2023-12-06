@@ -2,9 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
+                     shrubbery/print
                      "srcloc.rkt"
                      "tag.rkt"
-                     "with-syntax.rkt")
+                     "with-syntax.rkt"
+                     "annotation-string.rkt")
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
@@ -26,7 +28,7 @@
            syntax-local-method-result))
 
 (begin-for-syntax
-  (struct method-result (handler-expr predicate? static-infos arity))
+  (struct method-result (handler-expr predicate? annot-str static-infos arity))
   (define (method-result-ref v)
     (and (method-result? v) v))
 
@@ -35,7 +37,7 @@
         (raise-syntax-error #f "could not get method result information" id))))
 
 (define-syntax (define-method-result-syntax stx)
-  (define (parse check? result-handler result-static-infos predicate-handler?)
+  (define (parse check? result-handler result-annot-str result-static-infos predicate-handler?)
     (syntax-parse stx
       #:datum-literals (op)
       [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity
@@ -43,26 +45,35 @@
           maybe-ref-statinfo-id+id
           maybe-set-statinfo-id+id
           maybe-append-statinfo-id+id)
-       #:do [(define super-results (map syntax-local-method-result
-                                        (syntax->list #'(super-result-id ...))))]
-       #:with handler (for/fold ([handler (and check? result-handler)])
-                                ([r (in-list super-results)]
-                                 #:when (method-result-handler-expr r))
-                        (define super-pred (method-result-handler-expr r))
-                        (if handler
-                            (if predicate-handler?
-                                #`(let ([p #,handler]
-                                        [pp #,super-pred])
-                                    (lambda (v)
-                                      (and (p v) (pp v))))
-                                #`(let ([c #,handler]
-                                        [pp #,super-pred])
-                                    (lambda (v fail-k)
-                                      (let ([v (c v fail-k)])
-                                        (if (pp v)
-                                            v
-                                            (fail-k))))))
-                            super-pred))
+       #:do [(define super-results
+               (map syntax-local-method-result
+                    (syntax->list #'(super-result-id ...))))
+             (define-values (handler-stx annot-str)
+               (for/fold ([handler (and check? result-handler)]
+                          [annot-str (or result-annot-str annotation-any-string)])
+                         ([r (in-list super-results)]
+                          #:do [(define super-pred
+                                  (method-result-handler-expr r))]
+                          #:when super-pred
+                          #:do [(define super-annot-str
+                                  (method-result-annot-str r))])
+                 (if handler
+                     (values (if predicate-handler?
+                                 #`(let ([p #,handler]
+                                         [pp #,super-pred])
+                                     (lambda (v)
+                                       (and (p v) (pp v))))
+                                 #`(let ([c #,handler]
+                                         [pp #,super-pred])
+                                     (lambda (v fail-k)
+                                       (let ([v (c v fail-k)])
+                                         (if (pp v)
+                                             v
+                                             (fail-k))))))
+                             (annotation-string-and annot-str
+                                                    super-annot-str))
+                     (values super-pred super-annot-str))))]
+       #:with handler handler-stx
        #:with (static-info ...) result-static-infos
        #:with ((super-static-info ...) ...) (map method-result-static-infos super-results)
        #:with all-static-infos #'(static-info ... super-static-info ... ...)
@@ -82,6 +93,7 @@
                                                         #'(quote-syntax handler))
                                                     #'#f)
                                               #,predicate-handler?
+                                              '#,annot-str
                                               (quote-syntax all-static-infos)
                                               (quote arity)))))
        (cond
@@ -122,12 +134,14 @@
   (syntax-parse stx
     #:datum-literals ()
     [(_ _ () . _)
-     (parse #f #'#f #'() #t)]
+     (parse #f #'#f #f #'() #t)]
     [(_ _ (op::annotate-op ret ...) _ _ convert-ok? . _)
-     #:with c::annotation (respan #`(#,group-tag ret ...))
+     #:do [(define annot #`(#,group-tag ret ...))]
+     #:with c::annotation (respan annot)
+     #:do [(define annot-str (shrubbery-syntax->string annot))]
      (syntax-parse #'c.parsed
        [c-parsed::annotation-predicate-form
-        (parse (syntax-e #'op.check?) #'c-parsed.predicate #'c-parsed.static-infos #t)]
+        (parse (syntax-e #'op.check?) #'c-parsed.predicate annot-str #'c-parsed.static-infos #t)]
        [c-parsed::annotation-binding-form
         (unless (syntax-e #'convert-ok?)
           (raise-syntax-error #f
@@ -149,4 +163,4 @@
                                                        ...
                                                        c-parsed.body)
                                                      (fail-k))))
-          (parse (syntax-e #'op.check?) converter #'c-parsed.static-infos #f))])]))
+          (parse (syntax-e #'op.check?) converter annot-str #'c-parsed.static-infos #f))])]))

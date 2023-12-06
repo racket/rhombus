@@ -34,18 +34,20 @@ check:
 
 // function result contracts
 
-fun add1(x) :: Int:
-  match x
-  | n :: Int : x + 1
-  | ~else: x
-
-check:
-  add1(100)
-  ~is 101
-
-check:
-  add1("oops")
-  ~raises "result does not satisfy annotation"
+block:
+  fun add1(x) :: Int:
+    match x
+    | n :: Int : x + 1
+    | ~else: x
+  check:
+    add1(100)
+    ~is 101
+  check:
+    add1("oops")
+    ~raises values(
+      "result does not satisfy annotation",
+      "Int",
+    )
 
 fun
 | add_two(x) :: Number:
@@ -152,12 +154,26 @@ block:
       values(0, "oops")
     def (x, y) = f()
     10
-    ~raises "results do not satisfy annotation"
+    ~raises values(
+      "results do not satisfy annotation",
+      "(Int, Int)"
+    )
   check:
     fun f() :: (Int, Int):
       0
     f()
-    ~raises "results do not satisfy annotation"
+    ~raises values(
+      "result does not satisfy annotation",
+      "(Int, Int)"
+    )
+  check:
+    fun f() :: Int:
+      values(0, "oops")
+    f()
+    ~raises values(
+      "results do not satisfy annotation",
+      "Int"
+    )
   check:
     ~eval
     fun oops():

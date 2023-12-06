@@ -180,12 +180,13 @@
          (check-consistent stx names "name")
          (define-values (proc arity)
            (build-case-function no-adjustments
-                                the-name #'#f
+                                the-name
+                                #f #f
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                                #'(ret.converter ...)
+                                (attribute ret.converter) (attribute ret.annot-str)
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
@@ -206,12 +207,13 @@
          (check-consistent stx (cons the-name names) "name" #:has-main? #t)
          (define-values (proc arity)
            (build-case-function no-adjustments
-                                the-name #'main-ret.converter
+                                the-name
+                                (attribute main-ret.converter) (attribute main-ret.annot-str)
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                                #'(ret.converter ...)
+                                (attribute ret.converter) (attribute ret.annot-str)
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
@@ -229,7 +231,7 @@
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
-                           #'ret.converter
+                           (attribute ret.converter) (attribute ret.annot-str)
                            #'rhs
                            stx))
          (maybe-add-function-result-definition
@@ -279,12 +281,13 @@
                ...+))
      (define-values (proc arity)
        (build-case-function adjustments
-                            (get-local-name #'form-id) #'main-ret.converter
+                            (get-local-name #'form-id)
+                            (attribute main-ret.converter) (attribute main-ret.annot-str)
                             #'((arg.kw ...) ...)
                             #'((arg ...) ...) #'((arg.parsed ...) ...)
                             #'(rest.arg ...) #'(rest.parsed ...)
                             #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                            #'(ret.converter ...)
+                            (attribute ret.converter) (attribute ret.annot-str)
                             #'(rhs ...)
                             stx))
      (values (wrap-function-static-info
@@ -301,7 +304,7 @@
                        #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                        #'rest.arg #'rest.parsed
                        #'rest.kwarg #'rest.kwparsed
-                       #'ret.converter
+                       (attribute ret.converter) (attribute ret.annot-str)
                        #'rhs
                        stx))
      (values (let* ([fun (if (pair? (syntax-e #'ret.static-infos))
