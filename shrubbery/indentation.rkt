@@ -61,6 +61,8 @@
              (indent-like-parenthesis t start current-tab)]
             [(bar-operator)
              (like-enclosing #:as-bar? #t)]
+            [(comment)
+             (like-enclosing #:as-operator? (next-is-operator? t (+ start current-tab)))]
             [(group-comment)
              (like-enclosing #:as-bar? (bar-after-group-comment? t (+ start current-tab) start)
                              #:also-zero? #t)]
@@ -569,6 +571,18 @@
        (case category
          [(whitespace comment) (loop e)]
          [(opener) (equal? (send t get-text s e) "«")]
+         [else #f])])))
+
+(define (next-is-operator? t pos)
+  (let loop ([pos pos])
+    (cond
+      [(= pos (send t last-position)) #f]
+      [else
+       (define-values (s e) (get-token-range t pos))
+       (define category (classify-position t s))
+       (case category
+         [(whitespace comment) (loop e)]
+         [(operator) #t]
          [else #f])])))
 
 (define (get-non-empty-lines t s-line e-line)
