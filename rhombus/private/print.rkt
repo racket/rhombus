@@ -188,7 +188,7 @@
           (fresh-ref
            v
            (lambda ()
-             (printer v mode (lambda (v [mode 'expr])
+             (printer v mode (lambda (v #:mode [mode 'expr])
                                (check-mode 'describe_recur mode)
                                (PrintDesc (pretty v mode ht)))))))]
     [(struct? v)

@@ -20,7 +20,7 @@ block:
     implements Printable
     override describe(mode, recur):
       import: .PrintDesc open
-      concat("(", align(concat(recur(x, mode), ",", newline(),
+      concat("(", align(concat(recur(x, ~mode: mode), ",", newline(),
                                recur(y), ")")))
   check "" +& Posn(1, 2) ~is "(1,\n 2)"
   check "" +& Posn("a", "b") ~is "(a,\n \"b\")"
@@ -31,7 +31,7 @@ block:
   class Posn(x, y):
     implements Printable
     override describe(mode, recur):
-      PrintDesc.list("(", [recur(x, mode), recur(y)], ")")
+      PrintDesc.list("(", [recur(x, ~mode: mode), recur(y)], ")")
   check "" +& Posn(1, 2) ~is "(1, 2)"
 
 block:
@@ -40,7 +40,7 @@ block:
     override describe(mode, recur):
       import .PrintDesc open
       // using newline() forces multi-line rendering of `Posn`
-      list("(", [concat(recur(x, mode), newline(), "!"), recur(y)], ")")
+      list("(", [concat(recur(x, ~mode: mode), newline(), "!"), recur(y)], ")")
   parameterize { Printable.current_pretty: #true }:
     check "" +& Posn(1, 2) ~is "(\n  1\n  !,\n  2\n)"
 
