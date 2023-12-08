@@ -53,10 +53,13 @@
                        build-function
                        build-case-function
                        maybe-add-function-result-definition
-                       parse-anonymous-function-arity)))
+                       parse-anonymous-function-arity))
+  (begin-for-syntax
+    (provide (struct-out converter))))
 
 (module+ for-call
-  (provide (for-syntax parse-function-call)
+  (provide (for-syntax parse-function-call
+                       wrap-annotation-check)
            raise-result-failure))
 
 (begin-for-syntax
@@ -189,26 +192,35 @@
                            (list #'eq2))]
       [_ (void)]))
 
+  (struct converter (proc       ; `(lambda (arg ... success-k fail-k) ....)` with one `arg` for each result, or `#f`
+                     predicate? ; all predicate annotations?
+                     count))    ; the expected number of values
+
   (define-splicing-syntax-class :ret-annotation
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
-                  converter    ; `(lambda (arg ... success-k fail-k) ....)` with one `arg` for each result, or `#f`
+                  converter    ; a `converter` struct, or `#f`
                   annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
     #:datum-literals (block group)
     (pattern (~seq ann-op::annotate-op (~optional vls:identifier) (~and p (_::parens g ...)))
              #:when (or (not (attribute vls))
                         (free-identifier=? #'vls #'values))
-             #:with (c::annotation ...) #'(g ...)
-             #:with (arg ...) (generate-temporaries #'(g ...))
-             #:do [(define-values (sis cvtr)
+             #:do [(define gs #'(g ...))]
+             #:with (c::annotation ...) gs
+             #:with (arg ...) (generate-temporaries gs)
+             #:do [(define cnt (length (syntax->list gs)))
+                   (define-values (sis cvtr)
                      (syntax-parse #'(c.parsed ...)
                        [(c-parsed::annotation-predicate-form ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
-                                (and (syntax-e #'ann-op.check?)
-                                     #'(lambda (arg ... success-k fail-k)
-                                         (if (and (c-parsed.predicate arg) ...)
-                                             (success-k arg ...)
-                                             (fail-k)))))]
+                                (converter
+                                 (and (syntax-e #'ann-op.check?)
+                                      #'(lambda (arg ... success-k fail-k)
+                                          (if (and (c-parsed.predicate arg) ...)
+                                              (success-k arg ...)
+                                              (fail-k))))
+                                 #t
+                                 cnt))]
                        [(c-parsed::annotation-binding-form ...)
                         #:do [(unless (syntax-e #'ann-op.check?)
                                 (for ([c (in-list (syntax->list #'(c ...)))]
@@ -219,27 +231,27 @@
                         #:with (arg-parsed::binding-form ...) #'(c-parsed.binding ...)
                         #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
-                                #`(lambda (arg ... success-k fail-k)
-                                    #,(let loop ([args (syntax->list #'(arg ...))]
-                                                 [arg-impl-infos (syntax->list #'(arg-impl.info ...))]
-                                                 [bodys (syntax->list #'(c-parsed.body ...))])
-                                        (cond
-                                          [(null? args) #'(success-k arg ...)]
-                                          [else
-                                           (with-syntax-parse ([arg-info::binding-info (car arg-impl-infos)]
-                                                               [((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos]
-                                                               [v (car args)])
-                                             #`(arg-info.matcher-id v
-                                                                    arg-info.data
-                                                                    if/blocked
-                                                                    (begin
-                                                                      (arg-info.committer-id v arg-info.data)
-                                                                      (arg-info.binder-id v arg-info.data)
-                                                                      (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                                                                      ...
-                                                                      (let ([#,(car args) #,(car bodys)])
-                                                                        #,(loop (cdr args) (cdr arg-impl-infos) (cdr bodys))))
-                                                                    (fail-k)))]))))]))]
+                                (converter
+                                 #`(lambda (arg ... success-k fail-k)
+                                     #,(for/foldr ([next #'(success-k arg ...)])
+                                                  ([arg (in-list (syntax->list #'(arg ...)))]
+                                                   [arg-impl-info (in-list (syntax->list #'(arg-impl.info ...)))]
+                                                   [body (in-list (syntax->list #'(c-parsed.body ...)))])
+                                         (syntax-parse arg-impl-info
+                                           [arg-info::binding-info
+                                            #`(arg-info.matcher-id #,arg
+                                                                   arg-info.data
+                                                                   if/blocked
+                                                                   (begin
+                                                                     (arg-info.committer-id #,arg arg-info.data)
+                                                                     (arg-info.binder-id #,arg arg-info.data)
+                                                                     (define-static-info-syntax/maybe arg-info.bind-id
+                                                                       arg-info.bind-static-info ...)
+                                                                     ...
+                                                                     (let ([#,arg #,body]) #,next))
+                                                                   (fail-k))])))
+                                 #f
+                                 cnt))]))]
              #:with static-infos sis
              #:attr converter cvtr
              #:attr annot-str (shrubbery-syntax->string #`(#,group-tag (~? vls) p)))
@@ -250,31 +262,36 @@
                      (syntax-parse #'c.parsed
                        [c-parsed::annotation-predicate-form
                         (values #'c-parsed.static-infos
-                                (and (syntax-e #'ann-op.check?)
-                                     #'(lambda (v success-k fail-k)
-                                         (if (c-parsed.predicate v)
-                                             (success-k v)
-                                             (fail-k)))))]
+                                (converter
+                                 (and (syntax-e #'ann-op.check?)
+                                      #'(lambda (v success-k fail-k)
+                                          (if (c-parsed.predicate v)
+                                              (success-k v)
+                                              (fail-k))))
+                                 #t
+                                 1))]
                        [c-parsed::annotation-binding-form
                         #:do [(unless (syntax-e #'ann-op.check?)
                                 (raise-unchecked-disallowed #'ann-op.name #'c))]
                         #:with arg-parsed::binding-form #'c-parsed.binding
                         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
                         #:with arg-info::binding-info #'arg-impl.info
-                        (syntax-parse #'arg-info.bind-infos
-                          [((bind-id bind-use . bind-static-infos) ...)
-                           (values #'c-parsed.static-infos
-                                   #'(lambda (v success-k fail-k)
-                                       (arg-info.matcher-id v
-                                                            arg-info.data
-                                                            if/blocked
-                                                            (begin
-                                                              (arg-info.committer-id v arg-info.data)
-                                                              (arg-info.binder-id v arg-info.data)
-                                                              (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                                                              ...
-                                                              (success-k c-parsed.body))
-                                                            (fail-k))))])]))]
+                        (values #'c-parsed.static-infos
+                                (converter
+                                 #'(lambda (v success-k fail-k)
+                                     (arg-info.matcher-id v
+                                                          arg-info.data
+                                                          if/blocked
+                                                          (begin
+                                                            (arg-info.committer-id v arg-info.data)
+                                                            (arg-info.binder-id v arg-info.data)
+                                                            (define-static-info-syntax/maybe arg-info.bind-id
+                                                              arg-info.bind-static-info ...)
+                                                            ...
+                                                            (success-k c-parsed.body))
+                                                          (fail-k)))
+                                 #f
+                                 1))]))]
              #:with static-infos sis
              #:attr converter cvtr
              #:attr annot-str (shrubbery-syntax->string annot))
@@ -285,21 +302,33 @@
 
   (define-splicing-syntax-class :rhombus-ret-annotation
     #:attributes (count
+                  is_predicate
                   maybe_converter
                   static_info
                   annotation_string)
     (pattern r::ret-annotation
-             #:attr count (syntax-parse #'r.static-infos
-                            #:literals (#%values)
-                            [((#%values (si ...)))
-                             (length (syntax->list #'(si ...)))]
-                            [_ 1])
-             #:attr maybe_converter (and (attribute r.converter)
-                                         #'(parsed #:rhombus/expr r.converter))
-             #:with static_info (unpack-static-infos #'r.static-infos)
-             #:attr annotation_string (cond
-                                        [(attribute r.annot-str) => string->immutable-string]
-                                        [else annotation-any-string])))
+             #:do [(define-values (cnt pred? proc si annot-str)
+                     (cond
+                       [(attribute r.converter)
+                        => (lambda (cvtr)
+                             (values (converter-count cvtr)
+                                     (converter-predicate? cvtr)
+                                     (cond
+                                       [(converter-proc cvtr)
+                                        => (lambda (proc) #`(parsed #:rhombus/expr #,proc))]
+                                       [else #f])
+                                     (unpack-static-infos #'r.static-infos)
+                                     (string->immutable-string (attribute r.annot-str))))]
+                       [else (values #f
+                                     #t
+                                     #f
+                                     (unpack-static-infos #'())
+                                     annotation-any-string)]))]
+             #:attr count cnt
+             #:attr is_predicate pred?
+             #:attr maybe_converter proc
+             #:with static_info si
+             #:attr annotation_string annot-str))
 
   (define-splicing-syntax-class :pos-rest
     #:attributes (arg parsed)
@@ -796,34 +825,36 @@
                           (append base-args rest-args)
                           #f))
 
-(define-for-syntax (add-annotation-check who converter annot-str e)
+(define-for-syntax (wrap-annotation-check who e count annot-str body-k)
+  #`(call-with-values
+     (lambda () #,e)
+     (case-lambda
+       #,@(if (eqv? count 1)
+              (list #`[(val) #,(body-k
+                                #'(val)
+                                #`(raise-result-failure '#,who val '#,annot-str))])
+              (list (with-syntax ([(val ...) (generate-temporaries
+                                              (for/list ([_ (in-range count)])
+                                                'val))])
+                      #`[(val ...) #,(body-k
+                                      #'(val ...)
+                                      #`(raise-results-failure '#,who (list val ...) '#,annot-str))])
+                    #`[(val) (raise-result-failure '#,who val '#,annot-str)]))
+       [vals (raise-results-failure '#,who vals '#,annot-str)])))
+
+(define-for-syntax (add-annotation-check who cvtr annot-str e)
   (cond
-    [(not converter) e]
-    [else
-     (syntax-parse converter
-       #:literals (lambda)
-       [(~or* (lambda (arg ... _ _) . _)
-              (~parse (arg ...) (list #'result)))
-        (define single-valued?
-          (eqv? (length (syntax->list #'(arg ...))) 1))
-        #`(call-with-values
-           (lambda () #,e)
-           (case-lambda
-             #,@(if single-valued?
-                    (list #`[(val)
-                             (#,converter
-                              val
-                              (lambda (v) v)
-                              (lambda ()
-                                (raise-result-failure '#,who val '#,annot-str)))])
-                    (list #`[(arg ...)
-                             (#,converter
-                              arg ...
-                              (lambda (arg ...) (values arg ...))
-                              (lambda ()
-                                (raise-results-failure '#,who (list arg ...) '#,annot-str)))]
-                          #`[(val) (raise-result-failure '#,who val '#,annot-str)]))
-             [vals (raise-results-failure '#,who vals '#,annot-str)]))])]))
+    [(and cvtr (converter-proc cvtr))
+     => (lambda (proc)
+          (wrap-annotation-check
+           who e
+           (converter-count cvtr) annot-str
+           (lambda (vs raise)
+             #`(#,proc
+                #,@vs
+                (lambda (#,@vs) (values #,@vs))
+                (lambda () #,raise)))))]
+    [else e]))
 
 (define (raise-result-failure who val annot-str)
   (raise-binding-failure who "result" val annot-str))

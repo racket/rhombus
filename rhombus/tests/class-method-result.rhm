@@ -303,3 +303,92 @@ block:
       "result does not satisfy annotation",
       "Right",
     )
+
+// converter annotations
+block:
+  check:
+    ~eval
+    class A():
+      nonfinal
+      method m() :: converting(fun (_): #false):
+        #false
+    ~raises values(
+      "must be a predicate annotation",
+      "non-final",
+    )
+  check:
+    ~eval
+    interface A:
+      method m() :: converting(fun (_): #false)
+    ~raises values(
+      "must be a predicate annotation",
+      "non-final",
+    )
+  check:
+    class A():
+      method m() :: converting(fun (_): #true):
+        #false
+    A().m()
+    ~is #true
+
+// multiple-result annotations
+block:
+  check:
+    ~eval
+    class A():
+      nonfinal
+      method m() :: Any:
+        #false
+    class B():
+      extends A
+      override m() :: values(Any, Any):
+        values(#false, #false)
+    ~raises "incompatible result arities"
+  check:
+    ~eval
+    class A():
+      nonfinal
+      method m() :~ Any:
+        #false
+    class B():
+      extends A
+      override m() :~ values(Any, Any):
+        values(#false, #false)
+    ~raises "incompatible result arities"
+  check:
+    class A():
+      nonfinal
+      method m() :: (Real, Real):
+        values(1.0, 2.0)
+    class B():
+      extends A
+      override m() :: (Int, Int):
+        values(1, 2)
+    B().m()
+    ~is values(1, 2)
+  check:
+    class A():
+      nonfinal
+      method m() :: (Real, Int):
+        values(1.0, 2)
+    class B():
+      extends A
+      override m() :: (Int, Real):
+        values(1, 2.0)
+    B().m()
+    ~raises values(
+      "results do not satisfy annotation",
+      "(Int, Real)", "(Real, Int)",
+    )
+  check:
+    class A():
+      nonfinal
+      method m() :: (Any, String):
+        values(#false, "something")
+    class B():
+      extends A
+      override m() :: (String, String):
+        values("more", "really")
+    def (str1, str2) = B().m()
+    values(str1.length(), str2.length())
+    ~is values(4, 6)

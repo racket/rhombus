@@ -105,7 +105,7 @@
                   '(get set)))
 
 (define-syntax void-result
-  (method-result #'void? #t "Void" #'() 0))
+  (method-result #'void? #t 1 "Void" #'() 8))
 
 (define-for-syntax (parse-indexable-ref-or-set indexable-in stxes more-static?
                                                #:repetition? [repetition? #f])

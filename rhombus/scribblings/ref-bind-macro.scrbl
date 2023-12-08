@@ -396,6 +396,7 @@
     kind: ~sequence
     fields:
       count
+      is_predicate
       maybe_converter
       static_info
       annotation_string
@@ -409,7 +410,12 @@
  @itemlist(
 
   @item{The @rhombus(count) field holds an integer for the number of
-  expected results.}
+  expected results, or @rhombus(#false) if no annotation is declared
+  (i.e., any number of results is expected).}
+
+  @item{The @rhombus(is_predicate) field is @rhombus(#true) if all
+  annotations are @tech{predicate annotations}, or @rhombus(#false)
+  if at least one of them is a @tech{converter annotation}.}
 
   @item{The @rhombus(maybe_converter) field is @rhombus(#false) if no
   annotation is declared or if it is unchecked, otherwise it is a syntax
