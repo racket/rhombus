@@ -38,13 +38,14 @@ class Color(handle):
   reconstructor(red, green, blue, alpha):
     Color(red, green, blue, alpha)
 
-  implements Printable
-  override describe(mode, recur):
-    "Color("
-      +& red +& ", "
-      +& green +& ", "
-      +& blue +& ", "
-      +& alpha +& ")"
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.list("Color(",
+                   [recur(red),
+                    recur(green),
+                    recur(blue),
+                    recur(alpha)],
+                   ")")
 
 fun
 | unwrap_color(c :: Color): c.handle

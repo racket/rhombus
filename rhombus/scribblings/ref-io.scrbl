@@ -111,9 +111,11 @@
   --- returns a @rhombus(PrintDesc, ~annot) given a
   @rhombus(mode, ~var), which is either @rhombus(#'text) or
   @rhombus(#'expr), and a @rhombus(recur, ~var) function, which accepts a
-  value and an optional @rhombus(~mode) like @rhombus(Printable.describe);
-  the @rhombus(recur) function is specific to a particular overall print
-  action so that it can handle cycles and graph references}
+  value and an optional @rhombus(~mode) like @rhombus(Printable.describe)
+  (unlike @rhombus(Printable.describe), the @rhombus(~mode) defaults to
+  @rhombus(#'expr), which is generally desirable when printing subcomponents);
+  the @rhombus(recur, ~var) function is specific to a particular overall print
+  action so that it can handle cycles and graph references.}
 
 )
 
