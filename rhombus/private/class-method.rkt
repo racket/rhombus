@@ -84,11 +84,12 @@
        (values "class or interface" "classes or superinterfaces")]))
 
   (define dot-ht
-    (for/fold ([ht #hasheq()]) ([super (in-list supers)])
-      (for/fold ([ht #hasheq()]) ([sym (in-list (super-dots super))])
-        (when (hash-ref ht sym #f)
-          (raise-syntax-error #f (format "dot syntax supplied by multiple ~a" supers-str) stx sym))
-        (hash-set ht sym #t))))
+    (for*/fold ([ht #hasheq()])
+               ([super (in-list supers)]
+                [sym (in-list (super-dots super))])
+      (when (hash-ref ht sym #f)
+        (raise-syntax-error #f (format "dot syntax supplied by multiple ~a" supers-str) stx sym))
+      (hash-set ht sym #t)))
 
   ;; create merged method tables from the superclass (if any) and all superinterfaces;
   ;; we start with the superclass, if any, so the methods from its vtable stay

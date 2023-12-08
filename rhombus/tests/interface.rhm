@@ -324,3 +324,59 @@ check:
   class Posn(sevens):
     implements Point
   ~raises "field name already in interface as dot syntax"
+
+check:
+  ~eval
+  import rhombus/meta open
+  interface A:
+    dot '$left . something':
+      '#true'
+  interface B:
+    dot '$left . something':
+      '#false'
+  class O():
+    implements: A B
+  ~raises "dot syntax supplied by multiple superinterfaces"
+
+check:
+  ~eval
+  import rhombus/meta open
+  interface A:
+    dot '$left . something':
+      '#true'
+  class B():
+    nonfinal
+    dot '$left . something':
+      '#false'
+  class O():
+    implements A
+    extends B
+  ~raises "dot syntax supplied by multiple classes or superinterfaces"
+
+check:
+  ~eval
+  import rhombus/meta open
+  interface A:
+    dot '$left . something':
+      '#true'
+  interface B:
+    method something():
+      #false
+  class O():
+    implements: A B
+  ~raises "name supplied as both method and dot syntax by superinterfaces"
+
+check:
+  ~eval
+  import rhombus/meta open
+  interface A:
+    dot '$left . something':
+      '#true'
+  class B():
+    nonfinal
+    method something():
+      #false
+  class O():
+    implements A
+    extends B
+  ~raises "name supplied as both method and dot syntax by classes or superinterfaces"
