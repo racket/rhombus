@@ -851,20 +851,20 @@
                                               #`(begin #,body (void))]
                                              [(and result-desc
                                                    (method-result-handler-expr result-desc))
-                                              (if (method-result-predicate? result-desc)
-                                                  #`(let ([result #,body])
-                                                      (unless (#,(method-result-handler-expr result-desc) result)
-                                                        (raise-result-failure 'method-name
-                                                                              result
-                                                                              '#,(method-result-annot-str result-desc)))
-                                                      result)
-                                                  #`(let ([result #,body])
-                                                      (#,(method-result-handler-expr result-desc)
-                                                       result
-                                                       (lambda ()
-                                                         (raise-result-failure 'method-name
-                                                                               result
-                                                                               '#,(method-result-annot-str result-desc))))))]
+                                              => (lambda (proc)
+                                                   (wrap-annotation-check
+                                                    #'method-name body
+                                                    (method-result-count result-desc)
+                                                    (method-result-annot-str result-desc)
+                                                    (lambda (vs raise)
+                                                      (if (method-result-predicate? result-desc)
+                                                          #`(begin
+                                                              (unless (#,proc #,@vs) #,raise)
+                                                              (values #,@vs))
+                                                          #`(#,proc
+                                                             #,@vs
+                                                             (lambda (#,@vs) (values #,@vs))
+                                                             (lambda () #,raise))))))]
                                              [else body])))))
                                 #t)))
          #'e.parsed]))]))
