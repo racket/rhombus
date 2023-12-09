@@ -168,13 +168,6 @@
   corresponding to the number of @rhombus(accum_id, ~var)s. Each result
   becomes the new value of the corresponding @rhombus(accum_id, ~var).}
 
- @item{The @rhombus(step_id, ~var) should refer to a macro that expects
-  @rhombus(data, ~var) followed by an expression that produces a value (or
-  multiple values) to be acucmulated. It should produce a number of
-  results corresponding to the number of @rhombus(accum_id, ~var)s, and
-  each result becomes the new value of the corresponding
-  @rhombus(accum_id, ~var).}
-
  @item{The @rhombus(data, ~var) component is effectively the data half
   of a closure for @rhombus(complete_id, ~var) and
   @rhombus(step_id, ~var). It can have any shape that is needed to provide
