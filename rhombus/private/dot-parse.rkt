@@ -82,21 +82,20 @@
           [(mk mk-set)
            (syntax-parse tail
              [assign::assign-op-seq
-              (call-with-values
-               success-k
-               (lambda ()
-                 (build-assign
-                  (attribute assign.op)
-                  #'assign.name
-                  #`(lambda ()
-                      #,(mk lhs (lambda (e)
-                                  (relocate (respan #`(#,lhs #,field-stx)) e))))
-                  #`(lambda (v)
-                      #,(mk-set lhs #'v
-                                (lambda (e)
-                                  (relocate (respan #`(#,lhs #,field-stx)) e))))
-                  #'value
-                  #'assign.tail)))]
+              (define-values (assign-expr tail)
+                (build-assign
+                 (attribute assign.op)
+                 #'assign.name
+                 #`(lambda ()
+                     #,(mk lhs (lambda (e)
+                                 (relocate (respan #`(#,lhs #,field-stx)) e))))
+                 #`(lambda (v)
+                     #,(mk-set lhs #'v
+                               (lambda (e)
+                                 (relocate (respan #`(#,lhs #,field-stx)) e))))
+                 #'value
+                 #'assign.tail))
+              (success-k assign-expr tail)]
              [_ (just-access mk)])])))
 
     (k (syntax-e field-stx) field ary nary fail-k)))

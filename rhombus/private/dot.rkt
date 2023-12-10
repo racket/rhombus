@@ -3,13 +3,10 @@
                      syntax/parse/pre
                      enforest/property
                      enforest/syntax-local
-                     enforest/operator
                      "operator-parse.rkt"
-                     "tag.rkt"
                      "statically-str.rkt"
                      "srcloc.rkt")
          "provide.rkt"
-         "definition.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
@@ -19,7 +16,6 @@
          "compound-repetition.rkt"
          "realm.rkt"
          "parse.rkt"
-         "assign.rkt"
          "is-static.rkt"
          (submod "assign.rkt" for-assign))
 
@@ -178,10 +174,11 @@
     [dp-id
      (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))
      (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space dp-id)))
+     (define (success-k expr tail) (values expr tail))
      ((dot-provider-handler p) form1 dot field-id
                                tail
                                more-static?
-                               values generic)]
+                               success-k generic)]
     [else (generic)]))
 
 (define-syntax (define-dot-provider-syntax stx)
