@@ -119,7 +119,7 @@
  @rhombus(next_accum_id, ~var), @rhombus(break_id) and @rhombus(final_id)
  are false (because early termination is never needed by the reducer),
  @rhombus(step_result_id) returns @rhombus(next_accum_id, ~var), the
- @rhombus(var_static_key, ~var)s with @rhombus(var_static_values, ~var)s
+ @rhombus(var_static_key, ~var)s with @rhombus(var_static_value, ~var)s
  provide static information for a list, and @rhombus(data, ~var) has
  @rhombus(accum_id, ~var) and @rhombus(next_accum_id, ~var) (so that
  @rhombus(step_id, ~var) and @rhombus(step_result_id, ~var) are able to
@@ -167,6 +167,10 @@
   expects @rhombus(data, ~var) and produces a number of results
   corresponding to the number of @rhombus(accum_id, ~var)s. Each result
   becomes the new value of the corresponding @rhombus(accum_id, ~var).}
+
+ @item{The @rhombus(var_static_key, ~var)s with
+  @rhombus(var_static_value, ~var)s provide static information for the
+  reducer's result.}
 
  @item{The @rhombus(data, ~var) component is effectively the data half
   of a closure for @rhombus(complete_id, ~var) and
