@@ -137,7 +137,7 @@ positions.
 @provided_also_meta()
 
  The @rhombus(&) expression operator and binding operator can only be
- used in places where its specifically recognized, normally either to
+ used in places where it's specifically recognized, normally either to
  reference or bind the ``rest'' of a data structure. The @rhombus(List)
  constructor, @rhombus(Map) constructor, @rhombus(fun) form, and the
  @rhombus(#%call) form are among the places that recognize
@@ -162,7 +162,7 @@ positions.
 @provided_also_meta()
 
  The @rhombus(~&) expression operator and binding operator can only be
- used in places where its specifically recognized, normally to bind the
+ used in places where it's specifically recognized, normally to bind the
  ``rest'' of a map with keywords as keys. The @rhombus(fun) and
  @rhombus(#%call) forms are among the places that recognize
  @rhombus(~&).

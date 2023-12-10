@@ -3,6 +3,7 @@
                      (only-in racket/function normalize-arity)
                      racket/keyword
                      syntax/parse/pre
+                     enforest/name-parse
                      shrubbery/print
                      "hash-set.rkt"
                      "srcloc.rkt"
@@ -40,7 +41,9 @@
          (submod "list.rkt" for-compound-repetition)
          (submod "map.rkt" for-info)
          "if-blocked.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         (only-in "values.rkt"
+                  [values rhombus-values]))
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -202,9 +205,9 @@
                   annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
     #:datum-literals (block group)
-    (pattern (~seq ann-op::annotate-op (~optional vls:identifier) (~and p (_::parens g ...)))
-             #:when (or (not (attribute vls))
-                        (free-identifier=? #'vls #'values))
+    (pattern (~seq ann-op::annotate-op (~optional op::name) (~and p (_::parens g ...)))
+             #:when (or (not (attribute op))
+                        (free-identifier=? (in-annotation-space #'op.name) (annot-quote rhombus-values)))
              #:do [(define gs #'(g ...))]
              #:with (c::annotation ...) gs
              #:with (arg ...) (generate-temporaries gs)
@@ -254,7 +257,7 @@
                                  cnt))]))]
              #:with static-infos sis
              #:attr converter cvtr
-             #:attr annot-str (shrubbery-syntax->string #`(#,group-tag (~? vls) p)))
+             #:attr annot-str (shrubbery-syntax->string #`(#,group-tag (~? op) p)))
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
              #:do [(define annot #`(#,group-tag ctc0 ctc ...))]
              #:with c::annotation (no-srcloc annot)

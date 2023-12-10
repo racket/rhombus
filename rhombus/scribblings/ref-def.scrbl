@@ -8,29 +8,34 @@
 @doc(
   ~nonterminal:
     rhs_expr: block expr
-  defn.macro 'def $bind = $rhs_expr'
-  defn.macro 'def $bind:
+  defn.macro 'def $lhs_bind = $rhs_expr'
+  defn.macro 'def $lhs_bind:
                 $body
                 ...'
+  grammar lhs_bind:
+    $bind
+    #,(@rhombus(values, ~bind))($bind, ...)
+    ($bind, ...)
 ){
 
- Binds the identifiers of @rhombus(bind) to the value of @rhombus(rhs_expr) or the
+ Binds the identifiers of @rhombus(bind)s to the values of @rhombus(rhs_expr) or the
  @rhombus(body) sequence. The @rhombus(body) itself can include
  definitions, and it normally ends with an expression to provide the
- result value.
+ result values.
 
  A @rhombus(bind) can be just an identifier or @nontermref(id_name), or it
  can be constructed with a binding operator, such as a pattern form or
- @rhombus(::) for annotations.
+ @rhombus(::) for annotations. The number of result values must match
+ the number of @rhombus(bind)s.
 
  An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and most
  binding operators also create bindings in the @rhombus(expr, ~space) space.
 
- When @rhombus(def) is used with @rhombus(=), then @rhombus(expr) must
+ When @rhombus(def) is used with @rhombus(=), then @rhombus(rhs_expr) must
  not contain any immediate @rhombus(=) terms (although @rhombus(=) can
  appear nested in blocks, parentheses, etc.). When a @rhombus(def) group
  both contains a @rhombus(=) and ends in a block, the block is treated as
- part of an @rhombus(expr) after the @rhombus(=).
+ part of an @rhombus(rhs_expr) after the @rhombus(=).
 
 @examples(
   ~repl:
@@ -55,8 +60,9 @@
 @doc(
   ~nonterminal:
     rhs_expr: block expr
-  defn.macro 'let $bind = $rhs_expr'
-  defn.macro 'let $bind:
+    lhs_bind: def ~defn
+  defn.macro 'let $lhs_bind = $rhs_expr'
+  defn.macro 'let $lhs_bind:
                 $body
                 ...'
 ){

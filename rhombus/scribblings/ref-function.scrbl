@@ -160,8 +160,8 @@ normally bound to implement function calls.
   grammar maybe_res_annot:
     #,(@rhombus(::, ~bind)) $annot
     #,(@rhombus(:~, ~bind)) $annot
-    #,(@rhombus(::, ~bind)) values($annot, ...)
-    #,(@rhombus(:~, ~bind)) values($annot, ...)
+    #,(@rhombus(::, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
+    #,(@rhombus(:~, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
     #,(@rhombus(::, ~bind)) ($annot, ...)
     #,(@rhombus(:~, ~bind)) ($annot, ...)
     #,(epsilon)
