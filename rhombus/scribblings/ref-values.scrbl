@@ -18,12 +18,40 @@
 }
 
 @doc(
+  ~nonterminal:
+    lhs_bind: def ~defn
   bind.macro 'values($bind, ...)'
 ){
 
- Matches multiple result values corresponding to the number of
- @rhombus(bind)s, where each result matches the corresponing
- @rhombus(bind).
+ The @rhombus(values, ~bind) binding operator can only be used in
+ places where it's specifically recognized, normally to match multiple
+ result values. For example, the @rhombus(lhs_bind) position of
+ @rhombus(def) recognizes @rhombus(values, ~bind).
+
+@examples(
+  def values(x, y) = values(1, 2)
+  x+y
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    maybe_res_annot: fun ~defn
+  annot.macro 'values($annot, ...)'
+){
+
+ The @rhombus(values, ~annot) annotation can only be used in places
+ where it's specifically recognized, normally to annotate multiple
+ result values. For example, the @rhombus(maybe_res_annot) position of
+ @rhombus(fun) recognizes @rhombus(values, ~annot).
+
+@examples(
+  fun two_numbers() :: values(Int, Int):
+    values(1, 2)
+  def (x, y) = two_numbers()
+  x+y
+)
 
 }
 

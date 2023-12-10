@@ -4,6 +4,7 @@
                      "srcloc.rkt")
          "provide.rkt"
          "binding.rkt"
+         (submod "annotation.rkt" for-class)
          "reducer.rkt"
          "parse.rkt"
          "static-info.rkt"
@@ -14,6 +15,7 @@
 
 (provide (for-spaces (#f
                       rhombus/bind
+                      rhombus/annot
                       rhombus/reducer
                       rhombus/statinfo)
                      values)
@@ -24,7 +26,7 @@
 
 (define-binding-syntax values
   (binding-prefix-operator
-   #'values
+   (bind-quote values)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -33,6 +35,19 @@
         (raise-syntax-error #f
                             (string-append "not allowed as a pattern (except as a non-nested"
                                            " pattern by forms that specifically recognize it)")
+                            #'head)]))))
+
+(define-annotation-syntax values
+  (annotation-prefix-operator
+   (annot-quote values)
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(head . _)
+        (raise-syntax-error #f
+                            (string-append "not allowed as an annotation (except as a non-nested"
+                                           " annotation by forms that specifically recognize it)")
                             #'head)]))))
 
 (define-reducer-syntax values

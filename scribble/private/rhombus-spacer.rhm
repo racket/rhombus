@@ -119,7 +119,7 @@ meta:
            kind ~sequence
          | '$(tag && 'values') $(p && '($_)')'
          | '$(p && '($_)')': field tag = #false):
-          let new_tag = if tag | spacer.set(tag, #'~expr) | ''
+          let new_tag = if tag | spacer.set(tag, #'~annot) | ''
           let new_p = spacer.adjust_term(p, #'~annot, esc)
           '$new_tag $new_p'
       | ~else: spacer.adjust_sequence(res_ann, #'~annot, esc)
