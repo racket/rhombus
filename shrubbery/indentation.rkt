@@ -31,7 +31,7 @@
                                                     (or (eq? (cadr r) 'end)
                                                         (pos . <= . (cadr r)))
                                                     (cons (car r) (cadr r))))
-                                             '(0 0))])
+                                             '(0 . 0))])
     (define start (line-start t pos))
     (define current-tab (get-current-tab t start))
     (cond
