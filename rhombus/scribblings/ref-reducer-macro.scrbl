@@ -32,6 +32,9 @@
  The result of the macro expansion can be a low-level
  reducer description created with @rhombus(reducer_meta.pack).
 
+ This first example simply defines a short-cut for reducing
+ into an array of length 5:
+
 @examples(
   ~eval: macro_eval
   ~defn:
@@ -41,6 +44,55 @@
     for Array5:
       each i: 0..3
       i
+)
+
+ Here's an example that sums only the positive numbers that result
+ from the loop body, and halts as soon as the sum becomes larger
+ than 20. This illustrates the use of @rhombus(step_defs) to create a
+ binding that can be used by both the @rhombus(step_result) and the
+ @rhombus(final) clauses.
+
+@examples(
+  ~eval: macro_eval
+  ~defn:
+    reducer.macro 'SumPosTo20':
+      reducer_meta.pack('sptt_return',
+                        '(accum = 0)',
+                        'sptt_step_defs',
+                        #false,
+                        'sptt_final',
+                        'sptt_step_result',
+                        '()',
+                        '[new_accum, accum]')
+    expr.macro 'sptt_return [$new_accum, $accum] $e':
+      'cond
+       | $e > 20: "bigger than 20"
+       | ~else: $e'
+    defn.macro 'sptt_step_defs [$new_accum, $accum] $e':
+      'def $new_accum :
+         cond
+         | $e > 0: $accum + $e
+         | ~else: $accum'
+    expr.macro 'sptt_final [$new_accum, $accum]':
+      '$new_accum > 20'
+    expr.macro 'sptt_step_result [$new_accum, $accum]':
+      '$new_accum'
+  ~repl:
+    for SumPosTo20 (a: [6,-4,3]):
+      a
+    for SumPosTo20 (a: 3..):
+      a
+)
+
+ This example shows that reducers can be chained; specifically, it
+ creates a @rhombus(WithCount) reducer, that chains onto an existing reducer
+ and keeps track of the number of elements while allowing the prior
+ reducer to operate normally. The bulk of the code in this example
+ is in showing how to explicitly fall through to the macros defined
+ in the existing reducer.
+
+@examples(
+  ~eval: macro_eval
   ~defn:
     reducer.macro 'WithCount($(r :: reducer_meta.Parsed))':
       def '($wrap, ($bind, ...), $step, $break, $final, $finish, $static_info, $data)':
