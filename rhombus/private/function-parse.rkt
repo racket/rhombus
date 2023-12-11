@@ -15,7 +15,6 @@
                      (only-in "annotation-string.rkt" annotation-any-string))
          racket/unsafe/undefined
          "parens.rkt"
-         "expression.rkt"
          "binding.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
@@ -884,10 +883,10 @@
                                         #:srcloc [srcloc #f] ; for `relocate` on result
                                         #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
                                         #:rator-arity [rator-arity #f])
-  (define (generate extra-rands rands rsts dots kwrsts tag tail)
+  (define (generate rands rsts dots kwrsts tag tail)
     (syntax-parse stxes
       [(_ args . _)
-       (generate-call rator-in #'args extra-rands rands rsts dots kwrsts tail
+       (generate-call rator-in #'args extra-args rands rsts dots kwrsts tail
                       #:static? static?
                       #:repetition? repetition?
                       #:rator-stx rator-stx
@@ -913,28 +912,25 @@
                                            #:props-stx #'tag)
              #'tail)]
     [(_ (tag::parens rand ...
-                     (group _::&-expr rst ...)
-                     (group _::~&-expr kwrst ...))
+                     rep (group dots::...-expr)
+                     (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
+                                      (~parse kwrsts #'(kwrst-tag kwrst ...)))))
         . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tag #'tail)]
-    [(_ (tag::parens rand ...
-                     rep (group (~var dots (:... in-expression-space)))
-                     (group _::&-expr kwrst ...))
+     (generate #'(rand ...) #'rep #'dots.name (attribute kwrsts) #'tag #'tail)]
+    [(_ (~or* (~and (tag::parens rand ...
+                                 ((~and rst-tag group) _::&-expr rst ...)
+                                 (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
+                                                  (~parse kwrsts #'(kwrst-tag kwrst ...)))))
+                    (~parse rsts #'(rst-tag rst ...)))
+              (~and (tag::parens rand ...
+                                 ((~and kwrst-tag group) _::~&-expr kwrst ...))
+                    (~parse kwrsts #'(kwrst-tag kwrst ...))))
         . tail)
      (check-complex-allowed)
-     (generate #'(rand ...) #'rep #'dots.name #'(group kwrst ...) #'tag #'tail)]
-    [(_ (tag::parens rand ... (group _::&-expr rst ...)) . tail)
-     (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tag #'tail)]
-    [(_ (tag::parens rand ... rep (group (~var dots (:... in-expression-space)))) . tail)
-     (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'rep #'dots.name #f #'tag #'tail)]
-    [(_ (tag::parens rand ... (group _::~&-expr kwrst ...)) . tail)
-     (check-complex-allowed)
-     (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tag #'tail)]
+     (generate #'(rand ...) (attribute rsts) #f (attribute kwrsts) #'tag #'tail)]
     [(_ (tag::parens rand ...) . tail)
-     (generate extra-args #'(rand ...) #f #f #f #'tag #'tail)]))
+     (generate #'(rand ...) #f #f #f #'tag #'tail)]))
 
 (define-for-syntax (generate-call rator-in args-stx extra-rands rands rsts dots kwrsts tail
                                   #:static? static?
@@ -1074,18 +1070,18 @@
   (define (not-kw-splice-only? gs-stx)
     (syntax-parse gs-stx
       #:datum-literals (group)
-      [((group _::~&-expr rand ...+)) #f]
+      [((group _::~&-expr rand ...)) #f]
       [() #f]
       [_ #t]))
   (let loop ([gs-stx gs-stx])
     (syntax-parse gs-stx
       #:datum-literals (group)
       [() #f]
-      [((group _::&-expr rand ...+) . gs)
+      [((group _::&-expr rand ...) . gs)
        (or (loop #'gs) (not-kw-splice-only? #'gs))]
       [(g0 (group _::...-expr) . gs)
        (or (loop #'gs) (not-kw-splice-only? #'gs))]
-      [((group _::~&-expr rand ...+) . gs)
+      [((group _::~&-expr rand ...) . gs)
        (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
       [(_ . gs) (loop #'gs)])))
 
@@ -1156,16 +1152,16 @@
                                   #:rator-arity rator-arity
                                   #:props-stx props-stx))
                  term))]
-      [(((~and tag group) _::&-expr rand ...+) . gs)
+      [(((~and tag group) _::&-expr rand ...) . gs)
        (loop #'gs
              (cons (list (gen-id) 'list #'(rhombus-expression (tag rand ...)) #f)
                    rev-args))]
-      [(g0 (group (~var dots (:... in-expression-space))) . gs)
+      [(g0 (group dots::...-expr) . gs)
        (define-values (new-gs extras) (consume-extra-ellipses #'gs))
        (loop new-gs
              (cons (list (gen-id) 'list (repetition-as-list #'dots.name #'g0 1 extras))
                    rev-args))]
-      [(((~and tag group) _::~&-expr rand ...+) . gs)
+      [(((~and tag group) _::~&-expr rand ...) . gs)
        (loop #'gs
              (cons (list (gen-id) 'kws #'(rhombus-expression (tag rand ...)))
                    rev-args))]
