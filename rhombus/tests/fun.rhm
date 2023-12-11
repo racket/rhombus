@@ -208,3 +208,39 @@ check:
   ~eval
   fun (x where x = 1 = 2): 10
   ~raises "multiple immediate equals not allowed in this group"
+
+// check generation of function calls
+block:
+  fun noop(& args, ~& kw_args):
+    values(args, kw_args)
+  check:
+    noop(1, 2, 3, ~a: "a")
+    ~is values([1, 2, 3], {#'~a: "a"})
+  check:
+    def [x, ...] = [4, 5]
+    noop(1, 2, 3, ~a: "a", x, ...)
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a"})
+  check:
+    def [x, ...] = [4, 5]
+    noop(1, 2, 3, ~a: "a", x, ..., ~& {#'~b: "b"})
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a", #'~b: "b"})
+  check:
+    def [x, ...] = [4, 5]
+    noop(1, 2, 3, ~a: "a", ~& {#'~b: "b"}, x, ...)
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a", #'~b: "b"})
+  check:
+    noop(1, 2, 3, ~a: "a", & [4, 5])
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a"})
+  check:
+    noop(1, 2, 3, ~a: "a", ~& {#'~b: "b"})
+    ~is values([1, 2, 3], {#'~a: "a", #'~b: "b"})
+  check:
+    noop(1, 2, 3, ~a: "a", & [4, 5], ~& {#'~b: "b"})
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a", #'~b: "b"})
+  check:
+    noop(1, 2, 3, ~a: "a", ~& {#'~b: "b"}, & [4, 5])
+    ~is values([1, 2, 3, 4, 5], {#'~a: "a", #'~b: "b"})
+  check:
+    def [x, ...] = [4, 5]
+    noop(1, 2, 3, x, ..., & [6, 7, 8], ~a: "a", ~& {#'~b: "b"})
+    ~is values([1, 2, 3, 4, 5, 6, 7, 8], {#'~a: "a", #'~b: "b"})
