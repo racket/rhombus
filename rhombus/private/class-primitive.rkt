@@ -68,8 +68,9 @@
                    (~optional property-si #:defaults ([property-si #'#f]))]
          ...)
         #:methods
-        ((~or* (~and [method mask name-method-proc method-proc (~optional method-si)]
-                     (~parse method-dispatch #'(nary mask #'name-method-proc #'method-proc (~? method-si))))
+        ((~or* (~and [method mask name-method-proc method-proc]
+                     (~parse method-dispatch
+                             #'(nary 'mask (quote-syntax name-method-proc) (quote-syntax method-proc))))
                (~and (~or* (~and [method name-method-proc])
                            (~and method
                                  (~parse name-method-proc
