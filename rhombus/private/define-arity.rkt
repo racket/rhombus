@@ -92,28 +92,6 @@
   (define dispatch-id (format-id "~a/dispatch"))
   (define method-id (format-id "~a/method"))
   (define arity-mask (extract-arity-mask rhs))
-  (define method-static-infos
-    (or (and static-infos
-             (cond
-               [(static-info-lookup static-infos #'#%call-results-at-arities)
-                => (lambda (infos)
-                     #`(lambda (n)
-                         (case n
-                           #,@(for/list ([info (in-list (syntax->list infos))]
-                                         #:do [(define-values (n infos)
-                                                 (syntax-parse info
-                                                   [(n infos)
-                                                    (values (sub1 (syntax-e #'n)) #'infos)]))]
-                                         #:when (n . >= . 0))
-                                (with-syntax ([infos infos])
-                                  #`[(#,n) #`infos]))
-                           [else #f])))]
-               [(static-info-lookup static-infos #'#%call-result)
-                => (lambda (infos)
-                     (with-syntax ([infos infos])
-                       #`#`infos))]
-               [else #f]))
-        #'#f))
   (define-values (obj method)
     (syntax-parse rhs
       #:literals (lambda case-lambda)
@@ -131,7 +109,7 @@
                         #`[#,args #,(make-apply id #'obj args)])))]))
   (list* #`(define-for-syntax #,dispatch-id
              (lambda (nary)
-               (nary #,(arithmetic-shift arity-mask -1) #'#,id #'#,method-id #,method-static-infos)))
+               (nary '#,(arithmetic-shift arity-mask -1) (quote-syntax #,id) (quote-syntax #,method-id))))
          #`(define #,method-id
              (lambda (#,obj)
                ;; TODO what should we name the partially applied method?

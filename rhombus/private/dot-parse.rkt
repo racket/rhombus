@@ -3,16 +3,14 @@
                      syntax/parse/pre
                      "statically-str.rkt"
                      "srcloc.rkt")
-         "parse.rkt"
          "parens.rkt"
-         "static-info.rkt"
          (submod "assign.rkt" for-assign))
 
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!))
 
 (define-for-syntax (dot-parse-dispatch k)
-  (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
+  (lambda (lhs dot field-stx tail more-static? success-k fail-k)
     (define (ary mask n-k no-k)
       (define (bad msg)
         (raise-syntax-error #f msg field-stx))
@@ -24,7 +22,6 @@
          (cond
            [(bitwise-bit-set? mask n)
             (success-k (n-k #'(p-tag g ...)
-                            n
                             (lambda (e)
                               (relocate (respan #`(#,lhs args)) e)))
                        #'new-tail)]
@@ -41,31 +38,14 @@
                                 (relocate (respan #`(#,lhs #,field-stx)) e)))
                         tail))]))
 
-    (define (nary mask direct-id id [static-infos #f])
-      (define (wrap n stx)
-        (define maybe-static-infos
-          (if (procedure? static-infos)
-              (static-infos n)
-              static-infos))
-        (if maybe-static-infos
-            (wrap-static-info* stx maybe-static-infos)
-            stx))
+    (define (nary mask direct-id id)
       (ary mask
-           (if (eqv? mask 1)
-               ;; fast path given no args
-               (lambda (no-args n reloc)
-                 (wrap 0
-                       (relocate
-                        (respan #`(#,lhs #,field-stx))
-                        #`(#,direct-id #,lhs))))
-               (lambda (args n reloc)
-                 (wrap n
-                       (let ()
-                         (define-values (proc tail)
-                           (parse-function-call direct-id (list lhs) #`(#,direct-id #,args)
-                                                #:srcloc (reloc #'#false)
-                                                #:static? more-static?))
-                         proc))))
+           (lambda (args reloc)
+             (define-values (proc tail)
+               (parse-function-call direct-id (list lhs) #`(#,dot #,args)
+                                    #:srcloc (reloc #'#false)
+                                    #:static? more-static?))
+             proc)
            ;; return partially applied method
            (lambda (reloc)
              (reloc #`(#,id #,lhs)))))
