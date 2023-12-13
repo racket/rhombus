@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     "tag.rkt")
+                     syntax/parse/pre)
          "syntax-class-clause.rkt"
          (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
@@ -98,7 +97,7 @@
   (define-syntax-class :kind-id
     (pattern id:identifier
              #:when (free-identifier=? (in-syntax-class-clause-space #'id)
-                                       (in-syntax-class-clause-space #'kind)))))
+                                       (syntax-class-clause-quote kind)))))
 
 (define-syntax-class-clause-syntax fields
   (syntax-class-clause-transformer

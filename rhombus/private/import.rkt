@@ -2,41 +2,32 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/symbol
-                     enforest
                      enforest/operator
                      enforest/transformer
                      enforest/property
                      enforest/syntax-local
                      enforest/name-parse
-                     enforest/hier-name-parse
                      enforest/proc-name
                      syntax/private/modcollapse-noctc
                      "srcloc.rkt"
-                     "name-path-op.rkt"
                      "introducer.rkt"
                      "macro-result.rkt"
                      "import-invert.rkt"
                      "tag.rkt"
                      "id-binding.rkt"
-                     "operator-parse.rkt")
+                     "operator-parse.rkt"
+                     (for-syntax racket/base))
          "enforest.rkt"
          "name-root.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
          "definition.rkt"
-         "dot.rkt"
-         (submod "dot.rkt" for-dot-provider)
-         "space.rkt"
          "space-parse.rkt"
          "parens.rkt"
          "import-lower-require.rkt"
          "import-from-namespace.rkt"
          "space-in.rkt"
-         (only-in "implicit.rkt"
-                  #%literal)
-         (only-in "arithmetic.rkt"
-                  [/ rhombus/])
          "dotted-sequence-parse.rkt")
 
 (provide (for-space rhombus/defn
@@ -69,6 +60,7 @@
   (provide (for-syntax import-modifier
                        import-modifier-block
                        in-import-space
+                       impo-quote
                        :import
                        :prefix-op+import+tail
                        :infix-op+import+tail
@@ -91,6 +83,9 @@
   (property import-modifier-block transformer)
 
   (define in-import-space (make-interned-syntax-introducer/add 'rhombus/impo))
+  (define-syntax (impo-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/impo) #'id))]))
 
   (define (check-import-result form proc)
     (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "import" form))
@@ -646,7 +641,7 @@
      (define (already-bound? id as-id)
        (or (bound-identifier=? id as-id)
            (and (identifier-binding id (syntax-local-phase-level) #t #t)
-                (free-identifier=? id as-id))))     
+                (free-identifier=? id as-id))))
      (values
       #`(begin
           ;; non-exposed
@@ -742,7 +737,7 @@
           ;; exposed extensions from outside the namespace
           #,@(for*/list ([key (in-hash-keys (if (syntax-e prefix) expose-ht ht))]
                          #:do [(define id+keep-spaces
-                                 (and (syntax-e prefix) 
+                                 (and (syntax-e prefix)
                                       (hash-ref ht key)))
                                (define keep-spaces
                                  (and id+keep-spaces
@@ -800,7 +795,7 @@
 
 (define-import-syntax #%juxtapose
   (import-infix-operator
-   #'#%juxtapose
+   (impo-quote #%juxtapose)
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -822,29 +817,36 @@
    'left))
 
 (define-import-syntax #%literal
-  (make-module-path-literal-operator import-prefix-operator))
+  (make-module-path-literal-operator import-prefix-operator
+                                     (impo-quote #%literal)))
 
 (define-import-syntax rhombus/
-  (make-module-path-/-operator import-infix-operator))
+  (make-module-path-/-operator import-infix-operator
+                               (impo-quote rhombus/)))
 
 (define-import-syntax rhombus-file
-  (make-module-path-file-operator import-prefix-operator))
+  (make-module-path-file-operator import-prefix-operator
+                                  (impo-quote rhombus-file)))
 
 (define-import-syntax rhombus-lib
-  (make-module-path-lib-operator import-prefix-operator))
+  (make-module-path-lib-operator import-prefix-operator
+                                 (impo-quote rhombus-lib)))
 
 (define-import-syntax rhombus-!
-  (make-module-path-submod-operator import-infix-operator))
+  (make-module-path-submod-operator import-infix-operator
+                                    (impo-quote rhombus-!)))
 
 (define-import-syntax rhombus-self
-  (make-module-path-submod-same-operator import-prefix-operator))
+  (make-module-path-submod-same-operator import-prefix-operator
+                                         (impo-quote rhombus-self)))
 
 (define-import-syntax rhombus-parent
-  (make-module-path-submod-up-operator import-prefix-operator))
+  (make-module-path-submod-up-operator import-prefix-operator
+                                       (impo-quote rhombus-parent)))
 
 (define-for-syntax infix-path-dot
   (import-infix-operator
-   #'rhombus.
+   (impo-quote rhombus.)
    '((default . weaker))
    'macro
    ;; infix
@@ -864,7 +866,7 @@
 (define-import-syntax rhombus.
   (import-prefix+infix-operator
    (import-prefix-operator
-    #'rhombus.
+    (impo-quote rhombus.)
     '((default . weaker))
     'macro
     (lambda (stx)
@@ -903,8 +905,8 @@
   (define-syntax-class :as-id
     #:description "`as`"
     (pattern as-id:identifier
-             #:when (free-identifier=? (in-import-space #'as) (in-import-space #'as-id)))))
-    
+             #:when (free-identifier=? (in-import-space #'as-id) (impo-quote as)))))
+
 (define-import-syntax rename
   (import-modifier-block
    (lambda (req stx)
@@ -1017,7 +1019,7 @@
                                                 #'for-meta)
                                 #'phase
                                 req))]
-       [(form) 
+       [(form)
         (datum->syntax #f (list (relocate+reraw #'form
                                                 #'for-meta)
                                 #'1
@@ -1027,7 +1029,7 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       [(form) 
+       [(form)
         (datum->syntax #f (list (relocate+reraw #'form
                                                 #'for-meta)
                                 #f
@@ -1050,7 +1052,7 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       [(form) 
+       [(form)
         (datum->syntax #f (list (relocate+reraw #'form
                                                 #'only-meta-in)
                                 #f

@@ -12,7 +12,6 @@
          "binding.rkt"
          "pack.rkt"
          "empty-group.rkt"
-         "syntax-class-primitive.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          "repetition.rkt"
          "op-literal.rkt"
@@ -20,8 +19,6 @@
          (only-in "implicit.rkt" #%parens) ; for implicit `parens` in `:esc`
          (for-template "parens.rkt")
          (submod "syntax-object.rkt" for-quasiquote)
-         (only-in "annotation.rkt"
-                  ::)
          "pattern-variable.rkt"
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
@@ -69,8 +66,8 @@
              #:when (or any-id?
                         (not (identifier? #'term))
                         (not (unquote-binding-id? #'term))
-                        (free-identifier=? (in-unquote-binding-space #'_)
-                                           (in-unquote-binding-space #'term)))))
+                        (free-identifier=? (in-unquote-binding-space #'term)
+                                           (unquote-bind-quote _)))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
     (pattern (~seq (~var _ (:$ in-space)) (~var e (:esc dotted? #f)) (~var dots (:... in-space)))
@@ -476,7 +473,7 @@
 
 (define-unquote-binding-syntax #%quotes
   (unquote-binding-prefix-operator
-   #'#%quotes
+   (unquote-bind-quote #%quotes)
    null
    'macro
    (lambda (stx)

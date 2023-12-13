@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/name-parse
                      (rename-in syntax/private/boundmap
                                 [make-module-identifier-mapping make-free-identifier-mapping]
                                 [module-identifier-mapping-get free-identifier-mapping-get]
@@ -13,13 +12,9 @@
                      "introducer.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
-         "parse.rkt"
          "definition.rkt"
          "name-root-ref.rkt"
          "dollar.rkt"
-         ;; because we generate compile-time code:
-         (for-syntax "parse.rkt")
-         "op-literal.rkt"
          "binding.rkt"
          (only-in "unquote-binding-primitive.rkt"
                   #%parens)
@@ -170,7 +165,7 @@
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
     operator-options
     infix-operator-options)
-             
+
   (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym)
     operator-options
     infix-operator-options
@@ -188,8 +183,8 @@
     #:opaque
     #:datum-literals (op)
     (pattern (op $-id)
-             #:when (free-identifier=? (bind-quote $) (in-binding-space #'$-id)
-                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
+             #:when (free-identifier=? (in-binding-space #'$-id) (bind-quote $)
+                                       (add1 (syntax-local-phase-level)) (syntax-local-phase-level))))
 
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:attributes (name extends)
@@ -213,9 +208,9 @@
     #:datum-literals (group parens)
     (pattern id:identifier)
     (pattern (tag::parens (group parsed::identifier-for-parsed))
-             #:when (free-identifier=? (in-unquote-binding-space #'#%parens)
-                                       (in-unquote-binding-space (datum->syntax #'tag '#%parens))
-                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))
+             #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
+                                       (unquote-bind-quote #%parens)
+                                       (add1 (syntax-local-phase-level)) (syntax-local-phase-level))
              #:attr id #'parsed.id))
 
   (define-splicing-syntax-class :operator-syntax-quote
@@ -441,7 +436,7 @@
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
     (pattern (group _::operator-or-identifier-or-$ . _)))
-  
+
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
     #:datum-literals (group)
     (pattern (_::quotes g::identifier-definition-group

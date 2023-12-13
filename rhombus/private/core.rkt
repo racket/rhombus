@@ -19,7 +19,8 @@
                               #%parens)
                      "syntax-parse-config.rkt")
          (only-in "declaration.rkt"
-                  in-decl-space)
+                  in-decl-space
+                  decl-quote)
          racket/interaction-info
          "builtin-dot.rkt"
          "bounce.rkt"
@@ -206,8 +207,8 @@
 
 (define-for-syntax (contigure-runtime-module-mode g)
   (define (rhombus-mod? mod-id)
-    (free-identifier=? (in-decl-space #'rhombus:module)
-                       (in-decl-space mod-id)))
+    (free-identifier=? (in-decl-space mod-id)
+                       (decl-quote rhombus:module)))
   (syntax-parse g
     #:datum-literals (group parsed configure_runtime)
     #:literals (module module*)

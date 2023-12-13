@@ -1,12 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest
                      enforest/operator
-                     enforest/transformer
                      enforest/property
                      enforest/syntax-local
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     (for-syntax racket/base))
          "enforest.rkt")
 
 (begin-for-syntax
@@ -18,6 +17,7 @@
            :unquote-binding
 
            in-unquote-binding-space
+           unquote-bind-quote
 
            current-unquote-binding-kind
 
@@ -38,6 +38,9 @@
     id)
 
   (define in-unquote-binding-space (make-interned-syntax-introducer/add 'rhombus/unquote_bind))
+  (define-syntax (unquote-bind-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/unquote_bind) #'id))]))
 
   (define current-unquote-binding-kind (make-parameter 'term))
 

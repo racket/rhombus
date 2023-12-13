@@ -65,7 +65,7 @@
              (property-out annotation-infix-operator)
 
              identifier-annotation
-             
+
              in-annotation-space
              annot-quote
 
@@ -87,7 +87,7 @@
 
              build-annotated-expression
              raise-unchecked-disallowed))
-  
+
   (provide define-annotation-syntax
            define-annotation-constructor
 
@@ -204,11 +204,11 @@
   (define-syntax-class :annotate-op
     #:attributes (name check?)
     (pattern op::name
-             #:when (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'::))
+             #:when (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
              #:attr check? #'#t
              #:attr name #'op.name)
     (pattern op::name
-             #:when (free-identifier=? (in-binding-space #'op.name) (in-binding-space #':~))
+             #:when (free-identifier=? (in-binding-space #'op.name) (bind-quote :~))
              #:attr check? #'#f
              #:attr name #'op.name))
 
@@ -216,7 +216,7 @@
     #`(#:pred #,predicate #,static-infos))
   (define (annotation-binding-form binding body static-infos)
     #`(#:bind #,binding #,body #,static-infos))
-  
+
   (define (identifier-annotation predicate-stx static-infos)
     (define packed (annotation-predicate-form predicate-stx static-infos))
     (annotation-prefix-operator
@@ -464,7 +464,7 @@
         #:with left::binding-form form
         (values
          (syntax-parse #'t.parsed
-           [c-parsed::annotation-predicate-form 
+           [c-parsed::annotation-predicate-form
             (binding-form
              #'annotation-predicate-infoer
              #`(#,(shrubbery-syntax->string (remove-tail #'t #'t.tail))

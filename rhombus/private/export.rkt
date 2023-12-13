@@ -1,9 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     racket/provide-transform
-                     racket/phase+space
                      syntax/parse/pre
-                     enforest
                      enforest/operator
                      enforest/property
                      enforest/transformer
@@ -15,17 +12,15 @@
                      "name-path-op.rkt"
                      "introducer.rkt"
                      "tag.rkt"
-                     "id-binding.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     (for-syntax racket/base))
          "enforest.rkt"
          "all-spaces-out.rkt"
          "only-spaces-out.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
-         "definition.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
-         "dotted-sequence-parse.rkt"
          (submod "module-path.rkt" for-import-export)
          "space-parse.rkt"
          "parens.rkt")
@@ -50,6 +45,7 @@
 (module+ for-meta
   (provide (for-syntax export-modifier
                        in-export-space
+                       expo-quote
                        :export
                        :export-prefix-op+form+tail
                        :export-infix-op+form+tail
@@ -71,6 +67,9 @@
   (property export-modifier transformer)
 
   (define in-export-space (make-interned-syntax-introducer/add 'rhombus/expo))
+  (define-syntax (expo-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/expo) #'id))]))
 
   (define (check-export-result form proc)
     (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "export" form))
@@ -158,7 +157,7 @@
   (define-syntax-class :as-id
     #:description "`as`"
     (pattern as-id:identifier
-             #:when (free-identifier=? (in-export-space #'as) (in-export-space #'as-id))))
+             #:when (free-identifier=? (in-export-space #'as-id) (expo-quote as))))
 
   (define-syntax-class :renaming
     #:datum-literals (group)
@@ -169,7 +168,7 @@
 
 (define-export-syntax as
   (export-prefix-operator
-   #'rename
+   (expo-quote as)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -181,7 +180,7 @@
 
 (define-export-syntax rename
   (export-prefix-operator
-   #'rename
+   (expo-quote rename)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -204,7 +203,7 @@
        [(_ term ...)
         #:with e::export #'(group term ...)
         #`(except-out #,ex e.parsed)]))))
-     
+
 (define-export-syntax meta
   (export-modifier
    (lambda (ex stx)
@@ -214,14 +213,14 @@
         (unless (exact-integer? ph)
           (raise-syntax-error #f "not a valid phase" stx #'phase))
         (datum->syntax ex (list (syntax/loc #'form for-meta) #'phase ex) ex)]
-       [(form) 
+       [(form)
         (datum->syntax ex (list (syntax/loc #'form for-meta) #'1 ex) ex)]))))
 
 (define-export-syntax meta_label
   (export-modifier
    (lambda (ex stx)
      (syntax-parse stx
-       [(form) 
+       [(form)
         (datum->syntax ex (list (syntax/loc #'form for-meta) #f ex) ex)]))))
 
 (define-export-syntax only_space
@@ -254,7 +253,7 @@
 
 (define-export-syntax names
   (export-prefix-operator
-   #'names
+   (expo-quote names)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -267,7 +266,7 @@
 
 (define-export-syntax all_from
   (export-prefix-operator
-   #'all_from
+   (expo-quote all_from)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -339,7 +338,7 @@
 
 (define-export-syntax all_defined
   (export-prefix-operator
-   #'all_from
+   (expo-quote all_defined)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -353,7 +352,7 @@
 
 (define-export-syntax #%juxtapose
   (export-infix-operator
-   #'#%juxtapose
+   (expo-quote #%juxtapose)
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -372,7 +371,7 @@
 
 (define-export-syntax |.|
   (export-infix-operator
-   #'|.|
+   (expo-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form stx)
