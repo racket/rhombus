@@ -6,7 +6,8 @@
                      enforest/property
                      enforest/proc-name
                      "macro-result.rkt"
-                     "introducer.rkt"))
+                     "introducer.rkt"
+                     (for-syntax racket/base)))
 
 
 (provide define-decl-syntax)
@@ -16,7 +17,8 @@
 
            check-declaration-result
 
-           in-decl-space)
+           in-decl-space
+           decl-quote)
 
   (property declaration-transformer transformer)
 
@@ -24,7 +26,10 @@
     (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "declarations" forms))
     forms)
 
-  (define in-decl-space (make-interned-syntax-introducer/add 'rhombus/decl)))
+  (define in-decl-space (make-interned-syntax-introducer/add 'rhombus/decl))
+  (define-syntax (decl-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/decl) #'id))])))
 
 (define-syntax (define-decl-syntax stx)
   (syntax-parse stx

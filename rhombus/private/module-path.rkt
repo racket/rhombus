@@ -5,18 +5,12 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
-                     enforest/name-root
                      enforest/name-parse
                      "srcloc.rkt"
                      "introducer.rkt"
-                     "name-path-op.rkt"
                      "macro-result.rkt"
-                     "module-path-parse.rkt")
-         "provide.rkt"
-         (only-in "implicit.rkt"
-                  #%literal)
-         (only-in "arithmetic.rkt"
-                  [/ rhombus/])
+                     "module-path-parse.rkt"
+                     (for-syntax racket/base))
          "name-root.rkt")
 
 ;; The syntax of module paths is not meant to be extensible, but it
@@ -51,7 +45,8 @@
                        convert-symbol-module-path)))
 
 (module+ for-meta
-  (provide (for-syntax in-module-path-space)
+  (provide (for-syntax in-module-path-space
+                       modpath-quote)
            (for-space rhombus/namespace
                       modpath)))
 
@@ -60,6 +55,9 @@
   (property module-path-infix-operator infix-operator)
 
   (define in-module-path-space (make-interned-syntax-introducer/add 'rhombus/modpath))
+  (define-syntax (modpath-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/modpath) #'id))]))
 
   (define current-module-path-context (make-parameter 'import))
 
@@ -100,9 +98,9 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-module-path-space #'name) rhs))]))
 
-(define-for-syntax (make-module-path-literal-operator prefix-operator)
+(define-for-syntax (make-module-path-literal-operator prefix-operator name)
   (prefix-operator
-   #'%literal
+   name
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -119,11 +117,12 @@
                 #'tail)]))))
 
 (define-module-path-syntax #%literal
-  (make-module-path-literal-operator module-path-prefix-operator))
+  (make-module-path-literal-operator module-path-prefix-operator
+                                     (modpath-quote #%literal)))
 
-(define-for-syntax (make-module-path-/-operator infix-operator)
+(define-for-syntax (make-module-path-/-operator infix-operator name)
   (infix-operator
-   #'rhombus/
+   name
    '((default . stronger))
    'macro
    (lambda (form1 stx)
@@ -149,7 +148,8 @@
    'left))
 
 (define-module-path-syntax rhombus/
-  (make-module-path-/-operator module-path-infix-operator))
+  (make-module-path-/-operator module-path-infix-operator
+                               (modpath-quote rhombus/)))
 
 (define-for-syntax (make-module-path-string-arg-operator prefix-operator name mp-form-id check)
   (prefix-operator
@@ -167,9 +167,9 @@
                                 (list mp-form-id new-str)))
                 #'tail)]))))
 
-(define-for-syntax (make-module-path-file-operator prefix-operator)
+(define-for-syntax (make-module-path-file-operator prefix-operator name)
   (make-module-path-string-arg-operator
-   prefix-operator #'rhombus-file #'file
+   prefix-operator name #'file
    (lambda (str)
      (unless (path-string? (syntax->datum str))
        (raise-syntax-error (current-module-path-context)
@@ -178,11 +178,12 @@
      str)))
 
 (define-module-path-syntax rhombus-file
-  (make-module-path-file-operator module-path-prefix-operator))
+  (make-module-path-file-operator module-path-prefix-operator
+                                  (modpath-quote rhombus-file)))
 
-(define-for-syntax (make-module-path-lib-operator prefix-operator)
+(define-for-syntax (make-module-path-lib-operator prefix-operator name)
   (make-module-path-string-arg-operator
-   prefix-operator #'rhombus-lib #'lib
+   prefix-operator name #'lib
    (lambda (str)
      (define new-str (module-lib-string-to-lib-string (syntax-e str)))
      (unless new-str
@@ -192,11 +193,12 @@
      new-str)))
 
 (define-module-path-syntax rhombus-lib
-  (make-module-path-lib-operator module-path-prefix-operator))
+  (make-module-path-lib-operator module-path-prefix-operator
+                                 (modpath-quote rhombus-lib)))
 
-(define-for-syntax (make-module-path-submod-operator infix-operator)
+(define-for-syntax (make-module-path-submod-operator infix-operator name)
   (infix-operator
-   (in-module-path-space #'rhombus-!)
+   name
    '((default . stronger))
    'macro
    (lambda (mp stx)
@@ -221,18 +223,19 @@
    'left))
 
 (define-module-path-syntax rhombus-!
-  (make-module-path-submod-operator module-path-infix-operator))
+  (make-module-path-submod-operator module-path-infix-operator
+                                    (modpath-quote rhombus-!)))
 
 (begin-for-syntax
   (define-syntax-class :!
     #:description "submodule separator"
     #:opaque
     (pattern name::name
-             #:when (free-identifier=? (in-module-path-space #'name.name) (in-module-path-space #'rhombus-!)))))
+             #:when (free-identifier=? (in-module-path-space #'name.name) (modpath-quote rhombus-!)))))
 
-(define-for-syntax (make-module-path-submod-same-operator prefix-operator)
+(define-for-syntax (make-module-path-submod-same-operator prefix-operator name)
   (prefix-operator
-   #'rhombus-self
+   name
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -248,11 +251,12 @@
                 #'tail)]))))
 
 (define-module-path-syntax rhombus-self
-  (make-module-path-submod-same-operator module-path-prefix-operator))
+  (make-module-path-submod-same-operator module-path-prefix-operator
+                                         (modpath-quote rhombus-self)))
 
-(define-for-syntax (make-module-path-submod-up-operator prefix-operator)
+(define-for-syntax (make-module-path-submod-up-operator prefix-operator name)
   (prefix-operator
-   #'rhombus-parent
+   name
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -283,7 +287,8 @@
                 #'tail)]))))
 
 (define-module-path-syntax rhombus-parent
-  (make-module-path-submod-up-operator module-path-prefix-operator))
+  (make-module-path-submod-up-operator module-path-prefix-operator
+                                       (modpath-quote rhombus-parent)))
 
 ;; Defines a fake meta namespace that would be exposed if we allowed
 ;; new module-path forms, needed to document the built-in ones
@@ -293,7 +298,7 @@
 
 (define-module-path-syntax rhombus.
   (module-path-prefix-operator
-   (in-module-path-space #'rhombus.)
+   (modpath-quote rhombus.)
    '((default . stronger))
    'macro
    (lambda (stx)

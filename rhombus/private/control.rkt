@@ -174,7 +174,7 @@
 
 (define-syntax throw
   (expression-prefix-operator
-   (quote-syntax throw)
+   (expr-quote throw)
    '((default . weaker))
    'automatic
    (lambda (form1 op-stx)

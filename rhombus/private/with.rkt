@@ -8,7 +8,6 @@
          "parse.rkt"
          "dot-provider-key.rkt"
          "reconstructor.rkt"
-         "dot-property.rkt"
          "parens.rkt"
          "realm.rkt"
          (submod "equal.rkt" for-parse)
@@ -27,7 +26,7 @@
   (struct update-transformer (proc))
   (define (update-transformer-ref v)
     (and (update-transformer? v) v))
-  
+
   (define-syntax-class :update-provider
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
@@ -35,7 +34,7 @@
 (define-syntax with
   (expression-infix-operator
    (expr-quote with)
-   `((,(quote-syntax :=) . stronger)
+   `((,(expr-quote :=) . stronger)
      (default . weaker))
    'macro
    (lambda (orig-form1 tail)

@@ -3,9 +3,6 @@
          (for-syntax racket/base
                      syntax/stx
                      syntax/parse/pre
-                     enforest/name-parse
-                     shrubbery/print
-                     "srcloc.rkt"
                      "pack.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
          (submod "quasiquote.rkt" convert)
@@ -17,17 +14,13 @@
                   &&
                   [:: uq::])
          (only-in "syntax-class-primitive.rkt"
-                  Sequence
-                  Term)
+                  Sequence)
          "dollar.rkt"
          "parse.rkt"
-         "srcloc.rkt"
-         "binding.rkt"
          "unquote-binding.rkt"
          "op-literal.rkt"
          "pack.rkt"
          "parens.rkt"
-         "repetition.rkt"
          (only-in "static-info.rkt"
                   in-static-info-space
                   make-static-infos)
@@ -74,7 +67,7 @@
         [(pat ... _::$-bind (tag::parens))
          ;; a "nothing" group pattern means no further tail
          #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
-                                   (in-unquote-binding-space #'#%parens))
+                                   (unquote-bind-quote #%parens))
          (values #'(pat ...) #f)]
         [(pat ... _::$-bind _:identifier _::...-bind)
          ;; recognize where a tail match would be redundant and always be empty;

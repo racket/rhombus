@@ -2,28 +2,21 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
-                     enforest/name-parse
                      enforest/syntax-local
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
          "pack.rkt"
-         "syntax-class-primitive.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
          (only-in "definition.rkt"
                   in-defn-space)
          (submod "syntax-class-primitive.rkt" for-quasiquote)
-         (only-in "annotation.rkt"
-                  ::)
-         (only-in "repetition.rkt"
-                  in-repetition-space)
          "pattern-variable.rkt"
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "space.rkt"
          "parens.rkt"
          (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
@@ -94,7 +87,7 @@
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
-   (in-unquote-binding-space #'::)
+   (unquote-bind-quote ::)
    null
    'macro
    (lambda (form1 stx)
@@ -121,14 +114,14 @@
              (syntax-parse g
                #:datum-literals (group)
                [(group id:identifier)
-                (free-identifier=? (in-import-space #'id) (in-import-space #'open))
+                (free-identifier=? (in-import-space #'id) (impo-quote open))
                 (when (syntax? open)
                   (raise-syntax-error #f "redundant opening clause" stx #'id))
                 (when (and (hash? open) ((hash-count open) . > . 0))
                   (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'id))
                 #'id]
                [(group field:identifier as:identifier bind:identifier)
-                (free-identifier=? (in-import-space #'id) (in-import-space #'as))
+                (free-identifier=? (in-import-space #'id) (impo-quote as))
                 (when (syntax? open)
                   (raise-syntax-error #f "specific field not allowed after opening clause" stx #'field))
                 (define key (syntax-e #'field))
@@ -428,7 +421,7 @@
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
-   (in-unquote-binding-space #'&&)
+   (unquote-bind-quote &&)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -449,7 +442,7 @@
 
 (define-unquote-binding-syntax \|\|
   (unquote-binding-infix-operator
-   (in-unquote-binding-space #'\|\|)
+   (unquote-bind-quote \|\|)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -488,4 +481,3 @@
         (raise-syntax-error #f
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
-

@@ -28,7 +28,7 @@
 (module+ for-dot-provider
   (begin-for-syntax
     (provide (property-out dot-provider)
-             
+
              in-dot-provider-space
 
              wrap-dot-provider))
@@ -60,7 +60,7 @@
 
 (define-syntax |.|
   (expression-infix-operator
-   (quote-syntax |.|)
+   (expr-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
@@ -80,7 +80,7 @@
 
 (define-repetition-syntax |.|
   (repetition-infix-operator
-   (quote-syntax |.|)
+   (repet-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
@@ -111,10 +111,10 @@
    'left))
 
 ;; annotation, declared explicitly to create a syntax error
-;; for something like `"a" :: String.length()`   
+;; for something like `"a" :: String.length()`
 (define-annotation-syntax |.|
   (annotation-infix-operator
-   (quote-syntax |.|)
+   (annot-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)

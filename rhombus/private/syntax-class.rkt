@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
          "provide.rkt"
@@ -88,7 +87,7 @@
         #:datum-literals (group)
         [(_ (_::block (group form . rest)) ...)
          #:when (for/and ([form (in-list (syntax->list #'(form ...)))])
-                  (free-identifier=? (in-defn-space form) (in-defn-space #'syntax_class)))
+                  (free-identifier=? (in-defn-space form) (defn-quote syntax_class)))
          (define decls
            (for/list ([g (in-list (syntax->list #'((form . rest) ...)))])
              (parse-syntax-class g #:for-together? #t)))
@@ -290,7 +289,7 @@
       [(block (group (~and pat (_::quotes . _))
                      (_::block body ...)))
        (values #'pat #'(body ...))]))
-  
+
   (define in-quotes
     (cond
       [(eq? kind 'multi)

@@ -235,7 +235,7 @@
 
 (define-binding-syntax Array
   (binding-prefix-operator
-   #'Array
+   (bind-quote Array)
    '((default . stronger))
    'macro
    (lambda (stx)
