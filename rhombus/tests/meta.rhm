@@ -1,0 +1,41 @@
+#lang rhombus/and_meta
+
+meta def group = 1
+
+meta:
+  def block_1 = 2
+  def block_2 = 3
+
+check:
+  expr.macro 'show':
+    '[$group, $block_1, $block_2]'
+  show
+  ~is [1, 2, 3]
+
+meta.bridge outer:
+  '#'outer'
+
+check:
+  meta.bridge inner:
+    '#'inner'
+  expr.macro 'show':
+    '[$(syntax_meta.value('outer')),
+      $(syntax_meta.value('inner'))]'
+  show
+  ~is [#'outer, #'inner]
+
+check:
+  namespace direction:
+    export: left
+    meta.bridge left:
+      '#'left'
+  meta.bridge direction.right:
+    '#'right'
+  meta.bridge direction.(<>):
+    '#'both'
+  expr.macro 'show':
+    '[$(syntax_meta.value('direction.left')),
+      $(syntax_meta.value('direction.right')),
+      $(syntax_meta.value('direction.(<>)'))]'
+  show
+  ~is [#'left, #'right, #'both]
