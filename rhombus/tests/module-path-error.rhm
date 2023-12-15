@@ -13,7 +13,7 @@ parameterize { racket.#{error-print-source-location}: #true }:
       import:
         self!nested1 open
         self!nested2 open
-    ~raises values("identifier already required",
+    ~throws values("identifier already required",
                    "self!nested1",
                    "self!nested2")
 
@@ -28,7 +28,7 @@ parameterize { racket.#{error-print-source-location}: #true }:
         import:
           parent!nested1 open
           parent!nested2 open
-    ~raises values("identifier already required",
+    ~throws values("identifier already required",
                    "parent!nested1",
                    "parent!nested2")
 
@@ -44,7 +44,7 @@ parameterize { racket.#{error-print-source-location}: #true }:
           import:
             parent ! ! nested1 open
             parent ! ! nested2 open
-    ~raises values("identifier already required",
+    ~throws values("identifier already required",
                    "parent ! ! nested1",
                    "parent ! ! nested2")
 
@@ -55,6 +55,6 @@ parameterize { racket.#{error-print-source-location}: #true }:
       import:
         "example-e.rhm"!nested open
         file("example-e.rhm") open
-    ~raises values("identifier already required",
+    ~throws values("identifier already required",
                    "\"example-e.rhm\"!nested",
                    "file(\"example-e.rhm\")")

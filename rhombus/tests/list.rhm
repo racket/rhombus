@@ -19,7 +19,7 @@ check:
 
 check:
   List.length({1, 2, 3})
-  ~raises values("contract violation", "expected: List")
+  ~throws values("contract violation", "expected: List")
 
 check:
   [1] :: NonemptyList
@@ -27,7 +27,7 @@ check:
 
 check:
   [] :: NonemptyList
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 block:
   use_static
@@ -88,25 +88,25 @@ block:
 block:
   check:
     1 :: List
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: List.of(Any)
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: List.of(converting(fun (_): #false))
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     [1, 2, 3] :: List.of(converting(fun (n :: Int): n+1))
     ~is [2, 3, 4]
   check:
     1 :: NonemptyList
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: NonemptyList.of(Any)
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: NonemptyList.of(converting(fun (_): #false))
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     [1, 2, 3] :: NonemptyList.of(converting(fun (n :: Int): n+1))
     ~is [2, 3, 4]
@@ -154,7 +154,7 @@ check:
   [1, 2].append() ~is [1, 2]
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
-  [1, 2].append(3) ~raises "contract violation"
+  [1, 2].append(3) ~throws "contract violation"
 
 check:
   match []

@@ -228,21 +228,21 @@ check:
   macro
   | 'prefix': 'ok'
   | 'preeefix': 'oops'
-  ~raises "case operator does not match the initial case operator"
+  ~throws "case operator does not match the initial case operator"
 
 check:
   ~eval
   macro prefix
   | 'prefix': 'ok'
   | 'preeefix': 'oops'
-  ~raises "case operator does not match the declared operator"
+  ~throws "case operator does not match the declared operator"
 
 check:
   ~eval
   macro prefix:
     ~associativity: ~left
   | 'prefix': 'ok'
-  ~raises "associativity specified without infix cases"
+  ~throws "associativity specified without infix cases"
 
 check:
   def f = (macro '() $x':
@@ -257,7 +257,7 @@ check:
   (macro '() $x':
      ~weaker_than: +
      '$x')
-  ~raises "unexpected term"
+  ~throws "unexpected term"
 
 check:
   expr.macro 'two_of $(n :: Name)':

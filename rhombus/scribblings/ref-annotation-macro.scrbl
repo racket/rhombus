@@ -160,7 +160,7 @@
  If a value is tested against a delayed annotation @rhombus(id) before
  it is completed via @rhombus(annot.delayed_complete) at run time, then
  an exception is reported. At compile time, attempting to use the static information
- associated @rhombus(id) raises a syntax error until it is completed via
+ associated @rhombus(id) throws a syntax error until it is completed via
  @rhombus(annot.delayed_complete).
 
  These forms should be used as last resort, because they inherently

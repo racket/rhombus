@@ -393,19 +393,19 @@ check:
 
 check:
   anyargs(~x: 10, ~&{#'~x: 10})
-  ~raises "duplicate keyword"
+  ~throws "duplicate keyword"
 
 check:
   anyargs(~&{#'~x: 10}, ~x: 10)
-  ~raises "duplicate keyword"
+  ~throws "duplicate keyword"
 
 check:
   anyargs(~&{#'~x: 10}, ~&{#'~x: 10})
-  ~raises "duplicate keyword"
+  ~throws "duplicate keyword"
 
 check:
   anyargs(~&{#'~x: 10}, ~&{#'~y: 10}, ~&{#'~x: 10})
-  ~raises "duplicate keyword"
+  ~throws "duplicate keyword"
 
 // ---------------------------
 // Combinations of Positional and Keyword Rest
@@ -517,7 +517,7 @@ block:
 check:
   ~eval
   def {2: two, x: y, ...} = {1: "a"}
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 block:
   def {x, ...} = {1, 2}
@@ -546,4 +546,4 @@ block:
 check:
   ~eval
   def {2, x, ...} = {1}
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"

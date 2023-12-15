@@ -156,7 +156,7 @@ immutable strings.
  Converts a string to a byte string, encoding by UTF-8, Latin-1, or the
  current locale's encoding. The @rhombus(err_byte) argument provides a
  byte to use in place of an encoding error, where @rhombus(#false) means
- that an exception is raised. (No encoding error is possible with
+ that an exception is thrown. (No encoding error is possible with
  @rhombus(String.utf8_bytes), but @rhombus(err_byte) is accepted for
  consistency.)
 

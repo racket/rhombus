@@ -97,16 +97,17 @@
 
  Throws the value of @rhombus(expr) as an exception. Any value can be
  thrown, but typically thrown values are instances of a subclass of
- @rhombus(Exn).
+ @rhombus(Exn, ~class).
 
 }
 
 @doc(
   fun error(message :: ReadableString)
     :: None
-  fun error(who :: ReadableString || Symbol || Identifier || Operator || False,
-            message :: ReadableString)
-    :: None
+  fun error(
+    who :: maybe(ReadableString || Symbol || Identifier || Operator),
+    message :: ReadableString
+  ) :: None
 ){
 
  Throws the @rhombus(Exn.Fail, ~class) exception with @rhombus(message) as the

@@ -44,7 +44,7 @@ block:
     ~is 101
   check:
     add1("oops")
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Int",
     )
@@ -98,7 +98,7 @@ fun size2 :: Int:
 check:
   size2(10) ~is 10
   size2(Posn(1, 2)) ~is 3
-  size2("wrong") ~raises "does not satisfy annotation"
+  size2("wrong") ~throws "does not satisfy annotation"
 
 block:
   use_static
@@ -154,7 +154,7 @@ block:
       values(0, "oops")
     def (x, y) = f()
     10
-    ~raises values(
+    ~throws values(
       "results do not satisfy annotation",
       "(Int, Int)"
     )
@@ -162,7 +162,7 @@ block:
     fun f() :: (Int, Int):
       0
     f()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "(Int, Int)"
     )
@@ -170,7 +170,7 @@ block:
     fun f() :: Int:
       values(0, "oops")
     f()
-    ~raises values(
+    ~throws values(
       "results do not satisfy annotation",
       "Int"
     )
@@ -186,13 +186,13 @@ block:
       def x = f()
       def (a, b) = x
       b[0]
-    ~raises "specialization not known"
+    ~throws "specialization not known"
 
 check:
   ~eval
   fun f(x = "hello" :: String):
     "ok"
-  ~raises "immediate annotation operator not allowed in default-value expression"
+  ~throws "immediate annotation operator not allowed in default-value expression"
 
 check:
   use_static
@@ -207,7 +207,7 @@ check:
 check:
   ~eval
   fun (x where x = 1 = 2): 10
-  ~raises "multiple immediate equals not allowed in this group"
+  ~throws "multiple immediate equals not allowed in this group"
 
 // check generation of function calls
 block:

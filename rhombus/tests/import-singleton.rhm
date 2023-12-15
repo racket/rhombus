@@ -13,7 +13,7 @@ check:
       export: exint
       def exint = 10  
     import: .n.exint meta
-  ~raises "cannot shift phase of namespace content"
+  ~throws "cannot shift phase of namespace content"
 
 check:
   ~eval
@@ -23,7 +23,7 @@ check:
       def exint = 10  
     import: .n.exint:
               except: exint
-  ~raises "identifier to exclude is not nested within the imported name"
+  ~throws "identifier to exclude is not nested within the imported name"
 
 check:
   import: .n.exint
@@ -42,12 +42,12 @@ check:
 check:
   import: .n.exint
   def exint = "10"
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   import: .n.exint
   "10" :: exint
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   import: .n:
@@ -92,7 +92,7 @@ check:
       .n.exint:
         only_space: expr
     10 :: exint
-  ~raises "not bound as an annotation"
+  ~throws "not bound as an annotation"
 
 check:
   import:

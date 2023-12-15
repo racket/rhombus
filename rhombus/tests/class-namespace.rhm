@@ -22,7 +22,7 @@ check:
   class Posn(x, y):
     def x = 10
     export: x
-  ~raises "conflicts with field name"
+  ~throws "conflicts with field name"
 
 check:
   ~eval
@@ -30,7 +30,7 @@ check:
     method dist(): x+y
     def dist = 10
     export: dist
-  ~raises "conflicts with method name"
+  ~throws "conflicts with method name"
 
 check:
   ~eval
@@ -38,4 +38,4 @@ check:
     method zero(): 0
     def zero = 0
     export: zero
-  ~raises "conflicts with method name"
+  ~throws "conflicts with method name"

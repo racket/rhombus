@@ -20,15 +20,15 @@ check:
 
 check:
   Foo([1])
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   Bar(1)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   Foo([Foo([])])
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   class.together:

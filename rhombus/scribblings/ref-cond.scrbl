@@ -67,7 +67,7 @@
  clause.
 
  If no @rhombus(clause_test_expr) produces a true value and there is no
- @rhombus(~else) clause, a run-time exception is raised.
+ @rhombus(~else) clause, a run-time exception is thrown.
 
 }
 

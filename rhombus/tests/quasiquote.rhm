@@ -92,39 +92,39 @@ check:
 check:
   ~eval
   'x $'
-  ~raises "misplaced escape"
+  ~throws "misplaced escape"
 
 check:
   ~eval
   'x
    $'
-  ~raises "misplaced escape"
+  ~throws "misplaced escape"
 
 check:
   ~eval
   '... x'
-  ~raises "misplaced repetition"
+  ~throws "misplaced repetition"
 
 check:
   ~eval
   '...
    x'
-  ~raises "misplaced repetition"
+  ~throws "misplaced repetition"
 
 check:
   ~eval
   def '0 $('1; 2') 3' = '0 1; 2'
-  ~raises "multi-group pattern incompatible with term context"
+  ~throws "multi-group pattern incompatible with term context"
 
 check:
   ~eval
   def '0 $('1; 2')' = '0 1; 2'
-  ~raises "multi-group pattern incompatible with group context"
+  ~throws "multi-group pattern incompatible with group context"
 
 check:
   ~eval
   def '(0, $('1; 2'))' = '(0, 1, 2)'
-  ~raises "multi-group pattern incompatible with group context"
+  ~throws "multi-group pattern incompatible with group context"
 
 check:
   '1 $('')'
@@ -133,7 +133,7 @@ check:
 check:
   def g = ''
   '3 + (1, $g $g)'
-  ~raises "generated an empty group"
+  ~throws "generated an empty group"
 
 check:
   def ['(($b_var_id), ...)', ...]: ['((1), (2 2), (3))', '((4))']
@@ -171,40 +171,40 @@ block:
   check:
     '$b $a' ~prints_like ':« 1 » | 12 | 13'
     'head $b $a' ~prints_like 'head:« 1 » | 12 | 13'
-    'apple $[a, '8']' ~raises "alternatives not allowed in non-tail position of a group"
-    'apple $[b, '8']' ~raises "block not allowed in non-tail position of a group"
-    '$b $b' ~raises "block not allowed in non-tail position of a group"
-    'head $b $b' ~raises "block not allowed in non-tail position of a group"
-    '$a $a' ~raises "alternatives not allowed in non-tail position of a group"
-    'head $a $a' ~raises "alternatives not allowed in non-tail position of a group"
-    '$[b, b]' ~raises "block not allowed in non-tail"
-    'head $[b, b]' ~raises "block not allowed in non-tail"
-    'head $[a, a]' ~raises "alternatives not allowed in non-tail position of a group"
-    '$ts ...' ~raises "block not allowed in non-tail position of a group"
-    'head $ts ...' ~raises "block not allowed in non-tail position of a group"
-    '$[ts] ...' ~raises "block not allowed in non-tail position of a group"
+    'apple $[a, '8']' ~throws "alternatives not allowed in non-tail position of a group"
+    'apple $[b, '8']' ~throws "block not allowed in non-tail position of a group"
+    '$b $b' ~throws "block not allowed in non-tail position of a group"
+    'head $b $b' ~throws "block not allowed in non-tail position of a group"
+    '$a $a' ~throws "alternatives not allowed in non-tail position of a group"
+    'head $a $a' ~throws "alternatives not allowed in non-tail position of a group"
+    '$[b, b]' ~throws "block not allowed in non-tail"
+    'head $[b, b]' ~throws "block not allowed in non-tail"
+    'head $[a, a]' ~throws "alternatives not allowed in non-tail position of a group"
+    '$ts ...' ~throws "block not allowed in non-tail position of a group"
+    'head $ts ...' ~throws "block not allowed in non-tail position of a group"
+    '$[ts] ...' ~throws "block not allowed in non-tail position of a group"
 
 
 check:
   match '1 2: a b'
   | '$_ ...: a': "ok"
-  ~raises "unexpected term" // not "expected more terms"
+  ~throws "unexpected term" // not "expected more terms"
 check:
   match '1 2: a b'
   | '$_ ... $_ ...: a': "ok"
-  ~raises "unexpected term" // not "expected more terms"
+  ~throws "unexpected term" // not "expected more terms"
 check:
   match '1 2: a b'
   | '$_ ... 1 ...: a': "ok"
-  ~raises "unexpected term" // not "expected more terms"
+  ~throws "unexpected term" // not "expected more terms"
 check:
   match '1 2 | a b'
   | '$_ ... | a': "ok"
-  ~raises "unexpected term" // not "expected more terms"
+  ~throws "unexpected term" // not "expected more terms"
 check:
   match '1 2 | a b'
   | '$_ ...: a': "ok"
-  ~raises "expected a `:` block"
+  ~throws "expected a `:` block"
 
 check:
   match '(1)':

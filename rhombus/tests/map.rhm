@@ -22,7 +22,7 @@ check:
 
 check:
   Map.length({1, 2, 3})
-  ~raises values("contract violation", "expected: ReadableMap")
+  ~throws values("contract violation", "expected: ReadableMap")
 
 block:
   use_static
@@ -66,16 +66,16 @@ block:
 block:
   check:
     1 :: Map
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: Map.of(Any, Any)
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: Map.of(
       converting(fun (_): #false),
       converting(fun (_): #false)
     )
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     {1: 2, 2: 3, 3: 4} :: Map.of(
       converting(fun (n :: Int): n+1),
@@ -121,7 +121,7 @@ block:
          [3, [2, [1, []]]]]
   check:
     {&"oops"}
-    ~raises "not an immutable map"
+    ~throws "not an immutable map"
 
 block:
   def [x, ...] = [1, 2, 3]
@@ -200,8 +200,8 @@ block:
     use_dynamic
     check dynamic({1: "a", 2: "b"}).remove(1) ~is {2: "b"}
     check dynamic({1: "a", 2: "b"}).remove(3) ~is {1: "a", 2: "b"}
-    check MutableMap{1: "a", 2: "b"}.remove ~raises "no such field or method"
-    check MutableMap{1: "a", 2: "b"}.remove(1) ~raises "no such field or method"
+    check MutableMap{1: "a", 2: "b"}.remove ~throws "no such field or method"
+    check MutableMap{1: "a", 2: "b"}.remove(1) ~throws "no such field or method"
     
 block:
   use_static
@@ -222,8 +222,8 @@ block:
     use_dynamic
     check dynamic(m).delete(1) ~is #void
     check m ~is_now MutableMap{2: "b"}
-    check {1: "a", 2: "b"}.delete ~raises "no such field or method"
-    check {1: "a", 2: "b"}.delete(1) ~raises "no such field or method"
+    check {1: "a", 2: "b"}.delete ~throws "no such field or method"
+    check {1: "a", 2: "b"}.delete(1) ~throws "no such field or method"
 
 block:
   let m = MutableMap{1: "a", 2: "b"}
@@ -264,4 +264,4 @@ check:
     {#'foo: "foo", 1: "1", Box(2): "Box(2)"}
   for ((key, val): map):
     println(key.length() + val.length())
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"

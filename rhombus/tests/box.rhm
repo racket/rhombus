@@ -54,23 +54,23 @@ check:
 
 check:
   10 :: Box
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   10 :: Box.now_of(Any)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   10 :: Box.later_of(Any)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   10 :: Box.later_of(converting(fun (_): #false))
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   Box(1) :: Box.now_of(String)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   Box(1) :: Box.later_of(String)
@@ -90,7 +90,7 @@ check:
 check:
   def bx :: Box.later_of(String) = Box(1)
   bx.value
-  ~raises values(
+  ~throws values(
     "current value does not satisfy the box's annotation",
     "String",
   )
@@ -99,7 +99,7 @@ check:
   def bx :: Box.later_of(String) = Box("apple")
   bx.value
   bx.value := #'oops
-  ~raises values(
+  ~throws values(
     "new value does not satisfy the box's annotation",
     "String",
   )
@@ -107,7 +107,7 @@ check:
 check:
   ~eval
   Box(Box("apple")) :: Box.now_of(Box.later_of(String))
-  ~raises "converter annotation not supported for value"
+  ~throws "converter annotation not supported for value"
 
 check:
   use_static
@@ -120,7 +120,7 @@ check:
   use_static
   def bx :: Box.now_of(String) = Box("apple")
   bx.value ++ "jack"
-  ~raises "specialization not known"
+  ~throws "specialization not known"
 
 check:
   def b = Box(0)

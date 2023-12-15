@@ -220,7 +220,7 @@ check:
   for Array ~length 2:
     each i: 3..7
     i
-  ~raises "index is out of range"
+  ~throws "index is out of range"
 
 check:
   def mutable accum = []
@@ -274,7 +274,7 @@ check:
   for:
     each x: dynamic([1])
     x
-  ~raises "no specific iteration implementation available"
+  ~throws "no specific iteration implementation available"
 
 check:
   for Set:
@@ -337,42 +337,42 @@ check:
   use_static
   for ((key, val): ([Box(1), Box(2), Box(3)] :: List.of(Box))):
     key.value
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
   for ((key, val): ([Box(1), Box(2), Box(3)] :: List.of(Box))):
     val.value
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
   for ((key, val): ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
     key.value
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
   for ((key, val): ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
     val.value
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
   for (val: ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
     val.value
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
   for (val: ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
     val.length()
-  ~raises "no such field or method (based on static information)"
+  ~throws "no such field or method (based on static information)"
 
 // check `let` across clause boundary
 check:

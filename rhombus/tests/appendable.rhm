@@ -43,13 +43,13 @@ check:
   (A3() ++ A3()).v ~is 3
   (A3() :: I3) ++ A3() ~is O(3)
   (A4() ++ A4()).v ~is 4
-  A() ++ B() ~raises "cannot append an appendable object and other value"
-  B() ++ A() ~raises "cannot append an appendable object and other value"
+  A() ++ B() ~throws "cannot append an appendable object and other value"
+  B() ++ A() ~throws "cannot append an appendable object and other value"
 
 block:
   use_dynamic
   check:
-    dynamic(A()) ++ B() ~raises "cannot append an appendable object and other value"
+    dynamic(A()) ++ B() ~throws "cannot append an appendable object and other value"
 
 check:
   A() is_a Appendable ~is #true
@@ -77,7 +77,7 @@ block:
         0
     A()    
   check:
-    gen() ++ gen() ~raises "cannot append an appendable object and other value"
+    gen() ++ gen() ~throws "cannot append an appendable object and other value"
     dynamic("a") ++ "b" ~is "ab"
     dynamic([]) ++ ["a"] ~is ["a"]
 

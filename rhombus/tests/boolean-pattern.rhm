@@ -21,7 +21,7 @@ check:
   class Posn(x, y)
   def z && Posn(x, y) = dynamic(Posn(1, 2))
   z.x
-  ~raises values("no such field or method", "static")
+  ~throws values("no such field or method", "static")
 
 block:
   fun try(v):

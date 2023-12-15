@@ -24,7 +24,7 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: ex_a.ExList.of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 block:
   import:
@@ -50,7 +50,7 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: ExList.of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 block:
   import:
@@ -70,7 +70,7 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: ExList.of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 block:
   import:
@@ -87,7 +87,7 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: ExList.of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 block:
   import:
@@ -97,7 +97,7 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 block:
   import:
@@ -114,5 +114,5 @@ block:
     ~is [1, 2, 3]
   check:
     ([1, 2, 3] :: XList.of(String))
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 

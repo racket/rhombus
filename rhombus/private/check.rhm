@@ -18,9 +18,9 @@ meta:
   | '~is_a'
   | '~prints_like'
   | '~prints'
-  | '~raises'
+  | '$('~throws' || '~raises')' // TEMP remove the alias at some point
   | '~matches'
-      
+
   syntax_class Result:
     kind: ~sequence
   | '$(mode :: ResultMode): $body':
@@ -117,7 +117,7 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         !exn_msg && (got == expected)
     | #'~is_now:
         !exn_msg && (got is_now expected)
-    | #'~raises:
+    | #'~throws || #'~raises:
         exn_msg && does_contain_each(expected, exn_msg)
     | #'~completes:
         !exn_msg
@@ -141,10 +141,10 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         +& (exn_msg && ("exception " +& reindent_exn_msg(exn_msg, 17))
               || output && to_string(output, ~mode: #'expr)
               || values_str(got))
-        +&  "\n"
+        +& "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"
-                              | #'~raises: "exception " +& values_str(expected)
+                              | #'~throws || #'~raises: "exception " +& values_str(expected)
                               | #'~matches: "matching " +& expected_thunk(#false)
                               | #'~is_a: "satisfying " +& expected_thunk(#false)
                               | #'~prints: "output " +& values_str(expected)

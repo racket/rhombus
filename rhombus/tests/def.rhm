@@ -30,9 +30,9 @@ check:
 check:
   ~eval
   def x where x = 1 = 2
-  ~raises "multiple immediate equals not allowed in this group"
+  ~throws "multiple immediate equals not allowed in this group"
 
 check:
   ~eval
   def | x = 2
-  ~raises "alternatives are not supported here"
+  ~throws "alternatives are not supported here"

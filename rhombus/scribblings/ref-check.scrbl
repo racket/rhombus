@@ -33,7 +33,7 @@
     ~eval
     ~eval: $evaluator_expr
     #,(epsilon)
-  
+
   grammar expected_result:
     ~is $expected_expr
     ~is: $expected_body; ...
@@ -47,13 +47,13 @@
     ~matches: $expected_bind; ...
     ~prints $expected_expr
     ~prints: $expected_body; ...
-    ~raises $expected_expr
-    ~raises: $expected_body; ...
+    ~throws $expected_expr
+    ~throws: $expected_body; ...
     ~completes
 ){
 
  Evaluates the @rhombus(body) or @rhombus(expr) form, catching any
- exception that is raised, then determines whether the result or
+ exception that is thrown, then determines whether the result or
  exception matches @rhombus(expected_result):
 
 @itemlist(
@@ -83,10 +83,10 @@
   @rhombus(Port.current_output()) to a string, then checks that there is
   no exception and the output string is the same as the expected result.}
 
- @item{In @rhombus(~raises) mode, obtains one or more strings (as
+ @item{In @rhombus(~throws) mode, obtains one or more strings (as
   multiple values) by evaluating @rhombus(expected_body) or
   @rhombus(expected_expr), then checks that original @rhombus(body) or
-  @rhombus(expr) raised an exception and that each string is contained in
+  @rhombus(expr) threw an exception and that each string is contained in
   the exception message.}
 
  @item{In @rhombus(~completes) mode, checks merely that the original
@@ -140,19 +140,19 @@
     ~prints_like '2'
   check:
     1+"a"
-    ~raises "expected: Number"
+    ~throws "expected: Number"
   ~error:
     check:
       + // oops: causes syntax error for overall `check` form
-      ~raises "infix operator without preceding argument"    
+      ~throws "infix operator without preceding argument"
   check:
     ~eval // lets `check` confirm the expected syntax error
     +
-    ~raises "infix operator without preceding argument"    
+    ~throws "infix operator without preceding argument"
   check:
     ~eval
     +
-    ~raises values("+", "infix operator without preceding argument")
+    ~throws values("+", "infix operator without preceding argument")
 )
 
 }

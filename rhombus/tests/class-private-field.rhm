@@ -13,7 +13,7 @@ check:
       method get_color():
         color
     Posn(1, 2).color
-  ~raises values("no such field or method", "static")
+  ~throws values("no such field or method", "static")
 
 check:
   ~eval
@@ -22,7 +22,7 @@ check:
       method get_color():
         color
     Posn(1, 2).color
-  ~raises "no such field"
+  ~throws "no such field"
 
 check:
   class Posn(x, y, private color = "blue"):

@@ -109,7 +109,7 @@ block:
   check:
     ** 10 ~is "10"
     ** "apple" ~is "apple"
-    ** #'sym ~raises "no matching case for arguments"
+    ** #'sym ~throws "no matching case for arguments"
 
 // multi-case infix operator
 block:
@@ -120,7 +120,7 @@ block:
   check:
     1 ** 10 ~is 10
     0 ** "apple" ~is 0
-    2 ** 10 ~raises "no matching case for arguments"
+    2 ** 10 ~throws "no matching case for arguments"
 
 // multi-case prefix and infix
 block:
@@ -133,10 +133,10 @@ block:
   check:
     ** 10 ~is "10"
     ** "apple" ~is "apple"
-    ** #'sym ~raises "no matching case for arguments"
+    ** #'sym ~throws "no matching case for arguments"
     1 ** 10 ~is 10
     0 ** "apple" ~is 0
-    2 ** 10 ~raises "no matching case for arguments"
+    2 ** 10 ~throws "no matching case for arguments"
 
 
 // multi-case postfix
@@ -154,7 +154,7 @@ check:
   operator
   | 0 ** a: 0
   | 1 **: 1
-  ~raises "combination of infix and postfix cases not allowed"
+  ~throws "combination of infix and postfix cases not allowed"
 
 check:
   ~eval
@@ -162,7 +162,7 @@ check:
   | (0 ** a): 0
   | (** a): 0
   | (1 **): 1
-  ~raises "combination of infix and postfix cases not allowed"
+  ~throws "combination of infix and postfix cases not allowed"
 
 check:
   ~eval
@@ -170,27 +170,27 @@ check:
   | 0 ** a: 0
   | ** a: 0
   | 1 **: 1
-  ~raises "combination of infix and postfix cases not allowed"
+  ~throws "combination of infix and postfix cases not allowed"
 
 check:
   ~eval
   operator
   | ** **: 0
-  ~raises "expected non-operator"
+  ~throws "expected non-operator"
 
 check:
   ~eval
   operator
   | (0 ** a): 0
   | (1 ??): 1
-  ~raises "case operator does not match the initial case operator"
+  ~throws "case operator does not match the initial case operator"
 
 check:
   ~eval
   operator **:
   | (0 ** a): 0
   | (1 ??): 1
-  ~raises "case operator does not match the declared operator"
+  ~throws "case operator does not match the declared operator"
 
 check:
   ~eval
@@ -199,7 +199,7 @@ check:
   | (1 ** b):
       ~weaker_than: +
       1
-  ~raises "precedence option not allowed after first infix case"
+  ~throws "precedence option not allowed after first infix case"
 
 check:
   ~eval
@@ -208,7 +208,7 @@ check:
   | (1 **):
       ~weaker_than: +
       1
-  ~raises "precedence option not allowed after first postfix case"
+  ~throws "precedence option not allowed after first postfix case"
 
 check:
   ~eval
@@ -217,7 +217,7 @@ check:
   | (** 1):
       ~weaker_than: +
       1
-  ~raises "precedence option not allowed after first prefix case"
+  ~throws "precedence option not allowed after first prefix case"
 
 check:
   ~eval
@@ -225,7 +225,7 @@ check:
     ~associativity: ~none
   | (** 0): 0
   | (** 1): 1
-  ~raises "associativity specified without infix cases"
+  ~throws "associativity specified without infix cases"
 
 check:
   ~eval
@@ -234,7 +234,7 @@ check:
   | (1 ** b):
       ~associativity: ~left
       1
-  ~raises "associativity option not allowed after first infix case"
+  ~throws "associativity option not allowed after first infix case"
 
 // check postfix operator as repetition
 check:

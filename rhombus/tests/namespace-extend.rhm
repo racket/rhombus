@@ -182,7 +182,7 @@ check:
     namespace N
     import: .N as n
     n.y
-  ~raises "identifier not provided"
+  ~throws "identifier not provided"
 
 // Same, for macro
 check:
@@ -194,7 +194,7 @@ check:
     namespace N
     import: .N as n
     n.z 0
-  ~raises "identifier not provided"
+  ~throws "identifier not provided"
 
 //No shadowing => extension is visible
 check:

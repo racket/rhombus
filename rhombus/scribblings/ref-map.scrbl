@@ -279,7 +279,7 @@ in an unspecified order.
     key_expr: block expr
     val_expr: block expr
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
-  fun MutableMap(key :: Any, value:: Any, ...) :: MutableMap
+  fun MutableMap(key :: Any, value :: Any, ...) :: MutableMap
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
@@ -355,7 +355,9 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: ReadableMap, try_sort = #false) :: List
+  fun Map.keys(map :: ReadableMap,
+               try_sort :: Any = #false)
+    :: List
 ){
 
  Returns the keys of @rhombus(map) in a list.  If @rhombus(try_order)
@@ -383,7 +385,11 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.get(map :: ReadableMap, key, default = #,(@rhombus(raise_error, ~var)))
+  fun Map.get(map :: ReadableMap,
+              key :: Any,
+              default :: Any:
+                fun (): throw Exn.Fail.Contract(....))
+    :: Any
 ){
 
  Equivalent to @rhombus(map[key]) when @rhombus(default) is not
@@ -404,7 +410,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.remove(map :: Map, key) :: Map
+  fun Map.remove(map :: Map, key :: Any) :: Map
 ){
 
  Returns a map like @rhombus(map), but without a mapping for
@@ -419,7 +425,7 @@ in an unspecified order.
 
 
 @doc(
-  fun MutableMap.delete(map :: MutableMap, key) :: Void
+  fun MutableMap.delete(map :: MutableMap, key :: Any) :: Void
 ){
 
  Changes @rhombus(map) to remove a mapping for @rhombus(key), if any.
@@ -436,7 +442,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.has_key(map :: ReadableMap, key) :: Boolean
+  fun Map.has_key(map :: ReadableMap, key :: Any) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in

@@ -24,7 +24,7 @@ expr.macro 'one_check:
        ~eval
        use_static
        $dotted_id ... (~bad_keyword: 10, '$arg', ...)
-       ~raises values("keyword argument not recognized by called function", "static")
+       ~throws values("keyword argument not recognized by called function", "static")
      $(match '$arg; ...'
        | '$arg; ...; $last; $(bound_as expr_meta.space: '...')':
            'check_wrong_fewer:
@@ -54,4 +54,4 @@ expr.macro 'check_wrong_count:
      ~eval
      use_static
      $dotted_id ... ('$arg', ...)
-     ~raises "wrong number of arguments in function call"'
+     ~throws "wrong number of arguments in function call"'

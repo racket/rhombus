@@ -28,17 +28,17 @@ block:
   | f([]): 0
   | f(): 2
   check:
-    f([1]) ~raises "f: no matching case for arguments"
+    f([1]) ~throws "f: no matching case for arguments"
 
 block:
   fun f([] = [1]): 0
   check:
-    f() ~raises "f: argument does not satisfy annotation"
+    f() ~throws "f: argument does not satisfy annotation"
 
 block:
   fun f([] = [], & rst): rst
   check:
-    f("a") ~raises "f: argument does not satisfy annotation"
+    f("a") ~throws "f: argument does not satisfy annotation"
 
 block:
   /*

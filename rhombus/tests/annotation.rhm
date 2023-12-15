@@ -8,7 +8,7 @@ check:
 check:
   ~eval
   "a" :: PosInt . count()
-  ~raises "operator precedence"
+  ~throws "operator precedence"
 
 check:
   1 is_a Function ~is #false

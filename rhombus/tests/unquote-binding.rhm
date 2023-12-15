@@ -44,7 +44,7 @@ check:
   def '$('1' || '2')' = '1' ~completes
   def '$('1' || '2')' = '2' ~completes
   def '$('1' || '2') ...' = '1 2 1' ~completes
-  def '$('1' || '2') ...' = '1 2 1 3' ~raises "does not satisfy annotation"
+  def '$('1' || '2') ...' = '1 2 1 3' ~throws "does not satisfy annotation"
 
 block:
   def a = "top a"
@@ -131,7 +131,7 @@ block:
     ~prints_like '801'
   check:
     get_area_code('+ 65 (801) 555 - 1212')
-    ~raises "argument does not satisfy annotation"
+    ~throws "argument does not satisfy annotation"
 
 check:
   expr.macro 'm':

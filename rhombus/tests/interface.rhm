@@ -56,7 +56,7 @@ check:
   class LoneRanger():
     implements Shape
     implements Cowboy
-  ~raises "method supplied by multiple superinterfaces"
+  ~throws "method supplied by multiple superinterfaces"
 
 // conflict resolved
 check:
@@ -148,7 +148,7 @@ check:
       private implements Adder
       private override total(): x
     Sum(20).total
-  ~raises "no such field"
+  ~throws "no such field"
 
 check:
   ~eval
@@ -160,7 +160,7 @@ check:
       private implements Adder
       private override total(): x
     Sum(20).total
-  ~raises values("no such field or method", "static")
+  ~throws values("no such field or method", "static")
 
 // implement an interface both privately and publicly => public
 check:
@@ -192,7 +192,7 @@ check:
   def m = MilkShed()
   check:
     (m :~ Stool).seat()
-    ~raises "Stool"
+    ~throws "Stool"
   [m is_a Stool,
    m is_a _Stool,
    m is_a Cow,
@@ -267,7 +267,7 @@ check:
     extends A
   class C1():
     implements: A B
-  ~raises "method supplied by multiple superinterfaces and not overridden"
+  ~throws "method supplied by multiple superinterfaces and not overridden"
 check:
   ~eval
   interface A:
@@ -276,7 +276,7 @@ check:
     method m(): 1    
   class C1():
     implements: B A
-  ~raises "method supplied by multiple superinterfaces and not overridden"
+  ~throws "method supplied by multiple superinterfaces and not overridden"
 check:
   ~eval
   interface A:
@@ -287,7 +287,7 @@ check:
   class C2():
     extends C1
     implements: A
-  ~raises "method supplied by multiple classes or superinterfaces and not overridden"
+  ~throws "method supplied by multiple classes or superinterfaces and not overridden"
 check:
   ~eval
   interface A:
@@ -298,7 +298,7 @@ check:
   class C2():
     extends C1
     implements: A
-  ~raises "method supplied by multiple classes or superinterfaces and not overridden"
+  ~throws "method supplied by multiple classes or superinterfaces and not overridden"
 
 block:
   import rhombus/meta open
@@ -313,7 +313,7 @@ block:
   check:
     use_dynamic
     dynamic(Posn(1, 2)).sevens
-    ~raises "dynamic use of dot syntax"
+    ~throws "dynamic use of dot syntax"
 
 check:
   ~eval
@@ -323,7 +323,7 @@ check:
       '77'
   class Posn(sevens):
     implements Point
-  ~raises "field name already in interface as dot syntax"
+  ~throws "field name already in interface as dot syntax"
 
 check:
   ~eval
@@ -336,7 +336,7 @@ check:
       '#false'
   class O():
     implements: A B
-  ~raises "dot syntax supplied by multiple superinterfaces"
+  ~throws "dot syntax supplied by multiple superinterfaces"
 
 check:
   ~eval
@@ -351,7 +351,7 @@ check:
   class O():
     implements A
     extends B
-  ~raises "dot syntax supplied by multiple classes or superinterfaces"
+  ~throws "dot syntax supplied by multiple classes or superinterfaces"
 
 check:
   ~eval
@@ -364,7 +364,7 @@ check:
       #false
   class O():
     implements: A B
-  ~raises "name supplied as both method and dot syntax by superinterfaces"
+  ~throws "name supplied as both method and dot syntax by superinterfaces"
 
 check:
   ~eval
@@ -379,4 +379,4 @@ check:
   class O():
     implements A
     extends B
-  ~raises "name supplied as both method and dot syntax by classes or superinterfaces"
+  ~throws "name supplied as both method and dot syntax by classes or superinterfaces"

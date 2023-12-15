@@ -11,7 +11,7 @@ check:
 
 check:
   "no" :: AlsoPosn
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 bind.macro 'AlsoPosn ($x, $y)':
   'Posn($x, $y)'
@@ -25,7 +25,7 @@ block:
   annot.delayed_declare Forward
   check:
     10 :: Forward
-    ~raises "delayed annoation is not yet completed"
+    ~throws "delayed annoation is not yet completed"
   annot.delayed_complete Forward: Int
   check:
     10 :: Forward
@@ -39,7 +39,7 @@ block:
     fun f(v): v :: Forward
   check:
     f.f(10)
-    ~raises "delayed annoation is not yet completed"
+    ~throws "delayed annoation is not yet completed"
   annot.delayed_complete f.Forward: Int
   check:
     f.f(10)
@@ -51,7 +51,7 @@ check:
   import: rhombus/meta open
   annot.delayed_declare Forward
   fun (): (10 :: Forward).x
-  ~raises "static information needed before completed"
+  ~throws "static information needed before completed"
 
 check:
   ~eval
