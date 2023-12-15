@@ -29,7 +29,10 @@
          expected6
 
          input7
-         expected7)
+         expected7
+
+         input8
+         expected8)
 
 ;; input1 is split into parts to accomodate O(n^2) tests
 (define input1s
@@ -2258,7 +2261,7 @@ INPUT
  '
 
 INPUT
-)
+  )
 
 (define expected7
   '(top
@@ -2272,3 +2275,11 @@ INPUT
     (group (quotes (group a (quotes (group nested)) b)))
     (group (quotes (group a (quotes (group nested)) b)))
     (group (quotes (group a (quotes (group nested)) b)))))
+
+(define input8
+  "1 // comment\r\n2")
+
+(define expected8
+  '(top
+    (group 1)
+    (group 2)))

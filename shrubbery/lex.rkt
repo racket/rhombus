@@ -92,8 +92,8 @@
                       (:: "\\x" (:** 1 2 digit16)))]
 
   [bad-str (:: (:? "#") "\"" 
-               (:* (:~ "\"" "\\" #\newline)
-                   (:: "\\" (:- any-char #\newline)))
+               (:* (:~ "\"" "\\" #\newline #\return)
+                   (:: "\\" (:- any-char #\newline #\return)))
                (:? "\\" "\""))]
 
   [boolean (:or "#true" "#false")]
@@ -116,7 +116,10 @@
   [exponent-marker e]
   [sign (char-set "+-")]
   
-  [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline) (:: #\\ #\newline)))]
+  [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline #\return)
+                                         (:: #\\ (:or (:: #\return #\newline)
+                                                      #\newline
+                                                      #\return))))]
   
   [plain-identifier (:: (:or alphabetic "_" emoji)
                         (:* (:or alphabetic numeric "_" emoji)))]
@@ -187,8 +190,11 @@
 
   ;; making whitespace end at newlines is for interactive parsing
   ;; where we end at a blank line
-  [whitespace-segment (:or (:+ (:- whitespace "\n"))
-                           (:: (:* (:- whitespace "\n")) "\n"))])
+  [whitespace-segment (:or (:+ (:- whitespace #\newline #\return))
+                           (:: (:* (:- whitespace #\newline #\return))
+                               (:or "\r\n"
+                                    "\n"
+                                    "\r")))])
 
 (define-syntax (ret stx)
   (syntax-case stx (quote)
@@ -286,11 +292,18 @@
   (let loop ()
     (define next (peek-char-or-special i))
     (cond
-      [(eq? next #\newline)
+     [(or (eq? next #\newline)
+          (eq? next #\return))
        (cond
          [consume-newline?
           (read-char-or-special i)
-          (list #\newline)]
+          (cond
+           [(and (eq? next #\return)
+                 (eq? (peek-char-or-special i) #\newline))
+            (read-char-or-special i)
+            (list #\return #\newline)]
+           [else
+            (list #\newline)])]
          [else null])]
       [(eof-object? next)
        null]
@@ -736,12 +749,16 @@
      (let loop ([depth (in-at-openers status)])
        (define ch (peek-char in))
        (cond
-         [(eqv? ch #\newline)
+        [(or (eqv? ch #\newline)
+             (eqv? ch #\return))
           ;; convert a newline into a separate string input
           (define s (get-output-string o))
           (cond
             [(= 0 (string-length s))
              (read-char in)
+             (when (and (eqv? ch #\return)
+                        (eqv? #\newline (peek-char-or-special in)))
+               (read-char in))
              (define end-pos (next-location-as-pos in))
              (ret 'at-content "\n" 'text #f start-pos end-pos
                   (struct-copy in-at status [mode 'inside] [openers depth]))]
@@ -1082,7 +1099,9 @@
             (define newline? (let* ([s (syntax-e (token-value tok))]
                                     [len (string-length s)])
                                (and (positive? len)
-                                    (eqv? #\newline (string-ref s (sub1 len))))))
+                                    (let ([ch (string-ref s (sub1 len))])
+                                      (or (eqv? #\newline ch)
+                                          (eqv? #\return ch))))))
             (cond
               [(and (or (eq? mode 'interactive) (eq? mode 'line))
                     newline?
