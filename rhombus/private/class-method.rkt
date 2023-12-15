@@ -502,30 +502,24 @@
 (define-syntax super
   (expression-transformer
    (lambda (stxs)
-     (define c-or-id+dp+isi+supers (syntax-parameter-value #'this-id))
-     (cond
-       [(not c-or-id+dp+isi+supers)
-        (raise-syntax-error #f
-                            "allowed only within methods and constructors"
-                            #'head)]
-       [(keyword? (syntax-e (car (syntax-e c-or-id+dp+isi+supers))))
-        ;; in a constructor
+     (syntax-parse stxs
+       [(head . tail)
+        (define c-or-id+dp+isi+supers (syntax-parameter-value #'this-id))
+        (unless c-or-id+dp+isi+supers
+          (raise-syntax-error #f
+                              "allowed only within methods and constructors"
+                              #'head))
         (syntax-parse c-or-id+dp+isi+supers
-          [(_ make-name)
-           (syntax-parse stxs
-             [(head . tail)
-              (values (relocate+reraw #'head #'make-name) #'tail)])])]
-       [else
-        ;; in a method
-        (define id+dp+isi+supers c-or-id+dp+isi+supers)
-        (syntax-parse id+dp+isi+supers
-          [(id dp isi)
-           (raise-syntax-error #f "class has no superclass"
-                               (syntax-parse stxs #:datum-literals (op |.|) [(head . _) #'head]))]
+          [(_:keyword make-name)
+           ;; in a constructor
+           (values (relocate+reraw #'head #'make-name) #'tail)]
           [(id dp isi . super-ids)
-           (syntax-parse stxs
+           ;; in a method
+           (when (null? (syntax-e #'super-ids))
+             (raise-syntax-error #f "class has no superclass" #'head))
+           (syntax-parse #'tail
              #:datum-literals (op |.|)
-             [(head (op (~and dot-op |.|)) method-id:identifier . tail)
+             [((op (~and dot-op |.|)) method-id:identifier . tail)
               (define super+pos
                 (for/fold ([found #f]) ([super-id (in-list (syntax->list #'super-ids))])
                   (define super (syntax-local-value* (in-class-desc-space super-id)
