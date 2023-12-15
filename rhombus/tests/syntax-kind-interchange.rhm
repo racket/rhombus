@@ -43,7 +43,7 @@ check:
 check:
   match '1; 2 4; 3'
   | '$a': '1 + $a'
-  ~raises "multi-group syntax not allowed in group context"
+  ~throws "multi-group syntax not allowed in group context"
 
 check:
   match '(1) (2 + 7, 14) (3)'
@@ -58,12 +58,12 @@ check:
 check:
   def [none, ...] = []
   'x; $none ...; y'
-  ~raises "generated an empty group"
+  ~throws "generated an empty group"
   
 check:
   def none = []
   'x; $none; y'
-  ~raises "cannot coerce empty list to group syntax"
+  ~throws "cannot coerce empty list to group syntax"
 
 check:
   def none = '1; 2'
@@ -78,12 +78,12 @@ check:
 check:
   def none = ['1', '2 3']
   'x; $none; y'
-  ~raises "multi-term syntax not allowed in term context"
+  ~throws "multi-term syntax not allowed in term context"
 
 check:
   def none = []
   'x; $none; y'
-  ~raises "cannot coerce empty list to group syntax"
+  ~throws "cannot coerce empty list to group syntax"
 
 check:
   def none = ''

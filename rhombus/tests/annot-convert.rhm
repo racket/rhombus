@@ -10,7 +10,7 @@ check:
 
 check:
   [[1, 2]] :: List.of(converting(fun ([_, y :: String]): y))
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 class Posn(x, y)
 class PosnKW(x, ~y: y)
@@ -51,7 +51,7 @@ check:
 
 check:
   [2, 2] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x))
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   [12, 1] :: (Int || converting(fun ([x, 1]): x))
@@ -99,7 +99,7 @@ check:
     override method m() :: converting(fun (_ :: String): 0):
       "100"
   Hello().m()
-  ~raises values(
+  ~throws values(
     "result does not satisfy annotation",
     "converting(fun (_ :: String): 0)",
   )
@@ -108,7 +108,7 @@ check:
   ~eval
   interface Greeter:
     method m() :: converting(fun (_::String): 0)
-  ~raises "declared result annotation must be a predicate annotation"
+  ~throws "declared result annotation must be a predicate annotation"
 
 check:
   ~eval
@@ -116,7 +116,7 @@ check:
     nonfinal
     method m() :: converting(fun (_::String): 0):
       "hi"
-  ~raises "declared result annotation must be a predicate annotation"
+  ~throws "declared result annotation must be a predicate annotation"
 
 check:
   class Hello():
@@ -148,32 +148,32 @@ check:
 
 check:
   [1, "oops"] is_a matching((_ :: List) :: converting(fun ([x, ...]): [x+1, ...]))
-  ~raises "+: contract violation"
+  ~throws "+: contract violation"
 
 check:
   ~eval
   "apple" :~ ReadableString.to_string
-  ~raises "converter annotation not allowed in a non-checked position"
+  ~throws "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
   def x :~ ReadableString.to_string = 0
-  ~raises "converter annotation not allowed in a non-checked position"
+  ~throws "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
   fun (x :~ ReadableString.to_string): 0
-  ~raises "converter annotation not allowed in a non-checked position"
+  ~throws "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
   fun () :~ ReadableString.to_string: 0
-  ~raises "converter annotation not allowed in a non-checked position"
+  ~throws "converter annotation not allowed in a non-checked position"
 
 check:
   ~eval
   fun () :~ values(Int, ReadableString.to_string): 0
-  ~raises "converter annotation not allowed in a non-checked position"
+  ~throws "converter annotation not allowed in a non-checked position"
 
 block:
   annot.macro 'UTF8Bytes_oops':
@@ -182,7 +182,7 @@ block:
 
   check:
     #"\316\273" :: UTF8Bytes_oops ~is "λ"
-    #"\316" :: UTF8Bytes_oops ~raises "byte string is not a well-formed UTF-8 encoding"
+    #"\316" :: UTF8Bytes_oops ~throws "byte string is not a well-formed UTF-8 encoding"
     #"\316" is_a UTF8Bytes_oops ~is #true
 
   fun try_utf8(s):
@@ -202,4 +202,4 @@ block:
   check:
     #"\316\273" :: UTF8Bytes ~is "λ"
     #"\316" is_a UTF8Bytes ~is #false
-    #"\316" :: UTF8Bytes ~raises "value does not satisfy annotation"
+    #"\316" :: UTF8Bytes ~throws "value does not satisfy annotation"

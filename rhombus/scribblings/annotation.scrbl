@@ -25,7 +25,7 @@ The @rhombus(:~) and @rhombus(::) operators also work in expression
 positions. In that case, the assertion or check is about the expression
 on the left-hand side of @rhombus(:~) or @rhombus(::). For @rhombus(::),
 the left-hand expression must produce a value that satisfies the
-right-hand annotation, otherwise a run-time exception is raised. The
+right-hand annotation, otherwise a run-time exception is thrown. The
 @rhombus(is_a) operator takes an annotation like @rhombus(::), but it
 produces a boolean result indicating whether the result of the left-hand
 expression matches the annotation.

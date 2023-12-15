@@ -26,16 +26,16 @@ block:
 check:
   ~eval
   def x when x.length() > 10 = "Hello"
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   ~eval
   def x unless x.length() < 10 = "Hello"
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   ~eval
   block:
     let x when #true = 1
     x
-  ~raises "pattern requires early binding of its names"
+  ~throws "pattern requires early binding of its names"

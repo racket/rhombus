@@ -41,7 +41,7 @@
  available, then @rhombus(fail) is called if it is a procedure of 0
  arguments, otherwise @rhombus(fail) is returned.
 
- The default @rhombus(fail) is a procedure that raises an exception.
+ The default @rhombus(fail) is a procedure that throws an exception.
 
 }
 

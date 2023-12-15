@@ -15,7 +15,7 @@ Unless otherwise specified, an @tech{annotation} is a @deftech{predicate
  annotation}. For example, @rhombus(String, ~annot) and @rhombus(ReadableString, ~annot) are
 predicate annotations. When a predicate annotation is applied to a value
 with the @rhombus(::) expression operator, the result of the expression
-is the operator's left-hand argument (or an exception is raised).
+is the operator's left-hand argument (or an exception is thrown).
 Similarly, using the @rhombus(::, ~bind) binding operator with a
 predicate annotation has no effect on the binding other than checking
 whether a corresponding value satisfies the annotation's predicate.

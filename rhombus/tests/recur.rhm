@@ -56,12 +56,12 @@ check:
 check:
   ~eval
   recur f(x): x
-  ~raises "missing initial-value expression"
+  ~throws "missing initial-value expression"
 
 check:
   ~eval
   recur f(~x: x): x
-  ~raises "missing initial-value expression"
+  ~throws "missing initial-value expression"
 
 check:
   recur loop(x :: String = "a"):
@@ -71,7 +71,7 @@ check:
 check:
   recur loop(x :: String = 10):
     x.length()
-  ~raises "value does not match annotation"
+  ~throws "value does not match annotation"
 
 check:
   (recur loop(x :: String = "abs") :: String:
@@ -88,12 +88,12 @@ check:
 check:
   recur loop(x :: String = "abs") :: String:
     0
-  ~raises "result does not match annotation"
+  ~throws "result does not match annotation"
 
 check:
   recur loop(x :: String = "abs") :: (String, Int):
     0
-  ~raises "result does not match annotation"
+  ~throws "result does not match annotation"
 
 check:
   def mutable count = 0

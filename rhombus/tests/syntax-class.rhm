@@ -69,7 +69,7 @@ check:
   | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
-  ~raises "no such field"
+  ~throws "no such field"
 
 check:
   ~eval
@@ -78,7 +78,7 @@ check:
   | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
-  ~raises "no such field"
+  ~throws "no such field"
 
 check:
   ~eval
@@ -87,7 +87,7 @@ check:
   | '$x'
   match '1'
   | '$(any :: Any)': any.x
-  ~raises "no such field"
+  ~throws "no such field"
 
 check:
   ~eval
@@ -96,7 +96,7 @@ check:
   | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
-  ~raises "field implementation does not match declared depth"
+  ~throws "field implementation does not match declared depth"
 
 check:
   ~eval
@@ -105,7 +105,7 @@ check:
   | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
-  ~raises "field implementation does not match declared kind"
+  ~throws "field implementation does not match declared kind"
 
 check:
   syntax_class Arithmetic:
@@ -183,7 +183,7 @@ block:
     expr.macro 'right_operand $(e :: Arithmetic)':
       values(e.y, '')
     right_operand 1 +
-    ~raises "expression with addition or subtraction"
+    ~throws "expression with addition or subtraction"
 
 block:
   syntax_class Foo
@@ -207,7 +207,7 @@ check:
   | '$x + $y + $z'
   match '10 + 20 + 30'
   | '$(f :: Foo)': f.z
-  ~raises "no such field or method"
+  ~throws "no such field or method"
 
 block:
   syntax_class Foo:
@@ -232,7 +232,7 @@ check:
   syntax_class Foo:
     kind: ~term
   | '$x + $y'
-  ~raises "not a single-term pattern"
+  ~throws "not a single-term pattern"
 
 block:
   syntax_class Foo:
@@ -269,7 +269,7 @@ block:
     | '$x + $y'
     match '0 + 1 + 2 + 3'
     | '0 + $(f :: Foo) + 3': [f.x, f.y]
-    ~raises "syntax class incompatible with this context"
+    ~throws "syntax class incompatible with this context"
 
 block:
   syntax_class Foo:
@@ -304,7 +304,7 @@ check:
     kind: ~block
   | '($x + $y,
       $z - $w)'
-  ~raises "not a block pattern"
+  ~throws "not a block pattern"
 
 block:
   syntax_class Foo:
@@ -413,7 +413,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~raises "field is a repetition"
+  ~throws "field is a repetition"
 
 check:
   ~eval
@@ -422,7 +422,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~raises "field is a repetition"
+  ~throws "field is a repetition"
 
 block:
   syntax_class NTerms
@@ -503,13 +503,13 @@ check:
   ~eval
   syntax_class House(material) | '< < > >'
   def '$(x :: House)' = #false
-  ~raises "syntax class expects arguments"
+  ~throws "syntax class expects arguments"
 
 check:
   ~eval
   syntax_class Horse | '!!!'
   def '$(x :: Horse(1))' = #false
-  ~raises "syntax class does not expect arguments"
+  ~throws "syntax class does not expect arguments"
 
 // field value does not have to be syntax
 check:
@@ -574,7 +574,7 @@ block:
     ~prints_like ['1', '2']
   check:
     m('9 1')
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
 
 // opening an inline syntax class
 block:
@@ -794,13 +794,13 @@ check:
   ~eval
   match '1'
   | '$(pattern any | '$x')': x
-  ~raises "cannot reference an identifier before its definition"
+  ~throws "cannot reference an identifier before its definition"
 
 check:
   ~eval
   match '1'
   | (pattern any | '$x'): x
-  ~raises "cannot reference an identifier before its definition"
+  ~throws "cannot reference an identifier before its definition"
 
 // check generated attributes in inline `pattern`s
 block:
@@ -933,14 +933,14 @@ check:
   syntax_class C:
     root_swap: unknown terms
   | '$_ $second'
-  ~raises "field to swap as root not found"
+  ~throws "field to swap as root not found"
 
 check:
   ~eval
   syntax_class C:
     root_swap: second first
   | '$first $second'
-  ~raises "field for root already exists"
+  ~throws "field for root already exists"
 
 
 check:

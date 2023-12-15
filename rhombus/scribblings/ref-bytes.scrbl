@@ -127,7 +127,7 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
  Converts a byte string to a string, decoding as UTF-8, Latin-1, or the
  current locale's encoding. The @rhombus(err_char) argument provides a
  @tech{character} to use in place of an encoding error, where
- @rhombus(#false) means that an exception is raised.
+ @rhombus(#false) means that an exception is thrown.
 
 @examples(
   #"hello".utf8_string()

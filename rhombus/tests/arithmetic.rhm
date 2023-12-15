@@ -15,7 +15,7 @@ check:
 check:
   ~eval
   10 / 2 * 4
-  ~raises "combination of expression operators at same precedence, but only in the other order"
+  ~throws "combination of expression operators at same precedence, but only in the other order"
 
 check:
   fun five(x):

@@ -21,11 +21,11 @@ check AnythingGoes() == AnythingGoes() ~is #true
 check:
   use_dynamic
   AnythingGoes().equals(AnythingGoes(), fun (& _): #true)
-  ~raises "equals: no such field or method"
+  ~throws "equals: no such field or method"
 check:
   use_dynamic
   AnythingGoes().hash_code(fun (_): 0)
-  ~raises "hash_code: no such field or method"
+  ~throws "hash_code: no such field or method"
 
 check AnythingGoes() == NoGo() ~is #false
 check NoGo() == AnythingGoes()  ~is #false
@@ -39,7 +39,7 @@ check AnythingGoes() == Fail() ~is #false
 check Fail() == AnythingGoes() ~is #false
 check NoGo() == Fail() ~is #false
 check Fail() == NoGo() ~is #false
-check Fail() == Fail() ~raises "failure"
+check Fail() == Fail() ~throws "failure"
 block:
   let f: Fail()
   check f == f ~is #true

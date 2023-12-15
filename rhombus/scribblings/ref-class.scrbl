@@ -702,7 +702,7 @@
 
  When a class has an abstract method or property,
  either declared directly or inherited, the underlying constructor for the class
- raises an exception. The method or property must be overridden with a
+ throws an exception. The method or property must be overridden with a
  @rhombus(override, ~class_clause) class in a subclass, and then the
  subclass can be instantiated (as long as it has no other abstract
  methods). A @tech{final} class cannot have an abstract method or property.

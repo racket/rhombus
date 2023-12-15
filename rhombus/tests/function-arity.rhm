@@ -14,71 +14,71 @@ defn.macro 'static $check: $form; ...; $raises $msg':
 static check:
   fun f(x): x
   fun (): f()
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   fun f(x): x
   fun (): f(1, 2)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   fun f(x): x
   fun (): f(1, ~flavor: "vanilla")
-  ~raises "keyword argument not recognized"
+  ~throws "keyword argument not recognized"
 
 static check:
   fun f(x, ~flavor): x
   fun (): f(1)
-  ~raises "missing keyword argument in function call"
+  ~throws "missing keyword argument in function call"
 
 static check:
   fun f(x, & y): x
   fun (): f()
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   fun f(x, ~flavor, ~& kws): x
   fun (): f(1, ~color: "red")
-  ~raises "missing keyword argument in function call"
+  ~throws "missing keyword argument in function call"
 
 static check:
   class Posn(x, y):
     method m(): x
   fun (): Posn.m()
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
     nonfinal
     method m(): x
   fun (): Posn.m()
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
     nonfinal
     method m(): x
   fun (): Posn.m(1, 2)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
     method m(): x
   fun (): Posn(1, 2).m(0)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
     method m(): x
     method n(): m(1)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
   
 static check:
   class Posn(x, y):
     nonfinal
     method m(): x
   fun (): Posn(1, 2).m(0)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
@@ -87,13 +87,13 @@ static check:
   class Posn3D(z):
     extends Posn
   fun (): Posn3D(1, 2, 3).m(0)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   interface Pointy:
     method m(): 0
     method n(): m(1)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   interface Pointy:
@@ -101,40 +101,40 @@ static check:
   class Posn(x, y):
     implements Pointy
   fun (): Posn(1, 2).m(0)
-  ~raises "wrong number of arguments"
+  ~throws "wrong number of arguments"
 
 static check:
   class Posn(x, y):
     property | p: 10
   fun (): Posn(1, 2).p := 11
-  ~raises "property does not support assignment"
+  ~throws "property does not support assignment"
   
 static check:
   class Posn(x, y):
     property | p: 10
   fun (): Posn.p(Posn(1, 2), 11)
-  ~raises "wrong number of arguments in function call"
+  ~throws "wrong number of arguments in function call"
 
 check:
   ~eval
   class Posn(x, y):
     property | p: 10
     method m(): p := 11
-  ~raises "property does not support assignment"
+  ~throws "property does not support assignment"
   
 static check:
   class Posn(x, y):
     nonfinal
     property | p: 10
   fun (): Posn(1, 2).p := 11
-  ~raises "property does not support assignment"
+  ~throws "property does not support assignment"
   
 static check:
   class Posn(x, y):
     nonfinal
     property | p: 10
   fun (): Posn.p(Posn(1, 2), 11)
-  ~raises "wrong number of arguments in function call"
+  ~throws "wrong number of arguments in function call"
 
 static check:
   class Posn(x, y):
@@ -143,7 +143,7 @@ static check:
   class Posn3D(z):
     extends Posn
     method n(): super.m(1)
-  ~raises "wrong number of arguments in method call"
+  ~throws "wrong number of arguments in method call"
 
 static check:
   class Posn(x, y):
@@ -152,7 +152,7 @@ static check:
   class Posn3D(z):
     extends Posn
     method n(): super.p := 1
-  ~raises "property does not support assignment"
+  ~throws "property does not support assignment"
 
 static check:
   class Posn(x, y):
@@ -162,11 +162,11 @@ static check:
     extends Posn
     nonfinal
     method n(): this.p := 1
-  ~raises "property does not support assignment"
+  ~throws "property does not support assignment"
 
 static check:
   class Posn(x, y):
     constructor (z):
       super(z+1, z-1)
   fun (): Posn(1, 2)
-  ~raises "wrong number of arguments in function call"
+  ~throws "wrong number of arguments in function call"

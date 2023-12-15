@@ -51,7 +51,7 @@
  completely enumerated here.
 
  If no @rhombus(target_expr) produces a true value and there is no
- @rhombus(~else) clause, a run-time exception is raised. In that case,
+ @rhombus(~else) clause, a run-time exception is thrown. In that case,
  when all of the @rhombus(bind) forms are syntax-object patterns, the
  generated exception's message may be specialized to report the expected
  pattern, instead of just reporting that no cases matched.

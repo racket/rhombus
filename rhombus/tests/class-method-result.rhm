@@ -20,13 +20,13 @@ block:
     ~is 3
   check:
     Posn(1, 2).n()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "String",
     )
   check:
     Posn(1, 2).n_f()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "String",
     )
@@ -45,7 +45,7 @@ block:
         0
     check:
       Posn3D(1, 2, 3).m()
-      ~raises values(
+      ~throws values(
         "result does not satisfy annotation",
         "Int",
       )
@@ -98,26 +98,26 @@ block:
     ~is Magenta()
   check:
     Bottom().m(Magenta())
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Green",
     )
 
   check:
     Top().m(Cyan())
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Red",
     )
   check:
     Middle().m(Cyan())
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Blue",
     )
   check:
     Bottom().m(Cyan())
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Green",
     )
@@ -174,13 +174,13 @@ block:
     ~is #true
   check:
     Point(1, 2).visible()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Boolean",
     )
   check:
     Point(1, 2).invisible()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Boolean",
     )
@@ -217,7 +217,7 @@ block:
     ~is RacketLogo()
   check:
     RacketLogo().example(#false)
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Red", "Blue",
     )
@@ -243,7 +243,7 @@ block:
     ~is [1, 2]
   check:
     Top().m("apple")
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Int",
     )
@@ -252,7 +252,7 @@ block:
     ~is "apple"
   check:
     Bottom().m2("apple")
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Int",
     )
@@ -287,19 +287,19 @@ block:
     ~is Both()
   check:
     C(#false).m()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Right",
     )
   check:
     C(LeftC()).m()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Right",
     )
   check:
     C(RightC()).m()
-    ~raises values(
+    ~throws values(
       "result does not satisfy annotation",
       "Right",
     )
@@ -312,7 +312,7 @@ block:
       nonfinal
       method m() :: converting(fun (_): #false):
         #false
-    ~raises values(
+    ~throws values(
       "must be a predicate annotation",
       "non-final",
     )
@@ -320,7 +320,7 @@ block:
     ~eval
     interface A:
       method m() :: converting(fun (_): #false)
-    ~raises values(
+    ~throws values(
       "must be a predicate annotation",
       "non-final",
     )
@@ -343,7 +343,7 @@ block:
       extends A
       override m() :: values(Any, Any):
         values(#false, #false)
-    ~raises "incompatible result arities"
+    ~throws "incompatible result arities"
   check:
     ~eval
     class A():
@@ -354,7 +354,7 @@ block:
       extends A
       override m() :~ values(Any, Any):
         values(#false, #false)
-    ~raises "incompatible result arities"
+    ~throws "incompatible result arities"
   check:
     class A():
       nonfinal
@@ -376,7 +376,7 @@ block:
       override m() :: (Int, Real):
         values(1, 2.0)
     B().m()
-    ~raises values(
+    ~throws values(
       "results do not satisfy annotation",
       "(Int, Real)", "(Real, Int)",
     )

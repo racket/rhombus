@@ -19,15 +19,15 @@ check:
 
 check:
   Pair.first(1)
-  ~raises values("contract violation", "expected: Pair")
+  ~throws values("contract violation", "expected: Pair")
 
 check:
   Pair("ok", "oops") :: Pair.of(String, Number)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   ["ok", "oops"] :: Pair.of(String, Number)
-  ~raises "does not satisfy annotation"
+  ~throws "does not satisfy annotation"
 
 check:
   ["ok", "fine"] :: Pair.of(String, List)
@@ -87,16 +87,16 @@ block:
     ~is Pair(2, 1)
   check:
     1 :: Pair
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: Pair.of(Any, Any)
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
   check:
     1 :: Pair.of(
       converting(fun (_): #false),
       converting(fun (_): #false)
     )
-    ~raises "does not satisfy annotation"
+    ~throws "does not satisfy annotation"
 
 block:
   check:

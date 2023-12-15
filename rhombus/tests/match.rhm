@@ -43,6 +43,6 @@ block:
 
 check (match 1 | 1 || 2: "yes") ~is "yes"
 check (match 2 | 1 || 2: "yes") ~is "yes"
-check (match 3 | 1 || 2: "yes") ~raises "no matching case"
+check (match 3 | 1 || 2: "yes") ~throws "no matching case"
 
-check ( match 'ok (1)' | '«ok '$x'»': "ok") ~raises "expected quotes"
+check ( match 'ok (1)' | '«ok '$x'»': "ok") ~throws "expected quotes"

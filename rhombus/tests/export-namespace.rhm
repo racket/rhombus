@@ -51,7 +51,7 @@ check:
       only_space annot:
         exint
   n.exint
-  ~raises "identifier not provided"
+  ~throws "identifier not provided"
 
 check:
   ~eval
@@ -62,7 +62,7 @@ check:
       only_space expr:
         exint
   1 :: n.exint
-  ~raises "identifier not provided"
+  ~throws "identifier not provided"
 
 check:
   ~eval
@@ -73,7 +73,7 @@ check:
       only_space expr:
         except_space expr:
           exint
-  ~raises "space excluded in nested modification"
+  ~throws "space excluded in nested modification"
 
 check:
   ~eval
@@ -84,7 +84,7 @@ check:
       except_space expr:
         only_space annot:
           exint
-  ~raises "space not included in nested modification"
+  ~throws "space not included in nested modification"
 
 check:
   namespace ns:
@@ -109,7 +109,7 @@ check:
     def z = 200
     export all_defined
   ns.x
-  ~raises "identifier not provided by ns"
+  ~throws "identifier not provided by ns"
 
 block:
   import "example-d.rhm" as d
@@ -123,7 +123,7 @@ check:
   ~eval
   import lib("rhombus/tests/example-d.rhm") as d
   d.two
-  ~raises "no such imported identifier"
+  ~throws "no such imported identifier"
 
 block:
   def thing = 1
@@ -206,4 +206,4 @@ check:
         except_space annot:
           thing
     "ok"
-  ~raises "duplicate export name with different bindings"
+  ~throws "duplicate export name with different bindings"

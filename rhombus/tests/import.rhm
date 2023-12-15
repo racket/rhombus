@@ -18,7 +18,7 @@ check:
   import: lib("rhombus/tests/example-a.rhm") as ex_a:
             expose: beta
   alpha
-  ~raises "alpha: undefined"
+  ~throws "alpha: undefined"
 
 check:
   ~eval
@@ -39,7 +39,7 @@ check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").ExList open
   for ExList: "oops, no ExList"
-  ~raises "expected reducer"
+  ~throws "expected reducer"
 
 check:
   ~eval
@@ -51,7 +51,7 @@ check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
   ex_a.alpha
-  ~raises "ex_a: undefined"
+  ~throws "ex_a: undefined"
 
 check:
   ~eval
@@ -121,20 +121,20 @@ check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha open
   alpha
-  ~raises"cannot open binding"
+  ~throws"cannot open binding"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha:
            except: other
   "does not get here"
-  ~raises "identifier to exclude is not nested within the imported name"
+  ~throws "identifier to exclude is not nested within the imported name"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha
   beta
-  ~raises "beta: undefined"
+  ~throws "beta: undefined"
 
 // This test assumes too much about the implementation of `Pair`
 #//

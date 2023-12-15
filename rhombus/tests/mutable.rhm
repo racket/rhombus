@@ -35,7 +35,7 @@ block:
   def mutable p :: Posn = Posn(1, 2)
   check:
     p.x ~is 1
-    p := 100 ~raises "value does not satisfy annotation"
+    p := 100 ~throws "value does not satisfy annotation"
     p.x ~is 1
     p := Posn(4, 5) ~completes
     p.x ~is 4
@@ -48,12 +48,12 @@ block:
     p.x ~is 1
     p := 100 ~completes
     p ~is 100
-    p.x ~raises "contract violation"
+    p.x ~throws "contract violation"
 
 block:
   def mutable i :: Int = 10
   check:
-    i := "no" ~raises "value does not satisfy annotation"
+    i := "no" ~throws "value does not satisfy annotation"
     i ~is 10
     i := 11 ~completes
     i ~is 11
@@ -62,7 +62,7 @@ block:
   import lib("racket/base.rkt")
   def mutable str :: ReadableString.to_string = "apple"
   check:
-    str := 10 ~raises "value does not satisfy annotation"
+    str := 10 ~throws "value does not satisfy annotation"
     str ~is "apple"
     str := base.#{string-copy}("banana") ~completes
     str ~is "banana"

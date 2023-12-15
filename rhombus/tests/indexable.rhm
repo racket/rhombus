@@ -62,7 +62,7 @@ check:
   C()[4].v ~is 4
   A2()[3].v ~is 3
   A2()["good"] := #'ok ~is #void
-  A2()["bad"] := #'no ~raises values(
+  A2()["bad"] := #'no ~throws values(
     "result does not satisfy annotation",
     "Void",
   )

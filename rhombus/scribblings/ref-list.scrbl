@@ -197,7 +197,7 @@ it supplies its elements in order.
 
 
 @doc(
-  def List.empty :: []
+  def List.empty :: List = []
   bind.macro 'List.empty'
 ){
 
@@ -232,7 +232,9 @@ it supplies its elements in order.
 
 
 @doc(
-  repet.macro 'List.repet($lst)'
+  ~nonterminal:
+    list_expr: block expr
+  repet.macro 'List.repet($list_expr)'
 ){
 
  Creates a repetition from a list. This is a shorthand for using
@@ -302,7 +304,7 @@ it supplies its elements in order.
  elements in the case of @rhombus(List.drop_left), or without the last
  @rhombus(n) elements in the case of @rhombus(List.drop_right). The given
  @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
- @rhombus(Exn.Fail.Contract, ~class) exception is raised.
+ @rhombus(Exn.Fail.Contract, ~class) exception is thrown.
 
 @examples(
   [1, 2, 3, 4, 5].drop_left(2)
@@ -315,7 +317,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.has_element(lst :: List, v) :: List
+  fun List.has_element(lst :: List, v :: Any) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
@@ -330,7 +332,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.remove(lst :: List, v) :: List
+  fun List.remove(lst :: List, v :: Any) :: List
 ){
 
  Returns a list like @rhombus(lst), but with the first element equal to
@@ -360,10 +362,12 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.sort(lst :: List, less :: Function.of_arity(2) = math.less) :: List,
+  fun List.sort(lst :: List,
+                is_less :: Function.of_arity(2) = math.less)
+    :: List,
 ){
 
- Sorts @rhombus(lst) using @rhombus(less) to compare elements.
+ Sorts @rhombus(lst) using @rhombus(is_less) to compare elements.
 
 @examples(
   List.sort([1, 3, 2])

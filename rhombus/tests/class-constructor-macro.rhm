@@ -37,14 +37,14 @@ check:
   class Posn(x, y):
     constructor (x): 0
     expression 'Posn': '0'
-  ~raises "unnamed constructor inaccessible due to expression macro"
+  ~throws "unnamed constructor inaccessible due to expression macro"
   
 check:
   ~eval
   class Posn(x, y):
     constructor Posn(x): 0
     expression 'Posn': '0'
-  ~raises "constructor name conflicts with expression macro"
+  ~throws "constructor name conflicts with expression macro"
 
 check:
   interface Shape:
@@ -68,7 +68,7 @@ block:
     ~is "hello"
   check:
     5 :: Stringish
-    ~raises "value does not satisfy annotation"
+    ~throws "value does not satisfy annotation"
   block:
     class S():
       implements Stringish

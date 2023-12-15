@@ -43,7 +43,7 @@ check:
   block:
     empty_import
     "ok"
-  ~raises "misuse as an expression"
+  ~throws "misuse as an expression"
 
 // definition-sequence macros
 defn.sequence_macro 'reverse_defns; $defn1 ...; $defn2 ...; $tail; ...':

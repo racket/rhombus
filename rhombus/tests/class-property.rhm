@@ -89,7 +89,7 @@ check:
   class Posn3D(z):
     extends Posn
     override is_origin: #false
-  ~raises "cannot override superclass's property with a non-property method"
+  ~throws "cannot override superclass's property with a non-property method"
 
 check:
   ~eval
@@ -99,7 +99,7 @@ check:
   class Posn3D(z):
     extends Posn
     override is_origin(): #false
-  ~raises "cannot override superclass's property with a non-property method"
+  ~throws "cannot override superclass's property with a non-property method"
 
 check:
   ~eval
@@ -109,7 +109,7 @@ check:
   class Posn3D(z):
     extends Posn
     final override is_origin: #false
-  ~raises "cannot override superclass's property with a non-property method"
+  ~throws "cannot override superclass's property with a non-property method"
 
 check:
   ~eval
@@ -119,7 +119,7 @@ check:
   class Posn3D(z):
     extends Posn
     override property is_origin: #false
-  ~raises "cannot override superclass's non-property method with a property"
+  ~throws "cannot override superclass's non-property method with a property"
 
 block:
   class Posn(x, y):
@@ -154,7 +154,7 @@ check:
     implements Pointy
     override is_origin():
       x == 0 && y == 0
-  ~raises "cannot override interface's property with a non-property method"
+  ~throws "cannot override interface's property with a non-property method"
 
 check:
   ~eval
@@ -164,7 +164,7 @@ check:
     implements Pointy
     override property is_origin:
       x == 0 && y == 0
-  ~raises "cannot override interface's non-property method with a property"
+  ~throws "cannot override interface's non-property method with a property"
 
 check:
   class A():
@@ -194,7 +194,7 @@ check:
     abstract override property m
   class C():
     extends B
-  ~raises "final class cannot have abstract methods"
+  ~throws "final class cannot have abstract methods"
 
 check:
   ~eval
@@ -205,4 +205,4 @@ check:
   class B():
     extends A
     abstract override property m
-  ~raises "final class cannot have abstract methods"
+  ~throws "final class cannot have abstract methods"

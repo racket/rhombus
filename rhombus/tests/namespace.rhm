@@ -103,7 +103,7 @@ check:
     export:
       nonesuch
   nonesuch
-  ~raises "undefined"
+  ~throws "undefined"
 
 check:
   import rhombus/meta open

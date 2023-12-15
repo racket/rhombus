@@ -67,7 +67,7 @@
               [_ #f]))]
       [else (raise-argument-error* e-who
                                    rhombus-realm
-                                   "ReadableString || Symbol || Identifier || Operator || False"
+                                   "maybe(ReadableString || Symbol || Identifier || Operator)"
                                    who)]))
   (unless (string? msg)
     (raise-argument-error* e-who rhombus-realm "ReadableString" msg))

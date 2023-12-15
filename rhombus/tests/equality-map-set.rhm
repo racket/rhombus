@@ -62,7 +62,7 @@ check:
 
 check:
   {mcons(1, 2): 3}[mcons(1, 2)]
-  ~raises "Map.get: no value found for key"
+  ~throws "Map.get: no value found for key"
 
 block:
   def a = mcons(1, 2)

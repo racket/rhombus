@@ -23,12 +23,12 @@ check:
 check:
   import: lib("rhombus/tests/example-c.rhm") as ex_c
   def ex_c.exint = "10"
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   import: lib("rhombus/tests/example-c.rhm") as ex_c
   "10" :: ex_c.exint
-  ~raises "value does not satisfy annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   import: lib("rhombus/tests/example-c.rhm") open
@@ -101,7 +101,7 @@ check:
         open
         only_space: expr
     10 :: exint
-  ~raises "not bound as an annotation"
+  ~throws "not bound as an annotation"
 
 check:
   ~eval
@@ -111,7 +111,7 @@ check:
       lib("rhombus/tests/example-c.rhm") as ex_c:
         only_space: expr
     10 :: ex_c.exint
-  ~raises "not bound as an annotation"
+  ~throws "not bound as an annotation"
 
 check:
   import:

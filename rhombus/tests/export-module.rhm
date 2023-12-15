@@ -30,13 +30,13 @@ check:
   ~eval
   import lib("rhombus/tests/export-module.rhm")!annot
   annot.exint
-  ~raises "no such imported identifier"
+  ~throws "no such imported identifier"
 
 check:
   ~eval
   import lib("rhombus/tests/export-module.rhm")!expr
   1 :: expr.exint
-  ~raises "not bound as an annotation"
+  ~throws "not bound as an annotation"
 
 module ~early both ~lang rhombus/and_meta:
   namespace n:
@@ -77,4 +77,4 @@ check:
   ~eval
   import lib("rhombus/tests/export-module.rhm")!expr_via_reexport
   1 :: expr_via_reexport.exint
-  ~raises "not bound as an annotation"
+  ~throws "not bound as an annotation"
