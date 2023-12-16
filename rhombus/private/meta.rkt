@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "forwarding-sequence.rkt")
          "provide.rkt"
          "declaration.rkt"
          "definition.rkt"
@@ -27,10 +28,14 @@
      (syntax-parse stx
        [(form-id (_::block form ...))
         #'((begin-for-syntax
-             (rhombus-top form ...)))]
+             (rhombus-forwarding-sequence
+              #:module #f #f
+              (rhombus-top form ...))))]
        [(form-id . tail)
         #'((begin-for-syntax
-             (rhombus-top (group . tail))))]))))
+             (rhombus-forwarding-sequence
+              #:module #f #f
+              (rhombus-top (group . tail)))))]))))
 
 (define-for-syntax (make-bridge-definer space-sym)
   (definition-transformer

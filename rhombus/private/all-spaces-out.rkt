@@ -44,15 +44,16 @@
         (apply
          append
          (for/list ([phase (in-list phases)])
+           (define abs-phase (phase+space+ phase (syntax-local-phase-level)))
            (define space+ids
              (for*/list ([sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
                          [(intro) (in-value (if sym
                                                 (make-interned-syntax-introducer sym)
                                                 (lambda (x) x)))]
                          [(space-id) (in-value (intro id))]
-                         #:when (and (identifier-binding* space-id phase)
+                         #:when (and (identifier-binding* space-id abs-phase)
                                      (or (not sym)
-                                         (not (free-identifier=? id space-id phase)))))
+                                         (not (free-identifier=? id space-id abs-phase)))))
                (cons sym space-id)))
            (when (null? space+ids)
              (raise-syntax-error 'export
@@ -84,7 +85,7 @@
                                         (define id (intro id*))]
                                   #:when (identifier-extension-binding? id name-root-id)
                                   #:when (or (not space)
-                                             (identifier-distinct-binding* id id* phase)))
+                                             (identifier-distinct-binding* id id* abs-phase)))
                          (make-export phase space (intro (datum->syntax out-int-id sym out-int-id)) (adjust-prefix sym prefix))))]
                  [else null])))))))))))
 
@@ -102,8 +103,10 @@
                                          (make-interned-syntax-introducer space-sym)
                                          (lambda (x mode) x)))]
                  [phase (in-list phases)]
-                 [space-id (in-list (hash-ref ht phase '()))]
+                 #:do [(define abs-phase (phase+space+ phase (syntax-local-phase-level)))]
+                 [space-id (in-list (hash-ref ht abs-phase '()))]
                  #:when (and (bound-identifier=? space-id (intro space-id 'add))
                              (free-identifier=? space-id
-                                                (intro (datum->syntax stx (syntax-e space-id)) 'add))))
+                                                (intro (datum->syntax stx (syntax-e space-id)) 'add)
+                                                abs-phase)))
        (make-export space-id (syntax-e space-id) (phase+space phase space-sym) #f stx)))))

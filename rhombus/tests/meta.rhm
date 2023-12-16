@@ -39,3 +39,35 @@ check:
       $(syntax_meta.value('direction.(<>)'))]'
   show
   ~is [#'left, #'right, #'both]
+
+module ~early meta_something_1 ~lang rhombus/and_meta:
+  meta:
+    export:
+      something
+
+  meta:
+    def something = "something1"
+
+block:
+  check:
+    import:
+      meta -1:
+        self!meta_something_1
+    meta_something_1.something
+    ~is "something1"
+
+module ~early meta_something_2 ~lang rhombus/and_meta:
+  meta:
+    export:
+      all_defined
+
+  meta:
+    def something = "something2"
+
+block:
+  check:
+    import:
+      meta -1:
+        self!meta_something_2
+    meta_something_2.something
+    ~is "something2"
