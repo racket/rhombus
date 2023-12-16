@@ -145,14 +145,10 @@
                                                                                       (lambda () #'raise))))]
                  [(group (~and kw #:catch) . _)
                   (raise-syntax-error #f "expected alternatives or a binding and non-empty block after `~catch`" stx #'kw)]
-                 [(group #:way_out . _)
-                  #:when (hash-ref state 'way_out-handler #f)
-                  (raise-syntax-error #f "duplicate `~way_out` clause" stx (car gs))]
                  [_
                   (when (or (hash-ref state 'handler #f)
-                            (hash-ref state 'way_out-handler #f)
                             (hash-ref state 'finally #f))
-                    (raise-syntax-error #f "expression or definition not allowed after `~catch`, `~way_out`, or `~finally`"
+                    (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`"
                                         stx
                                         (car gs)))
                   (loop (cdr gs) (cons (car gs) rev-gs) state)])])))
