@@ -5,7 +5,6 @@
                      racket/syntax
                      "srcloc.rkt"
                      "tag.rkt"
-                     "with-syntax.rkt"
                      shrubbery/print)
          "provide.rkt"
          "expression.rkt"
@@ -344,14 +343,13 @@
                                            #:rest-repetition? rest-repetition?)
        #`(form-id (parens) . tail)
        maybe-rest))
-    (with-syntax-parse ([composite::binding-form composite])
-      (values
-       (binding-form #'set-infoer
-                     #`(#,mode (key ...)
-                        #,rest-tmp
-                        composite.infoer-id
-                        composite.data))
-       new-tail))))
+    (values
+     (syntax-parse composite
+       [composite::binding-form
+        (binding-form
+         #'set-infoer
+         #`(#,mode (key ...) #,rest-tmp composite.infoer-id composite.data))])
+     new-tail)))
 
 (define-syntax (set-infoer stx)
   (syntax-parse stx

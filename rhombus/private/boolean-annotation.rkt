@@ -1,13 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "with-syntax.rkt"
                      "annotation-string.rkt")
-         "annotation.rkt"
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
-         "parse.rkt"
          "if-blocked.rkt")
 
 (provide (for-space rhombus/annot

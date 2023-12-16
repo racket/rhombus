@@ -1,10 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "annotation-string.rkt"
-                     "with-syntax.rkt")
+                     "annotation-string.rkt")
          "binding.rkt"
-         "parse.rkt"
          "static-info.rkt"
          "literal.rkt"
          "if-blocked.rkt")
@@ -33,7 +31,7 @@
 (define-for-syntax (make-and-binding lhs rhs)
   (binding-form #'and-infoer
                 #`(#,lhs #,rhs)))
-  
+
 (define-syntax (and-infoer stx)
   (syntax-parse stx
     [(_ static-infos (lhs-i::binding-form rhs-i::binding-form))
@@ -81,18 +79,18 @@
    null
    'automatic
    (lambda (lhs rhs stx)
-     (with-syntax-parse ([lhs-i::binding-form lhs]
-                         [rhs-i::binding-form rhs])
-       (cond
-         [(and (free-identifier=? #'lhs-i.infoer-id  #'literal-infoer)
-               (free-identifier=? #'rhs-i.infoer-id  #'literal-infoer))
-          (binding-form
-           #'literal-infoer
-           #`(#,@#'lhs-i.data #,@#'rhs-i.data))]
-         [else
-          (binding-form
-           #'or-infoer
-           #`(#,lhs #,rhs))])))
+     (syntax-parse (list lhs rhs)
+       [(lhs-i::binding-form rhs-i::binding-form)
+        (cond
+          [(and (free-identifier=? #'lhs-i.infoer-id #'literal-infoer)
+                (free-identifier=? #'rhs-i.infoer-id #'literal-infoer))
+           (binding-form
+            #'literal-infoer
+            #`(#,@#'lhs-i.data #,@#'rhs-i.data))]
+          [else
+           (binding-form
+            #'or-infoer
+            #`(#,lhs #,rhs))])]))
    'left))
 
 (define-syntax (or-infoer stx)

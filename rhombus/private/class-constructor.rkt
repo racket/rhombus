@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "class-parse.rkt"
-                     "with-syntax.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
          racket/unsafe/undefined
          racket/stxparam
@@ -157,65 +156,70 @@
                                                 #,@(map (lambda (f) (build-field-init (added-field-arg-id f))) added-fields)))))])
                 name)))
          null)
-     (if constructor-rhs
-         (let ([constructor-rhs (if (eq? constructor-rhs 'synthesize)
-                                    (make-default-constructor super
-                                                              super-constructor-fields constructor-fields
-                                                              super-keywords keywords
-                                                              super-defaults defaults
-                                                              constructor-private?s
-                                                              #'make-name)
-                                    constructor-rhs)])
-           (with-syntax-parse ([((private-method-name private-method-id/property) ...)
-                                (for/list ([m-name (in-list (sort (hash-keys method-private)
-                                                                  symbol<?))])
-                                  (define id/property (hash-ref method-private m-name))
-                                  (list (datum->syntax #'name m-name)
-                                        id/property))]
-                               [private-tables-spec
-                                #'(cons (cons (quote-syntax name)
-                                              (hasheq (~@ 'private-method-name
-                                                          (quote-syntax private-method-id/property))
-                                                      ...
-                                                      (~@ 'private-field-name
-                                                          private-field-desc)
-                                                      ...))
-                                        (get-private-tables))]
-                               [super-this #`(#:c #,(wrap-static-info #'make-name #'#%call-result
-                                                                      (let ([si #`((#%dot-provider name-instance)
-                                                                                   . indirect-static-infos)])
-                                                                        (if super
-                                                                            #`((#%call-result #,si))
-                                                                            si))))])
-             (cond
-               [(and final?
-                     (not super))
-                (list
-                 #`(define constructor-name
-                     (syntax-parameterize ([this-id (quote-syntax super-this)]
-                                           [private-tables private-tables-spec])
-                       (let ([visible-name (wrap-constructor name name? #,constructor-rhs #,constructor-stx-params)])
-                         visible-name))))]
-               [else
-                (list
-                 #`(define constructor-maker-name
-                     (lambda (make-name)
-                       (syntax-parameterize ([this-id (quote-syntax super-this)]
-                                             [private-tables private-tables-spec])
-                         (let ([visible-name (wrap-constructor name name? #,constructor-rhs #,constructor-stx-params)])
-                           visible-name))))
-                 #`(define constructor-name
-                     #,(cond
-                         [super
-                          (compose-constructor
-                           #'make-name
-                           #`([#,(encode-protocol keywords defaults keywords defaults) constructor-maker-name]
-                              #,@(or (class-desc-constructor-makers super)
-                                     (list (list (encode-protocol super-keywords super-defaults
-                                                                  super-constructor+-keywords super-constructor+-defaults)
-                                                 #f)))))]
-                         [else #'(constructor-maker-name make-name)])))])))
-         null)
+     (cond
+       [constructor-rhs
+        (define constructor-body
+          #`(let ([visible-name
+                   (syntax-parameterize
+                       ([this-id
+                         (quote-syntax (#:c #,(wrap-static-info
+                                               #'make-name
+                                               #'#%call-result
+                                               (let ([si #`((#%dot-provider name-instance)
+                                                            . indirect-static-infos)])
+                                                 (if super
+                                                     #`((#%call-result #,si))
+                                                     si)))))]
+                        [private-tables
+                         #,(with-syntax ([((private-method-name private-method-id/property) ...)
+                                          (for/list ([m-name (in-list (sort (hash-keys method-private)
+                                                                            symbol<?))])
+                                            (define id/property (hash-ref method-private m-name))
+                                            (list (datum->syntax #'name m-name)
+                                                  id/property))])
+                             #`(cons (cons (quote-syntax name)
+                                           (hasheq (~@ 'private-method-name
+                                                       (quote-syntax private-method-id/property))
+                                                   ...
+                                                   (~@ 'private-field-name
+                                                       private-field-desc)
+                                                   ...))
+                                     (get-private-tables)))])
+                     (wrap-constructor
+                      name name?
+                      #,(if (eq? constructor-rhs 'synthesize)
+                            (make-default-constructor super
+                                                      super-constructor-fields constructor-fields
+                                                      super-keywords keywords
+                                                      super-defaults defaults
+                                                      constructor-private?s
+                                                      #'make-name)
+                            constructor-rhs)
+                      #,constructor-stx-params))])
+              visible-name))
+        (cond
+          [(and final?
+                (not super))
+           (list
+            #`(define constructor-name
+                #,constructor-body))]
+          [else
+           (list
+            #`(define constructor-maker-name
+                (lambda (make-name)
+                  #,constructor-body))
+            #`(define constructor-name
+                #,(cond
+                    [super
+                     (compose-constructor
+                      #'make-name
+                      #`([#,(encode-protocol keywords defaults keywords defaults) constructor-maker-name]
+                         #,@(or (class-desc-constructor-makers super)
+                                (list (list (encode-protocol super-keywords super-defaults
+                                                             super-constructor+-keywords super-constructor+-defaults)
+                                            #f)))))]
+                    [else #'(constructor-maker-name make-name)])))])]
+       [else null])
      (if (syntax-e #'make-converted-name)
          (list
           #`(define make-converted-name constructor-name))

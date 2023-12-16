@@ -2,14 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "tag.rkt"
-                     "with-syntax.rkt"
                      "srcloc.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
-         "parse.rkt"
          "entry-point.rkt"
          "pack.rkt"
-         "parens.rkt"
-         "dotted-sequence-parse.rkt")
+         "parens.rkt")
 
 (provide wrap-class-transformer
          (for-syntax check-class-transformer))
@@ -17,38 +14,43 @@
 (define-syntax (wrap-class-transformer stx)
   (check-class-transformer stx)
   (syntax-parse stx
-    #:literals ()
-    #:datum-literals (group named-macro)
-    [(_ name tail-name (named-macro macro orig-stx (q-tag::quotes ((~and g-tag group) id:identifier . pat)) blk) make what)
-     (define empty-parens (datum->syntax #'id '(parens) #'id #'id))
-     #`(wrap-class-transformer name tail-name (#,group-tag macro (q-tag (g-tag #,empty-parens . pat)) blk) make what)]
-    [(_ name tail-name (named-macro macro orig-stx (a-tag::alts
-                                                    (b-tag::block
-                                                     ((~and outer-g-tag group)
-                                                      (q-tag::quotes ((~and g-tag group) id:identifier . pat))
-                                                      blk))
-                                                    ...))
-        make
-        what)
-     (with-syntax ([(empty-parens ...) (for/list ([id (in-list (syntax->list #'(id ...)))])
-                                         (datum->syntax id '(parens) id id))]
-                   [g-tag group-tag])
-       #'(wrap-class-transformer name tail-name (g-tag
-                                                 macro
-                                                 (a-tag (b-tag (outer-g-tag (q-tag (g-tag empty-parens . pat)) blk))
-                                                        ...))
-                                 make
-                                 what))]
     [(_ name tail-name g make-prefix-operator what)
-     (with-syntax-parse ([(~var lam (:entry-point no-adjustments)) (respan #'g)])
-       #'(make-prefix-operator #'name
-                               '((default . stronger))
-                               'macro
-                               (let ([name lam.parsed])
-                                 (let ([name (lambda (tail head)
-                                               (name (pack-tail
-                                                      (cons head (unpack-tail tail #f #f)))))])
-                                   name))))]))
+     #:with (~var lam (:entry-point no-adjustments))
+     (syntax-parse #'g
+       #:datum-literals (group named-macro)
+       [(named-macro macro
+                     orig-stx
+                     (q-tag::quotes ((~and g-tag group) id:identifier . pat))
+                     blk)
+        #:with empty-parens (datum->syntax #'id '(parens) #'id #'id)
+        (respan #`(#,group-tag macro
+                               (q-tag (g-tag empty-parens . pat))
+                               blk))]
+       [(named-macro macro
+                     orig-stx
+                     (a-tag::alts
+                      (b-tag::block
+                       ((~and outer-g-tag group)
+                        (q-tag::quotes ((~and g-tag group) id:identifier . pat))
+                        blk))
+                      ...))
+        #:with (empty-parens ...) (for/list ([id (in-list (syntax->list #'(id ...)))])
+                                             (datum->syntax id '(parens) id id))
+        (respan #`(#,group-tag macro
+                               (a-tag
+                                (b-tag
+                                 (outer-g-tag
+                                  (q-tag (g-tag empty-parens . pat)) blk))
+                                ...)))]
+       [_ #'g])
+     #`(make-prefix-operator #'name
+                             '((default . stronger))
+                             'macro
+                             (let ([name lam.parsed])
+                               (let ([name (lambda (tail head)
+                                             (name (pack-tail
+                                                    (cons head (unpack-tail tail #f #f)))))])
+                                 name)))]))
 
 (define-for-syntax (check-class-transformer stx)
   (syntax-parse stx

@@ -5,7 +5,6 @@
                      racket/symbol
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "with-syntax.rkt"
                      "tag.rkt"
                      shrubbery/print)
          "provide.rkt"
@@ -204,7 +203,7 @@
      (syntax-parse stx
        [(form-id . tail)
         (values (binding-form #'empty-map-infoer name+hash?-id) #'tail)]))))
-  
+
 (define-binding-syntax empty-map (make-empty-map-binding #'("Map.empty" immutable-hash?)))
 (define-binding-syntax empty-readable-map (make-empty-map-binding #'("ReadableMap.empty" hash?)))
 
@@ -450,16 +449,13 @@
                                                                    'pair))
        #`(form-id (parens val ...) . tail)
        maybe-rest))
-    (with-syntax-parse ([composite::binding-form composite])
-      (values
-       (binding-form #'map-infoer
-                     #`(#,mode
-                        (key ...)
-                        #,tmp-ids
-                        #,rest-tmp
-                        composite.infoer-id
-                        composite.data))
-       new-tail))))
+    (values
+     (syntax-parse composite
+       [composite::binding-form
+        (binding-form
+         #'map-infoer
+         #`(#,mode (key ...) #,tmp-ids #,rest-tmp composite.infoer-id composite.data))])
+     new-tail)))
 
 (define-syntax (map-infoer stx)
   (syntax-parse stx

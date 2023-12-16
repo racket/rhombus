@@ -1,11 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     "srcloc.rkt"
-                     "with-syntax.rkt")
+                     syntax/parse/pre)
          "expression.rkt"
-         "repetition.rkt"
-         "static-info.rkt")
+         "repetition.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
                      make-expression&repetition-infix-operator
@@ -50,9 +47,10 @@
      (repetition-infix-operator repet-name prec protocol rep assc)))
 
   (define (repetition-depth form)
-    (with-syntax-parse ([rep::repetition-info form])
-      (- (syntax-e #'rep.bind-depth)
-         (syntax-e #'rep.use-depth)))))
+    (syntax-parse form
+      [rep::repetition-info
+       (- (syntax-e #'rep.bind-depth)
+          (syntax-e #'rep.use-depth))])))
 
 (define-for-syntax (build-compound-repetition at-stx forms build-one
                                               #:is-sequence? [is-sequence? (lambda (form) #f)]
@@ -69,15 +67,16 @@
     (for/lists (names lists depths immed?s) ([form (in-list forms)]
                                              [form-depth (in-list depths)])
       (define seq? (is-sequence? form))
-      (with-syntax-parse ([rep::repetition-info (extract form)])
-        (values #'rep.name
-                (repetition-as-list (extract form)
-                                    (+ (min depth form-depth)
-                                       (if seq? 1 0)))
-                form-depth
-                (if seq?
-                    #f
-                    (syntax-e #'rep.immediate?))))))
+      (syntax-parse (extract form)
+        [rep::repetition-info
+         (values #'rep.name
+                 (repetition-as-list (extract form)
+                                     (+ (min depth form-depth)
+                                        (if seq? 1 0)))
+                 form-depth
+                 (if seq?
+                     #f
+                     (syntax-e #'rep.immediate?)))])))
   (define-values (list-e element-static-infos)
     (build-repetition-map depth
                           names lists use-depths immed?s

@@ -4,7 +4,6 @@
                      shrubbery/print
                      enforest/name-parse
                      "srcloc.rkt"
-                     "with-syntax.rkt"
                      "tag.rkt")
          (submod "annotation.rkt" for-class)
          "annotation-operator.rkt"
@@ -31,48 +30,37 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (define (parse form-id bind-group result-ann plain-body check? tail)
-       (with-syntax-parse ([bind::binding bind-group])
-         (define-values (wrapped-body static-infos)
-           (cond
-             [result-ann
-              (with-syntax-parse ([res::annotation result-ann])
-                (build-annotated-expression form-id #'res
-                                            check?
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (_::parens
+                  (~or* (group _::fun-id
+                               (_::parens (~and bind-g (group _ ...)))
+                               op::annotate-op result-ann ...
+                               (tag::block body ...))
+                        (group _::fun-id
+                               (_::parens (~and bind-g (group _ ...)))
+                               (tag::block body ...))))
+                 . tail)
+        (define bind-parsed (syntax-parse #'bind-g [bind::binding #'bind.parsed]))
+        (define plain-body #'(rhombus-body-at tag body ...))
+        (define-values (wrapped-body static-infos)
+          (cond
+            [(attribute op)
+             (syntax-parse (respan #`(#,group-tag result-ann ...))
+               [res::annotation
+                (build-annotated-expression #'form-id #'res
+                                            (attribute op.check?)
                                             plain-body
                                             #'res.parsed
                                             (lambda (tmp-id)
-                                              #`(raise-annotation-failure 'form-id
-                                                                          #,tmp-id
-                                                                          '#,(shrubbery-syntax->string #'res)))
-                                            values))]
-             [else (values plain-body #'())]))
-         (values
-          (annotation-binding-form
-           #'bind.parsed
-           wrapped-body
-           static-infos)
-          tail)))
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-id (_::parens (group _::fun-id
-                                   (_::parens (group arg ...))
-                                   op::annotate-op result-ann ...
-                                   (tag::block body ...)))
-                 . tail)
-        (parse #'form-id
-               #'(group arg ...)
-               (respan #`(#,group-tag result-ann ...))
-               #'(rhombus-body-at tag body ...)
-               (attribute op.check?)
-               #'tail)]
-       [(form-id (_::parens (group _::fun-id
-                                   (_::parens (group arg ...))
-                                   (tag::block body ...)))
-                 . tail)
-        (parse #'form-id
-               #'(group arg ...)
-               #f
-               #'(rhombus-body-at tag body ...)
-               #f
-               #'tail)]))))
+                                              #`(raise-annotation-failure
+                                                 'form-id
+                                                 #,tmp-id
+                                                 '#,(shrubbery-syntax->string #'res)))
+                                            (lambda (form static-infos)
+                                              (values form static-infos)))])]
+            [else
+             (values plain-body #'())]))
+        (values
+         (annotation-binding-form bind-parsed wrapped-body static-infos)
+         #'tail)]))))

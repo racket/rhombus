@@ -1,16 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/syntax-local
-                     (only-in enforest/operator operator-proc)
-                     "srcloc.rkt"
-                     "with-syntax.rkt"
-                     "tag.rkt"
                      "class-parse.rkt")
-         "annotation.rkt"
          (submod "annotation.rkt" for-class)
          (submod "annot-macro.rkt" for-class)
-         "parens.rkt"
          (for-syntax "class-transformer.rkt")
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt")
@@ -31,75 +24,75 @@
                        constructor-name-fields constructor-public-name-fields super-name-fields super-public-name-fields
                        field-keywords public-field-keywords super-field-keywords super-public-field-keywords)
                  names])
-    (with-syntax ([core-ann-name (if annotation-rhs
-                                     (car (generate-temporaries #'(name)))
-                                     #'name)])
-      (define (make-ann-defs id of-id no-super?
-                             name-fields keywords
-                             super-name-fields super-field-keywords
-                             name-instance-stx
-                             make-converted-id indirect-static-infos-stx)
-        (define len (length (syntax->list name-fields)))
-        (with-syntax ([(constructor-name-field ...) name-fields]
-                      [(field-keyword ...) keywords]
-                      [(super-name-field ...) (if no-super? '() super-name-fields)]
-                      [(super-field-keyword ...) (if no-super? '() super-field-keywords)]
-                      [name-instance name-instance-stx]
-                      [name-build-convert (and
-                                           (syntax-e make-converted-id)
-                                           ((make-syntax-introducer)
-                                            (datum->syntax #f
-                                                           (string->symbol
-                                                            (format "~a-build-convert" (syntax-e #'name))))))])
-          (append
-           (list
-            #`(define-annotation-constructor (#,id #,of-id)
-                ([accessors (list (quote-syntax super-name-field) ...
-                                  (quote-syntax constructor-name-field) ...)])
-                (quote-syntax name?)
-                (#,(quote-syntax quasisyntax) ((#%dot-provider name-instance)
-                                               . #,indirect-static-infos-stx))
-                (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
-                (super-field-keyword ... field-keyword ...)
-                (make-class-instance-predicate accessors)
-                (make-class-instance-static-infos accessors)
-                #,(if (syntax-e #'name-build-convert)
-                      #'(quote-syntax name-build-convert)
-                      not-supported-due-to-internal-reasons)
-                #,(and (syntax-e #'name-build-convert)
-                       #'accessors)
-                #:extends name-extends))
-           (if (syntax-e #'name-build-convert)
-               (list
-                #`(define-syntax name-build-convert
-                    (make-class-instance-converter (quote-syntax #,make-converted-id))))
-               null))))
-      (append
-       (if exposed-internal-id
-           (make-ann-defs exposed-internal-id internal-of-id #t
-                          #'constructor-name-fields #'field-keywords
-                          #'super-name-fields #'super-field-keywords
-                          #'internal-name-instance
-                          #'make-converted-internal
-                          #'internal-indirect-static-infos)
-           null)
-       (cond
-         [annotation-rhs
-          (list
-           ;; build `(define-annotation-syntax name ...)`:
-           (build-syntax-definition/maybe-extension
-            'rhombus/annot #'name #'name-extends
-            #`(wrap-class-transformer name tail-name
-                                      #,(intro annotation-rhs)
-                                      make-annotation-prefix-operator
-                                      "class")))]
-         [else
-          (make-ann-defs #'name #'name-of #f
-                         #'constructor-public-name-fields #'public-field-keywords
-                         #'super-public-name-fields #'super-public-field-keywords
-                         #'name-instance
-                         #'make-converted-name
-                         #'indirect-static-infos)])))))
+    (define (make-ann-defs id of-id no-super?
+                           name-fields keywords
+                           super-name-fields super-field-keywords
+                           name-instance-stx
+                           make-converted-id indirect-static-infos-stx)
+      (define len (length (syntax->list name-fields)))
+      (with-syntax ([(constructor-name-field ...) name-fields]
+                    [(field-keyword ...) keywords]
+                    [(super-name-field ...) (if no-super? '() super-name-fields)]
+                    [(super-field-keyword ...) (if no-super? '() super-field-keywords)])
+        (define name-build-convert
+          (and (syntax-e make-converted-id)
+               ((make-syntax-introducer)
+                (datum->syntax #f
+                               (string->symbol
+                                (format "~a-build-convert" (syntax-e #'name)))))))
+        (append
+         (list
+          #`(define-annotation-constructor (#,id #,of-id)
+              ([accessors (list (quote-syntax super-name-field) ...
+                                (quote-syntax constructor-name-field) ...)])
+              (quote-syntax name?)
+              #,(with-syntax ([name-instance name-instance-stx]
+                              [indirect-static-infos indirect-static-infos-stx])
+                  #`(quasisyntax ((#%dot-provider name-instance)
+                                  . indirect-static-infos)))
+              (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
+              (super-field-keyword ... field-keyword ...)
+              (make-class-instance-predicate accessors)
+              (make-class-instance-static-infos accessors)
+              #,(if name-build-convert
+                    #`(quote-syntax #,name-build-convert)
+                    not-supported-due-to-internal-reasons)
+              (quote-syntax #,(if name-build-convert
+                                  #'(super-name-field ...
+                                     constructor-name-field ...)
+                                  #'()))
+              #:extends name-extends))
+         (if name-build-convert
+             (list
+              #`(define-syntax #,name-build-convert
+                  (make-class-instance-converter (quote-syntax #,make-converted-id))))
+             null))))
+    (append
+     (if exposed-internal-id
+         (make-ann-defs exposed-internal-id internal-of-id #t
+                        #'constructor-name-fields #'field-keywords
+                        #'super-name-fields #'super-field-keywords
+                        #'internal-name-instance
+                        #'make-converted-internal
+                        #'internal-indirect-static-infos)
+         null)
+     (cond
+       [annotation-rhs
+        (list
+         ;; build `(define-annotation-syntax name ....)`:
+         (build-syntax-definition/maybe-extension
+          'rhombus/annot #'name #'name-extends
+          #`(wrap-class-transformer name tail-name
+                                    #,(intro annotation-rhs)
+                                    make-annotation-prefix-operator
+                                    "class")))]
+       [else
+        (make-ann-defs #'name #'name-of #f
+                       #'constructor-public-name-fields #'public-field-keywords
+                       #'super-public-name-fields #'super-public-field-keywords
+                       #'name-instance
+                       #'make-converted-name
+                       #'indirect-static-infos)]))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)

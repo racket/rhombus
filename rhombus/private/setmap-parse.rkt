@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "with-syntax.rkt"
                      "tag.rkt")
          "parse.rkt"
          "static-info.rkt"
@@ -59,20 +58,20 @@
     (cond
       [raw? (list key-e val-e)]
       [else
-       (with-syntax-parse ([key::repetition key-e]
-                           [val::repetition val-e])
-         ;; This could be faster than building list of pair
-         ;; to convert to a hash table...
-         (define pair-rep (flatten-repetition
-                           (build-compound-repetition
-                            stx (list #'key.parsed #'val.parsed)
-                            (lambda (key val)
-                              (values #`(cons #,key #,val)
-                                      #'())))
-                           extra-ellipses))
-         (if repetition?
-             (list (inlined pair-rep))
-             (list #`(#,list->map #,(repetition-as-list pair-rep 1)))))]))
+       (define key-parsed (syntax-parse key-e [key::repetition #'key.parsed]))
+       (define val-parsed (syntax-parse val-e [val::repetition #'val.parsed]))
+       ;; This could be faster than building list of pair
+       ;; to convert to a hash table...
+       (define pair-rep (flatten-repetition
+                         (build-compound-repetition
+                          stx (list key-parsed val-parsed)
+                          (lambda (key val)
+                            (values #`(cons #,key #,val)
+                                    #'())))
+                         extra-ellipses))
+       (if repetition?
+           (list (inlined pair-rep))
+           (list #`(#,list->map #,(repetition-as-list pair-rep 1))))]))
   (syntax-parse stx
     #:datum-literals (block braces parens group)
     [(braces elem ...)

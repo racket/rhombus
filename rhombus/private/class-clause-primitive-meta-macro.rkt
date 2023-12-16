@@ -4,13 +4,10 @@
                      "macro-macro.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "macro-rhs.rkt"
-                     (submod "dot.rkt" for-dot-provider)
                      "srcloc.rkt"
                      "parse.rkt"
                      (for-syntax racket/base
-                                 syntax/parse/pre
-                                 "with-syntax.rkt"
-                                 "srcloc.rkt"))
+                                 syntax/parse/pre))
          "provide.rkt"
          "class-clause.rkt"
          "class-clause-tag.rkt"
