@@ -4,10 +4,8 @@
                      "with-syntax.rkt"
                      "tag.rkt")
          "parse.rkt"
-         (only-in "rest-marker.rkt" &)
          "static-info.rkt"
          "repetition.rkt"
-         "expression.rkt"
          "compound-repetition.rkt"
          (submod "ellipsis.rkt" for-parse)
          "op-literal.rkt")
@@ -96,7 +94,7 @@
            [(and (pair? (cdr elems))
                  (syntax-parse (cadr elems)
                    #:datum-literals (group op)
-                   [(group (op (~var dots-op (:... in-expression-space))))
+                   [(group (op dots-op::...-expr))
                     (when no-splice
                       (raise-syntax-error #f
                                           (format "repetition splicing is not supported on ~a" no-splice)
@@ -132,10 +130,10 @@
             (define elem (car elems))
             (syntax-parse elem
               #:datum-literals (block braces parens group op)
-              [(group (~var and-op (:& in-expression-space)) new-rst ...)
+              [(group and-op::&-expr new-rst ...)
                (when no-splice
                  (raise-syntax-error #f
-                                     (format "& rest is not supported on ~a" no-splice)
+                                     (format "`& rest` is not supported on ~a" no-splice)
                                      #'and-op.name))
                (loop (cdr elems)
                      shape

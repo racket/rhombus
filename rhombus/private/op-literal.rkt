@@ -30,23 +30,23 @@
         #:attributes (name)
         #:description desc
         #:opaque
-        [pattern op::name
-                 #:when (free-identifier=? (in-space #'orig-id) (in-space #'op.name))
-                 #:attr name #'op.name])
+        [pattern ::name
+                 #:when (free-identifier=? (in-space #'name)
+                                           (in-space #'orig-id))])
       (define-syntax-class id-expr
         #:attributes (name)
         #:description desc
         #:opaque
-        [pattern op::name
-                 #:when (free-identifier=? (expr-quote orig-id) #'op.name)
-                 #:attr name #'op.name])
+        [pattern ::name
+                 #:when (free-identifier=? #'name
+                                           (expr-quote orig-id))])
       (define-syntax-class id-bind
         #:attributes (name)
         #:description desc
         #:opaque
-        [pattern op::name
-                 #:when (free-identifier=? (bind-quote orig-id) (in-binding-space #'op.name))
-                 #:attr name #'op.name])))
+        [pattern ::name
+                 #:when (free-identifier=? (in-binding-space #'name)
+                                           (bind-quote orig-id))])))
 
   (define-literal-class :$ :$-expr :$-bind $ "an escape operator")
   (define-literal-class :... :...-expr :...-bind rhombus... "an ellipsis operator")

@@ -5,7 +5,7 @@
                                 [make-module-identifier-mapping make-free-identifier-mapping]
                                 [module-identifier-mapping-get free-identifier-mapping-get]
                                 [module-identifier-mapping-put! free-identifier-mapping-put!])
-                     "operator-parse.rkt"
+                     enforest/name-parse
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
                      "macro-rhs.rkt"
@@ -179,21 +179,20 @@
     infix-operator-options)
 
   (define-syntax-class :$+1
+    #:attributes (name)
     #:description "unquote operator"
     #:opaque
-    #:datum-literals (op)
-    (pattern (op $-id)
-             #:when (free-identifier=? (in-binding-space #'$-id) (bind-quote $)
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name) (bind-quote $)
                                        (add1 (syntax-local-phase-level)) (syntax-local-phase-level))))
 
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:attributes (name extends)
     #:description "operator-macro pattern"
     #:datum-literals (op group)
-    (pattern (~seq op-name::operator-or-identifier)
-             #:when (not (free-identifier=? (in-binding-space #'op-name.name) (bind-quote $)
+    (pattern (~seq ::name)
+             #:when (not (free-identifier=? (in-binding-space #'name) (bind-quote $)
                                             (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
-             #:attr name #'op-name.name
              #:attr extends #'#f)
     (pattern (~seq (_::parens (group seq::dotted-operator-or-identifier-sequence)))
              #:with id::dotted-operator-or-identifier #'seq

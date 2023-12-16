@@ -10,6 +10,7 @@
                      "annotation-string.rkt"
                      "keyword-sort.rkt"
                      "macro-result.rkt"
+                     "tag.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
@@ -142,13 +143,10 @@
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos)
-    (pattern (~seq op::name ~! ctc ...)
-             #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (bind-quote ::)))]
-             #:when (or check?
-                        (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
-             #:with c::annotation #'(group ctc ...)
-             #:with (~var ca (:annotation-converted check?)) #'c.parsed
-             #:do [(when (and (not check?)
+    (pattern (~seq op::annotate-op ctc ...)
+             #:with c::annotation (no-srcloc #`(#,group-tag ctc ...))
+             #:with (~var ca (:annotation-converted (attribute op.check?))) #'c.parsed
+             #:do [(when (and (not (attribute op.check?))
                               (syntax-e #'ca.converter))
                      (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
              #:attr converter #'ca.converter
@@ -185,9 +183,7 @@
 
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)
-    (pattern (~seq o::name ctc ...)
-             #:when (or (free-identifier=? (in-binding-space #'o.name) (bind-quote ::))
-                        (free-identifier=? (in-binding-space #'o.name) (bind-quote :~)))
+    (pattern (~seq o::annotate-op ctc ...)
              #:attr seq #'(o ctc ...)))
 
   (define-syntax-class :annotation-predicate-form
@@ -203,14 +199,16 @@
 
   (define-syntax-class :annotate-op
     #:attributes (name check?)
-    (pattern op::name
-             #:when (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
-             #:attr check? #'#t
-             #:attr name #'op.name)
-    (pattern op::name
-             #:when (free-identifier=? (in-binding-space #'op.name) (bind-quote :~))
-             #:attr check? #'#f
-             #:attr name #'op.name))
+    #:description "an annotation operator"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name)
+                                       (bind-quote ::))
+             #:attr check? #t)
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name)
+                                       (bind-quote :~))
+             #:attr check? #f))
 
   (define (annotation-predicate-form predicate static-infos)
     #`(#:pred #,predicate #,static-infos))
@@ -868,7 +866,7 @@
 
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
-   (annot-quote %parens)
+   (annot-quote #%parens)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -886,7 +884,7 @@
 
 (define-annotation-syntax #%literal
   (annotation-prefix-operator
-   (annot-quote %literal)
+   (annot-quote #%literal)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -913,7 +911,7 @@
                 #'tail)]))))
 
 (define-annotation-syntax Real.above (make-unary-real-annotation (annot-quote Real.above) #'>))
-(define-annotation-syntax Real.at_least (make-unary-real-annotation (annot-quote Real.above) #'>=))
+(define-annotation-syntax Real.at_least (make-unary-real-annotation (annot-quote Real.at_least) #'>=))
 (define-annotation-syntax Real.below (make-unary-real-annotation (annot-quote Real.below) #'<))
 (define-annotation-syntax Real.at_most (make-unary-real-annotation (annot-quote Real.at_most) #'<=))
 

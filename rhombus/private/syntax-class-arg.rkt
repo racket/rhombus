@@ -3,10 +3,8 @@
                      syntax/parse/pre
                      "tag.rkt")
          "parens.rkt"
-         "binding.rkt"
          "parse.rkt"
          "function-arity.rkt"
-         "rest-marker.rkt"
          "op-literal.rkt")
 
 (provide (for-syntax :class-args))
@@ -56,7 +54,7 @@
     (pattern (~seq)
              #:attr formals #'#f
              #:attr arity #'#f)
-    (pattern (~seq (_::parens arg::class-arg ... (group (~var _ (:& in-binding-space)) id:identifier))) 
+    (pattern (~seq (_::parens arg::class-arg ... (group _::&-bind id:identifier)))
              #:attr formals #'(arg.formal ... ... . id)
              #:attr arity (datum->syntax
                            #f

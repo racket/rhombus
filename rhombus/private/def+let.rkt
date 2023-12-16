@@ -3,15 +3,11 @@
                      syntax/parse/pre
                      enforest/name-parse
                      shrubbery/print
-                     "infer-name.rkt"
                      "tag.rkt"
                      "srcloc.rkt")
          "definition.rkt"
          "binding.rkt"
          "parse.rkt"
-         "implicit.rkt"
-         "annotation.rkt"
-         "call-result-key.rkt"
          "values-key.rkt"
          "static-info.rkt"
          "forwarding-sequence.rkt"
@@ -28,6 +24,15 @@
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
+(begin-for-syntax
+  (define-syntax-class :values-id
+    #:attributes (name)
+    #:description "the literal `values`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name)
+                                       (bind-quote rhombus-values)))))
+
 (define-for-syntax (make-def #:wrap-definition [wrap-definition values]
                              #:check-context [check-context void]
                              #:check-bind-uses [check-bind-uses void])
@@ -38,33 +43,27 @@
         #:datum-literals (parens group)
         [(_ ... a::equal _ ... b::equal . _)
          (raise-too-many-equals stx #'a #'b)]
-        [(form-id (~optional op::name) (parens g ...) (~and rhs (_::block body ...)))
-         #:when (or (not (attribute op))
-                    (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
+        [(form-id (~optional op::values-id) (parens g ...) (~and rhs (_::block body ...)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
                                    wrap-definition
-                                   #:show-values? (attribute op)
+                                   #:show-values? (and (attribute op) #t)
                                    #:check-bind-uses check-bind-uses)]
-        [(form-id (~optional op::name) (parens g ...) _::equal rhs ...+)
-         #:when (or (not (attribute op))
-                    (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
+        [(form-id (~optional op::values-id) (parens g ...) _::equal rhs ...+)
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition
-                                   #:show-values? (attribute op)
+                                   #:show-values? (and (attribute op) #t)
                                    #:check-bind-uses check-bind-uses)]
         [(form-id any::not-equal ...+ _::equal rhs ...+)
-         #:with g-tag group-tag
          (build-value-definitions #'form-id
-                                  (no-srcloc #'(g-tag any ...))
+                                  (no-srcloc #`(#,group-tag any ...))
                                   #`(#,group-tag rhs ...)
                                   wrap-definition
                                   #:check-bind-uses check-bind-uses)]
         [(form-id any ...+ (~and rhs (_::block body ...)))
-         #:with g-tag group-tag
          (build-value-definitions #'form-id
-                                  (no-srcloc #'(g-tag any ...))
+                                  (no-srcloc #`(#,group-tag any ...))
                                   #'rhs
                                   wrap-definition
                                   #:check-bind-uses check-bind-uses)]
@@ -135,7 +134,7 @@
                                     #:when (= (length (syntax->list #'(si ...)))
                                               (length lhss))
                                     (map single-valued-static-info (syntax->list #'(si ...)))]
-                                   [_ (for/list ([lhs (in-list lhss)]) #'())])) 
+                                   [_ (for/list ([lhs (in-list lhss)]) #'())]))
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      enforest/hier-name-parse
                      enforest/syntax-local
                      "name-path-op.rkt"
@@ -85,6 +86,18 @@
                               #:rator-arity arity))
        call])))
 
+(begin-for-syntax
+  (define-syntax-rule (define-expose-specifier-class class spec desc)
+    (define-syntax-class class
+      #:attributes (name)
+      #:description desc
+      #:opaque
+      (pattern ::name
+        #:when (free-identifier=? (in-import-space #'name)
+                                  (impo-quote spec)))))
+  (define-expose-specifier-class :as-id as "the literal `as`")
+  (define-expose-specifier-class :open-id open "the literal `open`"))
+
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
    (unquote-bind-quote ::)
@@ -110,29 +123,27 @@
          #:datum-literals (group)
          [((_::block g ...))
           (values
-           (for/fold ([open #hasheq()]) ([g (in-list (syntax->list #'(g ...)))])
+           (for/fold ([spec #hasheq()]) ([g (in-list (syntax->list #'(g ...)))])
              (syntax-parse g
                #:datum-literals (group)
-               [(group id:identifier)
-                (free-identifier=? (in-import-space #'id) (impo-quote open))
-                (when (syntax? open)
-                  (raise-syntax-error #f "redundant opening clause" stx #'id))
-                (when (and (hash? open) ((hash-count open) . > . 0))
-                  (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'id))
-                #'id]
-               [(group field:identifier as:identifier bind:identifier)
-                (free-identifier=? (in-import-space #'id) (impo-quote as))
-                (when (syntax? open)
+               [(group open::open-id)
+                (when (syntax? spec)
+                  (raise-syntax-error #f "duplicate opening clause" stx #'open.name))
+                (when (and (hash? spec) ((hash-count spec) . > . 0))
+                  (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'open.name))
+                #'open.name]
+               [(group field:identifier as::as-id bind:identifier)
+                (when (syntax? spec)
                   (raise-syntax-error #f "specific field not allowed after opening clause" stx #'field))
                 (define key (syntax-e #'field))
-                (hash-set open key (cons (cons #'field #'bind) (hash-ref open key null)))]
+                (hash-set spec key (cons (cons #'field #'bind) (hash-ref spec key null)))]
                [(group field:identifier ...)
-                (when (syntax? open)
+                (when (syntax? spec)
                   (raise-syntax-error #f "specific field not allowed after opening clause" stx
                                       (car (syntax-e #'(field ...)))))
-                (for/fold ([open open]) ([field (in-list (syntax->list #'(field ...)))])
+                (for/fold ([spec spec]) ([field (in-list (syntax->list #'(field ...)))])
                   (define key (syntax-e field))
-                  (hash-set open key (cons (cons field field) (hash-ref open key null))))]
+                  (hash-set spec key (cons (cons field field) (hash-ref spec key null))))]
                [_
                 (raise-syntax-error #f "bad exposure clause" stx g)]))
            #'())]

@@ -198,15 +198,21 @@
                      predicate? ; all predicate annotations?
                      count))    ; the expected number of values
 
+  (define-syntax-class :values-id
+    #:attributes (name)
+    #:description "the literal `values`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-annotation-space #'name)
+                                       (annot-quote rhombus-values))))
+
   (define-splicing-syntax-class :ret-annotation
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
                   converter    ; a `converter` struct, or `#f`
                   annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
     #:datum-literals (block group)
-    (pattern (~seq ann-op::annotate-op (~optional op::name) (~and p (_::parens g ...)))
-             #:when (or (not (attribute op))
-                        (free-identifier=? (in-annotation-space #'op.name) (annot-quote rhombus-values)))
+    (pattern (~seq ann-op::annotate-op (~optional op::values-id) (~and p (_::parens g ...)))
              #:do [(define gs #'(g ...))]
              #:with (c::annotation ...) gs
              #:with (arg ...) (generate-temporaries gs)
@@ -216,7 +222,7 @@
                        [(c-parsed::annotation-predicate-form ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
                                 (converter
-                                 (and (syntax-e #'ann-op.check?)
+                                 (and (attribute ann-op.check?)
                                       #'(lambda (arg ... success-k fail-k)
                                           (if (and (c-parsed.predicate arg) ...)
                                               (success-k arg ...)
@@ -224,7 +230,7 @@
                                  #t
                                  cnt))]
                        [(c-parsed::annotation-binding-form ...)
-                        #:do [(unless (syntax-e #'ann-op.check?)
+                        #:do [(unless (attribute ann-op.check?)
                                 (for ([c (in-list (syntax->list #'(c ...)))]
                                       [c-p (in-list (syntax->list #'(c.parsed ...)))])
                                   (syntax-parse c-p
@@ -265,7 +271,7 @@
                        [c-parsed::annotation-predicate-form
                         (values #'c-parsed.static-infos
                                 (converter
-                                 (and (syntax-e #'ann-op.check?)
+                                 (and (attribute ann-op.check?)
                                       #'(lambda (v success-k fail-k)
                                           (if (c-parsed.predicate v)
                                               (success-k v)
@@ -273,7 +279,7 @@
                                  #t
                                  1))]
                        [c-parsed::annotation-binding-form
-                        #:do [(unless (syntax-e #'ann-op.check?)
+                        #:do [(unless (attribute ann-op.check?)
                                 (raise-unchecked-disallowed #'ann-op.name #'c))]
                         #:with arg-parsed::binding-form #'c-parsed.binding
                         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)

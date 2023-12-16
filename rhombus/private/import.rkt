@@ -903,9 +903,12 @@
 
 (begin-for-syntax
   (define-syntax-class :as-id
-    #:description "`as`"
-    (pattern as-id:identifier
-             #:when (free-identifier=? (in-import-space #'as-id) (impo-quote as)))))
+    #:attributes (name)
+    #:description "the literal `as`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-import-space #'name)
+                                       (impo-quote as)))))
 
 (define-import-syntax rename
   (import-modifier-block

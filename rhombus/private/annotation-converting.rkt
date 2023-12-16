@@ -6,21 +6,28 @@
                      "srcloc.rkt"
                      "with-syntax.rkt"
                      "tag.rkt")
-         "annotation.rkt"
          (submod "annotation.rkt" for-class)
          "annotation-operator.rkt"
-         "binding.rkt"
          "parse.rkt"
          "parens.rkt"
-         (only-in "function.rkt" fun))
+         (only-in "function.rkt" fun)
+         (only-in "expression.rkt" expr-quote))
 
 (provide (for-space rhombus/annot
 
                     converting))
 
+(begin-for-syntax
+  (define-syntax-class :fun-id
+    #:attributes (name)
+    #:description "the literal `fun`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? #'name (expr-quote fun)))))
+
 (define-annotation-syntax converting
   (annotation-prefix-operator
-   (annot-quote matching)
+   (annot-quote converting)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -48,23 +55,21 @@
           tail)))
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (_::parens (group func::name
-                                   (parens (group arg ...))
+       [(form-id (_::parens (group _::fun-id
+                                   (_::parens (group arg ...))
                                    op::annotate-op result-ann ...
                                    (tag::block body ...)))
                  . tail)
-        #:when (free-identifier=? #'func.name #'fun)
         (parse #'form-id
                #'(group arg ...)
                (respan #`(#,group-tag result-ann ...))
                #'(rhombus-body-at tag body ...)
-               (syntax-e #'op.check?)
+               (attribute op.check?)
                #'tail)]
-       [(form-id (_::parens (group func::name
-                                   (parens (group arg ...))
+       [(form-id (_::parens (group _::fun-id
+                                   (_::parens (group arg ...))
                                    (tag::block body ...)))
                  . tail)
-        #:when (free-identifier=? #'func.name #'fun)
         (parse #'form-id
                #'(group arg ...)
                #f

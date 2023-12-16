@@ -228,10 +228,12 @@
 
 (begin-for-syntax
   (define-syntax-class :!
+    #:attributes (name)
     #:description "submodule separator"
     #:opaque
-    (pattern name::name
-             #:when (free-identifier=? (in-module-path-space #'name.name) (modpath-quote rhombus-!)))))
+    (pattern ::name
+             #:when (free-identifier=? (in-module-path-space #'name)
+                                       (modpath-quote rhombus-!)))))
 
 (define-for-syntax (make-module-path-submod-same-operator prefix-operator name)
   (prefix-operator

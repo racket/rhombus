@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     enforest/name-parse)
          "syntax-class-clause.rkt"
          (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
@@ -95,8 +96,11 @@
 (begin-for-syntax
   (struct declared-field (id depth unpack*-id) #:prefab)
   (define-syntax-class :kind-id
-    (pattern id:identifier
-             #:when (free-identifier=? (in-syntax-class-clause-space #'id)
+    #:attributes (name)
+    #:description "the literal `kind`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-syntax-class-clause-space #'name)
                                        (syntax-class-clause-quote kind)))))
 
 (define-syntax-class-clause-syntax fields

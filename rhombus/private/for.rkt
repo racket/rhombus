@@ -1,11 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     racket/syntax-srcloc
-                     syntax/srcloc
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/syntax-local
-                     enforest/transformer
                      "tag.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
@@ -15,7 +12,6 @@
          "binding.rkt"
          "parse.rkt"
          "reducer.rkt"
-         (submod "reducer.rkt" for-class)
          "for-clause.rkt"
          "static-info.rkt"
          "index-result-key.rkt"
@@ -242,6 +238,15 @@
                                        [finish () () (void) (void) #,stx-params]
                                        . #,bodys))))])))
 
+(begin-for-syntax
+  (define-syntax-class :values-id
+    #:attributes (name)
+    #:description "the literal `values`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name)
+                                       (bind-quote rhombus-values)))))
+
 (define-for-syntax (build-binding-clause/values orig-stx
                                                 state-stx
                                                 bindings-stx
@@ -251,10 +256,7 @@
                         state-stx
                         (syntax-parse bindings-stx
                           #:datum-literals (group parens block)
-                          [((group (~optional values-id::name) (parens g ...)))
-                           #:when (or (not (attribute values-id))
-                                      (free-identifier=? (in-binding-space #'values-id.name)
-                                                         (bind-quote rhombus-values)))
+                          [((group (~optional _::values-id) (parens g ...)))
                            #'(g ...)]
                           [else bindings-stx])
                         rhs-block-stx

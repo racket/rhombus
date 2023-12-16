@@ -22,11 +22,10 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       #:datum-literals (op)
-       [((op o) . _)
+       [(head::name . _)
         (raise-syntax-error #f
                             "not an expression operator"
-                            #'o)]))
+                            #'head.name)]))
    'none))
 
 (define-binding-syntax rhombus=
@@ -36,20 +35,19 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       #:datum-literals (op)
-       [((op o) . _)
+       [(head::name . _)
         (raise-syntax-error #f
                             "not a binding operator"
-                            #'o)]))
+                            #'head.name)]))
    'none))
 
 (begin-for-syntax
   (define-syntax-class :equal
-    #:attributes ()
+    #:attributes (name)
     #:description "equal operator"
     #:opaque
-    (pattern op::name
-             #:when (free-identifier=? #'op.name
+    (pattern ::name
+             #:when (free-identifier=? #'name
                                        (expr-quote rhombus=))))
   (define-syntax-class :not-equal
     #:attributes ()

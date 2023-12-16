@@ -155,9 +155,12 @@
 
 (begin-for-syntax
   (define-syntax-class :as-id
-    #:description "`as`"
-    (pattern as-id:identifier
-             #:when (free-identifier=? (in-export-space #'as-id) (expo-quote as))))
+    #:attributes (name)
+    #:description "the literal `as`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-export-space #'name)
+                                       (expo-quote as))))
 
   (define-syntax-class :renaming
     #:datum-literals (group)

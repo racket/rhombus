@@ -466,9 +466,9 @@
                         [() (no-wrap)]
                         [((block . _) . _) (wrap-non-block-non-alts)]
                         [((alts . _) . _) (wrap-non-alts)]
-                        [((~var _ (:$ in-binding-space)) _  (~var _ (:... in-binding-space)) . gs) (loop #'gs)]
-                        [((~var _ (:$ in-binding-space)) . gs) (loop #'gs)]
-                        [(_ (~var _ (:... in-binding-space)) . gs) (loop #'gs)]
+                        [(_::$-bind _ _::...-bind . gs) (loop #'gs)]
+                        [(_::$-bind . gs) (loop #'gs)]
+                        [(_ _::...-bind . gs) (loop #'gs)]
                         [_ (wrap-non-block-non-alts)])))))
 
 (define-unquote-binding-syntax #%quotes
@@ -543,9 +543,9 @@
                                      #:repetition? [repetition? #f])
   (syntax-parse (and (not repetition?) e)
     #:datum-literals (group multi)
-    [(group (~var _ (:$ in-expression-space)) tail:identifier (~var dots (:... in-expression-space)))
+    [(group _::$-expr tail:identifier dots::...-expr)
      (convert-direct-tail-template #'tail #'dots)]
-    [(multi (group (~var _ (:$ in-expression-space)) tail:identifier (~var dots (:... in-expression-space))))
+    [(multi (group _::$-expr tail:identifier dots::...-expr))
      (convert-direct-tail-template #'tail #'dots)]
     [_
      (define-values (template idrs sidrs vars can-be-empty?)

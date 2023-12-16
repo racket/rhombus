@@ -11,9 +11,7 @@
          "class-clause-tag.rkt"
          (submod "class-clause.rkt" for-class)
          "interface-clause.rkt"
-         (only-in "annotation.rkt" :: :~)
          (submod "annotation.rkt" for-class)
-         "binding.rkt"
          "parens.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
@@ -138,10 +136,8 @@
 (begin-for-syntax
   (define-splicing-syntax-class :maybe-ret
     #:attributes (seq)
-    (pattern (~seq (~and o op::name) ret ...)
-             #:when (or (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
-                        (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
-             #:attr seq #'(o ret ...))
+    (pattern (~seq op::annotate-op ret ...)
+             #:attr seq #'(op ret ...))
     (pattern (~seq)
              #:attr seq #'()))
   (define-splicing-syntax-class (:method-impl mode)
@@ -196,7 +192,7 @@
                                                         (block (group (parens (group ignored))
                                                                       (block (group (parsed #:rhombus/expr (not-assignable 'id)))))))))
                                                ret.seq)))
-    
+
     (pattern (~seq (_::alts
                     (_::block
                      (group id:identifier ret::maybe-ret
@@ -299,15 +295,18 @@
                               ((group fun (parens) rhs) ...)))]))))
 
 (begin-for-syntax
-  (define-syntax-rule (define-clause-form-syntax-class id form-id)
+  (define-syntax-rule (define-clause-form-syntax-class id form-id desc)
     (define-syntax-class id
-      (pattern f:identifier
-               #:when (free-identifier=? (in-class-clause-space #'f)
+      #:attributes (name)
+      #:description desc
+      #:opaque
+      (pattern ::name
+               #:when (free-identifier=? (in-class-clause-space #'name)
                                          (class-clause-quote form-id)))))
-  (define-clause-form-syntax-class :method method)
-  (define-clause-form-syntax-class :property property)
-  (define-clause-form-syntax-class :override override)
-  (define-clause-form-syntax-class :implements implements))
+  (define-clause-form-syntax-class :method method "the literal `method`")
+  (define-clause-form-syntax-class :property property "the literal `property`")
+  (define-clause-form-syntax-class :override override "the literal `override`")
+  (define-clause-form-syntax-class :implements implements "the literal `implements`"))
 
 (define-for-syntax (parse-final stx data)
   (syntax-parse stx
@@ -343,7 +342,7 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:property-impl #'#:property))) #'m.form]))))
-  
+
 (define-interface-clause-syntax property
   (interface-clause-transformer
    (lambda (stx data)
@@ -358,7 +357,7 @@
        [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
        [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
        [(_ (~var m (:method-impl #'#:override))) #'m.form]))))
-  
+
 (define-interface-clause-syntax override
   (interface-clause-transformer
    (lambda (stx data)
@@ -383,7 +382,7 @@
        [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
-  
+
 (define-interface-clause-syntax private
   (interface-clause-transformer
    (lambda (stx data)

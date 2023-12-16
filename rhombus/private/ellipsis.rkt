@@ -23,6 +23,6 @@
       #:datum-literals (group)
       [((group op::name) . gs)
        #:when (free-identifier=? #'op.name
-                                 (quote-syntax rhombus...))
+                                 (expr-quote rhombus...))
        (loop #'gs (add1 count))]
       [_ (values stx count)])))

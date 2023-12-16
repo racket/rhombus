@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "attribute-name.rkt")
          syntax/parse/pre
          "provide.rkt"
@@ -80,16 +81,23 @@
      (lambda (who stx expected-kind name tail)
        (parse-anonymous-syntax-class who stx expected-kind name tail)))))
 
+(begin-for-syntax
+  (define-syntax-class :syntax-class-id
+    #:attributes (name)
+    #:description "the literal `syntax_class`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-defn-space #'name)
+                                       (defn-quote syntax_class)))))
+
 (define-syntax together
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ (_::block (group form . rest)) ...)
-         #:when (for/and ([form (in-list (syntax->list #'(form ...)))])
-                  (free-identifier=? (in-defn-space form) (defn-quote syntax_class)))
+        [(_ (_::block (group op::syntax-class-id . rest)) ...)
          (define decls
-           (for/list ([g (in-list (syntax->list #'((form . rest) ...)))])
+           (for/list ([g (in-list (syntax->list #'((op . rest) ...)))])
              (parse-syntax-class g #:for-together? #t)))
          (append
           (map car decls)
