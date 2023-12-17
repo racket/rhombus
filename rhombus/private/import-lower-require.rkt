@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      racket/phase+space
                      enforest/transformer
+                     racket/symbol
                      "import-cover.rkt")
          "name-root-space.rkt"
          "space-in.rkt")
@@ -25,7 +26,10 @@
     (define-values (r-phase+spaces syms new-covered-ht phase-shift renames revnames only-mentioned? only-phase)
       ;; A call to `extract` returns
       ;;  - phases+spaces: relevant phase+space combinations
-      ;;  - syms: all names imported at relevant phase+space by the specification so far, mapped to spaces where it resides
+      ;;  - syms: all names imported at relevant phase+space by the specification so far, mapped to spaces where it resides;
+      ;;    each space is mapped to the set of symbol extensions (e.g., ".pi" for 'math.pi) at that space to handle
+      ;;    namespace extensions; a pair of space-keyed tables means that the original table was restricted to a subset
+      ;;    of the original spaces (for an easy test of whether there are any such extensions)
       ;;  - covered-ht: similar info to make sure all actions are covered across multiple import conversions
       ;;  - shift: phase shift
       ;;  - renames: summarizes rename/exclude history (redundant with `syms`, but allows some improved errors and optimization)
@@ -44,8 +48,12 @@
             (define phase+spaces (map car phase+space+symss))
             (define syms (for*/fold ([syms #hasheq()])
                                     ([phase+space+syms (in-list phase+space+symss)]
-                                     [sym (in-list (cdr phase+space+syms))])
-                           (hash-set syms sym (hash-set (hash-ref syms sym #hasheq()) (phase+space-space (car phase+space+syms)) #t))))
+                                     [full-sym (in-list (cdr phase+space+syms))])
+                           (define-values (sym sym-ext) (extract-symbol-root+ext full-sym))
+                           (define space (phase+space-space (car phase+space+syms)))
+                           (define old-table (hash-ref syms sym #hasheq()))
+                           (define old-sym-exts (hash-ref old-table sym #hash()))
+                           (hash-set syms sym (hash-set old-table space (hash-set old-sym-exts sym-ext #t)))))
             (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f '#:all))
           (define (get-not-here revnames only-mentioned?)
             (string-append " is not provided"
@@ -256,11 +264,11 @@
                (for/fold ([new-syms #hasheq()])
                          ([(sym spaces*) (in-hash syms)])
                  (define spaces (if (pair? spaces*) (car spaces*) spaces*))
-                 (define new-spaces (for/hasheq ([space (in-hash-keys spaces)]
+                 (define new-spaces (for/hasheq ([(space sym-exts) (in-hash spaces)]
                                                  #:when (if keep?
                                                             (hash-ref the-spaces space #f)
                                                             (not (hash-ref the-spaces space #f))))
-                                      (values space #t)))
+                                      (values space sym-exts)))
                  (if (positive? (hash-count new-spaces))
                      (hash-set new-syms sym (cond
                                               [(equal? spaces new-spaces) spaces*]
@@ -318,7 +326,7 @@
                                                 (car spaces*)
                                                 spaces*))])
              (hash-set space->ids space
-                       (hash-set (hash-ref space->ids space #hasheq()) k #t)))))
+                       (hash-set (hash-ref space->ids space #hasheq()) k spaces*)))))
     (define (make-ins* syms for-expose?)
       (cond
         [only-mentioned?
@@ -330,18 +338,25 @@
                 '()
                 (list #`(only #,mod-path
                               #,@(for/list ([k (in-hash-keys renames)]
-                                            #:when (hash-ref syms k #f))
+                                            #:do [(define spaces->exts (hash-ref syms k #f))]
+                                            #:when spaces->exts
+                                            [full-k (in-list (full-symbols spaces->exts k))])
                                    (if open-id
-                                       (datum->syntax open-id k)
-                                       k)))))]
+                                       (datum->syntax open-id full-k)
+                                       full-k)))))]
            [else
             ;; specific ids, some exposed or renamed
             (define l
               (for/list ([(k v) (in-hash renames)]
-                         #:when (and (or (not for-expose?)
-                                         (expose? v))
-                                     (hash-ref syms (syntax-e (plain-id v)) #f)))
-                #`(rename #,mod-path #,(plain-id v) #,k)))
+                         #:do [(define spaces->exts
+                                 (and (or (not for-expose?)
+                                          (expose? v))
+                                      (hash-ref syms (syntax-e (plain-id v)) #f)))]
+                         #:when spaces->exts
+                         [full-plain-id+k (in-list (full-symbols spaces->exts (plain-id v) k))])
+                (define full-plain-id (car full-plain-id+k))
+                (define full-k (cdr full-plain-id+k))
+                #`(rename #,mod-path #,full-plain-id #,full-k)))
             (if (null? l)
                 ;; don't lose track of the module completely
                 (list #`(only #,mod-path))
@@ -368,14 +383,20 @@
               null
               (list #`(all-except #,mod-path
                                   ;; things in `renames` are renamed or excluded
-                                  #,@(for/list ([k (in-hash-keys renames)])
-                                       k))))
+                                  #,@(for*/list ([k (in-hash-keys renames)]
+                                                 [full-k (in-list (full-symbols (hash-ref syms k #f) k))])
+                                       full-k))))
           (for/list ([(k v) (in-hash renames)]
                      #:when v ;; #f means excluded
-                     #:when (and (or (not for-expose?)
-                                     (expose? v))
-                                 (hash-ref syms (syntax-e (plain-id v)) #f)))
-            #`(rename #,mod-path #,(plain-id v) #,k)))]))
+                     #:do [(define spaces->exts
+                             (and (or (not for-expose?)
+                                      (expose? v))
+                                  (hash-ref syms (syntax-e (plain-id v)) #f)))]
+                     #:when spaces->exts
+                     [full-plain-id+k (in-list (full-symbols spaces->exts (plain-id v) k))])
+            (define full-plain-id (car full-plain-id+k))
+            (define full-k (cdr full-plain-id+k))
+            #`(rename #,mod-path #,full-plain-id #,full-k)))]))
     (define (make-ins for-expose?)
       (define ins
         (if any-space-limited?
@@ -424,4 +445,42 @@
              #`(begin
                  (#%require #,@(map car reqs+defss))
                  #,@(apply append (map cdr reqs+defss)))))
-     new-covered-ht)))
+     new-covered-ht))
+
+  (define (extract-symbol-root+ext sym)
+    (define str (symbol->immutable-string sym))
+    (let loop ([i 0])
+      (cond
+        [(= i (string-length str)) (values sym "")]
+        [(char=? #\. (string-ref str i)) (values (string->symbol (substring str 0 i))
+                                                 (substring str i))]
+        [else (loop (add1 i))])))
+
+  (define (full-symbols spaces->exts sym/id [and-sym #f])
+    (cond
+      [(not spaces->exts) (if (not and-sym)
+                              (list sym/id)
+                              (list (cons sym/id and-sym)))]
+      [else
+       (define sym (if (identifier? sym/id) (syntax-e sym/id) sym/id))
+       (hash-values
+        (for*/hasheq ([exts (in-hash-values spaces->exts)]
+                      [ext (in-hash-keys exts)])
+          (cond
+            [(equal? ext "") (values sym (if (not and-sym)
+                                             sym/id
+                                             (cons sym/id and-sym)))]
+            [else
+             (define new-sym
+               (string->symbol (string-append (symbol->immutable-string sym)
+                                              ext)))
+             (define new-sym/id
+               (if (identifier? sym/id)
+                   (datum->syntax sym/id new-sym sym/id sym/id)
+                   new-sym))
+             (values new-sym
+                     (if (not and-sym)
+                         new-sym/id
+                         (cons new-sym/id
+                               (string->symbol (string-append (symbol->immutable-string and-sym)
+                                                              ext)))))])))])))

@@ -167,3 +167,44 @@ check:
       x + y - 1
   f(3, 4)
   ~is 12
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm") as ex_f
+  [ex_f.prefix.original, ex_f.prefix.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm").prefix
+  [prefix.original, prefix.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm"):
+      expose prefix
+      rename prefix as pfx
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm").prefix as pfx
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm"):
+      only prefix
+      open
+  [prefix.original, prefix.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm") as ex:
+      only prefix
+  [ex.prefix.original, ex.prefix.added]
+  ~is ["orig", "add"]
