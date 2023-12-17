@@ -12,7 +12,7 @@ check:
     1/0
     ~catch
     | x :: Int:
-        "done"      
+        "done"
     | x :: Exn.Fail:
         "fail"
   ~is "fail"
@@ -45,7 +45,7 @@ check:
 check:
   def outer = Continuation.make_prompt_tag(#'outer)
   Continuation.prompt outer:
-    Continuation.prompt:  
+    Continuation.prompt:
       2 + (Continuation.escape(~tag: outer, 100))
       ~catch x: error("oops")
     ~catch x: [x]
@@ -129,3 +129,20 @@ check:
     fun (): 2
   )
   ~is 3
+
+check:
+  Continuation.prompt:
+    Continuation.capture cont:
+      Continuation.escape(cont)
+    ~catch cont: cont
+  ~is_a Continuation
+
+check:
+  Continuation.make_prompt_tag() ~is_a Continuation.PromptTag
+  Continuation.make_prompt_tag(#false) ~is_a Continuation.PromptTag
+  Continuation.make_prompt_tag(#'a_tag) ~is_a Continuation.PromptTag
+  Continuation.make_prompt_tag("a_tag") ~is_a Continuation.PromptTag
+  Continuation.default_prompt_tag ~is_a Continuation.PromptTag
+
+check:
+  Continuation.current_marks() ~is_a Continuation.Marks

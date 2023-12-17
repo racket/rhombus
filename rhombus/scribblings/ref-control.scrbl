@@ -88,8 +88,11 @@
 
 
 @doc(
-  fun Continuation.escape(val, ...,
-                          ~tag: tag = Continuation.default_prompt_tag)
+  fun Continuation.escape(
+    ~tag: tag :: Continuation.PromptTag:
+            Continuation.default_prompt_tag,
+    val :: Any, ...
+  ) :: None
 ){
 
  Escapes to the nearest prompt in the current continuation that has the
@@ -99,8 +102,19 @@
 }
 
 @doc(
-  fun Continuation.make_prompt_tag(name :: ReadableString || Symbol || False)
+  annot.macro 'Continuation.PromptTag'
+){
+
+ Recognizes prompt tags as produced by @rhombus(Continuation.make_prompt_tag).
+
+}
+
+@doc(
+  fun Continuation.make_prompt_tag(
+    name :: maybe(ReadableString || Symbol) = #false
+  ) :: Continuation.PromptTag
   def Continuation.default_prompt_tag
+    :: Continuation.PromptTag
 ){
 
  Creates a fresh prompt tag or accesses a default prompt tag.
@@ -148,8 +162,8 @@
 
 @doc(
   fun Continuation.call_with_immediate_mark(
-    key,
-    ~default: default = #false,
+    key :: Any,
+    ~default: default :: Any = #false,
     fn :: Function.of_arity(1)
   )
 ){
@@ -162,10 +176,9 @@
 
 
 @doc(
-  fun Continuation.call_in(
-    cont :: Continuation,
-    fn :: Function.of_arity(0)
-  )
+  fun Continuation.call_in(cont :: Continuation,
+                           fn :: Function.of_arity(0))
+    :: None
 ){
 
  Calls @rhombus(fn) with the current continuation extended with

@@ -31,6 +31,7 @@
 (define-name-root Continuation
   #:fields
   (Marks
+   PromptTag
    current_marks
    capture
    prompt
@@ -42,6 +43,8 @@
    call_with_immediate_mark))
 
 (define-annotation-syntax Continuation (identifier-annotation #'continuation? #'()))
+
+(define-annotation-syntax PromptTag (identifier-annotation #'continuation-prompt-tag? #'()))
 
 (define-annotation-syntax Marks (identifier-annotation #'continuation-mark-set? #'()))
 
@@ -315,7 +318,7 @@
       [(string? name-in) (string->symbol name-in)]
       [else (raise-argument-error* who
                                    rhombus-realm
-                                   "ReadableString || Symbol || False"
+                                   "maybe(ReadableString || Symbol)"
                                    name-in)]))
   (if name
       (make-continuation-prompt-tag name)
