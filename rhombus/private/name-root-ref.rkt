@@ -228,11 +228,20 @@
                                  (syntax-e root-id))
                              (syntax-e field-id))))
    'disappeared-use
-   (cons (transform-out (in-name-root-space root-id))
-         (datum->syntax new-field-id
-                        (syntax-e new-field-id)
-                        field-id
-                        field-id))))
+   (let ([root (transform-out (in-name-root-space root-id))])
+     (if (syntax-original? (transform-out field-id))
+         ;; enable arrows, etc., from `new-field-id` based on its binding
+         (cons (syntax-property (datum->syntax new-field-id
+                                               (syntax-e new-field-id)
+                                               field-id
+                                               field-id)
+                                ;; `new-field-id` is non-original, since it's
+                                ;; introduced by expansion, and it may have other
+                                ;; scopes from its definition site:
+                                'original-for-check-syntax
+                                #t)
+               root)
+         root))))
 
 (define-for-syntax (replace-head-dotted-name stx)
   (define head (car (syntax-e stx)))
