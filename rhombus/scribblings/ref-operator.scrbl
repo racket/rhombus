@@ -11,10 +11,9 @@
 @doc(
   ~nonterminal:
     maybe_res_annot: fun ~defn
-    op_or_id_name: namespace ~defn
 
   defn.macro 'operator $op_case'
-  defn.macro 'operator 
+  defn.macro 'operator
               | $op_case
               | ...'
   defn.macro 'operator $op_or_id_name $maybe_res_annot:
@@ -22,7 +21,7 @@
               | $op_case
               | ...'
 
-  grammar op_case:  
+  grammar op_case:
     $op_or_id_name $bind_term $impl_block
     $bind_term $op_or_id_name $bind_term $impl_block
     $bind_term $op_or_id_name $impl_block
@@ -62,7 +61,7 @@
     ~none
 
   grammar bind_term:
-    bind
+    $bind
 ){
 
  Binds @rhombus(op_or_id_name) as a operator, either
@@ -111,19 +110,19 @@
   ~repl:
     "a" ^^^ "b"
     1 ^^^ 2
-  ~defn:  
+  ~defn:
     operator x wings y:
       x +& y +& x
   ~repl:
     "a" wings "b"
-  ~defn:      
+  ~defn:
     operator ((x :: String) ^^^ (y :: String)) :: String:
       x +& y +& x
   ~repl:
     "a" ^^^ "b"
     ~error:
       1 ^^^ 2
-  ~defn:      
+  ~defn:
     operator x List.(^^^) y:
       x ++ y ++ x
   ~repl:

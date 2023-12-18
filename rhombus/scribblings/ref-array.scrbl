@@ -3,6 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
+@(def dots = @rhombus(..., ~bind))
+
 @title{Arrays}
 
 An array is @tech{indexable} using @brackets to access an array element
@@ -34,7 +36,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
  The @rhombus(Array, ~annot) annotation (without @rhombus(now_of) or
  @rhombus(later_of)) matches any array.
- 
+
  The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches an array whose elements all currently satisfy
  @rhombus(annot), but it does not ensure in any way that future
@@ -80,7 +82,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array(v :: Any, ...) :: Array
+  fun Array(v :: Any, ...) :: MutableArray
 ){
 
  Constructs a mutable array containing given arguments.
@@ -100,6 +102,9 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
     repet_bind: def bind ~defn
   bind.macro 'Array($bind, ...)'
   bind.macro 'Array($bind, ..., $repet_bind #,(@litchar{,}) $ellipsis)'
+
+  grammar ellipsis:
+    #,(dots)
 ){
 
  Matches an array with as many elements as @rhombus(bind)s, where
@@ -139,7 +144,8 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array.make(length :: NonnegInt, val :: Any = 0) :: MutableArray
+  fun Array.make(length :: NonnegInt, val :: Any = 0)
+    :: MutableArray
 ){
 
   Creates a fresh array with @rhombus(length) slots, where each slot
@@ -178,12 +184,13 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
                       dest_start :: NonnegInt,
                       src_arr :: Array,
                       src_start :: NonnegInt = 0,
-                      src_end :: NonnegInt = Array.length(src_arr)) :: Void
+                      src_end :: NonnegInt = Array.length(src_arr))
+    :: Void
 ){
 
  Copies bytes from @rhombus(src_arr) at @rhombus(src_start) (inclusive) to
  @rhombus(src_end) (exclusive) into @rhombus(dest_arr) starting at
- @rhombus(dest_start). The length of @rhombus(dest_arr) must be at least 
+ @rhombus(dest_start). The length of @rhombus(dest_arr) must be at least
  @rhombus(dest_start + (src_end - src_start)).
 
 }

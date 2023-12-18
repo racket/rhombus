@@ -81,7 +81,7 @@
   defn.macro 'enum:
                 $(id :: Group)
                 ...':
-    def [n, ...]: List.iota([id, ...].length())
+    let [n, ...]: List.iota([id, ...].length())
     'def $id: $n
      ...'
   enum:
@@ -161,7 +161,7 @@
 
 
 @doc(
-  fun defn_meta.pack_s_exp(tree) :: Syntax
+  fun defn_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
 @provided_meta()
@@ -172,4 +172,4 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

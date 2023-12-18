@@ -31,13 +31,14 @@
   ~eval: macro_eval
   ~defn:
     expo.macro 'range $(from :: Int) .. $(to :: Int): $id':
-      'names:
-         $(for List:
-             each i: from.unwrap() .. to.unwrap()
-             Syntax.make_id(id +& i, id))'
+      let [name, ...]:
+        for List (i: from.unwrap()..to.unwrap()):
+          Syntax.make_id(id +& i, id)
+      'names: $name ...'
   ~repl:
     namespace ns:
-      export: range 1..4: cat
+      export:
+        range 1..4: cat
       def cat1 = "Felix"
       def cat2 = "Tom"
       def cat3 = "Scratchy"
@@ -50,19 +51,20 @@
 @doc(
   ~nonterminal:
     prefix_macro_patterns: defn.macro ~defn
+    exp_id: block id
 
   defn.macro 'expo.modifier $prefix_macro_patterns'
 
   grammar option:
     ~op_stx: $id
     ~op_stx $id
-    ~export: $imp_id
-    ~export $imp_id
+    ~export: $exp_id
+    ~export $exp_id
 ){
 
  Like @rhombus(defn.macro), but defines an identifier as an
  export modifier, and an optional @rhombus(~export) declaration provides
- an @rhombus(imp_id) to be bound to the (opaque) export that is being
+ an @rhombus(exp_id) to be bound to the (opaque) export that is being
  modified.
 
 @examples(
@@ -124,4 +126,4 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

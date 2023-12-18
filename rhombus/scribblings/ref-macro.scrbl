@@ -9,12 +9,11 @@
 
 @doc(
   ~nonterminal:
-    op_or_id_name: namespace ~defn
     right_parsed_id: block id
     left_parsed_id: block id
 
   defn.macro 'macro $macro_case'
-  defn.macro 'macro 
+  defn.macro 'macro
               | $macro_case
               | ...'
   defn.macro 'macro $op_or_id_name:
@@ -23,12 +22,12 @@
               | ...'
 
   expr.macro 'macro $macro_case'
-  expr.macro 'macro 
+  expr.macro 'macro
               | $macro_case
               | ...'
 
   entry_point.macro 'macro $macro_case'
-  entry_point.macro 'macro 
+  entry_point.macro 'macro
                      | $macro_case
                      | ...'
 
@@ -41,7 +40,7 @@
     '$defined_name $ $right_parsed_id'
     '$defined_name $pattern ...'
     '$ $left_parsed_id $defined_name $ $right_parsed_id'
-    '$ $left_parsed_id $defined_name $pattern ...'    
+    '$ $left_parsed_id $defined_name $pattern ...'
   grammar defined_name:
     $id
     $op

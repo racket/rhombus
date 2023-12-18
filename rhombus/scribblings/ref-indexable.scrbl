@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -19,7 +20,7 @@ classes that implement @rhombus(Indexable, ~class).
     rhs_expr: block expr
   expr.macro '$expr #%index [$at_expr]'
   expr.macro '$expr #%index [$at_expr] $assign_op $rhs_expr'
-  repet.macro '$repetition #%index [$at_repet]'
+  repet.macro '$repet #%index [$at_repet]'
   grammar assign_op:
     :=
     $other_assign_op
@@ -80,7 +81,7 @@ classes that implement @rhombus(Indexable, ~class).
       private override method get(index):
         if (index mod 2) == 0
         | lst1[index div 2]
-        | lst2[index div 2]    
+        | lst2[index div 2]
   ~repl:
     def lsts = Interleaved([1, 2, 3], [-1, -2, -3])
     lsts[2]
@@ -106,7 +107,7 @@ classes that implement @rhombus(Indexable, ~class).
 @itemlist(
 
  @item{@rhombus(#,(@rhombus(set, ~datum))(#,(@rhombus(index, ~var)), #,(@rhombus(val, ~var))))
-  --- takes an @rhombus(index, ~var) and new @rhombus(value, ~var), which are the second and
+  --- takes an @rhombus(index, ~var) and new @rhombus(val, ~var), which are the second and
   third arguments to @rhombus(#%index). Those arguments are normally written
   within @brackets and after an assignment operator like @rhombus(:=),
   respectively. The result must be @rhombus(#void).}
@@ -119,7 +120,7 @@ classes that implement @rhombus(Indexable, ~class).
       private override method get(index):
         if (index mod 2) == 0
         | arr1[index div 2]
-        | arr2[index div 2]    
+        | arr2[index div 2]
       private override method set(index, val):
         if (index mod 2) == 0
         | arr1[index div 2] := val

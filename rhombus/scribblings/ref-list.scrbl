@@ -345,8 +345,10 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.map(lst :: List, f :: Function.of_arity(1)) :: List,
-  fun List.for_each(lst :: List, f :: Function.of_arity(1)) :: List,
+  fun List.map(lst :: List, f :: Function.of_arity(1))
+    :: List,
+  fun List.for_each(lst :: List, f :: Function.of_arity(1))
+    :: Void,
 ){
 
  Like @rhombus(Function.map) and @rhombus(Function.for_each), but with a

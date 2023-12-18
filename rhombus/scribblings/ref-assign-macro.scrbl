@@ -9,6 +9,7 @@
 
 @doc(
   ~nonterminal:
+    macro_patterns: expr.macro ~defn
     macro_pattern: macro ~defn
 
   defn.macro 'assign.macro $macro_patterns'
@@ -38,13 +39,15 @@
   ~defn:
     assign.macro '$left += $right':
       ~weaker_than: ~other
-      def (ref, set, name) = assign_meta.unpack_left(left)
-      assign_meta.pack_assignment('block:
-                                     let v = $ref() + (block:
-                                                         let $name = $right
-                                                         $name)
-                                     $set(v)
-                                     v')
+      let (ref, set, name) = assign_meta.unpack_left(left)
+      assign_meta.pack_assignment(
+        'block:
+           let v = $ref()
+           let $name = $right
+           let v = v + $name
+           $set(v)
+           v'
+      )
   ~repl:
     def mutable x = 12
     x += 4
@@ -55,7 +58,8 @@
 
 
 @doc(
-  fun assign_meta.unpack_left(stx :: Syntax) :: values(Syntax, Syntax, Syntax)
+  fun assign_meta.unpack_left(stx :: Syntax)
+    :: (Syntax, Syntax, Syntax)
 ){
 
 @provided_meta()
@@ -86,7 +90,8 @@
 
 
 @doc(
-  fun assign_meta.pack_assignment(group :: Syntax) :: Syntax
+  fun assign_meta.pack_assignment(group :: Syntax)
+    :: Syntax
 ){
 
 @provided_meta()
@@ -127,11 +132,11 @@
   ~eval: macro_eval
   ~defn:
     def mutable reflist = [0]
-    expr.macro 'refcar
-                  $(a :: assign_meta.AssignParsed('fun () : List.first(reflist)',
-                                                  'fun (v): reflist := [v]',
-                                                  'refelem'))
-                  $()':
+    expr.macro 'refcar $(a :: assign_meta.AssignParsed(
+                           'fun () : List.first(reflist)',
+                           'fun (v): reflist := [v]',
+                           'refelem'
+                         )) $()':
       values(a, '$a.tail ...')
   ~repl:
     refcar := 11
@@ -143,4 +148,4 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

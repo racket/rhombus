@@ -120,8 +120,8 @@ A @deftech{character} is Unicode code point.
 }
 
 @doc(
-  fun Char.grapheme_step(ch :: Char,
-                         state :: Int) :: values(Boolean, Int)
+  fun Char.grapheme_step(ch :: Char, state :: Int)
+    :: (Boolean, Int)
 ){
 
  Encodes a state machine for Unicode's grapheme-cluster specification on

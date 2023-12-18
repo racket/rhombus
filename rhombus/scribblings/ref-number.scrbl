@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Numbers}
 
@@ -46,17 +47,20 @@
 }
 
 @doc(
+  ~nonterminal:
+    lo_expr: block expr
+    hi_expr: block expr
   annot.macro 'Int'
   annot.macro 'PosInt'
   annot.macro 'NegInt'
   annot.macro 'NonnegInt'
 
-  annot.macro 'Int.in($lo $inclusivity, $hi $inclusivity)'
-  
+  annot.macro 'Int.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
+
   grammar inclusivity:
     #,(epsilon)
     ~inclusive
-    ~exclusive  
+    ~exclusive
 ){
 
  Matches exact integers: all of them, positive integers, negative
@@ -79,20 +83,19 @@
 }
 
 @doc(
+  ~nonterminal:
+    lo_expr: block expr
+    hi_expr: block expr
+    inclusivity: Int ~annot
   annot.macro 'Real'
   annot.macro 'PosReal'
   annot.macro 'NegReal'
   annot.macro 'NonnegReal'
-  annot.macro 'Real.at_least($lo)'
-  annot.macro 'Real.above($lo)'
-  annot.macro 'Real.below($hi)'
-  annot.macro 'Real.at_most($hi)'
-  annot.macro 'Real.in($lo $inclusivity, $hi $inclusivity)'
-
-  grammar inclusivity:
-    #,(epsilon)
-    ~inclusive
-    ~exclusive  
+  annot.macro 'Real.at_least($lo_expr)'
+  annot.macro 'Real.above($lo_expr)'
+  annot.macro 'Real.below($hi_expr)'
+  annot.macro 'Real.at_most($hi_expr)'
+  annot.macro 'Real.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 ){
 
  The @rhombus(Real, ~annot) annotation matches real numbers (as opposed
@@ -320,7 +323,7 @@
   math.real_part(math.sqrt(-1))
   math.imag_part(math.sqrt(-1))
   math.magnitude(1 + math.sqrt(-1))
-  math.angle(1 + math.sqrt(-1))  
+  math.angle(1 + math.sqrt(-1))
 )
 
 }
@@ -424,7 +427,10 @@
   operator ((n :: Int) bits.(>>) (m :: NonnegInt)) :: Int
   operator ((n :: Int) bits.(?) (m :: NonnegInt)) :: Boolean
   fun bits.length(n :: Int) :: Int
-  fun bits.field(n :: Int, start :: NonnegInt, end :: NonnegInt) :: Int
+  fun bits.field(n :: Int,
+                 start :: NonnegInt,
+                 end :: NonnegInt)
+    :: Int
 ){
 
  Bitwise operations on integers interpreted as a semi-infinite two's

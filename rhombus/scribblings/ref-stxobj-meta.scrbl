@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: 
-    "common.rhm" open 
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @title(~tag: "stxobj-macro"){Syntax Objects in Macros}
@@ -30,14 +31,16 @@
 
 @doc(
   fun syntax_meta.value(name :: Name,
-                        space :: SpaceMeta = expr_meta.space,
-                        fail = ....)
+                        in_space :: SpaceMeta = expr_meta.space,
+                        fail :: Any:
+                          fun (): throw Exn.Fail.Contract(....))
+    :: Any
 ){
 
 @provided_meta()
 
  Returns the compile-time value of @rhombus(name), if available, in the
- space specified by @rhombus(space). If no compile-time value is
+ space specified by @rhombus(in_space). If no compile-time value is
  available, then @rhombus(fail) is called if it is a procedure of 0
  arguments, otherwise @rhombus(fail) is returned.
 
@@ -47,37 +50,38 @@
 
 
 @doc(
-  fun syntax_meta.equal_binding(stx1 :: Name,
-                                stx2 :: Name,
-                                space :: SpaceMeta = expr_meta.space,
-                                phase1 :: SyntaxPhase = syntax_meta.expanding_phase(),
-                                phase2 :: SyntaxPhase = phase1)
-    :: Boolean
+  fun syntax_meta.equal_binding(
+    stx1 :: Name,
+    stx2 :: Name,
+    in_space :: SpaceMeta = expr_meta.space,
+    phase1 :: SyntaxPhase = syntax_meta.expanding_phase(),
+    phase2 :: SyntaxPhase = phase1
+  ) :: Boolean
 ){
 
 @provided_meta()
 
  Checks whether @rhombus(stx1) at phase @rhombus(phase1) refers to the
  same binding as @rhombus(stx2) at @rhombus(phase2) within the space
- reflected by @rhombus(space).
+ reflected by @rhombus(in_space).
 
 }
 
 @doc(
-  fun syntax_meta.equal_name_and_scopes(stx1 :: Name,
-                                        stx2 :: Name,
-                                        phase :: SyntaxPhase
-                                          = syntax_meta.expanding_phase())
-    :: Boolean
+  fun syntax_meta.equal_name_and_scopes(
+    stx1 :: Name,
+    stx2 :: Name,
+    phase :: SyntaxPhase = syntax_meta.expanding_phase()
+  ) :: Boolean
 ){
 
 @provided_meta()
 
- Checks whether @rhombus(stx1) and @rhombus(stx) have the same name (as
+ Checks whether @rhombus(stx1) and @rhombus(stx2) have the same name (as
  returned by @rhombus(Syntax.unwrap) on an identifier, for example) and
  the same scopes at @rhombus(phase).
 
- When @rhombus(stx1) or @rhombus(stx1) is a dotted name, then both must
+ When @rhombus(stx1) or @rhombus(stx2) is a dotted name, then both must
  be dotted names where each dotted component has the same name and
  scopes.
 
@@ -108,7 +112,8 @@
 }
 
 @doc(
-  fun syntax_meta.is_static(stx :: Operator || Identifier) :: Boolean
+  fun syntax_meta.is_static(stx :: Operator || Identifier)
+    :: Boolean
 ){
 
  Check whether the identifier @rhombus(#%dynamism) using the scopes of
@@ -147,15 +152,17 @@
 }
 
 @doc(
-  unquote_bind.macro '«bound_as $space_expr: '$id_or_op'»'
+  ~nonterminal:
+    space_expr: block expr
+  unquote_bind.macro '«bound_as $space_expr: '$op_or_id_name'»'
 ){
 
 @provided_meta()
 
  Unquote binding operator for use with @rhombus($, ~bind). It matches a
  syntax object for an identifier or operator, where the identifier or
- operator's binding is the same as @rhombus(id_or_op) in
- the @rhombus(SpaceMeta, ~annot) reflected by @rhombus(space) (e.g.,
+ operator's binding is the same as @rhombus(op_or_id_name) in
+ the @rhombus(SpaceMeta, ~annot) reflected by @rhombus(space_expr) (e.g.,
  @rhombus(expr_meta.space)).
 
 @examples(
@@ -163,11 +170,11 @@
     import:
       rhombus/meta open
       rhombus:
-        rename: + as plus
-        expose: plus
+        rename + as plus
+        expose plus
   ~defn:
     expr.macro 'simplify($stx)':
-      def new_stx:
+      let new_stx:
         match stx
         | '$(a :: Int) $(bound_as expr_meta.space: '+') $(b :: Int)':
             '$(a.unwrap() + b.unwrap())'

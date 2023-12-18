@@ -53,7 +53,7 @@ normally bound to implement function calls.
   ~nonterminal:
     fun_expr: block expr
     arg_expr: block expr
-    repet_arg: #%call arg               
+    repet_arg: #%call arg
     list_expr: block expr
     map_expr: block expr
 
@@ -77,7 +77,7 @@ normally bound to implement function calls.
   argument, and each @rhombus(keyword: arg_expr) combination is a
   by-keyword argument. Function calls can serve as repetitions,
   where @rhombus(repet_arg) is like @rhombus(arg), but with repetitions
-  in place of expressions. 
+  in place of expressions.
 
   If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
   @rhombus(repet #,(@litchar{,}) ellipses), then the
@@ -104,6 +104,7 @@ normally bound to implement function calls.
 
 @doc(
   ~nonterminal:
+    id: block
     default_expr: block expr
     default_body: block body
     list_expr: block expr
@@ -151,12 +152,12 @@ normally bound to implement function calls.
     $keyword: $bind: $default_body; ...
     $keyword
     $keyword = $default_expr
-  
+
   grammar bind_maybe_kw:
     $bind
     $keyword: $bind
     $keyword
-  
+
   grammar maybe_res_annot:
     #,(@rhombus(::, ~bind)) $annot
     #,(@rhombus(:~, ~bind)) $annot
@@ -217,8 +218,8 @@ normally bound to implement function calls.
  result of a @rhombus(default_expr) is subject to the same constraints
  imposed by annotations and patterns for its argument as an explicitly
  supplied argument would be. An argument form @rhombus(keyword = default_expr)
- is equivalent to the form @rhombus(keyword: #,(@nontermref(id)) = default_expr)
- for the @nontermref(id) with the same string form as @rhombus(keyword).
+ is equivalent to the form @rhombus(keyword: id = default_expr)
+ for the @rhombus(id) with the same string form as @rhombus(keyword).
  A @rhombus(::) or @rhombus(:~) is not allowed in @rhombus(default_expr),
  unless it is nested in another term, since that might be misread or
  confused as an annotation in @rhombus(bind) for an identifier; for similar
@@ -379,9 +380,11 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  fun Function.map(f :: Function, args0 :: List, args :: List, ...)
+  fun Function.map(f :: Function,
+                   args0 :: List, args :: List, ...)
     :: List,
-  fun Function.for_each(f :: Function, args0 :: List, args :: List, ...)
+  fun Function.for_each(f :: Function,
+                        args0 :: List, args :: List, ...)
     :: Void,
 ){
 
@@ -442,4 +445,3 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 )
 
 }
-

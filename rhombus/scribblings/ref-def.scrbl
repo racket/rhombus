@@ -8,6 +8,7 @@
 @doc(
   ~nonterminal:
     rhs_expr: block expr
+    id_name: namespace ~defn
   defn.macro 'def $lhs_bind = $rhs_expr'
   defn.macro 'def $lhs_bind:
                 $body
@@ -23,7 +24,7 @@
  definitions, and it normally ends with an expression to provide the
  result values.
 
- A @rhombus(bind) can be just an identifier or @nontermref(id_name), or it
+ A @rhombus(bind) can be just an identifier or @rhombus(id_name), or it
  can be constructed with a binding operator, such as a pattern form or
  @rhombus(::) for annotations. The number of result values must match
  the number of @rhombus(bind)s.

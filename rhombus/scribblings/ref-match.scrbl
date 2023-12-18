@@ -155,6 +155,8 @@
 
 
 @doc(
+  ~nonterminal:
+    left_bind: def bind ~defn
   expr.macro 'where'
   expr.macro '$left_bind where'
 ){

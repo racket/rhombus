@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -8,9 +9,9 @@
 @title{Maps}
 
 Immutable maps can be constructed using the syntax
-@rhombus({#,(@rhombus(key_expr, ~var)): #,(@rhombus(value_expr, ~var)), ...}),
+@rhombus({#,(@rhombus(key_expr, ~var)): #,(@rhombus(val_expr, ~var)), ...}),
 which creates a map from the values of the @rhombus(key_expr, ~var)s to
-the corresponding values of the @rhombus(value_expr, ~var)s. Note
+the corresponding values of the @rhombus(val_expr, ~var)s. Note
 that using @litchar{,} in place of @litchar{:} creates a set with
 separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
@@ -51,17 +52,17 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    value_annot: :: annot
+    val_annot: :: annot
     key_annot: :: annot
   annot.macro 'Map'
-  annot.macro 'Map.of($key_annot, $value_annot)'
+  annot.macro 'Map.of($key_annot, $val_annot)'
   annot.macro 'ReadableMap'
   annot.macro 'MutableMap'
 ){
 
  Matches any immutable map in the form without @rhombus(of). The @rhombus(of)
  variant matches an immutable map whose keys satisfy @rhombus(key_annot)
- and whose values satisfy @rhombus(value_annot).
+ and whose values satisfy @rhombus(val_annot).
 
  @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
@@ -87,7 +88,7 @@ in an unspecified order.
     $key_expr: $val_expr
     $key_repet: $val_repet #,(@litchar{,}) $ellipses
     & $map_expr
-  expr.macro '#%braces {$expr_or_splice, ...+}'
+  expr.macro '#%braces {$expr_or_splice, ...}'
   grammar expr_or_splice:
     $elem_expr
     $elem_repet #,(@litchar{,}) $ellipses
@@ -97,15 +98,15 @@ in an unspecified order.
     $ellipses #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots_expr)
-  repet.macro '#%braces {$key_val_or_splice_repet, ...}'
-  repet.macro '#%braces {$repet_or_splice, ...+}'
+  repet.macro '#%braces {$key_repet_or_splice, ...}'
+  repet.macro '#%braces {$repet_or_splice, ...}'
 ){
 
  Constructs either a map or a set, depending on whether
  @rhombus(key_expr) and @rhombus(val_expr) are provided or
  @rhombus(elem_expr) is provided. If no elements are provided directly,
  the result is a map (not a set). Map/set constructions can also serve as
- repetitions, where @rhombus(key_val_or_splice_repet) and
+ repetitions, where @rhombus(key_repet_or_splice) and
  @rhombus(repet_or_splice) are like
  @rhombus(key_val_or_splice) and @rhombus(expr_or_splice),
  but with repetitions in place of expressions.
@@ -121,7 +122,7 @@ in an unspecified order.
  which means that a later @rhombus(key_expr) or @rhombus(elem_expr) may
  replace one earlier in the sequence. This ordering applies to mappings
  or elements spliced via @dots_expr and @rhombus(&), too.
- 
+
  @see_implicit(@rhombus(#%braces), @braces, "expression or repetition")
 
 @examples(
@@ -144,20 +145,20 @@ in an unspecified order.
     key_repet: block repet
     val_repet: block repet
   expr.macro 'Map{$key_val_or_splice, ...}'
-  repet.macro 'Map{$key_val_or_splice_repet, ...}'
+  repet.macro 'Map{$key_repet_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
     $key_repet: $val_repet #,(@litchar{,}) $ellipsis
     #,(@rhombus(&)) $map_expr
   grammar ellipsis:
     #,(dots),
-  fun Map([key :: Any, value :: Any], ...) :: Map
+  fun Map([key :: Any, val :: Any], ...) :: Map
 ){
 
  Constructs an immutable map containing given keys mapped to the given
  values, equivalent to using @rhombus({key_val_or_splice, ...}) for the
- @braces form, or @rhombus({key: value, ...}) for the function form.
- The @braces form works as a repetition, where @rhombus(key_val_or_splice_repet)
+ @braces form, or @rhombus({key: val, ...}) for the function form.
+ The @braces form works as a repetition, where @rhombus(key_repet_or_splice)
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
 @examples(
@@ -279,7 +280,7 @@ in an unspecified order.
     key_expr: block expr
     val_expr: block expr
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
-  fun MutableMap(key :: Any, value :: Any, ...) :: MutableMap
+  fun MutableMap([key :: Any, val :: Any], ...) :: MutableMap
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map

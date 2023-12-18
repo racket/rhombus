@@ -156,9 +156,24 @@
  In syntax descriptions, @rhombus(annot) stands for any
  @tech{annotation} form.
 
- Besides all of the expression forms provided by
+ Besides all of the annotation forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
  @top_rhombus(annot.macro).
+
+}
+
+
+@doc(
+  ~nonterminal_key: for
+  grammar reducer
+){
+
+ In syntax descriptions, @rhombus(reducer) stands for any
+ @tech{reducer} form.
+
+ Besides all of the reducer forms provided by
+ @rhombuslangname(rhombus), new ones can be defined with
+ @top_rhombus(reducer.macro).
 
 }
 

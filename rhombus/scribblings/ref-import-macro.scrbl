@@ -31,7 +31,7 @@
   ~eval: macro_eval
   ~defn:
     impo.macro 'rkt $(name :: Identifier) $('/ $(next :: Identifier)') ...':
-      def str = to_string(name).append("/" +& next, ..., ".rkt")
+      let str = to_string(name).append("/" +& next, ..., ".rkt")
       'lib($(Syntax.make(str, name)))'
   ~repl:
     import: rkt racket/base
@@ -44,6 +44,7 @@
 @doc(
   ~nonterminal:
     prefix_macro_patterns: defn.macro ~defn
+    imp_id: block id
 
   defn.macro 'impo.modifier $prefix_macro_patterns'
 
@@ -67,20 +68,22 @@
          $name as $(Syntax.make_id("rkt_" +& name, name))
          ...'
   ~repl:
-    import: lib("racket/base.rkt"):
-              as_rkt: add1 sub1              
+    import:
+      lib("racket/base.rkt"):
+        as_rkt: add1 sub1
     base.rkt_sub1(base.rkt_add1(1))
   ~defn:
     impo.modifier 'expose_as_rkt: $(name :: Identifier) ...':
       ~import imp
-      def '$(ex_imp :: impo_meta.ParsedModifier(imp))':
+      let '$(ex_imp :: impo_meta.ParsedModifier(imp))':
         'expose: $name ...'
-      def '$(rn_imp :: impo_meta.ParsedModifier(ex_imp))':
+      let '$(rn_imp :: impo_meta.ParsedModifier(ex_imp))':
         'as_rkt: $name ...'
       rn_imp
   ~repl:
-    import: lib("racket/base.rkt"):
-              expose_as_rkt: add1 sub1              
+    import:
+      lib("racket/base.rkt"):
+        expose_as_rkt: add1 sub1
     rkt_sub1(rkt_add1(1))
 )
 
@@ -126,4 +129,4 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

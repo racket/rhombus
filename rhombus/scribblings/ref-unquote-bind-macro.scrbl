@@ -15,9 +15,9 @@ they appear only under @rhombus($, ~bind) within a syntax binding
 pattern. Unquote binding forms are distinct from normal binding forms
 because they must match syntax objects; some operators wotk in both
 contexts but have different meanings, such as
-@rhombus(::, ~unquote_bind) and @rhombus(#', ~unquote_bind) for unquote
+@rhombus(::, ~unquote_bind) and @rhombus(_, ~unquote_bind) for unquote
 bindings versus @rhombus(::, ~bind) and
-@rhombus(#', ~bind) for normal bindings.
+@rhombus(_, ~bind) for normal bindings.
 
 @doc(
   space.enforest unquote_bind
@@ -59,4 +59,4 @@ bindings versus @rhombus(::, ~bind) and
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

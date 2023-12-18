@@ -150,7 +150,7 @@
 
 
 @doc(
-  fun expr_meta.parse_all(group :: Syntax) :: values(Syntax, Syntax)
+  fun expr_meta.parse_all(group :: Syntax) :: (Syntax, Syntax)
 ){
 
 @provided_meta()
@@ -169,7 +169,7 @@
 
 
 @doc(
-  fun expr_meta.pack_s_exp(tree) :: Syntax
+  fun expr_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
 @provided_meta()
@@ -231,4 +231,5 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))
+@(macro.close_eval(macro_meta_eval))

@@ -1,12 +1,11 @@
 #lang scribble/rhombus/manual
-@(import: 
-    "common.rhm" open    
-    "nonterminal.rhm" open:
-      except: pattern
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
-@(def dots: @rhombus(..., ~bind))
-@(fun list(x, ...): [x, ...])
+@(def dots = @rhombus(..., ~bind))
+@(def macro_eval = macro.make_for_meta_eval())
 
 @title{Syntax Classes}
 
@@ -15,6 +14,7 @@
     id_bind: def bind ~defn
     rest_id: block id
     syntax_pattern: #%quotes pattern
+    bind_maybe_kw_opt: fun ~defn
 
   defn.macro 'syntax_class $id $maybe_args:
                 $class_clause
@@ -49,7 +49,7 @@
  Defines a @deftech{syntax class} that can be used in syntax patterns with
  @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
  case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
- arguments; an @rhombus(id_bind) is like a @rhombus(kwopt_binding, ~var) for
+ arguments; an @rhombus(id_bind) is like a @rhombus(bind_maybe_kw_opt) for
  @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments
  are visible in @rhombus(class_clause) bodies. Use @rhombus(syntax_class.together) to
@@ -104,7 +104,7 @@
  accessed from a binding @rhombus(id, ~var) using dot notation. For
  example, if the pattern variable is @rhombus(var, ~var), its value is
  accessed from @rhombus(id, ~var) using
- @list(@rhombus(id, ~var), @rhombus(.), @rhombus(var, ~var)).
+ @([@rhombus(id, ~var), @rhombus(.), @rhombus(var, ~var)]).
 
  A @rhombus(pattern_case) matches when
 
@@ -151,7 +151,7 @@
  corresponding to the entire match of a @rhombus(syntax_pattern).
 
 @examples(
-  ~eval: macro.make_for_meta_eval()
+  ~eval: macro_eval
   meta:
     syntax_class Arithmetic
     | '$x + $y'
@@ -347,7 +347,7 @@
                           $body
                           ...'
   pattern_clause.macro 'field $id_maybe_rep = $expr'
-  
+
   grammar id_maybe_rep:
     $id
     [$id_maybe_rep, $ellipsis]
@@ -409,6 +409,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    op_or_id_name: namespace ~defn
+    id_name: namespace ~defn
   syntax_class Term: kind: ~term
   syntax_class Identifier: kind: ~term
   syntax_class Operator: kind: ~term
@@ -453,3 +456,5 @@
  that matches dotted sequences like an @rhombus(id_name) form.
 
 }
+
+@(macro.close_eval(macro_eval))

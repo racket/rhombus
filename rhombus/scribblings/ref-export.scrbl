@@ -49,7 +49,7 @@
  single immediate @rhombus(export_clause) is shorthand for an
  @rhombus(export) form that has a block containing the single
  @rhombus(export_clause).
- 
+
  An @rhombus(export_item) can be an identifier, operator, other export
  form, such as @rhombus(all_from, ~expo).
  It can also be a sequence @rhombus(export_item)s within a
@@ -117,7 +117,7 @@
  Exports all @rhombus(id_or_op)s.
 
  Most @rhombus(id_or_op)s can be exported directly
- without using @rhombus(names, ~impo), but the @rhombus(names, ~impo)
+ without using @rhombus(names, ~expo), but the @rhombus(names, ~expo)
  form disambiguates in the case of an @rhombus(id_or_op) that is
  itself bound as an export form or modifier.
 
@@ -131,7 +131,7 @@
  Exports all identifiers defined within the enclosing module or
  namespace that could be referened by a @rhombus(names) form using the
  same scopes as @rhombus(id) or (when no @rhombus(id) is provided) the
- @rhombus(all_defined) identifier itself. Supplying
+ @rhombus(all_defined, ~expo) identifier itself. Supplying
  @rhombus(~scope_like id) is particularly useful in the case of a
  macro-introduced @rhombus(all_defined) form.
 
@@ -143,6 +143,8 @@
 
 
 @doc(
+  ~nonterminal:
+    export_item: export ~decl
   expo.macro '$export_item #%juxtapose $export_item'
 ){
 
@@ -161,14 +163,16 @@
 }
 
 @doc(
-  expo.modifier 'except $export'
+  ~nonterminal:
+    export_item: export ~decl
+  expo.modifier 'except $export_item'
   expo.modifier 'except:
-                  $export
-                  ...'
+                   $export_item
+                   ...'
 ){
 
- Modifies an export to remove the identifiers with the same external
- names as those that would be exported by the @rhombus(export)s.
+ Modifies an export to remove the bindings with the same external
+ names as those that would be exported by the @rhombus(export_item)s.
 
 }
 
@@ -212,6 +216,8 @@
 
 
 @doc(
+  ~nonterminal:
+    op_name: namespace ~defn
   expo.macro '$id_name . $id'
   expo.macro '$id_name . ($op)'
 ){
@@ -219,7 +225,7 @@
   In an export clause, @rhombus(., ~expo) can be used only to form a
   and @rhombus(id_name) or @rhombus(op_name)
   as described for @rhombus(export). It can also be used to form an
-  @rhombus(id_name) for @rhombus(all_from).
+  @rhombus(id_name) for @rhombus(all_from, ~expo).
 
 }
 
@@ -268,7 +274,7 @@
 }
 
 @doc(
-  modpath.macro 'self ! id'
+  modpath.macro 'self ! $id'
   modpath.macro 'parent'
 ){
 

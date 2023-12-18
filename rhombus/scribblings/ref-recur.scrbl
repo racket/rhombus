@@ -33,7 +33,7 @@ loops.
  where @rhombus(for) is not a good fit for some other reason.
 
  @margin_note{Racket and Scheme programmers will recognize this form as
-  a kind of ``@as_index{named let}.''}
+  a kind of ``@as_index{named @tt{let}}.''}
 
  To enable the immediate call of @rhombus(id), each
  @rhombus(bind_maybe_kw_opt) must include a ``default'' expression, and

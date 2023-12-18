@@ -86,7 +86,7 @@
    or @rhombus(as #,(@rhombus(id,~var))) and additional modifiers
    are needed.},
 
- @item{@rhombus(modifier: import_clause; ....) is the same as the
+ @item{@rhombus(modifier: import_clause; ...) is the same as the
    sequence of @rhombus(import_clause)s with @rhombus(modifier) add to the
    @emph{end} of each @rhombus(import_clause). This form is especialy handy
    when @rhombus(modifier) is @rhombus(meta).}
@@ -163,7 +163,7 @@
 
  @item{@rhombus(module_path#,(@rhombus(.,~impo))(op)): the same
   shorthand, but for operators.}
- 
+
  @item{@rhombus(self, ~impo): refers to the enclosing module itself,
   usually combined with @rhombus(!, ~impo) to refer to a submodule of the
   enclosing module.}
@@ -240,7 +240,7 @@
 }
 
 @doc(
-  impo.macro 'self ! id'
+  impo.macro 'self ! $id'
   impo.macro 'parent'
   impo.macro 'parent ! ...'
 ){
@@ -251,7 +251,7 @@
  within that one.
 
  In an interactive context, such as a read-eval-print loop (REPL),
- @rhombus(self!)@rhombus(id) refers to a module declaraed interactively
+ @rhombus(self!, ~impo)@rhombus(id) refers to a module declaraed interactively
  with name @rhombus(id).
 
  The form @rhombus(parent, ~impo) refers to the parent of an enclosing
@@ -325,7 +325,7 @@
  is used in place of the imported id name @rhombus(id).
  The new name @rhombus(local_id) applies to modifiers after the
  @rhombus(rename) modifier.
-  
+
 }
 
 @doc(
@@ -343,8 +343,8 @@
 @doc(
   impo.modifier 'except $id'
   impo.modifier 'except:
-                     $id ...
-                     ...'
+                   $id ...
+                   ...'
 ){
 
  Modifies an @rhombus(import) clause so that the listed
@@ -409,6 +409,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    import_item: import ~defn
   impo.macro '$import_item #%juxtapose $import_item'
 ){
 
@@ -427,7 +429,7 @@
   annot.macro 'ModulePath'
   fun ModulePath(mod_stx :: Group) :: ModulePath
   expr.macro '«ModulePath '$module_path'»'
-  fun ModulePath.s_exp(modmath :: ModulePath)
+  fun ModulePath.s_exp(modmath :: ModulePath) :: Any
 ){
 
  The @rhombus(ModulePath, ~annot) annotation recognizes values that

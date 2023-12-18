@@ -97,7 +97,7 @@
  @rhombus(list_expr, ~var). A non-zero @rhombus(use_depth, ~var) might be
  relevant to reporting the use of a repetition at the wrong depth in
  terms of the original form's depth.
- 
+
  The @rhombus(static_key, ~var)--@rhombus(static_value, ~var) pairs
  describe ``upward'' static information for inidvidual elements of the
  repeition. This information is automatically packed via
@@ -125,22 +125,20 @@
   ~defn:
     repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
       ~op_stx self
-      def '($orig, $name, $expr, $depth, $use_depth, $statinfos, $is_immed)':
+      let '($_, $name, $expr, $depth, $use_depth, $_, $_)':
         repet_meta.unpack_list(sub)
-      def (_, si):
-        def '$(p :: annot_meta.Parsed)': 'List'
-        annot_meta.unpack_predicate(p)                                       
-      repet_meta.pack_list('($self(),
-                             $name,
-                             for List:
-                               each:
-                                 elem: $expr
-                                 i: $from..
-                               [i, elem],
-                             $depth,
-                             $use_depth,
-                             $si,
-                             #false)')
+      let (_, si):
+        let '$(p :: annot_meta.Parsed)': 'List'
+        annot_meta.unpack_predicate(p)
+      repet_meta.pack_list(
+        '($self(),
+          $name,
+          for List (elem: $expr, i: $from ..): [i, elem],
+          $depth,
+          $use_depth,
+          $si,
+          #false)'
+      )
   ~repl:
     def [x, ...] = ["a", "b", "c"]
     [enum(1, x), ...]
@@ -149,4 +147,4 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

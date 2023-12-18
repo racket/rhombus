@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 @(import:
-    "common.rhm" open  
+    "common.rhm" open
     "nonterminal.rhm" open)
 
 @title{Booleans}
@@ -114,6 +114,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    left_bind: def bind ~defn
+    right_bind: def bind ~defn
   bind.macro '$left_bind && $right_bind'
 ){
 
@@ -141,6 +144,9 @@
 
 
 @doc(
+  ~nonterminal:
+    left_annot: :: annot
+    right_annot: :: annot
   annot.macro '$left_annot && $right_annot'
 ){
 
@@ -162,7 +168,7 @@
  When the overall annotation is used only for matching, the conversion
  part of @rhombus(right_annot) is skipped, but the conversion part of
  @rhombus(left_annot) must be performed.
- 
+
 @examples(
   1 is_a (String && Int)
   Pair.cons(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))
@@ -194,7 +200,7 @@
 
 
 @doc(
-  operator (! v) :: Boolean
+  operator (! (v :: Any)) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),

@@ -8,8 +8,8 @@
 A @deftech{module} is normally written as its own file starting with
 @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))) or similar. In an
 interactive context, the @rhombus(module) form can declare a module; in
-that case, the module decared as @rhombus(id) can be referenced using
-@rhombus(self!, ~impo)@rhombus(id).
+that case, the module decared as @nontermref(id) can be referenced using
+@rhombus(self!, ~impo)@nontermref(id).
 
 A @deftech{submodule} is a module that is textually nested in another
 (sub)module using the @rhombus(module) form. Its lifetime might be

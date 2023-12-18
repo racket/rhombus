@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Pairs}
 
@@ -46,6 +47,9 @@ its ``rest'' is a list.
 }
 
 @doc(
+  ~nonterminal:
+    fst_bind: def bind ~defn
+    rst_bind: def bind ~defn
   bind.macro 'Pair($fst_bind, $rst_bind)'
 ){
 
@@ -98,4 +102,3 @@ its ``rest'' is a list.
 )
 
 }
-

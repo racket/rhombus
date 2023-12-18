@@ -26,10 +26,11 @@ parameter's value using @rhombus(parameterize).
 }
 
 @doc(
-  fun Parameter.make(initial_val,
-                     ~name name :: Symbol = #'parameter,
-                     ~guard guard :: maybe(Function.of_arity(1)) = #false)
-    :: Parameter
+  fun Parameter.make(
+    initial_val :: Any,
+    ~name: name :: Symbol = #'parameter,
+    ~guard: guard :: maybe(Function.of_arity(1)) = #false
+  ) :: Parameter
 ){
 
  Creates a @tech{context parameter} whose initial value is
@@ -59,10 +60,10 @@ parameter's value using @rhombus(parameterize).
     parameter_expr: block expr
     val_expr: block expr
     val_body: block body
-  expr.macro 'parameterize {  $parameter_expr:
-                                $val_body
-                                ...,
-                              ... }:
+  expr.macro 'parameterize { $parameter_expr:
+                               $val_body
+                               ...,
+                             ... }:
                 $body
                 ...'
 ){

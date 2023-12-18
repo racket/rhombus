@@ -1,8 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open:
-      except: bind expr defn
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -41,47 +40,45 @@
     reducer.macro 'Array5':
       'Array ~length 5'
   ~repl:
-    for Array5:
-      each i: 0..3
-      i
+    for Array5 (i: 0..3): i
 )
 
  Here's an example that sums only the positive numbers that result
  from the loop body, and halts as soon as the sum becomes larger
- than 20. This illustrates the use of @rhombus(step_defs) to create a
- binding that can be used by both the @rhombus(step_result) and the
- @rhombus(final) clauses.
+ than 20. This illustrates the use of @rhombus(step_id, ~var) to create a
+ binding that can be used by both the @rhombus(final_id, ~var) and
+ @rhombus(step_result_id, ~var) macros.
 
 @examples(
   ~eval: macro_eval
   ~defn:
     reducer.macro 'SumPosTo20':
-      reducer_meta.pack('sptt_return',
-                        '(accum = 0)',
-                        'sptt_step_defs',
-                        #false,
-                        'sptt_final',
-                        'sptt_step_result',
-                        '()',
-                        '[new_accum, accum]')
-    expr.macro 'sptt_return [$new_accum, $accum] $e':
+      reducer_meta.pack(
+        'sptt_return',
+        '(accum = 0)',
+        'sptt_step_defs',
+        #false,
+        'sptt_final',
+        'sptt_step_result',
+        '()',
+        '[new_accum, accum]'
+      )
+    expr.macro 'sptt_return [$_, $_] $e':
       'cond
        | $e > 20: "bigger than 20"
        | ~else: $e'
     defn.macro 'sptt_step_defs [$new_accum, $accum] $e':
-      'def $new_accum :
+      'def $new_accum:
          cond
          | $e > 0: $accum + $e
          | ~else: $accum'
-    expr.macro 'sptt_final [$new_accum, $accum]':
+    expr.macro 'sptt_final [$new_accum, $_]':
       '$new_accum > 20'
-    expr.macro 'sptt_step_result [$new_accum, $accum]':
+    expr.macro 'sptt_step_result [$new_accum, $_]':
       '$new_accum'
   ~repl:
-    for SumPosTo20 (a: [6,-4,3]):
-      a
-    for SumPosTo20 (a: 3..):
-      a
+    for SumPosTo20 (a: [6, -4, 3]): a
+    for SumPosTo20 (a: 3..): a
 )
 
  This example shows that reducers can be chained; specifically, it
@@ -95,35 +92,33 @@
   ~eval: macro_eval
   ~defn:
     reducer.macro 'WithCount($(r :: reducer_meta.Parsed))':
-      def '($wrap, ($bind, ...), $step, $break, $final, $finish, $static_info, $data)':
+      let '($wrap, ($bind, ...), $step, $break, $final, $finish, $_, $data)':
         reducer_meta.unpack(r)
-      reducer_meta.pack('build_return',
-                        '($bind, ..., count = 0)',
-                        'build_inc',
-                        break.unwrap() && 'build_break',
-                        final.unwrap() && 'build_final',
-                        'build_finish',
-                        '()',
-                        '[count, $wrap, $step, $break, $final, $finish, $data]')
-    expr.macro 'build_return [$count, $wrap, $step, $break, $final, $finish, $data] $e':
+      reducer_meta.pack(
+        'build_return',
+        '($bind, ..., count = 0)',
+        'build_inc',
+        break.unwrap() && 'build_break',
+        final.unwrap() && 'build_final',
+        'build_finish',
+        '()',
+        '[count, $wrap, $step, $break, $final, $finish, $data]'
+      )
+    expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
       'block:
          def values(r, c) = $e
          values($wrap $data r, c)'
-    defn.macro 'build_inc [$count, $wrap, $step, $break, $final, $finish, $data] $e':
+    defn.macro 'build_inc [$_, $_, $step, $_, $_, $_, $data] $e':
       '$step $data $e'
-    expr.macro 'build_break [$count, $wrap, $step, $break, $final, $finish, $data]':
+    expr.macro 'build_break [$_, $_, $_, $break, $_, $_, $data]':
       '$break $data'
-    expr.macro 'build_final [$count, $wrap, $step, $break, $final, $finish, $data]':
+    expr.macro 'build_final [$_, $_, $_, $_, $final, $_, $data]':
       '$final $data'
-    expr.macro 'build_finish [$count, $wrap, $step, $break, $final, $finish, $data]':
+    expr.macro 'build_finish [$count, $_, $_, $_, $_, $finish, $data]':
       'values($finish $data, $count + 1)'
   ~repl:
-    for WithCount(List):
-      each i: 0..3
-      i
-    for WithCount(Map):
-      each i: 0..3
-      values(i, "val" +& i)
+    for WithCount(List) (i: 0..3): i
+    for WithCount(Map) (i: 0..3): values(i, "val" +& i)
 )
 
 }
@@ -136,7 +131,8 @@
                         final_id :: maybe(Identifier),
                         step_result_id :: Identifier,
                         static_info :: Syntax,
-                        data :: Syntax) :: Syntax
+                        data :: Syntax)
+    :: Syntax
 ){
 
  @provided_meta()
@@ -214,7 +210,7 @@
   indicates whether to stop the iteration after the accumulation of the
   current step. Like @rhombus(break_id), Supplying @rhombus(#false) for
   @rhombus(final_id) serves as a performance hint.}
- 
+
  @item{The @rhombus(step_result_id, ~var) should refer to a macro that
   expects @rhombus(data, ~var) and produces a number of results
   corresponding to the number of @rhombus(accum_id, ~var)s. Each result
@@ -275,4 +271,4 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

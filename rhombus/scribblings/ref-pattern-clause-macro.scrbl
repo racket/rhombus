@@ -26,6 +26,7 @@
   ~nonterminal:
     prefix_macro_patterns: defn.macro ~defn
     pattern_body: syntax_class ~defn
+    body: block
 
   defn.macro 'pattern_clause.macro $prefix_macro_patterns'
 ){
@@ -34,10 +35,10 @@
  @rhombus(pattern_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(pattern_body).
 
- The compile-time @rhombus(body, ~var) block returns the expansion result. The
+ The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
  use within a @rhombus(pattern_body).
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

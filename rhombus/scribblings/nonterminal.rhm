@@ -10,6 +10,7 @@ export:
   entry_point
   bind
   annot
+  reducer
   body
   nestable_body
   defn
@@ -30,6 +31,7 @@ manual.nonterminal:
   entry_point: block
   bind: def ~defn
   annot: ::
+  reducer: for
   body: block
   nestable_body: block
   defn: block

@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Eval}
 
@@ -10,7 +11,7 @@ by an evaluator, for example.
 
 @doc(
   fun eval(seq :: Syntax,
-           ~as_interaction: as_interaction = #false)
+           ~as_interaction: as_interaction :: Any = #false)
 ){
 
  Evaluates a term, group, or multi-group sequence @rhombus(seq) in the
@@ -71,7 +72,7 @@ by an evaluator, for example.
 @doc(
   def Evaluator.current :: Parameter
   fun Evaluator.current() :: Evaluator
-  fun Evaluator.current(ns :: Evaluator) :: #void
+  fun Evaluator.current(ns :: Evaluator) :: Void
 ){
 
  A @tech{context parameter} for the current evaluator.

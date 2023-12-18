@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: 
-    "common.rhm" open 
+@(import:
+    "common.rhm" open
     "nonterminal.rhm" open
     "macro.rhm")
 
@@ -217,9 +217,9 @@ Metadata for a syntax object can include a source location and the raw
 @itemlist(
 
  @item{@rhombus(Term, ~annot) matches only a single-term syntax object.}
- 
+
  @item{@rhombus(Group, ~annot) matches only a single-group syntax object.}
- 
+
  @item{@rhombus(Identifier, ~annot) matches only an identifier (which is
   a single-term syntax object).}
 
@@ -606,7 +606,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make(term, ctx_stx :: maybe(Term) = #false) :: Syntax
+  fun Syntax.make(term :: Any,
+                  ctx_stx :: maybe(Term) = #false)
+    :: Syntax
 ){
 
  Converts an ``unwrapped'' representation of a shrubbery @emph{term}
@@ -630,7 +632,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_group(terms :: List,
-                        ctx_stx :: maybe(Term) = #false) :: Syntax
+                        ctx_stx :: maybe(Term) = #false)
+    :: Syntax
 ){
 
  Converts a nonempty list of terms, each convertible by @rhombus(Syntax.make),
@@ -647,7 +650,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_sequence(groups :: List,
-                           ctx_stx :: maybe(Term) = #false) :: Syntax
+                           ctx_stx :: maybe(Term) = #false)
+    :: Syntax
 ){
 
  Converts a list of groups, each convertible by
@@ -663,7 +667,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.make_op(name :: Symbol,
-                     ctx_stx :: maybe(Term) = #false) :: Operator
+                     ctx_stx :: maybe(Term) = #false)
+    :: Operator
 ){
 
  Convenience to convert a plain symbol to a syntax object for an
@@ -678,7 +683,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_id(str :: ReadableString, ctx_stx :: maybe(Term) = #false) :: Identifier
+  fun Syntax.make_id(str :: ReadableString,
+                     ctx_stx :: maybe(Term) = #false)
+    :: Identifier
 ){
 
  Composes @rhombus(Syntax.make) and @rhombus(Symbol.from_string).
@@ -691,8 +698,9 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.make_temp_id(name = #false,
-                          ~keep_name: keep_name = #false) :: Identifier
+  fun Syntax.make_temp_id(name :: Any = #false,
+                          ~keep_name: keep_name :: Any = #false)
+    :: Identifier
 ){
 
  Creates an identifier with a fresh scope, which is useful for creating
@@ -769,7 +777,8 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap_sequence(stx :: Syntax) :: List.of(Syntax)
+  fun Syntax.unwrap_sequence(stx :: Syntax)
+    :: List.of(Syntax)
 ){
 
  Unwraps a multi-group syntax object by one layer. The result is a
@@ -821,7 +830,7 @@ Metadata for a syntax object can include a source location and the raw
  macro expansion. Originalness is determined by the presence of property
  that is added to the syntax object when it is originally read, plus the
  absence of scopes that indicate macro-introduction. See also
- @rhombus(syntax_meta.toggle_introduce).
+ @rhombus(syntax_meta.flip_introduce).
 
 }
 
@@ -836,7 +845,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.replace_scopes(stx :: Syntax, like_stx :: Term) :: Syntax
+  fun Syntax.replace_scopes(stx :: Syntax,
+                            like_stx :: Term)
+    :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except that
@@ -846,7 +857,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.relocate(stx :: Syntax, to :: Syntax || Srcloc || False) :: Syntax
+  fun Syntax.relocate(stx :: Syntax,
+                      to :: maybe(Syntax || Srcloc))
+    :: Syntax
 ){
 
  Returns a syntax object like @rhombus(stx), except that the metadata of
@@ -871,7 +884,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.relocate_span(stx :: Term,
-                           like_stxes :: List.of(Syntax)) :: Syntax
+                           like_stxes :: List.of(Syntax))
+    :: Syntax
 ){
 
  Similar to @rhombus(Syntax.relocate), but the metadata of syntax
@@ -883,8 +897,13 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.property(stx :: Syntax, key) :: Any
-  fun Syntax.property(stx :: Syntax, key, val, is_preserved = #false) :: Syntax
+  fun Syntax.property(stx :: Syntax,
+                      key :: Any)
+    :: Any
+  fun Syntax.property(stx :: Syntax,
+                      key :: Any, val :: Any,
+                      is_preserved :: Any = #false)
+    :: Syntax
 ){
 
  Returns the value of the @rhombus(key) syntax property of @rhombus(stx)

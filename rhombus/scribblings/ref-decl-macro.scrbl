@@ -72,7 +72,7 @@
 
 
 @doc(
-  fun decl_meta.pack_s_exp(tree) :: Syntax
+  fun decl_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
 @provided_meta()
@@ -83,4 +83,4 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

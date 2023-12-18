@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -9,7 +10,7 @@
 
 Immutable sets can be constructed using the syntax
 @rhombus({#,(@rhombus(val_expr, ~var)), ...}),
-which creates a set containing the values of the @rhombus(value_expr, ~var)s.
+which creates a set containing the values of the @rhombus(val_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
 parsed as an implicit use of the @rhombus(#%braces) form.
 
@@ -28,7 +29,7 @@ it supplies its elements in an unspecified order.
   "readable set (immutable or mutable)"
   @rhombus(Set)
   [set.length(), Set.length(set)]
-  [set.to_list(), Set.to_list(set)]
+  [set.to_list(try_sort, ...), Set.to_list(set, try_sort, ...)]
   [set.copy(), Set.copy(set)]
   [set.snapshot(), Set.snapshot(set)]
 )
@@ -39,7 +40,7 @@ it supplies its elements in an unspecified order.
   [set.append(set2, ...), Set.append(set, set2, ...)]
   [set.union(set2, ...), Set.union(set, set2, ...)]
   [set.intersect(set2, ...), Set.intersect(set, set2, ...)]
-  [set.remove(v), Set.remove(set, v)]  
+  [set.remove(v), Set.remove(set, v)]
 )
 
 @dispatch_table(
@@ -72,7 +73,7 @@ it supplies its elements in an unspecified order.
     set_expr: block expr
   expr.macro 'Set{$expr_or_splice, ...}'
   repet.macro 'Set{$repet_or_splice, ...}'
-  fun Set(value:: Any, ...) :: Set
+  fun Set(val :: Any, ...) :: Set
 
   grammar expr_or_splice:
     $expr
@@ -166,7 +167,7 @@ it supplies its elements in an unspecified order.
   ~nonterminal:
     val_expr: block expr
   expr.macro 'MutableSet{$val_expr, ...}'
-  fun MutableSet(value:: Any, ...) :: MutableSet
+  fun MutableSet(val :: Any, ...) :: MutableSet
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
@@ -254,7 +255,7 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.remove(set :: Set, v) :: Set
+  fun Set.remove(set :: Set, v :: Any) :: Set
 ){
 
  Returns a set like @rhombus(v) from @rhombus(set), if it is present.
@@ -268,7 +269,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.delete(set :: MutableSet, v) :: Void
+  fun MutableSet.delete(set :: MutableSet, v :: Any) :: Void
 ){
 
  Changes @rhombus(set) to remove @rhombus(v), if it is present.
@@ -283,10 +284,12 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.to_list(set :: ReadableSet, try_order = #false) :: List
+  fun Set.to_list(set :: ReadableSet,
+                  try_sort :: Any = #false)
+    :: List
 ){
 
- Returns the elements of @rhombus(set) in a list. If @rhombus(try_order)
+ Returns the elements of @rhombus(set) in a list. If @rhombus(try_sort)
  is true, then the elements are sorted to the degree that a built-in
  comparison can sort them.
 

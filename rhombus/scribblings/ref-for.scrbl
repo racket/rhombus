@@ -42,8 +42,8 @@
     $body
 
   grammar expr_or_block:
-    expr
-    : : $body; ...      
+    $expr
+    : : $body; ...
 ){
 
  Iterates as determined by @rhombus(maybe_each) and @rhombus(each, ~for_clause) clauses among the

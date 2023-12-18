@@ -1,11 +1,12 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm"open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm"open
+    "nonterminal.rhm" open)
 
 @title{Multiple Values}
 
 @doc(
-  fun values(v, ...)
+  fun values(v :: Any, ...)
 ){
 
  Returns the @rhombus(v)s as multiple result values.

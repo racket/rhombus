@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Source Locations}
 
@@ -22,7 +23,7 @@
 }
 
 @doc(
-  fun Srcloc(source,
+  fun Srcloc(source :: Any,
              line :: maybe(PosInt),
              column :: maybe(NonnegInt),
              position :: maybe(PosInt),
@@ -35,11 +36,17 @@
 }
 
 @doc(
-  bind.macro 'Srcloc($source_binding,
-                     $line_binding,
-                     $column_binding,
-                     $position_binding,
-                     $span_binding)'
+  ~nonterminal:
+    source_bind: def bind ~defn
+    line_bind: def bind ~defn
+    column_bind: def bind ~defn
+    position_bind: def bind ~defn
+    span_bind: def bind ~defn
+  bind.macro 'Srcloc($source_bind,
+                     $line_bind,
+                     $column_bind,
+                     $position_bind,
+                     $span_bind)'
 ){
 
  Matches a source location where the components match the corresponding binding forms.
@@ -47,7 +54,7 @@
 }
 
 @doc(
-  fun Srcloc.source(srcloc :: Srcloc)
+  fun Srcloc.source(srcloc :: Srcloc) :: Any
   fun Srcloc.line(srcloc :: Srcloc) :: maybe(PosInt)
   fun Srcloc.column(srcloc :: Srcloc) :: maybe(NonnegInt)
   fun Srcloc.position(srcloc :: Srcloc) :: maybe(PosInt)

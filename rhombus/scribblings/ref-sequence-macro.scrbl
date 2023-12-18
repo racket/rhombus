@@ -92,14 +92,14 @@
   ...
   // maybe check that sequence is valid
   block:
-    outer_check_body 
+    outer_check_body
     ...
   // bind loop arguments, especially as the iteration position
   let recur_id = recur_init_expr
   ...
   fun loop(recur_id = recur_id, ...):
     if (block: head_guard_body; ...) // check continues at this position
-    | def inner_bind: inner_body; ... // bind variables for element 
+    | def inner_bind: inner_body; ... // bind variables for element
       ...
       if (block: pre_guard_body; ...) // check continues for this element
       | loop_body
@@ -127,11 +127,12 @@
     class Posn(x :: Int, y :: Int):
       implements Sequenceable
       override method to_sequence():
-        Sequence.make(~initial_position: 0,
-                      ~continue_at_position: fun (i): i < 2,
-                      ~position_to_next: fun (i): i + 1,
-                      ~position_to_element: fun (i):
-                                              if i == 0 | y | x)
+        Sequence.make(
+          ~initial_position: 0,
+          ~continue_at_position: fun (i): i < 2,
+          ~position_to_next: fun (i): i + 1,
+          ~position_to_element: fun (i): if i == 0 | y | x
+        )
       sequence '$lhs: $rhs':
         '(~outer_binds:
             p = $rhs,
@@ -147,14 +148,10 @@
         '(($statinfo_meta.index_result_key,
            $(annot_meta.parse_to_packed_statinfo('Int'))))'
   ~repl:
-    for List:
-      each j: dynamic(Posn(1, 2)) // uses `to_sequence`
-      j
-    for List:
-      each j: Posn(1, 2) // uses `sequence` expansion
-      j
+    for List (j: dynamic(Posn(1, 2))): j // uses `to_sequence`
+    for List (j: Posn(1, 2)): j // uses `sequence` expansion
 )
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

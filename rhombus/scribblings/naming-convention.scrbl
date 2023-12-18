@@ -53,11 +53,11 @@ joined by capitalizing each word) are used for a name that refers to a
 
  @item{The @rhombus(ReadableString.to_string, ~annot) annotation is a
  @tech{converter annotation}, which means that it does not simply refer
- to an interface (even in principle), so the name @rhombus(to_string) is
+ to an interface (even in principle), so the name @rhombus(to_string, ~datum) is
  not capitalized.}
 
  @item{Annotation constructors are @emph{not} capitalized, including
- @rhombus(maybe), @rhombus(matching), or the @rhombus(of, ~datum) in
+ @rhombus(maybe, ~annot), @rhombus(matching, ~annot), or the @rhombus(of, ~datum) in
  @rhombus(Posn.of).}
 
  @item{Namespaces that do not also refer to a class or interface are

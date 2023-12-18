@@ -2,9 +2,8 @@
 @(import:
     "common.rhm" open:
       except: def
-    "nonterminal.rhm".body
+    "nonterminal.rhm" open
     meta_label:
-      rhombus/runtime_path
       rhombus/runtime_path open)
 
 @title(~style: #'toc){Runtime Paths}

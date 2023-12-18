@@ -1,10 +1,11 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Equality}
 
 @doc(
-  operator (v1 == v2) :: Boolean
+  operator ((v1 :: Any) == (v2 :: Any)) :: Boolean
 ){
 
  Reports whether @rhombus(v1) and @rhombus(v2) are equal, which includes
@@ -23,7 +24,7 @@
 }
 
 @doc(
-  operator (v1 === v2) :: Boolean
+  operator ((v1 :: Any) === (v2 :: Any)) :: Boolean
 ){
 
  Reports whether @rhombus(v1) and @rhombus(v2) are the same object.
@@ -58,7 +59,7 @@
 }
 
 @doc(
-  operator (v1 != v2) :: Boolean
+  operator ((v1 :: Any) != (v2 :: Any)) :: Boolean
 ){
 
  Equvalent to @rhombus(!(v1 == v2)).
@@ -71,7 +72,7 @@
 
 
 @doc(
-  operator (v1 is_now v2) :: Boolean
+  operator ((v1 :: Any) is_now (v2 :: Any)) :: Boolean
 ){
 
  Reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
@@ -149,8 +150,9 @@
       private field cache = #false
       method dist():
         cache || (block:
-                    cache := math.sqrt(x*x + y*y)
-                    cache)
+                    def v = math.sqrt(x*x + y*y)
+                    cache := v
+                    v)
       // since `cache` is mutable, the default equality
       // comparison would only make `===` objects equal
       private implements Equatable
@@ -165,7 +167,7 @@
 }
 
 @doc(
-  fun Equatable.hash(v) :: Int
+  fun Equatable.hash(v :: Any) :: Int
 ){
 
  Returns a hash code for @rhombus(v) that is consistent with
@@ -174,7 +176,7 @@
 }
 
 @doc(
-  fun Equatable.identity_hash(v) :: Int
+  fun Equatable.identity_hash(v :: Any) :: Int
 ){
 
  Returns a hash code for @rhombus(v) that is consistent with
@@ -183,8 +185,10 @@
 }
 
 @doc(
-  fun Equatable.hash_code_combine(hc :: Int, ...) :: Int
-  fun Equatable.hash_code_combine_unordered(hc :: Int, ...) :: Int
+  fun Equatable.hash_code_combine(hc :: Int, ...)
+    :: Int
+  fun Equatable.hash_code_combine_unordered(hc :: Int, ...)
+    :: Int
 ){
 
  Combines hash codes to produce a new one. Information is generally

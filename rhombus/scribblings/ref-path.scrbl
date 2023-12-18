@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Paths}
 
@@ -34,11 +36,11 @@
 }
 
 @doc(
-  bind.macro 'Path($binding)'
+  bind.macro 'Path($bind)'
 ){
 
  Matches a path where the byte-string form of the path matches
- @rhombus(binding).
+ @rhombus(bind).
 
 @examples(
   def Path(p): Path("/home/rhombus/shape.txt")

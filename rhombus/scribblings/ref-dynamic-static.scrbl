@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Static and Dynamic Lookup}
 
@@ -105,7 +106,7 @@
 }
 
 @doc(
-  fun dynamic(v)
+  fun dynamic(v :: Any) :: Any
 ){
 
  The identity function.

@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Input and Output}
 
@@ -18,7 +19,7 @@
 }
 
 @doc(
-  fun print(v,
+  fun print(v :: Any,
             out :: Port.Output = Port.current_output(),
             ~mode: mode :: Any.of(#'text, #'expr) = #'text,
             ~pretty: pretty = Printable.current_pretty())
@@ -44,8 +45,8 @@
 }
 
 @doc(
-  fun println(v,
-              out :: Port.Output = Port.output_port(),
+  fun println(v :: Any,
+              out :: Port.Output = Port.current_output(),
               ~mode: mode :: Any.of(#'text, #'expr) = #'text,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -59,7 +60,7 @@
 @doc(
   def Port.current_input :: Parameter
   fun Port.current_input() :: Port.Input
-  fun Port.current_input(in :: Port.Input)
+  fun Port.current_input(in :: Port.Input) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when reading.
@@ -69,7 +70,7 @@
 @doc(
   def Port.current_output :: Parameter
   fun Port.current_output() :: Port.Output
-  fun Port.current_output(out :: Port.Output)
+  fun Port.current_output(out :: Port.Output) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when printing.
@@ -80,7 +81,7 @@
 @doc(
   def Port.current_error :: Parameter
   fun Port.current_error() :: Port.Output
-  fun Port.current_error(out :: Port.Output)
+  fun Port.current_error(out :: Port.Output) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when printing
@@ -123,9 +124,10 @@
 
 
 @doc(
-  fun Printable.describe(v,
-                         ~mode: mode :: Any.of(#'text, #'expr) = #'text)
-    :: PrintDesc
+  fun Printable.describe(
+    v :: Any,
+    ~mode: mode :: Any.of(#'text, #'expr) = #'text
+  ) :: PrintDesc
 ){
 
 
@@ -138,22 +140,19 @@
 
 
 @doc(
-  fun Printable.render(pd :: PrintDesc,
-                       out :: Port.Output = Port.output_port(),
-                       ~column: column :: NonnegInt = 0)
-    :: Void
+  fun Printable.render(
+    pd :: PrintDesc,
+    out :: Port.Output = Port.current_output(),
+    ~column: column :: NonnegInt = 0
+  ) :: Void
 ){
 
  Pretty-prints the description @rhombus(pd) to @rhombus(out).
 
- The optional @rhombus(indent) argument indicates the initial
- indentation value, in case @rhombus(pd) contains a
- @rhombus(PrintDesc.newline) description that needs to write indentation.
-
  The optional @rhombus(column) argument indicates the current column for
  output, in case @rhombus(pd) contains a @rhombus(PrintDesc.align)
  description that needs to update indentation based on the current
- column. 
+ column.
 
 }
 
@@ -172,12 +171,18 @@
 }
 
 @doc(
-  fun PrintDesc.concat(pd :: PrintDesc, ...) :: PrintDesc
-  fun PrintDesc.newline() :: PrintDesc
-  fun PrintDesc.nest(n :: NonnegInt, pd :: PrintDesc) :: PrintDesc
-  fun PrintDesc.align(pd :: PrintDesc) :: PrintDesc
-  fun PrintDesc.or(pd1 :: PrintDesc, pd2 :: PrintDesc) :: PrintDesc
-  fun PrintDesc.flat(pd :: PrintDesc) :: PrintDesc
+  fun PrintDesc.concat(pd :: PrintDesc, ...)
+    :: PrintDesc
+  fun PrintDesc.newline()
+    :: PrintDesc
+  fun PrintDesc.nest(n :: NonnegInt, pd :: PrintDesc)
+    :: PrintDesc
+  fun PrintDesc.align(pd :: PrintDesc)
+    :: PrintDesc
+  fun PrintDesc.or(pd1 :: PrintDesc, pd2 :: PrintDesc)
+    :: PrintDesc
+  fun PrintDesc.flat(pd :: PrintDesc)
+    :: PrintDesc
 ){
 
  Core @rhombus(PrintDesc, ~annot) constructors (in addition
@@ -190,8 +195,9 @@
 
   @examples(
     Printable.render(
-      PrintDesc.concat("a", "b")
-    )
+      PrintDesc.concat(
+        "a", "b",
+      ))
   )}
 
  @item{@rhombus(PrintDesc.newline) prints a newline plus indentation,
@@ -199,9 +205,10 @@
 
   @examples(
     Printable.render(
-      PrintDesc.concat("a", PrintDesc.newline(),
-                       "b")
-    )
+      PrintDesc.concat(
+        "a", PrintDesc.newline(),
+        "b",
+      ))
   )}
 
  @item{@rhombus(PrintDesc.nest) increases the current indentation by
@@ -211,10 +218,13 @@
     Printable.render(
       PrintDesc.concat(
         "a",
-        PrintDesc.nest(2, PrintDesc.concat(PrintDesc.newline(),
-                                           "b"))
-      )
-    )
+        PrintDesc.nest(
+          2,
+          PrintDesc.concat(
+            PrintDesc.newline(),
+            "b",
+          )),
+      ))
   )}
 
  @item{@rhombus(PrintDesc.align) sets the current indentation
@@ -223,12 +233,14 @@
 
   @examples(
     Printable.render(
-      PrintDesc.concat("a",
-                       PrintDesc.align(
-                         PrintDesc.concat("b", PrintDesc.newline(),
-                                          "c"))
-                       )
-    )
+      PrintDesc.concat(
+        "a",
+        PrintDesc.align(
+          PrintDesc.concat(
+            "b", PrintDesc.newline(),
+            "c",
+          )),
+      ))
   )}
 
  @item{@rhombus(PrintDesc.or) offers two printign alternatives. Either
@@ -238,10 +250,14 @@
 
   @examples(
     Printable.render(
-      PrintDesc.or(PrintDesc.concat("a", "; ", "b"),
-                   PrintDesc.concat("a", PrintDesc.newline(),
-                                    "b"))
-    )
+      PrintDesc.or(
+        PrintDesc.concat(
+          "a", "; ", "b",
+        ),
+        PrintDesc.concat(
+          "a", PrintDesc.newline(),
+          "b",
+        )))
   )}
 
  @item{@rhombus(PrintDesc.flat) prints the same as @rhombus(pd), but
@@ -252,19 +268,30 @@
   recursive description.
 
   @examples(
-    def sub = PrintDesc.or(PrintDesc.concat("a", "; ", "b"),
-                           PrintDesc.concat("a", PrintDesc.newline(), "b"))
+    def sub = PrintDesc.or(
+      PrintDesc.concat(
+        "a", "; ", "b",
+      ),
+      PrintDesc.concat(
+        "a", PrintDesc.newline(),
+        "b",
+      ))
     Printable.render(
       PrintDesc.or(
-        PrintDesc.concat("f(", PrintDesc.flat(sub), ")"),
-        PrintDesc.concat("f(",
-                         PrintDesc.nest(
-                           2,
-                           PrintDesc.concat(PrintDesc.newline(), sub)
-                         ),
-                         PrintDesc.newline(), ")")
-      )
-    )
+        PrintDesc.concat(
+          "f(", PrintDesc.flat(sub), ")",
+        ),
+        PrintDesc.concat(
+          "f(",
+          PrintDesc.nest(
+            2,
+            PrintDesc.concat(
+              PrintDesc.newline(),
+              sub,
+            )),
+          PrintDesc.newline(),
+          ")",
+        )))
   )}
 
 )
@@ -294,11 +321,19 @@
  can cause the description to be unprintable).
 
 @examples(
-  Printable.render(PrintDesc.list("Posn(", ["x", "y"], ")"))
-  Printable.render(PrintDesc.block("begin",
-                                   PrintDesc.concat("one",
-                                                    PrintDesc.newline(),
-                                                    "two")))
+  Printable.render(
+    PrintDesc.list(
+      "Posn(",
+      ["x", "y"],
+      ")"
+    ))
+  Printable.render(
+    PrintDesc.block(
+      "begin",
+      PrintDesc.concat(
+        "one", PrintDesc.newline(),
+        "two",
+      )))
 )
 
 }
@@ -307,7 +342,7 @@
 @doc(
   def Printable.current_pretty :: Parameter
   fun Printable.current_pretty() :: Boolean
-  fun Printable.current_pretty(on)
+  fun Printable.current_pretty(on :: Any) :: Void
 ){
 
  A @tech{context parameter} that determines the default printing mode.
@@ -320,7 +355,7 @@
 @doc(
   def Printable.current_optimal :: Parameter
   fun Printable.current_optimal() :: Boolean
-  fun Printable.current_optimal(on)
+  fun Printable.current_optimal(on :: Any) :: Void
 ){
 
  A @tech{context parameter} that determines whether pretty printing uses
@@ -334,7 +369,7 @@
 @doc(
   def Printable.current_page_width :: Parameter
   fun Printable.current_page_width() :: Boolean
-  fun Printable.current_page_width(on)
+  fun Printable.current_page_width(on :: Any) :: Void
 ){
 
  A @tech{context parameter} for pretty printing that determines the
@@ -346,7 +381,7 @@
 @doc(
   def Printable.current_graph :: Parameter
   fun Printable.current_graph() :: Boolean
-  fun Printable.current_graph(on)
+  fun Printable.current_graph(on :: Any) :: Void
 ){
 
  A @tech{context parameter} that determines whether printing shows

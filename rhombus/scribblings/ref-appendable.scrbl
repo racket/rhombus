@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -12,13 +13,25 @@ lists, arrays, sets, strings, and byte strings are all indexable, as are
 instances of classes that implement @rhombus(Appendable, ~class).
 
 @doc(
-  operator ((v1 :: ReadableMap) ++ (v2 :: ReadableMap)) :: Map
-  operator ((v1 :: ReadableSet) ++ (v2 :: ReadableSet)) :: Set
-  operator ((v1 :: List) ++ (v2 :: List)) :: List
-  operator ((v1 :: Array) ++ (v2 :: Array)) :: Array
-  operator ((v1 :: ReadableString) ++ (v2 :: ReadableString)) :: String
-  operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: Bytes
+  ~nonterminal:
+    map_expr: block expr
+    key_expr: block expr
+    val_expr: block expr
+
+  operator ((v1 :: ReadableMap) ++ (v2 :: ReadableMap))
+    :: Map
+  operator ((v1 :: ReadableSet) ++ (v2 :: ReadableSet))
+    :: Set
+  operator ((v1 :: List) ++ (v2 :: List))
+    :: List
+  operator ((v1 :: Array) ++ (v2 :: Array))
+    :: Array
+  operator ((v1 :: ReadableString) ++ (v2 :: ReadableString))
+    :: String
+  operator ((v1 :: Bytes) ++ (v2 :: Bytes))
+    :: Bytes
   operator ((v1 :: Appendable) ++ (v2 :: Appendable))
+    :: Any
 ){
 
  Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list,
@@ -32,9 +45,9 @@ instances of classes that implement @rhombus(Appendable, ~class).
  first in the result followed by the elements of @rhombus(v2).
 
  The combination
- @rhombus(#,(@rhombus(map_expr, ~var)) ++ {#,(@rhombus(key_expr, ~var)): #,(@rhombus(value_expr, ~var))})
+ @rhombus(#,(@rhombus(map_expr)) ++ {#,(@rhombus(key_expr)): #,(@rhombus(val_expr))})
  is recognized by the compiler and turned into an efficient functional update of the
- map produced by @rhombus(map_expr, ~var), as opposed to creating an intermediate map.
+ map produced by @rhombus(map_expr), as opposed to creating an intermediate map.
  Set update is handled similarly.
 
  When @rhombus(v1) is an instance of a class that implements
@@ -44,7 +57,7 @@ instances of classes that implement @rhombus(Appendable, ~class).
 
  The @rhombus(use_static) declaration constrains @rhombus(++) to work
  only when the left-hand argument static information indicating that it
- satisfies @rhombus(Appendable).
+ satisfies @rhombus(Appendable, ~annot).
 
 @examples(
   ~repl:

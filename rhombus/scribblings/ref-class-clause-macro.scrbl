@@ -57,9 +57,9 @@
  use, where each group can be either a another @rhombus(class) clause, an
  expression, a defintion, or an export.
 
- In addition to an @rhombus(~op_stx) option like @rhombus(defn.macro, ~expr),
+ In addition to an @rhombus(~op_stx) option like @rhombus(defn.macro),
  the optional @rhombus(~info) body form binds an @rhombus(id) to
- a @rhombus(class_meta.Info) value. Use the
+ a @rhombus(class_meta.Info, ~annot) value. Use the
  @rhombus(class_meta.Info.lookup) function to access information about
  the class declaration that appears before the use of the class-clause
  macro.
@@ -148,9 +148,11 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
   annot.macro 'class_meta.Info'
   fun class_meta.Info.lookup(info :: class_meta.Info,
                              key :: Symbol)
+    :: Any
   annot.macro 'interface_meta.Info'
   fun interface_meta.Info.lookup(info :: interface_meta.Info,
                                  key :: Symbol)
+    :: Any
 ){
 
  @provided_meta()
@@ -191,7 +193,7 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
  information has not been fully checked; for example, the name of a class
  or interface being extended is reported as it appears, and has not yet
  been checked to be a valid class or interface name, and multiple names
- may be reported if a class contains multiple @rhombus(extends) clauses.
+ may be reported if a class contains multiple @rhombus(extends, ~class_clause) clauses.
  Similarly, field- or method-name lists may include duplicates.
 
  When obtained via @rhombus(class_meta.describe) or

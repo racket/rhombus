@@ -192,7 +192,7 @@
  @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var), providing a communication
  channel from an infoer to a matcher and binder.
- 
+
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
 
@@ -214,7 +214,8 @@
 
 @doc(
   fun bind_meta.get_info(bind_stx :: Syntax,
-                         static_info :: Syntax) :: Syntax
+                         static_info :: Syntax)
+    :: Syntax
 ){
 
  @provided_meta()
@@ -228,7 +229,7 @@
 
  @rhombusblock(
   '((#,(@rhombus(key_id, ~var)), #,(@rhombus(val, ~var))), ...)')
- 
+
  The result is a syntax object that represents the initial expansion of
  the binding form as a packed syntax object, whose form is unspecified
  and intended to be opaque. Use @rhombus(bind_meta.unpack_info) to convert
@@ -438,4 +439,4 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

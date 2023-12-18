@@ -32,8 +32,8 @@
     #,(epsilon)
 
   grammar maybe_annot:
-    :: annot
-    :~ annot
+    :: $annot
+    :~ $annot
     #,(epsilon)
 
   grammar maybe_default:
@@ -116,7 +116,7 @@
 
  @item{in the @rhombus(class, ~space) space, a representation of the
   class for reference as a superclass.}
- 
+
 )
 
  Fields, methods, properties, and dot syntax declared in a class can be accessed
@@ -199,7 +199,7 @@
  appear any number of times as a @rhombus(class_clause) to add or
  override any number of methods or properties. See @rhombus(method, ~class_clause)
  for more information on methods and properties.
- 
+
  When a @rhombus(class_clause) is an @rhombus(extends, ~class_clause)
  form, the new class is created as a subclass of the extended class. The
  extended class must not be @tech{final}. At most one
@@ -277,7 +277,7 @@
  the method and class are not @tech{final}, the called method is
  determined by the object and may be from a subclass that overrides the
  method; the same is true for properties.
- 
+
  Each field, method, property, and dot-syntax name must be distinct from all other field,
  method, property, and dot-syntax names, whether from a parenthesized @rhombus(field_spec), from a
  @rhombus(field, ~class_clause) clause, or from a method, property, or dot-syntax clause. If an
@@ -437,7 +437,7 @@
       abstract method get_next() :: Odd
     class Odd():
       nonfinal
-      abstract method get_next() :: Even  
+      abstract method get_next() :: Even
 )
 
 }
@@ -469,7 +469,7 @@
 
 }
 
-@doc(  
+@doc(
   class_clause.macro 'nonfinal'
 ){
 
@@ -530,6 +530,10 @@
 @doc(
   ~nonterminal:
     maybe_res_annot: fun ~defn
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
+    bind_maybe_kw_opt: fun ~defn
+    rest: fun ~defn
 
   class_clause.macro 'method $method_impl'
   class_clause.macro 'property $property_impl'
@@ -549,16 +553,14 @@
 
   grammar method_impl:
     $id $maybe_res_annot: $entry_point
-    $id ($kwopt_bind, ..., $rest, ...) $maybe_res_annot: $body; ...
-    Z| $id($bind, ..., $rest, ...) $maybe_res_annot:
-         $body
-         ...
+    $id $case_maybe_kw_opt
+    Z| $id $case_maybe_kw
      | ...
 
   grammar method_decl:
     $id $maybe_res_annot
-    $id ($kwopt_binding, ..., $rest, ...) $maybe_res_annot
-    
+    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+
   grammar property_impl:
     $id $maybe_res_annot: $body
     Z| $id $maybe_res_annot: $body
@@ -612,7 +614,7 @@
  In the body of a method or property, the special expression form @rhombus(this)
  refers to the object whose method was called. Fields (in the case of a
  class) and methods can be accessed using @rhombus(this) and @rhombus(.),
- but they can also be used directly. 
+ but they can also be used directly.
  Using a field, method, or property name
  directly is the same as using @rhombus(this) and @rhombus(.) in static
  mode (which implies that a direct reference to a method name must be a
@@ -652,8 +654,8 @@
   interface_clause.macro 'private #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'private #,(@rhombus(property, ~interface_clause)) $property_impl'
   interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause))  $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause))  $property_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
  A @tech{class clause} that declares interfaces that are privately
@@ -692,7 +694,7 @@
   interface_clause.macro 'abstract #,(@rhombus(method, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(property, ~interface_clause)) $property_decl'
-  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause))  $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
@@ -717,7 +719,7 @@
 
 }
 
-@doc(  
+@doc(
   expr.macro 'this'
 ){
 
@@ -745,7 +747,7 @@
 
 }
 
-@doc(  
+@doc(
   class_clause.macro 'internal $id'
   class_clause.macro 'internal: $id'
   interface_clause.macro 'internal $id'
@@ -770,27 +772,30 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun ~defn
+    id_name: namespace ~defn
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
+
   class_clause.macro 'constructor $maybe_name: $entry_point'
-  class_clause.macro 'constructor $maybe_name($kwopt_binding, ...,
-                                              $rest, ...) $maybe_res_annot:
-                        $body; ...'
+  class_clause.macro 'constructor $maybe_name $case_maybe_kw_opt'
   class_clause.macro 'constructor
-                      | $maybe_name($binding, ..., $rest, ...) $maybe_res_annot:
-                          $body; ...
+                      | $maybe_name $case_maybe_kw
                       | ...'
   class_clause.macro 'expression: $entry_point'
-  class_clause.macro '«expression '$id $pattern ...': '$template'»'
-  class_clause.macro '«expression | '$id $pattern ...': '$template'
-                                  | ...»'
+  class_clause.macro '«expression '$id $pattern ...': '$template ...'»'
+  class_clause.macro '«expression
+                       | '$id $pattern ...': '$template ...'
+                       | ...»'
   class_clause.macro 'binding: $entry_point'
-  class_clause.macro '«binding '$id $pattern ...': '$template'»'
-  class_clause.macro '«binding | '$id $pattern ...': '$template'
-                               | ...»'
+  class_clause.macro '«binding '$id $pattern ...': '$template ...'»'
+  class_clause.macro '«binding
+                       | '$id $pattern ...': '$template ...'
+                       | ...»'
   class_clause.macro 'annotation: $entry_point'
-  class_clause.macro '«annotation '$id $pattern ...': '$template'»',
-  class_clause.macro '«annotation | '$id $pattern ...': '$template'
-                                  | ...»'
+  class_clause.macro '«annotation '$id $pattern ...': '$template ...'»',
+  class_clause.macro '«annotation
+                       | '$id $pattern ...': '$template ...'
+                       | ...»'
 
   grammar maybe_name:
     $id
@@ -810,7 +815,7 @@
  is not present, in addition to the class name being bound as a default annotation,
  an @rhombus(of, ~datum) annotation constructor is exported as a field
  of the class.
- 
+
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form with an empty @rhombus(maybe_name), then a use of new class's
  @rhombus(id_name) as a
@@ -904,7 +909,7 @@
 }
 
 
-@doc(  
+@doc(
   interface_clause.macro 'expression: $expresssion_decl'
   interface_clause.macro 'annotation: $annotation_point'
 ){
@@ -1066,18 +1071,14 @@
 
 @doc(
   ~nonterminal:
-    maybe_res_annot: fun ~defn
-    field_id: block id
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
 
-  class_clause.macro 'reconstructor reconstructor_impl'
-
-  grammar reconstructor_impl:
-    : $entry_point
-    $id ($kwopt_bind, ..., $rest, ...) $maybe_res_annot: $body; ...
-    Z| $id($bind, ..., $rest, ...) $maybe_res_annot:
-         $body
-         ...
-     | ...
+  class_clause.macro 'reconstructor: $entry_point'
+  class_clause.macro 'reconstructor case_maybe_kw_opt'
+  class_clause.macro 'reconstructor
+                      | case_maybe_kw
+                      | ...'
 ){
 
  A form for @rhombus(class) to provide an implementation of a
@@ -1107,7 +1108,7 @@
 @doc(
   ~nonterminal:
     field_id: block id
-              
+
   class_clause.macro 'reconstructor_fields:
                         field_id: $body; ...
                         ...'
@@ -1125,7 +1126,7 @@
 
  When a class has a @rhombus(reconstructor_fields, ~class_clause)
  declaration, then the class and any subclass that extends it must have a
- @rhombus(reconstructor, ~class) declaration, since there is not
+ @rhombus(reconstructor, ~class_clause) declaration, since there is not
  necessarily any connection between the declared reconstructor fields and
  the constructor's arguments.
 

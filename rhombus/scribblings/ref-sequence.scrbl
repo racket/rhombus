@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -31,6 +32,9 @@ internal state, and the state can even be specific to a particular
 }
 
 @doc(
+  ~nonterminal:
+    n_expr: block expr
+    m_expr: block expr
   expr.macro '$n_expr .. $m_expr'
   expr.macro '$n_expr ..'
 ){
@@ -54,21 +58,29 @@ internal state, and the state can even be specific to a particular
 
 
 @doc(
-  fun Sequence.make(~initial_position: init_pos,
-                    ~continue_at_position: continue_at_pos = #false,
-                    ~position_to_element: pos_to_element,
-                    ~continue_at_value: continue_at_val = #false,
-                    ~early_position_to_next: early_next_pos = #false,
-                    ~continue_after_position_and_value: continue_at_pos_val = #false,
-                    ~position_to_next: next_pos)
-    :: Sequence
+  fun Sequence.make(
+    ~initial_position:
+      init_pos :: Any,
+    ~continue_at_position:
+      continue_at_pos :: maybe(Function.of_arity(1)) = #false,
+    ~position_to_element:
+      pos_to_element :: Function.of_arity(1),
+    ~continue_at_value:
+      continue_at_val :: maybe(Function) = #false,
+    ~early_position_to_next:
+      early_next_pos :: maybe(Function.of_arity(1)) = #false,
+    ~continue_after_position_and_value:
+      continue_at_pos_val :: maybe(Function) = #false,
+    ~position_to_next:
+      next_pos :: Function.of_arity(1)
+  ) :: Sequence
 ){
 
  Creates a @tech{sequence} by supplying the index value and stepper,
  element-to-index function, and continue conditions:
 
 @itemlist(
-  
+
  @item{@rhombus(init_pos): A value that represents the initial sequence
   position. Any kind of value is allowed, because it is used only by other
   supplied functions, such as @rhombus(pos_to_element) and
@@ -87,7 +99,7 @@ internal state, and the state can even be specific to a particular
   iteration, and only if iteration has not been stoppped by a
   @rhombus(#false) return from one of the continue functions.}
 
- @item{@rhombus(continue_at_value): An optional function that takes the
+ @item{@rhombus(continue_at_val): An optional function that takes the
   current element (which may be multiple values supplied as multiple
   arguments) and reports whether iteration should continue with that
   element. A @rhombus(#false) for @rhombus(continue_at_value) is equivalent
@@ -116,6 +128,9 @@ internal state, and the state can even be specific to a particular
   exposed to iteration. If @rhombus(early_next_pos) is supplied, its
   return is the first argument to @rhombus(continue_at_pos_val).}
 
+ @item{@rhombus(next_pos): A function that takes the current position
+  and returns the next position.}
+
 )
 
  The arguments to @rhombus(Sequence.make) are required to be a mixture
@@ -125,25 +140,26 @@ internal state, and the state can even be specific to a particular
 
  This same initial position and functions are used for every
  @tech{instantiation} of the result sequence. To distinguish different
- instantiations, use @rhombus(Sequence.instiantiable).
+ instantiations, use @rhombus(Sequence.instiantiate).
 
 @examples(
   ~defn:
     fun even_strings_up_to(n :: Int):
-      Sequence.make(~initial_position: 0,
-                    ~continue_at_position: fun (i): i < n,
-                    ~position_to_element: to_string,
-                    ~position_to_next: fun (i): i + 2)
+      Sequence.make(
+        ~initial_position: 0,
+        ~continue_at_position: fun (i): i < n,
+        ~position_to_element: to_string,
+        ~position_to_next: fun (i): i + 2
+      )
   ~repl:
-    for List:
-      each i: even_strings_up_to(5)
-      i
+    for List (i: even_strings_up_to(5)): i
 )
 
 }
 
 @doc(
-  fun Sequence.instantiable(thunk) :: Sequence
+  fun Sequence.instantiable(thunk :: Function.of_arity(0))
+    :: Sequence
 ){
 
  A delaying form of @rhombus(Sequence.make), where @rhombus(thunk) is
@@ -157,31 +173,39 @@ internal state, and the state can even be specific to a particular
       Sequence.instantiable(
         fun ():
           def mutable i = 0
-          Sequence.instantiate(~initial_position: #void,
-                               ~continue_at_position: fun (pos): i < n,
-                               ~position_to_element: fun (pos): to_string(i),
-                               ~position_to_next: fun (pos): i := i + 2)
-      )
+          Sequence.instantiate(
+            ~initial_position: #void,
+            ~continue_at_position: fun (pos): i < n,
+            ~position_to_element: fun (pos): to_string(i),
+            ~position_to_next: fun (pos): i := i + 2
+          ))
   ~repl:
-    for List:
-      each i: even_strings_up_to(5)
-      i
+    for List (i: even_strings_up_to(5)): i
 )
 
 }
 
 @doc(
-  fun Sequence.instantiate(~initial_position: init_pos,
-                           ~continue_at_position: continue_at_pos = #false,
-                           ~position_to_element: pos_to_element,
-                           ~continue_at_value: continue_at_val = #false,
-                           ~early_position_to_next: early_next_pos = #false,
-                           ~continue_after_position_and_value: continue_at_pos_val = #false,
-                           ~position_to_next: next_pos)
+  fun Sequence.instantiate(
+    ~initial_position:
+      init_pos :: Any,
+    ~continue_at_position:
+      continue_at_pos :: maybe(Function.of_arity(1)) = #false,
+    ~position_to_element:
+      pos_to_element :: Function.of_arity(1),
+    ~continue_at_value:
+      continue_at_val :: maybe(Function) = #false,
+    ~early_position_to_next:
+      early_next_pos :: maybe(Function.of_arity(1)) = #false,
+    ~continue_after_position_and_value:
+      continue_at_pos_val :: maybe(Function) = #false,
+    ~position_to_next:
+      next_pos :: Function.of_arity(1)
+  ) :: (Any, Any, Any, Any, Any, Any, Any)
 ){
 
  Takes arguments of the same form as @rhombus(Sequence.make), but simply
- returns the as multiple values in an unspecified order. This function is
+ returns them as multiple values in an unspecified order. This function is
  meant to be called from a function passed to
  @rhombus(Sequence.instantiable).
 
@@ -215,12 +239,7 @@ internal state, and the state can even be specific to a particular
       private override method to_sequence():
         [x, y]
   ~repl:
-    for List:
-      each i: Posn(10, 20)
-      i
+    for List (i: Posn(10, 20)): i
 )
 
 }
-
-
-

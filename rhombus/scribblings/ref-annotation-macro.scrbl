@@ -1,9 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm":
-      open
-      except: annot
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -61,9 +59,10 @@
 @doc(
   fun annot_meta.is_predicate(stx :: Syntax) :: Boolean
   fun annot_meta.pack_predicate(fun_stx :: Syntax,
-                                statinfo_stx :: Syntax = '()') :: Syntax
-  fun annot_meta.unpack_predicate(stx :: Syntax) :: (Syntax,
-                                                     Syntax)
+                                statinfo_stx :: Syntax = '()')
+    :: Syntax
+  fun annot_meta.unpack_predicate(stx :: Syntax)
+    :: (Syntax, Syntax)
 ){
 
 @provided_meta()
@@ -95,10 +94,10 @@
   fun annot_meta.is_converter(stx :: Syntax) :: Boolean
   fun annot_meta.pack_converter(bind_stx :: Syntax,
                                 body_stx :: Syntax,
-                                statinfo_stx :: Syntax = '()') :: Syntax
-  fun annot_meta.unpack_converter(stx :: Syntax) :: (Syntax,
-                                                     Syntax,
-                                                     Syntax)
+                                statinfo_stx :: Syntax = '()')
+    :: Syntax
+  fun annot_meta.unpack_converter(stx :: Syntax)
+    :: (Syntax, Syntax, Syntax)
 ){
 
 @provided_meta()
@@ -131,7 +130,8 @@
 }
 
 @doc(
-  fun annot_meta.parse_to_packed_statinfo(stx :: Group) :: Syntax
+  fun annot_meta.parse_to_packed_statinfo(stx :: Group)
+    :: Syntax
 ){
 
 @provided_meta()
@@ -183,7 +183,7 @@
       use_static
       fun (p :: Forward): p.x
   annot.delayed_complete Forward: Posn
-  Posn(1, 2) :: Forward  
+  Posn(1, 2) :: Forward
   block:
     use_static
     fun (p :: Forward): p.x
@@ -216,4 +216,4 @@
 }
 
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

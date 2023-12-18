@@ -1,9 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm":
-      open
-      except entry_point
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -35,8 +33,8 @@
     ~op_stx $id
     ~mode: $mode_id
     ~mode $mode_id
-    ~adjustment $adj_id
     ~adjustment: $adj_id
+    ~adjustment $adj_id
 
 ){
 
@@ -46,7 +44,7 @@
  @rhombus(~mode) and/or @rhombus(~adjustment) ``options'' can be
  specified---and they are effectively required to detect the mode mode of
  expansion and receive potential adjustments to the expansion.
- 
+
  An entry-point macro works in two modes, where the symbol provided as
  @rhombus(mode_id) indicates the mode:
 
@@ -64,7 +62,7 @@
   implementation that is packed via @rhombus(entry_point_meta.pack). In
   the latter case, the function should be potentially adjusted with extra
   leading arguments and a wrapper for the body, where the adjustments are
-  provided via a @rhombus(entry_point_meta.Adjustment) value for
+  provided via a @rhombus(entry_point_meta.Adjustment, ~class) value for
   @rhombus(adj_id). Adjusts might add a ``self'' argument for a method,
   for example, and wrap a body to bind names for direct access to object
   fields and methods.}
@@ -100,11 +98,15 @@
     entry_point.macro 'identity':
       ~mode mode
       ~adjustment adj
-      if (mode == #'arity)
-      | [2, [], []]
-      | def [id, ...] = adj.prefix_arguments
-        entry_point_meta.pack('fun($id, ..., x):
-                                 $(adj.wrap_body(2, 'x'))')
+      match mode
+      | #'arity:
+          [2, [], []]
+      | #'function:
+          let [arg, ...] = adj.prefix_arguments
+          entry_point_meta.pack(
+            'fun($arg, ..., x):
+               $(adj.wrap_body(2, 'x'))'
+          )
   ~repl:
     class C():
       method m: identity
@@ -115,10 +117,7 @@
 
 @doc(
   class entry_point_meta.Adjustment(
-    arity :: (False || Int
-                || matching([mask :: Int,
-                             allowed :: List.of(Keyword) || False,
-                             required :: List.of(Keyword)])),
+    prefix_arguments :: List.of(Identifier),
     wrap_body :: Function.of_arity(2),
     is_method :: Boolean
   )
@@ -129,7 +128,7 @@
  Represents an adjustment to an entry point to add extra arguments and
  wrap the generated function's body. The @rhombus(wrap_body) function
  expects an arity encoding (see @rhombus(entry_point.macro)) and a syntax
- object, and it produce a syntax object. The @rhombus(is_method) field
+ object, and it produces a syntax object. The @rhombus(is_method) field
  indicates whether the existence of a leading argument should be hidden
  in error messages.
 
@@ -149,7 +148,7 @@
 }
 
 @doc(
-  syntax_class entry_point_meta.Parsed(adj :: Adjustment):
+  syntax_class entry_point_meta.Parsed(adj):
     kind: ~group
     fields:
       group
@@ -168,4 +167,4 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+@(macro.close_eval(macro_eval))

@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Byte Strings}
 
@@ -41,7 +42,8 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 
 
 @doc(
-  fun Bytes.make(length :: NonnegInt, byte :: Byte = 0) :: MutableBytes
+  fun Bytes.make(length :: NonnegInt, byte :: Byte = 0)
+    :: MutableBytes
 ){
 
  Creates a fresh byte string with @rhombus(length) bytes, where each
@@ -99,12 +101,13 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
                       dest_start :: NonnegInt,
                       src_bstr :: Bytes,
                       src_start :: NonnegInt = 0,
-                      src_end :: NonnegInt = Bytes.length(src_bstr)) :: Void
+                      src_end :: NonnegInt = Bytes.length(src_bstr))
+    :: Void
 ){
 
  Copies bytes from @rhombus(src_bstr) at @rhombus(src_start) (inclusive) to
  @rhombus(src_end) (exclusive) into @rhombus(dest_bstr) starting at
- @rhombus(dest_start). The length of @rhombus(dest_bstr) must be at least 
+ @rhombus(dest_start). The length of @rhombus(dest_bstr) must be at least
  @rhombus(dest_start + (src_end - src_start)).
 
 }
@@ -113,15 +116,18 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
   fun Bytes.utf8_string(bstr :: Bytes,
                         err_char :: maybe(Char) = #false,
                         start :: NonnegInt = 0,
-                        end :: NonnegInt = Bytes.length(bstr)) :: String
+                        end :: NonnegInt = Bytes.length(bstr))
+    :: String
   fun Bytes.latin1_string(bstr :: Bytes,
                           err_char :: maybe(Char) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr)) :: String
+                          end :: NonnegInt = Bytes.length(bstr))
+    :: String
   fun Bytes.locale_string(bstr :: Bytes,
                           err_char :: maybe(Char) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr)) :: String
+                          end :: NonnegInt = Bytes.length(bstr))
+    :: String
 ){
 
  Converts a byte string to a string, decoding as UTF-8, Latin-1, or the
@@ -134,4 +140,3 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 )
 
 }
-

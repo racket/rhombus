@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Strings}
 
@@ -55,7 +56,9 @@ immutable strings.
 }
 
 @doc(
-  fun to_string(v, ~mode: mode :: Any.of(#'text, #'expr) = #'text) :: String
+  fun to_string(v :: Any,
+                ~mode: mode :: Any.of(#'text, #'expr) = #'text)
+    :: String
 ){
 
  Coerces @rhombus(v)  to a string.
@@ -68,14 +71,14 @@ immutable strings.
   to_string(10)
   to_string('hello')
   to_string([1, 2, 3])
-  to_string('hello', ~mode: #'expr)  
+  to_string('hello', ~mode: #'expr)
 )
 
 }
 
 
 @doc(
-  operator (v1 +& v2) :: String
+  operator ((v1 :: Any) +& (v2 :: Any)) :: String
 ){
 
  Coerces @rhombus(v1) and @rhombus(v2) to a string, then appends the strings.
@@ -124,7 +127,8 @@ immutable strings.
 @doc(
   fun String.substring(str :: ReadableString,
                        start :: NonnegInt,
-                       end :: NonnegInt = String.length(str)) :: String
+                       end :: NonnegInt = String.length(str))
+    :: String
 ){
 
  Returns the substring of @rhombus(str) from @rhombus(start) (inclusive)
@@ -142,15 +146,18 @@ immutable strings.
   fun String.utf8_bytes(str :: ReadableString,
                         err_byte :: maybe(Byte) = #false,
                         start :: NonnegInt = 0,
-                        end :: NonnegInt = String.length(str)) :: Bytes
+                        end :: NonnegInt = String.length(str))
+    :: Bytes
   fun String.latin1_bytes(str :: ReadableString,
                           err_byte :: maybe(Byte) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = String.length(str)) :: Bytes
+                          end :: NonnegInt = String.length(str))
+    :: Bytes
   fun String.locale_bytes(str :: ReadableString,
                           err_byte :: maybe(Byte) = #false,
                           start :: NonnegInt = 0,
-                          end :: NonnegInt = String.length(str)) :: Bytes
+                          end :: NonnegInt = String.length(str))
+    :: Bytes
 ){
 
  Converts a string to a byte string, encoding by UTF-8, Latin-1, or the
@@ -206,12 +213,14 @@ immutable strings.
 
 
 @doc(
-  fun String.to_string(str :: ReadableString) :: String
-  fun ReadableString.to_string(str :: ReadableString) :: String
+  fun String.to_string(str :: ReadableString)
+    :: String
+  fun ReadableString.to_string(str :: ReadableString)
+    :: String
 ){
 
  The same as @rhombus(to_string), but constrained to a
- @rhombus(ReadableString) argument. This function exists for consistency with
+ @rhombus(ReadableString, ~annot) argument. These functions exist for consistency with
  the @rhombus(ReadableString.to_string, ~annot) annotation.
 
 }
@@ -242,7 +251,8 @@ immutable strings.
 @doc(
   fun String.grapheme_span(str :: ReadableString,
                            start :: NonnegInt = 0,
-                           end :: NonnegInt = str.length()) :: NonnegInt
+                           end :: NonnegInt = String.length(str))
+    :: NonnegInt
 ){
 
  Returns the number of @tech{characters} (i.e., code points) in the
@@ -259,7 +269,8 @@ immutable strings.
 @doc(
   fun String.grapheme_count(str :: ReadableString,
                             start :: NonnegInt = 0,
-                            end :: NonnegInt = str.length()) :: NonnegInt
+                            end :: NonnegInt = String.length(str))
+    :: NonnegInt
 ){
 
  Returns the number of grapheme clusters in

@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Boxes}
 
@@ -29,7 +30,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
  The @rhombus(Box, ~annot) annotation (without @rhombus(now_of) or
  @rhombus(later_of)) matches any box.
- 
+
  The @rhombus(Box.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches a box whose values satisfies
  @rhombus(annotation), but it does not ensure in any way that future
@@ -87,10 +88,10 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 }
 
 @doc(
-  bind.macro 'Box($val_bind)'
+  bind.macro 'Box($bind)'
 ){
 
- Matches a box whose value matches @rhombus(val_bind).
+ Matches a box whose value matches @rhombus(bind).
 
 @examples(
   def Box(x): Box(1)
@@ -109,10 +110,10 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  Accesses or updates the value field of @rhombus(box).
 
 @examples(
-  def box: Box(1)
-  Box.value(box)
-  Box.value(box, 2)
-  Box.value(box)
+  def bx: Box(1)
+  Box.value(bx)
+  Box.value(bx, 2)
+  Box.value(bx)
 )
 
 }

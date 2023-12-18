@@ -17,9 +17,9 @@
 
 
 @doc(
-  defn.macro '«statinfo.macro '$id': 
-                $body
-                ...»'
+  defn.macro '«statinfo.macro '$id':
+                 $body
+                 ...»'
 ){
 
  Binds @rhombus(id) in the static-information space to
@@ -37,7 +37,8 @@
 
 @doc(
   fun statinfo_meta.wrap(expr_stx:: Syntax,
-                         statinfo_stx :: Syntax) :: Syntax
+                         statinfo_stx :: Syntax)
+    :: Syntax
 ){
 
  @provided_meta()
@@ -86,8 +87,10 @@
 }
 
 @doc(
-  fun statinfo_meta.pack_group(statinfo_stx :: Syntax) :: Syntax
-  fun statinfo_meta.unpack_group(statinfo_stx :: Syntax) :: Syntax
+  fun statinfo_meta.pack_group(statinfo_stx :: Syntax)
+    :: Syntax
+  fun statinfo_meta.unpack_group(statinfo_stx :: Syntax)
+    :: Syntax
 ){
 
  @provided_meta()
@@ -105,7 +108,9 @@
 
 
 @doc(
-  fun statinfo_meta.lookup(expr_stx :: Syntax, key :: Identifier)
+  fun statinfo_meta.lookup(expr_stx :: Syntax,
+                           key :: Identifier)
+    :: maybe(Syntax)
 ){
 
 @provided_meta()
@@ -129,19 +134,19 @@
 
  Keys for static information are compared based on binding, not merely
  the key's symbolic form.
- 
+
 }
 
 @doc(
-  def statinfo_meta.call_result_key
-  def statinfo_meta.index_result_key
-  def statinfo_meta.index_get_key
-  def statinfo_meta.index_set_key
-  def statinfo_meta.append_key
-  def statinfo_meta.dot_provider_key
-  def statinfo_meta.sequence_constructor_key
-  def statinfo_meta.sequence_element_key
-  def statinfo_meta.values_key
+  def statinfo_meta.call_result_key :: Identifier
+  def statinfo_meta.index_result_key :: Identifier
+  def statinfo_meta.index_get_key :: Identifier
+  def statinfo_meta.index_set_key :: Identifier
+  def statinfo_meta.append_key :: Identifier
+  def statinfo_meta.dot_provider_key :: Identifier
+  def statinfo_meta.sequence_constructor_key :: Identifier
+  def statinfo_meta.sequence_element_key :: Identifier
+  def statinfo_meta.values_key :: Identifier
 ){
 
  @provided_meta()
@@ -163,12 +168,12 @@
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
         access an element}
-        
+
   @item{@rhombus(statinfo_meta.index_set_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
         update an element}
-        
+
   @item{@rhombus(statinfo_meta.append_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to

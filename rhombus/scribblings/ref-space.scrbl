@@ -42,6 +42,7 @@ driver and macro-definitions forms.
 @doc(
   ~nonterminal:
     space_id: block id
+    meta_namespace_id: block id
 
   decl.macro 'space.enforest $space_id:
                 $space_clause_or_body_or_export
@@ -55,7 +56,7 @@ driver and macro-definitions forms.
       $space_meta_clause_or_body
       ...
     $nestable_body
-                  
+
   grammar space_id_path:
     $id
     $space_id_path / $id
@@ -310,14 +311,15 @@ driver and macro-definitions forms.
 
 @doc(
   ~nonterminal:
-    meta_namespace_id: block id
     space_id_path: space.enforest ~decl
+    meta_namespace_id: block id
+    space_meta_clause_or_body: space.enforest ~decl
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'
   space_clause.macro 'bridge_definer $id'
   space_clause.macro 'meta_namespace $meta_namespace_id:
-                        $space_meta_clause_or_body_or_export
-                          ...'
+                        $space_meta_clause_or_body
+                        ...'
 ){
 
  Clause forms for use within a @rhombus(space.enforest) or
@@ -362,4 +364,4 @@ driver and macro-definitions forms.
 }
 
 
-@macro.close_eval(macro_eval)
+@(macro.close_eval(macro_eval))

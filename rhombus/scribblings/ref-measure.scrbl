@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm".body
     meta_label:
-      rhombus/measure
-      rhombus/measure open)
+      rhombus/measure open
+      rhombus/runtime open)
 
 @title(~style: #'toc){Measure}
 
@@ -68,6 +68,6 @@
                 ...'
 ){
 
- Combines @rhombus(time) and @rhombus(measure).
+ Combines @rhombus(measure.time) and @rhombus(measure.memory).
 
 }
