@@ -107,6 +107,18 @@
 
 (define-for-syntax (parens-extract-metavariables stx space-name vars #:just-parens? [just-parens? #f])
   (define (extract-groups stx)
+    (define-syntax-class maybe-kw-opt
+      #:attributes (g)
+      #:datum-literals (group block)
+      (pattern (group _:keyword (block :maybe-opt)))
+      (pattern :maybe-opt))
+    (define-syntax-class maybe-opt
+      #:datum-literals (group block op =)
+      (pattern ((~and tag group) t ... (op =) . _)
+        #:with g #'(tag t ...))
+      (pattern ((~and tag group) t ... (block . _))
+        #:with g #'(tag t ...))
+      (pattern g))
     (define-syntax-class and
       #:datum-literals (group op &)
       (pattern ((~and tag group) (op &) . g)))
@@ -115,13 +127,17 @@
       (pattern ((~and tag group) (op ~&) . g)))
     (syntax-parse stx
       #:datum-literals (group op [ooo ...])
-      [(~or* (~and (g ... dot-g (group (op ooo)))
-                   (~parse gs #'(g ... dot-g)))
-             (~and (g ... and:and (~optional kw-and:kw-and))
-                   (~parse gs #'(g ... (and.tag . and.g) (~? (kw-and.tag . kw-and.g)))))
-             (~and (g ... kw-and:kw-and (~optional and:and))
-                   (~parse gs #'(g ... (kw-and.tag . kw-and.g) (~? (and.tag . and.g)))))
-             gs)
+      [(~or* (~and (pre-g ... dot-g (group (op ooo)))
+                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
+                   (~parse gs #'(kw-opt-g.g ... dot-g)))
+             (~and (pre-g ... and:and (~optional kw-and:kw-and))
+                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
+                   (~parse gs #'(kw-opt-g.g ... (and.tag . and.g) (~? (kw-and.tag . kw-and.g)))))
+             (~and (pre-g ... kw-and:kw-and (~optional and:and))
+                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
+                   (~parse gs #'(kw-opt-g.g ... (kw-and.tag . kw-and.g) (~? (and.tag . and.g)))))
+             (~and (kw-opt-g:maybe-kw-opt ...)
+                   (~parse gs #'(kw-opt-g.g ...))))
        (for/fold ([vars vars]) ([g (in-list (syntax->list #'gs))])
          (extract-binding-metavariables g vars))]))
   (if just-parens?

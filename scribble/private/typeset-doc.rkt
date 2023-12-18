@@ -566,10 +566,9 @@
 (define-for-syntax (extract-binding-metavariables stx vars)
   (define (extract-binding-group stx vars)
     (syntax-parse stx
-      #:datum-literals (group block op :: :~ =)
-      [(group t . (~or* ((op (~or* :: :~ =)) . _)
-                        ((block . _))
-                        ()))
+      #:datum-literals (group op :: :~)
+      [(~or* (group t)
+             (group t (op (~or* :: :~)) . _))
        (extract-binding-term #'t vars)]
       [_ vars]))
   (define (extract-binding-term stx vars)
@@ -626,15 +625,11 @@
                 (_ ... rst:rst/and)
                 _)
           (extract-list-rest (attribute rst) vars)])]
-      [(parens b) (extract-binding-term #'b vars)]
+      [(parens g) (extract-binding-group #'g vars)]
       [hole vars]
       [id:identifier (add-metavariable vars #'id #f)]
       [_ vars]))
-  (syntax-parse stx
-    #:datum-literals (group block)
-    [(~or* (group _:keyword (block g)) g)
-     (extract-binding-group #'g vars)]
-    [_ vars]))
+  (extract-binding-group stx vars))
 
 (define-for-syntax (extract-group-metavariables g vars nonterm?)
   (syntax-parse g
