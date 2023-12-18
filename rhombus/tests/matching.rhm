@@ -30,3 +30,8 @@ fun get_pts_x2(pts :~ ListOf(Posn)):
 check:
   get_pts_x2([Posn(5, 7)])
   ~is 5
+
+check:
+  0 ~is_a matching(i :: Int when i mod 3 == 0)
+  1 ~is_a matching(i :: Int unless i mod 3 == 0)
+  [1, 2, 3] ~is_a matching([x, ...] when math.sum(x, ...) == 6)

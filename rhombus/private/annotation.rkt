@@ -848,15 +848,14 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens)
-       [(_ (parens arg::binding) . tail)
+       [(_ (_::parens arg::binding) . tail)
         #:with arg-parsed::binding-form #'arg.parsed
         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
         #:with arg-info::binding-info #'arg-impl.info
         (values
          (annotation-predicate-form
-          #`(lambda (arg-info.name-id)
-              (arg-info.matcher-id arg-info.name-id
+          #`(lambda (val-in)
+              (arg-info.matcher-id val-in
                                    arg-info.data
                                    if/blocked
                                    #t
@@ -871,7 +870,7 @@
    'macro
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ (~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head (_::parens . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
