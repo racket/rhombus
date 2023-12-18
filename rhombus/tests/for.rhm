@@ -230,7 +230,7 @@ check:
      i > -1 && i,
    accum]
   ~is [9, [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-  
+
 check:
   def mutable accum = []
   [for all:
@@ -253,7 +253,7 @@ check:
      i > 9,
    accum]
   ~is [#false, [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]]
-  
+
 check:
   def mutable accum = []
   [for any:
@@ -311,6 +311,20 @@ check:
     each:«»
     values()
   ~is values()
+
+check:
+  ~eval
+  for List (i: 0..2):
+    i
+    ~into List
+  ~throws "both `~into` and reducer"
+
+check:
+  ~eval
+  for (i: 0..2):
+    i
+    ~into List (i: 0..2)
+  ~throws "misplaced term"
 
 check:
   for List (val: dynamic([1, 2, 3])):

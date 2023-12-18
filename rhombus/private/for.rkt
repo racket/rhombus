@@ -38,17 +38,17 @@
     #:attributes (each red-parsed)
     #:datum-literals (group)
     (pattern ((_::parens (~and g (group bind ...+ (_::block . _))) ...))
-             #:with each #'(group each (block g ...))
+             #:with each #`(#,group-tag each (block g ...))
              #:attr red-parsed #f)
     (pattern ()
              #:attr each #f
              #:attr red-parsed #f)
     (pattern (red ...)
-             #:with (~var redr (:infix-op+reducer+tail #'#%call)) #'(group red ...)
+             #:with (~var redr (:infix-op+reducer+tail #'#%call)) #`(#,group-tag red ...)
              #:attr each (syntax-parse #'redr.tail
                            #:datum-literals (group)
                            [((_::parens (~and g (group bind ...+ (_::block . _))) ...))
-                            #'(group each (block g ...))]
+                            #`(#,group-tag each (block g ...))]
                            [()
                             #f])
              #:with red-parsed #'redr.parsed)))
@@ -56,56 +56,57 @@
 (define-syntax rhombus-for
   (expression-transformer
    (lambda (stx)
-     (syntax-parse (respan stx)
-       #:datum-literals (group)
-       [(form-id pre_t ... (block-tag::block body ...+ (group #:into red ...)))
-        #:cut
-        #:with pre::maybe_ends_each #'(pre_t ...)
-        (when (attribute pre.red-parsed)
-          (raise-syntax-error #f
-                              "cannot have both `~into` and reducer terms before block"
-                              stx))
-        (values (relocate+reraw
-                 (respan stx)
-                 #'(rhombus-expression
-                    (group form-id red ... (block-tag (~? pre.each) body ...))))
-                #'())]
-       [(form-id pre_t ... (_::block body ...+))
-        #:cut
-        #:with pre::maybe_ends_each #'(pre_t ...)
-        (define static? (is-static-context? #'form-id))
-        (values
-         (cond
-           [(not (attribute pre.red-parsed))
-            (relocate+reraw
-             (respan stx)
-             #`(for (#:splice (for-clause-step #,stx
-                                               #,static?
-                                               [(begin (void))]
-                                               (~? pre.each) body ...))
-                 (void)))]
-           [else
-            (syntax-parse #'pre.red-parsed
-              [f::reducer-form
-               (wrap-static-info*
-                (relocate+reraw
-                 (respan stx)
-                 #`(f.wrapper
-                    f.data
-                    (for/fold f.binds
-                              (#:splice (for-clause-step #,stx
-                                                         #,static?
-                                                         [(f.body-wrapper f.data)]
-                                                         (~? pre.each) body ...))
-                      #,@(if (syntax-e #'f.break-whener)
-                             #`(#:break (f.break-whener f.data))
-                             null)
-                      #,@(if (syntax-e #'f.final-whener)
-                             #`(#:final (f.final-whener f.data))
-                             null)
-                      (f.finisher f.data))))
-                #'f.static-infos)])])
-         #'())]))))
+     (define static? (is-static-context/tail? stx))
+     (define-values (red-parsed body)
+       (syntax-parse stx
+         #:datum-literals (group)
+         [(_ pre_t ... (_::block body ...+ (group #:into red ...)))
+          #:cut
+          #:with pre::maybe_ends_each #'(pre_t ...)
+          #:do [(when (attribute pre.red-parsed)
+                  (raise-syntax-error #f
+                                      "cannot have both `~into` and reducer terms before block"
+                                      stx))]
+          #:with redr::reducer #`(#,group-tag red ...)
+          (values #'redr.parsed
+                  #'((~? pre.each) body ...))]
+         [(_ pre_t ... (_::block body ...+))
+          #:cut
+          #:with pre::maybe_ends_each #'(pre_t ...)
+          (values (attribute pre.red-parsed)
+                  #'((~? pre.each) body ...))]))
+     (values
+      (cond
+        [(not red-parsed)
+         (relocate+reraw
+          (respan stx)
+          #`(for (#:splice (for-clause-step #,stx
+                                            #,static?
+                                            [(begin (void))]
+                                            . #,body))
+              (void)))]
+        [else
+         (syntax-parse red-parsed
+           [f::reducer-form
+            (wrap-static-info*
+             (relocate+reraw
+              (respan stx)
+              #`(f.wrapper
+                 f.data
+                 (for/fold f.binds
+                           (#:splice (for-clause-step #,stx
+                                                      #,static?
+                                                      [(f.body-wrapper f.data)]
+                                                      . #,body))
+                   #,@(if (syntax-e #'f.break-whener)
+                          #`(#:break (f.break-whener f.data))
+                          null)
+                   #,@(if (syntax-e #'f.final-whener)
+                          #`(#:final (f.final-whener f.data))
+                          null)
+                   (f.finisher f.data))))
+             #'f.static-infos)])])
+      #'()))))
 
 (define-splicing-for-clause-syntax for-clause-step
   (lambda (stx)
