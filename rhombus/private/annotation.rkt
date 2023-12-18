@@ -510,8 +510,9 @@
             #:with arg-parsed::binding-form #'c-parsed.binding
             #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
             #:with arg-info::binding-info #'arg-impl.info
-            #`(let ([arg-info.name-id #,form])
-                (arg-info.matcher-id arg-info.name-id
+            #`(let ([val-in (let ([arg-info.name-id #,form])
+                              arg-info.name-id)])
+                (arg-info.matcher-id val-in
                                      arg-info.data
                                      if/blocked
                                      #t

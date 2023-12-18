@@ -23,3 +23,15 @@ check:
   (fun (x, ~y): #void) is_a Function.of_arity(1) ~is #false
   (fun (x, ~y = 0): #void) is_a Function.of_arity(1, ~y) ~is #true
   (fun (x, ~y): #void) is_a Function.of_arity(1, ~y) ~is #true
+
+check:
+  0 :: converting(fun (i :: Int when i mod 3 == 0): i)
+  1 :: converting(fun (i :: Int unless i mod 3 == 0): i)
+  [1, 2, 3] :: converting(fun ([x, ...] when math.sum(x, ...) == 6): #true)
+  ~completes
+
+check:
+  0 is_a converting(fun (i :: Int when i mod 3 == 0): i)
+  1 is_a converting(fun (i :: Int unless i mod 3 == 0): i)
+  [1, 2, 3] is_a converting(fun ([x, ...] when math.sum(x, ...) == 6): #true)
+  ~completes
