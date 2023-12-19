@@ -2,29 +2,20 @@
 
 import:
   lib("scribble/rhombus/manual.rkt"):
-    expose: examples
-            close_eval
+    expose:
+      examples
+      close_eval
 
 export:
   make_macro_eval
-  make_for_meta_eval
   close_eval
 
 fun make_macro_eval():
-  def macro_eval: manual.make_rhombus_eval()
+  let macro_eval = manual.make_rhombus_eval()
   @examples(
     ~eval: macro_eval
     ~hidden:
-      import: rhombus/meta open
-  )  
-  macro_eval
-
-fun make_for_meta_eval():
-  def meta_eval: manual.make_rhombus_eval()
-  @examples(
-    ~eval: meta_eval
-    ~hidden:
-      import: 
+      import:
         rhombus/meta open
   )
-  meta_eval
+  macro_eval

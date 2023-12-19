@@ -4,7 +4,7 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Import Macros}
 
@@ -34,7 +34,8 @@
       let str = to_string(name).append("/" +& next, ..., ".rkt")
       'lib($(Syntax.make(str, name)))'
   ~repl:
-    import: rkt racket/base
+    import:
+      rkt racket/base
     base.add1(1)
 )
 
@@ -128,5 +129,6 @@
  import.
 
 }
+
 
 @(macro.close_eval(macro_eval))

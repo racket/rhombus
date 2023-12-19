@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @title(~tag: "Modules"){Modules, Variables, and Functions}
@@ -13,7 +12,7 @@ expression at the top of a module, then its value gets printed out.
   #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   1+4  // prints 5
-  
+
   "Hello, world!"  // prints "Hello, world!", including the quotes
 )
 
@@ -34,7 +33,7 @@ parentheses.
   #,(hash_lang()) #,(@rhombuslangname(rhombus))
 
   def fahrenheit_freezing = 32
-                           
+
   fun fahrenheit_to_celsius(f):
     (f - 32) * 5/9
 
@@ -159,7 +158,7 @@ modules explicitly. Examples will sometimes show definitions, which are
 meant as part of some implicit module, with interactive examples
 shown with a leading @litchar{> } prompt and the expected result.
 
-@demo(
+@examples(
   ~defn:
     def fahrenheit_freezing = 32
     fun fahrenheit_to_celsius(f):

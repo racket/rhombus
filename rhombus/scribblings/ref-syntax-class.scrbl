@@ -5,7 +5,7 @@
     "macro.rhm")
 
 @(def dots = @rhombus(..., ~bind))
-@(def macro_eval = macro.make_for_meta_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Syntax Classes}
 
@@ -104,7 +104,7 @@
  accessed from a binding @rhombus(id, ~var) using dot notation. For
  example, if the pattern variable is @rhombus(var, ~var), its value is
  accessed from @rhombus(id, ~var) using
- @([@rhombus(id, ~var), @rhombus(.), @rhombus(var, ~var)]).
+ @rhombus(#,(@rhombus(id, ~var)).#,(@rhombus(var, ~var))).
 
  A @rhombus(pattern_case) matches when
 
@@ -152,25 +152,23 @@
 
 @examples(
   ~eval: macro_eval
-  meta:
-    syntax_class Arithmetic
-    | '$x + $y'
-    | '$x - $y'
+  meta syntax_class Arithmetic
+  | '$x + $y'
+  | '$x - $y'
   expr.macro 'doubled_operands $(a :: Arithmetic)':
     '$a.x * 2 + $a.y * 2'
   doubled_operands 3 + 5
   expr.macro 'add_one_to_expression $(a :: Arithmetic)':
     '$a + 1'
   add_one_to_expression 2 + 2
-  meta:
-    syntax_class NTerms
-    | '~one $a':
-        field b = '0'
-        field average = '$(Syntax.unwrap(a) / 2)'
-    | '~two $a $b':
-        def sum:
-          Syntax.unwrap(a) + Syntax.unwrap(b)
-        field average = '$(sum / 2)'
+  meta syntax_class NTerms
+  | '~one $a':
+      field b = '0'
+      field average = '$(Syntax.unwrap(a) / 2)'
+  | '~two $a $b':
+      def sum:
+        Syntax.unwrap(a) + Syntax.unwrap(b)
+      field average = '$(sum / 2)'
   expr.macro 'second_term $(e :: NTerms)':
     e.b
   second_term ~two 1 2
@@ -456,5 +454,6 @@
  that matches dotted sequences like an @rhombus(id_name) form.
 
 }
+
 
 @(macro.close_eval(macro_eval))

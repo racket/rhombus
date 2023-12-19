@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Annotations}
 
@@ -15,7 +16,7 @@
   annot.macro 'Size'
 ){
 
- Satisfied by a list containing two @rhombus(SizeInteger, ~annot)s.
+ Satisfied by a list containing two @rhombus(maybe(SizeInteger), ~annot)s.
 
 }
 

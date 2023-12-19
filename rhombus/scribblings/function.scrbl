@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def posn_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: posn_eval
   ~hidden:
     class Posn(x, y)
@@ -17,7 +15,7 @@ As we have seen, simple function definitions with @rhombus(fun) have the
 function name, the parameters in parentheses, and the body after a
 colon:
 
-@demo(
+@examples(
   ~defn:
     fun avg(a, b):
       (a + b) / 2
@@ -29,11 +27,12 @@ The @rhombus(fun) form can be used in an expression position and
 without a function name, in which case it behaves like λ and produces
 an anonymous function value.
 
-@demo(
+@examples(
   ~defn:
-    def curried_add = fun (x):
-                        fun (y):
-                          x+y
+    def curried_add:
+      fun (x):
+        fun (y):
+          x+y
   ~repl:
     curried_add(10)(20)
 )
@@ -44,21 +43,22 @@ parameters can be bindings, which can express annotations and pattern
 matching. All of that works with @rhombus(fun) in expression positions,
 too.
 
-@demo(
+@examples(
   ~defn:
     fun make_avg(a :: Number):
       fun (b :: Number) :: Number:
         (a + b) / 2
   ~repl:
     make_avg(5)(-2)
-    ~error: make_avg(5)("hello")
+    ~error:
+      make_avg(5)("hello")
 )
 
 A function argument can be made optional by using @rhombus(=) after the
 argument’s pattern and providing a default-value expression after
 @rhombus(=):
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun scale(Posn(x, y), factor = 1):
@@ -73,7 +73,7 @@ are especially useful. A keyword argument is indicated by prefixing a
 formal or actual argument with a shrubbery keyword, which is written
 with a leading @litchar{~}, and then starting a block with @litchar{:}.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun transform(Posn(x, y),
@@ -103,7 +103,7 @@ That only works for an argument that would otherwise be just an
 identifier and maybe a default value, because keywords don’t work as
 variable names in binding patterns.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun transform(Posn(x, y),
@@ -121,4 +121,5 @@ For functions that can take arbitrarily many arguments and
 for functions with multiple cases, see
 @seclink("more-arguments"){More Function Arguments}.
 
-@close_eval(posn_eval)
+
+@(close_eval(posn_eval))

@@ -1,10 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open
     "macro.rhm")
 
-@(def bind_eval: macro.make_macro_eval())
+@(def bind_eval = macro.make_macro_eval())
 
 @title(~tag: "annotation-macro-protocol"){Annotations as Converters}
 
@@ -22,7 +21,7 @@ whether a corresponding value satisfies the annotation's predicate.
 
 A @deftech{converter annotation} produces a result when applied to a
 value that is potentially different than the value. For example,
-@rhombus(ReadableStringAsString, ~annot) is a converter annotation that converts a
+@rhombus(ReadableString.to_string, ~annot) is a converter annotation that converts a
 mutable string to an immutable string. When a converter annotation is
 applied to a value with the @rhombus(::) expression operator, the result
 of the expression can be a different value that is derived from the
@@ -62,7 +61,7 @@ For example, the following @rhombus(AscendingIntList) annotation matches
 any list of integers, but converts it to ensure that the integers are
 sorted.
 
-@demo(
+@examples(
   ~eval: bind_eval
   ~defn:
     annot.macro 'AscendingIntList':
@@ -92,7 +91,7 @@ as well decode it. Annotation constructors like @rhombus(List.of, ~annot)
 similarly convert eagerly when given a converting annotation for
 elements, rather than checking and converting separately.
 
-@demo(
+@examples(
   ~eval: bind_eval
   ~defn:
     annot.macro 'UTF8BytesAsString_oops':
@@ -119,7 +118,8 @@ elements, rather than checking and converting separately.
   ~defn:
     annot.macro 'UTF8BytesAsString':
       // matches only when `MaybeUTF8BytesAsString` produces a string
-      'converting(fun ((str :: String) :: MaybeUTF8BytesAsString): str)'
+      'converting(fun (str :: (MaybeUTF8BytesAsString && String)):
+                    str)'
   ~repl:
     #"\316\273" :: UTF8BytesAsString
     #"\316" is_a UTF8BytesAsString
@@ -135,5 +135,6 @@ generalized to converter form. A converter annotation will not unpack
 with @rhombus(annot_meta.unpack_predicate). Use
 @rhombus(annot_meta.is_predicate) and @rhombus(annot_meta.is_converter)
 to detect annotation shapes and specialize transformations.
+
 
 @(close_eval(bind_eval))

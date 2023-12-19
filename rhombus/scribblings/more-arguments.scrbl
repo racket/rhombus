@@ -1,14 +1,12 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def args_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: args_eval
   ~hidden:
-    class Posn(x, y) 
+    class Posn(x, y)
 )
 
 @title(~tag: "more-arguments"){More Function Arguments}
@@ -25,7 +23,7 @@ For example, in the following definition of @rhombus(add), the argument
 @rhombus(x) is bound as a repetition, which allows any number of
 arguments:
 
-@demo(
+@examples(
   ~defn:
     fun add(x :~ Number, ...):
       for values(total = 0):
@@ -54,14 +52,14 @@ A function doesn't have to accept an arbitrary number of arguments for
 at the total number of spliced arguments matches the number that the
 function expects.
 
-@demo(
+@examples(
   math.expt(& [2, 10])
 )
 
 The @rhombus(add) function could also be written with @rhombus(&) for
 its argument instead of @rhombus(...), like this:
 
-@demo(
+@examples(
   ~eval: args_eval
   ~defn:
     fun add(& xs :~ List.of(Number)):
@@ -81,7 +79,7 @@ use @rhombus(~&) to bind an argument that receives all additional
 keyword arguments. The additional arguments are collected into a map
 with keywords as keys.
 
-@demo(
+@examples(
   ~eval: args_eval
   ~defn:
     fun roster(~manager: who, ~& players):
@@ -94,7 +92,7 @@ Similarly, use @rhombus(~&) in a function call to pass keyword arguments
 that are in map. Using @rhombus(~&) to call a function is most useful
 when chaining from one keyword-accepting function to another.
 
-@demo(
+@examples(
   ~eval: args_eval
   ~defn:
     fun
@@ -125,7 +123,7 @@ matching to distinguish calls with the same number of arguments.
 Different cases use @rhombus(&), @rhombus(...), and @rhombus(~&)
 independently.
 
-@demo(
+@examples(
   ~eval: args_eval
   ~defn:
     fun
@@ -139,4 +137,5 @@ independently.
     avg(Posn(0, 0), Posn(1, 3), Posn(2, 0))
 )
 
-@close_eval(args_eval)
+
+@(close_eval(args_eval))

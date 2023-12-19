@@ -9,7 +9,7 @@
 @title{Region}
 
 @doc(
-  class Region(handle):
+  class Region(handle :: Any):
     constructor (dc :: maybe(DC) = #false)
 ){
 
@@ -39,18 +39,24 @@
                                  ~dpt: dpt :: PointLike = Point.zero,
                                  ~dx: dx :: Real = 0,
                                  ~dy: dy :: Real = 0,
-                                 ~fill: fill :: Region.Fill = #'even_odd) :: Void
-  method (rgn :: Region).rectangle(r :: RectLike) :: Void
+                                 ~fill: fill :: Region.Fill = #'even_odd)
+    :: Void
+  method (rgn :: Region).rectangle(r :: RectLike)
+    :: Void
   method (rgn :: Region).rounded_rectangle(r :: RectLike,
-                                           radius :: Real = -0.25) :: Void
-  method (rgn :: Region).ellipse(r :: RectLike) :: Void
+                                           radius :: Real = -0.25)
+    :: Void
+  method (rgn :: Region).ellipse(r :: RectLike)
+    :: Void
   method (rgn :: Region).arc(r :: RectLike,
-                             start :: Real, end :: Real) :: Void
+                             start :: Real, end :: Real)
+    :: Void
   method (rgn :: Region).path(p :: Path,
                               ~dpt: dpt :: PointLike = Point.zero,
                               ~dx: dx :: Real = 0,
                               ~dy: dy :: Real = 0,
-                              ~fill: fill :: Region.Fill = #'odd_even) :: Void
+                              ~fill: fill :: Region.Fill = #'odd_even)
+    :: Void
 ){
 
  Adds to the region. A path or polygon is implicitly closed.
@@ -76,7 +82,7 @@
  Satisfied by the following symbols:
 
 @itemlist(
-  @item{@rhombus(#'even_odd)}  
+  @item{@rhombus(#'even_odd)}
   @item{@rhombus(#'winding)}
 )
 

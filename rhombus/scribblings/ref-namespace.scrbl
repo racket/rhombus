@@ -67,19 +67,24 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
 @examples(
   ~defn:
     namespace geometry:
-      export: pi tau
-      def pi: 3.14
-      def tau: 6.28
+      export:
+        pi tau
+      def pi = 3.14
+      def tau = 6.28
   ~repl:
     geometry.pi
     block:
-      import: .geometry open
+      import:
+        .geometry open
       [pi, tau]
   ~defn:
     namespace ~open:
-      export: bump
+      export:
+        bump
       def mutable x = 0
-      fun bump(): x := x + 1; x
+      fun bump():
+        x := x + 1
+        x
   ~repl:
     bump()
     ~error:
@@ -87,4 +92,3 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
 )
 
 }
-

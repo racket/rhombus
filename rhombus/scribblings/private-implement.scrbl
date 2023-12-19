@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval = make_rhombus_eval())
 
 @title(~tag: "private-implement"){Private Implementation}
 
@@ -25,8 +24,8 @@ To privately implement an interface, use
 and override the interfaces methods with
 @rhombus(private, ~class_clause) methods.
 
-@demo(
-  ~defn:      
+@examples(
+  ~defn:
     class Posn(x, y):
       private implements: Printable
       private override describe(mode, recur):
@@ -37,4 +36,5 @@ and override the interfaces methods with
       Posn(1, 2).describe(#'expr, Function.pass)
 )
 
-@close_eval(method_eval)
+
+@(close_eval(method_eval))

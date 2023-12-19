@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Annotations}
 
@@ -31,7 +32,7 @@
  committing to the match).
 
 @examples(
-  def x :: List: [1, 2, 3]
+  def x :: List = [1, 2, 3]
 )
 
 }
@@ -86,8 +87,8 @@
  must specify a @tech{predicate annotation}.
 
 @examples(
-  def x :~ List: [1, 2, 3]
-  def x :~ List: "oops"
+  def x :~ List = [1, 2, 3]
+  def x :~ List = "oops"
 )
 
 }
@@ -141,8 +142,9 @@
  implied conversions might be skipped.
 
 @examples(
-  def x :: matching([_, 10]): [9, 10]
-  ~error: def y :: matching([_, 10]): [9, 11]
+  def x :: matching([_, 10]) = [9, 10]
+  ~error:
+    def y :: matching([_, 10]) = [9, 11]
 )
 
 }
@@ -170,8 +172,9 @@
  See also @secref("annotation-macro-protocol").
 
 @examples(
-  def x :: converting(fun (x :: Int): x + 1): 11
-  ~error: def x :: converting(fun (x :: Int): x + 1): "eleven"
+  def x :: converting(fun (x :: Int): x + 1) = 11
+  ~error:
+    def x :: converting(fun (x :: Int): x + 1) = "eleven"
 )
 
 }

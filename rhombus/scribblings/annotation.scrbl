@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def ann_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: ann_eval
   ~hidden:
     class Posn(x, y)
@@ -30,10 +28,11 @@ right-hand annotation, otherwise a run-time exception is thrown. The
 produces a boolean result indicating whether the result of the left-hand
 expression matches the annotation.
 
-@demo(
+@examples(
   ~eval: ann_eval
   (flip(origin) :~ Posn).x
-  ~error: (1 :: Posn)
+  ~error:
+    (1 :: Posn)
   origin is_a Posn
   1 is_a Posn
 )
@@ -43,19 +42,20 @@ associated with each field. When the annotation is written with
 @rhombus(::), then the annotation is checked when an instance is
 created.
 
-@demo(
+@examples(
   ~eval: ann_eval
   ~defn:
     class Posn(x :: Int, y :: Int)
   ~repl:
     Posn(1, 2)
-    ~error: Posn(1, "2")
+    ~error:
+      Posn(1, "2")
 )
 
 Naturally, class annotations can be used as field annotations, and then
 the @rhombus(.) operator can be chained for efficient access:
 
-@demo(
+@examples(
   ~eval: ann_eval
   ~defn:
     class Line(p1 :~ Posn, p2 :~ Posn)
@@ -64,6 +64,10 @@ the @rhombus(.) operator can be chained for efficient access:
   ~repl:
     l1.p2.x
 )
+
+@margin_note{Using @rhombus(.) to reach an imported binding, as in
+ @rhombus(f2c.fahrenheit_to_celsius), is a different kind of @rhombus(.)
+ than the infix expression operator.}
 
 More generally, @rhombus(.) access is efficient when the left-hand side
 of @rhombus(.) is an @rhombus(import) prefix, a @tech{namespace}, or
@@ -87,17 +91,15 @@ error. The @rhombus(use_dynamic) form binds @rhombus(.) to the
 default @rhombus(.), which allows dynamic field lookup if the left-hand
 side is not a dot provider, namespace, or import prefix.
 
-@demo(
+@examples(
   ~eval: ann_eval
   ~defn:
     use_static
   ~repl:
     l1.p2.x
-    ~error: (1).x
+    ~error:
+      (1).x
 )
 
-@aside{Using @rhombus(.) to reach an imported binding, as in
- @rhombus(f2c.fahrenheit_to_celsius), is a different kind of @rhombus(.)
- than the infix expression operator.}
 
-@close_eval(ann_eval)
+@(close_eval(ann_eval))

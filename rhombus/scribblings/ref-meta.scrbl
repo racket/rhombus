@@ -4,7 +4,7 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval = macro.make_for_meta_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Meta Definitions and Expressions}
 
@@ -47,22 +47,22 @@
 
 @doc(
   defn.macro 'meta.bridge $op_or_id_name:
-                $nestable_body
+                $body
                 ...'
 ){
 
  Binds @rhombus(op_or_id_name) at the enclosing phase, but like a macro,
- where the @rhombus(nestable_body) side is a compile-time block at one phase
+ where the @rhombus(body) side is a compile-time block at one phase
  greater than the enclosing phase.
 
- The result of the @rhombus(nestable_body) block might be a macro transformer
+ The result of the @rhombus(body) block might be a macro transformer
  that is triggered by a use of @rhombus(op_or_id_name), or it might be
  some other kind of value that is accessed with
  @rhombus(syntax_meta.value).
 
  For example, forms like @rhombus(expr.macro), @rhombus(bind.macro),
  and @rhombus(annot.macro) expand to @rhombus(meta.bridge). In
- those cases, the generated @rhombus(nestable_body) block produces an
+ those cases, the generated @rhombus(body) block produces an
  expression transformer, binding transformer, or annotation
  transformer. Some forms that expand to @rhombus(meta.bridge) enrich
  the @rhombus(op_or_id_name) with a scope for a @tech{space} of bindings, which

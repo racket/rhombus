@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Syntax Pattern Clause Macros}
 
@@ -40,5 +40,6 @@
  use within a @rhombus(pattern_body).
 
 }
+
 
 @(macro.close_eval(macro_eval))

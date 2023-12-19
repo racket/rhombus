@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @title(~tag: "static-info-rules"){Rules for Static Information}
@@ -18,7 +17,7 @@ Here's a summary of the static-information behavior of classes:
 @itemlist(
 
   @item{A class name bound by @rhombus(class) acts as a @tech{namespace}. It
-   provides field-accessor functions, as in @rhombus(Posn.x).},
+   provides field-accessor functions, as in @rhombus(Posn.x).}
 
   @item{As an annotation, a class name turns any binding or
    expression using the annotation into a dot provider. A class name
@@ -29,27 +28,27 @@ Here's a summary of the static-information behavior of classes:
    @rhombus(class Rect(top_left, side)) declaration,
    @rhombus(r :: Rect.of(Posn, Int), ~bind) causes
    @rhombus(r.top_left) to have @rhombus(Posn) information, with means that
-   @rhombus(r.top_left.x) works.},
+   @rhombus(r.top_left.x) works.}
 
   @item{When a class field has an annotation, then that annotation's
    static information is associated with a field accessed through the @rhombus(.) operator.
    In the @rhombus(Line) example, the @rhombus(p2) field of @rhombus(Line) has a @rhombus(Posn)
    annotation, so a @rhombus(l1 :: Line, ~bind) binding means that @rhombus(l1.p2) is a dot
-   provider to access @rhombus(x) and @rhombus(y).},
+   provider to access @rhombus(x) and @rhombus(y).}
 
   @item{When a class field has an annotation, then that annotation's
    static information is associated as result information for a field
    accessor accessed through the @rhombus(.) operator. For example, @rhombus(Line.p1) gets the
    @rhombus(Posn) annotation's static information as its call-result
    information, so @rhombus(Line.p1(e)) has that information, which means that
-   @rhombus(Line.p1(e)) is a dot provider.},
+   @rhombus(Line.p1(e)) is a dot provider.}
 
   @item{When a class field has an annotation, and when the class
    name is used as a pattern form in a binding, then the annotation's
    static information is associated with the argument pattern. For
    example, @rhombus(Line(p1, p2)) as a binding pattern associates @rhombus(Posn)
    information to @rhombus(p1) and to @rhombus(p2), which means that they're dot
-   providers.},
+   providers.}
 
   @item{When a class name is used as a binding pattern, any ``downward''
    static information that flows the binding is checked for static
@@ -59,21 +58,21 @@ Here's a summary of the static-information behavior of classes:
    ``downward'' information that associates (the internal key for)
    @rhombus(Rect.top_left) to @rhombus(Posn)-annotation information, then
    the binding form @rhombus(tl) receives @rhombus(Posn)-annotation
-   information.},
+   information.}
 
 )
 
 More rules about static information in general:
 
 @itemlist(
-  
+
   @item{A expression that is parentheses wrapped around an inner expression
-   has the same static information as the inner expression.},
+   has the same static information as the inner expression.}
 
   @item{When a function call's function position has result static
    information, the function call as a whole is given that static
    information. For example, since @rhombus(Line.p1) has result information
-   that describes a dot provider, @rhombus(Line.p1(e)) is a dot provider.},
+   that describes a dot provider, @rhombus(Line.p1(e)) is a dot provider.}
 
   @item{When a @rhombus(fun) defintition form includes a result annotation, then the
    annotation's information is associated to the defined function name
@@ -81,7 +80,7 @@ More rules about static information in general:
    starts @rhombus(fun flip(x) :: Posn), then @rhombus(Posn) static information is
    associated to @rhombus(flip) as result information, so @rhombus(flip(x)) is a dot
    provider. The same applies to a @rhombus(def) form that behaves like a
-   @rhombus(fun) definition form.},
+   @rhombus(fun) definition form.}
 
   @item{When the right-hand side of a @rhombus(def) or @rhombus(let) has a single
    group, and when that goes does not start with a definition-form

@@ -1,16 +1,19 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Pen}
 
 @doc(
-  class Pen(handle):
-    constructor (~color: color :: (String || Color) = "Black",
-                 ~width: width :: Real.in(0, 255) = 1,
-                 ~style: style :: Pen.Style = #'solid,
-                 ~cap: cap :: Pen.Cap = #'round,
-                 ~join: join :: Pen.Join = #'round,
-                 ~stipple: stipple :: maybe(Bitmap) = #false)
+  class Pen(handle :: Any):
+    constructor (
+      ~color: color :: (String || Color) = "Black",
+      ~width: width :: Real.in(0, 255) = 1,
+      ~style: style :: Pen.Style = #'solid,
+      ~cap: cap :: Pen.Cap = #'round,
+      ~join: join :: Pen.Join = #'round,
+      ~stipple: stipple :: maybe(Bitmap) = #false,
+    )
 ){
 
  Creates a pen configuration.
@@ -41,7 +44,7 @@
  Satisfied by the following symbols:
 
 @itemlist(
-  @item{@rhombus(#'transparent)}  
+  @item{@rhombus(#'transparent)}
   @item{@rhombus(#'solid)}
   @item{@rhombus(#'xor)}
   @item{@rhombus(#'hilite)}
@@ -64,7 +67,7 @@
  Satisfied by the following symbols:
 
 @itemlist(
-  @item{@rhombus(#'round)}  
+  @item{@rhombus(#'round)}
   @item{@rhombus(#'projecting)}
   @item{@rhombus(#'butt)}
 )
@@ -78,7 +81,7 @@
  Satisfied by the following symbols:
 
 @itemlist(
-  @item{@rhombus(#'round)}  
+  @item{@rhombus(#'round)}
   @item{@rhombus(#'bevel)}
   @item{@rhombus(#'miter)}
 )

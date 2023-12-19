@@ -299,8 +299,9 @@
   Posn.x
   Posn.x(Posn(1, 2))
   Posn(1, 2).x
-  ~error: class Posn3(z):
-            extends Posn
+  ~error:
+    class Posn3(z):
+      extends Posn
   class Posn2D(x, y):
     nonfinal
   class Posn3D(z):
@@ -309,11 +310,11 @@
   class Rectangle(w, h):
     nonfinal
     constructor (~width: w, ~height: h):
-        super(w, h)
+      super(w, h)
   class Square():
     extends Rectangle
     constructor (~side: s):
-        super(~width: s, ~height: s)()
+      super(~width: s, ~height: s)()
   Square(~side: 10)
 )
 

@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Reducer Macros}
 
@@ -270,5 +270,6 @@
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for reducers.
 
 }
+
 
 @(macro.close_eval(macro_eval))

@@ -23,7 +23,6 @@ export:
   provided_interface_only
   provided_interface_and_namespace_only
   provided_interface_and_other_annotation_only
-  demo
   top_rhombus
   epsilon
   Z
@@ -73,12 +72,6 @@ fun provided_interface_and_other_annotation_only():
 expr.macro 'top_rhombus($g, ...)':
   'scribble.rhombus($(g.replace_scopes('here')), ...)'
 
-// suppressed a label, but `examples` now does that, anyway, so maybe
-// we'll end up removing this alias:
-defn.macro 'demo($form, ...)':
-  ~op_stx: self
-  'manual.examples(~label: #false, $form, ...)'
-
 def epsilon = "ϵ"
 
 // A hack to typeset alts as an alternative:
@@ -99,5 +92,7 @@ def vbar = @manual.litchar{|}
 def more_args = scribble.elem("....")
 
 fun shrubref(tag):
-  scribble.secref(tag,
-                  ~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"])
+  let shrub = ModulePath.s_exp(
+    ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")'
+  )
+  scribble.secref(~doc: shrub, tag)

@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(fun meta(s): italic(s))
@@ -23,7 +22,7 @@ Rhombus uses several built-in static-information keys:
    associates @rhombus(statinfo_meta.dot_provider_key) with uses of @rhombus(p) to
    expand @rhombus(p.x) and @rhombus(p.y) to field accesses. An expression
    is a @tech{dot provider} when it has static information mapped by
-   @rhombus(statinfo_meta.dot_provider_key).},
+   @rhombus(statinfo_meta.dot_provider_key).}
 
   @item{@rhombus(statinfo_meta.call_result_key) --- provides static information
    to be attached to a function-call expression where the function position
@@ -32,7 +31,7 @@ Rhombus uses several built-in static-information keys:
    with @rhombus(Posn) itself, and the associated value is static
    information with @rhombus(statinfo_meta.dot_provider_key). So, @rhombus(Posn(1, 2))
    gets @rhombus(statinfo_meta.dot_provider_key) that makes @rhombus(Posn(1, 2).x)
-   select the @rhombus(1).},
+   select the @rhombus(1).}
 
   @item{@rhombus(statinfo_meta.index_result_key) --- provides static information to be
    attached to a @brackets indexing reference where E is to the left
@@ -41,15 +40,15 @@ Rhombus uses several built-in static-information keys:
    @rhombus(statinfo_meta.index_result_key) to @rhombus(ps), where the associated value
    includes is static information with @rhombus(statinfo_meta.dot_provider_key). So,
    @rhombus(ps[i].x) is allowed and selects an @rhombus(x) field from the @rhombus(Posn)
-   instance produced by @rhombus(ps[i]).},
+   instance produced by @rhombus(ps[i]).}
 
-  @item{@rhombus(statinfo_meta.index_ref_key) and @rhombus(statinfo_meta.index_set_key) --- names a form to
+  @item{@rhombus(statinfo_meta.index_get_key) and @rhombus(statinfo_meta.index_set_key) --- names a form to
    use for a @brackets indexing reference or assignment where E is to
    the left of the @brackets. (The index expression inside
    @brackets does not matter.) For example, @rhombus(p :: Array) associates
-   @rhombus(statinfo_meta.index_ref_key) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
+   @rhombus(statinfo_meta.index_get_key) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
    referencing operation, and it associates @rhombus(statinfo_meta.index_set_key) to
-   @rhombus(p) so that @rhombus(p[i] = n) uses an array-specific assignment operation.},
+   @rhombus(p) so that @rhombus(p[i] = n) uses an array-specific assignment operation.}
 
   @item{@rhombus(statinfo_meta.append_key) --- names a form to specialize the
    @rhombus(++) operator for appending maps, lists, and similar values. For example,
@@ -70,7 +69,7 @@ why a binding @rhombus(p :: Posn, ~bind) makes every reference to @rhombus(p) a 
 provider to access @rhombus(x) and @rhombus(y). When @rhombus(::) is used in an expression,
 then static information indicated by the annotation is similarly
 associated with the overall @rhombus(::) expression, which is why
-@rhombus((e :: Posn)) is a dot provider for any expression @rhombus(e). Function-call forms
+@rhombus(e :: Posn) is a dot provider for any expression @rhombus(e). Function-call forms
 and map-reference forms similarly attach static information to
 their parsed forms, sometimes, based on static information attached to
 the first subexpression.

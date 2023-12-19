@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def subclass_eval: make_rhombus_eval())
+@(def subclass_eval = make_rhombus_eval())
 
 @title(~tag: "interfaces"){Interfaces}
 
@@ -18,23 +17,25 @@ at most one superclass. but it can implement any number of interfaces.
 An interface is never final, so @rhombus(nonfinal, ~class_clause) is
 not needed in an interface.
 
-@demo(
+@examples(
   ~defn:
     interface Shape
     interface Dance
     class Square(side):
-      implements: Shape Dance
+      implements:
+        Shape
+        Dance
   ~repl:
-    def s: Square(10)
+    def s = Square(10)
     s is_a Shape
     s is_a Dance
 )
 
-Interfaces can @rhombus(extend, ~interface_clause) other interfaces. Unlike
+Interfaces can extend other interfaces. Unlike
 classes extending at one most superclass, interfaces can extend any
 number of superinterfaces.
 
-@demo(
+@examples(
   ~defn:
     interface MailingAddress
     interface Residence
@@ -52,4 +53,4 @@ number of superinterfaces.
 )
 
 
-@close_eval(subclass_eval)
+@(close_eval(subclass_eval))

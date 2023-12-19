@@ -44,7 +44,7 @@
     pi
   ~repl:
     def pi:
-      def tau = 6.28
+      let tau = 6.28
       tau/2
     pi
   ~repl:
@@ -99,9 +99,10 @@
 
 @examples(
   namespace geometry:
-    export: pi
-    def pi: 3.14
-  def geometry.tau: 2 * geometry.pi
+    export:
+      pi
+    def pi = 3.14
+  def geometry.tau = 2 * geometry.pi
   geometry.tau
 )
 

@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval = make_rhombus_eval())
 
 @title(~tag: "properties"){Fields and Properties}
 
@@ -12,7 +11,7 @@ field using @rhombus(:=). An assignment can appear within methods using
 the field name directly, or it can appear on a @rhombus(.) expression
 that accesses a field in an object.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(mutable x, mutable y):
@@ -33,7 +32,7 @@ so a @rhombus(field, ~class_clause) has an expression to provide the
 field's initial value. A field added with @rhombus(field, ~class_clause)
 is always mutatble, and @rhombus(:=) can be used to assign to the field.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(x, y):
@@ -56,7 +55,7 @@ A read-only @rhombus(property, ~class_clause) is written similar to a
 @rhombus(method, ~class_clause), possibly with a result annotation, but
 without parentheses for arguments.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(x, y):
@@ -79,7 +78,7 @@ assignment form. In the assignment-like form to define a property, the
 part after @rhombus(:=) is a binding position, just like a function or
 method argument.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(mutable x, mutable y):
@@ -87,12 +86,12 @@ method argument.
       | angle :: Real:
           math.atan(y, x)
       | angle := new_angle :: Real:
-          def m = magnitude
+          let m = magnitude
           x := m * math.cos(new_angle)
           y := m * math.sin(new_angle)
       property magnitude :: Real:
         math.sqrt(x*x + y*y)
-        
+
   ~repl:
     def p = Posn(4, 4)
     p.magnitude
@@ -110,4 +109,5 @@ involves a lot of computation, because those features defeat the
 expectation of someone reading the code, because they see a field-like
 access.
 
-@close_eval(method_eval)
+
+@(close_eval(method_eval))

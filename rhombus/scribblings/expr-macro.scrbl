@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def macro_eval = make_rhombus_eval())
@@ -19,9 +18,9 @@ compile-time computation, and it can return terms that the macro's
 pattern matches but that the macro does not consume.
 
 For example, here's a @rhombus(thunk) macro that expects a block and
-wraps as a zero-argument function
+wraps as a zero-argument function:
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     import:
@@ -50,10 +49,10 @@ available in just @rhombuslangname(rhombus). The @rhombus(macro) form
 is more limited, because it's body must be a template written with @quotes,
 instead of an arbitrary compile-time expression.
 
-@demo(
+@examples(
   ~defn:
     :
-      // no import needed      
+      // no import needed
       macro 'thunk: $body':
         'fun (): $body'
   ~repl:
@@ -64,7 +63,7 @@ A postfix macro can be implemented as an infix operator that consumes no
 additional terms after the operator. For example, a postfix
 @rhombus(no_fail) might be defined like this:
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     macro '$left no_fail':
@@ -97,7 +96,7 @@ form, and not just a single shrubbery term. The form is parsed according
 to declared precedence relationships; specify precence for a macro in
 the same way as for @rhombus(operator).
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     macro '$left no_fail':
@@ -128,13 +127,14 @@ macros provide control over evaluation order. For example, this
 @rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
 side before it’s left-hand side:
 
-@demo(
+@examples(
   ~defn:
     macro '$left +<= $right':
       '$right + $left'
   ~repl:
     1 +<= 2
-    ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
+    ~error:
+      (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
 )
 
 If the infix/prefix operator in a macro pattern is not followed by just
@@ -147,7 +147,7 @@ For example, to match just an identifier in a macro pattern,
 annotate a pattern variable with @rhombus(::, ~unquote_bind) and
 @rhombus(Identifier, ~stxclass):
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     macro '$left is_name $(name :: Identifier)':
@@ -170,7 +170,7 @@ have not been consumed.
 
 For example, the @rhombus(no_fail) macro can be equivalently written like this:
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     expr.macro '$left no_fail $tail ...':
@@ -186,7 +186,7 @@ means that the pattern is required to match to the end of a group. In some
 cases,  @rhombus(#,(@rhombus($, ~bind))()) can be useful to constrain
 a macro uses to appear at the end of a group.
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     macro '$left EOM $()':
@@ -203,7 +203,7 @@ pattern to @rhombus((tail :: Term)) would disable the special treatment
 of @rhombus(..., ~bind) at the end of a pattern and template sequence
 and reify the tail as a fresh list---so don't do this:
 
-@demo(
+@examples(
   ~eval: macro_eval
   ~defn:
     expr.macro '$left no_fail $(tail :: Term) ... $()':
@@ -224,4 +224,5 @@ any) can have precedence and associativity declarations that apply to
 all cases---or precedence can be written before all alternatives by
 nesting the alternatives under @rhombus(match), as in @rhombus(operator).
 
-@close_eval(macro_eval)
+
+@(close_eval(macro_eval))

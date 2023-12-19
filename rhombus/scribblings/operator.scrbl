@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def op_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: op_eval
   ~hidden:
     class Posn(x, y)
@@ -16,7 +14,7 @@
 The @rhombus(operator) form defines a prefix, infix, or postfix operator for
 expressions, similar to a function definition:
 
-@demo(
+@examples(
   ~eval: op_eval
   ~defn:
     operator (x <> y):
@@ -38,7 +36,7 @@ expressions, similar to a function definition:
 An ``operator'' name does not have to be a shrubbery operator. It can be
 an identifier:
 
-@demo(
+@examples(
   ~defn:
     operator (x mod y):
       x - math.floor(x / y) * y
@@ -53,13 +51,14 @@ The arguments can be described by binding patterns, but in that case,
 they may need parentheses around the pattern to ensure that they form a
 single term in next to the operator being defined:
 
-@demo(
+@examples(
   ~eval: op_eval
   ~defn:
     operator ((x :: Int) <> (y :: Int)):
       Posn(x, y)
   ~repl:
-    ~error: 1 <> "apple"
+    ~error:
+      1 <> "apple"
 )
 
 An operator can be defined for both infix and prefix behavior in much
@@ -67,7 +66,7 @@ the same way that functions can be defined to accept one or two
 arguments, and there can be multiple cases with different binding
 patterns for infix, prefix, or both:
 
-@demo(
+@examples(
   ~eval: op_eval
   ~defn:
     operator
@@ -92,9 +91,10 @@ Operator precedence is declared in relationship to other operators when
 the operator is defined. With no precedence defined, @rhombus(<>) cannot
 appear near an arithmetic operator like @rhombus(*):
 
-@demo(
+@examples(
   ~eval: op_eval
-  ~error: 1 <> 2 * 3
+  ~error:
+    1 <> 2 * 3
   1 <> (2 * 3)
 )
 
@@ -114,12 +114,11 @@ well as @rhombus(~same_as_on_right) and @rhombus(~associativity).
 Operators listed with keywords like @rhombus(~weaker_than) can be
 grouped on lines however is convenient.
 
-@demo(
+@examples(
   ~eval: op_eval
   ~defn:
     operator (x <> y):
-      ~weaker_than: * / 
-                    + -
+      ~weaker_than: * / + -
       ~associativity: ~right
       Posn(x, y)
   ~repl:
@@ -139,7 +138,7 @@ then start a block that contains precedence and
 associativity that applies to all cases. Similar to this notation for
 @rhombus(fun), a result annotation can be written before the block.
 
-@demo(
+@examples(
   ~eval: op_eval
   ~defn:
     operator <> :: Posn:
@@ -176,14 +175,14 @@ If the point of an operator is terseness, however, an import prefix may
 defeat the point. Using a library that supplies operators may be one
 reason to expose an imported name. To
 selectively make an operator accessible without it import’s prefix, use
-the @rhombus(expose) import modifier:
+the @rhombus(expose, ~impo) import modifier or a dotted import:
 
 @rhombusblock(
   import:
-    "posn.rhm":
-      expose: <>
+    "posn.rhm".(<>)
 
   1 <> 2
 )
 
-@close_eval(op_eval)
+
+@(close_eval(op_eval))

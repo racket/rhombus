@@ -1,15 +1,18 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Bitmap}
 
 @doc(
   class Bitmap():
-    constructor (width :: PosInt,
-                 height :: PosInt,
-                 ~backing_scale: backing_space :: Real.above(0.0) = 1,
-                 ~has_color = #true,
-                 ~has_alpha = #true)
+    constructor (
+      width :: PosInt,
+      height :: PosInt,
+      ~backing_scale: backing_space :: Real.above(0.0) = 1,
+      ~has_color: has_color :: Any = #true,
+      ~has_alpha: has_alpha :: Any = #true,
+    )
 ){
 
 }
@@ -45,7 +48,7 @@
     ~y: y :: NonnegInt = 0,
     ~width: width :: NonnegInt = width,
     ~height: height :: NonnegInt = height,
-    ~dest: dest :: Bytes = Bytes.make(width * height * 4)
+    ~dest: dest :: Bytes = Bytes.make(width * height * 4),
   ) :: Bytes
 ){
 
@@ -54,12 +57,12 @@
 }
 
 @doc(
-  method (bm :: Bitmap).write(dest :: Path,
-                              ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm,
-                                                    #'xpm, #'bmp),
-                              ~quality: quality :: Int.in(0, 100) = 75,
-                              ~as_unscaled: as_unscaled :: Boolean = #false)
-    :: Void
+  method (bm :: Bitmap).write(
+    dest :: Path,
+    ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
+    ~quality: quality :: Int.in(0, 100) = 75,
+    ~as_unscaled: as_unscaled :: Any = #false,
+  ) :: Void
 ){
 
  Writes the bitmap to a file.

@@ -1,8 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open
-    "macro.rhm")
+    "nonterminal.rhm" open)
 
 @title{Dot Providers}
 
@@ -26,8 +25,8 @@
     ~op_stx $id
     ~is_static: $id
     ~is_static $id
-    ~tail '$pattern'
     ~tail: '$pattern'
+    ~tail '$pattern'
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that

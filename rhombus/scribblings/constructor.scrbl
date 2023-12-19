@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval = make_rhombus_eval())
 
 @title(~tag: "constructors"){Constructors}
 
@@ -12,13 +11,13 @@ both. In that case, the class constructor accepts the argument in
 keyword form, makes the argument optional, or both. Keyword fields are
 printed with their keywords, too.
 
-@demo(
+@examples(
   ~defn:
     class Posn(~x: x, ~y: y = x)
   ~repl:
     Posn(~y: 2, ~x: 1)
     Posn(~x: 1)
-    def Posn(~y: y1, ~x: x1): Posn(~x: 1, ~y: 2)
+    def Posn(~y: y1, ~x: x1) = Posn(~x: 1, ~y: 2)
     y1
 )
 
@@ -28,17 +27,17 @@ the same, and keyword fields support the same shothand as in function
 definitions where a keyword by itself implicitly supplies the
 corresponding identifier.
 
-@demo(
+@examples(
   ~defn:
     class Posn(~x, ~y)
   ~repl:
-    def p: Posn(~x: 1, ~y: 2)
+    def p = Posn(~x: 1, ~y: 2)
     p.x
     p.y
   ~defn:
     class Cell(~row: i, ~column: j)
   ~repl:
-    def c: Cell(~row: 1, ~column: 2)
+    def c = Cell(~row: 1, ~column: 2)
     c.i
     c.j
     c
@@ -53,13 +52,14 @@ form, but with @rhombus(constructor, ~class_clause) in place of
 function that is like the default constructor, at least in the case of a
 class without a superclass.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(~x, ~y):
       nonfinal
       constructor
-      | (): super(~x: 0, ~y: 0)
+      | ():
+          super(~x: 0, ~y: 0)
       | (~x: x, ~y: y):
           super(~x: x, ~y: x)
       | (~r: r, ~θ: θ):
@@ -97,13 +97,14 @@ tagged with a @rhombus(~z) keyword, so the second set of arguments to
 keyword. Meanwhile, the first set of arguments can take any of the forms
 that the @rhombus(Posn) constructor supports.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn3D(~z):
       extends Posn
       constructor
-      | (): super()(~z: 0)
+      | ():
+          super()(~z: 0)
       | (~x: x, ~y: y, ~z: z):
           super(~x: x, ~y: x)(~z: z)
       | (~r: r, ~θ: θ, ~φ: φ):
@@ -121,4 +122,5 @@ constructor of @rhombus(Posn). Within that invocation of the
 @rhombus(Posn) constructor, calling @rhombus(super) produces an the
 instance of @rhombus(Posn3D), not merely a @rhombus(Posn) instance.
 
-@close_eval(method_eval)
+
+@(close_eval(method_eval))

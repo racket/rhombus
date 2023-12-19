@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title(~tag: "ref-recur"){Recursion}
 
@@ -60,7 +60,8 @@ loops.
                      ~pos_sum: pos_sum = 0,
                      ~neg_sum: neg_sum = 0):
       match l
-      | []: values(pos_sum, neg_sum)
+      | []:
+          values(pos_sum, neg_sum)
       | [n, & ns]:
           if n > 0
           | sum_halves(ns, ~pos_sum: pos_sum + n)

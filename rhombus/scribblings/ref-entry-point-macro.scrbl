@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Entry Point Macros}
 
@@ -166,5 +166,6 @@
  @rhombus(entry_point_meta.Arity, ~stxclass).
 
 }
+
 
 @(macro.close_eval(macro_eval))

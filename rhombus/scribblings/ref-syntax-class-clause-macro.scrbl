@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Syntax Class Clause Macros}
 
@@ -22,6 +22,7 @@
 @doc(
   ~nonterminal:
     prefix_macro_patterns: defn.macro ~defn
+    body: block
 
   defn.macro 'syntax_class_clause.macro $prefix_macro_patterns'
 ){
@@ -30,7 +31,7 @@
  @rhombus(syntax_class_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(syntax_class) body.
 
- The compile-time @rhombus(body, ~var) block returns the expansion result. The
+ The compile-time @rhombus(body) block returns the expansion result. The
  result must be a block of groups optionally followed by syntax patterns
  to be spliced in place of the macro use within a @rhombus(syntax_class) body.
  The spliced syntax patterns can be supplied at most once.
@@ -56,5 +57,6 @@
 )
 
 }
+
 
 @(macro.close_eval(macro_eval))

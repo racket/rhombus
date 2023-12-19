@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Unquote Binding Macros}
 
@@ -58,5 +58,6 @@ bindings versus @rhombus(::, ~bind) and
 )
 
 }
+
 
 @(macro.close_eval(macro_eval))

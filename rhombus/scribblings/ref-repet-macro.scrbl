@@ -4,7 +4,7 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Repetition Macros}
 
@@ -128,7 +128,7 @@
       let '($_, $name, $expr, $depth, $use_depth, $_, $_)':
         repet_meta.unpack_list(sub)
       let (_, si):
-        let '$(p :: annot_meta.Parsed)': 'List'
+        let '$(p :: annot_meta.Parsed)' = 'List'
         annot_meta.unpack_predicate(p)
       repet_meta.pack_list(
         '($self(),

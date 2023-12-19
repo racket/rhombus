@@ -1,9 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
-    "common.rhm" open)
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval = make_rhombus_eval())
 
 @title(~tag: "class-together"){Mutual Dependencies}
 
@@ -11,7 +11,7 @@ The @rhombus(class) and @rhombus(interface) forms define names that can
 be used as annotations, but the rules about defining annotations before
 using them can be subtle. For example, this works:
 
-@demo(
+@examples(
   block:
     def make:
       fun () :: Posn:
@@ -22,7 +22,7 @@ using them can be subtle. For example, this works:
 
 But this does not:
 
-@demo(
+@examples(
   ~error:
     block:
       fun make() :: Posn:
@@ -33,7 +33,7 @@ But this does not:
 The reason the first example above works, however, is the same as the
 reason this one does not:
 
-@demo(
+@examples(
   ~error:
     block:
       def make:
@@ -45,11 +45,11 @@ reason this one does not:
 )
 
 When you use @rhombus(fun) as a definition form to bind a function
-@rhombus(identifier, ~var) with a result annotation, the static
+@nontermref(id_name) with a result annotation, the static
 information associated with that result annotation needs to be
-determined to bind @rhombus(identifier, ~var). That's why the middle
+determined to bind @nontermref(id_name). That's why the middle
 example fails. Using a @rhombus(fun) expression on the right-hand side
-of @rhombus(def) to bind @rhombus(identifier, ~var) doesn't need to
+of @rhombus(def) to bind @nontermref(id_name) doesn't need to
 inspect the result annotation to create the binding, but it also does
 not propagate that static information.
 
@@ -57,7 +57,7 @@ For this small example, the solution is straightforward, and similar to
 the one in @secref("class-namespace"): define @rhombus(Posn) before
 trying to use it:
 
-@demo(
+@examples(
   block:
     class Posn(x, y)
     fun make() :: Posn:
@@ -69,7 +69,7 @@ trying to use it:
 This ``just define it before'' strategy does not work, however, when you
 have two classes that need to refer to each other.
 
-@demo(
+@examples(
   ~error:
     block:
       class Posn2D(x, y):
@@ -77,7 +77,7 @@ have two classes that need to refer to each other.
           Posn3D(x, y, 0)
       class Posn3D(x, y, z):
         method project() :: Posn2D:
-          Posn2D(x, y)        
+          Posn2D(x, y)
 )
 
 The problem here is that the annotation facet of @rhombus(class) is
@@ -85,7 +85,7 @@ bundled together with the method-declaration facet of @rhombus(class), so
 they canot be ordered differently. To enable mutual references, use the
 @rhombus(class.together) form to combine the definitions.
 
-@demo(
+@examples(
   block:
     class.together:
       class Posn2D(x, y):
@@ -113,3 +113,6 @@ different modules. Within a module, prefer @rhombus(class.together),
 because it avoids potential pitfalls of using
 @rhombus(annot.delayed_declare) and @rhombus(annot.delayed_complete)
 directly.
+
+
+@(close_eval(method_eval))

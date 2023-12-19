@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title(~tag: "ref-function"){Functions}
 
@@ -251,16 +251,18 @@ normally bound to implement function calls.
 
 @examples(
   ~defn:
-    fun | hello(name):
-            "Hello, " +& name
-        | hello(first, last):
-            hello(first +& " " +& last)
+    fun
+    | hello(name):
+        "Hello, " +& name
+    | hello(first, last):
+        hello(first +& " " +& last)
   ~repl:
     hello("World")
     hello("Inigo", "Montoya")
   ~defn:
-    fun | is_passing(n :: Number): n >= 70
-        | is_passing(pf :: Boolean): pf
+    fun
+    | is_passing(n :: Number): n >= 70
+    | is_passing(pf :: Boolean): pf
   ~repl:
     is_passing(80) && is_passing(#true)
 )
@@ -291,8 +293,8 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 @examples(
   ~defn:
     fun
-    | is_sorted([]): #true
-    | is_sorted([head]): #true
+    | is_sorted([] || [_]):
+        #true
     | is_sorted([head, next, & tail]):
         head <= next && is_sorted([next, & tail])
   ~repl:
@@ -300,8 +302,8 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     is_sorted([1, 2, 9, 3, 5])
   ~defn:
     fun
-    | is_sorted([]): #true
-    | is_sorted([head]): #true
+    | is_sorted([] || [_]):
+        #true
     | is_sorted([head, next, tail, ...]):
         head <= next && is_sorted([next, tail, ...])
   ~repl:
@@ -334,7 +336,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     ~error:
       hello()
   ~defn:
-    fun things_to_say :: values(String, String)
+    fun things_to_say :: (String, String)
     | things_to_say():
         values("Hi", "Bye")
     | things_to_say(more):

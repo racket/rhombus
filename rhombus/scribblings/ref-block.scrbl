@@ -20,7 +20,7 @@
     2
 
   block:
-    def one: 1
+    let one = 1
     one + one
 )
 

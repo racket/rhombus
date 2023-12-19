@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def ns_eval = make_rhombus_eval())
@@ -14,7 +13,7 @@ the use of hierarchical names. Other hierarchical names provided by
 @rhombus(List.cons) via @rhombus(List) (where lists will discussed more
 in @secref("list")):
 
-@demo(
+@examples(
   List.length(["a", "b", "c"])
 )
 
@@ -24,7 +23,7 @@ namespace, and @rhombus(export) provide forms within the
 @rhombus(namespace) body determine the bindings that can be accessed from the
 name with the @rhombus(.) operator.
 
-@demo(
+@examples(
   ~eval: ns_eval
   ~defn:
     namespace geometry:
@@ -36,7 +35,8 @@ name with the @rhombus(.) operator.
       class Complex(real, imag)
   ~repl:
     geometry.tau
-    ~error: geometry.pi
+    ~error:
+      geometry.pi
     geometry.Complex(0, geometry.tau)
 )
 
@@ -46,16 +46,18 @@ module path. Also, @rhombus(import) can be used in nested blocks
 generally, such as a block created with @rhombus(begin) or
 @rhombus(def):
 
-@demo(
+examples(
   ~eval: ns_eval
   ~repl:
     block:
-      import: .geometry open
+      import:
+        .geometry open
       Complex(0, tau)
   ~defn:
     def also_pi:
-      import: .geometry open
-      tau / 2
+      import:
+        .geometry open
+      tau/2
   ~repl:
     also_pi
 )
@@ -63,7 +65,7 @@ generally, such as a block created with @rhombus(begin) or
 Naturally, namespaces can be nested further, either by exporting an
 existing namespace or by nesting @rhombus(namespace) forms.
 
-@demo(
+@examples(
   ~eval: ns_eval
   ~defn:
     namespace subject:
@@ -71,23 +73,26 @@ existing namespace or by nesting @rhombus(namespace) forms.
         geometry
         english
       namespace english:
+        export:
+          greeting
         def greeting = "Hello"
-        export: greeting
   ~repl:
     subject.english.greeting
     subject.geometry.tau
     block:
-      import: .subject open
-      geometry.tau             
+      import:
+        .subject open
+      geometry.tau
 )
 
 A @rhombus(., ~impo) can be used in an @rhombus(import) form as a shorthand to
 reach a nested binding without making intemediate bindings visible.
 
-@demo(
+@examples(
   ~eval: ns_eval
   block:
-    import: rhombus.List open
+    import:
+      .List open
     length(["a", "b", "c"])
 )
 
@@ -97,12 +102,13 @@ definition, such as defining @rhombus(geometry.e) in a context where
 namespace; it merely extends the bindings that are available in the
 scope of the extending definition.
 
-@demo(
+@examples(
   ~eval: ns_eval
   block:
     def geometry.e = 2.71
     geometry.e
-  ~error: geometry.e
+  ~error:
+    geometry.e
 )
 
 When a namespace is exported, any extensions of the namespace visible
@@ -112,4 +118,5 @@ not conflict, which is partly a result of the rule that the same name
 can be imported into a context multiple times as long as the binding
 is always the same.
 
-@close_eval(ns_eval)
+
+@(close_eval(ns_eval))

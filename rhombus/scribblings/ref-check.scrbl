@@ -1,9 +1,9 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
-@(def check_eval: make_rhombus_eval())
-
+@(def check_eval = make_rhombus_eval())
 @examples(
   ~eval: check_eval
   ~hidden:
@@ -158,4 +158,4 @@
 }
 
 
-@close_eval(check_eval)
+@(close_eval(check_eval))

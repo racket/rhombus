@@ -130,10 +130,11 @@
     '$x $y $z'
     sum
   ~defn:
-    fun | f(([x, y, z] where sum = x+y+z) when sum == 6):
-            '$x $y $z = $sum'
-        | f(_):
-            "something else"
+    fun
+    | f(([x, y, z] where sum = x+y+z) when sum == 6):
+        '$x $y $z = $sum'
+    | f(_):
+        "something else"
   ~repl:
     f([1, 2, 3])
     f([0, 2, 3])
@@ -144,11 +145,11 @@
       [1, 2, 3]
     sum
   ~repl:
-    def ([xs] where [x, ...] = xs): [[1, 2, 3]]
+    def ([xs] where [x, ...] = xs) = [[1, 2, 3]]
     '$x ...'
   ~repl:
     ~error:
-      def ([xs] where [x, ...] = xs): ["oops"]
+      def ([xs] where [x, ...] = xs) = ["oops"]
 )
 
 }

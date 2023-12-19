@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def set_eval = make_rhombus_eval())
@@ -16,7 +15,7 @@ as a map, where the set's elements act as keys and each key's value is
 @rhombus(Map), but @rhombus(Set) accepts just values to include in the
 set. The @rhombus(++) operator effectively unions sets.
 
-@demo(
+@examples(
   ~eval: set_eval
   ~defn:
     def friends = {"alice", "bob", "carol"}
@@ -47,14 +46,14 @@ Within a set construction using @braces, a
 @rhombus(&) form splice a set into the constructed set, analogous to the
 way @rhombus(&) works for list constructions.
 
-@demo(
+@examples(
   ~eval: set_eval
   {"dennis", & friends}
 )
 
 Also similar to maps, a repetition can be used to construct a set.
 
-@demo(
+@examples(
   ~defn:
     def [elem, ...] = ["a", "b", "a", "c", "c"]
   ~repl:
@@ -63,10 +62,13 @@ Also similar to maps, a repetition can be used to construct a set.
 
 Set forms work as bindings, too, analogous to map binding forms.
 
-@demo(
+@examples(
   ~eval: set_eval
   ~defn:
     def {"carol", other_friend, ...} = friends
   ~repl:
     [other_friend, ...]
 )
+
+
+@(close_eval(set_eval))

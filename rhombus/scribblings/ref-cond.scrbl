@@ -27,7 +27,7 @@
   | "no"
 
   if 1+2 == 3
-  | def yep: "yes"
+  | let yep = "yes"
     yep
   | "no"
 )
@@ -107,7 +107,7 @@
 @examples(
   unless #true
   | println("yes")
-  
+
   unless #false
   | println("no")
 )

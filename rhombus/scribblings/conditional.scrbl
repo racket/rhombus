@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @title(~tag: "conditional"){Conditionals and Pattern-Matching Dispatch}
@@ -10,7 +9,7 @@ and ''or'' forms. As in Racket, @rhombus(||) returns the first
 non-@rhombus(#false) value, and @rhombus(&&) returns the last
 non-@rhombus(#false) value.
 
-@demo(
+@examples(
   1 < 2 && "ok"
 )
 
@@ -28,7 +27,7 @@ The @rhombus(if) form expects a test expression followed by an
 alts-block with two @litchar{|}s. The first @litchar{|} holds the
 ``then'' branch, and the second @litchar{|} holds the ``else'' branch:
 
-@demo(
+@examples(
   if 1 == 2
   | "same"
   | "different"
@@ -42,7 +41,7 @@ block. Evaluating the @rhombus(cond) form dispatches to the block after
 first test that produces a non-@rhombus(#false) value. The
 @rhombus(~else) keyword can be used in place of a last test.
 
-@demo(
+@examples(
   ~defn:
     fun fib(n):
       cond
@@ -71,7 +70,7 @@ pattern accepts the expression’s value. Similar to @rhombus(cond),
 @rhombus(match) supports @rhombus(~else) in place of a final binding
 pattern, but using the binding operator @rhombus(_) is more common.
 
-@demo(
+@examples(
   ~defn:
     fun fib(n):
       match n
@@ -84,7 +83,7 @@ This kind of immediate pattern-matching dispatch on a function argument
 is common enough that @rhombus(fun) supports it directly, fusing the
 function declaration and the pattern match, like this:
 
-@demo(
+@examples(
   ~defn:
     fun
     | fib(0): 1
@@ -100,7 +99,7 @@ functions cannot have optional arguments, but different cases
 can have different numbers of arguments, and a call will find a matching
 case with the right number of arguments.
 
-@demo(
+@examples(
   ~defn:
     fun
     | hello(name):
@@ -116,7 +115,7 @@ To write a result annotation just once in a function definition with
 multiple cases, use the function name after @rhombus(fun), then
 @rhombus(::) or @rhombus(:~), the annotation, and then the cases:
 
-@demo(
+@examples(
   ~defn:
     fun fib :: PosInt:
     | fib(0): 1

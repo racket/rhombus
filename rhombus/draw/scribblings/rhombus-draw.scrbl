@@ -1,5 +1,4 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
 
 @title{Rhombus Draw}
 

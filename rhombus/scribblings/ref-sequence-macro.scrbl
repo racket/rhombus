@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Sequence Macros}
 
@@ -153,5 +153,6 @@
 )
 
 }
+
 
 @(macro.close_eval(macro_eval))

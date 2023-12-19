@@ -39,7 +39,7 @@ by an evaluator, for example.
 
  Represents an evaluator for inetarctive evaluation via @rhombus(eval).
  An evaluator is installed as the current one using
- @rhombus(current_evaluator), usually via @rhombus(parameterize).
+ @rhombus(Evaluator.current), usually via @rhombus(parameterize).
 
 }
 

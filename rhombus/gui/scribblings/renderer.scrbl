@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Renderers}
 
@@ -14,7 +15,8 @@
 
 @doc(
   fun render(view :: WindowView,
-             parent :: maybe(Renderer) = #false) :: Renderer
+             parent :: maybe(Renderer) = #false)
+    :: Renderer
 ){
 
  Renders @rhombus(view). Provide a @rhombus(parent) renderer to show a

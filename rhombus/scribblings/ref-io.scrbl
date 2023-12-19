@@ -387,8 +387,8 @@
  A @tech{context parameter} that determines whether printing shows
  sharing of objects in terms of @rhombus(===) identity.
 
- Sharing is reported by a @litchar{#}@italic{n}@litchar{=} prefix on a
- printed value, and then @litchar{#}@italic{n}@litchar{#} with the same
+ Sharing is reported by a @litchar{#}@math{n}@litchar{=} prefix on a
+ printed value, and then @litchar{#}@math{n}@litchar{#} with the same
  number @italic{n} is used for later occurrences of the value.
 
  The same notation is used to show cyclic data, which is shown

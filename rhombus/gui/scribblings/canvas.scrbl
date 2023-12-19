@@ -1,22 +1,25 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Canvases}
 
 @doc(
-  class Canvas():
+  class Canvas(handle :: Any):
     implements View
-    constructor (data :: MaybeObs.of(Any),
-                 draw :: Function.of_arity(2),
-                 ~mouse: mouse :: Function.of_arity(1) = Function.pass,
-                 ~key: key :: Function.of_arity(1) = Function.pass,
-                 ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 ~mixin: mix :: Function = values)
+    constructor (
+      data :: MaybeObs.of(Any),
+      draw :: Function.of_arity(2),
+      ~mouse: mouse :: Function.of_arity(1) = Function.pass,
+      ~key: key :: Function.of_arity(1) = Function.pass,
+      ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      ~mixin: mix :: Function = values,
+    )
 ){
 
  Creates a canvas view. When the view is rendered, the @rhombus(draw)
@@ -48,7 +51,7 @@
 @itemlist(
 
  @item{@rhombus(#'control_border)}
- @item{@rhombus(#'combo)} 
+ @item{@rhombus(#'combo)}
  @item{@rhombus(#'vscroll)}
  @item{@rhombus(#'hscroll)}
  @item{@rhombus(#'resize_corner)}

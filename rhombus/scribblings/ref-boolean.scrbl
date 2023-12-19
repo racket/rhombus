@@ -89,11 +89,9 @@
  returns @rhombus(#false).
 
 @examples(
-  for any:
-    each i: 0..10
-    (i == 5) && to_string(i)
-  for any:
-    each i: 0..10
+  for any (i: 0..10):
+    i == 5 && to_string(i)
+  for any (i: 0..10):
     i == 10
 )
 
@@ -132,8 +130,7 @@
   class Posn(x, y)
   fun three_xs(v):
     match v
-    | [a, b, c] && [Posn(x, _), ...]:
-        [x, ...]
+    | [_, _, _] && [Posn(x, _), ...]: [x, ...]
     | ~else: #false
   three_xs([Posn(1, 2), Posn(3, 4), Posn(5, 6)])
   three_xs([Posn(1, 2), Posn(3, 4)])
@@ -171,7 +168,7 @@
 
 @examples(
   1 is_a (String && Int)
-  Pair.cons(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))
+  Pair(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))
   1 :: (converting(fun (n): n+1) && converting(fun (n): -n))
 )
 
@@ -187,12 +184,10 @@
  iteration.
 
 @examples(
-  for all:
-    each i: 0..10
+  for all (i: 0..10):
     i == 5
-  for all:
-    each i: 0..10
-    (i < 10) && to_string(i)
+  for all (i: 0..10):
+    i < 10 && to_string(i)
 )
 
 }

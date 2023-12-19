@@ -155,7 +155,7 @@
     fun grid2(m, n):
       for List:
         each i: 0..m
-        def k: i + 1
+        let k = i + 1
         each j: 0..n
         [k, j]
     grid2(2, 3)
@@ -188,12 +188,5 @@
 ){
 
  The primitive clause forms that are recognized by @rhombus(for).
-
-@examples(
-  for:
-    each v: ["a", "b", "c"]
-    skip_when v == "b"
-    println(v),
-)
 
 }

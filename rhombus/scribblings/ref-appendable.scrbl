@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Appendables}
 
@@ -65,7 +65,7 @@ instances of classes that implement @rhombus(Appendable, ~class).
     [1, 2, 3] ++ [4, 5]
     "hello" ++ " " ++ "world"
   ~repl:
-    def m: {"x": 1, "y": 2}
+    def m = {"x": 1, "y": 2}
     m ++ {"x": 0}
     m
 )

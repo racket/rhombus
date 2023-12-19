@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Sets}
 
@@ -98,7 +98,7 @@ it supplies its elements in an unspecified order.
  instead.
 
 @examples(
-  def s: Set{"x", 1, "y", 2}
+  def s = Set{"x", 1, "y", 2}
   s
   s["x"]
   s[1]
@@ -140,13 +140,13 @@ it supplies its elements in an unspecified order.
  @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
 
 @examples(
-  def Set{"x", "y"}: {"x", "y"}
+  def Set{"x", "y"} = {"x", "y"}
   ~error:
-    def Set{"x", "y"}: {"x"}
-  def Set{"a"}: {"a", "b"}
-  def Set{"a", & rst}: {"a", "b", "c"}
+    def Set{"x", "y"} = {"x"}
+  def Set{"a"} = {"a", "b"}
+  def Set{"a", & rst} = {"a", "b", "c"}
   rst
-  def Set{"a", val, ...}: {"a", "b", "c"}
+  def Set{"a", val, ...} = {"a", "b", "c"}
   [val, ...]
 )
 
@@ -177,7 +177,7 @@ it supplies its elements in an unspecified order.
  mutable sets, only immutable sets.
 
 @examples(
-  def m: MutableSet{"x", 1, "y", 2}
+  def m = MutableSet{"x", 1, "y", 2}
   m
   m["x"]
   m["x"] := #false

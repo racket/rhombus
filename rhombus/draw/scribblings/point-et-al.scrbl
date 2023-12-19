@@ -49,7 +49,7 @@
  already.
 
  The @rhombus(PointLike.to_point) function converts a
- @rhombus(PointLike) value to a @rhombus(Point), like the
+ @rhombus(PointLike, ~annot) value to a @rhombus(Point, ~class), like the
  @rhombus(PointLike.to_point, ~annot) annotation. An expression
  @rhombus(pt) with static information from @rhombus(PointLike, ~annot)
  can call @rhombus(PointLike.to_point(pt)) using @rhombus(pt.to_point()).
@@ -96,9 +96,11 @@
 
 
 @doc(
-  class Rect(x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal):
+  class Rect(x :: Real, y :: Real,
+             width :: NonnegReal, height :: NonnegReal):
     constructor
-    | (x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal)
+    | (x :: Real, y :: Real,
+       width :: NonnegReal, height :: NonnegReal)
     | (point :: PointLike, size :: SizeLike)
   property (r :: Rect).point :: Point
   property (r :: Rect).size :: Size

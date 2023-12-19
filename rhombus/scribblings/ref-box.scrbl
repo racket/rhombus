@@ -28,8 +28,8 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
 ){
 
- The @rhombus(Box, ~annot) annotation (without @rhombus(now_of) or
- @rhombus(later_of)) matches any box.
+ The @rhombus(Box, ~annot) annotation (without @rhombus(now_of, ~datum) or
+ @rhombus(later_of, ~datum)) matches any box.
 
  The @rhombus(Box.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches a box whose values satisfies
@@ -78,7 +78,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  Constructs a box containg @rhombus(v)).
 
 @examples(
-  def bx: Box(1)
+  def bx = Box(1)
   bx
   bx.value
   bx.value := 2
@@ -94,9 +94,10 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  Matches a box whose value matches @rhombus(bind).
 
 @examples(
-  def Box(x): Box(1)
+  def Box(x) = Box(1)
   x
-  ~error: def Box(sv :: String): Box(1)
+  ~error:
+    def Box(sv :: String) = Box(1)
 )
 
 }
@@ -110,7 +111,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
  Accesses or updates the value field of @rhombus(box).
 
 @examples(
-  def bx: Box(1)
+  def bx = Box(1)
   Box.value(bx)
   Box.value(bx, 2)
   Box.value(bx)

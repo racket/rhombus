@@ -1,10 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open
     "macro.rhm")
 
-@(def method_eval: macro.make_macro_eval())
+@(def method_eval = macro.make_macro_eval())
 
 @title(~tag: "custom-binding"){Binding and Annotation}
 
@@ -24,13 +23,13 @@ be used in an excample.
 For example, suppose we customize the constructor for a
 @rhombus(Sandwich) class to accept any number of arguments, instead of
 having the user put those arguments into a list. That is, we want users
-to write @rhombus(Sandwich("pb", "j")) instead of
-@rhombus(Sandwich(["pb", "j"])). To make pattern-matching binding
+to write @rhombus(Sandwich("pb", "j"), ~bind) instead of
+@rhombus(Sandwich(["pb", "j"]), ~bind). To make pattern-matching binding
 consistent with that choice, we should also customize the binding, so
-that @rhombus(Sandwich(top, bottom)) would match instead of
-@rhombus(Sandwich([top, bottom])). Similarly,
-@rhombus(Sandwich.of(String)) would be preferable to
-@rhombus(Sandwich.of(List.of(String))), which requires adding an
+that @rhombus(Sandwich(top, bottom), ~bind) would match instead of
+@rhombus(Sandwich([top, bottom]), ~bind). Similarly,
+@rhombus(Sandwich.of(String), ~annot) would be preferable to
+@rhombus(Sandwich.of(List.of(String)), ~annot), which requires adding an
 @rhombus(of, ~datum) annotation form that is exported from
 @rhombus(Sandwhich) as a namespace.
 
@@ -38,9 +37,9 @@ The customization shown below defines @rhombus(_Sandwich) with
 @rhombus(internal, ~class_clause) so that it can be used in the binding
 and annotation expansion:
 
-@demo(
+@examples(
   ~eval: method_eval
-  ~defn:    
+  ~defn:
     class Sandwich(ingredients):
       nonfinal
       internal _Sandwich
@@ -48,13 +47,15 @@ and annotation expansion:
         super([ingredient, ...])
       binding 'Sandwich($ingredient, ...)':
         '_Sandwich([$ingredient, ...])'
-      annotation 'Sandwich': '_Sandwich'
+      annotation 'Sandwich':
+        '_Sandwich'
       annot.macro 'of($ingredient)':
         '_Sandwich.of(List.of($ingredient))'
-      export: of
+      export:
+        of
   ~repl:
-    def blt: Sandwich("bacon", "lettuce", "tomato")
-    def Sandwich(top, _, _): blt
+    def blt = Sandwich("bacon", "lettuce", "tomato")
+    def Sandwich(top, _, _) = blt
     top
     blt is_a Sandwich
     blt is_a Sandwich.of(Number)
@@ -74,7 +75,7 @@ of the class. A superclass binding or annotation can be combined with an
 internal binding or annotation using the @rhombus(&&, ~bind) binding
 operator or @rhombus(&&, ~annot) annotation operator.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Sub(inches):
@@ -84,14 +85,15 @@ operator or @rhombus(&&, ~annot) annotation operator.
         super(ingredient, ...)(inches)
       binding 'Sub($pre, ..., ~inches: $inches, $post, ...)':
         'Sandwich($pre, ..., $post, ...) && _Sub($inches)'
-      annotation 'Sub': '_Sub'
+      annotation 'Sub':
+        '_Sub'
       annot.macro 'of($ingredient)':
         '_Sub && Sandwich.of($ingredient)'
-      export: of
+      export:
+        of
   ~repl:
-    def blt: Sub("bacon", "lettuce", "tomato",
-                 ~inches: 6)
-    def Sub(~inches: len, stuff, ...): blt
+    def blt = Sub("bacon", "lettuce", "tomato", ~inches: 6)
+    def Sub(~inches: len, stuff, ...) = blt
     len
     [stuff, ...]
     blt is_a Sub.of(String)
@@ -99,4 +101,4 @@ operator or @rhombus(&&, ~annot) annotation operator.
 )
 
 
-@close_eval(method_eval)
+@(close_eval(method_eval))

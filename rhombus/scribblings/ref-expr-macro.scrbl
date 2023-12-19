@@ -4,16 +4,18 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def macro_meta_eval: make_rhombus_eval())
+@(def macro_meta_eval = make_rhombus_eval())
 @examples(
   ~eval: macro_meta_eval
   ~hidden:
-    import: meta -1: rhombus/meta open
+    import:
+      meta -1:
+        rhombus/meta open
 )
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Expression Macros}
 
@@ -120,7 +122,7 @@
       // an infix `no_fail` that works without a right-hand side
       // expression, and that has weak precendence
       expr.macro no_fail:
-        ~weaker_than ~other
+        ~weaker_than: ~other
       | '$left no_fail $()':
           'try: $left; ~catch _: #false'
       | '$left no_fail $(right :: expr_meta.AfterInfixParsed('no_fail')) $()':

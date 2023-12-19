@@ -30,6 +30,8 @@
 
 @doc(
   ~nonterminal_key: block
+  ~nonterminal:
+    id: block
   grammar expr
 ){
 
@@ -199,8 +201,8 @@
  might refer to an identifier or operator that is already bound, or it
  might be used in a binding position to extend an existing namespace with
  a binding for the identifier or operator. In either context, in an
- @rhombus(id_name, ~var) or @rhombus(op_name, ~var), each
- @rhombus(id, ~var) before a dot must refer to a namespace or import.
+ @rhombus(id_name) or @rhombus(op_name), each
+ @rhombus(id) before a dot must refer to a namespace or import.
 
 }
 

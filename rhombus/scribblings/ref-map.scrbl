@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Maps}
 
@@ -162,7 +162,7 @@ in an unspecified order.
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
 @examples(
-  def m: Map{"x": 1, "y": 2}
+  def m = Map{"x": 1, "y": 2}
   m
   m["x"]
   Map(["x", 1], ["y", 2])
@@ -204,10 +204,10 @@ in an unspecified order.
  @see_implicit(@rhombus(#%braces, ~bind), @braces, "binding")
 
 @examples(
-  def {"x": x, "y": y}: Map{"x": 1, "y": 2}
+  def {"x": x, "y": y} = Map{"x": 1, "y": 2}
   y
-  def {"b", rest, ...}: Set{"a", "b", "c"}
-  [rest, ...]
+  def {"b", z, ...} = Set{"a", "b", "c"}
+  [z, ...]
 )
 
 }
@@ -217,8 +217,8 @@ in an unspecified order.
     key_expr: block expr
     val_bind: def bind ~defn
     map_bind: def bind ~defn
-    rest_key_bind:  def bind ~defn
-    rest_val_bind:  def bind ~defn
+    rest_key_bind: def bind ~defn
+    rest_val_bind: def bind ~defn
   bind.macro 'Map{$key_expr: $val_bind, ...}'
   bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
   bind.macro 'Map([$key_expr, $val_bind], ...)'
@@ -251,13 +251,13 @@ in an unspecified order.
  @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
 
 @examples(
-  def Map{"x": x, "y": y}: {"x": 1, "y": 2}
+  def Map{"x": x, "y": y} = {"x": 1, "y": 2}
   y
-  def Map{"a": a}: {"a": 1, "b": 2, "c": 3}
+  def Map{"a": a} = {"a": 1, "b": 2, "c": 3}
   a
-  def Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3}
+  def Map{"a": _, & rst} = {"a": 1, "b": 2, "c": 3}
   rst
-  def Map{"a": _, key: val, ...}: {"a": 1, "b": 2, "c": 3}
+  def Map{"a": _, key: val, ...} = {"a": 1, "b": 2, "c": 3}
   [key, ...]
   [val, ...]
 )
@@ -290,7 +290,7 @@ in an unspecified order.
  mutable maps, only immutable maps.
 
 @examples(
-  def m: MutableMap{"x": 1, "y": 2}
+  def m = MutableMap{"x": 1, "y": 2}
   m
   m["x"]
   m["x"] := 0

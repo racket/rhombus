@@ -9,7 +9,7 @@
 @title{Path}
 
 @doc(
-  class Path(handle):
+  class Path(handle :: Any):
     constructor ()
 ){
 
@@ -30,10 +30,13 @@
 
 @doc(
   method (path :: Path).move_to(pt :: PointLike)
+    :: Void
   method (path :: Path).line_to(pt :: PointLike)
+    :: Void
   method (path :: Path).curve_to(pt1 :: PointLike,
                                  pt2 :: PointLike,
                                  pt3 :: PointLike)
+    :: Void
 ){
 
  Sets a starting poin for an open path, or extends an open path with a
@@ -46,13 +49,18 @@
   method (path :: Path).polygon([pt :: PointLike, ...],
                                 ~dpt: dpt :: PointLike = Point.zero,
                                 ~dx: dx :: Real = 0,
-                                ~dy: dy :: Real = 0) :: Void
-  method (path :: Path).rectangle(r :: RectLike) :: Void
+                                ~dy: dy :: Real = 0)
+    :: Void
+  method (path :: Path).rectangle(r :: RectLike)
+    :: Void
   method (path :: Path).rounded_rectangle(r :: RectLike,
-                                          radius :: Real = -0.25) :: Void
-  method (path :: Path).ellipse(r :: RectLike) :: Void
+                                          radius :: Real = -0.25)
+    :: Void
+  method (path :: Path).ellipse(r :: RectLike)
+    :: Void
   method (path :: Path).arc(r :: RectLike,
-                            start :: Real, end :: Real) :: Void
+                            start :: Real, end :: Real)
+    :: Void
 ){
 
  Adds to the path. If the path is currently open, it it first closed.

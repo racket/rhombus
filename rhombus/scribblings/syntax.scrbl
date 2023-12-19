@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def syntax_eval = make_rhombus_eval())
@@ -10,13 +9,14 @@
 The @quotes form produces a @tech{syntax object}. The syntax object holds
 an unparsed shrubbery, not a parsed Rhombus expression.
 
-@demo(
+@examples(
   '1'
   'hello'
   '1 + 2'
   'x:
      y'
-  ~error: '1' + 2
+  ~error:
+    '1' + 2
 )
 
 Within the @quotes, the
@@ -24,14 +24,14 @@ Within the @quotes, the
 the term after @rhombus($) is a Rhombus expression whose value replaces
 the @rhombus($) and its argument within the quoted form.
 
-@demo(
+@examples(
   '1 + $(2 + 3)'
 )
 
 A @rhombus($) only unquotes when it is followed by a term, otherwise the @rhombus($)
 itself remains quoted.
 
-@demo(
+@examples(
   '1 + $('$') 2'
 )
 
@@ -48,7 +48,7 @@ instead of the parenthesized group in place of @rhombus($), the term before
 @rhombus(...) is replicated as many times as the repetition has items, and each of
 those items is used in one replication.
 
-@demo(
+@examples(
   ~defn:
     def [seq, ...] = ['1', '2', '3']
   ~repl:
@@ -62,7 +62,7 @@ putting @rhombus(...) after a @comma in parentheses means that it follows a the
 group before the @comma, which effectively replicates that group with its
 separating comma:
 
-@demo(
+@examples(
   ~repl:
     def [seq, ...] = ['1', '2', '3']
     '(hi $seq, ...)'
@@ -71,7 +71,7 @@ separating comma:
 Along the same lines, @rhombus(...) just after a @vbar can replicate a preceding
 @litchar{|} block:
 
-@demo(
+@examples(
   ~repl:
     def [seq, ...] = ['1', '2', '3']
     'cond | $seq | ...'
@@ -84,7 +84,7 @@ When @quotes is used in a binding position, it constructs a pattern that
 matches syntax objects, and it binds variables that are escaped in the
 pattern with @rhombus($).
 
-@demo(
+@examples(
   ~repl:
     def '$x + $y' = '1 + (2 + 3)'
     x
@@ -95,7 +95,7 @@ A @rhombus(..., ~bind) works the way you would expect in a syntax
 pattern, matching any @rhombus(..., ~bind)-replicated pattern variables
 to form a repetition of matches:
 
-@demo(
+@examples(
   ~defn:
     def '$x + $y ... + 0' = '1 + 2 + 3 + 0'
   ~repl:
@@ -104,8 +104,11 @@ to form a repetition of matches:
     '$y ...'
 )
 
-@aside{A tail pattern @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))) combined with a tail
- template @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) ...) is similar to using @litchar{.} in
+@margin_note{A tail pattern
+ @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind)))
+ combined with a tail template
+ @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) ...)
+ is similar to using @litchar{.} in
  S-expression patterns and templates, where it allows sharing between the
  input and output syntax objects. That sharing and an associated expansion-cost difference
  is all the more important in the Rhombus expansion protocol, which
@@ -117,7 +120,7 @@ among other terms in the group. A block created with @litchar{:} counts
 as a single term of its enclosing group, and a sequence of @litchar{|}
 alternatives (not an individual alternative) similarly counts as one term.
 
-@demo(
+@examples(
   ~defn:
     def '$x $y' = 'block: 1 2 3'
   ~repl:
@@ -136,8 +139,9 @@ so a variable will @emph{not} be matched to a multi-term sequence that would be
 parsed as an expression. For example, a pattern variable @rhombus(y) by
 itself cannot be matched to a sequence @rhombus(2 + 3):
 
-@demo(
-  ~error: def '1 + $y + 4' = '1 + 2 + 3 + 4'
+@examples(
+  ~error:
+    def '1 + $y + 4' = '1 + 2 + 3 + 4'
 )
 
 Having pattern variables always stand for individual terms turns out to
@@ -147,7 +151,7 @@ you'd have to use two layers of ellipses. Then, to substitute that same
 body into a @rhombus(fun) template, you'd have to use the two layers of
 ellipses again.
 
-@demo(
+@examples(
   ~eval:
     syntax_eval
   ~defn:
@@ -164,7 +168,7 @@ pattern, it stands for a match to the whole group (at least by default).
 A pattern variable that is alone in a multi-group context similarly
 stands for a match to all the groups.
 
-@demo(
+@examples(
   ~eval:
     syntax_eval
   ~defn:
@@ -178,7 +182,7 @@ stands for a match to all the groups.
 As a further generalization, when an escaped variable is at the end of
 its group in a pattern, it stands for a match to remaining terms in group.
 
-@demo(
+@examples(
   ~repl:
     def '1 + $y' = '1 + 2 + 3 + 4'
     y
@@ -188,7 +192,7 @@ These multi-term and multi-group syntax objects can be spliced into
 similar positions in templates, where an escape is by itself within its
 group or by itself in a multi-group position.
 
-@demo(
+@examples(
   ~eval:
     syntax_eval
   ~repl:
@@ -200,7 +204,7 @@ There is no constraint that the original and destination contexts have
 the same shape, so a match from a block-like context can be put into a
 brackets context, for example.
 
-@demo(
+@examples(
   def '$x' = '1 + 2 + 3
               4 * 5 * 6'
   '[$x]'
@@ -209,7 +213,7 @@ brackets context, for example.
 A multi-term, single-group syntax object can be spliced in place of any
 term escape, even if it is not at the end of the group.
 
-@demo(
+@examples(
   ~repl:
     def '$x' = '1 + 2 + 3'
     '0 + $x + 4'
@@ -228,12 +232,13 @@ match a single term and not a group of terms. To match a single term in
 a group context, annotate the pattern variable with the
 @rhombus(Term, ~stxclass) syntax class using the @rhombus(::) operator.
 
-@demo(
+@examples(
   ~repl:
     def '$(x :: Term)' = '1'
     x
   ~repl:
-    ~error: def '$(x :: Term)' = '1 + 2'
+    ~error:
+      def '$(x :: Term)' = '1 + 2'
 )
 
 You can similarly use the @rhombus(Group,~stxclass) syntax class to
@@ -242,4 +247,5 @@ several other predefined syntax classes, such as @rhombus(Identifier, ~stxclass)
 to match an identifier, @rhombus(String, ~stxclass) to match a string
 literal, and @rhombus(Int, ~stxclass) to match an integer literal.
 
-@close_eval(syntax_eval)
+
+@(close_eval(syntax_eval))

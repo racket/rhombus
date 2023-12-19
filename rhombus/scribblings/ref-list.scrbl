@@ -1,9 +1,10 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open
-          "nonterminal.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Lists}
 
@@ -126,13 +127,13 @@ it supplies its elements in order.
  @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")
 
 @examples(
-  def List(1, x, y): [1, 2, 3]
+  def List(1, x, y) = [1, 2, 3]
   y
-  def [1, also_x, also_y]: [1, 2, 3]
+  def [1, also_x, also_y] = [1, 2, 3]
   also_y
-  def List(1, & xs): [1, 2, 3]
+  def List(1, & xs) = [1, 2, 3]
   xs
-  def List(1, x, ...): [1, 2, 3]
+  def List(1, x, ...) = [1, 2, 3]
   [x, ...]
 )
 
@@ -148,7 +149,8 @@ it supplies its elements in order.
 
 @examples(
   [1] :: NonemptyList
-  ~error: [] :: NonemptyList
+  ~error:
+    [] :: NonemptyList
 )
 
 }
@@ -188,7 +190,7 @@ it supplies its elements in order.
  propagated to @rhombus(list_bind).
 
 @examples(
-  def List.cons(x, y): [1, 2, 3]
+  def List.cons(x, y) = [1, 2, 3]
   x
   y
 )
@@ -275,7 +277,7 @@ it supplies its elements in order.
 
 @examples(
   List.reverse([1, 4, 8])
-  [1, 4, 8].reverse
+  [1, 4, 8].reverse()
 )
 
 }

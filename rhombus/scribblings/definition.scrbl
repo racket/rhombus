@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def posn_eval = make_rhombus_eval())
@@ -12,16 +11,17 @@ and functions, @rhombus(class) defines a new @deftech{class}. By
 @seclink("naming-convention"){convention}, class
 names start with a capital letter.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
-    class Posn(x, y))
+    class Posn(x, y)
+)
 
 A class name can be used like a function to construct an instance of the
 class. An instance expression followed by @rhombus(.) and a field name
 extracts the field value from the instance.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     def origin = Posn(0, 0)
@@ -33,7 +33,7 @@ extracts the field value from the instance.
 A class name followed by @rhombus(.) and a field name gets an accessor
 function to extract the field value from an instance of the class:
 
-@demo(
+@examples(
   ~eval: posn_eval
   Posn.x(origin)
 )
@@ -50,7 +50,7 @@ accessor. Annotations are particularly encouraged for a function
 argument that is a class instance, and the annotation is written after
 the argument name with @rhombus(:~, ~bind) and the class name:
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun flip(p :~ Posn):
@@ -67,9 +67,10 @@ field accessor for @rhombus(.x). If @rhombus(flip) is called with
 @rhombus(p.y) attempts to access the @rhombus(y) field of a
 @rhombus(Posn) instance:
 
-@demo(
+@examples(
   ~eval: posn_eval
-  ~error: flip(0)
+  ~error:
+    flip(0)
 )
 
 The @rhombus(::, ~bind) binding operator is another way to annotate a variable.
@@ -79,13 +80,14 @@ variant of the @rhombus(flip) function will report an error if its
 argument is not a @rhombus(Posn) instance, and the error is from
 @rhombus(flip) instead of delayed to the access of @rhombus(y):
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun flip(p :: Posn):
       Posn(p.y, p.x)
   ~repl:
-    ~error: flip(0)
+    ~error:
+      flip(0)
 )
 
 A run-time check implied by @rhombus(::, ~bind) can be expensive, depending on
@@ -101,7 +103,7 @@ The use of @rhombus(:~, ~bind) or @rhombus(::, ~bind) as above is not specific t
 @rhombus(fun). The @rhombus(:~, ~bind) and @rhombus(::, ~bind) binding operators work
 in any binding position, including the one for @rhombus(def):
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     def (flipped :~ Posn) = flip(Posn(1, 2))
@@ -118,27 +120,29 @@ annotations for the @rhombus(x) and @rhombus(y) fields. More generally,
 a @rhombus(class) definition binds the name so that @rhombus(.of)
 accesses an annotation constructor.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun flip_ints(p :: Posn.of(Int, Int)):
       Posn(p.y, p.x)
   ~repl:
     flip_ints(Posn(1, 2))
-    ~error: flip_ints(Posn("a", 2))
+    ~error:
+      flip_ints(Posn("a", 2))
 )
 
 Finally, a class name like @rhombus(Posn) can also work in binding
 positions as a pattern-matching form. Here’s a implementation of
 @rhombus(flip) that uses pattern matching for its argument:
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun flip(Posn(x, y)):
       Posn(y, x)
   ~repl:
-    ~error: flip(0)
+    ~error:
+      flip(0)
     flip(Posn(1, 2))
 )
 
@@ -152,13 +156,14 @@ because the check is anyway part of extracting @rhombus(x) and
 As you would expect, the fields in a @rhombus(Posn) binding pattern are
 themselves patterns. Here’s a function that works only on the origin:
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun flip_origin(Posn(0, 0)):
       origin
   ~repl:
-    ~error: flip_origin(Posn(1, 2))
+    ~error:
+      flip_origin(Posn(1, 2))
     flip_origin(origin)
 )
 
@@ -169,7 +174,7 @@ the function is checked against the annotation. Beware that a function’s
 body does not count as being tail position when the function is declared
 with a @rhombus(::) result annotation.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun same_posn(p) :~ Posn:
@@ -183,7 +188,8 @@ with a @rhombus(::) result annotation.
       p
   ~repl:
     checked_same_posn(origin)
-    ~error: checked_same_posn(5)
+    ~error:
+      checked_same_posn(5)
 )
 
 The @rhombus(let) form is like @rhombus(def), but it makes bindings
@@ -215,7 +221,7 @@ corresponding argument or value, but @rhombus(_, ~bind) nested in a
 binding pattern like @rhombus(::, ~bind) can still constrain allowed
 values.
 
-@demo(
+@examples(
   ~eval: posn_eval
   ~defn:
     fun omnivore(_): "yum"
@@ -226,8 +232,9 @@ values.
     omnivore("apple")
     omnivore2("a", 1)
     nomivore(1)
-    ~error: nomivore("a")
+    ~error:
+      nomivore("a")
 )
 
 
-@close_eval(posn_eval)
+@(close_eval(posn_eval))

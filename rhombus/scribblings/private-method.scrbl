@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
-
-@demo(
+@(def method_eval = make_rhombus_eval())
+@examples(
   ~eval: method_eval
   ~hidden:
     fun lookup_specs(make, model): [10, 30]
@@ -19,14 +17,14 @@ supports two ways of declaring private fields. One way is to use
 @rhombus(private, ~class_clause) @rhombus(field, ~class_clause)
 in the @rhombus(class) body:
 
-@demo(
+@examples(
   ~defn:
     class Car(mpg):
-      private field gas: 10
+      private field gas = 10
       method go(dist):
         gas := gas - dist/mpg
   ~repl:
-    def c : Car(30)
+    def c = Car(30)
     c.go(240)
     c
 )
@@ -37,13 +35,13 @@ default-value expression with @rhombus(=) avoids the need for a custom
 constructor, since it is automatically omitted from the default
 constructor.
 
-@demo(
+@examples(
   ~defn:
     class Car(mpg, private mutable gas = 10):
       method go(dist):
         gas := gas - dist/mpg
   ~repl:
-    def c : Car(30)
+    def c = Car(30)
     c.go(240)
     c
 )
@@ -57,21 +55,21 @@ created, then a custom constructor may be needed. When a private field
 is declared within parentheses after a class name, then the underlying
 constructor accessed with @rhombus(super)---as used in a custom
 constructor---accepts values for private fields as well as public ones.
-  
-@demo(
+
+@examples(
   ~eval: method_eval
   ~defn:
     class Car(make, model, private mpg):
       private field gas: 0
       constructor(make, model):
-        def [tank_size, mpg]: lookup_specs(make, model)
-        def car: super(make, model, mpg)
+        let [tank_size, mpg] = lookup_specs(make, model)
+        let car = super(make, model, mpg)
         car.gas := tank_size
         car
       method go(dist):
         gas := gas - dist/mpg
   ~repl:
-    def c : Car("Mazda", "Miata")
+    def c = Car("Mazda", "Miata")
     c.go(240)
     c
 )
@@ -83,15 +81,15 @@ constructor through the class's annotation, or through an
 declaring an internal name @rhombus(_Car) makes a priviate @rhombus(gas)
 field accessible outside the class's implementation:
 
-@demo(
+@examples(
   ~defn:
     class Car(mpg):
       internal _Car
-      private field gas: 10
+      private field gas = 10
       method go(dist):
         gas := gas - dist/mpg
   ~repl:
-    def c : Car(30)
+    def c = Car(30)
     c.go(240)
     ~error:
       c.gas
@@ -104,4 +102,5 @@ class's implementation, or via an @rhombus(internal, ~class_clause) name
 that is selectively exported, they can be used to limit access to
 some methods.
 
-@close_eval(method_eval)
+
+@(close_eval(method_eval))

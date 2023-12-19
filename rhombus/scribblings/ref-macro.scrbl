@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Simple Expression Macros}
 

@@ -38,7 +38,7 @@ its ``rest'' is a list.
  Constructs a pair containing @rhombus(fst_v) and @rhombus(rst_v).
 
 @examples(
-  def pr: Pair(1, 2)
+  def pr = Pair(1, 2)
   pr
   pr.first
   pr.rest
@@ -57,10 +57,11 @@ its ``rest'' is a list.
  rest component matches @rhombus(rst_bind).
 
 @examples(
-  def Pair(x, y): Pair(1, 2)
+  def Pair(x, y) = Pair(1, 2)
   y
-  ~error: def Pair(sx :: String, sy :: String): Pair(1, 2)
-  def Pair(lx, ly): [1, 2]
+  ~error:
+    def Pair(sx :: String, sy :: String) = Pair(1, 2)
+  def Pair(lx, ly) = [1, 2]
   y
 )
 

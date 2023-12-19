@@ -1,31 +1,34 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title(~tag: "panels"){Panels and Tabs}
 
 @doc(
-  class HPanel():
+  class HPanel(handle :: Any):
     implements View
-    constructor (~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(HPanel.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: MaybeObs.of(View),
-                 ...)
-  class VPanel():
+    constructor (
+      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+      ~style: style :: MaybeObs.of(List.of(HPanel.StyleSymbol)) = [],
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      child :: MaybeObs.of(View), ...
+    )
+  class VPanel(handle :: Any):
     implements View
-    constructor (~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(VPanel.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: MaybeObs.of(View),
-                 ...)
+    constructor (
+      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+      ~style: style :: MaybeObs.of(List.of(VPanel.StyleSymbol)) = [],
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      child :: MaybeObs.of(View), ...
+    )
 ){
 
  Creates a panel that arranges the @rhombus(child) views horizontally or
@@ -34,18 +37,19 @@
 }
 
 @doc(
-  class GroupPanel():
+  class GroupPanel(handle :: Any):
     implements View
-    constructor (label :: MaybeObs.of(LabelString),
-                 ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(Group.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: MaybeObs.of(View),
-                 ...)
+    constructor (
+      label :: MaybeObs.of(LabelString),
+      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+      ~style: style :: MaybeObs.of(List.of(GroupPanel.StyleSymbol)) = [],
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      child :: MaybeObs.of(View), ...
+    )
 ){
 
  Creates a vertical panel that shows grouping under @rhombus(label).
@@ -53,22 +57,23 @@
 }
 
 @doc(
-  class TabsPanel():
+  class TabsPanel(handle :: Any):
     implements View
-    constructor (choices :: MaybeObs.of(List),
-                 ~selection: selection :: MaybeObs.of(Any),
-                 ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
-                 ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-                 ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
-                 ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: MaybeObs.of(View),
-                 ...)
+    constructor (
+      choices :: MaybeObs.of(List),
+      ~selection: selection :: MaybeObs.of(Any),
+      ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
+      ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+      ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
+      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+      ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      child :: MaybeObs.of(View), ...
+    )
 
   property (tabs :: TabsPanel).at_selection :: Obs
 ){
@@ -126,7 +131,7 @@
 @itemlist(
 
  @item{@rhombus(#'deleted)}
- @item{@rhombus(#'border)} 
+ @item{@rhombus(#'border)}
  @item{@rhombus(#'vscroll)}
  @item{@rhombus(#'hscroll)}
  @item{@rhombus(#'auto_vscroll)}
@@ -162,7 +167,7 @@
 @itemlist(
 
  @item{@rhombus(#'deleted)}
- @item{@rhombus(#'no_border)} 
+ @item{@rhombus(#'no_border)}
  @item{@rhombus(#'can_reorder)}
  @item{@rhombus(#'can_close)}
  @item{@rhombus(#'new_button)}
@@ -171,4 +176,3 @@
 )
 
 }
-

@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Annotation Macros}
 
@@ -49,8 +49,10 @@
   annot.macro 'two_of($ann)':
     'matching(List(_ :: $ann, _ :: $ann))'
   [1, 2] :: two_of(Number)
-  ~error: [1, 2, 3] :: two_of(Number)
-  ~error: [1, "x"] :: two_of(Number)
+  ~error:
+    [1, 2, 3] :: two_of(Number)
+  ~error:
+    [1, "x"] :: two_of(Number)
 )
 
 }
@@ -113,7 +115,7 @@
  form as a syntax object. When the resulting annotation is applied to a
  value, it uses the binding to determine whether the value satisifies the
  predicate, and if so (and if the converted result is needed), the
- @rhombus(body) expression is evaluated to obstain the converted value.
+ body expression is evaluated to obstain the converted value.
  It also associates the static information in @rhombus(statinfo_stx) with
  the converted value. The given @rhombus(statinfo_stx) is in unpacked
  form (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
@@ -143,6 +145,8 @@
 
 
 @doc(
+  ~nonterminal:
+    as_annot: :: annot
   defn.macro 'annot.delayed_declare $id'
   defn.macro 'annot.delayed_complete $id_name: $as_annot'
 ){

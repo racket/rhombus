@@ -1,21 +1,20 @@
 #lang scribble/rhombus/manual
-@(
-  import:
+@(import:
     "common.rhm" open
     meta_label:
       lib("racket/draw.rkt"):
         expose:
-          #{color-database<%>}
-)
+          #{color-database<%>})
 
 @title{Color}
 
 @doc(
-  class Color():  
+  class Color(handle :: Any):
     constructor
     | (name :: String)
     | (red :: Byte, green :: Byte, blue :: Byte)
-    | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0))
+    | (red :: Byte, green :: Byte, blue :: Byte,
+       alpha :: Real.in(0.0, 1.0))
 ){
 
  When @rhombus(name) is given, it must be one of the predefined names
@@ -23,7 +22,7 @@
 
  When @rhombus(alpha) is not supplied, @rhombus(1.0) is used.
 
- colorbrush like an existing one can be constructed using @rhombus(with)
+ Color like an existing one can be constructed using @rhombus(with)
  and the field names @rhombus(red), @rhombus(green), @rhombus(blue),
  and/or @rhombus(alpha).
 

@@ -106,7 +106,7 @@
  exposed names should be bound.
 
  A @rhombus(module_path) clause can be be adjusted through one or more
- @rhombus(import_modifier)s. The set of modifiers is extensible, but
+ @rhombus(modifier)s. The set of modifiers is extensible, but
  includes @rhombus(as, ~impo), @rhombus(rename, ~impo), and
  @rhombus(expose, ~impo).
 

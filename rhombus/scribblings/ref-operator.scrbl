@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title(~tag: "ref-operator"){Operators}
 
@@ -127,7 +127,8 @@
       x ++ y ++ x
   ~repl:
     block:
-      import: .List open
+      import:
+        .List open
       [1, 2] ^^^ [3]
   ~defn:
     operator

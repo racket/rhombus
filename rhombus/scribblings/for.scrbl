@@ -1,6 +1,5 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @title(~tag: "for"){Iteration}
@@ -20,7 +19,7 @@ each iteration. The length of the sequence determines the number of
 iterations. The @rhombus(..) operator creates a sequence of integers
 from a starting integer (inclusive) to an ending integer (exclusive):
 
-@demo(
+@examples(
   for:
     each i: 1..4
     println(i)
@@ -29,7 +28,7 @@ from a starting integer (inclusive) to an ending integer (exclusive):
 As a shorthand, an initial @rhombus(each, ~for_clause) form can be written
 using parentheses before the @rhombus(for) body block:
 
-@demo(
+@examples(
   for (i: 1..4):
     println(i)
 )
@@ -38,7 +37,7 @@ If a @rhombus(for) body includes multiple @rhombus(each, ~for_clause) clauses, t
 are nested. That is, for each element of the first @rhombus(each, ~for_clause) clause,
 all elements are used for the second @rhombus(each, ~for_clause) clause, and so on.
 
-@demo(
+@examples(
   for:
     each friend: ["Alice", "Bob", "Carol"]
     each say: ["Hello", "Goodbye"]
@@ -50,10 +49,10 @@ An advantage of having @rhombus(each, ~for_clause) clauses in the body of
 languages, is that definitions or expressions can be written among
 @rhombus(each, ~for_clause) clauses.
 
-@demo(
+@examples(
   for:
     each friend: ["Alice", "Bob", "Carol"]
-    def dear_friend = "dear " +& friend
+    let dear_friend = "dear " +& friend
     each say: ["Hello", "Goodbye"]
     println(say +& ", " +& dear_friend +& "!")
 )
@@ -61,7 +60,7 @@ languages, is that definitions or expressions can be written among
 To draw elements from sequences in parallel, use a block of bindings
 immediately after @rhombus(each, ~for_clause).
 
-@demo(
+@examples(
   for:
     each:
       friend: ["Alice", "Bob", "Carol"]
@@ -73,7 +72,7 @@ Note that the shorthand form using parentheses for an initial
 @rhombus(each, ~for_clause) clause corresponds to this parallel mode,
 since the short is for a single @rhombus(each, ~for_clause) clause:
 
-@demo(
+@examples(
   for (friend: ["Alice", "Bob", "Carol"],
        index: 1..4):
     println(index +& ". " +& friend)
@@ -91,7 +90,7 @@ The @rhombus(for) form acts as a comprehension form when a
 accumulating the values produced by each iteration of the @rhombus(for)
 body.
 
-@demo(
+@examples(
   for List (i: 1..4):
     "number " +& i
   for List:
@@ -103,7 +102,7 @@ body.
 If you prefer, you can put the reducer at the end of a @rhombus(for)
 body with @rhombus(~into).
 
-@demo(
+@examples(
   for (i: 1..4):
     "number " +& i
     ~into List
@@ -113,7 +112,7 @@ body with @rhombus(~into).
 @rhombus(for) form must produce two values for each iteration: a key and
 a value.
 
-@demo(
+@examples(
   for Map (friend: ["alice", "bob", "carol"],
            index: 1..):
     values(index, friend)
@@ -127,7 +126,7 @@ values in the case of the first iteration), and the @rhombus(for) body
 returns as many values as identifiers to provide new values for the
 identifiers.
 
-@demo(
+@examples(
   fun sum(l :~ List):
     for values(sum = 0):
       each i: l
@@ -142,7 +141,7 @@ following example, @rhombus(ll) is annotated as a list of lists, so both
 the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
 
-@demo(
+@examples(
   fun sum2d(ll :~ List.of(List.of(Number))):
     for values(sum = 0):
       each l: ll

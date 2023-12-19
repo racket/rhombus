@@ -34,8 +34,8 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   annot.macro 'ImmutableArray'
 ){
 
- The @rhombus(Array, ~annot) annotation (without @rhombus(now_of) or
- @rhombus(later_of)) matches any array.
+ The @rhombus(Array, ~annot) annotation (without @rhombus(now_of, ~datum) or
+ @rhombus(later_of, ~datum)) matches any array.
 
  The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches an array whose elements all currently satisfy
@@ -88,7 +88,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  Constructs a mutable array containing given arguments.
 
 @examples(
-  def a: Array(1, 2, 3)
+  def a = Array(1, 2, 3)
   a
   a[0]
   a[0] := 0
@@ -119,9 +119,9 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  combined into an internal list to implement the repetition.
 
 @examples(
-  def Array(1, x, y): Array(1, 2, 3)
+  def Array(1, x, y) = Array(1, 2, 3)
   y
-  def Array(1, z, ...): Array(1, 2, 3)
+  def Array(1, z, ...) = Array(1, 2, 3)
   [z, ...]
 )
 

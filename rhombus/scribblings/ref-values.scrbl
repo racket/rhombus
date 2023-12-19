@@ -91,7 +91,7 @@
       | 0: values()
       | 1: "apple"
       | 2: values("apple", "banana")
-      | ~else values("apple", n +& " bananas")
+      | ~else: values("apple", n +& " bananas")
     fun
     | show(): println("nothing")
     | show(s): println(s)

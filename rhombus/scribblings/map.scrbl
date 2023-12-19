@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def map_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: map_eval
   ~hidden:
     class Posn(x, y)
@@ -19,14 +17,17 @@ keys to values. The term @deftech{map} is meant to be generic, and
 maps. The @rhombus(Map) constructor can be used like a function, in
 which case it accepts keys paired with values in two-item lists:
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
-    def neighborhood = Map(["alice", Posn(4, 5)],
-                           ["bob", Posn(7, 9)])
+    def neighborhood = Map(
+      ["alice", Posn(4, 5)],
+      ["bob", Posn(7, 9)],
+    )
   ~repl:
     neighborhood["alice"]
-    ~error: neighborhood["clara"]
+    ~error:
+      neighborhood["clara"]
 )
 
 Curly braces @braces can be used as a shorthand
@@ -34,11 +35,13 @@ for writing @rhombus(Map(#,(@elem{...}))). Within curly braces, the key and valu
 are joined by @litchar{:}. (If a key expression needs to use @litchar{:}
 itself, the expression will have to be in parentheses.)
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
-    def neighborhood = {"alice": Posn(4, 5),
-                        "bob": Posn(7, 9)}
+    def neighborhood = {
+      "alice": Posn(4, 5),
+      "bob": Posn(7, 9),
+    }
   ~repl:
     neighborhood["alice"]
 )
@@ -49,10 +52,10 @@ constructors other than the @rhombus(Map) default.
 
 To functionally extend a map, use the @rhombus(++) append operator:
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
-    def new_neighborhood: neighborhood ++ {"alice": Posn(40, 50)}
+    def new_neighborhood = neighborhood ++ {"alice": Posn(40, 50)}
   ~repl:
     new_neighborhood["alice"]
     neighborhood["alice"]
@@ -78,10 +81,11 @@ In a binding use of @rhombus(Map), the key positions are @emph{expressions},
 not @emph{bindings}. The binding matches an input that includes the keys, and
 each corresponding value is matched to the value binding pattern.
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
-    fun alice_home({"alice": p}): p
+    fun alice_home({"alice": p}):
+      p
   ~repl:
     alice_home(neighborhood)
 )
@@ -89,11 +93,11 @@ each corresponding value is matched to the value binding pattern.
 The @rhombus(Map.of, ~annot) annotation constructor takes two annotations, one
 for keys and one for values:
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
     fun locale(who, neighborhood :~ Map.of(String, Posn)):
-      def p = neighborhood[who]
+      let p = neighborhood[who]
       p.x +& ", " +& p.y
   ~repl:
     locale("alice", neighborhood)
@@ -110,11 +114,13 @@ The @rhombus(MutableMap) constructor works similarly to the @rhombus(Map)
 constructor, but it creates a mutable map. A mutable map can be updated
 using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
-    def locations = MutableMap{"alice": Posn(4, 5),
-                               "bob": Posn(7, 9)}
+    def locations = MutableMap{
+      "alice": Posn(4, 5),
+      "bob": Posn(7, 9),
+    }
   ~repl:
     locations["alice"] := Posn(40, 50)
     locations["alice"]
@@ -126,7 +132,7 @@ binds with lists. In a map @braces expression,
 @rhombus(&) splices in the content of another map, similar to the way
 @rhombus(&) works for list construction.
 
-@demo(
+@examples(
   ~eval: map_eval
   ~defn:
     def {"bob": bob_home, & others} = neighborhood
@@ -145,7 +151,7 @@ Before @rhombus(...) in a map construction, supply one repeition for
 keys before @rhombus(:), and supply another repetition for values. The
 repetitions must have the same length.
 
-@demo(
+@examples(
   ~defn:
     def [key, ...] = ["a", "b", "c"]
     def [val, ...] = [1, 2, 3]
@@ -160,7 +166,7 @@ guaranteed about the order of the keys and values, except that those two
 repetitions use the same order (i.e., keys with associated values in
 parallel).
 
-@demo(
+@examples(
   ~defn:
     def {key: val, ...} = {"b": 2, "a": 1, "c": 3}
   ~repl:
@@ -169,4 +175,4 @@ parallel).
 )
 
 
-@close_eval(map_eval)
+@(close_eval(map_eval))

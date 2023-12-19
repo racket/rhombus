@@ -26,13 +26,13 @@
 
 @examples(
   ~repl:
-    def mutable count: 0
+    def mutable count = 0
     count := count + 1
     count
     count := "string"
 
   ~repl:
-    def mutable count :: Int: 0
+    def mutable count :: Int = 0
     count := count + 1
     ~error:
       count := "string"
@@ -53,7 +53,7 @@
  some values.
 
 @examples(
-  def mutable count: 0
+  def mutable count = 0
   count := count + 1
   count
 )

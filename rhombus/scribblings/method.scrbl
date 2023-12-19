@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval = make_rhombus_eval())
 
 @title(~tag: "methods"){Methods}
 
@@ -12,7 +11,7 @@ interface. Withn a class, the method can refer to fieds directly, or it
 can use @rhombus(this), which refers to the object whose method is
 called.
 
-@demo(
+@examples(
   ~eval: method_eval
   ~defn:
     class Posn(x, y):
@@ -33,7 +32,7 @@ field accessor like @rhombus(Posn.x) or @rhombus(Posn.y), it can access
 a variant of a method that expects the @rhombus(this) object as an
 extra initial argument.
 
-@demo(
+@examples(
   ~eval: method_eval
   Posn.move(Posn(1, 2), 10, -10)
 )
@@ -45,7 +44,7 @@ will report an error. To call the superclass implementation for a method
 that is overidden (usually in the overriding implementation), use
 @rhombus(super) plus the @rhombus(.) operator and the method name.
 
-@demo(
+@examples(
   ~defn:
     class Posn(x, y):
       nonfinal
@@ -58,10 +57,10 @@ that is overidden (usually in the overriding implementation), use
       override method mdist():
         super.mdist() + z
   ~repl:
-    def p: Posn3D(1, 2, 3)
+    def p = Posn3D(1, 2, 3)
     p
-    p.mdist()             
-    p.area()             
+    p.mdist()
+    p.area()
 )
 
 Other method modifiers includes @rhombus(final, ~class_clause) to
@@ -79,13 +78,13 @@ does not have a body. An interface can also supply implemented methods,
 and those implementations can refer to other methods, whether
 implemented, abstract, or inherited from a superinterface.
 
-@demo(
+@examples(
   ~defn:
     interface Shape:
       method area()
       method is_empty():
         area() == 0
-  ~defn:        
+  ~defn:
     class Square(side):
       implements Shape
       override area():
@@ -102,11 +101,11 @@ annotations are different. If @rhombus(area) declares a result
 annotation, a check is added to each implementation to ensure that it
 results a satisfying result.
 
-@demo(
+@examples(
   ~defn:
     interface Shape:
       method area() :: Real
-  ~defn:        
+  ~defn:
     class Square(side):
       implements Shape
       override area():
@@ -122,4 +121,5 @@ method has its own result annotation, then both the overriding
 annotation and the inhereited annotation(s) apply to the method and any
 further overrides.
 
-@close_eval(method_eval)
+
+@(close_eval(method_eval))

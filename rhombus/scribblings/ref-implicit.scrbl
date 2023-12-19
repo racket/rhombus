@@ -22,7 +22,7 @@ Here are all of the implicit forms:
  @item{@rhombus(#%parens) --- used for @parens}
 
  @item{@rhombus(#%brackets) --- used for @brackets}
- 
+
  @item{@rhombus(#%braces) --- used for @braces}
 
  @item{@rhombus(#%quotes) --- used for @quotes}
@@ -81,7 +81,8 @@ Here are all of the implicit forms:
   #%literal 7
   fun only_sevens(7): "yes"
   only_sevens(7)
-  ~error: only_sevens(8)
+  ~error:
+    only_sevens(8)
 )
 
 }
@@ -101,10 +102,10 @@ Here are all of the implicit forms:
 @examples(
   (1+2)
   #%parens (1+2)
-  def (x): 1+2
+  def (x) = 1+2
   x
 )
- 
+
 }
 
 @doc(

@@ -4,7 +4,7 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Export Macros}
 
@@ -74,11 +74,11 @@
       'except: hello hi'
   ~repl:
     namespace n:
+      export:
+        not_greetings: all_defined
       def hello = "hello"
       def hi = "hi"
       def bye = "bye"
-      export:
-        not_greetings: all_defined
     n.bye
     ~error:
       n.hello
@@ -125,5 +125,6 @@
  export.
 
 }
+
 
 @(macro.close_eval(macro_eval))

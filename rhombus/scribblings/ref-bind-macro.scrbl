@@ -4,7 +4,7 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Binding Macros}
 
@@ -49,9 +49,10 @@
     bind.macro 'many $ann as $id':
       '$id && [_ :: $ann, $('...')]'
   ~repl:
-    def many Int as tickets: [1, 2, 3]
+    def many Int as tickets = [1, 2, 3]
     tickets
-    ~error: def many String as names: "oops"
+    ~error:
+      def many String as names = "oops"
 )
 
  See @secref("bind-macro-protocol") for examples using the low-level
@@ -97,6 +98,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    static_info_pattern: #%quotes pattern
+    data_pattern: #%quotes pattern
   defn.macro '«bind.infoer '$id($static_info_pattern, $data_pattern)':
                  $body
                  ...»'
@@ -256,6 +260,12 @@
 
 
 @doc(
+  ~nonterminal:
+    id_pattern: #%quotes pattern
+    data_pattern: #%quotes pattern
+    IF_pattern: #%quotes pattern
+    success_pattern: #%quotes pattern
+    fail_pattern: #%quotes pattern
   defn.macro '«bind.matcher '$id($id_pattern, $data_pattern,
                                  $IF_pattern, $success_pattern, $fail_pattern)':
                  $body
@@ -282,6 +292,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_pattern: #%quotes pattern
+    data_pattern: #%quotes pattern
   defn.macro '«bind.committer '$id($id_pattern, $data_pattern)':
                  $body
                  ...»'
@@ -307,6 +320,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_pattern: #%quotes pattern
+    data_pattern: #%quotes pattern
   defn.macro '«bind.binder '$id($id_pattern, $data_pattern)':
                  $body
                  ...»'
@@ -438,5 +454,6 @@
 )
 
 }
+
 
 @(macro.close_eval(macro_eval))

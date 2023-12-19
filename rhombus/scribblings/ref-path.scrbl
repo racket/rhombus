@@ -20,11 +20,11 @@
 }
 
 @doc(
-  fun Path(p :: Bytes || String || Path) :: Path
+  fun Path(path :: Bytes || String || Path) :: Path
 ){
 
  Constructs a path given a byte string, string, or existing path. When a
- path is provided as @rhombus(p), then the result is @rhombus(p).
+ path is provided as @rhombus(path), then the result is @rhombus(path).
 
 @examples(
   def p = Path("/home/rhombus/shape.txt")
@@ -43,14 +43,14 @@
  @rhombus(bind).
 
 @examples(
-  def Path(p): Path("/home/rhombus/shape.txt")
+  def Path(p) = Path("/home/rhombus/shape.txt")
   p
 )
 
 }
 
 @doc(
-  fun Path.bytes(p :: Path) :: Bytes
+  fun Path.bytes(path :: Path) :: Bytes
 ){
 
  Converts a path to a byte-string form, which does not lose any
@@ -65,7 +65,7 @@
 }
 
 @doc(
-  fun Path.string(p :: Path) :: String
+  fun Path.string(path :: Path) :: String
 ){
 
  Converts a path to a human-readable form, but the conversion may lose

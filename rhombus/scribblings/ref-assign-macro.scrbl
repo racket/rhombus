@@ -3,7 +3,7 @@
     "common.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
 @title{Assignment Macros}
 
@@ -42,9 +42,9 @@
       let (ref, set, name) = assign_meta.unpack_left(left)
       assign_meta.pack_assignment(
         'block:
-           let v = $ref()
-           let $name = $right
-           let v = v + $name
+           def v = $ref() + (block:
+                               let $name = $right
+                               $name)
            $set(v)
            v'
       )

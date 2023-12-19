@@ -78,4 +78,5 @@ parameter's binding in the remainder of a definition context using
 
 }
 
-@macro.close_eval(macro_eval)
+
+@(macro.close_eval(macro_eval))

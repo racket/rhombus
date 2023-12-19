@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{For Clause Macros}
 
@@ -22,6 +22,7 @@
 @doc(
   ~nonterminal:
     prefix_macro_patterns: defn.macro ~defn
+    body: block
 
   defn.macro 'for_clause.macro $prefix_macro_patterns'
 ){
@@ -30,7 +31,7 @@
  @rhombus(for_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(for) body.
 
- The compile-time @rhombus(body, ~var) block returns the expansion result. The
+ The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
  use, where each group can be either a another @rhombus(for) clause, an
  expression, or a defintion.
@@ -49,4 +50,5 @@
 
 }
 
-@«macro.close_eval»(macro_eval)
+
+@(macro.close_eval(macro_eval))

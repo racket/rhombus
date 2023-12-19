@@ -1,10 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def shrubbery_notation:
-    @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top"))
+@(def shrubbery_notation = @shrubref("top"))
 
 @title{Notation}
 
@@ -159,10 +157,10 @@ create the alternative cases within those forms:
   | get_another()
   | take_bite()
     be_happy()
-        
+
   match x
   | 0:
-      def zero = x
+      let zero = x
       x + zero
   | n:
       n + 1
@@ -207,7 +205,7 @@ previous examples:
   if is_rotten(apple) | get_another() | take_bite()
                                         be_happy()
 
-  match x | 0: def zero = x
+  match x | 0: let zero = x
                x + zero
           | n: n + 1
 
@@ -225,7 +223,7 @@ a new group, so these examples also parse the same:
 
   if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
-  match x | 0: def zero = x; x + zero
+  match x | 0: let zero = x; x + zero
           | n: n + 1
 
   cond | is_raining(): take_umbrella()

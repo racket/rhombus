@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Repetitions}
 
@@ -20,7 +20,7 @@ repetitions from one or more repetitions. For example, if @rhombus(x) is
 bound as a repetition, then @rhombus(x+1) can be used as a repetition to
 add @rhombus(1) to each element of @rhombus(x):
 
-@demo(
+@examples(
   def [x, ...] = [1, 2, 3]
   [x+1, ...]
 )
@@ -38,7 +38,7 @@ form the list. Using multiple @dots in a bininding context typically
 binds at a greater depth, as in this example that binds and uses
 @rhombus(z) at depth 2:
 
-@demo(
+@examples(
   def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   [[z+1, ...], ...]
 )
@@ -55,7 +55,7 @@ opposed to nested @rhombus(...)s, then the repetitions that would be
 accessed by nesting are flattend into a single repetition. This
 flattening has the effect of appending sequences.
 
-@demo(
+@examples(
   def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   [z, ..., ...]
 )
@@ -64,7 +64,7 @@ When a repetition form combines multiple repetitions, then unless
 documented otherwise, elements at the same repetition depth are drawn
 from the repetitions in parallel.
 
-@demo(
+@examples(
   def [x, ...] = [1, 2, 3]
   def [y, ...] = ["a", "b", "c"]
   [[x, y], ...]
@@ -78,7 +78,7 @@ to match the @rhombus(x) repetition of depth 1 or the @rhombus(z)
 repetition of depth 2. A repetition of depth 2 can be similarly repeated
 to match a repetition of depth 2:
 
-@demo(
+@examples(
   def [[z, ...], ...] = [[1, 2, 3], [4, 5, 6]]
   def [y, ...] = [10, 100, 1000]
   [[z+y, ...], ...]
@@ -144,9 +144,9 @@ positions.
  @rhombus(&).
 
 @examples(
-  def [a, b, &others]: [1, 2, 3, 4]
+  def [a, b, & others] = [1, 2, 3, 4]
   others
-  [0, &others]
+  [0, & others]
 )
 
 }
@@ -168,7 +168,7 @@ positions.
  @rhombus(~&).
 
 @examples(
-  fun roster(~manager: who, ~&players):
+  fun roster(~manager: who, ~& players):
     players
   roster(~pitcher: "Dave", ~manager: "Phil", ~catcher: "Johnny")
 )

@@ -1,14 +1,15 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Observables}
 
 @doc(
-  class Obs(handle):
-    constructor (v,
+  class Obs(handle :: Any):
+    constructor (v :: Any,
                  ~name: name :: String = "anon",
-                 ~is_derived = #false)
-    
+                 ~is_derived: is_derived :: Any = #false)
+
   annot.macro 'Obs.of($annot)'
   annot.macro 'MaybeObs.of($annot)'
 ){
@@ -26,8 +27,9 @@
 }
 
 @doc(
-  property | (obs :: Obs).value
-           | (obs :: Obs).value := v
+  property
+  | (obs :: Obs).value
+  | (obs :: Obs).value := (v :: Any)
 ){
 
  Returns the value via @rhombus(Obs.peek) (which you shouldn't normally
@@ -36,10 +38,11 @@
 
 @examples(
   ~hidden:
-    // fake observable, because we can't instante `rhombus/gui` here
+    // fake observable, because we can't instantiate `rhombus/gui` here
     class Obs(mutable v):
-      property | value: v
-               | value := x: v := x
+      property
+      | value: v
+      | value := x: v := x
   ~defn:
     def o = Obs("apple")
   ~repl:
@@ -115,7 +118,9 @@
 }
 
 @doc(
-  method (obs :: Obs).debounce(~duration: msec :: NonnegInt = 200) :: Obs
+  method (obs :: Obs).debounce(
+    ~duration: msec :: NonnegInt = 200
+  ) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
@@ -125,7 +130,9 @@
 }
 
 @doc(
-  method (obs :: Obs).throttle(~duration: msec :: NonnegInt = 200) :: Obs
+  method (obs :: Obs).throttle(
+    ~duration: msec :: NonnegInt = 200
+  ) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
@@ -134,13 +141,15 @@
 }
 
 @doc(
-  fun Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs
-  fun Obs.combine({key: obs :: Obs, ...}) :: Obs
+  fun Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...)
+    :: Obs
+  fun Obs.combine({key: obs :: Obs, ...})
+    :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
  @rhombus(f(obs.value, ...)) or
- @rhombus({#,(@rhombus(key, ~var)): obs.value, ...}) when the value
+ @rhombus({key: obs.value, ...}) when the value
  of any @rhombus(obs) changes.
 
 }

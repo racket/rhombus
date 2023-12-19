@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Class and Interface Clause Macros}
 
@@ -74,8 +74,9 @@
                     result := v
                     v)'
   class Person(name):
-    lazy_method greeting(): "Hello, " +& name
-  def ming: Person("Ming")
+    lazy_method greeting():
+      "Hello, " +& name
+  def ming = Person("Ming")
   ming.greeting()
   ming.greeting() === ming.greeting()
 )
@@ -109,7 +110,8 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
     defined_name: defn.macro ~defn
     option: class_clause.macro ~defn
 
-  defn.macro '«class_and_interface_clause.macro '$defined_name $pattern ...':
+  defn.macro '«class_and_interface_clause.macro '$defined_name
+                                                   $pattern ...':
                  $option; ...
                  $body
                  ...»'
@@ -129,8 +131,10 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 }
 
 @doc(
-  fun class_meta.describe(name :: Identifier) :: class_meta.Info
-  fun interface_meta.describe(name :: Identifier) :: interface_meta.Info
+  fun class_meta.describe(name :: Identifier)
+    :: class_meta.Info
+  fun interface_meta.describe(name :: Identifier)
+    :: interface_meta.Info
 ){
 
 @provided_meta()
@@ -146,13 +150,15 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 
 @doc(
   annot.macro 'class_meta.Info'
-  fun class_meta.Info.lookup(info :: class_meta.Info,
-                             key :: Symbol)
-    :: Any
+  fun class_meta.Info.lookup(
+    info :: class_meta.Info,
+    key :: Symbol
+  ) :: Any
   annot.macro 'interface_meta.Info'
-  fun interface_meta.Info.lookup(info :: interface_meta.Info,
-                                 key :: Symbol)
-    :: Any
+  fun interface_meta.Info.lookup(
+    info :: interface_meta.Info,
+    key :: Symbol
+  ) :: Any
 ){
 
  @provided_meta()
@@ -207,7 +213,7 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
  @rhombus(class_meta.describe) or @rhombus(interface_meta.describe) to
  get more information based on a retained or newly declared internal
  name.
- 
+
  Reocgnized keys for classes:
 
 @itemlist(
@@ -235,7 +241,7 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
  @item{@rhombus(#'internal_names): A list of identifiers declared as internal
   names for this class. This list will be non-empty only in the
   information provided to a clause macro.}
- 
+
  @item{@rhombus(#'field_names): A list of identifiers for fields
   declared for the class in the order of the field declarations. For a
   clause macro, the list does not include fields that will be inherited
@@ -345,4 +351,5 @@ Reocgnized keys for interfaces:
 
 }
 
-@«macro.close_eval»(macro_eval)
+
+@(macro.close_eval(macro_eval))

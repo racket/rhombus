@@ -1,15 +1,17 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Brush}
 
 @doc(
-  class Brush(handle, private saved_stipple):
-    constructor (~color: color :: (String || Color) = "Black",
-                 ~style: style :: Brush.Style = #'solid,
-                 ~stipple: stipple :: maybe(Bitmap) = #false,
-                 ~gradient: gradient :: maybe(LinearGradient || RadialGradient)
-                              = #false)
+  class Brush(handle :: Any):
+    constructor (
+      ~color: color :: (String || Color) = "Black",
+      ~style: style :: Brush.Style = #'solid,
+      ~stipple: stipple :: maybe(Bitmap) = #false,
+      ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false,
+    )
 ){
 
  Creates a brush configuration.
@@ -24,8 +26,8 @@
   property (brush :: Brush).color :: Color
   property (brush :: Brush).style :: Brush.Style
   property (brush :: Brush).stipple :: maybe(Bitmap)
-  property (brush :: Brush).gradient :: maybe(LinearGradient
-                                                || RadialGradient)
+  property (brush :: Brush).gradient
+    :: maybe(LinearGradient || RadialGradient)
 ){
 
  Properties to access brush components.
@@ -39,7 +41,7 @@
  Satisfied by the following symbols:
 
 @itemlist(
-  @item{@rhombus(#'transparent)}  
+  @item{@rhombus(#'transparent)}
   @item{@rhombus(#'solid)}
   @item{@rhombus(#'opaque)}
   @item{@rhombus(#'xor)}
@@ -65,7 +67,7 @@
 }
 
 @doc(
-  class LinearGradient():
+  class LinearGradient(handle :: Any):
     constructor (pt1 :: PointLike,
                  pt2 :: PointLike,
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
@@ -80,7 +82,7 @@
 }
 
 @doc(
-  class RadialGradient():
+  class RadialGradient(handle :: Any):
     constructor ([[pt1 :: PointLike], r1 :: Real],
                  [[pt2 :: PointLike], r2 :: Real],
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])

@@ -1,22 +1,25 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open)
 
 @title{Controls}
 
 @doc(
-  class Button():
+  class Button(handle :: Any):
     implements View
-    constructor (label :: MaybeObs.of(LabelString
-                                        || Bitmap
-                                        || matching([_ :: Bitmap,
-                                                     _ :: LabelString,
-                                                     _ :: Button.LabelPosition])),
-                 ~action: action :: Function.of_arity(0) = fun (): #void,
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
+    constructor (
+      label :: MaybeObs.of(LabelString
+                             || Bitmap
+                             || matching([_ :: Bitmap,
+                                          _ :: LabelString,
+                                          _ :: Button.LabelPosition])),
+      ~action: action :: Function.of_arity(0) = fun (): #void,
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+    )
 ){
 
  Creates a button. When rendered, the function call @rhombus(action())
@@ -25,12 +28,14 @@
 }
 
 @doc(
-  class Checkbox():
+  class Checkbox(handle :: Any):
     implements View
-    constructor (label :: MaybeObs.of(LabelString),
-                 ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
-                 ~action: action :: Function.of_arity(1) = #,(@rhombus(set_is_checked, ~var)),
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true)
+    constructor (
+      label :: MaybeObs.of(LabelString),
+      ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
+      ~action: action :: Function.of_arity(1) = #,(@rhombus(set_is_checked, ~var)),
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+    )
 
   property (cb :: Checkbox).at_is_checked :: Obs.of(Boolean)
 ){
@@ -58,18 +63,20 @@
 }
 
 @doc(
-  class Choice():
+  class Choice(handle :: Any):
     implements View
-    constructor (choices :: MaybeObs.of(List),
-                 ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-                 ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
-                 ~selection: selection :: MaybeObs.of(Any) = #false,
-                 ~action: action :: maybe(Function.of_arity(1)) = #false,
-                 ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-                 ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
+    constructor (
+      choices :: MaybeObs.of(List),
+      ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+      ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
+      ~selection: selection :: MaybeObs.of(Any) = #false,
+      ~action: action :: maybe(Function.of_arity(1)) = #false,
+      ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
+      ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+    )
 
   property (chc :: Choice).at_selection :: Obs
 ){
@@ -105,17 +112,19 @@
 }
 
 @doc(
-  class Slider():
+  class Slider(handle :: Any):
     implements View
-    constructor (label :: MaybeObs.of(maybe(LabelString)) = #false,
-                 ~value: value :: MaybeObs.of(PositionInteger) = 0,
-                 ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
-                 ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
-                 ~action: action :: maybe(Function.of_arity(1)) = #false,
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal])
+    constructor (
+      label :: MaybeObs.of(maybe(LabelString)) = #false,
+      ~value: value :: MaybeObs.of(PositionInteger) = 0,
+      ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
+      ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
+      ~action: action :: maybe(Function.of_arity(1)) = #false,
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal],
+    )
 
   property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
 ){
@@ -144,11 +153,13 @@
 
 
 @doc(
-  class Label():
+  class Label(handle :: Any):
     implements View
-    constructor (label :: MaybeObs.of(LabelString),
-                 ~color: color :: MaybeObs.of(maybe(Color)) = #false,
-                 ~font: font :: MaybeObs.of(Font) = Label.normal_control_font)
+    constructor (
+      label :: MaybeObs.of(LabelString),
+      ~color: color :: MaybeObs.of(maybe(Color)) = #false,
+      ~font: font :: MaybeObs.of(Font) = Label.normal_control_font,
+    )
 
   property (lbl :: Label).at_label :: Obs.of(LabelString)
 ){
@@ -174,7 +185,7 @@
 @itemlist(
 
  @item{@rhombus(#'border)}
- @item{@rhombus(#'multi_line)} 
+ @item{@rhombus(#'multi_line)}
  @item{@rhombus(#'deleted)}
 
 )
@@ -190,7 +201,7 @@
 @itemlist(
 
  @item{@rhombus(#'left)}
- @item{@rhombus(#'top)} 
+ @item{@rhombus(#'top)}
  @item{@rhombus(#'right)}
  @item{@rhombus(#'bottom)}
 
@@ -227,13 +238,12 @@
 @itemlist(
 
  @item{@rhombus(#'horizontal)}
- @item{@rhombus(#'vertical)} 
- @item{@rhombus(#'plain)} 
+ @item{@rhombus(#'vertical)}
+ @item{@rhombus(#'plain)}
  @item{@rhombus(#'horizontal_label)}
- @item{@rhombus(#'vertical_label)} 
+ @item{@rhombus(#'vertical_label)}
  @item{@rhombus(#'deleted)}
 
 )
 
 }
-

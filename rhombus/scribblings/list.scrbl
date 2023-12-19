@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def list_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: list_eval
   ~hidden:
     class Posn(x, y)
@@ -15,7 +13,7 @@
 
 A @brackets form as an expression creates a list:
 
-@demo(
+@examples(
   ~eval: list_eval
   [1, 2, 3]
   [0, "apple", Posn(1, 2)]
@@ -26,7 +24,7 @@ some of those operations can be applied using @rhombus(.) directly on an
 expression that produces a list. The @rhombus(++) operator appends
 lists.
 
-@demo(
+@examples(
    List.length(["a", "b", "c"])
    ["a", "b", "c"].length()
    ["a", "b"] ++ ["c", "d", "e"]
@@ -35,7 +33,7 @@ lists.
 You can also use the @rhombus(List) constructor, which takes any number of
 arguments:
 
-@demo(
+@examples(
   List(1, 2, 3)
 )
 
@@ -46,7 +44,7 @@ list is immutable.
 @rhombus(List, ~annot) works as an annotation with @rhombus(:~, ~bind) and
 @rhombus(::, ~bind):
 
-@demo(
+@examples(
   ~defn:
     fun
     | classify(_ :: List): "list"
@@ -62,7 +60,7 @@ As pattern, @brackets matches a list, and list elements
 can be matched with specific subpatterns. The @rhombus(List, ~bind) binding
 operator works the same in bindings, too.
 
-@demo(
+@examples(
   ~defn:
     fun are_three_sorted([a, b, c]):
       a <= b && b <= c
@@ -75,7 +73,7 @@ The last element in a @brackets binding pattern can be
 @rhombus(..., ~bind), which means zero or more repetitions of the preceding
 pattern.
 
-@demo(
+@examples(
   ~defn:
     fun
     | starts_milk([]): #false
@@ -96,7 +94,7 @@ in which case the preceding element form is treated as a repetition
 that supplies elements for the new list.
 
 
-@demo(
+@examples(
   ~defn:
     fun
     | got_milk([]): #false
@@ -112,7 +110,7 @@ While @rhombus(..., ~bind) can only be used at the end of a list in a
 binding, @rhombus(...) can be used anywhere in an expression, and it can
 be used multiple times.
 
-@demo(
+@examples(
   ~eval: list_eval
   ~defn:
     def [groceries, ...] = ["apple", "banana", "milk"]
@@ -125,14 +123,15 @@ Instead of using @rhombus(...) in @brackets
 or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
 or reference a plain list value whose elements are the rest of the list.
 
-@demo(
+@examples(
   ~eval: list_eval
   ~defn:
     def [x, & others] = [groceries, ...]
   ~repl:
     others
     ["broccoli", & others ++ ["cupcake"], x]
-    ~error: [others, ...]
+    ~error:
+      [others, ...]
     [groceries, ..., & ["pencil", "eraser"]]
 )
 
@@ -142,7 +141,7 @@ of forming a list, it accesses an element of an @tech{indexable} value.
 Lists are indexable using natural numbers starting with
 @rhombus(0):
 
-@demo(
+@examples(
   ~eval: list_eval
   ~repl:
     others[0]
@@ -156,7 +155,7 @@ function’s argument can use a binding pattern that indicates a list of
 @litchar{[}...@litchar{]} to efficiently access a field of a
 @rhombus(Posn) instance:
 
-@demo(
+@examples(
   ~eval: list_eval
   ~defn:
     fun nth_x([p :~ Posn, ...], n):
@@ -169,7 +168,7 @@ An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~annot)
 annotation constructor. It expects an annotation that every element of
 the list must satisfy:
 
-@demo(
+@examples(
   ~eval: list_eval
   ~defn:
     fun nth_x(ps :~ List.of(Posn), n):
@@ -181,7 +180,7 @@ unlike the previous versions (where the relevant list existed as an
 argument), this one creates a new intermediate list of @rhombus(x)
 elements:
 
-@demo(
+@examples(
   ~eval: list_eval
   ~defn:
     fun nth_x([Posn(x, _), ...], n):
@@ -190,4 +189,5 @@ elements:
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
 )
 
-@close_eval(list_eval)
+
+@(close_eval(list_eval))

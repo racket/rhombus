@@ -1,7 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
+
+@(def macro_eval = make_rhombus_eval())
 
 @title(~tag: "bind-macro"){Binding and Annotation Macros}
 
@@ -10,7 +11,8 @@ Macros can extend binding-position syntax, too, via
 by expanding to other binding operators, like this definition of @rhombus($$$)
 as a prefix operator to constrain a pattern to number inputs:
 
-@demo(
+@examples(
+  ~eval: macro_eval
   ~defn:
     import:
       rhombus/meta open
@@ -32,7 +34,7 @@ low-level interface, however, many others can be implemented though
 simple expansion.
 
 The @rhombus(annot.macro) form is similar to @rhombus(bind.macro), but for
-annotations. 
+annotations.
 
 @rhombusblock(
   use_static
@@ -45,3 +47,5 @@ annotations.
 
 For details on the low-level annotation protocol, see @secref("annotation-macro").
 
+
+@(close_eval(macro_eval))

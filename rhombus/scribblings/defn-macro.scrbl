@@ -1,7 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
+
+@(def macro_eval = make_rhombus_eval())
 
 @title(~tag: "defn-macro"){Definition and Declaration Macros}
 
@@ -13,7 +14,8 @@ the macro is used.
 
 Here’s the classic @rhombus(def_five) macro:
 
-@demo(
+@examples(
+  ~eval: macro_eval
   ~defn:
     import:
       rhombus/meta open
@@ -32,3 +34,6 @@ block produced by expansion can use forms like @rhombus(import) and
 By distinguishing between expression macros, definition macros, and
 declaration macros, Rhombus can report errors for out-of-place uses
 earlier and more clearly than Racket.
+
+
+@(close_eval(macro_eval))

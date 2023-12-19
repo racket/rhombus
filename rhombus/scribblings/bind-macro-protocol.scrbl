@@ -1,17 +1,16 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open
     "macro.rhm")
 
-@(def bind_eval: macro.make_macro_eval())
+@(def bind_eval = macro.make_macro_eval())
 
 @title(~tag: "bind-macro-protocol"){Binding Low-Level Protocol}
 
 A binding form using the low-level protocol has four parts:
 
 @itemlist(
-  
+
  @item{A compile-time function to report ``upward'' @tech{static
   information} about the variables that it binds. The function receives
  ``downward'' information provided by the context, such as static
@@ -94,8 +93,8 @@ transformer is represented as a syntax object with two parts:
 @itemlist(
 
  @item{The name of a compile-time function that is bound with
-  @rhombus(bind.infoer).},
-  
+  @rhombus(bind.infoer).}
+
  @item{Data for the @rhombus(bind.infoer)-defined function, packaged as
   a single syntax object. This data might contain parsed versions of other
   binding forms, for example.}
@@ -178,16 +177,16 @@ receives the @rhombus(IF) form name, a @rhombus(success) form, and a @rhombus(fa
 Here's a use of the low-level protocol to implement a @rhombus(fruit) pattern,
 which matches only things that are fruits according to @rhombus(is_fruit):
 
-@demo(
+@examples(
   ~eval: bind_eval
   ~defn:
-    import: rhombus/meta open
+    import:
+      rhombus/meta open
 
-    bind.macro 'fruit($id) $tail ...':
-      values(bind_meta.pack('(fruit_infoer,
-                              // remember the id:
-                              $id)'),
-             '$tail ...')
+    bind.macro 'fruit($id)':
+      bind_meta.pack('(fruit_infoer,
+                       // remember the id:
+                       $id)')
 
     bind.infoer 'fruit_infoer($static_info, $id)':
       '("matching(fruit(_))",
@@ -206,7 +205,7 @@ which matches only things that are fruits according to @rhombus(is_fruit):
       '$IF is_fruit($arg)
        | $success
        | $failure'
-    
+
     bind.binder 'fruit_committer($arg, $id)':
       ''
 
@@ -215,6 +214,7 @@ which matches only things that are fruits according to @rhombus(is_fruit):
 
     fun is_fruit(v):
       v == "apple" || v == "banana"
+
   ~repl:
     def fruit(snack) = "apple"
     snack
@@ -247,7 +247,7 @@ original builder was given, and possibly extending the @rhombus(success)
 form. A builder must be used in tail position, and it's
 @rhombus(success) position is a tail position.
 
-@demo(
+@examples(
   ~eval: bind_eval
   ~defn:
     bind.macro '$a <&> $b':
@@ -255,13 +255,18 @@ form. A builder must be used in tail position, and it's
                        ($a, $b))')
 
     bind.infoer 'anding_infoer($static_info, ($a, $b))':
-      def a_info: bind_meta.get_info(a, static_info)
-      def b_info: bind_meta.get_info(b, static_info)
-      def '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_, $_)':
+      let a_info = bind_meta.get_info(a, static_info)
+      let b_info = bind_meta.get_info(b, static_info)
+      def '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...),
+            $_, $_, $_, $_)':
         bind_meta.unpack_info(a_info)
-      def '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_, $_)':
+      let '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...),
+            $_, $_, $_, $_)':
         bind_meta.unpack_info(b_info)
-      def ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
+      let ann:
+        "and("
+          +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann)
+          +& ")"
       '($ann,
         $a_name,
         ($a_s_info, ..., $b_s_info, ...),
@@ -273,21 +278,33 @@ form. A builder must be used in tail position, and it's
 
     bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
                                  $IF, $success, $failure)':
-      def '($_, $_, $_, $_, $a_matcher, $_, $_, $a_data)': bind_meta.unpack_info(a_info)
-      def '($_, $_, $_, $_, $b_matcher, $_, $_, $b_data)': bind_meta.unpack_info(b_info)
+      let '($_, $_, $_, $_,
+            $a_matcher, $_, $_, $a_data)':
+        bind_meta.unpack_info(a_info)
+      let '($_, $_, $_, $_,
+            $b_matcher, $_, $_, $b_data)':
+        bind_meta.unpack_info(b_info)
       '$a_matcher($in_id, $a_data, $IF,
                   $b_matcher($in_id, $b_data, $IF, $success, $failure),
                   $failure)'
 
     bind.committer 'anding_committer($in_id, ($a_info, $b_info))':
-      def '($_, $_, $_, $_, $_, $a_committer, $_, $a_data)': bind_meta.unpack_info(a_info)
-      def '($_, $_, $_, $_, $_, $b_committer, $_, $b_data)': bind_meta.unpack_info(b_info)
+      let '($_, $_, $_, $_,
+            $_, $a_committer, $_, $a_data)':
+        bind_meta.unpack_info(a_info)
+      let '($_, $_, $_, $_,
+            $_, $b_committer, $_, $b_data)':
+        bind_meta.unpack_info(b_info)
       '$a_committer($in_id, $a_data)
        $b_committer($in_id, $b_data)'
 
     bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
-      def '($_, $_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
-      def '($_, $_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
+      let '($_, $_, $_, $_,
+            $_, $_, $a_binder, $a_data)':
+        bind_meta.unpack_info(a_info)
+      let '($_, $_, $_, $_,
+            $_, $_, $b_binder, $b_data)':
+        bind_meta.unpack_info(b_info)
       '$a_binder($in_id, $a_data)
        $b_binder($in_id, $b_data)'
   ~repl:
@@ -298,7 +315,7 @@ form. A builder must be used in tail position, and it's
   ~defn:
     class Posn(x, y)
   ~repl:
-    def Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
+    def Posn(0, y) <&> Posn(x, 1) = Posn(0, 1)
     x
     y
 )
@@ -316,5 +333,6 @@ and it can simply propagate ``downward'' static information. When a
 binding operator reflects a composite value with separate binding forms
 for component values, then upward and downward information needs to be
 adjusted accordingly.
+
 
 @(close_eval(bind_eval))

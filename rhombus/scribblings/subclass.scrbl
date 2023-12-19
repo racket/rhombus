@@ -1,9 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
-@(def subclass_eval: make_rhombus_eval())
+@(def subclass_eval = make_rhombus_eval())
 
 @title(~tag: "subclass"){Subclasses}
 
@@ -14,10 +13,10 @@ the name of an existing class. Instances of the new class, the
 however, a class is @emph{final} by default, which means that it does
 not permit subclasses.
 
-@demo(
+@examples(
   ~defn:
     class Posn(x, y)
-  ~defn:      
+  ~defn:
     ~error:
       class Posn3D(z):
         extends Posn
@@ -26,12 +25,12 @@ not permit subclasses.
 To allow subclasses, add a @rhombus(nonfinal, ~class_clause) clause in a
 class:
 
-@demo(
+@examples(
   ~eval: subclass_eval
   ~defn:
     class Posn(x, y):
       nonfinal
-  ~defn:             
+  ~defn:
     class Posn3D(z):
       extends Posn
 )
@@ -39,10 +38,10 @@ class:
 When a subclass is created, superclass fields are implicitly
 included before new fields in the subclass's constructor:
 
-@demo(
+@examples(
   ~eval: subclass_eval
   ~repl:
-    def p: Posn3D(1, 2, 3)
+    def p = Posn3D(1, 2, 3)
     p
     p.y
     p is_a Posn
@@ -59,20 +58,19 @@ at most one superclass. but it can implement any number of interfaces.
 An interface is never final, so no @rhombus(nonfinal, ~class_clause) is
 needed in an interface.
 
-@demo(
+@examples(
   ~defn:
     interface Shape
     interface Dance
     class Square(side):
-      implements: Shape Dance
+      implements:
+        Shape
+        Dance
   ~repl:
-    def s: Square(10)
+    def s = Square(10)
     s is_a Shape
     s is_a Dance
 )
 
-Interfaces can @rhombus(extend, ~interface_clause) other interfaces. Unlike
-classes extending at one most superclass, interfaces can extend any
-number of superinterfaces.
 
-@close_eval(subclass_eval)
+@(close_eval(subclass_eval))

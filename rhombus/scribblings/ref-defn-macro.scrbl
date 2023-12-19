@@ -4,9 +4,9 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def macro_eval: macro.make_macro_eval())
+@(def macro_eval = macro.make_macro_eval())
 
-@(def dollar: @rhombus($))
+@(def dollar = @rhombus($))
 
 @title{Definition Macros}
 
@@ -79,10 +79,10 @@
 @examples(
   ~eval: macro_eval
   defn.macro 'enum:
-                $(id :: Group)
+                $lhs
                 ...':
-    let [n, ...]: List.iota([id, ...].length())
-    'def $id: $n
+    let [n, ...] = List.iota([lhs, ...].length())
+    'def $lhs = $n
      ...'
   enum:
     a
@@ -123,8 +123,8 @@
     values('$defn2; $defn1', '$tail; ...')
   :
     reverse_defns
-    def seq_x: seq_y+1
-    def seq_y: 10
+    def seq_x = seq_y+1
+    def seq_y = 10
     seq_x
 )
 }

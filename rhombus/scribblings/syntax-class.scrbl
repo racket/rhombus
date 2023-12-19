@@ -1,11 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm" open
     "common.rhm" open)
 
 @(def sc_eval = make_rhombus_eval())
-
-@demo(
+@examples(
   ~eval: sc_eval
   ~hidden:
     import:
@@ -24,7 +22,7 @@ specify the kind of syntax the pattern variable can match. The syntax
 classes @rhombus(Term, ~stxclass), @rhombus(Group, ~stxclass), and
 @rhombus(Multi, ~stxclass) are built in, among others.
 
-@demo(
+@examples(
   ~defn:
     def '$(x :: Term)' = '1'
 )
@@ -35,7 +33,7 @@ create a nested pattern. Nesting immediately within an
 @rhombus($, ~datum) or @rhombus(..., ~datum), analogous to the way those
 literals can be included when constructing syntax.
 
-@demo(
+@examples(
   ~defn:
     fun get_amt('$('$') $amt'): // matches `$` followed by any term
       amt
@@ -54,7 +52,7 @@ both match, respectively. In particular, combining
 @rhombus(&&, ~unquote_bind) with an identifier can give a name to a
 nested match.
 
-@demo(
+@examples(
   ~defn:
     :
       // matches a parenthesized `*` term and names it `mult`
@@ -71,7 +69,7 @@ in a term context, the multi-term pattern is spliced into the enclosing
 group pattern. The @rhombus(||, ~unquote_bind) operator can try
 spliced sequences that have different lengths.
 
-@demo(
+@examples(
   ~defn:
     // matches an optional `+ 1` at the front
     fun get_area_code('$('+ 1' || '') ($code) $_ - $_'):
@@ -86,7 +84,7 @@ Although Rhombus supports new binding operators through
 organize most syntax abstractions. To define a new syntax class, use the
 @rhombus(syntax_class) form:
 
-@demo(
+@examples(
   ~defn:
     syntax_class Arithmetic
     | '$x + $y'
@@ -96,38 +94,37 @@ organize most syntax abstractions. To define a new syntax class, use the
 Defining a syntax class in this way makes it available for use in syntax
 patterns, such as in @rhombus(def) or @rhombus(match). The syntax class must be defined
 at the same phase as the referencing pattern. To define a syntax class
-for use in a macro definition, place it inside a
-@rhombus(meta) block.
+for use in a macro definition, place it under the @rhombus(meta) form.
 
-@demo(
+@examples(
   ~eval: sc_eval
   ~defn:
-    meta:
-      syntax_class Arithmetic
-      | '$x + $y'
-      | '$x - $y'
+    meta syntax_class Arithmetic
+    | '$x + $y'
+    | '$x - $y'
 )
 
 Once defined, a syntax class can be used to annotate a pattern
 variable that matches any of pattern alternatives specified in the
 syntax class.
 
-@demo(
+@examples(
   ~eval: sc_eval
-  ~defn:    
+  ~defn:
     expr.macro 'add_one_to_expr $(a :: Arithmetic)':
       '$a + 1'
   ~repl:
     add_one_to_expr 1 + 1
     add_one_to_expr 1 - 2
-    ~error: add_one_to_expr 2 > 3
+    ~error:
+      add_one_to_expr 2 > 3
 )
 
 The @rhombus($)-escaped variables in a syntax class's patterns bind to
 matched syntax objects as fields of the class. They can be accessed
 from a pattern variable using dot notation.
 
-@demo(
+@examples(
   ~eval: sc_eval
   ~defn:
     expr.macro 'right_operand $(a :: Arithmetic)':
@@ -140,7 +137,7 @@ from a pattern variable using dot notation.
 A field is accessible only when it appears in every pattern
 alternative of a syntax class.
 
-@demo(
+@examples(
   ~eval: sc_eval
   ~defn:
     syntax_class Arithmetic
@@ -149,10 +146,14 @@ alternative of a syntax class.
   ~repl:
     def '$(a :: Arithmetic)' = '1 + 2 + 3'
     a.y
-    ~error: a.z
+    ~error:
+      a.z
 )
 
-In other words, the fields of a syntax class are defined by the intersection 
+In other words, the fields of a syntax class are defined by the intersection
 of all escaped pattern variables found in the pattern alternatives. That's more
 flexible than @rhombus(||, ~unquote_bind), which does not bind identifiers
 from either of its arguments.
+
+
+@(close_eval(sc_eval))

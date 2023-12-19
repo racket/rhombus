@@ -3,8 +3,8 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots: @rhombus(..., ~bind))
-@(def dots_expr: @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title{Sequences}
 
@@ -172,12 +172,12 @@ internal state, and the state can even be specific to a particular
     fun even_strings_up_to(n :: Int):
       Sequence.instantiable(
         fun ():
-          def mutable i = 0
+          let mutable i = 0
           Sequence.instantiate(
             ~initial_position: #void,
-            ~continue_at_position: fun (pos): i < n,
-            ~position_to_element: fun (pos): to_string(i),
-            ~position_to_next: fun (pos): i := i + 2
+            ~continue_at_position: fun (_): i < n,
+            ~position_to_element: fun (_): to_string(i),
+            ~position_to_next: fun (_): i := i + 2
           ))
   ~repl:
     for List (i: even_strings_up_to(5)): i
