@@ -35,3 +35,20 @@ check:
   1 is_a converting(fun (i :: Int unless i mod 3 == 0): i)
   [1, 2, 3] is_a converting(fun ([x, ...] when math.sum(x, ...) == 6): #true)
   ~completes
+
+block:
+  fun is_multiple_of(n):
+    fun (v):
+      v is_a Int && v mod n == 0
+  check:
+    0 ~is_a satisfying(is_multiple_of(1))
+    1 ~is_a satisfying(is_multiple_of(1))
+    15 ~is_a satisfying(is_multiple_of(3)) && satisfying(is_multiple_of(5))
+
+check:
+  #false is_a satisfying("not a function")
+  ~throws values("contract violation", "expected: Function.of_arity(1)")
+
+check:
+  #false is_a satisfying(fun (): #false)
+  ~throws values("contract violation", "expected: Function.of_arity(1)")

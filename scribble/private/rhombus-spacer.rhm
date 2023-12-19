@@ -33,6 +33,7 @@ export:
     Any
     described_as
     matching
+    satisfying
     converting
     maybe
     syntax_class
@@ -685,6 +686,14 @@ spacer.bridge matching(self, tail, context, esc):
   fun adjust(t):
     match t
     | '($(_ :: Group))': spacer.adjust_term(t, #'~bind, esc)
+    | ~else: t
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge satisfying(self, tail, context, esc):
+  ~in: ~annot
+  fun adjust(t):
+    match t
+    | '($(_ :: Group))': spacer.adjust_term(t, #'~expr, esc)
     | ~else: t
   '$self $(adjust_one(tail, context, esc, adjust))'
 
