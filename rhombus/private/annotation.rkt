@@ -52,6 +52,7 @@
                     False
 
                     matching
+                    satisfying
                     #%parens
                     #%literal)
          (for-spaces (rhombus/annot
@@ -864,6 +865,31 @@
           #'arg-info.static-infos)
          #'tail)]))))
 
+(define-annotation-syntax satisfying
+  (annotation-prefix-operator
+   (annot-quote satisfying)
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (_::parens pred-g) . tail)
+        (values
+         (annotation-predicate-form
+          ;; use `((lambda ....) ....)` to avoid inferred name
+          #'((lambda (pred)
+               (unless (and (procedure? pred)
+                            (procedure-arity-includes? pred 1))
+                 (raise-predicate-error 'satisfying pred))
+               (lambda (v)
+                 (and (pred v) #t)))
+             (rhombus-expression pred-g))
+          #'())
+         #'tail)]))))
+
+(define (raise-predicate-error who val)
+  (raise-argument-error* who rhombus-realm
+                         "Function.of_arity(1)" val))
+
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
    (annot-quote #%parens)
@@ -941,8 +967,10 @@
         (values (annotation-predicate-form
                  #`(let ([lo-v (rhombus-expression lo.g)]
                          [hi-v (rhombus-expression hi.g)])
-                     (unless (#,pred-stx lo-v) (bad '#,name 'lower lo-v))
-                     (unless (#,pred-stx hi-v) (bad '#,name 'upper hi-v))
+                     (unless (#,pred-stx lo-v)
+                       (raise-number-error '#,name 'lower lo-v))
+                     (unless (#,pred-stx hi-v)
+                       (raise-number-error '#,name 'upper hi-v))
                      (lambda (v)
                        (and (#,pred-stx v)
                             (lo.comp lo-v v)
@@ -950,7 +978,7 @@
                  #'())
                 #'tail)]))))
 
-(define (bad who which v)
+(define (raise-number-error who which v)
   (raise-argument-error* who rhombus-realm
                          (case who
                            [(Read.in) "Real"]

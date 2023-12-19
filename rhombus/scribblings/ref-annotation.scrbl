@@ -136,7 +136,7 @@
 ){
 
  Converts @rhombus(bind) into an annotation. Variables bound in
- @rhombus($bind) are not made visible, but the annotation corresponds to
+ @rhombus(bind) are not made visible, but the annotation corresponds to
  the set of values for which @rhombus(bind) would match. Since no results
  are made visible, @rhombus(bind) is used only in matching mode, and
  implied conversions might be skipped.
@@ -145,6 +145,37 @@
   def x :: matching([_, 10]) = [9, 10]
   ~error:
     def y :: matching([_, 10]) = [9, 11]
+)
+
+}
+
+@doc(
+  ~nonterminal:
+    pred_expr: block expr
+  annot.macro 'satisfying(pred_expr)'
+){
+
+ Produces a @tech{predicate annotation} using the resulting function
+ from @rhombus(pred_expr).
+
+@examples(
+  ~defn:
+    fun is_multiple_of(n):
+      fun (v):
+        v is_a Int && v mod n == 0
+  ~repl:
+    15 :: (satisfying(is_multiple_of(3))
+             && satisfying(is_multiple_of(5)))
+  ~defn:
+    fun
+    | is_list_with_one(lst :: List):
+        lst.has_element(1)
+    | is_list_with_one(_):
+        #false
+  ~repl:
+    [1, 2, 3] :: satisfying(is_list_with_one)
+    ~error:
+      Array(1, 2, 3) :: satisfying(is_list_with_one)
 )
 
 }
@@ -164,8 +195,8 @@
  the value produced by the annotation is determined by the @rhombus(body)
  sequence, which can refer to variables bound by @rhombus(bind).
 
- When @rhombus(annot) is provided, then it's static information is
- propoagted to the new converter annotation. If @rhombus(annot) is
+ When @rhombus(annot) is provided, then its static information is
+ propagated to the new converter annotation. If @rhombus(annot) is
  supplied with @rhombus(::, ~bind), then the result of the @rhombus(body)
  sequence is checked against @rhombus(annot).
 
