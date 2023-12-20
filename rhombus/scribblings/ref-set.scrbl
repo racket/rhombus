@@ -189,10 +189,10 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
+  def Set.empty :: Set = Set{}
   bind.macro 'Set.empty'
-  expr.macro 'Set.empty'
+  def ReadableSet.empty :: ReadableSet = Set{}
   bind.macro 'ReadableSet.empty'
-  expr.macro 'ReadableSet.empty'
 ){
 
  An empty set. The @rhombus(Set.empty, ~bind) binding form differs from
@@ -200,11 +200,11 @@ it supplies its elements in an unspecified order.
  empty immutable set, while @rhombus(Set{}) matches any immutable set.
 
  The @rhombus(ReadableSet.empty, ~bind) binding form matches an empty set
- whether it is mutable or immutable. The @rhombus(ReadableSet.empty)
- expression form is equivalent to @rhombus(Set.empty).
+ whether it is mutable or immutable.
 
- An empty set, where the @rhombus(Set.empty, ~bind) binding matches
- only an empty set.
+ Corresponding to the binding forms, @rhombus(Set.empty) and
+ @rhombus(ReadableSet.empty) are bound to @rhombus(Set{}) with
+ approapriate static information.
 
 @examples(
   Set.empty

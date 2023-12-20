@@ -192,30 +192,36 @@
 
 (define (set->list s) (hash-keys (set-ht s)))
 
-(define-syntaxes (empty-set empty-readable-set)
-  (let ([t (expression-transformer
-            (lambda (stx)
-              (syntax-parse stx
-                [(form-id . tail)
-                 (values #'(set #hashalw()) #'tail)])))])
-    (values t t)))
+(define empty-set (set #hashalw()))
+(define-static-info-syntax empty-set
+  #:defined set-static-infos)
 
-(define-for-syntax (make-empty-set-binding hash?-id)
+(define empty-readable-set empty-set)
+(define-static-info-syntax empty-readable-set
+  #:defined readable-set-static-infos)
+
+(define-for-syntax (make-empty-set-binding name+hash?-id+static-infos)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
-        (values (binding-form #'empty-set-infoer hash?-id) #'tail)]))))
+        (values
+         (binding-form #'empty-set-infoer name+hash?-id+static-infos)
+         #'tail)]))))
 
-(define-binding-syntax empty-set (make-empty-set-binding #'immutable-hash?))
-(define-binding-syntax empty-readable-set (make-empty-set-binding #'hash?))
+(define-binding-syntax empty-set
+  (make-empty-set-binding
+   #`["Set.empty" immutable-hash? #,set-static-infos]))
+(define-binding-syntax empty-readable-set
+  (make-empty-set-binding
+   #`["ReadableSet.empty" hash? #,readable-set-static-infos]))
 
 (define-syntax (empty-set-infoer stx)
   (syntax-parse stx
-    [(_ static-infos hash?)
-     (binding-info "Set.empty"
-                   #'empty-set
-                   #'static-infos
+    [(_ up-static-infos [name-str hash? static-infos])
+     (binding-info #'name-str
+                   #'empty
+                   (static-infos-union #'static-infos #'up-static-infos)
                    #'()
                    #'empty-set-matcher
                    #'literal-commit-nothing

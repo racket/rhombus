@@ -189,30 +189,36 @@
 (define (hash-pairs ht)
   (for/list ([p (in-hash-pairs ht)]) p))
 
-(define-syntaxes (empty-map empty-readable-map)
-  (let ([t (expression-transformer
-            (lambda (stx)
-              (syntax-parse stx
-                [(form-id . tail)
-                 (values #'#hashalw() #'tail)])))])
-    (values t t)))
+(define empty-map #hashalw())
+(define-static-info-syntax empty-map
+  #:defined map-static-infos)
 
-(define-for-syntax (make-empty-map-binding name+hash?-id)
+(define empty-readable-map empty-map)
+(define-static-info-syntax empty-readable-map
+  #:defined readable-map-static-infos)
+
+(define-for-syntax (make-empty-map-binding name+hash?-id+static-infos)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
-        (values (binding-form #'empty-map-infoer name+hash?-id) #'tail)]))))
+        (values
+         (binding-form #'empty-map-infoer name+hash?-id+static-infos)
+         #'tail)]))))
 
-(define-binding-syntax empty-map (make-empty-map-binding #'("Map.empty" immutable-hash?)))
-(define-binding-syntax empty-readable-map (make-empty-map-binding #'("ReadableMap.empty" hash?)))
+(define-binding-syntax empty-map
+  (make-empty-map-binding
+   #`["Map.empty" immutable-hash? #,map-static-infos]))
+(define-binding-syntax empty-readable-map
+  (make-empty-map-binding
+   #`["ReadableMap.empty" hash? #,readable-map-static-infos]))
 
 (define-syntax (empty-map-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (name-str hash?))
+    [(_ up-static-infos [name-str hash? static-infos])
      (binding-info #'name-str
-                   #'empty-map
-                   #'static-infos
+                   #'empty
+                   (static-infos-union #'static-infos #'up-static-infos)
                    #'()
                    #'empty-map-matcher
                    #'literal-bind-nothing

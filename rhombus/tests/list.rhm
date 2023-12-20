@@ -183,3 +183,14 @@ check:
   use_static
   List.rest([1, 2, 3]).map(math.abs)
   ~is [2, 3]
+
+check:
+  use_static
+  List.empty.has_element("no such thing")
+  ~is #false
+
+check:
+  use_static
+  def List.empty && empty = dynamic([])
+  empty.has_element("no such thing")
+  ~is #false
