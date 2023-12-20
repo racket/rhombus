@@ -1,0 +1,86 @@
+#lang rhombus
+
+block:
+  fun test(1):
+    #void
+  check test(1) ~completes
+  check test(1.0) ~throws values(
+    "argument does not satisfy annotation",
+    "matching(1)",
+  )
+
+block:
+  fun test(#'symbol):
+    #void
+  check test(#'symbol) ~completes
+  check test(#'~keyword) ~throws values(
+    "argument does not satisfy annotation",
+    "matching(#'symbol)",
+  )
+
+block:
+  fun test(1 || 2 || 3 || 4 || 5):
+    #void
+  check test(1) ~completes
+  check test(2) ~completes
+  check test(3) ~completes
+  check test(4) ~completes
+  check test(5) ~completes
+  check test(#nan) ~throws values(
+    "argument does not satisfy annotation",
+    "matching(1 || 2 || 3 || 4 || 5)",
+  )
+
+block:
+  fun test(1 || 2.0 || #nan || "a string" || #"a byte string"
+             || #void || #false || #'symbol || #'~keyword):
+    #void
+  check test(1) ~completes
+  check test(2.0) ~completes
+  check test(#nan) ~completes
+  check test("a string") ~completes
+  check test(#"a byte string") ~completes
+  check test(#void) ~completes
+  check test(#false) ~completes
+  check test(#'symbol) ~completes
+  check test(#'~keyword) ~completes
+  check test("oops") ~throws values(
+    "argument does not satisfy annotation",
+    "matching("
+      ++ "1 || 2.0 || #nan || \"a string\" || #\"a byte string\""
+      ++ " || #void || #false || #'symbol || #'~keyword"
+      ++ ")",
+  )
+
+check:
+  use_static
+  def "a string" && str = dynamic("a string")
+  str.length()
+  ~is 8
+
+check:
+  use_static
+  def ("a string" || "more strings" || "really?") && str:
+    dynamic("really?")
+  str.length()
+  ~is 7
+
+check:
+  use_static
+  def #"a byte string" && bstr = dynamic(#"a byte string")
+  bstr.length()
+  ~is 13
+
+check:
+  use_static
+  def (#"a byte string" || #"more byte strings" || #"really?") && bstr:
+    dynamic(#"really?")
+  bstr.length()
+  ~is 7
+
+check:
+  ~eval
+  use_static
+  def ("a string" || #"a byte string") && str = dynamic("a string")
+  str.length()
+  ~throws "no such field or method (based on static information)"

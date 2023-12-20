@@ -6,7 +6,6 @@
                      "introducer.rkt"
                      "srcloc.rkt")
          "expression.rkt"
-         "name-root-ref.rkt"
          "indirect-static-info-key.rkt")
 
 ;; Represent static information in either of two ways:
@@ -87,8 +86,9 @@
     (pattern (begin (quote-syntax _) (~var e (:static-info key-id)))
              #:attr val #'e.val)
     (pattern (quote d)
-             #:do [(define si (quoted-static-infos #'d))
-                   (define v (static-info-lookup si key-id))]
+             #:do [(define si (quoted-static-infos #'d))]
+             #:when si
+             #:do [(define v (static-info-lookup si key-id))]
              #:when v
              #:attr val v))
 
@@ -107,30 +107,30 @@
     (case kind
       [(string) (set! string-static-infos static-infos)]
       [(bytes) (set! bytes-static-infos static-infos)]
-      [else (void)]))
+      [else (error 'install-static-infos! "unrecognized kind" kind)]))
 
   (define (extract-static-infos e)
     (syntax-parse e
       #:literals (begin quote-syntax quote)
       [id:identifier
-       (define v (syntax-local-value* (in-static-info-space #'id)
-                                      static-info-ref))
-       (if v
-           ((static-info-get-stxs v))
-           null)]
+       (cond
+         [(syntax-local-value* (in-static-info-space #'id)
+                               static-info-ref)
+          => (lambda (v)
+               (define si ((static-info-get-stxs v)))
+               (if (syntax? si)
+                   (syntax->list si)
+                   si))]
+         [else null])]
       [(begin (quote-syntax (~and form (key:identifier val))) e)
-       (cons #'form (let ([si (extract-static-infos #'e)])
-                      (if (syntax? si)
-                          (syntax->list si)
-                          si)))]
-      [(quote d) (quoted-static-infos #'d)]
+       (cons #'form (extract-static-infos #'e))]
+      [(quote d) (or (quoted-static-infos #'d) null)]
       [_ null]))
-  
-  (define (quoted-static-infos d)
-    (cond
-      [(string? (syntax-e d)) string-static-infos]
-      [(bytes? (syntax-e d)) bytes-static-infos]
-      [else null]))
+
+  (define (quoted-static-infos d-stx)
+    (define d (syntax-e d-stx))
+    (or (and (string? d) string-static-infos)
+        (and (bytes? d) bytes-static-infos)))
 
   (define (unwrap-static-infos e)
     (syntax-parse e

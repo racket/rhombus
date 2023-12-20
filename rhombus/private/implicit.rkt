@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-         "provide.rkt"
          "expression.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -97,7 +96,8 @@
                                       (syntax/loc #'datum (quote datum))
                                       0
                                       0
-                                      (quoted-static-infos #'datum)
+                                      (or (quoted-static-infos #'datum)
+                                          #'())
                                       #t)
                 #'tail)]))))
 
