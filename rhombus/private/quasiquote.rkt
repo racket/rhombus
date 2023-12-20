@@ -814,15 +814,12 @@
        [else
         ;; strip away redundant unpack as an optimization
         (define opt-e
-          (let loop ([e base-e])
-            (syntax-parse e
-              #:literals (begin quote-syntax)
-              [(begin (quote-syntax . _) e) (loop #'e)]
-              [(unpack*:id _ e d)
-               #:when (and (identifier? unpack*-id)
-                           (free-identifier=? #'unpack* unpack*-id))
-               #'e]
-              [_ e])))
+          (syntax-parse (unwrap-static-infos base-e)
+            [(unpack*:id _ e _)
+             #:when (free-identifier=? #'unpack* unpack*-id)
+             #'e]
+            [e
+             #'e]))
         #`(unpack* $-name #,opt-e depth)])]))
 
 (define-syntax (delaying stx)
@@ -835,15 +832,12 @@
   ;; replace redundant unpack with alternative; this is not just an
   ;; optimization, but a change to the time complexity of using the
   ;; tail in a template by avoiding conversion to a list and back
-  (let loop ([e base-e])
-    (syntax-parse e
-      #:literals (begin quote-syntax)
-      [(begin (quote-syntax . _) e) (loop #'e)]
-      [(unpack*:id $-name e d)
-       #:when (free-identifier=? #'unpack* replaceable-unpack*-id)
-       #`(#,replacement-unpack*-id $-name e #,depth-stx)]
-      [_
-       #`(#,generic-unpack*-id #,$-name #,e #,depth-stx)])))
+  (syntax-parse (unwrap-static-infos base-e)
+    [(unpack*:id $-name e _)
+     #:when (free-identifier=? #'unpack* replaceable-unpack*-id)
+     #`(#,replacement-unpack*-id $-name e #,depth-stx)]
+    [e
+     #`(#,generic-unpack*-id #,$-name e #,depth-stx)]))
 
 (define-for-syntax (quoted-shape-dispatch stx in-space single-k group-k multi-k literal-k)
   (syntax-parse stx

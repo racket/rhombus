@@ -48,9 +48,7 @@
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot))
 
   (define (wrap-dot-provider expr provider-stx)
-    (quasisyntax/loc expr
-      (begin (quote-syntax (#%dot-provider #,provider-stx))
-             #,expr)))
+    (wrap-static-info expr #'#%dot-provider provider-stx))
 
   (define-syntax-class :dot-provider
     (pattern id:identifier

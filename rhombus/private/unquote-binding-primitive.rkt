@@ -23,7 +23,8 @@
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
          (submod "syntax-class.rkt" for-anonymous-syntax-class)
-         "sequence-pattern.rkt")
+         "sequence-pattern.rkt"
+         (only-in "static-info.rkt" unwrap-static-infos))
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -84,7 +85,7 @@
                               #:rator-stx stx-class
                               #:rator-kind '|syntax class|
                               #:rator-arity arity))
-       call])))
+       (unwrap-static-infos call)])))
 
 (begin-for-syntax
   (define-syntax-rule (define-expose-specifier-class class spec desc)
