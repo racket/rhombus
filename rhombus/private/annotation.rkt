@@ -832,14 +832,14 @@
     (error-message->adjusted-string
      who
      rhombus-realm
-     (format
-      (string-append "value does not satisfy annotation\n"
-                     "  argument: ~v\n"
-                     "  annotation: ~a")
-      val
-      (error-contract->adjusted-string
-       ctc
-       rhombus-realm))
+     (string-append
+      "value does not satisfy annotation"
+      "\n  value: " ((error-value->string-handler)
+                     val
+                     (error-print-width))
+      "\n  annotation: " (error-contract->adjusted-string
+                          ctc
+                          rhombus-realm))
      rhombus-realm)
     (current-continuation-marks))))
 

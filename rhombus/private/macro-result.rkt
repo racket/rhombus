@@ -1,4 +1,5 @@
 #lang racket/base
+(require "realm.rkt")
 
 (provide raise-bad-macro-result)
 
@@ -6,15 +7,16 @@
                                 #:syntax-for? [syntax-for? #t])
   (raise
    (exn:fail:contract
-    (format (string-append "~ainvalid macro result\n"
-                           "  expected: ~a~a\n"
-                           "  received: ~v")
-            (if who
-                (format "~a: " who)
-                "")
-            (if syntax-for?
-                "syntax object for "
-                "")
-            what
-            form)
+    (error-message->adjusted-string
+     who
+     rhombus-realm
+     (string-append
+      "invalid macro result"
+      "\n  expected: " (if syntax-for?
+                           (string-append "syntax object for " what)
+                           what)
+      "\n  received: " ((error-value->string-handler)
+                        form
+                        (error-print-width)))
+     rhombus-realm)
     (current-continuation-marks))))

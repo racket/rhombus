@@ -517,25 +517,23 @@
                           "cannot coerce pair to syntax"
                           "pair" r))
 
-(define (expected-list-or-syntax who msg r)
-  (raise-arguments-error* who rhombus-realm
-                          msg
-                          "value" r))
-
 (define (raise-error who msg r)
-  (if (procedure? who)
-      (let ([who (proc-name who)])
-        (raise
-         (exn:fail:contract
-          (format (string-append "~ainvalid macro result;\n"
-                                 " ~a\n"
-                                 "  received: ~v")
-                  (if who
-                      (format "~a: " who)
-                      "")
-                  msg
-                  r)
-          (current-continuation-marks))))
-      (raise-arguments-error* who rhombus-realm
-                              msg
-                              "syntax" r)))
+  (cond
+    [(procedure? who)
+     (raise
+      (exn:fail:contract
+       (error-message->adjusted-string
+        (proc-name who)
+        rhombus-realm
+        (string-append
+         "invalid macro result"
+         ";\n " msg
+         "\n  received: " ((error-value->string-handler)
+                           r
+                           (error-print-width)))
+        rhombus-realm)
+       (current-continuation-marks)))]
+    [else
+     (raise-arguments-error* who rhombus-realm
+                             msg
+                             "syntax" r)]))
