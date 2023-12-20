@@ -301,10 +301,10 @@ in an unspecified order.
 
 
 @doc(
+  def Map.empty :: Map = {}
   bind.macro 'Map.empty'
-  expr.macro 'Map.empty'
+  def ReadableMap.empty :: ReadableMap = {}
   bind.macro 'ReadableMap.empty'
-  expr.macro 'ReadableMap.empty'
 ){
 
  An empty map. The @rhombus(Map.empty, ~bind) binding form differs from
@@ -313,8 +313,11 @@ in an unspecified order.
  @rhombus(Map()) matches any immutable map.
 
  The @rhombus(ReadableMap.empty, ~bind) binding form matches an empty map
- whether it is mutable or immutable. The @rhombus(ReadableMap.empty)
- expression form is equivalent to @rhombus(Map.empty).
+ whether it is mutable or immutable.
+
+ Corresponding to the binding forms, @rhombus(Map.empty) and
+ @rhombus(ReadableMap.empty) are bound to @rhombus({}) with
+ approapriate static information.
 
 @examples(
   Map.empty

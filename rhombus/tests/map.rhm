@@ -186,6 +186,54 @@ check:
   ~is [{"y", "z"}, {2, 3}]
 
 check:
+  match {}
+  | Map.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
+  match MutableMap{}
+  | Map.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
+  match {1: 2}
+  | Map.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
+  match MutableMap{1: 2}
+  | Map.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
+  match {}
+  | ReadableMap.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
+  match MutableMap{}
+  | ReadableMap.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
+  match {1: 2}
+  | ReadableMap.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
+  match MutableMap{1: 2}
+  | ReadableMap.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
   {1: "a", 2: 2, 3: 3}.keys(#true) ~is [1, 2, 3]
 
 block:
@@ -202,7 +250,7 @@ block:
     check dynamic({1: "a", 2: "b"}).remove(3) ~is {1: "a", 2: "b"}
     check MutableMap{1: "a", 2: "b"}.remove ~throws "no such field or method"
     check MutableMap{1: "a", 2: "b"}.remove(1) ~throws "no such field or method"
-    
+
 block:
   use_static
   let m = MutableMap{1: "a", 2: "b"}
@@ -211,13 +259,13 @@ block:
   m.delete(3)
   check m ~is_now MutableMap{2: "b"}
   m[1] := "a"
-  check m ~is_now MutableMap{1: "a", 2: "b"}  
+  check m ~is_now MutableMap{1: "a", 2: "b"}
   check MutableMap.delete(m, 1) ~is #void
   check m ~is_now MutableMap{2: "b"}
   check MutableMap.delete(m, 3) ~is #void
   check m ~is_now MutableMap{2: "b"}
   m[1] := "a"
-  check m ~is_now MutableMap{1: "a", 2: "b"}  
+  check m ~is_now MutableMap{1: "a", 2: "b"}
   block:
     use_dynamic
     check dynamic(m).delete(1) ~is #void
@@ -255,7 +303,7 @@ check:
   for Set ((key, val): map):
     key.length() + val.y
   ~is {3, 5, 6}
-  
+
 check:
   ~eval
   use_static
@@ -264,4 +312,50 @@ check:
     {#'foo: "foo", 1: "1", Box(2): "Box(2)"}
   for ((key, val): map):
     println(key.length() + val.length())
+  ~throws "no such field or method (based on static information)"
+
+check:
+  use_static
+  Map.empty.get("no such thing", #false)
+  ~is #false
+
+check:
+  use_static
+  def Map.empty && empty = dynamic({})
+  empty.get("no such thing", #false)
+  ~is #false
+
+check:
+  use_static
+  Map.empty.remove("no such thing")
+  ~is {}
+
+check:
+  use_static
+  def Map.empty && empty = dynamic({})
+  empty.remove("no such thing")
+  ~is {}
+
+check:
+  use_static
+  ReadableMap.empty.get("no such thing", #false)
+  ~is #false
+
+check:
+  use_static
+  def ReadableMap.empty && empty = dynamic({})
+  empty.get("no such thing", #false)
+  ~is #false
+
+check:
+  ~eval
+  use_static
+  ReadableMap.empty.remove("no such thing")
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def ReadableMap.empty && empty = dynamic({})
+  empty.remove("no such thing")
   ~throws "no such field or method (based on static information)"

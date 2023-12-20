@@ -212,6 +212,9 @@
        (lambda (v) (cons v lst))
        (lambda () #f))))
 
+(define-static-info-syntax null
+  #:defined list-static-infos)
+
 (define-binding-syntax null
   (binding-transformer
    (lambda (stx)
@@ -221,10 +224,10 @@
 
 (define-syntax (empty-infoer stx)
   (syntax-parse stx
-    [(_ static-infos datum)
+    [(_ up-static-infos _)
      (binding-info "List.empty"
                    #'empty
-                   #'static-infos
+                   (static-infos-union list-static-infos #'up-static-infos)
                    #'()
                    #'empty-matcher
                    #'literal-bind-nothing
@@ -391,7 +394,7 @@
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))
-  
+
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
 (define-for-syntax (parse-list-binding stx)
