@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base ; for `unsyntax` binding
-                     )
+(require (for-syntax racket/base)
          "provide.rkt"
          "class-primitive.rkt"
          "dot-property.rkt"

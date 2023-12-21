@@ -324,12 +324,12 @@
                                        [(converter-proc cvtr)
                                         => (lambda (proc) #`(parsed #:rhombus/expr #,proc))]
                                        [else #f])
-                                     (unpack-static-infos #'r.static-infos)
+                                     (unpack-static-infos 'bind_meta.Result #'r.static-infos)
                                      (string->immutable-string (attribute r.annot-str))))]
                        [else (values #f
                                      #t
                                      #f
-                                     (unpack-static-infos #'())
+                                     (unpack-static-infos 'bind_meta.Result #'())
                                      annotation-any-string)]))]
              #:attr count cnt
              #:attr is_predicate pred?

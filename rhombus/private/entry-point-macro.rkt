@@ -3,16 +3,18 @@
                      syntax/parse/pre
                      enforest/proc-name
                      "pack.rkt"
-                     "tail-returner.rkt"
                      "macro-result.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      "entry-point-adjustment.rkt"
+                     "macro-result.rkt"
+                     "realm.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
          "entry-point.rkt"
-         "space.rkt"
-         "name-root.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
@@ -26,7 +28,7 @@
 (begin-for-syntax
   (define-name-root entry_point_meta
     #:fields
-    (pack
+    ([pack entry_point_meta.pack]
      Parsed
      Arity
      [Adjustment entry_point_meta.Adjustment])))
@@ -66,5 +68,14 @@
          [(head . tail) (proc (pack-tail #'tail) #'head 'arity #f)]))
      (extract-entry-point-arity form proc))))
 
-(define-for-syntax (pack stx)
-  #`(parsed #:rhombus/entry_point (rhombus-expression #,(unpack-group stx 'entry_point_meta.pack #f))))
+(define-for-syntax (check-syntax who s)
+  (unless (syntax? s)
+    (raise-argument-error* who rhombus-realm "Syntax" s)))
+
+(begin-for-syntax
+  (define/arity (entry_point_meta.pack stx)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who stx)
+    #`(parsed #:rhombus/entry_point
+              (rhombus-expression #,(unpack-group stx who #f))))
+  )

@@ -94,7 +94,7 @@
        #`(define-syntax #,static-infos-id
            (#,(quote-syntax quasisyntax)
             (#,@(for/list ([expr (in-list (reverse static-infos-exprs))])
-                  #`(#,(quote-syntax unsyntax-splicing) (pack-static-infos #,expr 'static_info)))))))
+                  #`(#,(quote-syntax unsyntax-splicing) (pack-static-infos 'static_info #,expr)))))))
       null))
 
 (define-for-syntax (build-class-static-infos exposed-internal-id

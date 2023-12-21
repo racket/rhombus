@@ -40,3 +40,18 @@ block:
   check:
     statinfo_meta.unpack_group(statinfo_meta.pack_group('((x, y)) ((z, w))'))
     ~prints_like '((x, y)) ((z, w))'
+
+check:
+  import:
+    meta -1: rhombus/meta open
+  use_static
+  statinfo_meta.call_result_key.unwrap()
+  statinfo_meta.index_result_key.unwrap()
+  statinfo_meta.index_get_key.unwrap()
+  statinfo_meta.index_set_key.unwrap()
+  statinfo_meta.append_key.unwrap()
+  statinfo_meta.dot_provider_key.unwrap()
+  statinfo_meta.sequence_constructor_key.unwrap()
+  statinfo_meta.sequence_element_key.unwrap()
+  statinfo_meta.values_key.unwrap()
+  ~completes

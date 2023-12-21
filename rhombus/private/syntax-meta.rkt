@@ -37,11 +37,11 @@
     #:fields
     ([equal_binding syntax_meta.equal_binding]
      [equal_name_and_scopes syntax_meta.equal_name_and_scopes]
-     expanding_phase
+     [expanding_phase syntax_meta.expanding_phase]
      [error syntax_meta.error]
      [value syntax_meta.value]
      [flip_introduce syntax_meta.flip_introduce]
-     is_static))
+     [is_static syntax_meta.is_static]))
 
   (define expr-space-path (space-syntax #f))
 
@@ -143,8 +143,8 @@
                        [else (cons (car l) (loop (cddr l)))]))]
                   [_ #f]))])
         (raise-argument-error* who rhombus-realm "Name" stx)))
-  
-  (define/arity (expanding_phase)
+
+  (define/arity (syntax_meta.expanding_phase)
     (syntax-local-phase-level))
 
   (define/arity syntax_meta.error
@@ -175,7 +175,7 @@
     #:static-infos ((#%call-result #,syntax-static-infos))
     (transform-in stx))
 
-  (define/arity (is_static id/op)
+  (define/arity (syntax_meta.is_static id/op)
     (define (fail)
       (raise-argument-error* who rhombus-realm "Identifier || Operator" id/op))
     (define s (unpack-term id/op #f #f))

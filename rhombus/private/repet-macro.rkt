@@ -8,12 +8,16 @@
                      "macro-result.rkt"
                      "tail-returner.rkt"
                      "name-root.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class))
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "realm.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
+                     (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "repetition.rkt"
          "space.rkt"
-         "name-root.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
@@ -28,8 +32,8 @@
   (define-name-root repet_meta
     #:fields
     (space
-     pack_list
-     unpack_list
+     [pack_list repet_meta.pack_list]
+     [unpack_list repet_meta.unpack_list]
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
@@ -104,36 +108,47 @@
          (extract-repetition (proc (wrap-parsed form) stx)
                              proc)))))
 
-(define-for-syntax (pack_list stx)
-  (syntax-parse (unpack-term stx 'repet_meta.pack #f)
-    #:datum-literals (group)
-    [(parens (group orig-form ...)
-             (group name:identifier)
-             seq-expr
-             (group bind-depth:exact-nonnegative-integer)
-             (group use-depth:exact-nonnegative-integer)
-             (group element-static-infos)
-             (group immediate?:boolean))
-     (wrap-parsed
-      (make-repetition-info #'(orig-form ...)
-                            #'name
-                            #'(rhombus-expression seq-expr)
-                            #'bind-depth
-                            #'use-depth
-                            (pack-static-infos #'element-static-infos 'repet_meta.pack)
-                            #'immediate?))]
-    [_ (raise-syntax-error 'repet_meta.pack_info
-                           "ill-formed unpacked repetiton info"
-                           stx)]))
+(define-for-syntax (check-syntax who s)
+  (unless (syntax? s)
+    (raise-argument-error* who rhombus-realm "Syntax" s)))
 
-(define-for-syntax (unpack_list stx)
-  (syntax-parse (unpack-term stx 'repet_meta.unpack #f)
-    [((~datum parsed) #:rhombus/repet r::repetition-info)
-     (pack-term
-      #`(parens (group . r.rep-expr)
-                (group r.name)
-                (group (parsed #:rhombus/expr r.seq-expr))
-                (group r.bind-depth)
-                (group r.use-depth)
-                (group #,(unpack-static-infos #'r.element-static-infos))
-                (group r.immediate?)))]))
+(begin-for-syntax
+  (define/arity (repet_meta.pack_list stx)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who stx)
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parens group)
+      [(parens (group orig-form ...)
+               (group name:identifier)
+               seq-expr
+               (group bind-depth:exact-nonnegative-integer)
+               (group use-depth:exact-nonnegative-integer)
+               (group element-static-infos)
+               (group immediate?:boolean))
+       (wrap-parsed
+        (make-repetition-info #'(orig-form ...)
+                              #'name
+                              #'(rhombus-expression seq-expr)
+                              #'bind-depth
+                              #'use-depth
+                              (pack-static-infos who #'element-static-infos)
+                              #'immediate?))]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "ill-formed unpacked repetiton info"
+                                 "syntax object" stx)]))
+
+  (define/arity (repet_meta.unpack_list stx)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who stx)
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed)
+      [(parsed #:rhombus/repet r::repetition-info)
+       (pack-term
+        #`(parens (group . r.rep-expr)
+                  (group r.name)
+                  (group (parsed #:rhombus/expr r.seq-expr))
+                  (group r.bind-depth)
+                  (group r.use-depth)
+                  (group #,(unpack-static-infos who #'r.element-static-infos))
+                  (group r.immediate?)))]))
+  )

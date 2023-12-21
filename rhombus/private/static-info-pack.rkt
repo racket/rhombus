@@ -1,18 +1,23 @@
 #lang racket/base
 (require syntax/parse/pre
-         "pack.rkt")
+         "realm.rkt")
 
 (provide unpack-static-infos
          pack-static-infos)
 
-(define (unpack-static-infos v)
-  (syntax-parse v
+(define (unpack-static-infos who stx)
+  (syntax-parse stx
     [((key val) ...)
-     #'(parens (group (parens (group key) (group val))) ...)]))
+     #'(parens (group (parens (group key) (group val))) ...)]
+    [_ (raise-arguments-error* who rhombus-realm
+                               "ill-formed packed static infos"
+                               "syntax object" stx)]))
 
-(define (pack-static-infos v who)
-  (syntax-parse v
+(define (pack-static-infos who stx)
+  (syntax-parse stx
     #:datum-literals (parens group)
     [(parens (group (parens (group key) (group val))) ...)
-     #'((key val) ...)]))
-
+     #'((key val) ...)]
+    [_ (raise-arguments-error* who rhombus-realm
+                               "ill-formed unpacked static infos"
+                               "syntax object" stx)]))

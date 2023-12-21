@@ -2,17 +2,18 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
-                     "srcloc.rkt"
                      "pack.rkt"
                      "pack-s-exp.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
-         "name-root.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
          "macro-macro.rkt"
@@ -65,7 +66,7 @@
     (space
      Group
      NestableGroup
-     pack_s_exp)))
+     [pack_s_exp decl_meta.pack_s_exp])))
 
 (define-for-syntax space
   (space-syntax rhombus/decl))
@@ -80,19 +81,20 @@
     #:attributes ()
     (pattern g
              #:when (nestable-declaration? #'g)))
-  
+
   (define-syntax-class-syntax Group
     (make-syntax-class #':is_declaration
                        #:kind 'group
                        #:fields #'()))
-  
+
   (define-syntax-class-syntax NestableGroup
     (make-syntax-class #':is_nestable_declaration
                        #:kind 'group
-                       #:fields #'())))
+                       #:fields #'()))
 
-(define-for-syntax (pack_s_exp orig-s)
-  #`(parsed
-     #:rhombus/decl
-     #,(pack-s-exp 'decl.pack_s_exp orig-s)))
-
+  (define/arity (decl_meta.pack_s_exp orig-s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    #`(parsed
+       #:rhombus/decl
+       #,(pack-s-exp who orig-s)))
+  )

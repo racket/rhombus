@@ -2,17 +2,18 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
-                     "srcloc.rkt"
                      "pack.rkt"
                      "pack-s-exp.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
-         "name-root.rkt"
          "definition.rkt"
          "macro-macro.rkt"
          "parse.rkt")
@@ -68,7 +69,7 @@
     (space
      Group
      SequenceStartGroup
-     pack_s_exp)))
+     [pack_s_exp defn_meta.pack_s_exp])))
 
 (define-for-syntax space
   (space-syntax rhombus/defn))
@@ -82,19 +83,20 @@
     #:attributes ()
     (pattern g
              #:when (definition-sequence? #'(g))))
-  
+
   (define-syntax-class-syntax Group
     (make-syntax-class #':is_definition
                        #:kind 'group
                        #:fields #'()))
-  
+
   (define-syntax-class-syntax SequenceStartGroup
     (make-syntax-class #':is_definition_sequence
                        #:kind 'group
-                       #:fields #'())))
+                       #:fields #'()))
 
-(define-for-syntax (pack_s_exp orig-s)
-  #`(parsed
-     #:rhombus/defn
-     #,(pack-s-exp 'defn.pack_s_exp orig-s)))
-
+  (define/arity (defn_meta.pack_s_exp orig-s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    #`(parsed
+       #:rhombus/defn
+       #,(pack-s-exp who orig-s)))
+  )

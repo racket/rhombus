@@ -8,13 +8,17 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
-                     (for-syntax racket/base)
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "realm.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
+                     "values-key.rkt"
+                     (for-syntax racket/base))
          "name-root.rkt"
          "macro-macro.rkt"
          "parse.rkt"
-         (submod "assign.rkt" for-assign)
-         (submod "syntax-object.rkt" for-quasiquote))
+         (submod "assign.rkt" for-assign))
 
 (provide (for-space rhombus/namespace
                     assign)
@@ -29,8 +33,8 @@
 (begin-for-syntax
   (define-name-root assign_meta
     #:fields
-    (unpack_left
-     pack_assignment
+    ([unpack_left assign_meta.unpack_left]
+     [pack_assignment assign_meta.pack_assignment]
      AssignParsed)))
 
 (define-operator-definition-transformer macro
@@ -93,42 +97,55 @@
            (raise-syntax-error #f "expected empty tail" tail))
          form))))
 
-(define-for-syntax (unpack_left stx)
-  (syntax-parse (unpack-term stx 'assign_meta.unpack_left #f)
-    #:datum-literals (parsed left-hand-side)
-    [(parsed #:rhombus/assign (left-hand-side ref set rhs-name))
-     (values #'(parsed #:rhombus/expr ref)
-             #'(parsed #:rhombus/expr set)
-             #'rhs-name)]))
-
-(define-for-syntax (pack_assignment stx)
-  #`(parsed #:rhombus/assign
-            (assignment
-             (rhombus-expression #,(unpack-group stx 'assign_meta.pack_expression #f)))))
+(define-for-syntax (check-syntax who s)
+  (unless (syntax? s)
+    (raise-argument-error* who rhombus-realm "Syntax" s)))
 
 (begin-for-syntax
+  (define/arity (assign_meta.unpack_left stx)
+    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
+                                               #,syntax-static-infos
+                                               #,syntax-static-infos)))))
+    (check-syntax who stx)
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed left-hand-side)
+      [(parsed #:rhombus/assign (left-hand-side ref set rhs-name))
+       (values #'(parsed #:rhombus/expr ref)
+               #'(parsed #:rhombus/expr set)
+               #'rhs-name)]))
+
+  (define/arity (assign_meta.pack_assignment stx)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who stx)
+    #`(parsed #:rhombus/assign
+              (assignment
+               (rhombus-expression #,(unpack-group stx who #f)))))
+
   (define-syntax-class (:assign-parsed ref set rhs-name)
     #:attributes (parsed tail)
     #:datum-literals (group)
     (pattern (group . assign::assign-op-seq)
              #:do [(define op (attribute assign.op))
-                   (define-values (assign-expr tail) (build-assign
-                                                      op
-                                                      #'assign.name
-                                                      #`(rhombus-expression #,(unpack-group ref 'assign_meta.AssignParsed #f))
-                                                      #`(rhombus-expression #,(unpack-group set 'assign_meta.AssignParsed #f))
-                                                      (if (identifier? rhs-name)
-                                                          rhs-name
-                                                          (raise-argument-error 'assign_meta.AssignParsed
-                                                                                "Identifier"
-                                                                                rhs-name))
-                                                      #'assign.tail))]
-             #:attr parsed assign-expr
-             #:attr tail tail))
-  (define-syntax-class-syntax AssignParsed (make-syntax-class
-                                            #':assign-parsed
-                                            #:arity 8
-                                            #:kind 'group
-                                            #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr))
-                                                        (tail #f tail tail unpack-tail-list*))
-                                            #:root-swap '(parsed . group))))
+                   (define-values (assign-expr tail)
+                     (build-assign
+                      op
+                      #'assign.name
+                      #`(rhombus-expression #,(unpack-group ref 'assign_meta.AssignParsed #f))
+                      #`(rhombus-expression #,(unpack-group set 'assign_meta.AssignParsed #f))
+                      (if (identifier? rhs-name)
+                          rhs-name
+                          (raise-argument-error 'assign_meta.AssignParsed
+                                                "Identifier"
+                                                rhs-name))
+                      #'assign.tail))]
+             #:with parsed assign-expr
+             #:with tail tail))
+  (define-syntax-class-syntax AssignParsed
+    (make-syntax-class
+     #':assign-parsed
+     #:arity 8
+     #:kind 'group
+     #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr))
+                 (tail #f tail tail unpack-tail-list*))
+     #:root-swap '(parsed . group)))
+  )

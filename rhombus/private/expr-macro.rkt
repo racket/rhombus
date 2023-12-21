@@ -7,17 +7,20 @@
                      "pack.rkt"
                      "pack-s-exp.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     (for-syntax racket/base)
                      "tail-returner.rkt"
-                     "realm.rkt")
+                     "name-root.rkt"
+                     "realm.rkt"
+                     "define-arity.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     "call-result-key.rkt"
+                     "values-key.rkt"
+                     (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
-         "name-root.rkt"
          "macro-macro.rkt"
          "expression.rkt"
          "parse.rkt"
          "wrap-expression.rkt"
-         (for-syntax "name-root.rkt")
          "parse-meta.rkt"
          "parse-and-meta.rkt")
 
@@ -39,12 +42,12 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
-     parse_more
-     parse_all
-     pack_s_exp
-     pack_expr
-     pack_meta_expr
-     pack_and_meta_expr)))
+     [parse_more expr_meta.parse_more]
+     [parse_all expr_meta.parse_all]
+     [pack_s_exp expr_meta.pack_s_exp]
+     [pack_expr expr_meta.pack_expr]
+     [pack_meta_expr expr_meta.pack_meta_expr]
+     [pack_and_meta_expr expr_meta.pack_and_meta_expr])))
 
 (define-for-syntax space
   (space-syntax #f))
@@ -111,38 +114,54 @@
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
 
-(define-for-syntax (pack_s_exp orig-s)
-  #`(parsed
-     #:rhombus/expr
-     #,(pack-s-exp 'expr.pack_s_exp orig-s)))
-
-(define-for-syntax (pack_expr s)
+(define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  (define g (unpack-group s 'expr.pack_expr #f))
-  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g))))
+    (raise-argument-error* who rhombus-realm "Syntax" s)))
 
-(define-for-syntax (pack_meta_expr s)
-  (unless (syntax? s)
-    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  (define g (unpack-group s 'expr.pack_expr #f))
-  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g))))
+(begin-for-syntax
+  (define/arity (expr_meta.pack_s_exp orig-s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    #`(parsed
+       #:rhombus/expr
+       #,(pack-s-exp who orig-s)))
 
-(define-for-syntax (pack_and_meta_expr s)
-  (unless (syntax? s)
-    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
-  (define g (unpack-group s 'expr.pack_expr #f))
-  (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
+  (define/arity (expr_meta.pack_expr s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who s)
+    (define g (unpack-group s who #f))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g))))
 
-(define-for-syntax (parse_more s)
-  (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
-    [e::expression
-     (define new-e (rhombus-local-expand #'e.parsed))
-     (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))
+  (define/arity (expr_meta.pack_meta_expr s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who s)
+    (define g (unpack-group s who #f))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g))))
 
-(define-for-syntax (parse_all s)
-  (syntax-parse (unpack-group s 'expr_meta.parse_more #f)
-    [e::expression
-     (define-values (expr opaque) (syntax-local-expand-expression (syntax-local-introduce (transform-out #'e.parsed))))
-     (values (relocate+reraw expr #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce expr))))
-             (relocate+reraw expr #`(parsed #:rhombus/expr #,(transform-in (syntax-local-introduce opaque)))))]))
+  (define/arity (expr_meta.pack_and_meta_expr s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who s)
+    (define g (unpack-group s who #f))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
+
+  (define/arity (expr_meta.parse_more s)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (check-syntax who s)
+    (syntax-parse (unpack-group s who #f)
+      [e::expression
+       (define new-e (rhombus-local-expand #'e.parsed))
+       (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))
+
+  (define/arity (expr_meta.parse_all s)
+    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
+                                               #,syntax-static-infos)))))
+    (check-syntax who s)
+    (syntax-parse (unpack-group s who #f)
+      [e::expression
+       (define-values (expr opaque)
+         (syntax-local-expand-expression
+          (syntax-local-introduce (transform-out #'e.parsed))))
+       (values (relocate+reraw expr #`(parsed #:rhombus/expr
+                                              #,(transform-in (syntax-local-introduce expr))))
+               (relocate+reraw expr #`(parsed #:rhombus/expr
+                                              #,(transform-in (syntax-local-introduce opaque)))))]))
+  )

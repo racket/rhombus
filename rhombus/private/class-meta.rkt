@@ -1,5 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base) ; for `unsyntax` binding
+(require (for-syntax racket/base)
          syntax/parse/pre
          enforest/syntax-local
          "define-arity.rkt"
@@ -24,8 +24,8 @@
 
 (define-name-root class_meta
   #:fields
-  [Info
-   describe])
+  (Info
+   [describe class_meta.describe]))
 
 (define/method (class_meta.Info.lookup info key)
   (lookup who info key))
@@ -40,6 +40,10 @@
   #:methods
   ([lookup class_meta.Info.lookup]
    ))
+
+(define/arity (class_meta.describe id)
+  #:static-infos ((#%call-result #,class-data-static-infos))
+  (describe who id))
 
 (struct class-expand-data class-data (stx accum-stx))
 (struct class-describe-data class-data (desc private-idesc))
@@ -248,8 +252,7 @@
                              "unrecognized key symbol"
                              "symbol" key)]))
 
-(define/arity (describe id)
-  #:static-infos ((#%call-result #,class-data-static-infos))
+(define (describe who id)
   (unless (identifier? id)
     (raise-argument-error* who rhombus-realm "Identifier" id))
   (define desc (syntax-local-value* (in-class-desc-space id) class-desc-ref))

@@ -1,17 +1,23 @@
 #lang racket/base
 (require syntax/parse/pre
-         "pack.rkt")
+         "realm.rkt")
 
 (provide unpack-uses
          pack-uses)
 
-(define (unpack-uses v)
-  (syntax-parse v
+(define (unpack-uses who stx)
+  (syntax-parse stx
     [(stx ...)
-     #'(brackets (group stx) ...)]))
+     #'(brackets (group stx) ...)]
+    [_ (raise-arguments-error* who rhombus-realm
+                               "ill-formed unpacked uses"
+                               "syntax object" stx)]))
 
-(define (pack-uses v who)
-  (syntax-parse v
+(define (pack-uses who stx)
+  (syntax-parse stx
     #:datum-literals (brackets group)
     [(brackets (group stx) ...)
-     #'(stx ...)]))
+     #'(stx ...)]
+    [_ (raise-arguments-error* who rhombus-realm
+                               "ill-formed packed uses"
+                               "syntax object" stx)]))
