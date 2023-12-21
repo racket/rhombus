@@ -16,7 +16,7 @@
          "index-key.rkt"
          "append-key.rkt"
          "define-arity.rkt"
-         "static-info.rkt"
+         (submod "literal.rkt" for-info)
          (submod "annotation.rkt" for-class)
          "mutability.rkt"
          "pack.rkt"
@@ -277,4 +277,4 @@
 (define-grapheme count)
 
 (begin-for-syntax
-  (install-static-infos! 'string string-static-infos))
+  (install-literal-static-infos! 'string string-static-infos))

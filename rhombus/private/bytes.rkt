@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          "provide.rkt"
-         "static-info.rkt"
+         (submod "literal.rkt" for-info)
          "define-arity.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
@@ -129,4 +129,4 @@
     [(bstr dest-start src src-start src-end) (bytes-copy! bstr dest-start src src-start src-end)]))
 
 (begin-for-syntax
-  (install-static-infos! 'bytes bytes-static-infos))
+  (install-literal-static-infos! 'bytes bytes-static-infos))

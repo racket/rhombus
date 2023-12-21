@@ -36,17 +36,11 @@
            static-infos-intersect
            static-infos-union
            static-infos-remove
-           make-static-infos
-           install-static-infos!
-           (rename-out [string-static-infos indirect-string-static-infos]
-                       [bytes-static-infos indirect-bytes-static-infos])))
+           make-static-infos))
 
 (provide define-static-info-syntax
          define-static-info-syntaxes
          define-static-info-syntax/maybe)
-
-(module+ for-literal
-  (provide (for-syntax quoted-static-infos)))
 
 (begin-for-syntax
   (property static-info (get-stxs))
@@ -67,7 +61,8 @@
         [(key:identifier val) (wrap-static-info expr #'key #'val)])))
 
   (define-syntax-class (:static-info key-id)
-    #:literals (begin quote-syntax quote)
+    #:attributes (val)
+    #:literals (begin quote-syntax)
     (pattern id:identifier
              #:do [(define v (syntax-local-value* (in-static-info-space
                                                    (out-of-expression-space #'id))
@@ -75,22 +70,16 @@
                    (define val (and v
                                     (static-info-lookup ((static-info-get-stxs v)) key-id)))]
              #:when val
-             #:attr val val)
+             #:with val val)
     (pattern (begin (quote-syntax (~and form (key:identifier val))) _)
              #:when (free-identifier=? #'key key-id))
     (pattern (begin (quote-syntax (~and form (key:identifier indirect-id))) _)
              #:when (free-identifier=? #'key #'#%indirect-static-info)
-             #:do [(define v (indirect-static-info-ref #'indirect-id key-id))]
-             #:when v
-             #:attr val v)
-    (pattern (begin (quote-syntax _) (~var e (:static-info key-id)))
-             #:attr val #'e.val)
-    (pattern (quote d)
-             #:do [(define si (quoted-static-infos #'d))]
-             #:when si
-             #:do [(define v (static-info-lookup si key-id))]
-             #:when v
-             #:attr val v))
+             #:do [(define val (indirect-static-info-ref #'indirect-id key-id))]
+             #:when val
+             #:with val val)
+    (pattern (begin (quote-syntax _) (~var || (:static-info key-id))))
+    )
 
   (define (syntax-local-static-info expr key-id)
     (syntax-parse expr
@@ -101,36 +90,23 @@
   (define (indirect-static-info-ref id key-id)
     (syntax-local-static-info id key-id))
 
-  (define string-static-infos #f)
-  (define bytes-static-infos #f)
-  (define (install-static-infos! kind static-infos)
-    (case kind
-      [(string) (set! string-static-infos static-infos)]
-      [(bytes) (set! bytes-static-infos static-infos)]
-      [else (error 'install-static-infos! "unrecognized kind" kind)]))
-
   (define (extract-static-infos e)
-    (syntax-parse e
-      #:literals (begin quote-syntax quote)
-      [id:identifier
-       (cond
-         [(syntax-local-value* (in-static-info-space #'id)
-                               static-info-ref)
-          => (lambda (v)
-               (define si ((static-info-get-stxs v)))
-               (if (syntax? si)
-                   (syntax->list si)
-                   si))]
-         [else null])]
-      [(begin (quote-syntax (~and form (key:identifier val))) e)
-       (cons #'form (extract-static-infos #'e))]
-      [(quote d) (or (quoted-static-infos #'d) null)]
-      [_ null]))
-
-  (define (quoted-static-infos d-stx)
-    (define d (syntax-e d-stx))
-    (or (and (string? d) string-static-infos)
-        (and (bytes? d) bytes-static-infos)))
+    (let loop ([e e] [inner? #f])
+      (syntax-parse e
+        #:literals (begin quote-syntax)
+        [id:identifier
+         (cond
+           [(syntax-local-value* (in-static-info-space #'id)
+                                 static-info-ref)
+            => (lambda (v)
+                 (define si ((static-info-get-stxs v)))
+                 (if (and inner? (syntax? si))
+                     (syntax->list si)
+                     si))]
+           [else null])]
+        [(begin (quote-syntax (~and form (key:identifier val))) e)
+         (cons #'form (loop #'e #t))]
+        [_ null])))
 
   (define (unwrap-static-infos e)
     (syntax-parse e

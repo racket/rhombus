@@ -4,13 +4,18 @@
                      shrubbery/print
                      "annotation-string.rkt")
          "binding.rkt"
-         "static-info.rkt"
-         (submod "static-info.rkt" for-literal))
+         "static-info.rkt")
 
 (provide literal-infoer
          ;; useful for other binding patterns:
          literal-commit-nothing
          literal-bind-nothing)
+
+(module+ for-info
+  (provide (for-syntax (rename-out [string-static-infos indirect-string-static-infos]
+                                   [bytes-static-infos indirect-bytes-static-infos])
+                       install-literal-static-infos!
+                       literal-static-infos)))
 
 (define-syntax (literal-infoer stx)
   (syntax-parse stx
@@ -21,11 +26,11 @@
                            (for/list ([datum (in-list (syntax->list #'(datum ...)))])
                              (string-append " || " (literal->string datum)))))
                    #'literal
-                   ;; assumption: quoted static infos are disjoint constants
-                   (or (let ([si (quoted-static-infos #'datum0)])
+                   ;; assumption: literal static infos are disjoint constants
+                   (or (let ([si (literal-static-infos #'datum0)])
                          (and si
                               (for/and ([datum (in-list (syntax->list #'(datum ...)))])
-                                (eq? (quoted-static-infos datum) si))
+                                (eq? (literal-static-infos datum) si))
                               (static-infos-union si #'up-static-infos)))
                        #'up-static-infos)
                    #'()
@@ -59,3 +64,16 @@
   (syntax-parse stx
     [(_ arg-id datums)
      #'(begin)]))
+
+(define-for-syntax string-static-infos #f)
+(define-for-syntax bytes-static-infos #f)
+(define-for-syntax (install-literal-static-infos! kind static-infos)
+  (case kind
+    [(string) (set! string-static-infos static-infos)]
+    [(bytes) (set! bytes-static-infos static-infos)]
+    [else (error "unrecognized kind" kind)]))
+
+(define-for-syntax (literal-static-infos d-stx)
+  (define d (syntax-e d-stx))
+  (or (and (string? d) string-static-infos)
+      (and (bytes? d) bytes-static-infos)))

@@ -13,7 +13,8 @@
          "setmap.rkt"
          "literal.rkt"
          "parens.rkt"
-         (submod "static-info.rkt" for-literal)
+         "static-info.rkt"
+         (submod "literal.rkt" for-info)
          "is-static.rkt")
 
 (provide (for-space #f
@@ -72,7 +73,14 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (relocate #'datum #'(quote datum) #'datum) ; copies all props, including originalness
+        (define quoted-datum
+          ;; copies all props, including originalness
+          (relocate #'datum #'(quote datum) #'datum))
+        (values (cond
+                  [(literal-static-infos #'datum)
+                   => (lambda (si)
+                        (wrap-static-info* quoted-datum si))]
+                  [else quoted-datum])
                 #'tail)]))))
 
 (define-binding-syntax #%literal
@@ -96,7 +104,7 @@
                                       (syntax/loc #'datum (quote datum))
                                       0
                                       0
-                                      (or (quoted-static-infos #'datum)
+                                      (or (literal-static-infos #'datum)
                                           #'())
                                       #t)
                 #'tail)]))))
