@@ -86,7 +86,7 @@ refers to a @rhombus(vector_dot_provider) that we will define:
     annot.macro 'Vector':
       annot_meta.pack_predicate(
         'fun (x): x is_a Posn',
-        '(($(statinfo_meta.dot_provider_key),
+        '(($statinfo_meta.dot_provider_key,
            vector_dot_provider))'
       )
 )
@@ -133,7 +133,7 @@ by using @rhombus(statinfo_meta.wrap):
     expr.macro 'or_zero $p $tail ...':
       statinfo_meta.wrap(
         '$p || Posn(0,0)',
-        '(($(statinfo_meta.dot_provider_key),
+        '(($statinfo_meta.dot_provider_key,
            vector_dot_provider))'
       )
   ~repl:
@@ -163,15 +163,19 @@ representation.
  information. The overall right-hand side result for
  @rhombus(statinfo.macro) is similarly automatically packed.}
 
-@rhombusblock(
-  fun zero():
-    Posn(0, 0)
-  statinfo.macro 'zero':
-     '($(statinfo_meta.call_result_key),
-       $(statinfo_meta.pack(
-           '(($(statinfo_meta.dot_provider_key),
-              vector_dot_provider))')))'
-  zero().magnitude  // prints 0
+@examples(
+  ~eval: ann_eval
+  ~defn:
+    fun zero():
+      Posn(0, 0)
+    statinfo.macro 'zero':
+      '(($statinfo_meta.call_result_key,
+         $(statinfo_meta.pack(
+             '(($statinfo_meta.dot_provider_key,
+                vector_dot_provider))'
+           ))))'
+  ~repl:
+    zero().magnitude
 )
 
 The @rhombus(statinfo.macro) form expects @rhombus('') containing an

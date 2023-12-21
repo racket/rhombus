@@ -5,7 +5,7 @@
 @title{Bitmap}
 
 @doc(
-  class Bitmap():
+  class Bitmap(handle :: Any):
     constructor (
       width :: PosInt,
       height :: PosInt,
