@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 check:
   match Pair.cons(7, 8)
@@ -19,7 +21,8 @@ check:
 block:
   let mutable cnt = 0
   fun f(x):
-    // literals for initial patterns should be converted to `case` internally
+    // literals for initial patterns should be converted to
+    // `case/equal-always` internally
     match (block:
              // check whether expression is repeatedly evaluated
              cnt := cnt + 1
@@ -45,4 +48,21 @@ check (match 1 | 1 || 2: "yes") ~is "yes"
 check (match 2 | 1 || 2: "yes") ~is "yes"
 check (match 3 | 1 || 2: "yes") ~throws "no matching case"
 
-check ( match 'ok (1)' | '«ok '$x'»': "ok") ~throws "expected quotes"
+check (match 'ok (1)' | '«ok '$x'»': "ok") ~throws "expected quotes"
+
+version_guard.at_least "8.11.1.8":
+  // check `==` semantics applies as opposed to `is_now`
+  // in other words, `case/equal-always` is really used
+  check:
+    match Bytes.copy(#"byte string"):
+    | #"byte string": "matched"
+    | ~else: "unmatched"
+    ~is "unmatched"
+
+  check:
+    import:
+      lib("racket/base.rkt").#{string-copy}
+    match #{string-copy}("string"):
+    | "string": "matched"
+    | ~else: "unmatched"
+    ~is "unmatched"
