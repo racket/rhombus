@@ -136,3 +136,29 @@ check:
     each elem: Posn(1, 2)
     elem[0]
   ~is [1]
+
+// Use `:` form of bindings
+check:
+  class Posn(x, y):
+    nonfinal
+    implements Sequenceable
+    override method to_sequence():
+      "oops"
+    sequence '$lhs: $rhs':
+      '(~outer_binds:
+          p: $rhs,
+        ~recur_binds:
+          pos = 0,
+        ~head_guard:
+          pos < 2,
+        ~inner_binds:
+          $lhs: if pos == 0 | Posn.y(p) | Posn.x(p),
+        ~recur_args:
+          (pos + 1))'
+    method self_iterate():
+      for (x: this):
+        x
+  for List:
+    each elem: Posn(1, 2)
+    elem
+  ~is [2, 1]

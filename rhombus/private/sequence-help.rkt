@@ -36,8 +36,8 @@
              #:attr (rhs 1) '()
              #:do [(raise-too-many-equals #'stx #'a #'b)])
     (pattern (group bind ... _::equal rhs ...))
-    (pattern (group bind ... (btag::block body ...))
-             #:attr (rhs 1) (list #'(group block (b-tag body ...))))))
+    (pattern (group bind ... (b-tag::block body ...))
+             #:attr (rhs 1) (list #'block #'(b-tag body ...)))))
 
 (define-for-syntax (make_sequence_constructor proc)
   (lambda (stx)
