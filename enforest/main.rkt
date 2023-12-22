@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         racket/symbol
          syntax/parse/pre
          syntax/stx
          "operator.rkt"
@@ -324,46 +325,26 @@
             [(eq? rel-prec 'stronger)
              (values init-form stxes)]
             [else
-             (cond
-               [(or (eq? rel-prec 'inconsistent-prec)
-                    (eq? rel-prec 'inconsistent-assoc))
-                (raise-syntax-error #f
-                                    (format
-                                     (string-append "inconsistent operator ~a declared\n"
-                                                    "  left operator: ~a\n"
-                                                    "  right operator: ~a")
-                                     (if (eq? rel-prec 'inconsistent-prec)
-                                         "precedence"
-                                         "associativity")
-                                     (syntax-e current-op-stx)
-                                     (syntax-e op-stx))
-                                    op-stx)]
-               [(eq? rel-prec 'same)
-                (raise-syntax-error #f
-                                    "non-associative operator needs explicit parenthesization"
-                                    op-stx)]
-               [(eq? rel-prec 'same-on-left)
-                (raise-syntax-error #f
-                                    (format
-                                     (string-append
-                                      "combination of ~as at same precedence, but only in the other order;\n"
-                                      " needs explicit parenthesization\n"
-                                      "  earlier operator: ~a")
-                                     operator-kind-str
-                                     (syntax-e current-op-stx))
-                                    op-stx
-                                    #f
-                                    (list current-op-stx))]
-               [else
-                (raise-syntax-error #f
-                                    (format
-                                     (string-append
-                                      "combination of ~as without declared relative precedence;\n"
-                                      " needs explicit parenthesization\n"
-                                      "  other operator: ~a")
-                                     operator-kind-str
-                                     (syntax-e current-op-stx))
-                                    op-stx)])]))
+             (raise-syntax-error
+              (syntax-e op-stx)
+              (string-append
+               "explicit parenthesization needed"
+               ";\n found operators "
+               (cond
+                 [(or (and (eq? rel-prec 'inconsistent-prec) "precedence")
+                      (and (eq? rel-prec 'inconsistent-assoc) "associativity"))
+                  => (lambda (what)
+                       (string-append "with inconsistently declared " what))]
+                 [(or (and (eq? rel-prec 'same) "both are non-associative")
+                      (and (eq? rel-prec 'same-on-left) "only in the other order"))
+                  => (lambda (why)
+                       (string-append "at same precedence, but " why))]
+                 [else "without declared precedence or associativity"])
+               "\n  operator kind: " operator-kind-str
+               "\n  earlier operator: " (symbol->immutable-string (syntax-e current-op-stx)))
+              stxes
+              #f
+              (list current-op-stx op-stx))]))
 
         (define (dispatch-infix-implicit implicit-name context-stx head-stx)
           (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form context-stx head-stx in-space
