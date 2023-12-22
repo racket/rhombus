@@ -6,8 +6,6 @@
 
 @(def macro_eval = macro.make_macro_eval())
 
-@(def dollar = @rhombus($))
-
 @title{Reducer Macros}
 
 @doc(
@@ -37,10 +35,10 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    reducer.macro 'Array5':
+    reducer.macro '(Array.len5)':
       'Array ~length 5'
   ~repl:
-    for Array5 (i: 0..3): i
+    for Array.len5 (i: 0..3): i
 )
 
  Here's an example that sums only the positive numbers that result
@@ -52,7 +50,7 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    reducer.macro 'SumPosTo20':
+    reducer.macro 'sum_pos_to_20':
       reducer_meta.pack(
         'sptt_return',
         '(accum = 0)',
@@ -77,12 +75,12 @@
     expr.macro 'sptt_step_result [$new_accum, $_]':
       '$new_accum'
   ~repl:
-    for SumPosTo20 (a: [6, -4, 3]): a
-    for SumPosTo20 (a: 3..): a
+    for sum_pos_to_20 (a: [6, -4, 3]): a
+    for sum_pos_to_20 (a: 3..): a
 )
 
  This example shows that reducers can be chained; specifically, it
- creates a @rhombus(WithCount) reducer, that chains onto an existing reducer
+ creates a @rhombus(counted) reducer, that chains onto an existing reducer
  and keeps track of the number of elements while allowing the prior
  reducer to operate normally. The bulk of the code in this example
  is in showing how to explicitly fall through to the macros defined
@@ -91,18 +89,23 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    reducer.macro 'WithCount($(r :: reducer_meta.Parsed))':
-      let '($wrap, ($bind, ...), $step, $break, $final, $finish, $_, $data)':
+    reducer.macro 'counted($(r :: reducer_meta.Parsed))':
+      let '($wrap, ($binds),
+            $step, $break, $final, $finish,
+            $si, $data)':
         reducer_meta.unpack(r)
       reducer_meta.pack(
         'build_return',
-        '($bind, ..., count = 0)',
+        '($binds, count = 0)',
         'build_inc',
         break.unwrap() && 'build_break',
         final.unwrap() && 'build_final',
         'build_finish',
-        '()',
-        '[count, $wrap, $step, $break, $final, $finish, $data]'
+        '(($statinfo_meta.values_key,
+           $(statinfo_meta.pack_group('$si ()'))))',
+        '[count,
+          $wrap, $step, $break, $final, $finish,
+          $data]'
       )
     expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
       'block:
@@ -117,8 +120,19 @@
     expr.macro 'build_finish [$count, $_, $_, $_, $_, $finish, $data]':
       'values($finish $data, $count + 1)'
   ~repl:
-    for WithCount(List) (i: 0..3): i
-    for WithCount(Map) (i: 0..3): values(i, "val" +& i)
+    for counted(List) (i: 0..3): i
+  ~defn:
+    :
+      // static information is also chained
+      def (map, count):
+        for counted(Map) (i: 0..10):
+          keep_when i mod 2 == 0
+          values(i, "val" +& i)
+  ~repl:
+    values(map, count)
+    block:
+      use_static
+      map.remove(2)
 )
 
 }
@@ -143,7 +157,7 @@
 
  @rhombusblock(
   '(#,(@rhombus(complete_id, ~var)),    // expression macro
-    (#,(@rhombus(accum_id, ~var)) = #,(@rhombus(accum_expr, ~var)), ...),
+    (#,(@rhombus(accum_id, ~var)) #,(@rhombus(=, ~datum)) #,(@rhombus(accum_expr, ~var)), ...),
     #,(@rhombus(step_id, ~var)),        // definition macro
     #,(@rhombus(break_id, ~var)),       // optional expression macro
     #,(@rhombus(final_id, ~var)),       // optional expression macro

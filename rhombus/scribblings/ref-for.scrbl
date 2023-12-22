@@ -160,6 +160,8 @@
         [k, j]
     grid2(2, 3)
   ~repl:
+    for Map (i: 0..3):
+      values(i, i +& "!")
     for Map:
       each i: 0..3
       values(i, i +& "!")

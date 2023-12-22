@@ -98,7 +98,7 @@
  Analogous to @rhombus(statinfo_meta.pack) and
  @rhombus(statinfo_meta.unpack), but for a sequence of static information
  sets, such as one set of static information per value produced by a
- multiple-value expression (see @rhombus(statinfo_meta.values_key).
+ multiple-value expression (see @rhombus(statinfo_meta.values_key)).
 
  An unpacked sequence is represented as a group syntax object, where
  each term in the group is unpacked static information in the sense of
