@@ -14,7 +14,13 @@
          "realm.rkt"
          "parens.rkt"
          (submod "quasiquote.rkt" for-match)
-         (only-in "literal.rkt" literal-infoer))
+         (only-in "literal.rkt" literal-infoer)
+         "version-case.rkt")
+;; TEMP approximate `case/equal-always`
+(meta-if-version-at-least
+ "8.11.1.8"
+ (require (only-in racket/case case/equal-always))
+ (require (only-in racket/base [case case/equal-always])))
 
 (provide match)
 
@@ -126,7 +132,7 @@
      (relocate+reraw
       (respan stx)
       #`(let ([val #,in-expr])
-          (case val
+          (case/equal-always val
             #,@(for/list ([parsed (in-list lit-parseds)]
                           [rhs (in-list lit-rhss)])
                  (syntax-parse parsed
