@@ -9,5 +9,4 @@
         "where.rhm"
         "described_as.rhm"
         "sequence.rhm"
-        "class_together.rhm"
-        "rrbtree.rhm")
+        "class_together.rhm")
