@@ -6,7 +6,6 @@
          "private/transform.rkt"
          "hier-name-parse.rkt"
          "name-root.rkt"
-         (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
          "private/check.rkt"
          "implicit.rkt")
@@ -67,7 +66,7 @@
                     #:do [(define head-id (in-space #'hname.name))
                           (define t (syntax-local-value* head-id transformer-ref))]
                     #:when t
-                    #:attr parsed (transform-in ; back to an enclosing transformer, if any
+                    #:with parsed (transform-in ; back to an enclosing transformer, if any
                                    (apply-transformer t (transform-out head-id)
                                                       (begin
                                                         (transform-out ; from an enclosing transformer
@@ -79,14 +78,14 @@
                     #:cut
                     #:with () #'inside-tail
                     #:with () #'tail
-                    #:attr parsed #'inside)
+                    #:with parsed #'inside)
            (pattern ((~datum group) head . tail)
                     #:do [(define-values (implicit-name* ctx) (select-prefix-implicit #'head))
                           (define implicit-name (datum->syntax ctx implicit-name*))
                           (define implicit-id (in-space implicit-name))
                           (define t (syntax-local-value* implicit-id transformer-ref))]
                     #:when t
-                    #:attr parsed (transform-in
+                    #:with parsed (transform-in
                                    (apply-transformer t (transform-out implicit-id)
                                                       (transform-out
                                                        (datum->syntax #f (list* implicit-name #'head #'tail)))

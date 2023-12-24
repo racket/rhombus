@@ -29,7 +29,7 @@
 
   (define-syntax-class :update-provider
     (pattern (~var ref-id (:static-info #'#%dot-provider))
-             #:attr id #'ref-id.val)))
+             #:with id #'ref-id.val)))
 
 (define-syntax with
   (expression-infix-operator

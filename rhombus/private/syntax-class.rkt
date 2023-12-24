@@ -277,10 +277,10 @@
     #:datum-literals (group op)
     #:literals (rhombus...)
     (pattern id:identifier
-             #:attr depth #'0)
+             #:with depth #'0)
     (pattern (_::brackets (group a::attribute-lhs) (group (op rhombus...)))
-             #:attr id #'a.id
-             #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
+             #:with id #'a.id
+             #:with depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
 ;; Returns two values:
 ;;   * a `pattern` form suitable to use in `define-syntax-class`

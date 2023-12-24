@@ -17,10 +17,10 @@
   (define-syntax-class :field-lhs
     #:datum-literals (group)
     (pattern id:identifier
-             #:attr depth #'0)
+             #:with depth #'0)
     (pattern (_::brackets (group a::field-lhs) (group _::...-bind))
-             #:attr id #'a.id
-             #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
+             #:with id #'a.id
+             #:with depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
 (define-pattern-clause-syntax field
   (pattern-clause-transformer

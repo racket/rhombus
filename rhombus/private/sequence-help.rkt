@@ -2,8 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      version/utils
-                     "parse.rkt"
-                     "pack.rkt")
+                     "parse.rkt")
          "definition.rkt"
          "parse.rkt"
          "parens.rkt"
@@ -32,12 +31,12 @@
     #:attributes ([bind 1] [rhs 1])
     #:datum-literals (group)
     (pattern (~and stx (group _ ... a::equal _ ... b::equal . _))
-             #:attr (bind 1) #f
-             #:attr (rhs 1) '()
-             #:do [(raise-too-many-equals #'stx #'a #'b)])
+             #:do [(raise-too-many-equals #'stx #'a #'b)]
+             #:with (bind ...) '()
+             #:with (rhs ...) '())
     (pattern (group bind ... _::equal rhs ...))
     (pattern (group bind ... (b-tag::block body ...))
-             #:attr (rhs 1) (list #'block #'(b-tag body ...)))))
+             #:with (rhs ...) #'(block (b-tag body ...)))))
 
 (define-for-syntax (make_sequence_constructor proc)
   (lambda (stx)

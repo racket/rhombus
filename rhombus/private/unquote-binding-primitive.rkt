@@ -65,7 +65,7 @@
   (define-splicing-syntax-class :syntax-class-args
     (pattern (~seq (~and args (_::parens . _))))
     (pattern (~seq)
-             #:attr args #'#f))
+             #:with args #'#f))
   (define (parse-syntax-class-args stx-class rator-in arity class-args)
     (cond
       [(not arity)

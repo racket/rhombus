@@ -78,7 +78,7 @@
                                                                   (in-name-root-space #'root)
                                                                   (syntax->list #'(field ...))))]
              #:when target+remains+space
-             #:attr name (datum->syntax #f (list #'root (car target+remains+space))))
+             #:with name (datum->syntax #f (list #'root (car target+remains+space))))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
     #:attributes (name)
@@ -89,11 +89,9 @@
                                                                   (syntax->list #'(field ... opname))
                                                                   #:parens #'ptag))]
              #:when target+remains+space
-             #:attr name (datum->syntax #f (list #'root (car target+remains+space))))
-    (pattern (~seq (op id:identifier))
-             #:attr name #'id)
-    (pattern (~seq (~var id (identifier-target space-name)))
-             #:attr name #'id.name)))
+             #:with name (datum->syntax #f (list #'root (car target+remains+space))))
+    (pattern (~seq (op name:identifier)))
+    (pattern (~seq (~var || (identifier-target space-name))))))
 
 (define-for-syntax (head-extract-name stx space-name)
   (syntax-parse stx

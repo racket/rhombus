@@ -36,7 +36,7 @@
              #:do [(define op (syntax-local-value* #'name.name assign-infix-operator-ref))]
              #:when op
              #:attr op op
-             #:attr tail #'name.tail))
+             #:with tail #'name.tail))
 
   (define (build-assign/automatic proc self-stx ref set rhs-name rhs)
     (proc ref set rhs self-stx rhs-name))

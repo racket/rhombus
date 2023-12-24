@@ -3,7 +3,6 @@
                      syntax/parse/pre
                      racket/symbol)
          "space-clause.rkt"
-         "space.rkt"
          "parens.rkt")
 
 (provide (for-space rhombus/space_clause
@@ -26,7 +25,7 @@
     #:attributes (name)
     #:datum-literals (/ op)
     (pattern (~seq root:identifier (~seq (op /) part:identifier) ...+)
-             #:attr name (datum->syntax
+             #:with name (datum->syntax
                           #f
                           (string->symbol
                            (apply string-append
@@ -34,7 +33,7 @@
                                   (map id->string
                                        (syntax->list #'((~@ / part) ...)))))))
     (pattern (~seq name:identifier)))
-  
+
   (define (id->string s) (symbol->immutable-string (syntax-e s))))
 
 (define-space-clause-syntax space_path

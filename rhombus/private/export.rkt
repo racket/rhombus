@@ -114,14 +114,14 @@
                                                                    "base export" parsed-ex)])))
 
   (define-syntax-class :modified-export
+    #:attributes (parsed)
     #:datum-literals (group)
     (pattern (group mod-id:identifier mod-arg ... (_::block exp ...))
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
-             #:with (~var ex (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...)))) #'(group mod-id mod-arg ...)
-             #:attr parsed #'ex.parsed)
-    (pattern e0::export
-             #:attr parsed #'e0.parsed))
+             #:with (~var || (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...))))
+             #`(#,group-tag mod-id mod-arg ...))
+    (pattern ::export))
 
   (define (apply-modifiers mods e-parsed)
     (cond
@@ -165,8 +165,8 @@
     #:datum-literals (group)
     (pattern (group . (~var int (:hier-name-seq in-name-root-space values name-path-op name-root-ref)))
              #:with (_::as-id ext::name) #'int.tail
-             #:attr int-name #'int.name
-             #:attr ext-name #'ext.name)))
+             #:with int-name #'int.name
+             #:with ext-name #'ext.name)))
 
 (define-export-syntax as
   (export-prefix-operator

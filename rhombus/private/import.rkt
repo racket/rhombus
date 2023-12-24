@@ -236,7 +236,7 @@
     #:datum-literals (group)
     (pattern (group mod-id:identifier mod-arg ... (_::block imp ...))
              #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
-             #:attr mod #'(group mod-id mod-arg ...))))
+             #:with mod #`(#,group-tag mod-id mod-arg ...))))
 
 (define-defn-syntax import
   (definition-transformer

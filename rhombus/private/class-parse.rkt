@@ -131,7 +131,7 @@
 
 (define-splicing-syntax-class :options-block
   (pattern (~seq)
-           #:attr (form 1) '())
+           #:with (form ...) '())
   (pattern (~seq (_::block form ...))))
 
 (define (check-duplicate-field-names stxes ids super interface-dotss)

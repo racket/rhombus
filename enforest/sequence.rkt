@@ -6,7 +6,6 @@
          "private/transform.rkt"
          "hier-name-parse.rkt"
          "name-root.rkt"
-         (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
          "private/check.rkt")
 
@@ -56,8 +55,8 @@
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
-                    #:attr id head-id
-                    #:attr tail #'hname.tail))
+                    #:with id head-id
+                    #:with tail #'hname.tail))
          (define (apply-transformer head-name head-tail tail-tail)
            (define head-id (in-space head-name))
            (define t (syntax-local-value* head-id transformer-ref))

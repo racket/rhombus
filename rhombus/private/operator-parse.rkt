@@ -12,6 +12,5 @@
 
 (define-syntax-class :operator-or-identifier
   #:attributes (name)
-  (pattern o::operator
-           #:attr name #'o.name)
+  (pattern ::operator)
   (pattern name:identifier))

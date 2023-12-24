@@ -391,8 +391,7 @@
   (define-splicing-syntax-class :each-decl
     #:datum-literals (group)
     #:attributes ([bind 1] blk)
-    (pattern (~seq bind ...+ (~and rhs (_::block . _)))
-             #:attr blk #'rhs)))
+    (pattern (~seq bind ...+ (~and blk (_::block . _))))))
 
 (define-for-clause-syntax each
   (for-clause-transformer

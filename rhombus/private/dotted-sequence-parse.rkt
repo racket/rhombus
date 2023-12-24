@@ -42,26 +42,21 @@
     #:datum-literals (op |.|)
     (pattern (~and all ((~seq head-id:identifier (op |.|)) ... tail-id:identifier))
              #:do [(define-values (name extends tail-name) (build-dot-identifier #'(head-id ...) #'tail-id #'all))]
-             #:attr name name
-             #:attr extends extends
-             #:attr tail-name tail-name))
+             #:with name name
+             #:with extends extends
+             #:with tail-name tail-name))
 
   (define-syntax-class :dotted-operator-or-identifier
     #:attributes (name extends tail-name)
     #:datum-literals (parens group op |.|)
-    (pattern ((op o))
-             #:attr name #'o
-             #:attr extends #'#f
-             #:attr tail-name #'o)
+    (pattern ((op (~and name tail-name)))
+             #:with extends #'#f)
     (pattern (~and all ((~seq head-id:identifier (op |.|)) ... (parens (group (op tail-op)))))
              #:do [(define-values (name extends tail-name) (build-dot-identifier #'(head-id ...) #'tail-op #'all))]
-             #:attr name name
-             #:attr extends extends
-             #:attr tail-name tail-name)
-    (pattern id::dotted-identifier
-             #:attr name #'id.name
-             #:attr extends #'id.extends
-             #:attr tail-name #'id.tail-name)))
+             #:with name name
+             #:with extends extends
+             #:with tail-name tail-name)
+    (pattern ::dotted-identifier)))
 
 (begin-for-syntax
   (struct extension-rename-transformer (id extends-id)

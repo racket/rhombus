@@ -119,10 +119,10 @@
     #:attributes (form)
     (pattern (~seq form-id d::var-decl)
              #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(d.bind ...)
-             #:attr ann-seq (if (attribute c)
+             #:with ann-seq (if (attribute c)
                                 #'c.seq
                                 #'#f)
-             #:attr form (wrap-class-clause #`(#:field id
+             #:with form (wrap-class-clause #`(#:field id
                                                tmp-id ann-seq d.blk form-id
                                                #,mode)))))
 
@@ -137,16 +137,16 @@
   (define-splicing-syntax-class :maybe-ret
     #:attributes (seq)
     (pattern (~seq op::annotate-op ret ...)
-             #:attr seq #'(op ret ...))
+             #:with seq #'(op ret ...))
     (pattern (~seq)
-             #:attr seq #'()))
+             #:with seq #'()))
   (define-splicing-syntax-class (:method-impl mode)
     #:description "method implementation"
     #:attributes (form)
     #:datum-literals (group)
     (pattern (~seq id:identifier (~and args (_::parens . _)) ret::maybe-ret
                    (~and rhs (_::block . _)))
-             #:attr form (wrap-class-clause #`(#,mode id
+             #:with form (wrap-class-clause #`(#,mode id
                                                (block (group fun args rhs))
                                                ret.seq)))
     (pattern (~seq (~and alts
@@ -157,34 +157,34 @@
                           ...+)))
              #:do [(define a-ids (syntax->list #'(a-id ...)))
                    (check-consistent #:who mode #'alts a-ids "name")]
-             #:attr id (car a-ids)
+             #:with id (car a-ids)
              #:with (ret0 ...) (let ([retss (syntax->list #'(ret.seq ...))])
                                  (if (for/and ([rets (in-list (cdr retss))])
                                        (same-return-signature? (car retss) rets))
                                      (car retss)
                                      '()))
-             #:attr form (wrap-class-clause #`(#,mode id
+             #:with form (wrap-class-clause #`(#,mode id
                                                (block (group fun (atag (btag (gtag args body)) ...)))
                                                (ret0 ...))))
     (pattern (~seq id:identifier ret::maybe-ret (~and rhs (_::block . _)))
-             #:attr form (wrap-class-clause #`(#,mode id rhs ret.seq))))
+             #:with form (wrap-class-clause #`(#,mode id rhs ret.seq))))
   (define-splicing-syntax-class :method-decl
     #:description "method declaration"
     #:attributes (id rhs maybe-ret)
     (pattern (~seq id:identifier (tag::parens arg ...) ret::maybe-ret)
-             #:attr rhs #'(block (group fun (tag arg ...)
+             #:with rhs #'(block (group fun (tag arg ...)
                                         (block (group (parsed #:rhombus/expr (void))))))
-             #:attr maybe-ret #'ret.seq)
+             #:with maybe-ret #'ret.seq)
     (pattern (~seq id:identifier ret::maybe-ret)
-             #:attr rhs #'#f
-             #:attr maybe-ret #'ret.seq))
+             #:with rhs #'#f
+             #:with maybe-ret #'ret.seq))
   (define-splicing-syntax-class (:property-impl mode)
     #:description "property implementation"
     #:attributes (form)
     #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret
                    (~and rhs (_::block . _)))
-             #:attr form (wrap-class-clause #`(#,mode id
+             #:with form (wrap-class-clause #`(#,mode id
                                                (block
                                                 (group fun/read-only-property
                                                        (alts
@@ -197,7 +197,7 @@
                     (_::block
                      (group id:identifier ret::maybe-ret
                             (~and rhs (_::block . _))))))
-             #:attr form (wrap-class-clause #`(#,mode id
+             #:with form (wrap-class-clause #`(#,mode id
                                                (block
                                                 (group fun/read-only-property
                                                        (alts
@@ -216,7 +216,7 @@
                                                assign-rhs ...+
                                                (~and body2 (_::block . _)))))))
              #:do [(check-consistent #:who mode #'alts (list #'a-id1 #'a-id2) "name")]
-             #:attr form (wrap-class-clause #`(#,mode a-id1
+             #:with form (wrap-class-clause #`(#,mode a-id1
                                                (block (group fun
                                                              (atag
                                                               (btag1 (group (parens) body1))
@@ -228,12 +228,12 @@
     #:attributes (id rhs maybe-ret)
     #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret)
-             #:attr rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed #:rhombus/expr (void))))))
+             #:with rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed #:rhombus/expr (void))))))
                                                   (block (group (parens (group _)) (block (group (parsed #:rhombus/expr (void)))))))))
-             #:attr maybe-ret #'ret.seq)
+             #:with maybe-ret #'ret.seq)
     (pattern (~seq (_::alts (_::block (group id:identifier ret::maybe-ret))))
-             #:attr rhs #'(block (group fun (parens) (block (group (parsed #:rhombus/expr (void))))))
-             #:attr maybe-ret #'ret.seq)))
+             #:with rhs #'(block (group fun (parens) (block (group (parsed #:rhombus/expr (void))))))
+             #:with maybe-ret #'ret.seq)))
 
 (define-class-clause-syntax constructor
   (class-clause-transformer

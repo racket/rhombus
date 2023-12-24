@@ -54,7 +54,7 @@
     (pattern id:identifier
              #:when (syntax-local-value* (in-dot-provider-space #'id) dot-provider-ref))
     (pattern (~var ref-id (:static-info #'#%dot-provider))
-             #:attr id #'ref-id.val)))
+             #:with id #'ref-id.val)))
 
 (define-syntax |.|
   (expression-infix-operator

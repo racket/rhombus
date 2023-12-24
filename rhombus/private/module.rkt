@@ -134,17 +134,17 @@
   (define-splicing-syntax-class :pragma
     #:attributes (kw [parsed 1])
     (pattern (~seq (~and kw #:unsafe))
-             #:attr [parsed 1] (list #'kw))
+             #:with (parsed ...) (list #'kw))
     (pattern (~seq (~and kw #:empty_evaluator))
-             #:attr [parsed 1] (list #'#:empty-namespace))
-    ;; TODO: allow, but thendisable `#:realm` added by `rhombus`:
+             #:with (parsed ...) (list #'#:empty-namespace))
+    ;; TODO: allow, but then disable `#:realm` added by `rhombus`:
     #;
     (pattern (~seq (~and kw #:realm) id:identifier)
-             #:attr [parsed 1] (list #'kw #'id))
+             #:with (parsed ...) (list #'kw #'id))
     ;; not possible, so far:
     #;
     (pattern (~seq (~and kw #:cross_phase_persistent))
-             #:attr [parsed 1] (list #'#:cross-phase-persistent)))
+             #:with (parsed ...) (list #'#:cross-phase-persistent)))
 
   ;; Also module-local:
   (define-values (pragmas-box) (make-hasheq)))

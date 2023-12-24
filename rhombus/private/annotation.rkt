@@ -137,10 +137,9 @@
     #:make-identifier-form raise-not-a-annotation)
 
   (define-syntax-class :annotation-seq
+    #:attributes (parsed tail)
     (pattern stxes
-             #:with (~var c (:annotation-infix-op+form+tail #'::)) #'(group . stxes)
-             #:attr parsed #'c.parsed
-             #:attr tail #'c.tail))
+             #:with (~var || (:annotation-infix-op+form+tail #'::)) #`(#,group-tag . stxes)))
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos)
@@ -150,26 +149,26 @@
              #:do [(when (and (not (attribute op.check?))
                               (syntax-e #'ca.converter))
                      (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
-             #:attr converter #'ca.converter
-             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-             #:attr static-infos #'ca.static-infos))
+             #:with converter #'ca.converter
+             #:with annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
+             #:with static-infos #'ca.static-infos))
 
   (define-syntax-class (:annotation-converted check?)
     #:attributes (converter static-infos)
     (pattern c-parsed::annotation-predicate-form
-             #:attr converter (if check?
+             #:with converter (if check?
                                   #'(lambda (tmp-id who fail-k)
                                       (if (c-parsed.predicate tmp-id)
                                           tmp-id
                                           (fail-k tmp-id who)))
                                   #'#f)
-             #:attr static-infos #'c-parsed.static-infos)
+             #:with static-infos #'c-parsed.static-infos)
      (pattern c-parsed::annotation-binding-form
               #:with arg-parsed::binding-form #'c-parsed.binding
               #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
               #:with arg-info::binding-info #'arg-impl.info
               #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
-              #:attr converter #'(lambda (tmp-id who fail-k)
+              #:with converter #'(lambda (tmp-id who fail-k)
                                    (arg-info.matcher-id tmp-id
                                                         arg-info.data
                                                         if/blocked
@@ -180,12 +179,12 @@
                                                           ...
                                                           c-parsed.body)
                                                         (fail-k tmp-id who)))
-              #:attr static-infos #'c-parsed.static-infos))
+              #:with static-infos #'c-parsed.static-infos))
 
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)
     (pattern (~seq o::annotate-op ctc ...)
-             #:attr seq #'(o ctc ...)))
+             #:with seq #'(o ctc ...)))
 
   (define-syntax-class :annotation-predicate-form
     (pattern (#:pred predicate static-infos)))
@@ -194,9 +193,9 @@
     (pattern (#:bind binding body static-infos)) ; binding is `:binding-impl`, but the annotation-str of eventual `:binding-info` is not used
     (pattern (#:pred predicate static-infos)
              ;; coerce to the more general binding form (so all annotations kinds can be handled this way)
-             #:attr binding (binding-form #'annotation-predicate-binding-infoer
+             #:with binding (binding-form #'annotation-predicate-binding-infoer
                                           #'(result predicate static-infos))
-             #:attr body #'result))
+             #:with body #'result))
 
   (define-syntax-class :annotate-op
     #:attributes (name check?)
@@ -946,13 +945,13 @@
     #:attributes (g comp)
     #:datum-literals (group)
     (pattern (group t ... #:exclusive)
-             #:attr comp #'<
-             #:attr g #'(group t ...))
+             #:with comp #'<
+             #:with g #`(#,group-tag t ...))
     (pattern (group t ... #:inclusive)
-             #:attr comp #'<=
-             #:attr g #'(group t ...))
+             #:with comp #'<=
+             #:with g #`(#,group-tag t ...))
     (pattern g
-             #:attr comp #'<=)))
+             #:with comp #'<=)))
 
 (define-for-syntax (make-in-annotation name pred-stx)
   (annotation-prefix-operator

@@ -37,10 +37,10 @@
                   _::equal
                   default-form ...+)
            #:with ((~optional c::unparsed-inline-annotation)) #'(ann ...)
-           #:attr ann-seq (if (attribute c)
+           #:with ann-seq (if (attribute c)
                               #'c.seq
                               #'#f)
-           #:attr default #`((rhombus-expression (#,group-tag default-form ...))))
+           #:with default #`((rhombus-expression (#,group-tag default-form ...))))
   (pattern (group (~optional (~and _::private-id (~parse private #'#t))
                              #:defaults ([private #'#f]))
                   (~optional (~and _::mutable-id (~parse mutable #'#t))
@@ -49,20 +49,20 @@
                   ann ...
                   (block-tag::block default-form ...))
            #:with ((~optional c::unparsed-inline-annotation)) #'(ann ...)
-           #:attr ann-seq (if (attribute c)
+           #:with ann-seq (if (attribute c)
                               #'c.seq
                               #'#f)
-           #:attr default #`((rhombus-body-at block-tag default-form ...)))
+           #:with default #`((rhombus-body-at block-tag default-form ...)))
   (pattern (group (~optional (~and _::private-id (~parse private #'#t))
                              #:defaults ([private #'#f]))
                   (~optional (~and _::mutable-id (~parse mutable #'#t))
                              #:defaults ([mutable #'#f]))
                   name:identifier
                   (~optional c::unparsed-inline-annotation))
-           #:attr ann-seq (if (attribute c)
+           #:with ann-seq (if (attribute c)
                               #'c.seq
                               #'#f)
-           #:attr default #'#f))
+           #:with default #'#f))
 
 (define (keyword->id kw)
   (datum->syntax kw

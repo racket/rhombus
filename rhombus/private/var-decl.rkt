@@ -12,6 +12,5 @@
     #:datum-literals (group)
     #:attributes ([bind 1] blk)
     (pattern (~seq bind::not-equal ...+ _::equal rhs ...+)
-             #:attr blk #`(#,group-tag rhs ...))
-    (pattern (~seq bind ...+ (~and rhs (_::block . _)))
-             #:attr blk #'rhs)))
+             #:with blk #`(#,group-tag rhs ...))
+    (pattern (~seq bind ...+ (~and blk (_::block . _))))))

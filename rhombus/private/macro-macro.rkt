@@ -91,9 +91,8 @@
     #:opaque
     #:attributes ([name 1])
     (pattern (_::block (group o::op/other ...) ...)
-             #:attr [name 1] (syntax->list #'(o.name ... ...)))
-    (pattern (~seq n::op/other ...)
-             #:attr [name 1] (syntax->list #'(n.name ...))))
+             #:with (name ...) #'(o.name ... ...))
+    (pattern (~seq ::op/other ...)))
 
   (define-syntax-class-mixin operator-options
     #:datum-literals (op group
@@ -112,7 +111,7 @@
                      #:defaults ([(same-on-left.name 2) '()]))
           (~optional (group #:same_on_right_as ~! same-on-right::ops/others)
                      #:defaults ([(same-on-right.name 2) '()])))
-    #:attr prec (combine-prec space-sym
+    #:with prec (combine-prec space-sym
                               (syntax->list #'(stronger.name ...))
                               (syntax->list #'(weaker.name ...))
                               (syntax->list #'(same.name ...))
@@ -143,16 +142,12 @@
     self-options)
 
   (define-splicing-syntax-class (:macro-maybe-prefix-operator-options space-sym prec?)
-    (pattern (~var o (:self-operator-options space-sym))
-             #:when (not prec?)
-             #:attr prec #'()
-             #:attr self-id #'o.self-id
-             #:attr all-id #'o.all-id)
-    (pattern (~var o (:macro-prefix-operator-options space-sym))
-             #:when prec?
-             #:attr prec #'o.prec
-             #:attr self-id #'o.self-id
-             #:attr all-id #'o.all-id))
+    #:attributes (prec self-id all-id)
+    (pattern (~and (~fail #:when prec?)
+                   (~var || (:self-operator-options space-sym)))
+             #:with prec #'())
+    (pattern (~and (~fail #:unless prec?)
+                   (~var || (:macro-prefix-operator-options space-sym)))))
 
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (group)
@@ -193,24 +188,23 @@
     (pattern (~seq ::name)
              #:when (not (free-identifier=? (in-binding-space #'name) (bind-quote $)
                                             (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
-             #:attr extends #'#f)
+             #:with extends #'#f)
     (pattern (~seq (_::parens (group seq::dotted-operator-or-identifier-sequence)))
-             #:with id::dotted-operator-or-identifier #'seq
-             #:attr name #'id.name
-             #:attr extends #'id.extends)
+             #:with ::dotted-operator-or-identifier #'seq)
     (pattern (~seq _::$+1 (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
-             #:attr extends #'#f))
+             #:with extends #'#f))
 
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)
     #:description "identifier for a parsed sequence"
     #:datum-literals (group)
     (pattern id:identifier)
-    (pattern (tag::parens (group parsed::identifier-for-parsed))
-             #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
-                                       (unquote-bind-quote #%parens)
-                                       (add1 (syntax-local-phase-level)) (syntax-local-phase-level))
-             #:attr id #'parsed.id))
+    (pattern (tag::parens
+              ~!
+              (~fail #:unless (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
+                                                 (unquote-bind-quote #%parens)
+                                                 (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
+              (group ::identifier-for-parsed))))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
