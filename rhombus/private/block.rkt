@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt")
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "parens.rkt")
 
 (provide (rename-out [rhombus-block block]))
 
@@ -11,8 +12,8 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts block group)
-       [(form-id ((~and tag block) form ...)
+       #:datum-literals (group)
+       [(form-id (tag::block form ...)
                  . tail)
         (values
          (relocate+reraw

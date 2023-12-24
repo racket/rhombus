@@ -359,7 +359,6 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
        [(_ ... a::equal _ ... b::equal . _)
         (raise-too-many-equals stx #'a #'b)]
        [(_ lhs ... _::equal rhs ... (tag::block g ...))

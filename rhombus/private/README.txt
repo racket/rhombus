@@ -52,3 +52,8 @@ that possible change has been tried and is really unlikely to ever be
 a good idea. Do prefer `expr-quote` to just `quote-syntax` or `#'`,
 though, since it's useful documentation (and a reminder) without being
 much more noisy.
+
+For matching tags, prefer syntax classes like `:parens` over
+`(~datum parens)` or `#:datum-literals (parens)`; the syntax classes
+provide better error message, and it's less easier to mess up than
+manually adding entries to `#:datum-literals`.

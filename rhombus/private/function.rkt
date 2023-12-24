@@ -154,7 +154,7 @@
            (kw-subset allow kws))
        (kw-subset kws req)))
 
-(begin-for-syntax  
+(begin-for-syntax
   (define (get-local-name who)
     (or (syntax-local-name) who)))
 
@@ -167,12 +167,13 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (group block alts parens)
+        #:datum-literals (group)
         ;; immediate alts case
         [(form-id (alts-tag::alts
-                   (block (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
-                                 ret::ret-annotation
-                                 (~and rhs (_::block body ...))))
+                   (_::block
+                    (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
+                           ret::ret-annotation
+                           (~and rhs (_::block body ...))))
                    ...+))
          #:with (name::dotted-identifier ...) #'(name-seq ...)
          (define names (syntax->list #'(name.name ...)))
@@ -196,9 +197,10 @@
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
                   (alts-tag::alts
-                   (block (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
-                                 ret::ret-annotation
-                                 (~and rhs (_::block body ...))))
+                   (_::block
+                    (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
+                           ret::ret-annotation
+                           (~and rhs (_::block body ...))))
                    ...+))
          #:with main-name::dotted-identifier #'main-name-seq
          #:with (name::dotted-identifier ...) #'(name-seq ...)
@@ -240,7 +242,7 @@
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or (~seq (_::parens _ ...) _ ...)
-                 (_::alts (block (group (parens _ ...) . _)) ...+)
+                 (_::alts (_::block (group (_::parens _ ...) . _)) ...+)
                  (~seq _ ... (_::alts . _))))
          (syntax-parse #`(group . #,stx)
            [e::expression
@@ -269,15 +271,16 @@
    ;; extract arity:
    (lambda (stx)
      1)))
-  
+
 (define-for-syntax (parse-anonymous-function stx [adjustments no-adjustments] [for-entry? #f])
   (syntax-parse stx
-    #:datum-literals (group block alts)
+    #:datum-literals (group)
     ;; alts case, with maybe a declared return annotation
     [(form-id main-ret::ret-annotation
               (alts-tag::alts
-               (block (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                             (~and rhs (_::block body ...))))
+               (_::block
+                (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
+                       (~and rhs (_::block body ...))))
                ...+))
      (define-values (proc arity)
        (build-case-function adjustments

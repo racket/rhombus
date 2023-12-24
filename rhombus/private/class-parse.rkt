@@ -1,15 +1,8 @@
 #lang racket/base
 (require syntax/parse/pre
-         "tag.rkt"
          "introducer.rkt"
-         (for-template
-          racket/unsafe/undefined
-          (submod "annotation.rkt" for-class)
-          "parens.rkt"
-          "assign.rkt"
-          (rename-in "equal.rkt"
-                     [= rhombus=])
-          "parse.rkt"))
+         (for-template racket/unsafe/undefined
+                       "parens.rkt"))
 
 (provide in-class-desc-space
 
@@ -137,7 +130,6 @@
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 
 (define-splicing-syntax-class :options-block
-  #:datum-literals (block group parens)
   (pattern (~seq)
            #:attr (form 1) '())
   (pattern (~seq (_::block form ...))))
@@ -171,7 +163,7 @@
                                   id))]
         [else
          (hash-set ht (syntax-e id) id)]))))
-  
+
 (define (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
   (define dots-ht (for/hasheq ([dot (in-list dots)])
                     (values (syntax-e (car dot)) (car dot))))
@@ -409,4 +401,3 @@
                                             (syntax-e name)
                                             (syntax-e field-id)))
                     field-id))))
-

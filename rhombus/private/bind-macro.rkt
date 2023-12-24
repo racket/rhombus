@@ -6,6 +6,7 @@
                      "name-root.rkt"
                      "pack.rkt"
                      "parse.rkt"
+                     "parens.rkt"
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
@@ -145,9 +146,9 @@
     #:static-infos ((#%call-result #,syntax-static-infos))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
-      #:datum-literals (parens group)
-      [(parens (group infoer-id:identifier)
-               (group data))
+      #:datum-literals (group)
+      [(_::parens (group infoer-id:identifier)
+                  (group data))
        (pack-term #`(parsed #:rhombus/bind #,(binding-form #'infoer-id
                                                            #'data)))]
       [_ (raise-arguments-error* who rhombus-realm
@@ -188,8 +189,8 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (op parens group block quotes)
-        [(form-id (quotes (group infoer-id:identifier . _))
+        #:datum-literals (group)
+        [(form-id (_::quotes (group infoer-id:identifier . _))
                   . _)
          (list
           #`(define-syntax infoer-id
@@ -200,11 +201,11 @@
     (syntax-parse stx
       [(_ who orig-stx)
        (syntax-parse #'orig-stx
-         #:datum-literals (op parens group block quotes)
-         [(form-id (quotes (group infoer-id:identifier
-                                  (parens info-pattern
-                                          data-pattern)))
-                   ((~and block-tag block) body ...))
+         #:datum-literals (group)
+         [(form-id (_::quotes (group infoer-id:identifier
+                                     (_::parens info-pattern
+                                                data-pattern)))
+                   (block-tag::block body ...))
           (define-values (converted-info-pattern info-idrs info-sidrs info-vars info-can-be-empty?) (convert-pattern #'info-pattern))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((info-id info-id-ref) ...) info-idrs]
@@ -233,8 +234,8 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (op group quotes)
-        [(form-id (quotes (group builder-id:identifier . _))
+        #:datum-literals (group)
+        [(form-id (_::quotes (group builder-id:identifier . _))
                   . _)
          (list
           #`(define-syntax builder-id
@@ -245,14 +246,14 @@
     (syntax-parse stx
       [(_ orig-stx)
        (syntax-parse #'orig-stx
-         #:datum-literals (op parens group block quotes)
-         [(form-id (quotes (group builder-id:identifier
-                                  (parens (group _::$-bind arg-id:identifier)
-                                          data-pattern
-                                          (group _::$-bind IF-id:identifier)
-                                          (group _::$-bind success-id:identifier)
-                                          (group _::$-bind fail-id:identifier))))
-                   ((~and block-tag block) body ...))
+         #:datum-literals (group)
+         [(form-id (_::quotes (group builder-id:identifier
+                                     (_::parens (group _::$-bind arg-id:identifier)
+                                                data-pattern
+                                                (group _::$-bind IF-id:identifier)
+                                                (group _::$-bind success-id:identifier)
+                                                (group _::$-bind fail-id:identifier))))
+                   (block-tag::block body ...))
           (define-values (converted-pattern idrs sidrs vars can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((id id-ref) ...) idrs]
                         [(((sid ...) sid-ref) ...) sidrs])
@@ -274,12 +275,11 @@
 (define-for-syntax (parse-if-bridge stx)
   ;; depending on `IF`, `if-bridge` will be used in an expression
   (syntax-parse stx
-    #:datum-literals (alts block parsed maybe-definition)
-    [(form-id e ... (alts (block success ...)
-                          (block . fail-case)))
+    [(form-id e ... (_::alts (_::block success ...)
+                             (_::block . fail-case)))
      (syntax-parse #'fail-case
        #:datum-literals (group parsed)
-       #:literals (if-bridge)
+       #:literals (maybe-definition if-bridge)
        [((group (parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))))
         #`(IF (rhombus-expression (group e ...))
               (rhombus-body-sequence success ...)
@@ -299,14 +299,16 @@
 (define-for-syntax (parse-chain-to-matcher rhombus stx)
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
-    #:datum-literals (parsed group parens maybe-definition)
-    [(_ (parens (group arg-id:identifier)
-                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))
-                (group if-id)
-                (group success ...)
-                (group fail ...)))
+    #:datum-literals (group)
+    [(_ (_::parens (group arg-id:identifier)
+                   (group (parsed #:rhombus/bind/info/chain
+                                  (matcher-id committer-id binder-id data)))
+                   (group if-id)
+                   (group success ...)
+                   (group fail ...)))
      (syntax-parse #'(fail ...)
-       #:literals (if-bridge)
+       #:datum-literals (parsed)
+       #:literals (maybe-definition if-bridge)
        [((parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
         #:with rhombus rhombus
         (syntax-parse #'(success ...)
@@ -349,10 +351,10 @@
 (define-for-syntax (parse-chain-to-committer rhombus stx)
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
-    #:datum-literals (parsed group parens)
-    #:literals (if-bridge)
-    [(_ (parens (group arg-id:identifier)
-                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
+    #:datum-literals (parsed group)
+    [(_ (_::parens (group arg-id:identifier)
+                   (group (parsed #:rhombus/bind/info/chain
+                                  (matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
      #`(committer-id arg-id data)]))
 
@@ -367,10 +369,10 @@
 (define-for-syntax (parse-chain-to-binder rhombus stx)
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
-    #:datum-literals (parsed group parens)
-    #:literals (if-bridge)
-    [(_ (parens (group arg-id:identifier)
-                (group (parsed #:rhombus/bind/info/chain (matcher-id committer-id binder-id data)))))
+    #:datum-literals (parsed group)
+    [(_ (_::parens (group arg-id:identifier)
+                   (group (parsed #:rhombus/bind/info/chain
+                                  (matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
      #`(binder-id arg-id data)]))
 
@@ -386,9 +388,9 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (op group quotes)
-        [(form-id (quotes (group builder-id:identifier
-                                 . _))
+        #:datum-literals (group)
+        [(form-id (_::quotes (group builder-id:identifier
+                                    . _))
                   . _)
          (list
           #`(define-syntax builder-id
@@ -398,16 +400,16 @@
   (check-syntax who stx)
   (let loop ([stx (unpack-term stx who #f)])
     (syntax-parse stx
-      #:datum-literals (parsed parens group)
-      [(parens name-str-g
-               name-id-g
-               static-infos-g
-               bind-ids-g
-               (group (~literal chain-to-matcher))
-               (group (~literal chain-to-committer))
-               (group (~literal chain-to-binder))
-               (group (parsed #:rhombus/bind/info/chain
-                              (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
+      #:datum-literals (parsed group)
+      [(_::parens name-str-g
+                  name-id-g
+                  static-infos-g
+                  bind-ids-g
+                  (group (~literal chain-to-matcher))
+                  (group (~literal chain-to-committer))
+                  (group (~literal chain-to-binder))
+                  (group (parsed #:rhombus/bind/info/chain
+                                 (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
        ;; hacky: remove indirection to get back to Racket forms
        (loop #'(parens name-str-g
                        name-id-g
@@ -417,15 +419,19 @@
                        (group orig-committer-id)
                        (group orig-binder-id)
                        (group orig-data)))]
-      [(parens (group name-str:string)
-               (group name-id:identifier)
-               (group static-infos)
-               (group bind-ids)
-               (group matcher-id:identifier)
-               (group committer-id:identifier)
-               (group binder-id:identifier)
-               (group data))
-       #:with (parens (group (parens (group bind-id) (group bind-uses) (group bind-static-infos))) ...) #'bind-ids
+      [(_::parens (group name-str:string)
+                  (group name-id:identifier)
+                  (group static-infos)
+                  (group bind-ids)
+                  (group matcher-id:identifier)
+                  (group committer-id:identifier)
+                  (group binder-id:identifier)
+                  (group data))
+       #:with (_::parens (group (_::parens (group bind-id)
+                                           (group bind-uses)
+                                           (group bind-static-infos)))
+                         ...)
+       #'bind-ids
        #:with (packed-bind-uses ...) (map (lambda (v) (pack-uses who v))
                                           (syntax->list #'(bind-uses ...)))
        #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos who v))
@@ -450,11 +456,11 @@
     (syntax-parse stx
       [(_ orig-stx)
        (syntax-parse #'orig-stx
-         #:datum-literals (op parens group block quotes)
-         [(form-id (quotes (group builder-id:identifier
-                                  (parens (group _::$-bind arg-id:identifier)
-                                          data-pattern)))
-                   ((~and block-tag block) body ...))
+         #:datum-literals (group)
+         [(form-id (_::quotes (group builder-id:identifier
+                                     (_::parens (group _::$-bind arg-id:identifier)
+                                                data-pattern)))
+                   (block-tag::block body ...))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((data-id data-id-ref) ...) data-idrs]
                         [(((data-sid ...) data-sid-ref) ...) data-sidrs])

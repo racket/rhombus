@@ -11,7 +11,8 @@
          "forwarding-sequence.rkt"
          "parse.rkt"
          "name-root.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "parens.rkt")
 
 (provide (for-space rhombus/defn
                     namespace))
@@ -24,9 +25,8 @@
   (definition-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts block group)
        [(form-id #:open
-                 ((~and tag block) form ...))
+                 (_::block form ...))
         (define intro (make-syntax-introducer))
         #`((rhombus-nested-forwarding-sequence
             (open-exports plain #,(intro #'scoped))
@@ -37,7 +37,7 @@
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends plain scoped])))]
        [(form-id name-seq::dotted-identifier-sequence
-                 ((~and tag block) form ...))
+                 (_::block form ...))
         #:with name::dotted-identifier #'name-seq
         (define intro syntax-local-introduce)
         #`((rhombus-nested-forwarding-sequence
@@ -70,7 +70,6 @@
      (define (generate-definitions ext-id int-id rule)
        (for/list ([space+id (in-list (let loop ([rule rule])
                                        (syntax-parse rule
-                                         #:datum-literals ()
                                          [() (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))])
                                                (list (datum->syntax #f space) int-id))]
                                          [(#:space space+ids . rule-rest)

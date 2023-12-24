@@ -17,8 +17,7 @@
          "declaration.rkt"
          "nestable-declaration.rkt"
          "macro-macro.rkt"
-         "parse.rkt"
-         "implicit.rkt")
+         "parse.rkt")
 
 (define+provide-space decl rhombus/decl
   #:fields
@@ -52,7 +51,7 @@
 
 (define-for-syntax (unpack-declarations form proc)
   (syntax-parse (and (syntax? form) (unpack-multi form proc #f))
-    #:datum-literals (parens block group)
+    #:datum-literals (group)
     [((group d ...) ...)
      #`((rhombus-top (group d ...))
         ...)]

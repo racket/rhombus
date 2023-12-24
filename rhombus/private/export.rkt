@@ -114,8 +114,8 @@
                                                                    "base export" parsed-ex)])))
 
   (define-syntax-class :modified-export
-    #:datum-literals (group block)
-    (pattern (group mod-id:identifier mod-arg ... (block exp ...))
+    #:datum-literals (group)
+    (pattern (group mod-id:identifier mod-arg ... (_::block exp ...))
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
              #:with (~var ex (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...)))) #'(group mod-id mod-arg ...)
@@ -140,8 +140,7 @@
   (nestable-declaration-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (block)
-       [(_ (block e::modified-export ...))
+       [(_ (_::block e::modified-export ...))
         #`((provide e.parsed ...))]
        [(_ term ...)
         #:with e::modified-export #`(#,group-tag term ...)
@@ -200,8 +199,7 @@
   (export-modifier
    (lambda (ex stx)
      (syntax-parse stx
-       #:datum-literals (block)
-       [(_ (block e::export ...))
+       [(_ (_::block e::export ...))
         #`(except-out #,ex e.parsed ...)]
        [(_ term ...)
         #:with e::export #'(group term ...)
@@ -261,8 +259,8 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (block)
-       [(_ (block (group name::name ...) ...)
+       #:datum-literals (group)
+       [(_ (_::block (group name::name ...) ...)
            . tail)
         (values #`(combine-out (all-spaces-out name.name) ... ...)
                 #'tail)]))))
@@ -275,8 +273,8 @@
    (lambda (stx)
      (parameterize ([current-module-path-context 'export])
        (syntax-parse stx
-         #:datum-literals (parens group op |.|)
-         [(_ (parens (group (op |.|) . (~var name (:hier-name-seq in-name-root-space values name-path-op name-root-ref))))
+         #:datum-literals (group op |.|)
+         [(_ (_::parens (group (op |.|) . (~var name (:hier-name-seq in-name-root-space values name-path-op name-root-ref))))
              . tail)
           (values
            (cond
@@ -334,7 +332,7 @@
                                   "not bound as a name root"
                                   #'name.name)])
            #'tail)]
-         [(_ (parens mod-path::module-path)
+         [(_ (_::parens mod-path::module-path)
              . tail)
           (values #`(all-from-out #,(convert-symbol-module-path #'mod-path.parsed))
                   #'tail)])))))
@@ -360,8 +358,7 @@
    'macro
    (lambda (form1 stx)
      (syntax-parse stx
-       #:datum-literals (block group)
-       [(_ (block mod ...) . tail)
+       [(_ (_::block mod ...) . tail)
         (values (apply-modifiers (syntax->list #'(mod ...))
                                  form1)
                 #'tail)]

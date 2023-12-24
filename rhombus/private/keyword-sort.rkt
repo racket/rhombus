@@ -1,5 +1,6 @@
 #lang racket/base
-(require syntax/parse/pre)
+(require syntax/parse/pre
+         (for-template "parens.rkt"))
 
 (provide sort-with-respect-to-keywords)
 
@@ -41,8 +42,8 @@
               [else (cons (car pos-args) (loop (cdr pos-args) (cdr kws)))]))]
          [else
           (syntax-parse (car gs)
-            #:datum-literals (group block)
-            [(group kwd:keyword (~and blk (block . _)))
+            #:datum-literals (group)
+            [(group kwd:keyword (~and blk (_::block . _)))
              (define kw (syntax-e #'kwd))
              (when (hash-ref kw-args kw #f)
                (raise-syntax-error #f
@@ -52,7 +53,7 @@
              (syntax-parse #'blk
                [(_ g)
                 (loop (cdr gs) rev-pos-args (hash-set kw-args kw #'g))]
-               [else
+               [_
                 (raise-syntax-error #f
                                     (format "expected a single group for argument after `~~~a`"
                                             (keyword->string kw))

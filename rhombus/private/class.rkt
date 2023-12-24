@@ -5,8 +5,7 @@
                      "class-parse.rkt"
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
-                     "interface-parse.rkt"
-                     "expose.rkt")
+                     "interface-parse.rkt")
          "provide.rkt"
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -48,10 +47,10 @@
   (definition-transformer
     (lambda (stxes)
       (parse-class stxes))))
-      
+
 (define-for-syntax (parse-class stxes)
   (syntax-parse stxes
-    #:datum-literals (group block)
+    #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
         options::options-block)
      #:with full-name::dotted-identifier #'name-seq
@@ -324,7 +323,7 @@
            (if p?
                (values pub (cons e priv))
                (values (cons e pub) priv))))
-          
+
        (define constructor-keywords (syntax->list #'(constructor-field-keyword ...)))
        (define constructor-defaults (syntax->list #'(constructor-field-default ...)))
        (define-values (constructor-public-fields constructor-private-fields)

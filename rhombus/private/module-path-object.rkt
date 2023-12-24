@@ -15,7 +15,8 @@
          "realm.rkt"
          "module-path-parse.rkt"
          "parens.rkt"
-         "pack.rkt")
+         "pack.rkt"
+         (for-template "parens.rkt"))
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace
@@ -42,7 +43,7 @@
                              "ModulePath("
                              (list (PrintDesc-doc
                                     (recur (datum->syntax
-                                            #f 
+                                            #f
                                             (format-module-path
                                              (module-path-raw v))))))
                              ")")))
@@ -123,14 +124,14 @@
          mp
          `(submod ,mp ,@(map syntax-e (syntax->list submods))))))
   (syntax-parse g
-    #:datum-literals (group parens lib file op self parent / ! |.|)
+    #:datum-literals (group lib file op self parent / ! |.|)
     [(group str:string (~seq (op !) sub:identifier) ...)
      (check-and-wrap (syntax-e #'str) #'(sub ...))]
-    [(group lib (parens (group str:string)) (~seq (op !) sub:identifier) ...)
+    [(group lib (_::parens (group str:string)) (~seq (op !) sub:identifier) ...)
      (check-and-wrap `(lib ,(let ([s (module-lib-string-to-lib-string (syntax-e #'str))])
                               (and s (string->immutable-string s))))
                      #'(sub ...))]
-    [(group file (parens (group str:string)) (~seq (op !) sub:identifier) ...)
+    [(group file (_::parens (group str:string)) (~seq (op !) sub:identifier) ...)
      (check-and-wrap `(file ,(string->immutable-string (syntax-e #'str)))
                      #'(sub ...))]
     [(group self (~seq (op !) sub:identifier) ...+)

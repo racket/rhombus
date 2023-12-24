@@ -15,10 +15,10 @@
 
 (begin-for-syntax
   (define-syntax-class :field-lhs
-    #:datum-literals (brackets group op)
+    #:datum-literals (group)
     (pattern id:identifier
              #:attr depth #'0)
-    (pattern (brackets (group a::field-lhs) (group _::...-bind))
+    (pattern (_::brackets (group a::field-lhs) (group _::...-bind))
              #:attr id #'a.id
              #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
 

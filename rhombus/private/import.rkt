@@ -233,8 +233,8 @@
                               #'form)])]))
 
   (define-syntax-class :modified-imports
-    #:datum-literals (group block)
-    (pattern (group mod-id:identifier mod-arg ... (block imp ...))
+    #:datum-literals (group)
+    (pattern (group mod-id:identifier mod-arg ... (_::block imp ...))
              #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
              #:attr mod #'(group mod-id mod-arg ...))))
 
@@ -800,12 +800,11 @@
    'macro
    (lambda (form1 stx)
      (syntax-parse stx
-       #:datum-literals (block group)
-       [(_ (block mod ...))
+       [(_ (_::block mod ...))
         (values (apply-modifiers (syntax->list #'(mod ...))
                                  form1)
                 #'())]
-       [(_ mod-id:identifier mod-arg ... (block mod ...))
+       [(_ mod-id:identifier mod-arg ... (_::block mod ...))
         #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
         (values (apply-modifiers (syntax->list #'((group mod-id mod-arg ...) mod ...))
                                  form1)
@@ -914,7 +913,6 @@
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block)
        [(_ int::name _::as-id ext::name)
         (datum->syntax req
                        (list* #'rename-in req #'([int.name ext.name]))
@@ -929,7 +927,7 @@
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block group)
+       #:datum-literals (group)
        [(_ name::name)
         (datum->syntax req
                        (list* #'only-in req #'(name.name))
@@ -943,7 +941,7 @@
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block group)
+       #:datum-literals (group)
        [(_ name::name)
         (datum->syntax req
                        (list* #'except-in req #'(name.name))
@@ -958,7 +956,7 @@
    (lambda (req stx)
      (with-syntax ([(name ...)
                     (syntax-parse stx
-                      #:datum-literals (block group)
+                      #:datum-literals (group)
                       [(_ (_::block (group . g) ...))
                        (parse-space-names stx #'(g ...))]
                       [(_  . g)
@@ -972,7 +970,7 @@
    (lambda (req stx)
      (with-syntax ([(name ...)
                     (syntax-parse stx
-                      #:datum-literals (block group)
+                      #:datum-literals (group)
                       [(_ (_::block (group . g) ...))
                        (parse-space-names stx #'(g ...))]
                       [(_ . g) (parse-space-names stx #'(g))])])
@@ -984,7 +982,7 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block group)
+       #:datum-literals (group)
        [(_ #:scope_like id:identifier)
         (datum->syntax #f (list (relocate+reraw stx #'rhombus-prefix-in)
                                 req
@@ -1000,7 +998,7 @@
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block group)
+       #:datum-literals (group)
        [(_ name::name)
         (datum->syntax req
                        (list* #'expose-in req #'(name.name))

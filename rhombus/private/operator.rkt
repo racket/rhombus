@@ -43,10 +43,10 @@
 
   (define-splicing-syntax-class :prefix-case
     #:description "prefix operator case"
-    #:datum-literals (group block)
+    #:datum-literals (group)
     (pattern (~seq (_::parens (~and g (group op-name-seq::dotted-operator-or-identifier-sequence arg::not-op)))
                    ret::ret-annotation
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:prefix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -58,7 +58,7 @@
              #:attr ret-annot-str (attribute ret.annot-str)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op-or-block
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:prefix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -73,10 +73,10 @@
 
   (define-splicing-syntax-class :infix-case
     #:description "infix operator case"
-    #:datum-literals (group block)
+    #:datum-literals (group)
     (pattern (~seq (_::parens (~and g (group left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op)))
                    ret::ret-annotation
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:infix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -89,7 +89,7 @@
              #:attr ret-annot-str (attribute ret.annot-str)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op-or-block
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:infix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -105,10 +105,10 @@
 
   (define-splicing-syntax-class :postfix-case
     #:description "postfix operator case"
-    #:datum-literals (group block)
+    #:datum-literals (group)
     (pattern (~seq (_::parens (~and g (group arg::not-op op-name-seq::dotted-operator-or-identifier-sequence)))
                    ret::ret-annotation
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:prefix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -120,7 +120,7 @@
              #:attr ret-annot-str (attribute ret.annot-str)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq arg::not-op op-name-seq::dotted-operator-or-identifier-sequence
-                   ((~and tag block)
+                   (tag::block
                     (~var options (:prefix-operator-options '#f))
                     body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
@@ -433,8 +433,8 @@
                #:result (values (reverse all) (reverse pres) (reverse ins) (reverse posts)))
               ([a (in-list (syntax->list as-stx))])
       (syntax-parse a
-        #:datum-literals (group block)
-        [(block (group p::prefix-case))
+        #:datum-literals (group)
+        [(_::block (group p::prefix-case))
          (define opc (unary-opcase #'p.name #'p.extends
                                    #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
@@ -442,7 +442,7 @@
                                    #'p.ret-static-infos
                                    #'p.arg))
          (values (cons opc all) (cons opc pres) ins posts)]
-        [(block (group p::postfix-case))
+        [(_::block (group p::postfix-case))
          (define opc (unary-opcase #'p.name #'p.extends
                                    #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
@@ -450,7 +450,7 @@
                                    #'p.ret-static-infos
                                    #'p.arg))
          (values (cons opc all) pres ins (cons opc posts))]
-        [(block (group i::infix-case))
+        [(_::block (group i::infix-case))
          (define opc (binary-opcase #'i.name #'i.extends
                                     #'i.prec #'i.rhs
                                     (attribute i.ret-converter)

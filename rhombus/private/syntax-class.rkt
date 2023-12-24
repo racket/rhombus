@@ -223,7 +223,7 @@
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)
             #:description #,(or description-expr #f)
-            #:datum-literals (block group quotes)
+            #:disable-colon-notation
             #:attributes #,(for/list ([var (in-list attributes)])
                              #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
             #,@(if opaque? '(#:opaque) '())
@@ -252,7 +252,8 @@
       [(eq? kind 'multi) 'multi]
       [else
        (syntax-parse alt
-         [(block (group pat . _) . _)
+         #:datum-literals (group)
+         [(_::block (group pat . _) . _)
           (define-values (new-kind tail)
             (quoted-shape-dispatch #'(pattern pat)
                                    in-binding-space
@@ -264,20 +265,20 @@
                                        [(multi)
                                         ;; special case: empty sequence can be spliced
                                         'sequence]
-                                       [else 'multi]))
+                                       [_ 'multi]))
                                    (lambda (e) 'term)))
           (cond
             [(and (eq? kind 'sequence) (eq? new-kind 'term)) kind]
             [else new-kind])]
-         [else kind])])))
+         [_ kind])])))
 
 (begin-for-syntax
   (define-syntax-class :attribute-lhs
-    #:datum-literals (brackets group op)
+    #:datum-literals (group op)
     #:literals (rhombus...)
     (pattern id:identifier
              #:attr depth #'0)
-    (pattern (brackets (group a::attribute-lhs) (group (op rhombus...)))
+    (pattern (_::brackets (group a::attribute-lhs) (group (op rhombus...)))
              #:attr id #'a.id
              #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
@@ -292,10 +293,10 @@
   (define-values (pat body)
     (syntax-parse stx
       #:datum-literals (group)
-      [(block (group (~and pat (_::quotes . _))))
+      [(_::block (group (~and pat (_::quotes . _))))
        (values #'pat #'())]
-      [(block (group (~and pat (_::quotes . _))
-                     (_::block body ...)))
+      [(_::block (group (~and pat (_::quotes . _))
+                        (_::block body ...)))
        (values #'pat #'(body ...))]))
 
   (define in-quotes
@@ -305,8 +306,8 @@
          [(_ g ...) #'(multi g ...)])]
       [(eq? kind 'block)
        (syntax-parse pat
-         #:datum-literals (block)
-         [(_ (~and g (group (block . _)))) #'g]
+         #:datum-literals (group)
+         [(_ (~and g (group (_::block . _)))) #'g]
          [_ (raise-syntax-error #f
                                 "not a block pattern"
                                 orig-stx

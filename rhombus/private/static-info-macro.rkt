@@ -66,8 +66,8 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (block quotes)
-        [(_ (quotes (group name::name)) (body-tag::block body ...))
+        #:datum-literals (group)
+        [(_ (_::quotes (group name::name)) (body-tag::block body ...))
          #`((define-syntax #,(in-space #'name.name)
               (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 

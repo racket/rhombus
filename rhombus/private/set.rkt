@@ -305,7 +305,7 @@
 
 (define-for-syntax (parse-set-binding who stx opener+closer [mode 'Set])
   (syntax-parse stx
-    #:datum-literals (parens block group op)
+    #:datum-literals (group)
     [(form-id (_ (group key-e ...) ...
                  (group elem-b ...)
                  (group _::...-bind))

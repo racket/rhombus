@@ -295,7 +295,7 @@
   (define method-private
     (for/fold ([ht super-priv-ht]) ([(k v) (in-hash priv-ht)])
       (hash-set ht k v)))
-  
+
   (define abstract-name
     (for/or ([v (in-hash-values new-vtable-ht)]
              [i (in-naturals)])
@@ -679,7 +679,7 @@
            (raise-syntax-error #f
                                (string-append "method must be called" statically-str)
                                #'head)])))]))
-    
+
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private
@@ -807,8 +807,7 @@
 
 (define-syntax (method-block stx)
   (syntax-parse stx
-    #:datum-literals (block)
-    [(_ (block expr) stx-params
+    [(_ (_::block expr) stx-params
         name name-instance name?
         result-id method-name
         private-tables-id

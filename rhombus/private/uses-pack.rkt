@@ -1,6 +1,7 @@
 #lang racket/base
 (require syntax/parse/pre
-         "realm.rkt")
+         "realm.rkt"
+         (for-template "parens.rkt"))
 
 (provide unpack-uses
          pack-uses)
@@ -15,8 +16,8 @@
 
 (define (pack-uses who stx)
   (syntax-parse stx
-    #:datum-literals (brackets group)
-    [(brackets (group stx) ...)
+    #:datum-literals (group)
+    [(_::brackets (group stx) ...)
      #'(stx ...)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed packed uses"

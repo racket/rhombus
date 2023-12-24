@@ -112,8 +112,7 @@
                      #:rest-repetition? #f)])
      (lambda (tail)
        (syntax-parse tail
-         #:datum-literals (parens)
-         [(form-id ((~and tag parens) elem list) . new-tail)
+         [(form-id (tag::parens elem list) . new-tail)
           (composite #'(form-id (tag elem) . new-tail)
                      #`(#,group-tag rest-bind #,list-static-infos
                         #:annot-prefix? #f
@@ -174,7 +173,7 @@
    ;; information this way
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group op)
+       #:datum-literals (group)
        [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
         #:when (normal-call? #'tag)
         (parse-list-form stx #:repetition? #f #:span-form-name? #t)]
@@ -188,7 +187,7 @@
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id ((~and tag (~datum parens)) arg ...) . tail)
+       [(form-id (_::parens arg ...) . tail)
         (parse-list-binding stx)]))))
 
 (define-annotation-constructor (List of)
@@ -289,8 +288,8 @@
   (repetition-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group repet)
-       [(form-id (~and args (parens g)) . tail)
+       #:datum-literals (group)
+       [(form-id (~and args (_::parens g)) . tail)
         (define name (syntax-e #'form-id))
         (values (make-repetition-info #'(form-id args)
                                       name

@@ -54,7 +54,6 @@
    'macro
    (lambda (packed-tail self)
      (syntax-parse packed-tail
-       #:datum-literals ()
        [(_ (_ (~and p (_::parens g)) . tail))
         #:with e::expression #'g
         (define new-g #`((parsed #:rhombus/expr

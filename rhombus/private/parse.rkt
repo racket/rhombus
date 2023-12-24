@@ -1,12 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx
-                     enforest
                      enforest/transformer
                      shrubbery/property
-                     "srcloc.rkt"
-                     "name-path-op.rkt")
+                     "srcloc.rkt")
          "enforest.rkt"
          "name-root-ref.rkt"
          "forwarding-sequence.rkt"
@@ -15,7 +12,7 @@
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
-         "srcloc.rkt")
+         "parens.rkt")
 
 (provide rhombus-top
          rhombus-nested
@@ -152,8 +149,9 @@
     (transform-out ; see `enforest-rhombus-expression`
      (syntax-local-introduce
       (syntax-parse (syntax-local-introduce (transform-in stx))
+        #:datum-literals (group parsed)
         [(_ top decl-ok? data) #`(begin)]
-        [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) #:rhombus/decl decl)) . forms)
+        [(_ top decl-ok? (data ...) (group (parsed #:rhombus/decl decl)) . forms)
          #`(begin decl (top data ... . forms))]
         ;; note that we may perform hierarchical name resolution
         ;; up to four times, since resolution in `:declaration`,
@@ -184,8 +182,9 @@
     (transform-out ; see `enforest-rhombus-expression`
      (syntax-local-introduce
       (syntax-parse (syntax-local-introduce (transform-in stx))
+        #:datum-literals (group parsed)
         [(_) #'(begin)]
-        [(_ ((~datum group) ((~datum parsed) #:rhombus/defn defn))) #'defn]
+        [(_ (group (parsed #:rhombus/defn defn))) #'defn]
         [(_ e::definition) #'(begin . e.parsed)]
         [(_ form) #'(#%expression (rhombus-expression form))])))))
 
@@ -219,9 +218,10 @@
 ;; Like `(rhombus-expression (group _))`, but recognizes `block` forms
 (define-syntax (rhombus-body-expression stx)
   (syntax-parse stx
-    [(_ ((~and body-tag (~datum block)) body ...))
+    #:datum-literals (parsed)
+    [(_ (body-tag::block body ...))
      #'(rhombus-body-at body-tag body ...)]
-    [(_ ((~datum parsed) #:rhombus/expr rhs))
+    [(_ (parsed #:rhombus/expr rhs))
      #'rhs]
     [(_ rhs)
      #'(rhombus-expression (group rhs))]))
@@ -284,16 +284,17 @@
 ;; definition, then parse the expression
 (define-for-syntax (enforest-expression-block e)
   (syntax-parse e
-    [((~datum block) g)
+    #:datum-literals (group)
+    [(_::block g)
      (cond
        [(definition? #'g) #`(rhombus-body-expression #,e)]
        [else
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]
-    [((~datum group) . _)
+    [(_::block g ...+) #`(rhombus-body g ...)]
+    [(group . _)
      (syntax-parse e
-       [g-e::expression #'g-e.parsed])]
-    [((~datum block) g ...+) #`(rhombus-body g ...)]))
+       [g-e::expression #'g-e.parsed])]))
 
 ;; Forces enforestation through `rhombus-expression`; note that
 ;; `#%parens` eagerly enforests its content, so this effectively

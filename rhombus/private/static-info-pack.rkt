@@ -1,6 +1,7 @@
 #lang racket/base
 (require syntax/parse/pre
-         "realm.rkt")
+         "realm.rkt"
+         (for-template "parens.rkt"))
 
 (provide unpack-static-infos
          pack-static-infos)
@@ -15,8 +16,8 @@
 
 (define (pack-static-infos who stx)
   (syntax-parse stx
-    #:datum-literals (parens group)
-    [(parens (group (parens (group key) (group val))) ...)
+    #:datum-literals (group)
+    [(_::parens (group (_::parens (group key) (group val))) ...)
      #'((key val) ...)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed unpacked static infos"

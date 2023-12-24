@@ -11,7 +11,8 @@
          "function-arity-key.rkt"
          (submod "equal.rkt" for-parse)
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt")
+         "indirect-static-info-key.rkt"
+         "parens.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -54,8 +55,8 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse (respan stx)
-       #:datum-literals (group op)
-       [(_ (parens (group id:identifier _::equal rhs ...) ...) . tail)
+       #:datum-literals (group)
+       [(_ (_::parens (group id:identifier _::equal rhs ...) ...) . tail)
         #:with (e::expression ...) #'((group rhs ...) ...)
         #:with (e2 ...) (map rhombus-local-expand (syntax->list #'(e.parsed ...)))
         #:with (si ...) (map extract-static-infos (syntax->list #'(e2 ...)))

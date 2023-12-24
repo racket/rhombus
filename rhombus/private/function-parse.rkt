@@ -103,7 +103,7 @@
   ;; used when just extracting an arity:
   (define-syntax-class :kw-arity-arg
     #:attributes (kw)
-    #:datum-literals (block group)
+    #:datum-literals (group)
     (pattern (group kw:keyword . _))
     (pattern (group kw:keyword))
     (pattern _::non-...
@@ -111,13 +111,13 @@
 
   (define-syntax-class :kw-opt-binding
     #:attributes (kw parsed default)
-    #:datum-literals (block group)
-    (pattern (group kw:keyword (block (group a::not-equal ...+ eq::equal e ...+)))
+    #:datum-literals (group)
+    (pattern (group kw:keyword (_::block (group a::not-equal ...+ eq::equal e ...+)))
              #:cut
              #:with default #'(group e ...)
              #:do [(check-argument-annot #'default #'eq)]
              #:with ::binding #'(group a ...))
-    (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
+    (pattern (group kw:keyword (_::block (group a ...+ (b-tag::block b ...))))
              #:cut
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:with ::binding #'(group a ...))
@@ -154,17 +154,17 @@
   ;; used when just extracting an arity:
   (define-syntax-class :kw-opt-arity-arg
     #:attributes (kw default)
-    #:datum-literals (block group)
-    (pattern (group kw:keyword (block (group _::not-equal ...+ _::equal _ ...+)))
+    #:datum-literals (group)
+    (pattern (group kw:keyword (_::block (group _::not-equal ...+ _::equal _ ...+)))
              #:with default #'#t)
-    (pattern (group kw:keyword (block (group _ ...+ (b-tag::block . _))))
+    (pattern (group kw:keyword (_::block (group _ ...+ (b-tag::block . _))))
              #:with default #'#t)
     (pattern (group kw:keyword _::equal _ ...+)
              #:with default #'#t)
     (pattern (group _::not-equal ...+ _::equal _ ...+)
              #:with default #'#t
              #:with kw #'#f)
-    (pattern (group a ...+ (block . _))
+    (pattern (group a ...+ (_::block . _))
              #:with (~not (_:keyword)) #'(a ...)
              #:with default #'#t
              #:with kw #'#f)
@@ -210,7 +210,7 @@
                   converter    ; a `converter` struct, or `#f`
                   annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
-    #:datum-literals (block group)
+    #:datum-literals (group)
     (pattern (~seq ann-op::annotate-op (~optional op::values-id) (~and p (_::parens g ...)))
              #:do [(define gs #'(g ...))]
              #:with (c::annotation ...) gs
@@ -389,10 +389,9 @@
 
 (define-for-syntax (parse-anonymous-function-arity stx)
   (syntax-parse stx
-    #:datum-literals (group block alts)
     [(form-id (alts-tag::alts
-               (block (group (_::parens arg::kw-arity-arg ... rest::maybe-rest-arity-arg)
-                             . _))
+               (_::block (group (_::parens arg::kw-arity-arg ... rest::maybe-rest-arity-arg)
+                                . _))
                ...+))
      (union-arity-summaries
       (for/list ([arg-kws (in-list (syntax->list #'((arg.kw ...) ...)))]
@@ -880,8 +879,8 @@
 (begin-for-syntax
   (define-syntax-class :kw-argument
     #:attributes (kw exp)
-    #:datum-literals (block group)
-    (pattern (group kw:keyword (block exp)))
+    #:datum-literals (group)
+    (pattern (group kw:keyword (_::block exp)))
     (pattern exp
              #:with kw #'#f)))
 

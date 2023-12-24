@@ -21,7 +21,8 @@
          "index-property.rkt"
          "mutability.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result))
+         (only-in "class-method-result.rkt" method-result)
+         "parens.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -115,8 +116,8 @@
   (define who '|[]|)
   (define (not-static) (string-append "specialization not known" statically-str))
   (syntax-parse stxes
-    #:datum-literals (brackets op)
-    [(_ ((~and head brackets) index) . assign-tail)
+    #:datum-literals (op)
+    [(_ (_::brackets index) . assign-tail)
      #:when (not repetition?)
      #:with assign::assign-op-seq #'assign-tail
      (define op (attribute assign.op))
@@ -139,7 +140,7 @@
                      [index-v (rhombus-expression index)])
                  #,assign-expr)
              tail)]
-    [(_ (~and args ((~and head brackets) index)) . tail)
+    [(_ (~and args (head::brackets index)) . tail)
      (define (build-ref indexable index indexable-static-info)
        (define indexable-ref-id (or (static-info/indirect indexable-static-info #'#%index-get #'#%index-get-indirect)
                                     (if more-static?

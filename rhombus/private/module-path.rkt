@@ -11,7 +11,8 @@
                      "macro-result.rkt"
                      "module-path-parse.rkt"
                      (for-syntax racket/base))
-         "name-root.rkt")
+         "name-root.rkt"
+         "parens.rkt")
 
 ;; The syntax of module paths is not meant to be extensible, but it
 ;; may be useful to expose `:module-path` parsing. For imports, we
@@ -158,8 +159,8 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
-       [(form-id (~and arg ((~and tag parens) (group str:string))) . tail)
+       #:datum-literals (group)
+       [(form-id (~and arg (_::parens (group str:string))) . tail)
         (define new-str (check #'str))
         (values (relocate+reraw
                  (datum->syntax #f (list #'form-id #'arg))
@@ -208,7 +209,6 @@
                            mp))
      (let ([mp (convert-symbol-module-path mp)])
        (syntax-parse stx
-         #:datum-literals ()
          [(form-id id:identifier . tail)
           (values (relocate+reraw
                    (datum->syntax #f (list mp #'form-id #'id))
@@ -242,7 +242,6 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals ()
        [(form-id name::! id:identifier . tail)
         (values (relocate+reraw
                  (datum->syntax #f (list #'form-id #'name #'id))
@@ -263,7 +262,6 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals ()
        [(form-id name::! ...+ id:identifier . tail)
         (values (relocate+reraw
                  (datum->syntax #f (cons #'form-id #'(name ... id)))

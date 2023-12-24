@@ -5,6 +5,7 @@
                      (submod "entry-point-adjustment.rkt" for-struct))
          racket/unsafe/undefined
          racket/stxparam
+         "parens.rkt"
          "call-result-key.rkt"
          "dot-provider-key.rkt"
          "static-info.rkt"
@@ -12,7 +13,6 @@
          "entry-point.rkt"
          "realm.rkt"
          "wrap-expression.rkt"
-         "realm.rkt"
          (only-in "syntax-parameter.rkt"
                   syntax-parameters-key
                   with-syntax-parameters))
@@ -271,10 +271,10 @@
 
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
-    #:datum-literals (parsed block)
+    #:datum-literals (parsed)
     [(_ name predicate-id (parsed #:rhombus/expr e) stx-params)
      #'(with-syntax-parameters stx-params e)]
-    [(_ name predicate-id (block g) stx-params)
+    [(_ name predicate-id (_::block g) stx-params)
      (define adjustments (entry-point-adjustment
                           '()
                           (lambda (arity body)

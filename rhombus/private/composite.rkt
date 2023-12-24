@@ -11,9 +11,9 @@
          "index-result-key.rkt"
          "sequence-element-key.rkt"
          "values-key.rkt"
-         (submod "annotation.rkt" for-class)
          "repetition.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "parens.rkt")
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
 ;; to a composite datatype, but the `rest` support is currently
@@ -35,7 +35,7 @@
                                                        #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (lambda (tail [rest-arg #f] [stx-in #f])
     (syntax-parse tail
-      [(form-id ((~and tag (~datum parens)) a_g ...) . new-tail)
+      [(form-id (tag::parens a_g ...) . new-tail)
        #:do [(define stx (or stx-in
                              (quasisyntax/loc #'form-id
                                (#,group-tag form-id (tag a_g ...)))))]
@@ -363,7 +363,7 @@
 
 ;; more run-time support for "rest" matching, creates the function
 ;; that is called after a successful match to get all the results
-(define (build-overall-getter rest-syms accum)                                             
+(define (build-overall-getter rest-syms accum)
   (cond
     [(and (pair? rest-syms) (null? (cdr rest-syms)))
      ;; simple case: single-values

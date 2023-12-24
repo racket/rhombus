@@ -7,6 +7,7 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          (submod "ellipsis.rkt" for-parse)
+         "parens.rkt"
          "op-literal.rkt")
 
 (provide (for-syntax parse-setmap-content
@@ -73,8 +74,8 @@
            (list (inlined pair-rep))
            (list #`(#,list->map #,(repetition-as-list pair-rep 1))))]))
   (syntax-parse stx
-    #:datum-literals (block braces parens group)
-    [(braces elem ...)
+    #:datum-literals (group)
+    [(_::braces elem ...)
      (define-values (shape rev-args rev-argss)
        (let loop ([elems (syntax->list #'(elem ...))]
                   [shape init-shape]
@@ -104,8 +105,8 @@
             (define elem (car elems))
             (define-values (ignored-gs extra-ellipses) (consume-extra-ellipses (cddr elems)))
             (syntax-parse elem
-              #:datum-literals (block braces parens group op)
-              [(group key-e ... (block val))
+              #:datum-literals (group op)
+              [(group key-e ... (_::block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
                (loop (list-tail (cddr elems) extra-ellipses)
@@ -128,7 +129,7 @@
             ;; single element or splice
             (define elem (car elems))
             (syntax-parse elem
-              #:datum-literals (block braces parens group op)
+              #:datum-literals (group op)
               [(group and-op::&-expr new-rst ...)
                (when no-splice
                  (raise-syntax-error #f
@@ -141,7 +142,7 @@
                            (if (null? rev-args)
                                rev-argss
                                (cons (reverse rev-args) rev-argss))))]
-              [(group key-e ... (block val))
+              [(group key-e ... (_::block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
                (loop (cdr elems)

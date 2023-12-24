@@ -129,11 +129,12 @@
                #,body))])))
   (define (convert-rule-template block ids)
     (syntax-parse block
-      #:datum-literals (block group quotes op)
-      [(block (group (quotes template)))
+      #:datum-literals (group)
+      [(_::block (group (_::quotes template)))
        ;; delay further conversion until after pattern variables are bound
        #`(rule-template template #,ids)]
-      [(block (group e)) (raise-syntax-error 'template "result must be a template expression" #'e)]))
+      [(_::block (group e))
+       (raise-syntax-error 'template "result must be a template expression" #'e)]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol
@@ -266,10 +267,10 @@
                                                            (for/or ([id (in-list ids)])
                                                              (free-identifier=? e id)))
                                                       (syntax-parse e
-                                                        #:datum-literals (group parens quotes op)
-                                                        [(parens (group (quotes (group (op _))))) #t]
-                                                        [(quotes (group (op _))) #t]
-                                                        [else #f]))
+                                                        #:datum-literals (group op)
+                                                        [(_::parens (group (_::quotes (group (op _))))) #t]
+                                                        [(_::quotes (group (op _))) #t]
+                                                        [_ #f]))
                                             (raise-syntax-error 'template
                                                                 (if (identifier? e)
                                                                     "expected an identifier that is bound by the pattern"

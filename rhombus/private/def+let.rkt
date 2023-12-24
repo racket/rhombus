@@ -40,16 +40,16 @@
     (lambda (stx)
       (check-context stx)
       (syntax-parse stx
-        #:datum-literals (parens group)
+        #:datum-literals (group)
         [(_ ... a::equal _ ... b::equal . _)
          (raise-too-many-equals stx #'a #'b)]
-        [(form-id (~optional op::values-id) (parens g ...) (~and rhs (_::block body ...)))
+        [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block body ...)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
                                    wrap-definition
                                    #:show-values? (and (attribute op) #t)
                                    #:check-bind-uses check-bind-uses)]
-        [(form-id (~optional op::values-id) (parens g ...) _::equal rhs ...+)
+        [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition

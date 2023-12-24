@@ -111,7 +111,7 @@
 (define-splicing-for-clause-syntax for-clause-step
   (lambda (stx)
     (syntax-parse stx
-      #:datum-literals (group block parens)
+      #:datum-literals (group)
       [(_ orig static? [finish] . bodys)
        ;; initialize state
        #`(#:splice (for-clause-step orig static? [finish () () (void) (void) #hasheq()]
@@ -170,7 +170,7 @@
           (with-continuation-mark
            syntax-parameters-key #'stx-params
            (syntax-parse #'body0
-             #:datum-literals (group block parens)
+             #:datum-literals (group)
              #:literals (prim-for-clause)
              [(group prim-for-clause #:each any ...+ rhs-blk)
               ;; parse binding as binding group
@@ -182,8 +182,8 @@
                                                           #'rhs-blk
                                                           (syntax-e #'static?))
                            . bodys))]
-             [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
-                                                   ...))
+             [(group prim-for-clause #:each (_::block (group any ...+ rhs-blk)
+                                                      ...))
               ;; parse binding as binding group
               #`(#:splice (for-clause-step
                            orig static?
@@ -258,10 +258,10 @@
   (build-binding-clause orig-stx
                         state-stx
                         (syntax-parse bindings-stx
-                          #:datum-literals (group parens block)
-                          [((group (~optional _::values-id) (parens g ...)))
+                          #:datum-literals (group)
+                          [((group (~optional _::values-id) (_::parens g ...)))
                            #'(g ...)]
-                          [else bindings-stx])
+                          [_ bindings-stx])
                         rhs-block-stx
                         static?))
 
@@ -389,7 +389,7 @@
 (begin-for-syntax
   ;; Like `:var-decl`, but we don't allow `=` here
   (define-splicing-syntax-class :each-decl
-    #:datum-literals (group block)
+    #:datum-literals (group)
     #:attributes ([bind 1] blk)
     (pattern (~seq bind ...+ (~and rhs (_::block . _)))
              #:attr blk #'rhs)))
@@ -398,7 +398,7 @@
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals (group)
        [(form-id d::each-decl)
         #`[(#,group-tag prim-for-clause #:each d.bind ... d.blk)]]
        [(form-id (tag::block (group d::each-decl) ...))
@@ -412,7 +412,6 @@
 
 (define-for-syntax (parse-when stx kw)
   (syntax-parse stx
-    #:datum-literals ()
     [(form-id (tag::block g ...))
      #`[(#,group-tag prim-for-clause #,kw (rhombus-body-at tag g ...))]]
     [(form-id expr ...+)

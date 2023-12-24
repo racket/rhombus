@@ -4,7 +4,7 @@
          "expression.rkt"
          "parse.rkt"
          "parens.rkt"
-         (submod "equal.rkt" for-parse))
+         #;(submod "equal.rkt" for-parse))
 
 (provide (rename-out
           [rhombus-parameterize parameterize]))
@@ -25,7 +25,6 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals ()
        [(form-id (_::braces binding::binding ...)
                  (tag::block body ...))
         (values

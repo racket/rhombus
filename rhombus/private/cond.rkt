@@ -37,9 +37,9 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals (group)
        [(form-id (_::alts
-                  (_::block (group pred ... ((~and tag block) rhs ...)))
+                  (_::block (group pred ... (tag::block rhs ...)))
                   ...
                   e::else-clause))
         (values
@@ -52,7 +52,7 @@
               [else e.parsed]))
          #'())]
        [(form-id (_::alts
-                  (_::block (group pred ... ((~and tag block) rhs ...)))
+                  (_::block (group pred ... (tag::block rhs ...)))
                   ...))
         (values
          (relocate+reraw

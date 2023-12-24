@@ -49,7 +49,7 @@
                               stx))
        #`(#,proc #,val))
      (syntax-parse stx
-       #:datum-literals (block group)
+       #:datum-literals (group)
        [(form-id in ...+ (alts-tag::alts
                           clause::pattern-clause
                           ...

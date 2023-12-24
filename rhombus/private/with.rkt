@@ -41,7 +41,7 @@
      (define more-static? (is-static-context/tail? tail))
      (syntax-parse tail
        #:datum-literals (group)
-       [(with-id (_parens (group name:id _::equal rhs ...) ...) . tail)
+       [(with-id (_::parens (group name:id _::equal rhs ...) ...) . tail)
         (let ([form1 (rhombus-local-expand orig-form1)])
           (define update-id
             (syntax-parse form1

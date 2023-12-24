@@ -1,17 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/property
                      enforest/syntax-local
-                     "name-path-op.rkt"
-                     "operator-parse.rkt"
                      "dotted-sequence.rkt"
-                     "introducer.rkt"
-                     "srcloc.rkt")
-         "expression.rkt"
-         "name-root.rkt"
-         "name-root-ref.rkt"
-         "parens.rkt")
+                     "introducer.rkt")
+         "name-root-ref.rkt")
 
 (begin-for-syntax
   (provide :dotted-identifier-sequence
@@ -55,7 +48,7 @@
 
   (define-syntax-class :dotted-operator-or-identifier
     #:attributes (name extends tail-name)
-    #:datum-literals (op |.|)
+    #:datum-literals (parens group op |.|)
     (pattern ((op o))
              #:attr name #'o
              #:attr extends #'#f

@@ -199,7 +199,7 @@
              (and (target-space? (syntax-e sp-stx) x)
                   (in-space space-id)))
            (loop #'rest-rule))]
-      [((~and mode (~or #:only #:except)) space ...)
+      [((~and mode (~or* #:only #:except)) space ...)
        (define x (datum->syntax #f 'x))
        (define match?
          (for/or ([sp-stx (in-list (syntax->list #'(space ...)))])
@@ -255,7 +255,7 @@
                     stx
                     stx)]
     [else stx]))
-                             
+
 ;; Gets information on a name ref that can be used with `import`
 (define-for-syntax (import-root-ref v)
   (and

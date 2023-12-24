@@ -204,7 +204,7 @@
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)
     #:description "identifier for a parsed sequence"
-    #:datum-literals (group parens)
+    #:datum-literals (group)
     (pattern id:identifier)
     (pattern (tag::parens (group parsed::identifier-for-parsed))
              #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
@@ -429,7 +429,6 @@
 
 (begin-for-syntax
   (define-syntax-class :identifier-syntax-quote
-    #:datum-literals ()
     (pattern (_::quotes g::identifier-definition-group)))
 
   (define-syntax-class :identifier-definition-group

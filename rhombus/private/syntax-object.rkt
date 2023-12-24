@@ -21,7 +21,8 @@
          "index-result-key.rkt"
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
-         (submod "list.rkt" for-compound-repetition))
+         (submod "list.rkt" for-compound-repetition)
+         "parens.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -147,21 +148,21 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens quotes group)
-       [(_ ((~or parens quotes) (group term)) . tail)
+       #:datum-literals (group)
+       [(_ ((~or* _::parens _::quotes) (group term)) . tail)
         ;; Note: discarding group properties in this case
         (values #'(quote-syntax term) #'tail)]
-       [(_ (~and ((~or parens quotes) . _) gs) . tail)
+       [(_ (~and ((~or* _::parens _::quotes) . _) gs) . tail)
         (values #`(quote-syntax #,(pack-tagged-multi #'gs)) #'tail)]))))
 
 (define-syntax literal_group
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens quotes group)
-       [(_ ((~or parens quotes)) . tail)
+       #:datum-literals (group)
+       [(_ ((~or* _::parens _::quotes)) . tail)
         (values #`(quote-syntax #,(pack-multi '())) #'tail)]
-       [(_ ((~or parens quotes) g) . tail)
+       [(_ ((~or* _::parens _::quotes) g) . tail)
         (values #'(quote-syntax g) #'tail)]))))
 
 ;; ----------------------------------------
@@ -408,7 +409,7 @@
   #:static-infos ((#%call-result #,list-of-syntax-static-infos))
   (check-syntax who v)
   (syntax->list (unpack-tail v who #f)))
-  
+
 (define/method (Syntax.unwrap_sequence v)
   #:static-infos ((#%call-result #,list-of-syntax-static-infos))
   (check-syntax who v)
@@ -462,7 +463,7 @@
 (define (relevant-source-syntax ctx-stx-in)
   (syntax-parse ctx-stx-in
     #:datum-literals (group block alts parens brackets braces quotes multi op)
-    [((~and head (~or group block alts parens brackets braces quotes)) . _) #'head]
+    [((~and head (~or* group block alts parens brackets braces quotes)) . _) #'head]
     [(multi (g t))
      #:when (syntax-property #'g 'from-pack)
      (relevant-source-syntax #'t)]
@@ -477,7 +478,7 @@
   (let loop ([stx stx])
     (syntax-parse stx
       #:datum-literals (group block alts parens brackets braces quotes multi op)
-      [((~and head (~or group block alts parens brackets braces quotes)) . rest)
+      [((~and head (~or* group block alts parens brackets braces quotes)) . rest)
        (define inner (proc #'head))
        (proc-outer (datum->syntax #f (cons inner #'rest)) inner)]
       [((~and m multi) (g t))

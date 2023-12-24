@@ -21,13 +21,13 @@
            binding-transformer
 
            make-identifier-binding
-                     
+
            :binding-form
            binding-form
            check-binding-result
 
            :binding-impl
-           
+
            :binding-info
            binding-info
 
@@ -43,13 +43,11 @@
 (begin-for-syntax
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
-    #:datum-literals (parens group)
     (pattern (infoer-id:identifier
               data)))
 
   ;; To call an infoer:
   (define-syntax-class :binding-impl
-    #:datum-literals (parens group)
     (pattern (~and form (infoer-id . _))
              #:do [(define proc (syntax-local-value* #'infoer-id (lambda (v)
                                                                    (and (procedure? v)
@@ -70,7 +68,6 @@
 
   ;; To unpack a binding infoer result:
   (define-syntax-class :binding-info
-    #:datum-literals (parens group)
     (pattern (annotation-str:string
               name-id:identifier
               (~and static-infos ((:identifier _) ...))

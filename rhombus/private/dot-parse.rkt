@@ -15,7 +15,6 @@
       (define (bad msg)
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
-        #:datum-literals ()
         [((~and args (p-tag::parens g ...)) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (define n (length gs))

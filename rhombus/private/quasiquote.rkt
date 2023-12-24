@@ -14,6 +14,7 @@
          "empty-group.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          "repetition.rkt"
+         "parens.rkt"
          "op-literal.rkt"
          "static-info.rkt"
          (only-in "implicit.rkt" #%parens) ; for implicit `parens` in `:esc`
@@ -50,18 +51,16 @@
 (begin-for-syntax
   (define-syntax-class (list-repetition in-space)
     #:attributes (name)
-    (pattern (~var op (:... in-space))
-             #:attr name #'op.name)
-    (pattern ((~datum group) (~var op (:... in-space)))
-             #:attr name #'op.name)
-    (pattern ((~datum block) ((~datum group) (~var op (:... in-space))))
-             #:attr name #'op.name))
+    #:datum-literals (group)
+    (pattern (~var || (:... in-space)))
+    (pattern (group (~var || (:... in-space))))
+    (pattern (_::block (group (~var || (:... in-space))))))
   (define-splicing-syntax-class (:esc dotted? any-id?)
     #:attributes (term)
     #:datum-literals (op |.|)
     (pattern (~seq a0:identifier (~seq (~and dot-op (op |.|)) a:identifier) ...+)
              #:when dotted?
-             #:attr term #'(parens (group a0 (~@ dot-op a) ...)))
+             #:with term #'(parens (group a0 (~@ dot-op a) ...)))
     (pattern (~seq term)
              #:when (or any-id?
                         (not (identifier? #'term))
@@ -70,15 +69,12 @@
                                            (unquote-bind-quote _)))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
-    (pattern (~seq (~var _ (:$ in-space)) (~var e (:esc dotted? #f)) (~var dots (:... in-space)))
-             #:attr term #'e.term
-             #:attr name #'dots.name))
+    (pattern (~seq (~var _ (:$ in-space)) (~var || (:esc dotted? #f)) (~var || (:... in-space)))))
   (define-splicing-syntax-class (:block-tail-repetition in-space dotted?)
     #:attributes (name term)
-    (pattern (~seq ((~datum group) (~var _ (:$ in-space)) (~var e (:esc dotted? #f)))
-                   ((~datum group) (~var dots (:... in-space))))
-             #:attr term #'e.term
-             #:attr name #'dots.name)))
+    #:datum-literals (group)
+    (pattern (~seq (group (~var _ (:$ in-space)) (~var || (:esc dotted? #f)))
+                   (group (~var || (:... in-space)))))))
 
 (define-for-syntax (convert-syntax e make-datum make-literal make-void
                                    handle-escape handle-group-escape handle-multi-escape
@@ -96,7 +92,7 @@
                                    #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
-      #:datum-literals (parens brackets braces block quotes multi group alts)
+      #:datum-literals (group parens brackets braces block quotes multi alts)
       [(group
         (~var $-id (:$ in-space)) (~var esc (:esc tail-any-escape? #f)))
        #:when (and (zero? depth) (not as-tail?) (not splice?))
@@ -105,14 +101,14 @@
        #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-group-escape #'$-id.name #'esc.term e))]
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
-      [((~and tag (~or parens brackets braces quotes multi block))
+      [((~or* parens brackets braces quotes multi block)
         (group (~var $-id (:$ in-space)) (~var esc (:esc tail-any-escape? #f))))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
        #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id.name #'esc.term e splice?))]
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
-      [((~and tag (~or parens brackets braces quotes multi block))
+      [((~and tag (~or* parens brackets braces quotes multi block))
         (~and g (group . _)))
        #:when (not splice?)
        ;; Special case: for a single group with (), [], {}, '', or block, if the group
@@ -125,7 +121,7 @@
                    new-sidrs
                    new-vars
                    #f))]
-      [((~and tag (~or parens brackets braces quotes multi block alts group))
+      [((~and tag (~or* parens brackets braces quotes multi block alts group))
         g ...)
        (define in-block? (eq? (syntax-e #'tag) 'block))
        ;; Note: this is where `depth` would be incremented, when `tag` is `quotes`, if we wanted that
@@ -178,6 +174,7 @@
                  vars
                  can-be-empty?))]))
          (syntax-parse gs
+           #:datum-literals (op)
            [()
             (finish (reverse ps) tail
                     (append (or pend-idrs '()) idrs)
@@ -239,7 +236,7 @@
                         (append new-pend-vars vars)
                         (cons (quote-syntax ...) ps) can-be-empty? #f #f depth
                         #t)))]
-           [(((~datum op) (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
+           [((op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
               [(zero? depth)
                (define tail? (and (null? (syntax-e #'n-gs))
@@ -264,7 +261,7 @@
                         #t)])]
               [else
                (simple2 gs (sub1 depth))])]
-           [(((~datum op) (~var $-id (:$ in-space))))
+           [((op (~var $-id (:$ in-space))))
             (raise-syntax-error #f
                                 "misplaced escape"
                                 #'$-id.name)]
@@ -296,12 +293,12 @@
                                     #:splice-pattern [splice-pattern #f])
   (define (make-datum d)
     (case (syntax-e d)
-      [(parens) #'_::parens]
-      [(block) #'_::block]
-      [(alts) #'_::alts]
-      [(braces) #'_::braces]
-      [(brackets) #'_::brackets]
-      [(quotes) #'_::quotes]
+      [(parens) #'(~var _ :parens)]
+      [(block) #'(~var _ :block)]
+      [(alts) #'(~var _ :alts)]
+      [(braces) #'(~var _ :braces)]
+      [(brackets) #'(~var _ :brackets)]
+      [(quotes) #'(~var _ :quotes)]
       [else #`(~datum #,d)]))
   (define (handle-escape $-id e in-e kind)
     (define parsed
@@ -459,13 +456,12 @@
                                                          #,(car ps))
                                                  (cdr ps)))
                     (define (wrap-non-alts) (wrap #`(~not ((~datum alts) . _))))
-                    (define (wrap-non-block-non-alts) (wrap #`(~not ((~or (~datum block) (~datum alts)) . _))))
+                    (define (wrap-non-block-non-alts) (wrap #`(~not ((~or* (~datum block) (~datum alts)) . _))))
                     (let loop ([gs gs])
                       (syntax-parse gs
-                        #:datum-literals (block alts)
                         [() (no-wrap)]
-                        [((block . _) . _) (wrap-non-block-non-alts)]
-                        [((alts . _) . _) (wrap-non-alts)]
+                        [((_::block . _) . _) (wrap-non-block-non-alts)]
+                        [((_::alts . _) . _) (wrap-non-alts)]
                         [(_::$-bind _ _::...-bind . gs) (loop #'gs)]
                         [(_::$-bind . gs) (loop #'gs)]
                         [(_ _::...-bind . gs) (loop #'gs)]
@@ -841,18 +837,18 @@
 
 (define-for-syntax (quoted-shape-dispatch stx in-space single-k group-k multi-k literal-k)
   (syntax-parse stx
-    #:datum-literals (quotes group)
-    [(_ (quotes (group (~and special (~or (~var _ (:... in-space)) (~var _ (:$ in-space)))))) . tail)
+    #:datum-literals (group)
+    [(_ (_::quotes (group (~and special (~or* (~var _ (:... in-space)) (~var _ (:$ in-space)))))) . tail)
      (values (literal-k #'special)
              #'tail)]
-    [(_ (quotes (group t)) . tail)
+    [(_ (_::quotes (group t)) . tail)
      (values (single-k #'t)
              #'tail)]
-    [(_ (quotes g) . tail)
+    [(_ (_::quotes g) . tail)
      #:when group-k
      (values (group-k #'g)
              #'tail)]
-    [(_ ((~and tag quotes) . args) . tail)
+    [(_ (_::quotes . args) . tail)
      (values (multi-k (datum->syntax #f (cons (syntax-raw-property (datum->syntax #f 'multi) "")
                                               #'args)))
              #'tail)]))
@@ -935,8 +931,8 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
-       [(_ (parens (group term)) . tail)
+       #:datum-literals (group)
+       [(_ (_::parens (group term)) . tail)
         (values (convert-template #'term) #'tail)]))))
 
 (define-binding-syntax syntax_term
@@ -946,8 +942,8 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
-       [(_ (parens (group term)) . tail)
+       #:datum-literals (group)
+       [(_ (_::parens (group term)) . tail)
         (values (convert-pattern/generate-match #'term) #'tail)]))))
 
 (define-syntax (syntax-infoer stx)

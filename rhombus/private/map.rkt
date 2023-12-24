@@ -234,8 +234,7 @@
 
 (define-for-syntax (parse-map stx repetition?)
   (syntax-parse stx
-    #:datum-literals (braces)
-    [(form-id (~and content (braces . _)) . tail)
+    [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss) (parse-setmap-content #'content
                                                         #:shape 'map
                                                         #:who (syntax-e #'form-id)
@@ -265,7 +264,7 @@
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id (~and content (_::braces . _)) . tail)
+       [(form-id (_::braces . _) . tail)
         (parse-map-binding (syntax-e #'form-id) stx "braces" mode)]
        [(form-id (_::parens arg ...) . tail)
         (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
@@ -273,8 +272,8 @@
             [(null? args) (generate-map-binding (reverse keys) (reverse vals) #f #'tail mode)]
             [else
              (syntax-parse (car args)
-               #:datum-literals (group brackets)
-               [(group (brackets key val))
+               #:datum-literals (group)
+               [(group (_::brackets key val))
                 (loop (cdr args) (cons #'key keys) (cons #'val vals))]
                [_ (raise-syntax-error #f
                                       "expected [<key-expr>, <value-binding>]"
@@ -357,8 +356,7 @@
 
 (define-for-syntax (parse-mutable-map stx repetition?)
   (syntax-parse stx
-    #:datum-literals (braces)
-    [(form-id (~and content (braces . _)) . tail)
+    [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss)
        (parse-setmap-content #'content
                              #:shape 'map
@@ -401,9 +399,9 @@
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode 'Map])
   (syntax-parse stx
-    #:datum-literals (parens block group)
-    [(form-id (_ (group key-e ... (block (group val ...))) ...
-                 (group key-b ... (block (group val-b ...)))
+    #:datum-literals (group)
+    [(form-id (_ (group key-e ... (_::block (group val ...))) ...
+                 (group key-b ... (_::block (group val-b ...)))
                  (group _::...-bind))
               . tail)
      (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
@@ -411,7 +409,7 @@
                            #'tail
                            mode
                            #:rest-repetition? #t)]
-    [(form-id (_ (group key-e ... (block (group val ...))) ...
+    [(form-id (_ (group key-e ... (_::block (group val ...))) ...
                  (group _::&-bind rst ...))
               . tail)
      (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
@@ -419,7 +417,7 @@
                               (#,group-tag rst ...))
                            #'tail
                            mode)]
-    [(form-id (_ (group key-e ... (block (group val ...))) ...) . tail)
+    [(form-id (_ (group key-e ... (_::block (group val ...))) ...) . tail)
      (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
                            #f
                            #'tail

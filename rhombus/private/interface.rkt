@@ -1,12 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/syntax-local
-                     enforest/hier-name-parse
-                     "srcloc.rkt"
-                     "name-path-op.rkt"
-                     "introducer.rkt"
-                     "tag.rkt"
                      "interface-parse.rkt"
                      (submod "interface-meta.rkt" for-class)
                      "expose.rkt"
@@ -18,7 +12,6 @@
                               added-method-body))
          "forwarding-sequence.rkt"
          "definition.rkt"
-         "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
          (submod "annot-macro.rkt" for-class)
@@ -50,7 +43,7 @@
 
 (define-for-syntax (parse-interface stxes)
   (syntax-parse stxes
-    #:datum-literals (group block)
+    #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence options::options-block)
      #:with full-name::dotted-identifier #'name-seq
      #:with name #'full-name.name
@@ -114,7 +107,7 @@
          (extract-internal-ids options
                                #'scope-stx #'base-stx
                                #'orig-stx))
-                                    
+
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
        (define intro (make-syntax-introducer))
@@ -128,7 +121,7 @@
                                           ;; vtable from `this`
                                           (and (hash-ref options 'has-non-abstract-method? #f)
                                                (temporary "internal-internal-~a"))))
-       
+
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id

@@ -47,10 +47,10 @@
   (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ (parens g::unquote-binding) . tail)
+       [(_ (_::parens g::unquote-binding) . tail)
         (values #'g.parsed
                 #'tail)]
-       [(_ (parens) . tail)
+       [(_ (_::parens) . tail)
         ;; empty parentheses match an empty group, which
         ;; is only useful for matching an empty group tail
         (case (current-unquote-binding-kind)
@@ -171,7 +171,6 @@
        [(_ . rest)
         #:with (~var stx-class-hier (:hier-name-seq in-name-root-space in-syntax-class-space name-path-op name-root-ref)) #'rest
         (syntax-parse #'stx-class-hier.tail
-          #:datum-literals ()
           [(args::syntax-class-args . args-tail)
            (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
            (values (build-syntax-class-pattern #'stx-class-hier.name

@@ -18,7 +18,6 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens quotes group)
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (syntax/loc stx (quote q))
@@ -28,7 +27,6 @@
   (repetition-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens quotes group)
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (make-repetition-info #'datum
@@ -44,7 +42,6 @@
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens quotes group)
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (binding-form #'literal-infoer

@@ -19,7 +19,8 @@
          "repetition.rkt"
          "space.rkt"
          "macro-macro.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "parens.rkt")
 
 (define+provide-space repet rhombus/repet
   #:fields
@@ -117,14 +118,14 @@
     #:static-infos ((#%call-result #,syntax-static-infos))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
-      #:datum-literals (parens group)
-      [(parens (group orig-form ...)
-               (group name:identifier)
-               seq-expr
-               (group bind-depth:exact-nonnegative-integer)
-               (group use-depth:exact-nonnegative-integer)
-               (group element-static-infos)
-               (group immediate?:boolean))
+      #:datum-literals (group)
+      [(_::parens (group orig-form ...)
+                  (group name:identifier)
+                  seq-expr
+                  (group bind-depth:exact-nonnegative-integer)
+                  (group use-depth:exact-nonnegative-integer)
+                  (group element-static-infos)
+                  (group immediate?:boolean))
        (wrap-parsed
         (make-repetition-info #'(orig-form ...)
                               #'name

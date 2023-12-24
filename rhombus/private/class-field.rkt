@@ -4,7 +4,8 @@
                      "class-parse.rkt")
          "parse.rkt"
          (only-in "binding.rkt" raise-binding-failure)
-         "syntax-parameter.rkt")
+         "syntax-parameter.rkt"
+         "parens.rkt")
 
 (provide (for-syntax build-added-field-arg-definitions))
 
@@ -16,8 +17,7 @@
                            #,(added-field-arg-stx-params added)
                            #,(let ([blk (added-field-arg-blk added)])
                                (syntax-parse blk
-                                 #:datum-literals (block)
-                                 [(block . _) #`(rhombus-body-at . #,blk)]
+                                 [(_::block . _) #`(rhombus-body-at . #,blk)]
                                  [_ #`(rhombus-expression #,blk)])))]
                   [converter (added-field-converter added)]
                   [annotation-str (added-field-annotation-str added)]

@@ -1,21 +1,15 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "operator-parse.rkt"
-                     enforest
                      enforest/property
-                     enforest/syntax-local
                      enforest/operator
-                     enforest/transformer
                      enforest/property
-                     enforest/name-parse
                      enforest/proc-name
                      "introducer.rkt"
                      "macro-result.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "expression.rkt"
-         "binding.rkt"
          "static-info.rkt"
          "index-result-key.rkt"
          "indirect-static-info-key.rkt"
@@ -43,7 +37,7 @@
 
             in-repetition-space
             repet-quote
-            
+
 
             identifier-repetition-use
 
@@ -53,7 +47,6 @@
 
 (begin-for-syntax
   (define-syntax-class :repetition-info
-    #:datum-literals (parens group)
     (pattern (rep-expr
               name
               seq-expr
@@ -72,7 +65,7 @@
 
   (property repetition-prefix-operator prefix-operator)
   (property repetition-infix-operator infix-operator)
-  
+
   (struct repetition-prefix+infix-operator (prefix infix)
     #:property prop:repetition-prefix-operator (lambda (self) (repetition-prefix+infix-operator-prefix self))
     #:property prop:repetition-infix-operator (lambda (self) (repetition-prefix+infix-operator-infix self)))
