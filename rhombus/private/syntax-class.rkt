@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/keyword
                      syntax/parse/pre
                      enforest/name-parse
                      "attribute-name.rkt")
@@ -147,7 +148,7 @@
                                        #:for-together? [for-together? #f])
   (define-values (kind splicing?)
     (let ([kind (cond
-                  [kind-kw (string->symbol (keyword->string kind-kw))]
+                  [kind-kw (string->symbol (keyword->immutable-string kind-kw))]
                   [else (infer-pattern-kind alts)])])
       (cond
         [(eq? kind 'sequence) (values 'term #t)]

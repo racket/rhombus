@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/keyword
                      syntax/parse/pre
                      (rename-in syntax/private/boundmap
                                 [make-module-identifier-mapping make-free-identifier-mapping]
@@ -221,7 +222,7 @@
   (define (convert-assc assc)
     (if (null? (syntax-e assc))
         #''left
-        #`'#,(string->symbol (keyword->string (syntax-e assc)))))
+        #`'#,(string->symbol (keyword->immutable-string (syntax-e assc)))))
 
   (define (check-parsed-right-form form-id tail-pattern)
     (syntax-parse tail-pattern

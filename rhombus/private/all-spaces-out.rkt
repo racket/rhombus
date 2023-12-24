@@ -72,7 +72,7 @@
                   => (lambda (name-root-id)
                        ;; also export any extensions
                        (define out-int-id (out-of-name-root-space int-id))
-                       (define prefix (format "~a." (symbol->string (syntax-e int-id))))
+                       (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
                        (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
                                   #:do [(define intro (if space
                                                           (make-interned-syntax-introducer/add space)

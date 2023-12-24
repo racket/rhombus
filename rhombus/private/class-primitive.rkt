@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      "srcloc.rkt"
                      "class-parse.rkt")
@@ -113,7 +114,7 @@
           (datum->syntax #'parent (string->symbol (format "~a-field-list" (syntax-e #'parent)))))
          null)
      #:with name-static-infos (datum->syntax #'name (string->symbol (format "~a-static-infos" (syntax-e #'name))))
-     #:with Name-str (datum->syntax #'here (symbol->string (syntax-e #'Name)))
+     #:with Name-str (datum->syntax #'here (symbol->immutable-string (syntax-e #'Name)))
      #:with name-instance (datum->syntax #'here (string->symbol (format "~a-instance" (syntax-e #'name))))
      #:with field-list #'((parent-Name.field parent-field-static-infos)
                           ...

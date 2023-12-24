@@ -1,10 +1,11 @@
 #lang racket/base
+(require racket/symbol)
 
 (provide module-symbol-to-lib-string
          module-lib-string-to-lib-string)
 
 (define (module-symbol-to-lib-string sym)
-  (define str (symbol->string sym))
+  (define str (symbol->immutable-string sym))
   (if (regexp-match? #rx"/" str)
       (string-append str ".rhm")
       (string-append str "/main.rhm")))

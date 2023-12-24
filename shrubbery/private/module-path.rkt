@@ -1,6 +1,7 @@
 #lang racket/base
-(require syntax/stx
-         racket/syntax-srcloc)
+(require racket/symbol
+         racket/syntax-srcloc
+         syntax/stx)
 
 (provide parse-module-path-as-shrubbery)
 
@@ -38,13 +39,13 @@
                        [else #f])))
               (datum->syntax #'s
                              (string->symbol (apply string-append
-                                                    (cons (symbol->string (syntax-e #'s))
+                                                    (cons (symbol->immutable-string (syntax-e #'s))
                                                           (let loop ([tail (syntax->list #'tail)])
                                                             (cond
                                                               [(null? tail) '()]
                                                               [else
                                                                (list* "/"
-                                                                      (symbol->string (syntax-e (cadr tail)))
+                                                                      (symbol->immutable-string (syntax-e (cadr tail)))
                                                                       (loop (cddr tail)))])))))
                              (let ([start (syntax-srcloc #'s)]
                                    [end (syntax-srcloc (let loop ([tail (syntax->list #'tail)])

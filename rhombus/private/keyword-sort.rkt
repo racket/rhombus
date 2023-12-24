@@ -1,5 +1,6 @@
 #lang racket/base
-(require syntax/parse/pre
+(require racket/keyword
+         syntax/parse/pre
          (for-template "parens.rkt"))
 
 (provide sort-with-respect-to-keywords)
@@ -17,22 +18,24 @@
                 #:when kw)
             (unless (hash-ref kw-args kw #f)
               (raise-syntax-error #f
-                                  (format "missing keyord argument `~~~a`"
-                                          (keyword->string kw))
+                                  (string-append "missing keyword argument `~"
+                                                 (keyword->immutable-string kw)
+                                                 "`")
                                   stx)))
           (for ([kw (in-hash-keys kw-args)])
             (unless (memq kw kws)
               (raise-syntax-error #f
-                                  (format "unexpected keyord argument `~~~a`"
-                                          (keyword->string kw))
+                                  (string-append "unexpected keyword argument `~"
+                                                 (keyword->immutable-string kw)
+                                                 "`")
                                   stx)))
           (unless (= (length unsorted-gs) (length kws))
             (raise-syntax-error #f
-                                (format (string-append "wrong number of by-position arguments\n"
-                                                       "  expected: ~a\n"
-                                                       "  given: ~a")
-                                        (- (length kws) (hash-count kw-args))
-                                        (length rev-pos-args))
+                                (string-append "wrong number of by-position arguments"
+                                               "\n  expected: "
+                                               (number->string (- (length kws) (hash-count kw-args)))
+                                               "\n  given: "
+                                               (number->string (length rev-pos-args)))
                                 stx))
           (let loop ([pos-args (reverse rev-pos-args)] [kws kws])
             (cond
@@ -47,16 +50,18 @@
              (define kw (syntax-e #'kwd))
              (when (hash-ref kw-args kw #f)
                (raise-syntax-error #f
-                                   (format "duplicate keyord argument `~~~a`"
-                                           (keyword->string kw))
+                                   (string-append "duplicate keyword argument `~"
+                                                  (keyword->immutable-string kw)
+                                                  "`")
                                    stx))
              (syntax-parse #'blk
                [(_ g)
                 (loop (cdr gs) rev-pos-args (hash-set kw-args kw #'g))]
                [_
                 (raise-syntax-error #f
-                                    (format "expected a single group for argument after `~~~a`"
-                                            (keyword->string kw))
+                                    (string-append "expected a single group for argument after `~"
+                                                   (keyword->immutable-string kw)
+                                                   "`")
                                     stx)])]
             [_
              (loop (cdr gs) (cons (car gs) rev-pos-args) kw-args)])]))]))

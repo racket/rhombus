@@ -250,7 +250,7 @@
     [name
      (datum->syntax stx
                     (cons (syntax-raw-property (datum->syntax head name head head)
-                                               (symbol->string name))
+                                               (symbol->immutable-string name))
                           (cdr (syntax-e stx)))
                     stx
                     stx)]

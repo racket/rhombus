@@ -186,7 +186,7 @@
           [_:identifier (datum->syntax
                          mp
                          (string->symbol (regexp-replace #rx"^.*/"
-                                                         (symbol->string (syntax-e mp))
+                                                         (symbol->immutable-string (syntax-e mp))
                                                          ""))
                          mp
                          mp)]

@@ -1,28 +1,24 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      "expose.rkt")
-         syntax/parse/pre
          racket/symbol
-         enforest
+         syntax/parse/pre
          enforest/property
          enforest/operator
          enforest/transformer
-         enforest/transformer-result
          enforest/proc-name
          (for-template "enforest.rkt")
          "introducer.rkt"
-         "name-path-op.rkt"
          "space-provide.rkt"
          "pack.rkt"
-         (submod "syntax-class-primitive.rkt" for-quasiquote)
          (submod "syntax-class-primitive.rkt" for-syntax-class)
          (submod "syntax-object.rkt" for-quasiquote)
          (for-syntax racket/base)
-         "implicit.rkt" ;; needed for `$%body`
+         "implicit.rkt" ;; needed for `#%body`
          "name-root.rkt"
          "space.rkt"
-         "realm.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
          "space-meta-clause.rkt"
@@ -60,7 +56,7 @@
      #`(rhombus-mixed-nested-forwarding-sequence
         (enforest-meta-finish [#,stx base-stx scope-stx name #f . names]) rhombus-meta-enforest
         (enforest-meta-body-step . clauses))]))
-  
+
 (define-syntax enforest-meta-body-step
   (lambda (stx)
     (syntax-parse stx
@@ -79,7 +75,7 @@
           ()
           form . rest)]
       [(_) #'(begin)])))
-             
+
 (define-syntax enforest-meta-finish
   (lambda (stx)
     (syntax-parse stx
@@ -99,7 +95,7 @@
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
-       (define parsed-tag (string->keyword (symbol->string (syntax-e #'space-path-name))))
+       (define parsed-tag (string->keyword (symbol->immutable-string (syntax-e #'space-path-name))))
        (define pack-id (hash-ref options '#:parsed_packer #'#f))
        (define unpack-id (hash-ref options '#:parsed_unpacker #'#f))
        (define pack-and-unpack? (or (syntax-e pack-id) (syntax-e unpack-id)))
@@ -298,7 +294,7 @@
 
 (define ((make-check-syntax name parsed-tag recur) form proc)
   (unless (syntax? form)
-    (raise-bad-macro-result (proc-name proc) (symbol->string name) form))
+    (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form))
   (if recur
       (syntax-parse form
         #:datum-literals (parsed)
@@ -310,7 +306,7 @@
            [(unpack-tail form #f #f)
             => (lambda (g) (recur g))]
            [else
-            (raise-bad-macro-result (proc-name proc) (symbol->string name) form)])])
+            (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form)])])
       form))
 
 (define-for-syntax (check-distinct-exports ex-ht

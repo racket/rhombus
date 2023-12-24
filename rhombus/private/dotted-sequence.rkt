@@ -1,5 +1,6 @@
 #lang racket/base
-(require syntax/parse/pre
+(require racket/symbol
+         syntax/parse/pre
          "operator-parse.rkt"
          (for-template "parens.rkt"))
 
@@ -21,7 +22,7 @@
    (apply string-append
           (let loop ([ids ids])
             (cond
-              [(null? (cdr ids)) (list (symbol->string
+              [(null? (cdr ids)) (list (symbol->immutable-string
                                         (let ([s (syntax-e (car ids))])
                                           (if (and skip-dots?
                                                    (pair? s))
@@ -34,7 +35,6 @@
                                                   (cadr
                                                    (syntax->list (car ids))))))))
                                               s))))]
-              [else (list* (symbol->string (syntax-e (car ids)))
+              [else (list* (symbol->immutable-string (syntax-e (car ids)))
                            "."
                            (loop (if skip-dots? (cddr ids) (cdr ids))))])))))
-

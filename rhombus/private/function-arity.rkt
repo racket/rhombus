@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/keyword
+                     racket/symbol
                      shrubbery/property
                      "statically-str.rkt"
                      "hash-set.rkt"))
@@ -94,17 +96,17 @@
                                [else
                                 (string-append "wrong number of "
                                                (if needed-kws "by-position " "")
-                                               "arguments in " (symbol->string kind) " call"
+                                               "arguments in " (symbol->immutable-string kind) " call"
                                                statically-str)])
                              (error-stx)))
        (unless kwrsts
          (define needed (or needed-kws orig-needed))
          (when (and needed ((hash-count needed) . > . 0))
            (raise-syntax-error #f
-                               (string-append "missing keyword argument in " (symbol->string kind) " call"
+                               (string-append "missing keyword argument in " (symbol->immutable-string kind) " call"
                                               statically-str "\n"
                                               "  keyword: ~"
-                                              (keyword->string (hash-iterate-key needed (hash-iterate-first needed))))
+                                              (keyword->immutable-string (hash-iterate-key needed (hash-iterate-first needed))))
                                (error-stx))))]
       [(syntax-e (car kws))
        (define kw (syntax-e (car kws)))
@@ -118,10 +120,10 @@
        (when (and allowed
                   (not (hash-ref allowed kw #f)))
          (raise-syntax-error #f
-                             (string-append "keyword argument not recognized by called " (symbol->string kind)
+                             (string-append "keyword argument not recognized by called " (symbol->immutable-string kind)
                                             statically-str "\n"
                                             "  keyword: ~"
-                                            (keyword->string kw))
+                                            (keyword->immutable-string kw))
                              (error-stx)))
        (loop (cdr kws) n needed allowed)]
       [else

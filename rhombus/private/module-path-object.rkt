@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         racket/symbol
          syntax/parse/pre
          (only-in racket/base
                   [module-path? racket:module-path?])
@@ -152,10 +153,10 @@
      (check-and-wrap `(lib ,(string->immutable-string
                              (module-symbol-to-lib-string
                               (let loop ([nexts (syntax->list #'(next-id ...))]
-                                         [accum (list (symbol->string (syntax-e #'id)))])
+                                         [accum (list (symbol->immutable-string (syntax-e #'id)))])
                                 (cond
                                   [(null? nexts) (string->symbol (apply string-append (reverse accum)))]
-                                  [else (loop (cdr nexts) (list* (symbol->string (syntax-e (car nexts)))
+                                  [else (loop (cdr nexts) (list* (symbol->immutable-string (syntax-e (car nexts)))
                                                                  "/"
                                                                  accum))])))))
                      #'(sub ...))]

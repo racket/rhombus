@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/keyword
+                     racket/symbol
                      syntax/parse/pre
                      enforest/syntax-local
                      enforest/hier-name-parse
@@ -7,6 +9,7 @@
                      rhombus/private/name-path-op
                      "add-space.rkt"
                      "typeset-key-help.rkt")
+         racket/symbol
          (prefix-in typeset-meta: "typeset_meta.rhm")
          "metavar.rkt"
          "nonterminal.rkt"
@@ -328,7 +331,7 @@
                                     space)))]
     [else
      (define str (if (eq? immed-space 'grammar)
-                     (symbol->string nonterm-sym)
+                     (symbol->immutable-string nonterm-sym)
                      (shrubbery-syntax->string (if str-id-e
                                                    str-id
                                                    id))))
@@ -419,7 +422,7 @@
      #`(parsed
         #:rhombus/expr
         (racketvarfont
-         (make-id-element (quote-syntax #,sp-def-id) #,(symbol->string id-sym) #f
+         (make-id-element (quote-syntax #,sp-def-id) '#,(symbol->immutable-string id-sym) #f
                           #:space '#,space-sym
                           #:suffix #,(if def-sub
                                          #`(list '#,def-sub '#,def-space-sym '#,(or sym id-sym))
@@ -428,7 +431,7 @@
 (define-for-syntax (make-meta-id-transformer id)
   (typeset-meta:make_Transformer
    (lambda (use-stx)
-     #`(parsed #:rhombus/expr (racketvarfont #,(symbol->string (syntax-e id)))))))
+     #`(parsed #:rhombus/expr (racketvarfont '#,(symbol->immutable-string (syntax-e id)))))))
 
 (define-for-syntax (nt-key-expand nt-key-g)
   (define-values (root fields space-names)
@@ -437,11 +440,11 @@
       [(_ root:identifier (~seq (op |.|) field:identifier) ... space:keyword)
        (values #'root
                (syntax->list #'(field ...))
-               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->immutable-string (syntax-e #'space)))))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ...  (op |.|) (parens (group (op name:identifier))) space:keyword)
        (values #'root
                (syntax->list #'(field ... name))
-               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->immutable-string (syntax-e #'space)))))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ...)
        (values #'root
                (syntax->list #'(field ...))
@@ -453,7 +456,7 @@
       [(_ (op name:identifier) space:keyword)
        (values #'name
                '()
-               (full-space-names (string->symbol (keyword->string (syntax-e #'space)))))]
+               (full-space-names (string->symbol (keyword->immutable-string (syntax-e #'space)))))]
       [(_ (op name:identifier))
        (values #'name
                '()

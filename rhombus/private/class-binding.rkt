@@ -1,12 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      enforest/syntax-local
                      (only-in enforest/operator operator-proc)
-                     "srcloc.rkt"
-                     "class-parse.rkt")
+                     "srcloc.rkt")
          "binding.rkt"
-         "bind-macro.rkt"
          (submod "bind-macro.rkt" for-class)
          "composite.rkt"
          "parens.rkt"
@@ -35,7 +34,7 @@
                     [(super-field-static-infos ...) (if no-super? '() #'super-field-static-infoss)]
                     [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)])
         #`(binding-transformer
-           (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+           (make-composite-binding-transformer '#,(symbol->immutable-string (syntax-e #'name))
                                                (quote-syntax name?)
                                                #:static-infos (quote-syntax ((#%dot-provider name-instance)
                                                                              . indirect-static-infos))

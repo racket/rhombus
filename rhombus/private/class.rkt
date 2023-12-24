@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      enforest/syntax-local
                      "class-parse.rkt"
@@ -352,7 +353,7 @@
                                                        [df (in-list super-defaults)])
                                                 (and (not (syntax-e kw))
                                                      (syntax-e df))))
-       (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
+       (define (to-keyword f) (datum->syntax f (string->keyword (symbol->immutable-string (syntax-e f))) f f))
        (define field-ht (check-duplicate-field-names stxes fields super (map interface-desc-dots interfaces)))
        (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
        (define intro (make-syntax-introducer))

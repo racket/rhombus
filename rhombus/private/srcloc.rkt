@@ -1,5 +1,6 @@
 #lang racket/base
-(require shrubbery/srcloc
+(require racket/symbol
+         shrubbery/srcloc
          shrubbery/property)
 
 (provide syntax-srcloc
@@ -105,8 +106,9 @@
 
 ;; unlike `relocate`, copies props and potentially updates 'raw
 (define (relocate-id head id)
-  (syntax-raw-property (relocate head id head) (or (syntax-raw-property head)
-                                                   (symbol->string (syntax-e head)))))
+  (syntax-raw-property (relocate head id head)
+                       (or (syntax-raw-property head)
+                           (symbol->immutable-string (syntax-e head)))))
 
 ;; `stx` should be a Racket expression, while `src-stx` can be a srcloc
 ;; or a shrubbery form

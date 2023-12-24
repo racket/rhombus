@@ -25,8 +25,8 @@
         (list
          (if (regexp-match? #rx"/" str)
              space-name
-             (string->symbol (string-append "rhombus/" (symbol->string space-name)))))])]))
-    
+             (string->symbol (string-append "rhombus/" (symbol->immutable-string space-name)))))])]))
+
 (define (add-space stx space-name/full)
   (cond
     [(eq? space-name/full 'hide)

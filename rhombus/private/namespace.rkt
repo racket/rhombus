@@ -129,7 +129,7 @@
                                       (hash-ref ht ext-sym #f)
                                       (make-ext+int+rule ext-id int-id spaces-mode spaces))))
            ;; look for extensions (in all spaces)
-           (define prefix (format "~a." (symbol->string (syntax-e int-id))))
+           (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
            (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
                                       #:when (use-space? space-sym spaces-mode spaces)
                                       #:do [(define intro (if space-sym

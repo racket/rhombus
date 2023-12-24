@@ -1,5 +1,5 @@
 #lang racket/base
-(require "srcloc.rkt")
+(require racket/keyword)
 
 (provide check-consistent)
 
@@ -8,7 +8,7 @@
   (for ([another-id (in-list (cdr ids))])
     (unless (free-identifier=? the-id another-id)
       (raise-syntax-error (if (keyword? who)
-                              (string->symbol (keyword->string who))
+                              (string->symbol (keyword->immutable-string who))
                               who)
                           (format "case ~a does not match the ~a ~a"
                                   what
