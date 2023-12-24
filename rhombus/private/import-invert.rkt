@@ -1,6 +1,5 @@
 #lang racket/base
-(require syntax/parse/pre
-         "space-in.rkt")
+(require syntax/parse/pre)
 
 (provide import-invert)
 
@@ -14,13 +13,13 @@
                                                         #'name)
                                                    ctx)))
        (values mp #`(tag #,new-imp name . rest))]
-      [((~and tag (~or rename-in only-in except-in expose-in only-spaces-in except-spaces-in)) imp . rest)
+      [((~and tag (~or* rename-in only-in except-in expose-in only-spaces-in except-spaces-in)) imp . rest)
        (define-values (mp new-imp) (loop #'imp ctx))
        (values mp #`(tag #,new-imp . rest))]
       [((~and tag for-label) imp)
        (define-values (mp new-imp) (loop #'imp ctx))
        (values mp #`(tag #,new-imp))]
-      [((~and tag (~or for-meta only-meta-in)) phase imp)
+      [((~and tag (~or* for-meta only-meta-in)) phase imp)
        (define-values (mp new-imp) (loop #'imp ctx))
        (values mp #`(tag phase #,new-imp))]
       [_

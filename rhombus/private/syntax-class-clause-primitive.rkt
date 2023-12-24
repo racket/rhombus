@@ -122,10 +122,10 @@
                             [(_ (_::block
                                  ~!
                                  (group _::kind-id
-                                        (~or
+                                        (~or*
                                          (_::block
-                                          (group (~and kind (~or #:term #:sequence #:group #:multi #:block))))
-                                         (~and kind (~or #:term #:sequence #:group #:multi #:block))))))
+                                          (group (~and kind (~or* #:term #:sequence #:group #:multi #:block))))
+                                         (~and kind (~or* #:term #:sequence #:group #:multi #:block))))))
                              (values #'kind #'())]
                             [(_ . rest)
                              (values #'#f #'rest)]))

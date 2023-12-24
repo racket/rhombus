@@ -307,7 +307,7 @@
 (define-for-syntax (call-nonterminal-transformer nt id)
   (syntax-parse ((typeset-meta:Transformer_proc nt) id)
     [(parsed _ e) #'e]))
-        
+
 (define-for-syntax (make-ellipsis-transformer)
   (typeset-meta:make_Transformer
    (lambda (use-stx)
@@ -505,7 +505,7 @@
                                 to
                                 from)
                  (from-property from)))
-  
+
   (define (subst name #:wrap? [wrap? #t] #:redef? [as-redef? #f])
     (cond
       [wrap?
@@ -641,7 +641,7 @@
 (define-for-syntax (extract-term-metavariables t vars nonterm?)
   (syntax-parse t
     #:datum-literals (parens brackets braces block quotes alts)
-    [((~or parens brackets braces block quotes) g ...)
+    [((~or* parens brackets braces block quotes) g ...)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-group-metavariables g vars nonterm?))]
     [((~datum alts) b ...)
@@ -664,7 +664,7 @@
          [_:identifier (if after-$?
                            (values (extract-term-metavariables t vars #t) #f)
                            (values vars #f))]
-         [((~or parens brackets braces quotes block) g ...)
+         [((~or* parens brackets braces quotes block) g ...)
           (values (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
                     (extract-pattern-metavariables g vars))
                   #f)]
@@ -689,7 +689,7 @@
                                          (syntax-parse at-form
                                            #:datum-literals (op parens)
                                            [(_ (op a) . _) #'a]
-                                           [(_ (seq . _) . _) #'seq] 
+                                           [(_ (seq . _) . _) #'seq]
                                            [(_ a . _) #'a]))
                           "")]
                 [(option ...) options])
@@ -712,7 +712,7 @@
                (define t (cadr ts))
                (cons (append-consecutive-syntax-objects (syntax-e t) pre t)
                      (loop (cddr ts)))]
-              [((~and tag (~or parens brackets braces quotes block)) g ...)
+              [((~and tag (~or* parens brackets braces quotes block)) g ...)
                (cons #`(tag
                         #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
                              (drop-pattern-escapes g)))

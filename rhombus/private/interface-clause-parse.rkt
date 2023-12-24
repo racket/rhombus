@@ -1,12 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     (only-in "class-parse.rkt"
-                              added-method))
-         "interface-clause.rkt"
+                     syntax/parse/pre)
          "class-clause-parse.rkt"
-         (submod "class-clause-parse.rkt" for-interface)
-         "parens.rkt")
+         (submod "class-clause-parse.rkt" for-interface))
 
 (provide (for-syntax parse-annotation-options
                      parse-options
@@ -36,9 +32,9 @@
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
-              [((~or #:method #:override #:final #:final-override
-                     #:property #:override-property
-                     #:final-property #:final-override-property) . _)
+              [((~or* #:method #:override #:final #:final-override
+                      #:property #:override-property
+                      #:final-property #:final-override-property) . _)
                (hash-set options 'has-non-abstract-method? #t)]
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]

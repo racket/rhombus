@@ -23,7 +23,7 @@
   (define (add-to-term stx)
     (syntax-parse stx
       #:datum-literals (parens brackets braces block alts op)
-      [((~and tag (~or parens brackets braces block)) g ...)
+      [((~and tag (~or* parens brackets braces block)) g ...)
        (datum->syntax stx (cons #'tag (add-to-groups #'(g ...))) stx stx)]
       [((~and tag alts) b ...)
        (datum->syntax stx (cons #'tag (add-to-terms #'(b ...))) stx stx)]

@@ -33,7 +33,7 @@
              (#,(datum->syntax #'lang.parsed '#%module-begin)
               (top body
                    ...))))]
-       [(_ (~optional (~and order (~or #:late #:early))
+       [(_ (~optional (~and order (~or* #:late #:early))
                       #:defaults ([order #'#:early]))
            name:identifier
            #:lang mp ...+ (_::block body ...))
@@ -109,8 +109,8 @@
                (datum->syntax
                 stx
                 (list
-                 #'module* 
-                 #'the-submodule 
+                 #'module*
+                 #'the-submodule
                  #f ; namespace context is the original context
                  (list
                   '#%module-begin
@@ -145,7 +145,7 @@
     #;
     (pattern (~seq (~and kw #:cross_phase_persistent))
              #:attr [parsed 1] (list #'#:cross-phase-persistent)))
-  
+
   ;; Also module-local:
   (define-values (pragmas-box) (make-hasheq)))
 

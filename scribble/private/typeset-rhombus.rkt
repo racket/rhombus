@@ -371,7 +371,7 @@
   (if inset?
       (nested-flow (style 'code-inset null) (list output-block))
       output-block))
-  
+
 (define tt-style (style 'tt null))
 
 (define tt-space (element tt-style " "))
@@ -568,7 +568,7 @@
   (define (replace-in-term stx)
     (syntax-parse stx
       #:datum-literals (parens brackets braces block quotes multi alts op)
-      [((~and tag (~or parens brackets braces quotes block multi)) g ...)
+      [((~and tag (~or* parens brackets braces quotes block multi)) g ...)
        (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
       [((~and tag alts) b ...)
        (datum->syntax stx (cons #'tag (replace-in-terms #'(b ...))) stx stx)]

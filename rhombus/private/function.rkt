@@ -241,9 +241,9 @@
           (build-definitions/maybe-extension #f #'name.name #'name.extends
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
-        [(_ (~or (~seq (_::parens _ ...) _ ...)
-                 (_::alts (_::block (group (_::parens _ ...) . _)) ...+)
-                 (~seq _ ... (_::alts . _))))
+        [(_ (~or* (~seq (_::parens _ ...) _ ...)
+                  (_::alts (_::block (group (_::parens _ ...) . _)) ...+)
+                  (~seq _ ... (_::alts . _))))
          (syntax-parse #`(group . #,stx)
            [e::expression
             (list #'(#%expression e.parsed))])]))))

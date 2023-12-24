@@ -121,11 +121,11 @@
 
   (define-syntax-class-mixin self-options
     #:datum-literals (group)
-    (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
-                                             (_::block (group self-id:identifier))))
+    (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
+                                              (_::block (group self-id:identifier))))
                      #:defaults ([self-id #'self]))
-          (~optional (group #:all_stx ~! (~or all-id:identifier
-                                              (_::block (group all-id:identifier))))
+          (~optional (group #:all_stx ~! (~or* all-id:identifier
+                                               (_::block (group all-id:identifier))))
                      #:defaults ([all-id #'#f]))))
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
@@ -157,9 +157,9 @@
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (group)
     (~alt (~optional (group #:associativity ~!
-                            (~or (_::block (group (~and assc
-                                                        (~or #:right #:left #:none))))
-                                 (~and assc (~or #:right #:left #:none))))
+                            (~or* (_::block (group (~and assc
+                                                         (~or* #:right #:left #:none))))
+                                  (~and assc (~or* #:right #:left #:none))))
                      #:defaults ([assc #'()]))))
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
@@ -506,16 +506,16 @@
     #:datum-literals (group)
     [(form-id q::identifier-syntax-quote
               (~and rhs (tag::block
-                         (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
-                                                                  (_::block (group self-id:identifier))))
+                         (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
+                                                                   (_::block (group self-id:identifier))))
                                           #:defaults ([self-id #'self]))
-                               (~optional (group #:all_stx ~! (~or all-id:identifier
-                                                                   (_::block (group all-id:identifier))))
+                               (~optional (group #:all_stx ~! (~or* all-id:identifier
+                                                                    (_::block (group all-id:identifier))))
                                           #:defaults ([all-id #'#f]))
                                (group (~var kw (:keyword-matching extra-kws))
                                       ~!
-                                      (~or (_::block (group extra))
-                                           extra)))
+                                      (~or* (_::block (group extra))
+                                            extra)))
                          ...
                          body ...)))
      (define p (parse-transformer-definition #'q.g #'(tag body ...)))
@@ -526,16 +526,16 @@
                 (group
                  q::identifier-syntax-quote
                  (~and rhs (tag::block
-                            (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
-                                                                         (_::block (group self-id:identifier))))
+                            (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
+                                                                      (_::block (group self-id:identifier))))
                                              #:defaults ([self-id #'self]))
-                                  (~optional (group #:all_stx ~! (~or all-id:identifier
-                                                                      (_::block (group all-id:identifier))))
+                                  (~optional (group #:all_stx ~! (~or* all-id:identifier
+                                                                       (_::block (group all-id:identifier))))
                                              #:defaults ([all-id #'#f]))
                                   (group (~var kw (:keyword-matching extra-kws))
-                                             ~!
-                                             (~or (_::block (group extra))
-                                                  extra)))
+                                         ~!
+                                         (~or* (_::block (group extra))
+                                               extra)))
                             ...
                             body ...))))
                ...))

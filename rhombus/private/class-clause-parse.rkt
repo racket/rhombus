@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/hier-name-parse
                      "class-parse.rkt"
                      "expose.rkt")
          (submod "annotation.rkt" for-class)
@@ -188,10 +187,10 @@
 
 (define-for-syntax (parse-method-clause orig-stx options clause stx-params)
   (syntax-parse clause
-    [((~and tag (~or #:method #:override #:private #:final #:final-override #:private-override
-                     #:property #:override-property
-                     #:final-property #:final-override-property
-                     #:private-property #:private-override-property))
+    [((~and tag (~or* #:method #:override #:private #:final #:final-override #:private-override
+                      #:property #:override-property
+                      #:final-property #:final-override-property
+                      #:private-property #:private-override-property))
       id rhs maybe-ret)
      (define-values (body replace disposition kind)
        (case (syntax-e #'tag)
@@ -222,7 +221,7 @@
                                                     kind
                                                     (extract-arity #'rhs))
                                       (hash-ref options 'methods null)))]
-    [((~and tag (~or #:abstract #:abstract-property #:abstract-override #:abstract-override-property))
+    [((~and tag (~or* #:abstract #:abstract-property #:abstract-override #:abstract-override-property))
       id rhs maybe-ret)
      (define-values (replace kind)
        (case (syntax-e #'tag)

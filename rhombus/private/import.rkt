@@ -147,7 +147,7 @@
                                     only-space-in only-spaces-in except-spaces-in only-meta-in
                                     submod)
         [#f (reverse accum)]
-        [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
+        [((~or* rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
          (extract #'mp accum)]
         [((~and tag rhombus-prefix-in) mp name ctx)
          (if (or (identifier? #'name)
@@ -161,7 +161,7 @@
                  (syntax-parse #'name
                    [(_ op) (extract #'mp (cons #'(tag mp op ctx)
                                                accum))])))]
-        [((~or for-meta only-space-in only-meta-in) _ mp) (extract #'mp accum)]
+        [((~or* for-meta only-space-in only-meta-in) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
@@ -441,11 +441,11 @@
                                        only-space-in only-spaces-in except-spaces-in only-meta-in
                                        submod)
            [#f (values #`(expose-in #,r #,id) #f)]
-           [((~and tag (~or only-spaces-in except-spaces-in)) mp . tail)
+           [((~and tag (~or* only-spaces-in except-spaces-in)) mp . tail)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values (and new-r #`(tag #,new-r . tail))
                     meta)]
-           [((~and tag (~or for-label)) mp . tail)
+           [((~and tag (~or* for-label)) mp . tail)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values (and new-r #`(tag #,new-r . tail))
                     #'tag)]
@@ -456,17 +456,17 @@
                          new-r
                          #`(rename-in #,new-r [#,id name]))
                     meta)]
-           [((~and tag (~or only-space-in only-meta-in)) sp mp)
+           [((~and tag (~or* only-space-in only-meta-in)) sp mp)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values (and new-r
                          #`(tag sp #,new-r))
                     meta)]
-           [((~and tag (~or for-meta)) m mp)
+           [((~and tag (~or* for-meta)) m mp)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values (and new-r
                          #`(tag m #,new-r))
                     #'tag)]
-           [((~or only-in except-in expose-in rename-in) mp . _)
+           [((~or* only-in except-in expose-in rename-in) mp . _)
             (define-values (new-r meta) (loop #'mp prefixed?))
             (values #f meta)]
            [_ (error "oops ~s" r)])))

@@ -233,7 +233,7 @@
          (raise-syntax-error #f
                              "module re-export not supported in a namespace context"
                              #'mod-path)]
-        [((~or for-meta for-label) . _)
+        [((~or* for-meta for-label) . _)
          (raise-syntax-error #f
                              "not allowed in a namespace context"
                              ex)]

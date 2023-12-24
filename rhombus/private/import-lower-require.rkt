@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/phase+space
-                     enforest/transformer
                      racket/symbol
                      "import-cover.rkt")
          "name-root-space.rkt"
@@ -253,7 +252,7 @@
                    (syntax-e #'phase)
                    only-phase))
              (values phase+spaces syms covered-ht shift renames revnames only-mentioned? new-only-phase)]
-            [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
+            [((~and mode (~or* only-spaces-in except-spaces-in)) mp a-space ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
                (extract #'mp space step))
              (define the-spaces
@@ -305,10 +304,10 @@
           #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in only-meta-in
                                 only-spaces-in except-spaces-in)
           [#f mp]
-          [((~and tag (~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in))
+          [((~and tag (~or* rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in))
             mp . rest)
            #`(tag #,(strip #'mp) . rest)]
-          [((~and tag (~or for-meta only-meta-in)) phase mp)
+          [((~and tag (~or* for-meta only-meta-in)) phase mp)
            #`(tag phase #,(strip #'mp))]
           [((~and tag only-space-in) space mp)
            #`(tag space #,(strip #'mp))]

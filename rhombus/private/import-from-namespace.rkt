@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/phase+space
                      racket/symbol
                      "import-cover.rkt"
                      "id-binding.rkt")
@@ -142,7 +141,7 @@
              (extract #'mp ht step)
              (raise-syntax-error 'import "cannot prune phase of namespace content" r))]
         [(rhombus-prefix-in mp . _) (extract #'mp ht step)]
-        [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
+        [((~and mode (~or* only-spaces-in except-spaces-in)) mp a-space ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (define the-spaces
            (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
@@ -176,9 +175,9 @@
                                   only-spaces-in except-spaces-in rhombus-prefix-in
                                   only-space-in only-meta-in)
       [#f (void)]
-      [((~or rename-in only-in except-in expose-in only-spaces-in except-spaces-in rhombus-prefix-in) mp . _)
+      [((~or* rename-in only-in except-in expose-in only-spaces-in except-spaces-in rhombus-prefix-in) mp . _)
        (loop #'mp)]
-      [((~or for-meta for-label) . _)
+      [((~or* for-meta for-label) . _)
        (raise-syntax-error 'import "cannot shift phase with dotted-import shorthand" r)]
       [(only-space-in space mp)
        (loop #'mp)]
@@ -194,9 +193,9 @@
                                   only-spaces-in except-spaces-in rhombus-prefix-in
                                   only-space-in only-meta-in)
       [#f #f]
-      [((~or rename-in only-in except-in expose-in rhombus-prefix-in) mp . _)
+      [((~or* rename-in only-in except-in expose-in rhombus-prefix-in) mp . _)
        (loop #'mp)]
-      [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
+      [((~and mode (~or* only-spaces-in except-spaces-in)) mp a-space ...)
        (define the-spaces
          (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
            (values (syntax-e a-space) #t)))
@@ -244,7 +243,7 @@
         (loop #'rule-rest))]
       [(#:only) ; shortcut for zero spaces
        null]
-      [((~and mode (~or #:only #:except)) space ...)
+      [((~and mode (~or* #:only #:except)) space ...)
        (define spaces (for/hasheq ([space (in-list (syntax->list #'(space ...)))])
                         (values (syntax-e space) #t)))
        (find-identifer-in-spaces

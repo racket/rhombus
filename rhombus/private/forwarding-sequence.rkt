@@ -86,7 +86,7 @@
          (raise-syntax-error #f "block does not end with an expression" #'orig))
        (define forms #`(begin #,@(reverse accum)))
        (syntax-parse #'ctx
-         [[(final ...) (~or #:stop-at #:block-stop-at) _ accum ...]
+         [[(final ...) (~or* #:stop-at #:block-stop-at) _ accum ...]
           #`(begin
               #,forms
               (final ... #,@(reverse (syntax->list #'(accum ...)))))]
@@ -148,7 +148,7 @@
           (if (null? accum)
               seq
               #`(begin #,@(reverse accum) #,seq))]
-         [((~and def (~or define-values define-syntaxes)) (id ...) rhs)
+         [((~and def (~or* define-values define-syntaxes)) (id ...) rhs)
           #:with (new-id ...) ((make-syntax-delta-introducer #'remove-ctx #'base-ctx)
                                ((make-syntax-delta-introducer #'add-ctx #'base-ctx)
                                 #'(id ...)
@@ -181,7 +181,7 @@
                 [((~and tag portal) id content) #`(tag #,(intro #'id) content)]
                 [_ (intro req)])))
           (syntax-parse #'ctx
-            [(~or #:block (_ #:block-stop-at . _))
+            [(~or* #:block (_ #:block-stop-at . _))
              (for ([req (in-list reqs)])
                (syntax-local-lift-require (local-introduce req) #'use #f))
              #`(sequence [ctx mode orig base-ctx add-ctx remove-ctx stx-params] . forms)]
@@ -204,7 +204,7 @@
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
           #:do [(define next
                   (syntax-parse #'ctx
-                    [(head (~and ctx-tag (~or #:stop-at #:block-stop-at)) stop-id . tail)
+                    [(head (~and ctx-tag (~or* #:stop-at #:block-stop-at)) stop-id . tail)
                      (free-identifier=? #'id #'stop-id)
                      (syntax-track-origin
                       #`(begin
@@ -229,7 +229,7 @@
                       exp-form
                       (syntax-parse exp-form
                         #:literals (#%declare begin-for-syntax module module*)
-                        [((~or #%declare begin-for-syntax module module*) . _)
+                        [((~or* #%declare begin-for-syntax module module*) . _)
                          exp-form]
                         [_ #`(#%expression
                               (with-syntax-parameters stx-params #,(discard-static-infos exp-form)))]))

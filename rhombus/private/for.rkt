@@ -193,7 +193,7 @@
                                                            (syntax->list #'(rhs-blk ...))
                                                            (syntax-e #'static?))
                            . bodys))]
-             [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
+             [(group prim-for-clause (~and kw (~or* #:keep_when #:skip_when #:break_when #:final_when))
                      rhs)
               #:with new-kw (case (syntax-e #'kw)
                               [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]

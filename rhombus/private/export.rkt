@@ -316,7 +316,7 @@
                                           (only-spaces-out space-id space)
                                           ...
                                           #,(loop #'rule-rest))]
-                                      [((~and mode (~or #:only #:except))  space ...)
+                                      [((~and mode (~or* #:only #:except))  space ...)
                                        #`(#,(if (eq? (syntax-e #'mode) '#:only)
                                                 #'only-spaces-out
                                                 #'except-spaces-out)

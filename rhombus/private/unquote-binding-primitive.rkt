@@ -463,8 +463,8 @@
         (syntax-parse (normalize-id form2)
           [#f #'#f]
           [(pat2 idrs2 sidrs2 vars2)
-           #`(#,(norm-seq2 #`(~or #,(norm-seq #'pat1 #'pat2)
-                                  #,(norm-seq #'pat2 #'pat1))
+           #`(#,(norm-seq2 #`(~or* #,(norm-seq #'pat1 #'pat2)
+                                   #,(norm-seq #'pat2 #'pat1))
                            #'pat1
                            #'pat2)
               ()
