@@ -162,11 +162,11 @@
   ;; means that you get nice editor support.
   (define block-stx
     (syntax-parse stx
-      #:datum-literals (muti group block)
+      #:datum-literals (multi group block)
       [(multi (group (~and b (block . _)))) #'b]
       [(group (~and b (block . _))) #'b]
       [(block . _) stx]
-      [else (error 'typeset-rhombusblock "not a block term: ~e" stx)]))
+      [_ (error 'typeset-rhombusblock "not a block term: ~e" stx)]))
   (define stx-ranges (make-hasheq))
   (define str (block-string->content-string (shrubbery-syntax->string (replace-name-refs block-stx)
                                                                       #:use-raw? #t
@@ -572,7 +572,7 @@
        (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
       [((~and tag alts) b ...)
        (datum->syntax stx (cons #'tag (replace-in-terms #'(b ...))) stx stx)]
-      [else stx]))
+      [_ stx]))
   (replace-in-term block-stx))
 
 (define (strip-dont-stop state)

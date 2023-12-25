@@ -37,10 +37,9 @@
 (define-for-syntax (extract-rhs b)
   (syntax-parse b
     [(_::block g) #'g]
-    [else
-     (raise-syntax-error #f
-                         "expected a single entry point in block body"
-                         b)]))
+    [_ (raise-syntax-error #f
+                           "expected a single entry point in block body"
+                           b)]))
 
 (define-for-syntax (parse-annotation-options orig-stx forms stx-paramss)
   (syntax-parse forms

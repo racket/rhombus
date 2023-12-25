@@ -68,7 +68,7 @@
                                 (syntax-parse g
                                   #:datum-literals (group parens)
                                   [(group (parens sub-g)) #'sub-g]
-                                  [else g]))
+                                  [_ g]))
      #`(doc:#%module-begin
         #:id doc
         #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
@@ -91,7 +91,7 @@
            #`(begin
                #,@(reverse accum)
                top))])))
-    
+
 ;; ----------------------------------------
 
 (define (verbatim #:indent [indent 0] l)

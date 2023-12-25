@@ -495,10 +495,9 @@
                   ;; into a term context
                   (syntax-parse e
                     [(_) (values #'(group) #t)]
-                    [else
-                     (raise-syntax-error #f
-                                         (format "multi-group pattern incompatible with ~a context" kind)
-                                         #'qs)])]
+                    [_ (raise-syntax-error #f
+                                           (format "multi-group pattern incompatible with ~a context" kind)
+                                           #'qs)])]
                  [else (values e (and (eq? pat-kind 'group)
                                       (memq kind '(multi block term))))]))
              (define-values (pattern idrs sidrs vars can-be-empty?)
