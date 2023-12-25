@@ -313,6 +313,7 @@
                                   #,@(map parsed-impl ps))]
                              [else
                               #`(syntax-parse (insert-multi-front-group self tail)
+                                  #:disable-colon-notation
                                   #,@(map parsed-impl ps))])))))])
        #,(parsed-name p))
      #,@(if prefix?
@@ -418,6 +419,7 @@
                        [else
                         ;; general pattern mode
                         #`(syntax-parse (insert-multi-front-group self tail)
+                            #:disable-colon-notation
                             #,@(for/list ([pre-parsed (in-list pre-parseds)]
                                           [self-id (in-list self-ids)]
                                           [all-id (in-list all-ids)]
@@ -469,6 +471,7 @@
                                       (with-syntax ([((p-id id-ref) ...) idrs]
                                                     [(((s-id ...) sid-ref) ...) sidrs])
                                         #`(syntax-parse tail-id
+                                            #:disable-colon-notation
                                             [#,pattern
                                              (let ([p-id id-ref] ...)
                                                (let-syntaxes ([(s-id ...) sid-ref] ...)

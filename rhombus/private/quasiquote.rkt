@@ -971,6 +971,7 @@
            (begin
              (define-values (match? tmp-id ...)
                (syntax-parse (repack arg-id)
+                 #:disable-colon-notation
                  [pattern (values #t id-ref ...)]
                  [_ (values #f 'id ...)]))
              (IF match?
@@ -1011,6 +1012,7 @@
      (relocate+reraw
       (respan stx)
       #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,in-expr)
+          #:disable-colon-notation
           #:context '#,who
           #,@(for/list ([bind (in-list binds)]
                         [rhs (in-list (syntax->list rhss-stx))])
