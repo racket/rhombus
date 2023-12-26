@@ -129,7 +129,7 @@ from a pattern variable using dot notation.
   ~defn:
     expr.macro 'right_operand $(a :: Arithmetic)':
       a.y
-  ~eval:
+  ~repl:
     right_operand 2 + 3
     right_operand 8 - 4
 )

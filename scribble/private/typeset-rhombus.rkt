@@ -182,15 +182,19 @@
                                                                            (display "ELEM" output)
                                                                            #t]
                                                                           [else #f])))
-                                            (syntax-parse block-stx
-                                              [(_ one . _)
-                                               #:when (not indent-from-block?)
-                                               (syntax-parse #'one
-                                                 #:datum-literals (group)
-                                                 [(group a . _) (syntax-column #'a)])]
-                                              [(b . _) (syntax-column #'b)])
-                                            (syntax-case block-stx ()
-                                              [(b . _) (and indent-from-block? (syntax-raw-property #'b))])
+                                            (syntax-column
+                                             (if indent-from-block?
+                                                 (syntax-parse block-stx
+                                                   #:datum-literals (block)
+                                                   [((~and tag block) . _) #'tag])
+                                                 (syntax-parse block-stx
+                                                   #:datum-literals (group block)
+                                                   [(block (group (~or* (a . _) a) . _) . _) #'a])))
+                                            (and indent-from-block?
+                                                 (syntax-parse block-stx
+                                                   #:datum-literals (block)
+                                                   [((~and tag block) . _)
+                                                    (syntax-raw-property #'tag)]))
                                             indent-from-block?
                                             stx-ranges))
   (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])

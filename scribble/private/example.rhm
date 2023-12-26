@@ -2,7 +2,6 @@
 
 import:
   "typeset-example.rkt" open
-  
 
 export:
   examples
@@ -11,74 +10,62 @@ export:
   close_eval
 
 expr.macro 'examples($form, ...)':
-  ~op_stx: self
-  fun split(forms) :~ List:
-    match forms
-    | []: []
-    | ['~eval: $_', &rest]:
-        split(rest)
-    | ['~label: $_', &rest]:
-        split(rest)
-    | ['~indent: $_', &rest]:
-        split(rest)
-    | ['~defn: $defn; ...', &rest]:
-        [['~defn', [defn, ...]], &split(rest)]
-    | ['~repl: $repl; ...', &rest]:
-        [['~repl', [repl, ...]], &split(rest)]
-    | ['~hidden: $repl; ...', &rest]:
-        [['~hidden', [repl, ...]], &split(rest)]
-    | ['~error: $repl', &rest]:
-        [['~repl', forms]]
-    | ['~check: $repl', &rest]:
-        [['~repl', forms]]
-    | ['~fake: $repl', &rest]:
-        [['~repl', forms]]
-    | ['$(kw :: Keyword) $_ ...', &rest]:
-        syntax_meta.error("misplaced or unrecognized keyword", self, kw)
-    | [form, ...]:
-        [['~repl', [form, ...]]]
-  fun find_kw(forms, want_kw, was_found):
-    match forms
-    | []: #false
-    | ['$(kw :: Keyword): $(eval_expr :: Group)', &rest]:
-        cond
-        | kw.unwrap() == want_kw:
-            when was_found
-            | syntax_meta.error("duplicate `~" +& kw.unwrap() +& "` clause", '$eval_expr')
-            find_kw(rest, want_kw, #true)
-            eval_expr
-        | ~else: find_kw(rest, want_kw, was_found)
-    | [form, &rest]: find_kw(rest, want_kw, was_found)
-  fun find_eval(): find_kw([form, ...], #'~eval, #false)
-  fun find_label(): find_kw([form, ...], #'~label, #false)
-  fun find_indent(): find_kw([form, ...], #'~indent, #false) || '0'
+  ~all_stx stx
+  fun find_kw(want_kw):
+    for values(found_expr = #false) (form: [form, ...]):
+      match form
+      | '$(pattern:
+             kind ~term
+           | '$(kw :: Keyword)':
+               match_when kw.unwrap() == want_kw
+               when found_expr
+               | syntax_meta.error("duplicate `~" +& kw.unwrap() +& "` clause",
+                                   stx, form))
+           $tail':
+          let ': $(eval_expr :: Group)' = tail
+          eval_expr
+      | ~else: found_expr
+  let label = find_kw(#'~label)
+  let eval = find_kw(#'~eval)
+  let indent = find_kw(#'~indent)
   def [new_form, ...]:
-    for List:
-      each:
-        j :~ List: split([form, ...])
-        i: 0..
-      def [no_prompt, ...]: match j[0]
-                            | '~defn': ['~no_prompt']
-                            | '~hidden': ['~hidden: #true']
-                            | _: []
-      def label: if i == 0 | find_label() | #false
-      Syntax.relocate_span('(@examples_stanza(~label: $label,
-                                              ~eval: eval,
-                                              ~indent: indent,
-                                              $no_prompt, ...,
-                                              $(List.repet(j[1])), ...))',
-                           j[1])
-  def eval = find_eval()
+    let split_forms :~ List:
+      recur split(forms = [form, ...]):
+        match forms
+        | []: []
+        | ['$('~eval' || '~label' || '~indent'): $_', & rest]:
+            split(rest)
+        | ['$(tag && ('~defn' || '~repl' || '~hidden')): $g; ...', & rest]:
+            [[tag, [g, ...]], & split(rest)]
+        | ['$('~error' || '~check' || '~fake'): $_', & _] :
+            [['~repl', forms]]
+        | ['$(kw :: Keyword) $_ ...', & _]:
+            syntax_meta.error("misplaced or unrecognized keyword",
+                              stx, kw)
+        | ~else:
+            [['~repl', forms]]
+    for List ([tag, forms && [form, ...]]: split_forms,
+              i: 0..):
+      '(@examples_stanza(~label: $(if i == 0 | 'label' | '#false'),
+                         ~eval: eval,
+                         ~indent: indent,
+                         $(match tag
+                           | '~defn': '~no_prompt'
+                           | '~hidden': '~hidden: #true'
+                           | ~else: ''),
+                         $form, ...))'
+        .relocate_span(forms)
   'block:
-     def eval: $(eval || 'make_rhombus_eval()')
-     def indent: $(find_indent())
+     def label = $label
+     def eval = $(eval || 'make_rhombus_eval()')
+     def indent = $(indent || '0')
      def content = [$new_form, ...]
-     $(if eval | #void | 'close_eval(eval)')
+     $(if eval | '' | 'close_eval(eval)')
      content'
 
 expr.macro 'examples_stanza $(parens && '($_)')':
   expr_meta.pack_s_exp(['#{typeset-examples}', parens])
-  
+
 fun make_rhombus_eval(~lang: lang = #'rhombus):
   #{make-rhombus-eval}(lang)
 

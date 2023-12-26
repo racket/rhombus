@@ -5,7 +5,7 @@ import:
   meta:
     "rebuild.rhm" open
   "typeset_meta.rhm"
-  "spacer.rhm" 
+  "spacer.rhm"
   lib("scribble/base.rkt") as scribble:
     expose: elem
   meta:
@@ -139,7 +139,7 @@ expr.macro
          || kw === #'~bind
          || kw === #'~impo
          || kw === #'~expo
-         || kw === #'~modpath       
+         || kw === #'~modpath
          || kw === #'~annot
          || kw === #'~repet
          || kw === #'~stxclass
@@ -161,20 +161,20 @@ expr.macro
         syntax_meta.error("invalid space", kw_stx)
 
 expr.macro 'rhombusblock_etc $tail ...':
-  ~op_stx: me
-  fun finish(options, fin_tail):
+  ~all_stx stx
+  fun finish([opt, ...], fin_tail):
     match fin_tail
-    | ': $_':
-        def [opt, ...] = options
-        '#{typeset-rhombusblock}($opt, ..., $(escape_term(spacer.adjust_term(fin_tail, #false, '#,'))))'
-    | ~else: syntax_meta.error("expected a block", '$me $tail ...')
-  fun check_options(options):
-    match options
-    | []: #true
-    | ['~inset: $on', more, ...]: check_options([more, ...])
-    | ['~indent: $amt', more, ...]: check_options([more, ...])
-    | ['~prompt: $prompt', more, ...]: check_options([more, ...])
-    | ['$opt', _, ...]: syntax_meta.error("invalid option", opt)
+    | ': $_': #void
+    | ~else: syntax_meta.error("expected a block", stx)
+    '#{typeset-rhombusblock}(
+       $opt, ...,
+       $(escape_term(spacer.adjust_term(fin_tail, #false, '#,')))
+     )'
+  fun check_options(options :~ List):
+    for (opt: options):
+      match opt
+      | '$('~inset' || '~indent' || '~prompt' || '~indent_from_block'): $_': #void
+      | ~else: syntax_meta.error("invalid option", stx, opt)
   match '$tail ...'
   | '($option, ...) $new_tail ...':
       check_options([option, ...])
@@ -182,5 +182,7 @@ expr.macro 'rhombusblock_etc $tail ...':
   | ~else: finish([], '$tail ...')
 
 expr.macro 'rhombusblock ($args)':
-  '#{typeset-rhombusblock}($(escape_term(spacer.adjust_term(': $args', #false, '#,'))),
-                           ~indent_from_block: #false)'
+  '#{typeset-rhombusblock}(
+     ~indent_from_block: #false,
+     $(escape_term(spacer.adjust_term(': $args', #false, '#,')))
+   )'

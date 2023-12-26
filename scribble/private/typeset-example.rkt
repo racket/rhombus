@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     shrubbery/property)
+                     syntax/parse/pre)
          racket/string
          racket/syntax-srcloc
          rhombus/parse
@@ -35,8 +34,8 @@
     #:datum-literals (parens group block)
     [(_ (parens (~alt (~optional (group #:label (block label-expr))
                                  #:defaults ([label-expr #'(group (parsed #:rhombus/expr #f))]))
-                      (~optional (group (~and no-prompt #:no_prompt))
-                                 #:defaults ([no-prompt #'#f]))
+                      (~optional (group (~and #:no_prompt (~bind [no-prompt? #t])))
+                                 #:defaults ([no-prompt? #f]))
                       (~optional (group (~and eval-kw #:eval) (block eval-expr))
                                  #:defaults ([eval-expr #'(group (parsed #:rhombus/expr (make-rhombus-eval)))]))
                       (~optional (group (~and once-kw #:once)))
@@ -45,46 +44,39 @@
                       (~optional (group #:indent (block indent-expr))
                                  #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))])))
                 ...
-                (group form ...) ...))
+                (~and g (group _ ...)) ...))
      (define (rb form)
-       (with-syntax ([t-form form]
-                     [t-block (syntax-raw-property
-                               (datum->syntax #f 'block
-                                              (syntax-parse form
-                                                [(_ (a . _) . _) #'a]
-                                                [(_ a . _) #'a]))
-                               "")]
-                     [prompt (if (syntax-e #'no-prompt) "" "> ")]
-                     [prompt-indent (if (syntax-e #'no-prompt) 0 2)])
-         #'(rhombus-expression (group rhombusblock_etc
-                                      (parens (group #:prompt (block (group (parsed #:rhombus/expr prompt))))
-                                              (group #:indent (block (group (parsed #:rhombus/expr
-                                                                                    (+ prompt-indent
-                                                                                       (rhombus-expression indent-expr))))))
-                                              (group #:inset (block (group (parsed #:rhombus/expr #f)))))
-                                      (t-block t-form)))))
+       (define-values (block-stx spliced?)
+         (syntax-parse form
+           #:datum-literals (group block)
+           [(group (~and b (block . _))) (values #'b #t)]
+           [(group t ...) (values #'(block (group t ...)) #f)]))
+       #`(rhombus-expression
+          (group rhombusblock_etc
+                 (parens (group #:prompt (block (group (parsed #:rhombus/expr
+                                                               '#,(if (attribute no-prompt?) "" "> ")))))
+                         (group #:indent (block (group (parsed #:rhombus/expr
+                                                               (+ '#,(if (attribute no-prompt?) 0 2)
+                                                                  (rhombus-expression indent-expr))))))
+                         (group #:inset (block (group (parsed #:rhombus/expr #f))))
+                         (group #:indent_from_block (block (group (parsed #:rhombus/expr '#,spliced?)))))
+                 #,block-stx)))
      (with-syntax ([((t-form e-form) ...)
-                    (for/list ([form (in-list (map (lambda (s) (datum->syntax #f
-                                                                              (cons 'group (syntax-e s))))
-                                                   (syntax->list #'((form ...) ...))))])
+                    (for/list ([form (in-list (syntax->list #'(g ...)))])
                       (syntax-parse form
-                        #:datum-literals (group)
-                        [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed #:rhombus/expr (void))))]
-                        [(group #:error (block ((~and tag group) form ...)))
-                         #`((list (quote #:error)
-                                  #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
-                            (tag form ...))]
-                        [(group #:check (block ((~and tag group) form ...)
+                        #:datum-literals (group block)
+                        [(group #:blank)
+                         (list #'(quote #:blank)
+                               #'(group (parsed #:rhombus/expr (void))))]
+                        [(group #:error (block (~and t-form e-form)))
+                         (list #`(list (quote #:error) #,(rb #'t-form)) #'e-form)]
+                        [(group #:check (block (~and t-form e-form1)
                                                (group #:is expect ...)))
-                         #`((list (quote #:check)
-                                  #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
-                            ((tag form ...)
-                             (group expect ...)))]
-                        [(group #:fake (block ((~and tag group) form ...)
-                                              ((~and tag2 group) answer ...)))
-                         #`(#,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...))
-                            (tag2 answer ...))]
-                        [_ #`(#,(rb form) #,form)]))])
+                         (list #`(list (quote #:check) #,(rb #'t-form))
+                               #'(e-form1 (group expect ...)))]
+                        [(group #:fake (block t-form e-form))
+                         (list (rb #'t-form) #'e-form)]
+                        [_ (list (rb form) form)]))])
        #`(examples
           #:eval (rhombus-expression eval-expr)
           #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
