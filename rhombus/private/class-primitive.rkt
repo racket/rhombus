@@ -268,6 +268,7 @@
                                  #f ; not indexable
                                  #f ; not mutable indexable
                                  #f ; not appendable
+                                 #f ; not callable (again)
                                  #f ; not prefab
                                  null)))
                 null)

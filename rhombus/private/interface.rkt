@@ -127,6 +127,8 @@
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
 
+                       super-call-statinfo-indirect-id
+
                        static-infos-id
                        static-infos-exprs
                        instance-static-infos
@@ -146,7 +148,8 @@
                      [call-statinfo-indirect call-statinfo-indirect-id]
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
-                     [append-statinfo-indirect append-statinfo-indirect-id])
+                     [append-statinfo-indirect append-statinfo-indirect-id]
+                     [super-call-statinfo-indirect super-call-statinfo-indirect-id])
          (values
           #`(begin
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
@@ -164,7 +167,8 @@
                                           #,internal-internal-name
                                           instance-static-infos
                                           call-statinfo-indirect index-statinfo-indirect
-                                          index-set-statinfo-indirect append-statinfo-indirect]
+                                          index-set-statinfo-indirect append-statinfo-indirect
+                                          super-call-statinfo-indirect]
                                 exports
                                 [option stx-param] ...))))])))
 
@@ -178,7 +182,8 @@
                     internal-internal-name-id
                     instance-static-infos
                     call-statinfo-indirect index-statinfo-indirect
-                    index-set-statinfo-indirect append-statinfo-indirect]
+                    index-set-statinfo-indirect append-statinfo-indirect
+                    super-call-statinfo-indirect]
           exports
           [option stx-param] ...)
        (define stxes #'orig-stx)
@@ -283,7 +288,8 @@
                                      #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name
-                                             instance-static-infos))
+                                             instance-static-infos
+                                             super-call-statinfo-indirect call-statinfo-indirect))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
@@ -292,7 +298,8 @@
                                      #'call-statinfo-indirect callable?
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
-                                     #'append-statinfo-indirect appendable?))))
+                                     #'append-statinfo-indirect appendable?
+                                     #'super-call-statinfo-indirect))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
@@ -350,7 +357,8 @@
   (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
                        dot-provider-name
-                       instance-static-infos)
+                       instance-static-infos
+                       super-call-statinfo-indirect call-statinfo-indirect)
                  names])
     (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
           [method-map (build-quoted-method-map method-mindex)]
@@ -373,6 +381,7 @@
                                          #,method-result-expr
                                          #,custom-annotation?
                                          (#,(quote-syntax quasisyntax) instance-static-infos)
+                                         #f
                                          '()
                                          #f
                                          '()
@@ -399,6 +408,12 @@
                            #,(and (syntax-e #'dot-provider-name)
                                   #'(quote-syntax dot-provider-name))
                            (#,(quote-syntax quasisyntax) instance-static-infos)
+                           #,(let ([id (if (syntax-e #'call-statinfo-indirect)
+                                           #'call-statinfo-indirect
+                                           #'super-call-statinfo-indirect)])
+                               (if (and id (syntax-e id))
+                                   #`(quote-syntax #,id)
+                                   #f))
                            '#,(append
                                (if callable? '(call) '())
                                (if indexable? '(get) '())

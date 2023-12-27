@@ -19,7 +19,6 @@
          "nested-bindings.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
-         "function-indirect-key.rkt"
          "values-key.rkt"
          "static-info.rkt"
          "repetition.rkt"
@@ -959,25 +958,13 @@
        kwrsts
        (lambda (rator args rest-args kwrest-args rator-static-info)
          (define kws (syntax->list #'(rand.kw ...)))
-         (define (rator-static-info/indirect key
-                                             #:result [result (lambda (si indirect?) si)])
-           (define si (rator-static-info key))
-           (if si
-               (result si #f)
-               (result (let loop ([c-id (rator-static-info #'#%function-indirect)])
-                         (and c-id
-                              (or (syntax-local-static-info c-id key)
-                                  (loop (syntax-local-static-info c-id #'#%function-indirect)))))
-                       #t)))
          (when static?
            (when (or (not kwrsts) (not rsts))
-             (define-values (a indirect?)
-               (if rator-arity
-                   (values rator-arity #f)
-                   (rator-static-info/indirect #'#%function-arity #:result values)))
+             (define a (or rator-arity
+                           (rator-static-info #'#%function-arity)))
              (when a
                (let* ([a (if (syntax? a) (syntax->datum a) a)])
-                 (check-arity rator-stx rator-in a (+ (length extra-rands) (if indirect? 1 0)) kws rsts kwrsts rator-kind)))))
+                 (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind)))))
          (define num-rands (length (syntax->list #'(rand.kw ...))))
          (define arg-formss (for/list ([kw kws]
                                        [arg (in-list args)])
@@ -1000,14 +987,13 @@
          (define e (relocate+reraw (or srcloc
                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx)))
-         (define result-static-infos (or (rator-static-info/indirect #'#%call-result)
+         (define result-static-infos (or (rator-static-info #'#%call-result)
                                          #'()))
-         (define all-result-static-infos (or (let-values ([(r indirect?)
-                                                           (rator-static-info/indirect #'#%call-results-at-arities #:result values)])
+         (define all-result-static-infos (or (let ([r (rator-static-info #'#%call-results-at-arities)])
                                                (let loop ([r r])
                                                  (syntax-parse r
                                                    [((n (result ...)) . rest)
-                                                    (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands) (if indirect? 1 0)))
+                                                    (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands)))
                                                         #`(result ... . #,result-static-infos)
                                                         (loop #'rest))]
                                                    [_ #f])))

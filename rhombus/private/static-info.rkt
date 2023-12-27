@@ -26,8 +26,6 @@
            wrap-static-info*
            :static-info
            syntax-local-static-info
-           syntax-local-static-info/indirect
-           static-info/indirect
            extract-static-infos
            unwrap-static-infos
            discard-static-infos
@@ -130,18 +128,6 @@
                        (and (free-identifier=? #'key #'#%indirect-static-info)
                             (indirect-static-info-ref #'val find-key)))]
         [_ #f])))
-
-  (define (syntax-local-static-info/indirect e key indirect-key)
-    (or (syntax-local-static-info e key)
-        (let ([id (syntax-local-static-info e indirect-key)])
-          (and id
-               (syntax-local-static-info/indirect id key indirect-key)))))
-
-  (define (static-info/indirect indexable-static-info key indirect-key)
-    (or (indexable-static-info key)
-        (let ([id (indexable-static-info indirect-key)])
-          (and id
-               (syntax-local-static-info/indirect id key indirect-key)))))
 
   ;; it's better to relocate and then wrap, since wrapping propagates
   ;; the location, but sometimes it's so much easier to relocate
