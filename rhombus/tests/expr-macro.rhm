@@ -175,9 +175,30 @@ check:
   ~is "quote  1 + 2"
 
 check:
+  expr.macro '$left quote $(x :: Group) $()':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  #'dropped  quote  1 + 2
+  ~is "#'dropped  quote  1 + 2"
+
+check:
   expr.macro 'quote $(x :: Group) $()': '($x)'
   quote 1 + 2
   ~is 3
+
+check:
+  expr.macro 'quote $tail ...':
+    ~all_stx stx
+    values('$(stx.to_source_string())', '$tail ...')
+  quote  +&  1  +&  200
+  ~is "quote  +&  1  +&  2001200"
+
+check:
+  expr.macro 'quote $tail $()':
+    ~all_stx stx
+    values('$(stx.to_source_string())', tail)
+  quote  +&  1  +&  200
+  ~is "quote  +&  1  +&  2001200"
 
 check:
   expr.macro 'quote $x $tail ...':
@@ -199,6 +220,41 @@ check:
     '$(stx.to_source_string())'
   quote 1 3  +&  200
   ~is "quote 1 3200"
+
+check:
+  expr.macro '$left quote $tail ...':
+    ~all_stx stx
+    values('$(stx.to_source_string())', '$tail ...')
+  #'dropped  quote  +&  1  +&  200
+  ~is "#'dropped  quote  +&  1  +&  2001200"
+
+check:
+  expr.macro '$left quote $tail $()':
+    ~all_stx stx
+    values('$(stx.to_source_string())', tail)
+  #'dropped  quote  +&  1  +&  200
+  ~is "#'dropped  quote  +&  1  +&  2001200"
+
+check:
+  expr.macro '$left quote $x $tail ...':
+    ~all_stx stx
+    values('$(stx.to_source_string())', '$tail ...')
+  #'dropped  quote 1  +&  200
+  ~is "#'dropped  quote 1  +&  200200"
+
+check:
+  expr.macro '$left quote $(x :: Term)':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  #'dropped  quote 1  +&  200
+  ~is "#'dropped  quote 1200"
+
+check:
+  expr.macro '$left quote $x $(y :: Term)':
+    ~all_stx stx
+    '$(stx.to_source_string())'
+  #'dropped  quote 1 3  +&  200
+  ~is "#'dropped  quote 1 3200"
 
 
 // check pattern forms that should match parsed arguments

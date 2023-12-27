@@ -1,7 +1,10 @@
 #lang racket/base
-(require syntax/parse/pre
-         (for-syntax racket/base
+(require (for-syntax racket/base
                      syntax/parse/pre)
+         "parens.rkt"
+         "unquote-binding.rkt"
+         (only-in "unquote-binding-primitive.rkt"
+                  #%parens)
          "op-literal.rkt"
          "pattern-variable.rkt"
          "pack.rkt"
@@ -19,8 +22,10 @@
 (define-for-syntax (is-simple-pattern? tail-pattern)
   (syntax-parse tail-pattern
     [() #t]
-    [(_::$-bind name:identifier _::...-bind)
-     #t]
+    [(_::$-bind name:identifier _::...-bind) #t]
+    [(_::$-bind name:identifier _::$-bind (tag::parens))
+     (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
+                        (unquote-bind-quote #%parens))]
     [_ #f]))
 
 (define-for-syntax (maybe-bind-tail tail-pattern tail)
@@ -28,21 +33,23 @@
     [() null]
     [(_ name _)
      (list
-      #`(define-syntaxes . #,(make-pattern-variable-bind #'name tail #'unpack-tail-list* 1 '())))]))
+      #`(define-syntaxes . #,(make-pattern-variable-bind #'name tail #'unpack-tail-list* 1 '())))]
+    [(_ name _ _)
+     (list
+      #`(define-syntaxes . #,(make-pattern-variable-bind #'name tail #'unpack-tail* 0 '())))]))
 
 ;; add tail or not for an `enforest`-based simple pattern
 (define-for-syntax (maybe-return-tail expr tail-pattern tail)
   (syntax-parse tail-pattern
     [() #`(values #,expr #,tail)]
-    [(_ name _) expr]))
+    [(~or* (_ _ _) (_ _ _ _)) expr]))
 
 (define-for-syntax (maybe-bind-all all-id self-id make-all-id tail-pattern tail)
   (cond
     [(syntax-e all-id)
      (list
-      #`(define-syntax #,(in-static-info-space all-id) (make-static-infos syntax-static-infos))
       (syntax-parse tail-pattern
         [() #`(define #,all-id #,self-id)]
-        [(_ name _)
-         #`(define #,all-id (#,make-all-id (cons #,self-id tail)))]))]
+        [(~or* (_ _ _) (_ _ _ _)) #`(define #,all-id (#,make-all-id (cons #,self-id #,tail)))])
+      #`(define-syntax #,(in-static-info-space all-id) (make-static-infos syntax-static-infos)))]
     [else '()]))

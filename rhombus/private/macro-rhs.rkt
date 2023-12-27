@@ -124,7 +124,7 @@
                            #,(if implicit-tail?
                                  #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
                                  #`(make-all (list* left-id ... self tail))))
-                         (define-syntax #,(in-static-info-space #'all-id) (make-static-infos syntax-static-infos)))
+                         (define-syntax #,(in-static-info-space all-id) (make-static-infos syntax-static-infos)))
                       '())
                #,body))])))
   (define (convert-rule-template block ids)
