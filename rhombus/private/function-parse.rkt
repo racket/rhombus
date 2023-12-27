@@ -114,16 +114,16 @@
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a::not-equal ...+ eq::equal e ...+)))
              #:cut
-             #:with default #'(group e ...)
+             #:with default #`(#,group-tag e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with ::binding #'(group a ...))
+             #:with ::binding #`(#,group-tag a ...))
     (pattern (group kw:keyword (_::block (group a ...+ (b-tag::block b ...))))
              #:cut
-             #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
-             #:with ::binding #'(group a ...))
+             #:with default #`(#,group-tag (parsed #:rhombus/expr (rhombus-body-at b-tag b ...)))
+             #:with ::binding #`(#,group-tag a ...))
     (pattern (group kw:keyword eq::equal e ...+)
              #:cut
-             #:with default #'(group e ...)
+             #:with default #`(#,group-tag e ...)
              #:do [(check-argument-annot #'default #'eq)]
              #:with ::binding (keyword->binding #'kw))
     (pattern ::has-kw-binding
@@ -131,15 +131,15 @@
     (pattern (group a::not-equal ...+ eq::equal e ...+)
              #:cut
              #:with kw #'#f
-             #:with default #'(group e ...)
+             #:with default #`(#,group-tag e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with ::binding #'(group a ...))
+             #:with ::binding #`(#,group-tag a ...))
     (pattern (group a ...+ (b-tag::block b ...))
              #:cut
              #:with (~not (_:keyword)) #'(a ...)
              #:with kw #'#f
-             #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
-             #:with ::binding #'(group a ...))
+             #:with default #`(#,group-tag (parsed #:rhombus/expr (rhombus-body-at b-tag b ...)))
+             #:with ::binding #`(#,group-tag a ...))
     (pattern ::plain-binding
              #:with default #'#f))
 
