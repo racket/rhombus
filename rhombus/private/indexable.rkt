@@ -10,7 +10,6 @@
          "parse.rkt"
          "index-key.rkt"
          "index-result-key.rkt"
-         "index-indirect-key.rkt"
          "call-result-key.rkt"
          "static-info.rkt"
          (submod "assign.rkt" for-assign)
@@ -73,6 +72,7 @@
                   '()
                   #f
                   #'()
+                  #f
                   '(get)))
 
 (define-annotation-syntax MutableIndexable
@@ -102,6 +102,7 @@
                   '()
                   #f
                   #'()
+                  #f
                   '(get set)))
 
 (define-syntax void-result
@@ -120,11 +121,11 @@
      #:when (not repetition?)
      #:with assign::assign-op-seq #'assign-tail
      (define op (attribute assign.op))
-     (define indexable-set!-id (or (syntax-local-static-info/indirect indexable #'#%index-set #'#%index-set-indirect)
+     (define indexable-set!-id (or (syntax-local-static-info indexable #'#%index-set)
                                    (if more-static?
                                        (raise-syntax-error who (not-static) indexable-in)
                                        #'indexable-set!)))
-     (define indexable-ref-id (or (syntax-local-static-info/indirect indexable #'#%index-get #'#%index-get-indirect)
+     (define indexable-ref-id (or (syntax-local-static-info indexable #'#%index-get)
                                   (if more-static?
                                       (raise-syntax-error who (not-static) indexable-in)
                                       #'indexable-index)))
@@ -141,7 +142,7 @@
              tail)]
     [(_ (~and args ((~and head brackets) index)) . tail)
      (define (build-ref indexable index indexable-static-info)
-       (define indexable-ref-id (or (static-info/indirect indexable-static-info #'#%index-get #'#%index-get-indirect)
+       (define indexable-ref-id (or (indexable-static-info #'#%index-get)
                                     (if more-static?
                                         (raise-syntax-error who (not-static) indexable-in)
                                         #'indexable-index)))
@@ -149,7 +150,7 @@
                                 (list indexable-ref-id indexable index)
                                 (span-srcloc indexable #'head)
                                 #'head))
-       (define result-static-infos (or (static-info/indirect indexable-static-info #'#%index-result #'#%index-get-indirect)
+       (define result-static-infos (or (indexable-static-info #'#%index-result)
                                        (syntax-local-static-info indexable-ref-id #'#%call-result)
                                        #'()))
        (values e result-static-infos))

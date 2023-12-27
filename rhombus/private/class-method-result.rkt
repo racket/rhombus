@@ -10,7 +10,7 @@
          "function-arity-key.rkt"
          "index-result-key.rkt"
          "index-key.rkt"
-         "append-indirect-key.rkt"
+         "append-key.rkt"
          "values-key.rkt"
          (submod "function-parse.rkt" for-build))
 
@@ -144,23 +144,27 @@
                              (datum->syntax #f
                                             (string->symbol
                                              (format "~a-result-handler" (syntax-e #'id))))))
-     (define (gen id)
+     (define (gen id [de-method? #f])
        (if (syntax-e id)
            (list #`(define-static-info-syntax #,id
                      #,(if (eq? (syntax-e #'kind) 'property)
-                           #`(#%call-results-at-arities ((1 #,all-static-infos)))
+                           #`(#%call-results-at-arities ((#,(if de-method? 0 1) #,all-static-infos)))
                            #`(#%call-result #,all-static-infos))
                      #,@(if (syntax-e #'arity)
-                            (list #'(#%function-arity arity))
+                            (list #`(#%function-arity #,(if de-method?
+                                                            (de-method-arity #'arity)
+                                                            #'arity)))
                             '())
                      (#%indirect-static-info indirect-function-static-info)))
            '()))
-     (define (gen-bounce ind-id+id key result-key)
+     (define (gen-bounce ind-id+id key result-key #:box-id? [box-id? #f])
        (if (syntax-e ind-id+id)
            (syntax-parse ind-id+id
              [(ind-id id)
               (list #`(define-static-info-syntax ind-id
-                        (#,key id)
+                        (#,key #,(if box-id?
+                                     (box-immutable #'id)
+                                     #'id))
                         #,@(if result-key
                                (list #`(#,result-key #,all-static-infos))
                                '())))])
@@ -175,7 +179,16 @@
                           (quote-syntax #,all-static-infos)
                           (quote arity)))
          #,@(gen #'maybe-final-id)
-         #,@(gen #'maybe-call-statinfo-id)
+         #,@(gen #'maybe-call-statinfo-id #t)
          #,@(gen-bounce #'maybe-ref-statinfo-id+id #'#%index-get #'#%index-result)
          #,@(gen-bounce #'maybe-set-statinfo-id+id #'#%index-set #f)
-         #,@(gen-bounce #'maybe-append-statinfo-id+id #'#%append/checked #f))]))
+         #,@(gen-bounce #'maybe-append-statinfo-id+id #'#%append #f
+                        ;; boxed identifier means "checked" for `#%append`
+                        #:box-id? #t))]))
+
+(define-for-syntax (de-method-arity arity)
+  (syntax-parse arity
+    [(n . kws)
+     (datum->syntax arity (cons (de-method-arity #'n) #'kws))]
+    [n
+     (datum->syntax arity (quotient (syntax-e #'n) 2))]))

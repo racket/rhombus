@@ -14,10 +14,10 @@
          "entry-point.rkt"
          "class-this.rkt"
          "class-method-result.rkt"
-         "function-indirect-key.rkt"
          "index-key.rkt"
-         "append-indirect-key.rkt"
+         "append-key.rkt"
          "static-info.rkt"
+         "indirect-static-info-key.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
          "parens.rkt"
@@ -352,7 +352,8 @@
                                          call-statinfo-indirect-stx callable?
                                          index-statinfo-indirect-stx indexable?
                                          index-set-statinfo-indirect-stx setable?
-                                         append-statinfo-indirect-stx appendable?)
+                                         append-statinfo-indirect-stx appendable?
+                                         super-call-statinfo-indirect-id)
   (define defs
     (for/list ([added (in-list added-methods)]
                #:when (added-method-result-id added))
@@ -386,29 +387,36 @@
                  (eq? 'append (syntax-e (added-method-id added)))
                  #`[#,append-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
   ;; may need to add info for inherited `call`, etc.:
-  (define (add-able which statinfo-indirect-stx able? key defs abstract-args)
+  (define (add-able which statinfo-indirect-stx able? key defs abstract-args
+                    #:use-id [use-id #f]
+                    #:box-id? [box-id? #f])
     (if (and statinfo-indirect-stx
              able?
              (not (for/or ([added (in-list added-methods)])
                     (eq? which (syntax-e (added-method-id added))))))
         ;; method is inherited, so bounce again to inherited method's info
         (let* ([index (mindex-index (hash-ref method-mindex which))]
-               [impl-id (vector-ref method-vtable index)])
+               [impl-id (or use-id (vector-ref method-vtable index))])
           (define abstract? (eq? impl-id '#:abstract))
           (if (or (not abstract?) abstract-args)
               (cons
                #`(define-static-info-syntax #,statinfo-indirect-stx
-                   (#,key #,(if abstract?
-                                #`(lambda (obj . #,abstract-args)
-                                    ((method-ref #,methods-ref-id obj #,index) obj . #,abstract-args))
-                                impl-id)))
+                   (#,key #,(cond
+                              [abstract?
+                               #`(lambda (obj . #,abstract-args)
+                                   ((method-ref #,methods-ref-id obj #,index) obj . #,abstract-args))]
+                              [box-id? (box-immutable impl-id)]
+                              [else impl-id])))
                defs)
               defs))
         defs))
-  (let* ([defs (add-able 'call call-statinfo-indirect-stx callable? #'#%function-indirect defs #f)]
+  (let* ([defs (add-able 'call call-statinfo-indirect-stx callable? #'#%indirect-static-info defs #f
+                         #:use-id super-call-statinfo-indirect-id)]
          [defs (add-able 'get index-statinfo-indirect-stx indexable? #'#%index-get defs #'(index))]
          [defs (add-able 'set index-set-statinfo-indirect-stx setable? #'#%index-set defs #'(index val))]
-         [defs (add-able 'append append-statinfo-indirect-stx appendable? #'#%append/checked defs #'(val))])
+         [defs (add-able 'append append-statinfo-indirect-stx appendable? #'#%append defs #'(val)
+                         ;; boxed means "checked" for `#%append`:
+                         #:box-id? #t)])
     defs))
 
 (define-for-syntax (build-method-result-expression method-result)

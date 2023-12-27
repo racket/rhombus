@@ -166,6 +166,8 @@
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
 
+                       super-call-statinfo-indirect-id
+
                        static-infos-id
                        static-infos-exprs
                        instance-static-infos
@@ -199,6 +201,7 @@
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
+                     [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
@@ -241,6 +244,7 @@
                          name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                         super-call-statinfo-indirect
                          indirect-static-infos
                          instance-static-infos
                          constructor-field-names
@@ -261,6 +265,7 @@
                     name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                    super-call-statinfo-indirect
                     indirect-static-infos
                     instance-static-infos
                     (constructor-field-name ...)
@@ -707,6 +712,7 @@
                                  #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name prefab-guard-name
                                          instance-static-infos
+                                         super-call-statinfo-indirect call-statinfo-indirect
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
                                                      (quote-syntax super-maybe-set-name-field!)
@@ -729,7 +735,8 @@
                                      #'call-statinfo-indirect callable?
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
-                                     #'append-statinfo-indirect appendable?))))
+                                     #'append-statinfo-indirect appendable?
+                                     #'super-call-statinfo-indirect))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -945,6 +952,7 @@
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name prefab-guard-name
                        instance-static-infos
+                       super-call-statinfo-indirect call-statinfo-indirect
                        fields
                        ([field-name field-argument maybe-set-name-field!] ...)
                        [(recon-field-name recon-field-acc) ...])
@@ -1032,6 +1040,12 @@
                      #,(able-method-for-class-desc 'append here-appendable? public-appendable?
                                                    super
                                                    method-mindex method-vtable method-private)
+                     #,(let ([id (if (syntax-e #'call-statinfo-indirect)
+                                     #'call-statinfo-indirect
+                                     #'super-call-statinfo-indirect)])
+                         (if (and id (syntax-e id))
+                             #`(quote-syntax #,id)
+                             #f))
                      #,(and (syntax-e #'prefab-guard-name)
                             #`(quote-syntax prefab-guard-name))
                      '(#,@(if authentic? '(authentic) null)

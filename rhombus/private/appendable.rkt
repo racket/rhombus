@@ -11,10 +11,8 @@
          "parse.rkt"
          (submod "map.rkt" for-build)
          "append-key.rkt"
-         "append-indirect-key.rkt"
          "append-property.rkt"
          "call-result-key.rkt"
-         "function-indirect-key.rkt"
          "static-info.rkt"
          (only-in "string.rkt"
                   +&)
@@ -64,26 +62,30 @@
                   '()
                   #f
                   #'()
+                  #f
                   '(append)))
 
 (define-for-syntax (parse-append form1 form2 self-stx form1-in
                                  static?
                                  appendable-static-info
                                  k)
-  (define direct-append-id (appendable-static-info #'#%append))
-  (define static-append-id (or direct-append-id
-                               (static-info/indirect appendable-static-info #'#%append/checked #'#%append-indirect)))
-  (define append-id (or static-append-id
+  (define direct-append-id/maybe-boxed (appendable-static-info #'#%append))
+  (define checked? (and direct-append-id/maybe-boxed
+                        (box? (syntax-e direct-append-id/maybe-boxed))))
+  (define direct-append-id (if checked?
+                               (unbox (syntax-e direct-append-id/maybe-boxed))
+                               direct-append-id/maybe-boxed))
+  (define append-id (or direct-append-id
                         (if static?
                             (raise-syntax-error #f
                                                 (string-append "specialization not known" statically-str)
                                                 self-stx
                                                 form1-in)
                             #'general-append)))
-  (define si (or (syntax-local-static-info/indirect append-id #'#%call-result #'#%function-indirect) #'()))
+  (define si (or (syntax-local-static-info append-id #'#%call-result)
+                 #'()))
   (k append-id
-     (or direct-append-id
-         (not static-append-id))
+     (not checked?)
      form1 form2
      si))
 

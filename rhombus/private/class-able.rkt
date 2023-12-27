@@ -4,6 +4,7 @@
                      "class-parse.rkt"))
 
 (provide (for-syntax able-statinfo-indirect-id
+                     able-super-statinfo-indirect-id
                      able-method-status
                      able-method-as-property
                      able-method-for-class-desc))
@@ -19,6 +20,10 @@
                  (memq which (interface-desc-flags intf))))
            ;; => which method's info is relevant
            (intro (datum->syntax #f (string->symbol (format "~a-~a-indirect" (syntax-e name-id) which)))))
+      (and (eq? which 'call)
+           ;; need the designated identifier for callable info, because it
+           ;; has different arity information than the implementing method:
+           (able-super-statinfo-indirect-id which super interfaces))
       (and super
            ;; => can refer directly to superclass's private implementation, since it can't be overridden here
            (case which
@@ -27,6 +32,15 @@
              [(set) (class-desc-index-set-method-id super)]
              [(append) (class-desc-append-method-id super)]
              [else (error "unknown able")]))))
+
+;; gets public or private id, whatever is available to supply arity info in case
+;; it's not overridden
+(define-for-syntax (able-super-statinfo-indirect-id which super interfaces)
+  (unless (eq? which 'call) (error 'able-super-statinfo-indirect-id "only handles 'call"))
+  (or (and super
+           (class-desc-indirect-call-method-id super))
+      (for/or ([intf (in-list interfaces)])
+        (interface-desc-indirect-call-method-id intf))))
 
 ;; returns `(values here-<which>able? public-<which>able?)`:
 ;;   * `<which>able?` implies that a <which> method is declared or inherited, maybe abstract
