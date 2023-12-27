@@ -84,3 +84,15 @@ check:
   def ("a string" || #"a byte string") && str = dynamic("a string")
   str.length()
   ~throws "no such field or method (based on static information)"
+
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    '#%literal $(expr.to_source_string())'
+  check source "a string" ~is "\"a string\""
+  check source #"a byte string" ~is "#\"a byte string\""
+  check source 1 ~is "1"
+  check source 2.0 ~is "2.0"
+  check source #'symbol ~is "#'symbol"
+  check source #'~keyword ~is "#'~keyword"

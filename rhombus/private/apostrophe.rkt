@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -20,7 +21,9 @@
      (syntax-parse stx
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
-        (values (syntax/loc stx (quote q))
+        (values (relocate+reraw
+                 (respan (datum->syntax #f (list #'form-name #'q)))
+                 #'(quote q))
                 #'tail)]))))
 
 (define-repetition-syntax |#'|
