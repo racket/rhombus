@@ -6,6 +6,7 @@
 
 (provide in-class-desc-space
 
+         (struct-out objects-desc)
          (struct-out class-desc)
          class-desc-ref
 
@@ -46,35 +47,41 @@
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
-(struct class-desc (final?
-                    id
-                    super-id
-                    interface-ids
-                    class:id
-                    ref-id
-                    fields ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
-                    all-fields ; #f or (list a-field ...), includes private fields; see below for a-field
-                    inherited-field-count ; number of fields that are inherited
-                    method-shapes ; vector of shape; see below
-                    method-vtable ; syntax-object vector of function identifiers or #'#:abstract
-                    method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
-                    method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
-                    constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
-                    custom-constructor?
-                    custom-binding?
-                    custom-annotation?
-                    reconstructor-fields ; #f or (list (cons field-sym accessor-id) ...)
-                    dots ; list of symbols for dot syntax
-                    dot-provider  ; #f or compile-time identifier
-                    defaults-id   ; #f if no arguments with defaults
-                    static-infos  ; syntax object for additional instance static-infos
-                    call-method-id ; #f or identifier as private `call` (for Callable) whose static info is relevant
-                    index-method-id ; for `get`
-                    index-set-method-id ; for `set`
-                    append-method-id ; for `append`
-                    indirect-call-method-id ; #f or identifier for `call`
-                    prefab-guard-id
-                    flags))       ; list with 'authentic, 'prefab, 'no-recon, and/or 'call (=> public `call` is for Callable), 'get, 'set, 'append
+;; common fields for `class`, `interface`, and `veneer` descriptions
+(struct objects-desc
+  (interface-ids ; syntax list of identifiers for implemented/extended interfaces
+   method-shapes ; vector of shape; see below
+   method-vtable ; syntax-object vector of function identifiers or #'#:abstract
+   method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
+   method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
+   dots          ; list of symbols for dot syntax
+   dot-provider  ; #f or compile-time identifier
+   static-infos  ; syntax object for additional instance static-infos
+   flags))       ; 'call (=> public `call` is Callable), 'get, 'set, 'append; others specific to class/interface/veneer
+
+(struct class-desc objects-desc
+  ;; `flags` from `objects-desc` can include 'authentic, 'prefab, 'no-recon
+  (final?
+   id
+   super-id
+   class:id
+   ref-id
+   fields                ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
+   all-fields            ; #f or (list a-field ...), includes private fields; see below for a-field
+   inherited-field-count ; number of fields that are inherited
+   constructor-makers    ; (list constructor-maker ... maybe-default-constuctor-desc)
+   custom-constructor?
+   custom-binding?
+   custom-annotation?
+   reconstructor-fields  ; #f or (list (cons field-sym accessor-id) ...)
+   defaults-id           ; #f if no arguments with defaults
+   call-method-id        ; #f or identifier as private `call` (for Callable) whose static info is relevant
+   index-method-id       ; for `get`
+   index-set-method-id   ; for `set`
+   append-method-id      ; for `append`
+   indirect-call-method-id ; #f or identifier for `call`
+   prefab-guard-id))
+
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
@@ -139,7 +146,7 @@
   (define super-ids (map field-desc-name (if super (class-desc-fields super) '())))
   (define dots-ht (let ([ht (if (not super)
                                 #hasheq()
-                                (for/fold ([ht #hasheq()]) ([dot-name (in-list (class-desc-dots super))])
+                                (for/fold ([ht #hasheq()]) ([dot-name (in-list (objects-desc-dots super))])
                                   (hash-set ht dot-name "superclass")))])
                     (for*/fold ([ht ht]) ([dots (in-list interface-dotss)]
                                           [dot-name (in-list dots)])
@@ -206,12 +213,12 @@
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding-rhs #f) "binding")
   (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation-rhs #f) "annotation")
   (when (hash-ref options 'prefab? #f)
-    (unless (memq 'prefab (class-desc-flags super))
+    (unless (memq 'prefab (objects-desc-flags super))
       (raise-syntax-error #f
                           "superclass must be prefab for a prefab subclass"
                           stxes
                           parent-name)))
-  (unless (eq? (and (memq 'authentic (class-desc-flags super)) #t)
+  (unless (eq? (and (memq 'authentic (objects-desc-flags super)) #t)
                (hash-ref options 'authentic? #f))
     (raise-syntax-error #f
                         (if (hash-ref options 'authentic? #f)

@@ -86,7 +86,7 @@
   as the supplied non-@rhombus(private, ~class_clause) @rhombus(field_spec)s
   in parentheses, and it returns an instance of the class;},
 
- @item{in the @rhombus(annot, ~space) space,
+ @item{in the @top_rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
   and by default an annotation constructor @rhombus(id_name.of) or
   @rhombus(id_name.now_of), which
@@ -109,10 +109,10 @@
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
   a syntactic form
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))),
-  a field accessor
+  and a field accessor
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(field,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, dot syntax, and field in the class
-  (including inherited methods, properties, fields, and dot syntax), respectively; and}
+  (including inherited methods, properties, dot syntax, and fields), respectively; and}
 
  @item{in the @rhombus(class, ~space) space, a representation of the
   class for reference as a superclass.}

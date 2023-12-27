@@ -51,22 +51,23 @@
       (bytes? v)))
 
 (define-class-desc-syntax Appendable
-  (interface-desc #'Appendable
-                  #'Appendable
-                  #'()
-                  #'prop:Appendable
-                  #'prop:Appendable
-                  #'Appendable-ref
+  (interface-desc #'()
                   '#(#&append)
                   #'#(#:abstract)
                   (hasheq 'append 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '(append)))
+                  '(append veneer)
+                  ;; --------------------
+                  #'Appendable
+                  #'Appendable
+                  #'prop:Appendable
+                  #'prop:Appendable
+                  #'Appendable-ref
+                  #t
+                  #f))
 
 (define-for-syntax (parse-append form1 form2 self-stx form1-in
                                  static?

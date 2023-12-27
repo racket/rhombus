@@ -9,6 +9,7 @@
          "class-clause.rkt"
          "class-clause-tag.rkt"
          "interface-clause.rkt"
+         "veneer-clause.rkt"
          "parens.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt")
@@ -16,7 +17,8 @@
 (provide (for-space rhombus/class_clause
                     binding)
          (for-spaces (rhombus/class_clause
-                      rhombus/interface_clause)
+                      rhombus/interface_clause
+                      rhombus/veneer_clause)
                      expression
                      annotation))
 
@@ -72,9 +74,17 @@
   (make-macro-clause-transformer #'#:annotation
                                  #:clause-transformer interface-clause-transformer))
 
+(define-veneer-clause-syntax annotation
+  (make-macro-clause-transformer #'#:annotation
+                                 #:clause-transformer veneer-clause-transformer))
+
 (define-class-clause-syntax expression
   (make-macro-clause-transformer #'#:expression))
 
 (define-interface-clause-syntax expression
   (make-macro-clause-transformer #'#:expression
                                  #:clause-transformer interface-clause-transformer))
+
+(define-veneer-clause-syntax expression
+  (make-macro-clause-transformer #'#:expression
+                                 #:clause-transformer veneer-clause-transformer))

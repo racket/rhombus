@@ -1,0 +1,92 @@
+#lang rhombus/static/and_meta
+
+veneer RevList(this :: List):
+  implements: MutableIndexable
+              Appendable
+  override get(i):
+    this[this.length() - i - 1]
+  override set(i, v):
+    println("dropping " +& v)
+  override append(other) :~ RevList:
+    this ++ other
+  method m():
+    this.length()
+  sequence '$lhs: $rhs':
+    '(~outer_binds:
+        lst :~ List = $rhs,
+      ~recur_binds:
+        pos = lst.length(),
+      ~head_guard:
+        pos > 0,
+      ~inner_binds:
+        $lhs = lst[pos-1],
+      ~recur_args:
+        (pos - 1))'
+
+block:
+  def r :: RevList = dynamic([1, 2, 3])
+  check:
+    r.m() ~is 3
+    r[2] ~is 1
+    r[2] := "plate" ~prints "dropping plate\n"
+    (r ++ [4, 5, 6])[0] ~is 6
+    RevList([1, 2, 3]).m() ~is 3
+    RevList([5, 2]).m() ~is 2
+    RevList.m([5, 2]) ~is 2
+    (for List (i: r): i) ~is [3, 2, 1]
+
+veneer InfiniteString(this :: ReadableString.to_string):
+  converter
+  implements: Indexable
+              Appendable
+  override get(i):
+    if i >= this.length() | #{#\space} | this[i]
+  override append(other :: InfiniteString) :: InfiniteString:
+    this
+  method m():
+    "m"
+
+check:
+  InfiniteString("apple") ~is "apple"
+  InfiniteString("apple")[1000] ~is #{#\space}
+  InfiniteString("apple").m() ~is "m"
+  InfiniteString(5) ~throws "does not satisfy"
+  InfiniteString.m(5) ~throws "does not satisfy"
+
+
+veneer RevList2(this :: List):
+  implements: Indexable
+  override get(i):
+    this[this.length() - i - 1]
+  method m():
+    this.length()
+  expression 'RevList2[$elem, ...]':
+    '[$elem, ...] :~ RevList2'
+
+check:
+  RevList2[1, 2, 3][0] ~is 3
+
+
+veneer Num (this :: Int):
+  implements Indexable
+  override get(i):
+    this + i
+  method m(): [this]
+
+veneer PlusNum (this :: PosInt):
+  implements Indexable
+  extends Num
+  override method get(v):
+    this - v
+
+block:
+  def n :: Num = 5
+  check:
+    n ~is 5
+    n[1] ~is 6
+    n.get(2) ~is 7
+    n.m() ~is [5]
+    n is_a Indexable ~is #false
+    PlusNum(7) ~is 7
+    PlusNum(7)[9] ~is -2
+    PlusNum(7).m() ~is [7]

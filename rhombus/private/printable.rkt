@@ -33,22 +33,23 @@
   (print-description-unwrap 'Printable.print pd #t))
 
 (define-class-desc-syntax Printable
-  (interface-desc #'Printable
-                  #'Printable
-                  #'()
-                  #'prop:Printable
-                  #'prop:Printable
-                  #'Printable-ref
+  (interface-desc #'()
                   '#(#&describe)
                   #'#(#:abstract)
                   (hasheq 'describe 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '()))
+                  '()
+                  ;; --------------------
+                  #'Printable
+                  #'Printable
+                  #'prop:Printable
+                  #'prop:Printable
+                  #'Printable-ref
+                  #t
+                  #f))
 
 
 (define-name-root Printable

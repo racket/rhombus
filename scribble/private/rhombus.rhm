@@ -149,6 +149,7 @@ expr.macro
          || kw === #'~for_clause
          || kw === #'~class_clause
          || kw === #'~interface_clause
+         || kw === #'~veneer_clause
          || kw === #'~entry_point
          || kw === #'~unquote_bind
          || kw === #'~syntax_class_clause

@@ -15,9 +15,11 @@
          "class-clause.rkt"
          "class-clause-parse.rkt"
          "class-clause-tag.rkt"
+         "class-step.rkt"
          "class-constructor.rkt"
          "class-binding.rkt"
          "class-annotation.rkt"
+         "class-representation.rkt"
          "class-dot.rkt"
          "class-reconstructor.rkt"
          "class-static-info.rkt"
@@ -68,9 +70,9 @@
                                       (field.name ...)
                                       (field.keyword ...)
                                       (field.default ...)
-                                      (field.mutable ...)
-                                      (field.private ...)
-                                      (field.ann-seq ...)]
+                                       (field.mutable ...)
+                                       (field.private ...)
+                                       (field.ann-seq ...)]
                             ;; data accumulated from parsed clauses:
                             ()))
      #`(#,(cond
@@ -81,27 +83,10 @@
                 (class-annotation+finish #,finish-data) rhombus-class
                 (class-body-step #,finish-data . #,(intro body)))]))]))
 
-(define-syntax class-body-step
-  (lambda (stx)
-    ;; parse the first form as a class clause, if possible, otherwise assume
-    ;; an expression or definition
-    (syntax-parse stx
-      [(_ (data accum) form . rest)
-       #:with (~var clause (:class-clause (class-expand-data #'data #'accum))) (syntax-local-introduce #'form)
-       (syntax-parse (syntax-local-introduce #'clause.parsed)
-         #:datum-literals (group parsed)
-         [((group (parsed #:rhombus/class_clause p)) ...)
-          #:with (new-accum ...) (class-clause-accum #'(p ...))
-          #`(begin p ... (class-body-step (data (new-accum ... . accum)) . rest))]
-         [(form ...)
-          #`(class-body-step (data accum) form ... . rest)])]
-      [(_ data+accum form . rest)
-       #`(rhombus-top-step
-          class-body-step
-          #f
-          (data+accum)
-          form . rest)]
-      [(_ data+accum) #'(begin)])))
+(define-class-body-step class-body-step
+  :class-clause
+  class-expand-data
+  class-clause-accum)
 
 ;; First phase of `class` output: bind the annotation form, so it can be used
 ;; in field declarations
@@ -359,7 +344,7 @@
                                                 (and (not (syntax-e kw))
                                                      (syntax-e df))))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->immutable-string (syntax-e f))) f f))
-       (define field-ht (check-duplicate-field-names stxes fields super (map interface-desc-dots interfaces)))
+       (define field-ht (check-duplicate-field-names stxes fields super (map objects-desc-dots interfaces)))
        (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
        (define intro (make-syntax-introducer))
        (define all-name-fields
@@ -394,10 +379,7 @@
        (define dot-provider-rhss (map cdr dots))
        (define parent-dot-providers
          (for/list ([parent (in-list (cons super interfaces))]
-                    #:do [(define dp (cond
-                                       [(class-desc? parent) (class-desc-dot-provider parent)]
-                                       [(interface-desc? parent) (interface-desc-dot-provider parent)]
-                                       [else #f]))]
+                    #:do [(define dp (and parent (objects-desc-dot-provider parent)))]
                     #:when dp)
            dp))
 
@@ -565,7 +547,7 @@
                (build-methods method-results
                               added-methods method-mindex method-names method-private
                               reconstructor-rhs reconstructor-stx-params
-                              #'(name name-instance name? reconstructor-name
+                              #'(name name-instance name? #f reconstructor-name
                                       prop-methods-ref
                                       indirect-static-infos
                                       [(field-name) ... super-field-name ...]
@@ -666,7 +648,7 @@
                                              #'of)
                                          dot-provider-rhss parent-dot-providers
                                          #'(name name-extends tail-name
-                                                 name? constructor-name name-instance name-ref name-of
+                                                 name? #f constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
                                                  indirect-static-infos
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
@@ -837,7 +819,7 @@
                                                                                          ...)))))
                                                           #,@(if (or (syntax-e #'reconstructor-name)
                                                                      (and super
-                                                                          (not (memq 'no-recon (class-desc-flags super)))))
+                                                                          (not (memq 'no-recon (objects-desc-flags super)))))
                                                                  #`((cons prop:reconstructor
                                                                           #,(and (syntax-e #'reconstructor-name)
                                                                                  #`(cons (list
@@ -891,7 +873,7 @@
                                                                                             (append (if super
                                                                                                         (interface-names->interfaces
                                                                                                          #f
-                                                                                                         (let ([l (class-desc-interface-ids super)])
+                                                                                                         (let ([l (objects-desc-interface-ids super)])
                                                                                                            (if (null? l)
                                                                                                                null
                                                                                                                (syntax->list l))))
@@ -971,10 +953,26 @@
      (list
       (build-syntax-definition/maybe-extension
        'rhombus/class #'name #'name-extends
-       #`(class-desc #,final?
+       #`(class-desc (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
+                     '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
+                     (quote-syntax #,method-vtable)
+                     '#,(build-quoted-method-map method-mindex)
+                     #,(build-method-result-expression method-results)
+                     '#,(map car dots)
+                     #,(and (syntax-e #'dot-provider-name)
+                            #'(quote-syntax dot-provider-name))
+                     (#,(quote-syntax quasisyntax) instance-static-infos)
+                     '(#,@(if authentic? '(authentic) null)
+                       #,@(if prefab? '(prefab) null)
+                       #,@(if no-recon? '(no-recon) null)
+                       #,@(if public-callable? '(call) null)
+                       #,@(if public-indexable? '(get) null)
+                       #,@(if public-setable? '(set) null)
+                       #,@(if public-appendable? '(append) null))
+                     ;; ----------------------------------------
+                     #,final?
                      (quote-syntax name)
                      #,(and parent-name #`(quote-syntax #,parent-name))
-                     (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
                      (quote-syntax class:name)
                      (quote-syntax name-ref)
                      fields
@@ -1008,10 +1006,6 @@
                                (length (class-desc-all-fields super))
                                (length (class-desc-fields super)))
                            0)
-                     '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
-                     (quote-syntax #,method-vtable)
-                     '#,(build-quoted-method-map method-mindex)
-                     #,(build-method-result-expression method-results)
                      #,(cond
                          [(syntax-e #'constructor-maker-name)
                           #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
@@ -1032,12 +1026,8 @@
                      #,(if force-custom-recon?
                            #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
                            #f)
-                     '#,(map car dots)
-                     #,(and (syntax-e #'dot-provider-name)
-                            #'(quote-syntax dot-provider-name))
                      #,(and (syntax-e #'name-defaults)
                             #'(quote-syntax name-defaults))
-                     (#,(quote-syntax quasisyntax) instance-static-infos)
                      #,(able-method-for-class-desc 'call here-callable? public-callable?
                                                    super
                                                    method-mindex method-vtable method-private)
@@ -1057,14 +1047,7 @@
                              #`(quote-syntax #,id)
                              #f))
                      #,(and (syntax-e #'prefab-guard-name)
-                            #`(quote-syntax prefab-guard-name))
-                     '(#,@(if authentic? '(authentic) null)
-                       #,@(if prefab? '(prefab) null)
-                       #,@(if no-recon? '(no-recon) null)
-                       #,@(if public-callable? '(call) null)
-                       #,@(if public-indexable? '(get) null)
-                       #,@(if public-setable? '(set) null)
-                       #,@(if public-appendable? '(append) null)))))
+                            #`(quote-syntax prefab-guard-name)))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

@@ -19,6 +19,7 @@
 @include_section("ref-function.scrbl")
 @include_section("ref-operator.scrbl")
 @include_section("ref-class.scrbl")
+@include_section("ref-veneer.scrbl")
 @include_section("ref-mutable.scrbl")
 
 @include_section("ref-repetition.scrbl")

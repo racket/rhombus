@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      "interface-parse.rkt"
-                     "class-parse.rkt"))
+                     "class-parse.rkt"
+                     "veneer-parse.rkt"))
 
 (provide (for-syntax able-statinfo-indirect-id
                      able-super-statinfo-indirect-id
@@ -15,16 +16,16 @@
 ;; we haven't parsed enough about the class to predict its implementation's name
 (define-for-syntax (able-statinfo-indirect-id which super interfaces name-id intro)
   (or (and (or (and super
-                    (memq which (class-desc-flags super)))
+                    (memq which (objects-desc-flags super)))
                (for/or ([intf (in-list interfaces)])
-                 (memq which (interface-desc-flags intf))))
+                 (memq which (objects-desc-flags intf))))
            ;; => which method's info is relevant
            (intro (datum->syntax #f (string->symbol (format "~a-~a-indirect" (syntax-e name-id) which)))))
       (and (eq? which 'call)
            ;; need the designated identifier for callable info, because it
            ;; has different arity information than the implementing method:
            (able-super-statinfo-indirect-id which super interfaces))
-      (and super
+      (and (class-desc? super)
            ;; => can refer directly to superclass's private implementation, since it can't be overridden here
            (case which
              [(call) (class-desc-call-method-id super)]
@@ -37,7 +38,7 @@
 ;; it's not overridden
 (define-for-syntax (able-super-statinfo-indirect-id which super interfaces)
   (unless (eq? which 'call) (error 'able-super-statinfo-indirect-id "only handles 'call"))
-  (or (and super
+  (or (and (class-desc? super)
            (class-desc-indirect-call-method-id super))
       (for/or ([intf (in-list interfaces)])
         (interface-desc-indirect-call-method-id intf))))
@@ -49,9 +50,9 @@
 ;;   * `public-<which>able?` can be #f even if `here-<which>able?` if the <which> method is not public
 (define-for-syntax (able-method-status which super interfaces method-mindex method-vtable method-private)
   (define is-able?
-    (or (and super (memq which (class-desc-flags super)))
+    (or (and super (memq which (objects-desc-flags super)))
         (for/or ([intf (in-list interfaces)])
-          (memq which (interface-desc-flags intf)))))
+          (memq which (objects-desc-flags intf)))))
   (values is-able?
           (and is-able?
                (or (hash-ref method-private which #f)

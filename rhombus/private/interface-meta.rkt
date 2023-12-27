@@ -7,7 +7,9 @@
          "name-root.rkt"
          "interface-parse.rkt"
          (only-in "class-parse.rkt"
-                  in-class-desc-space)
+                  in-class-desc-space
+                  objects-desc-interface-ids
+                  objects-desc-method-shapes)
          (for-template
           (only-in "class-clause-parse.rkt"
                    class-clause-extract
@@ -85,10 +87,10 @@
         (define desc (interface-describe-data-desc info))
         (case key
           [(internal_names) null]
-          [(extends) (syntax->list (interface-desc-super-ids desc))]
+          [(extends) (syntax->list (objects-desc-interface-ids desc))]
           [(uses_default_annotation) (not (interface-desc-custom-annotation? desc))]
           [else
-           (method-shape-extract (interface-desc-method-shapes desc)
+           (method-shape-extract (objects-desc-method-shapes desc)
                                  (if (interface-internal-desc? desc)
                                      (interface-internal-desc-private-methods desc)
                                      null)

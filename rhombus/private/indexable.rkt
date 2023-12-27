@@ -61,22 +61,23 @@
       (bytes? v)))
 
 (define-class-desc-syntax Indexable
-  (interface-desc #'Indexable
-                  #'Indexable
-                  #'()
-                  #'prop:Indexable
-                  #'prop:Indexable
-                  #'Indexable-ref
+  (interface-desc #'()
                   '#(#&get)
                   #'#(#:abstract)
                   (hasheq 'get 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '(get)))
+                  '(get veneer)
+                  ;; --------------------
+                  #'Indexable
+                  #'Indexable
+                  #'prop:Indexable
+                  #'prop:Indexable
+                  #'Indexable-ref
+                  #t
+                  #f))
 
 (define-annotation-syntax MutableIndexable
   (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-index)
@@ -90,23 +91,24 @@
       (mutable-bytes? v)))
 
 (define-class-desc-syntax MutableIndexable
-  (interface-desc #'MutableIndexable
-                  #'MutableIndexable
-                  #'(Indexable)
-                  #'prop:MutableIndexable
-                  #'prop:MutableIndexable
-                  #'MutableIndexable-ref
+  (interface-desc #'(Indexable)
                   '#(#&get #&set)
                   #'#(#:abstract #:abstract)
                   (hasheq 'get 0
                           'set 1)
                   (hasheq 'set #'void-result)
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '(get set)))
+                  '(get set veneer)
+                  ;; --------------------
+                  #'MutableIndexable
+                  #'MutableIndexable
+                  #'prop:MutableIndexable
+                  #'prop:MutableIndexable
+                  #'MutableIndexable-ref
+                  #t
+                  #f))
 
 (define-syntax void-result
   (method-result #'void? #t 1 "Void" #'() 8))

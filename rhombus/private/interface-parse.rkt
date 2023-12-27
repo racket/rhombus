@@ -2,7 +2,10 @@
 (require enforest/syntax-local
          "introducer.rkt"
          (only-in "class-parse.rkt"
-                  in-class-desc-space)
+                  in-class-desc-space
+                  objects-desc
+                  objects-desc-interface-ids
+                  objects-desc-flags)
          (for-template "expression.rkt"))
 
 (provide (struct-out interface-desc)
@@ -13,22 +16,15 @@
          close-interfaces-over-superinterfaces
          interface-names->quoted-list)
 
-(struct interface-desc (id
-                        internal-id
-                        super-ids
-                        prop:id
-                        prop:internal-internal-id
-                        ref-id
-                        method-shapes   ; same as `class-desc`
-                        method-vtable   ; same as `class-desc`
-                        method-map      ; same as `class-desc`
-                        method-result   ; same as `class-desc`
-                        custom-annotation?
-                        dots            ; list of symbols for dot syntax
-                        dot-provider    ; #f or compile-time identifier
-                        static-infos    ; same as `class-desc`
-                        indirect-call-method-id ; same as `class-desc`
-                        flags))         ; list of 'call (public `call` is Callable), 'get, 'set, and/or 'append
+(struct interface-desc objects-desc
+  ;; `flags` from `objects-desc` can include 'veneer
+  (id
+   internal-id
+   prop:id
+   prop:internal-internal-id
+   ref-id
+   custom-annotation?
+   indirect-call-method-id)) ; same as `class-desc`
 (struct interface-internal-desc interface-desc (private-methods      ; (list symbol ...)
                                                 private-properties)) ; (list symbol ...)
 
@@ -38,11 +34,17 @@
                                                 v))
 
 (define (interface-names->interfaces stxes names
-                                     #:results [results (lambda (all pruned) pruned)])
+                                     #:results [results (lambda (all pruned) pruned)]
+                                     #:for-veneer? [for-veneer? #f])
   (define intfs
     (for/list ([name (in-list names)])
-      (or (syntax-local-value* (in-class-desc-space name) interface-noninternal-desc-ref)
-          (raise-syntax-error #f "not an interface name" stxes name))))
+      (define intf
+        (or (syntax-local-value* (in-class-desc-space name) interface-noninternal-desc-ref)
+            (raise-syntax-error #f "not an interface name" stxes name)))
+      (when (and for-veneer?
+                 (not (memq 'veneer (objects-desc-flags intf))))
+        (raise-syntax-error #f "interface cannot be implemented by a veneer" stxes name))
+      intf))
   (results
    intfs
    ;; remove duplicates, just to make the generated class or interface description more compact
@@ -90,7 +92,7 @@
        (define intf+priv? (car int+priv?s))
        (define intf (car intf+priv?))
        (define priv? (cdr intf+priv?))
-       (define supers (for/list ([id (in-list (syntax->list (interface-desc-super-ids intf)))])
+       (define supers (for/list ([id (in-list (syntax->list (objects-desc-interface-ids intf)))])
                         (cons (or (syntax-local-value* (in-class-desc-space id) interface-desc-ref)
                                   (error "missing interface" id))
                               priv?)))

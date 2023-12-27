@@ -349,6 +349,13 @@
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
+(define-doc veneer_clause.macro veneer_clause
+  "veneer clause"
+  rhombus/veneer_clause
+  identifier-macro-extract-name
+  identifier-macro-extract-metavariables
+  identifier-macro-extract-typeset)
+
 (define-doc entry_point.macro entry_point
   "entry point"
   rhombus/entry_point

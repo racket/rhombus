@@ -12,11 +12,13 @@
          "class-clause.rkt"
          "class-clause-tag.rkt"
          "interface-clause.rkt"
+         "veneer-clause.rkt"
          "op-literal.rkt"
          "parens.rkt")
 
 (provide (for-spaces (rhombus/class_clause
-                      rhombus/interface_clause)
+                      rhombus/interface_clause
+                      rhombus/veneer_clause)
                      dot
                      static_info))
 
@@ -54,6 +56,9 @@
 
 (define-interface-clause-syntax dot
   (make-macro-clause-transformer #:clause-transformer interface-clause-transformer))
+
+(define-veneer-clause-syntax dot
+  (make-macro-clause-transformer #:clause-transformer veneer-clause-transformer))
 
 (begin-for-syntax
   (define-syntax (class-dot-transformer stx)
@@ -95,3 +100,6 @@
 
 (define-interface-clause-syntax static_info
   (interface-clause-transformer parse-static_info))
+
+(define-veneer-clause-syntax static_info
+  (veneer-clause-transformer parse-static_info))

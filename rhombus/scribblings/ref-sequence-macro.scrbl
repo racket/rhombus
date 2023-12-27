@@ -34,9 +34,12 @@
   interface_clause.macro '«sequence '$pattern':
                              $body
                              ...»'
+  veneer_clause.macro '«sequence '$pattern':
+                          $body
+                          ...»'
 ){
 
- Forms for @rhombus(class) or @rhombus(interface) to supply an
+ Forms for @rhombus(class), @rhombus(interface), or @rhombus(veneer) to supply an
  optimizing conversion in an @rhombus(each, ~for_clause) clause of @rhombus(for).
  The conversion applies whenever the right-hand side of
  @rhombus(each, ~for_clause) has static information for the class or

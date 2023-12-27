@@ -20,3 +20,15 @@ class_and_interface_clause.macro '«sequence '$(pat :: Group)':
      static_info: '((#{#%sequence-constructor},
                      sequence_constructor))'
    »'
+
+veneer_clause.macro '«sequence '$(pat :: Group)':
+                        $body
+                        ...»':
+  '«
+     sequence_macro sequence_constructor:
+       make_sequence_constructor(fun ('$pat'):
+                                   $body
+                                   ...)
+     static_info: '((#{#%sequence-constructor},
+                     sequence_constructor))'
+   »'

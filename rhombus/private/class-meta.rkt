@@ -39,8 +39,7 @@
   #:properties
   ()
   #:methods
-  ([lookup class_meta.Info.lookup]
-   ))
+  ([lookup class_meta.Info.lookup]))
 
 (define/arity (class_meta.describe id)
   #:static-infos ((#%call-result #,class-data-static-infos))
@@ -65,7 +64,7 @@
         constructor-field-defaults
         constructor-field-mutables
         constructor-field-privates
-        _)
+        . _)
      (values #'constructor-field-names
              #'constructor-field-keywords
              #'constructor-field-defaults
@@ -118,10 +117,10 @@
             (if idesc
                 (vis 'private (syntax->list (class-internal-desc-private-interfaces idesc)))
                 null)
-            (vis 'public (syntax->list (class-desc-interface-ids desc))))]
+            (vis 'public (syntax->list (objects-desc-interface-ids desc))))]
           [else
            (define idesc (class-describe-data-private-idesc info))
-           (method-shape-extract (class-desc-method-shapes desc)
+           (method-shape-extract (objects-desc-method-shapes desc)
                                  (if idesc (class-internal-desc-private-methods idesc) null)
                                  (if idesc (class-internal-desc-private-properties idesc) null)
                                  key)])])]

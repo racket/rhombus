@@ -23,22 +23,23 @@
                      Listable))
 
 (define-class-desc-syntax Listable
-  (interface-desc #'Listable
-                  #'Listable
-                  #'()
-                  #'prop:Listable
-                  #'prop:Listable
-                  #'Listable-ref
+  (interface-desc #'()
                   (vector-immutable (box-immutable 'to_list))
                   #'#(#:abstract)
                   (hasheq 'to_list 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '()))
+                  '()
+                  ;; --------------------
+                  #'Listable
+                  #'Listable
+                  #'prop:Listable
+                  #'prop:Listable
+                  #'Listable-ref
+                  #t
+                  #f))
 
 (define-annotation-syntax Listable
   (identifier-annotation #'listable? #'((#%dot-provider listable-instance))))

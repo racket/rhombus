@@ -21,19 +21,20 @@
                                  s))))))
 
 (define-class-desc-syntax Sequenceable
-  (interface-desc #'Sequenceable
-                  #'Sequenceable
-                  #'()
-                  #'prop:Sequenceable
-                  #'prop:Sequenceable
-                  #'Sequenceable-ref
+  (interface-desc #'()
                   (vector-immutable (box-immutable 'to_sequence))
                   #'#(#:abstract)
                   (hasheq 'to_sequence 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '()))
+                  '()
+                  ;; --------------------
+                  #'Sequenceable
+                  #'Sequenceable
+                  #'prop:Sequenceable
+                  #'prop:Sequenceable
+                  #'Sequenceable-ref
+                  #t
+                  #f))

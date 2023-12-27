@@ -111,6 +111,7 @@
         "class-clause-primitive.rkt"
         "with.rkt"
         "interface.rkt"
+        "veneer.rkt"
         "block.rkt"
         "cond.rkt"
         "match.rkt"

@@ -11,6 +11,7 @@
          "class-clause-tag.rkt"
          (submod "class-clause.rkt" for-class)
          "interface-clause.rkt"
+         "veneer-clause.rkt"
          (submod "annotation.rkt" for-class)
          "parens.rkt"
          "name-root-ref.rkt"
@@ -22,7 +23,6 @@
          "op-literal.rkt")
 
 (provide (for-space rhombus/class_clause
-                    implements
                     nonfinal
                     opaque
                     prefab
@@ -32,15 +32,23 @@
                     reconstructor
                     reconstructor_fields)
          (for-spaces (rhombus/class_clause
-                      rhombus/interface_clause)
+                      rhombus/veneer_clause)
+                     implements)
+         (for-spaces (rhombus/class_clause
+                      rhombus/interface_clause
+                      rhombus/veneer_clause)
                      extends
-                     internal
-                     final
                      method
                      property
                      override
                      private
-                     abstract))
+                     final)
+         (for-spaces (rhombus/class_clause
+                      rhombus/interface_clause)
+                     internal
+                     abstract)
+         (for-space rhombus/veneer_clause
+                    converter))
 
 (define-for-syntax (parse-multiple-names stx)
   (define lines
@@ -57,37 +65,42 @@
                [(~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref))
                 (cons #'id.name (loop #'id.tail))])))))
 
+(define-for-syntax parse-class-extends
+  (lambda (stx data)
+    (define names (parse-multiple-names stx))
+    (wrap-class-clause #`(#:extends . #,names))))
+
 (define-class-clause-syntax extends
-  (class-clause-transformer
-   (lambda (stx data)
-     (define names (parse-multiple-names stx))
-     (wrap-class-clause #`(#:extends . #,names)))))
+  (class-clause-transformer parse-class-extends))
 
 (define-interface-clause-syntax extends
-  (interface-clause-transformer
-   (lambda (stx data)
-     (define names (parse-multiple-names stx))
-     (wrap-class-clause #`(#:extends . #,names)))))
+  (interface-clause-transformer parse-class-extends))
+
+(define-veneer-clause-syntax extends
+  (veneer-clause-transformer parse-class-extends))
+
+(define-for-syntax parse-class-implements
+  (lambda (stx data)
+    (define names (parse-multiple-names stx))
+    (wrap-class-clause #`(#:implements . #,names))))
 
 (define-class-clause-syntax implements
-  (class-clause-transformer
-   (lambda (stx data)
-     (define names (parse-multiple-names stx))
-     (wrap-class-clause #`(#:implements . #,names)))))
+  (class-clause-transformer parse-class-implements))
+
+(define-veneer-clause-syntax implements
+  (veneer-clause-transformer parse-class-implements))
+
+(define-for-syntax parse-class-internal
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ name:identifier)
+       (wrap-class-clause #'(#:internal name))])))
 
 (define-class-clause-syntax internal
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ name:identifier)
-        (wrap-class-clause #'(#:internal name))]))))
+  (class-clause-transformer parse-class-internal))
 
 (define-interface-clause-syntax internal
-  (interface-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ name:identifier)
-        (wrap-class-clause #'(#:internal name))]))))
+  (interface-clause-transformer parse-class-internal))
 
 (define-class-clause-syntax nonfinal
   (class-clause-transformer
@@ -340,11 +353,23 @@
 (define-interface-clause-syntax final
   (interface-clause-transformer parse-final))
 
-(define-class-clause-syntax method
-  (class-clause-transformer
+;; redundant, but allowed:
+(define-veneer-clause-syntax final
+  (veneer-clause-transformer parse-final))
+
+(define-veneer-clause-syntax converter
+  (veneer-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_ (~var m (:method-impl #'#:method))) #'m.form]))))
+       [(_) (wrap-class-clause #`(#:converter))]))))
+
+(define-for-syntax parse-class-method
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ (~var m (:method-impl #'#:method))) #'m.form])))
+
+(define-class-clause-syntax method
+  (class-clause-transformer parse-class-method))
 
 (define-interface-clause-syntax method
   (interface-clause-transformer
@@ -353,11 +378,16 @@
        [(_ (~var m (:method-impl #'#:method))) #'m.form]
        [(_ (~var decl (:method-decl #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))))
 
+(define-veneer-clause-syntax method
+  (veneer-clause-transformer parse-class-method))
+
+(define-for-syntax parse-class-property
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ (~var m (:property-impl #'#:property))) #'m.form])))
+
 (define-class-clause-syntax property
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~var m (:property-impl #'#:property))) #'m.form]))))
+  (class-clause-transformer parse-class-property))
 
 (define-interface-clause-syntax property
   (interface-clause-transformer
@@ -366,13 +396,18 @@
        [(_ (~var m (:property-impl #'#:property))) #'m.form]
        [(_ decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs decl.maybe-ret))]))))
 
+(define-veneer-clause-syntax property
+  (veneer-clause-transformer parse-class-property))
+
+(define-for-syntax parse-class-override
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
+      [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
+      [(_ (~var m (:method-impl #'#:override))) #'m.form])))
+
 (define-class-clause-syntax override
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
-       [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
-       [(_ (~var m (:method-impl #'#:override))) #'m.form]))))
+  (class-clause-transformer parse-class-override))
 
 (define-interface-clause-syntax override
   (interface-clause-transformer
@@ -385,19 +420,24 @@
        [(_ (~var m (:method-impl #'#:override))) #'m.form]
        [(_ (~var decl (:method-decl #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]))))
 
+(define-veneer-clause-syntax override
+  (veneer-clause-transformer parse-class-override))
+
+(define-for-syntax parse-class-private
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ tag::implements form ...)
+       (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
+      [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
+      [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
+      [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
+      [(_ _::override _::method (~var m (:method-impl #'#:private-override))) #'m.form]
+      [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
+      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'private)))) #'f.form]
+      [(_ (~var m (:method-impl #'#:private))) #'m.form])))
+
 (define-class-clause-syntax private
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ tag::implements form ...)
-        (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
-       [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
-       [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
-       [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
-       [(_ _::override _::method (~var m (:method-impl #'#:private-override))) #'m.form]
-       [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
-       [(~and (_ _::field . _) (_ (~var f (:field-spec 'private)))) #'f.form]
-       [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
+  (class-clause-transformer parse-class-private))
 
 (define-interface-clause-syntax private
   (interface-clause-transformer
@@ -405,6 +445,9 @@
      (syntax-parse stx
        [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
        [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
+
+(define-veneer-clause-syntax private
+  (veneer-clause-transformer parse-class-private))
 
 (define-for-syntax (parse-abstract-clause stx data)
   (syntax-parse stx

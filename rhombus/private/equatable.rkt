@@ -28,23 +28,24 @@
   (list bounce-to-equal-mode-proc bounce-to-hash-mode-proc))
 
 (define-class-desc-syntax Equatable
-  (interface-desc #'Equatable
-                  #'Equatable
-                  #'()
-                  #'prop:Equatable
-                  #'prop:Equatable
-                  #'Equatable-ref
+  (interface-desc #'()
                   (vector-immutable (box-immutable 'equals)
                                     (box-immutable 'hash_code))
                   #'#(#:abstract #:abstract)
                   (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '()))
+                  '()
+                  ;; --------------------
+                  #'Equatable
+                  #'Equatable
+                  #'prop:Equatable
+                  #'prop:Equatable
+                  #'Equatable-ref
+                  #t
+                  #f))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))

@@ -20,19 +20,20 @@
                              (list)))
 
 (define-class-desc-syntax Callable
-  (interface-desc #'Callable
-                  #'Callable
-                  #'()
-                  #'prop:Callable
-                  #'prop:Callable
-                  #'Callable-ref
+  (interface-desc #'()
                   '#(#&call)
                   #'#(#:abstract)
                   (hasheq 'call 0)
                   #hasheq()
-                  #t
                   '()
                   #f
                   #'()
-                  #f
-                  '(call)))
+                  '(call)
+                  ;; --------------------
+                  #'Callable
+                  #'Callable
+                  #'prop:Callable
+                  #'prop:Callable
+                  #'Callable-ref
+                  #t
+                  #f))

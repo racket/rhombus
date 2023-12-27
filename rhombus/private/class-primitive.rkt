@@ -231,10 +231,19 @@
 
          #,@(if (attribute actual-class)
                 #`((define-class-desc-syntax Name
-                     (class-desc #f ; not final
+                     (class-desc null
+                                 #() ; no methods
+                                 (quote-syntax #()) ; no methods
+                                 '#hasheq() ; empty method map
+                                 '#hasheq() ; empty method results
+                                 null ; no dot syntax
+                                 #f   ; no dot-provider
+                                 #'() ; no additional instance static-infos
+                                 null ; no flags
+                                 ;; ----------------------------------------
+                                 #f ; not final
                                  (quote-syntax Name)
                                  #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
-                                 null
                                  (quote-syntax struct_name)
                                  #f ; `ref-id` would only used by the normal class dot provider
                                  (list (list 'super-field-name
@@ -251,26 +260,19 @@
                                        ...)
                                  #f ; no private fields
                                  #,inherited-field-count
-                                 #() ; no methods
-                                 (quote-syntax #()) ; no methods
-                                 '#hasheq() ; empty method map
-                                 '#hasheq() ; empty method results
                                  #f ; constructor-makers
                                  #f ; not custom constructor
                                  #f ; not custom binding
                                  #f ; not custom annotation
                                  #f ; no functional-update specialization
-                                 null ; no dot syntax
-                                 #f ; dot-provider
                                  #f ; no arguments with defaults
-                                 #'() ; no additional instance static-infos
                                  #f ; not callable
                                  #f ; not indexable
                                  #f ; not mutable indexable
                                  #f ; not appendable
                                  #f ; not callable (again)
                                  #f ; not prefab
-                                 null)))
+                                 )))
                 null)
 
          (define-for-syntax name-dot-dispatch

@@ -7,6 +7,7 @@
                      (only-in "class-parse.rkt"
                               :options-block
                               in-class-desc-space
+                              objects-desc-dot-provider
                               check-exports-distinct
                               check-fields-methods-dots-distinct
                               added-method-body))
@@ -19,6 +20,7 @@
          "interface-clause-parse.rkt"
          "class-top-level.rkt"
          "class-clause-tag.rkt"
+         "class-step.rkt"
          "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
          (for-syntax "class-transformer.rkt")
@@ -67,27 +69,10 @@
                 (interface-annotation+finish #,finish-data) rhombus-class
                 (interface-body-step (#,interface-data-stx ()) . #,(intro body)))]))]))
 
-(define-syntax interface-body-step
-  (lambda (stx)
-    ;; parse the first form as a interface clause, if possible, otherwise assume
-    ;; an expression or definition
-    (syntax-parse stx
-      [(_ (data accum) form . rest)
-       #:with (~var clause (:interface-clause (interface-expand-data #'data #'accum))) (syntax-local-introduce #'form)
-       (syntax-parse (syntax-local-introduce #'clause.parsed)
-         #:datum-literals (group parsed)
-         [((group (parsed #:rhombus/class_clause p)) ...)
-          #:with (new-accum ...) (class-clause-accum #'(p ...))
-          #`(begin p ... (interface-body-step (data (new-accum ... . accum)) . rest))]
-         [(g ...)
-          #`(interface-body-step (data accum) g ... . rest)])]
-      [(_ data+accum form . rest)
-       #`(rhombus-top-step
-          interface-body-step
-          #f
-          (data+accum)
-          form . rest)]
-      [(_ data+accum) #'(begin)])))
+(define-class-body-step interface-body-step
+  :interface-clause
+  interface-expand-data
+  class-clause-accum)
 
 (define-syntax interface-annotation+finish
   (lambda (stx)
@@ -217,7 +202,7 @@
 
        (define parent-dot-providers
          (for/list ([parent (in-list supers)]
-                    #:do [(define dp (interface-desc-dot-provider parent))]
+                    #:do [(define dp (objects-desc-dot-provider parent))]
                     #:when dp)
            dp))
 
@@ -260,7 +245,7 @@
                (build-methods method-results
                               added-methods method-mindex method-names method-private
                               #f #f
-                              #'(name name-instance internal-name? #f
+                              #'(name name-instance internal-name? #f #f
                                       internal-name-ref
                                       ()
                                       []
@@ -370,53 +355,55 @@
            (list
             #`(define-syntax #,(in-class-desc-space internal-name)
                 ;; could improve by avoiding duplicate information
-                (interface-internal-desc (quote-syntax name)
-                                         #f
-                                         (quote-syntax #,parent-names)
-                                         (quote-syntax prop:internal-name)
-                                         (quote-syntax prop:internal-name)
-                                         (quote-syntax internal-name-ref)
+                (interface-internal-desc (quote-syntax #,parent-names)
                                          '#,method-shapes
                                          (quote-syntax #,method-vtable)
                                          '#,method-map
                                          #,method-result-expr
-                                         #,custom-annotation?
+                                         #f ; dots not used directly
+                                         #f
                                          (#,(quote-syntax quasisyntax) instance-static-infos)
-                                         #f
                                          '()
+                                         ;; --------------------
+                                         (quote-syntax name)
                                          #f
-                                         '()
+                                         (quote-syntax prop:internal-name)
+                                         (quote-syntax prop:internal-name)
+                                         (quote-syntax internal-name-ref)
+                                         #,custom-annotation?
+                                         #f
                                          (quote #,(build-quoted-private-method-list 'method method-private))
                                          (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
        (list
         (build-syntax-definition/maybe-extension
          'rhombus/class #'name #'name-extends
-         #`(interface-desc (quote-syntax name)
-                           #,(and internal-name
-                                  #`(quote-syntax #,internal-name))
-                           (quote-syntax #,parent-names)
-                           (quote-syntax prop:name)
-                           #,(and (syntax-e #'prop:internal-name)
-                                  #'(quote-syntax prop:internal-name))
-                           (quote-syntax name-ref-or-error)
+         #`(interface-desc (quote-syntax #,parent-names)
                            '#,method-shapes
                            (quote-syntax #,method-vtable)
                            '#,method-map
                            #,method-result-expr
-                           #,custom-annotation?
                            '#,(map car dots)
                            #,(and (syntax-e #'dot-provider-name)
                                   #'(quote-syntax dot-provider-name))
                            (#,(quote-syntax quasisyntax) instance-static-infos)
+                           '#,(append
+                               (if callable? '(call) '())
+                               (if indexable? '(get) '())
+                               (if setable? '(set) '())
+                               (if appendable? '(append) '()))
+                           ;; ----------------------------------------
+                           (quote-syntax name)
+                           #,(and internal-name
+                                  #`(quote-syntax #,internal-name))
+                           (quote-syntax prop:name)
+                           #,(and (syntax-e #'prop:internal-name)
+                                  #'(quote-syntax prop:internal-name))
+                           (quote-syntax name-ref-or-error)
+                           #,custom-annotation?
                            #,(let ([id (if (syntax-e #'call-statinfo-indirect)
                                            #'call-statinfo-indirect
                                            #'super-call-statinfo-indirect)])
                                (if (and id (syntax-e id))
                                    #`(quote-syntax #,id)
-                                   #f))
-                           '#,(append
-                               (if callable? '(call) '())
-                               (if indexable? '(get) '())
-                               (if setable? '(set) '())
-                               (if appendable? '(append) '())))))))))
+                                   #f)))))))))
