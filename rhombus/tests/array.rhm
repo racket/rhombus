@@ -121,7 +121,7 @@ check:
   def a :: Array.later_of(String) = Array(1)
   a[0]
   ~throws values(
-    "current element does not satisfy the array's annotation",
+    "current element does not satisfy annotation",
     "0",
     "String",
   )
@@ -136,7 +136,7 @@ check:
   a[0]
   a[0] := #'oops
   ~throws values(
-    "new element does not satisfy the array's annotation",
+    "new element does not satisfy annotation",
     "0",
     "String",
   )

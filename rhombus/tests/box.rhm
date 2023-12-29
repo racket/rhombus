@@ -91,7 +91,7 @@ check:
   def bx :: Box.later_of(String) = Box(1)
   bx.value
   ~throws values(
-    "current value does not satisfy the box's annotation",
+    "current value does not satisfy annotation",
     "String",
   )
 
@@ -100,7 +100,7 @@ check:
   bx.value
   bx.value := #'oops
   ~throws values(
-    "new value does not satisfy the box's annotation",
+    "new value does not satisfy annotation",
     "String",
   )
 
