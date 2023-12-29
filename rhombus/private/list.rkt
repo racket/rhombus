@@ -290,19 +290,16 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~and args (_::parens g)) . tail)
-        (define name (syntax-e #'form-id))
         (values (make-repetition-info #'(form-id args)
-                                      name
-                                      #`(check-repetition-list '#,name (rhombus-expression g))
+                                      #'repet
+                                      #'(let ([l (rhombus-expression g)])
+                                          (check-list 'List.repet l)
+                                          l)
                                       1
                                       0
                                       #'()
                                       #f)
                 #'tail)]))))
-
-(define (check-repetition-list who l)
-  (check-list who l)
-  l)
 
 (define (check-function-of-arity n who proc)
   (unless (and (procedure? proc)

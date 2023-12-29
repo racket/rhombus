@@ -29,9 +29,7 @@
   (begin-for-syntax
     (provide (property-out dot-provider)
 
-             in-dot-provider-space
-
-             wrap-dot-provider))
+             in-dot-provider-space))
   (provide define-dot-provider-syntax
            #%dot-provider
            prop:field-name->accessor
@@ -46,9 +44,6 @@
   (property dot-provider (handler))
 
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot))
-
-  (define (wrap-dot-provider expr provider-stx)
-    (wrap-static-info expr #'#%dot-provider provider-stx))
 
   (define-syntax-class :dot-provider
     (pattern id:identifier

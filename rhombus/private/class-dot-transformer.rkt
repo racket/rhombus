@@ -57,9 +57,12 @@
        [(_ (_ (~and p (_::parens g)) . tail))
         #:with e::expression #'g
         (define new-g #`((parsed #:rhombus/expr
-                                 #,(wrap-static-info #`(check-instance '#,name #,pred e.parsed)
-                                                     #'#%dot-provider
-                                                     instance))
+                                 #,(wrap-static-info
+                                    #`(let ([o e.parsed])
+                                        (check-instance '#,name #,pred o)
+                                        o)
+                                    #'#%dot-provider
+                                    instance))
                          |.|
                          #,name))
         (define orig-tail (pack-tail #'tail))
@@ -73,5 +76,6 @@
 
 (define (check-instance name pred v)
   (unless (pred v)
-    (raise-arguments-error* name rhombus-realm "not an instance for dot syntax" "value" v))
-  v)
+    (raise-arguments-error* name rhombus-realm
+                            "not an instance for dot syntax"
+                            "value" v)))

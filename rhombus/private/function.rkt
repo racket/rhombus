@@ -125,8 +125,10 @@
                                                 #`(#t (accepts-keywords? v '#,(sort (map syntax-e kws) keyword<?)))]))]
                         [(n ...) (generate-temporaries #'(g ...))])
             (values (annotation-predicate-form
-                     #`(let ([n (check-nonneg-integer 'Function.of_arity (rhombus-expression g))]
+                     #'(let ([n (rhombus-expression g)]
                              ...)
+                         (check-nonneg-int 'Function.of_arity n)
+                         ...
                          (lambda (v)
                            (and (procedure? v)
                                 (procedure-arity-includes? v n kw-ok?)
@@ -135,10 +137,9 @@
                      function-static-infos)
                     #'tail)))]))))
 
-(define (check-nonneg-integer who v)
+(define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
-    (raise-argument-error* who rhombus-realm "NonnegInt" v))
-  v)
+    (raise-argument-error* who rhombus-realm "NonnegInt" v)))
 
 (define (accepts-keywords? proc kws)
   (define-values (req allow) (procedure-keywords proc))
