@@ -31,7 +31,7 @@ block:
     arr.length()
     ~is 3
   check:
-    def arr :~ Array = dynamic(Array(1, 2, 3))
+    def arr :: Array.of_length(3) = dynamic(Array(1, 2, 3))
     arr.length()
     ~is 3
   check:
@@ -87,6 +87,10 @@ check:
   ~throws "does not satisfy annotation"
 
 check:
+  10 :: Array.of_length(1)
+  ~throws "does not satisfy annotation"
+
+check:
   10 :: Array.now_of(Any)
   ~throws "does not satisfy annotation"
 
@@ -96,6 +100,14 @@ check:
 
 check:
   10 :: Array.later_of(converting(fun (_): #false))
+  ~throws "does not satisfy annotation"
+
+check:
+  Array(1) :: Array.of_length(1)
+  ~completes
+
+check:
+  Array(1) :: Array.of_length(2)
   ~throws "does not satisfy annotation"
 
 check:
