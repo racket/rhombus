@@ -8,7 +8,7 @@ check:
 check:
   ~eval
   "a" :: PosInt . count()
-  ~throws "operator precedence"
+  ~throws "operators with inconsistently declared precedence"
 
 check:
   0 :: converting(fun (i :: Int when i mod 3 == 0): i)
