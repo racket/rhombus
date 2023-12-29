@@ -116,15 +116,9 @@
                             #,(make-reelementer "new")))))
 
 (define (raise-reelementer-error what idx v annot-str)
-  (raise-arguments-error*
-   'Array rhombus-realm
-   (string-append what " element does not satisfy the array's annotation")
-   "element" v
-   "position" (unquoted-printing-string (number->string idx))
-   "annotation" (unquoted-printing-string
-                 (error-contract->adjusted-string
-                  annot-str
-                  rhombus-realm))))
+  (raise-binding-failure
+   'Array (string-append what " element") v annot-str
+   "position" (unquoted-printing-string (number->string idx))))
 
 (define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
 (define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))

@@ -115,14 +115,7 @@
                          #,(make-reboxer "new")))))
 
 (define (raise-reboxer-error what v annot-str)
-  (raise-arguments-error*
-   'Box rhombus-realm
-   (string-append what " value does not satisfy the box's annotation")
-   "value" v
-   "annotation" (unquoted-printing-string
-                 (error-contract->adjusted-string
-                  annot-str
-                  rhombus-realm))))
+  (raise-binding-failure 'Box (string-append what " value") v annot-str))
 
 (define-annotation-syntax MutableBox (identifier-annotation #'mutable-box? box-static-infos))
 (define-annotation-syntax ImmutableBox (identifier-annotation #'immutable-box? box-static-infos))

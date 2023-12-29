@@ -164,11 +164,13 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-binding-space #'name) rhs))]))
 
-(define (raise-binding-failure who what val annotation-str)
-  (raise-arguments-error* who rhombus-realm
-                          (string-append what " does not satisfy annotation")
-                          what val
-                          "annotation" (unquoted-printing-string
-                                        (error-contract->adjusted-string
-                                         annotation-str
-                                         rhombus-realm))))
+(define (raise-binding-failure who what val annotation-str . extra)
+  (apply raise-arguments-error*
+         who rhombus-realm
+         (string-append what " does not satisfy annotation")
+         what val
+         (append extra
+                 (list "annotation" (unquoted-printing-string
+                                     (error-contract->adjusted-string
+                                      annotation-str
+                                      rhombus-realm))))))

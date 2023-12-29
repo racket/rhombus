@@ -826,21 +826,7 @@
   (raise-annotation-failure who val ctc))
 
 (define (raise-annotation-failure who val ctc)
-  (raise
-   (exn:fail:contract
-    (error-message->adjusted-string
-     who
-     rhombus-realm
-     (string-append
-      "value does not satisfy annotation"
-      "\n  value: " ((error-value->string-handler)
-                     val
-                     (error-print-width))
-      "\n  annotation: " (error-contract->adjusted-string
-                          ctc
-                          rhombus-realm))
-     rhombus-realm)
-    (current-continuation-marks))))
+  (raise-binding-failure who "value" val ctc))
 
 (define-annotation-syntax matching
   (annotation-prefix-operator

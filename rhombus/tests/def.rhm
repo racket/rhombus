@@ -36,3 +36,21 @@ check:
   ~eval
   def | x = 2
   ~throws "alternatives are not supported here"
+
+check:
+  def (1, 2) = values(1, 1)
+  ~throws values(
+    "value does not satisfy annotation",
+    "1",
+    "2nd",
+    "matching(2)",
+  )
+
+check:
+  def (1, 2) = values(2, 2)
+  ~throws values(
+    "value does not satisfy annotation",
+    "2",
+    "1st",
+    "matching(1)",
+  )

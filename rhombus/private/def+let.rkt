@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     shrubbery/print
                      "tag.rkt"
                      "srcloc.rkt")
          "definition.rkt"
@@ -47,13 +46,11 @@
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
                                    wrap-definition
-                                   #:show-values? (and (attribute op) #t)
                                    #:check-bind-uses check-bind-uses)]
         [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition
-                                   #:show-values? (and (attribute op) #t)
                                    #:check-bind-uses check-bind-uses)]
         [(form-id any::not-equal ...+ _::equal rhs ...+)
          (build-value-definitions #'form-id
@@ -121,7 +118,6 @@
             ...))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
-                                             #:show-values? [show-values? #f]
                                              #:check-bind-uses [check-bind-uses void])
   (syntax-parse gs-stx
     [(lhs::binding ...)
@@ -138,16 +134,9 @@
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
-     #:with lhs-str (let ([str (apply
-                                string-append
-                                (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]
-                                           [i (in-naturals)])
-                                  (string-append
-                                   (if (zero? i) "" ", ")
-                                   (shrubbery-syntax->string lhs))))])
-                      (if show-values?
-                          (string-append "values(" str ")")
-                          str))
+     #:with (pos ...) (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]
+                                 [i (in-naturals 1)])
+                        i)
      (for ([ids (in-list (syntax->list #'((lhs-i.bind-id ...) ...)))]
            [usess (in-list (syntax->list #'((lhs-i.bind-uses ...) ...)))])
        (for ([lhs (in-list (syntax->list #'(lhs ...)))]
@@ -164,7 +153,8 @@
                              lhs-i.data
                              flattened-if
                              (begin)
-                             (rhs-binding-failure '#,form-id tmp-id 'lhs-str))
+                             (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str
+                                                  #:position 'pos))
            ...
            (lhs-i.committer-id tmp-id lhs-i.data)
            ...)
@@ -192,8 +182,22 @@
          (unless check-expr fail-expr)
          success-expr)]))
 
-(define (rhs-binding-failure who val binding-str)
-  (raise-binding-failure who "value" val binding-str))
+(define (rhs-binding-failure who val binding-str
+                             #:position [pos #f])
+  (define (n->th n)
+    (string-append (number->string n)
+                   (case (modulo n 100)
+                     [(11 12 13) "th"]
+                     [else (case (modulo n 10)
+                             [(1) "st"]
+                             [(2) "nd"]
+                             [(3) "rd"]
+                             [else "th"])])))
+  (apply raise-binding-failure
+         who "value" val binding-str
+         (if pos
+             (list "position" (unquoted-printing-string (n->th pos)))
+             '())))
 
 (define-for-syntax (single-valued-static-info si)
   (static-infos-remove si #'#%values))
