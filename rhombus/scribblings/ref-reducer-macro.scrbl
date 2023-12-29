@@ -20,6 +20,7 @@
 @doc(
   ~nonterminal:
     macro_patterns: expr.macro ~defn
+    maybe_each: for
 
   defn.macro 'reducer.macro $macro_patterns'
 ){
@@ -36,7 +37,7 @@
   ~eval: macro_eval
   ~defn:
     reducer.macro '(Array.len5)':
-      'Array ~length 5'
+      'Array.of_length(5)'
   ~repl:
     for Array.len5 (i: 0..3): i
 )
@@ -78,6 +79,10 @@
     for sum_pos_to_20 (a: [6, -4, 3]): a
     for sum_pos_to_20 (a: 3..): a
 )
+
+ @margin_note{It is recommended that a reducer macro only consume a
+  finite number of terms, as opposed to the whole tail, to account for
+  the @rhombus(maybe_each) position in @rhombus(for).}
 
  This example shows that reducers can be chained; specifically, it
  creates a @rhombus(counted) reducer, that chains onto an existing reducer

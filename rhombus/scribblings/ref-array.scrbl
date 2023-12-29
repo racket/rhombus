@@ -33,14 +33,18 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 @doc(
   annot.macro 'Array'
+  annot.macro 'Array.of_length($expr)'
   annot.macro 'Array.now_of($annot)'
   annot.macro 'Array.later_of($annot)'
   annot.macro 'MutableArray'
   annot.macro 'ImmutableArray'
 ){
 
- The @rhombus(Array, ~annot) annotation (without @rhombus(now_of, ~datum) or
- @rhombus(later_of, ~datum)) matches any array.
+ The @rhombus(Array, ~annot) annotation (without
+ @rhombus(of_length, ~datum), @rhombus(now_of, ~datum), or
+ @rhombus(later_of, ~datum)) matches any array. The
+ @rhombus(Array.of_length, ~annot) annotation matches arrays of a
+ given length.
 
  The @rhombus(Array.now_of, ~annot) form constructs a @tech{predicate
   annotation} that matches an array whose elements all currently satisfy
@@ -71,6 +75,10 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 @examples(
   ~repl:
+    Array(1, 2, 3) :: Array
+    Array(1, 2, 3) :: Array.of_length(3)
+    ~error:
+      Array(1, 2, 3) :: Array.of_length(5)
     Array(1, 2, 3) :: Array.now_of(Number)
     ~error:
       Array(1, "b", 3) :: Array.now_of(Number)
@@ -133,18 +141,27 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
+  ~nonterminal:
+    len_expr: block expr
+    fill_expr: block expr
   reducer.macro 'Array'
-  reducer.macro 'Array ~length $expr'
+  reducer.macro 'Array.of_length($len_expr, $maybe_fill)'
+
+  grammar maybe_fill:
+    ~fill: $fill_expr
+    #,(@epsilon)
 ){
 
- A @tech{reducer} used with @rhombus(for), accumulates each result of a
+ @tech{Reducers} used with @rhombus(for), accumulates each result of a
  @rhombus(for) body into a result array.
 
- When a @rhombus(~length) clause is provided, an array of the specified
+ The @rhombus(Array.of_length, ~reducer) reducer, like the
+ corresponding annotation, produces an array of a given length.
+ Specifically, an array of the specified
  length is created and mutated by iterations of the @rhombus(for) body.
  Iterations more than the specified length will trigger an exception,
- while iterations fewer than the length will leave @rhombus(0) values in
- the array.
+ while iterations fewer than the length will leave the value of
+ @rhombus(fill_expr) (or @rhombus(0)) in the array.
 
 }
 

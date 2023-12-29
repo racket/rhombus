@@ -55,7 +55,8 @@
    [append Array.append]
    [of now_of] ;; TEMPORARY
    now_of
-   later_of)
+   later_of
+   of_length)
   #:properties
   ()
   #:methods
@@ -106,6 +107,28 @@
   #'array-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
+(define-annotation-syntax of_length
+  (annotation-prefix-operator
+   (annot-quote of_length)
+   `((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (_::parens len-g) . tail)
+        (values
+         (annotation-predicate-form
+          #'(let ([n (rhombus-expression len-g)])
+              (check-nonneg-int 'Array.of_length n)
+              (lambda (v)
+                (and (vector? v)
+                     (= (vector-length v) n))))
+          array-static-infos)
+         #'tail)]))))
+
+(define (check-nonneg-int who v)
+  (unless (exact-nonnegative-integer? v)
+    (raise-argument-error* who rhombus-realm "NonnegInt" v)))
+
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
   (with-syntax ([[(annot-str . _) _] data])
     (define (make-reelementer what)
@@ -132,24 +155,6 @@
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ #:length e ...+)
-        ;; If `e` ends with parentheses after at least one term, then
-        ;; let those parentheses be for the initial `each` shorthand,
-        ;; instead of treating it as part of the length expression
-        (define (finish len-g tail)
-          (values (reducer/no-break #'build-array-reduce
-                                    #'([i 0])
-                                    #'build-array-assign
-                                    array-static-infos
-                                    #`[dest
-                                       (rhombus-expression #,len-g)
-                                       i])
-                  tail))
-        (syntax-parse #'(e ...)
-          [(e ...+ (~and p (_::parens . _)))
-           (finish #'(group e ...) #'(p))]
-          [_
-           (finish #'(group e ...) #'())])]
        [(_ . tail)
         (values
          (reducer/no-break #'build-array-reduce-list
@@ -159,17 +164,39 @@
                            #'accum)
          #'tail)]))))
 
+(define-reducer-syntax of_length
+  (reducer-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (_::parens len-g
+                      (~optional (group #:fill (_::block fill-g))))
+           . tail)
+        (values
+         (reducer/no-break #'build-array-reduce
+                           #'([i 0])
+                           #'build-array-assign
+                           array-static-infos
+                           #'[dest
+                              (rhombus-expression len-g)
+                              (~? (rhombus-expression fill-g) 0)
+                              i])
+         #'tail)]))))
+
 (define-syntax (build-array-reduce stx)
   (syntax-parse stx
-    [(_ (dest-id len-expr i) body)
-     (wrap-static-info* #'(let ([dest-id (make-vector len-expr)])
+    [(_ (dest-id len-expr fill-expr i) body)
+     (wrap-static-info* #'(let ([dest-id (let ([len len-expr]
+                                               [fill fill-expr])
+                                           (check-nonneg-int 'Array.of_length len)
+                                           (make-vector len fill))])
                             body
                             dest-id)
                         array-static-infos)]))
 
 (define-syntax (build-array-assign stx)
   (syntax-parse stx
-    [(_ (dest-id len-expr i) v)
+    [(_ (dest-id len-expr fill-expr i) v)
      #'(begin (vector-set! dest-id i v) (add1 i))]))
 
 (define-syntax (build-array-reduce-list stx)

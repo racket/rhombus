@@ -197,27 +197,32 @@ check:
   for Array:
     each i: 3..7
     i
-  ~prints_like Array(3, 4, 5, 6)
+  ~is_now Array(3, 4, 5, 6)
 
 check:
-  for Array ~length 6:
+  for Array.of_length(6):
     each i: 3..7
     i
-  ~prints_like Array(3, 4, 5, 6, 0, 0)
+  ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
-  for Array ~length (1 + 5):
+  for Array.of_length(1 + 5):
     each i: 3..7
     i
-  ~prints_like Array(3, 4, 5, 6, 0, 0)
+  ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
-  for Array ~length 6 (i: 3..7):
+  for Array.of_length(6) (i: 3..7):
     i
-  ~prints_like Array(3, 4, 5, 6, 0, 0)
+  ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
-  for Array ~length 2:
+  for Array.of_length(6, ~fill: 42) (i: 3..7):
+    i
+  ~is_now Array(3, 4, 5, 6, 42, 42)
+
+check:
+  for Array.of_length(2):
     each i: 3..7
     i
   ~throws "index is out of range"

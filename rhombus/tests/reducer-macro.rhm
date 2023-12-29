@@ -2,7 +2,7 @@
 
 check:
   reducer.macro '(Array.len5)':
-    'Array ~length 5'
+    'Array.of_length(5)'
   for Array.len5 (i: 0..3): i
   ~is_now Array(0, 1, 2, 0, 0)
 
