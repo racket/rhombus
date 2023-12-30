@@ -206,19 +206,22 @@
          [(#:private-property) (values 'method 'method 'private 'property)]
          [(#:private-override-property) (values 'method 'override 'private 'property)]
          [else (error "method kind not handled" #'tag)]))
+     (define arity (extract-arity #'rhs))
      (hash-set options 'methods (cons (added-method #'id
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
                                                     stx-params
                                                     #'maybe-ret
                                                     (and (or (pair? (syntax-e #'maybe-ret))
-                                                             (syntax-e #'e-arity.parsed))
+                                                             arity
+                                                             ;; may need to propagate super:
+                                                             (eq? replace 'override))
                                                          (car (generate-temporaries #'(id))))
                                                     body
                                                     replace
                                                     disposition
                                                     kind
-                                                    (extract-arity #'rhs))
+                                                    arity)
                                       (hash-ref options 'methods null)))]
     [((~and tag (~or* #:abstract #:abstract-property #:abstract-override #:abstract-override-property))
       id rhs maybe-ret)
@@ -229,19 +232,22 @@
          [(#:abstract-override) (values 'override 'method)]
          [(#:abstract-override-property) (values 'override 'property)]
          [else (error "method kind not handled" #'tag)]))
+     (define arity (extract-arity #'rhs))
      (hash-set options 'methods (cons (added-method #'id
                                                     '#:abstract
                                                     #'rhs
                                                     stx-params
                                                     #'maybe-ret
                                                     (and (or (pair? (syntax-e #'maybe-ret))
-                                                             (syntax-e #'e-arity.parsed))
+                                                             arity
+                                                             ;; may need to propagate super:
+                                                             (eq? replace 'override))
                                                          (car (generate-temporaries #'(id))))
                                                     'abstract
                                                     replace
                                                     'abstract
                                                     kind
-                                                    (extract-arity #'rhs))
+                                                    arity)
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))

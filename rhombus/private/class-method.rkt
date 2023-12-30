@@ -355,8 +355,7 @@
                                          append-statinfo-indirect-stx appendable?
                                          super-call-statinfo-indirect-id)
   (define defs
-    (for/list ([added (in-list added-methods)]
-               #:when (added-method-result-id added))
+    (for/list ([added (in-list added-methods)])
       #`(define-method-result-syntax #,(added-method-result-id added)
           #,(added-method-maybe-ret added)
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))

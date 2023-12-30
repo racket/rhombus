@@ -392,3 +392,27 @@ block:
     def (str1, str2) = B().m()
     values(str1.length(), str2.length())
     ~is values(4, 6)
+
+// Checked result annotations put the body in non-tail position,
+// but unchcked result annotations do not
+block:
+  class Posn(x, y):
+    method m(n) :~ maybe(String):
+      match n
+      | 0: Continuation.call_with_immediate_mark(#'depth,
+                                                 fun (d): d)
+      | ~else: m(n-1)
+    method checked_m(n) :: maybe(String):
+      match n
+      | 0: Continuation.call_with_immediate_mark(#'depth,
+                                                 fun (d): d)
+      | ~else: checked_m(n-1)
+
+  check:
+    Continuation.with_mark #'depth = "ok":
+      Posn(1, 2).m(3)
+    ~is "ok"
+  check:
+    Continuation.with_mark #'depth = "ok":
+      Posn(1, 2).checked_m(3)
+    ~is #false

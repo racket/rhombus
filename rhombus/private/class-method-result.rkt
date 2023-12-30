@@ -84,6 +84,10 @@
                                                      #:when pred)
                                             pred)])
                   (values (cond
+                            [(and predicate?
+                                  (null? (syntax-e #'(pred ...)))
+                                  (not proc))
+                             #f]
                             [predicate?
                              (define all-pred
                                (syntax-parse #'(pred ...)
@@ -171,13 +175,16 @@
            '()))
      #`(begin
          (~? (define handler-id handler))
-         (define-syntax id
-           (method-result (~? (quote-syntax handler-id) (~? (quote-syntax handler) #f))
-                          (quote #,predicate?)
-                          (quote #,all-count)
-                          (quote #,all-annot-str)
-                          (quote-syntax #,all-static-infos)
-                          (quote arity)))
+         #,@(if (syntax-e #'id)
+                (list
+                 #`(define-syntax id
+                     (method-result (~? (quote-syntax handler-id) (~? (quote-syntax handler) #f))
+                                    (quote #,predicate?)
+                                    (quote #,all-count)
+                                    (quote #,all-annot-str)
+                                    (quote-syntax #,all-static-infos)
+                                    (quote arity))))
+                null)
          #,@(gen #'maybe-final-id)
          #,@(gen #'maybe-call-statinfo-id #t)
          #,@(gen-bounce #'maybe-ref-statinfo-id+id #'#%index-get #'#%index-result)
