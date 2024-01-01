@@ -38,7 +38,7 @@
 
   grammar maybe_default:
     = $default_expr
-    : : $default_body; ...
+    : $default_body; ...
     #,(epsilon)
 
   grammar class_clause_or_body_or_export:
