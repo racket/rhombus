@@ -160,6 +160,117 @@ check:
 
 check:
   use_static
+  def set:
+    for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
+      each i: 0..8
+      if set[i] | set.remove(i) | set
+  set ++ {36}
+  ~is {9, 16, 25, 36}
+
+check:
+  use_static
+  def set:
+    for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
+      each i: 0..8
+      if set[i] | set.remove(i) | set
+  set ++ {36}
+  ~is {9, 16, 25, 36}
+
+check:
+  use_static
+  for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
+    each i: 0..8
+    keep_when set[i]
+    set.remove(i)
+  ~is {9, 16, 25}
+
+check:
+  use_static
+  for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
+    each i: 0..8
+    keep_when set[i]
+    set.remove(i)
+  ~is {9, 16, 25}
+
+check:
+  for values(_ = 0, _ = 0+1):
+    each i: 0..8
+    values(i, i+1)
+  ~is values(7, 8)
+
+check:
+  for values(_ :~ Int = 0, _ :~ Int = 0+1):
+    each i: 0..8
+    values(i, i+1)
+  ~is values(7, 8)
+
+check:
+  for values(_ :: Int = 0, _ :: Int = 0+1):
+     each i: 0..8
+     values(i, i+1)
+  ~is values(7, 8)
+
+check:
+  for values(_ :~ Int = 0, _ :~ Int = 0+1):
+    each _: 0..8
+    values("oops", "oh no")
+  ~is values("oops", "oh no")
+
+check:
+  for values(_ :~ Int = 0, _ :: Int = 0+1):
+    each _: 0..8
+    values("oops", "oh no")
+  ~throws values(
+    "value does not satisfy annotation",
+    "\"oh no\"",
+    "Int",
+  )
+
+check:
+  for values(_ :: Int = 0, _ :: Int = 0+1):
+    each _: 0..8
+    values("oops", "oh no")
+  ~throws values(
+    "value does not satisfy annotation",
+    "\"oops\"",
+    "Int",
+  )
+
+check:
+  for values(_ :~ Int = "oops", _ :~ Int = "oh no"):
+    each i: 0..8
+    values(i, i+1)
+  ~is values(7, 8)
+
+check:
+  for values(_ :~ Int = "oops", _ :: Int = "oh no"):
+    each i: 0..8
+    values(i, i+1)
+  ~throws values(
+    "value does not satisfy annotation",
+    "\"oh no\"",
+    "Int",
+  )
+
+check:
+  for values(_ :: Int = "oops", _ :: Int = "oh no"):
+    each i: 0..8
+    values(i, i+1)
+  ~throws values(
+    "value does not satisfy annotation",
+    "\"oops\"",
+    "Int",
+  )
+
+check:
+  for values(_: println("first"); 0, _: println("second"); 0+1):
+    each i: 0..8
+    println(i)
+    values(i, i+1)
+  ~prints "first\nsecond\n0\n1\n2\n3\n4\n5\n6\n7\n"
+
+check:
+  use_static
   class Posn(x, y)
   fun point_xs(l :~ List.of(List.of(Posn))):
     for:

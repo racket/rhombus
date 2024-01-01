@@ -9,10 +9,12 @@
          "parse.rkt"
          "static-info.rkt"
          "function-arity-key.rkt"
-         (submod "equal.rkt" for-parse)
+         "values-key.rkt"
          (submod "define-arity.rkt" for-info)
          "indirect-static-info-key.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "op-literal.rkt"
+         "var-decl.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -51,34 +53,75 @@
                                            " annotation by forms that specifically recognize it)")
                             #'head)]))))
 
+(begin-for-syntax
+  (define-splicing-syntax-class :accum
+    #:description "accumulator with optional annotation"
+    #:attributes (id e check make-check static-infos)
+    (pattern d::var-decl
+      #:with ((~or* (~and _::_-bind
+                          (~parse id (car (generate-temporaries '(wildcard)))))
+                    id:identifier)
+              (~optional c::inline-annotation))
+      #'(d.bind ...)
+      #:with e #'d.default
+      #:do [(define-values (check make-check)
+              (if (cond
+                    [(attribute c.converter) => syntax-e]
+                    [else #f])
+                  (values (car (generate-temporaries '(check)))
+                          #'(lambda (who)
+                              (lambda (val)
+                                (c.converter
+                                 val who
+                                 (lambda (val who)
+                                   (raise-annotation-failure who val 'c.annotation-str))))))
+                  (values #f #f)))]
+      #:attr check check
+      #:attr make-check make-check
+      #:with static-infos #'(~? c.static-infos ()))))
+
 (define-reducer-syntax values
   (reducer-transformer
    (lambda (stx)
      (syntax-parse (respan stx)
        #:datum-literals (group)
-       [(_ (_::parens (group id:identifier _::equal rhs ...) ...) . tail)
-        #:with (e::expression ...) #'((group rhs ...) ...)
-        #:with (e2 ...) (map rhombus-local-expand (syntax->list #'(e.parsed ...)))
-        #:with (si ...) (map extract-static-infos (syntax->list #'(e2 ...)))
+       [(form-id (_::parens (group accum::accum) ...) . tail)
         (values
-         (reducer/no-break #'build-return
-                           #'([id e2] ...)
-                           #'build-static-info
-                           #'()
-                           #'([id si] ...))
+         (reducer/no-break #'build-values-check-bind
+                           #'([accum.id (~? (let ([accum.id accum.e])
+                                              (accum.check accum.id)
+                                              accum.id)
+                                            accum.e)]
+                              ...)
+                           #:pre-clause #'build-values-static-info
+                           #'build-values-check
+                           #'((#%values (accum.static-infos
+                                         ...)))
+                           #'([accum.id accum.static-infos
+                                        (~? [accum.check (accum.make-check 'form-id)])]
+                              ...))
          #'tail)]))))
 
-(define-syntax (build-return stx)
+(define-syntax (build-values-check-bind stx)
   (syntax-parse stx
-    [(_ _ e) #'e]))
-
-(define-syntax (build-static-info stx)
-  (syntax-parse stx
-    [(_ ([id si] ...) e)
-     #'(let ()
-         (define-static-info-syntax/maybe id . si)
-         ...
+    [(_ ([_ _ (~optional (~and check-bind [_ _]))] ...) e)
+     #'(let ((~? check-bind) ...)
          e)]))
+
+(define-syntax (build-values-static-info stx)
+  (syntax-parse stx
+    [(_ ([id si (~optional [_ _])] ...))
+     #'(begin
+         (define-static-info-syntax/maybe id . si)
+         ...)]))
+
+(define-syntax (build-values-check stx)
+  (syntax-parse stx
+    [(_ ([id _ (~optional [check _])] ...) e)
+     #'(let-values ([(id ...) e])
+         (~? (check id))
+         ...
+         (values id ...))]))
 
 (define-static-info-syntax values
   (#%function-arity -1)
