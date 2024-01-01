@@ -1,19 +1,14 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     version/utils))
+(require "version-case.rkt")
 
 (provide config-syntax-parse!)
 
 ;; temporarily accomodate Racket versions before `syntax/parse/report-config`
-(define-syntax (req stx)
-  (syntax-case stx ()
-    [(_ current-report-configuration)
-     (if (version<? (version) "8.9.0.5")
-         #'(define current-report-configuration void)
-         #'(require (rename-in syntax/parse/report-config
-                               [current-report-configuration current-report-configuration])))]))
-
-(req current-report-configuration)
+(meta-if-version-at-least
+ "8.9.0.5"
+ (require (rename-in syntax/parse/report-config
+                     [current-report-configuration current-report-configuration]))
+ (define current-report-configuration void))
 
 (define (config-syntax-parse!)
   (current-report-configuration
