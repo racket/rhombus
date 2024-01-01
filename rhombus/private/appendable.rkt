@@ -4,6 +4,8 @@
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt")
+         (only-in racket/vector
+                  vector-append)
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -23,7 +25,6 @@
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          (only-in "class-method-result.rkt" method-result)
-         "vector-append.rkt"
          "is-static.rkt")
 
 (provide (for-spaces (rhombus/class

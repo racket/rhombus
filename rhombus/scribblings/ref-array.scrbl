@@ -22,8 +22,13 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   "array",
   @rhombus(Array),
   [arr.length(), Array.length(arr)]
-  [arr.copy(), Array.copy(arr)]
+  [arr.copy(arg, ...), Array.copy(arr, arg, ...)]
   [arr.copy_from(arg, ...), Array.copy_from(arr, arg, ...)]
+  [arr.take_left(n), Array.take_left(arr, n)]
+  [arr.take_right(n), Array.take_right(arr, n)]
+  [arr.drop_left(n), Array.drop_left(arr, n)]
+  [arr.drop_right(n), Array.drop_right(arr, n)]
+  [arr.set_in_copy(i, v), Array.set_in_copy(arr, i, v)]
 )
 
 @doc(
@@ -171,11 +176,20 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 
 @doc(
-  fun Array.copy(arr :: Array) :: MutableArray
+  fun Array.copy(arr :: Array,
+                 start :: NonnegInt = 0,
+                 end :: NonnegInt = Array.length(arr)) :: MutableArray
 ){
 
- Returns a fresh array string with the same initial content as
- @rhombus(arr).
+ Returns a fresh array string with the same initial content as in
+ @rhombus(arr) from position @rhombus(start) (inclusive) through
+ @rhombus(end) (exclusive).
+
+@examples(
+  Array("a", "b", "c").copy()
+  Array("a", "b", "c").copy(1)
+  Array("a", "b", "c").copy(1, 2)
+)
 
 }
 
@@ -194,3 +208,37 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  @rhombus(dest_start + (src_end - src_start)).
 
 }
+
+@doc(
+  fun Array.take_left(arr :: Array, n :: NonnegInt) :: MutableArray
+  fun Array.take_right(arr :: Array, n :: NonnegInt) :: MutableArray
+  fun Array.drop_left(arr :: Array, n :: NonnegInt) :: MutableArray
+  fun Array.drop_right(arr :: Array, n :: NonnegInt) :: MutableArray
+){
+
+ Like @rhombus(Array.copy) with a range that selects a prefix or suffix
+ of @rhombus(arr).
+
+@examples(
+  Array("a", "b", "c").take_left(2)
+  Array("a", "b", "c").take_right(2)
+  Array("a", "b", "c").drop_left(2)
+  Array("a", "b", "c").drop_right(2)
+)
+
+}
+
+
+@doc(
+  fun Array.set_in_copy(arr :: Array, i :: NonnegInt, v :: Any) :: MutableArray
+){
+
+ Returns an array like @rhombus(arr), but with @rhombus(v) as the
+ @rhombus(i)th element.
+
+@examples(
+  Array("a", "b", "c").set_in_copy(1, "x")
+)
+
+}
+

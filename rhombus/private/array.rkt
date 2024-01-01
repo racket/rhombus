@@ -4,6 +4,7 @@
                      "srcloc.rkt")
          (only-in racket/base
                   [vector array])
+         racket/vector
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -22,9 +23,9 @@
          "parse.rkt"
          "realm.rkt"
          "mutability.rkt"
-         "vector-append.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "version-case.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -51,17 +52,21 @@
   #:fields ()
   #:namespace-fields
   ([make Array.make]
+   [append Array.append]
    [of now_of] ;; TEMPORARY
    now_of
-   later_of
-   )
+   later_of)
   #:properties
   ()
   #:methods
   (length
    copy
    copy_from
-   ))
+   drop_left
+   drop_right
+   take_left
+   take_right
+   set_in_copy))
 
 (define-syntax Array
   (expression-transformer
@@ -192,11 +197,15 @@
   (unless (vector? v)
     (raise-argument-error* who rhombus-realm "Array" v)))
 
-(define/arity (Array.append v1 v2)
+(define/arity Array.append
+  #:inline
+  #:primitive (vector-append)
   #:static-infos ((#%call-result #,array-static-infos))
-  (check-array who v1)
-  (check-array who v2)
-  (vector-append v1 v2))
+  (case-lambda
+    [(v1) (vector-append v1)]
+    [(v1 v2) (vector-append v1 v2)]
+    [(v1 v2 v3) (vector-append v1 v2 v3)]
+    [args (apply vector-append args)]))
 
 (define/arity Array.make
   #:inline
@@ -211,13 +220,13 @@
   #:primitive (vector-length)
   (vector-length v))
 
-(define/method (Array.copy v)
+(define/method Array.copy
+  #:primitive (vector-copy)
   #:static-infos ((#%call-result #,array-static-infos))
-  (check-array who v)
-  (define len (vector-length v))
-  (define new-v (make-vector len))
-  (vector-copy! new-v 0 v 0 len)
-  new-v)
+  (case-lambda
+    [(v) (vector-copy v)]
+    [(v start) (vector-copy v start)]
+    [(v start end) (vector-copy v start end)]))
 
 (define/method Array.copy_from
   #:inline
@@ -226,6 +235,37 @@
     [(v dest-start src) (vector-copy! v dest-start src)]
     [(v dest-start src src-start) (vector-copy! v dest-start src src-start)]
     [(v dest-start src src-start src-end) (vector-copy! v dest-start src src-start src-end)]))
+
+(define/method (Array.take_left v n)
+  #:primitive (vector-take)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (vector-take v n))
+
+(define/method (Array.take_right v n)
+  #:primitive (vector-take-right)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (vector-take-right v n))
+
+(define/method (Array.drop_left v n)
+  #:primitive (vector-drop)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (vector-drop v n))
+
+(define/method (Array.drop_right v n)
+  #:primitive (vector-drop-right)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (vector-drop-right v n))
+
+(define/method (Array.set_in_copy v i val)
+  #:primitive (vector-set/copy)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (meta-if-version-at-least
+   "8.11.1.10"
+   (vector-set/copy v i val)
+   (begin
+     (define v2 (vector-copy v))
+     (vector-set! v2 i val)
+     v2)))
 
 (define-binding-syntax Array
   (binding-prefix-operator

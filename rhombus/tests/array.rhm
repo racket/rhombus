@@ -158,3 +158,15 @@ check:
   def a :: Array.now_of(String) = Array("apple")
   a[0] ++ "jack"
   ~throws "specialization not known"
+
+check:
+  Array("a", "b", "c").copy() ~is_now Array("a", "b", "c")
+  Array("a", "b", "c").copy(1)  ~is_now Array("b", "c")
+  Array("a", "b", "c").copy(1, 2)  ~is_now Array("b")
+
+  Array("a", "b", "c").take_left(2) ~is_now Array("a", "b")
+  Array("a", "b", "c").take_right(2) ~is_now Array("b", "c")
+  Array("a", "b", "c").drop_left(2) ~is_now Array("c")
+  Array("a", "b", "c").drop_right(2) ~is_now Array("a")
+
+  Array("a", "b", "c").set_in_copy(1, "x") ~is_now Array("a", "x", "c")
