@@ -16,7 +16,6 @@
          "index-result-key.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
-         "values-key.rkt"
          "parse.rkt"
          "parens.rkt"
          (rename-in "values.rkt"
@@ -280,22 +279,11 @@
   (syntax-parse lhs-parsed-stxes
     [(lhs-e::binding-form ...)
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
-     #:with (static-infos ...) (cond
-                                 [(or (syntax-local-static-info #'rhs #'#%sequence-element)
-                                      (syntax-local-static-info #'rhs #'#%index-result))
-                                  => (lambda (infos)
-                                       (define number-of-vals (length (syntax->list #'(lhs-e ...))))
-                                       (define infoss
-                                         (syntax-parse infos
-                                           #:literals (#%values)
-                                           [((#%values (si ...))) (syntax->list #'(si ...))]
-                                           [_ (list infos)]))
-                                       (if (= (length infoss) number-of-vals)
-                                           infoss
-                                           (for/list ([idx (in-range number-of-vals)])
-                                             #'())))]
-                                 [else (for/list ([lhs-e (in-list (syntax->list #'(lhs-e ...)))])
-                                         #'())])
+     #:with (static-infos ...) (normalize-static-infos/values
+                                (length lhs-parsed-stxes)
+                                (or (syntax-local-static-info #'rhs #'#%sequence-element)
+                                    (syntax-local-static-info #'rhs #'#%index-result)
+                                    #'()))
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (form-id . _) orig-stx

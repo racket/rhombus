@@ -110,10 +110,9 @@
              (define (static-info-lookup/pair infos key)
                (define maybe-infos (static-info-lookup infos key))
                (and maybe-infos
-                    (syntax-parse maybe-infos
-                      #:literals (#%values)
-                      [((#%values (car-infos cdr-infos))) #'((car car-infos) (cdr cdr-infos))]
-                      [_ #f])))
+                    (syntax-parse (normalize-static-infos/values 2 maybe-infos)
+                      [(() ()) #f]
+                      [(car-infos cdr-infos) #'((car car-infos) (cdr cdr-infos))])))
              (or (and (syntax-e #'index-result-info?)
                       (static-info-lookup/pair #'static-infos #'#%index-result))
                  (and (syntax-e #'sequence-element-info?)

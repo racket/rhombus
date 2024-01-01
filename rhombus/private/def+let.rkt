@@ -7,7 +7,6 @@
          "definition.rkt"
          "binding.rkt"
          "parse.rkt"
-         "values-key.rkt"
          "static-info.rkt"
          "forwarding-sequence.rkt"
          (only-in "values.rkt"
@@ -94,7 +93,7 @@
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-stx))
-     #:with static-infos (single-valued-static-info (extract-static-infos #'rhs))
+     #:with static-infos (normalize-static-infos (extract-static-infos #'rhs))
      #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
      #:with lhs-i::binding-info #'lhs-impl.info
      (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
@@ -123,14 +122,9 @@
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-stx))
-     #:with (static-infos ...) (let ([si (extract-static-infos #'rhs)])
-                                 (define lhss (syntax->list #'(lhs ...)))
-                                 (syntax-parse (static-info-lookup si #'#%values)
-                                   [(si ...)
-                                    #:when (= (length (syntax->list #'(si ...)))
-                                              (length lhss))
-                                    (map single-valued-static-info (syntax->list #'(si ...)))]
-                                   [_ (for/list ([lhs (in-list lhss)]) #'())]))
+     #:with (static-infos ...) (normalize-static-infos/values
+                                (length (syntax->list gs-stx))
+                                (extract-static-infos #'rhs))
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
@@ -198,6 +192,3 @@
          (if pos
              (list "position" (unquoted-printing-string (n->th pos)))
              '())))
-
-(define-for-syntax (single-valued-static-info si)
-  (static-infos-remove si #'#%values))

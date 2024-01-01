@@ -117,30 +117,23 @@
                             (annotation-string-and annot-str all-annot-str))))]
                ;; no annotation in the inheritance chain
                [else (values #f #f)]))
-           (define (extract-static-infoss infos)
-             (syntax-parse infos
-               #:literals (#%values)
-               [((#%values (si ...))) (syntax->list #'(si ...))]
-               [_ (list infos)]))
-           (define static-infoss (extract-static-infoss static-infos))
-           (define static-infoss-count (length static-infoss))
            ;; Like `Super_1 && ... && Super_n && This`, in reverse of
            ;; the actual checks (checks happen "bottom-up"); or in
            ;; other words, a variant of `&&` that prioritizes the
            ;; left-hand side static infos.
            (define all-static-infos
-             (for/foldr ([all-static-infoss (for/list ([_ (in-range static-infoss-count)])
-                                              '())]
-                         #:result (if (eqv? static-infoss-count 1)
-                                      (car all-static-infoss)
-                                      #`((#%values #,all-static-infoss))))
-                        ([infos (in-list (cons static-infos
-                                               (map method-result-static-infos super-results)))]
-                         #:do [(define infoss (extract-static-infoss infos))]
-                         #:when (eqv? (length infoss) static-infoss-count))
-               (for/list ([infos (in-list infoss)]
-                          [all-static-infos (in-list all-static-infoss)])
-                 (static-infos-union infos all-static-infos))))]
+             (if all-count
+                 (for/foldr ([all-static-infoss (for/list ([_ (in-range all-count)])
+                                                  '())]
+                             #:result (if (eqv? all-count 1)
+                                          #`#,(car all-static-infoss)
+                                          #`((#%values #,all-static-infoss))))
+                            ([infos (in-list (cons static-infos
+                                                   (map method-result-static-infos super-results)))])
+                   (for/list ([infos (in-list (normalize-static-infos/values all-count infos))]
+                              [all-static-infos (in-list all-static-infoss)])
+                     (static-infos-union infos all-static-infos)))
+                  #'()))]
      #:attr handler handler-stx
      #:attr handler-id (and handler-stx
                             (not (identifier? handler-stx))

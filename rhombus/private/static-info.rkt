@@ -6,7 +6,8 @@
                      "introducer.rkt"
                      "srcloc.rkt")
          "expression.rkt"
-         "indirect-static-info-key.rkt")
+         "indirect-static-info-key.rkt"
+         "values-key.rkt")
 
 ;; Represent static information in either of two ways:
 ;;
@@ -27,6 +28,8 @@
            :static-info
            syntax-local-static-info
            extract-static-infos
+           normalize-static-infos
+           normalize-static-infos/values
            unwrap-static-infos
            discard-static-infos
            relocate-wrapped
@@ -105,6 +108,26 @@
         [(begin (quote-syntax (~and form (key:identifier val))) e)
          (cons #'form (loop #'e #t))]
         [_ null])))
+
+  (define (normalize-static-infos infos)
+    (car (normalize-static-infos/values 1 infos)))
+
+  (define (normalize-static-infos/values num infos)
+    (define infoss
+      (syntax-parse infos
+        #:literals (#%values)
+        [((#%values (si ...))) (syntax->list #'(si ...))]
+        [_ (list infos)]))
+    (if (eqv? (length infoss) num)
+        (for/list ([infos (in-list infoss)])
+          (let loop ([infos infos])
+            (syntax-parse infos
+              #:literals (#%values)
+              [((#%values (only-infos))) (loop #'only-infos)]
+              [((#%values _)) #'()]
+              [_ infos])))
+        (for/list ([_ (in-range num)])
+          #'())))
 
   (define (unwrap-static-infos e)
     (syntax-parse e

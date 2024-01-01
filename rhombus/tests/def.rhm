@@ -54,3 +54,48 @@ check:
     "1st",
     "matching(1)",
   )
+
+check:
+  use_static
+  def str = (fun () :: String: "a string")()
+  str.length()
+  ~is 8
+
+check:
+  use_static
+  def str = (fun () :: (String): "a string")()
+  str.length()
+  ~is 8
+
+check:
+  use_static
+  def (str) = (fun () :: String: "a string")()
+  str.length()
+  ~is 8
+
+check:
+  use_static
+  def (str) = (fun () :: (String): "a string")()
+  str.length()
+  ~is 8
+
+check:
+  ~eval
+  use_static
+  def str = (fun () :~ (String, String): "a string")()
+  str.length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def (str) = (fun () :~ (String, String): "a string")()
+  str.length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def (str, _) = (fun () :~ String: values("a string", "another"))()
+  str.length()
+  ~throws "no such field or method (based on static information)"
