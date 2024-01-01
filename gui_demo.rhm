@@ -46,7 +46,8 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
     // draw ghost dots (showing recent mouse movements)
     let dot_size = [4, 4]
-    for values(brush = draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
+    for values(brush :~ draw.Brush:
+                 draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
       each [x, y]: (config["ghosts"] :: List).reverse()
       dc.brush := brush
       let x = x/scale

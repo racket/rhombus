@@ -57,13 +57,24 @@
 }
 
 @doc(
-  reducer.macro 'values($id = $expr, ...)'
+  reducer.macro 'values($id $maybe_annot $init, ...)'
+
+  grammar maybe_annot:
+    #,(@rhombus(::, ~bind)) $annot
+    #,(@rhombus(:~, ~bind)) $annot
+    #,(epsilon)
+
+  grammar init:
+    = $expr
+    : $body; ...
 ){
 
  A @tech{reducer} used with @rhombus(for), expects as many results from a
- @rhombus(for) body as @rhombus(id)s. For the first iteration of
+ @rhombus(for) body as @rhombus(id)s. When @rhombus(id) is
+ @rhombus(_, ~bind), a fresh identifier is used, otherwise
+ @rhombus(id) is bound as follows. For the first iteration of
  the @rhombus(for) body, each @rhombus(id)'s value is the result
- of the corresponding @rhombus(expr). The results of a @rhombus(for) body
+ of the corresponding @rhombus(init). The results of a @rhombus(for) body
  for one iteration then serve as the values of the @rhombus(id)s
  for the next iteration. The values of the whole @rhombus(for) expression
  are the final values of the @rhombus(id)s.
