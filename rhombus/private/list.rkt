@@ -420,7 +420,8 @@
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
-                           (length-at-least v #,len))))
+                           (maybe-list-tail v '#,len)
+                           #t)))
      (generate-binding #'form-id pred args #'tail
                        #`(#,group-tag rest-bind #,list-static-infos
                           (#,group-tag rest-arg ...))
@@ -431,7 +432,8 @@
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
-                           (length-at-least v #,len))))
+                           (maybe-list-tail v '#,len)
+                           #t)))
      (generate-binding #'form-id pred args #'tail #'rest-arg
                        (if (null? args) #'values #'cdr)
                        #t)]
@@ -440,7 +442,7 @@
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
-                           (= (length v) #,len))))
+                           (null? (maybe-list-tail v '#,len)))))
      (generate-binding #'form-id pred args #'tail)]))
 
 (define-for-syntax (parse-list-form stx
@@ -540,10 +542,11 @@
 (define-for-syntax (parse-list-repetition stx)
   (parse-list-form stx #:repetition? #t #:span-form-name? #f))
 
-(define (length-at-least v len)
-  (or (eqv? len 0)
-      (and (pair? v)
-           (length-at-least (cdr v) (- len 1)))))
+(define (maybe-list-tail l n)
+  (or (and (eqv? n 0)
+           l)
+      (and (pair? l)
+           (maybe-list-tail (cdr l) (sub1 n)))))
 
 (define (assert-list v)
   (unless (list? v)
