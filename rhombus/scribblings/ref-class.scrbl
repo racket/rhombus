@@ -32,8 +32,8 @@
     #,(epsilon)
 
   grammar maybe_annot:
-    :: $annot
-    :~ $annot
+    #,(@rhombus(::, ~bind)) $annot
+    #,(@rhombus(:~, ~bind)) $annot
     #,(epsilon)
 
   grammar maybe_default:
