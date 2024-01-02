@@ -178,7 +178,7 @@ class TreeList(root :~ Node,
         pos < p.size,
       ~inner_binds:
         values($lhs, next_node, next_node_pos):
-          if node_pos < node.size
+          if node_pos < Node.size(node)
           | values((node :~ Node)[node_pos], node, node_pos + 1)
           | let (node :~ Node, node_pos) = _TreeList.node_for(p, pos)
             values(node[node_pos], node, node_pos + 1),

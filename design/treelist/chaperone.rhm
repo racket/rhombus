@@ -1,0 +1,40 @@
+#lang rhombus
+
+import:
+  lib("rhombus/private/treelist.rkt") open
+
+def orig = #{make-treelist}(1, 2, 3, -4)
+def tl = #{chaperone-treelist}(orig,
+                               fun (orig, index, v): if v < 0
+                                                     | error(#'oops, "ref negative rejected")
+                                                     | v,
+                               fun (orig, index, v): if v < 0
+                                                     | error(#'oops, "set negative rejected")
+                                                     | v,
+                               fun (orig, index, v): if v < 0
+                                                     | error(#'oops, "insert negative rejected")
+                                                     | v,
+                               fun (orig, other):
+                                 for values(tl = orig) (e : #{in-treelist}(other)):
+                                   #{treelist-add}(orig, e))
+
+check:
+  #{treelist-length}(tl) ~is 4
+  #{treelist-ref}(tl, 2) ~is 3
+  #{treelist-ref}(tl, 3) ~throws "ref negative rejected"
+  #{treelist->list}(tl) ~throws "ref negative rejected"
+  #{treelist->list}(#{treelist-take}(tl, 3)) ~is [1, 2, 3]
+  #{treelist-set}(tl, 0, -3) ~throws "set negative rejected"
+  #{treelist-insert}(tl, 1, -3) ~throws "insert negative rejected"
+  #{treelist->list}(#{treelist-remove}(tl, 3)) ~is [1, 2, 3]
+  #{treelist-set}(#{treelist-remove}(tl, 3), 0, -2) ~throws "set negative rejected"
+  #{treelist-ref}(#{treelist-append}(tl, #{make-treelist}(10, 20)), 4) ~is 20
+  #{treelist-ref}(#{treelist-append}(tl, #{make-treelist}(10, 20)), 3) ~throws "ref negative rejected"
+  #{treelist-set}(#{treelist-append}(tl, #{make-treelist}(10, 20)), 0, -2) ~throws "set negative rejected"
+  #{treelist-ref}(#{treelist-drop}(tl, 2), 0) ~is 3
+  #{treelist-ref}(#{treelist-drop}(tl, 2), 1) ~throws "ref negative rejected"
+  #{treelist-ref}(#{treelist-cons}(tl, 10), 1) ~is 1
+  #{treelist-ref}(#{treelist-cons}(tl, 10), 4) ~throws "ref negative rejected"
+  #{treelist-ref}(#{treelist-add}(tl, 10), 1) ~is 2
+  #{treelist-ref}(#{treelist-add}(tl, 10), 4) ~is 10
+  #{treelist-ref}(#{treelist-add}(tl, 10), 3) ~throws "ref negative rejected"
