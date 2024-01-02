@@ -1,0 +1,115 @@
+#lang rhombus
+import:
+  rhombus/measure
+  lib("rhombus/private/treelist.rhm").TreeList
+  lib("rhombus/private/treelist.rkt") open
+
+def M = 1000000
+def N = 10
+
+macro 'bm $who: $body':
+  'block:
+     print($who +& "                ".substring(0, math.max(0, 16 - ($who).length())))
+     measure.time:
+       ~gc
+       $body
+     #void' 
+
+bm "Pair.cons":
+  for values(r = #false) (i: 0..M):
+    for values (l = []) (i: 0..N):
+      Pair.cons(i, l)
+
+bm "List.cons":
+  for values(r = #false) (i: 0..M):
+    for values (l = []) (i: 0..N):
+      List.cons(i, l)
+
+bm "Set.add":
+  for values(r = #false) (i: 0..M):
+    for values (l = Set.empty) (i: 0..N):
+      l ++ { i }
+
+bm "TreeList.add":
+  for values(r = #false) (i: 0..M):
+    for values (l = TreeList.empty) (i: 0..N):
+      TreeList.add(l, i)
+
+bm "treelist-add":
+  for values(r = #false) (i: 0..M):
+    for values (l = #{make-treelist}()) (i: 0..N):
+      #{treelist-add}(l, i)
+
+bm "TreeList.cons":
+  for values(r = #false) (i: 0..M):
+    for values (l = TreeList.empty) (i: 0..N):
+      TreeList.cons(l, i)
+
+bm "treelist-cons":
+  for values(r = #false) (i: 0..M):
+    for values (l = #{make-treelist}()) (i: 0..N):
+      #{treelist-cons}(l, i)
+
+bm "Pair.rest":
+  let init:
+    for values (l = []) (i: 0..N):
+      Pair.cons(i, l)
+  for values(r = #false) (i: 0..M):
+    for values (l = init) (i: 0..N):
+      Pair.rest(l)
+
+bm "List.rest":
+  let init:
+    for values (l = []) (i: 0..N):
+      List.cons(i, l)
+  for values(r = #false) (i: 0..M):
+    for values (l = init) (i: 0..N):
+      List.rest(l)
+
+bm "Set.remove":
+  let init:
+    for values (l = Set.empty) (i: 0..N):
+      l ++ { i }
+  for values(r = #false) (i: 0..M):
+    for values (l = init) (i: 0..N):
+      Set.remove(l, i)
+
+bm "TreeList.drop":
+  let init:
+    for values (l = TreeList.empty) (i: 0..N):
+      TreeList.cons(l, i)
+  for values(r = #false) (i: 0..M):
+    for values (l = init) (i: 0..N):
+      TreeList.drop(l, 1)
+
+bm "treelist-drop":
+  let init:
+    for values (l = #{make-treelist}()) (i: 0..N):
+      #{treelist-cons}(l, i)
+  for values(r = #false) (i: 0..M):
+    for values (l = init) (i: 0..N):
+      #{treelist-drop}(l, 1)
+
+bm "List.iter":
+  let init :~ List:
+    for List (i: 0..N):
+      i
+  for values(r = #false) (i: 0..M):
+    for values (r = r) (e: init):
+      e
+
+bm "TreeList.iter":
+  let init :~ TreeList:
+    for values (l = TreeList.empty) (i: 0..N):
+      TreeList.cons(l, i)
+  for values(r = #false) (i: 0..M):
+    for values (r = r) (e: init):
+      e
+
+bm "treelist-iter":
+  let init:
+    for values (l = #{make-treelist}()) (i: 0..N):
+      #{treelist-cons}(l, i)
+  for values(r = #false) (i: 0..M):
+    for values (r = r) (e: #{in-treelist}(init)):
+      e

@@ -1,0 +1,48 @@
+#lang rhombus
+
+import:
+  lib("racket/base.rkt") as rkt
+  lib("rhombus/private/treelist.rkt") open
+  rhombus/measure
+
+def N = 2000
+def M = 10000
+def lst = (for List (i: 0..N): i)
+def alt_lst = (for List (i: 0..N): i)
+
+def tl = #{list->treelist}(lst)
+def alt = #{treelist-take}(#{treelist-add}(tl, "x"), N)
+def alt2 = #{treelist-remove}(#{treelist-insert}(tl, N div 2, "x"), N div 2)
+def fresh = #{list->treelist}(lst)
+
+measure.time:
+  ~gc
+  for values(v = #false) (i: 0..M):
+    tl == tl
+
+measure.time:
+  ~gc
+  for values(v = #false) (i: 0..M):
+    tl == alt
+
+measure.time:
+  ~gc
+  for values(v = #false) (i: 0..M):
+    tl == alt2
+
+measure.time:
+  ~gc
+  for values(v = #false) (i: 0..M):
+    tl == fresh
+
+measure.time:
+  ~gc
+  for values(v = #false) (i: 0..M):
+    lst == alt_lst
+
+measure.time:
+  ~gc
+  for (i: 0..N):
+    ((tl == #{treelist-remove}(#{treelist-insert}(tl, i, "x"), i))
+       && (tl == #{treelist-insert}(#{treelist-remove}(tl, i), i, #{treelist-ref}(tl, i))))
+      || error(#'equal, "bad result at " +& i)
