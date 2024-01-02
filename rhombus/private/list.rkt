@@ -445,26 +445,23 @@
                            (null? (maybe-list-tail v '#,len)))))
      (generate-binding #'form-id pred args #'tail)]))
 
+(begin-for-syntax
+  (struct list-rest (syntax))
+  (struct list-rest-splice list-rest ())
+  (struct list-rest-rep list-rest ()))
+
 (define-for-syntax (parse-list-form stx
                                     #:repetition? repetition?
                                     #:span-form-name? span-form-name?)
   (syntax-parse stx
     #:datum-literals (group)
     [(form-id (~and args (tag arg ...)) . tail)
-     ;; a list of syntax, (cons 'splice syntax), and (cons 'rep syntax):
+     ;; a list of syntax, (list-rest-splice syntax), or (list-rest-rep syntax):
      (define content
-       (let loop ([gs-stx #'(arg ...)] [accum '()])
+       (let loop ([gs-stx #'(arg ...)])
          (syntax-parse gs-stx
-           #:datum-literals (group op)
-           [() (reverse accum)]
-           [((group _::&-expr rand ...+) . gs)
-            (define e (let ([g #'(group rand ...)])
-                        (if repetition?
-                            (syntax-parse g
-                              [rep::repetition #'rep.parsed])
-                            (syntax-parse g
-                              [e::expression #'e.parsed]))))
-            (loop #'gs (cons (list 'splice e) accum))]
+           #:datum-literals (group)
+           [() '()]
            [(rep-arg (group _::...-expr) . gs)
             (define-values (new-gs extras) (consume-extra-ellipses #'gs))
             (define e (syntax-parse #'rep-arg
@@ -473,14 +470,22 @@
                          (if repetition?
                              the-rep
                              (repetition-as-list the-rep 1))]))
-            (loop new-gs (cons (list 'rep e) accum))]
-           [(g . gs)
+            (cons (list-rest-rep e)
+                  (loop new-gs))]
+           [((~or* (~and (group _::&-expr rand ...+)
+                         (~parse g #`(#,group-tag rand ...))
+                         (~bind [splice? #t]))
+                   g)
+             . gs)
             (define e (if repetition?
                           (syntax-parse #'g
                             [rep::repetition #'rep.parsed])
                           (syntax-parse #'g
                             [e::expression #'e.parsed])))
-            (loop #'gs (cons e accum))])))
+            (cons (if (attribute splice?)
+                      (list-rest-splice e)
+                      e)
+                  (loop #'gs))])))
      (define src-span (if span-form-name?
                           (respan (datum->syntax #f (list #'form-id #'args)))
                           (maybe-respan #'args)))
@@ -490,9 +495,9 @@
        src-span
        (cond
          [(and (pair? content) (null? (cdr content))
-               (pair? (car content)) (eq? 'rep (caar content)))
+               (list-rest-rep? (car content)))
           ;; special case, especially to expose static info on rest elements
-          (define seq (cadar content))
+          (define seq (list-rest-syntax (car content)))
           (cond
             [repetition? (repetition-as-deeper-repetition seq list-static-infos)]
             [else (wrap-list-static-info seq)])]
@@ -504,12 +509,15 @@
           (build-compound-repetition
            stx
            content
-           #:is-sequence? (lambda (e) (and (pair? e) (eq? 'rep (car e))))
-           #:extract (lambda (e) (if (pair? e) (cadr e) e))
+           #:is-sequence? list-rest-rep?
+           #:extract (lambda (e) (if (list-rest? e) (list-rest-syntax e) e))
            (lambda new-content
              (let ([content (for/list ([e (in-list content)]
                                        [new-e (in-list new-content)])
-                              (if (pair? e) (list (car e) new-e) new-e))])
+                              (cond
+                                [(list-rest-splice? e) (list-rest-splice new-e)]
+                                [(list-rest-rep? e) (list-rest-rep new-e)]
+                                [else new-e]))])
                (values (tag-props (build-list-form content))
                        list-static-infos))))]))
       #'tail)]))
@@ -517,24 +525,29 @@
 (define-for-syntax (build-list-form content)
   ;; group content into a list of list-generating groups,
   ;; and those lists will be appended
-  (let loop ([content content] [accum '()] [accums '()])
-    (define (gather)
-      (if (null? accum) accums (cons #`(list #,@(reverse accum)) accums)))
-    (cond
-      [(null? content)
-       (define es (gather))
-       (cond
-         [(null? es) #'null]
-         [(null? (cdr es)) (car es)]
-         [else #`(append #,@(reverse es))])]
-      [(pair? (car content))
-       (cond
-         [(eq? (caar content) 'splice)
-          (loop (cdr content) '() (cons #`(assert-list #,(cadar content)) (gather)))]
-         [else
-          (loop (cdr content) '() (cons (cadar content) (gather)))])]
-      [else
-       (loop (cdr content) (cons (car content) accum) accums)])))
+  (define (gather group groups)
+    (if (null? group)
+        groups
+        (cons #`(list #,@group) groups)))
+  (define groups
+    (for/foldr ([group '()]
+                [groups '()]
+                #:result (gather group groups))
+               ([one (in-list content)])
+      (cond
+        [(list-rest-splice? one)
+         (values '()
+                 (cons #`(assert-list #,(list-rest-syntax one))
+                       (gather group groups)))]
+        [(list-rest-rep? one)
+         (values '()
+                 (cons (list-rest-syntax one)
+                       (gather group groups)))]
+        [else (values (cons one group) groups)])))
+  (cond
+    [(null? groups) #'null]
+    [(null? (cdr groups)) (car groups)]
+    [else #`(append #,@groups)]))
 
 (define-for-syntax (parse-list-expression stx)
   (parse-list-form stx #:repetition? #f #:span-form-name? #f))
