@@ -1,0 +1,19 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  "view.rhm".View
+
+
+
+
+export:
+  Spacer
+
+class Spacer(hand):
+  implements View
+  internal _Spacer
+  opaque
+  override property handle: hand
+
+  constructor ():
+    super(easy.spacer())
