@@ -32,15 +32,26 @@
   #:fields
   (Marks
    PromptTag
-   current_marks
+   ;; TEMP see `Marks`
+   [current_marks Continuation.Marks.current]
    capture
    prompt
-   escape
-   default_prompt_tag
-   make_prompt_tag
-   call_in
+   [escape Continuation.escape]
+   ;; TEMP see `PromptTag`
+   [default_prompt_tag Continuation.PromptTag.default]
+   [make_prompt_tag Continuation.PromptTag.make]
+   [call_in Continuation.call_in]
    with_mark
-   call_with_immediate_mark))
+   [call_with_immediate_mark Continuation.call_with_immediate_mark]))
+
+(define-name-root PromptTag
+  #:fields
+  ([default Continuation.PromptTag.default]
+   [make Continuation.PromptTag.make]))
+
+(define-name-root Marks
+  #:fields
+  ([current Continuation.Marks.current]))
 
 (define-annotation-syntax Continuation (identifier-annotation #'continuation? #'()))
 
@@ -48,7 +59,7 @@
 
 (define-annotation-syntax Marks (identifier-annotation #'continuation-mark-set? #'()))
 
-(define/arity (current_marks)
+(define/arity (Continuation.Marks.current)
   (current-continuation-marks))
 
 (define/arity #:name error rhombus-error
@@ -279,12 +290,15 @@
                             null)))
                 #'())]))))
 
-(define/arity (escape #:tag [prompt-tag (default-continuation-prompt-tag)] . vals)
+(define/arity (Continuation.escape
+               #:tag [prompt-tag (default-continuation-prompt-tag)]
+               . vals)
   (apply abort-current-continuation prompt-tag vals))
 
-(define default_prompt_tag (default-continuation-prompt-tag))
+(define Continuation.PromptTag.default
+  (default-continuation-prompt-tag))
 
-(define/arity (make_prompt_tag [name-in #f])
+(define/arity (Continuation.PromptTag.make [name-in #f])
   (define name
     (cond
       [(not name-in) #f]
@@ -298,7 +312,7 @@
       (make-continuation-prompt-tag name)
       (make-continuation-prompt-tag)))
 
-(define/arity (call_in k proc)
+(define/arity (Continuation.call_in k proc)
   (unless (continuation? k)
     (raise-argument-error* who
                            rhombus-realm
@@ -344,5 +358,7 @@
                     (rhombus-body-at tag g ...))
                 #'())]))))
 
-(define/arity (call_with_immediate_mark key proc #:default [default #f])
+(define/arity (Continuation.call_with_immediate_mark
+               key proc
+               #:default [default #f])
   (call-with-immediate-continuation-mark key proc default))

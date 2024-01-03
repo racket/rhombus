@@ -10,7 +10,7 @@ block:
         x
   check:
     (v :: Exn.Fail.Syntax).exprs[0].unwrap()
-    ~prints_like ['fun']  
+    ~prints_like ['fun']
   check:
     def e :: Exn.Fail.Syntax = v
     e.exprs[0].unwrap()
@@ -24,7 +24,7 @@ block:
     ~prints_like ['fun']
 
   check:
-    def v = Exn.Fail.Read("hi", Continuation.current_marks() , [Srcloc(1, 2, 3, 4, 5)])
+    def v = Exn.Fail.Read("hi", Continuation.Marks.current(), [Srcloc(1, 2, 3, 4, 5)])
     match v
     | Exn.Fail.Read(a, b, srcs): srcs[0].line
     ~is 2
@@ -40,7 +40,7 @@ block:
   use_static
   class ExExn(index):
     extends Exn.Fail.Syntax
-  def v = ExExn("oops", Continuation.current_marks(), ['bad'], 75)
+  def v = ExExn("oops", Continuation.Marks.current(), ['bad'], 75)
   check:
     v.message ~is "oops"
     v.index ~is 75

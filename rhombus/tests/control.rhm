@@ -43,7 +43,7 @@ check:
   ~is 101
 
 check:
-  def outer = Continuation.make_prompt_tag(#'outer)
+  def outer = Continuation.PromptTag.make(#'outer)
   Continuation.prompt outer:
     Continuation.prompt:
       2 + (Continuation.escape(~tag: outer, 100))
@@ -86,7 +86,7 @@ check:
 
 check:
   def mutable saved = #false
-  def tag = Continuation.make_prompt_tag(#'demo)
+  def tag = Continuation.PromptTag.make(#'demo)
   Continuation.prompt tag:
     1 + (Continuation.capture tag k:
            saved := k
@@ -138,11 +138,11 @@ check:
   ~is_a Continuation
 
 check:
-  Continuation.make_prompt_tag() ~is_a Continuation.PromptTag
-  Continuation.make_prompt_tag(#false) ~is_a Continuation.PromptTag
-  Continuation.make_prompt_tag(#'a_tag) ~is_a Continuation.PromptTag
-  Continuation.make_prompt_tag("a_tag") ~is_a Continuation.PromptTag
-  Continuation.default_prompt_tag ~is_a Continuation.PromptTag
+  Continuation.PromptTag.make() ~is_a Continuation.PromptTag
+  Continuation.PromptTag.make(#false) ~is_a Continuation.PromptTag
+  Continuation.PromptTag.make(#'a_tag) ~is_a Continuation.PromptTag
+  Continuation.PromptTag.make("a_tag") ~is_a Continuation.PromptTag
+  Continuation.PromptTag.default ~is_a Continuation.PromptTag
 
 check:
-  Continuation.current_marks() ~is_a Continuation.Marks
+  Continuation.Marks.current() ~is_a Continuation.Marks
