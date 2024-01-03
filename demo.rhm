@@ -4,8 +4,10 @@
 // `import` goes at the top:
 import:
   rhombus/meta open
+// alternatively, use `#lang rhombus/and_meta`
 
 // to ensure that we're not sloppy in examples:
+// alternatively, use `#lang rhombus/static`
 use_static
 
 // ------------------------------------------------------------
@@ -28,6 +30,7 @@ use_static
 
 [1, 2, 3]
 List.cons(0, [1, 2, 3])
+[0, & [1, 2, 3]]
 
 // `++` is append on lists
 [1, 2, 3] ++ [4, 5]
@@ -37,7 +40,8 @@ def π = 3.14
 π
 
 // a pattern-matching definition
-def [ca, cb] = List.cons(1, List.cons(2, List.empty))
+// `_` matches without binding anything
+def [ca, _] = List.cons(1, List.cons(2, List.empty))
 ca
 
 // parentheses around a pattern do not matter
@@ -45,17 +49,22 @@ def (((ππ))) = π * π
 ππ
 
 // comma-separated patterns in parentheses match multiple values
-def (ma, mb, mc):
+def (_, mb, _):
   values("1", "2", "3")
 mb
 
-// define and call a function
+// or use `values`, if you prefer
+def values(_, also_mb, _):
+  values("1", "2", "3")
+also_mb
 
-fun five(x):
+// define and call a function
+// function arguments are also pattern-matched
+fun five(_):
   5
 
 five("anything")
-3*five(#true && #false || 2 < 3)-2
+3*five(#true && #false || 2 < 3) - 2
 
 // `fun` without a name is an expression that produces a function, so
 // you could also define a function like this:
@@ -81,7 +90,7 @@ cond
 
 // pattern-matching dispatch
 match [1, 2]
-| [x, y, z]: "oops"
+| [_, _, _]: "oops"
 | [x, y]: [y, x]
 | ~else: "shouldn't get here, either"
 
@@ -94,9 +103,8 @@ match [1, 2]
 // as a keyword followed by `:`, while an optional argument
 // is one that has a default supplied via `=`
 
-fun six(x, ~plus: amt = 0):
+fun six(_, ~plus: amt = 0):
   6 + amt
-
 six("anything")
 six("anything", ~plus: 7)
 
@@ -110,7 +118,7 @@ seven(12, 10, ~plus: 8)
 
 // pattern-matching on a function argument
 
-fun first_one([x, y]): x
+fun first_one([x, _]): x
 
 first_one(["alpha", "beta"])
 
@@ -128,7 +136,7 @@ also_first_one([1, 2, 3, 4])
 
 fun add1(x) :: Int:
   match x
-  | n :: Int : x + 1
+  | _ :: Int : x + 1
   | ~else: x
 
 add1(100)
@@ -253,7 +261,7 @@ def a_set = {1, 3, 5, 7, 9}
 // `[]` on a set checks whether something is in a set
 if a_set[1] && !a_set[2]
 | "ok"
-| 1/0
+| error("no way!")
 
 // some patterns forms (like `[]`) support `...` to create a repetition
 // binding, and some with constructors (like `[]`) support `...` to
@@ -276,7 +284,7 @@ def [x, y, ...] = nums
 
 // function calls can also use `...`
 block:
-  fun f (a, b): a
+  fun f(a, _): a
   // this works because `y` happens to have two elements:
   f(y, ...)
 
@@ -302,8 +310,7 @@ fun
 sum([1, 2, 3])
 
 fun
-| is_sorted([]): #true
-| is_sorted([head]): #true
+| is_sorted([] || [_]): #true
 | is_sorted([head, next, tail, ...]):
    head <= next && is_sorted([next, tail, ...])
 
@@ -330,7 +337,7 @@ md(Posn(1, 4))
 
 // here, we need `use_dynamic`, since `p` is not known to be a `Posn`;
 // it can look up `x` and `y` dynamically, but `use_static` at the top
-// of this module 
+// of this module
 fun md2(p):
   use_dynamic
   p.x + p.y
@@ -344,7 +351,7 @@ block:
 // `:~` is similar to `::`, but it declares static information without a
 // cooresponding run-time check, so a failure may happen later if the claimed
 // information is incorrect
-  
+
 fun md3(p :~ Posn):
   p.x + p.y
 md3(Posn(7, 8))
@@ -463,6 +470,9 @@ match '1 2 3'
 match '([{1 + 2}])'
 | '([{ $g }])': g
 
+match '([{1 + 2, 3 + 4}])'
+| '([{ $g }])': g
+
 // the `macro` form defines a simple pattern-based expression macro:
 macro 'thunk: $body':
   'fun (): $body'
@@ -472,10 +482,9 @@ delayed_area()
 
 // the `expr.macro` form defines a macro where the result is determined
 // by arbitrary expand-time code
-expr.macro 'find_matching_name $expr ... : $id ...':
+expr.macro 'find_matching_name $expr ...: $id ...':
   // convert identifiers to strings
-  def [name, ...]: Function.map(fun(id): "" +& id,
-                                [id, ...])
+  let [name, ...] = [id, ...].map(fun(id): to_string(id))
   // build a result conditional
   'block:
      def val = $expr ...
