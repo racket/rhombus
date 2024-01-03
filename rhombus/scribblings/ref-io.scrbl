@@ -20,7 +20,7 @@
 
 @doc(
   fun print(v :: Any,
-            out :: Port.Output = Port.current_output(),
+            out :: Port.Output = Port.Output.current(),
             ~mode: mode :: Any.of(#'text, #'expr) = #'text,
             ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -46,7 +46,7 @@
 
 @doc(
   fun println(v :: Any,
-              out :: Port.Output = Port.current_output(),
+              out :: Port.Output = Port.Output.current(),
               ~mode: mode :: Any.of(#'text, #'expr) = #'text,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -58,9 +58,9 @@
 
 
 @doc(
-  def Port.current_input :: Parameter
-  fun Port.current_input() :: Port.Input
-  fun Port.current_input(in :: Port.Input) :: Void
+  def Port.Input.current :: Parameter
+  fun Port.Input.current() :: Port.Input
+  fun Port.Input.current(in :: Port.Input) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when reading.
@@ -68,9 +68,9 @@
 }
 
 @doc(
-  def Port.current_output :: Parameter
-  fun Port.current_output() :: Port.Output
-  fun Port.current_output(out :: Port.Output) :: Void
+  def Port.Output.current :: Parameter
+  fun Port.Output.current() :: Port.Output
+  fun Port.Output.current(out :: Port.Output) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when printing.
@@ -79,9 +79,9 @@
 
 
 @doc(
-  def Port.current_error :: Parameter
-  fun Port.current_error() :: Port.Output
-  fun Port.current_error(out :: Port.Output) :: Void
+  def Port.Output.current_error :: Parameter
+  fun Port.Output.current_error() :: Port.Output
+  fun Port.Output.current_error(out :: Port.Output) :: Void
 ){
 
  A @tech{context parameter} for the default port to use when printing
@@ -142,7 +142,7 @@
 @doc(
   fun Printable.render(
     pd :: PrintDesc,
-    out :: Port.Output = Port.current_output(),
+    out :: Port.Output = Port.Output.current(),
     ~column: column :: NonnegInt = 0
   ) :: Void
 ){

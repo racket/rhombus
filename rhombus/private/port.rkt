@@ -5,8 +5,6 @@
          (submod "annotation.rkt" for-class)
          "function-arity-key.rkt"
          "static-info.rkt"
-         "realm.rkt"
-         "define-arity.rkt"
          (submod "define-arity.rkt" for-info))
 
 (provide (for-spaces (rhombus/annot
@@ -19,8 +17,18 @@
   #:fields
   (Input
    Output
+   ;; TEMP see `Input` and `Output`
    [current_input current-input-port]
    [current_output current-output-port]
+   [current_error current-error-port]))
+
+(define-name-root Input
+  #:fields
+  ([current current-input-port]))
+
+(define-name-root Output
+  #:fields
+  ([current current-output-port]
    [current_error current-error-port]))
 
 (define-annotation-syntax Input (identifier-annotation #'input-port? #'()))

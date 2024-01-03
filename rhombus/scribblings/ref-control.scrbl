@@ -41,7 +41,7 @@
  Returns the value of the @rhombus(body) sequence, but also establishes
  a delimiting continuation prompt around the sequence. If
  @rhombus(tag_expr) is present, is determines the tag used for the
- prompt, otherwise @rhombus(Continuation.default_prompt_tag) is used.
+ prompt, otherwise @rhombus(Continuation.PromptTag.default) is used.
 
  The @rhombus(~catch) clauses is superficially similar to
  @rhombus(~catch) in @rhombus(try), but @rhombus(~catch) in
@@ -75,7 +75,7 @@
 
  The captured continuation is delimited by a prompt with the tag
  specified by @rhombus(tag_expr), where
- @rhombus(Continuation.default_prompt_tag) is used if
+ @rhombus(Continuation.PromptTag.default) is used if
  @rhombus(tag_expr) is not present. A prompt with the designated tag
  must be present in the current continuation at the time of capture.
 
@@ -90,7 +90,7 @@
 @doc(
   fun Continuation.escape(
     ~tag: tag :: Continuation.PromptTag:
-            Continuation.default_prompt_tag,
+            Continuation.PromptTag.default,
     val :: Any, ...
   ) :: None
 ){
@@ -105,22 +105,23 @@
   annot.macro 'Continuation.PromptTag'
 ){
 
- Recognizes prompt tags as produced by @rhombus(Continuation.make_prompt_tag).
+ Recognizes prompt tags as produced by
+ @rhombus(Continuation.PromptTag.make).
 
 }
 
 @doc(
-  fun Continuation.make_prompt_tag(
+  fun Continuation.PromptTag.make(
     name :: maybe(ReadableString || Symbol) = #false
   ) :: Continuation.PromptTag
-  def Continuation.default_prompt_tag
+  def Continuation.PromptTag.default
     :: Continuation.PromptTag
 ){
 
  Creates a fresh prompt tag or accesses a default prompt tag.
 
  If @rhombus(name) is provided to
- @rhombus(Continuation.make_prompt_tag), it is used only for printing and
+ @rhombus(Continuation.PromptTag.make), it is used only for printing and
  other debugging purposes.
 
 }
@@ -130,13 +131,13 @@
 ){
 
  Recognizes continuation marks as returned by
- @rhombus(Continuation.current_marks).
+ @rhombus(Continuation.Marks.current).
 
 }
 
 
 @doc(
-  fun Continuation.current_marks() :: Continuation.Marks
+  fun Continuation.Marks.current() :: Continuation.Marks
 ){
 
  Returns the marks of the current continuation.
