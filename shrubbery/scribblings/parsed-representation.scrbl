@@ -56,24 +56,24 @@ Overall, the grammar of S-expression representations is as follows:
 Here's the same grammar, but expressed using Rhombus constructors:
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{document},
-                 @rhombus([#'top, #,(@nonterm{group}), ...])],
-                [@nonterm{group},
-                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{item})]),
-                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block})]),
-                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{alts})]),
-                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block}), #,(@nonterm{alts})])],
-                [@nonterm{item},
-                 @nonterm{atom},
-                 @rhombus([#'op, #,(@nonterm{symbol})]),
-                 @rhombus([#'parens, #,(@nonterm{group}), ...]),
-                 @rhombus([#'brackets, #,(@nonterm{group}), ...]),
-                 @rhombus([#'braces, #,(@nonterm{group}), ...]),
-                 @rhombus([#'quotes, #,(@nonterm{group}), ...])],
-                [@nonterm{block},
-                 @rhombus([#'block, #,(@nonterm{group}), ...])],
-                [@nonterm{alts},
-                 @rhombus([#'alts, #,(@nonterm{block}), ...])]))
+        BNF([@nonterm{document},
+             @rhombus([#'top, #,(@nonterm{group}), ...])],
+            [@nonterm{group},
+             @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{item})]),
+             @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block})]),
+             @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{alts})]),
+             @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block}), #,(@nonterm{alts})])],
+            [@nonterm{item},
+             @nonterm{atom},
+             @rhombus([#'op, #,(@nonterm{symbol})]),
+             @rhombus([#'parens, #,(@nonterm{group}), ...]),
+             @rhombus([#'brackets, #,(@nonterm{group}), ...]),
+             @rhombus([#'braces, #,(@nonterm{group}), ...]),
+             @rhombus([#'quotes, #,(@nonterm{group}), ...])],
+            [@nonterm{block},
+             @rhombus([#'block, #,(@nonterm{group}), ...])],
+            [@nonterm{alts},
+             @rhombus([#'alts, #,(@nonterm{block}), ...])]))
 
 Here are some example shrubberies with their S-expression parsed
 representations:

@@ -4,6 +4,7 @@
          racket/symbol
          racket/keyword
          shrubbery/write
+         "treelist.rkt"
          "provide.rkt"
          (submod "set.rkt" for-ref)
          "printer-property.rkt"
@@ -232,9 +233,15 @@
               (pretty-text pre)
               (list (pretty-write v))
               (pretty-text ")")))))]
-    [(list? v)
+    [(treelist? v)
      (pretty-listlike
       (pretty-text "[")
+      (for/list ([e (in-treelist v)])
+        (print e))
+      (pretty-text "]"))]
+    [(list? v)
+     (pretty-listlike
+      (pretty-text "PairList[")
       (for/list ([e (in-list v)])
         (print e))
       (pretty-text "]"))]

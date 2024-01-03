@@ -3,6 +3,7 @@
          (for-syntax racket/base
                      syntax/stx
                      syntax/parse/pre
+                     "treelist.rkt"
                      "pack.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
          (submod "quasiquote.rkt" convert)
@@ -160,7 +161,7 @@
              (cond
                [(syntax-e #'parsed-right-id)
                 (define right-id #'parsed-right-id)
-                (define extra-args (entry-point-adjustment-prefix-arguments adjustments))
+                (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
                 #`(lambda (#,@extra-args left #,right-id self-id)
                     (define-syntax #,(in-static-info-space #'left) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space right-id) (make-static-infos syntax-static-infos))
@@ -202,7 +203,7 @@
              (cond
                [(syntax-e #'parsed-right-id)
                 (define arg-id #'parsed-right-id)
-                (define extra-args (entry-point-adjustment-prefix-arguments adjustments))
+                (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     (define-syntax #,(in-static-info-space arg-id) (make-static-infos syntax-static-infos))
                     (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
@@ -302,7 +303,7 @@
      (let ([#,(parsed-name p)
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
-                  (let ([extra-args (entry-point-adjustment-prefix-arguments adjustments)])
+                  (let ([extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments))])
                     #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self)
                         #,(adjust-result
                            adjustments

@@ -18,7 +18,14 @@ export:
     
 meta:
   fun set_space(stx, context):
-    let context = if context is_a Keyword | Symbol.from_string(to_string(context)) | context
+    let context:
+      match context
+      | context :: Keyword:
+          Symbol.from_string(to_string(context))
+      | context :: List:
+          for PairList (e: context): e
+      | ~else:
+          context
     match stx
     | '$(_ :: Term)':
         Syntax.property(stx, #'#{typeset-space-name}, context, #true)
@@ -26,7 +33,7 @@ meta:
         '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate(stx)
 
   fun find_relevant_context(context, in_contexts :~ List):
-    let nows :~ List = #{full-space-names}(context)
+    let nows :~ PairList = #{full-space-names}(context)
     // `relevant_context` can be `#false` (the default space)
     for values(found = #false, relevant_context = #false):
       each now: nows
@@ -108,7 +115,7 @@ defn.macro 'bridge $(name :: Name)($(self :: Identifier),
                    ~in: $space ...
                    $body
                    ...':
-  let [space_name, ...] = List.append(#{full-space-names}(space.unwrap()), ...)
+  let PairList[space_name, ...] = PairList.append(#{full-space-names}(space.unwrap()), ...)
   fun quote(s): if s | '#' $s' | '#false'
   'meta.bridge $(typeset_meta.in_space(name)):
      typeset_meta.Spacer(

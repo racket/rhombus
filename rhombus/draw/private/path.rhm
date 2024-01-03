@@ -62,4 +62,4 @@ class Path(private _handle):
                  ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0):
-    rkt.send handle.#{lines}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+    rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)

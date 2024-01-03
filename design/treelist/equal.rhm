@@ -1,19 +1,17 @@
-#lang rhombus
+#lang rhombus/static
 
 import:
-  lib("racket/base.rkt") as rkt
-  lib("rhombus/private/treelist.rkt") open
   rhombus/measure
 
 def N = 2000
 def M = 10000
-def lst = (for List (i: 0..N): i)
-def alt_lst = (for List (i: 0..N): i)
+def lst = (for PairList (i: 0..N): i)
+def alt_lst = (for PairList (i: 0..N): i)
 
-def tl = #{list->treelist}(lst)
-def alt = #{treelist-take}(#{treelist-add}(tl, "x"), N)
-def alt2 = #{treelist-remove}(#{treelist-insert}(tl, N div 2, "x"), N div 2)
-def fresh = #{list->treelist}(lst)
+def tl = for List (e: lst): e
+def alt = tl.add("x").take_left(N)
+def alt2 = tl.insert(N div 2, "x").delete(N div 2)
+def fresh = for List (e: lst): e
 
 measure.time:
   ~gc
@@ -43,6 +41,6 @@ measure.time:
 measure.time:
   ~gc
   for (i: 0..N):
-    ((tl == #{treelist-remove}(#{treelist-insert}(tl, i, "x"), i))
-       && (tl == #{treelist-insert}(#{treelist-remove}(tl, i), i, #{treelist-ref}(tl, i))))
-      || error(#'equal, "bad result at " +& i)
+    ((tl == tl.insert(i, "x").delete(i))
+       && (tl == tl.remove(i).insert(i, tl[i])))
+     || error(#'equal, "bad result at " +& i)

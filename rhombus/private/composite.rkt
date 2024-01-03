@@ -31,7 +31,8 @@
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:index-result-info? [index-result-info? #f]
                                                        #:sequence-element-info? [sequence-element-info? #f]
-                                                       #:rest-accessor [rest-accessor #f] ; for a list "rest"
+                                                       #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
+                                                       #:rest-to-repetition [rest-to-repetition #'values] ; to convert "rest" to a list
                                                        #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (lambda (tail [rest-arg #f] [stx-in #f])
     (syntax-parse tail
@@ -67,6 +68,7 @@
             #,accessor->info? #,index-result-info? #,sequence-element-info?
             #,(and rest-arg
                    #`(#,rest-accessor
+                      #,rest-to-repetition
                       #,rest-repetition?
                       rest-a-parsed.infoer-id ...
                       rest-a-parsed.data ...))))
@@ -103,7 +105,7 @@
                                    rest-repetition?)
        (syntax-parse #'rest-data
          [#f (values #'#f #'() #'rest #f #'() #f)]
-         [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
+         [(rest-accessor rest-to-repetition rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-static-infos
           (case (syntax-e #'rest-repetition?)
             [(pair)
@@ -140,7 +142,10 @@
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
           #:with rest-seq-tmp-ids (and (syntax-e #'rest-repetition?)
                                        (generate-temporaries #'(rest-info.bind-id ...)))
-          (values #'(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
+          #:with no-rest-map? (free-identifier=? #'always-succeed #'rest-info.matcher-id)
+          (values #'(rest-tmp-id rest-accessor
+                                 rest-to-repetition no-rest-map?
+                                 rest-repetition? rest-info rest-seq-tmp-ids)
                   #'rest-info.static-infos
                   #'rest-info.name-id
                   #'rest-info.annotation-str
@@ -226,12 +231,15 @@
                  [(null? name-ids)
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
-                    [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
+                    [(rest-tmp-id rest-accessor
+                                  rest-to-repetition no-rest-map?
+                                  rest-repetition? rest-info rest-seq-tmp-ids)
                      (cond
                        [(syntax-e #'rest-repetition?)
                         #`(begin
                             (define rest-tmp-id
-                              #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
+                              #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)
+                                                 #'rest-to-repetition (syntax-e #'no-rest-map?)))
                             (IF rest-tmp-id
                                 success-expr
                                 fail-expr))]
@@ -270,7 +278,9 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
+              [(rest-tmp-id rest-accessor
+                            rest-to-repetition no-rest-map?
+                            rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
                    #'((define-values rest-seq-tmp-ids (rest-tmp-id)))
@@ -286,19 +296,26 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-repetition? rest-info rest-seq-tmp-ids)
+              [(rest-tmp-id rest-accessor
+                            rest-to-repetition no-rest-map?
+                            rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
                    (with-syntax ([(depth ...) (for/list ([uses (in-list (syntax->list #'(rest.bind-uses ...)))])
                                                 (add1 (uses->depth uses)))]
                                  [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids]
                                  [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))])
-                     #'((define-syntaxes (rest.bind-id rep-bind-id)
-                          (make-expression+repetition (quote-syntax rest.bind-id)
-                                                      (quote-syntax rest-seq-tmp-id)
-                                                      (quote-syntax (rest.bind-static-info ...))
-                                                      #:depth depth))
-                        ...))
+                     (with-syntax ([(rest-seq-tmp-id-as-rep ...)
+                                    (if (syntax-e #'no-rest-map?)
+                                        #'((rest-to-repetition rest-seq-tmp-id)
+                                           ...)
+                                        #'rest-seq-tmp-ids)])
+                       #'((define-syntaxes (rest.bind-id rep-bind-id)
+                            (make-expression+repetition (quote-syntax rest.bind-id)
+                                                        (quote-syntax rest-seq-tmp-id-as-rep)
+                                                        (quote-syntax (rest.bind-static-info ...))
+                                                        #:depth depth))
+                          ...)))
                    #'((rest.binder-id rest-tmp-id rest.data)))]))]))
 
 ;; ------------------------------------------------------------
@@ -319,18 +336,19 @@
 ;; a match result for a "rest" match is a function that gets
 ;; lists of results; the binder step for each element is delayed
 ;; until the whole list is found to match
-(define-for-syntax (make-rest-match c-arg-id accessor rest-info fail)
+(define-for-syntax (make-rest-match c-arg-id accessor rest-info fail
+                                    rest-to-repetition no-rest-map?)
   (syntax-parse rest-info
     [rest::binding-info
      (define get-rest #`(let ([rest.name-id (#,accessor #,c-arg-id)])
                           rest.name-id))
-     (if (free-identifier=? #'always-succeed #'rest.matcher-id)
+     (if no-rest-map?
          (if (null? (syntax-e #'(rest.bind-id ...)))
              #`(lambda () (values))
              #`(lambda () #,get-rest))
          #`(get-rest-getters
             '(rest.bind-id ...)
-            #,get-rest
+            (#,rest-to-repetition #,get-rest)
             (lambda (arg-id)
               (rest.matcher-id arg-id rest.data
                                if/blocked

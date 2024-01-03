@@ -6,6 +6,7 @@
                      "interface-parse.rkt")
          (only-in racket/vector
                   vector-append)
+         "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -42,6 +43,7 @@
 (define (appendable? v)
   (or (Appendable? v)
       (hash? v)
+      (treelist? v)
       (list? v)
       (vector? v)
       (set? v)
@@ -159,21 +161,24 @@
                             what map1
                             "other value" map2))
   (cond
+    [(treelist? map1) (cond
+                        [(treelist? map2) (treelist-append map1 map2)]
+                        [else (mismatch "List")])]
     [(list? map1) (cond
                     [(list? map2) (append map1 map2)]
-                    [else (mismatch "list")])]
+                    [else (mismatch "PairList")])]
     [(hash? map1) (cond
                     [(hash? map2) (hash-append/proc map1 map2)]
-                    [else (mismatch "map")])]
+                    [else (mismatch "Map")])]
     [(set? map1) (cond
                    [(set? map2) (set-append/proc map1 map2)]
-                   [else (mismatch "set")])]
+                   [else (mismatch "Set")])]
     [(string? map1) (cond
                       [(string? map2) (string-append-immutable map1 map2)]
-                      [else (mismatch "string")])]
+                      [else (mismatch "String")])]
     [(bytes? map1) (cond
                      [(bytes? map2) (bytes-append map1 map2)]
-                     [else (mismatch "byte string" map1)])]
+                     [else (mismatch "Bytes" map1)])]
     [(appendable-ref map1 #f)
      => (lambda (app1)
           (cond

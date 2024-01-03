@@ -49,8 +49,8 @@
   (syntax-parse stx
     [(_ e)
      #`(let ()
-         (rhombus-forwarding-sequence
-          #:block #:need-end-expr #,stx
+         (rhombus-block-forwarding-sequence
+          #:orig #,stx
           e))]))
 
 (define-syntax (static-if stx)

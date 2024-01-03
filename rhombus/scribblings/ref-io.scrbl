@@ -301,7 +301,7 @@
 
 @doc(
   fun PrintDesc.list(pre_pd :: PrintDesc,
-                     elements :: List.of(PrintDesc),
+                     elements :: Listable.of(PrintDesc),
                      post_pd :: PrintDesc)
     :: PrintDesc
   fun PrintDesc.block(head_pd :: PrintDesc,

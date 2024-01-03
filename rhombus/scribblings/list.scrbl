@@ -37,10 +37,6 @@ arguments:
   List(1, 2, 3)
 )
 
-A list is a ``linked list,'' in the sense that getting the @math{n}th element
-takes @math{O(n)} time, and adding to the front takes constant time. A
-list is immutable.
-
 @rhombus(List, ~annot) works as an annotation with @rhombus(:~, ~bind) and
 @rhombus(::, ~bind):
 
@@ -113,10 +109,10 @@ be used multiple times.
 @examples(
   ~eval: list_eval
   ~defn:
-    def [groceries, ...] = ["apple", "banana", "milk"]
+    def [grocery, ...] = ["apple", "banana", "milk"]
   ~repl:
-    [groceries, ..., "cupcake"]
-    [groceries, ..., groceries, ...]
+    [grocery, ..., "cupcake"]
+    [grocery, ..., grocery, ...]
 )
 
 Instead of using @rhombus(...) in @brackets
@@ -126,15 +122,14 @@ or reference a plain list value whose elements are the rest of the list.
 @examples(
   ~eval: list_eval
   ~defn:
-    def [x, & others] = [groceries, ...]
+    def [x, & others] = [grocery, ...]
   ~repl:
     others
     ["broccoli", & others ++ ["cupcake"], x]
     ~error:
       [others, ...]
-    [groceries, ..., & ["pencil", "eraser"]]
+    [grocery, ..., & ["pencil", "eraser"]]
 )
-
 
 When @brackets appears after an expression, then instead
 of forming a list, it accesses an element of an @tech{indexable} value.
@@ -189,5 +184,49 @@ elements:
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
 )
 
+Many operations on a list with @math{N} elements take @math{O(log N)}
+time, including getting an element of a list with @brackets, appending
+lists with @rhombus(++), adding to the front or end of a list with
+@rhombus(List.cons) or @rhombus(List.add), inserting into the middle of
+a list with @rhombus(List.insert), deleting a list element with
+@rhombus(List.delete), or dropping or taking a list prefix or suffix
+with functions like @rhombus(List.drop_left). Internally, lists are
+implemented as relaxed radix balanced (RRB) trees.
+
+As an alternative to @rhombus(List), @rhombus(PairList) constructs a
+@tech{pair list}, which is implemented as a singly linked list. As the
+name suggests, a pair list uses a @tech{pair} to add each element to the
+front of an existing list. The @rhombus(PairList.cons) operation
+performs that addition, and it takes @math{O(1)} time, as do its
+@rhombus(PairList.first) and @rhombus(PairList.rest) operations to access
+the initial pair's components. Operations like appending or accessing a
+random element take @math{O(N)} time. When @rhombus(PairList) prefixes
+@brackets for constructing or matching a list, then @brackets constructs
+or matches a pair list, instead of a list.
+
+@examples(
+  ~eval: list_eval
+  ~defn:
+    def autos = PairList["beetle", "jeep", "miata"]
+  ~repl:
+    Pair.cons("cadillac", autos)
+    autos is_a List
+    autos is_a Listable
+)
+
+The @rhombus(Listable, ~class) annotation is satisfied by a list, pair
+list, or another data structure that implements a conversion to list
+form. Listable values are generally allowed for explicit splicing
+operations, such as using @rhombus(&) to build a list. One consequence
+is that @rhombus(&) within a constructor can be used to convert among
+listable representations, potentially while also adding additional
+elements.
+
+@examples(
+  ~eval: list_eval
+  autos
+  [& autos]
+  PairList["cadillac", & [& autos, "corvette"]]
+)
 
 @(close_eval(list_eval))

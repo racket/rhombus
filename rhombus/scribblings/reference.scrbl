@@ -51,6 +51,7 @@
 @include_section("ref-set.scrbl")
 @include_section("ref-box.scrbl")
 @include_section("ref-indexable.scrbl")
+@include_section("ref-listable.scrbl")
 @include_section("ref-sequence.scrbl")
 @include_section("ref-appendable.scrbl")
 @include_section("ref-path.scrbl")

@@ -1,0 +1,49 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  elem
+  italic
+  bold
+  emph
+  tt
+  subscript
+  superscript
+  smaller
+  larger
+
+fun elem(~style: style :: maybe(Style || String || Symbol) = #false,
+         pre_content :: PreContent) :~ Element:
+  base.elem(pre_content)
+  
+fun italic(pre_content :: PreContent) :~ Element:
+  base.italic(pre_content)
+
+fun emph(pre_content :: PreContent) :~ Element:
+  base.emph(pre_content)
+
+fun bold(pre_content :: PreContent) :~ Element:
+  base.bold(pre_content)
+
+fun tt(pre_content :: PreContent) :~ Element:
+  base.tt(pre_content)
+
+fun subscript(pre_content :: PreContent) :~ Element:
+  base.subscript(pre_content)
+
+fun superscript(pre_content :: PreContent) :~ Element:
+  base.superscript(pre_content)
+
+fun smaller(pre_content :: PreContent) :~ Element:
+  base.smaller(pre_content)
+
+fun larger(pre_content :: PreContent) :~ Element:
+  base.larger(pre_content)
+
+fun literal(str :: (String || List.of(String))) :~ Element:
+  if str is_a String
+  | base.literal(str)
+  | base.literal(& str)

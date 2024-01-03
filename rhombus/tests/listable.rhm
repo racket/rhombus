@@ -1,0 +1,51 @@
+#lang rhombus
+
+check [] ~is_a Listable
+check [1] ~is_a Listable
+check PairList[] ~is_a Listable
+check PairList[1] ~is_a Listable
+check Array(1, 2) ~is_a Listable
+check: 0..2 ~is_a Listable
+
+block:
+  use_static
+  check [].to_list() ~is []
+  check [3, 2, 1].to_list() ~is [3, 2, 1]
+  check PairList[].to_list() ~is []
+  check PairList[3, 2, 1].to_list() ~is [3, 2, 1]
+  check Array(10, 20, 30).to_list() ~is [10, 20, 30]
+  check Listable.to_list(0..4) ~is [0, 1, 2, 3]
+  check [].to_list().length() ~is 0
+  check PairList[].to_list().length() ~is 0
+  check [1, 2, 3].to_list().length() ~is 3
+  check PairList[1, 2, 3].to_list().length() ~is  3
+  check Array(10, 20, 30, 40).to_list().length() ~is 4
+  check Listable.to_list(0..5).length() ~is 5
+  
+block:
+  check dynamic([]).to_list() ~is []
+  check dynamic([].to_list)() ~is []
+  check dynamic(([] :~ Listable).to_list)() ~is []
+  check dynamic([3, 2, 1]).to_list() ~is [3, 2, 1]
+  check dynamic(PairList[]).to_list() ~is []
+  check dynamic(PairList[3, 2, 1]).to_list() ~is [3, 2, 1]
+  check dynamic(Array(10, 20, 30)).to_list() ~is [10, 20, 30]
+  check dynamic([]).to_list().length() ~is 0
+  check dynamic(PairList[]).to_list().length() ~is 0
+  check dynamic([1, 2, 3]).to_list().length() ~is 3
+  check dynamic(PairList[1, 2, 3]).to_list().length() ~is  3
+  check dynamic(Array(10, 20, 30, 40)).to_list().length() ~is 4
+
+block:
+  class Posn(x, y):
+    implements Listable
+    override to_list(): [x, y]
+
+  check Posn(1, 2).to_list() ~is [1, 2]
+  check Listable.to_list(Posn(1, 2)) ~is [1, 2]
+  block:
+    use_static
+    check Posn(1, 2).to_list() ~is [1, 2]
+    check Listable.to_list(Posn(1, 2)) ~is [1, 2]
+    check Listable.to_list(Posn(1, 2)).length() ~is 2
+    check (Posn(1, 2) :~ Listable).to_list().length() ~is 2

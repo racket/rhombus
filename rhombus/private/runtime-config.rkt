@@ -83,6 +83,10 @@
                   => (lambda (m)
                        (rhombus (string-append (regexp-replace* #rx"vector" (substring msg (caar m) (cdar m)) "array")
                                                (substring msg (cdar m)))))]
+                 [(regexp-match-positions #rx"^index is out of range.*?treelist:" msg)
+                  => (lambda (m)
+                       (rhombus (string-append (regexp-replace* #rx"treelist" (substring msg (caar m) (cdar m)) "list")
+                                               (substring msg (cdar m)))))]
                  [else (values msg msg-realm)])]
               [(racket)
                (define (rhombus s) (values s 'rhombus/primitive))

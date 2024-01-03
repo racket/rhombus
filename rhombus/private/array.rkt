@@ -5,6 +5,7 @@
          (only-in racket/base
                   [vector array])
          racket/vector
+         "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -25,7 +26,8 @@
          "mutability.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         "version-case.rkt")
+         "version-case.rkt"
+         (submod "list.rkt" for-compound-repetition))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -67,7 +69,8 @@
    drop_right
    take_left
    take_right
-   set_in_copy))
+   set_in_copy
+   to_list))
 
 (define-syntax Array
   (expression-transformer
@@ -293,6 +296,11 @@
      (define v2 (vector-copy v))
      (vector-set! v2 i val)
      v2)))
+
+(define/method (Array.to_list v)
+  #:static-infos ((#%call-result #,treelist-static-infos))
+  (check-array who v)
+  (vector->treelist v))
 
 (define-binding-syntax Array
   (binding-prefix-operator

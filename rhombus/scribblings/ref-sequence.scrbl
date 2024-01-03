@@ -41,7 +41,7 @@ internal state, and the state can even be specific to a particular
 
  If @rhombus(n_expr) produces an integer @rhombus(n, ~var) and
  @rhombus(m_expr) (when supplied) produces an integer @rhombus(m, ~var),
- returns a @tech{sequence} containing the integers from @rhombus(n, ~var)
+ returns a @tech{listable} @tech{sequence} containing the integers from @rhombus(n, ~var)
  (inclusive) to @rhombus(m, ~var) (exclusive). If @rhombus(m_expr) is not
  specified, the result is an infinite sequence that contains all integers
  starting from @rhombus(n, ~var).
@@ -219,7 +219,7 @@ internal state, and the state can even be specific to a particular
 @provided_interface_only()
 
  An interface that a class can implement (publicly or privately) to make
- instances of the class work with as a seuqnce for @rhombus(for)---in
+ instances of the class work with as a sequence for @rhombus(for)---in
  dynamic mode, but see also @rhombus(sequence, ~class_clause) for
  statically optimizing @rhombus(for) expansions. The interface has a
  single abstract method:

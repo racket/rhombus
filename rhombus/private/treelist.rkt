@@ -1,25 +1,40 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/for-body)
          racket/fixnum
          racket/vector
          racket/hash-code
          "version-case.rkt")
 
-(provide make-treelist
+(provide (rename-out [make-treelist treelist])
+         treelist?
          treelist-ref
          treelist-set
          treelist-add
          treelist-cons
          treelist-append
          treelist-insert
-         treelist-remove
+         treelist-delete
          treelist-take
          treelist-drop
+         treelist-take-right
+         treelist-drop-right
          treelist-length
+         treelist-empty?
+         empty-treelist
+         treelist->vector
+         vector->treelist
          treelist->list
          list->treelist
          in-treelist
+         for/treelist
+         for*/treelist
          chaperone-treelist)
+
+(module+ unsafe
+  (provide unsafe-root-add
+           (rename-out [empty-node unsafe-empty-root]
+                       [treelist unsafe-treelist])))
 
 (#%declare #:unsafe)
 
@@ -104,43 +119,79 @@
 (define (leaf v) (Node (vector v)))
 
 (struct treelist (root size height)
+  #:sealed
+  #:property prop:custom-print-quotable 'never
+  #:property prop:custom-write (lambda (tl port mode)
+                                 (case mode
+                                   [(#t #f)
+                                    (display "#<treelist" port)
+                                    (unless (zero? (treelist-size tl))
+                                      (display ":" port))]
+                                   [else
+                                    (display "(treelist" port)])
+                                 (for ([e (in-treelist tl)])
+                                   (display " " port)
+                                   (case mode
+                                     [(#t) (write e port)]
+                                     [(#f) (display e port)]
+                                     [else (print e port)]))
+                                 (case mode
+                                   [(#t #f) (display ">" port)]
+                                   [else (display ")" port)]))
   #:property prop:equal+hash (list
                               (lambda (tl other-tl recur)
                                 (treelist-equal? tl other-tl recur))
                               (lambda (v recur)
                                 (treelist-hash-code v recur))
                               (lambda (v recur)
-                                42)))
+                                (treelist-size v)))
+  #:property prop:sequence (lambda (tl)
+                             (make-do-sequence
+                              (lambda ()
+                                (values
+                                  (lambda (i) (treelist-ref tl i))
+                                  add1
+                                  0
+                                  (lambda (i) (i . < . (treelist-length tl)))
+                                  #f
+                                  #f)))))
 
 (define empty-treelist (treelist empty-node 0 0))
 
+(define (treelist-empty? v)
+  (or (eq? v empty-treelist)
+      (and (impersonator? v)
+           (equal? v empty-treelist))))
+
 (define make-treelist
-  (case-lambda
-    [() empty-treelist]
-    [(a) (treelist (leaf a) 1 0)]
-    [(a b) (treelist (Node (vector a b)) 2 0)]
-    [(a b c) (treelist (Node (vector a b c)) 3 0)]
-    [ds (list->treelist ds)]))
+  (let ([treelist
+         (case-lambda
+           [() empty-treelist]
+           [(a) (treelist (leaf a) 1 0)]
+           [(a b) (treelist (Node (vector a b)) 2 0)]
+           [(a b c) (treelist (Node (vector a b c)) 3 0)]
+           [ds (list->treelist ds)])])
+    treelist))
 
 (define (check-treelist who tl)
   (unless (treelist? tl)
-    (raise-argument-error who "treelist?" tl)))
+    (raise-argument-error* who 'racket/primitive "treelist?" tl)))
 
-(define (check-treelist-index who size index)
+(define (check-treelist-index who tl size index)
   (unless (fixnum? index)
     (if (exact-nonnegative-integer? index)
-        (raise-argument-error who "exact-nonnegative-integer?" index)
-        (error who "index out of range: ~v" index)))
+        (raise-argument-error* who 'racket/primitive "exact-nonnegative-integer?" index)
+        (raise-range-error* who 'racket/primitive "treelist" "" index tl 0 (fx- size 1))))
   (when (or (index . fx< . 0) (index . fx>= . size))
-    (error who "index out of range: ~v / ~s" index size)))
+    (raise-range-error* who 'racket/primitive "treelist" "" index tl 0 (fx- size 1))))
 
-(define (check-treelist-end-index who size index)
+(define (check-treelist-end-index who tl size index)
   (unless (fixnum? index)
     (if (exact-nonnegative-integer? index)
-        (raise-argument-error who "exact-nonnegative-integer?" index)
-        (error who "count out of range: ~v" index)))
+        (raise-argument-error* who 'racket/primitive "exact-nonnegative-integer?" index)
+        (raise-range-error* who 'racket/primitive "treelist" "" index tl 0 size)))
   (when (or (index . fx< . 0) (index . fx> . size))
-    (error who "count out of range: ~v / ~v" index size)))
+    (raise-range-error* who 'racket/primitive "treelist" "" index tl 0 size)))
 
 (define-sequence-syntax in-treelist
   (lambda () #'in-treelist/proc)
@@ -150,12 +201,14 @@
        #'[(d)
           (:do-in
            ([(tl) tl-expr])
-           (unless (variable-reference-from-unsafe? (#%variable-reference))
-             (check-treelist 'in-treelist tl))
+           (begin
+             (unless (variable-reference-from-unsafe? (#%variable-reference))
+               (check-treelist 'in-treelist tl))
+             (define size (treelist-size tl)))
            ([pos 0]
             [node empty-node]
             [node-pos 0])
-           (pos . fx< . (treelist-size tl))
+           (pos . fx< . size)
            ([(d next-node next-node-pos)
              (if (node-pos . fx< . (node-size node))
                  (values (node-ref node node-pos) node (fx+ node-pos 1))
@@ -163,7 +216,36 @@
                    (values (node-ref node node-pos) node (fx+ node-pos 1))))])
            #t
            #t
-           ((fx+ pos 1) next-node next-node-pos))]])))
+           ((fx+ pos 1) next-node next-node-pos))]]
+      [_ #f])))
+
+(define-syntax (for/treelist stx)
+  (syntax-case stx ()
+    [(_ binds body0 body ...)
+     (with-syntax ([((pre-body ...) (post-body ...)) (split-for-body stx #'(body0 body ...))])
+       #`(for/fold/derived #,stx ([root empty-node] [size 0] [height 0]
+                                                    #:result (if (fx= size 0)
+                                                                 empty-treelist
+                                                                 (treelist root size height)))
+                           binds
+           pre-body ...
+           (unsafe-root-add root size height
+                            (let ()
+                              post-body ...))))]))
+
+(define-syntax (for*/treelist stx)
+  (syntax-case stx ()
+    [(_ binds body0 body ...)
+     (with-syntax ([((pre-body ...) (post-body ...)) (split-for-body stx #'(body0 body ...))])
+       #`(for*/fold/derived #,stx ([root empty-node] [size 0] [height 0]
+                                                     #:result (if (fx= size 0)
+                                                                  empty-treelist
+                                                                  (treelist root size height)))
+                            binds
+           pre-body ...
+           (unsafe-root-add root size height
+                            (let ()
+                              post-body ...))))]))
 
 (define (in-treelist/proc tl)
   ;; Slower strategy than the inline version, but the
@@ -186,7 +268,7 @@
     [(impersonator? tl) (treelist-ref/slow tl index)]
     [else
      (check-treelist 'treelist-ref tl)
-     (check-treelist-index 'treelist-ref (treelist-size tl) index)
+     (check-treelist-index 'treelist-ref tl (treelist-size tl) index)
      (define-values (node pos) (treelist-node-for tl index))
      (node-ref node pos)]))
 
@@ -319,7 +401,7 @@
     [else
      (check-treelist 'treelist-set tl)
      (define size (treelist-size tl))
-     (check-treelist-index 'treelist-set size index)
+     (check-treelist-index 'treelist-set tl size index)
      (define height (treelist-height tl))
      (define new-node
        (let set ([node (treelist-root tl)]
@@ -361,37 +443,67 @@
                       (fx+ size 1)
                       (fx+ height 1)))])]))
 
+(define (unsafe-root-add root size height el)
+  ;; similar to `treelist-add`, used for `for/treelist`
+  (define new-root (build root height el))
+  (if new-root
+      (values new-root (fx+ size 1) height)
+      (values (Node (vector root
+                            (new-branch el height)))
+              (fx+ size 1)
+              (fx+ height 1))))
+
+(define (treelist->vector tl)
+  (check-treelist 'treelist->vector tl)
+  (for/vector #:length (treelist-size tl) ([el (in-treelist tl)])
+    el))
+
+(define (vector->treelist vec-in)
+  ;; build a dense tree of vectors directly
+  (define vec (if (impersonator? vec-in)
+                  (and (vector? vec-in)
+                       (vector-copy vec-in))
+                  (and (vector? vec-in) ; amounts to `vector*?`
+                       vec-in)))
+  (unless vec (raise-argument-error 'vector->treelist "vector?" vec-in))
+  (define size (vector*-length vec))
+  (cond
+    [(fx= size 0) empty-treelist]
+    [else
+     (define-values (root height)
+       (cond
+         [(size . fx<= . MAX_WIDTH) (values (Node vec) 0)]
+         [else
+          (define height (fx- (fxquotient (fx+ (integer-length (fx- size 1)) BITS -1) BITS) 1))
+          (values
+           (let loop ([start 0] [height height])
+             (cond
+               [(fx= height 0)
+                (Node (vector*-copy vec start (fxmin size (fx+ start MAX_WIDTH))))]
+               [else
+                (define width (fxlshift MAX_WIDTH (fx* height BITS)))
+                (define end (fxmin size (fx+ width start)))
+                (define step (fxrshift width BITS))
+                (define len (fxquotient (fx+ (fx- end start) (fx- step 1)) step))
+                (Node (for/vector #:length len ([start (in-range start end step)])
+                                  (loop start (fx- height 1))))]))
+           height)]))
+     (treelist root size height)]))
+
 (define (treelist->list tl)
   (check-treelist 'treelist->list tl)
   (for/list ([el (in-treelist tl)])
     el))
 
 (define (list->treelist lst)
-  ;; build a dense tree of vectors directly
-  (define vec (list->vector lst))
-  (define size (vector*-length vec))
-  (define-values (root height)
-    (cond
-      [(size . fx<= . MAX_WIDTH) (values (Node vec) 0)]
-      [else
-       (define height (fx- (fxquotient (fx+ (integer-length (fx- size 1)) BITS -1) BITS) 1))
-       (values
-        (let loop ([start 0] [height height])
-          (cond
-            [(fx= height 0)
-             (Node (vector*-copy vec start (fxmin size (fx+ start MAX_WIDTH))))]
-            [else
-             (define width (fxlshift MAX_WIDTH (fx* height BITS)))
-             (define end (fxmin size (fx+ width start)))
-             (define step (fxrshift width BITS))
-             (define len (fxquotient (fx+ (fx- end start) (fx- step 1)) step))
-             (Node (for/vector #:length len ([start (in-range start end step)])
-                      (loop start (fx- height 1))))]))
-        height)]))
-  (treelist root size height))
+  (unless (list? lst) (raise-argument-error 'list->treelist "list?" lst))
+  (if (null? lst)
+      empty-treelist
+      (vector->treelist (list->vector lst))))
 
-(define (treelist-length treelist)
-  (treelist-size treelist))
+(define (treelist-length tl)
+  (check-treelist 'treelist-length tl)
+  (treelist-size tl))
 
 ;; trees that are a result of this method may not meet invariants, but rebalancing is costly
 ;; and future concatenations would restore the invariants due to rebalancing being done on concats.
@@ -403,7 +515,7 @@
     [else
      (check-treelist 'treelist-take tl)
      (define size (treelist-size tl))
-     (check-treelist-end-index 'treelist-take size pos)
+     (check-treelist-end-index 'treelist-take tl size pos)
      (cond
        [(fx= pos 0)
         empty-treelist]
@@ -449,7 +561,7 @@
     [else
      (check-treelist 'treelist-drop tl)
      (define size (treelist-size tl))
-     (check-treelist-end-index 'treelist-drop size pos)
+     (check-treelist-end-index 'treelist-drop tl size pos)
      (cond
        [(fx= pos 0)
         tl]
@@ -510,9 +622,21 @@
                   (Node new-children new-sizes)])])))
         (squash new-root (fx- size pos) height)])]))
 
+(define (treelist-take-right tl pos)
+  (check-treelist 'treelist-take-right tl)
+  (define size (treelist-size tl))
+  (check-treelist-end-index 'treelist-take-right tl size pos)
+  (treelist-drop tl (fx- size pos)))
+
+(define (treelist-drop-right tl pos)
+  (check-treelist 'treelist-drop-right tl)
+  (define size (treelist-size tl))
+  (check-treelist-end-index 'treelist-drop-right tl size pos)
+  (treelist-take tl (fx- size pos)))
+
 (define (treelist-split tl at)
   (check-treelist 'treelist-split tl)
-  (check-treelist-end-index 'treelist-split (treelist-size tl) at)
+  (check-treelist-end-index 'treelist-split tl (treelist-size tl) at)
   (cond
     [(fx= at 0) (values empty-treelist tl)]
     [(fx= at (treelist-size tl)) (values tl empty-treelist)]
@@ -525,24 +649,27 @@
     [else
      (check-treelist 'treelist-insert tl)
      (define size (treelist-size tl))
-     (check-treelist-end-index 'treelist-insert size at)
+     (check-treelist-end-index 'treelist-insert tl size at)
      (cond
        [(fx= at 0) (treelist-cons tl el)]
        [(fx= at size) (treelist-add tl el)]
        [else (treelist-append (treelist-add (treelist-take tl at) el)
                               (treelist-drop tl at))])]))
 
-(define (treelist-remove tl at)
+(define (treelist-delete tl at)
   (cond
     [(impersonator? tl)
-     (treelist-remove/slow tl at)]
+     (treelist-delete/slow tl at)]
     [else
-     (check-treelist 'treelist-remove tl)
+     (check-treelist 'treelist-delete tl)
      (define size (treelist-size tl))
-     (check-treelist-index 'treelist-remove size at)
+     (check-treelist-index 'treelist-delete tl size at)
      (cond
        [(fx= at 0) (treelist-drop tl 1)]
-       [(fx= at (fx- size 1)) (treelist-take tl at)]
+       [(fx= at (fx- size 1))
+        (if (fx= at 0)
+            empty-treelist
+            (treelist-take tl at))]
        [else (treelist-append (treelist-take tl at)
                               (treelist-drop tl (fx+ at 1)))])]))
 
@@ -580,27 +707,36 @@
           [else
            (treelist-append (treelist (leaf el) 1 0) tl)])])]))
 
-(define (treelist-append tl rhs)
-  (cond
-    [(or (impersonator? tl)
-         (impersonator? rhs))
-     (treelist-append/slow tl rhs)]
-    [else
-     (check-treelist 'treelist-append tl)
-     (check-treelist 'treelist-append rhs)
+(define treelist-append
+  (case-lambda
+    [(tl rhs)
      (cond
-       [(fx= 0 (treelist-size tl)) rhs]
-       [(fx= 0 (treelist-size rhs)) tl]
+       [(or (impersonator? tl)
+            (impersonator? rhs))
+        (treelist-append/slow tl rhs)]
        [else
-        (define-values (new-children new-height)
-          (concat-subtree (treelist-root tl)
-                          (treelist-height tl)
-                          (treelist-root rhs)
-                          (treelist-height rhs)))
-        (treelist new-children
-                  (fx+ (treelist-size tl)
-                       (treelist-size rhs))
-                  new-height)])]))
+        (check-treelist 'treelist-append tl)
+        (check-treelist 'treelist-append rhs)
+        (cond
+          [(fx= 0 (treelist-size tl)) rhs]
+          [(fx= 0 (treelist-size rhs)) tl]
+          [else
+           (define-values (new-children new-height)
+             (concat-subtree (treelist-root tl)
+                             (treelist-height tl)
+                             (treelist-root rhs)
+                             (treelist-height rhs)))
+           (treelist new-children
+                     (fx+ (treelist-size tl)
+                          (treelist-size rhs))
+                     new-height)])])]
+    [() empty-treelist]
+    [(tl)
+     (check-treelist 'treelist-append tl)
+     tl]
+    [(tl . rhss)
+     (for/fold ([tl tl]) ([rhs (in-list rhss)])
+       (treelist-append tl rhs))]))
 
 ;; after take or drop, squash tree if it can be shorter:
 (define (squash node new-size new-height)
@@ -885,7 +1021,7 @@
 (define (treelist-ref/slow tl index)
   (define who 'treelist-ref)
   (check-treelist who tl)
-  (check-treelist-index who (treelist-size tl) index)
+  (check-treelist-index who tl (treelist-size tl) index)
   (define w (treelist-chaperone-ref tl))
   (define prev (treelist-wrapper-prev w))
   (define v (treelist-ref prev index))
@@ -904,7 +1040,7 @@
 (define (treelist-set/slow tl index el)
   (define who 'treelist-set)
   (check-treelist who tl)
-  (check-treelist-index who (treelist-size tl) index)
+  (check-treelist-index who tl (treelist-size tl) index)
   (define w (treelist-chaperone-ref tl))
   (define prev (treelist-wrapper-prev w))
   (define new-el
@@ -916,7 +1052,7 @@
   (define who 'treelist-insert)
   (check-treelist who tl)
   (define size (treelist-size tl))
-  (check-treelist-end-index who size at)
+  (check-treelist-end-index who tl size at)
   (define w (treelist-chaperone-ref tl))
   (define prev (treelist-wrapper-prev w))
   (define new-el
@@ -936,14 +1072,14 @@
   (define who who)
   (check-treelist who tl)
   (define size (treelist-size tl))
-  (check-treelist-end-index who size at)
+  (check-treelist-end-index who tl size at)
   (define w (treelist-chaperone-ref tl))
   (define prev (treelist-wrapper-prev w))
   (define new-prev (op prev at))
   (re-chaperone new-prev w))
 
-(define (treelist-remove/slow tl at)
-  (treelist-do-slow 'treelist-remove treelist-remove tl at))
+(define (treelist-delete/slow tl at)
+  (treelist-do-slow 'treelist-delete treelist-delete tl at))
 
 (define (treelist-take/slow tl pos)
   (treelist-do-slow 'treelist-take treelist-take tl pos))

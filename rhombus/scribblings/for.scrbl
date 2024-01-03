@@ -127,10 +127,9 @@ returns as many values as identifiers to provide new values for the
 identifiers.
 
 @examples(
-  fun sum(l :~ List):
-    for values(sum = 0):
-      each i: l
-      sum+i
+  fun sum(ns :~ List):
+    for values(sum = 0) (n: ns):
+      sum+n
   sum([2, 3, 4])
 )
 
@@ -142,10 +141,10 @@ the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
 
 @examples(
-  fun sum2d(ll :~ List.of(List.of(Number))):
+  fun sum2d(nss :~ List.of(List.of(Number))):
     for values(sum = 0):
-      each l: ll
-      each i: l
-      sum+i
+      each ns: nss
+      each n: ns
+      sum+n
   sum2d([[1], [2, 3, 4], [5, 6, 7], [8, 9]])
 )

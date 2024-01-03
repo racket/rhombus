@@ -1,5 +1,6 @@
 #lang racket/base
 (require "mutability.rkt"
+         "treelist.rkt"
          (submod "dot.rkt" for-builtin)
          (submod "map.rkt" for-builtin)
          (submod "set.rkt" for-builtin)
@@ -24,6 +25,7 @@
      [(set? v) (if (mutable-set? v)
                    mutable-set-method-table
                    set-method-table)]
+     [(treelist? v) treelist-method-table]
      [(list? v) list-method-table]
      [(vector? v) array-method-table]
      [(syntax? v) syntax-method-table]

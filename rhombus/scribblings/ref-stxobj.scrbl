@@ -12,10 +12,8 @@
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
  multi-group sequence with binding scopes and other metadata on
  individual terms, and metadata potentially on individual syntax objects. See
- @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top")
- for information on shrubbery notation, and specifically
- @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
- for information on representing shrubbery terms as
+ @shrubref("top") for information on shrubbery notation, and specifically
+ @shrubref("parsed-rep") for information on representing shrubbery terms as
  Rhombus values. The @rhombus(Syntax.make) function takes such a value
  and wraps it as a syntax object, so that it can accumulate binding
  scopes or hold other metadata, and functions like @rhombus(Syntax.unwrap)
@@ -640,7 +638,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_group(terms :: List,
+  fun Syntax.make_group(terms :: Listable.to_list && NonemptyList,
                         ctx_stx :: maybe(Term) = #false)
     :: Syntax
 ){
@@ -659,7 +657,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_sequence(groups :: List,
+  fun Syntax.make_sequence(groups :: Listable,
                            ctx_stx :: maybe(Term) = #false)
     :: Syntax
 ){
@@ -896,7 +894,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   fun Syntax.relocate_span(stx :: Term,
-                           like_stxes :: List.of(Syntax))
+                           like_stxes :: Listable.of(Syntax))
     :: Syntax
 ){
 

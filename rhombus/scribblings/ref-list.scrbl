@@ -12,11 +12,11 @@
 @rhombus([#,(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the
-@rhombus(#%brackets) form, which (despite its name) is normally bound to
+@rhombus(#%brackets) form, which is normally bound to
 construct a list.
 
 A list is @tech{indexable} using @brackets to access a list
-element by position (in time proportional to the position) via
+element by position---in @math{O(log N)} time---via
 @rhombus(#%index). A list also works with the @rhombus(++) operator
 to append lists. A list can be used as @tech{sequence}, in which case
 it supplies its elements in order.
@@ -27,15 +27,21 @@ it supplies its elements in order.
   [lst.length(), List.length(lst)]
   [lst.first, List.first(lst)]
   [lst.rest, List.rest(lst)]
+  [lst.insert(lst, n, v), List.insert(lst, n, v)]
+  [lst.add(lst, v), List.add(lst, v)]
+  [lst.delete(lst, n), List.delete(lst, n)]
   [lst.reverse(), List.reverse(lst)]
   [lst.append(lst2, ...), List.append(lst, lst2, ...)]
-  [list.drop_left(lst, n), List.drop_left(lst, n)]
-  [list.drop_right(lst, n), List.drop_right(lst, n)]
-  [list.has_element(lst, v), List.has_element(lst, v)]
-  [list.remove(lst, v), List.remove(lst, v)]
+  [lst.take_left(lst, n), List.take_left(lst, n)]
+  [lst.take_right(lst, n), List.take_right(lst, n)]
+  [lst.drop_left(lst, n), List.drop_left(lst, n)]
+  [lst.drop_right(lst, n), List.drop_right(lst, n)]
+  [lst.has_element(lst, v), List.has_element(lst, v)]
+  [lst.remove(lst, v), List.remove(lst, v)]
   [lst.map(func), List.map(lst, func)]
   [lst.for_each(func), List.for_each(lst, func)]
   [lst.sort(arg, ...), List.sort(lst, arg, ...)]
+  [lst.to_list(), List.to_list(lst)]
 )
 
 @doc(
@@ -54,15 +60,17 @@ it supplies its elements in order.
 
 @doc(
   ~nonterminal:
-    list_expr: block expr
+    listable_expr: block expr
   fun List(v :: Any, ...) :: List
   expr.macro '#%brackets [$expr_or_splice, ...]'
   repet.macro '#%brackets [$repet_or_splice, ...]'
-
+  expr.macro 'List[$expr_or_splice, ...]'
+  repet.macro 'List[$repet_or_splice, ...]'
+  
   grammar expr_or_splice:
     $expr
     $repet #,(@litchar{,}) $ellipses
-    & $list_expr
+    & $listable_expr
 
   grammar ellipses:
     $ellipsis
@@ -75,8 +83,8 @@ it supplies its elements in order.
 
  Constructs a list of the given @rhombus(v)s values or results of the
  @rhombus(expr_or_splice)s. A @rhombus(&) or @dots_expr form
- can appear within @brackets to splice a @tech{repetition} or existing list
- into the constructed list, the same as in a function call (see
+ can appear within @brackets to splice a @tech{repetition} or existing @tech{listable}
+ value into the constructed list, the same as in a function call (see
  @rhombus(#%call)). List constructions can also serve as
  repetitions, where @rhombus(repet_or_splice) is like
  @rhombus(expr_or_splice), but with repetitions in place of expressions.
@@ -101,6 +109,8 @@ it supplies its elements in order.
   bind.macro 'List($bind, ..., $rest)'
   bind.macro '#%brackets [$bind, ...]'
   bind.macro '#%brackets [$bind, ..., $rest]'
+  bind.macro 'List[$bind, ...]'
+  bind.macro 'List[$bind, ..., $rest]'
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
     & $list_bind
@@ -165,11 +175,41 @@ it supplies its elements in order.
 }
 
 @doc(
+  fun List.insert(lst :: List, n :: NonnegInt, elem :: Any) :: List
+){
+
+ Creates a list like @rhombus(lst), but with @rhombus(elem) added before
+ the @rhombus(n)th element or at the end if @rhombus(n) is the length of
+ @rhombus(lst). The @rhombus(n) index must be no more than the length of
+ @rhombus(lst). Insertion takes @math{O(log N)} time.
+
+@examples(
+  List.insert(["a", "b", "c"], 1, "x")
+)
+
+}
+
+
+@doc(
+  fun List.add(lst :: List, elem :: Any) :: List
+){
+
+ Creates a list like @rhombus(lst), but with @rhombus(elem) added to
+ the end, equivalent to @rhombus(List.insert(ls, elem, List.length(lst))).
+
+@examples(
+  List.add([2, 3], 1)
+)
+
+}
+
+
+@doc(
   fun List.cons(elem :: Any, lst :: List) :: List
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to
- the front.
+ the front, equivalent to @rhombus(List.insert(ls, elem, 0)).
 
 @examples(
   List.cons(1, [2, 3])
@@ -213,6 +253,7 @@ it supplies its elements in order.
 ){
 
  Returns the first element of @rhombus(lst).
+ Accessing the first element takes @math{O(log N)} time.
 
 @examples(
   List.first(["a", "b", "c"])
@@ -225,6 +266,7 @@ it supplies its elements in order.
 ){
 
  Returns a list like @rhombus(lst), but without its first element.
+ Creating the list takes @math{O(log N)} time.
 
 @examples(
   List.rest(["a", "b", "c"])
@@ -232,6 +274,20 @@ it supplies its elements in order.
 
 }
 
+
+@doc(
+  fun List.delete(lst :: List, n :: NonnegInt) :: List
+){
+
+ Creates a list like @rhombus(lst), but without the @rhombus(n)th
+ element. The @rhombus(n) index must be less than the length of
+ @rhombus(lst). Deletion takes @math{O(log N)} time.
+
+@examples(
+  List.delete(["a", "b", "c"], 1)
+)
+
+}
 
 @doc(
   ~nonterminal:
@@ -258,6 +314,7 @@ it supplies its elements in order.
 ){
 
  Returns the number of items in @rhombus(lst).
+ The length is produced in @math{O(1)} time.
 
 @examples(
   List.length([1, 4, 8])
@@ -272,8 +329,10 @@ it supplies its elements in order.
   fun List.reverse(lst :: List) :: List
 ){
 
- Returns a list with the same items as @rhombus(lst). but in reversed
- order.
+ Returns a list with the same items as @rhombus(lst), but in reversed
+ order. Reversing a list takes @math{O(N log N)} time, equivalent
+ asymptotically to adding each element of @rhombus(lst) to another
+ list one at a time.
 
 @examples(
   List.reverse([1, 4, 8])
@@ -288,10 +347,36 @@ it supplies its elements in order.
 ){
 
  Appends the @rhombus(lst)s in order. See also @rhombus(++).
+ Appending takes @math{O(log N)} time, which is asymptotically faster than
+ adding each element one at a time from one list to the other.
 
 @examples(
   List.append([1, 2, 3], [4, 5], [6])
   [1, 2, 3].append([4, 5], [6])
+)
+
+}
+
+
+@doc(
+  fun List.take_left(lst :: List, n :: NonnegInt) :: List
+  fun List.take_right(lst :: List, n :: NonnegInt) :: List
+){
+
+ Returns a list like @rhombus(lst), but with only the first @rhombus(n)
+ elements in the case of @rhombus(List.take_left), or only the last
+ @rhombus(n) elements in the case of @rhombus(List.take_right). The given
+ @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
+ @rhombus(Exn.Fail.Contract, ~class) exception is thrown.
+ Creating the new list takes @math{O(log N)} time, which is
+ asymptotically faster than building a new list by adding or removing
+ elements one at a time.
+
+@examples(
+  [1, 2, 3, 4, 5].take_left(2)
+  [1, 2, 3, 4, 5].take_right(2)
+  ~error:
+    [1].take_left(2)
 )
 
 }
@@ -307,6 +392,9 @@ it supplies its elements in order.
  @rhombus(n) elements in the case of @rhombus(List.drop_right). The given
  @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
  @rhombus(Exn.Fail.Contract, ~class) exception is thrown.
+ Creating the new list takes @math{O(log N)} time, which is
+ asymptotically faster than building a new list by adding or removing
+ elements one at a time.
 
 @examples(
   [1, 2, 3, 4, 5].drop_left(2)
@@ -323,7 +411,8 @@ it supplies its elements in order.
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
- @rhombus(v), @rhombus(#false) otherwise.
+ @rhombus(v), @rhombus(#false) otherwise. Searching the list
+ takes @math{O(N)} time.
 
 @examples(
   [1, 2, 3].has_element(2)
@@ -338,7 +427,7 @@ it supplies its elements in order.
 ){
 
  Returns a list like @rhombus(lst), but with the first element equal to
- @rhombus(v) (if any) removed.
+ @rhombus(v) (if any) removed.  Searching the list takes @math{O(N)} time.
 
 @examples(
   [1, 2, 3, 2].remove(2)
@@ -372,6 +461,7 @@ it supplies its elements in order.
 ){
 
  Sorts @rhombus(lst) using @rhombus(is_less) to compare elements.
+ Sorting takes @math{O(N log N)} time.
 
 @examples(
   List.sort([1, 3, 2])
@@ -392,5 +482,14 @@ it supplies its elements in order.
   List.iota(3)
   List.iota(0)
 )
+
+}
+
+
+@doc(
+  fun List.to_list(lst :: List) :: List
+){
+
+ Implements @rhombus(Listable, ~class) by returning @rhombus(lst) unchanged.
 
 }

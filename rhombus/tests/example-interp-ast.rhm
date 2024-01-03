@@ -1,0 +1,252 @@
+#lang rhombus/static/and_meta
+
+// Ported from Shplait (with types stripped out)
+
+import:
+  rhombus/measure
+
+defn.macro 'type $id
+            | $ctr($args)
+            | ...':
+  'class $id():
+     nonfinal
+   class $ctr($args):
+     extends $id
+   ...'
+
+type Value
+| intV(n)
+| closV(arg,
+        body,
+        env)
+
+type Exp
+| intE(n)
+| idE(s)
+| plusE(l, r)
+| funE(n, body)
+| appE(fn, arg)
+| if0E(tst, thn, els)
+
+type Binding
+| bind(name, val)
+
+def mt_env = []
+def extend_env = List.cons
+
+// parse ----------------------------------------
+fun parse(s):
+  match s
+  | '$(n :: Int)':
+      intE(n.unwrap())
+  | '$(s :: Identifier)':
+      idE(s.unwrap())
+  | 'if $tst ... == 0
+     | $thn
+     | $els':
+      if0E(parse('$tst ...'), parse(thn), parse(els))
+  | 'let $name = $rhs ... :
+       $body':
+      appE(funE(name.unwrap(),
+                parse(body)),
+           parse('$rhs ...'))
+  | '$left ... + $right ...':
+      plusE(parse('$left ...'),
+            parse('$right ...'))
+  | 'fun ($id): $body':
+      funE(id.unwrap(),
+           parse(body))
+  | '$fn $fnx ...($arg)':
+      appE(parse('$fn $fnx ...'),
+           parse(arg))
+  | '($e)':
+      parse(e)
+  | ~else:
+      error(#'parse, "invalid input: " +& s)
+
+module test:
+  check: parse('2')
+         ~is intE(2)
+  check: parse('x')
+         ~is idE(#'x)
+  check: parse('2 + 1')
+         ~is plusE(intE(2), intE (1))
+  check: parse('fun (x): 9')
+         ~is funE(#'x, intE(9))
+  check: parse('double(9)')
+         ~is appE(idE(#'double), intE(9))
+  check: parse('1 + double(9)')
+         ~is plusE(intE(1),
+                   appE(idE(#'double), intE(9)))
+  check: parse('3 + (4 + 8)')
+         ~is plusE(intE(3),
+                   plusE(intE(4), intE(8)))
+  check: parse('let x = 1 + 2:
+                  y')
+         ~is appE(funE(#'x,
+                       idE(#'y)),
+                  plusE(intE(1), intE(2)))
+  check: parse('if 1 == 0 | 2 | 3')
+         ~is if0E(intE(1), intE(2), intE(3))
+
+  check: parse('1 2')
+         ~throws "invalid input"
+      
+// interp ----------------------------------------
+fun interp(a, env):
+  match a
+  | intE(n): intV(n)
+  | idE(s): lookup(s, env)
+  | plusE(l, r): num_plus(interp(l, env), interp(r, env))
+  | funE(n, body): closV(n, body, env)
+  | appE(fn, arg):
+      match interp(fn, env)
+      | closV(n, body, c_env):
+          interp(body,
+                 extend_env(bind(n, interp(arg, env)),
+                            c_env))
+      | ~else: error(#'interp, "not a function")
+  | if0E(tst, thn, els):
+      interp(if num_is_zero(interp(tst, env))
+             | thn
+             | els,
+             env)
+
+module test:
+  check: interp(parse('2'), mt_env)
+         ~is intV(2)
+  check: interp(parse('x'), mt_env)
+         ~throws "free variable"
+  check: interp(parse('x'),
+                extend_env(bind(#'x, intV(9)), mt_env))
+         ~is intV(9)
+  check: interp(parse('2 + 1'), mt_env)
+         ~is intV(3)
+  check: interp(parse('(2 + 3) + (5 + 8)'), mt_env)
+         ~is intV(18)
+  check: interp(parse('fun (x): x + x'),
+                mt_env)
+         ~is closV(#'x, plusE(idE(#'x), idE(#'x)), mt_env)
+  check: interp(parse('let x = 5: x + x'),
+                mt_env)
+         ~is intV(10)
+  check: interp(parse('let x = 5:
+                         let x = x + 1:
+                           x + x'),
+                mt_env)
+         ~is intV(12)
+  check: interp(parse('let x = 5:
+                         let y = 6:
+                           x'),
+                mt_env)
+         ~is intV(5)
+  check: interp(parse('(fun (x): x + x)(8)'),
+                mt_env)
+         ~is intV(16)
+  check: interp(parse('if 0 == 0 | 2 | 3'),
+                mt_env)
+         ~is intV(2)
+  check: interp(parse('if 1 == 0 | 2 | 3'),
+                mt_env)
+         ~is intV(3)
+  check: interp(parse('1(2)'), mt_env)
+         ~throws "not a function"
+  check: interp(parse('1 + (fun (x): x)'), mt_env)
+         ~throws "not a number"
+  check: interp(parse('let bad = (fun (x): x + y):
+                         let y = 5:
+                           bad(2)'),
+                mt_env)
+         ~throws "free variable"
+  check: interp(parse('if (fun (x): x) == 0 | 2 | 3'),
+                mt_env)
+         ~throws "not a number"
+               
+// num_plus ----------------------------------------
+fun num_op(op, l, r):
+  cond
+  | l is_a intV && r is_a intV:
+      intV(op(intV.n(l), intV.n(r)))
+  | ~else:
+      error(#'interp, "not a number")
+fun num_plus(l :: Value, r :: Value) :: Value:
+  num_op(fun (a, b): a+b, l, r)
+fun num_is_zero(v :: Value) :: Boolean:
+  match v
+  | intV(n): n == 0
+  | ~else: error(#'interp, "not a number")
+
+module test:
+  check: num_plus(intV(1), intV(2))
+         ~is intV(3)
+  check: num_is_zero(intV(0))
+         ~is #true
+  check: num_is_zero(intV(1))
+         ~is #false
+
+// lookup ----------------------------------------
+fun lookup(n, env):
+  // traditional recursion
+  match env
+  | []:
+      error(#'lookup, "free variable: " +& n)
+  | List.cons(b, rst_env):
+      cond
+      | n == bind.name(b):
+          bind.val(b)
+      | ~else:
+          lookup(n, rst_env)
+
+#//
+fun lookup(n, env):
+  // list-ref recursion
+  recur search(i = 0):
+    cond
+    | i == List.length(env):
+       error(#'lookup, "free variable: " +& n)
+    | ~else:
+        let b = (env :~ List)[i]
+        cond
+        | n == bind.name(b):
+            bind.val(b)
+        | ~else:
+            search(i + 1)
+
+#//
+fun lookup(n, env):
+  // using `for`
+  (for any (b: (env :~ List)):
+     (n == bind.name(b)) && bind.val(b))
+    || error(#'lookup, "free variable: " +& n)
+
+module test:
+  check: lookup(#'x, mt_env)
+         ~throws "free variable"
+  check: lookup(#'x, extend_env(bind(#'x, intV(8)), mt_env))
+         ~is intV(8)
+  check: lookup(#'x, extend_env(bind(#'x, intV(9)),
+                                extend_env(bind(#'x, intV(8)),
+                                           mt_env)))
+         ~is intV(9)
+  check: lookup(#'y, extend_env(bind(#'x, intV(9)),
+                                extend_env(bind(#'y, intV(8)),
+                                           mt_env)))
+         ~is intV(8)
+
+measure.time:
+  interp(parse(
+           'let mkrec = (fun (body_proc):
+                           (fun (fX):
+                              fX(fX))(fun (fX):
+                                        body_proc(fun (x):
+                                                    fX(fX)(x)))):
+              let fib = mkrec(fun (fib):
+                                fun (n):
+                                  if n == 0:
+                                  | 1
+                                  | if (n + -1) == 0
+                                    | 1
+                                    | fib(n + -1) + fib(n + -2)):
+                fib(27)'
+         ),
+         mt_env)

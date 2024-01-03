@@ -259,3 +259,29 @@ check:
   def [x, _, ...] = [1, 2, 3]
   x
   ~is 1
+
+// nestings of lists and pair lists
+block:
+  use_static
+  class Posn(x, y)
+
+  def [[x :~ Posn, ...], ...] = [[Posn(1, 2)], [Posn(3, 4), Posn(5, 6)]]
+  def [[[z :~ Posn, ...], ...], ...] = [[[Posn(1, 2)], [Posn(3, 4), Posn(5, 6)]]]
+
+  check PairList(PairList(x, ...), ...)[0][0].x ~is 1
+  check PairList[PairList[x, ...], ...][0][0].x ~is 1
+
+  check [PairList[x, ...], ...] ~is [PairList[Posn(1, 2)], PairList[Posn(3, 4), Posn(5, 6)]]
+  check [PairList[x, ...], ...][0][0].x ~is 1
+  check [PairList[x, ...], ...][1][1].x ~is 5
+
+  check PairList[[x, ...], ...] ~is PairList[[Posn(1, 2)], [Posn(3, 4), Posn(5, 6)]]
+  check PairList[[x, ...], ...][0][0].x ~is 1
+  check PairList[[x, ...], ...][1][1].x ~is 5
+
+  check [[[z, ...], ...], ...] ~is [[[Posn(1, 2)], [Posn(3, 4), Posn(5, 6)]]]
+  check [[[z, ...], ...], ...][0][0][0].x ~is 1
+
+block:
+  def [x, ...] = [[1, 2], [3, 4]]
+  check [[0, & x], ...] ~is [[0, 1, 2], [0, 3, 4]]

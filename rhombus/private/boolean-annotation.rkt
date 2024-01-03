@@ -143,14 +143,15 @@
                                (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                                ...
                                left-body)
-                             (rhs.matcher-id arg-id rhs.data if/blocked
-                                             (lambda ()
-                                               (rhs.committer-id arg-id rhs.data)
-                                               (rhs.binder-id arg-id rhs.data)
-                                               (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
-                                               ...
-                                               right-body)
-                                             #f))))
+                             (let ()
+                               (rhs.matcher-id arg-id rhs.data if/blocked
+                                               (lambda ()
+                                                 (rhs.committer-id arg-id rhs.data)
+                                                 (rhs.binder-id arg-id rhs.data)
+                                                 (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
+                                                 ...
+                                                 right-body)
+                                               #f)))))
          (IF finish-id success fail))]))
 
 (define-syntax (or-committer stx)

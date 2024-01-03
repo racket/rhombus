@@ -1,0 +1,53 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  title
+  section
+  subsection
+  subsubsection
+  subsubsub_section
+
+fun title(~tag: tag :: maybe(String || List.of(String)) = #false,
+          ~tag_prefix: tag_prefix :: maybe(String || ModulePath) = #false,
+          ~style: style :: maybe(Style || String || Symbol || List.of(Symbol)) = #false,
+          ~version: vers :: maybe(String) = #false,
+          ~date: date :: maybe(String) = #false,
+          pre_content :: PreContent):
+  base.title(~tag: convert_list(tag),
+             #{#:tag-prefix}:
+               if tag_prefix is_a ModulePath
+               | ModulePath.s_exp(tag_prefix)
+               | tag_prefix,
+             ~style: convert_list(style),
+             ~version: vers,
+             ~date: date,
+             pre_content)
+
+defn.macro 'def_section $section: $rkt_section':
+  'fun $section(~tag: tag :: maybe(String || List.of(String)) = #false,
+                ~tag_prefix: tag_prefix :: maybe(String || ModulePath) = #false,
+                ~style: style :: maybe(Style || String || Symbol || List.of(Symbol)) = #false,
+                pre_content :: PreContent):
+     base . $rkt_section(~tag: convert_list(tag),
+                         #{#:tag-prefix}:
+                           if tag_prefix is_a ModulePath
+                           | ModulePath.s_exp(tag_prefix)
+                           | tag_prefix,
+                         ~style: convert_list(style),
+                         pre_content)'
+
+def_section section: section
+def_section subsection: subsection
+def_section subsubsection: subsubsection
+def_section subsubsub_section: #{subsubsub*section}
+
+fun author(c :: Content,
+           ~email: email :: maybe(String),
+           ~obfuscate: obfuscate = #false):
+  if email
+  | base.#{author+email}(c, email, #{#:obfuscate?}: obfuscate)
+  | base.author(c)

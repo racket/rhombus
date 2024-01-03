@@ -1,0 +1,164 @@
+#lang rhombus/static/and_meta
+import:
+  lib("scribble/core.rkt")
+  lib("scribble/base.rkt")
+  lib("scribble/decode.rkt")
+
+export:
+  Style
+  Element
+  Content
+  PreContent
+  PreFlow
+  Block
+  Part
+  Tag
+  Taglet
+  GeneratedTag
+  convert_list
+  convert_list_of_lists
+  convert_pre_part
+
+annot.macro 'Element':
+  annot_meta.pack_predicate('core.#{element?}')
+annot.macro 'MultiargElement':
+  annot_meta.pack_predicate('core.#{multiarg-element?}')
+annot.macro 'TraverseElement':
+  annot_meta.pack_predicate('core.#{traverse-element?}')
+annot.macro 'PartRelativeElement':
+  annot_meta.pack_predicate('core.#{part-relative-element?}')
+annot.macro 'DelayedElement':
+  annot_meta.pack_predicate('core.#{delayed-element?}')
+
+annot.macro 'Block':
+  annot_meta.pack_predicate('core.#{block?}')
+
+annot.macro 'Part':
+  annot_meta.pack_predicate('core.#{part?}')
+
+annot.macro 'PartDecl':
+  annot_meta.pack_predicate('fun (x):
+                               decode.#{title-decl?}(x)
+                                 || decode.#{part-start?}(x)
+                                 || decode.#{part-index-decl?}(x)
+                                 || decode.#{part-collect-decl?}(x)
+                                 || decode.#{part-tag-decl?}(x)')
+
+annot.macro 'Style':
+  annot_meta.pack_predicate('core.#{style?}')
+
+fun convert_list(v):
+  match v
+  | l :: List:
+      for PairList(e: l): e
+  | ~else:
+      v
+
+fun convert_list_of_lists(cells :~ List.of(List)):
+  for PairList(row: cells):
+    for PairList(cell: row):
+      cell
+
+annot.macro 'PreContent':
+  'converting(fun (v): convert_pre_content(v)) && True'
+
+annot.macro 'Content':
+  'converting(fun (v): convert_content(v)) && True'
+
+annot.macro 'PreFlow':
+  'converting(fun (v): convert_pre_flow(v)) && True'
+
+annot.macro 'Tag':
+  'converting(fun (v): convert_tag(v)) && True'
+annot.macro 'Taglet':
+  'converting(fun (v): convert_taglet(v)) && True'
+annot.macro 'GeneratedTag':
+  'satisfying(core.#{generated-tag?})'
+
+fun convert_pre_content(v):
+  match v
+  | l :: List:
+      convert_pre_content(for PairList(e: l): e)
+  | l :: PairList:
+      recur loop(l = l):
+        match l
+        | PairList[]: l
+        | Pair.cons(a, b):
+            let new_a = convert_pre_content(a)
+            new_a && Pair.cons(new_a, loop(b))
+  | _ :: satisfying(decode.#{splice?}):
+      convert_pre_content(decode.#{splice-run}(v))
+  | ~else:
+     convert_content(v)
+
+fun convert_content(v):
+  match v
+  | s :: String:
+      s
+  | e :: (Element || MultiargElement || TraverseElement || PartRelativeElement || DelayedElement):
+      e
+  | l :: List:
+      convert_content(for PairList(e: l): e)
+  | l :: PairList:
+      recur loop(l = l):
+        match l
+        | PairList[]: l
+        | Pair.cons(a, b):
+            let new_a = convert_content(a)
+            new_a && Pair.cons(new_a, loop(b))
+  | ~else:
+      #false
+
+fun convert_pre_flow(v):
+  match v
+  | l :: List:
+      convert_pre_flow(for PairList(e: l): e)
+  | l :: PairList:
+      recur loop(l = l):
+        match l
+        | PairList[]: l
+        | Pair.cons(a, b):
+            let new_a = convert_pre_flow(a)
+            new_a && Pair.cons(new_a, loop(b))
+  | _ :: Block:
+      v
+  | #void:
+      v
+  | _ :: satisfying(decode.#{splice?}):
+      convert_pre_content(decode.#{splice-run}(v))
+  | ~else:
+     convert_content(v)
+
+fun convert_pre_part(v):
+  match v
+  | l :: List:
+      convert_pre_part(for PairList(e: l): e)
+  | l :: PairList:
+      recur loop(l = l):
+        match l
+        | PairList[]: l
+        | Pair.cons(a, b):
+            let new_a = convert_pre_part(a)
+            new_a && Pair.cons(new_a, loop(b))
+  | _ :: (Block || Part || PartDecl):
+      v
+  | #void:
+      v
+  | _ :: satisfying(decode.#{splice?}):
+      convert_pre_content(decode.#{splice-run}(v))
+  | ~else:
+     convert_content(v)
+
+fun convert_tag(v):
+  match v
+  | [s :: Symbol, r :: (String || GeneratedTag || List)]:
+      PairList[s, convert_list(r)]
+  | ~else:
+      #false
+
+fun convert_taglet(v):
+  match v
+  | r :: (String || GeneratedTag || List):
+      convert_list(r)
+  | ~else:
+      #false

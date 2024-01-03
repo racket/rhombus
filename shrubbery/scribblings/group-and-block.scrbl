@@ -11,9 +11,9 @@
 @(def closer: @emph{closer})
 @(def opener_closer: @elem{@opener--@italic{closer}})
 @(fun annote(content, note): [content,
-                              @elem(~style: style(#false, [#{color-property}([127,127,127])]),
-                                    hspace(4), "---", " ", italic(note))])
-@(fun nogood(content, ...): @elem(~style: style(#false, [#{color-property}("red")]),
+                              @elem(~style: style(#false, PairList[#{color-property}(PairList[127,127,127])]),
+                                    [hspace(4), "---", " ", italic(note)])])
+@(fun nogood(content, ...): @elem(~style: style(#false, PairList[#{color-property}("red")]),
                                   tt(content, ...)))
 
 @title(~tag: "group-and-block"){Groups and Blocks}
@@ -29,15 +29,15 @@ summarizes the abstract structure of a group, ignoring whitespace rules
 and @litchar{,} and @litchar{;} separators.
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{group}, bseq(kleeneplus(@nonterm{term}))],
-                [@nonterm{term},
-                 @nonterm{atom},
-                 balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
-                      bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
-                      bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
-                      bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'"))),
-                 bseq(@litchar{:}, kleenestar(@nonterm{group})),
-                 kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
+        BNF([@nonterm{group}, bseq(kleeneplus(@nonterm{term}))],
+            [@nonterm{term},
+             @nonterm{atom},
+             balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
+                  bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
+                  bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
+                  bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'"))),
+             bseq(@litchar{:}, kleenestar(@nonterm{group})),
+             kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
 
 This initial grammar is overly permissive, however, because a sequence
 of @litchar{|} alternatives can appear only at the end of a group, and a
@@ -48,27 +48,27 @@ block or sequence of @litchar{|} alternatives, as long as the group is
 nonempty.
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{group},
-                 annote(bseq(kleenestar(@nonterm{dterm}),
-                             boptional(@nonterm{block}),
-                             boptional(@nonterm{alts})),
-                        "must be nonempty")],
-                [@nonterm{dterm},
-                 @nonterm{atom},
-                 balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
-                      bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
-                      bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
-                      bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'")))],
-                [@nonterm{block},
-                 bseq(@litchar{:}, kleenestar(@nonterm{group}))],
-                [@nonterm{alts},
-                 kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
+        BNF([@nonterm{group},
+             annote(bseq(kleenestar(@nonterm{dterm}),
+                         boptional(@nonterm{block}),
+                         boptional(@nonterm{alts})),
+                    "must be nonempty")],
+            [@nonterm{dterm},
+             @nonterm{atom},
+             balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
+                  bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
+                  bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
+                  bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'")))],
+            [@nonterm{block},
+             bseq(@litchar{:}, kleenestar(@nonterm{group}))],
+            [@nonterm{alts},
+             kleeneplus(bgroup(bseq(@litchar("|"), @kleenestar(@nonterm{group}))))]))
 
 Overall, a document is a sequence of groups:
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{document},
-                 kleenestar(@nonterm{group})]))
+        BNF([@nonterm{document},
+             kleenestar(@nonterm{group})]))
 
 @section{Grouping by Lines}
 

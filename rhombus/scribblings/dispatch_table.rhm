@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  lib("scribble/rhombus.rkt") open
+  lib("scribble/rhombus/manual.rkt") open
   lib("scribble/manual.rkt").racketvarfont
   lib("scribble/manual.rkt").racketfont
 
@@ -61,7 +61,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
           @tabular(
             ~sep: @elem{@hspace(1)is@hspace(1)},
             [
-              [@elem{@rhombus($lhs)@racketfont{.@($name_str)}@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
+              [@elem{@rhombus($lhs)@racketfont("." ++ $name_str)@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
               ...
             ]
           )

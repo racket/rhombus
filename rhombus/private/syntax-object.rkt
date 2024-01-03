@@ -7,6 +7,8 @@
          racket/symbol
          shrubbery/property
          shrubbery/print
+         "treelist.rkt"
+         "to-list.rkt"
          "provide.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
@@ -77,9 +79,9 @@
    to_source_string
    ))
 
-(define-for-syntax list-of-syntax-static-infos
+(define-for-syntax treelist-of-syntax-static-infos
   #`((#%index-result #,syntax-static-infos)
-     . #,list-static-infos))
+     . #,treelist-static-infos))
 
 (define-annotation-syntax Syntax
   (identifier-annotation #'syntax? syntax-static-infos))
@@ -209,10 +211,13 @@
 (define (starts-alts? ds)
   (and (pair? ds)
        (let ([a (car ds)])
-         (define e (if (syntax? a)
-                       (let ([t (unpack-term a #f #f)])
-                         (and t (syntax-e t)))
-                       a))
+         (define e/l (if (syntax? a)
+                         (let ([t (unpack-term a #f #f)])
+                           (and t (syntax-e t)))
+                         a))
+         (define e (if (and (not (pair? e/l)) (listable? e/l))
+                       (to-list #f e/l)
+                       e/l))
          (cond
            [(pair? e)
             (define head-stx (car e))
@@ -255,6 +260,7 @@
                                   (null? ds))
                             (l-loop ds))])))
            (invalid))]
+      [(listable? e) (group (to-list #f e))]
       [(syntax? e)
        (or (unpack-group e #f #f)
            (invalid))]
@@ -276,22 +282,24 @@
           (if tail?
               (cons head-stx
                     (for/list ([e (in-list (cdr v))])
-                      (cond
-                        [(and (pair? e)
-                              (list? e))
-                         (define head-stx (car e))
-                         (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
-                         (if (eq? head 'block)
-                             (loop e #f #t)
-                             (invalid))]
-                        [(syntax? e)
-                         (define u (unpack-term e #f #f))
-                         (define d (and u (syntax-e u)))
-                         (or (and d
-                                  (eq? 'block (syntax-e (car d)))
-                                  u)
-                             (invalid))]
-                        [else (invalid)])))
+                      (let tail-loop ([e e])
+                        (cond
+                          [(and (pair? e)
+                                (list? e))
+                           (define head-stx (car e))
+                           (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+                           (if (eq? head 'block)
+                               (loop e #f #t)
+                               (invalid))]
+                          [(listable? e) (tail-loop (to-list #f e))]
+                          [(syntax? e)
+                           (define u (unpack-term e #f #f))
+                           (define d (and u (syntax-e u)))
+                           (or (and d
+                                    (eq? 'block (syntax-e (car d)))
+                                    u)
+                               (invalid))]
+                          [else (invalid)]))))
               (invalid))]
          [(op)
           (if (and (pair? (cdr v))
@@ -303,6 +311,7 @@
               (invalid))]
          [else (invalid)])]
       [(pair? v) (invalid)]
+      [(listable? v) (loop (to-list #f v) pre-alt? tail?)]
       [(syntax? v) (let ([t (unpack-term v #f #f)])
                      (cond
                        [t
@@ -336,12 +345,13 @@
 
 (define (check-nonempty-list who l)
   (unless (and (pair? l) (list? l))
-    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
+    (raise-argument-error* who rhombus-realm "Listable.to_list && NonemptyList" l)))
 
-(define/arity (Syntax.make_group v [ctx-stx #f])
+(define/arity (Syntax.make_group v-in [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
+  (define v (if (listable? v-in) (to-list #f v-in) v-in))
   (check-nonempty-list who v)
-  (define terms (let loop ([es v])
+  (define terms (let loop ([es (to-list #f v)])
                   (cond
                     [(null? es) null]
                     [else
@@ -354,13 +364,13 @@
   (datum->syntax #f (cons group-tag terms)))
 
 (define (check-list who l)
-  (unless (list? l)
-    (raise-argument-error* who rhombus-realm "List" l)))
+  (unless (listable? l)
+    (raise-argument-error* who rhombus-realm "Listable" l)))
 
 (define/arity (Syntax.make_sequence v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
   (check-list who v)
-  (pack-multi (for/list ([e (in-list v)])
+  (pack-multi (for/list ([e (in-list (to-list #f v))])
                 (do-make who e ctx-stx #t #t #t))))
 
 (define (check-readable-string who s)
@@ -407,12 +417,12 @@
   (cond
     [(and (pair? u)
           (eq? (syntax-e (car u)) 'parsed))
-     v]
+     (list->treelist v)]
     [else
      (if (and (pair? u)
               (not (list? u)))
-         (syntax->list unpacked)
-         u)]))
+         (list->treelist (syntax->list unpacked))
+         (maybe-list->treelist u))]))
 
 (define/method (Syntax.unwrap_op v)
   (check-syntax who v)
@@ -425,29 +435,36 @@
                              "syntax object" v)]))
 
 (define/method (Syntax.unwrap_group v)
-  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
+  #:static-infos ((#%call-result #,treelist-of-syntax-static-infos))
   (check-syntax who v)
-  (syntax->list (unpack-tail v who #f)))
+  (list->treelist (syntax->list (unpack-tail v who #f))))
 
 (define/method (Syntax.unwrap_sequence v)
-  #:static-infos ((#%call-result #,list-of-syntax-static-infos))
+  #:static-infos ((#%call-result #,treelist-of-syntax-static-infos))
   (check-syntax who v)
-  (syntax->list (unpack-multi-tail v who #f)))
+  (list->treelist (syntax->list (unpack-multi-tail v who #f))))
 
 (define/method (Syntax.unwrap_all v)
   (check-syntax who v)
+  (define (list->treelist* s)
+    (cond
+      [(null? s) empty-treelist]
+      [(pair? s) (for/treelist ([e (in-list s)])
+                   (list->treelist* e))]
+      [else s]))
   (define (normalize s)
     (cond
+      [(null? s) empty-treelist]
       [(not (pair? s)) s]
       [(eq? (car s) 'group)
        (if (null? (cddr s))
-           (cadr s)
+           (list->treelist* (cadr s))
            s)]
       [(eq? (car s) 'multi)
        (if (and (pair? (cdr s)) (null? (cddr s)))
            (normalize (cadr s))
-           s)]
-      [else s]))
+           (list->treelist* s))]
+      [else (list->treelist* s)]))
   (normalize (syntax->datum v)))
 
 (define/method (Syntax.strip_scopes v)
@@ -517,13 +534,14 @@
 
 (define (check-list-of-stx who stxs)
   (unless (and (list? stxs) (andmap syntax? stxs))
-    (raise-argument-error* who rhombus-realm "List.of(Syntax)" stxs)))
+    (raise-argument-error* who rhombus-realm "Listable.of(Syntax)" stxs)))
 
 ;; also reraws:
-(define/method (Syntax.relocate_span stx-in ctx-stxes)
+(define/method (Syntax.relocate_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,syntax-static-infos))
   (define stx (and (syntax? stx-in) (unpack-term stx-in #f #f)))
   (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
+  (define ctx-stxes (if (listable? ctx-stxes-in) (to-list #f ctx-stxes-in) ctx-stxes-in))
   (check-list-of-stx who ctx-stxes)
 
   (at-relevant-dest-syntax

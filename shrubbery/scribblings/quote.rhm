@@ -1,7 +1,6 @@
 #lang rhombus
 import:
   scribble/rhombus/manual
-  lib("scribble/base.rkt") as scribble
 
 export:
   parens
@@ -13,7 +12,7 @@ export:
   block_comment
 
 fun open_close(o, c):
-  @scribble.elem{@manual.litchar(o)…@manual.litchar(c)}
+  @manual.elem{@manual.litchar(o)…@manual.litchar(c)}
 
 def parens = @open_close("(", ")")
 def brackets = @open_close("[", "]")

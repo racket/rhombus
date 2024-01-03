@@ -4,6 +4,7 @@
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt")
+         "treelist.rkt"
          "provide.rkt"
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
@@ -52,6 +53,7 @@
 (define (indexable? v)
   (or (Indexable? v)
       (hash? v)
+      (treelist? v)
       (list? v)
       (vector? v)
       (set? v)
@@ -181,6 +183,7 @@
 (define (indexable-index indexable index)
   (cond
     [(vector? indexable) (vector-ref indexable index)]
+    [(treelist? indexable) (treelist-ref indexable index)]
     [(list? indexable) (list-ref indexable index)]
     [(hash? indexable) (hash-ref indexable index)]
     [(set? indexable) (hash-ref (set-ht indexable) index #f)]

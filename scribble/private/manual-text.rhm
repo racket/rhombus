@@ -1,0 +1,66 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/manual.rkt")
+
+export:
+  litchar
+  deftech
+  tech
+  onscreen
+  defterm
+  math
+  filepath
+  pkg
+  exec
+  hash_lang
+
+fun
+| litchar(str :: String): manual.litchar(str)
+| litchar(str :: List.of(String)): manual.litchar(& str)
+
+fun deftech(pre_content :: PreContent,
+            ~key: key :: maybe(String) = #false,
+            ~normalize: normalize = #true,
+            ~use_style: use_style = #true):
+  manual.deftech(pre_content,
+                 ~key: key,
+                 #{#:normalize?}: normalize,
+                 #{#:style?}: use_style)
+
+fun tech(pre_content :: PreContent,
+         ~key: key :: maybe(String) = #false,
+         ~normalize: normalize = #true,
+         ~doc: doc :: maybe(ModulePath) = #false,
+         ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
+         ~indirect: indirect = #false,
+         ~quiet: quiet = #true):
+  let tech = if quiet | manual.tech | manual.techlink
+  tech(pre_content,
+       ~key: key,
+       #{#:normalize?}: normalize,
+       ~doc: doc && ModulePath.s_exp(doc),
+       #{#:tag-prefixes}: convert_list(prefixes),
+       #{#:indirect?}: indirect)
+
+fun onscreen(pre_content :: PreContent):
+  manual.math(pre_content)
+
+fun defterm(pre_content :: PreContent):
+  manual.math(pre_content)
+
+fun math(pre_content :: PreContent):
+  manual.math(pre_content)
+
+fun filepath(pre_content :: PreContent):
+  manual.math(pre_content)
+
+fun pkg(pre_content :: PreContent):
+  manual.tt(pre_content)
+
+fun exec(content :: Content):
+  manual.exec(content)
+
+fun hash_lang():
+  manual.#{hash-lang}()

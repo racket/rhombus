@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
+         "treelist.rkt"
+         "to-list.rkt"
          "provide.rkt"
          "class-primitive.rkt"
          "dot-property.rkt"
@@ -27,7 +29,7 @@
   #:transparent
   #:fields
   ([(prefix_arguments prefix-arguments) ((#%index-result #,syntax-static-infos)
-                                         . #,list-static-infos)]
+                                         . #,treelist-static-infos)]
    [(wrap_body wrap-body) ((#%function-arity 4))]
    [(is_method method?)])
   #:properties
@@ -40,9 +42,10 @@
   (list* null
          entry-point-adjustment-method-table
          #hasheq())
-  #:guard (lambda (args wrap is-method? info)
-            (unless (and (list? args) (andmap identifier? args))
-              (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "List.of(Identifier)" args))
+  #:guard (lambda (args-in wrap is-method? info)
+            (define args (and (listable? args-in) (to-treelist #f args-in)))
+            (unless (and args (for/and ([e (in-treelist args)]) (identifier? e)))
+              (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Listable.to_list && List.of(Identifier)" args-in))
             (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
               (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Function.of_arity(2)" wrap))
             (values args wrap (and is-method? #t))))

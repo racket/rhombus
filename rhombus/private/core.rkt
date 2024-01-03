@@ -103,6 +103,7 @@
         "set.rkt"
         "indexable.rkt"
         "appendable.rkt"
+        "listable.rkt"
         "assign.rkt"
         "equal.rkt"
         "function.rkt"
@@ -172,12 +173,18 @@
   (provide enter-parameterization
            exit-parameterization))
 
-(define-syntax (rhombus-module-begin stx)
+(module+ module-begin
+  (provide (for-syntax rhombus-module-begin-configure)))
+
+(define-for-syntax (rhombus-module-begin-configure)
   (error-syntax->string-handler
    (lambda (s len)
      (shrubbery-syntax->string s #:max-length len)))
   (config-syntax-parse!)
-  (check-unbound-identifier-early!)
+  (check-unbound-identifier-early!))
+
+(define-syntax (rhombus-module-begin stx)
+  (rhombus-module-begin-configure)
   (syntax-parse stx
     [(_ (top . content))
      (unless (eq? 'top (syntax-e #'top))
@@ -185,8 +192,7 @@
      #`(#%module-begin
         (#%declare #:realm rhombus
                    #:require=define)
-        (rhombus-forwarding-sequence
-         #:module #f #f
+        (rhombus-module-forwarding-sequence
          (rhombus-top . content))
         #,(let ([mode (ormap contigure-runtime-module-mode (syntax->list #'content))])
             (if mode

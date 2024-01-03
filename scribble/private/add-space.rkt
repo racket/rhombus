@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/symbol
-         racket/keyword)
+         racket/keyword
+         rhombus/private/treelist)
 
 (provide full-space-names
          add-space)
@@ -12,6 +13,8 @@
     [(and (pair? space-name)
           (list? space-name))
      space-name]
+    [(treelist? space-name)
+     (full-space-names (treelist->list space-name))]
     [else
      (case space-name
        [(#f) '(rhombus/defn rhombus/decl #f)]

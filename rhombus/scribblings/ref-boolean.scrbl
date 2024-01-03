@@ -15,10 +15,17 @@
 
 @doc(
   annot.macro 'False'
+  annot.macro 'True'
 ){
 
-  Matches only @rhombus(#false).
+  Matches only @rhombus(#false) and values other than @rhombus(#false), respectively.
 
+@examples(
+  #false is_a False
+  #false is_a True
+  42 is_a True
+)
+  
 }
 
 @doc(

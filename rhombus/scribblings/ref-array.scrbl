@@ -7,7 +7,7 @@
 
 @title{Arrays}
 
-An array is @tech{indexable} using @brackets to access an array element
+An @deftech{array} is @tech{indexable} using @brackets to access an array element
 by position (in constant time) via @rhombus(#%index). An array also
 works with the @rhombus(++) operator to append arrays. An array can be
 used as @tech{sequence}, in which case it supplies its elements in

@@ -28,13 +28,11 @@
      (syntax-parse stx
        [(form-id (_::block form ...))
         #'((begin-for-syntax
-             (rhombus-forwarding-sequence
-              #:module #f #f
+             (rhombus-module-forwarding-sequence
               (rhombus-top form ...))))]
        [(form-id . tail)
         #'((begin-for-syntax
-             (rhombus-forwarding-sequence
-              #:module #f #f
+             (rhombus-module-forwarding-sequence
               (rhombus-top (group . tail)))))]))))
 
 (define-for-syntax (make-bridge-definer space-sym)

@@ -41,7 +41,7 @@ class Slider(private _handle, private _at_value :: Obs):
                       #{#:enabled?}: obs.unwrap(is_enabled),
                       #{#:min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values),
-                      ~style: convert_style.map(style)),
+                      ~style: PairList[& style].map(convert_style)),
           at_value)
 
   export:
