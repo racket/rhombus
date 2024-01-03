@@ -177,6 +177,55 @@
 
 
 @doc(
+  class Input(handle :: Any):
+    implements View
+    constructor (
+      content :: MaybeObs.of(Any),
+      ~action: action :: maybe(Function.of_arity(2)) = #false,
+      ~label: label :: MaybeObs.of(LabelString) = "",
+      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
+      ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
+      ~font : font :: Font = normal_control_font,
+      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      ~mixin: mixin :: Function = values,
+      ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = (fun (a, b): a == b),
+      ~value_to_text: val_to_txt :: Function = values
+    )
+){
+
+  Returns a representation of a text field that calls @rhombus(action) on change.
+  The first argument to the @rhombus(action) is the type of event that caused
+  the input to change and the second is the contents of the text field.
+
+  The @rhombus(~is_equal_value) argument controls when changes to the input data
+  are reflected in the contents of the field. The contents of the input field only
+  change when the new value of the underlying observable is not @rhombus(==) to the
+  previous one. The only exception to this is when the textual value
+  (via @rhombus(~value_to_text)) of the observable is the empty string, in which case
+  the input is cleared regardless of the value of the underlying observable.
+
+  The @rhombus(~value_to_text) argument controls how the input values are rendered
+  to strings. If not provided, value must be either a string? or an observable
+  of strings.
+
+}
+
+
+@doc(
+  class Spacer(handle :: Any):
+    implements View
+    constructor ()
+){
+
+   Returns a representation of a spacer.  Spacers extend to fill the
+   space of their parents.
+}
+
+
+@doc(
   annot.macro 'Button.StyleSymbol'
 ){
 
@@ -243,6 +292,27 @@
  @item{@rhombus(#'horizontal_label)}
  @item{@rhombus(#'vertical_label)}
  @item{@rhombus(#'deleted)}
+
+)
+
+}
+
+
+@doc(
+  annot.macro 'Input.StyleSymbol'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+
+ @item{@rhombus(#'deleted)}
+ @item{@rhombus(#'horizontal_label)}
+ @item{@rhombus(#'hscroll)}
+ @item{@rhombus(#'multiple)}
+ @item{@rhombus(#'password)}
+ @item{@rhombus(#'single)}
+ @item{@rhombus(#'vertical_label)}
 
 )
 

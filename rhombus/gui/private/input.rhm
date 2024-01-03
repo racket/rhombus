@@ -1,0 +1,74 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  rhombus/draw:
+    expose:
+      Color
+      Font
+  rhombus/draw/private/font!private._Font
+  rhombus/draw/private/symbol_map.symbol_map_annot
+  "label.rhm".Label.normal_control_font
+  "obs.rhm":
+    expose:
+      Obs
+      MaybeObs
+  "type.rhm":
+    expose:
+      LabelString
+      Margin
+      Size
+      Stretch
+  "view.rhm".View
+
+export:
+  Input
+
+class Input(hand, private _at_content :: Obs):
+  implements View
+  internal _Input
+  opaque
+  override property handle: hand
+
+  constructor (content :: MaybeObs.of(Any) = "",
+               ~action: action :: maybe(Function.of_arity(2)) = #false,
+	       ~label: label :: MaybeObs.of(LabelString) = "",
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+	       ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
+	       ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
+	       ~font : font :: Font = normal_control_font,
+	       // ~keymap: ... TODO
+	       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+               ~mixin: mixin :: Function = values,
+               ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = (fun (a, b): a == b),
+               ~value_to_text: val_to_txt :: Function = values):
+    def at_content = obs.to_obs(content)
+    super(easy.input(obs.unwrap(content), action,
+                     ~label: obs.unwrap(label),
+                     #{#:enabled?}: obs.unwrap(is_enabled),
+		     #{#:background-color}: obs.unwrap(bg_color),
+		     ~style: obs.unwrap_list(style, convert_style),
+                     ~font: obs.unwrap_convert(font, fun (f): f && Font.handle(f)),
+		     ~margin: obs.unwrap_list(margin, values),
+		     #{#:min-size}: obs.unwrap_list(min_size, values),
+		     ~stretch: obs.unwrap_list(stretch, values),
+                     ~mixin: mixin,
+                     #{#:value=?}: is_equal, 
+                     #{#:value->text}: val_to_txt),
+	  at_content)
+
+  property at_content :: Obs:
+    _at_content.map(values)
+
+  export:
+    StyleSymbol
+
+  symbol_map_annot StyleSymbol convert_style:
+    { deleted: deleted,
+      horizontal_label: #{horizontal-label},
+      hscroll: hscroll,
+      multiple: multiple,
+      password: password,
+      single: single,
+      vertical_label: #{vertical-label} }
