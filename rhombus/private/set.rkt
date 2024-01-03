@@ -6,6 +6,7 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      shrubbery/print)
+         "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -632,6 +633,6 @@
   (hash-remove! (set-ht s) v))
 
 (define/method (Set.to_list s [try-sort? #f])
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,treelist-static-infos))
   (check-set who s)
-  (hash-keys (set-ht s) try-sort?))
+  (list->treelist (hash-keys (set-ht s) try-sort?)))

@@ -7,6 +7,8 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      shrubbery/print)
+         "treelist.rkt"
+         "to-list.rkt"
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -170,17 +172,19 @@
     Map))
 
 (define (build-map who args)
-  (define ht (hashalw))
-  (let loop ([ht ht] [args args])
+  (for/hashalw ([arg (in-list args)])
     (cond
-      [(null? args) ht]
+      [(and (pair? arg) (pair? (cdr arg)) (null? (cddr arg)))
+       (values (car arg) (cadr arg))]
+      [(and (treelist? arg) (= 2 (treelist-length arg)))
+       (values (treelist-ref arg 0) (treelist-ref arg 1))]
+      [(and (listable? arg) (let ([arg (to-list #f arg)])
+                              (and (pair? arg) (pair? (cdr arg)) (null? (cddr arg))
+                                   arg)))
+       => (lambda (arg)
+            (values (car arg) (cadr arg)))]
       [else
-       (define arg (car args))
-       (cond
-         [(and (pair? arg) (pair? (cdr arg)) (null? (cddr arg)))
-          (loop (hash-set ht (car arg) (cadr arg)) (cdr args))]
-         [else
-          (raise-argument-error* who rhombus-realm "[_, _]" arg)])])))
+       (raise-argument-error* who rhombus-realm "Listable.to_list && matching([_, _])" arg)])))
 
 (define (list->map key+vals)
   (for/hashalw ([key+val (in-list key+vals)])
@@ -572,14 +576,14 @@
   (hash-count ht))
 
 (define/method (Map.keys ht [try-sort? #f])
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,treelist-static-infos))
   (check-readable-map who ht)
-  (hash-keys ht try-sort?))
+  (list->treelist (hash-keys ht try-sort?)))
 
 (define/method (Map.values ht)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,treelist-static-infos))
   (check-readable-map who ht)
-  (hash-values ht))
+  (list->treelist (hash-values ht)))
 
 (define/method Map.get
   #:inline

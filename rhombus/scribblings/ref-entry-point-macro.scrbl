@@ -117,7 +117,7 @@
 
 @doc(
   class entry_point_meta.Adjustment(
-    prefix_arguments :: List.of(Identifier),
+    prefix_arguments :: Listable.to_list && List.of(Identifier),
     wrap_body :: Function.of_arity(2),
     is_method :: Boolean
   )

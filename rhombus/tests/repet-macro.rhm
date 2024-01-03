@@ -4,7 +4,7 @@ repet.macro 'nat3':
   ~op_stx self
   repet_meta.pack_list('($self,
                          n,
-                         [0, 1, 2],
+                         PairList[0, 1, 2],
                          1,
                          0,
                          (),
@@ -23,7 +23,7 @@ repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
     annot_meta.unpack_predicate(match 'List' | '$(p :: annot_meta.Parsed)': p)
   repet_meta.pack_list('($self(),
                          $name,
-                         for List:
+                         for PairList:
                            each:
                              elem: $expr
                              i: $from..

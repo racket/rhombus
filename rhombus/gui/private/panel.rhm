@@ -52,7 +52,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
                   child :: MaybeObs.of(View),
                   $'...'):
        super(easy . $easy_name($convert($arg), ...,
-                               ~alignment: obs.unwrap(alignment),
+                               ~alignment: obs.unwrap_list(alignment, values),
                                #{#:enabled?}: obs.unwrap(is_enabled),
                                ~style: obs.unwrap_list(style, convert_style),
                                ~spacing: obs.unwrap(spacing),
@@ -116,7 +116,7 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
                     ~selection: obs.unwrap(at_selection),
                     #{#:choice->label}: choice_to_label,
                     #{#:choice=?}: choice_equal,
-                    ~alignment: obs.unwrap(alignment),
+                    ~alignment: obs.unwrap_list(alignment, values),
                     #{#:enabled?}: obs.unwrap(is_enabled),
                     ~style: obs.unwrap_list(style, convert_style),
                     ~spacing: obs.unwrap(spacing),

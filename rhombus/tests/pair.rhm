@@ -9,13 +9,13 @@ check:
   ~is Pair.cons
 
 check:
-  Pair(1, [2])
-  ~is [1, 2]
+  Pair(1, PairList[2])
+  ~is PairList[1, 2]
 
 check:
-  def p :: Pair = [1, 2]
+  def p :: Pair = PairList[1, 2]
   p
-  ~is [1, 2]
+  ~is PairList[1, 2]
 
 check:
   Pair.first(1)
@@ -26,12 +26,12 @@ check:
   ~throws "does not satisfy annotation"
 
 check:
-  ["ok", "oops"] :: Pair.of(String, Number)
+  PairList["ok", "oops"] :: Pair.of(String, Number)
   ~throws "does not satisfy annotation"
 
 check:
-  ["ok", "fine"] :: Pair.of(String, List)
-  ~is ["ok", "fine"]
+  PairList["ok", "fine"] :: Pair.of(String, PairList)
+  ~is PairList["ok", "fine"]
 
 block:
   use_static
@@ -48,33 +48,33 @@ block:
     Pair.cons(1, 2).rest
     ~is 2
   check:
-    def x :: Pair = [1, 2, 3]
+    def x :: Pair = PairList[1, 2, 3]
     x.first
     ~is 1
   check:
-    def Pair(x, y) = [1, 2, 3]
+    def Pair(x, y) = PairList[1, 2, 3]
     x
     ~is 1
   check:
-    def Pair.cons(x, y) = [1, 2, 3]
+    def Pair.cons(x, y) = PairList[1, 2, 3]
     x
     ~is 1
   check:
-    (["ok", "fine"] :: Pair.of(String, List)).rest
-    ~is ["fine"]
+    (PairList["ok", "fine"] :: Pair.of(String, PairList)).rest
+    ~is PairList["fine"]
   check:
-    def Pair(x :: List, y) = [[1, 2, 3]]
+    def Pair(x :: PairList, y) = PairList[PairList[1, 2, 3]]
     x.length()
     ~is 3
   check:
-    def Pair.cons(x :: List, y) = [[1, 2, 3]]
+    def Pair.cons(x :: PairList, y) = PairList[PairList[1, 2, 3]]
     x.length()
     ~is 3
   check:
-    (["ok", "fine"] :: Pair.of(String, List)).rest.length()
+    (PairList["ok", "fine"] :: Pair.of(String, PairList)).rest.length()
     ~is 1
   check:
-    def x :: Pair.of(List, Any) = [[1, 2, 3]]
+    def x :: Pair.of(PairList, Any) = PairList[PairList[1, 2, 3]]
     x.first.length()
     ~is 3
 

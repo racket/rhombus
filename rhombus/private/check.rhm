@@ -93,7 +93,7 @@ expr.macro
 
 expr.macro
 | 'matcher(~matches, : $binding)':
-    'fun | (): (fun | ($binding): #true | (&_): #false)
+    'fun | (): (fun | ($binding): #true | (& _): #false)
          | (x): $("" +& '$binding')'
 | 'matcher(~is_a, : $ann)':
     'fun | (): (fun (x): x is_a ($ann))
@@ -124,7 +124,7 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
     | #'~is_a:
         !exn_msg && got.length() == 1 && expected[0](got[0])
     | #'~matches:
-        !exn_msg && expected[0](&got)
+        !exn_msg && expected[0](& got)
   #{test-log!}(ok)
   if ok
   | #void

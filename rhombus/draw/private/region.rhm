@@ -53,7 +53,7 @@ class Region():
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0,
                  fill :: Region.Fill = #'odd_even):
-    rkt.send handle.#{set-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy, fill_convert(fill))
+    rkt.send handle.#{set-polygon}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method path(p :: Path,
               ~dpt: dpt :: PointLike = Point.zero,

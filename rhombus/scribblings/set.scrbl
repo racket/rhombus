@@ -9,9 +9,10 @@
 When @braces is used with elements that do not
 have @colon to separate a key and value, then @braces creates a set. (If
 a set-element expression uses @colon, then it will need to be in
-parentheses to avoid being parsed as a key–value pair.) A set can serve
-as a map, where the set's elements act as keys and each key's value is
-@rhombus(#true). There's a @rhombus(Set) constructor that's analogous to
+parentheses to avoid being parsed as a key–value pair.) A set is @tech{indexable}
+with @brackets, where the set's elements act as indices to values of
+@rhombus(#true), while using any other value as an index produces @rhombus(#false).
+There's a @rhombus(Set) constructor that's analogous to
 @rhombus(Map), but @rhombus(Set) accepts just values to include in the
 set. The @rhombus(++) operator effectively unions sets.
 
@@ -39,8 +40,8 @@ function with @parens instead of
 
 @rhombus(Set.of, ~annot) and @rhombus(MutableSet) work as you'd expect. When
 @brackets with @rhombus(:=) is used to modify a mutable
-set, the ``key'' is removed from the set if the assigned value is
-@rhombus(#false), otherwise the ``key'' is added to the set.
+set, the index is removed from the set if the assigned value is
+@rhombus(#false), otherwise the index is added to the set.
 
 Within a set construction using @braces, a
 @rhombus(&) form splice a set into the constructed set, analogous to the

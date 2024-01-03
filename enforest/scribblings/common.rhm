@@ -16,7 +16,7 @@ export:
     all_from(rhombus)
     all_from(rhombus/meta)
 
-def shrubbery_doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"]
-def rhombus_doc: [#'lib, "rhombus/scribblings/rhombus.scrbl"]
+def shrubbery_doc: ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")'
+def rhombus_doc: ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")'
 
 def Rhombus: @seclink(~doc: rhombus_doc, "top"){Rhombus}

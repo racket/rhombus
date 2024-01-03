@@ -99,8 +99,8 @@ fun
 | unwrap_convert(v, convert :: Function): convert(v)
 
 fun
-| unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun (l): convert.map(l)))
-| unwrap_list(v, convert :: Function): convert.map(v)
+| unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun ([e, ...]): PairList[convert(e), ...]))
+| unwrap_list([e, ...], convert :: Function): PairList[convert(e), ...]
 
 fun
 | to_obs(o :: Obs) :: Obs: o

@@ -199,8 +199,8 @@
      #`(rhombus-expression g)]
     [(_ . tail)
      #`(let ()
-         (rhombus-forwarding-sequence
-          #:block #:need-end-expr #,stx
+         (rhombus-block-forwarding-sequence
+          #:orig #,stx
           (rhombus-body-sequence . tail)))]))
 
 ;; Similar to `rhombus-body`, but goes through `#%body`:

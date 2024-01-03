@@ -14,8 +14,7 @@
     $op
 ){
 
- An @rhombus(id) or @rhombus(op) is a
- @seclink(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top"){shrubbery}
+ An @rhombus(id) or @rhombus(op) is a @shrublink("top"){shrubbery}
  identifier or operator, respectively. Some syntactic contexts require
  specifically an identifier, some require specifically an operator, and
  some allow either, as represented by @rhombus(id_or_op).

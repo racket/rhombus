@@ -110,6 +110,6 @@ class Font(private _handle):
       #false
 
   fun norm_hash(map :: Map):
-    racket.hash(& (for values(list = []):
+    racket.hash(& (for values(list = PairList[]):
                      each values(k, v): map
-                     [k, v, &list]))
+                     PairList[k, v, & list]))

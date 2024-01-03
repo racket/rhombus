@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
+                     "treelist.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
          syntax/parse/pre
          "pack.rkt"
@@ -60,7 +61,7 @@
 (define-for-syntax (expose-arity adjustments e)
   (wrap-static-info e
                     #'#%function-arity
-                    #`(#,(+ 1 (length (entry-point-adjustment-prefix-arguments adjustments)))
+                    #`(#,(+ 1 (treelist-length (entry-point-adjustment-prefix-arguments adjustments)))
                        ()
                        ())))
 

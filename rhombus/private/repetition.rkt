@@ -184,14 +184,25 @@
          (wrap-static-info* #'rep-info.seq-expr infos)
          (wrap-static-info #'rep-info.seq-expr #'#%index-result infos))]))
 
-(define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos)
+(define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos
+                                                    #:convert [convert #f])
   (syntax-parse rep-parsed
     [rep-info::repetition-info
+     (define depth (+ 1 (syntax-e #'rep-info.use-depth)))
      (make-repetition-info #'rep-info.rep-expr
                            #'rep-info.name
-                           #'rep-info.seq-expr
+                           (syntax-parse #'rep-info.seq-expr
+                             #:literals (nested-convert list)
+                             [(nested-convert (list c ...) e)
+                              #`(nested-convert (list c ... #,convert) e)]
+                             [e
+                              (if convert
+                                  (with-syntax ([(c ...) (for/list ([i (in-range depth)])
+                                                           #'values)])
+                                    #`(nested-convert (list c ... #,convert) e))
+                                  #'e)])
                            #'rep-info.bind-depth
-                           (+ 1 (syntax-e #'rep-info.use-depth))
+                           depth
                            #`((#%index-result rep-info.element-static-infos)
                               . #,static-infos)
                            #'rep-info.immediate?)]))
@@ -214,6 +225,13 @@
   (if (zero? count)
       lists
       (flatten (apply append lists) (sub1 count))))
+
+(define (nested-convert converts e)
+  (cond
+    [(null? converts) e]
+    [else ((car converts)
+           (for/list ([e (in-list e)])
+             (nested-convert (cdr converts) e)))]))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

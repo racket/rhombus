@@ -1,15 +1,7 @@
-#lang rhombus/private/core
+#lang rhombus/static/and_meta
 import:
   rhombus/unsafe.use_unsafe
-  "core-macro.rkt" open
-  "core-meta.rkt" open
-  "sequence.rhm" open
-  "check.rhm" open
-  "maybe.rhm" open
-  "sequence_meta.rhm" open
-  "recur.rhm" open
 
-use_static
 use_unsafe
 
 // comment out for fast
@@ -38,13 +30,10 @@ macro 'radix($index, $height)':
 
 module test:
   for (i: 0 .. MAX_WIDTH):
-    check: radix(i, 0)
-           ~is i
-    check: radix(i, 1)
-           ~is 0
+    check: radix(i, 0) ~is i
+    check: radix(i, 1) ~is 0
   for (i: MAX_WIDTH .. 2*MAX_WIDTH):
-    check: radix(i, 1)
-           ~is 1
+    check: radix(i, 1) ~is 1
 
 /* a node in the RRB Tree
 
@@ -57,6 +46,7 @@ module test:
 */
 
 // veneer `Node` variant:
+#//
 veneer Node(this :~ (Array.of(Node || Any)
                        || Pair.of(Array.of(Node || Any),
                                   Array.of(Int)))):
@@ -104,7 +94,6 @@ veneer Node(this :~ (Array.of(Node || Any)
         Node(a.set_in_copy(index, el))
 
 // wrapper `Node` variant:
-#//
 class Node(children :~ Array.of(Node || Any) = Array(), sizes :~ maybe(Array.of(Int)) = #false):
   implements Indexable
 

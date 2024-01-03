@@ -10,8 +10,12 @@ block:
     List.for_each(lst, proc)
     List.has_element(lst, val)
     List.remove(lst, val)
+    List.delete(lst, i)
+    List.insert(lst, i, val)
     List.drop_left(lst, n)
     List.drop_right(lst, n)
+    List.take_left(lst, n)
+    List.take_right(lst, n)
 
 check:
   List.length([1, 2, 3])
@@ -150,7 +154,7 @@ block:
     check sum ~is 3
 
 check:
-  List.append(&[[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]
+  List.append(& [[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]
   [1, 2].append() ~is [1, 2]
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
@@ -174,10 +178,25 @@ check:
   dynamic([1, 2, 3]).remove(1) ~is [2, 3]
 
 check:
+  [1, 2, 3].insert(2, "x") ~is [1, 2, "x", 3]
+  [1, 2, 3].insert(3, "x") ~is [1, 2, 3, "x"]
+  [1, 2, 3].insert(0, "x") ~is ["x", 1, 2, 3]
+  dynamic([1, 2, 3]).insert(1, "x") ~is [1, "x", 2, 3]
+
+check:
+  [1, 2, 3].delete(2) ~is [1, 2]
+  [1, 2, 3].delete(0) ~is [2, 3]
+  dynamic([1, 2, 3]).delete(1) ~is [1, 3]
+
+check:
   [1, 2, 3].drop_left(2) ~is [3]
   List.drop_left([1, 2, 3], 2) ~is [3]
   [1, 2, 3].drop_right(2) ~is [1]
   List.drop_right([1, 2, 3], 2) ~is [1]
+  [1, 2, 3].take_left(2) ~is [1, 2]
+  List.take_left([1, 2, 3], 2) ~is [1, 2]
+  [1, 2, 3].take_right(2) ~is [2, 3]
+  List.take_right([1, 2, 3], 2) ~is [2, 3]
 
 check:
   use_static
@@ -194,3 +213,10 @@ check:
   def List.empty && empty = dynamic([])
   empty.has_element("no such thing")
   ~is #false
+
+block:
+  def l = [1, 2, 3]
+  def l2 = l ++ l
+  check l.to_list() === l ~is #true
+  check l2.to_list() === l2 ~is #true
+  

@@ -27,6 +27,7 @@ block:
     check sub.now ~is "Saturday"
   namespace more:
     check sub.now ~is "Saturday"
+  #void
 
 check:
   match "Thursday"

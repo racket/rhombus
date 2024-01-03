@@ -31,14 +31,14 @@ class LinearGradient(private _handle):
     super(rkt.make_object(rkt.#{linear-gradient%},
                           pt1.x, pt1.y,
                           pt2.x, pt2.y,
-                          [[stop, color.handle], ...]))
+                          PairList[PairList[stop, color.handle], ...]))
 
   property line :: List.of(Point):
     let (x1, y1, x2, y2) = rkt.send handle.#{get-line}()
     [Point(x1, y1), Point(x2, y2)]
 
   property stops :: List.of(matching([_ :: Real, _ :: Color])):
-    let [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    let PairList[PairList[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
 
 class RadialGradient(private _handle):
@@ -51,14 +51,14 @@ class RadialGradient(private _handle):
     super(rkt.make_object(rkt.#{radial-gradient%},
                           pt1.x, pt1.y, r1,
                           pt2.x, pt2.y, r2,
-                          [[stop, color.handle], ...]))
+                          PairList[PairList[stop, color.handle], ...]))
 
   property circles:: List.of(matching([_ :: Point, _ :: Real])):
     let (x0, y0, r0, x1, y1, r1) = rkt.send handle.#{get-circles}()
     [[Point(x0, y0), r0], [Point(x1, y1), r1]]
 
   property stops :: List.of(matching([_ :: Real, _ :: Color])):
-    let [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    let PairList[PairList[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
 
 class Brush(private _handle):

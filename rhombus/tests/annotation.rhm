@@ -39,6 +39,7 @@ check:
   #false is_a satisfying(fun (): #false)
   ~throws values("contract violation", "expected: Function.of_arity(1)")
 
+
 block:
   check:
     def List(_) :: List = [1]
@@ -81,3 +82,13 @@ block:
 check:
   def List(_, _, _) :: converting(fun (_): error("oops")) = [1]
   ~throws "oops"
+
+check:
+  "x" :: (False || ((converting(fun (v): [v]) && True) || False))
+  ~is ["x"]
+
+check:
+  #false :: False ~is #false
+  "x" :: True ~is "x"
+  "x" :: False ~throws "does not satisfy"
+  #false :: True ~throws "does not satisfy"

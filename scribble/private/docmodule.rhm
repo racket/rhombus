@@ -28,7 +28,8 @@ meta:
         ['lib', str]
 
   fun
-  | pack_tree([v, ...]): [pack_tree(v), ...]
+  | pack_tree(PairList[v, ...]): PairList[pack_tree(v), ...]
+  | pack_tree([v, ...]): pack_tree(PairList[pack_tree(v), ...])
   | pack_tree(v): Syntax.make(v, #false)
 
   syntax_class Option

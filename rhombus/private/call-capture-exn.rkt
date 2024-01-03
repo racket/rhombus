@@ -1,5 +1,6 @@
 #lang racket/base
-(require racket/string)
+(require racket/string
+         "treelist.rkt")
 
 (provide call_capturing_exn
          call_capturing_values
@@ -23,15 +24,15 @@
                  (call-with-continuation-prompt
                   thunk
                   (default-continuation-prompt-tag)))
-               list)
+               treelist)
               #f
               (get-output)))))
 
 (define (call_capturing_values thunk)
-  (call-with-values thunk list))
+  (call-with-values thunk treelist))
 
 (define (does_contain_each strs in-str)
-  (for/and ([str (in-list strs)])
+  (for/and ([str (in-treelist strs)])
     (does_contain str in-str)))
 
 (define (does_contain str in-str)

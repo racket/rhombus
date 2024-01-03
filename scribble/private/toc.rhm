@@ -1,0 +1,15 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  table_of_contents
+  local_table_of_contents
+
+fun table_of_contents():
+  base.#{table-of-contents}()
+
+fun local_table_of_contents(~style: style :: maybe(Style) = #false):
+  base.#{local-table-of-contents}(~style: style)

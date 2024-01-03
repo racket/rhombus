@@ -205,6 +205,22 @@ check:
   ~is #void
 
 check:
+  List.cons.map([1, 2, 3])
+  ~throws values("expected number of arguments does not match the given number of lists",
+                 "expected: 2",
+                 "given: 1")
+
+check:
+  (fun | (): 0 | (x, y): x).map([1, 2, 3])
+  ~throws values("expected number of arguments does not match the given number of lists",
+                 "given: 1")
+
+check:
+  (fun (x, y, z, ...): x).map([1, 2, 3])
+  ~throws values("expected number of arguments does not match the given number of lists",
+                 "given: 1")
+
+check:
   ~eval
   fun (x where x = 1 = 2): 10
   ~throws "multiple immediate equals not allowed in this group"

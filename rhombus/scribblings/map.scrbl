@@ -12,10 +12,11 @@
 @title(~tag: "map"){Maps}
 
 The @rhombus(Map) constructor creates an immutable mapping of arbitrary
-keys to values. The term @deftech{map} is meant to be generic, and
-@rhombus(Map) as a constructor just uses a default implementation of
-maps. The @rhombus(Map) constructor can be used like a function, in
-which case it accepts keys paired with values in two-item lists:
+keys to values. A map is @tech{indexable} using @brackets with a key,
+and the result is the corresponding value.
+
+The @rhombus(Map) constructor can be used like a function, in which case
+it accepts keys paired with values in two-item lists to create a map:
 
 @examples(
   ~eval: map_eval
@@ -142,12 +143,12 @@ binds with lists. In a map @braces expression,
 )
 
 Map patterns can also bind repetitions, and map constructions can use
-repetitions. These repeition constructions tend to go through
+repetitions. These repetition constructions tend to go through
 intermediate lists, and so they tend to be less efficient than using
 @rhombus(&) to work with maps, but they are especially useful when the
 intent is to convert between lists and maps.
 
-Before @rhombus(...) in a map construction, supply one repeition for
+Before @rhombus(...) in a map construction, supply one repetition for
 keys before @rhombus(:), and supply another repetition for values. The
 repetitions must have the same length.
 
@@ -162,7 +163,7 @@ repetitions must have the same length.
 In a map pattern, @(colon)-separated key and value bindings should
 appear before @rhombus(...). Unlike key expressions for individual keys,
 the key part of a repetition binding is a binding. There is no
-guaranteed about the order of the keys and values, except that those two
+guarantee about the order of the keys and values, except that those two
 repetitions use the same order (i.e., keys with associated values in
 parallel).
 

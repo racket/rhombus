@@ -6,17 +6,17 @@ block:
     'lib($(Syntax.make(str, id)))'
   check:
     import: rkt racket/base
-    base.car([1, 2])
+    base.car(PairList[1, 2])
     ~is 1
   check:
     import: rkt racket/base as r
-    r.car([10, 2])
+    r.car(PairList[10, 2])
     ~is 10
 
 check:
   impo.macro 'rkt $(id :: Identifier)': 'lib("racket/main.rkt") as $id'
   import: rkt r
-  r.car([1, 2])
+  r.car(PairList[1, 2])
   ~is 1
                                        
 check:
@@ -25,13 +25,13 @@ check:
   import:
     lib("racket/base.rkt"):
       just car
-  base.car([1, 2])
+  base.car(PairList[1, 2])
   ~is 1
 
 check:
   impo.macro 'do $(i :: impo_meta.Parsed) $()': i
   import: do lib("racket/base.rkt") as r
-  r.car([1, 2])
+  r.car(PairList[1, 2])
   ~is 1
                                        
 check:
@@ -41,7 +41,7 @@ check:
     m
   import:
     lib("racket/base.rkt") do expose car
-  car([1, 2])
+  car(PairList[1, 2])
   ~is 1
 
 

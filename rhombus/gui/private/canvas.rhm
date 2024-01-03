@@ -42,7 +42,7 @@ class Canvas(private _handle):
                       ~label: obs.unwrap(label),
                       #{#:enabled?}: obs.unwrap(is_enabled),
                       ~style: obs.unwrap_list(style, convert_style),
-                      ~margin: obs.unwrap(margin),
+                      ~margin: obs.unwrap_list(margin, values),
                       #{#:min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values),
                       ~mixin: fun (c):

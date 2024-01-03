@@ -50,6 +50,7 @@
                     Number
                     Void
                     False
+                    True
 
                     matching
                     satisfying
@@ -67,6 +68,7 @@
              (property-out annotation-infix-operator)
 
              identifier-annotation
+             identifier-binding-annotation
 
              in-annotation-space
              annot-quote
@@ -217,6 +219,17 @@
 
   (define (identifier-annotation predicate-stx static-infos)
     (define packed (annotation-predicate-form predicate-stx static-infos))
+    (annotation-prefix-operator
+     (quote-syntax ignored)
+     '((default . stronger))
+     'macro
+     (lambda (stx)
+       (values packed (syntax-parse stx
+                        [(_ . tail) #'tail]
+                        [_ 'does-not-happen])))))
+
+  (define (identifier-binding-annotation binding-stx body-stx static-infos)
+    (define packed (annotation-binding-form binding-stx body-stx static-infos))
     (annotation-prefix-operator
      (quote-syntax ignored)
      '((default . stronger))
@@ -791,6 +804,7 @@
 (define-annotation-syntax NonnegReal (identifier-annotation #'nonnegative-real? #'()))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
+(define-annotation-syntax True (identifier-annotation #'(lambda (x) (and x #t)) #'()))
 
 (define-name-root Any
   #:fields

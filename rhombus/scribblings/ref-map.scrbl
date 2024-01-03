@@ -8,6 +8,7 @@
 
 @title{Maps}
 
+A @deftech{map} associates a value with each of a set of keys.
 Immutable maps can be constructed using the syntax
 @rhombus({#,(@rhombus(key_expr, ~var)): #,(@rhombus(val_expr, ~var)), ...}),
 which creates a map from the values of the @rhombus(key_expr, ~var)s to

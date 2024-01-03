@@ -36,6 +36,7 @@ export:
   vbar
   more_args
   shrubref
+  shrublink
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @whn is
@@ -48,29 +49,29 @@ fun provided_note(txt):
   scribble.smaller(txt)
 
 fun provided_meta():
-  @scribble.elem{@provided_note{Provided as @scribble.rhombus(meta, ~expo).}}
+  @scribble.elem{@provided_note{Provided as @manual.rhombus(meta, ~expo).}}
 
 fun provided_also_meta():
-  @scribble.elem{@provided_note{Provided both normally and as @scribble.rhombus(meta, ~expo).}}
+  @scribble.elem{@provided_note{Provided both normally and as @manual.rhombus(meta, ~expo).}}
 
 fun provided_interface_only():
-  @provided_note{Provided only in the @scribble.rhombus(class, ~space) space, not
-   the @scribble.rhombus(annot, ~space) or @scribble.rhombus(namespace, ~space) space.}
+  @provided_note{Provided only in the @manual.rhombus(class, ~space) space, not
+   the @manual.rhombus(annot, ~space) or @manual.rhombus(namespace, ~space) space.}
 
 fun provided_interface_and_namespace_only():
-  @provided_note{Provided only in the @scribble.rhombus(class, ~space) space, not
-   the @scribble.rhombus(annot, ~space) space.}
+  @provided_note{Provided only in the @manual.rhombus(class, ~space) space, not
+   the @manual.rhombus(annot, ~space) space.}
 
 fun provided_interface_and_other_annotation_only():
-  @provided_note{Provided only in the @scribble.rhombus(class, ~space) space
-   and @scribble.rhombus(annot, ~space) space, not
-   the @scribble.rhombus(namespace, ~space) space.}
+  @provided_note{Provided only in the @manual.rhombus(class, ~space) space
+   and @manual.rhombus(annot, ~space) space, not
+   the @manual.rhombus(namespace, ~space) space.}
 
 // Use `top_rhombus` to avoid a local nonterminal binding,
 // such as when referring to `expr.macro` when `expr` is a
 // locally bound nonterminal
 expr.macro 'top_rhombus($g, ...)':
-  'scribble.rhombus($(g.replace_scopes('here')), ...)'
+  'manual.rhombus($(g.replace_scopes('here')), ...)'
 
 def epsilon = "ϵ"
 
@@ -91,8 +92,9 @@ def vbar = @manual.litchar{|}
 
 def more_args = scribble.elem("....")
 
+def shrub_doc = ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")'
+
 fun shrubref(tag):
-  let shrub = ModulePath.s_exp(
-    ModulePath 'lib("shrubbery/scribblings/shrubbery.scrbl")'
-  )
-  scribble.secref(~doc: shrub, tag)
+  scribble.secref(~doc: shrub_doc, tag)
+fun shrublink(tag, content):
+  scribble.seclink(~doc: shrub_doc, tag, content)

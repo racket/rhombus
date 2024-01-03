@@ -1,7 +1,8 @@
 #lang racket/base
 (require syntax/parse/pre
          "pack.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "to-list.rkt")
 
 (provide pack-s-exp)
 
@@ -14,10 +15,10 @@
          #:datum-literals (parsed)
          [(parsed #:rhombus/expr e) #'e]
          [_ stx])]
-      [(list? s)
-       (for/list ([e (in-list s)])
+      [(listable? s)
+       (for/list ([e (in-list (to-list #f s))])
          (loop e))]
       [else
        (raise-arguments-error* who rhombus-realm
-                               "not a list nesting of syntax objects"
+                               "not a listable nesting of syntax objects"
                                "value" orig-s)])))

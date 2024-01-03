@@ -3,26 +3,24 @@
                     [if rhombus:if]
                     [module rhombus:module])
          (prefix-in manual: scribble/manual)
+         "../private/rhombus.rhm"
+         "../private/rhombus_typeset.rhm"
          "../private/doc.rhm"
          "../private/docmodule.rhm"
          "../private/example.rhm"
          "../private/rhombus-doc.rkt"
-         "../private/rhombus-spacer.rhm")
+         "../private/rhombus-spacer.rhm"
+         "../private/manual-text.rhm")
 
 (provide (all-from-out scribble/rhombus
-                       "../private/rhombus-doc.rkt")
+                       "../private/rhombus.rhm"
+                       "../private/rhombus_typeset.rhm"
+                       "../private/rhombus-doc.rkt"
+                       "../private/manual-text.rhm")
          (rename-out [rhombus:if if])
          (for-space rhombus/decl
                     (rename-out
                      [rhombus:module module]))
-         litchar
-         (rename-out [manual:deftech deftech]
-                     [manual:tech tech]
-                     [manual:math math]
-                     [manual:filepath filepath]
-                     [manual:exec exec]
-                     [manual:hash-lang hash_lang]
-                     [manual:onscreen onscreen])
          doc
          (for-space rhombus/defn
                     nonterminal)
@@ -45,5 +43,7 @@
   #:whole-body-readers? #t
   (require (submod scribble/rhombus reader)))
 
-(define (litchar ls)
-  (manual:litchar (if (string? ls) ls (car ls))))
+(module configure-expand racket/base
+  (require rhombus/expand-config)
+  (provide enter-parameterization
+           exit-parameterization))

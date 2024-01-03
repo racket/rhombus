@@ -5,7 +5,8 @@
                      enforest/property
                      enforest/proc-name
                      "introducer.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "to-list.rkt")
          "enforest.rkt")
 
 (module+ for-class
@@ -27,18 +28,30 @@
     form)
 
   (define (check-entry-point-arity-result form proc)
-    (unless (or (not form)
-                (exact-integer? form)
-                (and (list? form)
-                     (= 3 (length form))
-                     (exact-integer? (car form))
-                     (list? (cadr form))
-                     (andmap keyword? (cadr form))
-                     (or (not (caddr form))
-                         (and (list? (caddr form))
-                              (andmap keyword? (caddr form))))))
+    (define (bad)
       (raise-bad-macro-result (proc-name proc) #:syntax-for? #f "entry point arity" form))
-    (datum->syntax #f form))
+    (let loop ([form form])
+      (cond
+        [(not form) (datum->syntax #f form)]
+        [(exact-integer? form) (datum->syntax #f form)]
+        [(and (list? form)
+              (= 3 (length form))
+              (exact-integer? (car form)))
+         (define allows (cadr form))
+         (define reqs (caddr form))
+         (cond
+           [(and (list? allows)
+                 (andmap keyword? allows)
+                 (or (not reqs)
+                     (and (list? reqs)
+                          (andmap keyword? reqs))))
+            (datum->syntax #f form)]
+           [(and (listable? allows)
+                 (listable? reqs))
+            (loop (list (car form) (to-list #f allows) (to-list #f reqs)))]
+           [else (bad)])]
+        [(and (listable? form) (not (list? form))) (loop (to-list #f form))]
+        [else (bad)])))
 
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))
   

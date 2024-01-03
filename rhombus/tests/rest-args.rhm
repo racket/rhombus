@@ -106,7 +106,7 @@ block:
 
 block:
   fun avg(a, & bs):
-    (a + more_math.sum(bs)) / (1 + List.length(bs))
+    (a + math.sum(& bs)) / (1 + List.length(bs))
   check avg(1, 5) ~is 3
   check avg(7, 9) ~is 8
   check avg(-2, 4) ~is 1

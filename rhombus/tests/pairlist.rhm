@@ -1,0 +1,213 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    PairList(l, ...)
+    PairList.length(lst)
+    PairList.cons(a, d)
+    PairList.map(lst, proc)
+    PairList.for_each(lst, proc)
+    PairList.has_element(lst, val)
+    PairList.remove(lst, val)
+    PairList.drop_left(lst, n)
+    PairList.drop_right(lst, n)
+    PairList.take_left(lst, n)
+    PairList.take_right(lst, n)
+
+check:
+  PairList.length(PairList[1, 2, 3])
+  ~is 3
+
+check:
+  PairList.length({1, 2, 3})
+  ~throws values("contract violation", "expected: PairList")
+
+check:
+  PairList[1] :: NonemptyPairList
+  ~is PairList[1]
+
+check:
+  PairList[] :: NonemptyPairList
+  ~throws "does not satisfy annotation"
+
+block:
+  use_static
+  check:
+    PairList[1, 2, 3].length()
+    ~is 3
+  check:
+    PairList[1, 2, 3][0]
+    ~is 1
+  check:
+    PairList[1, 2, 3].first
+    ~is 1
+  check:
+    PairList[1, 2, 3].rest
+    ~is PairList[2, 3]
+  check:
+    PairList(1, 2, 3).length()
+    ~is 3
+  check:
+    def lst = PairList[1, 2, 3]
+    lst.length()
+    ~is 3
+  check:
+    def lst :: PairList = dynamic(PairList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def lst :~ PairList = dynamic(PairList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def lst :: PairList.of(Int) = dynamic(PairList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def PairList[v, ...] = dynamic(PairList[1, 2, 3])
+    PairList[v, ...].length()
+    ~is 3
+  check:
+    def lst :: PairList.of(PairList) = dynamic(PairList[PairList[1, 2, 3]])
+    lst.first.length()
+    ~is 3
+  check:
+    def lst :: PairList.of(Int) = dynamic(PairList[1, 2, 3])
+    lst.rest.length()
+    ~is 2
+  check:
+    def lst :: NonemptyPairList.of(PairList) = dynamic(PairList[PairList[1, 2, 3]])
+    lst.first.length()
+    ~is 3
+  check:
+    PairList.cons(1, PairList[2, 3])
+    ~is PairList[1, 2, 3]
+  check:
+    PairList.cons(1, PairList[2, 3]).length()
+    ~is 3
+
+block:
+  check:
+    1 :: PairList
+    ~throws "does not satisfy annotation"
+  check:
+    1 :: PairList.of(Any)
+    ~throws "does not satisfy annotation"
+  check:
+    1 :: PairList.of(converting(fun (_): #false))
+    ~throws "does not satisfy annotation"
+  check:
+    PairList[1, 2, 3] :: PairList.of(converting(fun (n :: Int): n+1))
+    ~is PairList[2, 3, 4]
+  check:
+    1 :: NonemptyPairList
+    ~throws "does not satisfy annotation"
+  check:
+    1 :: NonemptyPairList.of(Any)
+    ~throws "does not satisfy annotation"
+  check:
+    1 :: NonemptyPairList.of(converting(fun (_): #false))
+    ~throws "does not satisfy annotation"
+  check:
+    PairList[1, 2, 3] :: NonemptyPairList.of(converting(fun (n :: Int): n+1))
+    ~is PairList[2, 3, 4]
+
+block:
+  check:
+    dynamic(PairList[1, 2, 3]).length()
+    ~is 3
+  check:
+    dynamic(PairList[1, 2, 3]).first
+    ~is 1
+  check:
+    dynamic(PairList[1, 2, 3]).rest
+    ~is PairList[2, 3]
+  check:
+    dynamic(PairList[1, 2, 3])[0]
+    ~is 1
+
+check:
+  match PairList[]
+  | PairList.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
+  match PairList[1]
+  | PairList.empty: "empty"
+  | ~else: "other"
+  ~is "other"
+
+check:
+  use_static
+  PairList[1, 2].reverse().reverse()
+  ~is PairList[1, 2]
+
+block:
+  check PairList[1, 2].map(fun (x): x + 1).reverse() ~is PairList[3, 2]
+  block:
+    def mutable sum = 0
+    check PairList[1, 2].for_each(fun (x): sum := sum + x) ~is #void
+    check sum ~is 3
+
+check:
+  PairList.append(& PairList[PairList[1, 2], PairList[3], PairList[4, 5]]) ~is PairList[1, 2, 3, 4, 5]
+  PairList[1, 2].append() ~is PairList[1, 2]
+  PairList[1, 2].append(PairList[3]) ~is PairList[1, 2, 3]
+  PairList[1, 2].append(PairList[3], PairList[4, 5]) ~is PairList[1, 2, 3, 4, 5]
+  PairList[1, 2].append(3) ~throws "contract violation"
+
+check:
+  match PairList[]
+  | PairList.cons(hd,tl): "no"
+  | PairList[]: "empty"
+  ~is "empty"
+
+check:
+  PairList[1, 2, 3].has_element(2) ~is #true
+  PairList[1, 2, 3].has_element(4) ~is #false
+  dynamic(PairList[1, 2, 3]).has_element(1) ~is #true
+
+check:
+  PairList[1, 2, 3].remove(2) ~is PairList[1, 3]
+  PairList[1, 2, 3].remove(4) ~is PairList[1, 2, 3]
+  PairList[1, 2, 2, 3].remove(4) ~is PairList[1, 2, 2, 3]
+  dynamic(PairList[1, 2, 3]).remove(1) ~is PairList[2, 3]
+
+check:
+  PairList[1, 2, 3].drop_left(2) ~is PairList[3]
+  PairList.drop_left(PairList[1, 2, 3], 2) ~is PairList[3]
+  PairList[1, 2, 3].drop_right(2) ~is PairList[1]
+  PairList.drop_right(PairList[1, 2, 3], 2) ~is PairList[1]
+  PairList[1, 2, 3].take_left(2) ~is PairList[1, 2]
+  PairList.take_left(PairList[1, 2, 3], 2) ~is PairList[1, 2]
+  PairList[1, 2, 3].take_right(2) ~is PairList[2, 3]
+  PairList.take_right(PairList[1, 2, 3], 2) ~is PairList[2, 3]
+  // todo: these error messages shouldn't be soo different:
+  PairList[1, 2, 3].drop_left(4) ~throws "index too large for list"
+  PairList[1, 2, 3].drop_right(4) ~throws "list is shorter than the number of elements to drop"
+
+check:
+  use_static
+  PairList.rest(PairList[1, 2, 3]).map(math.abs)
+  ~is PairList[2, 3]
+
+check:
+  use_static
+  PairList.empty.has_element("no such thing")
+  ~is #false
+
+check:
+  use_static
+  def PairList.empty && empty = dynamic(PairList[])
+  empty.has_element("no such thing")
+  ~is #false
+
+block:
+  use_static
+  def l = PairList[1, 2, 3]
+  def l2 = l ++ l
+  check l.to_list() ~is [1, 2, 3]
+  check l2.to_list() ~is [1, 2, 3, 1, 2, 3]
+  check l2.to_list().length() ~is 6

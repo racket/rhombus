@@ -2,36 +2,35 @@
 
 import:
   lib("racket/base.rkt") as rkt
-  lib("rhombus/private/treelist.rhm").TreeList
-  lib("rhombus/private/treelist.rkt") open
+  "treelist.rhm".TreeList
   rhombus/measure
 
 // Turn off all but one to get a useful (thoough rough) performance result:
-def do_list = #true
+def do_pairlist = #true
 def do_TreeList = #false
-def do_treelist = #true
+def do_list = #true
 
 // rkt.#{random-seed}(10)
 
-fun insert(lst, pos, v):
+fun insert(plst, pos, v):
   cond
-  | pos == 0: List.cons(v, lst)
-  | lst == []: [v]
-  | ~else List.cons(List.first(lst), insert(List.rest(lst), pos-1, v))
+  | pos == 0: PairList.cons(v, plst)
+  | plst == PairList[]: [v]
+  | ~else PairList.cons(PairList.first(plst), insert(PairList.rest(plst), pos-1, v))
 
-fun rand_test(lst, tl, rtl, n, history):
-  // println([n, history, rtl])
+fun rand_test(plst, tl, lst, n, history):
+  // println([n, history, lst])
   fun check():
     when do_list && do_TreeList
     | unless lst == tl.to_list()
-      | error(#'rand_test, "fail " +& lst +& " vs. " +& tl +& " using " +& List.reverse(history))
-    when do_list && do_treelist
-    | unless lst == #{treelist->list}(rtl)
-      | error(#'rand_test, "fail " +& lst +& " vs. " +& rtl +& " using " +& List.reverse(history))
-    when do_treelist
-    | let rtl2 = #{list->treelist}(#{treelist->list}(rtl))
-      unless (rtl2 == rtl) && (rtl == rtl2) && Equatable.hash(rtl) == Equatable.hash(rtl2)
-      | error(#'rand_test, "equal fails " +& rtl)
+      | error(#'rand_test, "fail " +& lst +& " vs. " +& tl +& " using " +& PairList.reverse(history))
+    when do_pairlist && do_list
+    | unless plst == (for PairList (e: lst): e)
+      | error(#'rand_test, "fail " +& plst +& " vs. " +& lst +& " using " +& PairList.reverse(history))
+    when do_list
+    | let lst2 = (for List (e: (for PairList (e: lst): e)): e)
+      unless (lst2 == lst) && (lst == lst2) && Equatable.hash(lst) == Equatable.hash(lst2)
+      | error(#'rand_test, "equal fails " +& lst)
   cond
   | n >= 1000:
       check()
@@ -40,17 +39,17 @@ fun rand_test(lst, tl, rtl, n, history):
       | check()  
       let pos = rkt.random(n+2)
       if pos == n+1
-      | rand_test(do_list && (lst ++ lst),
+      | rand_test(do_pairlist && (plst ++ plst),
                   do_TreeList && (tl ++ tl),
-                  do_treelist && #{treelist-append}(rtl, rtl),
+                  do_list && (lst ++ lst),
                   2 * n,
                   List.cons(#'append, history))
-      | rand_test(do_list && insert(lst, pos, n),
+      | rand_test(do_pairlist && insert(plst, pos, n),
                   do_TreeList && TreeList.insert(tl, pos, n),
-                  do_treelist && #{treelist-insert}(rtl, pos, n),
+                  do_list && List.insert(lst, pos, n),
                   n + 1,
                   List.cons(pos, history))
 
 measure.time:
   for (i: 0..1000):
-    rand_test([], TreeList[], #{make-treelist}(), 0, [])
+    rand_test(PairList[], TreeList[], [], 0, [])

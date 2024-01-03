@@ -2,15 +2,14 @@
 
 import:
   scribble/rhombus open
-  lib("scribble/bnf.rkt"):
-    rename: #{BNF-seq} as bseq
-            #{BNF-alt} as balt
-    expose: nonterm bseq balt kleenestar kleeneplus
+  scribble/private/util
+  lib("scribble/bnf.rkt")
 
 export:
-  bnf
+  BNF
   bseq balt boptional nonterm kleenestar kleeneplus boptional bgroup
   bis bor
+  nonterm
 
 def bis: @elem{@hspace(1)::=@hspace(1)}
 def bor: @elem{@hspace(1) | @hspace(1)}
@@ -20,3 +19,21 @@ fun boptional(content, ...):
 
 fun bgroup(content, ...):
   [@elem{( }, content, ..., @elem{ )}]
+
+fun nonterm(pre_content :: util.PreContent):
+  bnf.nonterm(pre_content)
+
+fun kleenestar(pre_content :: util.PreContent):
+  bnf.nonterm(pre_content)
+
+fun kleeneplus(pre_content :: util.PreContent):
+  bnf.nonterm(pre_content)
+
+fun bseq(c :: util.Content, ...):
+  bnf.#{BNF-seq}(c, ...)
+
+fun balt(e, ...):
+  bnf.#{BNF-alt}(e, ...)
+
+fun BNF([nt :: (util.Block || util.Content), clause :: (util.Block || util.Content), ...], ...):
+  bnf.BNF(PairList[nt, clause, ...], ...)

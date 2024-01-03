@@ -46,7 +46,7 @@
   ~defn:
     repet.macro 'nat3':
       ~op_stx self
-      repet_meta.pack_list('($self, n, [0, 1, 2], 1, 0, (), #true)')
+      repet_meta.pack_list('($self, n, PairList[0, 1, 2], 1, 0, (), #true)')
   ~repl:
     [nat3, ...]
 )
@@ -69,7 +69,7 @@
  @rhombusblock(
   '(#,(@rhombus(source_form, ~var)),
     #,(@rhombus(name_id, ~var)),
-    #,(@rhombus(list_expr, ~var)),
+    #,(@rhombus(pair_list_expr, ~var)),
     #,(@rhombus(total_depth, ~var)),
     #,(@rhombus(use_depth, ~var)),
     ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
@@ -84,7 +84,7 @@
  in the sense that it is used as the inferred name for an element of the
  repetition, in case such a name is relevant.
 
- The @rhombus(list_expr, ~var) expression produces a list that contains
+ The @rhombus(pair_list_expr, ~var) expression produces a @rhombus(PairList, ~annot) that contains
  the elements of the repetition. Lists must be nested according to the
  repeition's depth: a list of elements for depth 1, a list of element
  lists for depth 2, and so on.
@@ -133,7 +133,7 @@
       repet_meta.pack_list(
         '($self(),
           $name,
-          for List (elem: $expr, i: $from ..): [i, elem],
+          for PairList (elem: $expr, i: $from ..): [i, elem],
           $depth,
           $use_depth,
           $si,

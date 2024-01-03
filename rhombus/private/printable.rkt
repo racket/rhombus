@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      "interface-parse.rkt")
+         "to-list.rkt"
          "provide.rkt"
          "printer-property.rkt"
          "name-root.rkt"
@@ -128,10 +129,10 @@
   (define pre-pd (print-description-unwrap who pre))
   (define (bad-elems)
     (raise-argument-error* who rhombus-realm
-                           (format "List.of(~a)" description-ann-str)
+                           (format "Listable.of(~a)" description-ann-str)
                            elems))
-  (define elem-pds (if (list? elems)
-                       (for/list ([elem (in-list elems)])
+  (define elem-pds (if (listable? elems)
+                       (for/list ([elem (in-list (to-list #f elems))])
                          (or (print-description-unwrap #f elem)
                              (bad-elems)))
                        (bad-elems)))

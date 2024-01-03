@@ -5,27 +5,23 @@
          rhombus/private/parse
          rhombus/private/forwarding-sequence
          (prefix-in doc: scribble/doclang2)
-         (rename-in scribble/base
-                    [verbatim base:verbatim]
-                    [table-of-contents table_of_contents]
-                    [local-table-of-contents local_table_of_contents]
-                    [margin-note margin_note]
-                    [as-index as_index])
          scribble/private/manual-defaults
-         "private/rhombus.rhm"
-         "private/rhombus_typeset.rhm"
-         "private/include.rhm")
+         rhombus/private/bounce
+         "private/util.rhm"
+         (submod rhombus/private/core module-begin))
 
-(provide (rename-out [module-begin #%module-begin])
-         (except-out (all-from-out scribble/base)
-                     base:verbatim
-                     include-section)
-         (all-spaces-out verbatim
-                         pkg
-                         include_section)
-         (all-from-out "private/rhombus.rhm"
-                       "private/rhombus_typeset.rhm"
-                       "private/include.rhm"))
+(provide (rename-out [module-begin #%module-begin]))
+
+(bounce "private/section.rhm"
+        "private/include.rhm"
+        "private/block.rhm"
+        "private/element.rhm"
+        "private/image.rhm"
+        "private/spacing.rhm"
+        "private/link.rhm"
+        "private/index.rhm"
+        "private/toc.rhm")
+
 (define-syntax-rule (rhombus-out)
   (begin
     (require (except-in rhombus #%module-begin))
@@ -60,7 +56,13 @@
        (dynamic-require 'scribble/tools/drracket-buttons 'drracket-buttons)]
       [else (shrubbery:get-info-proc key default make-default)])))
 
+(module configure-expand racket/base
+  (require rhombus/expand-config)
+  (provide enter-parameterization
+           exit-parameterization))
+
 (define-syntax (module-begin stx)
+  (rhombus-module-begin-configure)
   (syntax-parse stx
     #:datum-literals (brackets)
     [(_ (brackets g ...))
@@ -73,9 +75,14 @@
         #:id doc
         #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
-        (rhombus-forwarding-sequence
-         #:module #f #f
+        (rhombus-module-forwarding-sequence
+         #:wrap-non-string convert-pre-part
          (scribble-rhombus-top g-unwrapped ...)))]))
+
+(define (convert-pre-part v)
+  (or (convert_pre_part v)
+      ;; let Scribble complain:
+      v))
 
 ;; Includes shortcut for string literals:
 (define-syntax (scribble-rhombus-top stx)
@@ -91,11 +98,3 @@
            #`(begin
                #,@(reverse accum)
                top))])))
-
-;; ----------------------------------------
-
-(define (verbatim #:indent [indent 0] l)
-  (apply base:verbatim #:indent indent l))
-
-(define (pkg l)
-  (tt l))
