@@ -14,15 +14,12 @@ import:
       Size
       Stretch
 
-
 export:
   Slider
 
-class Slider(hand, private _at_value :: Obs):
+class Slider(private _handle, private _at_value :: Obs):
   implements View
-  internal _Slider
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (label :: MaybeObs.of(maybe(LabelString)) = #false,
                ~value: value :: MaybeObs.of(PositionInteger) = 0,
@@ -33,9 +30,11 @@ class Slider(hand, private _at_value :: Obs):
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal]):
-    def at_value = obs.to_obs(value)
+    let at_value = obs.to_obs(value)
+    let action = action || (fun (val):
+                              at_value.value := val)
     super(easy.slider(obs.unwrap(at_value),
-                      action || fun (val): at_value.value := val,
+                      action,
                       ~label: obs.unwrap(label),
                       #{#:min-value}: obs.unwrap(min_value),
                       #{#:max-value}: obs.unwrap(max_value),

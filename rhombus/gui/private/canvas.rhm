@@ -15,17 +15,16 @@ import:
       _MouseEvent
       _KeyEvent
   "obs.rhm":
-    expose: MaybeObs
+    expose:
+      MaybeObs
   "canvas-help.rkt".add_canvas_callbacks
 
 export:
   Canvas
 
-class Canvas(hand):
+class Canvas(private _handle):
   implements View
-  internal _Canvas
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (data,
                draw :: Function.of_arity(2),
@@ -46,11 +45,12 @@ class Canvas(hand):
                       ~margin: obs.unwrap(margin),
                       #{#:min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values),
-                      ~mixin: (fun (c): mix(add_canvas_callbacks(
-                                              c,
-                                              fun (ev): on_key(_KeyEvent(ev)()),
-                                              fun (ev): on_mouse(_MouseEvent(ev)())
-                                            )))))
+                      ~mixin: fun (c):
+                                mix(add_canvas_callbacks(
+                                      c,
+                                      fun (ev): on_key(_KeyEvent(ev)()),
+                                      fun (ev): on_mouse(_MouseEvent(ev)())
+                                    ))))
 
   export:
     StyleSymbol

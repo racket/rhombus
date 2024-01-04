@@ -5,7 +5,7 @@
 @title{Observables}
 
 @doc(
-  class Obs(handle :: Any):
+  class Obs():
     constructor (v :: Any,
                  ~name: name :: String = "anon",
                  ~is_derived: is_derived :: Any = #false)
@@ -27,8 +27,17 @@
 }
 
 @doc(
+  property (obs :: Obs).handle :: Any
+){
+
+ Returns a Racket object that corresponds to the observable for use
+ directly with @racketmodname(racket/gui/easy).
+
+}
+
+@doc(
   property
-  | (obs :: Obs).value
+  | (obs :: Obs).value :: Any
   | (obs :: Obs).value := (v :: Any)
 ){
 
@@ -56,6 +65,7 @@
 
 @doc(
   method (obs :: Obs).observe(f :: Function.of_arity(1))
+    :: Void
 ){
 
  Adds @rhombus(f) as a function to be called when the value of
@@ -65,6 +75,7 @@
 
 @doc(
   method (obs :: Obs).unobserve(f :: Function.of_arity(1))
+    :: Void
 ){
 
  Removes @rhombus(f) as a function to be called when the value of
@@ -74,16 +85,18 @@
 
 @doc(
   method (obs :: Obs).update(f :: Function.of_arity(1))
+    :: Any
   operator ((obs :: Obs) <~ (f :: Function.of_arity(1)))
+    :: Any
 ){
 
  Changes the value @rhombus(v, ~var) of @rhombus(obs) to
- @rhombus(f(#,(@rhombus(v, ~var)))).
+ @rhombus(f(#,(@rhombus(v, ~var)))).  Returns the new value.
 
 }
 
 @doc(
-  method (obs :: Obs).peek()
+  method (obs :: Obs).peek() :: Any
 ){
 
  Returns the current value of @rhombus(obs).
@@ -106,8 +119,10 @@
 }
 
 @doc(
-  method (obs :: Obs).map(f :: Function.of_arity(1)) :: Obs
-  operator ((obs :: Obs) ~> (f :: Function.of_arity(1))) :: Obs
+  method (obs :: Obs).map(f :: Function.of_arity(1))
+    :: Obs
+  operator ((obs :: Obs) ~> (f :: Function.of_arity(1)))
+    :: Obs
 ){
 
  Returns an observer whose value changes each time that @rhombus(obs)'s

@@ -18,7 +18,7 @@ def anon_str = "anon"
 namespace MaybeObs:
   export: of
   annot.macro 'of($(ann :: annot_meta.Parsed))':
-    def (pred, infos) = annot_meta.unpack_predicate(ann)
+    let (pred, infos) = annot_meta.unpack_predicate(ann)
     annot_meta.pack_predicate('block:
                                  def pred = $pred
                                  fun
@@ -27,10 +27,10 @@ namespace MaybeObs:
                               '()')
 
 annot.macro 'of($(ann :: annot_meta.Parsed))':
-  def (pred, infos) = annot_meta.unpack_predicate(ann)
-  def (obs_pred, obs_info):
-    annot_meta.unpack_predicate(match 'Obs'
-                                | '$(a :: annot_meta.Parsed)': a)
+  let (pred, _) = annot_meta.unpack_predicate(ann)
+  let (_, obs_info):
+    let '$(a :: annot_meta.Parsed)' = 'Obs'
+    annot_meta.unpack_predicate(a)
   annot_meta.pack_predicate('block:
                                def pred = $pred
                                fun
@@ -38,15 +38,17 @@ annot.macro 'of($(ann :: annot_meta.Parsed))':
                                | (_): #false',
                             obs_info)
 
-class Obs(handle):
+class Obs(private _handle):
   internal _Obs
+  property handle: _handle
+
   constructor (v,
                ~name: name :: String = anon_str,
                ~is_derived = #false):
     super(easy.obs(v,
-                   ~name: (if name === anon_str
-                           | #'anon
-                           | Symbol.from_string(name)),
+                   ~name: if name === anon_str
+                          | #'anon
+                          | Symbol.from_string(name),
                    #{#:derived?}: is_derived))
 
   property
@@ -77,8 +79,9 @@ class Obs(handle):
   method throttle(~duration: duration :: NonnegInt = 200) :: Obs:
     _Obs(easy.#{obs-throttle}(~duration: duration))
 
-  export: combine
-          of
+  export:
+    combine
+    of
 
 fun
 | combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs:

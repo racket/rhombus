@@ -6,7 +6,8 @@ import:
   "dc-interface.rhm"._DC
   "region-interface.rhm" as intf
   "symbol_map.rhm":
-    expose: symbol_map_annot
+    expose:
+      symbol_map_annot
 
 export:
   Region
@@ -19,61 +20,60 @@ module private:
 class Region():
   internal _Region
   extends intf.Region
-  opaque
 
   constructor(dc :: maybe(DC) = #false):
-    _Region(rkt.make_object(rkt.#{region%}, dc && (dc :: _DC).dc))()
+    super(rkt.make_object(rkt.#{region%}, dc && (dc :: _DC).handle))()
 
   property dc :: maybe(DC):
-    let dc = rkt.send hand.#{get-dc}()
+    let dc = rkt.send handle.#{get-dc}()
     dc && wrap_dc(dc)
 
   method is_empty():
-    rkt.send hand.#{is-empty?}()
+    rkt.send handle.#{is-empty?}()
 
   method contains(pt :: PointLike):
-    rkt.send hand.#{in-region?}(pt.x, pt.y)
+    rkt.send handle.#{in-region?}(pt.x, pt.y)
 
   method rectangle(r :: RectLike):
-    rkt.send hand.#{set-rectangle}(r.x, r.y, r.width, r.height)
+    rkt.send handle.#{set-rectangle}(r.x, r.y, r.width, r.height)
 
   method rounded_rectangle(r :: RectLike,
                            radius :: Real = -0.25):
-    rkt.send hand.#{set-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
+    rkt.send handle.#{set-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
 
   method ellipse(r :: RectLike):
-    rkt.send hand.#{set-ellipse}(r.x, r.y, r.width, r.height)
+    rkt.send handle.#{set-ellipse}(r.x, r.y, r.width, r.height)
 
   method arc(r :: RectLike,
              start_radians :: Real, end_radians :: Real):
-    rkt.send hand.#{set-arc}(r.x, r.y, r.width, r.height, start_radians, end_radians)
+    rkt.send handle.#{set-arc}(r.x, r.y, r.width, r.height, start_radians, end_radians)
 
   method polygon([pt :: PointLike, ...],
                  ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0,
                  fill :: Region.Fill = #'odd_even):
-    rkt.send hand.#{set-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy, fill_convert(fill))
+    rkt.send handle.#{set-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method path(p :: Path,
               ~dpt: dpt :: PointLike = Point.zero,
               ~dx: dx :: Real = 0.0,
               ~dy: dy :: Real = 0.0,
               ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send hand.#{set-path}(p, dpt.x + dx, dpt.y + dy, fill_convert(fill))
+    rkt.send handle.#{set-path}(p, dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method union(region :: Region):
-    rkt.send hand.#{union}(region.hand)
+    rkt.send handle.#{union}(region.handle)
   method intersect(region :: Region):
-    rkt.send hand.#{intersect}(region.hand)
+    rkt.send handle.#{intersect}(region.handle)
   method subtract(region :: Region):
-    rkt.send hand.#{subtract}(region.hand)
+    rkt.send handle.#{subtract}(region.handle)
   method xor(region :: Region):
-    rkt.send hand.#{xor}(region.hand)
+    rkt.send handle.#{xor}(region.handle)
 
   export:
     Fill
-    
+
   symbol_map_annot Fill fill_convert:
     { odd_even: #{odd-even},
       winding: winding }

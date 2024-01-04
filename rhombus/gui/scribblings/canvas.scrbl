@@ -5,7 +5,7 @@
 @title{Canvases}
 
 @doc(
-  class Canvas(handle :: Any):
+  class Canvas():
     implements View
     constructor (
       data :: MaybeObs.of(Any),

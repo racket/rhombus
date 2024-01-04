@@ -9,7 +9,7 @@
 @title{Color}
 
 @doc(
-  class Color(handle :: Any):
+  class Color():
     constructor
     | (name :: String)
     | (red :: Byte, green :: Byte, blue :: Byte)

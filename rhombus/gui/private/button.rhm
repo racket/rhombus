@@ -5,7 +5,8 @@ import:
   rhombus/draw.Bitmap
   "view.rhm".View
   "obs.rhm":
-    expose: MaybeObs
+    expose:
+      MaybeObs
   "type.rhm":
     expose:
       LabelString
@@ -16,16 +17,15 @@ import:
 export:
   Button
 
-class Button(hand):
+class Button(private _handle):
   implements View
-  internal _Button
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
-  constructor (label :: MaybeObs.of(LabelString || Bitmap || matching([_ :: Bitmap,
-                                                                       _ :: LabelString,
-                                                                       _ :: Button.LabelPosition]))
-                 = "Button",
+  constructor (label :: MaybeObs.of(LabelString
+                                      || Bitmap
+                                      || matching([_ :: Bitmap,
+                                                   _ :: LabelString,
+                                                   _ :: Button.LabelPosition])),
                ~action: action :: Function.of_arity(0) = values,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],

@@ -1,14 +1,18 @@
 #lang rhombus/static/and_meta
 import:
-  "type.rhm" open
+  "type.rhm".Size
 
 export:
   Bitmap
   BitmapForward
 
-class Bitmap(hand):
+class Bitmap(private _handle):
   nonfinal
-  property handle: hand
+  property handle: _handle
+
+  constructor (hand):
+    super(hand)
+
   abstract property width
   abstract property height
   abstract property size :: Size

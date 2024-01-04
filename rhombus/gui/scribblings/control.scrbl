@@ -5,7 +5,7 @@
 @title{Controls}
 
 @doc(
-  class Button(handle :: Any):
+  class Button():
     implements View
     constructor (
       label :: MaybeObs.of(LabelString
@@ -28,7 +28,7 @@
 }
 
 @doc(
-  class Checkbox(handle :: Any):
+  class Checkbox():
     implements View
     constructor (
       label :: MaybeObs.of(LabelString),
@@ -63,7 +63,7 @@
 }
 
 @doc(
-  class Choice(handle :: Any):
+  class Choice():
     implements View
     constructor (
       choices :: MaybeObs.of(List),
@@ -112,7 +112,7 @@
 }
 
 @doc(
-  class Slider(handle :: Any):
+  class Slider():
     implements View
     constructor (
       label :: MaybeObs.of(maybe(LabelString)) = #false,
@@ -153,7 +153,7 @@
 
 
 @doc(
-  class Label(handle :: Any):
+  class Label():
     implements View
     constructor (
       label :: MaybeObs.of(LabelString),
@@ -177,7 +177,7 @@
 
 
 @doc(
-  class Input(handle :: Any):
+  class Input():
     implements View
     constructor (
       content :: MaybeObs.of(Any),
@@ -215,13 +215,13 @@
 
 
 @doc(
-  class Spacer(handle :: Any):
+  class Spacer():
     implements View
-    constructor ()
 ){
 
    Returns a representation of a spacer.  Spacers extend to fill the
    space of their parents.
+
 }
 
 

@@ -3,6 +3,9 @@
 export:
   Region
 
-class Region(hand):
+class Region(private _handle):
   nonfinal
-  property handle: hand
+  property handle: _handle
+
+  constructor (hand):
+    super(hand)

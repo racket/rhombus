@@ -5,7 +5,7 @@
 @title{Events}
 
 @doc(
-  class MouseEvent(handle :: Any):
+  class MouseEvent():
     constructor (
       ~kind: kind :: MouseEvent.Kind = #'motion,
       ~down: down :: Set.of(MouseEvent.DownSymbol) = Set{},
@@ -58,7 +58,7 @@
 
 
 @doc(
-  class KeyEvent(handle :: Any):
+  class KeyEvent():
     constructor (
       code :: (Char || KeyEvent.Key),
       ~release_code: r_code :: (Char || KeyEvent.Key) = #'press,

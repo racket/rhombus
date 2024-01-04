@@ -9,21 +9,21 @@ import:
       Position
       Stretch
   "view.rhm":
-    expose: View
-            WindowView
+    expose:
+      View
+      WindowView
   "view.rhm"!private.to_view
   "obs.rhm":
-    expose: Obs
-            MaybeObs
+    expose:
+      Obs
+      MaybeObs
 
 export:
   Window
 
-class Window(hand):
+class Window(private _handle):
   implements WindowView
-  internal _Window
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (~title: title :: MaybeObs.of(String) = "Untitled",
                ~size: size :: MaybeObs.of(Size) = [#false, #false],
@@ -47,7 +47,7 @@ class Window(hand):
                       ...))
 
   export:
-    StyleSymbol  
+    StyleSymbol
 
   symbol_map_annot StyleSymbol convert_style:
     { no_resize_border: #{no-resize-border},

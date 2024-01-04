@@ -7,6 +7,6 @@ export:
 
 interface DC:
   internal _DC
-  abstract property dc
+  property handle
 
 annot.delayed_declare DCForward

@@ -23,40 +23,38 @@ import:
 export:
   Input
 
-class Input(hand, private _at_content :: Obs):
+class Input(private _handle, private _at_content :: Obs):
   implements View
-  internal _Input
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (content :: MaybeObs.of(Any) = "",
                ~action: action :: maybe(Function.of_arity(2)) = #false,
-	       ~label: label :: MaybeObs.of(LabelString) = "",
+               ~label: label :: MaybeObs.of(LabelString) = "",
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-	       ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
-	       ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
-	       ~font : font :: Font = normal_control_font,
-	       // ~keymap: ... TODO
-	       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+               ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
+               ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
+               ~font : font :: Font = normal_control_font,
+               // ~keymap: ... TODO
+               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                ~mixin: mixin :: Function = values,
-               ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = (fun (a, b): a == b),
+               ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values):
-    def at_content = obs.to_obs(content)
+    let at_content = obs.to_obs(content)
     super(easy.input(obs.unwrap(content), action,
                      ~label: obs.unwrap(label),
                      #{#:enabled?}: obs.unwrap(is_enabled),
-		     #{#:background-color}: obs.unwrap(bg_color),
-		     ~style: obs.unwrap_list(style, convert_style),
-                     ~font: obs.unwrap_convert(font, fun (f): f && Font.handle(f)),
-		     ~margin: obs.unwrap_list(margin, values),
-		     #{#:min-size}: obs.unwrap_list(min_size, values),
-		     ~stretch: obs.unwrap_list(stretch, values),
+                     #{#:background-color}: obs.unwrap(bg_color),
+                     ~style: obs.unwrap_list(style, convert_style),
+                     ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
+                     ~margin: obs.unwrap_list(margin, values),
+                     #{#:min-size}: obs.unwrap_list(min_size, values),
+                     ~stretch: obs.unwrap_list(stretch, values),
                      ~mixin: mixin,
-                     #{#:value=?}: is_equal, 
+                     #{#:value=?}: is_equal,
                      #{#:value->text}: val_to_txt),
-	  at_content)
+          at_content)
 
   property at_content :: Obs:
     _at_content.map(values)

@@ -1,15 +1,12 @@
 #lang rhombus/static/and_meta
-
 import:
   lib("racket/gui/easy.rkt"):
     expose:
       #{if-view}
       #{cond-view}
-      #{case-view}
       #{observable-view}
   lib("racket/base.rkt").else
   "obs.rhm"
-  rhombus
 
 export:
   View
@@ -38,7 +35,7 @@ interface View:
      | ...
      | ~else: $else_ans':
       'AView($(expr_meta.pack_s_exp(['#{cond-view}',
-                                     [expr_meta.pack_expr('obs.unwrap($ques ...)'),                                    
+                                     [expr_meta.pack_expr('obs.unwrap($ques ...)'),
                                       expr_meta.pack_expr('unwrap_view(block: $ans)')],
                                      ...,
                                      ['else',
@@ -50,17 +47,23 @@ interface View:
       'cond
        | $ques ...: $ans
        | ...
-       | ~else: $else'     
+       | ~else: $else'
 
 interface WindowView:
   extends View
 
 fun unwrap_view(v :: View): v.handle
 
-class AView(hand):
+class AView(private _handle):
   implements View
-  opaque
-  override property handle: hand
+  override property handle: _handle
+
+  constructor (hand):
+    super(hand)
+
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.list("View(", [], ")")
 
 fun
 | to_view(v :: View) :: View: v

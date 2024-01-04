@@ -5,7 +5,7 @@
 @title{Font}
 
 @doc(
-  class Font(handle :: Any):
+  class Font():
     constructor (
       ~kind: kind :: Font.Kind = #'default,
       ~name: name :: maybe(String) = #false,

@@ -6,11 +6,9 @@ import:
 export:
   Spacer
 
-class Spacer(hand):
+class Spacer(private _handle):
   implements View
-  internal _Spacer
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor ():
     super(easy.spacer())

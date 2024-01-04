@@ -7,17 +7,6 @@ import:
       symbol_map_annot
       symbol_set_annot
   rhombus/draw/private/rkt
-  "type.rhm":
-    expose:
-      LabelString
-      Margin
-      Size
-      Stretch
-  "view.rhm".View
-  rhombus/draw/private/dc!internal.SomeDC
-  "obs.rhm":
-    expose: MaybeObs
-  "canvas-help.rkt".add_canvas_callbacks
 
 export:
   MouseEvent
@@ -28,47 +17,65 @@ module private:
     _MouseEvent
     _KeyEvent
 
-class KeyMouseEvent(handle):
+meta fun make_message(key):
+  Syntax.make_id("get-" +& key +& "-down", key)
+
+expr.macro '$left get_all_down $handle $('. $key') ...':
+  'block:
+     let s = $left
+     let s = (if rkt.send $handle . $(make_message(key))()
+              | (s :~ Set) ++ { #'$key }
+              | s)
+     ...
+     s'
+
+class KeyMouseEvent(private _handle):
   nonfinal
+  property handle: _handle
+
+  constructor (hand):
+    super(hand)
 
   // result is cached in subclasses:
   property down:
-    let s: Set{}
-    let s :~ Set: if rkt.send handle.#{get-shift-down}() | s ++ { #'shift } | s
-    let s :~ Set: if rkt.send handle.#{get-control-down}() | s ++ { #'control } | s
-    let s :~ Set: if rkt.send handle.#{get-meta-down}() | s ++ { #'meta } | s
-    let s :~ Set: if rkt.send handle.#{get-alt-down}() | s ++ { #'alt } | s
-    let s :~ Set: if rkt.send handle.#{get-caps-down}() | s ++ { #'caps } | s
-    let s :~ Set: if rkt.send handle.#{get-mod3-down}() | s ++ { #'mod3 } | s
-    let s :~ Set: if rkt.send handle.#{get-mod4-down}() | s ++ { #'mod4 } | s
-    let s :~ Set: if rkt.send handle.#{get-mod5-down}() | s ++ { #'mod5 } | s
-    s
+    Set{} get_all_down handle
+      .shift
+      .control
+      .meta
+      .alt
+      .caps
+      .mod3
+      .mod4
+      .mod5
 
   // `sym` is restructed to appropriate values in subclasses:
   method is_down(sym):
-    match sym
-    | #'left: rkt.send handle.#{get-left-down}()
-    | #'middle: rkt.send handle.#{get-middle-down}()
-    | #'right: rkt.send handle.#{get-right-down}()
-    | #'shift: rkt.send handle.#{get-shift-down}()
-    | #'control: rkt.send handle.#{get-control-down}()
-    | #'meta: rkt.send handle.#{get-meta-down}()
-    | #'alt: rkt.send handle.#{get-alt-down}()
-    | #'caps: rkt.send handle.#{get-caps-down}()
-    | #'mod3: rkt.send handle.#{get-mod3-down}()
-    | #'mod4: rkt.send handle.#{get-mod4-down}()
-    | #'mod5: rkt.send handle.#{get-mod5-down}()
-    | ~else error("bad symbol")
+    expr.macro 'match_down | $key | ...':
+      'match sym
+       | #'$key: rkt.send handle . $(make_message(key))()
+       | ...
+       | ~else: error("bad symbol")'
+    match_down
+    | left
+    | middle
+    | right
+    | shift
+    | control
+    | meta
+    | alt
+    | caps
+    | mod3
+    | mod4
+    | mod5
 
   property x: rkt.send handle.#{get-x}()
   property y: rkt.send handle.#{get-y}()
-  property timestamp: rkt.send handle.#{get-time-stamp}()  
+  property timestamp: rkt.send handle.#{get-time-stamp}()
 
 
 class MouseEvent():
   extends KeyMouseEvent
   internal _MouseEvent
-  opaque
   private field down_set = #false
 
   constructor (~kind: kind :: MouseEvent.Kind = #'motion,
@@ -88,14 +95,14 @@ class MouseEvent():
     unconvert_kind(rkt.send handle.#{get-event-type}())
 
   override property down :: Set:
-    if down_set
-    | down_set
-    | let s :~ Set: super.down
-      let s :~ Set: if rkt.send handle.#{get-left-down}() | s ++ { #'left } | s
-      let s :~ Set: if rkt.send handle.#{get-middle-down}() | s ++ { #'middle } | s
-      let s :~ Set: if rkt.send handle.#{get-right-down}() | s ++ { #'right } | s
-      down_set := s
-      s
+    down_set || (block:
+                   let s:
+                     super.down get_all_down handle
+                       .left
+                       .middle
+                       .right
+                   down_set := s
+                   s)
 
   override method is_down(sym :: MouseEvent.DownSymbol):
     super.is_down(sym)
@@ -137,7 +144,6 @@ class MouseEvent():
 class KeyEvent():
   extends KeyMouseEvent
   internal _KeyEvent
-  opaque
   private field down_set = #false
 
   constructor (code :: (Char || KeyEvent.Key),
@@ -153,8 +159,8 @@ class KeyEvent():
                ~use_altgr: use_altgr = #true):
     let evt = rkt.make_object(gui.#{key-event%},
                               match code
-                              | c :: Char: code
-                              | ~else convert_key(code),
+                              | _ :: Char: code
+                              | ~else: convert_key(code),
                               down[#'shift], down[#'control], down[#'meta], down[#'alt],
                               x, y,
                               timestamp,
@@ -168,12 +174,11 @@ class KeyEvent():
     super(evt)()
 
   override property down :: Set:
-    if down_set
-    | down_set
-    | let s: super.down
-      down_set := s
-      s
-      
+    down_set || (block:
+                   let s = super.down
+                   down_set := s
+                   s)
+
   override method is_down(sym :: KeyEvent.DownSymbol):
     super.is_down(sym)
 
@@ -269,4 +274,3 @@ class KeyEvent():
   symbol_set_annot DownSymbol:
     { shift, control, meta, alt,
       caps, mod3, mod4, mod5 }
-

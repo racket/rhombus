@@ -13,8 +13,10 @@ import:
   "font.rhm".Font
   "font.rhm"!private._Font
   "region.rhm".Region
-  "region.rhm"!private._Region
-  "region.rhm"!private.set_wrap_dc
+  "region.rhm"!private:
+    expose:
+      _Region
+      set_wrap_dc
   "path.rhm".Path
   "symbol_map.rhm":
     expose:
@@ -34,10 +36,7 @@ interface DC:
   export:
     from_handle
 
-  property handle: get_dc()
-
-  private method get_dc():
-    (this :: _DCer).dc
+  extends DCer
 
   dot '$left . save_and_restore':
     ~head_stx: head
@@ -45,7 +44,7 @@ interface DC:
     match tail
     | ': $body':
         values('block:
-                  let dc :: DC = $left
+                  def dc :: DC = $left
                   try:
                     ~initially dc.save()
                     block $tail
@@ -55,7 +54,7 @@ interface DC:
         syntax_meta.error("expected a block afterward", head)
 
   property size :: Size:
-    def (w, h) = rkt.send get_dc().#{get-size}()
+    let (w, h) = rkt.send handle.#{get-size}()
     Size(w, h)
 
   property width: size.width
@@ -65,86 +64,86 @@ interface DC:
   method restore()
 
   method clear():
-    rkt.send get_dc().clear()
+    rkt.send handle.clear()
 
   method font_metrics_key():
-    rkt.send get_dc().#{cache-font-metrics-key}()
+    rkt.send handle.#{cache-font-metrics-key}()
 
   property
   | pen :: Pen:
-      _Pen(rkt.send get_dc().#{get-pen}())
+      _Pen(rkt.send handle.#{get-pen}())
   | pen := p :: Pen:
-      rkt.send get_dc().#{set-pen}(p.handle)
+      rkt.send handle.#{set-pen}(p.handle)
 
   property
   | brush :: Brush:
-      _Brush(rkt.send get_dc().#{get-brush}())
+      _Brush(rkt.send handle.#{get-brush}())
   | brush := b :: Brush:
-      rkt.send get_dc().#{set-brush}(b.handle)
+      rkt.send handle.#{set-brush}(b.handle)
 
   property
   | font :: Font:
-      _Font(rkt.send get_dc().#{get-font}())      
+      _Font(rkt.send handle.#{get-font}())
   | font := f :: Font:
-      rkt.send get_dc().#{set-font}(f.handle)
+      rkt.send handle.#{set-font}(f.handle)
 
   property
   | clipping_region :: maybe(Region):
-      let r = rkt.send get_dc().#{get-clipping-region}()
+      let r = rkt.send handle.#{get-clipping-region}()
       r && _Region(r)()
   | clipping_region := region :: maybe(Region):
-      rkt.send get_dc().#{set-clipping-region}(region && Region.handle(region))
-    
+      rkt.send handle.#{set-clipping-region}(region && (region :~ _Region).handle)
+
   method copy(src :: RectLike,
               dest :: PointLike):
-    rkt.send get_dc().copy(src.x, src.y, src.width, src.height, dest.x, dest.y)
+    rkt.send handle.copy(src.x, src.y, src.width, src.height, dest.x, dest.y)
 
   method point(pt :: PointLike):
-    rkt.send get_dc().#{draw-point}(pt.x, pt.y)
+    rkt.send handle.#{draw-point}(pt.x, pt.y)
 
   method line(pt1 :: PointLike,
               pt2 :: PointLike):
-    rkt.send get_dc().#{draw-line}(pt1.x, pt1.y, pt2.x, pt2.y)
-    
+    rkt.send handle.#{draw-line}(pt1.x, pt1.y, pt2.x, pt2.y)
+
   method lines([pt :: PointLike, ...],
                ~dpt: dpt :: PointLike = Point.zero,
                ~dx: dx :: Real = 0.0,
                ~dy: dy :: Real = 0.0):
-    rkt.send get_dc().#{draw-lines}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+    rkt.send handle.#{draw-lines}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
 
   method polygon([pt :: PointLike, ...],
                  ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0.0,
                  ~dy: dy :: Real = 0.0,
                  ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send get_dc().#{draw-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy,
-                                      fill_convert(fill))
+    rkt.send handle.#{draw-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy,
+                                    fill_convert(fill))
 
   method path(p :: Path,
               ~dpt: dpt :: PointLike = Point.zero,
               ~dx: dx :: Real = 0.0,
               ~dy: dy :: Real = 0.0,
               ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send get_dc().#{draw-path}(p.hand, dpt.x + dx, dpt.y + dy, fill_convert(fill))
+    rkt.send handle.#{draw-path}(p.handle, dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method rectangle(r :: RectLike):
-    rkt.send get_dc().#{draw-rectangle}(r.x, r.y, r.width, r.height)
-    
+    rkt.send handle.#{draw-rectangle}(r.x, r.y, r.width, r.height)
+
   method rounded_rectangle(r :: RectLike,
                            radius :: Real = -0.25):
-    rkt.send get_dc().#{draw-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
-    
+    rkt.send handle.#{draw-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
+
   method ellipse(r :: RectLike):
-    rkt.send get_dc().#{draw-ellipse}(r.x, r.y, r.width, r.height)
-    
+    rkt.send handle.#{draw-ellipse}(r.x, r.y, r.width, r.height)
+
   method arc(r :: RectLike,
              start :: Real, end :: Real):
-    rkt.send get_dc().#{draw-arc}(r.x, r.y, r.width, r.height, start, end)
+    rkt.send handle.#{draw-arc}(r.x, r.y, r.width, r.height, start, end)
 
   method spline(pt1 :: PointLike,
                 pt2 :: PointLike,
                 pt3 :: PointLike):
-    rkt.send get_dc().#{draw-spline}(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y)
+    rkt.send handle.#{draw-spline}(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y)
 
   method bitmap(b :: Bitmap,
                 ~dpt: dpt :: PointLike = Point.zero,
@@ -154,10 +153,10 @@ interface DC:
                 ~style: style :: DC.BitmapOverlay = #'solid,
                 ~color: color :: Color = Color("black"),
                 ~mask: mask :: maybe(Bitmap) = #false):
-    rkt.send get_dc().#{draw-bitmap-section}(b.handle, dpt.x + dx, dpt.y + dy,
-                                             source.x, source.y,
-                                             source.width, source.height,
-                                             style, color.handle, mask)
+    rkt.send handle.#{draw-bitmap-section}(b.handle, dpt.x + dx, dpt.y + dy,
+                                           source.x, source.y,
+                                           source.width, source.height,
+                                           style, color.handle, mask)
     #void
 
   method text(str :: String,
@@ -166,33 +165,37 @@ interface DC:
               ~dy: dy :: Real = 0,
               ~combine: combine :: DC.TextCombine = #'kern,
               ~angle: angle :: Real = 0.0):
-    rkt.send get_dc().#{draw-text}(str, dpt.x + dx, dpt.y + dy,
-                                   match combine
-                                   | #'kern: #true
-                                   | #'grapheme: #'grapheme
-                                   | ~else: #false,
-                                   0,
-                                   angle)
+    rkt.send handle.#{draw-text}(str, dpt.x + dx, dpt.y + dy,
+                                 match combine
+                                 | #'kern: #true
+                                 | #'grapheme: #'grapheme
+                                 | ~else: #false,
+                                 0,
+                                 angle)
 
-  method | scale(sx :: Real, sy :: Real):
-             rkt.send get_dc().#{scale}(sx, sy)
-         | scale(s :: Real):
-             rkt.send get_dc().#{scale}(s, s)
-  method | translate(dx :: Real, dy :: Real):
-             rkt.send get_dc().#{translate}(dx, dy)
-         | translate(dpt :: PointLike):
-             rkt.send get_dc().#{translate}(dpt.x, dpt.y)
+  method
+  | scale(sx :: Real, sy :: Real):
+      rkt.send handle.#{scale}(sx, sy)
+  | scale(s :: Real):
+      rkt.send handle.#{scale}(s, s)
+  method
+  | translate(dx :: Real, dy :: Real):
+      rkt.send handle.#{translate}(dx, dy)
+  | translate(dpt :: PointLike):
+      rkt.send handle.#{translate}(dpt.x, dpt.y)
+
   method rotate(radians :: Real):
-    rkt.send get_dc().#{rotate}(radians)
+    rkt.send handle.#{rotate}(radians)
   method transform(a :: Transformation):
-    rkt.send get_dc().#{transform}(a)
+    rkt.send handle.#{transform}(a)
 
-  property | transformation :: Transformation:
-               let Array(a, x, y, sx, sy, rot) =  rkt.send get_dc().#{get-transformation}()
-               a
-           | transformation := a :: Transformation:
-               let Array(old_a, x, y, sx, sy, rot) =  rkt.send get_dc().#{get-transformation}()
-               rkt.send get_dc().#{set-transformation}(Array(a, x, y, sx, sy, rot))
+  property
+  | transformation :: Transformation:
+      let Array(a, x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
+      a
+  | transformation := a :: Transformation:
+      let Array(old_a, x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
+      rkt.send handle.#{set-transformation}(Array(a, x, y, sx, sy, rot))
 
   export:
     BitmapOverlay
@@ -220,54 +223,45 @@ fun from_handle(handle) :: DC:
   | error("DC.from_handle", "not a DC handle: " +& handle)
   SomeDC(handle)
 
-namespace main:
-  export: DC
+class SomeDC(private _handle):
+  nonfinal
+  implements DC
+  override property handle: _handle
 
-namespace some_dc:
-  export:
-    rename: DC as SomeDC
+  constructor (hand):
+    super(hand)
 
-  // defined as `DC` for default printer, then exported as `SomeDC`
-  class DC(private hand):
-    nonfinal
-    opaque
-    implements main.DC
-    internal _DC
-    private implements DCer
-    private override property dc: hand
+  private field states = []
 
-    constructor (handle):
-      _DC(handle)
+  override method save():
+    states := [pen,
+               brush,
+               font,
+               clipping_region,
+               transformation,
+               states]
 
-    private field states = []
+  override method restore():
+    match states
+    | []:
+        error("DC.pop", "no state saved")
+    | [old_pen,
+       old_brush,
+       old_font,
+       old_region,
+       old_transformation,
+       old_states]:
+        pen := old_pen
+        brush := old_brush
+        font := old_font
+        clipping_region := old_region
+        transformation := old_transformation
+        states := old_states
 
-    override method save():
-      states := [pen,
-                 brush,
-                 font,
-                 clipping_region,
-                 transformation,
-                 states]
-    
-    override method restore():
-      match states
-      | []:
-          error("DC.pop", "no state saved")
-      | [old_pen,
-         old_brush,
-         old_font,
-         old_region,
-         old_transformation,
-         old_states]:
-          pen := old_pen
-          brush := old_brush
-          font := old_font
-          clipping_region := old_region
-          transformation := old_transformation
-          states := old_states
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.list("DC(", [], ")")
 
-  set_wrap_dc(DC)
-
-import: .some_dc.SomeDC
+set_wrap_dc(SomeDC)
 
 annot.delayed_complete DCForward: DC

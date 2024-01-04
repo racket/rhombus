@@ -1,10 +1,12 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/class.rkt"):
-    expose: send
-            #{is-a?}
-    rename: send as rkt_send
-            #{is-a?} as rkt_is_a
+    expose:
+      send
+      #{is-a?}
+    rename:
+      send as rkt_send
+      #{is-a?} as rkt_is_a
   lib("racket/draw.rkt")
 
 export:
@@ -27,12 +29,11 @@ expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg
   expr_meta.pack_s_exp(['rkt_send',
                         expr_meta.pack_expr('$target ...'),
                         method,
-                        &(for List:
-                            each p: [[kw, expr_meta.pack_expr(kw_arg)], ...]
-                            each i: p
-                            i),
+                        & (for List:
+                             each p: [[kw, expr_meta.pack_expr(kw_arg)], ...]
+                             each i: p
+                             i),
                         expr_meta.pack_expr(arg), ...])
 
 expr.macro '$obj is_a $class':
   expr_meta.pack_s_exp(['rkt_is_a', obj, class])
-  

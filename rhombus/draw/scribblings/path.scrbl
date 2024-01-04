@@ -9,8 +9,7 @@
 @title{Path}
 
 @doc(
-  class Path(handle :: Any):
-    constructor ()
+  class Path()
 ){
 
  Creates a drawing path.

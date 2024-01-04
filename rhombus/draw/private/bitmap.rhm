@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
-  "type.rhm" open
+  "type.rhm".Size
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
@@ -13,16 +13,20 @@ export:
 interface BitmapDC:
   extends DC
 
-class _BitmapDC():
-  extends: SomeDC
+class ABitmapDC():
+  extends SomeDC
   implements BitmapDC
+
   constructor (hand):
-    super(hand)
+    super(hand)()
+
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.list("BitmapDC(", [], ")")
 
 class Bitmap():
   internal _Bitmap
   extends intf.Bitmap
-  opaque
 
   constructor (width :: PosInt,
                height :: PosInt,
@@ -61,7 +65,7 @@ class Bitmap():
     rkt.send handle.#{ok?}()
 
   method make_dc() :: BitmapDC:
-    _BitmapDC(rkt.send handle.#{make-dc}())
+    ABitmapDC(rkt.send handle.#{make-dc}())
 
   method argb_pixels(~x: x :: NonnegInt = 0,
                      ~y: y :: NonnegInt = 0,

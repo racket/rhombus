@@ -20,9 +20,11 @@ dotting.annot_macro 'SizeLike' ('to_size' => 'SizeLike.to_size'):
 namespace SizeLike:
   export:
     to_size
+
   annot.macro 'to_size':
     'Size
        || converting(fun ([width :: NonnegReal, height :: NonnegReal]) :: Size: Size(width, height))
        || converting(fun ({#'width: width :: NonnegReal, #'height: height :: NonnegReal}) :: Size: Size(width, height))'
+
   fun to_size(s :: to_size described_as SizeLike):
     s

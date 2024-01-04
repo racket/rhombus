@@ -10,16 +10,17 @@ module private:
     _Color
     unwrap_color
 
-class Color(handle):
+class Color(private _handle):
   internal _Color
-  
+  property handle: _handle
+
   constructor
   | (name :: String):
-      _Color(rkt.send (rkt.#{the-color-database}).#{find-color}(name))
+      super(rkt.send (rkt.#{the-color-database}).#{find-color}(name))
   | (red :: Byte, green :: Byte, blue :: Byte):
-      _Color(rkt.make_object(rkt.#{color%}, red, green, blue, 1.0))
+      super(rkt.make_object(rkt.#{color%}, red, green, blue, 1.0))
   | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0)):
-      _Color(rkt.make_object(rkt.#{color%}, red, green, blue, alpha))
+      super(rkt.make_object(rkt.#{color%}, red, green, blue, alpha))
 
   property red:
     rkt.send handle.red()

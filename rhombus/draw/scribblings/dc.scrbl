@@ -20,6 +20,18 @@
 }
 
 @doc(
+  property (dc :: DC).handle :: Any
+  fun DC.from_handle(hand :: Any) :: DC
+){
+
+ The @rhombus(DC.handle) property returns a Racket object that
+ corresponds to the drawing context for use directly with
+ @racketmodname(racket/draw). The @rhombus(DC.from_handle) function
+ creates a @rhombus(DC, ~class) from such a Racket object.
+
+}
+
+@doc(
   property (dc :: DC).width :: NonnegReal
   property (dc :: DC).height :: NonnegReal
   property (dc :: DC).size :: Size
@@ -254,17 +266,5 @@
   @item{@rhombus(y0, ~var): an additional amount added to the device @rhombus(y, ~var)}
 
 )
-
-}
-
-@doc(
-  property (dc :: DC).handle :: Any
-  fun DC.from_handle(handle :: Any) :: DC
-){
-
- The @rhombus(DC.handle) property returns a Racket object that
- corresponds to the @tech{drawing context} for use directly with
- @racketmodname(racket/draw). The @rhombus(DC.from_handle) function
- creates a @rhombus(DC) from such a Racket object.
 
 }

@@ -6,10 +6,11 @@ import:
   "color.rhm"!private._Color
   "color.rhm"!private.unwrap_color
   "symbol_map.rhm":
-    expose: symbol_map_annot
-            symbol_set_annot
+    expose:
+      symbol_map_annot
+      symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
-  "bitmap-interface.rhm".Bitmap as BitmapPrivate
+  "bitmap-interface.rhm".Bitmap as _Bitmap
 
 export:
   Brush
@@ -20,60 +21,74 @@ module private:
   export:
     _Brush
 
-class LinearGradient(handle):
-  opaque
+class LinearGradient(private _handle):
   internal _LinearGradient
+  property handle: _handle
+
   constructor (pt1 :: PointLike,
                pt2 :: PointLike,
                [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
-    _LinearGradient(rkt.make_object(rkt.#{linear-gradient%},
-                                    pt1.x, pt1.y,
-                                    pt2.x, pt2.y,
-                                    [[stop, color.handle], ...]))
+    super(rkt.make_object(rkt.#{linear-gradient%},
+                          pt1.x, pt1.y,
+                          pt2.x, pt2.y,
+                          [[stop, color.handle], ...]))
+
   property line :: List.of(Point):
-    let values(x1, y1, x2, y2): rkt.send handle.#{get-line}()
+    let (x1, y1, x2, y2) = rkt.send handle.#{get-line}()
     [Point(x1, y1), Point(x2, y2)]
+
   property stops :: List.of(matching([_ :: Real, _ :: Color])):
-    def [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    let [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
-  
-class RadialGradient(handle):
-  opaque
+
+class RadialGradient(private _handle):
   internal _RadialGradient
+  property handle: _handle
+
   constructor ([pt1 :: PointLike, r1 :: Real],
                [pt2 :: PointLike, r2 :: Real],
                [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
-    _RadialGradient(rkt.make_object(rkt.#{radial-gradient%},
-                                    pt1.x, pt1.y, r1,
-                                    pt2.x, pt2.y, r2,
-                                    [[stop, color.handle], ...]))
+    super(rkt.make_object(rkt.#{radial-gradient%},
+                          pt1.x, pt1.y, r1,
+                          pt2.x, pt2.y, r2,
+                          [[stop, color.handle], ...]))
+
   property circles:: List.of(matching([_ :: Point, _ :: Real])):
-    let values(x0, y0, r0, x1, y1, r1): rkt.send handle.#{get-circles}()
+    let (x0, y0, r0, x1, y1, r1) = rkt.send handle.#{get-circles}()
     [[Point(x0, y0), r0], [Point(x1, y1), r1]]
+
   property stops :: List.of(matching([_ :: Real, _ :: Color])):
-    def [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    let [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
-    
-class Brush(handle):
+
+class Brush(private _handle):
   internal _Brush
-  opaque
+  property handle: _handle
+
   constructor (~color: color :: (String || Color) = "Black",
                ~style: style :: Brush.Style = #'solid,
                ~stipple: stipple :: maybe(Bitmap) = #false,
                ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false):
-    if stipple || gradient
-    | _Brush(rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
-                             stipple && BitmapPrivate.handle(stipple),
-                             match gradient
-                             | g :: LinearGradient: g.handle
-                             | g :: RadialGradient: g.handle
-                             | ~else #false))
-    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)))
+    let hand:
+      if stipple || gradient
+      | rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
+                        stipple && (stipple :~ _Bitmap).handle,
+                        match gradient
+                        | g :: LinearGradient: g.handle
+                        | g :: RadialGradient: g.handle
+                        | ~else: #false)
+      | rkt.send rkt.#{the-brush-list}
+          .#{find-or-create-brush}(unwrap_color(color), style_convert(style))
+    super(hand)
+
   property color :: Color: _Color(rkt.send handle.#{get-color}())
+
   property style: style_unconvert(rkt.send handle.#{get-style}())
+
   property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
-    bm && BitmapPrivate(bm)
+    bm && _Bitmap(bm)
+
   property gradient :: maybe(LinearGradient || RadialGradient):
     let g = rkt.send handle.#{get-gradient}()
     g && (if g rkt.is_a rkt.#{linear-gradient%}
@@ -106,5 +121,8 @@ class Brush(handle):
       horizontal_hatch: #{horizontal-hatch},
       vertical_hatch: #{vertical-hatch} }
 
-def none = _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(rkt.#{make-color}(0, 0, 0),
-                                                                         #'transparent))
+def none = _Brush(rkt.send rkt.#{the-brush-list}
+                    .#{find-or-create-brush}(
+                      rkt.#{make-color}(0, 0, 0),
+                      #'transparent
+                    ))

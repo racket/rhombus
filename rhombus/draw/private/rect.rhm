@@ -18,7 +18,7 @@ class Rect(x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal):
       super(x, y, width, height)
   | (topleft :: PointLike, size :: SizeLike):
       super(topleft.x, topleft.y, size.width, size.height)
-      
+
   property point :: Point: Point(x, y)
   property size :: Size: Size(width, height)
 
@@ -37,6 +37,7 @@ dotting.annot_macro 'RectLike' ('to_rect' => 'RectLike.to_rect'):
 namespace RectLike:
   export:
     to_rect
+
   annot.macro 'to_rect':
     'Rect
        || converting(fun ([x :: Real, y :: Real, w :: NonnegReal, h :: NonnegReal]) :: Rect: Rect(x, y, w, h))
@@ -45,5 +46,6 @@ namespace RectLike:
                        Rect(x, y, w, h))
        || converting(fun ({#'point: topleft :: PointLike, #'size: size :: SizeLike}) :: Rect:
                        Rect(topleft.x, topleft.y, size.width, size.height))'
+
   fun to_rect(r :: to_rect described_as RectLike):
     r

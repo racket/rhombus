@@ -15,9 +15,8 @@ defn.macro '«annot_macro '$name' ('$field' => '$method'): '$ann'»':
     dot.macro '_dot_provider $('$')left . $('$')field':
       ~tail '$('$')tail'
       match field
-      | '$field':
-          convert_dot(left, field, tail, '$method')
-      | ~else #false»'
+      | '$field': convert_dot(left, field, tail, '$method')
+      | ~else: #false»'
 
 meta:
   fun convert_dot(left, field, tail, method):

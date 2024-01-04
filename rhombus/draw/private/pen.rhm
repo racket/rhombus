@@ -5,10 +5,11 @@ import:
   "color.rhm"!private._Color
   "color.rhm"!private.unwrap_color
   "symbol_map.rhm":
-    expose: symbol_map_annot
-            symbol_set_annot
+    expose:
+      symbol_map_annot
+      symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
-  "bitmap-interface.rhm".Bitmap as BitmapPrivate
+  "bitmap-interface.rhm".Bitmap as _Bitmap
 
 export:
   Pen
@@ -17,19 +18,24 @@ module private:
   export:
     _Pen
 
-class Pen(handle):
+class Pen(private _handle):
   internal _Pen
-  opaque
+  property handle: _handle
+
   constructor (~color: color :: (String || Color) = "Black",
                ~width: width :: Real.in(0, 255) = 1,
                ~style: style :: Pen.Style = #'solid,
                ~cap: cap :: Pen.Cap = #'round,
                ~join: join :: Pen.Join = #'round,
                ~stipple: stipple :: maybe(Bitmap) = #false):
-    if stipple
-    | _Pen(rkt.make_object(rkt.#{pen%}, unwrap_color(color), width, style_convert(style), cap, join,
-                           BitmapPrivate.handle(stipple)))
-    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(unwrap_color(color), width, style_convert(style), cap, join))
+    let hand:
+      if stipple
+      | rkt.make_object(rkt.#{pen%}, unwrap_color(color), width, style_convert(style), cap, join,
+                        (stipple :~ _Bitmap).handle)
+      | rkt.send rkt.#{the-pen-list}
+          .#{find-or-create-pen}(unwrap_color(color), width, style_convert(style), cap, join)
+    super(hand)
+
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property width: rkt.send handle.#{get-width}()
   property style: style_unconvert(rkt.send handle.#{get-width}())
@@ -37,7 +43,7 @@ class Pen(handle):
   property join: rkt.send handle.#{get-join}()
   property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
-    bm && BitmapPrivate(bm)
+    bm && _Bitmap(bm)
 
   reconstructor_fields:
     color: this.color
@@ -75,6 +81,7 @@ class Pen(handle):
   symbol_set_annot Join:
     { round, bevel, miter }
 
-def none = _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(rkt.#{make-color}(0, 0, 0),
-                                                                   1,
-                                                                   #'transparent))
+def none = _Pen(rkt.send rkt.#{the-pen-list}
+                  .#{find-or-create-pen}(rkt.#{make-color}(0, 0, 0),
+                                         1,
+                                         #'transparent))

@@ -5,7 +5,7 @@
 @title{Pen}
 
 @doc(
-  class Pen(handle :: Any):
+  class Pen():
     constructor (
       ~color: color :: (String || Color) = "Black",
       ~width: width :: Real.in(0, 255) = 1,

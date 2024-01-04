@@ -16,26 +16,21 @@ import:
   "type.rhm":
     expose:
       LabelString
-      PositionInteger
-      Size
-      Stretch
 
 export:
   Label
 
-class Label(hand, private _at_label :: Obs):
+class Label(private _handle, private _at_label :: Obs):
   implements View
-  internal _Label
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (label :: MaybeObs.of(LabelString),
-               ~color : color :: MaybeObs.of(maybe(Color)) = #false,
-               ~font : font :: Font = normal_control_font):
-    def at_label = obs.to_obs(label)
+               ~color: color :: MaybeObs.of(maybe(Color)) = #false,
+               ~font: font :: Font = normal_control_font):
+    let at_label = obs.to_obs(label)
     super(easy.text(obs.unwrap(at_label),
                     ~color: obs.unwrap(color),
-                    ~font: obs.unwrap_convert(font, fun(fnt): fnt && Font.handle(fnt))),
+                    ~font: obs.unwrap_convert(font, fun(fnt): fnt && (fnt :~ Font).handle)),
           at_label)
 
   property at_label :: Obs:
@@ -47,7 +42,8 @@ class Label(hand, private _at_label :: Obs):
     tiny_control_font
     view_control_font
 
+// TODO these need docs
 def normal_control_font = _Font(racket.#{normal-control-font})
 def small_control_font = _Font(racket.#{small-control-font})
 def tiny_control_font = _Font(racket.#{tiny-control-font})
-def vie_control_font = _Font(racket.#{view-control-font})
+def view_control_font = _Font(racket.#{view-control-font})

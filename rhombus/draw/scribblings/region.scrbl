@@ -9,7 +9,7 @@
 @title{Region}
 
 @doc(
-  class Region(handle :: Any):
+  class Region():
     constructor (dc :: maybe(DC) = #false)
 ){
 

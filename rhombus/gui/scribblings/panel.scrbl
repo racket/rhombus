@@ -5,7 +5,7 @@
 @title(~tag: "panels"){Panels and Tabs}
 
 @doc(
-  class HPanel(handle :: Any):
+  class HPanel():
     implements View
     constructor (
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
@@ -17,7 +17,7 @@
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
       child :: MaybeObs.of(View), ...
     )
-  class VPanel(handle :: Any):
+  class VPanel():
     implements View
     constructor (
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
@@ -37,7 +37,7 @@
 }
 
 @doc(
-  class GroupPanel(handle :: Any):
+  class GroupPanel():
     implements View
     constructor (
       label :: MaybeObs.of(LabelString),
@@ -57,7 +57,7 @@
 }
 
 @doc(
-  class TabsPanel(handle :: Any):
+  class TabsPanel():
     implements View
     constructor (
       choices :: MaybeObs.of(List),
@@ -110,7 +110,7 @@
  The default @rhombus(set_selection, ~var) function corresponds to
 
 @rhombusblock(
-  fun (what, choices, selected):
+  fun (_, _, selected):
     #,(@rhombus(at_selection, ~var)).value := selected
 )
 

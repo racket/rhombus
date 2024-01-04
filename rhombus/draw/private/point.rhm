@@ -20,9 +20,11 @@ dotting.annot_macro 'PointLike' ('to_point' => 'PointLike.to_point'):
 namespace PointLike:
   export:
     to_point
+
   annot.macro 'to_point':
     'Point
        || converting(fun ([x :: Real, y :: Real]) :: Point: Point(x, y))
        || converting(fun ({#'x: x :: Real, #'y: y :: Real}) :: Point: Point(x, y))'
+
   fun to_point(p :: to_point described_as PointLike):
     p

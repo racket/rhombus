@@ -1,5 +1,4 @@
 #lang rhombus/static/and_meta
-
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
@@ -38,10 +37,9 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
               ~easy: $easy_name
               $body
               ...':
-  'class $name(hand):
+  'class $name(private _handle):
      implements View
-     opaque
-     override property handle: hand
+     override property handle: _handle
 
      constructor ($arg :: $arg_annot ..., ...,
                   ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'center],
@@ -72,6 +70,7 @@ def_panel HPanel():
 
   export:
     StyleSymbol
+
   annot.macro 'StyleSymbol': 'PanelStyleSymbol'
 
 def_panel VPanel():
@@ -79,24 +78,25 @@ def_panel VPanel():
 
   export:
     StyleSymbol
+
   annot.macro 'StyleSymbol': 'PanelStyleSymbol'
 
 def_panel GroupPanel(label :: MaybeObs.of(LabelString) => (obs.unwrap)):
   ~easy: group
-  
+
   export:
     StyleSymbol
+
   symbol_map_annot StyleSymbol convert_style:
     { deleted: deleted }
 
-class TabsPanel(hand, private _at_selection :: Obs):
+class TabsPanel(private _handle, private _at_selection :: Obs):
   implements View
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (choices :: MaybeObs.of(List),
                ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-               ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
+               ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: MaybeObs.of(Any) = #false,
                ~action: action :: maybe(Function.of_arity(3)) = #false,
                ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
@@ -108,11 +108,11 @@ class TabsPanel(hand, private _at_selection :: Obs):
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                child :: MaybeObs.of(View),
                ...):
-    def at_selection = obs.to_obs(selection)
-    def use_action = action || (fun(what, choices, selected):
-                                  at_selection.value := selected)
+    let at_selection = obs.to_obs(selection)
+    let action = action || (fun (_, _, selected):
+                              at_selection.value := selected)
     super(easy.tabs(obs.unwrap_list(choices, values),
-                    use_action,
+                    action,
                     ~selection: obs.unwrap(at_selection),
                     #{#:choice->label}: choice_to_label,
                     #{#:choice=?}: choice_equal,
@@ -132,6 +132,7 @@ class TabsPanel(hand, private _at_selection :: Obs):
 
   export:
     StyleSymbol
+
   symbol_map_annot StyleSymbol convert_style:
     { no_border: #{no-border},
       can_reorder: #{can-reorder},

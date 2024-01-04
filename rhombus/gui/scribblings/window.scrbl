@@ -5,7 +5,7 @@
 @title{Windows}
 
 @doc(
-  class Window(handle :: Any):
+  class Window():
     implements WindowView
     constructor (
       ~title: title :: MaybeObs.of(String) = "Untitled",

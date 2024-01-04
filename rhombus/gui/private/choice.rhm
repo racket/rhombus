@@ -2,7 +2,6 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  rhombus/draw.Bitmap
   "view.rhm".View
   "obs.rhm":
     expose:
@@ -17,14 +16,13 @@ import:
 export:
   Choice
 
-class Choice(hand, private _at_selection :: Obs):
+class Choice(private _handle, private _at_selection :: Obs):
   implements View
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (choices :: MaybeObs.of(List),
                ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-               ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
+               ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: MaybeObs.of(Any) = #false,
                ~action: action :: maybe(Function.of_arity(1)) = #false,
                ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
@@ -32,11 +30,11 @@ class Choice(hand, private _at_selection :: Obs):
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
-    def at_selection = obs.to_obs(selection)
-    def use_action = action || (fun(selected):
-                                  at_selection.value := selected)
+    let at_selection = obs.to_obs(selection)
+    let action = action || (fun(selected):
+                              at_selection.value := selected)
     super(easy.choice(obs.unwrap_list(choices, values),
-                      use_action,
+                      action,
                       ~selection: obs.unwrap(at_selection),
                       #{#:choice->label}: choice_to_label,
                       #{#:choice=?}: choice_equal,
@@ -52,6 +50,7 @@ class Choice(hand, private _at_selection :: Obs):
 
   export:
     StyleSymbol
+
   symbol_map_annot StyleSymbol convert_style:
     { horizontal_label: #{horizontal-label},
       vertical_label: #{vertical-label},

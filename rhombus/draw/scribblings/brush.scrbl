@@ -5,7 +5,7 @@
 @title{Brush}
 
 @doc(
-  class Brush(handle :: Any):
+  class Brush():
     constructor (
       ~color: color :: (String || Color) = "Black",
       ~style: style :: Brush.Style = #'solid,
@@ -67,7 +67,7 @@
 }
 
 @doc(
-  class LinearGradient(handle :: Any):
+  class LinearGradient():
     constructor (pt1 :: PointLike,
                  pt2 :: PointLike,
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
@@ -82,7 +82,7 @@
 }
 
 @doc(
-  class RadialGradient(handle :: Any):
+  class RadialGradient():
     constructor ([[pt1 :: PointLike], r1 :: Real],
                  [[pt2 :: PointLike], r2 :: Real],
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])

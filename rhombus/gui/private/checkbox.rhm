@@ -13,18 +13,18 @@ import:
 export:
   Checkbox
 
-class Checkbox(hand, private _at_checked :: Obs):
+class Checkbox(private _handle, private _at_checked :: Obs):
   implements View
-  internal _Checkbox
-  opaque
-  override property handle: hand
+  override property handle: _handle
 
   constructor (label :: MaybeObs.of(LabelString),
                ~action: action :: maybe(Function.of_arity(1)) = #false,
                ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true):
-    def at_checked = obs.to_obs(is_checked)
-    super(easy.checkbox(action || fun (on): at_checked.value := on,
+    let at_checked = obs.to_obs(is_checked)
+    let action = action || (fun (on):
+                              at_checked.value := on)
+    super(easy.checkbox(action,
                         ~label: obs.unwrap(label),
                         #{#:enabled?}: obs.unwrap(is_enabled),
                         #{#:checked?}: obs.unwrap(at_checked)),

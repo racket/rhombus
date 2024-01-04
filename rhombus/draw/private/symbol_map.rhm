@@ -33,4 +33,4 @@ defn.macro 'symbol_set_annot $(name :: Identifier):
      fun is_symbol(v): table[v]
      annot.macro '$name':
        annot_meta.pack_predicate('is_symbol', '()')
-   »'                    
+   »'
