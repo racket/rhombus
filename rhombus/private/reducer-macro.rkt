@@ -21,7 +21,10 @@
          "reducer.rkt"
          "macro-macro.rkt"
          "parens.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "equal.rkt"
+                  [= rhombus=])
+         (submod "equal.rkt" for-parse))
 
 (provide (for-syntax (for-space rhombus/namespace
                                 reducer_meta)))
@@ -130,8 +133,8 @@
     (check-syntax who data)
     (define packed-binds
       (syntax-parse binds
-        #:datum-literals (group op =)
-        [(_::parens (group id:identifier (op =) e ...) ...)
+        #:datum-literals (group)
+        [(_::parens (group id:identifier _::equal e ...) ...)
          #'([id (rhombus-expression (group e ...))] ...)]
         [_ (raise-arguments-error* who rhombus-realm
                                    "ill-formed accumulator bindings"
@@ -180,7 +183,7 @@
     (syntax-parse (unpack-term stx who #f)
       [(parsed #:rhombus/reducer r::reducer-form)
        #`(parens (group chain-back-to-wrapper)
-                 (group (parens (group r.id (op =) (parsed #:rhombus/expr r.init-expr))
+                 (group (parens (group r.id rhombus= (parsed #:rhombus/expr r.init-expr))
                                 ...))
                  (group chain-back-to-body-wrapper)
                  (group #,(and (syntax-e #'r.break-whener) #'chain-back-to-breaker))

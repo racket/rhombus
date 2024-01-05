@@ -157,7 +157,7 @@
 
  @rhombusblock(
   '(#,(@rhombus(complete_id, ~var)),    // expression macro
-    (#,(@rhombus(accum_id, ~var)) #,(@rhombus(=, ~datum)) #,(@rhombus(accum_expr, ~var)), ...),
+    (#,(@rhombus(accum_id, ~var)) = #,(@rhombus(accum_expr, ~var)), ...),
     #,(@rhombus(step_id, ~var)),        // definition macro
     #,(@rhombus(break_id, ~var)),       // optional expression macro
     #,(@rhombus(final_id, ~var)),       // optional expression macro
