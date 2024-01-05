@@ -55,6 +55,7 @@
       reducer_meta.pack(
         'sptt_return',
         '(accum = 0)',
+        #false,
         'sptt_step_defs',
         #false,
         'sptt_final',
@@ -96,7 +97,7 @@
   ~defn:
     reducer.macro 'counted($(r :: reducer_meta.Parsed))':
       let '($wrap, ($(bind && '$id $_'), ...),
-            $step, $break, $final, $finish,
+            $pre, $step, $break, $final, $finish,
             $si, $data)':
         reducer_meta.unpack(r)
       let [si, ...]:
@@ -107,6 +108,7 @@
       reducer_meta.pack(
         'build_return',
         '(count = 0, $bind, ...)',
+        pre.unwrap() && 'build_pre',
         'build_inc',
         break.unwrap() && 'build_break',
         final.unwrap() && 'build_final',
@@ -114,10 +116,10 @@
         '(($statinfo_meta.values_key,
            $(statinfo_meta.pack_group('$si ... ()'))))',
         '[[count, $id, ...],
-          $wrap, $step, $break, $final, $finish,
+          $wrap, $pre, $step, $break, $final, $finish,
           $data]'
       )
-    expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
+    expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $_, $data] $e':
       'call_with_values(
          fun (): $e,
          fun
@@ -129,14 +131,16 @@
                fun (): $wrap $data (values(r, $('...'))),
                fun (r, $('...')): values(r, $('...'), c)
              ))'
-    defn.macro 'build_inc [$_, $_, $step, $_, $_, $_, $data] $e':
+    defn.macro 'build_pre [$_, $_, $pre, $_, $_, $_, $_, $data]':
+      '$pre $data'
+    defn.macro 'build_inc [$_, $_, $_, $step, $_, $_, $_, $data] $e':
       '$step $data $e'
-    expr.macro 'build_break [$_, $_, $_, $break, $_, $_, $data]':
+    expr.macro 'build_break [$_, $_, $_, $_, $break, $_, $_, $data]':
       '$break $data'
-    expr.macro 'build_final [$_, $_, $_, $_, $final, $_, $data]':
+    expr.macro 'build_final [$_, $_, $_, $_, $_, $final, $_, $data]':
       '$final $data'
     expr.macro 'build_finish [[$count, $id, ...],
-                              $_, $_, $_, $_, $finish,
+                              $_, $_, $_, $_, $_, $finish,
                               $data]':
       'block:
          def ($id, ...) = $finish $data
@@ -168,6 +172,7 @@
 @doc(
   fun reducer_meta.pack(complete_id :: Identifier,
                         binds :: Syntax,
+                        pre_clause_id :: maybe(Identifier),
                         step_id :: Identifier,
                         break_id :: maybe(Identifier),
                         final_id :: maybe(Identifier),
@@ -186,6 +191,7 @@
  @rhombusblock(
   '(#,(@rhombus(complete_id, ~var)),    // expression macro
     (#,(@rhombus(accum_id, ~var)) = #,(@rhombus(accum_expr, ~var)), ...),
+    #,(@rhombus(pre_clause_id, ~var)),  // optional definition macro
     #,(@rhombus(step_id, ~var)),        // definition macro
     #,(@rhombus(break_id, ~var)),       // optional expression macro
     #,(@rhombus(final_id, ~var)),       // optional expression macro
@@ -201,10 +207,11 @@
  termination of the iteration depending on element values or an
  accumulated value.
 
- As an example, for the @rhombus(List, ~reducer),
+ As an example, for the @rhombus(List, ~reducer) reducer,
  @rhombus(complete_id, ~var) reverses an accumulated list, one
  @rhombus(accum_id, ~var) is initialized to @rhombus([]) and represents
- an accumulated (in reverse) list, @rhombus(step_id, ~var) adds a new
+ an accumulated (in reverse) list, @rhombus(pre_clause_id, ~var) is
+ false, @rhombus(step_id, ~var) adds a new
  value to the front of the list and binds it to a fresh variable
  @rhombus(next_accum_id, ~var), @rhombus(break_id) and @rhombus(final_id)
  are false (because early termination is never needed by the reducer),
@@ -233,13 +240,20 @@
   input. When no further inputs are available, @rhombus(complete_id, ~var)
   receives the final state to convert it in to the result value.}
 
+ @item{The optional @rhombus(pre_clause_id, ~var) should refer to
+  a macro that expects @rhombus(data, ~var) and produces definitions
+  to be placed before any @rhombus(for) clauses, therefore visible to
+  the whole @rhombus(for) body. For example, it can be used to provide
+  static information for @rhombus(accum_id, ~var)s, which should be
+  visible even in @rhombus(for) clauses.}
+
  @item{The @rhombus(step_id, ~var) should refer to a macro that expects
   @rhombus(data, ~var) followed by an expression that produces a value (or
   multiple values) to be accumulated. It should expand to definitions that
   bind whatever is needed by @rhombus(break_id, ~var),
   @rhombus(final_id, ~var), and especially @rhombus(step_result_id, ~var).}
 
- @item{The optional @rhombus(break_id, ~var) identifier should refer to
+ @item{The optional @rhombus(break_id, ~var) should refer to
   a macro that expects @rhombus(data, ~var) and produces a boolean that
   indicates whether to stop the iteration with the value(s) accumulated
   through previous steps, not accumulating in this step. Supplying
@@ -247,7 +261,7 @@
   needed before the iteration would otherwise complete, which might
   enable a more efficient compilation.}
 
- @item{The optional @rhombus(final_id, ~var) identifier should refer to
+ @item{The optional @rhombus(final_id, ~var) should refer to
   a macro that expects @rhombus(data, ~var) and produces a boolean that
   indicates whether to stop the iteration after the accumulation of the
   current step. Like @rhombus(break_id), Supplying @rhombus(#false) for

@@ -13,6 +13,7 @@ block:
       annot_meta.unpack_predicate(a)
     reducer_meta.pack('build_reverse',
                       '(l = List.empty)',
+                      #false,
                       'build_cons',
                       #false,
                       #false,
@@ -39,7 +40,7 @@ block:
 block:
   reducer.macro 'counted($(r :: reducer_meta.Parsed))':
     let '($wrap, ($(bind && '$id $_'), ...),
-          $step, $break, $final, $finish,
+          $pre, $step, $break, $final, $finish,
           $si, $data)':
       reducer_meta.unpack(r)
     let [si, ...]:
@@ -50,6 +51,7 @@ block:
     reducer_meta.pack(
       'build_return',
       '(count = 0, $bind, ...)',
+      pre.unwrap() && 'build_pre',
       'build_inc',
       break.unwrap() && 'build_break',
       final.unwrap() && 'build_final',
@@ -57,10 +59,10 @@ block:
       '(($statinfo_meta.values_key,
          $(statinfo_meta.pack_group('$si ... ()'))))',
       '[[count, $id, ...],
-        $wrap, $step, $break, $final, $finish,
+        $wrap, $pre, $step, $break, $final, $finish,
         $data]'
     )
-  expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
+  expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $_, $data] $e':
     'call_with_values(
        fun (): $e,
        fun
@@ -71,14 +73,16 @@ block:
              fun (): $wrap $data (values(r, $('...'))),
              fun (r, $('...')): values(r, $('...'), c)
            ))'
-  defn.macro 'build_inc [$_, $_, $step, $_, $_, $_, $data] $e':
+  defn.macro 'build_pre [$_, $_, $pre, $_, $_, $_, $_, $data]':
+    '$pre $data'
+  defn.macro 'build_inc [$_, $_, $_, $step, $_, $_, $_, $data] $e':
     '$step $data $e'
-  expr.macro 'build_break [$_, $_, $_, $break, $_, $_, $data]':
+  expr.macro 'build_break [$_, $_, $_, $_, $break, $_, $_, $data]':
     '$break $data'
-  expr.macro 'build_final [$_, $_, $_, $_, $final, $_, $data]':
+  expr.macro 'build_final [$_, $_, $_, $_, $_, $final, $_, $data]':
     '$final $data'
   expr.macro 'build_finish [[$count, $id, ...],
-                            $_, $_, $_, $_, $finish,
+                            $_, $_, $_, $_, $_, $finish,
                             $data]':
     'block:
        def ($id, ...) = $finish $data

@@ -1,10 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     "annotation-string.rkt")
-         "reducer.rkt"
-         "parse.rkt"
-         "static-info.rkt")
+                     syntax/parse/pre)
+         "reducer.rkt")
 
 (provide (for-space rhombus/reducer
                     all
@@ -18,6 +15,7 @@
         (values (reducer
                  #'build-result
                  #'([result #true])
+                 #f
                  #'build-accum
                  #f
                  #'build-stop-false
@@ -34,6 +32,7 @@
         (values (reducer
                  #'build-result
                  #'([result #f])
+                 #f
                  #'build-accum
                  #f
                  #'build-stop-true
