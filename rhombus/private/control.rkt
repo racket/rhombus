@@ -359,12 +359,11 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ ... a::equal _ ... b::equal . _)
-        (raise-too-many-equals stx #'a #'b)]
-       [(_ lhs ... _::equal rhs ... (tag::block g ...))
-        (values #'(with-continuation-mark
-                    (rhombus-expression (group lhs ...))
-                    (rhombus-expression (group rhs ...))
+       [(_ lhs ...+ _::equal rhs ...+ (tag::block g ...))
+        (check-multiple-equals stx)
+        (values #`(with-continuation-mark
+                    (rhombus-expression (#,group-tag lhs ...))
+                    (rhombus-expression (#,group-tag rhs ...))
                     (rhombus-body-at tag g ...))
                 #'())]))))
 

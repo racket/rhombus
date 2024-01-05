@@ -18,7 +18,9 @@
              #:with lhs #`(#,group-tag n ...)
              #:with rhs #'(rhombus-body-at tag body ...))
     #;
-    (pattern (group n::not-equal ... _::equal expr ...)
+    (pattern (~and g
+                   (group n ...+ _::equal expr ...+))
+             #:do [(check-multiple-equals #'g)]
              #:with lhs #`(#,group-tag n ...)
              #:with rhs #`(rhombus-expression (#,group-tag expr ...)))))
 

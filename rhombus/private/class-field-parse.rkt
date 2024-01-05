@@ -3,13 +3,13 @@
          syntax/parse/pre
          enforest/name-parse
          "tag.rkt"
-         (for-template
-          (submod "annotation.rkt" for-class)
-          "parens.rkt"
-          (submod "equal.rkt" for-parse)
-          "parse.rkt"
-          (only-in "class-clause-primitive.rkt" private)
-          (submod "class-clause.rkt" for-class)))
+         (for-template (submod "annotation.rkt" for-class)
+                       "parens.rkt"
+                       (submod "equal.rkt" for-parse)
+                       "parse.rkt"
+                       (only-in "class-clause-primitive.rkt" private)
+                       (submod "class-clause.rkt" for-class)
+                       "var-decl.rkt"))
 
 (provide :constructor-field
          parse-field-annotations)
@@ -32,36 +32,16 @@
                              #:defaults ([private #'#f]))
                   (~optional (~and _::mutable-id (~parse mutable #'#t))
                              #:defaults ([mutable #'#f]))
-                  name:identifier
-                  ann::not-equal ...
-                  _::equal
-                  default-form ...+)
-           #:with ((~optional c::unparsed-inline-annotation)) #'(ann ...)
-           #:with ann-seq (if (attribute c)
-                              #'c.seq
-                              #'#f)
-           #:with default #`((rhombus-expression (#,group-tag default-form ...))))
+                  d::var-decl)
+           #:with (name:identifier (~optional c::unparsed-inline-annotation)) #'(d.bind ...)
+           #:with ann-seq #'(~? c.seq #f)
+           #:with default #'d.default)
   (pattern (group (~optional (~and _::private-id (~parse private #'#t))
                              #:defaults ([private #'#f]))
                   (~optional (~and _::mutable-id (~parse mutable #'#t))
                              #:defaults ([mutable #'#f]))
-                  name:identifier
-                  ann ...
-                  (block-tag::block default-form ...))
-           #:with ((~optional c::unparsed-inline-annotation)) #'(ann ...)
-           #:with ann-seq (if (attribute c)
-                              #'c.seq
-                              #'#f)
-           #:with default #`((rhombus-body-at block-tag default-form ...)))
-  (pattern (group (~optional (~and _::private-id (~parse private #'#t))
-                             #:defaults ([private #'#f]))
-                  (~optional (~and _::mutable-id (~parse mutable #'#t))
-                             #:defaults ([mutable #'#f]))
-                  name:identifier
-                  (~optional c::unparsed-inline-annotation))
-           #:with ann-seq (if (attribute c)
-                              #'c.seq
-                              #'#f)
+                  name:identifier (~optional c::unparsed-inline-annotation))
+           #:with ann-seq #'(~? c.seq #f)
            #:with default #'#f))
 
 (define (keyword->id kw)
@@ -85,7 +65,7 @@
   (pattern (group keyword:keyword _::equal default-form ...+)
            #:with ann-seq #'#f
            #:with name (keyword->id #'keyword)
-           #:with default #`((rhombus-expression (#,group-tag default-form ...)))
+           #:with default #`(rhombus-expression (#,group-tag default-form ...))
            #:with mutable #'#f
            #:with private #'#f))
 

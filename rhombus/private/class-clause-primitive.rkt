@@ -119,11 +119,9 @@
     #:attributes (form)
     (pattern (~seq form-id d::var-decl)
              #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(d.bind ...)
-             #:with ann-seq (if (attribute c)
-                                #'c.seq
-                                #'#f)
+             #:with ann-seq #'(~? c.seq #f)
              #:with form (wrap-class-clause #`(#:field id
-                                               tmp-id ann-seq d.blk form-id
+                                               tmp-id ann-seq d.default form-id
                                                #,mode)))))
 
 (define-class-clause-syntax field

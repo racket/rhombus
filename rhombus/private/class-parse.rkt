@@ -117,7 +117,7 @@
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
 
-(struct added-field (id arg-id arg-blk arg-stx-params form-id static-infos converter annotation-str mode))
+(struct added-field (id arg-id arg-default arg-stx-params form-id static-infos converter annotation-str mode))
 (struct added-method (id rhs-id rhs stx-params maybe-ret result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
@@ -302,7 +302,7 @@
               (unbox (syntax-e arg))
               arg)
           (if (box? (syntax-e arg))
-              #'(unsafe-undefined)
+              #'unsafe-undefined
               #'#f)))
 
 (define (extract-super-constructor-fields super)
@@ -330,7 +330,7 @@
           (define arg/v (cdar all-fields))
           (define arg (if (vector? arg/v) (vector-ref arg/v 0) arg/v))
           (define k (datum->syntax #f (if (box? arg) (unbox arg) arg)))
-          (define d (if (box? arg) #'(unsafe-undefined) #'#f))
+          (define d (if (box? arg) #'unsafe-undefined #'#f))
           (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]
          [(and (pair? fields) (identifier? (field-desc-constructor-arg (car fields)))) ; not in constructor
           (loop (cdr all-fields) (cdr fields) rev-fields rev-keywords rev-defaults)]

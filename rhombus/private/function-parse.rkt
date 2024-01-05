@@ -111,7 +111,9 @@
   (define-syntax-class :kw-opt-binding
     #:attributes (kw parsed default)
     #:datum-literals (group)
-    (pattern (group kw:keyword (_::block (group a::not-equal ...+ eq::equal e ...+)))
+    (pattern (~and g
+                   (group kw:keyword (_::block (group a ...+ eq::equal e ...+))))
+             #:do [(check-multiple-equals #'g)]
              #:cut
              #:with default #`(#,group-tag e ...)
              #:do [(check-argument-annot #'default #'eq)]
@@ -127,7 +129,9 @@
              #:with ::binding (keyword->binding #'kw))
     (pattern ::has-kw-binding
              #:with default #'#f)
-    (pattern (group a::not-equal ...+ eq::equal e ...+)
+    (pattern (~and g
+                   (group a ...+ eq::equal e ...+))
+             #:do [(check-multiple-equals #'g)]
              #:cut
              #:with kw #'#f
              #:with default #`(#,group-tag e ...)
@@ -154,13 +158,17 @@
   (define-syntax-class :kw-opt-arity-arg
     #:attributes (kw default)
     #:datum-literals (group)
-    (pattern (group kw:keyword (_::block (group _::not-equal ...+ _::equal _ ...+)))
+    (pattern (~and g
+                   (group kw:keyword (_::block (group _ ...+ _::equal _ ...+))))
+             #:do [(check-multiple-equals #'g)]
              #:with default #'#t)
     (pattern (group kw:keyword (_::block (group _ ...+ (b-tag::block . _))))
              #:with default #'#t)
     (pattern (group kw:keyword _::equal _ ...+)
              #:with default #'#t)
-    (pattern (group _::not-equal ...+ _::equal _ ...+)
+    (pattern (~and g
+                   (group _ ...+ _::equal _ ...+))
+             #:do [(check-multiple-equals #'g)]
              #:with default #'#t
              #:with kw #'#f)
     (pattern (group a ...+ (_::block . _))

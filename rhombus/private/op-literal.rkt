@@ -6,8 +6,6 @@
                     [... rhombus...])
          (rename-in "underscore.rkt"
                     [_ rhombus_])
-         (rename-in "equal.rkt"
-                    [= rhombus=])
          "dollar.rkt"
          "rest-marker.rkt"
          "assign.rkt"
@@ -20,7 +18,6 @@
           :_ :_-expr :_-bind
           :& :&-expr :&-bind
           :~& :~&-expr :~&-bind
-          := :=-expr :=-bind
           ::= ::=-expr ::=-bind))
 
 (begin-for-syntax
@@ -53,5 +50,4 @@
   (define-literal-class :_ :_-expr :_-bind rhombus_ "a wildcard operator")
   (define-literal-class :& :&-expr :&-bind & "a splice operator")
   (define-literal-class :~& :~&-expr :~&-bind ~& "a keyword splice operator")
-  (define-literal-class := :=-expr :=-bind rhombus= "an equal operator")
   (define-literal-class ::= ::=-expr ::=-bind := "an assignment operator"))

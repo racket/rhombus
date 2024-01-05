@@ -30,12 +30,10 @@
   (define-syntax-class :binding+rhs
     #:attributes ([bind 1] [rhs 1])
     #:datum-literals (group)
-    (pattern (~and stx (group _ ... a::equal _ ... b::equal . _))
-             #:do [(raise-too-many-equals #'stx #'a #'b)]
-             #:with (bind ...) '()
-             #:with (rhs ...) '())
-    (pattern (group bind ... _::equal rhs ...))
-    (pattern (group bind ... (b-tag::block body ...))
+    (pattern (~and g
+                   (group bind ...+ _::equal rhs ...+))
+             #:do [(check-multiple-equals #'g)])
+    (pattern (group bind ...+ (b-tag::block body ...))
              #:with (rhs ...) #'(block (b-tag body ...)))))
 
 (define-for-syntax (make_sequence_constructor proc)

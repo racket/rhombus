@@ -6,7 +6,8 @@
          "parens.rkt"
          "parse.rkt"
          "function-arity.rkt"
-         "op-literal.rkt")
+         "op-literal.rkt"
+         (submod "equal.rkt" for-parse))
 
 (provide (for-syntax :class-args))
 
@@ -31,21 +32,21 @@
     (pattern (group kw:keyword (_::block (group id:identifier)))
              #:with (formal ...) (list #'kw #'id)
              #:with def? #'#f)
-    (pattern (group id:identifier _::=-bind rhs ...+)
+    (pattern (group id:identifier _::equal rhs ...+)
              #:with (formal ...) (list #`[id (rhombus-expression (#,group-tag rhs ...))])
              #:with kw #'#f
              #:with def? #'#t)
-    (pattern (group id:identifier (tag::block body ...+))
+    (pattern (group id:identifier (tag::block body ...))
              #:with (formal ...) (list #'[id (rhombus-body-at tag body ...)])
              #:with kw #'#f
              #:with def? #'#t)
-    (pattern (group kw:keyword _::=-bind rhs ...+)
+    (pattern (group kw:keyword _::equal rhs ...+)
              #:with (formal ...) (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (#,group-tag rhs ...))])
              #:with def? #'#f)
-    (pattern (group kw:keyword (_::block (group id:identifier _::=-bind rhs ...+)))
+    (pattern (group kw:keyword (_::block (group id:identifier _::equal rhs ...+)))
              #:with (formal ...) (list #'kw #`[id (rhombus-expression (#,group-tag rhs ...))])
              #:with def? #'#t)
-    (pattern (group kw:keyword (_::block (group id:identifier (tag::block body ...+))))
+    (pattern (group kw:keyword (_::block (group id:identifier (tag::block body ...))))
              #:with (formal ...) (list #'kw #'[id (rhombus-body-at tag body ...)])
              #:with def? #'#t))
 

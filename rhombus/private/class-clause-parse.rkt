@@ -165,7 +165,7 @@
               [(#:static-infos expr)
                ;; covered in annotation pass
                options]
-              [(#:field id rhs-id ann-seq blk form-id mode)
+              [(#:field id rhs-id ann-seq default form-id mode)
                (with-syntax ([(converter annotation-str static-infos)
                               (with-continuation-mark
                                syntax-parameters-key (car stx-paramss)
@@ -174,7 +174,7 @@
                                  [(c::inline-annotation)
                                   (list #'c.converter #'c.annotation-str #'c.static-infos)]))])
                  (hash-set options 'fields (cons (added-field #'id
-                                                              #'rhs-id #'blk (car stx-paramss) #'form-id
+                                                              #'rhs-id #'default (car stx-paramss) #'form-id
                                                               #'static-infos
                                                               #'converter
                                                               #'annotation-str
@@ -314,7 +314,7 @@
                                                         [(implements_visibilities)
                                                          '(private)]
                                                         [else null])]
-                       [(#:field id rhs-id ann-seq blk form-id mode)
+                       [(#:field id rhs-id ann-seq default form-id mode)
                         (case key
                           [(field-names) (list #'id)]
                           [(field-visibilities) (list #'mode)]

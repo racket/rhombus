@@ -66,7 +66,7 @@
                             (cond
                               [(syntax-e df)
                                #`[#,f (if (eq? #,tmp unsafe-undefined)
-                                          (let ([#,f . #,df]) #,f)
+                                          (let ([#,f #,df]) #,f)
                                           #,tmp)]]
                               [else
                                #`[#,f #,tmp]]))
@@ -90,7 +90,7 @@
                                                                              defaults))])
                                                (let ([arg (if (syntax-e df)
                                                               (if final?
-                                                                  #`[#,f . #,df]
+                                                                  #`[#,f #,df]
                                                                   #`[#,f unsafe-undefined])
                                                               f)])
                                                  (if (keyword? (syntax-e kw))

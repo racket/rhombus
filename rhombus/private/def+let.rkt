@@ -39,8 +39,6 @@
       (check-context stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ ... a::equal _ ... b::equal . _)
-         (raise-too-many-equals stx #'a #'b)]
         [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block body ...)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
@@ -51,7 +49,8 @@
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition
                                    #:check-bind-uses check-bind-uses)]
-        [(form-id any::not-equal ...+ _::equal rhs ...+)
+        [(form-id any ...+ _::equal rhs ...+)
+         (check-multiple-equals stx)
          (build-value-definitions #'form-id
                                   (no-srcloc #`(#,group-tag any ...))
                                   #`(#,group-tag rhs ...)

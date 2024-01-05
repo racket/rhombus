@@ -5,7 +5,8 @@
          "pattern-clause.rkt"
          "parens.rkt"
          "parse.rkt"
-         "op-literal.rkt")
+         "op-literal.rkt"
+         (submod "equal.rkt" for-parse))
 
 (provide (for-space rhombus/pattern_clause
                     field
@@ -29,7 +30,7 @@
        #:datum-literals (op)
        [(_ field::field-lhs (tag::block in-block ...))
         #'(#:field field.id field.depth (rhombus-body-at tag in-block ...))]
-       [(_ field::field-lhs _::=-expr rhs ...)
+       [(_ field::field-lhs _::equal rhs ...)
         #`(#:field field.id field.depth (rhombus-expression (#,group-tag rhs ...)))]))))
 
 (define-pattern-clause-syntax match_def
@@ -39,7 +40,7 @@
        #:datum-literals (op)
        [(_ (~and pat (_::quotes p ...)) (tag::block in-block ...))
         #'(#:also pat (rhombus-body-at tag in-block ...))]
-       [(_ (~and pat (_::quotes p ...)) _::=-expr rhs ...)
+       [(_ (~and pat (_::quotes p ...)) _::equal rhs ...)
         #`(#:also pat (rhombus-expression (#,group-tag rhs ...)))]))))
 
 (define-pattern-clause-syntax match_when

@@ -1,11 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
                      "class-parse.rkt")
-         "parse.rkt"
          (only-in "binding.rkt" raise-binding-failure)
-         "syntax-parameter.rkt"
-         "parens.rkt")
+         "syntax-parameter.rkt")
 
 (provide (for-syntax build-added-field-arg-definitions))
 
@@ -15,10 +12,7 @@
                   [tmp-id (added-field-arg-id added)]
                   [rhs #`(with-syntax-parameters
                            #,(added-field-arg-stx-params added)
-                           #,(let ([blk (added-field-arg-blk added)])
-                               (syntax-parse blk
-                                 [(_::block . _) #`(rhombus-body-at . #,blk)]
-                                 [_ #`(rhombus-expression #,blk)])))]
+                           #,(added-field-arg-default added))]
                   [converter (added-field-converter added)]
                   [annotation-str (added-field-annotation-str added)]
                   [form-id (added-field-form-id added)])
