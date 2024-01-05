@@ -186,6 +186,21 @@ block:
     ~throws "expression with addition or subtraction"
 
 block:
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    meta:
+      syntax_class Arithmetic:
+        description "an expression with addition or subtraction"
+      | '$x + $y'
+      | '$x - $y'
+    expr.macro 'right_operand $(e :: Arithmetic)':
+      values(e.y, '')
+    right_operand 1 +
+    ~throws "expression with addition or subtraction"
+
+block:
   syntax_class Foo
   | '$x + $y'
   | '$x + $y + $z'

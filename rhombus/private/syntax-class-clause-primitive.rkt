@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/name-parse)
+                     enforest/name-parse
+                     "tag.rkt")
          "syntax-class-clause.rkt"
          (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
@@ -91,7 +92,7 @@
        [(_ (tag::block e ...+))
         #`(#:description #,stx (rhombus-body-at tag e ...))]
        [(_ e ...)
-        #`(#:description #,stx (rhombus-expression e ...))]))))
+        #`(#:description #,stx (rhombus-expression (#,group-tag e ...)))]))))
 
 (begin-for-syntax
   (struct declared-field (id depth unpack*-id) #:prefab)
