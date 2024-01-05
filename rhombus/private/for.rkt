@@ -59,7 +59,7 @@
      (define-values (red-parsed body)
        (syntax-parse stx
          #:datum-literals (group)
-         [(_ pre_t ... (_::block body ...+ (group #:into red ...)))
+         [(_ pre_t ... (_::block body ... (group #:into red ...)))
           #:cut
           #:with pre::maybe_ends_each #'(pre_t ...)
           #:do [(when (attribute pre.red-parsed)
@@ -69,7 +69,7 @@
           #:with redr::reducer #`(#,group-tag red ...)
           (values #'redr.parsed
                   #'((~? pre.each) body ...))]
-         [(_ pre_t ... (_::block body ...+))
+         [(_ pre_t ... (_::block body ...))
           #:cut
           #:with pre::maybe_ends_each #'(pre_t ...)
           (values (attribute pre.red-parsed)

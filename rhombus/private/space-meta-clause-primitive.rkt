@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/symbol)
+                     racket/symbol
+                     "tag.rkt")
          "space-meta-clause.rkt"
          "parens.rkt"
          "parse.rkt")
@@ -51,10 +52,10 @@
   (space-meta-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id (tag::block g ...+))
+       [(form-id (tag::block g ...))
         (wrap-clause #`(#,kw #,stx (rhombus-body-at tag g ...)))]
        [(form-id e ...)
-        (wrap-clause #`(#,kw #,stx (rhombus-expression (group e ...))))]))))
+        (wrap-clause #`(#,kw #,stx (rhombus-expression (#,group-tag e ...))))]))))
 
 (define-space-meta-clause-syntax description
   (make-expression-transformer '#:desc))

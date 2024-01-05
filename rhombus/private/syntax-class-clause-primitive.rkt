@@ -89,7 +89,7 @@
   (syntax-class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ (tag::block e ...+))
+       [(_ (tag::block e ...))
         #`(#:description #,stx (rhombus-body-at tag e ...))]
        [(_ e ...)
         #`(#:description #,stx (rhombus-expression (#,group-tag e ...)))]))))

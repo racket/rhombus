@@ -291,7 +291,7 @@
        [else
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]
-    [(_::block g ...+) #`(rhombus-body g ...)]
+    [(_::block g ...) #`(rhombus-body g ...)]
     [(group . _)
      (syntax-parse e
        [g-e::expression #'g-e.parsed])]))
