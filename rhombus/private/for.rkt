@@ -81,7 +81,7 @@
           (respan stx)
           #`(for (#:splice (for-clause-step #,stx
                                             #,static?
-                                            [(begin (void))]
+                                            [(void-result [])]
                                             . #,body))
               (void)))]
         [else
@@ -95,7 +95,10 @@
                  (for/fold f.binds
                            (#:splice (for-clause-step #,stx
                                                       #,static?
-                                                      [(f.body-wrapper f.data)]
+                                                      [(f.body-wrapper f.data)
+                                                       #,@(if (syntax-e #'f.pre-clause-former)
+                                                              (list #'(f.pre-clause-former f.data))
+                                                              '())]
                                                       . #,body))
                    #,@(if (syntax-e #'f.break-whener)
                           #`(#:break (f.break-whener f.data))
@@ -107,13 +110,18 @@
              #'f.static-infos)])])
       #'()))))
 
+(define-syntax (void-result stx)
+  (syntax-parse stx
+    [(_ _ e) #'e]))
+
 (define-splicing-for-clause-syntax for-clause-step
   (lambda (stx)
     (syntax-parse stx
       #:datum-literals (group)
-      [(_ orig static? [finish] . bodys)
+      [(_ orig static? [finish (~optional pre-clause-form)] . bodys)
        ;; initialize state
-       #`(#:splice (for-clause-step orig static? [finish () () (void) (void) #hasheq()]
+       #`(#:splice (for-clause-step orig static?
+                                    [finish () () (void) (~? pre-clause-form (void)) #hasheq()]
                                     . bodys))]
       [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher binder stx-params])
        (when (null? (syntax-e #'rev-bodys))
