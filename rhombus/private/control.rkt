@@ -89,72 +89,66 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ (tag::block g ...+))
-        (define gs (syntax->list #'(g ...)))
+       [(_ (tag::block g ...))
         (define-values (rev-gs state)
-          (let loop ([gs gs] [rev-gs null] [state #hasheq()])
-            (cond
-              [(null? gs) (values rev-gs state)]
-              [else
-               (syntax-parse (car gs)
-                 #:datum-literals (group)
-                 [(group #:initially . _)
-                  #:when (hash-ref state 'initially #f)
-                  (raise-syntax-error #f "duplicate `~initially` clause" stx (car gs))]
-                 [(group #:initially . _)
-                  #:when (or (pair? rev-gs) (positive? (hash-count state)))
-                  (raise-syntax-error #f "`~initially` clause must appear at the start of the body" stx (car gs))]
-                 [(group #:initially (tag::block body ...+))
-                  (loop (cdr gs) rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
-                 [(group #:initially term ...+)
-                  (loop (cdr gs) rev-gs (hash-set state 'initially #'(rhombus-expression (group term ...))))]
-                 [(group (~and kw #:initially) . _)
-                  (raise-syntax-error #f "expected block or expression after `~initially`" stx #'kw)]
-                 [(group #:finally . _)
-                  #:when (hash-ref state 'finally #f)
-                  (raise-syntax-error #f "duplicate `~finally` clause" stx (car gs))]
-                 [(group #:finally (tag::block body ...+))
-                  (loop (cdr gs) rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
-                 [(group #:finally term ...+)
-                  (loop (cdr gs) rev-gs (hash-set state 'finally #'(rhombus-expression (group term ...))))]
-                 [(group (~and kw #:finally) . _)
-                  (raise-syntax-error #f "expected block or expression after `~finally`" stx #'kw)]
-                 [(group #:catch . _)
-                  #:when (hash-ref state 'handler #f)
-                  (raise-syntax-error #f "duplicate `~catch` clause" stx (car gs))]
-                 [(group #:catch . _)
-                  #:when (hash-ref state 'finally #f)
-                  (raise-syntax-error #f "`~catch` not allowed after `~finally`" stx (car gs))]
-                 [(group #:catch (_::alts b ...))
-                  (define handler
-                    (let catch-loop ([bs (syntax->list #'(b ...))])
-                      (cond
-                        [(null? bs) #'raise]
-                        [else
-                         (syntax-parse (car bs)
-                           [(_ (_ bind ...+ (tag::block body ...+)))
-                            (binding-to-function #`(#,group-tag bind ...)
-                                                 #'(rhombus-body-at tag body ...)
-                                                 (lambda ()
-                                                   (catch-loop (cdr bs))))]
-                           [_ (raise-syntax-error #f
-                                                  "expected a binding and non-empty block for `~catch` alternative"
-                                                  stx
-                                                  (car bs))])])))
-                  (loop (cdr gs) rev-gs (hash-set state 'handler handler))]
-                 [(group #:catch bind ...+ (tag::block body ...+))
-                  (loop (cdr gs) rev-gs (hash-set state 'handler (binding-to-function #`(#,group-tag bind ...)
-                                                                                      #'(rhombus-body-at tag body ...)
-                                                                                      (lambda () #'raise))))]
-                 [(group (~and kw #:catch) . _)
-                  (raise-syntax-error #f "expected alternatives or a binding and non-empty block after `~catch`" stx #'kw)]
-                 [_
-                  (when (or (hash-ref state 'handler #f)
-                            (hash-ref state 'finally #f))
-                    (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`"
-                                        stx
-                                        (car gs)))
-                  (loop (cdr gs) (cons (car gs) rev-gs) state)])])))
+          (for/fold ([rev-gs null]
+                     [state #hasheq()])
+                    ([g (in-list (syntax->list #'(g ...)))])
+            (syntax-parse g
+              #:datum-literals (group)
+              [(group #:initially . _)
+               #:when (hash-ref state 'initially #f)
+               (raise-syntax-error #f "duplicate `~initially` clause" stx g)]
+              [(group #:initially . _)
+               #:when (or (pair? rev-gs) (positive? (hash-count state)))
+               (raise-syntax-error #f "`~initially` clause must appear at the start of the body" stx g)]
+              [(group #:initially (tag::block body ...))
+               (values rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
+              [(group #:initially term ...+)
+               (values rev-gs (hash-set state 'initially #`(rhombus-expression (#,group-tag term ...))))]
+              [(group #:initially . _)
+               (raise-syntax-error #f "expected block or expression after `~initially`" stx g)]
+              [(group #:finally . _)
+               #:when (hash-ref state 'finally #f)
+               (raise-syntax-error #f "duplicate `~finally` clause" stx g)]
+              [(group #:finally (tag::block body ...))
+               (values rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
+              [(group #:finally term ...+)
+               (values rev-gs (hash-set state 'finally #`(rhombus-expression (#,group-tag term ...))))]
+              [(group #:finally . _)
+               (raise-syntax-error #f "expected block or expression after `~finally`" stx g)]
+              [(group #:catch . _)
+               #:when (hash-ref state 'handler #f)
+               (raise-syntax-error #f "duplicate `~catch` clause" stx g)]
+              [(group #:catch . _)
+               #:when (hash-ref state 'finally #f)
+               (raise-syntax-error #f "`~catch` not allowed after `~finally`" stx g)]
+              [(group #:catch (_::alts b ...))
+               (define-values (b-parseds rhss)
+                 (for/lists (b-parseds rhss)
+                            ([b (in-list (syntax->list #'(b ...)))])
+                   (syntax-parse b
+                     #:datum-literals (group)
+                     [(_::block (group bind ...+ (~and rhs (_::block . _))))
+                      #:with b::binding #`(#,group-tag bind ...)
+                      (values #'b.parsed #'rhs)]
+                     [_ (raise-syntax-error #f
+                                            "expected a binding and block for `~catch` alternative"
+                                            stx
+                                            b)])))
+               (define handler (build-try-handler b-parseds rhss))
+               (values rev-gs (hash-set state 'handler handler))]
+              [(group #:catch bind ...+ (~and rhs (_::block . _)))
+               #:with b::binding #`(#,group-tag bind ...)
+               (define handler (build-try-handler (list #'b.parsed) (list #'rhs)))
+               (values rev-gs (hash-set state 'handler handler))]
+              [(group #:catch . _)
+               (raise-syntax-error #f "expected alternatives or a binding and block after `~catch`" stx g)]
+              [_
+               (when (or (hash-ref state 'handler #f)
+                         (hash-ref state 'finally #f))
+                 (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`" stx g))
+               (values (cons g rev-gs) state)])))
         (let* ([body #`(rhombus-body-at tag #,@(reverse rev-gs))]
                [body (let ([handler (hash-ref state 'handler #f)])
                        (if handler
@@ -165,7 +159,7 @@
                            [finally (hash-ref state 'finally #f)])
                        (if (or finally initially)
                            #`(dynamic-wind
-                                     #,(if initially #`(lambda () #,initially) #'void)
+                               #,(if initially #`(lambda () #,initially) #'void)
                                (lambda () #,body)
                                #,(if finally #`(lambda () #,finally) #'void))
                            body))])
@@ -199,106 +193,86 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ tag-expr ... (tag::block g ...+))
+       [(_ tag-expr ... (tag::block g ...))
         (define-values (rev-gs state)
-          (let loop ([gs (syntax->list #'(g ...))] [rev-gs null] [state #hasheq()])
-            (cond
-              [(null? gs) (values rev-gs state)]
-              [else
-               (syntax-parse (car gs)
-                 #:datum-literals (group)
-                 [(group #:catch . _)
-                  #:when (hash-ref state 'handler #f)
-                  (raise-syntax-error #f "duplicate `~catch` clause" stx (car gs))]
-                 [(group #:catch (_::alts b ...))
-                  (define handler
-                    (let catch-loop ([bs (syntax->list #'(b ...))]
-                                     [rev-argss null]
-                                     [rev-arg-parsedss null]
-                                     [rev-rhss null])
-                      (cond
-                        [(null? bs)
-                         (define argss (reverse rev-argss))
-                         (define arg-parsedss (reverse rev-arg-parsedss))
-                         (define rhss (reverse rev-rhss))
-                         (define falses (map (lambda (f) #f) argss))
-                         (define falses-stx (datum->syntax #f (map (lambda (f) #'#f) argss)))
-                         (define-values (proc arity)
-                           (build-case-function no-adjustments
-                                                #'prompt_handler
-                                                #f #f
-                                                (datum->syntax #f
-                                                               (for/list ([args (in-list argss)])
-                                                                 (for/list ([arg (in-list (syntax->list args))])
-                                                                   #'#f)))
-                                                (datum->syntax #f argss) (datum->syntax #f arg-parsedss)
-                                                falses-stx falses-stx
-                                                falses-stx falses-stx
-                                                falses falses
-                                                (datum->syntax #f rhss)
-                                                (car gs)))
-                         proc]
-                        [else
-                         (syntax-parse (car bs)
-                           [(_ (_ (parens-tag::parens arg::binding ...) (~and rhs (_::block body ...+))))
-                            (catch-loop (cdr bs)
-                                        (cons #'(arg ...) rev-argss)
-                                        (cons #'(arg.parsed ...) rev-arg-parsedss)
-                                        (cons #'rhs rev-rhss))]
-                           [(_ (_ bind ...+ (~and rhs (_::block body ...+))))
-                            #:with arg::binding #`(#,group-tag bind ...)
-                            (catch-loop (cdr bs)
-                                        (cons #'(arg) rev-argss)
-                                        (cons #'(arg.parsed) rev-arg-parsedss)
-                                        (cons #'rhs rev-rhss))]
-                           [_ (raise-syntax-error #f
-                                                  "expected a binding and non-empty block for `~catch` alternative"
-                                                  stx
-                                                  (car bs))])])))
-                  (loop (cdr gs) rev-gs (hash-set state 'handler handler))]
-                 [(group #:catch bind ...+ (~and rhs (tag::block body ...+)))
-                  (define handler
-                    (syntax-parse #`(#,group-tag bind ...)
-                      [(parens-tag::parens arg::binding ...)
-                       (define falses (datum->syntax #f (map (lambda (a) #'#f) (syntax->list #'(arg ...)))))
-                       (define-values (proc arity)
-                         (build-function no-adjustments
-                                         #'prompt_handler
-                                         falses #'(arg ...) #'(arg.parsed ...) falses
-                                         #'#f #'#f
-                                         #'#f #'#f
-                                         #f #f
-                                         #'rhs
-                                         (car gs)))
-                       proc]
-                      [arg::binding
-                       (define-values (proc arity)
-                         (build-function no-adjustments
-                                         #'prompt_handler
-                                         #'(#f) #'(arg) #'(arg.parsed) #'(#f)
-                                         #'#f #'#f
-                                         #'#f #'#f
-                                         #f #f
-                                         #'rhs
-                                         (car gs)))
-                       proc]))
-                  (loop (cdr gs) rev-gs (hash-set state 'handler handler))]
-                 [(group #:catch (tag::block entry))
-                  #:with (~var e (:entry-point no-adjustments)) #'entry
-                  (loop (cdr gs) rev-gs (hash-set state 'handler #'e.parsed))]
-                 [(group #:catch . _)
-                  (raise-syntax-error #f "expected a non-empty block after `~catch`" stx #'kw)]
-                 [_
-                  (when (hash-ref state 'handler #f)
-                    (raise-syntax-error #f "expression or definition not allowed after `~catch`"
-                                        stx
-                                        (car gs)))
-                  (loop (cdr gs) (cons (car gs) rev-gs) state)])])))
+          (for/fold ([rev-gs null]
+                     [state #hasheq()])
+                    ([g (in-list (syntax->list #'(g ...)))])
+            (syntax-parse g
+              #:datum-literals (group)
+              [(group #:catch . _)
+               #:when (hash-ref state 'handler #f)
+               (raise-syntax-error #f "duplicate `~catch` clause" stx g)]
+              [(group #:catch (_::alts b ...))
+               (define-values (argss arg-parsedss rhss)
+                 (for/lists (argss arg-parsedss rhss)
+                            ([b (in-list (syntax->list #'(b ...)))])
+                   (syntax-parse b
+                     #:datum-literals (group)
+                     [(_::block (group (_::parens arg::binding ...) (~and rhs (_::block . _))))
+                      (values #'(arg ...) #'(arg.parsed ...) #'rhs)]
+                     [(_::block (group bind ...+ (~and rhs (_::block . _))))
+                      #:with arg::binding #`(#,group-tag bind ...)
+                      (values #'(arg) #'(arg.parsed) #'rhs)]
+                     [_ (raise-syntax-error #f
+                                            "expected a binding and block for `~catch` alternative"
+                                            stx
+                                            b)])))
+               (define falses (map (lambda (f) #f) argss))
+               (define falses-stx (datum->syntax #f (map (lambda (f) #'#f) argss)))
+               (define-values (handler arity)
+                 (build-case-function no-adjustments
+                                      #'prompt_handler
+                                      #f #f
+                                      (datum->syntax #f
+                                                     (for/list ([args (in-list argss)])
+                                                       (for/list ([arg (in-list (syntax->list args))])
+                                                         #'#f)))
+                                      (datum->syntax #f argss) (datum->syntax #f arg-parsedss)
+                                      falses-stx falses-stx
+                                      falses-stx falses-stx
+                                      falses falses
+                                      (datum->syntax #f rhss)
+                                      g))
+               (values rev-gs (hash-set state 'handler handler))]
+              [(group #:catch (_::parens arg::binding ...) (~and rhs (_::block . _)))
+               (define falses-stx (datum->syntax #f (map (lambda (a) #'#f) (syntax->list #'(arg ...)))))
+               (define-values (handler arity)
+                 (build-function no-adjustments
+                                 #'prompt_handler
+                                 falses-stx #'(arg ...) #'(arg.parsed ...) falses-stx
+                                 #'#f #'#f
+                                 #'#f #'#f
+                                 #f #f
+                                 #'rhs
+                                 g))
+               (values rev-gs (hash-set state 'handler handler))]
+              [(group #:catch bind ...+ (~and rhs (_::block . _)))
+               #:with arg::binding #`(#,group-tag bind ...)
+               (define-values (handler arity)
+                 (build-function no-adjustments
+                                 #'prompt_handler
+                                 #'(#f) #'(arg) #'(arg.parsed) #'(#f)
+                                 #'#f #'#f
+                                 #'#f #'#f
+                                 #f #f
+                                 #'rhs
+                                 g))
+               (values rev-gs (hash-set state 'handler handler))]
+              [(group #:catch (_::block entry))
+               #:with (~var e (:entry-point no-adjustments)) #'entry
+               (values rev-gs (hash-set state 'handler #'e.parsed))]
+              [(group #:catch . _)
+               (raise-syntax-error #f "expected alternatives or a binding and block after `~catch`" stx g)]
+              [_
+               (when (hash-ref state 'handler #f)
+                 (raise-syntax-error #f "expression or definition not allowed after `~catch`" stx g))
+               (values (cons g rev-gs) state)])))
         (values #`(call-with-continuation-prompt
                    (lambda () (rhombus-body-at tag #,@(reverse rev-gs)))
                    #,(if (null? (syntax-e #'(tag-expr ...)))
                          #'(default-continuation-prompt-tag)
-                         #'(rhombus-expression (group tag-expr ...)))
+                         #`(rhombus-expression (#,group-tag tag-expr ...)))
                    #,@(let ([handler (hash-ref state 'handler #f)])
                         (if handler
                             (list handler)
@@ -338,20 +312,23 @@
                            proc))
   (call-in-continuation k proc))
 
-(define-for-syntax (binding-to-function binds body get-fail)
-  (syntax-parse binds
-    [b::binding
-     #:with arg-parsed::binding-form #'b.parsed
-     #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-     #:with arg::binding-info #'arg-impl.info
-     #`(lambda (arg-id)
-         (arg.matcher-id arg-id arg.data
-                         if/blocked
-                         (let ()
-                           (arg.committer-id arg-id arg.data)
-                           (arg.binder-id arg-id arg.data)
-                           #,body)
-                         (#,(get-fail) arg-id)))]))
+(define-for-syntax (build-try-handler b-parseds rhss)
+  (for/foldr ([next #'raise])
+             ([b-parsed (in-list b-parseds)]
+              [rhs (in-list rhss)])
+    (syntax-parse b-parsed
+      [arg-parsed::binding-form
+       #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+       #:with arg::binding-info #'arg-impl.info
+       #:with (tag g ...) rhs
+       #`(lambda (arg-id)
+           (arg.matcher-id arg-id arg.data
+                           if/blocked
+                           (let ()
+                             (arg.committer-id arg-id arg.data)
+                             (arg.binder-id arg-id arg.data)
+                             (rhombus-body-at tag g ...))
+                           (#,next arg-id)))])))
 
 (define (always-true x) #t)
 
