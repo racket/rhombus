@@ -114,7 +114,7 @@
        [(_) (wrap-class-clause #`(#:prefab))]))))
 
 (begin-for-syntax
-  (define-splicing-syntax-class (:field mode)
+  (define-splicing-syntax-class (:field-spec mode)
     #:description "field identifier with optional annotation"
     #:attributes (form)
     (pattern (~seq form-id d::var-decl)
@@ -128,7 +128,7 @@
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [((~var f (:field 'public)))
+       [((~var f (:field-spec 'public)))
         #'f.form]))))
 
 (begin-for-syntax
@@ -301,6 +301,7 @@
       (pattern ::name
                #:when (free-identifier=? (in-class-clause-space #'name)
                                          (class-clause-quote form-id)))))
+  (define-clause-form-syntax-class :field field "the literal `field`")
   (define-clause-form-syntax-class :method method "the literal `method`")
   (define-clause-form-syntax-class :property property "the literal `property`")
   (define-clause-form-syntax-class :override override "the literal `override`")
@@ -376,9 +377,9 @@
        [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
        [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
        [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
-       [(_ _::override method (~var m (:method-impl #'#:private-override))) #'m.form]
+       [(_ _::override _::method (~var m (:method-impl #'#:private-override))) #'m.form]
        [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
-       [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
+       [(~and (_ _::field . _) (_ (~var f (:field-spec 'private)))) #'f.form]
        [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
 
 (define-interface-clause-syntax private
