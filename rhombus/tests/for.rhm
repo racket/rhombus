@@ -388,6 +388,20 @@ check:
     val.length()
   ~throws "no such field or method (based on static information)"
 
+// check that `each` goes through `#%body`
+block:
+  macro '#%body: $_':
+    '["everything", "is", "this", "list"]'
+  check:
+    for List:
+      each i: ["this", "is", "my", "list"]
+      i
+    ~is ["everything", "is", "this", "list"]
+  check:
+    for List (i: ["where", "is", "my", "list?"]):
+      i
+    ~is ["everything", "is", "this", "list"]
+
 // check `let` across clause boundary
 check:
   for List:

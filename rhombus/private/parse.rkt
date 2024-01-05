@@ -45,6 +45,7 @@
                      :prefix-op+binding+tail
                      :infix-op+binding+tail
 
+                     set-#%body-id!
                      enforest-expression-block
                      expression-relative-precedence
                      binding-relative-precedence
@@ -280,21 +281,24 @@
     (syntax-parse (syntax-local-introduce stx)
       [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
 
+(define-for-syntax #%body-id #f)
+(define-for-syntax (set-#%body-id! id)
+  (set! #%body-id id))
+
 ;; If `e` is a block with a single group, and if the group is not a
-;; definition, then parse the expression
+;; definition, then parse the expression.  This requires the base
+;; `#%body` binding; otherwise, go through the `#%body`.
 (define-for-syntax (enforest-expression-block e)
   (syntax-parse e
     #:datum-literals (group)
-    [(_::block g)
-     (cond
-       [(definition? #'g) #`(rhombus-body-expression #,e)]
-       [else
-        (syntax-parse #'g
-          [g-e::expression #'g-e.parsed])])]
-    [(_::block g ...) #`(rhombus-body g ...)]
-    [(group . _)
-     (syntax-parse e
-       [g-e::expression #'g-e.parsed])]))
+    [(tag::block g)
+     #:when (and (free-identifier=? (datum->syntax #'tag '#%body)
+                                    #%body-id)
+                 (not (definition? #'g)))
+     #:with g-e::expression #'g
+     #'g-e.parsed]
+    [(tag::block g ...) #'(rhombus-body-at tag g ...)]
+    [(~and (group . _) g-e::expression) #'g-e.parsed]))
 
 ;; Forces enforestation through `rhombus-expression`; note that
 ;; `#%parens` eagerly enforests its content, so this effectively

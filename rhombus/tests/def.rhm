@@ -99,3 +99,13 @@ check:
   def (str, _) = (fun () :~ String: values("a string", "another"))()
   str.length()
   ~throws "no such field or method (based on static information)"
+
+// check that `def` goes through `#%body`
+check:
+  macro '#%body: $_':
+    '"nothing"'
+  def something:
+    let more = "more"
+    "something " ++ "more"
+  something
+  ~is "nothing"

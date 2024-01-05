@@ -246,4 +246,5 @@
 
 (begin-for-syntax
   (set-#%call-ids! (quote-syntax #%call)
-                   (quote-syntax static-#%call)))
+                   (quote-syntax static-#%call))
+  (set-#%body-id! (quote-syntax #%body)))
