@@ -38,3 +38,46 @@ check:
 check:
   #false is_a satisfying(fun (): #false)
   ~throws values("contract violation", "expected: Function.of_arity(1)")
+
+block:
+  check:
+    def List(_) :: List = [1]
+    ~completes
+  check:
+    def List(_, _, _) :: List = [1]
+    ~throws values(
+      "value does not satisfy annotation",
+      "[1]",
+      "List && matching(List(_, _, _))",
+    )
+
+check:
+  def List(_, _, _) :: satisfying(fun (_): error("oops")) = [1]
+  ~throws "oops"
+
+block:
+  import:
+    rhombus/meta open
+  annot.macro 'one_to_two':
+    'converting(fun ([x]): [x, x])'
+  check:
+    def List(_, _) :: one_to_two = [1]
+    ~completes
+  check:
+    def List(_, _) :: one_to_two = [1, 2]
+    ~throws values(
+      "value does not satisfy annotation",
+      "[1, 2]",
+      "one_to_two && matching(List(_, _))",
+    )
+  check:
+    def List(_, _, _) :: one_to_two = [1]
+    ~throws values(
+      "value does not satisfy annotation",
+      "[1]",
+      "one_to_two && matching(List(_, _, _))",
+    )
+
+check:
+  def List(_, _, _) :: converting(fun (_): error("oops")) = [1]
+  ~throws "oops"

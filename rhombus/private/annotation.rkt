@@ -526,7 +526,7 @@
      #:with left-impl::binding-impl #`(left-infoer-id #,(static-infos-union #'implied-static-infos #'static-infos) left-data)
      #:with left::binding-info #'left-impl.info
      (if (syntax-e #'predicate)
-         (binding-info (annotation-string-and (syntax-e #'left.annotation-str) (syntax-e #'annotation-str))
+         (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
                        #'left.name-id
                        #'left.static-infos ; presumably includes `implied-static-infos` as passed to `left-infoer-id`
                        #'left.bind-infos
@@ -567,7 +567,7 @@
      #:with left-impl::binding-impl #'(left-infoer-id body-static-infos left-data)
      #:with left::binding-info #'left-impl.info
      (define (build-binding-info matcher-id committer-id)
-       (binding-info (annotation-string-and (syntax-e #'left.annotation-str) (syntax-e #'annotation-str))
+       (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
                      #'left.name-id
                      #'arg-info.static-infos ; this is about the value coming in, not the converted value
                      #'left.bind-infos
