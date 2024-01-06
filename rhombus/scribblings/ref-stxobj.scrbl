@@ -205,6 +205,8 @@ Metadata for a syntax object can include a source location and the raw
   annot.macro 'Syntax'
   annot.macro 'Term'
   annot.macro 'Group'
+  annot.macro 'Block'
+  annot.macro 'TermSequence'
   annot.macro 'Identifier'
   annot.macro 'Operator'
   annot.macro 'Name'
@@ -219,6 +221,12 @@ Metadata for a syntax object can include a source location and the raw
  @item{@rhombus(Term, ~annot) matches only a single-term syntax object.}
 
  @item{@rhombus(Group, ~annot) matches only a single-group syntax object.}
+
+ @item{@rhombus(Block, ~annot) matches only a block (which is a
+  single-term syntax object).}
+
+ @item{@rhombus(TermSequence, ~annot) matches only a single-group
+  syntax object or an multi-group sequence with zero groups.}
 
  @item{@rhombus(Identifier, ~annot) matches only an identifier (which is
   a single-term syntax object).}

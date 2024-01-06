@@ -35,7 +35,7 @@ meta:
       final_when #true
       values(#true, now)
 
-  fun adjust_term(t, context, esc) :~ Syntax:
+  fun adjust_term(t :: Term, context, esc) :~ Syntax:
     match t
     | '($(g :: Group), ...)':
         '($(adjust_group(g, context, esc)), ...)'.relocate(t)
@@ -54,15 +54,17 @@ meta:
     | ~else:
         t
 
-  fun adjust_block(b, context, esc) :~ Syntax:
+  fun adjust_block(b :: Block, context, esc) :~ Syntax:
     match b
     | ': $g; ...':
         ': $(adjust_group(g, context, esc)); ...'.relocate(b)
 
-  fun adjust_group(g, context, esc) :~ Syntax:
-    '$(adjust_sequence(g, context, esc))'.relocate(g)
+  fun adjust_group(g :: Group, context, esc) :~ Syntax:
+     match adjust_sequence(g, context, esc)
+     | '$(new_g :: Group)': new_g.relocate(g)
+     | '': error("group turned into empty sequence: " +& to_string(g, ~mode: #'expr))
 
-  fun adjust_sequence(seq, context, esc) :~ Syntax:
+  fun adjust_sequence(seq :: TermSequence, context, esc) :~ Syntax:
     fun loop(head, tail):
       '$head $(adjust_sequence(tail, context, esc))'
     match seq

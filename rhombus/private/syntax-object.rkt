@@ -30,6 +30,8 @@
          (for-spaces (rhombus/annot)
                      Term
                      Group
+                     TermSequence
+                     Block
                      Identifier
                      Operator
                      Name
@@ -142,6 +144,23 @@
 (define (syntax-group? s)
   (and (syntax? s)
        (unpack-group s #f #f)
+       #t))
+
+(define-annotation-syntax TermSequence
+  (identifier-annotation #'syntax-sequence? syntax-static-infos))
+(define (syntax-sequence? s)
+  (and (syntax? s)
+       (unpack-group-or-empty s #f #f)
+       #t))
+
+(define-annotation-syntax Block
+  (identifier-annotation #'syntax-block? syntax-static-infos))
+(define (syntax-block? s)
+  (and (syntax? s)
+       (syntax-parse (unpack-term s #f #f)
+         #:datum-literals (block)
+         [(block . _) #t]
+         [_ #false])
        #t))
 
 (define-syntax literal
