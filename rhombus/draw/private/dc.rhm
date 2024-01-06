@@ -223,6 +223,8 @@ fun from_handle(handle) :: DC:
   | error("DC.from_handle", "not a DC handle: " +& handle)
   SomeDC(handle)
 
+class DCDump(pen, brush, font, clipping_region, transformation, dump)
+
 class SomeDC(private _handle):
   nonfinal
   implements DC
@@ -231,32 +233,26 @@ class SomeDC(private _handle):
   constructor (hand):
     super(hand)
 
-  private field states = []
+  private field dump = #false
 
   override method save():
-    states := [pen,
-               brush,
-               font,
-               clipping_region,
-               transformation,
-               states]
+    dump := DCDump(pen, brush, font, clipping_region, transformation, dump)
 
   override method restore():
-    match states
-    | []:
-        error("DC.pop", "no state saved")
-    | [old_pen,
-       old_brush,
-       old_font,
-       old_region,
-       old_transformation,
-       old_states]:
-        pen := old_pen
-        brush := old_brush
-        font := old_font
-        clipping_region := old_region
-        transformation := old_transformation
-        states := old_states
+    unless dump
+    | error("DC.restore", "no state saved")
+    macro 'update $('. $field') ...':
+      'block:
+         def old_dump :~ DCDump = dump
+         $field := old_dump . $field
+         ...'
+    update
+      .pen
+      .brush
+      .font
+      .clipping_region
+      .transformation
+      .dump
 
   private implements Printable
   private override describe(mode, recur):
