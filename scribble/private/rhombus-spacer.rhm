@@ -53,6 +53,13 @@ module for_doc:
     only_space spacer.typeset:
       as_class_clause
 
+// NOTE Please make sure that every `adjust_*` function has proper
+// `.relocate`s on all branches, either implicitly through `spacer.*`
+// functions or explicitly.  This may seem excessive, but it's less
+// easier to mess up than `.relocate` on function-call site.  In
+// particular, remember that `spacer.adjust_sequence` doesn't
+// `.relocate`.
+
 meta:
   def body_spaces = [#'#{rhombus/defn}, #false]
   fun adjust_expr_or_body(expr_or_body, esc):
@@ -81,7 +88,7 @@ meta:
         let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
         let new_rhs = adjust_rhs(rhs, esc)
         '$new_bind $new_rhs'.relocate(def)
-    | ~else: spacer.adjust_sequence(def, #'~bind, esc)
+    | ~else: spacer.adjust_sequence(def, #'~bind, esc).relocate(def)
 
 spacer.bridge def(self, tail, context, esc):
   ~in: ~defn
