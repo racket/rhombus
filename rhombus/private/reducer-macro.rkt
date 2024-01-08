@@ -121,8 +121,20 @@
     (raise-argument-error* who rhombus-realm "maybe(Identifier)" maybe-id)))
 
 (begin-for-syntax
-  (define/arity (reducer_meta.pack wrapper-id binds step-id maybe-break-id maybe-final-id finish-id static-infos data)
+  (define/arity (reducer_meta.pack wrapper-id-in
+                                   binds
+                                   step-id-in
+                                   maybe-break-id-in
+                                   maybe-final-id-in
+                                   finish-id-in
+                                   static-infos
+                                   data)
     #:static-infos ((#%call-result #,syntax-static-infos))
+    (define wrapper-id (unpack-term/maybe wrapper-id-in))
+    (define step-id (unpack-term/maybe step-id-in))
+    (define maybe-break-id (unpack-term/maybe maybe-break-id-in))
+    (define maybe-final-id (unpack-term/maybe maybe-final-id-in))
+    (define finish-id (unpack-term/maybe finish-id-in))
     (check-identifier who wrapper-id)
     (check-syntax who binds)
     (check-identifier who step-id)

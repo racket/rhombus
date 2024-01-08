@@ -11,7 +11,8 @@
                    class-clause-extract
                    method-shape-extract))
          "call-result-key.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "pack.rkt")
 
 (provide (for-space rhombus/namespace
                     class_meta))
@@ -252,9 +253,13 @@
                              "unrecognized key symbol"
                              "symbol" key)]))
 
-(define (describe who id)
+(define (check-identifier who id)
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id))
+    (raise-argument-error* who rhombus-realm "Identifier" id)))
+
+(define (describe who id-in)
+  (define id (unpack-term/maybe id-in))
+  (check-identifier who id)
   (define desc (syntax-local-value* (in-class-desc-space id) class-desc-ref))
   (define idesc (and (not desc)
                      (syntax-local-value* (in-class-desc-space id) class-internal-desc-ref)))

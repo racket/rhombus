@@ -124,7 +124,8 @@
       (wrap-static-info* (wrap-expression form) (pack who info)))
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
-  (define/arity (statinfo_meta.lookup form key)
+  (define/arity (statinfo_meta.lookup form key-in)
+    (define key (unpack-term/maybe key-in))
     (check-syntax who form)
     (check-identifier who key)
     (define si

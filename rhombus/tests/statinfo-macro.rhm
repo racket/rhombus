@@ -11,6 +11,12 @@ check:
   use_x
   ~is "yes"
 
+check:
+  expr.macro 'also_use_x':
+    statinfo_meta.lookup('sub.x', Syntax.make_group(['anything']))
+  also_use_x
+  ~is "yes"
+
 expr.macro 'two $(pre_expr :: expr_meta.Parsed) $()':
   def expr = expr_meta.parse_more(pre_expr)
   def si = statinfo_meta.lookup(expr, statinfo_meta.index_get_key)

@@ -30,6 +30,7 @@
 
 (provide pack-term
          unpack-term
+         unpack-term/maybe
          pack-group
          unpack-group
          pack-multi
@@ -123,6 +124,11 @@
            (fail))]
       [(list? r) (and who (cannot-coerce-list who r))]
       [else (datum->syntax at-stx r)])))
+
+;; For meta functions that take terms as arguments
+(define (unpack-term/maybe v)
+  (and (syntax? v)
+       (unpack-term v #f #f)))
 
 ;; "Packs" to a `group` form, but `r` starts with `group` already
 (define (pack-group r) r)
