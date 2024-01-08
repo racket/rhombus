@@ -4,6 +4,8 @@ import:
   "sequence-help.rkt" open
   "sequence-constructor-key.rkt" open
 
+use_static
+
 export:
   sequence
 

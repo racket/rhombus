@@ -3,6 +3,8 @@ import:
   "core-meta.rkt" open
   lib("racket/base.rkt")
 
+use_static
+
 export:
   Sequence
 

@@ -7,8 +7,10 @@ import:
   lib("rackunit/log.rkt").#{test-log!}
   lib("racket/base.rkt")
 
+use_static
+
 export:
- check
+  check
 
 meta:
   syntax_class ResultMode:
@@ -66,7 +68,7 @@ expr.macro
      ...
      $(result2 :: Result)':
     ~op_stx: check_id
-    'check_same(located'$(check_id)',
+    'check_same(located '$(check_id)',
                 fun ():
                   $result1
                   ...
@@ -78,15 +80,15 @@ expr.macro
 | 'check: $result1 ... $(result2 :: Result); ...':
     ~op_stx: check_id
     'block:
-       check_same(located'$(check_id)',
+       check_same(located '$(check_id)',
                   fun (): $result1 ...; $result2.suffix; ...,
                   matcher($result2.mode, : $result2.body),
-                  located'$result2.mode')
+                  located '$result2.mode')
        ...'
 // single line
 | 'check $result1 ... $(result2 :: Result)':
     ~op_stx: check_id
-    'check_same(located'$(check_id)',
+    'check_same(located '$(check_id)',
                 fun (): $result1 ...; $result2.suffix; ...,
                 matcher($result2.mode, : $result2.body),
                 #'$result2.mode)'
@@ -100,13 +102,13 @@ expr.macro
          | (x): $("" +& '$ann')'
 | 'matcher($_, : $body)': 'fun (): $body'
 
-fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
-  def [mode, srcloc]:
+fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
+  def [mode, srcloc :~ Srcloc]:
     match maybe_loc_mode
     | [mode, srcloc]: maybe_loc_mode
     | mode: [mode, loc_where[1]]
-  def values(got, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
-  def expected = call_capturing_values(expected_thunk)
+  def values(got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
+  def expected :~ List = call_capturing_values(expected_thunk)
   def ok:
     match mode
     | #'~prints:

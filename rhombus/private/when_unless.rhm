@@ -2,6 +2,8 @@
 import:
   "core-meta.rkt" open
 
+use_static
+
 export:
   when
   unless
@@ -46,6 +48,6 @@ bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
 
 bind.committer 'when_committer($in_id, $data)':
   ''
-  
+
 bind.binder 'when_binder($in_id, $data)':
   ''

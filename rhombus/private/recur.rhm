@@ -3,6 +3,8 @@ import:
   "core-meta.rkt" open
   lib("racket/unsafe/undefined.rkt").#{unsafe-undefined}
 
+use_static
+
 export:
   recur
 

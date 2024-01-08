@@ -2,6 +2,8 @@
 import:
   "core-meta.rkt" open
 
+use_static
+
 export:
   described_as
 

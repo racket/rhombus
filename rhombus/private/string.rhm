@@ -3,6 +3,8 @@ import:
   "core-meta.rkt" open
   lib("racket/base.rkt").#{string->immutable-string}
 
+use_static
+
 export:
   ReadableString
 
