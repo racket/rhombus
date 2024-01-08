@@ -1,57 +1,107 @@
 #lang rhombus/static/and_meta
 
 check:
-  reducer.macro 'A5': 'Array ~length 5'
-  for A5:
-    each i: 1..3
-    i
-  ~is_now Array(1, 2, 0, 0, 0)
+  reducer.macro '(Array.len5)':
+    'Array ~length 5'
+  for Array.len5 (i: 0..3): i
+  ~is_now Array(0, 1, 2, 0, 0)
 
-check:
-  reducer.macro 'ListOfLists':
+block:
+  reducer.macro '(List.nested)':
+    let (_, si):
+      let '$(a :: annot_meta.Parsed)' = 'List'
+      annot_meta.unpack_predicate(a)
     reducer_meta.pack('build_reverse',
                       '(l = List.empty)',
                       'build_cons',
                       #false,
                       #false,
                       'use_cons',
-                      '()',
-                      '(l, next_l)')
+                      si,
+                      '[l, next_l]')
   expr.macro 'build_reverse $_ $e':
     'List.reverse($e)'
-  defn.macro 'build_cons ($l_id, $next_l_id) $e':
-    'def $next_l_id = List.cons([$e], $l_id)'
-  expr.macro 'use_cons ($l_id, $next_l_id)':
-    next_l_id
-  for ListOfLists:
-    each i: 1..3
-    i
-  ~is_now [[1], [2]]
+  defn.macro 'build_cons [$l, $next_l] $e':
+    'def $next_l = List.cons(call_with_values(fun (): $e, List), $l)'
+  expr.macro 'use_cons [$_, $next_l]':
+    next_l
+  def lst:
+    for List.nested (i: 0..3):
+      values(& List.iota(i))
+  check:
+    lst
+    ~is [[], [0], [0, 1]]
+  check:
+    use_static
+    lst.length()
+    ~is 3
 
-check:
-  reducer.macro 'AndCount($(r :: reducer_meta.Parsed))':
-    def '($wrap, ($bind, ...), $step, $break, $final, $finish, $static_info, $data)' = reducer_meta.unpack(r)
-    reducer_meta.pack('build_return',
-                      '($bind, ..., count = 0)',
-                      'build_inc',
-                      break.unwrap() && 'build_break',
-                      final.unwrap() && 'build_final',
-                      'build_finish',
-                      '()',
-                      '[count, $wrap, $step, $break, $final, $finish, $data]')
-  expr.macro 'build_return [$count, $wrap, $step, $break, $final, $finish, $data] $e':
-    'block:
-       def values(r, c) = $e
-       values($wrap $data r, c)'
-  defn.macro 'build_inc [$count, $wrap, $step, $break, $final, $finish, $data] $e':
+block:
+  reducer.macro 'counted($(r :: reducer_meta.Parsed))':
+    let '($wrap, ($(bind && '$id $_'), ...),
+          $step, $break, $final, $finish,
+          $si, $data)':
+      reducer_meta.unpack(r)
+    let [si, ...]:
+      let sis = statinfo_meta.lookup(si, statinfo_meta.values_key)
+      if sis
+      | statinfo_meta.unpack_group(sis)
+      | [si]
+    reducer_meta.pack(
+      'build_return',
+      '(count = 0, $bind, ...)',
+      'build_inc',
+      break.unwrap() && 'build_break',
+      final.unwrap() && 'build_final',
+      'build_finish',
+      '(($statinfo_meta.values_key,
+         $(statinfo_meta.pack_group('$si ... ()'))))',
+      '[[count, $id, ...],
+        $wrap, $step, $break, $final, $finish,
+        $data]'
+    )
+  expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
+    'call_with_values(
+       fun (): $e,
+       fun
+       | (c, r):
+           values($wrap $data r, c)
+       | (c, r, $('...')):
+           call_with_values(
+             fun (): $wrap $data (values(r, $('...'))),
+             fun (r, $('...')): values(r, $('...'), c)
+           ))'
+  defn.macro 'build_inc [$_, $_, $step, $_, $_, $_, $data] $e':
     '$step $data $e'
-  expr.macro 'build_break [$count, $wrap, $step, $break, $final, $finish, $data]':
+  expr.macro 'build_break [$_, $_, $_, $break, $_, $_, $data]':
     '$break $data'
-  expr.macro 'build_final [$count, $wrap, $step, $break, $final, $finish, $data]':
+  expr.macro 'build_final [$_, $_, $_, $_, $final, $_, $data]':
     '$final $data'
-  expr.macro 'build_finish [$count, $wrap, $step, $break, $final, $finish, $data]':
-    'values($finish $data, $count + 1)'
-  for AndCount(List):
-    each i: 0..3
-    i
-  ~is values([0, 1, 2], 3)
+  expr.macro 'build_finish [[$count, $id, ...],
+                            $_, $_, $_, $_, $finish,
+                            $data]':
+    'block:
+       def ($id, ...) = $finish $data
+       values($count + 1, $id, ...)'
+  check:
+    for counted(List) (i: 0..3): i
+    ~is values([0, 1, 2], 3)
+  block:
+    def (map, count):
+      for counted(Map) (i: 0..10):
+        keep_when i mod 2 == 0
+        values(i, "val" +& i)
+    check:
+      values(map, count)
+      ~is values(
+        {0: "val0", 2: "val2", 4: "val4", 6: "val6", 8: "val8"},
+        5
+      )
+    check:
+      use_static
+      map.remove(2)
+      ~is {0: "val0", 4: "val4", 6: "val6", 8: "val8"}
+  check:
+    for counted(values(i = 0, j = 10)) (k: 0..5):
+      values(i+k, j-k)
+    ~is values(10, 0, 5)

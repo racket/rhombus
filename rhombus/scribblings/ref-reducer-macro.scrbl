@@ -90,35 +90,52 @@
   ~eval: macro_eval
   ~defn:
     reducer.macro 'counted($(r :: reducer_meta.Parsed))':
-      let '($wrap, ($binds),
+      let '($wrap, ($(bind && '$id $_'), ...),
             $step, $break, $final, $finish,
             $si, $data)':
         reducer_meta.unpack(r)
+      let [si, ...]:
+        let sis = statinfo_meta.lookup(si, statinfo_meta.values_key)
+        if sis
+        | statinfo_meta.unpack_group(sis)
+        | [si]
       reducer_meta.pack(
         'build_return',
-        '($binds, count = 0)',
+        '(count = 0, $bind, ...)',
         'build_inc',
         break.unwrap() && 'build_break',
         final.unwrap() && 'build_final',
         'build_finish',
         '(($statinfo_meta.values_key,
-           $(statinfo_meta.pack_group('$si ()'))))',
-        '[count,
+           $(statinfo_meta.pack_group('$si ... ()'))))',
+        '[[count, $id, ...],
           $wrap, $step, $break, $final, $finish,
           $data]'
       )
     expr.macro 'build_return [$_, $wrap, $_, $_, $_, $_, $data] $e':
-      'block:
-         def values(r, c) = $e
-         values($wrap $data r, c)'
+      'call_with_values(
+         fun (): $e,
+         fun
+         | (c, r):
+             // optimize the common case
+             values($wrap $data r, c)
+         | (c, r, $('...')):
+             call_with_values(
+               fun (): $wrap $data (values(r, $('...'))),
+               fun (r, $('...')): values(r, $('...'), c)
+             ))'
     defn.macro 'build_inc [$_, $_, $step, $_, $_, $_, $data] $e':
       '$step $data $e'
     expr.macro 'build_break [$_, $_, $_, $break, $_, $_, $data]':
       '$break $data'
     expr.macro 'build_final [$_, $_, $_, $_, $final, $_, $data]':
       '$final $data'
-    expr.macro 'build_finish [$count, $_, $_, $_, $_, $finish, $data]':
-      'values($finish $data, $count + 1)'
+    expr.macro 'build_finish [[$count, $id, ...],
+                              $_, $_, $_, $_, $finish,
+                              $data]':
+      'block:
+         def ($id, ...) = $finish $data
+         values($count + 1, $id, ...)'
   ~repl:
     for counted(List) (i: 0..3): i
   ~defn:
@@ -133,6 +150,12 @@
     block:
       use_static
       map.remove(2)
+  ~repl:
+    :
+      // cooperate with multiple-value reducers
+      for counted(values(i = 0, j = 10)) (k: 0..5):
+        values(i+k, j-k)
+
 )
 
 }
