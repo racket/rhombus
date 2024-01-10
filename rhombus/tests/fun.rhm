@@ -1,36 +1,39 @@
 #lang rhombus
+import:
+  lib("racket/base.rkt").#{object-name}
+  lib("racket/base.rkt").#{procedure-arity-mask}
+  lib("racket/base.rkt").#{procedure-keywords}
 
 class Posn(x, y)
 
-fun
-| size(n :: Int):
-    n
-| size(p :: Posn):
-    p.x + p.y
-| size(a, b):
-    a+b
+block:
+  fun
+  | size(n :: Int):
+      n
+  | size(p :: Posn):
+      p.x + p.y
+  | size(a, b):
+      a+b
+  check:
+    size(Posn(8, 6))
+    ~is 14
+  check:
+    size(1, 2)
+    ~is 3
 
 check:
-  size(Posn(8, 6))
-  ~is 14
-
-check:
-  size(1, 2)
-  ~is 3
-
-def Posn(px, py) :~ Posn = Posn(1, 2)
-
-check:
+  def Posn(px, py) :~ Posn = Posn(1, 2)
   List(px, py)
   ~is [1, 2]
 
-def identity = fun (x): x
-check:
-  identity(1 + (fun (x): x) (99) )
-  ~is 100
-check:
-  identity(1+(fun (x): x)(99))
-  ~is 100
+block:
+  def identity = fun (x): x
+  check:
+    identity(1 + (fun (x): x) (99) )
+    ~is 100
+  check:
+    identity(1+(fun (x): x)(99))
+    ~is 100
 
 // function result contracts
 
@@ -49,56 +52,49 @@ block:
       "Int",
     )
 
-fun
-| add_two(x) :: Number:
-    x + 2.0
-| add_two(x, y) :: String:
-    x +& " and " +& y
+block:
+  fun
+  | add_two(x) :: Number:
+      x + 2.0
+  | add_two(x, y) :: String:
+      x +& " and " +& y
+  check:
+    add_two(7) .= 9.0
+    ~is #true
+  check:
+    add_two(6, 7)
+    ~is "6 and 7"
 
 check:
-  add_two(7) .= 9.0
-  ~is #true
-
-check:
-  add_two(6, 7)
-  ~is "6 and 7"
-
-check:
-  block:
-    def f = fun (x) :: Int: x
-    f(10)
+  def f = fun (x) :: Int: x
+  f(10)
   ~is 10
 
-fun on_diag(n :: Int) :: Posn:
-  Posn(n, n)
-
-check:
+block:
   use_static
-  on_diag(1).x
-  ~is 1
-
-check:
-  use_static
-  def known_posn = on_diag(2)
-  known_posn.x
-  ~is 2
+  fun on_diag(n :: Int) :: Posn:
+    Posn(n, n)
+  check on_diag(1).x ~is 1
+  check:
+    def known_posn = on_diag(2)
+    known_posn.x
+    ~is 2
 
 // `match` variant
 
-fun size2 :: Int:
-| size2("wrong"):
-    "oops"
-| size2(n :: Int):
-    n
-| size2(p :: Posn):
-    p.x + p.y
-| size2(a, b):
-    a+b
-
-check:
-  size2(10) ~is 10
-  size2(Posn(1, 2)) ~is 3
-  size2("wrong") ~throws "does not satisfy annotation"
+block:
+  fun size2 :: Int:
+  | size2("wrong"):
+      "oops"
+  | size2(n :: Int):
+      n
+  | size2(p :: Posn):
+      p.x + p.y
+  | size2(a, b):
+      a+b
+  check size2(10) ~is 10
+  check size2(Posn(1, 2)) ~is 3
+  check size2("wrong") ~throws "does not satisfy annotation"
 
 block:
   use_static
@@ -275,7 +271,39 @@ check:
   check defaults(0, 0, ~arg3: 0) ~is values(0, 0, 0, 4, 5)
   check defaults(0, 0, ~arg3: 0, ~arg4: 0) ~is values(0, 0, 0, 0, 5)
   check defaults(0, 0, ~arg3: 0, ~arg4: 0, ~arg5: 0) ~is values(0, 0, 0, 0, 0)
+  check #{object-name}(defaults) ~is #'defaults
+  check #{procedure-arity-mask}(defaults) ~is 7
+  check:
+    #{procedure-keywords}(defaults)
+    ~is values(PairList[],
+               PairList[#'~arg3, #'~arg4, #'~arg5])
   ~prints "arg2\narg5\narg2\narg5\narg5\narg5\narg5\n"
+
+check:
+  fun more_defaults(arg1,
+                    ~arg5: arg5 = 5,
+                    arg2: println("arg2"); 2,
+                    ~arg4,
+                    arg3 = 3,
+                    ~arg6: arg6: println("arg5"); 6,
+                    & rest,
+                    ~& kwrest):
+    values(arg1, arg2, arg3, arg4, arg5, arg6, rest, kwrest)
+  check more_defaults(0, ~arg4: 0) ~is values(0, 2, 3, 0, 5, 6, [], {})
+  check more_defaults(0, 0, ~arg4: 0) ~is values(0, 0, 3, 0, 5, 6, [], {})
+  check more_defaults(0, 0, 0, ~arg4: 0) ~is values(0, 0, 0, 0, 5, 6, [], {})
+  check more_defaults(0, 0, 0, ~arg4: 0, ~arg5: 0) ~is values(0, 0, 0, 0, 0, 6, [], {})
+  check more_defaults(0, 0, 0, ~arg4: 0, ~arg5: 0, ~arg6: 0) ~is values(0, 0, 0, 0, 0, 0, [], {})
+  check:
+    more_defaults(0, 0, 0, ~arg4: 0, ~arg5: 0, ~arg6: 0, 7, 8, ~arg9: 9, ~arg10: 10)
+    ~is values(0, 0, 0, 0, 0, 0, [7, 8], {#'~arg9: 9, #'~arg10: 10})
+  check #{object-name}(more_defaults) ~is #'more_defaults
+  check #{procedure-arity-mask}(more_defaults) ~is -2
+  check:
+    #{procedure-keywords}(more_defaults)
+    ~is values(PairList[#'~arg4],
+               #false)
+  ~prints "arg2\narg5\narg5\narg5\narg5\n"
 
 // check constraint on optional by-position arguments
 check:
@@ -309,3 +337,22 @@ check:
       let v = "value"
       v)
   ~is "value"
+
+// check object names of anonymous functions
+check:
+  #{object-name}(fun (): #false)
+  ~is #'fun
+
+check:
+  #{object-name}(fun (~& _): #false)
+  ~is #'fun
+
+check:
+  #{object-name}(fun
+                 | (): #false)
+  ~is #'fun
+
+check:
+  #{object-name}(fun
+                 | (~& _): #false)
+  ~is #'fun

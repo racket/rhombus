@@ -1,17 +1,10 @@
 #lang rhombus
-
 import:
-  lib("racket/math.rkt").sqr
-  lib("racket/base.rkt").#{object-name} as object_name
-  lib("racket/base.rkt").#{procedure-arity} as procedure_arity
-  lib("racket/base.rkt").#{procedure-keywords} as procedure_keywords
+  lib("racket/base.rkt").#{object-name}
+  lib("racket/base.rkt").#{procedure-arity-mask}
+  lib("racket/base.rkt").#{procedure-keywords}
 
 class Posn(x, y)
-
-fun map(f, l):
-  for List:
-    each e: l
-    f(e)
 
 block:
   fun
@@ -139,53 +132,206 @@ block:
   check f() ~is 0
   check f([], [1]) ~is 0
 
-fun
-| distance(x, y): math.sqrt(x*x + y*y)
-| distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1)
-
-check: distance(3, 4); ~is 5
-check: distance(10, 5, 18, 20); ~is 17
-
-fun
-| avg(a :: Number, & bs :~ List.of(Number)):
-    (a + math.sum(& bs)) / (1 + List.length(bs))
-| avg(a :: Posn, & bs :~ List.of(Posn)):
-    Posn(avg(a.x, & map(Posn.x, bs)),
-         avg(a.y, & map(Posn.y, bs)))
-
-check: avg(1, 2, 5); ~is 8/3
-check: avg(-8, 5, 6, 7); ~is 5/2
-check: avg(Posn(1, 7), Posn(5, 9)); ~is Posn(3, 8)
-check: avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)); ~is Posn(1, 1)
-
-// ---------------------------------------------------------
-// Alt Functions with Keywords
-
-fun
-| pythag(~a: a, ~b: b): math.sqrt(sqr(a) + (sqr(b)))
-| pythag(~a: a, ~c: c): math.sqrt(sqr(c) - (sqr(a)))
-| pythag(~b: b, ~c: c): math.sqrt(sqr(c) - (sqr(b)))
-| pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
-
-check pythag(~a: 3, ~b: 4) ~is 5
-check pythag(~c: 5, ~a: 3) ~is 4
-check pythag(~c: 5, ~b: 4) ~is 3
-check pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
-check pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
 block:
-  check object_name(pythag) ~is #'pythag
-  check procedure_arity(pythag) ~is 0
-  def values(req_kws, all_kws) = procedure_keywords(pythag)
-  check req_kws ~is PairList[]
-  check all_kws ~is PairList[#'~a, #'~b, #'~c]
+  fun
+  | distance(x, y): math.sqrt(x*x + y*y)
+  | distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1)
+  check distance(3, 4) ~is 5
+  check distance(10, 5, 18, 20) ~is 17
 
-fun
-| rectangle_area(~width, ~height): width * height
-| rectangle_area(~diagonal, ~aspect_ratio):
-    // height^2 * (aspect_ratio^2 + 1) = diagonal^2
-    // width * height = aspect_ratio * height^2
-    (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
+block:
+  fun
+  | avg(a :: Number, & bs :~ List.of(Number)):
+      (a + math.sum(& bs)) / (1 + List.length(bs))
+  | avg(a :: Posn, & bs :~ List.of(Posn)):
+      Posn(avg(a.x, & bs.map(Posn.x)),
+           avg(a.y, & bs.map(Posn.y)))
+  check avg(1, 2, 5) ~is 8/3
+  check avg(-8, 5, 6, 7) ~is 5/2
+  check avg(Posn(1, 7), Posn(5, 9)) ~is Posn(3, 8)
+  check avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)) ~is Posn(1, 1)
 
-check rectangle_area(~width: 8.5, ~height: 11) ~is 93.5
-check rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
-check rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
+block:
+  fun size2 :: Int:
+  | size2("wrong"):
+      "oops"
+  | size2(n :: Int):
+      n
+  | size2(p :: Posn):
+      p.x + p.y
+  | size2(a, b):
+      a+b
+  check size2(10) ~is 10
+  check size2(Posn(1, 2)) ~is 3
+  check size2("wrong") ~throws "does not satisfy annotation"
+
+block:
+  use_static
+  fun flip :: Posn:
+  | flip(Posn(x, y)):
+      Posn(y,x)
+  | flip(x):
+      Posn(0, x)
+  check flip(Posn(1, 2)) ~is Posn(2, 1)
+  check flip(Posn(1, 2)).y ~is 1
+  check flip(9) ~is Posn(0, 9)
+
+check:
+  fun size3:
+  | size3(_): "not yet implemented"
+  size3(10)
+  ~is "not yet implemented"
+
+block:
+  def long_form_one = (fun
+                       | (): 1)
+  def longer_form_one = (fun :: Int
+                         | (): 1)
+  check:
+    long_form_one() ~is 1
+    longer_form_one() ~is 1
+
+// check keyword arguments
+block:
+  fun sqr(x): x*x
+  fun
+  | pythag(~a: a, ~b: b): math.sqrt(sqr(a) + (sqr(b)))
+  | pythag(~a: a, ~c: c): math.sqrt(sqr(c) - (sqr(a)))
+  | pythag(~b: b, ~c: c): math.sqrt(sqr(c) - (sqr(b)))
+  | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
+  check pythag(~a: 3, ~b: 4) ~is 5
+  check pythag(~c: 5, ~a: 3) ~is 4
+  check pythag(~c: 5, ~b: 4) ~is 3
+  check pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
+  check pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
+  check #{object-name}(pythag) ~is #'pythag
+  check #{procedure-arity-mask}(pythag) ~is 1
+  check:
+    #{procedure-keywords}(pythag)
+    ~is values(PairList[],
+               PairList[#'~a, #'~b, #'~c])
+
+block:
+  fun
+  | rectangle_area(~width, ~height): width * height
+  | rectangle_area(~diagonal, ~aspect_ratio):
+      // height^2 * (aspect_ratio^2 + 1) = diagonal^2
+      // width * height = aspect_ratio * height^2
+      (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
+  check rectangle_area(~width: 8.5, ~height: 11) ~is 93.5
+  check rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
+  check rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
+  check #{object-name}(rectangle_area) ~is #'rectangle_area
+  check #{procedure-arity-mask}(rectangle_area) ~is 1
+  check:
+    #{procedure-keywords}(rectangle_area)
+    ~is values(PairList[],
+               PairList[#'~aspect_ratio, #'~diagonal, #'~height, #'~width])
+
+block:
+  fun
+  | weird(~arg1: arg1): arg1
+  | weird(arg1, ~arg2: arg2): values(arg1, arg2)
+  | weird(arg1, arg2, ~arg3: arg3, ~arg4: arg4): values(arg1, arg2, arg3, arg4)
+  | weird(& rest, ~& kwrest): values(rest, kwrest)
+  check weird(~arg1: 1) ~is 1
+  check weird(1, ~arg2: 2) ~is values(1, 2)
+  check weird(1, 2, ~arg3: 3, ~arg4: 4) ~is values(1, 2, 3, 4)
+  check weird(5, 6, ~arg7: 7, ~arg8: 8) ~is values([5, 6], {#'~arg7: 7, #'~arg8: 8})
+  check #{object-name}(weird) ~is #'weird
+  check #{procedure-arity-mask}(weird) ~is -1
+  check:
+    #{procedure-keywords}(weird)
+    ~is values(PairList[],
+               #false)
+
+block:
+  fun
+  | overlap(~arg1: arg1): arg1
+  | overlap(arg1, ~arg1: also_arg1, ~arg2: arg2): values(arg1, also_arg1, arg2)
+  check overlap(~arg1: 1) ~is 1
+  check overlap(1, ~arg1: 1, ~arg2: 2) ~is values(1, 1, 2)
+  check #{object-name}(overlap) ~is #'overlap
+  check #{procedure-arity-mask}(overlap) ~is 3
+  check:
+    #{procedure-keywords}(overlap)
+    ~is values(PairList[#'~arg1],
+               PairList[#'~arg1, #'~arg2])
+
+// check rest arguments
+block:
+  fun
+  | weird(arg): arg
+  | weird(arg1, arg2): values(arg1, arg2)
+  | weird(& args): args
+  check weird() ~is []
+  check weird(1) ~is 1
+  check weird(1, 2) ~is values(1, 2)
+  check weird(1, 2, 3) ~is [1, 2, 3]
+  check weird(1, 2, 3, 4) ~is [1, 2, 3, 4]
+
+block:
+  fun
+  | weird(arg): arg
+  | weird(arg1, arg2): values(arg1, arg2)
+  | weird(arg, & args): values(arg, args)
+  check weird(1) ~is 1
+  check weird(1, 2) ~is values(1, 2)
+  check weird(1, 2, 3) ~is values(1, [2, 3])
+  check weird(1, 2, 3, 4) ~is values(1, [2, 3, 4])
+
+block:
+  fun
+  | weird(arg): arg
+  | weird(arg1, arg2): values(arg1, arg2)
+  | weird(arg1, arg2, & args): values(arg1, arg2, args)
+  check weird(1) ~is 1
+  check weird(1, 2) ~is values(1, 2)
+  check weird(1, 2, 3) ~is values(1, 2, [3])
+  check weird(1, 2, 3, 4) ~is values(1, 2, [3, 4])
+
+block:
+  fun
+  | weird(arg): arg
+  | weird(arg1, arg2): values(arg1, arg2)
+  | weird(arg1, arg2, arg3, & args): values(arg1, arg2, arg3, args)
+  check weird(1) ~is 1
+  check weird(1, 2) ~is values(1, 2)
+  check weird(1, 2, 3) ~is values(1, 2, 3, [])
+  check weird(1, 2, 3, 4) ~is values(1, 2, 3, [4])
+
+block:
+  fun
+  | weird(arg0, ~arg1: arg1, & args): values(arg0, arg1, args)
+  | weird(arg0, arg1, ~arg2: arg2, & args): values(arg0, arg1, arg2, args)
+  | weird(& args): args
+  check weird(0, ~arg1: 1, 2, 3) ~is values(0, 1, [2, 3])
+  check weird(0, 1, ~arg2: 2, 3) ~is values(0, 1, 2, [3])
+  check weird(0, 1, 2, 3) ~is [0, 1, 2, 3]
+
+block:
+  fun
+  | weird(arg0, ~arg1: arg1, & args): values(arg0, arg1, args)
+  | weird(arg0, arg1, ~arg2: arg2, & args): values(arg0, arg1, arg2, args)
+  | weird(arg0, & args): values(arg0, args)
+  check weird(0, ~arg1: 1, 2, 3) ~is values(0, 1, [2, 3])
+  check weird(0, 1, ~arg2: 2, 3) ~is values(0, 1, 2, [3])
+  check weird(0, 1, 2, 3) ~is values(0, [1, 2, 3])
+
+block:
+  fun
+  | weird(arg0, ~arg1: arg1, & args): values(arg0, arg1, args)
+  | weird(arg0, arg1, ~arg2: arg2, & args): values(arg0, arg1, arg2, args)
+  | weird(arg0, arg1, & args): values(arg0, arg1, args)
+  check weird(0, ~arg1: 1, 2, 3) ~is values(0, 1, [2, 3])
+  check weird(0, 1, ~arg2: 2, 3) ~is values(0, 1, 2, [3])
+  check weird(0, 1, 2, 3) ~is values(0, 1, [2, 3])
+
+block:
+  fun
+  | weird(arg0, ~arg1: arg1, & args): values(arg0, arg1, args)
+  | weird(arg0, arg1, ~arg2: arg2, & args): values(arg0, arg1, arg2, args)
+  | weird(arg0, arg1, arg2, & args): values(arg0, arg1, arg2, args)
+  check weird(0, ~arg1: 1, 2, 3) ~is values(0, 1, [2, 3])
+  check weird(0, 1, ~arg2: 2, 3) ~is values(0, 1, 2, [3])
+  check weird(0, 1, 2, 3) ~is values(0, 1, 2, [3])

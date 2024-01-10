@@ -32,7 +32,6 @@
          "reducer.rkt"
          "setmap-parse.rkt"
          "parens.rkt"
-         (only-in "lambda-kwrest.rkt" hash-remove*)
          "op-literal.rkt"
          (only-in "pair.rkt"
                   Pair)
@@ -493,7 +492,7 @@
                (cond
                  [(and (null? keys) (syntax-e #'rest-tmp))
                   #`(begin
-                      (define rest-tmp (hash-remove*/copy arg-id (list #,@key-tmps)))
+                      (define rest-tmp (hash-remove*/snapshot arg-id (list #,@key-tmps)))
                       (composite-matcher-id 'map composite-data IF success failure))]
                  [(null? keys)
                   #`(composite-matcher-id 'map composite-data IF success failure)]
@@ -506,9 +505,10 @@
                           failure))]))
            failure)]))
 
-;; hash-remove*/copy : (Hashof K V) (Listof K) -> (ImmutableHashof K V)
-(define (hash-remove*/copy h ks)
-  (hash-remove* (if (immutable? h) h (hash-map/copy h values #:kind 'immutable)) ks))
+;; hash-remove*/snapshot : (Hashof K V) (Listof K) -> (ImmutableHashof K V)
+(define (hash-remove*/snapshot ht ks)
+  (for/fold ([ht (hash-snapshot ht)]) ([k (in-list ks)])
+    (hash-remove ht k)))
 
 (define-syntax (map-committer stx)
   (syntax-parse stx

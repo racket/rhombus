@@ -24,6 +24,14 @@
     [(let-values _ body) (let-body #'body)]
     [_ stx]))
 
+(define (let-named stx)
+  (syntax-parse stx
+    #:literals (let-values)
+    [(let-values ([(name1) e]) name2)
+     #:when (bound-identifier=? #'name1 #'name2)
+     #'e]
+    [_ stx]))
+
 (define (lambda-optimized? mod-stx)
   (syntax-parse mod-stx
     #:datum-literals (g)
@@ -40,7 +48,7 @@
                     _)
               ...))
            (~parse (lambda () gb)
-                   (let-body #'ge))
+                   (let-body (let-named #'ge)))
            (~parse (if (#%app variable-reference-constant? (#%variable-reference _))
                        (#%app . _)
                        (#%app (#%app checked-procedure-check-and-extract . _) . _))
@@ -162,7 +170,7 @@
    prefix.f(1, ~b: 2)
  })
 
-(define (case-lambda-optimized? mod-stx)
+(define ((case-lambda-optimized? match-case) mod-stx)
   (syntax-parse mod-stx
     #:datum-literals (f)
     #:literals ([#%module-begin #%plain-module-begin]
@@ -172,25 +180,38 @@
               (~alt (~once (define-values (f) fe))
                     _)
               ...))
-           (~parse (case-lambda . _)
-                   (let-body #'fe)))
-     #t]
+           (~parse (~and fn (case-lambda . _))
+                   (let-body (let-named #'fe))))
+     (match-case #'fn)]
     [_ #f]))
 
-(check-pred case-lambda-optimized?
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _]) #t]
+                 [_ #f])))
             @get-module['case-fun1]{
  fun
  | f(a): a
  })
 
-(check-pred case-lambda-optimized?
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _] [(_ _) . _]) #t]
+                 [_ #f])))
             @get-module['case-fun2]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  })
 
-(check-pred case-lambda-optimized?
+;; FIXME these currently aren't as optimized as they can be
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
+                 [_ #f])))
             @get-module['case-fun3]{
  fun
  | f(a): a
@@ -198,10 +219,62 @@
  | f(a, & bs): values(a, & bs)
  })
 
-(check-pred case-lambda-optimized?
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
+                 [_ #f])))
             @get-module['case-fun4]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, ...): values(a, b, ...)
+ })
+
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
+                 [_ #f])))
+            @get-module['case-fun5]{
+ fun
+ | f(a): a
+ | f(a, b): values(a, b)
+ | f(a, b, & cs): values(a, b, & cs)
+ })
+
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
+                 [_ #f])))
+            @get-module['case-fun6]{
+ fun
+ | f(a): a
+ | f(a, b): values(a, b)
+ | f(a, b, c, ...): values(a, b, c, ...)
+ })
+
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
+                 [_ #f])))
+            @get-module['case-fun7]{
+ fun
+ | f(a): a
+ | f(a, b): values(a, b)
+ | f(a, b, c, & ds): values(a, b, c, & ds)
+ })
+
+(check-pred (case-lambda-optimized?
+             (lambda (stx)
+               (syntax-parse stx
+                 [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
+                 [_ #f])))
+            @get-module['case-fun8]{
+ fun
+ | f(a): a
+ | f(a, b): values(a, b)
+ | f(a, b, c, d, ...): values(a, b, c, d, ...)
  })
