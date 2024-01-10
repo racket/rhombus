@@ -1,0 +1,95 @@
+#lang rhombus/static
+
+import:
+  pict open
+  draw
+
+export:
+  timeline
+
+module private:
+  export:
+    time_at
+    epoch_dot_size
+    epoch_dot_color
+    duration_box_color
+    duration_box_pad
+    stackx
+    tl_arrows
+
+fun time_at(t) :~ Pict:
+  beside(~vert: #'baseline,
+         text("t", ~font: draw.Font(~style: #'italic)),
+         text(" = " +& t))
+
+def epoch_dot_size = 10
+def epoch_dot_color = "red"
+def duration_box_color = "pink"
+def duration_box_pad = 4
+
+fun tl_arrows(p :~ Pict, dot :~ Pict):
+  let q = p.pad(~horiz: 24)
+  let (_, dy) = Find.left(dot).in(p)
+  let dy = dy - (q.height / 2)
+  let q = connect(~on: q, Find.left(p, ~dy: dy), Find.left(q, ~dy: dy), ~style: #'arrow, ~arrow_size: 8)
+  let q = connect(~on: q, Find.right(p, ~dy: dy), Find.right(q, ~dy: dy), ~style: #'arrow, ~arrow_size: 8)
+  q  
+
+fun stackx(a, b :~ Pict) :~ Pict:
+  let p = stack(a, b)
+  p.pad(~horiz: (b.width - p.width) / 2)
+                
+fun timeline(p_in :~ Pict, [t, ...],
+             ~pre: pre = 0,
+             ~post: post = 0,
+             ~label: label = #false,
+             ~balance_label = #false,
+             ~show_timebox = #false):
+  let sep = 20
+  fun p_at_time(t, keep): if keep
+                          | p_in.snapshot(math.exact(math.floor(t)),
+                                          t - math.floor(t))
+                          | nothing
+  let w = p_in.width
+  let dot = circle(~size: epoch_dot_size, ~fill: epoch_dot_color)
+  fun mk_dot(_): dot.launder()
+  fun epochly(p :~ Pict, t):
+    if t == math.floor(t)
+    | p
+    | overlay(p.ghost(), line(~dx: p.width))
+  let [t_dot, ...]: [mk_dot(t), ...]
+  let [lt_dot, ...]: [stackx(time_at(t), epochly(t_dot, t)), ...]
+  let p :~ Pict:
+    let sep = sep + w - dot.width
+    fun keep(p, keep): if keep | p | nothing  
+    let tb = beside(~sep: sep, keep(lt_dot, t >= 0 && t < p_in.duration), ...)
+    beside(~sep: sep, beside(~sep: sep, keep(lt_dot, t < 0), ...),
+           overlay(~vert: #'bottom,
+                   rectangle(~width: tb.width + sep, ~height: dot.height + 2*duration_box_pad,
+                             ~line: show_timebox && duration_box_color)
+                     .pad(~bottom: -4, ~left: sep/2 + 4).translate(sep/4-1, 0),
+                   tb)
+             .refocus(tb),
+           beside(~sep: sep, keep(lt_dot, t >= p_in.duration), ...))
+  let p = tl_arrows(p, [t_dot, ...].first)
+  let (p, _):
+    for values(p = p, prev = #false) (t_dot: [t_dot, ...]):
+      values(if prev
+             | connect(~on: p, Find.right(prev), Find.left(t_dot))
+             | p,
+             t_dot)
+  let imgs:
+    let tb = beside(~sep: sep, p_at_time(t, t >= 0 && t < p_in.duration), ...)
+    beside(~sep: sep,
+           beside(~sep: sep, p_at_time(t, t < 0), ...),
+           tb,
+           beside(~sep: sep, p_at_time(t, t >= p_in.duration), ...))
+  let p:
+    stack(~sep: 10, p, imgs).pad(~horiz: 10)
+  let p = p.pad(~left: pre * (w + sep), ~right: post * (w + sep))
+  let p:
+    if label
+    | let label = text(label, ~font: draw.Font(~kind: #'modern))
+      beside(~sep: 20, label, p, if balance_label | label.ghost() | nothing)
+    | p
+  p

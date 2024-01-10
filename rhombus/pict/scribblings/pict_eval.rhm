@@ -1,0 +1,23 @@
+#lang rhombus/static
+
+import:
+  scribble/rhombus/manual:
+    expose:
+      make_rhombus_eval
+      examples
+
+export:
+  pict_eval
+
+def pict_eval = make_rhombus_eval()
+
+block:
+  @examples(
+    ~eval: pict_eval
+    ~hidden:
+      import:
+        pict open
+        pict/text open
+        draw
+  )
+  #void

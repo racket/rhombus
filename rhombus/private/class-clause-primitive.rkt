@@ -205,7 +205,7 @@
                                 (if (for/and ([rets (in-list (cdr retss))])
                                       (same-return-signature? (car retss) rets))
                                     (car retss)
-                                    #'#f))
+                                    #'()))
              #:with rhs #'(block (group fun
                                         (atag (btag (gtag args (block (group (parsed #:rhombus/expr (void))))))
                                               ...)))))

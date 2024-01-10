@@ -1,0 +1,264 @@
+#lang rhombus/static/and_meta
+
+import:
+  draw
+  pict:
+    expose:
+      Pict
+      HorizAlignment
+      MaybeColor
+      LineWidth
+  lib("pict/main.rkt") as rkt_pict
+  lib("racket/string.rkt")
+  "private/para.rkt" as rkt
+
+export:
+  current_font
+  current_para_width
+  current_line_sep
+
+  // these flatten nested lists of mixtures of strings and picts
+  // and convert only the strings, combining all with `beside`;
+  // so, they work well with `@` notation
+  t
+  bold
+  italic
+  tt
+  roman
+  subscript
+  superscript
+  strikethrough
+
+  // `ly` variants are syntactic forms that `parameterize`
+  // the argument expressions, so that `italic` can be nested in
+  // `boldly` to get bold italic, etc.
+  boldly
+  italicly
+  ttly
+  romanly
+
+  // like `stack`, but with the current line separation
+  lines
+
+  // these flatten nested lists, so they work well with `@` notation;
+  // unlike Racket slideshow, the default is that the result pict is
+  // only as wide as needed, with the intent that `align` is used to
+  // make blocks of paragraphs and bullets
+  para
+  item
+  subitem
+
+  verbatim
+
+module ly:
+  export ly
+
+Parameter.def current_font :: draw.Font:
+  draw.Font()
+
+fun flatten_string(who, c, font) :~ Pict:
+  match c
+  | s :: String: pict.text(s, ~font: font)
+  | p :: Pict: p
+  | [c, ...]: pict.beside(~vert: #'topline, flatten_string(who, c, font), ...)
+  | ~else:
+      error(who, "bad text content: " +& to_string(c, ~mode: #'expr))
+
+fun t(~font: font :: draw.Font = current_font(),
+      s, ...) :~ Pict:
+  flatten_string(#'t, [s, ...], font)
+
+fun current_font_as_bold():
+   (current_font() :~ draw.Font) with (weight = #'bold)
+
+fun current_font_as_italic():
+   (current_font() :~ draw.Font) with (style = #'italic)
+
+fun current_font_as_tt():
+   (current_font() :~ draw.Font) with (kind = #'modern, name = #false)
+
+fun current_font_as_roman():
+   (current_font() :~ draw.Font) with (kind = #'roman, name = #false)
+
+defn.macro 'ly $ly: $expr':
+  '«
+     macro
+     | '$ly($('$')args)':
+         '(parameterize { current_font: $expr }:
+             t($('$')args)) :~ Pict'
+     | '$ly: $('$')body':
+         'parameterize { current_font: $expr }:
+            $('$')body'
+   »'
+
+ly boldly: current_font_as_bold()
+ly italicly: current_font_as_italic()
+ly ttly: current_font_as_tt()
+ly romanly: current_font_as_roman()
+
+fun bold(a, ...) :~ Pict:
+  boldly(a, ...)
+
+fun italic(a, ...) :~ Pict:
+  italicly(a, ...)
+
+fun tt(a, ...) :~ Pict:
+  ttly(a, ...)
+
+fun roman(a, ...) :~ Pict:
+  romanly(a, ...)
+
+fun subscript(arg, ...) :~ Pict:
+  let p = t(arg, ...)
+  p.lift(-p.height/2).scale(0.75)
+
+fun superscript(arg, ...) :~ Pict:
+  let p = t(arg, ...)
+  p.lift(p.height/3).scale(0.75)
+
+fun strikethrough(~line: line :: MaybeColor = #'inherit,
+                  ~line_width: line_width :: LineWidth = 3,
+                  ~dy: dy = 0,
+                  arg, ...) :~ Pict:
+  let p = t(arg, ...)
+  pict.pin(~on: p,
+           ~at: pict.Find.left_top(p, ~dy: dy + 0.75 * p.ascent),
+           pict.line(~dx: p.width, ~line: line, ~line_width: line_width))
+
+// ----------------------------------------
+
+Parameter.def current_line_sep :: Real = 5
+
+fun lines(~horiz: align :: HorizAlignment = #'left,
+          p :: Pict, ...) :~ Pict:
+  pict.stack(~sep: current_line_sep(),
+             ~horiz: align,
+             p, ...)
+
+namespace lines:
+  export:
+    left center right
+  fun left(p :: Pict, ...) :~ Pict: lines(~horiz: #'left, p, ...)
+  fun center(p :: Pict, ...) :~ Pict: lines(~horiz: #'center, p, ...)
+  fun right(p :: Pict, ...) :~ Pict: lines(~horiz: #'right, p, ...)
+
+
+Parameter.def current_para_width :: Real:
+  500
+
+fun mstr_t(s :: ReadableString.to_string): t(s).snapshot().handle
+
+fun flatten_para_content(who, decode, c) :~ List:
+  recur flatten(c = c) :~ List:
+    match c
+    | "":
+        []
+    | s :: String:
+        let PairList[str, ...] = string.#{string-split}(s)
+        let ps = List.append([Pict.from_handle(rkt.para(~t: mstr_t,
+                                                        ~width: #inf,
+                                                        #{#:decode?}: decode,
+                                                        str)), #'sep],
+                             ...)
+        let ps = if s[s.length()-1] == " "[0] | ps | ps.drop_right(1)
+        let ps = if s[0] == " "[0] | List.cons(#'sep, ps) | ps
+        ps
+    | p :: Pict: [#'sep, p, #'sep]
+    | []: []
+    | [l1 :: List, & c]:
+        flatten(l1) ++ [#'sep] ++ flatten(c)
+    | [s1 :: String, s2 :: String, & c]:
+        flatten(s1) ++ [#'sep] ++ flatten([s2, & c])
+    | [p1 :: Pict, s2 :: String, & c]:
+        [p1] ++ flatten([s2, & c])
+    | [s1 :: String, p2 :: Pict, & c]:
+        flatten(s1) ++ [p2] ++ flatten(c)
+    | [c1, & c]:
+        flatten(c1) ++ flatten(c)
+    | ~else:
+        error(who, "bad paragraph content: " +& to_string(c, ~mode: #'expr))
+
+fun join_nonbreaking(l :: List):
+  match l
+  | []: []
+  | [#'sep, & l]: join_nonbreaking(l)
+  | [p, #'sep, & l]: [p, & join_nonbreaking(l)]
+  | [p, p2, & l]: join_nonbreaking([pict.beside.topline(p, p2), & l])
+  | [p]: [p]
+
+fun para(~width: width = current_para_width(),
+         ~horiz: align :: pict.HorizAlignment = #'left,
+         ~full: full = #false,
+         ~decode: decode = #true,
+         content, ...) :~ Pict:
+  recur retry(ps = join_nonbreaking(flatten_para_content(#'slide, decode, [content, ...]))):
+    match ps
+    | [p :: pict.StaticPict, ...]:
+        Pict.from_handle(rkt.para(~t: mstr_t,
+                                  #{#:line-sep}: current_line_sep(),
+                                  #{#:fill?}: full,
+                                  ~width: width,
+                                  ~align: align,
+                                  p.handle, ...))
+    | ps:
+        pict.animate_map(ps, ~combine: retry)
+
+fun item(~width: width = current_para_width(),
+         ~full: full = #false,
+         ~decode: decode = #true,
+         ~horiz: align :: pict.HorizAlignment = #'left,
+         ~bullet: bullet :: maybe(Pict) = #false,
+         content, ...) :~ Pict:
+  let bullet :~ Pict = bullet || t("\u2022")
+  pict.beside(~sep: bullet.width,
+              ~vert: #'topline,
+              bullet,
+              para(~width: width - 2*bullet.width,
+                   ~full: full,
+                   ~decode: decode,
+                   ~horiz: align,
+                   content, ...))
+
+fun subitem(~width: width = current_para_width(),
+            ~full: full = #false,
+            ~decode: decode = #true,
+            ~horiz: align :: pict.HorizAlignment = #'left,
+            ~bullet: bullet :: maybe(Pict) = #false,
+            content, ...) :~ Pict:
+  let bullet :~ Pict = bullet || t("\u25E6")
+  pict.beside(~sep: bullet.width,
+              ~vert: #'topline,
+              pict.blank(~width: bullet.width),
+              bullet,
+              para(~width: width - 4*bullet.width,
+                   ~full: full,
+                   ~decode: decode,
+                   ~horiz: align,
+                   content, ...))
+
+// ----------------------------------------
+
+fun flatten_content(who, c) :~ List:
+  match c
+  | s :: String: [s]
+  | p :: Pict: [p]
+  | [c, ...]: List.append(flatten_content(who, c), ...)
+  | ~else:
+      error(who, "bad content: " +& to_string(c, ~mode: #'expr))
+
+fun verbatim(content, ...) :~ Pict:
+  let content = flatten_content(#'verbatim, [content, ...])
+  let [row, ...]:
+    recur loop(content = content) :~ List:
+      match content
+      | []: []
+      | ["\n", & content]:
+          loop(content).insert(0, [])
+      | [p, & content]:
+          let rows = loop(content)
+          match rows
+          | []: [[p]]
+          | [row :~ List, & rows]: [row.insert(0, p), & rows]
+  fun tt_maybe_empty(row):
+    if row == [] | tt("") | tt(row)
+  lines(tt_maybe_empty(row), ...)

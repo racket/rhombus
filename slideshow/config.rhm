@@ -1,0 +1,3 @@
+#lang rhombus
+import: rhombus/slideshow/config
+

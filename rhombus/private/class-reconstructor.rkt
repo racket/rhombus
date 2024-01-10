@@ -80,7 +80,7 @@
                                         (syntax->list #'(con-field-name ...))
                                         (syntax->list #'(con-field-arg ...))
                                         (syntax->list #'(con-acc ...)))))
-             ;; non-default reconstructor has handled in `build-methods`
+             ;; non-default reconstructor is handled in `build-methods`
              null)
          (list
           #`(define-update-syntax name-instance
@@ -179,4 +179,3 @@
                             "value does not support functional update"
                             "value" obj))
   (cdr r))
-

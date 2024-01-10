@@ -1,0 +1,3 @@
+#lang rhombus
+import: rhombus/pict
+export: all_from(.pict)

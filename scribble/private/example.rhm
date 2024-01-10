@@ -35,7 +35,7 @@ expr.macro 'examples($form, ...)':
         | []: []
         | ['$('~eval' || '~label' || '~indent'): $_', & rest]:
             split(rest)
-        | ['$(tag && ('~defn' || '~repl' || '~hidden')): $g; ...', & rest]:
+        | ['$(tag && ('~defn' || '~repl' || '~hidden' || '~result')): $g; ...', & rest]:
             [[tag, [g, ...]], & split(rest)]
         | ['$('~error' || '~check' || '~fake'): $_', & _] :
             [['~repl', forms]]
@@ -52,6 +52,7 @@ expr.macro 'examples($form, ...)':
                          $(match tag
                            | '~defn': '~no_prompt'
                            | '~hidden': '~hidden: #true'
+                           | '~result': '~result_only: #true'
                            | ~else: ''),
                          $form, ...))'
         .relocate_span(forms)

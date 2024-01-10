@@ -3,6 +3,7 @@ import:
   lib("scribble/core.rkt")
   lib("scribble/base.rkt")
   lib("scribble/decode.rkt")
+  lib("file/convertible.rkt") as convert
 
 export:
   Style
@@ -106,6 +107,8 @@ fun convert_content(v):
         | Pair.cons(a, b):
             let new_a = convert_content(a)
             new_a && Pair.cons(new_a, loop(b))
+  | p :: satisfying(convert.#{convertible?}):
+      p
   | ~else:
       #false
 
