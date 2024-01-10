@@ -52,7 +52,7 @@
 (define-for-syntax (union-arity-summaries as)
   (cond
     [(null? as) #f]
-    [(= 1 (length as)) (car as)]
+    [(null? (cdr as)) (car as)]
     [else
      (define (normalize a)
        (if (pair? a)

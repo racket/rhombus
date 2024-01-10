@@ -115,12 +115,12 @@
     (cond
       [(multi-syntax? r)
        (define l (syntax->list r))
-       (if (= 2 (length l))
+       (if (and (pair? (cdr l)) (null? (cddr l)))
            (loop (cadr l))
            (fail))]
       [(group-syntax? r)
        (define l (syntax->list r))
-       (if (= 2 (length l))
+       (if (and (pair? (cdr l)) (null? (cddr l)))
            (cadr l)
            (fail))]
       [(or (treelist? r) (list? r)) (cannot-coerce-list who r)]
@@ -151,7 +151,7 @@
     [(multi-syntax? r)
      (define l (syntax->list r))
      (cond
-       [(= 2 (length l)) (cadr l)]
+       [(and (pair? (cdr l)) (null? (cddr l))) (cadr l)]
        [else (raise-error who "multi-group syntax not allowed in group context" r)])]
     [(group-syntax? r) r]
     [(listable? r)
@@ -306,7 +306,7 @@
       (define l (syntax->list r))
       (cond
         [(null? (cdr l)) '()]
-        [(= 2 (length l)) (cdr (syntax-e (cadr l)))]
+        [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
         [else (raise-error who "multi-group syntax not allowed in group context" r)])]
      [(group-syntax? r) (cdr (syntax-e r))]
      [(pair? r) (cannot-coerce-pair who r)]

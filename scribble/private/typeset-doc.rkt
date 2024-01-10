@@ -185,7 +185,9 @@
                                #f
                                (cadr (syntax->list def-name))))
             (define index-str (let ([l (syntax->list def-name)])
-                                (and (and (list? l) ((length l) . > . 2))
+                                (and (pair? l)
+                                     (pair? (cdr l))
+                                     (pair? (cddr l))
                                      (caddr l))))
             (define sym-path (cons
                               (if str-id
@@ -548,8 +550,8 @@
                              (cons str new-strs))))])
     (cond
       [(null? strs) "???"]
-      [(= 1 (length strs)) (car strs)]
-      [(= 2 (length strs)) (string-append (car strs) " and " (cadr strs))]
+      [(null? (cdr strs)) (car strs)]
+      [(null? (cddr strs)) (string-append (car strs) " and " (cadr strs))]
       [else (let loop ([strs strs])
               (cond
                 [(null? (cdr strs)) (string-append "and " (car strs))]

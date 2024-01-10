@@ -542,7 +542,8 @@
                                                 (temporary "make-internal-~a"))]
                        [(dot-id ...) (map car dots)]
                        [dot-provider-name (or (and (or (pair? dot-provider-rhss)
-                                                       ((length parent-dot-providers) . > . 1))
+                                                       (and (pair? parent-dot-providers)
+                                                            (pair? (cdr parent-dot-providers))))
                                                    (temporary "dot-provider-~a"))
                                               (and (pair? parent-dot-providers)
                                                    (car parent-dot-providers)))]

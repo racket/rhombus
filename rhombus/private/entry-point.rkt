@@ -27,34 +27,47 @@
       (raise-bad-macro-result (proc-name proc) "entry point" form))
     form)
 
-  (define (check-entry-point-arity-result form proc)
+  (define (check-entry-point-arity-result form-in proc)
     (define (bad)
-      (raise-bad-macro-result (proc-name proc) #:syntax-for? #f "entry point arity" form))
-    (let loop ([form form])
+      (raise-bad-macro-result (proc-name proc)
+                              #:syntax-for? #f
+                              "entry point arity" form-in))
+    (define (to-list/maybe v)
+      (if (listable? v)
+          (to-list #f v)
+          v))
+    (define (arity-list? v)
+      (and (pair? v)
+           (pair? (cdr v))
+           (pair? (cddr v))
+           (null? (cdddr v))))
+    (define (check-keyword-list v)
+      (unless (and (list? v)
+                   (andmap keyword? v))
+        (bad))
+      v)
+    (define form
       (cond
-        [(not form) (datum->syntax #f form)]
-        [(exact-integer? form) (datum->syntax #f form)]
-        [(and (list? form)
-              (= 3 (length form))
-              (exact-integer? (car form)))
-         (define allows (cadr form))
-         (define reqs (caddr form))
-         (cond
-           [(and (list? allows)
-                 (andmap keyword? allows)
-                 (or (not reqs)
-                     (and (list? reqs)
-                          (andmap keyword? reqs))))
-            (datum->syntax #f form)]
-           [(and (listable? allows)
-                 (listable? reqs))
-            (loop (list (car form) (to-list #f allows) (to-list #f reqs)))]
-           [else (bad)])]
-        [(and (listable? form) (not (list? form))) (loop (to-list #f form))]
-        [else (bad)])))
+        [(or (not form-in)
+             (exact-integer? form-in))
+         form-in]
+        [else
+         (define form (to-list/maybe form-in))
+         (unless (arity-list? form) (bad))
+         (define-values (mask required-kws-in allowed-kws-in)
+           (values (car form) (cadr form) (caddr form)))
+         (unless (exact-integer? mask) (bad))
+         (define required-kws
+           (check-keyword-list (to-list/maybe required-kws-in)))
+         (define allowed-kws
+           (cond
+             [(not allowed-kws-in) allowed-kws-in]
+             [else (check-keyword-list (to-list/maybe allowed-kws-in))]))
+         (list mask required-kws allowed-kws)]))
+    (datum->syntax #f form))
 
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))
-  
+
   (define-rhombus-transform
     #:syntax-class (:entry-point adjustments)
     #:desc "entry-point form"
@@ -66,7 +79,7 @@
                                 (lambda (stx)
                                   ((transformer-proc t) stx adjustments)))))
     #:check-result check-entry-point-result)
-  
+
   (define-rhombus-transform
     #:syntax-class :entry-point-arity
     #:desc "entry-point form"

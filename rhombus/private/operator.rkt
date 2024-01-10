@@ -190,7 +190,7 @@
     (define (->stx l) (datum->syntax #f l))
     (define-values (proc arity)
       (cond
-        [(and (eqv? (length args) 1)
+        [(and (pair? args) (null? (cdr args))
               (not main-converter))
          (build-function no-adjustments
                          name
@@ -225,7 +225,7 @@
     (define (->stx l) (datum->syntax #f l))
     (define-values (proc arity)
       (cond
-        [(and (eqv? (length lefts) 1)
+        [(and (pair? lefts) (null? (cdr lefts))
               (not main-converter))
          (build-function no-adjustments
                          name

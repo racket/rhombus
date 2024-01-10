@@ -144,7 +144,7 @@
                                                                   ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results 
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results
                                                  internal-name
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
@@ -175,7 +175,7 @@
                                       "interface")]
            [else #'no-constructor-transformer]))
         #`(define-name-root name
-            #:extends name-extends 
+            #:extends name-extends
             #:fields ([method-name method-id]
                       ...
                       [dot-id dot-intf-id]
@@ -194,7 +194,7 @@
              (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
                                                                               #hasheq()
                                                                               #hasheq())])
-                               
+
                                (if (syntax-e #'dot-provider-name)
                                    #`(compose-dot-providers
                                       (quote-syntax dot-provider-name)
@@ -209,7 +209,8 @@
 (define-for-syntax (maybe-dot-provider-definition dot-rhs-ids dot-provider-name parent-dot-providers)
   (if (and (syntax-e dot-provider-name)
            (or (pair? (syntax-e dot-rhs-ids))
-               ((length parent-dot-providers) . > . 1)))
+               (and (pair? parent-dot-providers)
+                    (pair? (cdr parent-dot-providers)))))
       (list
        #`(define-syntax #,dot-provider-name
            (compose-dot-providers

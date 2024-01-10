@@ -1,11 +1,10 @@
 #lang racket/base
 (require racket/class
          racket/list
-         "lex.rkt"
          "private/edit-help.rkt"
          "private/paren.rkt"
          "private/delta-text.rkt")
-         
+
 ;; Conventions:
 ;;   pos = arbitary position
 ;;   s, e = range positions
@@ -144,10 +143,13 @@
      (define indent (shrubbery-indentation t pos
                                            #:multi? #t
                                            #:stop-pos stop-pos))
+     (define amt
+       (cond
+         [(and (pair? indent) (null? (cdr indent))) (car indent)]
+         [(exact-nonnegative-integer? indent) indent]
+         [else #f]))
      (cond
-       [(or (not (list? indent))
-            (= 1 (length indent)))
-        (define amt (if (pair? indent) (car indent) indent))
+       [amt
         (define current (get-current-tab t pos))
         (define one
           (if (current . < . amt)

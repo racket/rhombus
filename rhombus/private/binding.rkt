@@ -152,7 +152,7 @@
     [(_ arg-id [bind-id prefix-id])
      (define l (build-definitions/maybe-extension #f #'bind-id #'prefix-id
                                                   #'arg-id))
-     (if (= 1 (length l))
+     (if (and (pair? l) (null? (cdr l)))
          (car l)
          #`(begin #,@l))]
     [(_ arg-id bind-id)

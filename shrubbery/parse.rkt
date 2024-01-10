@@ -342,7 +342,7 @@
                                                             #:commenting group-commenting
                                                             #:raw splice-raw)))
                  (when (group-state-paren-immed sg)
-                   (unless (= 1 (length gs))
+                   (unless (and (pair? gs) (null? (cdr gs)))
                      (fail t (format "multi-group splice not allowed (immediately ~a)" within-parens-str))))
                  (define-values (more-gs more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)
                    (parse-groups close-l (struct-copy group-state sg
@@ -358,7 +358,7 @@
                                                       [raw group-tail-raw])))
                  (values (append gs more-gs)
                          more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)]
-                
+
                 [else
                  (when (group-state-paren-immed sg)
                    (fail t (format "misplaced semicolon (immediately ~a)" within-parens-str)))
@@ -1705,7 +1705,7 @@
                 (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
                 (parse-top-groups l #:interactive? (memq mode '(interactive line)))))
   v)
-  
+
 (module+ main
   (require racket/cmdline
            "print.rkt")

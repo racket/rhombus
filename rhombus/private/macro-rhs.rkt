@@ -343,7 +343,7 @@
   (define prefixes (for/list ([p (in-list ps)] #:when (eq? 'prefix (parsed-fixity p))) p))
   (define infixes (for/list ([p (in-list ps)] #:when (eq? 'infix (parsed-fixity p))) p))
   (define (check-fixity-consistent what options ps)
-    (unless ((length ps) . < . 2)
+    (when (and (pair? ps) (pair? (cdr ps)))
       (for ([p (in-list ps)]
             [i (in-naturals)])
         (when (parsed-parsed-right? p)
@@ -480,7 +480,7 @@
 
 (define-for-syntax (select-transformer-case-shape pre-parseds extra-bindss)
   (cond
-    [(and (= 1 (length pre-parseds))
+    [(and (pair? pre-parseds) (null? (cdr pre-parseds))
           (syntax-parse (car pre-parseds)
             #:datum-literals (pre-parsed)
             [(pre-parsed _

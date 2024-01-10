@@ -336,7 +336,7 @@
                                              (cond
                                                [(eq? kind 'multi)
                                                 #`(_ #,@ps)]
-                                               [(= 1 (length ps))
+                                               [(and (pair? ps) (null? (cdr ps)))
                                                 (car ps)]
                                                [else
                                                 (raise-syntax-error #f

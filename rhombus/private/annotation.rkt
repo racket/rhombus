@@ -113,17 +113,10 @@
                         "not bound as an annotation"
                         id))
 
-  (define (check-annotation-result stx proc)
-    (unless (and (syntax? stx)
-                 (let ([l (syntax->list stx)])
-                   (and l
-                        (pair? l)
-                        (or (and (eq? (syntax-e (car l)) '#:pred)
-                                 (= (length l) 3))
-                            (and (eq? (syntax-e (car l)) '#:bind)
-                                 (= (length l) 4))))))
-      (raise-bad-macro-result (proc-name proc) "annotation" stx))
-    stx)
+  (define (check-annotation-result form proc)
+    (syntax-parse (if (syntax? form) form #'#f)
+      [(~or* _::annotation-predicate-form _::annotation-binding-form) form]
+      [_ (raise-bad-macro-result (proc-name proc) "annotation" form)]))
 
   (define-rhombus-enforest
     #:enforest enforest-annotation
@@ -397,12 +390,12 @@
        (build-syntax-definitions/maybe-extension
         (list 'rhombus/annot) #'name #:extra-names (list #'of-name) #'name-extends
         #'(let binds
-              (annotation-constructor #'annot-name predicate-stx static-infos
-                                      sub-n 'kws
-                                      predicate-maker info-maker
-                                      binding-maker-id binding-maker-data
-                                      parse-annotation-of-id))))
-     (if (= 1 (length defs))
+            (annotation-constructor #'annot-name predicate-stx static-infos
+                                    sub-n 'kws
+                                    predicate-maker info-maker
+                                    binding-maker-id binding-maker-data
+                                    parse-annotation-of-id))))
+     (if (and (pair? defs) (null? (cdr defs)))
          (car defs)
          #`(begin #,@defs))]))
 

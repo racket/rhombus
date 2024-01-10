@@ -49,7 +49,7 @@
              (lambda (x) x)))
        (define dest+space-name
          (cond
-           [(= 1 (length space-names))
+           [(and (pair? space-names) (null? (cdr space-names)))
             (define space-name (car space-names))
             (define intro (make-intro space-name))
             (define dest (and lookup (lookup #f "identifier" field intro)))
