@@ -7,47 +7,51 @@
                      "hash-set.rkt"))
 
 (provide (for-syntax summarize-arity
+                     shift-arity
                      union-arity-summaries
                      check-arity))
 
 (define-for-syntax (summarize-arity kws defaults rest? kw-rest?)
-  (let loop ([kws (if (syntax? kws) (syntax->list kws) kws)]
-             [defaults (if (syntax? defaults) (syntax->list defaults) defaults)]
-             [bit 1]
+  (define (syntax->list/maybe stx)
+    (if (syntax? stx) (syntax->list stx) stx))
+  (define (make-arity bit mask allowed-kws required-kws)
+    (define (hash->list/keyword kws)
+      (sort (hash-keys kws) keyword<?))
+    (define a (bitwise-ior mask
+                           (if rest?
+                               (bitwise-xor -1 (sub1 bit))
+                               bit)))
+    (cond
+      [kw-rest? (list a (hash->list/keyword required-kws) #f)]
+      [(eqv? (hash-count allowed-kws) 0) a]
+      [else (list a (hash->list/keyword required-kws) (hash->list/keyword allowed-kws))]))
+  (for/fold ([bit 1]
              [mask 0]
              [allowed-kws #hasheq()]
-             [required-kws #hasheq()])
+             [required-kws #hasheq()]
+             #:result (make-arity bit mask allowed-kws required-kws))
+            ([kw (in-list (syntax->list/maybe kws))]
+             [default (in-list (syntax->list/maybe defaults))])
     (cond
-      [(null? kws)
-       (define a (bitwise-ior mask
-                              (if rest?
-                                  (bitwise-xor -1 (sub1 bit))
-                                  bit)))
-       (if kw-rest?
-           `(,a ,(sort (hash-keys required-kws) keyword<?) #f)
-           (if (zero? (hash-count allowed-kws))
-               a
-               `(,a ,(sort (hash-keys required-kws) keyword<?)
-                    ,(sort (hash-keys allowed-kws) keyword<?))))]
-      [(if (syntax? (car kws)) (syntax-e (car kws)) (car kws))
-       (define kw (if (syntax? (car kws)) (syntax-e (car kws)) (car kws)))
-       (loop (cdr kws)
-             (cdr defaults)
-             bit
-             mask
-             (hash-set allowed-kws kw #t)
-             (if (syntax-e (car defaults))
-                 required-kws
-                 (hash-set required-kws kw #t)))]
+      [(syntax-e kw)
+       (values bit
+               mask
+               (hash-set allowed-kws (syntax-e kw) #t)
+               (if (syntax-e default)
+                   required-kws
+                   (hash-set required-kws (syntax-e kw) #t)))]
       [else
-       (loop (cdr kws)
-             (cdr defaults)
-             (arithmetic-shift bit 1)
-             (if (syntax-e (car defaults))
-                 (bitwise-ior mask bit)
-                 mask)
-             allowed-kws
-             required-kws)])))
+       (values (arithmetic-shift bit 1)
+               (if (syntax-e default)
+                   (bitwise-ior mask bit)
+                   mask)
+               allowed-kws
+               required-kws)])))
+
+(define-for-syntax (shift-arity a shift)
+  (if (pair? a)
+      (list (arithmetic-shift (car a) shift) (cadr a) (caddr a))
+      (arithmetic-shift a shift)))
 
 (define-for-syntax (union-arity-summaries as)
   (cond

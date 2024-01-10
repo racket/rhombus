@@ -28,7 +28,6 @@
          "setmap-parse.rkt"
          "parens.rkt"
          "composite.rkt"
-         (only-in "lambda-kwrest.rkt" hash-remove*)
          "op-literal.rkt"
          "hash-snapshot.rkt"
          "mutability.rkt"
@@ -383,7 +382,7 @@
                (cond
                  [(and (null? keys) (syntax-e #'rest-tmp))
                   #`(begin
-                      (define rest-tmp (set-remove*/copy arg-id (list #,@key-tmps)))
+                      (define rest-tmp (set-remove*/snapshot arg-id (list #,@key-tmps)))
                       (composite-matcher-id 'set composite-data IF success failure))]
                  [(null? keys)
                   #`(composite-matcher-id 'set composite-data IF success failure)]
@@ -395,9 +394,9 @@
                           failure))]))
            failure)]))
 
-(define (set-remove*/copy s ks)
-  (define h (set-ht s))
-  (set (hash-remove* (if (immutable? h) h (hash-map/copy h values #:kind 'immutable)) ks)))
+(define (set-remove*/snapshot s ks)
+  (set (for/fold ([ht (hash-snapshot (set-ht s))]) ([k (in-list ks)])
+         (hash-remove ht k))))
 
 (define-syntax (set-committer stx)
   (syntax-parse stx
