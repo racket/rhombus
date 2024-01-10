@@ -110,8 +110,7 @@
 ;; The result is always a syntax object.
 (define (unpack-term form who at-stx)
   (define (fail)
-    (and who
-         (raise-error who "multi-term syntax not allowed in term context" form)))
+    (raise-error who "multi-term syntax not allowed in term context" form))
   (let loop ([r form])
     (cond
       [(multi-syntax? r)
@@ -124,7 +123,7 @@
        (if (= 2 (length l))
            (cadr l)
            (fail))]
-      [(or (treelist? r) (list? r)) (and who (cannot-coerce-list who r))]
+      [(or (treelist? r) (list? r)) (cannot-coerce-list who r)]
       [else (datum->syntax at-stx r)])))
 
 ;; For meta functions that take terms as arguments
@@ -153,7 +152,7 @@
      (define l (syntax->list r))
      (cond
        [(= 2 (length l)) (cadr l)]
-       [else (and who (raise-error who "multi-group syntax not allowed in group context" r))])]
+       [else (raise-error who "multi-group syntax not allowed in group context" r)])]
     [(group-syntax? r) r]
     [(listable? r)
      (define es (to-list #f r))
@@ -193,9 +192,9 @@
                [(and (null? rest-terms) (stx-null? tail))
                 #t]
                [else
-                (and who (raise-error who
-                                      "alternatives not allowed in non-tail position of a group"
-                                      e))])]
+                (raise-error who
+                             "alternatives not allowed in non-tail position of a group"
+                             e)])]
             [(eq? t 'block)
              (cond
                [(and (null? rest-terms)
@@ -213,9 +212,9 @@
                    (when (pair? rest-terms)
                      (loop rest-terms))]
                   [else
-                   (and who (raise-error who
-                                         "block not allowed in non-tail position of a group (unless just before alternatives)"
-                                         e))])])]
+                   (raise-error who
+                                "block not allowed in non-tail position of a group (unless just before alternatives)"
+                                e)])])]
             [else (loop rest-terms)])])])))
 
 ;; this function makes sure the list is valid as a group
@@ -511,27 +510,31 @@
                                  (error "unexpected multi-group sequence for macro match"))))]
     [else (list term r)]))
 
+(define (->name v)
+  (cond
+    [(syntax? v) (syntax-e v)]
+    [(procedure? v) (proc-name v)]
+    [else v]))
+
 (define (cannot-coerce-list who r)
-  (raise-arguments-error* (cond
-                            [(syntax? who) (syntax-e who)]
-                            [(procedure? who) (proc-name who)]
-                            [else who])
-                          rhombus-realm
-                          "cannot coerce list to syntax"
-                          "list" r))
+  (and who
+       (raise-arguments-error* (->name who)
+                               rhombus-realm
+                               "cannot coerce list to syntax"
+                               "list" r)))
 
 (define (cannot-coerce-empty-list who r)
-  (raise-arguments-error* (cond
-                            [(syntax? who) (syntax-e who)]
-                            [(procedure? who) (proc-name who)]
-                            [else who])
-                          rhombus-realm
-                          "cannot coerce empty list to group syntax"))
+  (and who
+       (raise-arguments-error* (->name who)
+                               rhombus-realm
+                               "cannot coerce empty list to group syntax")))
 
 (define (cannot-coerce-pair who r)
-  (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm
-                          "cannot coerce pair to syntax"
-                          "pair" r))
+  (and who
+       (raise-arguments-error* (->name who)
+                               rhombus-realm
+                               "cannot coerce pair to syntax"
+                               "pair" r)))
 
 (define (raise-error who msg r)
   (cond
@@ -549,7 +552,9 @@
                            (error-print-width)))
         rhombus-realm)
        (current-continuation-marks)))]
-    [else
-     (raise-arguments-error* who rhombus-realm
+    [who
+     (raise-arguments-error* (->name who)
+                             rhombus-realm
                              msg
-                             "syntax" r)]))
+                             "syntax" r)]
+    [else #f]))
