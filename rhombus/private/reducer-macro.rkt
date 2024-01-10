@@ -112,13 +112,15 @@
   (unless (syntax? s)
     (raise-argument-error* who rhombus-realm "Syntax" s)))
 
-(define-for-syntax (check-identifier who id)
+(define-for-syntax (unpack-identifier who id-in [annot-str "Identifier"])
+  (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id)))
+    (raise-argument-error* who rhombus-realm annot-str id-in))
+  id)
 
-(define-for-syntax (check-maybe-identifier who maybe-id)
-  (unless (or (not maybe-id) (identifier? maybe-id))
-    (raise-argument-error* who rhombus-realm "maybe(Identifier)" maybe-id)))
+(define-for-syntax (unpack-maybe-identifier who maybe-id-in)
+  (and maybe-id-in
+       (unpack-identifier who maybe-id-in "maybe(Identifier)")))
 
 (begin-for-syntax
   (define/arity (reducer_meta.pack wrapper-id-in
@@ -130,17 +132,12 @@
                                    static-infos
                                    data)
     #:static-infos ((#%call-result #,syntax-static-infos))
-    (define wrapper-id (unpack-term/maybe wrapper-id-in))
-    (define step-id (unpack-term/maybe step-id-in))
-    (define maybe-break-id (unpack-term/maybe maybe-break-id-in))
-    (define maybe-final-id (unpack-term/maybe maybe-final-id-in))
-    (define finish-id (unpack-term/maybe finish-id-in))
-    (check-identifier who wrapper-id)
+    (define wrapper-id (unpack-identifier who wrapper-id-in))
     (check-syntax who binds)
-    (check-identifier who step-id)
-    (check-maybe-identifier who maybe-break-id)
-    (check-maybe-identifier who maybe-final-id)
-    (check-identifier who finish-id)
+    (define step-id (unpack-identifier who step-id-in))
+    (define maybe-break-id (unpack-maybe-identifier who maybe-break-id-in))
+    (define maybe-final-id (unpack-maybe-identifier who maybe-final-id-in))
+    (define finish-id (unpack-identifier who finish-id-in))
     (check-syntax who static-infos)
     (check-syntax who data)
     (define packed-binds

@@ -253,13 +253,14 @@
                              "unrecognized key symbol"
                              "symbol" key)]))
 
-(define (check-identifier who id)
+(define (unpack-identifier who id-in)
+  (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id)))
+    (raise-argument-error* who rhombus-realm "Identifier" id-in))
+  id)
 
 (define (describe who id-in)
-  (define id (unpack-term/maybe id-in))
-  (check-identifier who id)
+  (define id (unpack-identifier who id-in))
   (define desc (syntax-local-value* (in-class-desc-space id) class-desc-ref))
   (define idesc (and (not desc)
                      (syntax-local-value* (in-class-desc-space id) class-internal-desc-ref)))

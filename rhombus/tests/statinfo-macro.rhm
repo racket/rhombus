@@ -13,7 +13,7 @@ check:
 
 check:
   expr.macro 'also_use_x':
-    statinfo_meta.lookup('sub.x', Syntax.make_group(['anything']))
+    statinfo_meta.lookup('sub.x', Syntax.literal_group 'anything')
   also_use_x
   ~is "yes"
 

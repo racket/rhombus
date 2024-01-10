@@ -175,15 +175,24 @@
     #:static-infos ((#%call-result #,syntax-static-infos))
     (transform-in stx))
 
-  (define/arity (syntax_meta.is_static id/op-in)
+  (define (unpack-identifier-or-operator who id/op-in)
     (define id/op (unpack-term/maybe id/op-in))
     (define id
-      (syntax-parse id/op
-        #:datum-literals (op)
-        [(~or* id:identifier (op id)) #'id]
-        [_ (raise-argument-error* who rhombus-realm
-                                  "Identifier || Operator"
-                                  id/op)]))
+      (cond
+        [(identifier? id/op) id/op]
+        [id/op (syntax-parse id/op
+                 #:datum-literals (op)
+                 [(op o) #'o]
+                 [_ #f])]
+        [else #f]))
+    (unless id
+      (raise-argument-error* who rhombus-realm
+                             "Identifier || Operator"
+                             id/op-in))
+    id)
+
+  (define/arity (syntax_meta.is_static id/op-in)
+    (define id (unpack-identifier-or-operator who id/op-in))
     (is-static-context? id))
 
   (define-annotation-syntax SyntaxPhase

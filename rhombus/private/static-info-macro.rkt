@@ -87,9 +87,11 @@
   (unless (syntax? s)
     (raise-argument-error* who rhombus-realm "Syntax" s)))
 
-(define-for-syntax (check-identifier who id)
+(define-for-syntax (unpack-identifier who id-in)
+  (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id)))
+    (raise-argument-error* who rhombus-realm "Identifier" id-in))
+  id)
 
 (begin-for-syntax
   (define/arity (statinfo_meta.pack stx)
@@ -125,9 +127,8 @@
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
   (define/arity (statinfo_meta.lookup form key-in)
-    (define key (unpack-term/maybe key-in))
     (check-syntax who form)
-    (check-identifier who key)
+    (define key (unpack-identifier who key-in))
     (define si
       (extract-static-infos
        (syntax-parse (unpack-group form who #f)
