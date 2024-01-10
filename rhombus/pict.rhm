@@ -1,0 +1,11 @@
+#lang rhombus/static/and_meta
+
+import:
+  draw:
+    expose Color
+  "pict/private/static.rhm"
+  "pict/private/anim.rhm"
+
+export:
+  all_from(.static)
+  all_from(.anim)

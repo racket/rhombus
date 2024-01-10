@@ -38,7 +38,7 @@ class Pen(private _handle):
 
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property width: rkt.send handle.#{get-width}()
-  property style: style_unconvert(rkt.send handle.#{get-width}())
+  property style: style_unconvert(rkt.send handle.#{get-style}())
   property cap: rkt.send handle.#{get-cap}()
   property join: rkt.send handle.#{get-join}()
   property stipple :: maybe(Bitmap):

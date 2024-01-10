@@ -1,0 +1,82 @@
+#lang rhombus/static
+
+import:
+  pict open
+  draw
+  scribble/rhombus.centered
+  "timeline_pict.rhm"
+  "timeline_pict.rhm"!private open
+
+export:
+  timeline
+  stretched_timeline
+
+fun timeline(p_in :~ Pict, [t, ...],
+             ~pre: pre = 0,
+             ~post: post = 0,
+             ~label: label = #false,
+             ~balance_label = #false):
+  let p = timeline_pict.timeline(p_in, [t, ...],
+                                 ~pre: pre,
+                                 ~post: post,
+                                 ~label: label,
+                                 ~balance_label: balance_label,
+                                 ~show_timebox: #true)
+  centered(p)
+
+def stretched_timeline:
+  let d1 = rectangle(~width: epoch_dot_size * 5,
+                     ~height: epoch_dot_size,
+                     ~rounded: epoch_dot_size/2,
+                     ~fill: epoch_dot_color)
+  let d2 = rectangle(~width: epoch_dot_size * 3,
+                     ~height: epoch_dot_size,
+                     ~rounded: epoch_dot_size/2,
+                     ~fill: epoch_dot_color)
+  let d3 = rectangle(~width: epoch_dot_size * 4,
+                     ~height: epoch_dot_size,
+                     ~rounded: epoch_dot_size/2,
+                     ~fill: epoch_dot_color)
+  let d4 = circle(~size: epoch_dot_size,
+                  ~fill: epoch_dot_color)
+  let p:
+    beside(stackx(time_at(0), d1),
+           blank(~width: epoch_dot_size * 4),
+           stackx(time_at(1), d2),
+           blank(~width: epoch_dot_size * 8),
+           stackx(time_at(2), d3),
+           blank(~width: epoch_dot_size * 4),
+           stackx(time_at(3).ghost(), d4)).pad(~bottom: 8)
+  fun pointy(p):
+    let pt = blank()
+    let q = stack(~sep: 10, pt, p)
+    let q = connect(~on: q, Find.bottom(pt), Find.top(p))
+    q.refocus(pt)
+  let p = connect(~on: p, Find.right(d1), Find.left(d2),
+                  ~label: pointy(time_at(0.5)))
+  let p = connect(~on: p, Find.right(d2), Find.left(d3),
+                  ~label: pointy(time_at(1.5)))
+  let p = connect(~on: p, Find.right(d3), Find.left(d4),
+                  ~label: pointy(time_at(2.5)))
+  let p :~ Pict:
+    let (sx, sy) = Find.left(d1).in(p)
+    let (ex, _) = Find.left(d4).in(p)
+    pin(~on: p,
+        ~at: Find.abs(sx, sy - epoch_dot_size/2 - duration_box_pad),
+        ~order: #'back,
+        rectangle(~width: ex-sx, ~height: epoch_dot_size + 2*duration_box_pad,
+                  ~line: duration_box_color))
+  fun elapsed(p, d1, d2, label):
+    let (sx, sy) = Find.right(d1).in(p)
+    let (ex, _) = Find.left(d2).in(p)
+    let b = text("{", ~font: draw.Font(~kind: #'roman)).rotate(math.pi * -1/2)
+    let b = b.scale((ex - sx) / b.width, 1)
+    let b = stack(text(label), b)
+    pin(~on: p,
+        ~at: Find.abs(sx, 0),
+        b)
+  let p: p.pad(~top: 12)
+  let p: elapsed(p, d1, d2, "0.5 sec")
+  let p: elapsed(p, d2, d3, "1.0 sec")
+  let p: elapsed(p, d3, d4, "0.5 sec")
+  stack(tl_arrows(p, d1), time_at(2.5).ghost())

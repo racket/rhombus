@@ -1,0 +1,56 @@
+#lang rhombus/static/and_meta
+
+import:
+  lib("racket/udp.rkt") as rkt
+
+export:
+  UDP
+
+annot.macro 'PortNumber': 'Int.in(1, 65535)'
+annot.macro 'ListenPortNumber': 'Int.in(0, 65535)'
+
+class UDP(_handle):
+  opaque
+  internal _UDP
+
+  property handle: _handle
+
+  constructor (~family_host: family_host :: maybe(String) = #false,
+               ~family_port: family_port :: maybe(PortNumber) = #false):
+    _UDP(rkt.#{udp-open-socket}(family_host, family_port))
+
+  method bind(~host: host :: maybe(String) = #false,
+              ~port: port :: ListenPortNumber = 0,
+              ~reuse: reuse = #false) :~ UDP:
+    rkt.#{udp-bind!}(_handle, host, port, reuse)
+    this
+
+  method receive(bytes :: MutableBytes,
+                 start_pos :: NonnegInt = 0,
+                 end_pos :: NonnegInt = bytes.length()):
+    rkt.#{udp-receive!}(_handle, bytes, start_pos, end_pos)
+
+  method receive_now(bytes :: MutableBytes,
+                     start_pos :: NonnegInt = 0,
+                     end_pos :: NonnegInt = bytes.length()):
+    rkt.#{udp-receive!*}(_handle, bytes, start_pos, end_pos)
+
+  method send_to(~host: host :: String,
+                 ~port: port :: PortNumber,
+                 bytes :: Bytes,
+                 start_pos :: NonnegInt = 0,
+                 end_pos :: NonnegInt = bytes.length()):
+    rkt.#{udp-send-to}(_handle, host, port, bytes, start_pos, end_pos)
+
+  method connect(~host: host :: String,
+                 ~port: port :: PortNumber):
+    rkt.#{udp-connect!}(_handle, host, port)
+    
+  method send(bytes :: Bytes,
+              start_pos :: NonnegInt = 0,
+              end_pos :: NonnegInt = bytes.length()):
+    rkt.#{udp-send}(_handle, bytes, start_pos, end_pos)
+
+  method close():
+    rkt.#{udp-close}(_handle)
+

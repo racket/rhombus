@@ -43,6 +43,8 @@
                       (~optional (group (~and once-kw #:once)))
                       (~optional (group #:hidden (block hidden-expr))
                                  #:defaults ([hidden-expr #'(group (parsed #:rhombus/expr #f))]))
+                      (~optional (group #:result_only (block result-only-expr))
+                                 #:defaults ([result-only-expr #'(group (parsed #:rhombus/expr #f))]))
                       (~optional (group #:indent (block indent-expr))
                                  #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))])))
                 ...
@@ -84,6 +86,7 @@
           #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
           #:label (rhombus-expression label-expr)
           #:hidden? (rhombus-expression hidden-expr)
+          #:result-only? (rhombus-expression result-only-expr)
           #:indent (rhombus-expression indent-expr)
           (list
            (list t-form
@@ -102,6 +105,7 @@
                   #:once? once?
                   #:label label
                   #:hidden? hidden?
+                  #:result-only? result-only?
                   #:indent indent
                   rb+exprs)
   (define example-block
@@ -118,7 +122,9 @@
            (define rb (car rb+expr))
            (cond
              [(eq? rb '#:blank)
-              (list (paragraph plain (hspace 1)))]
+              (if result-only?
+                  null
+                  (list (paragraph plain (hspace 1))))]
              [else
               (define-values (plain-rb mode)
                 (cond
@@ -128,7 +134,9 @@
                    (values (cadr rb) 'check)]
                   [else (values rb 'success)]))
               (define expr (cadr rb+expr))
-              (cons
+              ((if result-only?
+                   (lambda (a b) b)
+                   cons)
                plain-rb
                (let ([vs (with-handlers ([exn:fail? (lambda (exn)
                                                       (define msg (format-exception exn eval))

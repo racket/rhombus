@@ -1,0 +1,73 @@
+#lang rhombus/static/and_meta
+import:
+  scribble/rhombus/manual:
+    expose:
+      make_rhombus_eval
+      examples
+      rhombusblock
+
+export:
+  show
+  show_result
+  slide_eval
+
+def slide_eval = make_rhombus_eval()
+
+block:
+  @examples(
+    ~eval: slide_eval
+    ~hidden:
+      import:
+        pict open
+        pict/text open
+        slideshow/content
+        rhombus/pict/scribblings/timeline_pict.timeline
+        draw
+      namespace slide:
+        import .content open
+        export:
+          next
+          gap
+          alts
+          align
+          right
+          center
+          left
+          horiz
+      def mutable slides :~ List = []
+      current_font(draw.Font(~size: 32, ~name: "Helvetica"))
+      fun slide(c, ...):
+        slides := slides.add(content.slide_content_pict(c, ...))
+      fun slide_pict(c, ...):
+        content.slide_content_pict(c, ...)
+      fun slides_as_timeline():
+        let new_slides = slides
+        slides := []
+        slides_as_pict(& new_slides)
+      fun slides_as_pict(p, ...):
+        fun frame(p :~ Pict):
+          rectangle(~around: p.scale(0.33), ~width: 150, ~height: 100)
+        let p = switch(frame(p), ...)
+        timeline(p, List.append(
+                      & for List (i: 0..p.duration):
+                        if p.epoch_extent(i) == 0
+                        | [i]
+                        | for List (j: 0..3):
+                            i + j/3))
+  )
+  #void
+
+expr.macro 'show($expr, ...)':
+  '[rhombusblock($expr, ...),
+    show_result($expr, ...)]'
+
+expr.macro 'show_result($expr, ...)':
+  '@examples(
+     ~eval: slide_eval
+     ~result:
+       block:
+         $expr
+         ...
+         slides_as_timeline()
+   )'
+

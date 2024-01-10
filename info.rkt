@@ -12,7 +12,10 @@
     "testing-util-lib"
     "draw-lib"
     ["gui-easy-lib" #:version "0.9"]
-    "gui-lib"))
+    "gui-lib"
+    "pict-lib"
+    "pict-balloon2"
+    "slideshow-lib"))
 
 (define build-deps
   '("at-exp-lib"
@@ -21,6 +24,8 @@
     "rackunit-lib"
     "scribble-doc"
     "draw-doc"
+    "pict-doc"
+    "slideshow-doc"
     "gui-easy"
     "compatibility"))
 

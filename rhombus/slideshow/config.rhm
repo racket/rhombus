@@ -1,0 +1,22 @@
+#lang rhombus/and_meta
+
+import:
+  draw
+  pict/text
+  lib("slideshow/base.rkt") as rkt
+
+// Side-effect! Sets the default font and paragraph width.
+
+block:
+  let init = rkt.#{current-main-font}()
+  fun find_one(a, pred):
+    match a
+    | Pair(a, d): find_one(a, pred) || find_one(d, pred)
+    | ~else: pred(a) && a
+  text.current_font(
+    draw.Font(~size: 32,
+              ~name: find_one(init, fun (x): x is_a String),
+              ~kind: find_one(init, fun (x): x is_a Symbol) || #'default)
+  )
+
+text.current_para_width(rkt.#{current-para-width}())
