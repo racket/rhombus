@@ -6,7 +6,6 @@
          shrubbery/write
          "provide.rkt"
          (submod "set.rkt" for-ref)
-         "adjust-name.rkt"
          "printer-property.rkt"
          "define-arity.rkt"
          "mutability.rkt"
@@ -104,7 +103,7 @@
         (write v op)])]
     [(and (procedure? v)
           (not (printer-ref v #f)))
-     (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
+     (define name (object-name v))
      (cond
        [name
         (concat
