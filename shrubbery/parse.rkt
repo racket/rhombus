@@ -1091,7 +1091,8 @@
                (if (pair? at-mode)
                    (append (reverse at-mode) g)
                    g))
-             (keep-stop-mode am)
+             (and (at-mode-stop-at-at? am)
+                  (make-at-mode #:stop-at-at? #t))
              l line delta)]))
 
 (define (parse-text-sequence l line delta

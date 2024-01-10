@@ -1848,6 +1848,8 @@ then @{8}
 
 @elem{@a()@b()}
 @elem{@a{}@b()}
+@a()@b()
+@a{}@b()
 
 @(«alpha beta»)(gamma){delta}
 @(«alpha beta»){delta}
@@ -1960,6 +1962,8 @@ INPUT
        (brackets
         (group a (parens (group (brackets))))
         (group b (parens))))))
+    (group a (parens) b (parens))
+    (group a (parens (group (brackets))) b (parens))
     (group alpha beta (parens (group gamma)) (braces (group delta)))
     (group alpha beta (braces (group delta)))
     (group alpha beta)
