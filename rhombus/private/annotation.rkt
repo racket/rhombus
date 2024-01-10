@@ -136,10 +136,10 @@
     #:check-result check-annotation-result
     #:make-identifier-form raise-not-a-annotation)
 
-  (define-syntax-class :annotation-seq
+  (define-syntax-class (:annotation-seq prec-op)
     #:attributes (parsed tail)
     (pattern stxes
-             #:with (~var || (:annotation-infix-op+form+tail #'::)) #`(#,group-tag . stxes)))
+             #:with (~var || (:annotation-infix-op+form+tail prec-op)) #`(#,group-tag . stxes)))
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos)
@@ -400,7 +400,7 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op::name . t::annotation-seq)
+       [(op::name . (~var t (:annotation-seq #'::)))
         (values
          (build-annotated-expression #'op.name #'t
                                      checked? form #'t.parsed
@@ -458,7 +458,7 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op::name . t::annotation-seq)
+       [(op::name . (~var t (:annotation-seq #'::)))
         #:with left::binding-form form
         (values
          (syntax-parse #'t.parsed
@@ -501,7 +501,7 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op . t::annotation-seq)
+       [(op . (~var t (:annotation-seq #'is_a)))
         (values
          (syntax-parse #'t.parsed
            [c-parsed::annotation-predicate-form
@@ -812,9 +812,16 @@
 (define (negative-real? r) (and (real? r) (r . < . 0.0)))
 (define (nonnegative-real? r) (and (real? r) (r . >= . 0.0)))
 
-;; not exported, but referenced by `:annotation-seq` so that
+;; not exported, but referenced by `:annotation-seq` uses so that
 ;; annotation parsing terminates appropriately
 (define-annotation-syntax ::
+  (annotation-infix-operator
+   (annot-quote ::)
+   `((default . weaker))
+   'macro
+   (lambda (stx) (error "should not get here"))
+   'none))
+(define-annotation-syntax is_a
   (annotation-infix-operator
    (annot-quote ::)
    `((default . stronger))

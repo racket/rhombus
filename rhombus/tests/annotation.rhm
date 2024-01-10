@@ -1,13 +1,28 @@
 #lang rhombus
 
-// check for sensible precedence of `::` mixed with expression
+// check for sensible precedence of `is_a` mixed with expression
 check:
-  "a" :: String && #true ~is #true
-  "a" :: String +& "ok" ~is "aok"
+  "a" is_a String && #true ~is #true
+  "a" is_a String +& "ok" ~is "#trueok"
+
+// check for different precedence of `::`, especially intended
+// for bindings
+check:
+  ~eval
+  "a" :: String && #true
+  ~throws  "literal not allowed as an annotation"
+check:
+  ("a" :: String) && #true ~is #true
+  (block:
+     def x :: String || Int = "ok"
+     x) ~is "ok"
+  (block:
+     def x :: String || Int = 5
+     x) ~is 5
 
 check:
   ~eval
-  "a" :: PosInt . count()
+  "a" is_a PosInt . count()
   ~throws "operators with inconsistently declared precedence"
 
 check:
