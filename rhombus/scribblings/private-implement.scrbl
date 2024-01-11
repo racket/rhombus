@@ -27,7 +27,7 @@ and override the interfaces methods with
 @examples(
   ~defn:
     class Posn(x, y):
-      private implements: Printable
+      private implements Printable
       private override describe(mode, recur):
         PrintDesc.list("⟨⟨⟨", [recur(x), recur(y)], "⟩⟩⟩")
   ~repl:

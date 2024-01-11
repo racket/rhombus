@@ -164,10 +164,9 @@
   meta syntax_class NTerms
   | '~one $a':
       field b = '0'
-      field average = '$(Syntax.unwrap(a) / 2)'
+      field average = '$(a.unwrap() / 2)'
   | '~two $a $b':
-      def sum:
-        Syntax.unwrap(a) + Syntax.unwrap(b)
+      def sum = a.unwrap() + b.unwrap()
       field average = '$(sum / 2)'
   expr.macro 'second_term $(e :: NTerms)':
     e.b

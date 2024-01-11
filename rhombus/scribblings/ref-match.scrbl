@@ -71,11 +71,11 @@
   | [x, y]: x+y
 
   ~error:
-    match 'go ~slow':
+    match 'go ~slow'
     | 'go ~fast': "ok"
 
   ~error:
-    match 1+2:
+    match 1+2
     | n when n > 4: "ok"
 )
 }
