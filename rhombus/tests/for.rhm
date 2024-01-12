@@ -187,21 +187,23 @@ check:
   set ++ {36}
   ~is {9, 16, 25, 36}
 
-check:
-  use_static
-  for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
-    each i: 0..8
-    keep_when set[i]
-    set.remove(i)
-  ~is {9, 16, 25}
+version_guard.at_least "8.11.1.4":
+  check:
+    use_static
+    for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
+      each i: 0..8
+      keep_when set[i]
+      set.remove(i)
+    ~is {9, 16, 25}
 
-check:
-  use_static
-  for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
-    each i: 0..8
-    keep_when set[i]
-    set.remove(i)
-  ~is {9, 16, 25}
+version_guard.at_least "8.11.1.4":
+  check:
+    use_static
+    for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
+      each i: 0..8
+      keep_when set[i]
+      set.remove(i)
+    ~is {9, 16, 25}
 
 check:
   for values(_ = 0, _ = 0+1):
