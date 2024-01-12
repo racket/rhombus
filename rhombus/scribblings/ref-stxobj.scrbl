@@ -513,18 +513,19 @@ Metadata for a syntax object can include a source location and the raw
     class_clause: syntax_class ~defn
     pattern_case: syntax_class ~defn
 
-  bind.macro 'pattern $maybe_id:
+  bind.macro 'pattern $maybe_id_open:
                 $class_clause
                 ...
               | $pattern_case
               | ...'
-  unquote_bind.macro 'pattern $maybe_id:
+  unquote_bind.macro 'pattern $maybe_id_open:
                         $class_clause
                         ...
                       | $pattern_case
                       | ...'
 
-  grammar maybe_id:
+  grammar maybe_id_open:
+    $id ~open
     $id
     #,(epsilon)
 ){
@@ -533,6 +534,8 @@ Metadata for a syntax object can include a source location and the raw
  matching with an inline @rhombus(syntax_class) form. It has the same
  grammar as inline @rhombus(syntax_class), except that an @rhombus(id)
  can be present with the same meaning as in
+ @rhombus(::, ~unquote_bind); moreover, when @rhombus(~open) is
+ present, the match is @rhombus(open, ~impo)ed in the same sense as in
  @rhombus(::, ~unquote_bind). The @rhombus(id) can also be omitted, in
  which case the match isn't bound but all fields are available.
 

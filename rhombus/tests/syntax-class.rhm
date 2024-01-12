@@ -667,6 +667,35 @@ block:
     m('8 1; 9 2 3')
     ~matches ['1', '2']
 
+block:
+  fun m(stx):
+    def '$(pattern match ~open
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [x, ...]
+  check:
+    m('8 1')
+    ~matches ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~matches ['1', '2']
+
+block:
+  fun m(stx):
+    def '$(pattern match ~open:
+             kind ~sequence
+           | '9 $x $_'
+           | '8 $x':
+               match_when #true); ...' = stx
+    [x, ...]
+  check:
+    m('8 1')
+    ~matches ['1']
+  check:
+    m('8 1; 9 2 3')
+    ~matches ['1', '2']
+
 // pattern shorthand binding
 block:
   fun m(stx):
@@ -724,6 +753,35 @@ block:
          | '8 $x':
              match_when #true, ...] = stx
     [match.x, ...]
+  check:
+    m(['8 1'])
+    ~matches ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~matches ['1', '2']
+
+block:
+  fun m(stx):
+    def [pattern match ~open
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [x, ...]
+  check:
+    m(['8 1'])
+    ~matches ['1']
+  check:
+    m(['8 1', '9 2 3'])
+    ~matches ['1', '2']
+
+block:
+  fun m(stx):
+    def [pattern match ~open:
+           kind ~sequence
+         | '9 $x $_'
+         | '8 $x':
+             match_when #true, ...] = stx
+    [x, ...]
   check:
     m(['8 1'])
     ~matches ['1']

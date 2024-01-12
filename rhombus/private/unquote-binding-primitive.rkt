@@ -184,7 +184,10 @@
 
 (define-for-syntax (parse-pattern stx)
   (syntax-parse stx
-    [(form-id (~optional form1:identifier) . tail)
+    [(form-id
+      (~optional (~seq form1:identifier
+                       (~optional (~and #:open (~bind [open? #t])))))
+      . tail)
      (parameterize ([inline-attr-depth (cond
                                          [(inline-attr-depth) => add1]
                                          [else 0])]
@@ -199,7 +202,8 @@
                    (build-syntax-class-pattern stx
                                                rsc
                                                #'#f
-                                               (and (not (attribute form1))
+                                               (and (or (not (attribute form1))
+                                                        (attribute open?))
                                                     #'form-id)
                                                (attribute form1)
                                                #f)
