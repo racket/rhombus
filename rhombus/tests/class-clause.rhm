@@ -47,7 +47,7 @@ block:
   def_idescribe disuper extends
   def_idescribe dimethods method_names
   expr.macro 'diann $(name :: Term)': '$(interface_meta.describe(name).lookup(#'uses_default_annotation))'
-  
+
   block:
     interface Pointy
     interface VeryPointy:
@@ -68,61 +68,61 @@ block:
     def p = Posn3D(1, 2, 3)
     def p0 = Posn0D()
     check:
-      p.names() ~prints_like 'Posn3D'
-      p.supers() ~prints_like 'Posn'
-      p.intfs() ~prints_like 'Pointy'
-      p.internals() ~prints_like ''
-      p.fields() ~prints_like 'z color'
-      p.keywords() ~prints_like '#false #false'
-      p.mutables() ~prints_like 'immutable mutable'
-      p.visibilities() ~prints_like 'public public'
-      p.constructives() ~prints_like 'required absent'
-      p.methods() ~prints_like 'get_color'
-      p.mvisibilities() ~prints_like 'public'
-      p.marities() ~prints_like '1'
-      p.defaults() ~prints_like '#true; #true; #true'
-      p0.supers() ~prints_like 'Pointy'
-      p0.methods() ~prints_like 'get_extent'
-      p0.visibilities() ~prints_like 'public'
-      p0.arities() ~prints_like '1'
-      
+      p.names() ~matches 'Posn3D'
+      p.supers() ~matches 'Posn'
+      p.intfs() ~matches 'Pointy'
+      p.internals() ~matches ''
+      p.fields() ~matches 'z color'
+      p.keywords() ~matches '#false #false'
+      p.mutables() ~matches 'immutable mutable'
+      p.visibilities() ~matches 'public public'
+      p.constructives() ~matches 'required absent'
+      p.methods() ~matches 'get_color'
+      p.mvisibilities() ~matches 'public'
+      p.marities() ~matches '1'
+      p.defaults() ~matches '#true; #true; #true'
+      p0.supers() ~matches 'Pointy'
+      p0.methods() ~matches 'get_extent'
+      p0.visibilities() ~matches 'public'
+      p0.arities() ~matches '1'
+
     block:
       check:
-        dname Posn ~prints_like 'Posn'
-        dsuper Posn ~prints_like ''
-        dinterfaces Posn ~prints_like ''
-        dfields Posn ~prints_like 'x y'
-        dfield_keywords Posn ~prints_like '#false #false'
-        dfield_visabilities Posn ~prints_like 'public public'
-        dfield_constructives Posn ~prints_like 'required required'
-        dfield_mutabilities Posn ~prints_like 'immutable immutable'
-        dmethods Posn ~prints_like 'is_origin'
-        darities Posn ~prints_like '1'
-        dinternals Posn ~prints_like ''
+        dname Posn ~matches 'Posn'
+        dsuper Posn ~matches ''
+        dinterfaces Posn ~matches ''
+        dfields Posn ~matches 'x y'
+        dfield_keywords Posn ~matches '#false #false'
+        dfield_visabilities Posn ~matches 'public public'
+        dfield_constructives Posn ~matches 'required required'
+        dfield_mutabilities Posn ~matches 'immutable immutable'
+        dmethods Posn ~matches 'is_origin'
+        darities Posn ~matches '1'
+        dinternals Posn ~matches ''
       check:
-        dname Posn3D ~prints_like 'Posn3D'
-        dsuper Posn3D ~prints_like 'Posn'
-        dinterfaces Posn3D ~prints_like 'Pointy'
-        dfields Posn3D ~prints_like 'x y z color'
-        dfield_keywords Posn3D ~prints_like '#false #false #false #false'
-        dfield_visabilities Posn3D ~prints_like 'public public public public'
-        dfield_constructives Posn3D ~prints_like 'required required required absent'
-        dfield_mutabilities Posn3D ~prints_like 'immutable immutable immutable mutable'
-        dmethods Posn3D ~prints_like 'is_origin get_color
-                                        $('names supers intfs internals fields keywords')
-                                        $('mutables visibilities constructives')
-                                        $('methods mvisibilities marities defaults')'
+        dname Posn3D ~matches 'Posn3D'
+        dsuper Posn3D ~matches 'Posn'
+        dinterfaces Posn3D ~matches 'Pointy'
+        dfields Posn3D ~matches 'x y z color'
+        dfield_keywords Posn3D ~matches '#false #false #false #false'
+        dfield_visabilities Posn3D ~matches 'public public public public'
+        dfield_constructives Posn3D ~matches 'required required required absent'
+        dfield_mutabilities Posn3D ~matches 'immutable immutable immutable mutable'
+        dmethods Posn3D ~matches 'is_origin get_color
+                                    $('names supers intfs internals fields keywords')
+                                    $('mutables visibilities constructives')
+                                    $('methods mvisibilities marities defaults')'
       check:
-        dname Posn0D ~prints_like 'Posn0D'
-        dsuper Posn0D ~prints_like ''
-        dinterfaces Posn0D ~prints_like 'VeryPointy'
-        dfields Posn0D ~prints_like ''
-        dfield_keywords Posn0D ~prints_like ''
-        dfield_visabilities Posn0D ~prints_like ''
-        dfield_constructives Posn0D ~prints_like ''
-        dfield_mutabilities Posn0D ~prints_like ''
-        dmethods Posn0D ~prints_like 'get_extent
-                                        $('supers methods arities visibilities')'
+        dname Posn0D ~matches 'Posn0D'
+        dsuper Posn0D ~matches ''
+        dinterfaces Posn0D ~matches 'VeryPointy'
+        dfields Posn0D ~matches ''
+        dfield_keywords Posn0D ~matches ''
+        dfield_visabilities Posn0D ~matches ''
+        dfield_constructives Posn0D ~matches ''
+        dfield_mutabilities Posn0D ~matches ''
+        dmethods Posn0D ~matches 'get_extent
+                                    $('supers methods arities visibilities')'
 
   block:
     interface Pointy:
@@ -150,82 +150,82 @@ block:
     def p = Posn3D(1)
     def p4 = Posn4D(1)
     check:
-      diname Pointy ~prints_like 'Pointy'
-      disuper Pointy ~prints_like ''
-      dimethods Pointy ~prints_like 'here'
+      diname Pointy ~matches 'Pointy'
+      disuper Pointy ~matches ''
+      dimethods Pointy ~matches 'here'
       diann Pointy ~is #true
     check:
-      diname _Pointy ~prints_like 'Pointy'
-      disuper _Pointy ~prints_like ''
-      dimethods _Pointy ~prints_like 'inside here'
+      diname _Pointy ~matches 'Pointy'
+      disuper _Pointy ~matches ''
+      dimethods _Pointy ~matches 'inside here'
       diann _Pointy ~is #true
     check:
-      p.fields() ~prints_like 'x y z color size'
-      p.mutables() ~prints_like 'immutable mutable immutable mutable mutable'
-      p.visibilities() ~prints_like 'public public private public private'
-      p.keywords() ~prints_like '#false ~y #false #false #false'
-      p.constructives() ~prints_like 'required optional absent absent absent'
-      p.methods() ~prints_like 'get_color get_size'
-      p.mvisibilities() ~prints_like 'public private'
-      p.internals() ~prints_like '_Posn3D'
+      p.fields() ~matches 'x y z color size'
+      p.mutables() ~matches 'immutable mutable immutable mutable mutable'
+      p.visibilities() ~matches 'public public private public private'
+      p.keywords() ~matches '#false ~y #false #false #false'
+      p.constructives() ~matches 'required optional absent absent absent'
+      p.methods() ~matches 'get_color get_size'
+      p.mvisibilities() ~matches 'public private'
+      p.internals() ~matches '_Posn3D'
     check:
-      dname Posn3D ~prints_like 'Posn3D'
-      dsuper Posn3D ~prints_like ''
-      dinterfaces Posn3D ~prints_like 'Pointy'
-      dfields Posn3D ~prints_like 'x y color'
-      dfield_keywords Posn3D ~prints_like '#false ~y #false'
-      dfield_visabilities Posn3D ~prints_like 'public public public'
-      dfield_constructives Posn3D ~prints_like 'required optional absent'
-      dfield_mutabilities Posn3D ~prints_like 'immutable mutable mutable'
-      dmethods Posn3D ~prints_like 'here get_color
-                                      $('names supers intfs internals fields keywords')
-                                      $('mutables visibilities constructives')
-                                      $('methods mvisibilities marities defaults')'
+      dname Posn3D ~matches 'Posn3D'
+      dsuper Posn3D ~matches ''
+      dinterfaces Posn3D ~matches 'Pointy'
+      dfields Posn3D ~matches 'x y color'
+      dfield_keywords Posn3D ~matches '#false ~y #false'
+      dfield_visabilities Posn3D ~matches 'public public public'
+      dfield_constructives Posn3D ~matches 'required optional absent'
+      dfield_mutabilities Posn3D ~matches 'immutable mutable mutable'
+      dmethods Posn3D ~matches 'here get_color
+                                  $('names supers intfs internals fields keywords')
+                                  $('mutables visibilities constructives')
+                                  $('methods mvisibilities marities defaults')'
       dctr Posn3D ~is #true
       dbind Posn3D ~is #true
       dann Posn3D ~is #true
     check:
-      dname _Posn3D ~prints_like 'Posn3D'
-      dsuper _Posn3D ~prints_like ''
-      dinterfaces _Posn3D ~prints_like 'Pointy'
-      dinterfaces_vis _Posn3D ~prints_like 'public'
-      dfields _Posn3D ~prints_like 'x y z color size'
-      dfield_keywords _Posn3D ~prints_like '#false ~y #false #false #false'
-      dfield_visabilities _Posn3D ~prints_like 'public public private public private'
-      dfield_constructives _Posn3D ~prints_like 'required optional optional absent absent'
-      dfield_mutabilities _Posn3D ~prints_like 'immutable mutable immutable mutable mutable'
-      dmethods _Posn3D ~prints_like 'get_size here get_color
-                                       $('names supers intfs internals fields keywords')
-                                       $('mutables visibilities constructives')
-                                       $('methods mvisibilities marities defaults')'
+      dname _Posn3D ~matches 'Posn3D'
+      dsuper _Posn3D ~matches ''
+      dinterfaces _Posn3D ~matches 'Pointy'
+      dinterfaces_vis _Posn3D ~matches 'public'
+      dfields _Posn3D ~matches 'x y z color size'
+      dfield_keywords _Posn3D ~matches '#false ~y #false #false #false'
+      dfield_visabilities _Posn3D ~matches 'public public private public private'
+      dfield_constructives _Posn3D ~matches 'required optional optional absent absent'
+      dfield_mutabilities _Posn3D ~matches 'immutable mutable immutable mutable mutable'
+      dmethods _Posn3D ~matches 'get_size here get_color
+                                   $('names supers intfs internals fields keywords')
+                                   $('mutables visibilities constructives')
+                                   $('methods mvisibilities marities defaults')'
     check:
-      dname Posn4D ~prints_like 'Posn4D'
-      dsuper Posn4D ~prints_like 'Posn3D'
-      dinterfaces Posn4D ~prints_like ''
-      dinterfaces_vis Posn4D ~prints_like ''
-      dfields Posn4D ~prints_like 'x y color w q angle'
-      dfield_keywords Posn4D ~prints_like '#false ~y #false ~w #false #false'
-      dfield_visabilities Posn4D ~prints_like 'public public public public public public'
-      dfield_constructives Posn4D ~prints_like 'required optional absent optional optional absent'
-      dfield_mutabilities Posn4D ~prints_like 'immutable mutable mutable immutable immutable mutable'
-      dmethods Posn4D ~prints_like 'here get_color
-                                      $('names supers intfs internals fields keywords')
-                                      $('mutables visibilities constructives')
-                                      $('methods mvisibilities marities defaults')'
+      dname Posn4D ~matches 'Posn4D'
+      dsuper Posn4D ~matches 'Posn3D'
+      dinterfaces Posn4D ~matches ''
+      dinterfaces_vis Posn4D ~matches ''
+      dfields Posn4D ~matches 'x y color w q angle'
+      dfield_keywords Posn4D ~matches '#false ~y #false ~w #false #false'
+      dfield_visabilities Posn4D ~matches 'public public public public public public'
+      dfield_constructives Posn4D ~matches 'required optional absent optional optional absent'
+      dfield_mutabilities Posn4D ~matches 'immutable mutable mutable immutable immutable mutable'
+      dmethods Posn4D ~matches 'here get_color
+                                  $('names supers intfs internals fields keywords')
+                                  $('mutables visibilities constructives')
+                                  $('methods mvisibilities marities defaults')'
     check:
-      dname _Posn4D ~prints_like 'Posn4D'
-      dsuper _Posn4D ~prints_like 'Posn3D'
-      dinterfaces _Posn4D ~prints_like 'Secret'
-      dinterfaces_vis _Posn4D ~prints_like 'private'
-      dfields _Posn4D ~prints_like 'x y color w q s weight angle'
-      dfield_keywords _Posn4D ~prints_like '#false ~y #false ~w #false #false #false #false'
-      dfield_visabilities _Posn4D ~prints_like 'public public public public public private private public'
-      dfield_constructives _Posn4D ~prints_like 'required optional absent optional optional optional absent absent'
-      dfield_mutabilities _Posn4D ~prints_like 'immutable mutable mutable immutable immutable immutable mutable mutable'
-      dmethods _Posn4D ~prints_like 'here get_color
-                                       $('names supers intfs internals fields keywords')
-                                       $('mutables visibilities constructives')
-                                       $('methods mvisibilities marities defaults')'
+      dname _Posn4D ~matches 'Posn4D'
+      dsuper _Posn4D ~matches 'Posn3D'
+      dinterfaces _Posn4D ~matches 'Secret'
+      dinterfaces_vis _Posn4D ~matches 'private'
+      dfields _Posn4D ~matches 'x y color w q s weight angle'
+      dfield_keywords _Posn4D ~matches '#false ~y #false ~w #false #false #false #false'
+      dfield_visabilities _Posn4D ~matches 'public public public public public private private public'
+      dfield_constructives _Posn4D ~matches 'required optional absent optional optional optional absent absent'
+      dfield_mutabilities _Posn4D ~matches 'immutable mutable mutable immutable immutable immutable mutable mutable'
+      dmethods _Posn4D ~matches 'here get_color
+                                   $('names supers intfs internals fields keywords')
+                                   $('mutables visibilities constructives')
+                                   $('methods mvisibilities marities defaults')'
 
 // Make sure that introduced names can be referenced directly
 

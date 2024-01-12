@@ -5,30 +5,30 @@
 
 check:
   '$'
-  ~prints_like '$'
+  ~matches '$'
 
 check:
   '$('$')'
-  ~prints_like '$'
+  ~matches '$'
 
 check:
   '$('...')'
-  ~prints_like '...'
+  ~matches '...'
 
 check:
   match '$('$') 1 + 2'
   | '$x 1 + 2': x
-  ~prints_like '$'
+  ~matches '$'
 
 check:
   match '$('$') 1 + 2'
   | '$('$') $x + 2': x
-  ~prints_like '1'
+  ~matches '1'
 
 check:
   match '($('$')) 10 + 2'
   | '($'$') $x + 2': x
-  ~prints_like '10'
+  ~matches '10'
 
 check:
   match ': $('$')'
@@ -80,7 +80,7 @@ check:
   def a = '3'
   def b = '4'
   a =+= b
-  ~prints_like '3 + 4'
+  ~matches '3 + 4'
 
 check:
   // phase-0 binding of `$` does not affect `macro` use

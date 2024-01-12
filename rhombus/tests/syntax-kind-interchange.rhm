@@ -3,42 +3,42 @@
 check:
   match '1 2 3 0'
   | '$a ...': '$a ...'
-  ~prints_like  '1 2 3 0'
+  ~matches '1 2 3 0'
 
 check:
   match '1 2 3 0'
   | '$a ...': [a, ...]
-  ~prints_like  ['1', '2', '3', '0']
-  
+  ~matches ['1', '2', '3', '0']
+
 check:
   match '1 2; 3 0'
   | '$a; ...': '$a; ...'
-  ~prints_like '1 2; 3 0'
+  ~matches '1 2; 3 0'
 
 check:
   match '1 2; 3 0'
   | '$a; ...': [a, ...]
-  ~prints_like ['1 2', '3 0']
+  ~matches ['1 2', '3 0']
 
 check:
   match '1 2 3 0'
   | '$a ... 0': '$a ...'
-  ~prints_like '1 2 3'
+  ~matches '1 2 3'
 
 check:
   match '1 2 3 0'
   | '$a ...': '($a, ...)'
-  ~prints_like '(1, 2, 3, 0)'
+  ~matches '(1, 2, 3, 0)'
 
 check:
   match '1 2 3'
   | '$a ...': '$a; ...'
-  ~prints_like '1; 2; 3'
+  ~matches '1; 2; 3'
 
 check:
   match '1; 2 4; 3'
   | '$a; ...': '$a ...'
-  ~prints_like '1 2 4 3'
+  ~matches '1 2 4 3'
 
 check:
   match '1; 2 4; 3'
@@ -48,18 +48,18 @@ check:
 check:
   match '(1) (2 + 7, 14) (3)'
   | '($a) ...': [a, ...]
-  ~prints_like ['1', '2 + 7; 14', '3']
+  ~matches ['1', '2 + 7; 14', '3']
 
 check:
   match '1 + 2'
   | '$a + $b': '($a)'
-  ~prints_like '(1)'
+  ~matches '(1)'
 
 check:
   def [none, ...] = []
   'x; $none ...; y'
   ~throws "generated an empty group"
-  
+
 check:
   def none = []
   'x; $none; y'
@@ -68,12 +68,12 @@ check:
 check:
   def none = '1; 2'
   'x; $none; y'
-  ~prints_like 'x; 1; 2; y'
+  ~matches 'x; 1; 2; y'
 
 check:
   def none = ['1', '2']
   'x; $none; y'
-  ~prints_like 'x; 1 2; y'
+  ~matches 'x; 1 2; y'
 
 check:
   def none = ['1', '2 3']
@@ -88,9 +88,9 @@ check:
 check:
   def none = ''
   'x; $none; y'
-  ~prints_like 'x; y'
+  ~matches 'x; y'
 
 check:
   def '$tail ...' = ''
   '1 + $tail ...'
-  ~prints_like '1 +'
+  ~matches '1 +'

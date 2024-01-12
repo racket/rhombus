@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   syntax_class Arithmetic
@@ -7,35 +9,34 @@ block:
   check:
     match '1+2'
     | '$(exp :: Arithmetic)': exp.x
-    ~prints_like '1'
+    ~matches '1'
 
   check:
     match '1+2'
     | '$(exp :: Arithmetic)': exp.y
-    ~prints_like '2'
+    ~matches '2'
 
   check:
     match '1+2'
     | '$(_ :: Arithmetic: y)': y
-    ~prints_like '2'
+    ~matches '2'
 
   check:
     match '1+2'
     | '$(_ :: Arithmetic: y as expy)': expy
-    ~prints_like '2'
+    ~matches '2'
 
   check:
     match '1+2'
     | '$(_ :: Arithmetic: open)': y
-    ~prints_like '2'
+    ~matches '2'
 
 check:
-  ~eval
   syntax_class Arithmetic
   | '$x + $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp
-  ~prints_like '1 + 2'
+  ~matches '1 + 2'
 
 block:
   syntax_class Arithmetic
@@ -45,12 +46,12 @@ block:
   check:
     match '1+2'
     | '$(exp :: Arithmetic)': exp.x
-    ~prints_like '1'
+    ~matches '1'
 
   check:
     match '1-2'
     | '$(exp :: Arithmetic)': exp.y
-    ~prints_like '2'
+    ~matches '2'
 
 check:
   syntax_class Arithmetic:
@@ -60,7 +61,7 @@ check:
   | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': [exp.x, exp.y]
-  ~prints_like ['1', '2']
+  ~matches ['1', '2']
 
 check:
   ~eval
@@ -123,12 +124,12 @@ block:
   check:
     match '1+2'
     | '$(exp :: Arithmetic)': exp.sum
-    ~prints_like '3'
+    ~matches '3'
 
   check:
     match '1+2'
     | '$(exp :: Arithmetic)': [exp.num, ...]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   syntax_class Foo
@@ -137,17 +138,17 @@ block:
   check:
     match 'a (1, 2, 3) z'
     | '$(f :: Foo)': [f.x, ...]
-    ~prints_like ['1', '2', '3']
+    ~matches ['1', '2', '3']
 
   check:
     match '[a (1, 2, 3) z, a () z, a ("x", "y") z]'
     | '[$(f :: Foo), ...]': [[f.x, ...], ...]
-    ~prints_like [['1', '2', '3'], [], ['"x"', '"y"']]
+    ~matches [['1', '2', '3'], [], ['"x"', '"y"']]
 
   check:
     match 'a (1, 2, 3) z'
     | '$(whole :: Foo: x as f)': [f, ...]
-    ~prints_like ['1', '2', '3']
+    ~matches ['1', '2', '3']
 
 block:
   syntax_class Foo
@@ -156,7 +157,7 @@ block:
   check:
     match 'a (1, 2, 3) z'
     | '$(f :: Foo)': [f.x, ...]
-    ~prints_like ['(1, 2, 3)', 'z']
+    ~matches ['(1, 2, 3)', 'z']
 
 // check that right-hand side of pattern
 // is in a more nested scope than pattern variables
@@ -167,7 +168,7 @@ block:
   check:
     match 'a 1'
     | '$(f :: Foo)': f.x
-    ~prints_like '1'
+    ~matches '1'
 
 // check that syntax class description appears in match error
 block:
@@ -207,11 +208,11 @@ block:
   check:
     match '1 + 2'
     | '$(f :: Foo)': [f.x, f.y]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
   check:
     match '10 + 20 + 30'
     | '$(f :: Foo)': [f.x, f.y]
-    ~prints_like ['10', '20']
+    ~matches ['10', '20']
 
 check:
   ~eval
@@ -231,7 +232,7 @@ block:
   check:
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   syntax_class Foo:
@@ -240,7 +241,7 @@ block:
   check:
     match '0 + (1 + 2)'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 check:
   ~eval
@@ -256,7 +257,7 @@ block:
   check:
     match '(1 + 2)'
     | '($(f :: Foo))': [f.x, f.y]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   syntax_class Foo:
@@ -265,7 +266,7 @@ block:
   check:
     match '(1 + 2)'
     | '($(f :: Foo))': f.g
-    ~prints_like '1 + 2'
+    ~matches '1 + 2'
 
 block:
   check:
@@ -274,7 +275,7 @@ block:
     | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   check:
@@ -295,12 +296,12 @@ block:
     match ': 1 + 2
              3 - 4'
     | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
-    ~prints_like ['1', '2', '3', '4', '1 + 2; 3 - 4']
+    ~matches ['1', '2', '3', '4', '1 + 2; 3 - 4']
   check:
     match '(1 + 2,
             3 - 4)'
     | '($(f :: Foo))': [f.x, f.y, f.z, f.w, f]
-    ~prints_like ['1', '2', '3', '4', '1 + 2; 3 - 4']
+    ~matches ['1', '2', '3', '4', '1 + 2; 3 - 4']
 
 block:
   syntax_class Foo:
@@ -311,7 +312,7 @@ block:
     match ': 1 + 2
              3 - 4'
     | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
-    ~prints_like ['1', '2', '3', '4', ': 1 + 2; 3 - 4']
+    ~matches ['1', '2', '3', '4', ': 1 + 2; 3 - 4']
 
 check:
   ~eval
@@ -328,7 +329,7 @@ block:
   check:
     match '((1 + 2, 3 - 4))'
     | '($(f :: Foo))': f
-    ~prints_like '(1 + 2, 3 - 4)'
+    ~matches '(1 + 2, 3 - 4)'
   check:
     match '(1 + 2, 3 - 4)'
     | '($(f :: Foo))': f
@@ -338,7 +339,7 @@ block:
     match '(1 + 2, 3 - 4)'
     | '$(f :: Foo)': f
     | ~else: "no"
-    ~prints_like '(1 + 2, 3 - 4)'
+    ~matches '(1 + 2, 3 - 4)'
 
 block:
   syntax_class Foo:
@@ -347,11 +348,11 @@ block:
   check:
     match '(1 + 2, 3 - 4)'
     | '($(f :: Foo))': f
-    ~prints_like '1 + 2; 3 - 4'
+    ~matches '1 + 2; 3 - 4'
   check:
     match ': 1 + 2; 3 - 4; 5 / 6'
     | ': $(f :: Foo)': f
-    ~prints_like '1 + 2; 3 - 4; 5 / 6'
+    ~matches '1 + 2; 3 - 4; 5 / 6'
 
 block:
   syntax_class Foo
@@ -366,16 +367,16 @@ block:
   check:
     def '$(f :: Foo)': 'a 1'
     [f.x, f.y, f.case]
-    ~prints_like ['a', '1', '1']
+    ~matches ['a', '1', '1']
   check:
     def '$(f :: Foo)': 'b 100'
     [f.x, f.y, f.case]
-    ~prints_like ['b', '100', '2']
+    ~matches ['b', '100', '2']
   check:
     def '$(f :: Foo)': 'c 5'
     [f.x, f.y, f.case]
-    ~prints_like ['c', '5', '3']
-   
+    ~matches ['c', '5', '3']
+
 block:
   syntax_class Foo
   | '$x $y':
@@ -391,16 +392,16 @@ block:
   check:
     def '$(f :: Foo)': 'a 1'
     [f.x, f.y, f.case, f.z]
-    ~prints_like ['a', '1', '3', 'no']
+    ~matches ['a', '1', '3', 'no']
   check:
     def '$(f :: Foo)': 'b (1 * 1)'
     [f.x, f.y, f.case, f.z]
-    ~prints_like ['b', '(1 * 1)', '3', 'no']
+    ~matches ['b', '(1 * 1)', '3', 'no']
   check:
     def '$(f :: Foo)': 'b (1 + 4)'
     [f.x, f.y, f.case, f.z]
-    ~prints_like ['b', '(1 + 4)', '2', '4']
-   
+    ~matches ['b', '(1 + 4)', '2', '4']
+
 check:
   syntax_class Option:
     kind: ~term
@@ -408,7 +409,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form, ...]
-  ~prints_like ['~lang', '~lang']
+  ~matches ['~lang', '~lang']
 
 check:
   syntax_class Option
@@ -418,7 +419,7 @@ check:
       field form: '~and'
   match '(~lang, ~lang ~and)'
   | '($(o :: Option), ...)': [o.form, ...]
-  ~prints_like ['~lang', '~and']
+  ~matches ['~lang', '~and']
 
 check:
   ~eval
@@ -464,13 +465,13 @@ block:
   def '$(two_terms :: NTerms)' = '~two 24 42'
   check:
     two_terms.a
-    ~prints_like '24'
+    ~matches '24'
   check:
     two_terms.c
-    ~prints_like '0'
+    ~matches '0'
   check:
     two_terms.average
-    ~prints_like '33'
+    ~matches '33'
 
 // check that dotted syntax-class names work
 block:
@@ -482,12 +483,12 @@ block:
   check:
     match '1+2'
     | '$(exp :: N.Arithmetic)': exp.x
-    ~prints_like '1'
+    ~matches '1'
 
   check:
     match '1+2'
     | '$(exp :: N.Arithmetic)': exp.y
-    ~prints_like '2'
+    ~matches '2'
 
 // empty pattern is a special case
 block:
@@ -498,12 +499,12 @@ block:
   check:
     def '$(x :: Maybe) 2' = '2'
     x
-    ~prints_like ''
+    ~matches ''
 
   check:
     def '$(x :: Maybe) 2' = '1 2'
     x
-    ~prints_like '1'
+    ~matches '1'
 
 block:
   syntax_class House(material)
@@ -512,7 +513,7 @@ block:
   check:
     def '$(x :: House("straw"))' = '< < > >'
     x.stuff
-    ~prints_like '"straw!"'
+    ~matches '"straw!"'
 
 check:
   ~eval
@@ -533,7 +534,7 @@ check:
       field [y, ...] = [1, #'~q, 3]
   match 'x'
   | '$(f :: Foo)': [f.y, ...]
-  ~is [1, #'~q, 3]    
+  ~is [1, #'~q, 3]
 
 // a field used both as a non-syntax and a sytax field
 block:
@@ -548,11 +549,11 @@ block:
   check:
     match 'x 1 2 3'
     | '$(f :: Foo)': [f.y, ...]
-    ~prints_like ['1', '2', '3']
+    ~matches ['1', '2', '3']
   check:
     match 'x'
     | '$(f :: Foo)': '($f.y, ...)'
-    ~prints_like '(1, ~q, 3)'
+    ~matches '(1, ~q, 3)'
 
 // mixing tail and non-tail modes for a field is allowed,
 // even though it disables optimization for the tail case
@@ -564,11 +565,11 @@ block:
   check:
     match 'x (1 + 1) (2 + 1) 3'
     | '$(f :: Foo)': [f.y, ...]
-    ~prints_like ['(1 + 1)', '(2 + 1)', '3']
+    ~matches ['(1 + 1)', '(2 + 1)', '3']
   check:
     match 'x (1 + 1) (2 + 1) (3 + 1)'
     | '$(f :: Foo)': [f.y, ...]
-    ~prints_like ['1', '2', '3']
+    ~matches ['1', '2', '3']
 
 // inline syntax class
 block:
@@ -580,13 +581,13 @@ block:
     [f2.x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 8 2')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
   check:
     m('9 1')
     ~throws "value does not satisfy annotation"
@@ -598,14 +599,14 @@ block:
                   | '9 $x $_'
                   | '8 $x':
                       match_when #true):
-             open); ...' = stx  
+             open); ...' = stx
     [x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 // pattern shorthand unquote
 block:
@@ -617,10 +618,10 @@ block:
     [x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   fun m(stx):
@@ -632,10 +633,10 @@ block:
     [x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   fun m(stx):
@@ -646,10 +647,10 @@ block:
     [match.x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   fun m(stx):
@@ -661,10 +662,10 @@ block:
     [match.x, ...]
   check:
     m('8 1')
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m('8 1; 9 2 3')
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 // pattern shorthand binding
 block:
@@ -676,10 +677,10 @@ block:
     [x, ...]
   check:
     m(['8 1'])
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m(['8 1', '9 2 3'])
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 block:
   fun m(stx):
@@ -691,10 +692,10 @@ block:
     [x, ...]
   check:
     m(['8 1'])
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m(['8 1', '9 2 3'])
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 // The following two tests currently do not work due to how
 // repetitions are handled.  If these are to be fixed, the
@@ -709,10 +710,10 @@ block:
     [match.x, ...]
   check:
     m(['8 1'])
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m(['8 1', '9 2 3'])
-    ~prints_like ['1', '2']
+    ~matches ['1', '2']
 
 #//
 block:
@@ -725,15 +726,10 @@ block:
     [match.x, ...]
   check:
     m(['8 1'])
-    ~prints_like ['1']
+    ~matches ['1']
   check:
     m(['8 1', '9 2 3'])
-    ~prints_like ['1', '2']
-
-def is_old_racket:
-  import lib("racket/base.rkt")
-  import lib("version/utils.rkt")
-  utils.#{version<?}(base.version(), "8.10")
+    ~matches ['1', '2']
 
 // check interaction of macro introduction and pattern variables
 block:
@@ -743,31 +739,26 @@ block:
       '«match '1 2'
         | (pattern | '$('$')x $('$')$ex'): x»'
     matcher x
-    ~prints_like '1'
+    ~matches '1'
   check:
     expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern | '$('$')x $('$')$ex'): $ex»'
     matcher x
-    ~prints_like '2'
-  unless is_old_racket
-  | check:
-      ~eval
-      import rhombus/meta open
+    ~matches '2'
+  version_guard.at_least "8.10":
+    check:
       expr.macro 'matcher $(ex :: Term)':
         '«match '1 2'
           | (pattern | '$('$')$ex $('$')x'): x»'
       matcher x
-      ~prints_like '2'
-  unless is_old_racket
-  | check:
-      ~eval
-      import rhombus/meta open
+      ~matches '2'
+    check:
       expr.macro 'matcher $(ex :: Term)':
         '«match '1 2'
           | (pattern | '$('$')$ex $('$')x'): $ex»'
       matcher x
-      ~prints_like '1'
+      ~matches '1'
 
 // field names are recognized symbolically
 // Is this the expected behavior?  I think it is.
@@ -778,31 +769,26 @@ block:
       '«match '1 2'
         | (pattern who | '$('$')x $('$')$ex'): who.x»'
     matcher x
-    ~prints_like '2'
+    ~matches '2'
   check:
     expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern who | '$('$')x $('$')$ex'): who . $ex»'
     matcher x
-    ~prints_like '2'
-  unless is_old_racket
-  | check:
-      ~eval
-      import rhombus/meta open
+    ~matches '2'
+  version_guard.at_least "8.10":
+    check:
       expr.macro 'matcher $(ex :: Term)':
         '«match '1 2'
           | (pattern who | '$('$')$ex $('$')x'): who.x»'
       matcher x
-      ~prints_like '2'
-  unless is_old_racket
-  | check:
-      ~eval
-      import rhombus/meta open
+      ~matches '2'
+    check:
       expr.macro 'matcher $(ex :: Term)':
         '«match '1 2'
           | (pattern who | '$('$')$ex $('$')x'): who . $ex»'
       matcher x
-      ~prints_like '2'
+      ~matches '2'
 
 // check (not) `open`ing named `pattern`s
 check:
@@ -844,10 +830,10 @@ block:
         '($lhs ..., $rhs)'
   check:
     m('foo bar = baz')
-    ~prints_like '(foo bar, = baz)'
+    ~matches '(foo bar, = baz)'
   check:
     m('foo bar: baz')
-    ~prints_like '(foo bar, :« baz »)'
+    ~matches '(foo bar, :« baz »)'
 
 // check handling of nested `pattern`s
 block:
@@ -860,10 +846,10 @@ block:
         who
   check:
     m('foo')
-    ~prints_like 'foo'
+    ~matches 'foo'
   check:
     m('foo bar')
-    ~prints_like 'bar'
+    ~matches 'bar'
 
 block:
   fun m(stx):
@@ -875,10 +861,10 @@ block:
         who
   check:
     m('foo')
-    ~prints_like 'foo'
+    ~matches 'foo'
   check:
     m('foo bar')
-    ~prints_like 'bar'
+    ~matches 'bar'
 
 // check handling of `open`ed syntax classes
 block:
@@ -895,10 +881,10 @@ block:
         '$(lbind || '') $name $rbind'
   check:
     m('x + y: add(x, y)')
-    ~prints_like 'x + y'
+    ~matches 'x + y'
   check:
     m('(+ y): add(x, y)')
-    ~prints_like '+ y'
+    ~matches '+ y'
 
 block:
   fun m(op):
@@ -913,10 +899,10 @@ block:
         '$(lbind || '') $name $rbind'
   check:
     m('x + y: add(x, y)')
-    ~prints_like 'x + y'
+    ~matches 'x + y'
   check:
     m('(+ y): add(x, y)')
-    ~prints_like '+ y'
+    ~matches '+ y'
 
 // infer ~multi mode
 check:
@@ -924,7 +910,7 @@ check:
   | '$a; $b'
   def '$(c :: C)': '1; 2'
   [c.a, c.b]
-  ~prints_like ['1', '2']
+  ~matches ['1', '2']
 
 // should infer ~term mode, but is there a way to tell?
 check:
@@ -941,7 +927,7 @@ check:
   match '1 2'
   | '$(c :: C)':
       [c, c.terms]
-  ~prints_like ['2', '1 2']
+  ~matches ['2', '1 2']
 
 check:
   ~eval
@@ -970,7 +956,7 @@ check:
   match 'a / b / c'
   | '$(mp :: ModPath)':
       [mp.elem, ...]
-  ~prints_like ['a', 'b', 'c']
+  ~matches ['a', 'b', 'c']
 
 
 // field name in root-swapped syntax class should not be

@@ -12,51 +12,51 @@ block:
     Syntax.make_temp_id([t])
 
 check:
-  Syntax.make(1) ~prints_like '1'
+  Syntax.make(1) ~matches '1'
   Syntax.make([1, 2]) ~throws "invalid as a shrubbery term"
-  Syntax.make([#'parens, [#'group, 1, "a", #'z]]) ~prints_like '(1 "a" z)'
+  Syntax.make([#'parens, [#'group, 1, "a", #'z]]) ~matches '(1 "a" z)'
   Syntax.make([#'parens,
                [#'group, 1],
                [#'group, "a"],
-               [#'group, [#'op, #'#{+}]]]) ~prints_like '(1, "a", +)'
-  Syntax.make([#'parens, '1', '"a"', '+']) ~prints_like '(1, "a", +)'
-  Syntax.make([#'parens, '1 2 3', '"a"', '4 + 5']) ~prints_like '(1 2 3, "a", 4 + 5)'
-  Syntax.make(['block', '1 2', '3']) ~prints_like ': 1 2; 3'
-  Syntax.make(['block']) ~prints_like ':«»'
+               [#'group, [#'op, #'#{+}]]]) ~matches '(1, "a", +)'
+  Syntax.make([#'parens, '1', '"a"', '+']) ~matches '(1, "a", +)'
+  Syntax.make([#'parens, '1 2 3', '"a"', '4 + 5']) ~matches '(1 2 3, "a", 4 + 5)'
+  Syntax.make(['block', '1 2', '3']) ~matches ': 1 2; 3'
+  Syntax.make(['block']) ~matches ':«»'
 
 check:
-  Syntax.make_group([1, 2]) ~prints_like '1 2'
-  Syntax.make_group(['block', ['block', '1 2', '3']]) ~prints_like 'block: 1 2; 3'
+  Syntax.make_group([1, 2]) ~matches '1 2'
+  Syntax.make_group(['block', ['block', '1 2', '3']]) ~matches 'block: 1 2; 3'
   Syntax.make_group([': a', ': b']) ~throws "invalid as a shrubbery non-tail term representation"
   Syntax.make_group(['any', ['block', '1 2', '3'], 'more']) ~throws "invalid as a shrubbery non-tail term"
   Syntax.make_group(['any', ['alts', ['block', '1 2', '3']], 'more']) ~throws "invalid as a shrubbery non-tail term"
-  Syntax.make_group([': a', '| b']) ~prints_like ':« a » | b'
-  Syntax.make_group([['block', 'a'], ['alts', ['block', '1 2', '3']]]) ~prints_like ':« a » | 1 2 ; 3'
+  Syntax.make_group([': a', '| b']) ~matches ':« a » | b'
+  Syntax.make_group([['block', 'a'], ['alts', ['block', '1 2', '3']]]) ~matches ':« a » | 1 2 ; 3'
 
 check:
   Syntax.make_group([]) ~throws "NonemptyList"
 
 check:
-  Syntax.make_temp_id("hello", ~keep_name: #true) ~prints_like 'hello'
+  Syntax.make_temp_id("hello", ~keep_name: #true) ~matches 'hello'
 
 check:
   Syntax.make([#'parens, Syntax.make_group([1])])
-  ~prints_like '(1)'
+  ~matches '(1)'
 
 check:
   Syntax.make_sequence(['a', 'b c', 'd e f'])
-  ~prints_like 'a; b c; d e f'
+  ~matches 'a; b c; d e f'
 
 check:
   Syntax.unwrap('x') ~is #'x
   Syntax.unwrap('1 1') ~throws "multi-term syntax not allowed in term context"
-  Syntax.unwrap('(1 2 3)') ~prints_like ['parens', '1 2 3']
-  Syntax.unwrap('(1, 2, 3)') ~prints_like ['parens', '1', '2', '3']
-  Syntax.unwrap_group('1 2 3') ~prints_like ['1', '2', '3']
+  Syntax.unwrap('(1 2 3)') ~matches ['parens', '1 2 3']
+  Syntax.unwrap('(1, 2, 3)') ~matches ['parens', '1', '2', '3']
+  Syntax.unwrap_group('1 2 3') ~matches ['1', '2', '3']
   Syntax.unwrap_group('1 2; 3 4') ~throws "multi-group syntax not allowed in group context"
-  Syntax.unwrap_sequence('1 2; 3 4 5') ~prints_like ['1 2', '3 4 5']
-  Syntax.unwrap_sequence('1 2') ~prints_like ['1 2']
-  Syntax.unwrap_sequence('1') ~prints_like ['1']
+  Syntax.unwrap_sequence('1 2; 3 4 5') ~matches ['1 2', '3 4 5']
+  Syntax.unwrap_sequence('1 2') ~matches ['1 2']
+  Syntax.unwrap_sequence('1') ~matches ['1']
   Syntax.unwrap_all('(1 2, 3 4)') ~is [#'parens, [#'group, 1, 2], [#'group, 3, 4]]
 
 block:

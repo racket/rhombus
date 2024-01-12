@@ -10,18 +10,18 @@ block:
         x
   check:
     (v :: Exn.Fail.Syntax).exprs[0].unwrap()
-    ~prints_like ['fun']
+    ~matches ['fun']
   check:
     def e :: Exn.Fail.Syntax = v
     e.exprs[0].unwrap()
-    ~prints_like ['fun']
+    ~matches ['fun']
   check:
     Exn.Fail.Syntax.exprs(v)[0].unwrap()
-    ~prints_like ['fun']
+    ~matches ['fun']
   check:
     use_dynamic
     v.exprs[0].unwrap()
-    ~prints_like ['fun']
+    ~matches ['fun']
 
   check:
     def v = Exn.Fail.Read("hi", Continuation.Marks.current(), PairList[Srcloc(1, 2, 3, 4, 5)])

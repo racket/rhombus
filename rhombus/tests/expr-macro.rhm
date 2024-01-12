@@ -165,7 +165,7 @@ block:
 check:
   expr.macro 'quote $(x :: Group) $()': '('$x')'
   quote 1 + 2
-  ~prints_like '1 + 2'
+  ~matches '1 + 2'
 
 check:
   expr.macro 'quote $(x :: Group) $()':
@@ -305,7 +305,7 @@ check:
              ~op_stx: id
              '$id')
   f('apple 10')
-  ~prints_like 'apple'
+  ~matches 'apple'
 
 check:
   // precedence not allowed for `macro` expression form

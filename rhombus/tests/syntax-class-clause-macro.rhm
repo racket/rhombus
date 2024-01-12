@@ -12,11 +12,11 @@ syntax_class Options:
 check:
   match 'options 1 2'
   | '$(o :: Options)': [o.rhs, ...]
-  ~prints_like ['1 2']
+  ~matches ['1 2']
 
 check:
   match 'options:
            1 2
            3 4'
   | '$(o :: Options)': [o.rhs, ...]
-  ~prints_like ['1 2', '3 4']
+  ~matches ['1 2', '3 4']

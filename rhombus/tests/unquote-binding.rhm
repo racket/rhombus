@@ -23,22 +23,22 @@ check:
 check:
   def '$(b && '1')' = '1'
   b
-  ~prints_like '1'
+  ~matches '1'
 
 check:
   def '$('($b)' && '(1)')' = '(1)'
   b
-  ~prints_like '1'
+  ~matches '1'
 
 check:
   def '$('(1)' && '($b)')' = '(1)'
   b
-  ~prints_like '1'
+  ~matches '1'
 
 check:
   def '($(a && '1 2 3'))' = '(1 2 3)'
   a
-  ~prints_like '1 2 3'
+  ~matches '1 2 3'
 
 check:
   def '$('1' || '2')' = '1' ~completes
@@ -51,7 +51,7 @@ block:
   check:
     match '1'
     | '$('1' && a)': a
-    ~prints_like '1'
+    ~matches '1'
   check:
     match '2'
     | '$('1' || a)': a
@@ -66,14 +66,14 @@ check:
     '$x :: Group'
   match 'x: 2 3'
   |  '$_: $(g v)': v
-  ~prints_like '2 3'
+  ~matches '2 3'
   
 check:
   unquote_bind.macro 'g $(x :: Term)':
     '$x'
   match 'x: 2 3'
   |  '$_: $(g v)': v
-  ~prints_like '2 3'
+  ~matches '2 3'
 
 block:
   unquote_bind.macro 'g':
@@ -118,17 +118,17 @@ check:
     '_ :: Wrapped: content as $id'
   match '{x} [y] (z)'
   | '$(wrapped a) ...': [a, ...]
-  ~prints_like ['x', 'y', 'z']
+  ~matches ['x', 'y', 'z']
 
 block:
   fun get_area_code('$('+ 1' || '') ($code) $_ - $_'):
     code
   check:
     get_area_code('+ 1 (801) 555 - 1212')
-    ~prints_like '801'
+    ~matches '801'
   check:
     get_area_code('(801) 555 - 1212')
-    ~prints_like '801'
+    ~matches '801'
   check:
     get_area_code('+ 65 (801) 555 - 1212')
     ~throws "argument does not satisfy annotation"
@@ -144,14 +144,14 @@ check:
 check:
   match 'foo.bar.baz'
   | '$('$_ .') ... $(who :: Term)': who
-  ~prints_like 'baz'
+  ~matches 'baz'
 
 check:
   match '(1 0)'
   | '($((a :: Sequence) && '1' && '1') 0)': a
-  ~prints_like '1'
+  ~matches '1'
 
 check:
   match '1 1 baz'
   | '$((a :: Sequence) && '1' && '1') ... $(who :: Term)': who
-  ~prints_like 'baz'
+  ~matches 'baz'

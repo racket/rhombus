@@ -1,6 +1,6 @@
 #lang rhombus
 
-macro 'expect: $a; $b': 'check: $a; ~prints_like: $b'
+macro 'expect: $a; $b': 'check: $a; ~matches: $b'
 
 expect:
   '@x'
@@ -11,8 +11,8 @@ expect:
   'f (["text"])'
 
 expect:
-  'f (["text"], ["another text"])'
   '@f{text}{another text}'
+  'f (["text"], ["another text"])'
 
 expect:
   '@f(x, y){This is plain text.}'

@@ -36,16 +36,16 @@ block:
     meta -1: rhombus/meta open
   check:
     statinfo_meta.unpack(statinfo_meta.pack('((x, y))'))
-    ~prints_like '((x, y))'
+    ~matches '((x, y))'
   check:
     statinfo_meta.unpack(statinfo_meta.pack('((x, y), (z, w))'))
-    ~prints_like '((x, y), (z, w))'
+    ~matches '((x, y), (z, w))'
   check:
     statinfo_meta.unpack_group(statinfo_meta.pack_group('((x, y))'))
-    ~prints_like '((x, y))'
+    ~matches '((x, y))'
   check:
     statinfo_meta.unpack_group(statinfo_meta.pack_group('((x, y)) ((z, w))'))
-    ~prints_like '((x, y)) ((z, w))'
+    ~matches '((x, y)) ((z, w))'
 
 check:
   import:

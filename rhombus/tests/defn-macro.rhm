@@ -25,7 +25,7 @@ check:
   ~is 9
 check:
   use_nine
-  ~prints_like 'nine'
+  ~matches 'nine'
 
 // declaration form
 

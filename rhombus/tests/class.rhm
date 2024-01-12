@@ -801,11 +801,11 @@ block:
              '')
   check:
     Posn(1, 2).eat * "hi"
-    ~prints_like [#true, '* "hi"']
+    ~matches [#true, '* "hi"']
   check:
     use_dynamic
     Posn(1, 2).eat * "hi"
-    ~prints_like [#false, '* "hi"']
+    ~matches [#false, '* "hi"']
 
 check:
   ~eval

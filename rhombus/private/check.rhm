@@ -60,7 +60,7 @@ expr.macro
                                             $result2.suffix
                                             ...',
                             $eval.make_eval),
-                fun(): $result2.body,
+                matcher($result2.mode, : $result2.body),
                 located '$result2.mode')'
 // normal block
 | 'check:

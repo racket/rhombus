@@ -170,7 +170,7 @@ check:
   krpythag(~c: 5, ~a: 3) ~is 4
   krpythag(~c: 5, ~b: 4) ~is 3
   krpythag(~a: 3, ~b: 4, ~c: 5) ~is #true
-  krpythag(~a: 3, ~b: 4, ~c: 6) ~is #false    
+  krpythag(~a: 3, ~b: 4, ~c: 6) ~is #false
   krpythag(~& {#'~a: 3, #'~b: 4}) ~is 5
   krpythag(~a: 5, ~& {#'~b: 12}) ~is 13
   krpythag(~a: 8, ~b: 15, ~& {}) ~is 17
@@ -277,16 +277,16 @@ check:
 check:
   match '(1 10) (2 3 4 10) (5 6 10)'
   | '($a ... 10) ...': [[a, ...], ...]
-  ~prints_like [['1'], ['2', '3', '4'], ['5', '6']]
+  ~matches [['1'], ['2', '3', '4'], ['5', '6']]
 
 check:
   def [s, ...] = ["a", "b", "c"]
   '(hi $s) ...'
-  ~prints_like '(hi "a") (hi "b") (hi "c")'
-  
+  ~matches '(hi "a") (hi "b") (hi "c")'
+
 check:
   '(hi $(List.repet(["a", "b", "c"]))) ...'
-  ~prints_like '(hi "a") (hi "b") (hi "c")'
+  ~matches '(hi "a") (hi "b") (hi "c")'
 
 class Posn(x, y)
 
@@ -305,14 +305,14 @@ check:
 
 fun posns_y2(& List(p :: Posn, ...)):
   [p, ...][1].y
-     
+
 check:
   posns_y2(Posn(1, 2), Posn(3, 4), Posn(5, 6))
   ~is 4
 
 fun posns_y(p :: Posn, ...):
   [p, ...][1].y
-     
+
 check:
   posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
   ~is 4
@@ -358,7 +358,7 @@ check:
 
 check:
   def mutable s = 0
-  [triangle_area(~& (block: s := [2, s]; { #'~height: 10 }), ~base: (block: s := [1, s]; 1)), 
+  [triangle_area(~& (block: s := [2, s]; { #'~height: 10 }), ~base: (block: s := [1, s]; 1)),
    s]
   ~is [5, [1, [2, 0]]]
 
@@ -485,7 +485,7 @@ block:
     ~is {[1, "a"], [2, "b"]}
   check:
     {x, ...}
-    ~is {1, 2}    
+    ~is {1, 2}
   check:
     {y, ...}
     ~is {"a", "b"}
@@ -526,7 +526,7 @@ block:
     ~is {[1], [2]}
   check:
     {x, ...}
-    ~is {1, 2}    
+    ~is {1, 2}
   check:
     {x: "a", ...}
     ~is {1: "a", 2: "a"}

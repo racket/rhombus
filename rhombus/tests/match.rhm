@@ -16,7 +16,7 @@ check:
   match '(z + y, {[10, 11, 12]})'
   | '(x $a)': a
   | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
-  ~prints_like ['z', '10', '11', '12']
+  ~matches ['z', '10', '11', '12']
 
 block:
   let mutable cnt = 0
