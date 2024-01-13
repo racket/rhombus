@@ -109,7 +109,7 @@ expansion in the sense of producing another binding form).
 The function bound with @rhombus(bind.infoer) will receive two syntax
 objects: a representation of ``downward'' static information and the
 parsed binding's data. The result must be a single-object tuple with
-seven parts:
+the following parts:
 
 @itemlist(
 
@@ -141,7 +141,7 @@ seven parts:
    @rhombus(p :: matching(Posn(_, _)), ~bind) makes @rhombus(p) have @rhombus(Posn)
    static information.}
 
- @item{A list of invdidual names that are bound by the overall binding,
+ @item{A list of individual names that are bound by the overall binding,
    a description of valid uses for each name (e.g., as an expression, as
    a repetition of some depth), and ``upward'' static information for each name.
    For example, @rhombus(Posn(x, y)) as a binding pattern binds @rhombus(x) and @rhombus(y)
