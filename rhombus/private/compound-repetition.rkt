@@ -42,9 +42,14 @@
                                        (list form1 form2)
                                        (lambda (form1 form2) (values (exp form1 form2 self-stx)
                                                                      #'()))))))
+    (define (add-repet-space prec)
+      (for/list ([p (in-list prec)])
+        (if (identifier? (car p))
+            (cons (in-repetition-space (car p)) (cdr p))
+            p)))
     (values
      (expression-infix-operator expr-name prec protocol exp assc)
-     (repetition-infix-operator repet-name prec protocol rep assc)))
+     (repetition-infix-operator repet-name (add-repet-space prec) protocol rep assc)))
 
   (define (repetition-depth form)
     (syntax-parse form
