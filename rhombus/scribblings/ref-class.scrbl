@@ -561,6 +561,8 @@
   grammar method_decl:
     $id $maybe_res_annot
     $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+    Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+     | ...
 
   grammar property_impl:
     $id $maybe_res_annot: $body
