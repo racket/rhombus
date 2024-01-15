@@ -107,6 +107,7 @@
    take_right
    drop_left
    drop_right
+   sublist
    has_element
    remove
    map
@@ -682,6 +683,16 @@
   #:primitive (treelist-drop-right)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-drop-right l n))
+
+(define/method (List.sublist l start end)
+  #:static-infos ((#%call-result #,treelist-static-infos))
+  (check-treelist who l)
+  (define len (treelist-length l))
+  (unless (and (0 . <= . start) (start . <= . len))
+    (raise-range-error* who rhombus-realm "list" "starting " start l 0 len))
+  (unless (and (start . <= . end) (end . <= . len))
+    (raise-range-error* who rhombus-realm "list" "ending " end l start len))
+  (treelist-take (treelist-drop l start) (- end start)))
 
 (define (check-list-count who what l len n)
   (when (n . > . len)

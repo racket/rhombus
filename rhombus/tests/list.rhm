@@ -16,6 +16,7 @@ block:
     List.drop_right(lst, n)
     List.take_left(lst, n)
     List.take_right(lst, n)
+    List.sublist(lst, n, m)
 
 check:
   List.length([1, 2, 3])
@@ -197,6 +198,8 @@ check:
   List.take_left([1, 2, 3], 2) ~is [1, 2]
   [1, 2, 3].take_right(2) ~is [2, 3]
   List.take_right([1, 2, 3], 2) ~is [2, 3]
+  [1, 2, 3, 4, 5, 6].sublist(2, 5) ~is [3, 4, 5]
+  List.sublist([1, 2, 3, 4, 5, 6], 2, 5) ~is [3, 4, 5]
 
 check:
   use_static

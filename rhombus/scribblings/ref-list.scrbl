@@ -36,6 +36,7 @@ it supplies its elements in order.
   [lst.take_right(lst, n), List.take_right(lst, n)]
   [lst.drop_left(lst, n), List.drop_left(lst, n)]
   [lst.drop_right(lst, n), List.drop_right(lst, n)]
+  [lst.sublist(lst, n, m), List.sublist(lst, n, m)]
   [lst.has_element(lst, v), List.has_element(lst, v)]
   [lst.remove(lst, v), List.remove(lst, v)]
   [lst.map(func), List.map(lst, func)]
@@ -402,6 +403,21 @@ it supplies its elements in order.
   ~error:
     [1].drop_left(2)
 )
+
+}
+
+@doc(
+  fun List.sublist(lst :: List, n :: NonnegInt, m :: NonnegInt) :: List
+){
+
+ Returns a sublist of @rhombus(lst) containing elements from index
+ @rhombus(n) (inclusive) to @rhombus(m) (exclusive), equivalent to
+ @rhombus(List.drop_left(lst, n).take_left(m-n)).
+
+@examples(
+  [1, 2, 3, 4, 5].sublist(1, 3)
+)
+
 
 }
 
