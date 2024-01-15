@@ -420,7 +420,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 ){
 
  Like @rhombus(PairList.drop_left) and @rhombus(PairList.drop_right), but for
- @tech{pair lists}. Producing the new list takes @math{O(N)} time,
+ @tech{pair lists}. Producing the result list takes @math{O(N)} time,
  where @math{N} is the @rhombus(n) argument for dropping from the left or
  the length of the pair list for dropping from the right.
 

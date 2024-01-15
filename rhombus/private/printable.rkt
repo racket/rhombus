@@ -81,8 +81,6 @@
 (define-annotation-syntax PrintDesc
   (identifier-annotation #'printable-description? #'()))
 
-(define description-ann-str "PrintDesc || String || Bytes")
-
 (define (print-description-unwrap who pd [result? #f])
   (cond
     [(PrintDesc? pd)
@@ -92,8 +90,8 @@
     [else
      (and who
           (if result?
-              (raise-result-error* who rhombus-realm description-ann-str pd)
-              (raise-argument-error* who rhombus-realm description-ann-str pd)))]))
+              (raise-result-error* who rhombus-realm "PrintDesc" pd)
+              (raise-argument-error* who rhombus-realm "PrintDesc" pd)))]))
 
 (define (printable-description? v)
   (and (print-description-unwrap #f v) #t))
@@ -129,7 +127,7 @@
   (define pre-pd (print-description-unwrap who pre))
   (define (bad-elems)
     (raise-argument-error* who rhombus-realm
-                           (format "Listable.of(~a)" description-ann-str)
+                           "Listable.to_list && List.of(PrintDesc)"
                            elems))
   (define elem-pds (if (listable? elems)
                        (for/list ([elem (in-list (to-list #f elems))])

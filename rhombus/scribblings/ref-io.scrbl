@@ -300,13 +300,15 @@
 
 
 @doc(
-  fun PrintDesc.list(pre_pd :: PrintDesc,
-                     elements :: Listable.of(PrintDesc),
-                     post_pd :: PrintDesc)
-    :: PrintDesc
-  fun PrintDesc.block(head_pd :: PrintDesc,
-                      body :: PrintDesc)
-    :: PrintDesc
+  fun PrintDesc.list(
+    pre_pd :: PrintDesc,
+    elements :: Listable.to_list && List.of(PrintDesc),
+    post_pd :: PrintDesc
+  ) :: PrintDesc
+  fun PrintDesc.block(
+    head_pd :: PrintDesc,
+    body :: PrintDesc
+  ) :: PrintDesc
 ){
 
  Description-building helpers for list-like and block-like forms where

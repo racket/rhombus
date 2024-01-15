@@ -153,7 +153,8 @@ in an unspecified order.
     #,(@rhombus(&)) $map_expr
   grammar ellipsis:
     #,(dots),
-  fun Map([key :: Any, val :: Any], ...) :: Map
+  fun Map([key :: Any, val :: Any] :: Listable.to_list, ...)
+    :: Map
 ){
 
  Constructs an immutable map containing given keys mapped to the given
@@ -281,7 +282,8 @@ in an unspecified order.
     key_expr: block expr
     val_expr: block expr
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
-  fun MutableMap([key :: Any, val :: Any], ...) :: MutableMap
+  fun MutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
+    :: MutableMap
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
@@ -472,7 +474,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.snapshot(set :: ReadableMap) :: Map
+  fun Map.snapshot(map :: ReadableMap) :: Map
 ){
 
  Returns an immutable map whose content matches @rhombus(map). If

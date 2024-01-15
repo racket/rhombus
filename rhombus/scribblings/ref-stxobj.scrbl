@@ -730,7 +730,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap(stx :: Term)
+  fun Syntax.unwrap(stx :: Term) :: Any
 ){
 
  Unwraps a single-term syntax object by one layer. The result is a
@@ -808,7 +808,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap_all(stx :: Syntax)
+  fun Syntax.unwrap_all(stx :: Syntax) :: Any
 ){
 
  Unwraps a syntax object recursively, returning a value that does not
@@ -893,9 +893,10 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.relocate_span(stx :: Term,
-                           like_stxes :: Listable.of(Syntax))
-    :: Syntax
+  fun Syntax.relocate_span(
+    stx :: Term,
+    like_stxes :: Listable.to_list && List.of(Syntax)
+  ) :: Syntax
 ){
 
  Similar to @rhombus(Syntax.relocate), but the metadata of syntax

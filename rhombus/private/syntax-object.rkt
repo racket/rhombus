@@ -534,7 +534,9 @@
 
 (define (check-list-of-stx who stxs)
   (unless (and (list? stxs) (andmap syntax? stxs))
-    (raise-argument-error* who rhombus-realm "Listable.of(Syntax)" stxs)))
+    (raise-argument-error* who rhombus-realm
+                           "Listable.to_list && List.of(Syntax)"
+                           stxs)))
 
 ;; also reraws:
 (define/method (Syntax.relocate_span stx-in ctx-stxes-in)
