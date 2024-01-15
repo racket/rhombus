@@ -900,6 +900,8 @@
     #:attributes (kw exp)
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block exp)))
+    (pattern (group kw:keyword (btag::block g ...))
+             #:with exp #'(group (parsed #:rhombus/expr (rhombus-body-at btag g ...))))
     (pattern exp
              #:with kw #'#f)))
 
