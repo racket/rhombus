@@ -23,6 +23,7 @@ check:
 check:
   import: lib("rhombus/tests/example-c.rhm") as ex_c
   def ex_c.exint = "10"
+  #void
   ~throws "value does not satisfy annotation"
 
 check:

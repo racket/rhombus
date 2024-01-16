@@ -22,7 +22,8 @@
                     [values rhombus-values])
          "is-static.rkt"
          "forwarding-sequence.rkt"
-         "syntax-parameter.rkt")
+         "syntax-parameter.rkt"
+         "if-blocked.rkt")
 
 (provide (rename-out [rhombus-for for])
          (for-space rhombus/for_clause
@@ -320,18 +321,19 @@
              matcher
              (lhs-i.matcher-id tmp-id
                                lhs-i.data
-                               flattened-if
-                               (void)
+                               if/flattened
+                               (begin)
                                (rhs-binding-failure 'form-id tmp-id 'lhs-i.annotation-str))
              ...)
            (begin
              binder
-             (begin
-               (lhs-i.committer-id tmp-id lhs-i.data)
-               (lhs-i.binder-id tmp-id lhs-i.data)
-               (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-               ...)
-             ...)
+             (lhs-i.committer-id tmp-id lhs-i.data)
+             ...
+             (lhs-i.binder-id tmp-id lhs-i.data)
+             ...
+             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+             ... ...
+             (define-values () (values)))
            stx-params]])]))
 
 (define-for-syntax (build-binding-clause*/values orig-stx
@@ -352,13 +354,6 @@
                                      (cdr bindings-stxs)
                                      (cdr rhs-blk-stxs)
                                      static?)]))
-
-(define-syntax (flattened-if stx)
-  (syntax-parse stx
-    [(_ check-expr success-expr fail-expr)
-     #'(begin
-         (unless check-expr fail-expr)
-         success-expr)]))
 
 (define (rhs-binding-failure who val binding-str)
   (raise-binding-failure who "element" val binding-str))

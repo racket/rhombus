@@ -61,6 +61,7 @@ block:
     ~completes
   check:
     def List(_, _, _) :: List = [1]
+    #void
     ~throws values(
       "value does not satisfy annotation",
       "[1]",
@@ -69,6 +70,7 @@ block:
 
 check:
   def List(_, _, _) :: satisfying(fun (_): error("oops")) = [1]
+  #void
   ~throws "oops"
 
 block:
@@ -81,6 +83,7 @@ block:
     ~completes
   check:
     def List(_, _) :: one_to_two = [1, 2]
+    #void
     ~throws values(
       "value does not satisfy annotation",
       "[1, 2]",
@@ -88,6 +91,7 @@ block:
     )
   check:
     def List(_, _, _) :: one_to_two = [1]
+    #void
     ~throws values(
       "value does not satisfy annotation",
       "[1]",
@@ -96,6 +100,7 @@ block:
 
 check:
   def List(_, _, _) :: converting(fun (_): error("oops")) = [1]
+  #void
   ~throws "oops"
 
 check:

@@ -12,7 +12,8 @@
          (only-in "values.rkt"
                   [values rhombus-values])
          (submod "equal.rkt" for-parse)
-         "parens.rkt")
+         "parens.rkt"
+         "if-blocked.rkt")
 
 (provide (for-space rhombus/defn
                     def
@@ -105,15 +106,16 @@
                           lhs-i.name-id))
        #`(lhs-i.matcher-id tmp-id
                            lhs-i.data
-                           flattened-if
-                           (void)
+                           if/flattened
+                           (begin)
                            (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
        #`(lhs-i.committer-id tmp-id lhs-i.data)
        (wrap-definition
         #`(begin
             (lhs-i.binder-id tmp-id lhs-i.data)
             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-            ...))))]))
+            ...
+            (define-values () (values))))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
                                              #:check-bind-uses [check-bind-uses void])
@@ -144,7 +146,7 @@
        #`(begin
            (lhs-i.matcher-id tmp-id
                              lhs-i.data
-                             flattened-if
+                             if/flattened
                              (begin)
                              (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str
                                                   #:position 'pos))
@@ -155,10 +157,9 @@
         #`(begin
             (lhs-i.binder-id tmp-id lhs-i.data)
             ...
-            (begin
-              (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-              ...)
-            ...))))]))
+            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+            ... ...
+            (define-values () (values))))))]))
 
 (define-for-syntax (top-level-decls ids-stx)
   (cond
@@ -166,14 +167,6 @@
      (list
       #`(define-syntaxes #,ids-stx (values)))]
     [else null]))
-
-(define-syntax (flattened-if stx)
-  (syntax-parse stx
-    [(_ #t success-expr _) #'success-expr]
-    [(_ check-expr success-expr fail-expr)
-     #'(begin
-         (unless check-expr fail-expr)
-         success-expr)]))
 
 (define (rhs-binding-failure who val binding-str
                              #:position [pos #f])

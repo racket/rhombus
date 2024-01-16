@@ -30,9 +30,8 @@
                                #`(begin
                                    (arg.committer-id arg-id arg.data)
                                    (arg.binder-id arg-id arg.data)
-                                   (begin
-                                     (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
-                                     ...)
+                                   (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
+                                   ...
                                    (nested-bindings who try-next failure . tail)))
                          (static-if try-next
                                     (try-next)

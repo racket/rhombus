@@ -44,7 +44,11 @@ check:
   def '$('1' || '2')' = '1' ~completes
   def '$('1' || '2')' = '2' ~completes
   def '$('1' || '2') ...' = '1 2 1' ~completes
-  def '$('1' || '2') ...' = '1 2 1 3' ~throws "does not satisfy annotation"
+
+check:
+  def '$('1' || '2') ...' = '1 2 1 3'
+  #void
+  ~throws "does not satisfy annotation"
 
 block:
   def a = "top a"
@@ -60,14 +64,14 @@ block:
     match '2'
     | '$(a || '1')': a
     ~is "top a"
-  
+
 check:
   unquote_bind.macro 'g $(x :: Term)':
     '$x :: Group'
   match 'x: 2 3'
   |  '$_: $(g v)': v
   ~matches '2 3'
-  
+
 check:
   unquote_bind.macro 'g $(x :: Term)':
     '$x'
@@ -102,7 +106,7 @@ block:
   check:
     match Syntax.make_group(['...', '...', '...'])
     | '$dots ...': "all dots"
-    ~is "all dots"                 
+    ~is "all dots"
   check:
     match Syntax.make_group(['!', '...', '...'])
     | '$dots ...': "all dots"

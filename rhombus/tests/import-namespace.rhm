@@ -27,6 +27,7 @@ check:
 check:
   import: .n as ex_c
   def ex_c.exint = "10"
+  #void
   ~throws "value does not satisfy annotation"
 
 check:
@@ -146,7 +147,7 @@ block:
       .n open:
         except_space: bind
     export: exint
-    bind.macro 'exint': '(_ :: PosInt)'                            
+    bind.macro 'exint': '(_ :: PosInt)'
   check:
     import .n2 as ex_c
     def ex_c.exint = 10
@@ -160,10 +161,12 @@ block:
   check:
     import .n2 as ex_c
     def ex_c.exint = -10
+    #void
     ~throws "value does not satisfy annotation"
   check:
     import .n2 open
     def exint = -10
+    #void
     ~throws "value does not satisfy annotation"
 
 check:

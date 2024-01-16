@@ -11,8 +11,9 @@ check:
   block:
     namespace n:
       export: exint
-      def exint = 10  
+      def exint = 10
     import: .n.exint meta
+    #void
   ~throws "cannot shift phase of namespace content"
 
 check:
@@ -20,9 +21,10 @@ check:
   block:
     namespace n:
       export: exint
-      def exint = 10  
+      def exint = 10
     import: .n.exint:
               except: exint
+    #void
   ~throws "identifier to exclude is not nested within the imported name"
 
 check:
@@ -42,6 +44,7 @@ check:
 check:
   import: .n.exint
   def exint = "10"
+  #void
   ~throws "value does not satisfy annotation"
 
 check:

@@ -39,6 +39,7 @@ check:
 
 check:
   def (1, 2) = values(1, 1)
+  #void
   ~throws values(
     "value does not satisfy annotation",
     "1",
@@ -48,6 +49,7 @@ check:
 
 check:
   def (1, 2) = values(2, 2)
+  #void
   ~throws values(
     "value does not satisfy annotation",
     "2",
@@ -109,3 +111,10 @@ check:
     "something " ++ "more"
   something
   ~is "nothing"
+
+// check that expansion of `def` does not end with an expression
+check:
+  ~eval
+  block:
+    def [1, 2] = [1, 2]
+  ~throws "block does not end with an expression"
