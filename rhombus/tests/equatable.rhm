@@ -44,3 +44,30 @@ block:
   let f: Fail()
   check f == f ~is #true
 
+block:
+  class AnythingGoesAbstract():
+    nonfinal
+    implements Equatable
+    abstract m()
+
+  class AnythingGoesConcrete(n):
+    extends AnythingGoesAbstract
+    override equals(other, recur): #true
+    override hash_code(recur): 0
+    override method m(): "ok"
+
+  check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+
+block:
+  class AnythingGoesAbstract():
+    nonfinal
+    private implements Equatable
+    private override equals(other, recur): #true
+    private override hash_code(recur): 0
+    abstract m()
+
+  class AnythingGoesConcrete(n):
+    extends AnythingGoesAbstract
+    override method m(): "ok"
+
+  check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true

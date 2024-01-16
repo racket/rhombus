@@ -60,7 +60,7 @@
 
 (define (close-interfaces-over-superinterfaces interfaces private-interfaces)
   (let loop ([seen #hasheq()]
-             [priv-seen #hasheq()]
+             [priv-seen private-interfaces]
              [int+priv?s (for/list ([intf (in-list interfaces)])
                            (cons intf (hash-ref private-interfaces intf #f)))])
     (cond

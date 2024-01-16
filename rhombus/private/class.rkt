@@ -885,14 +885,23 @@
                                                                  '()
                                                                  (list #`(cons prop:methods
                                                                                (vector #,@(vector->list method-vtable)))))
-                                                          #,@(if abstract-name
-                                                                 null
-                                                                 (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
-                                                                                                                                  private-interfaces))])
-                                                                   #`(cons #,(interface-desc-prop:id intf)
-                                                                           (vector #,@(build-interface-vtable intf
-                                                                                                              method-mindex method-vtable method-names
-                                                                                                              method-private)))))))
+                                                          #,@(for/list ([intf (in-list (close-interfaces-over-superinterfaces
+                                                                                        (if abstract-name
+                                                                                            null
+                                                                                            (append (if super
+                                                                                                        (interface-names->interfaces
+                                                                                                         #f
+                                                                                                         (let ([l (class-desc-interface-ids super)])
+                                                                                                           (if (null? l)
+                                                                                                               null
+                                                                                                               (syntax->list l))))
+                                                                                                        null)
+                                                                                                    interfaces))
+                                                                                        private-interfaces))])
+                                                               #`(cons #,(interface-desc-prop:id intf)
+                                                                       (vector #,@(build-interface-vtable intf
+                                                                                                          method-mindex method-vtable method-names
+                                                                                                          method-private))))))
                                             #,(if prefab? (quote-syntax 'prefab) #f)
                                             #f
                                             '(immutable-field-index ...)

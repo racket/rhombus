@@ -380,3 +380,61 @@ check:
     implements A
     extends B
   ~throws "name supplied as both method and dot syntax by classes or superinterfaces"
+
+// make sure an abstract class can implement an interface
+block:
+  // public implementation
+  block:
+    interface Pointy
+    class Posn(x, y):
+      nonfinal
+      abstract m()
+      implements Pointy
+    class Posn3D(z):
+      extends Posn
+      override m(): 5
+    check Posn3D(1, 2, 3) is_a Pointy ~is #true
+
+  // public implementation with method
+  block:
+    interface Pointy:
+      method m()
+    class Posn(x, y):
+      nonfinal
+      implements Pointy
+    class Posn3D(z):
+      extends Posn
+      override m(): 5
+    check Posn3D(1, 2, 3) is_a Pointy ~is #true
+    check Posn3D(1, 2, 3).m() ~is 5
+
+  // private implementation
+  block:
+    interface Pointy:
+      internal _Pointy
+    class Posn(x, y):
+      nonfinal
+      private implements Pointy
+      abstract m()
+    class Posn3D(z):
+      extends Posn
+      override m(): 5
+    check Posn3D(1, 2, 3) is_a Pointy ~is #false
+    check Posn3D(1, 2, 3) is_a _Pointy ~is #true
+
+  // private implementation with method
+  block:
+    interface Pointy:
+      internal _Pointy
+      method pt()
+    class Posn(x, y):
+      nonfinal
+      private implements Pointy
+      abstract m()
+      private override pt(): m()
+    class Posn3D(z):
+      extends Posn
+      override m(): 5
+    check Posn3D(1, 2, 3) is_a Pointy ~is #false
+    check Posn3D(1, 2, 3) is_a _Pointy ~is #true
+    check (Posn3D(1, 2, 3) :~ _Pointy).pt() ~is 5
