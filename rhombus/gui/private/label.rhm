@@ -30,7 +30,7 @@ class Label(private _handle, private _at_label :: Obs):
     let at_label = obs.to_obs(label)
     super(easy.text(obs.unwrap(at_label),
                     ~color: obs.unwrap(color),
-                    ~font: obs.unwrap_convert(font, fun(fnt): fnt && (fnt :~ Font).handle)),
+                    ~font: obs.unwrap_convert(font, fun (fnt): fnt && (fnt :~ Font).handle)),
           at_label)
 
   property at_label :: Obs:

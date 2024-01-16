@@ -4,7 +4,7 @@ import:
     rhombus expose: macro
 
 use_static
-  
+
 block:
   class Posn(x, y)
   def p = Posn(1, 2)
@@ -224,7 +224,7 @@ block:
     export: of
   def p = Posn(0, 2)
   def Posn(yy, xx) = p
-  def Posn(a) = p    
+  def Posn(a) = p
   check:
     [p.y, p.x, yy, xx, a,
      p is_a Posn,
@@ -284,7 +284,7 @@ check:
   class Posn3D(z):
     extends Posn
     constructor:
-      fun(x, y, z):
+      fun (x, y, z):
         super(~x: 1, y)(z)
   def p2 = Posn(~x: 1, 2)
   def p3 = Posn3D(1, 2, 3)
@@ -298,12 +298,12 @@ check:
     extends Posn
     nonfinal
     constructor:
-      fun(x, y, z):
+      fun (x, y, z):
         super(~x: 1, y)(z)
   class Posn4D(~w):
     extends Posn3D
     constructor:
-      fun(x, y, z, w):
+      fun (x, y, z, w):
         super(x, y, z)(~w: w)
   def p2 = Posn(~x: 1, 2)
   def p3 = Posn3D(1, 2, 3)
@@ -319,19 +319,19 @@ check:
   class Posn(~x, y):
     nonfinal
     constructor:
-      fun(~ex: x, ~wy: y):
+      fun (~ex: x, ~wy: y):
         super(~x: 1, y)
   class Posn3D(z):
     extends Posn
     nonfinal
     constructor:
-      fun(x, ~y: y, z):
+      fun (x, ~y: y, z):
         super(~ex: 1, ~wy: y)(z)
     internal _Posn3D
   class Posn4D(w):
     extends Posn3D
     constructor:
-      fun(x, y, z, w):
+      fun (x, y, z, w):
         super(x, ~y: y, z)(w)
   def p2 = Posn(~ex: 1, ~wy: 2)
   def p3 = Posn3D(1, ~y: 2, 3)
@@ -512,7 +512,7 @@ check:
   ~is [[1, 2],
        [1, 2, 3],
        [1, 2, 3, 6]]
-  
+
 check:
   class Posn(x, ~y):
     nonfinal
@@ -555,7 +555,7 @@ check:
   // mutable field => `now_of`, but only for public constructor
   class Posn(x, ~y, private mutable other = 0):
     nonfinal
-    internal _Posn    
+    internal _Posn
     field also_other = 1
   class Posn3D(mutable z):
     extends Posn

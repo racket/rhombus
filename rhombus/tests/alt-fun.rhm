@@ -47,9 +47,9 @@ block:
   | f(): 2
   */
   def f:
-    let c0: fun(): 0
-    let c1: fun(a): 1
-    let c2: fun(): 2
+    let c0 = fun (): 0
+    let c1 = fun (a): 1
+    let c2 = fun (): 2
     fun
     | (tmp1):
         match tmp1
@@ -71,9 +71,9 @@ block:
   | f(a): 1
   */
   def f:
-    let c0: fun(): 0
-    let c1: fun(a): 1
-    let c2: fun(): 2
+    let c0 = fun (): 0
+    let c1 = fun (a): 1
+    let c2 = fun (): 2
     fun
     | (tmp1):
         match tmp1
@@ -96,9 +96,9 @@ block:
   | (): 2
   */
   def f:
-    let c0: fun(rst): 0
-    let c1: fun(a): 1
-    let c2: fun(): 2
+    let c0 = fun (rst): 0
+    let c1 = fun (a): 1
+    let c2 = fun (): 2
     fun
     | (tmp1, & rst):
         match [tmp1, rst]
@@ -121,9 +121,9 @@ block:
   | (a): 1
   */
   def f:
-    let c0: fun(rst): 0
-    let c1: fun(a): 1
-    let c2: fun(): 2
+    let c0 = fun (rst): 0
+    let c1 = fun (a): 1
+    let c2 = fun (): 2
     fun
     | (tmp1, & rst):
         match [tmp1, rst]
@@ -189,4 +189,3 @@ fun
 check rectangle_area(~width: 8.5, ~height: 11) ~is 93.5
 check rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
 check rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
-

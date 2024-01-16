@@ -104,7 +104,7 @@
       | #'function:
           let [arg, ...] = adj.prefix_arguments
           entry_point_meta.pack(
-            'fun($arg, ..., x):
+            'fun ($arg, ..., x):
                $(adj.wrap_body(2, 'x'))'
           )
   ~repl:

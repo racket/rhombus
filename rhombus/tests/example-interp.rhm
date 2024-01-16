@@ -58,6 +58,6 @@ def init_env:
   {'cons'.unwrap(): List.cons,
    'first'.unwrap(): List.first,
    'rest'.unwrap(): List.rest,
-   '+'.unwrap_op(): fun(x, y): x + y,
-   '-'.unwrap_op(): fun(x, y): x - y,
-   '*'.unwrap_op(): fun(x, y): x * y}
+   '+'.unwrap_op(): fun (x, y): x + y,
+   '-'.unwrap_op(): fun (x, y): x - y,
+   '*'.unwrap_op(): fun (x, y): x * y}

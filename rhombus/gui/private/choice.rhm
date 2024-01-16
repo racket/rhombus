@@ -31,7 +31,7 @@ class Choice(private _handle, private _at_selection :: Obs):
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
     let at_selection = obs.to_obs(selection)
-    let action = action || (fun(selected):
+    let action = action || (fun (selected):
                               at_selection.value := selected)
     super(easy.choice(obs.unwrap_list(choices, values),
                       action,

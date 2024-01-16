@@ -11,7 +11,7 @@ check:
     | check:
         adj ~is_a entry_point_meta.Adjustment
         adj.prefix_arguments ~is_a List.of(Syntax)
-      match 'fun(x): x'
+      match 'fun (x): x'
       | '$(e :: entry_point_meta.Parsed(adj))':
           e
 
@@ -27,7 +27,7 @@ check:
     ~adjustment adj
     if (mode == #'arity)
     | [2, [], []]
-    | 'fun(x): x'
+    | 'fun (x): x'
 
   class C():
     method m:
@@ -42,7 +42,7 @@ check:
     if (mode == #'arity)
     | [2, [], []]
     | def [id, ...] = adj.prefix_arguments
-      entry_point_meta.pack('fun($id, ..., x):
+      entry_point_meta.pack('fun ($id, ..., x):
                                $(adj.wrap_body(2, 'x'))')
 
   class C():
@@ -58,7 +58,7 @@ check:
     ~adjustment adj
     if (mode == #'arity)
     | [1, [#'~kw], [#'~kw]]
-    | 'fun(~kw: x): x'
+    | 'fun (~kw: x): x'
 
   class C():
     method m:

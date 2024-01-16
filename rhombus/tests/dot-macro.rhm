@@ -38,7 +38,7 @@ check:
   or_zero(#false).magnitude
   ~is 0
 
-def zero_vec = dynamic(fun(): Posn(0, 0))
+def zero_vec = dynamic(fun (): Posn(0, 0))
 statinfo.macro 'zero_vec': '(($(statinfo_meta.call_result_key),
                               $(statinfo_meta.pack('(($(statinfo_meta.dot_provider_key),
                                                       vector_dot_provider))'))))'

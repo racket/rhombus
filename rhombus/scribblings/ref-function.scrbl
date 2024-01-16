@@ -203,7 +203,7 @@ normally bound to implement function calls.
     identity(1)
   ~defn:
     fun curried_add(x):
-      fun(y):
+      fun (y):
         x + y
   ~repl:
     curried_add(1)(2)

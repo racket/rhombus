@@ -111,7 +111,7 @@ check:
   ~is {0, 1, 3, 5, 7, 9}
 
 check:
-  (fun(y, z): z)(y, ...)
+  (fun (y, z): z)(y, ...)
   ~is 3
 
 def Array(ax, ay, az) = nums_a

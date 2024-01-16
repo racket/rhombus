@@ -26,7 +26,7 @@ block:
 block:
   def p1 = PosnKW(1, ~y: 2)
   def p2 = p1 :: PosnKW.of(~y: converting(fun (y) :: Real: y),
-                           Int)  
+                           Int)
   check:
     p1 == p2 ~is #true
     p1 === p2 ~is #false
@@ -143,7 +143,7 @@ block:
     reveal(ReadableString.to_string) ~is "converter"
 
 check:
-  [1, "oops"] is_a converting(fun(_ :: converting(fun ([x, ...]): [x+1, ...])): "ok")
+  [1, "oops"] is_a converting(fun (_ :: converting(fun ([x, ...]): [x+1, ...])): "ok")
   ~is #true
 
 check:

@@ -54,7 +54,7 @@ expr.macro
      $(result2 :: Result)':
     ~op_stx: check_id
     'check_same(located '$(check_id)',
-                fun():
+                fun ():
                   eval_test(Syntax.literal '$result1
                                             ...
                                             $result2.suffix

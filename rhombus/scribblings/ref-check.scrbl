@@ -8,7 +8,7 @@
   ~eval: check_eval
   ~hidden:
     import lib("racket/base.rkt").#{error-display-handler}
-    #{error-display-handler}(fun(msg, exn):
+    #{error-display-handler}(fun (msg, exn):
                                print(msg, Port.Output.current_error()))
 )
 

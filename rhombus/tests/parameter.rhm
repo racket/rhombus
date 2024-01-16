@@ -19,7 +19,7 @@ block:
     p() ~is 11
 
 block:
-  def p = Parameter.make("1", ~guard: fun(x): to_string(x))
+  def p = Parameter.make("1", ~guard: fun (x): to_string(x))
 
   check:
     p() ~is "1"

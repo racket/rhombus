@@ -410,7 +410,7 @@ in an unspecified order.
   Map.get({"a": 1, "b": 2}, "a")
   Map.get({"a": 1, "b": 2}, "c", #inf)
   ~error:
-    Map.get({"a": 1, "b": 2}, "c", fun(): error("no value"))
+    Map.get({"a": 1, "b": 2}, "c", fun (): error("no value"))
 )
 
 }

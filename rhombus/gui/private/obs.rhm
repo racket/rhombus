@@ -53,7 +53,7 @@ class Obs(private _handle):
 
   property
   | value: peek()
-  | value := v: update(fun(_): v)
+  | value := v: update(fun (_): v)
 
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))

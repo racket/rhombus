@@ -484,7 +484,7 @@ delayed_area()
 // by arbitrary expand-time code
 expr.macro 'find_matching_name $expr ...: $id ...':
   // convert identifiers to strings
-  let [name, ...] = [id, ...].map(fun(id): to_string(id))
+  let [name, ...] = [to_string(id), ...]
   // build a result conditional
   'block:
      def val = $expr ...
