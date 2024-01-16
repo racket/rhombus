@@ -102,6 +102,66 @@
    f(1, ~b: 2)
  })
 
+(check-pred lambda-optimized?
+            @get-module['fun1/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
+(check-pred lambda-optimized?
+            @get-module['fun2/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b, & _):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
+(check-pred lambda-optimized?
+            @get-module['fun3/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b, _, ...,):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
+(check-pred lambda-optimized?
+            @get-module['fun4/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b = 1):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
+(check-pred lambda-optimized?
+            @get-module['fun5/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b = 1, & _):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
+(check-pred lambda-optimized?
+            @get-module['fun6/namespaced]{
+ namespace prefix
+ fun prefix.f(x, ~b = 1, _, ...,):
+   b
+
+ fun g():
+   prefix.f(1, ~b: 2)
+ })
+
 (define (case-lambda-optimized? mod-stx)
   (syntax-parse mod-stx
     #:datum-literals (f)
@@ -116,6 +176,7 @@
                    (let-body #'fe)))
      #t]
     [_ #f]))
+
 (check-pred case-lambda-optimized?
             @get-module['case-fun1]{
  fun

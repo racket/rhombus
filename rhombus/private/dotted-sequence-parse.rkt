@@ -66,10 +66,11 @@
   (define name ((space->introducer space-sym) name-in))
   (cond
     [(syntax-e extends)
-     (define tmp ((space->introducer space-sym) (car (generate-temporaries (list name)))))
+     (define tmp ((space->introducer space-sym)
+                  ((make-syntax-introducer)
+                   (datum->syntax #f (syntax-e name) name))))
      (list
-      #`(define #,tmp (let ([#,name #,rhs])
-                        #,name))
+      #`(define #,tmp #,rhs)
       #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
                                                             (quote-syntax #,extends))))]
     [else
