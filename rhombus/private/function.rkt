@@ -192,7 +192,24 @@
 
 (begin-for-syntax
   (define (get-local-name who)
-    (or (syntax-local-name) who)))
+    (or (syntax-local-name) who))
+
+  ;; check positional constraint on optional arguments
+  ;; optional by-position arguments must follow required ones
+  (define (check-optional-args stx args kws defaults)
+    (for/fold ([seen-default? #f])
+              ([arg (in-list args)]
+               [kw (in-list kws)]
+               [default (in-list defaults)]
+               #:unless (syntax-e kw))
+      (define default? (and (syntax-e default) #t))
+      (when (and seen-default? (not default?))
+        (raise-syntax-error #f
+                            "default-value expression missing"
+                            stx
+                            arg))
+      default?)
+    (void)))
 
 (define-syntax fun
   (expression-transformer
@@ -263,6 +280,10 @@
                   ret::ret-annotation
                   (~and rhs (_::block body ...)))
          #:with name::dotted-identifier #'name-seq
+         (check-optional-args stx
+                              (syntax->list #'(arg ...))
+                              (syntax->list #'(arg.kw ...))
+                              (syntax->list #'(arg.default ...)))
          (define-values (proc arity)
            (build-function no-adjustments
                            #'name.name
@@ -337,6 +358,10 @@
     ;; single-alterative case
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
               (~and rhs (_::block body ...)))
+     (check-optional-args stx
+                          (syntax->list #'(arg ...))
+                          (syntax->list #'(arg.kw ...))
+                          (syntax->list #'(arg.default ...)))
      (define-values (fun arity)
        (build-function adjustments
                        (get-local-name #'form-id)

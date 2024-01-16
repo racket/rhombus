@@ -226,6 +226,10 @@ normally bound to implement function calls.
  reasons, @rhombus(bind) and @rhombus(default_expr) cannot contain an
  immediate @rhombus(=).
 
+ A constraint not reflected in the grammar is that all optional
+ by-position arguments must follow all required by-position arguments.
+ To define a function that works otherwise, use the @vbar form.
+
 @examples(
   ~defn:
     fun f(x, y = x+1):
@@ -243,6 +247,17 @@ normally bound to implement function calls.
     transform([1, 2])
     transform([1, 2], ~dx: 7)
     transform([1, 2], ~dx: 7, ~scale: 2)
+  ~defn:
+    ~error:
+      fun invalid(x = 1, y):
+        x+y
+  ~defn:
+    fun
+    | valid(y): valid(1, y)
+    | valid(x, y): x+y
+  ~repl:
+    valid(2)
+    valid(3, 2)
 )
 
  When alternatives are specified with multiple @vbar clauses, the
