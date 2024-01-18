@@ -1049,12 +1049,12 @@
   ~defn:
     class PosnX(x, y):
       internal _PosnX
-      expression 'PosnX< $x... || $y ... >':
+      expression 'PosnX< $x ... || $y ... >':
         '_PosnX($x ..., $y ...) :~ PosnX'
       reconstructor (x, y):
         PosnX< x || y >
   ~repl:
-    def px = PosnX < 1 || 2 >
+    def px = PosnX< 1 || 2 >
     px with (y = 20)
     px
   ~defn:
