@@ -1,25 +1,34 @@
 #lang rhombus/and_meta
-import:
-  lib("racket/base.rkt").atan
 
 class Posn(x, y)
 
-annot.macro 'AlsoPosn': 'Posn'
-check:
-  Posn(1, 2) :: AlsoPosn
-  ~is Posn(1, 2)
+block:
+  annot.macro 'AlsoPosn': 'Posn'
+  check:
+    Posn(1, 2) :: AlsoPosn
+    ~is Posn(1, 2)
+  check:
+    "no" :: AlsoPosn
+    ~throws "value does not satisfy annotation"
+
+  bind.macro 'AlsoPosn ($x, $y)':
+    'Posn($x, $y)'
+  def AlsoPosn(also_x, also_y) = Posn(10, 20)
+  check:
+    also_x +& "," +& also_y
+    ~is "10,20"
 
 check:
-  "no" :: AlsoPosn
-  ~throws "value does not satisfy annotation"
+  annot.macro '-> $r':
+    'converting(fun (x): x)'
+  def h :: -> Boolean = 1
+  ~completes
 
-bind.macro 'AlsoPosn ($x, $y)':
-  'Posn($x, $y)'
-
-def AlsoPosn(also_x, also_y) = Posn(10, 20)
 check:
-  also_x +& "," +& also_y
-  ~is "10,20"
+  annot.macro '$d -> $r':
+    'converting(fun (x): x)'
+  def h :: Int -> Boolean = 1
+  ~completes
 
 block:
   annot.delayed_declare Forward

@@ -72,6 +72,9 @@
     #:property prop:annotation-prefix-operator (lambda (self) (annotation-prefix+infix-operator-prefix self))
     #:property prop:annotation-infix-operator (lambda (self) (annotation-prefix+infix-operator-infix self))))
 
+(define-for-syntax (wrap-parsed stx)
+  #`(parsed #:rhombus/annot #,stx))
+
 (define-for-syntax (parse-annotation-macro-result form proc)
   (unless (syntax? form)
     (raise-bad-macro-result (proc-name proc) "annotation" form))
@@ -83,15 +86,19 @@
    name
    prec
    protocol
-   (lambda (form1 tail)
-     (define-values (form new-tail)
-       (tail-returner
-        proc
-        (syntax-parse tail
-          [(head . tail) (proc #`(parsed #:rhombus/annot #,form1) (pack-tail #'tail) #'head)])))
-     (check-transformer-result (parse-annotation-macro-result form proc)
-                               (unpack-tail new-tail proc #f)
-                               proc))
+   (if (eq? protocol 'macro)
+       (lambda (form1 tail)
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)])))
+         (check-transformer-result (parse-annotation-macro-result form proc)
+                                   (unpack-tail new-tail proc #f)
+                                   proc))
+       (lambda (form1 form2 stx)
+         (parse-annotation-macro-result (proc (wrap-parsed form1) (wrap-parsed form2) stx)
+                                        proc)))
    assc))
 
 (define-for-syntax (make-annotation-prefix-operator name prec protocol proc)
@@ -99,15 +106,19 @@
    name
    prec
    protocol
-   (lambda (tail)
-     (define-values (form new-tail)
-       (tail-returner
-        proc
-        (syntax-parse tail
-          [(head . tail) (proc (pack-tail #'tail) #'head)])))
-     (check-transformer-result (parse-annotation-macro-result form proc)
-                               (unpack-tail new-tail proc #f)
-                               proc))))
+   (if (eq? protocol 'macro)
+       (lambda (tail)
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
+         (check-transformer-result (parse-annotation-macro-result form proc)
+                                   (unpack-tail new-tail proc #f)
+                                   proc))
+       (lambda (form stx)
+         (parse-annotation-macro-result (proc (wrap-parsed form) stx)
+                                        proc)))))
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
