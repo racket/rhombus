@@ -24,6 +24,12 @@
     [(let-values _ body) (let-body #'body)]
     [_ stx]))
 
+(define (letrec-body stx)
+  (syntax-parse stx
+    #:literals (letrec-values)
+    [(letrec-values _ body) (let-body #'body)]
+    [_ stx]))
+
 (define (let-named stx)
   (syntax-parse stx
     #:literals (let-values)
@@ -48,7 +54,7 @@
                     _)
               ...))
            (~parse (lambda () gb)
-                   (let-body (let-named #'ge)))
+                   (let-body #'ge))
            (~parse (if (#%app variable-reference-constant? (#%variable-reference _))
                        (#%app . _)
                        (#%app (#%app checked-procedure-check-and-extract . _) . _))
@@ -170,6 +176,43 @@
    prefix.f(1, ~b: 2)
  })
 
+(define (lambda/kwrest-not-reduced? mod-stx)
+  (syntax-parse mod-stx
+    #:datum-literals (f)
+    #:literals ([#%module-begin #%plain-module-begin]
+                [#%app #%plain-app]
+                module define-values case-lambda
+                make-keyword-procedure)
+    [(~and (module _ _
+             (#%module-begin
+              (~alt (~once (define-values (f) fe))
+                    _)
+              ...))
+           (~parse (#%app make-keyword-procedure _ inner)
+                   (letrec-body #'fe))
+           (~parse (case-lambda . _)
+                   (let-named #'inner)))
+     #t]
+    [_ #f]))
+
+(check-pred lambda/kwrest-not-reduced?
+            @get-module['fun/kwrest1]{
+ fun f(~& kwrest):
+   kwrest
+ })
+
+(check-pred lambda/kwrest-not-reduced?
+            @get-module['fun/kwrest2]{
+ fun f(& _, ~& kwrest):
+   kwrest
+ })
+
+(check-pred lambda/kwrest-not-reduced?
+            @get-module['fun/kwrest3]{
+ fun f(_, & _, ~& kwrest):
+   kwrest
+ })
+
 (define ((case-lambda-optimized? match-case) mod-stx)
   (syntax-parse mod-stx
     #:datum-literals (f)
@@ -277,4 +320,43 @@
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, c, d, ...): values(a, b, c, d, ...)
+ })
+
+(define (case-lambda/kwrest-not-reduced? mod-stx)
+  (syntax-parse mod-stx
+    #:datum-literals (f)
+    #:literals ([#%module-begin #%plain-module-begin]
+                [#%app #%plain-app]
+                module define-values case-lambda
+                make-keyword-procedure)
+    [(~and (module _ _
+             (#%module-begin
+              (~alt (~once (define-values (f) fe))
+                    _)
+              ...))
+           (~parse (#%app make-keyword-procedure _ inner)
+                   (let-body #'fe))
+           (~parse (case-lambda . _)
+                   (let-named #'inner)))
+     #t]
+    [_ #f]))
+
+(check-pred case-lambda/kwrest-not-reduced?
+            @get-module['case-fun/kwrest1]{
+ fun
+ | f(~& kwrest): kwrest
+ })
+
+(check-pred case-lambda/kwrest-not-reduced?
+            @get-module['case-fun/kwrest2]{
+ fun
+ | f(& rest): rest
+ | f(~& kwrest): kwrest
+ })
+
+(check-pred case-lambda/kwrest-not-reduced?
+            @get-module['case-fun/kwrest3]{
+ fun
+ | f(_, & rest): rest
+ | f(~& kwrest): kwrest
  })
