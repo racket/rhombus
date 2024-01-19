@@ -356,3 +356,39 @@ check:
   #{object-name}(fun
                  | (~& _): #false)
   ~is #'fun
+
+// check argument bindings
+check:
+  import:
+    rhombus/meta open
+  bind.macro 'printed($id)':
+    bind_meta.pack('(printed_infoer, $id)')
+  bind.infoer 'printed_infoer($_, $id)':
+    '("printed(_)",
+      printed,
+      (),
+      (),
+      printed_matcher,
+      printed_committer,
+      printed_binder,
+      $id)'
+  bind.matcher 'printed_matcher($_, $id, $IF, $success, $failure)':
+    '$IF #true
+     | $success
+     | $failure'
+  bind.binder 'printed_committer($_, $id)':
+    'println(#%literal $("commit " +& id))'
+  bind.binder 'printed_binder($_, $id)':
+    'println(#%literal $("bind " +& id))'
+  fun bind(printed(arg1), printed(arg2), & printed(rest), ~& printed(kwrest)):
+    #void
+  bind(1, 2, 3, ~arg3: 3)
+  ~prints "commit arg1"
+    ++ "\n" ++ "bind arg1"
+    ++ "\n" ++ "commit arg2"
+    ++ "\n" ++ "bind arg2"
+    ++ "\n" ++ "commit rest"
+    ++ "\n" ++ "bind rest"
+    ++ "\n" ++ "commit kwrest"
+    ++ "\n" ++ "bind kwrest"
+    ++ "\n"

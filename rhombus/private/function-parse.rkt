@@ -608,8 +608,8 @@
                           #:with (arg ...) (fcase-args fc)
                           #:with (this-arg-id ...) this-args
                           #:with ((maybe-match-rest ...)
-                                  (maybe-bind-rest ...)
                                   (maybe-commit-rest ...)
+                                  (maybe-bind-rest ...)
                                   (maybe-static-info-rest ...))
                           (cond
                             [(syntax-e (fcase-rest-arg fc))
@@ -625,8 +625,8 @@
                                     ...))])]
                             [else #'(() () () ())])
                           #:with ((maybe-match-kwrest ...)
-                                  (maybe-bind-kwrest ...)
                                   (maybe-commit-kwrest ...)
+                                  (maybe-bind-kwrest ...)
                                   (maybe-static-info-kwrest ...))
                           (cond
                             [(syntax-e (fcase-kwrest-arg fc))
