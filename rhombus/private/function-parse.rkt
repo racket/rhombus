@@ -607,7 +607,10 @@
                           #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
                           #:with (arg ...) (fcase-args fc)
                           #:with (this-arg-id ...) this-args
-                          #:with ((maybe-match-rest ...) (maybe-bind-rest-seq ...) (maybe-bind-rest ...))
+                          #:with ((maybe-match-rest ...)
+                                  (maybe-bind-rest ...)
+                                  (maybe-commit-rest ...)
+                                  (maybe-static-info-rest ...))
                           (cond
                             [(syntax-e (fcase-rest-arg fc))
                              (define rest-parsed (fcase-rest-arg-parsed fc))
@@ -616,13 +619,15 @@
                                 #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
                                 #:with rest-info::binding-info #'rest-impl.info
                                 #`(((rest-tmp rest-info #,(fcase-rest-arg fc) #f))
-                                   ((rest-info.committer-id rest-tmp rest-info.data)
-                                    (rest-info.binder-id rest-tmp rest-info.data))
+                                   ((rest-info.committer-id rest-tmp rest-info.data))
+                                   ((rest-info.binder-id rest-tmp rest-info.data))
                                    ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
                                     ...))])]
-                            [else
-                             #'(() () ())])
-                          #:with ((maybe-match-kwrest ...) (maybe-bind-kwrest-seq ...) (maybe-bind-kwrest ...))
+                            [else #'(() () () ())])
+                          #:with ((maybe-match-kwrest ...)
+                                  (maybe-bind-kwrest ...)
+                                  (maybe-commit-kwrest ...)
+                                  (maybe-static-info-kwrest ...))
                           (cond
                             [(syntax-e (fcase-kwrest-arg fc))
                              (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
@@ -631,12 +636,11 @@
                                 #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
                                 #:with kwrest-info::binding-info #'kwrest-impl.info
                                 #`(((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f))
-                                   ((kwrest-info.committer-id kwrest-tmp kwrest-info.data)
-                                    (kwrest-info.binder-id kwrest-tmp kwrest-info.data))
+                                   ((kwrest-info.committer-id kwrest-tmp kwrest-info.data))
+                                   ((kwrest-info.binder-id kwrest-tmp kwrest-info.data))
                                    ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
                                     ...))])]
-                            [else
-                             #'(() () ())])
+                            [else #'(() () () ())])
                           ;; use `((lambda ....) ....)` to keep code in original order, in case
                           ;; of expansion errors.
                           #`((lambda (try-next)
@@ -652,14 +656,18 @@
                                      (begin
                                        (arg-info.committer-id this-arg-id arg-info.data)
                                        ...
+                                       maybe-commit-rest ...
+                                       maybe-commit-kwrest ...
                                        (arg-info.binder-id this-arg-id arg-info.data)
                                        ...
+                                       maybe-bind-rest ...
+                                       maybe-bind-kwrest ...
                                        (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
                                        ... ...
-                                       maybe-bind-rest-seq ...
-                                       maybe-bind-rest ...
-                                       maybe-bind-kwrest-seq ...
-                                       maybe-bind-kwrest ...
+                                       maybe-static-info-rest
+                                       ...
+                                       maybe-static-info-kwrest
+                                       ...
                                        #,(wrap-expression
                                           ((entry-point-adjustment-wrap-body adjustments)
                                            arity
