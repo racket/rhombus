@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre))
+                     syntax/parse/pre)
+         racket/unsafe/undefined)
 
 (provide lambda/kwrest
          case-lambda/kwrest)
@@ -27,6 +28,7 @@
           #:arity (mask required-kws allowed-kws)
           (~optional (~seq #:rest rest))
           #:kwrest kwrest
+          ;; assumption: default values are simple enough to be duplicated
           ((~alt (~seq kw:keyword (~or* [kw-arg kw-default] kw-arg))
                  (~or* [arg default] arg))
            ...)
@@ -44,11 +46,15 @@
              [(eqv? n non-rest-max)
               (values #`[(~? (kwrest #,@args . rest)
                              (kwrest #,@args))
-                         (let* ((~@ [kw-arg (hash-ref kwrest 'kw
-                                                      ;; guarded by reduced arity
-                                                      (~? (lambda () kw-default)))]
-                                    [kwrest (hash-remove kwrest 'kw)])
-                                ...)
+                         (let*-values ([(kw-arg kwrest)
+                                        ;; `unsafe-undefined` cannot be the result of a safe expression
+                                        (~? (let ([val (hash-ref kwrest 'kw unsafe-undefined)])
+                                              (if (eq? val unsafe-undefined)
+                                                  (values kw-default kwrest)
+                                                  (values val (hash-remove kwrest 'kw))))
+                                            ;; guarded by reduced arity
+                                            (values (hash-ref kwrest 'kw) (hash-remove kwrest 'kw)))]
+                                       ...)
                            b ...)]
                       #`[(~? (#,@args . rest)
                              (#,@args))
