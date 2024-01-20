@@ -24,12 +24,6 @@
     [(let-values _ body) (let-body #'body)]
     [_ stx]))
 
-(define (letrec-body stx)
-  (syntax-parse stx
-    #:literals (letrec-values)
-    [(letrec-values _ body) (let-body #'body)]
-    [_ stx]))
-
 (define (let-named stx)
   (syntax-parse stx
     #:literals (let-values)
@@ -38,21 +32,29 @@
      #'e]
     [_ stx]))
 
-(define (lambda-optimized? mod-stx)
+(define (extract-def mod-stx name)
   (syntax-parse mod-stx
-    #:datum-literals (g)
     #:literals ([#%module-begin #%plain-module-begin]
-                [#%app #%plain-app]
+                module
+                define-values)
+    [(module _ _
+       (#%module-begin
+        (~alt (~once (~and (define-values (f) fe)
+                           (~fail #:unless (eq? (syntax-e #'f) name))))
+              _)
+        ...))
+     #'fe]))
+
+(define (lambda-optimized? mod-stx)
+  (define def (extract-def mod-stx 'g))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
                 [lambda #%plain-lambda]
                 #%variable-reference
-                module define-values if
+                if
                 variable-reference-constant?
                 checked-procedure-check-and-extract)
-    [(~and (module _ _
-             (#%module-begin
-              (~alt (~once (define-values (g) ge))
-                    _)
-              ...))
+    [(~and ge
            (~parse (lambda () gb)
                    (let-body #'ge))
            (~parse (if (#%app variable-reference-constant? (#%variable-reference _))
@@ -177,23 +179,15 @@
  })
 
 (define (lambda/kwrest-not-reduced? mod-stx)
-  (syntax-parse mod-stx
-    #:datum-literals (f)
-    #:literals ([#%module-begin #%plain-module-begin]
-                [#%app #%plain-app]
-                module define-values case-lambda
-                make-keyword-procedure)
-    [(~and (module _ _
-             (#%module-begin
-              (~alt (~once (define-values (f) fe))
-                    _)
-              ...))
-           (~parse (#%app make-keyword-procedure _ inner)
-                   (letrec-body #'fe))
-           (~parse (case-lambda . _)
-                   (let-named #'inner)))
-     #t]
-    [_ #f]))
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                procedure-reduce-keyword-arity-mask)
+    [(~and fe
+           (~parse (#%app procedure-reduce-keyword-arity-mask _ _ _ _)
+                   (let-body #'fe)))
+     #f]
+    [_ #t]))
 
 (check-pred lambda/kwrest-not-reduced?
             @get-module['fun/kwrest1]{
@@ -214,15 +208,10 @@
  })
 
 (define ((case-lambda-optimized? match-case) mod-stx)
-  (syntax-parse mod-stx
-    #:datum-literals (f)
-    #:literals ([#%module-begin #%plain-module-begin]
-                module define-values case-lambda)
-    [(~and (module _ _
-             (#%module-begin
-              (~alt (~once (define-values (f) fe))
-                    _)
-              ...))
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals (case-lambda)
+    [(~and fe
            (~parse (~and fn (case-lambda . _))
                    (let-body (let-named #'fe))))
      (match-case #'fn)]
@@ -323,23 +312,7 @@
  })
 
 (define (case-lambda/kwrest-not-reduced? mod-stx)
-  (syntax-parse mod-stx
-    #:datum-literals (f)
-    #:literals ([#%module-begin #%plain-module-begin]
-                [#%app #%plain-app]
-                module define-values case-lambda
-                make-keyword-procedure)
-    [(~and (module _ _
-             (#%module-begin
-              (~alt (~once (define-values (f) fe))
-                    _)
-              ...))
-           (~parse (#%app make-keyword-procedure _ inner)
-                   (let-body #'fe))
-           (~parse (case-lambda . _)
-                   (let-named #'inner)))
-     #t]
-    [_ #f]))
+  (lambda/kwrest-not-reduced? mod-stx))
 
 (check-pred case-lambda/kwrest-not-reduced?
             @get-module['case-fun/kwrest1]{
