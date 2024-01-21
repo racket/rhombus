@@ -36,4 +36,5 @@
                   #'prop:Callable
                   #'Callable-ref
                   #t
-                  #f))
+                  #f
+                  null))

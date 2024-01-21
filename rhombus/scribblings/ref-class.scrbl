@@ -73,6 +73,7 @@
     #,(@rhombus(static_info, ~class_clause)) $static_info_decl
     #,(@rhombus(opaque, ~class_clause))
     #,(@rhombus(prefab, ~class_clause))
+    #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
     $other_class_clause
 ){
 
@@ -351,6 +352,7 @@
     #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
     #,(@rhombus(dot, ~interface_clause)) $dot_decl
     #,(@rhombus(static_info, ~interface_clause)) $static_info_decl
+    #,(@rhombus(primitive_property, ~interface_clause)) $primitive_property_decl
     $other_interface_clause
 
 ){
@@ -565,10 +567,10 @@
      | ...
 
   grammar property_impl:
-    $id $maybe_res_annot: $body
-    Z| $id $maybe_res_annot: $body
-    Z| $id $maybe_res_annot: $body
-     | $id := $binding: $body
+    $id $maybe_res_annot: $body; ...
+    Z| $id $maybe_res_annot: $body; ...
+    Z| $id $maybe_res_annot: $body; ...
+     | $id := $binding: $body; ...
 
   grammar property_decl:
     $id $maybe_res_annot
@@ -1001,7 +1003,6 @@
 }
 
 
-
 @doc(
   expr.macro '$obj with ($id = $expr, ...)'
 ){
@@ -1134,5 +1135,43 @@
  the constructor's arguments.
 
  See @rhombus(with) for an example.
+
+}
+
+
+@doc(
+  class_clause.macro 'primitive_property $expr: $body; ...'
+  interface_clause.macro 'primitive_property $expr: $body; ...'
+){
+
+ A @tech{class clause} or @tech{interface clause} that bridges Rhombus
+ and Racket protocols. When used as a class clause, the enclosing class
+ implements the primitive, Racket-level property produced by
+ @rhombus(expr) with the value produced by @rhombus(body). When used as
+ an interface clause, any class that implements the interface will
+ implement the primitive property with the @rhombus(body) value.
+
+ If the class is not @tech{final}, then any subclass of the class by
+ default implements the property with the same value, but it can specify
+ the same property to produce a different value that replaces the one
+ produced by @rhombus(body). Implementing an interface with
+ @rhombus(implements, ~class_clause), meanwhile, corresponds to writing
+ @rhombus(primitive_property, ~class_clause) for each primitive property
+ inthe interface and its superinterfaces, which means that those
+ properties cannot be immediately overridden with
+ @rhombus(primitive_property, ~class_clause).
+
+ The @rhombus(expr) and @rhombus(body) are evaluated in order relative
+ to surrounding @rhombus(expr) and @rhombus(defn) forms.
+
+@examples(
+  ~defn:
+    import lib("racket/base.rkt")
+    class NamedPosn(name, x, y):
+      primitive_property base.#{prop:object-name}:
+        fun (self): self.name
+  ~repl:
+    base.#{object-name}(NamedPosn("Rumpelstiltskin", 1, 2))
+)
 
 }

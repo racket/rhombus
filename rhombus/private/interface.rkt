@@ -175,6 +175,7 @@
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-param ...)))
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
        (define parent-names (map interface-desc-id supers))
+       (define primitive-properties (hash-ref options 'primitive-properties '()))
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
                        method-names    ; index -> symbol-or-identifier
@@ -271,6 +272,7 @@
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
                                      callable? indexable? setable? appendable?
+                                     primitive-properties
                                      #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name
@@ -339,6 +341,7 @@
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
                                          callable? indexable? setable? appendable?
+                                         primitive-properties
                                          names)
   (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
@@ -372,6 +375,7 @@
                                          (quote-syntax internal-name-ref)
                                          #,custom-annotation?
                                          #f
+                                         null
                                          (quote #,(build-quoted-private-method-list 'method method-private))
                                          (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
@@ -406,4 +410,7 @@
                                            #'super-call-statinfo-indirect)])
                                (if (and id (syntax-e id))
                                    #`(quote-syntax #,id)
-                                   #f)))))))))
+                                   #f))
+                           (list #,@(for/list ([pp (in-list primitive-properties)])
+                                      #`(cons (quote-syntax #,(car pp))
+                                              (quote-syntax #,(cdr pp))))))))))))

@@ -24,7 +24,8 @@
    prop:internal-internal-id
    ref-id
    custom-annotation?
-   indirect-call-method-id)) ; same as `class-desc`
+   indirect-call-method-id ; same as `class-desc`
+   primitive-properties))  ; list of (cons prop-id val-id)
 (struct interface-internal-desc interface-desc (private-methods      ; (list symbol ...)
                                                 private-properties)) ; (list symbol ...)
 

@@ -49,7 +49,8 @@
                   #'prop:Printable
                   #'Printable-ref
                   #t
-                  #f))
+                  #f
+                  null))
 
 
 (define-name-root Printable

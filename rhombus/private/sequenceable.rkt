@@ -37,4 +37,5 @@
                   #'prop:Sequenceable
                   #'Sequenceable-ref
                   #t
-                  #f))
+                  #f
+                  null))

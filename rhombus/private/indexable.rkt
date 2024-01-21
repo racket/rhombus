@@ -77,7 +77,8 @@
                   #'prop:Indexable
                   #'Indexable-ref
                   #t
-                  #f))
+                  #f
+                  null))
 
 (define-annotation-syntax MutableIndexable
   (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-index)
@@ -108,7 +109,8 @@
                   #'prop:MutableIndexable
                   #'MutableIndexable-ref
                   #t
-                  #f))
+                  #f
+                  null))
 
 (define-syntax void-result
   (method-result #'void? #t 1 "Void" #'() 8))
