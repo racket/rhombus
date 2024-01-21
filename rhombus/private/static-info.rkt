@@ -5,7 +5,6 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "srcloc.rkt")
-         "expression.rkt"
          "indirect-static-info-key.rkt"
          "values-key.rkt")
 
@@ -65,22 +64,20 @@
     #:attributes (val)
     #:literals (begin quote-syntax)
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* (in-static-info-space
-                                                   (out-of-expression-space #'id))
+             #:do [(define v (syntax-local-value* (in-static-info-space #'id)
                                                   static-info-ref))
                    (define val (and v
                                     (static-info-lookup ((static-info-get-stxs v)) key-id)))]
              #:when val
              #:with val val)
-    (pattern (begin (quote-syntax (~and form (key:identifier val))) _)
+    (pattern (begin (quote-syntax (key:identifier val)) _)
              #:when (free-identifier=? #'key key-id))
-    (pattern (begin (quote-syntax (~and form (key:identifier indirect-id))) _)
+    (pattern (begin (quote-syntax (key:identifier indirect-id)) _)
              #:when (free-identifier=? #'key #'#%indirect-static-info)
              #:do [(define val (indirect-static-info-ref #'indirect-id key-id))]
              #:when val
              #:with val val)
-    (pattern (begin (quote-syntax _) (~var || (:static-info key-id))))
-    )
+    (pattern (begin (quote-syntax (_:identifier _)) (~var || (:static-info key-id)))))
 
   (define (syntax-local-static-info expr key-id)
     (syntax-parse expr
@@ -105,7 +102,7 @@
                      (syntax->list si)
                      si))]
            [else null])]
-        [(begin (quote-syntax (~and form (key:identifier val))) e)
+        [(begin (quote-syntax (~and form (_:identifier _))) e)
          (cons #'form (loop #'e #t))]
         [_ null])))
 
@@ -132,7 +129,7 @@
   (define (unwrap-static-infos e)
     (syntax-parse e
       #:literals (begin quote-syntax)
-      [(begin (quote-syntax (~and form (key:identifier val))) e)
+      [(begin (quote-syntax (_:identifier _)) e)
        (unwrap-static-infos #'e)]
       [_ e]))
 
@@ -158,7 +155,7 @@
   (define (relocate-wrapped srcloc e)
     (syntax-parse e
       #:literals (begin quote-syntax)
-      [((~and tag begin) (~and qs (quote-syntax (key:identifier val))) e)
+      [((~and tag begin) (~and qs (quote-syntax (_:identifier _))) e)
        (define e2 (relocate-wrapped srcloc #'e))
        (relocate+reraw e2 #`(tag qs #,e2))]
       [_ (relocate+reraw srcloc e)])))
