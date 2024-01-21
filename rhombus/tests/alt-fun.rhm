@@ -375,3 +375,52 @@ check:
     ++ "\n" ++ "bind arg1"
     ++ "\n" ++ "bind rest"
     ++ "\n"
+
+// check constraint on keyword arguments
+check:
+  ~eval
+  fun invalid
+  | invalid(~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun
+  | invalid(~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun
+  | (~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun invalid
+  | invalid(arg1, ~kw: kw1):
+      arg1 + kw1
+  | invalid(~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun
+  | invalid(arg1, ~kw: kw1):
+      arg1 + kw1
+  | invalid(~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun
+  | (arg1, ~kw: kw1):
+      arg1 + kw1
+  | (~kw: kw1, ~kw: kw2):
+      kw1+kw2
+  ~throws "duplicate keyword for argument"

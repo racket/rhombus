@@ -330,6 +330,19 @@ check:
     arg1+arg2
   ~throws "default-value expression missing"
 
+// check constraint on keyword arguments
+check:
+  ~eval
+  fun invalid(~kw: kw1, ~kw: kw2):
+    kw1+kw2
+  ~throws "duplicate keyword for argument"
+
+check:
+  ~eval
+  fun (~kw: kw1, ~kw: kw2):
+    kw1+kw2
+  ~throws "duplicate keyword for argument"
+
 // check block-style keyword arguments
 check:
   fun f(~x: x): x

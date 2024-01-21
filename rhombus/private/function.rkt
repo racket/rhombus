@@ -209,6 +209,21 @@
                             stx
                             arg))
       default?)
+    (void))
+
+  ;; check uniqueness constraint on keyword arguments
+  (define (check-keyword-args stx args kws)
+    (for/fold ([seen-kws #hasheq()])
+              ([arg (in-list args)]
+               [kw (in-list kws)]
+               #:when (syntax-e kw))
+      (when (hash-ref seen-kws (syntax-e kw) #f)
+        (raise-syntax-error #f
+                            "duplicate keyword for argument"
+                            stx
+                            arg
+                            (list kw)))
+      (hash-set seen-kws (syntax-e kw) #t))
     (void)))
 
 (define-syntax fun
@@ -232,6 +247,9 @@
          (define names (syntax->list #'(name.name ...)))
          (define the-name (car names))
          (check-consistent stx names "name")
+         (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
+               [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
+           (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
          (define-values (proc arity)
            (build-case-function no-adjustments
                                 the-name
@@ -260,6 +278,9 @@
          (define names (syntax->list #'(name.name ...)))
          (define the-name #'main-name.name)
          (check-consistent stx (cons the-name names) "name" #:has-main? #t)
+         (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
+               [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
+           (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
          (define-values (proc arity)
            (build-case-function no-adjustments
                                 the-name
@@ -280,10 +301,11 @@
                   ret::ret-annotation
                   (~and rhs (_::block body ...)))
          #:with name::dotted-identifier #'name-seq
-         (check-optional-args stx
-                              (syntax->list #'(arg ...))
-                              (syntax->list #'(arg.kw ...))
-                              (syntax->list #'(arg.default ...)))
+         (define args (syntax->list #'(arg ...)))
+         (define kws (syntax->list #'(arg.kw ...)))
+         (define defaults (syntax->list #'(arg.default ...)))
+         (check-optional-args stx args kws defaults)
+         (check-keyword-args stx args kws)
          (define-values (proc arity)
            (build-function no-adjustments
                            #'name.name
@@ -339,6 +361,9 @@
                 (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
                        (~and rhs (_::block body ...))))
                ...+))
+     (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
+           [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
+       (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
      (define-values (proc arity)
        (build-case-function adjustments
                             (get-local-name #'form-id)
@@ -358,10 +383,11 @@
     ;; single-alterative case
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
               (~and rhs (_::block body ...)))
-     (check-optional-args stx
-                          (syntax->list #'(arg ...))
-                          (syntax->list #'(arg.kw ...))
-                          (syntax->list #'(arg.default ...)))
+     (define args (syntax->list #'(arg ...)))
+     (define kws (syntax->list #'(arg.kw ...)))
+     (define defaults (syntax->list #'(arg.default ...)))
+     (check-optional-args stx args kws defaults)
+     (check-keyword-args stx args kws)
      (define-values (fun arity)
        (build-function adjustments
                        (get-local-name #'form-id)
