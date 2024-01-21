@@ -45,7 +45,8 @@
                   #'prop:Equatable
                   #'Equatable-ref
                   #t
-                  #f))
+                  #f
+                  null))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))

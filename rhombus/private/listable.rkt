@@ -39,7 +39,8 @@
                   #'prop:Listable
                   #'Listable-ref
                   #t
-                  #f))
+                  #f
+                  null))
 
 (define-annotation-syntax Listable
   (identifier-annotation #'listable? #'((#%dot-provider listable-instance))))

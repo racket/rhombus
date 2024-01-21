@@ -1,0 +1,71 @@
+#lang rhombus/and_meta
+import:
+  lib("file/convertible.rkt") as rkt
+
+block:
+  class Posn(x, y):
+    primitive_property rkt.#{prop:convertible}:
+      fun (self :~ Posn, req, default):
+        if req == #'text
+        | "<" +& self.x +& ", " +& self.y +& ">"
+        | default
+
+  check rkt.#{convertible?}(Posn(1, 2)) ~is #true
+  check rkt.convert(Posn(1, 2), #'text) ~is "<1, 2>"
+  check rkt.convert(Posn(1, 2), #'#{pkg-bytes}) ~is #false
+
+block:
+  interface Noisy:
+    primitive_property rkt.#{prop:convertible}:
+      fun (self :~ Posn, req, default):
+        if req == #'text
+        | "HI!"
+        | default
+  interface StillNoisy:
+    extends Noisy
+  class Posn(x, y):
+    nonfinal
+    implements Noisy
+  class Posn3D(z):
+    extends Posn
+  class ColorPosn(c):
+    extends Posn
+    implements Noisy
+  class HeavyPosn(w):
+    extends Posn
+    // overrides `Noisy` property value:
+    primitive_property rkt.#{prop:convertible}:
+      fun (self :~ Posn, req, default):
+        if req == #'text
+        | "<thump>"
+        | default
+  class Point(x, y):
+    implements StillNoisy
+
+  check rkt.#{convertible?}(Posn(1, 2)) ~is #true
+  check rkt.#{convertible?}(Posn3D(1, 2, 3)) ~is #true
+  check rkt.#{convertible?}(ColorPosn(1, 2, "red")) ~is #true
+  check rkt.#{convertible?}(HeavyPosn(1, 2, 100)) ~is #true
+  check rkt.#{convertible?}(Point(1, 2)) ~is #true
+
+  check rkt.convert(Posn(1, 2), #'text) ~is "HI!"
+  check rkt.convert(Posn3D(1, 2, 3), #'text) ~is "HI!"
+  check rkt.convert(ColorPosn(1, 2, "red"), #'text) ~is "HI!"
+  check rkt.convert(HeavyPosn(1, 2, 100), #'text) ~is "<thump>"
+  check rkt.convert(Point(1, 2), #'text) ~is "HI!"
+
+  check:
+    class ConfusedPosn(w):
+      extends Posn
+      implements Noisy
+      primitive_property rkt.#{prop:convertible}:
+        fun (self :~ Posn, req, default): default
+    #void
+    ~throws "duplicate property binding"
+  check:
+    class ConfusedPosn(w):
+      implements Noisy
+      primitive_property rkt.#{prop:convertible}:
+        fun (self :~ Posn, req, default): default
+    #void
+    ~throws "duplicate property binding"

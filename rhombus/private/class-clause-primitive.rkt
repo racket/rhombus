@@ -13,6 +13,7 @@
          "interface-clause.rkt"
          "veneer-clause.rkt"
          (submod "annotation.rkt" for-class)
+         "parse.rkt"
          "parens.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
@@ -20,7 +21,8 @@
          (only-in "function.rkt" fun)
          (submod "function.rkt" for-method)
          (only-in "implicit.rkt" #%body)
-         "op-literal.rkt")
+         "op-literal.rkt"
+         "realm.rkt")
 
 (provide (for-space rhombus/class_clause
                     nonfinal
@@ -46,7 +48,8 @@
          (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
                      internal
-                     abstract)
+                     abstract
+                     primitive_property)
          (for-space rhombus/veneer_clause
                     converter))
 
@@ -462,6 +465,40 @@
   (class-clause-transformer parse-abstract-clause))
 (define-interface-clause-syntax abstract
   (interface-clause-transformer parse-abstract-clause))
+
+(define-for-syntax parse-class-primitive-property
+  (lambda (stx data)
+    (syntax-parse stx
+      [(form prop_expr ... (b-tag::block val_body ...))
+       #`[(group (parsed #:rhombus/defn
+                         [(define prop (check-primitive-property
+                                        'form
+                                        (rhombus-expression (group prop_expr ...))))
+                          (define prop-val (rhombus-body-at b-tag val_body ...))]))
+          (group primitive_property_finish prop prop-val)]])))
+
+(define (check-primitive-property who v)
+  (unless (struct-type-property? v)
+    (raise-argument-error* who rhombus-realm "PrimitiveProperty" v))
+  v)
+
+(define-class-clause-syntax primitive_property
+  (class-clause-transformer parse-class-primitive-property))
+
+(define-interface-clause-syntax primitive_property
+  (interface-clause-transformer parse-class-primitive-property))
+
+(define-for-syntax parse-class-primitive-property-finish
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ prop-id prop-val-id)
+       (wrap-class-clause #'(#:primitive-property prop-id prop-val-id))])))
+
+(define-class-clause-syntax primitive_property_finish
+  (class-clause-transformer parse-class-primitive-property-finish))
+
+(define-interface-clause-syntax primitive_property_finish
+  (interface-clause-transformer parse-class-primitive-property-finish))
 
 (define-for-syntax (same-return-signature? a b)
   (cond

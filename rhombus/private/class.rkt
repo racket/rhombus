@@ -279,6 +279,7 @@
        (define prefab? (hash-ref options 'prefab? #f))
        (define final? (hash-ref options 'final? (not prefab?)))
        (define opaque? (hash-ref options 'opaque? #f))
+       (define primitive-properties (hash-ref options 'primitive-properties '()))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
        (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
@@ -584,6 +585,7 @@
                                    abstract-name
                                    interfaces private-interfaces
                                    has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
+                                   primitive-properties
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
                                            reconstructor-name
                                            [public-field-name ...]
@@ -728,6 +730,7 @@
                                        abstract-name
                                        interfaces private-interfaces
                                        has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
+                                       primitive-properties
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
                        reconstructor-name
@@ -796,6 +799,29 @@
                           #:super (and prefab?
                                        super
                                        (class-desc-prefab-guard-id super))))
+      (define all-interfaces
+        (close-interfaces-over-superinterfaces
+         (if abstract-name
+             ;; for interface-implementing properties, an abstract class defers to
+             ;; subclasses for public interfaces
+             null
+             ;; otherwise, always implement interface properties from superclasses,
+             ;; because it's a vtable that needs to refer to this class's implementations
+             (append (if super
+                         (interface-names->interfaces
+                          #f
+                          (let ([l (objects-desc-interface-ids super)])
+                            (if (null? l)
+                                null
+                                (syntax->list l))))
+                         null)
+                     interfaces))
+         private-interfaces))
+      (define all-prim-prop-interfaces
+        ;; for primitive properties, we only need to cover immediately
+        ;; implemented interfaces; values can be inherited from superclasses
+        (close-interfaces-over-superinterfaces interfaces
+                                               private-interfaces))
       (append
        (list
         #`(define-values (class:name primitive-make-name name? name-field ... set-name-field! ...)
@@ -867,19 +893,12 @@
                                                                  '()
                                                                  (list #`(cons prop:methods
                                                                                (vector #,@(vector->list method-vtable)))))
-                                                          #,@(for/list ([intf (in-list (close-interfaces-over-superinterfaces
-                                                                                        (if abstract-name
-                                                                                            null
-                                                                                            (append (if super
-                                                                                                        (interface-names->interfaces
-                                                                                                         #f
-                                                                                                         (let ([l (objects-desc-interface-ids super)])
-                                                                                                           (if (null? l)
-                                                                                                               null
-                                                                                                               (syntax->list l))))
-                                                                                                        null)
-                                                                                                    interfaces))
-                                                                                        private-interfaces))])
+                                                          #,@(for/list ([pp (in-list primitive-properties)])
+                                                               #`(cons #,(car pp) #,(cdr pp)))
+                                                          #,@(for*/list ([intf (in-list all-prim-prop-interfaces)]
+                                                                         [pp (in-list (interface-desc-primitive-properties intf))])
+                                                               #`(cons #,(car pp) #,(cdr pp)))
+                                                          #,@(for/list ([intf (in-list all-interfaces)])
                                                                #`(cons #,(interface-desc-prop:id intf)
                                                                        (vector #,@(build-interface-vtable intf
                                                                                                           method-mindex method-vtable method-names
