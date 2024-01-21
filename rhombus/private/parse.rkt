@@ -233,8 +233,9 @@
     (transform-out ; see `enforest-rhombus-expression`
      (syntax-parse (syntax-local-introduce (transform-in stx))
        #:datum-literals (group parsed)
+       #:literals (maybe-definition)
        [(_) #'(begin)]
-       [(_ (group (parsed #:rhombus/expr ((~literal maybe-definition) e))) . tail)
+       [(_ (group (parsed #:rhombus/expr (maybe-definition e))) . tail)
         #`(begin e . tail)]
        [(_ e::definition-sequence . tail)
         (define-values (parsed new-tail)

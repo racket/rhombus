@@ -401,13 +401,16 @@
   (let loop ([stx (unpack-term stx who #f)])
     (syntax-parse stx
       #:datum-literals (parsed group)
+      #:literals (chain-to-matcher
+                  chain-to-committer
+                  chain-to-binder)
       [(_::parens name-str-g
                   name-id-g
                   static-infos-g
                   bind-ids-g
-                  (group (~literal chain-to-matcher))
-                  (group (~literal chain-to-committer))
-                  (group (~literal chain-to-binder))
+                  (group chain-to-matcher)
+                  (group chain-to-committer)
+                  (group chain-to-binder)
                   (group (parsed #:rhombus/bind/info/chain
                                  (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
        ;; hacky: remove indirection to get back to Racket forms

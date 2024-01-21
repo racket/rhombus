@@ -89,6 +89,7 @@
 (define-for-syntax (forwarding-sequence-step stx get-expand-context local-introduce)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
+      #:literals (quote)
       [(_ [state base-ctx add-ctx remove-ctx stx-params])
        (define forms #`(begin #,@(reverse accum)))
        (syntax-parse #'state
@@ -107,7 +108,7 @@
          [(#:block #f orig)
           (raise-syntax-error #f "block does not end with an expression" #'orig)]
          [_ forms])]
-      [(_ [state base-ctx add-ctx remove-ctx stx-params] (~and form ((~literal quote) v)) . forms)
+      [(_ [state base-ctx add-ctx remove-ctx stx-params] (~and form (quote v)) . forms)
        (loop #'(_ state base-ctx add-ctx remove-ctx stx-params . forms)
              (cons (syntax-parse #'state
                      [(#:module #f) #'form]

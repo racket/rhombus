@@ -46,27 +46,35 @@
            (reverse vars))]
          [else
           (define def (car defs))
-          (define (keep-stx)
-            (loop (cdr defs) (cons def stxs) vars var-names))
           (syntax-parse def
-            [((~literal begin) d ...)
+            #:literals (begin
+                        define define-values
+                        define-syntax define-syntaxes
+                        define-class-desc-syntax
+                        define-name-root
+                        define-binding-syntax
+                        define-annotation-syntax define-annotation-constructor
+                        define-dot-provider-syntax
+                        define-update-syntax
+                        define-method-result-syntax)
+            [(begin d ...)
              (loop (append (syntax->list #'(d ...)) (cdr defs)) stxs vars var-names)]
-            [((~literal define) (id . _) . _)
+            [(~or* (define (id . _) . _)
+                   (define id _))
              (loop (cdr defs) stxs (cons def vars) (cons #'id var-names))]
-            [((~literal define) id rhs)
-             (loop (cdr defs) stxs (cons def vars) (cons #'id var-names))]
-            [((~literal define-values) (id ...) rhs)
+            [(define-values (id ...) _)
              (loop (cdr defs) stxs (cons def vars) (append (syntax->list #'(id ...)) var-names))]
-            [((~literal define-syntax) . _) (keep-stx)]
-            [((~literal define-syntaxes) . _) (keep-stx)]
-            [((~literal define-class-desc-syntax) . _) (keep-stx)]
-            [((~literal define-name-root) . _) (keep-stx)]
-            [((~literal define-binding-syntax) . _) (keep-stx)]
-            [((~literal define-annotation-syntax) . _) (keep-stx)]
-            [((~literal define-annotation-constructor) . _) (keep-stx)]
-            [((~literal define-dot-provider-syntax) . _) (keep-stx)]
-            [((~literal define-update-syntax) . _) (keep-stx)]
-            [((~literal define-method-result-syntax) . _) (keep-stx)]
+            [(~or* (define-syntax . _)
+                   (define-syntaxes . _)
+                   (define-class-desc-syntax . _)
+                   (define-name-root . _)
+                   (define-binding-syntax . _)
+                   (define-annotation-syntax . _)
+                   (define-annotation-constructor . _)
+                   (define-dot-provider-syntax . _)
+                   (define-update-syntax . _)
+                   (define-method-result-syntax . _))
+             (loop (cdr defs) (cons def stxs) vars var-names)]
             [_
              (loop (cdr defs) stxs (cons def vars) var-names)])]))]
     [else defs]))

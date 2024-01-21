@@ -301,8 +301,9 @@
     (define (strip-prefix r mp)
       (let strip ([r r])
         (syntax-parse r
-          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in only-meta-in
-                                only-spaces-in except-spaces-in)
+          #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
+                                      rhombus-prefix-in only-spaces-in except-spaces-in
+                                      only-space-in only-meta-in)
           [#f mp]
           [((~and tag (~or* rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in))
             mp . rest)
@@ -311,7 +312,7 @@
            #`(tag phase #,(strip #'mp))]
           [((~and tag only-space-in) space mp)
            #`(tag space #,(strip #'mp))]
-          [((~literal rhombus-prefix-in) mp . _) (strip #'mp)]
+          [(rhombus-prefix-in mp . _) (strip #'mp)]
           [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
     (define any-space-limited?
