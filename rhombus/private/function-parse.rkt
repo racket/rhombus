@@ -5,7 +5,6 @@
                      enforest/name-parse
                      shrubbery/print
                      "treelist.rkt"
-                     "hash-set.rkt"
                      "srcloc.rkt"
                      "tag.rkt"
                      "same-expression.rkt"

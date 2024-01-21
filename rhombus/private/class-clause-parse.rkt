@@ -7,7 +7,9 @@
          "entry-point.rkt"
          "parens.rkt"
          (only-in "syntax-parameter.rkt"
-                  syntax-parameters-key))
+                  syntax-parameters-key)
+         (only-in "function-arity.rkt"
+                  shift-arity))
 
 (provide (for-syntax extract-internal-ids
                      make-expose
@@ -345,9 +347,7 @@
 
 (define-for-syntax (method-shape-extract shapes private-methods private-properties key)
   (define (unwrap a) (if (vector? a) (vector-ref a 0) a))
-  (define (unshift-arity a) (and a (if (integer? a)
-                                       (quotient a 2)
-                                       (cons (quotient (car a) 2) (cdr a)))))
+  (define (unshift-arity a) (and a (shift-arity a -1)))
   (case key
     [(method_names)
      (append

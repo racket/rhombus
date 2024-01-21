@@ -12,7 +12,9 @@
          "index-key.rkt"
          "append-key.rkt"
          "values-key.rkt"
-         (submod "function-parse.rkt" for-build))
+         (submod "function-parse.rkt" for-build)
+         (only-in "function-arity.rkt"
+                  shift-arity))
 
 (provide define-method-result-syntax)
 
@@ -187,8 +189,11 @@
                         #:box-id? #t))]))
 
 (define-for-syntax (de-method-arity arity)
-  (syntax-parse arity
-    [(n . kws)
-     (datum->syntax arity (cons (de-method-arity #'n) #'kws))]
-    [n
-     (datum->syntax arity (quotient (syntax-e #'n) 2))]))
+  (datum->syntax #f
+                 (shift-arity
+                  (syntax-parse arity
+                    [(n required-kws allowed-kws)
+                     (list (syntax-e #'n) #'required-kws #'allowed-kws)]
+                    [n
+                     (syntax-e #'n)])
+                  -1)))

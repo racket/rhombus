@@ -3,8 +3,7 @@
                      racket/keyword
                      racket/symbol
                      shrubbery/property
-                     "statically-str.rkt"
-                     "hash-set.rkt"))
+                     "statically-str.rkt"))
 
 (provide (for-syntax summarize-arity
                      shift-arity
@@ -15,20 +14,18 @@
   (define (syntax->list/maybe stx)
     (if (syntax? stx) (syntax->list stx) stx))
   (define (make-arity bit mask allowed-kws required-kws)
-    (define (hash->list/keyword kws)
-      (sort (hash-keys kws) keyword<?))
     (define a (bitwise-ior mask
                            (if rest?
                                (bitwise-xor -1 (sub1 bit))
                                bit)))
     (cond
-      [kw-rest? (list a (hash->list/keyword required-kws) #f)]
-      [(eqv? (hash-count allowed-kws) 0) a]
-      [else (list a (hash->list/keyword required-kws) (hash->list/keyword allowed-kws))]))
+      [kw-rest? (list a (sort required-kws keyword<?) #f)]
+      [(null? allowed-kws) a]
+      [else (list a (sort required-kws keyword<?) (sort allowed-kws keyword<?))]))
   (for/fold ([bit 1]
              [mask 0]
-             [allowed-kws #hasheq()]
-             [required-kws #hasheq()]
+             [allowed-kws '()]
+             [required-kws '()]
              #:result (make-arity bit mask allowed-kws required-kws))
             ([kw (in-list (syntax->list/maybe kws))]
              [default (in-list (syntax->list/maybe defaults))])
@@ -36,10 +33,10 @@
       [(syntax-e kw)
        (values bit
                mask
-               (hash-set allowed-kws (syntax-e kw) #t)
+               (cons (syntax-e kw) allowed-kws)
                (if (syntax-e default)
                    required-kws
-                   (hash-set required-kws (syntax-e kw) #t)))]
+                   (cons (syntax-e kw) required-kws)))]
       [else
        (values (arithmetic-shift bit 1)
                (if (syntax-e default)
@@ -53,6 +50,30 @@
       (list (arithmetic-shift (car a) shift) (cadr a) (caddr a))
       (arithmetic-shift a shift)))
 
+(define-for-syntax (list->hash l)
+  (for/hasheq ([v (in-list l)])
+    (values v #t)))
+
+(define-for-syntax (hash->list ht)
+  (sort (hash-keys ht) keyword<?))
+
+(define-for-syntax (hash-intersect a b)
+  (let-values ([(a b)
+                (if ((hash-count a) . <= . (hash-count b))
+                    (values a b)
+                    (values b a))])
+    (for/hasheq ([k (in-hash-keys b)]
+                 #:when (hash-ref a k #f))
+      (values k #t))))
+
+(define-for-syntax (hash-union a b)
+  (let-values ([(a b)
+                (if ((hash-count a) . >= . (hash-count b))
+                    (values a b)
+                    (values b a))])
+    (for/fold ([a a]) ([k (in-hash-keys b)])
+      (hash-set a k #t))))
+
 (define-for-syntax (union-arity-summaries as)
   (cond
     [(null? as) #f]
@@ -60,16 +81,16 @@
     [else
      (define (normalize a)
        (if (pair? a)
-           (list (car a) (list->set (cadr a)) (and (caddr a) (list->set (caddr a))))
+           (list (car a) (list->hash (cadr a)) (and (caddr a) (list->hash (caddr a))))
            (list a #hasheq() #hasheq())))
      (define norm-a
        (for/fold ([new-a (normalize (car as))]) ([a (in-list (cdr as))])
          (let ([a (normalize a)])
            (list (bitwise-ior (car new-a) (car a))
-                 (set-intersect (cadr new-a) (cadr a))
-                 (and (caddr new-a) (caddr a) (set-union (caddr new-a) (caddr a)))))))
-     (define required-kws (sort (set->list (cadr norm-a)) keyword<?))
-     (define allowed-kws (and (caddr norm-a) (sort (set->list (caddr norm-a)) keyword<?)))
+                 (hash-intersect (cadr new-a) (cadr a))
+                 (and (caddr new-a) (caddr a) (hash-union (caddr new-a) (caddr a)))))))
+     (define required-kws (hash->list (cadr norm-a)))
+     (define allowed-kws (and (caddr norm-a) (hash->list (caddr norm-a))))
      (if (and (null? required-kws)
               (null? allowed-kws))
          (car norm-a)
@@ -77,8 +98,7 @@
 
 (define-for-syntax (check-arity stx fallback-stx a n kws rsts kwrsts kind)
   (define orig-needed (if (pair? a)
-                          (for/hasheq ([kw (in-list (cadr a))])
-                            (values kw #t))
+                          (list->hash (cadr a))
                           #hasheq()))
   (define (error-stx) (or stx (let ([s (syntax-raw-property fallback-stx)])
                                 (if (string? s)
@@ -118,8 +138,7 @@
        (define allowed (or allowed-kws
                            (if (pair? a)
                                (and (caddr a)
-                                    (for/hasheq ([kw (in-list (caddr a))])
-                                      (values kw #t)))
+                                    (list->hash (caddr a)))
                                #hasheq())))
        (when (and allowed
                   (not (hash-ref allowed kw #f)))
