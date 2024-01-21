@@ -44,14 +44,14 @@
                     ([n (in-inclusive-range non-rest-min non-rest-max)])
            (cond
              [(eqv? n non-rest-max)
-              (values #`[(~? (ks vs #,@args . rest)
-                             (ks vs #,@args))
-                         (~? (apply entry (keyword-lists->hash ks vs) #,@args rest)
-                             (entry (keyword-lists->hash ks vs) #,@args))]
-                      #`[(~? (#,@args . rest)
-                             (#,@args))
-                         (~? (apply entry '#hashalw() #,@args rest)
-                             (entry '#hashalw() #,@args))])]
+              (values #`(~? [(ks vs #,@args . rest)
+                             (entry (keyword-lists->hash ks vs) #,@args rest)]
+                            [(ks vs #,@args)
+                             (entry (keyword-lists->hash ks vs) #,@args)])
+                      #`(~? [(#,@args . rest)
+                             (entry '#hashalw() #,@args rest)]
+                            [(#,@args)
+                             (entry '#hashalw() #,@args)]))]
              [else
               (define given-args
                 (for/list ([arg (in-list args)]
@@ -59,11 +59,13 @@
                   arg))
               (define unsupplied-args
                 (list-tail defaults (- n non-rest-min)))
+              (define maybe-rest-arg
+                (if (attribute rest) (list #''()) '()))
               (values #`[(ks vs #,@given-args)
-                         (entry (keyword-lists->hash ks vs) #,@given-args #,@unsupplied-args)]
+                         (entry (keyword-lists->hash ks vs) #,@given-args #,@unsupplied-args #,@maybe-rest-arg)]
                       #`[(#,@given-args)
-                         (entry '#hashalw() #,@given-args #,@unsupplied-args)])])))
-       #`(let ([entry (lambda (~? (kwrest arg ... . rest)
+                         (entry '#hashalw() #,@given-args #,@unsupplied-args #,@maybe-rest-arg)])])))
+       #`(let ([entry (lambda (~? (kwrest arg ... rest)
                                   (kwrest arg ...))
                         (let*-values ([(kw-arg kwrest)
                                        ;; `unsafe-undefined` cannot be the result of a safe expression
@@ -112,24 +114,24 @@
        #:with (entry ...) (generate-temporaries
                            (for/list ([_ (in-list (syntax->list #'(claw ...)))])
                              'entry))
-       #`(let ([entry (lambda (~? (kwrest arg ... . rest)
+       #`(let ([entry (lambda (~? (kwrest arg ... rest)
                                   (kwrest arg ...))
                         b ...)]
                ...)
            #,(make-procedure-reduce-keyword-arity-mask
               #`(make-keyword-procedure
                  (let ([kw-proc (case-lambda
-                                  [(~? (ks vs arg ... . rest)
-                                       (ks vs arg ...))
-                                   (~? (apply entry (keyword-lists->hash ks vs) arg ... rest)
-                                       (entry (keyword-lists->hash ks vs) arg ...))]
+                                  (~? [(ks vs arg ... . rest)
+                                       (entry (keyword-lists->hash ks vs) arg ... rest)]
+                                      [(ks vs arg ...)
+                                       (entry (keyword-lists->hash ks vs) arg ...)])
                                   ...)])
                    kw-proc)
                  (let ([name (case-lambda
-                               [(~? (arg ... . rest)
-                                    (arg ...))
-                                (~? (apply entry '#hashalw() arg ... rest)
-                                    (entry '#hashalw() arg ...))]
+                               (~? [(arg ... . rest)
+                                    (entry '#hashalw() arg ... rest)]
+                                   [(arg ...)
+                                    (entry '#hashalw() arg ...)])
                                ...)])
                    name))
               #'arity))])))

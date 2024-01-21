@@ -189,23 +189,54 @@
      #f]
     [_ #t]))
 
+(define (lambda/kwrest-no-apply? mod-stx)
+  (define (no-apply? proc-stx)
+    (syntax-parse proc-stx
+      #:literals ([#%app #%plain-app]
+                  case-lambda
+                  apply)
+      [(case-lambda
+         [_ (#%app _ ...)]
+         ...
+         [_ (#%app apply _ ...)]
+         [_ (#%app _ ...)]
+         ...)
+       #f]
+      [_ #t]))
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                procedure-reduce-keyword-arity-mask
+                make-keyword-procedure)
+    [(~and fe
+           (~parse (~or (#%app procedure-reduce-keyword-arity-mask inner _ _ _)
+                        inner)
+                   (let-body #'fe))
+           (~parse (#%app make-keyword-procedure kw-proc proc)
+                   #'inner))
+     (and (no-apply? (let-named #'kw-proc))
+          (no-apply? (let-named #'proc)))]
+    [_ #f]))
+
 (check-pred lambda/kwrest-not-reduced?
             @get-module['fun/kwrest1]{
  fun f(~& kwrest):
    kwrest
  })
 
-(check-pred lambda/kwrest-not-reduced?
-            @get-module['fun/kwrest2]{
- fun f(& _, ~& kwrest):
-   kwrest
- })
+(let ([mod-stx @get-module['fun/kwrest2]{
+        fun f(& _, ~& kwrest):
+          kwrest
+        }])
+  (check-pred lambda/kwrest-not-reduced? mod-stx)
+  (check-pred lambda/kwrest-no-apply? mod-stx))
 
-(check-pred lambda/kwrest-not-reduced?
-            @get-module['fun/kwrest3]{
- fun f(_, & _, ~& kwrest):
-   kwrest
- })
+(let ([mod-stx @get-module['fun/kwrest3]{
+        fun f(_, & _, ~& kwrest):
+          kwrest
+        }])
+  (check-pred lambda/kwrest-not-reduced? mod-stx)
+  (check-pred lambda/kwrest-no-apply? mod-stx))
 
 (define ((case-lambda-optimized? match-case) mod-stx)
   (define def (extract-def mod-stx 'f))
@@ -314,22 +345,27 @@
 (define (case-lambda/kwrest-not-reduced? mod-stx)
   (lambda/kwrest-not-reduced? mod-stx))
 
+(define (case-lambda/kwrest-no-apply? mod-stx)
+  (lambda/kwrest-no-apply? mod-stx))
+
 (check-pred case-lambda/kwrest-not-reduced?
             @get-module['case-fun/kwrest1]{
  fun
  | f(~& kwrest): kwrest
  })
 
-(check-pred case-lambda/kwrest-not-reduced?
-            @get-module['case-fun/kwrest2]{
- fun
- | f(& rest): rest
- | f(~& kwrest): kwrest
- })
+(let ([mod-stx @get-module['case-fun/kwrest2]{
+        fun
+        | f(& rest): rest
+        | f(~& kwrest): kwrest
+        }])
+  (check-pred case-lambda/kwrest-not-reduced? mod-stx)
+  (check-pred case-lambda/kwrest-no-apply? mod-stx))
 
-(check-pred case-lambda/kwrest-not-reduced?
-            @get-module['case-fun/kwrest3]{
- fun
- | f(_, & rest): rest
- | f(~& kwrest): kwrest
- })
+(let ([mod-stx @get-module['case-fun/kwrest3]{
+        fun
+        | f(_, & rest): rest
+        | f(~& kwrest): kwrest
+        }])
+  (check-pred case-lambda/kwrest-not-reduced? mod-stx)
+  (check-pred case-lambda/kwrest-no-apply? mod-stx))
