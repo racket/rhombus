@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      "consistent.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct))
+         racket/keyword
          "treelist.rkt"
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
@@ -62,18 +63,57 @@
     (raise-argument-error* who rhombus-realm "List" l)))
 
 (define (check-proc-arity who fn n)
+  (define (make-msg why)
+    (string-append "argument mismatch;\n " why))
+  (define (keyword->string kw)
+    (string-append "~" (keyword->immutable-string kw)))
+  (define (single-arity->string a)
+    (cond
+      [(arity-at-least? a) (string-append
+                            "at least "
+                            (number->string (arity-at-least-value a)))]
+      [else (number->string a)]))
+  (define (list->string ->string sep lst)
+    (cond
+      [(null? (cdr lst))
+       (->string (car lst))]
+      [(null? (cddr lst))
+       (string-append (->string (car lst))
+                      " " sep " "
+                      (->string (cadr lst)))]
+      [else
+       (for/foldr ([strs '()]
+                   [idx 0]
+                   #:result (apply string-append strs))
+                  ([elem (in-list lst)])
+         (values
+          (case idx
+            [(0) (cons (->string elem) strs)]
+            [(1) (list* (->string elem) ", " sep " " strs)]
+            [else (list* (->string elem) ", " strs)])
+          (add1 idx)))]))
   (unless (procedure-arity-includes? fn n)
-    (apply raise-arguments-error* who rhombus-realm
-           (string-append
-            "map: argument mismatch;\n"
-            " the given function's expected number of arguments does not match the given number of lists")
-           "given function" fn
-           (append
-            (let ([a (procedure-arity fn)])
-              (if (number? a)
-                  (list "expected" (unquoted-printing-string (number->string a)))
-                  null))
-            (list "given" (unquoted-printing-string "1"))))))
+    (define-values (required-kws allowed-kws) (procedure-keywords fn))
+    (cond
+      [(pair? required-kws)
+       (raise-arguments-error*
+        who rhombus-realm
+        (make-msg "the given function expects keyword arguments")
+        "given function" fn
+        "required keywords" (unquoted-printing-string
+                             (list->string keyword->string "and" required-kws)))]
+      [else
+       (raise-arguments-error*
+        who rhombus-realm
+        (make-msg "the given function's expected number of arguments does not match the given number of lists")
+        "given function" fn
+        "expected" (unquoted-printing-string
+                    (let ([a (procedure-arity fn)])
+                      (cond
+                        [(null? a) "nothing (cannot be called)"]
+                        [(pair? a) (list->string single-arity->string "or" a)]
+                        [else (single-arity->string a)])))
+        "given" (unquoted-printing-string (number->string n)))])))
 
 (define (check-list-length who fn l1 l2)
   (unless (= (treelist-length l1) (treelist-length l2))
