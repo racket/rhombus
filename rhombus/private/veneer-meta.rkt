@@ -14,7 +14,8 @@
                    class-clause-extract
                    method-shape-extract))
          "call-result-key.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "pack.rkt")
 
 (provide (for-space rhombus/namespace
                     veneer_meta))
@@ -93,9 +94,14 @@
                              "unrecognized key symbol"
                              "symbol" key)]))
 
-(define (describe who id)
+(define (unpack-identifier who id-in)
+  (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id))
+    (raise-argument-error* who rhombus-realm "Identifier" id-in))
+  id)
+
+(define (describe who id-in)
+  (define id (unpack-identifier who id-in))
   (define desc (syntax-local-value* (in-class-desc-space id) veneer-desc-ref))
   (unless desc
     (raise-arguments-error* who rhombus-realm

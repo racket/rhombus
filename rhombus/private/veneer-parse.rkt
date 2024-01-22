@@ -1,6 +1,5 @@
 #lang racket/base
-(require enforest/syntax-local
-         (only-in "class-parse.rkt"
+(require (only-in "class-parse.rkt"
                   objects-desc))
 
 (provide (struct-out veneer-desc)

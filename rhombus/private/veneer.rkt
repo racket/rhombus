@@ -69,7 +69,7 @@
   class-clause-accum)
 
 ;; First phase of `veneer` output: bind the annotation form, so it can be used
-;; in body foelds
+;; in body fields
 (define-syntax veneer-annotation+finish
   (lambda (stx)
     (syntax-parse stx

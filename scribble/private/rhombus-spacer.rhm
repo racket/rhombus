@@ -11,6 +11,7 @@ export:
     operator
     class
     interface
+    veneer
     extends
     implements
     field
@@ -443,12 +444,38 @@ spacer.bridge interface(self, tail, context, esc):
       '$self $name $new_body'
   | ~else: '$self $tail'
 
+meta:
+  def veneer_spaces = [#'#{rhombus/veneer_clause}, & body_spaces]
+
+spacer.bridge veneer(self, tail, context, esc):
+  ~in: ~defn
+  fun adjust_args(args):
+    match args
+    | '($(decl :: Group
+            && '$(this && 'this') $(ann :: Ann)'))':
+        let new_decl:
+          let new_this = spacer.set(this, #'~expr)
+          let new_ann = adjust_ann(ann, esc)
+          '$new_this $new_ann'.relocate(decl)
+        '($new_decl)'.relocate(args)
+    | ~else: args
+  match tail
+  | '$(name :: Name(esc)) $(args :: Args)
+       $(pattern:
+           kind ~group
+         | ': $(body :: Block)'
+         | '$()': field body = #false)':
+      let new_args = adjust_args(args)
+      let new_body = if body | spacer.adjust_term(body, veneer_spaces, esc) | ''
+      '$self $name $new_args $new_body'
+  | ~else: '$self $tail'
+
 spacer.bridge extends(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   '$self $(spacer.adjust_sequence(tail, #'~class, esc))'
 
 spacer.bridge implements(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   '$self $(spacer.adjust_sequence(tail, #'~class, esc))'
 
 spacer.bridge field(self, tail, context, esc):
@@ -496,7 +523,7 @@ meta:
     | ~else: adjust_field(property, esc)
 
 spacer.bridge property(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   '$self $(adjust_property(tail, esc))'
 
 meta:
@@ -524,7 +551,7 @@ meta:
     | ~else: method
 
 spacer.bridge method(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   '$self $(adjust_method(tail, esc))'
 
 spacer.bridge constructor(self, tail, context, esc):
@@ -549,7 +576,7 @@ meta:
     | ~else: adjust_method(override, esc)
 
 spacer.bridge override(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   '$self $(adjust_override(tail, get_space(self), esc))'
 
 spacer.bridge abstract(self, tail, context, esc):
@@ -569,7 +596,7 @@ spacer.bridge abstract(self, tail, context, esc):
   | ~else: '$self $(adjust_method(tail, esc))'
 
 spacer.bridge final(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   let space = get_space(self)
   match tail
   | '$(pattern who:
@@ -585,7 +612,7 @@ spacer.bridge final(self, tail, context, esc):
   | ~else: '$self $(adjust_method(tail, esc))'
 
 spacer.bridge private(self, tail, context, esc):
-  ~in: ~class_clause ~interface_clause
+  ~in: ~class_clause ~interface_clause ~veneer_clause
   let space = get_space(self)
   match tail
   | '$(pattern who:

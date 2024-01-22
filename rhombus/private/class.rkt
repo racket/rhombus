@@ -70,9 +70,9 @@
                                       (field.name ...)
                                       (field.keyword ...)
                                       (field.default ...)
-                                       (field.mutable ...)
-                                       (field.private ...)
-                                       (field.ann-seq ...)]
+                                      (field.mutable ...)
+                                      (field.private ...)
+                                      (field.ann-seq ...)]
                             ;; data accumulated from parsed clauses:
                             ()))
      #`(#,(cond

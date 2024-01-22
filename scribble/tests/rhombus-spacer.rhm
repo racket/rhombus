@@ -74,6 +74,7 @@ def_unquote.full annot
 def_unquote.full class
 def_unquote.full class_clause
 def_unquote.full interface_clause
+def_unquote.full veneer_clause
 def_unquote.full reducer
 def_unquote.full impo
 def_unquote.full expo
@@ -601,6 +602,50 @@ check_spacer:
       area (
       )
         == 0
+
+check_spacer:
+  veneer Posn(this :: Pair):
+    property x:
+      this.first
+    property y:
+      this.rest
+    private implements Indexable
+    private override get(i):
+      match i
+      | 0: x
+      | 1: y
+  $(defn.full) $none($expr $bind $annot):
+    $(veneer_clause.full) $none:
+      $body . $body
+    $(veneer_clause.full) $none:
+      $body . $body
+    $(veneer_clause.full) $(veneer_clause.full) $class
+    $(veneer_clause.full) $(veneer_clause.full) $none($bind):
+      $(expr.full) $expr
+      | $datum: $body
+      | $datum: $body
+
+  veneer Posn (
+    this
+      :: Pair
+  ):
+    property x:
+      this
+        . first
+    property y:
+      this
+        . rest
+    private implements Indexable
+    private override get (
+      i
+    ):
+      match i
+      |
+        0:
+          x
+      |
+        1:
+          y
 
 check_spacer:
   class Square(side):

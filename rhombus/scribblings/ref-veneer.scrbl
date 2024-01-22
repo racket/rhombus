@@ -64,7 +64,7 @@
   returns it, but with the static information of @rhombus(id_name);}
 
  @item{in the @top_rhombus(annot, ~space) space, an annotation that is
-  satisfied by any value tat satisifes the @rhombus(annot) specified for
+  satisfied by any value that satisfies the @rhombus(annot) specified for
   @rhombus(this);}
 
  @item{in the @rhombus(namespace, ~space) space,
@@ -73,7 +73,7 @@
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
-  and a a syntactic form
+  and a syntactic form
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, and dot syntax in the veneer
   (including inherited methods, properties, and dot syntax), respectively; and}
@@ -85,7 +85,7 @@
 
  When the @rhombus(annot) declared for @rhombus(this) is checked, the
  check occurs whenever the veneer is used as an annotation, by the
- default veneer constrcutor, when a method or property of the veneer is
+ default veneer constructor, when a method or property of the veneer is
  called. In the case of a method or property, the check applies when
  using @rhombus(.) after an expression that has the veneer's static
  information or when using a function like
@@ -112,7 +112,7 @@
  to static dispatch: @rhombus(Indexable, ~class),
  @rhombus(MutableIndexable, ~class), and @rhombus(Appendable, ~class).
  Note that @rhombus(is_a) is a dynamic operation, not a static operation.
- So, for example, an a value with a veneer that implements
+ So, for example, a value with a veneer that implements
  @rhombus(Indexable, ~class) is not an instance in the sense of
  @rhombus(is_a) (unless the underlying representation is an instance).
  Instead, having a veneer implement @rhombus(Indexable, ~class) only
@@ -129,7 +129,7 @@
         this.first
       property y:
         this.rest
-      private implements: Indexable
+      private implements Indexable
       private override get(i):
         match i
         | 0: x

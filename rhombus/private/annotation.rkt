@@ -387,10 +387,6 @@
         (~optional (~seq #:extends name-extends)
                    #:defaults ([name-extends #'#f])))
      #:with annot-name (in-annotation-space #'name)
-     (define sub-n-val
-       (syntax-parse #'sub-n
-         [(quote sub-n) (syntax-e #'sub-n)]
-         [_ (syntax-e #'sub-n)]))
      (define extra-names (list #'of-name))
      (define defs
        ;; usually `(define-syntaxes (annot-name of-name) ....)`:

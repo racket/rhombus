@@ -7,9 +7,6 @@
                      (submod "veneer-meta.rkt" for-static-info))
          "space-provide.rkt"
          "veneer-clause.rkt"
-         (submod "veneer-clause.rkt" for-class)
-         "space.rkt"
-         "name-root.rkt"
          "macro-macro.rkt")
 
 (define+provide-space veneer_clause rhombus/veneer_clause
