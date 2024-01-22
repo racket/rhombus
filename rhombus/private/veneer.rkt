@@ -6,9 +6,7 @@
                      "class-parse.rkt"
                      "veneer-parse.rkt"
                      (submod "veneer-meta.rkt" for-class)
-                     "class-field-parse.rkt"
                      "interface-parse.rkt"
-                     "expose.rkt"
                      "srcloc.rkt"
                      "tag.rkt"
                      "annotation-string.rkt")
@@ -19,24 +17,17 @@
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "binding.rkt"
-         "space.rkt"
          "veneer-clause.rkt"
          "class-clause-parse.rkt"
          "class-clause-tag.rkt"
          "class-step.rkt"
-         "class-desc.rkt"
-         "class-binding.rkt"
-         "class-annotation.rkt"
-         "class-representation.rkt"
          "class-dot.rkt"
          "class-static-info.rkt"
          "class-method.rkt"
          "class-top-level.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
-         "parse.rkt"
          (submod "namespace.rkt" for-exports)
-         (submod "print.rkt" for-class)
          "class-able.rkt"
          "if-blocked.rkt")
 
