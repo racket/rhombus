@@ -238,6 +238,42 @@
   (check-pred lambda/kwrest-not-reduced? mod-stx)
   (check-pred lambda/kwrest-no-apply? mod-stx))
 
+(define ((lambda/kwrest-opt-no-destructure? num-of-kws) mod-stx)
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                make-keyword-procedure
+                case-lambda)
+    [(~and fe
+           (~parse (#%app make-keyword-procedure kw-proc proc)
+                   (let-body #'fe))
+           (~parse (case-lambda
+                     [(_ _ . _) (#%app _ kw-arg ...)]
+                     ...)
+                   (let-named #'kw-proc))
+           (~parse (case-lambda
+                     [_ (#%app _ arg ...)]
+                     ...)
+                   (let-named #'proc)))
+     (for/and ([kw-args (in-list (syntax->list #'((kw-arg ...) ...)))]
+               [args (in-list (syntax->list #'((arg ...) ...)))])
+       (eqv? (- (length (syntax->list args))
+                (length (syntax->list kw-args)))
+             num-of-kws))]
+    [_ #f]))
+
+(check-pred (lambda/kwrest-opt-no-destructure? 2)
+            @get-module['fun/kwrest-opt1]{
+ fun f(~kw1 = 1, ~kw2 = 2, ~& _):
+   kw1+kw2
+ })
+
+(check-pred (lambda/kwrest-opt-no-destructure? 2)
+            @get-module['fun/kwrest-opt2]{
+ fun f(~kw1 = 1, ~kw2 = 2, & _, ~& _):
+   kw1+kw2
+ })
+
 (define ((case-lambda-optimized? match-case) mod-stx)
   (define def (extract-def mod-stx 'f))
   (syntax-parse def

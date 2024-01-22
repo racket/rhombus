@@ -45,13 +45,16 @@
            (cond
              [(eqv? n non-rest-max)
               (values #`(~? [(ks vs #,@args . rest)
-                             (entry (keyword-lists->hash ks vs) #,@args rest)]
+                             (kw-entry (keyword-lists->hash ks vs) #,@args rest)]
                             [(ks vs #,@args)
-                             (entry (keyword-lists->hash ks vs) #,@args)])
-                      #`(~? [(#,@args . rest)
-                             (entry '#hashalw() #,@args rest)]
-                            [(#,@args)
-                             (entry '#hashalw() #,@args)]))]
+                             (kw-entry (keyword-lists->hash ks vs) #,@args)])
+                      #`(~? (~? [(#,@args . rest)
+                                 (entry '#hashalw() kw-default ... #,@args rest)]
+                                [(#,@args)
+                                 (entry '#hashalw() kw-default ... #,@args)])
+                            [(~? (#,@args . rest)
+                                 (#,@args))
+                             (raise-should-not-reach-error 'name)]))]
              [else
               (define given-args
                 (for/list ([arg (in-list args)]
@@ -62,28 +65,33 @@
               (define maybe-rest-arg
                 (if (attribute rest) (list #''()) '()))
               (values #`[(ks vs #,@given-args)
-                         (entry (keyword-lists->hash ks vs) #,@given-args #,@unsupplied-args #,@maybe-rest-arg)]
+                         (kw-entry (keyword-lists->hash ks vs) #,@given-args #,@unsupplied-args #,@maybe-rest-arg)]
                       #`[(#,@given-args)
-                         (entry '#hashalw() #,@given-args #,@unsupplied-args #,@maybe-rest-arg)])])))
-       #`(let ([entry (lambda (~? (kwrest arg ... rest)
-                                  (kwrest arg ...))
-                        (let*-values ([(kw-arg kwrest)
-                                       ;; `unsafe-undefined` cannot be the result of a safe expression
-                                       (~? (let ([val (hash-ref kwrest 'kw unsafe-undefined)])
-                                             (if (eq? val unsafe-undefined)
-                                                 (values kw-default kwrest)
-                                                 (values val (hash-remove kwrest 'kw))))
-                                           ;; guarded by reduced arity
-                                           (values (hash-ref kwrest 'kw) (hash-remove kwrest 'kw)))]
-                                      ...)
-                          b ...))])
-           #,(make-procedure-reduce-keyword-arity-mask
-              #`(make-keyword-procedure
-                 (let ([kw-proc (case-lambda #,@kw-proc-claws)])
-                   kw-proc)
-                 (let ([name (case-lambda #,@proc-claws)])
-                   name))
-              #'arity))])))
+                         (~? (entry '#hashalw() kw-default ... #,@given-args #,@unsupplied-args #,@maybe-rest-arg)
+                             (raise-should-not-reach-error 'name))])])))
+       #`(let ([entry (lambda (~? (kwrest kw-arg ... arg ... rest)
+                                  (kwrest kw-arg ... arg ...))
+                        b ...)])
+           (let ([kw-entry (lambda (~? (kwrest arg ... rest)
+                                       (kwrest arg ...))
+                             (let*-values ([(kw-arg kwrest)
+                                            ;; `unsafe-undefined` cannot be the result of a safe expression
+                                            (~? (let ([val (hash-ref kwrest 'kw unsafe-undefined)])
+                                                  (if (eq? val unsafe-undefined)
+                                                      (values kw-default kwrest)
+                                                      (values val (hash-remove kwrest 'kw))))
+                                                ;; guarded by reduced arity
+                                                (values (hash-ref kwrest 'kw) (hash-remove kwrest 'kw)))]
+                                           ...)
+                               (~? (entry kwrest kw-arg ... arg ... rest)
+                                   (entry kwrest kw-arg ... arg ...))))])
+             #,(make-procedure-reduce-keyword-arity-mask
+                #`(make-keyword-procedure
+                   (let ([kw-proc (case-lambda #,@kw-proc-claws)])
+                     kw-proc)
+                   (let ([name (case-lambda #,@proc-claws)])
+                     name))
+                #'arity)))])))
 
 (define-syntax case-lambda/kwrest
   (lambda (stx)
@@ -127,12 +135,20 @@
                                        (entry (keyword-lists->hash ks vs) arg ...)])
                                   ...)])
                    kw-proc)
-                 (let ([name (case-lambda
-                               (~? [(arg ... . rest)
-                                    (entry '#hashalw() arg ... rest)]
-                                   [(arg ...)
-                                    (entry '#hashalw() arg ...)])
-                               ...)])
+                 (let ([name #,(if (syntax-parse #'arity
+                                     [(_ (_ _ ...) _) #t]
+                                     [_ #f])
+                                   #'(case-lambda
+                                       [(~? (arg ... . rest)
+                                            (arg ...))
+                                        (raise-should-not-reach-error 'name)]
+                                       ...)
+                                   #'(case-lambda
+                                       (~? [(arg ... . rest)
+                                            (entry '#hashalw() arg ... rest)]
+                                           [(arg ...)
+                                            (entry '#hashalw() arg ...)])
+                                       ...))])
                    name))
               #'arity))])))
 
@@ -149,3 +165,8 @@
   (for/hashalw ([k (in-list ks)]
                 [v (in-list vs)])
     (values k v)))
+
+(define (raise-should-not-reach-error name)
+  (raise-arguments-error name
+                         (string-append "should not reach this path"
+                                        ";\n procedure requires keyword arguments")))
