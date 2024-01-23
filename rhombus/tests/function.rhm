@@ -79,3 +79,14 @@ check:
     "the given function expects keyword arguments",
     "required keywords", "~kw1, ~kw2, and ~kw3",
   )
+
+block:
+  fun take_all(~& _): #false
+  check:
+    take_all(~kw: #false,
+             ~& {#'~kw: #false})
+    ~throws "duplicate keyword in spliced map and direct keyword arguments"
+  check:
+    take_all(~& {#'~kw: #false},
+             ~& {#'~kw: #false})
+    ~throws "duplicate keyword in keyword-argument maps"

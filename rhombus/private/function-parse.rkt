@@ -1226,7 +1226,8 @@
        (define all-kw-ht
          (for/fold ([ht kw-ht]) ([kw (in-list kws)]
                                  [arg (in-list kw-args)])
-           (when (hash-ref kw-ht kw #f)
+           (unless (eq? (hash-ref kw-ht kw unsafe-undefined)
+                        unsafe-undefined)
              (raise-arguments-error* function-call-who rhombus-realm
                                      "duplicate keyword in spliced map and direct keyword arguments"
                                      "keyword" kw))
@@ -1248,12 +1249,14 @@
                               "not a map for keyword arguments"
                               "given" ht)))
   (check-hash ht)
-  (for/fold ([accum-ht ht]) ([ht (in-list hts)])
-    (check-hash ht)
-    (for/fold ([accum-ht accum-ht]) ([(kw arg) (in-hash ht)])
-      (when (hash-ref accum-ht kw #f)
+  (for ([ht (in-list hts)])
+    (check-hash ht))
+  (for/fold ([all-ht ht]) ([ht (in-list hts)])
+    (for/fold ([accum-ht all-ht]) ([(kw arg) (in-hash ht)])
+      (unless (eq? (hash-ref all-ht kw unsafe-undefined)
+                   unsafe-undefined)
         (raise-arguments-error* function-call-who rhombus-realm
-                                "duplicate keyword in in keyword-argument maps"
+                                "duplicate keyword in keyword-argument maps"
                                 "keyword" kw))
       (hash-set accum-ht kw arg))))
 
