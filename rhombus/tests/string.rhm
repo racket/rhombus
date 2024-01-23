@@ -10,10 +10,16 @@ block:
 
 block:
   use_static
-  def hello = "hello"
+  check:
+    def hello = "hello"
+    hello.length()
+    ~is 5
   check:
     "hello".length() ~is 5
-    hello.length() ~is 5
+    "hello"[0] ~is #{#\h}
+    "hello".get(0) ~is #{#\h}
+    "hello".append(" world") ~is "hello world"
+    "hello".append(" world", " and bye") ~is "hello world and bye"
     "hello".to_int() ~is #false
     "17".to_int() ~is 17
     "hello".to_number() ~is #false
@@ -37,9 +43,13 @@ block:
     "Hello".grapheme_count(2) ~is 3
     "Hello".grapheme_span(2, 4) ~is 1
     "Hello".grapheme_count(2, 4) ~is 2
-    
+
 check:
   dynamic("hello").length() ~is 5
+  dynamic("hello")[0] ~is #{#\h}
+  dynamic("hello").get(0) ~is #{#\h}
+  dynamic("hello").append(" world") ~is "hello world"
+  dynamic("hello").append(" world", " and bye") ~is "hello world and bye"
   dynamic("hello").to_int() ~is #false
   dynamic("17").to_int() ~is 17
   dynamic("hello").to_number() ~is #false
@@ -62,7 +72,7 @@ check:
   dynamic("Hello").grapheme_count(2) ~is 3
   dynamic("Hello").grapheme_span(2, 4) ~is 1
   dynamic("Hello").grapheme_count(2, 4) ~is 2
-    
+
 check:
   String.length("hello") ~is 5
   String.to_int("17") ~is 17
@@ -92,4 +102,6 @@ block:
   check:
     String.append() ~is ""
     String.append(copy("this")) ~is "this"
+    String.append(copy("this"), copy(", that")) ~is "this, that"
     String.append(copy("this"), " and ", copy("that")) ~is "this and that"
+    String.append(copy("this"), ", this", ", and ", copy("that")) ~is "this, this, and that"

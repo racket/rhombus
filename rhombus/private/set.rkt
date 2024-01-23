@@ -92,7 +92,7 @@
     (in-set s)))
 
 (define-for-syntax any-set-static-infos
-  #'((#%index-get set-member?)
+  #'((#%index-get Set.get)
      (#%sequence-constructor in-set)))
 
 (define-primitive-class ReadableSet readable-set
@@ -109,10 +109,10 @@
   ()
   #:methods
   ([length Set.length]
+   [get Set.get]
    [to_list Set.to_list]
    [copy Set.copy]
-   [snapshot Set.snapshot]
-   ))
+   [snapshot Set.snapshot]))
 
 (define-primitive-class Set set
   #:lift-declaration
@@ -126,24 +126,23 @@
   #:namespace-fields
   ([empty empty-set]
    [length Set.length]
+   [get Set.get]
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
-   of
-   )
+   of)
   #:properties
   ()
   #:methods
   (append
    union
    intersect
-   remove
-   ))
+   remove))
 
 (define-primitive-class MutableSet mutable-set
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%index-set set-member!)
+  #:instance-static-info ((#%index-set MutableSet.set)
                           . #,any-set-static-infos)
   #:existing
   #:opaque
@@ -154,19 +153,11 @@
   #:properties
   ()
   #:methods
-  (delete
-   ))
+  (set
+   delete))
 
 (define (immutable-set? v) (and (set? v) (immutable-hash? (set-ht v))))
 (define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
-
-(define (set-member? s v)
-  (hash-ref (set-ht s) v #f))
-
-(define (set-member! s v in?)
-  (if in?
-      (hash-set! (set-ht s) v #t)
-      (hash-remove! (set-ht s) v)))
 
 (define (check-readable-set who s)
   (unless (set? s)
@@ -175,6 +166,10 @@
 (define/method (Set.length s)
   (check-readable-set who s)
   (hash-count (set-ht s)))
+
+(define/method (Set.get s v)
+  (check-readable-set who s)
+  (hash-ref (set-ht s) v #f))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -626,6 +621,12 @@
 (define (check-mutable-set who s)
   (unless (mutable-set? s)
     (raise-argument-error* who rhombus-realm "MutableSet" s)))
+
+(define/method (MutableSet.set s v in?)
+  (check-mutable-set who s)
+  (if in?
+      (hash-set! (set-ht s) v #t)
+      (hash-remove! (set-ht s) v)))
 
 (define/method (MutableSet.delete s v)
   (check-mutable-set who s)

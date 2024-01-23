@@ -54,7 +54,6 @@
   #:fields ()
   #:namespace-fields
   ([make Array.make]
-   [append Array.append]
    [of now_of] ;; TEMPORARY
    now_of
    later_of
@@ -63,6 +62,9 @@
   ()
   #:methods
   (length
+   get
+   set
+   append
    copy
    copy_from
    drop_left
@@ -213,12 +215,12 @@
 (set-primitive-contract! 'vector? "Array")
 (set-primitive-contract! '(and/c vector? (not/c immutable?)) "MutableArray")
 
-(define/arity (Array.get v i)
+(define/method (Array.get v i)
   #:inline
   #:primitive (vector-ref)
   (vector-ref v i))
 
-(define/arity (Array.set v i x)
+(define/method (Array.set v i x)
   #:inline
   #:primitive (vector-set!)
   (vector-set! v i x))
@@ -227,11 +229,12 @@
   (unless (vector? v)
     (raise-argument-error* who rhombus-realm "Array" v)))
 
-(define/arity Array.append
+(define/method Array.append
   #:inline
   #:primitive (vector-append)
   #:static-infos ((#%call-result #,array-static-infos))
   (case-lambda
+    [() (vector)]
     [(v1) (vector-append v1)]
     [(v1 v2) (vector-append v1 v2)]
     [(v1 v2 v3) (vector-append v1 v2 v3)]

@@ -20,8 +20,9 @@ immutable strings.
 @dispatch_table(
   "string"
   @rhombus(String)
-  [str.append(more_str, ...), String.append(str, more_str, ...)]
+  [str.append(str2, ...), String.append(str, str2, ...)]
   [str.length(), String.length(str)]
+  [str.get(n), String.get(str, n)]
   [str.substring(arg, ...), String.substring(str, arg, ...)]
   [str.utf8_bytes(arg, ...), String.utf8_bytes(str, arg, ...)]
   [str.latin1_bytes(arg, ...), String.latin1_bytes(str, arg, ...)]
@@ -119,6 +120,21 @@ immutable strings.
 @examples(
   String.length("hello")
   "hello".length()
+)
+
+}
+
+
+@doc(
+  fun String.get(str :: ReadableString, n :: NonnegInt) :: Char
+){
+
+ Equivalent to @rhombus(str[n]) (with the default implicit
+ @rhombus(#%index) form). Returns the @rhombus(n)th character of
+ @rhombus(str) (starting from @rhombus(0)).
+
+@examples(
+  "abc"[0] +& "abc".get(0)
 )
 
 }

@@ -29,6 +29,7 @@ it supplies its elements in an unspecified order.
   "readable set (immutable or mutable)"
   @rhombus(Set)
   [set.length(), Set.length(set)]
+  [set.get(v), Set.get(set, v)]
   [set.to_list(try_sort, ...), Set.to_list(set, try_sort, ...)]
   [set.copy(), Set.copy(set)]
   [set.snapshot(), Set.snapshot(set)]
@@ -46,6 +47,7 @@ it supplies its elements in an unspecified order.
 @dispatch_table(
   "mutable set"
   @rhombus(MutableSet)
+  [set.set(v, in), #,(@top_rhombus(MutableSet.set))(set, v, in)]
   [set.delete(v), MutableSet.delete(set, v)]
 )
 
@@ -236,6 +238,23 @@ it supplies its elements in an unspecified order.
 
 }
 
+
+@doc(
+  fun Set.get(set :: ReadableSet, val :: Any) :: Boolean
+){
+
+ Equivalent to @rhombus(set[val]) (with the default implicit
+ @rhombus(#%index) form). Returns @rhombus(#true) if @rhombus(val) is
+ in @rhombus(set), @rhombus(#false) otherwise.
+
+@examples(
+  {"a", "b"}.get("a")
+  {"a", "b"}["a"]
+)
+
+}
+
+
 @doc(
   fun Set.append(set :: Set, ...) :: Set
   fun Set.union(set :: Set, ...) :: Set
@@ -255,10 +274,11 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.remove(set :: Set, v :: Any) :: Set
+  fun Set.remove(set :: Set, val :: Any) :: Set
 ){
 
- Returns a set like @rhombus(v) from @rhombus(set), if it is present.
+ Returns a set like @rhombus(set) but without @rhombus(val), if it is
+ present.
 
 @examples(
   {1, 2, 3}.remove(2)
@@ -269,10 +289,33 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.delete(set :: MutableSet, v :: Any) :: Void
+  fun MutableSet.set(set :: MutableSet,
+                     val :: Any, in :: Any)
+    :: Void
 ){
 
- Changes @rhombus(set) to remove @rhombus(v), if it is present.
+ Equivalent to @rhombus(set[val] := in) (with the default implicit
+ @rhombus(#%index) form). Changes @rhombus(set) to remove
+ @rhombus(val) if @rhombus(in) is @rhombus(#false), otherwise add
+ @rhombus(val).
+
+@examples(
+  def s = MutableSet{1, 2, 3}
+  s.set(1, #false)
+  s
+  s[1] := #true
+  s
+)
+
+}
+
+
+@doc(
+  fun MutableSet.delete(set :: MutableSet, val :: Any)
+    :: Void
+){
+
+ Changes @rhombus(set) to remove @rhombus(val), if it is present.
 
 @examples(
   def s = MutableSet{1, 2, 3}
@@ -291,7 +334,9 @@ it supplies its elements in an unspecified order.
 
  Returns the elements of @rhombus(set) in a list. If @rhombus(try_sort)
  is true, then the elements are sorted to the degree that a built-in
- comparison can sort them.
+ comparison can sort them. Note that sets do @emph{not} implement
+ @rhombus(Listable, ~class), because the order of elements is
+ unspecified.
 
 @examples(
   {1, 2, 3}.to_list(#true)

@@ -35,6 +35,12 @@ block:
     {"a": 1, "b": 2}.get("c", "other") ~is "other"
     {"a": 1, "b": 2}.get("c", fun (): "got other") ~is "got other"
   check:
+    ({"a": 1, "b": 2} ++ {"a": 3})["a"] ~is 3
+    ({"a": 1, "b": 2} ++ {"a": 3, "b": 4})["a"] ~is 3
+    {"a": 1, "b": 2}.append()["a"] ~is 1
+    {"a": 1, "b": 2}.append({"a": 2})["a"] ~is 2
+    {"a": 1, "b": 2}.append({"a": 2}, {"a": 3})["a"] ~is 3
+  check:
     Map{"a": 1, "b": 2}.length()
     ~is 2
   check:
@@ -63,6 +69,13 @@ block:
     map.length()
     ~is 2
 
+check:
+  Map.append() ~is {}
+  Map.append({1: 1}) ~is {1: 1}
+  Map.append({1: 1}, {1: 2}) ~is {1: 2}
+  Map.append({1: 1}, {1: 2}, {1: 3}) ~is {1: 3}
+  Map.append({1: 1}, {1: 2}, {1: 3}, {1: 4}) ~is {1: 4}
+
 block:
   check:
     1 :: Map
@@ -88,7 +101,13 @@ block:
     dynamic({"a": 1, "b": 2}).length() ~is 2
     dynamic({"a": 1, "b": 2})["a"] ~is 1
     dynamic({"a": 1, "b": 2}).get("a") ~is 1
-    dynamic({"a": 1, "b": 2}).get("c", "other")  ~is "other"
+    dynamic({"a": 1, "b": 2}).get("c", "other") ~is "other"
+  check:
+    (dynamic({"a": 1, "b": 2}) ++ {"a": 3})["a"] ~is 3
+    (dynamic({"a": 1, "b": 2}) ++ {"a": 3, "b": 4})["a"] ~is 3
+    dynamic({"a": 1, "b": 2}).append()["a"] ~is 1
+    dynamic({"a": 1, "b": 2}).append({"a": 2})["a"] ~is 2
+    dynamic({"a": 1, "b": 2}).append({"a": 2}, {"a": 3})["a"] ~is 3
 
 // See also tests in "rest-args.rhm"
 block:
@@ -264,14 +283,22 @@ block:
   check m ~is_now MutableMap{2: "b"}
   check MutableMap.delete(m, 3) ~is #void
   check m ~is_now MutableMap{2: "b"}
-  m[1] := "a"
+  m.set(1, "a")
   check m ~is_now MutableMap{1: "a", 2: "b"}
   block:
     use_dynamic
     check dynamic(m).delete(1) ~is #void
     check m ~is_now MutableMap{2: "b"}
-    check {1: "a", 2: "b"}.delete ~throws "no such field or method"
-    check {1: "a", 2: "b"}.delete(1) ~throws "no such field or method"
+    check dynamic(m)[1] := "a" ~is #void
+    check m ~is_now MutableMap{1: "a", 2: "b"}
+    check dynamic(m).delete(1) ~is #void
+    check m ~is_now MutableMap{2: "b"}
+    check dynamic(m).set(1, "a") ~is #void
+    check m ~is_now MutableMap{1: "a", 2: "b"}
+
+check:
+  {1: "a", 2: "b"}.delete ~throws "no such field or method"
+  {1: "a", 2: "b"}.delete(1) ~throws "no such field or method"
 
 block:
   let m = MutableMap{1: "a", 2: "b"}

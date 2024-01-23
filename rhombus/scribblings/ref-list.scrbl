@@ -25,6 +25,7 @@ it supplies its elements in order.
   "list"
   @rhombus(List)
   [lst.length(), List.length(lst)]
+  [lst.get(n), List.get(lst, n)]
   [lst.first, List.first(lst)]
   [lst.rest, List.rest(lst)]
   [lst.insert(lst, n, v), List.insert(lst, n, v)]
@@ -67,7 +68,7 @@ it supplies its elements in order.
   repet.macro '#%brackets [$repet_or_splice, ...]'
   expr.macro 'List[$expr_or_splice, ...]'
   repet.macro 'List[$repet_or_splice, ...]'
-  
+
   grammar expr_or_splice:
     $expr
     $repet #,(@litchar{,}) $ellipses
@@ -250,7 +251,24 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.first(lst :: NonemptyList)
+  fun List.get(lst :: List, n :: NonnegInt) :: Any
+){
+
+ Equivalent to @rhombus(lst[n]) (with the default implicit
+ @rhombus(#%index) form). Returns the @rhombus(n)th element of
+ @rhombus(lst) (starting from @rhombus(0)).
+ Accessing a list element by position takes @math{O(log N)} time.
+
+@examples(
+  ["a", "b", "c"].get(1)
+  ["a", "b", "c"][1]
+)
+
+}
+
+
+@doc(
+  fun List.first(lst :: NonemptyList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
