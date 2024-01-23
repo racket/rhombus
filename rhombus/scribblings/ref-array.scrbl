@@ -22,6 +22,9 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   "array",
   @rhombus(Array),
   [arr.length(), Array.length(arr)]
+  [arr.get(n), Array.get(arr, n)]
+  [arr.set(n, v), Array.get(arr, n, v)]
+  [arr.append(arr2, ...), Array.append(arr, arr2, ...)]
   [arr.copy(arg, ...), Array.copy(arr, arg, ...)]
   [arr.copy_from(arg, ...), Array.copy_from(arr, arg, ...)]
   [arr.take_left(n), Array.take_left(arr, n)]
@@ -29,6 +32,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   [arr.drop_left(n), Array.drop_left(arr, n)]
   [arr.drop_right(n), Array.drop_right(arr, n)]
   [arr.set_in_copy(i, v), Array.set_in_copy(arr, i, v)]
+  [arr.to_list(), Array.to_list(arr)]
 )
 
 @doc(
@@ -193,9 +197,61 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 
 @doc(
+  fun Array.get(arr :: Array, n :: NonnegInt) :: Any
+){
+
+ Equivalent to @rhombus(arr[n]) (with the default implicit
+ @rhombus(#%index) form). Returns the @rhombus(n)th element of
+ @rhombus(arr) (starting from @rhombus(0)).
+
+@examples(
+  Array("a", "b", "c")[1]
+  Array("a", "b", "c").get(1)
+)
+
+}
+
+
+@doc(
+  fun Array.set(arr :: MutableArray,
+                n :: NonnegInt, val :: Any)
+    :: Void
+){
+
+ Equivalent to @rhombus(arr[n] := val) (with the default implicit
+ @rhombus(#%index) form). Updates the @rhombus(n)th position of
+ @rhombus(arr) to @rhombus(val).
+
+@examples(
+  def a = Array("a", "b", "c")
+  a.set(1, "d")
+  a
+  a[1] := "e"
+  a
+)
+
+}
+
+
+@doc(
+  fun Array.append(arr :: Array, ...) :: MutableArray
+){
+
+ Appends @rhombus(arr)s by creating a new mutable array with all
+ elements.
+
+@examples(
+  Array(1, 2, 3).append(Array(4, 5, 6), Array(7, 8, 9))
+)
+
+}
+
+
+@doc(
   fun Array.copy(arr :: Array,
                  start :: NonnegInt = 0,
-                 end :: NonnegInt = Array.length(arr)) :: MutableArray
+                 end :: NonnegInt = Array.length(arr))
+    :: MutableArray
 ){
 
  Returns a fresh array string with the same initial content as in
@@ -227,10 +283,14 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array.take_left(arr :: Array, n :: NonnegInt) :: MutableArray
-  fun Array.take_right(arr :: Array, n :: NonnegInt) :: MutableArray
-  fun Array.drop_left(arr :: Array, n :: NonnegInt) :: MutableArray
-  fun Array.drop_right(arr :: Array, n :: NonnegInt) :: MutableArray
+  fun Array.take_left(arr :: Array, n :: NonnegInt)
+    :: MutableArray
+  fun Array.take_right(arr :: Array, n :: NonnegInt)
+    :: MutableArray
+  fun Array.drop_left(arr :: Array, n :: NonnegInt)
+    :: MutableArray
+  fun Array.drop_right(arr :: Array, n :: NonnegInt)
+    :: MutableArray
 ){
 
  Like @rhombus(Array.copy) with a range that selects a prefix or suffix
@@ -247,11 +307,13 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 
 @doc(
-  fun Array.set_in_copy(arr :: Array, i :: NonnegInt, v :: Any) :: MutableArray
+  fun Array.set_in_copy(arr :: Array,
+                        n :: NonnegInt, val :: Any)
+    :: MutableArray
 ){
 
- Returns an array like @rhombus(arr), but with @rhombus(v) as the
- @rhombus(i)th element.
+ Returns a new mutable array like @rhombus(arr), but with
+ @rhombus(val) as the @rhombus(n)th element.
 
 @examples(
   Array("a", "b", "c").set_in_copy(1, "x")
@@ -259,3 +321,12 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 }
 
+
+@doc(
+  fun Array.to_list(arr :: Array) :: List
+){
+
+ Implements @rhombus(Listable, ~class) by returning a @tech{list}
+ with the same elements as @rhombus(arr) in the same order.
+
+}

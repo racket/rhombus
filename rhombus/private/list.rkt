@@ -98,6 +98,7 @@
                treelist-static-infos))])
   #:methods
   (length
+   get
    add
    insert
    delete
@@ -144,6 +145,7 @@
                list-static-infos))])
   #:methods
   (length
+   get
    reverse
    append
    take_left
@@ -197,7 +199,7 @@
                      #`(#,group-tag rest-bind #,list-static-infos
                         #:annot-prefix? #f
                         list))])))))
-  
+
 (set-primitive-contract! 'list? "PairList")
 (set-primitive-contract! 'treelist? "List")
 
@@ -654,7 +656,7 @@
      (apply append ls)]))
 
 ;; primitive doesn't check for listness
-(define/arity (PairList.get l n)
+(define/method (PairList.get l n)
   #:inline
   #:primitive (list-ref)
   (check-list who l)
@@ -965,11 +967,11 @@
     [(null? groups) empty-*list-stx]
     [(null? (cdr groups)) (car groups)]
     [else #`(#,*list-append-stx #,@groups)]))
-  
+
 (define-for-syntax (build-treelist-form content)
   (build-*list-form content #'treelist #'empty-treelist #'treelist-append
                     #'ensure-treelist #'list->treelist))
-  
+
 (define-for-syntax (build-list-form content)
   (build-*list-form content #'list #'null #'append
                     #'ensure-list #f))

@@ -25,6 +25,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   "pait list"
   @rhombus(PairList)
   [lst.length(), PairList.length(lst)]
+  [lst.get(n), PairList.get(lst, n)]
   [lst.first, PairList.first(lst)]
   [lst.rest, PairList.rest(lst)]
   [lst.reverse(), PairList.reverse(lst)]
@@ -149,7 +150,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   fun PairList(v :: Any, ...) :: PairList
   expr.macro 'PairList[$expr_or_splice, ...]'
   repet.macro 'PairList[$repet_or_splice, ...]'
-  
+
   grammar expr_or_splice:
     $expr
     $repet #,(@litchar{,}) $ellipses
@@ -301,7 +302,24 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.first(lst :: NonemptyList)
+  fun PairList.get(lst :: PairList, n :: NonnegInt) :: Any
+){
+
+ Equivalent to @rhombus(lst[n]) (with the default implicit
+ @rhombus(#%index) form). Returns the @rhombus(n)th element of
+ @rhombus(lst) (starting from @rhombus(0)).
+ Accessing a pair list element by position takes @math{O(N)} time.
+
+@examples(
+  PairList["a", "b", "c"].get(1)
+  PairList["a", "b", "c"][1]
+)
+
+}
+
+
+@doc(
+  fun PairList.first(lst :: NonemptyPairList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
@@ -314,7 +332,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  fun PairList.rest(lst :: NonemptyList) :: PairList
+  fun PairList.rest(lst :: NonemptyPairList) :: PairList
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but without its first element.

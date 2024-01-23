@@ -43,6 +43,9 @@ block:
     [1, 2, 3][0]
     ~is 1
   check:
+    [1, 2, 3].get(0)
+    ~is 1
+  check:
     [1, 2, 3].first
     ~is 1
   check:
@@ -128,6 +131,9 @@ block:
     ~is [2, 3]
   check:
     dynamic([1, 2, 3])[0]
+    ~is 1
+  check:
+    dynamic([1, 2, 3]).get(0)
     ~is 1
 
 check:
@@ -222,4 +228,3 @@ block:
   def l2 = l ++ l
   check l.to_list() === l ~is #true
   check l2.to_list() === l2 ~is #true
-  

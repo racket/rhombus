@@ -62,6 +62,7 @@
   ()
   #:methods
   ([length String.length]
+   [get String.get]
    [append String.append]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
@@ -79,8 +80,7 @@
    [normalize_nfc String.normalize_nfc]
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
-   [grapheme_count String.grapheme_count]
-   ))
+   [grapheme_count String.grapheme_count]))
 
 (define-primitive-class String string
   #:lift-declaration
@@ -94,6 +94,7 @@
   ([to_string String.to_string]
    [append String.append]
    [length String.length]
+   [get String.get]
    [substring String.substring]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
@@ -110,8 +111,7 @@
    [normalize_nfc String.normalize_nfc]
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
-   [grapheme_count String.grapheme_count]
-   )
+   [grapheme_count String.grapheme_count])
   #:properties
   ()
   #:methods
@@ -158,7 +158,7 @@
   (unless (string? s)
     (raise-argument-error* who rhombus-realm "ReadableString" s)))
 
-(define/arity (String.get s i)
+(define/method (String.get s i)
   #:inline
   #:primitive (string-ref)
   (string-ref s i))

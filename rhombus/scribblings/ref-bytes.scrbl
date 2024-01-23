@@ -19,6 +19,9 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
   "byte string"
   @rhombus(Bytes)
   [bstr.length(), Bytes.length(bstr)]
+  [bstr.get(n), Bytes.get(bstr, n)]
+  [bstr.set(n, byte), Bytes.set(bstr, n, byte)]
+  [bstr.append(bstr2, ...), Bytes.append(bstr, bstr2, ...)]
   [bstr.subbytes(arg, ...), Bytes.subbytes(bstr, arg, ...)]
   [bstr.copy(), Bytes.copy(bstr)]
   [bstr.copy_from(arg, ...), Bytes.copy_from(bstr, arg, ...)]
@@ -65,6 +68,57 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 @examples(
   Bytes.length(#"hello")
   #"hello".length()
+)
+
+}
+
+
+@doc(
+  fun Bytes.get(bstr :: Bytes, n :: NonnegInt) :: Byte
+){
+
+ Equivalent to @rhombus(bstr[n]) (with the default implicit
+ @rhombus(#%index) form). Returns the @rhombus(n)th byte of
+ @rhombus(bstr) (starting from @rhombus(0)).
+
+@examples(
+  #"abc"[0]
+  #"abc".get(0)
+)
+
+}
+
+
+@doc(
+  fun Bytes.set(bstr :: MutableBytes,
+                n :: NonnegInt, byte :: Byte)
+    :: Void
+){
+
+ Equivalent to @rhombus(bstr[n] := byte) (with the default implicit
+ @rhombus(#%index) form). Updates the @rhombus(n)th position of
+ @rhombus(bstr) to @rhombus(byte).
+
+@examples(
+  def b = #"abc".copy()
+  b[0] := 104
+  b
+  b.set(1, 104)
+  b
+)
+
+}
+
+
+@doc(
+  fun Bytes.append(bstr :: Bytes, ...) :: MutableBytes
+){
+
+ Appends @rhombus(bstr)s by creating a new mutable byte string with
+ all bytes.
+
+@examples(
+  #"abc".append(#"def", #"ghi")
 )
 
 }

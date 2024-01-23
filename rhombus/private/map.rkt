@@ -104,8 +104,7 @@
    [get Map.get]
    [has_key Map.has_key]
    [copy Map.copy]
-   [snapshot Map.snapshot]
-   ))
+   [snapshot Map.snapshot]))
 
 (define-primitive-class Map map
   #:lift-declaration
@@ -126,18 +125,17 @@
    [has_key Map.has_key]
    [copy Map.copy]
    [snapshot Map.snapshot]
-   of
-   )
+   of)
   #:properties
   ()
   #:methods
-  (remove
-   ))
+  (append
+   remove))
 
 (define-primitive-class MutableMap mutable-map
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%index-set hash-set!)
+  #:instance-static-info ((#%index-set MutableMap.set)
                           . #,any-map-static-infos)
   #:existing
   #:opaque
@@ -148,8 +146,8 @@
   #:properties
   ()
   #:methods
-  (delete
-   ))
+  (set
+   delete))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
 
@@ -592,6 +590,30 @@
     [(ht key) (hash-ref ht key)]
     [(ht key default) (hash-ref ht key default)]))
 
+(define (check-map who ht)
+  (unless (immutable-hash? ht)
+    (raise-argument-error* who rhombus-realm "Map" ht)))
+
+(define/method Map.append
+  #:static-infos ((#%call-result #,map-static-infos))
+  (case-lambda
+    [()
+     #hashalw()]
+    [(ht)
+     (check-map who ht)
+     ht]
+    [(ht1 ht2)
+     (check-map who ht1)
+     (check-map who ht2)
+     (hash-append/proc ht1 ht2)]
+    [(ht . hts)
+     (check-map who ht)
+     (for ([ht (in-list hts)])
+       (check-map who ht))
+     (for/fold ([new-ht ht])
+               ([ht (in-list hts)])
+       (hash-append/proc new-ht ht))]))
+
 (define/method (Map.has_key ht key)
   (check-readable-map who ht)
   (hash-has-key? ht key))
@@ -612,6 +634,11 @@
   #:primitive (hash-remove)
   #:static-infos ((#%call-result #,map-static-infos))
   (hash-remove ht key))
+
+(define/method (MutableMap.set ht key val)
+  #:inline
+  #:primitive (hash-set!)
+  (hash-set! ht key val))
 
 (define/method (MutableMap.delete ht key)
   #:inline

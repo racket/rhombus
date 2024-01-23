@@ -40,6 +40,9 @@ block:
     PairList[1, 2, 3][0]
     ~is 1
   check:
+    PairList[1, 2, 3].get(0)
+    ~is 1
+  check:
     PairList[1, 2, 3].first
     ~is 1
   check:
@@ -125,6 +128,9 @@ block:
     ~is PairList[2, 3]
   check:
     dynamic(PairList[1, 2, 3])[0]
+    ~is 1
+  check:
+    dynamic(PairList[1, 2, 3]).get(0)
     ~is 1
 
 check:

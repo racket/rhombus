@@ -9,6 +9,8 @@ block:
   check:
     #"hello".length() ~is 5
     hello.length() ~is 5
+    #"hello"[0] ~is 104
+    #"hello".get(0) ~is 104
     #"hello".subbytes(1) ~is_now #"ello"
     #"hello".subbytes(1, 4) ~is_now #"ell"
     #"hello".copy() ~is_now #"hello"
@@ -26,9 +28,11 @@ block:
     #"h\311llo".latin1_string() ~is "hÉllo"
     #"hello".locale_string() ~is "hello"
     #"h\303\211llo".utf8_string().length() ~is 5
-    
+
 check:
   dynamic(#"hello").length() ~is 5
+  dynamic(#"hello")[0] ~is 104
+  dynamic(#"hello").get(0) ~is 104
   dynamic(#"hello").subbytes(1) ~is_now #"ello"
   dynamic(#"hello").subbytes(1, 4) ~is_now #"ell"
   dynamic(#"hello").copy() ~is_now #"hello"
@@ -40,7 +44,30 @@ check:
   dynamic(#"h\303\211llo").utf8_string(#false, 3) ~is "llo"
   dynamic(#"h\311llo").latin1_string() ~is "hÉllo"
   dynamic(#"hello").locale_string() ~is "hello"
-    
+
+block:
+  use_static
+  def bstr = #"hello".copy()
+  bstr[1] := 104
+  bstr.set(2, 104)
+  check bstr ~is_now #"hhhlo"
+  block:
+    use_dynamic
+    dynamic(bstr)[3] := 104
+    dynamic(bstr).set(4, 104)
+    check bstr ~is_now #"hhhhh"
+
+check:
+  Bytes.append() ~is_now #""
+  Bytes.append(#"this".copy()) ~is_now #"this"
+  Bytes.append(#"this".copy(), #", that".copy()) ~is_now #"this, that"
+  Bytes.append(#"this".copy(), #" and ", #"that".copy()) ~is_now #"this and that"
+  Bytes.append(#"this".copy(), #", this", #", and ", #"that".copy()) ~is_now #"this, this, and that"
+
+check:
+  #"hello".append(#" world") ~is_now #"hello world"
+  #"hello".append(#" world", #" and bye") ~is_now #"hello world and bye"
+
 check:
   Bytes.length(#"hello") ~is 5
   Bytes.subbytes(#"hello", 1) ~is_now #"ello"

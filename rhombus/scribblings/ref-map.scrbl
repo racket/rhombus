@@ -42,12 +42,14 @@ in an unspecified order.
 @dispatch_table(
   "map (immutable only)"
   @rhombus(Map)
+  [map.append(map2, ...), Map.append(map, map2, ...)]
   [map.remove(k), Map.remove(map, k)]
 )
 
 @dispatch_table(
   "mutable map"
   @rhombus(MutableMap)
+  [map.set(k, v), MutableMap.set(map, k, v)]
   [map.delete(k), MutableMap.delete(map, k)]
 )
 
@@ -362,6 +364,22 @@ in an unspecified order.
 
 
 @doc(
+  fun Map.append(map :: Map, ...) :: Map
+){
+
+ Functionally appends @rhombus(map)s, like the @rhombus(++) operator
+ (but without the special optimization). When a key has a value in
+ multiple given @rhombus(map)s, the rightmost value is used.
+
+@examples(
+  {1: "a", 2: "b"}.append({1: "c"}, {1: "d"})
+  {1: "a", 2: "b"} ++ {1: "c"} ++ {1: "d"}
+)
+
+}
+
+
+@doc(
   fun Map.keys(map :: ReadableMap,
                try_sort :: Any = #false)
     :: List
@@ -399,8 +417,9 @@ in an unspecified order.
     :: Any
 ){
 
- Equivalent to @rhombus(map[key]) when @rhombus(default) is not
- provided, otherwise @rhombus(default) is used when @rhombus(map) does
+ Equivalent @rhombus(map[key]) (with the default implicit
+ @rhombus(#%index) form) when @rhombus(default) is not provided,
+ otherwise @rhombus(default) is used when @rhombus(map) does
  not contain a mapping for @rhombus(key). In that case, if
  @rhombus(default) is a function, then the function is called with zero
  arguments to get a result, otherwise @rhombus(default) is returned as
@@ -408,6 +427,7 @@ in an unspecified order.
 
 @examples(
   Map.get({"a": 1, "b": 2}, "a")
+  {"a": 1, "b": 2}["a"]
   Map.get({"a": 1, "b": 2}, "c", #inf)
   ~error:
     Map.get({"a": 1, "b": 2}, "c", fun (): error("no value"))
@@ -426,6 +446,27 @@ in an unspecified order.
 @examples(
   Map.remove({"a": 1, "b": 2}, "a")
   Map.remove({"a": 1, "b": 2}, "c")
+)
+
+}
+
+
+@doc(
+  fun MutableMap.set(map :: MutableMap,
+                     key :: Any, val :: Any)
+    :: Void
+){
+
+ Equivalent to @rhombus(map[key] := val) (with the default implicit
+ @rhombus(#%index) form). Changes @rhombus(map) to map @rhombus(key)
+ to @rhombus(val).
+
+@examples(
+  def m = MutableMap{"a": 1, "b": 2}
+  m.set("a", 3)
+  m
+  m["a"] := 4
+  m
 )
 
 }

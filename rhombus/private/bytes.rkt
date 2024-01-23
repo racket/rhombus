@@ -36,19 +36,20 @@
   #:opaque
   #:fields ()
   #:namespace-fields
-  ([make Bytes.make]
-   )
+  ([make Bytes.make])
   #:properties
   ()
   #:methods
   (length
+   get
+   set
+   append
    subbytes
    copy
    copy_from
    utf8_string
    latin1_string
-   locale_string
-   ))
+   locale_string))
 
 (define-annotation-syntax Bytes (identifier-annotation #'bytes? bytes-static-infos))
 (define-annotation-syntax MutableBytes (identifier-annotation #'mutable-bytes? bytes-static-infos))
@@ -57,20 +58,25 @@
 (set-primitive-contract! 'bytes? "Bytes")
 (set-primitive-contract! '(and/c bytes? (not/c immutable?)) "MutableBytes")
 
-(define/arity (Bytes.get b i)
+(define/method (Bytes.get b i)
   #:inline
   #:primitive (bytes-ref)
   (bytes-ref b i))
 
-(define/arity (Bytes.set b i x)
+(define/method (Bytes.set b i x)
   #:inline
   #:primitive (bytes-set!)
   (bytes-set! b i x))
 
-(define/arity (Bytes.append b1 b2)
+(define/method Bytes.append
   #:inline
   #:primitive (bytes-append)
-  (bytes-append b1 b2))
+  (case-lambda
+    [() (bytes)]
+    [(b1) (bytes-append b1)]
+    [(b1 b2) (bytes-append b1 b2)]
+    [(b1 b2 b3) (bytes-append b1 b2 b3)]
+    [args (apply bytes-append args)]))
 
 (define/arity Bytes.make
   #:inline
