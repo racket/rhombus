@@ -625,7 +625,7 @@
   #:primitive (treelist-append)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (case-lambda
-    [() (treelist-append)]
+    [() empty-treelist]
     [(a) (treelist-append a)]
     [(a b) (treelist-append a b)]
     [(a b c) (treelist-append a b c)]
@@ -644,7 +644,7 @@
     [(a b)
      (unless (list? b)
        (check-list who a)
-       (raise-argument-error* who rhombus-realm "List" b))
+       (raise-argument-error* who rhombus-realm "PairList" b))
      (append a b)]
     [ls
      (let ([ln (let loop ([ls ls])
@@ -652,7 +652,7 @@
        (unless (list? ln)
          (for ([l (in-list ls)])
            (check-list who l))
-         (raise-argument-error* who rhombus-realm "List" ln)))
+         (raise-argument-error* who rhombus-realm "PairList" ln)))
      (apply append ls)]))
 
 ;; primitive doesn't check for listness

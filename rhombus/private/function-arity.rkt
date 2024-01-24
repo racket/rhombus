@@ -59,16 +59,16 @@
 
 (define-for-syntax (hash-intersect a b)
   (let-values ([(a b)
-                (if ((hash-count a) . <= . (hash-count b))
-                    (values a b)
-                    (values b a))])
+                (if ((hash-count a) . < . (hash-count b))
+                    (values b a)
+                    (values a b))])
     (for/hasheq ([k (in-hash-keys b)]
                  #:when (hash-ref a k #f))
       (values k #t))))
 
 (define-for-syntax (hash-union a b)
   (let-values ([(a b)
-                (if ((hash-count a) . >= . (hash-count b))
+                (if ((hash-count a) . < . (hash-count b))
                     (values a b)
                     (values b a))])
     (for/fold ([a a]) ([k (in-hash-keys b)])

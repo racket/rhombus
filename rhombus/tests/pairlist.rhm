@@ -43,6 +43,18 @@ block:
     PairList[1, 2, 3].get(0)
     ~is 1
   check:
+    PairList[1, 2, 3] ++ PairList[4, 5]
+    ~is PairList[1, 2, 3, 4, 5]
+  check:
+    PairList[1, 2, 3] ++ [4, 5]
+    ~throws values("contract violation", "expected: PairList")
+  check:
+    PairList[1, 2, 3] ++ "oops"
+    ~throws values("contract violation", "expected: PairList")
+  check:
+    PairList[1, 2, 3].append(PairList[4, 5])
+    ~is PairList[1, 2, 3, 4, 5]
+  check:
     PairList[1, 2, 3].first
     ~is 1
   check:
@@ -132,6 +144,18 @@ block:
   check:
     dynamic(PairList[1, 2, 3]).get(0)
     ~is 1
+  check:
+    dynamic(PairList[1, 2, 3]) ++ PairList[4, 5]
+    ~is PairList[1, 2, 3, 4, 5]
+  check:
+    dynamic(PairList[1, 2, 3]) ++ [4, 5]
+    ~throws "cannot append a pair list and other value"
+  check:
+    dynamic(PairList[1, 2, 3]) ++ "oops"
+    ~throws "cannot append a pair list and other value"
+  check:
+    dynamic(PairList[1, 2, 3]).append(PairList[4, 5])
+    ~is PairList[1, 2, 3, 4, 5]
 
 check:
   match PairList[]

@@ -76,10 +76,13 @@
 
 (module+ for-build
   (provide set-append
-           set-append/proc
            set-extend*
            set-assert
            list->set))
+
+(module+ for-append
+  (provide set-append
+           immutable-set?))
 
 (struct set (ht)
   #:property prop:equal+hash
@@ -117,7 +120,7 @@
 (define-primitive-class Set set
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%append set-append)
+  #:instance-static-info ((#%append Set.append/optimize)
                           . #,any-set-static-infos)
   #:existing
   #:opaque
@@ -503,7 +506,7 @@
   (hash-ref (set-ht s) v #f))
 
 ;; macro to optimize to an inline functional update
-(define-syntax (set-append stx)
+(define-syntax (Set.append/optimize stx)
   (syntax-parse stx
     [(_ set1 set2)
      (syntax-parse (unwrap-static-infos #'set2)
@@ -511,21 +514,11 @@
         #:when (free-identifier=? (expr-quote Set-build) #'id)
         #'(set (hash-set (set-ht set1) v #t))]
        [_
-        #'(set-append/proc set1 set2)])]))
+        #'(Set.append set1 set2)])]))
 
 ;; for `++`
-(define-static-info-syntax set-append
+(define-static-info-syntax Set.append/optimize
   (#%call-result #,set-static-infos))
-
-(define (set-append/proc set1 set2)
-  (define ht1 (set-ht set1))
-  (define ht2 (set-ht set2))
-  (let-values ([(ht1 ht2)
-                (if ((hash-count ht2) . < . (hash-count ht1))
-                    (values ht1 ht2)
-                    (values ht2 ht1))])
-    (set (for/fold ([ht ht1]) ([k (in-hash-keys ht2)])
-           (hash-set ht k #t)))))
 
 (define set-extend*
   (case-lambda
@@ -560,58 +553,83 @@
   (unless (immutable-set? s)
     (raise-argument-error* who rhombus-realm "Set" s)))
 
-(define (set-union who s1 ss)
-  (check-set who s1)
-  (let loop ([s s1] [ss ss])
-       (if (null? ss)
-           s
-           (let ([s1 (car ss)])
-             (check-set who s1)
-             (loop (set-append/proc s s1) (cdr ss))))))
+(define (set-append/hash a b)
+  (let-values ([(a b)
+                (if ((hash-count a) . < . (hash-count b))
+                    (values b a)
+                    (values a b))])
+    (for/fold ([a a]) ([k (in-hash-keys b)])
+      (hash-set a k #t))))
+
+(define (set-append s1 s2)
+  (set (set-append/hash (set-ht s1) (set-ht s2))))
+
+(define (set-append-all s1 ss)
+  (set (for/fold ([ht (set-ht s1)])
+                 ([s (in-list ss)])
+         (set-append/hash ht (set-ht s)))))
 
 (define/method Set.append
   #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
-    [() (set #hashalw())]
+    [() empty-set]
     [(s)
      (check-set who s)
      s]
+    [(s1 s2)
+     (check-set who s1)
+     (check-set who s2)
+     (set-append s1 s2)]
     [(s1 . ss)
-     (set-union who s1 ss)]))
+     (check-set who s1)
+     (for ([s (in-list ss)])
+       (check-set who s))
+     (set-append-all s1 ss)]))
 
 (define/method Set.union
   #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
-    [() (set #hashalw())]
+    [() empty-set]
     [(s)
      (check-set who s)
      s]
+    [(s1 s2)
+     (check-set who s1)
+     (check-set who s2)
+     (set-append s1 s2)]
     [(s1 . ss)
-     (set-union who s1 ss)]))
+     (check-set who s1)
+     (for ([s (in-list ss)])
+       (check-set who s))
+     (set-append-all s1 ss)]))
+
+(define (set-intersect/hash a b)
+  (let-values ([(a b)
+                (if ((hash-count a) . < . (hash-count b))
+                    (values b a)
+                    (values a b))])
+    (for/hashalw ([k (in-hash-keys b)]
+                  #:when (hash-ref a k #f))
+      (values k #t))))
 
 (define/method Set.intersect
   #:static-infos ((#%call-result #,set-static-infos))
   (case-lambda
-    [() (set #hashalw())]
+    [() empty-set]
     [(s)
      (check-set who s)
      s]
+    [(s1 s2)
+     (check-set who s1)
+     (check-set who s2)
+     (set (set-intersect/hash (set-ht s1) (set-ht s2)))]
     [(s1 . ss)
      (check-set who s1)
-     (define (int a b)
-       (if ((hash-count a) . < . (hash-count b))
-           (int b a)
-           (for/hashalw ([k (in-hash-keys b)]
-                         #:when (hash-ref a k #f))
-             (values k #t))))
-     (set
-      (let loop ([ht (set-ht s1)] [ss ss])
-        (if (null? ss)
-            ht
-            (let ([s1 (car ss)])
-              (check-set who s1)
-              (loop (int ht (set-ht s1))
-                    (cdr ss))))))]))
+     (for ([s (in-list ss)])
+       (check-set who s))
+     (set (for/fold ([ht (set-ht s1)])
+                    ([s (in-list ss)])
+            (set-intersect/hash ht (set-ht s))))]))
 
 (define/method (Set.remove s v)
   #:static-infos ((#%call-result #,set-static-infos))

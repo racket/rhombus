@@ -18,20 +18,15 @@ instances of classes that implement @rhombus(Appendable, ~class).
     key_expr: block expr
     val_expr: block expr
 
-  operator ((v1 :: ReadableMap) ++ (v2 :: ReadableMap))
-    :: Map
-  operator ((v1 :: ReadableSet) ++ (v2 :: ReadableSet))
-    :: Set
-  operator ((v1 :: List) ++ (v2 :: List))
-    :: List
-  operator ((v1 :: Array) ++ (v2 :: Array))
-    :: Array
+  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
+  operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
+  operator ((v1 :: List) ++ (v2 :: List)) :: List
+  operator ((v1 :: PairList) ++ (v2 :: PairList)) :: PairList
+  operator ((v1 :: Array) ++ (v2 :: Array)) :: MutableArray
   operator ((v1 :: ReadableString) ++ (v2 :: ReadableString))
     :: String
-  operator ((v1 :: Bytes) ++ (v2 :: Bytes))
-    :: Bytes
-  operator ((v1 :: Appendable) ++ (v2 :: Appendable))
-    :: Any
+  operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: MutableBytes
+  operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any
 ){
 
  Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list,
@@ -41,7 +36,7 @@ instances of classes that implement @rhombus(Appendable, ~class).
  In the case of maps, mappings for keys in @rhombus(v2) replace ones
  that exist already in @rhombus(v1). In the case of sets, the new set has
  all of the elements of @rhombus(v1) and @rhombus(v2). In the case of
- lists, strings, and byte strings, the elements of @rhombus(v1) appear
+ lists, pair lists, strings, and byte strings, the elements of @rhombus(v1) appear
  first in the result followed by the elements of @rhombus(v2).
 
  The combination

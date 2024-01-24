@@ -27,6 +27,9 @@ block:
     Array(1, 2, 3) ++ Array(0)
     ~is_now Array(1, 2, 3, 0)
   check:
+    Array(1, 2, 3) ++ "oops"
+    ~throws values("contract violation", "expected: Array")
+  check:
     Array(1, 2, 3).append(Array(4, 5, 6), Array(7, 8, 9))
     ~is_now Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
   check:

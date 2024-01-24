@@ -71,6 +71,7 @@
 (define/method Bytes.append
   #:inline
   #:primitive (bytes-append)
+  #:static-infos ((#%call-result #,bytes-static-infos))
   (case-lambda
     [() (bytes)]
     [(b1) (bytes-append b1)]

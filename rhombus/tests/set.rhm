@@ -26,6 +26,11 @@ block:
     {"a", "b"}.get("a")
     ~is #true
   check:
+    {1, 2, 3} ++ {4, 5} ~is {1, 2, 3, 4, 5}
+    {1, 2, 3}.append({4, 5}) ~is {1, 2, 3, 4, 5}
+    {1, 2, 3} ++ "oops" ~throws values("contract violation", "expected: Set")
+    {1, 2, 3} ++ MutableSet{4, 5} ~throws values("contract violation", "expected: Set")
+  check:
     Set("a", "b").length()
     ~is 2
   check:
@@ -72,26 +77,31 @@ block:
   check:
     dynamic({"a", "b"}).get("a")
     ~is #true
+  check:
+    dynamic({1, 2, 3}) ++ {4, 5} ~is {1, 2, 3, 4, 5}
+    dynamic({1, 2, 3}).append({4, 5}) ~is {1, 2, 3, 4, 5}
+    dynamic({1, 2, 3}) ++ "oops" ~throws "cannot append a set and other value"
+    dynamic({1, 2, 3}) ++ MutableSet{4, 5} ~throws "cannot append a set and other value"
 
 // See also tests in "rest-args.rhm"
 block:
   check:
-    {"a", "b", &{"c"}}
+    {"a", "b", & {"c"}}
     ~is {"a", "b", "c"}
   check:
-    {"a", &{"b", "c"}}
+    {"a", & {"b", "c"}}
     ~is {"a", "b", "c"}
   check:
-    {&{"b", "c"}, "a"}
+    {& {"b", "c"}, "a"}
     ~is {"a", "b", "c"}
   check:
-    {&{"b"}, "a", &{"c"}}
+    {& {"b"}, "a", & {"c"}}
     ~is {"a", "b", "c"}
   check:
-    {"c", "b", &{"b"}, "a", &{"c"}}
+    {"c", "b", & {"b"}, "a", & {"c"}}
     ~is {"a", "b", "c"}
   check:
-    {"b", &{"b"}, "c", "a", &{"c"}}
+    {"b", & {"b"}, "c", "a", & {"c"}}
     ~is {"a", "b", "c"}
   check:
     def mutable x = []
@@ -100,7 +110,7 @@ block:
     ~is [{"a", "b", "c"},
          [3, [2, [1, []]]]]
   check:
-    Set{&"oops"}
+    Set{& "oops"}
     ~throws "not a set"
 
 block:
@@ -115,7 +125,7 @@ block:
     {0, x, ...}
     ~is {0, 1, 2, 3}
   check:
-    {&{10, 11}, x, ..., 0}
+    {& {10, 11}, x, ..., 0}
     ~is {0, 1, 2, 3, 10, 11}
   check:
     [{x}, ...]

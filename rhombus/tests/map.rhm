@@ -37,6 +37,8 @@ block:
   check:
     ({"a": 1, "b": 2} ++ {"a": 3})["a"] ~is 3
     ({"a": 1, "b": 2} ++ {"a": 3, "b": 4})["a"] ~is 3
+    {"a": 1, "b": 2} ++ "oops" ~throws values("contract violation", "expected: Map")
+    {"a": 1, "b": 2} ++ MutableMap{"a": 3} ~throws values("contract violation", "expected: Map")
     {"a": 1, "b": 2}.append()["a"] ~is 1
     {"a": 1, "b": 2}.append({"a": 2})["a"] ~is 2
     {"a": 1, "b": 2}.append({"a": 2}, {"a": 3})["a"] ~is 3
@@ -105,6 +107,8 @@ block:
   check:
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3})["a"] ~is 3
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3, "b": 4})["a"] ~is 3
+    dynamic({"a": 1, "b": 2}) ++ "oops" ~throws "cannot append a map and other value"
+    dynamic({"a": 1, "b": 2}) ++ MutableMap{"a": 3} ~throws "cannot append a map and other value"
     dynamic({"a": 1, "b": 2}).append()["a"] ~is 1
     dynamic({"a": 1, "b": 2}).append({"a": 2})["a"] ~is 2
     dynamic({"a": 1, "b": 2}).append({"a": 2}, {"a": 3})["a"] ~is 3
@@ -112,34 +116,34 @@ block:
 // See also tests in "rest-args.rhm"
 block:
   check:
-    {"a": 1, "b": 2, &{"c": 3}}
+    {"a": 1, "b": 2, & {"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {"a": 1, &{"b": 2, "c": 3}}
+    {"a": 1, & {"b": 2, "c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {&{"b": 2, "c": 3}, "a": 1}
+    {& {"b": 2, "c": 3}, "a": 1}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {&{"b": 2}, "a": 1, &{"c": 3}}
+    {& {"b": 2}, "a": 1, & {"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {"c": "oops", "b": "oops", &{"b": 2}, "a": 1, &{"c": 3}}
+    {"c": "oops", "b": "oops", & {"b": 2}, "a": 1, & {"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {"b": "oops", &{"b": 2}, "c": "oops", "a": 1, &{"c": 3}}
+    {"b": "oops", & {"b": 2}, "c": "oops", "a": 1, & {"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
-    {&{"b": "oops"}, "c": "oops", "b": 2, "a": 1, &{"c": 3}}
+    {& {"b": "oops"}, "c": "oops", "b": 2, "a": 1, & {"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
   check:
     def mutable x = []
-    [{&(block: x := [1, x]; {"b": 2}), (block: x:= [2, x]; "a"): 1, &(block: x:= [3, x]; {"c": 3})},
+    [{& (block: x := [1, x]; {"b": 2}), (block: x:= [2, x]; "a"): 1, & (block: x:= [3, x]; {"c": 3})},
      x]
     ~is [{"a": 1, "b": 2, "c": 3},
          [3, [2, [1, []]]]]
   check:
-    {&"oops"}
+    {& "oops"}
     ~throws "not an immutable map"
 
 block:
@@ -151,7 +155,7 @@ block:
     {#true: 0, x: x, ...}
     ~is {1: 1, 2: 2, 3: 3, #true: 0}
   check:
-    {#true: 0, &{7: 7}, x: x, ...}
+    {#true: 0, & {7: 7}, x: x, ...}
     ~is {1: 1, 2: 2, 3: 3, 7: 7, #true: 0}
   def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   check:

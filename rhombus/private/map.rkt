@@ -76,10 +76,13 @@
 
 (module+ for-build
   (provide hash-append
-           hash-append/proc
            hash-extend*
            hash-assert
            list->map))
+
+(module+ for-append
+  (provide hash-append
+           immutable-hash?))
 
 (define-for-syntax any-map-static-infos
   #'((#%index-get Map.get)
@@ -109,7 +112,7 @@
 (define-primitive-class Map map
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%append hash-append)
+  #:instance-static-info ((#%append Map.append/optimize)
                           . #,any-map-static-infos)
   #:existing
   #:opaque
@@ -150,18 +153,6 @@
    delete))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
-
-(define (Map.from_interleaved . args)
-  (define ht (hashalw))
-  (let loop ([ht ht] [args args])
-    (cond
-      [(null? args) ht]
-      [(null? (cdr args))
-       (raise-arguments-error* 'Map rhombus-realm
-                               (string-append "key does not have a value"
-                                              " (i.e., an odd number of arguments were provided)")
-                               "key" (car args))]
-      [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))
 
 (define Map-pair-build
   (let ([Map (lambda args
@@ -520,26 +511,19 @@
 
 
 ;; macro to optimize to an inline functional update
-(define-syntax (hash-append stx)
+(define-syntax (Map.append/optimize stx)
   (syntax-parse stx
     [(_ map1 map2)
      (syntax-parse (unwrap-static-infos #'map2)
-       [(id:identifier k:keyword v)
-        #:when (free-identifier=? (expr-quote Map-build) #'id)
-        #'(hash-set map1 'k v)]
        [(id:identifier k v)
         #:when (free-identifier=? (expr-quote Map-build) #'id)
         #'(hash-set map1 k v)]
        [_
-        #'(hash-append/proc map1 map2)])]))
+        #'(Map.append map1 map2)])]))
 
 ;; for `++`
-(define-static-info-syntax hash-append
+(define-static-info-syntax Map.append/optimize
   (#%call-result #,map-static-infos))
-
-(define (hash-append/proc map1 map2)
-  (for/fold ([ht map1]) ([(k v) (in-hash map2)])
-    (hash-set ht k v)))
 
 (define hash-extend*
   (case-lambda
@@ -594,6 +578,14 @@
   (unless (immutable-hash? ht)
     (raise-argument-error* who rhombus-realm "Map" ht)))
 
+(define (hash-append a b)
+  (let-values ([(a b)
+                (if ((hash-count a) . < . (hash-count b))
+                    (values b a)
+                    (values a b))])
+    (for/fold ([a a]) ([(k v) (in-hash b)])
+      (hash-set a k v))))
+
 (define/method Map.append
   #:static-infos ((#%call-result #,map-static-infos))
   (case-lambda
@@ -605,14 +597,14 @@
     [(ht1 ht2)
      (check-map who ht1)
      (check-map who ht2)
-     (hash-append/proc ht1 ht2)]
+     (hash-append ht1 ht2)]
     [(ht . hts)
      (check-map who ht)
      (for ([ht (in-list hts)])
        (check-map who ht))
      (for/fold ([new-ht ht])
                ([ht (in-list hts)])
-       (hash-append/proc new-ht ht))]))
+       (hash-append new-ht ht))]))
 
 (define/method (Map.has_key ht key)
   (check-readable-map who ht)

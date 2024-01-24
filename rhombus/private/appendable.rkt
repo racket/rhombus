@@ -12,7 +12,7 @@
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
          "parse.rkt"
-         (submod "map.rkt" for-build)
+         (submod "map.rkt" for-append)
          "append-key.rkt"
          "append-property.rkt"
          "call-result-key.rkt"
@@ -20,12 +20,11 @@
          (only-in "string.rkt"
                   +&)
          (submod "set.rkt" for-ref)
-         (submod "set.rkt" for-build)
+         (submod "set.rkt" for-append)
          "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "is-static.rkt")
 
 (provide (for-spaces (rhombus/class
@@ -101,7 +100,7 @@
                       (list append-id form1 form2)
                       `(,#'let ([a1 ,form1]
                                 [a2 ,form2])
-                               (check-appendable a1 a2)
+                               (,#'check-appendable a1 a2)
                                (,append-id a1 a2))))))
 
 (define-syntax ++
@@ -153,62 +152,57 @@
 (define (same-append? a b)
   (eq? a b))
 
-(define (general-append map1 map2)
-  (define (mismatch what)
-    (raise-arguments-error* '++ rhombus-realm
-                            (format "cannot append a~a ~a and other value"
-                                    (if (eqv? (string-ref what 0) #\a) "n" "")
-                                    what)
-                            what map1
-                            "other value" map2))
+(define (raise-mismatch what v1 v2)
+  (raise-arguments-error* '++ rhombus-realm
+                          (format "cannot append a~a ~a and other value"
+                                  (if (eqv? (string-ref what 0) #\a) "n" "")
+                                  what)
+                          what v1
+                          "other value" v2))
+
+(define (general-append v1 v2)
   (cond
-    [(treelist? map1) (cond
-                        [(treelist? map2) (treelist-append map1 map2)]
-                        [else (mismatch "List")])]
-    [(list? map1) (cond
-                    [(list? map2) (append map1 map2)]
-                    [else (mismatch "PairList")])]
-    [(hash? map1) (cond
-                    [(hash? map2) (hash-append/proc map1 map2)]
-                    [else (mismatch "Map")])]
-    [(set? map1) (cond
-                   [(set? map2) (set-append/proc map1 map2)]
-                   [else (mismatch "Set")])]
-    [(string? map1) (cond
-                      [(string? map2) (string-append-immutable map1 map2)]
-                      [else (mismatch "String")])]
-    [(bytes? map1) (cond
-                     [(bytes? map2) (bytes-append map1 map2)]
-                     [else (mismatch "Bytes" map1)])]
-    [(appendable-ref map1 #f)
-     => (lambda (app1)
-          (cond
-            [(appendable-ref map2 #f)
-             => (lambda (app2)
-                  (cond
-                    [(same-append? app1 app2)
-                     (app1 map1 map2)]
-                    [else
-                     (mismatch "appendable object")]))]
-            [else (mismatch "appendable object")]))]
-    [(vector? map1) (cond
-                     [(vector? map2) (vector-append map1 map2)]
-                     [else (mismatch "array")])]    
-    [else (raise-argument-error* '++ rhombus-realm "Appendable" map1)]))
+    [(treelist? v1)
+     (unless (treelist? v2)
+       (raise-mismatch "list" v1 v2))
+     (treelist-append v1 v2)]
+    [(list? v1)
+     (unless (list? v2)
+       (raise-mismatch "pair list" v1 v2))
+     (append v1 v2)]
+    [(immutable-hash? v1)
+     (unless (immutable-hash? v2)
+       (raise-mismatch "map" v1 v2))
+     (hash-append v1 v2)]
+    [(immutable-set? v1)
+     (unless (immutable-set? v2)
+       (raise-mismatch "set" v1 v2))
+     (set-append v1 v2)]
+    [(string? v1)
+     (unless (string? v2)
+       (raise-mismatch "string" v1 v2))
+     (string-append-immutable v1 v2)]
+    [(bytes? v1)
+     (unless (bytes? v2)
+       (raise-mismatch "byte string" v1 v2))
+     (bytes-append v1 v2)]
+    [(vector? v1)
+     (unless (vector? v2)
+       (raise-mismatch "array" v1 v2))
+     (vector-append v1 v2)]
+    [else
+     (define app1 (appendable-ref v1 #f))
+     (unless app1
+       (raise-argument-error* '++ rhombus-realm "Appendable" v1))
+     (define app2 (appendable-ref v2 #f))
+     (unless (and app2 (same-append? app1 app2))
+       (raise-mismatch "appendable object" v1 v2))
+     (app1 v1 v2)]))
 
 (define (check-appendable a1 a2)
-  (cond
-    [(appendable-ref a1 #f)
-     => (lambda (app1)
-          (unless (cond
-                    [(appendable-ref a2 #f)
-                     => (lambda (app2)
-                          (same-append? app1 app2))]
-                    [else #f])
-            (raise-arguments-error* '++ rhombus-realm
-                                    "cannot append an appendable object and other value"
-                                    "appendable object" a1
-                                    "other value" a2)))]
-    [else
-     ;; If we get here, then it means that static information was wrong
-     (raise-argument-error* '++ rhombus-realm "Appendable" a1)]))
+  (define app1 (appendable-ref a1 #f))
+  (unless app1
+    (raise-argument-error* '++ rhombus-realm "Appendable" a1))
+  (define app2 (appendable-ref a2 #f))
+  (unless (and app2 (same-append? app1 app2))
+    (raise-mismatch "appendable object" a1 a2)))

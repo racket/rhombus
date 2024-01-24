@@ -1,12 +1,8 @@
 #lang rhombus
 
 check:
-  "hello" ++ " " ++ "world" ~is "hello world"
   "hello" :: String ~is "hello"
-
-block:
-  use_static
-  check 1 +& 2 ++ "3" ~is "123"
+  1 +& 2 ++ "3" ~is "123"
 
 block:
   use_static
@@ -18,6 +14,8 @@ block:
     "hello".length() ~is 5
     "hello"[0] ~is #{#\h}
     "hello".get(0) ~is #{#\h}
+    "hello" ++ " " ++ "world" ~is "hello world"
+    "hello" ++ " " ++ #"world" ~throws values("contract violation", "expected: ReadableString")
     "hello".append(" world") ~is "hello world"
     "hello".append(" world", " and bye") ~is "hello world and bye"
     "hello".to_int() ~is #false
@@ -48,6 +46,8 @@ check:
   dynamic("hello").length() ~is 5
   dynamic("hello")[0] ~is #{#\h}
   dynamic("hello").get(0) ~is #{#\h}
+  dynamic("hello" ++ " ") ++ "world" ~is "hello world"
+  dynamic("hello" ++ " ") ++ #"world" ~throws "cannot append a string and other value"
   dynamic("hello").append(" world") ~is "hello world"
   dynamic("hello").append(" world", " and bye") ~is "hello world and bye"
   dynamic("hello").to_int() ~is #false
