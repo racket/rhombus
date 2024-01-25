@@ -1,6 +1,5 @@
 #lang racket/base
 (require "treelist.rkt"
-         "realm.rkt"
          (submod "list.rkt" for-listable))
 
 (provide listable?
@@ -12,8 +11,8 @@
   (cond
     [(treelist? v) (treelist->list v)]
     [(list? v) v]
-    [(listable? v) (treelist->list (to-treelist who v))]
-    [else (raise-argument-error* who rhombus-realm "Listable" v)]))
+    [(vector? v) (vector->list v)]
+    [else (treelist->list (to-treelist who v))]))
 
 (define (maybe-list->treelist v)
   (cond
