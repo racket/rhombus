@@ -214,9 +214,26 @@ check:
   PairList.take_left(PairList[1, 2, 3], 2) ~is PairList[1, 2]
   PairList[1, 2, 3].take_right(2) ~is PairList[2, 3]
   PairList.take_right(PairList[1, 2, 3], 2) ~is PairList[2, 3]
-  // todo: these error messages shouldn't be soo different:
-  PairList[1, 2, 3].drop_left(4) ~throws "index too large for list"
-  PairList[1, 2, 3].drop_right(4) ~throws "list is shorter than the number of elements to drop"
+  PairList[1, 2, 3].take_left(4) ~throws values(
+    "list is shorter than the number of elements to take",
+    "list length", "3",
+    "number to take", "4",
+  )
+  PairList[1, 2, 3].take_right(4) ~throws values(
+    "list is shorter than the number of elements to take",
+    "list length", "3",
+    "number to take", "4",
+  )
+  PairList[1, 2, 3].drop_left(4) ~throws values(
+    "list is shorter than the number of elements to drop",
+    "list length", "3",
+    "number to drop", "4",
+  )
+  PairList[1, 2, 3].drop_right(4) ~throws values(
+    "list is shorter than the number of elements to drop",
+    "list length", "3",
+    "number to drop", "4",
+  )
 
 check:
   use_static

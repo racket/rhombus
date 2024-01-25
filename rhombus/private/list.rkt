@@ -696,14 +696,13 @@
     (raise-range-error* who rhombus-realm "list" "ending " end l start len))
   (treelist-take (treelist-drop l start) (- end start)))
 
-(define (check-list-count who what l len n)
-  (when (n . > . len)
-    (raise-arguments-error* who rhombus-realm
-                            (string-append "list is shorter than the number of elements to "
-                                           what)
-                            "list length" (unquoted-printing-string (number->string len))
-                            (string-append "number to " what)
-                            (unquoted-printing-string (number->string n)))))
+(define (raise-list-count who what l len n)
+  (raise-arguments-error* who rhombus-realm
+                          (string-append "list is shorter than the number of elements to "
+                                         what)
+                          "list length" (unquoted-printing-string (number->string len))
+                          (string-append "number to " what)
+                          (unquoted-printing-string (number->string n))))
 
 (define/method (PairList.take_left orig-l orig-n)
   #:static-infos ((#%call-result #,list-static-infos))
@@ -712,11 +711,8 @@
   (let loop ([l orig-l] [n orig-n])
     (cond
       [(zero? n) null]
-      [(null? l)
-       ;; maybe revisit: this error case has O(length) time
-       ;; instead of O(n) time
-       (define len (length l))
-       (check-list-count who "take" orig-l len orig-n)]
+      ;; too many to take
+      [(null? l) (raise-list-count who "take" orig-l (- orig-n n) orig-n)]
       [else (cons (car l) (loop (cdr l) (sub1 n)))])))
 
 (define/method (PairList.take_right l n)
@@ -724,23 +720,28 @@
   (check-list who l)
   (check-nonneg-int who n)
   (define len (length l))
-  (check-list-count who "take" l len n)
+  (when (n . > . len)
+    (raise-list-count who "take" l len n))
   (list-tail l (- len n)))
 
-;; primitive doesn't check for listness
-(define/method (PairList.drop_left l n)
-  #:inline
-  #:primitive (list-tail)
+(define/method (PairList.drop_left orig-l orig-n)
   #:static-infos ((#%call-result #,list-static-infos))
-  (check-list who l)
-  (list-tail l n))
+  (check-list who orig-l)
+  (check-nonneg-int who orig-n)
+  (let loop ([l orig-l] [n orig-n])
+    (cond
+      [(zero? n) l]
+      ;; too many to drop
+      [(null? l) (raise-list-count who "drop" orig-l (- orig-n n) orig-n)]
+      [else (loop (cdr l) (sub1 n))])))
 
 (define/method (PairList.drop_right l n)
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who l)
   (check-nonneg-int who n)
   (define len (length l))
-  (check-list-count who "drop" l len n)
+  (when (n . > . len)
+    (raise-list-count who "drop" l len n))
   (for/list ([a (in-list l)]
              [i (in-range 0 (- len n))])
     a))
