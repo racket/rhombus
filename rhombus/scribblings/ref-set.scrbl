@@ -140,6 +140,8 @@ it supplies its elements in an unspecified order.
 
  The @rhombus(Set, ~bind) binding forms match only immutable sets, while
  @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
+ For @rhombus(ReadableSet, ~bind), the @rhombus(& set_bind) will match
+ a snapshot (in the sense of @rhombus(Set.snapshot)) of the rest of the set.
 
 @examples(
   def Set{"x", "y"} = {"x", "y"}

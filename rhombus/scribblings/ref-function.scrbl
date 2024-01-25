@@ -85,7 +85,7 @@ normally bound to implement function calls.
   call as separate by-position arguments.
 
   If the @rhombus(arg) sequence contains @rhombus(~& map_expr), then all
-  the keys in the map produced by @rhombus(map_expr) must be keywords, and
+  the keys in the immutable map produced by @rhombus(map_expr) must be keywords, and
   they must not overlap with the directly supplied @rhombus(keyword)s or
   keywords in maps from other @rhombus(~& map_expr) arguments. The
   keyword-value pairs are passed into the function as additional keyword
@@ -300,7 +300,7 @@ in a @rhombus(rest) sequence.
 When a @rhombus(rest) sequence contains @rhombus(~& map_bind), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
-values are collected into a map value to be bound to
+values are collected into an immutable map value to be bound to
 @rhombus(map_bind). Static information associated by @rhombus(Map) is
 propagated to @rhombus(map_bind).
 Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.

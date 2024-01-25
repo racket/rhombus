@@ -35,7 +35,8 @@
          (submod "define-arity.rkt" for-info)
          "indirect-static-info-key.rkt"
          "class-primitive.rkt"
-         "rest-bind.rkt")
+         "rest-bind.rkt"
+         "hash-remove.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -229,7 +230,9 @@
 (define-syntax (empty-set-matcher stx)
   (syntax-parse stx
     [(_ arg-id hash? IF success fail)
-     #'(IF (and (set? arg-id) (hash? (set-ht arg-id)) (eqv? 0 (hash-count (set-ht arg-id))))
+     #'(IF (and (set? arg-id) (let ([ht (set-ht arg-id)])
+                                (and (hash? ht)
+                                     (eqv? 0 (hash-count ht)))))
            success
            fail)]))
 
@@ -373,28 +376,25 @@
   (syntax-parse stx
     [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
         IF success failure)
+     (define readable-set? (eq? (syntax-e #'mode) 'ReadableSet))
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if (eq? (syntax-e #'mode) 'ReadableSet) #'set? #'immutable-set?) arg-id)
-           #,(let loop ([keys (syntax->list #'keys)]
-                        [key-tmp-ids key-tmps])
-               (cond
-                 [(and (null? keys) (syntax-e #'rest-tmp))
-                  #`(begin
-                      (define rest-tmp (set-remove*/snapshot arg-id (list #,@key-tmps)))
-                      (composite-matcher-id 'set composite-data IF success failure))]
-                 [(null? keys)
-                  #`(composite-matcher-id 'set composite-data IF success failure)]
-                 [else
-                  #`(begin
-                      (define #,(car key-tmp-ids) (rhombus-expression #,(car keys)))
-                      (IF (set-ref arg-id #,(car key-tmp-ids))
-                          #,(loop (cdr keys) (cdr key-tmp-ids))
-                          failure))]))
+     #`(IF (#,(if readable-set? #'set? #'immutable-set?) arg-id)
+           (begin
+             (define ht (set-ht arg-id))
+             #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
+                                               (list #`(define rest-tmp
+                                                         (set (hash-remove*
+                                                               #,(if readable-set? #'(hash-snapshot ht) #'ht)
+                                                               (list #,@key-tmps)))))
+                                               '())
+                                           (list #'(composite-matcher-id 'set composite-data IF success failure)))])
+                           ([key (in-list (syntax->list #'keys))]
+                            [key-tmp-id (in-list key-tmps)])
+                  (list #`(define #,key-tmp-id (rhombus-expression #,key))
+                        #`(IF (hash-ref ht #,key-tmp-id #f)
+                              (begin #,@forms)
+                              failure))))
            failure)]))
-
-(define (set-remove*/snapshot s ks)
-  (set (for/fold ([ht (hash-snapshot (set-ht s))]) ([k (in-list ks)])
-         (hash-remove ht k))))
 
 (define-syntax (set-committer stx)
   (syntax-parse stx
@@ -431,7 +431,7 @@
   1
   #f
   (lambda (arg-id predicate-stxs)
-    #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
+    #`(for/and ([v (in-immutable-hash-keys (set-ht #,arg-id))])
         (#,(car predicate-stxs) v)))
   (lambda (static-infoss)
     #`((#%sequence-element #,(car static-infoss))))
@@ -439,7 +439,7 @@
 
 (define-syntax (set-build-convert arg-id build-convert-stxs kws data)
   #`(for/fold ([ht #hashalw()] #:result (and ht (set ht)))
-              ([v (in-hash-keys (set-ht #,arg-id))])
+              ([v (in-immutable-hash-keys (set-ht #,arg-id))])
       #:break (not ht)
       (#,(car build-convert-stxs)
        v
@@ -502,9 +502,6 @@
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
-(define (set-ref s v)
-  (hash-ref (set-ht s) v #f))
-
 ;; macro to optimize to an inline functional update
 (define-syntax (Set.append/optimize stx)
   (syntax-parse stx
@@ -558,7 +555,7 @@
                 (if ((hash-count a) . < . (hash-count b))
                     (values b a)
                     (values a b))])
-    (for/fold ([a a]) ([k (in-hash-keys b)])
+    (for/fold ([a a]) ([k (in-immutable-hash-keys b)])
       (hash-set a k #t))))
 
 (define (set-append s1 s2)
@@ -608,7 +605,7 @@
                 (if ((hash-count a) . < . (hash-count b))
                     (values b a)
                     (values a b))])
-    (for/hashalw ([k (in-hash-keys b)]
+    (for/hashalw ([k (in-immutable-hash-keys b)]
                   #:when (hash-ref a k #f))
       (values k #t))))
 

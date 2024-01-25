@@ -88,6 +88,28 @@ block:
   check b ~is 2
   check rst ~is {"c": 3, "d": 4}
 
+block:
+  def ReadableMap{"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
+  check a ~is 1
+  check b ~is 2
+  check rst ~is {"c": 3, "d": 4}
+
+block:
+  def {"a", "b", & rst} = {"a", "b", "c", "d"}
+  check rst ~is {"c", "d"}
+
+block:
+  def Set{"a", "b", & rst} = {"a", "b", "c", "d"}
+  check rst ~is {"c", "d"}
+
+block:
+  def ReadableSet{"a", "b", & rst} = {"a", "b", "c", "d"}
+  check rst ~is {"c", "d"}
+
+block:
+  def ReadableSet{"a", "b", & rst} = MutableSet{"a", "b", "c", "d"}
+  check rst ~is {"c", "d"}
+
 // Match & rest on mutable maps produces an immutable copy
 block:
   def m = MutableMap{"a": 1, "b": 2}
@@ -321,7 +343,7 @@ check:
 // Mixing `...` and `&` and not at end
 
 check:
-  add(1, 2, &[3, 4], 5)
+  add(1, 2, & [3, 4], 5)
   ~is 15
 
 check:
@@ -330,19 +352,19 @@ check:
   ~is 15
 
 check:
-  add(&[-1, 1], 2, &[3, 4], 5)
+  add(& [-1, 1], 2, & [3, 4], 5)
   ~is 14
 
 check:
   def [x, ...] = [3, 4]
-  add(&[-1, 1], 2, x, ..., 5)
+  add(& [-1, 1], 2, x, ..., 5)
   ~is 14
 
 check:
   def mutable s = 0
-  [add(&(block: s := [1, s]; [-1, 1]),
+  [add(& (block: s := [1, s]; [-1, 1]),
        (block: s := [2, s]; 2),
-       &(block: s := [3, s]; [3, 4]),
+       & (block: s := [3, s]; [3, 4]),
        (block: s := [4, s]; 5)),
    s]
   ~is [14, [4, [3, [2, [1, 0]]]]]
@@ -392,19 +414,19 @@ check:
        [5, [4, [3, [2, [1, 0]]]]]]
 
 check:
-  anyargs(~x: 10, ~&{#'~x: 10})
+  anyargs(~x: 10, ~& {#'~x: 10})
   ~throws "duplicate keyword"
 
 check:
-  anyargs(~&{#'~x: 10}, ~x: 10)
+  anyargs(~& {#'~x: 10}, ~x: 10)
   ~throws "duplicate keyword"
 
 check:
-  anyargs(~&{#'~x: 10}, ~&{#'~x: 10})
+  anyargs(~& {#'~x: 10}, ~& {#'~x: 10})
   ~throws "duplicate keyword"
 
 check:
-  anyargs(~&{#'~x: 10}, ~&{#'~y: 10}, ~&{#'~x: 10})
+  anyargs(~& {#'~x: 10}, ~& {#'~y: 10}, ~& {#'~x: 10})
   ~throws "duplicate keyword"
 
 // ---------------------------

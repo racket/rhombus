@@ -81,7 +81,7 @@ check:
   )
 
 block:
-  fun take_all(~& _): #false
+  fun take_all(~& _): #void
   check:
     take_all(~kw: #false,
              ~& {#'~kw: #false})
@@ -90,3 +90,18 @@ block:
     take_all(~& {#'~kw: #false},
              ~& {#'~kw: #false})
     ~throws "duplicate keyword in keyword-argument maps"
+  check:
+    take_all(~& {#'~kw: 1, #'~kw2: 2},
+             ~& {#'~kw: 1, #'~kw3: 3, #'~kw4: 4})
+    ~throws "duplicate keyword in keyword-argument maps"
+  check:
+    take_all(~& {#'~kw: 1, #'~kw3: 3, #'~kw4: 4},
+             ~& {#'~kw: 1, #'~kw2: 2})
+    ~throws "duplicate keyword in keyword-argument maps"
+  check:
+    take_all(~& MutableMap{#'~kw: 1, #'~kw2: 2})
+    ~throws "not an immutable map for keyword arguments"
+  check:
+    take_all(~& MutableMap{#'~kw: 1, #'~kw2: 2},
+             ~& MutableMap{#'~kw3: 3})
+    ~throws "not an immutable map for keyword arguments"

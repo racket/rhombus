@@ -40,6 +40,7 @@
          (submod "map.rkt" for-info)
          "if-blocked.rkt"
          "realm.rkt"
+         "mutability.rkt"
          (only-in "values.rkt"
                   [values rhombus-values]))
 
@@ -1218,11 +1219,18 @@
 
 (define function-call-who '|function call|)
 
+(define (check-immutable-hash ht)
+  (unless (immutable-hash? ht)
+    (raise-arguments-error* function-call-who rhombus-realm
+                            "not an immutable map for keyword arguments"
+                            "given" ht)))
+
 (define keyword-apply/map
   (make-keyword-procedure
    (lambda (kws kw-args proc . args+rest)
      ;; currying makes it easier to preserve order when `~&` is last
      (lambda (kw-ht)
+       (check-immutable-hash kw-ht)
        (define all-kw-ht
          (for/fold ([ht kw-ht]) ([kw (in-list kws)]
                                  [arg (in-list kw-args)])
@@ -1243,22 +1251,23 @@
                           [else (cons (car args+rest) (loop (cdr args+rest)))])))))))
 
 (define (merge-keyword-argument-maps ht . hts)
-  (define (check-hash ht)
-    (unless (hash? ht)
-      (raise-arguments-error* function-call-who rhombus-realm
-                              "not a map for keyword arguments"
-                              "given" ht)))
-  (check-hash ht)
+  (define (merge a b)
+    (let-values ([(a b)
+                  (if ((hash-count a) . < . (hash-count b))
+                      (values b a)
+                      (values a b))])
+      (for/fold ([new-a a]) ([(kw arg) (in-immutable-hash b)])
+        (unless (eq? (hash-ref a kw unsafe-undefined)
+                     unsafe-undefined)
+          (raise-arguments-error* function-call-who rhombus-realm
+                                  "duplicate keyword in keyword-argument maps"
+                                  "keyword" kw))
+        (hash-set new-a kw arg))))
+  (check-immutable-hash ht)
   (for ([ht (in-list hts)])
-    (check-hash ht))
+    (check-immutable-hash ht))
   (for/fold ([all-ht ht]) ([ht (in-list hts)])
-    (for/fold ([accum-ht all-ht]) ([(kw arg) (in-hash ht)])
-      (unless (eq? (hash-ref all-ht kw unsafe-undefined)
-                   unsafe-undefined)
-        (raise-arguments-error* function-call-who rhombus-realm
-                                "duplicate keyword in keyword-argument maps"
-                                "keyword" kw))
-      (hash-set accum-ht kw arg))))
+    (merge all-ht ht)))
 
 (begin-for-syntax
   (set-parse-function-call! parse-function-call))

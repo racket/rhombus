@@ -1,9 +1,10 @@
 #lang racket/base
+(require "mutability.rkt")
 
 (provide hash-snapshot)
 
 (define (hash-snapshot ht)
-  (if (immutable? ht)
+  (if (immutable-hash? ht)
       ht
       (for/fold ([new-ht (cond
                            [(hash-equal-always? ht) #hashalw()]

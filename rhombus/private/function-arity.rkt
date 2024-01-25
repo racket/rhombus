@@ -62,16 +62,16 @@
                 (if ((hash-count a) . < . (hash-count b))
                     (values b a)
                     (values a b))])
-    (for/hasheq ([k (in-hash-keys b)]
+    (for/hasheq ([k (in-immutable-hash-keys b)]
                  #:when (hash-ref a k #f))
       (values k #t))))
 
 (define-for-syntax (hash-union a b)
   (let-values ([(a b)
                 (if ((hash-count a) . < . (hash-count b))
-                    (values a b)
-                    (values b a))])
-    (for/fold ([a a]) ([k (in-hash-keys b)])
+                    (values b a)
+                    (values a b))])
+    (for/fold ([a a]) ([k (in-immutable-hash-keys b)])
       (hash-set a k #t))))
 
 (define-for-syntax (union-arity-summaries as)

@@ -42,7 +42,8 @@
          "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         "rest-bind.rkt")
+         "rest-bind.rkt"
+         "hash-remove.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -179,7 +180,7 @@
     (values (car key+val) (cdr key+val))))
 
 (define (hash-pairs ht)
-  (for/list ([p (in-hash-pairs ht)]) p))
+  (for/list ([p (in-immutable-hash-pairs ht)]) p))
 
 (define empty-map #hashalw())
 (define-static-info-syntax empty-map
@@ -287,7 +288,7 @@
   2
   #f
   (lambda (arg-id predicate-stxs)
-    #`(for/and ([(k v) (in-hash #,arg-id)])
+    #`(for/and ([(k v) (in-immutable-hash #,arg-id)])
         (and (#,(car predicate-stxs) k)
              (#,(cadr predicate-stxs) v))))
   (lambda (static-infoss)
@@ -298,7 +299,7 @@
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
   #`(for/fold ([map #hashalw()])
-              ([(k v) (in-hash #,arg-id)])
+              ([(k v) (in-immutable-hash #,arg-id)])
       #:break (not map)
       (#,(car build-convert-stxs)
        k
@@ -473,31 +474,26 @@
   (syntax-parse stx
     [(_ arg-id (mode keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data)
         IF success failure)
+     (define readable-map? (eq? (syntax-e #'mode) 'ReadableMap))
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if (eq? (syntax-e #'mode) 'ReadableMap) #'hash? #'immutable-hash?) arg-id)
-           #,(let loop ([keys (syntax->list #'keys)]
-                        [key-tmp-ids key-tmps]
-                        [val-tmp-ids (syntax->list #'tmp-ids)])
-               (cond
-                 [(and (null? keys) (syntax-e #'rest-tmp))
-                  #`(begin
-                      (define rest-tmp (hash-remove*/snapshot arg-id (list #,@key-tmps)))
-                      (composite-matcher-id 'map composite-data IF success failure))]
-                 [(null? keys)
-                  #`(composite-matcher-id 'map composite-data IF success failure)]
-                 [else
-                  #`(begin
-                      (define #,(car key-tmp-ids) (rhombus-expression #,(car keys)))
-                      (define #,(car val-tmp-ids) (hash-ref arg-id #,(car key-tmp-ids) unsafe-undefined))
-                      (IF (not (eq? #,(car val-tmp-ids) unsafe-undefined))
-                          #,(loop (cdr keys) (cdr key-tmp-ids) (cdr val-tmp-ids))
-                          failure))]))
+     #`(IF (#,(if readable-map? #'hash? #'immutable-hash?) arg-id)
+           (begin
+             #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
+                                               (list #`(define rest-tmp
+                                                         (hash-remove*
+                                                          #,(if readable-map? #'(hash-snapshot arg-id) #'arg-id)
+                                                          (list #,@key-tmps))))
+                                               '())
+                                           (list #'(composite-matcher-id 'map composite-data IF success failure)))])
+                           ([key (in-list (syntax->list #'keys))]
+                            [key-tmp-id (in-list key-tmps)]
+                            [val-tmp-id (in-list (syntax->list #'tmp-ids))])
+                  (list #`(define #,key-tmp-id (rhombus-expression #,key))
+                        #`(define #,val-tmp-id (hash-ref arg-id #,key-tmp-id unsafe-undefined))
+                        #`(IF (not (eq? #,val-tmp-id unsafe-undefined))
+                              (begin #,@forms)
+                              failure))))
            failure)]))
-
-;; hash-remove*/snapshot : (Hashof K V) (Listof K) -> (ImmutableHashof K V)
-(define (hash-remove*/snapshot ht ks)
-  (for/fold ([ht (hash-snapshot ht)]) ([k (in-list ks)])
-    (hash-remove ht k)))
 
 (define-syntax (map-committer stx)
   (syntax-parse stx
@@ -583,7 +579,7 @@
                 (if ((hash-count a) . < . (hash-count b))
                     (values b a)
                     (values a b))])
-    (for/fold ([a a]) ([(k v) (in-hash b)])
+    (for/fold ([a a]) ([(k v) (in-immutable-hash b)])
       (hash-set a k v))))
 
 (define/method Map.append

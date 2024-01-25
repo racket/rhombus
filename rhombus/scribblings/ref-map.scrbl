@@ -105,7 +105,7 @@ in an unspecified order.
   repet.macro '#%braces {$repet_or_splice, ...}'
 ){
 
- Constructs either a map or a set, depending on whether
+ Constructs either an immutable map or immutable set, depending on whether
  @rhombus(key_expr) and @rhombus(val_expr) are provided or
  @rhombus(elem_expr) is provided. If no elements are provided directly,
  the result is a map (not a set). Map/set constructions can also serve as
@@ -118,7 +118,7 @@ in an unspecified order.
  map) or one repetition (for a set), the paired key and value elements
  (for a map) or value elements (for a set) are included in the result map
  or set. When @rhombus(& map_expr) or @rhombus(& set_expr) appears among
- the content, the map or set produced by @rhombus(map_expr) or
+ the content, the immutable map or immutable set produced by @rhombus(map_expr) or
  @rhombus(set_expr) is included in the result map or set.
 
  Mappings or elements are added to the result map or set left-to-right,
@@ -253,6 +253,8 @@ in an unspecified order.
 
  The @rhombus(Map, ~bind) binding forms match only immutable maps, while
  @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
+ For @rhombus(ReadableMap, ~bind), the @rhombus(& map_bind) will match
+ a snapshot (in the sense of @rhombus(Map.snapshot)) of the rest of the map.
 
 @examples(
   def Map{"x": x, "y": y} = {"x": 1, "y": 2}
