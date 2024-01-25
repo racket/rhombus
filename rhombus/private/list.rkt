@@ -340,12 +340,12 @@
 (define-for-syntax (make-treelist-rest-selector args-n for-rep?)
   (if (= 0 args-n)
       #'values
-      #`(lambda (v) (treelist-drop v #,args-n))))
+      #`(lambda (v) (treelist-drop v '#,args-n))))
 
 (define-for-syntax (make-list-rest-selector args-n for-rep?)
   (if (= 0 args-n)
       #'values
-      (if (= 0 args-n) #'values #'cdr)))
+      #'cdr))
 
 (define-for-syntax (make-binding generate-binding make-rest-selector static-infos)
   (binding-transformer
