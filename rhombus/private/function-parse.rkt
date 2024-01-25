@@ -1125,8 +1125,15 @@
       [(g0 (group _::...-expr) . gs)
        (or (loop #'gs) (not-kw-splice-only? #'gs))]
       [((group _::~&-expr rand ...) . gs)
-       (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
+       (or (loop #'gs) (pair? (syntax-e #'gs)))]
       [(_ . gs) (loop #'gs)])))
+
+(begin-for-syntax
+  (struct arg (id stx))
+  (struct arg-pos arg ())
+  (struct arg-kw arg (kw))
+  (struct arg-list arg ())
+  (struct arg-map arg ()))
 
 (define-for-syntax (complex-argument-splice-call rator args-stx extra-args gs-stx
                                                  #:static? static?
@@ -1136,86 +1143,82 @@
                                                  #:rator-kind rator-kind
                                                  #:rator-arity rator-arity
                                                  #:props-stx props-stx)
-  (define (gen-id) (car (generate-temporaries '(arg))))
-  (let loop ([gs-stx gs-stx]
-             [rev-args '()])
-    (syntax-parse gs-stx
-      #:datum-literals (group)
-      [()
-       (define args (reverse rev-args))
-       (define extra-arg-ids (generate-temporaries extra-args))
-       #`(let (#,@(for/list ([extra-arg-id (in-list extra-arg-ids)]
-                             [extra-arg (in-list extra-args)])
-                    #`[#,extra-arg-id #,extra-arg])
-               #,@(for/list ([arg (in-list args)])
-                    #`[#,(car arg) #,(caddr arg)]))
-             #,(let ([lists? (for/or ([arg (in-list args)])
-                               (eq? 'list (cadr arg)))])
-                 (define-values (term ignored-tail)
-                   (generate-call rator args-stx
-                                  (append
-                                   extra-arg-ids
-                                   (if lists?
-                                       null
-                                       (for/list ([arg (in-list args)]
-                                                  #:when (eq? (cadr arg) 'arg))
-                                         (car arg))))
-                                  (append
-                                   (for/list ([arg (in-list args)]
-                                              #:when (eq? (cadr arg) 'kw))
-                                     #`(group #,(list-ref arg 3)
-                                              (block (group (parsed #:rhombus/expr #,(car arg)))))))
-                                  (and lists?
-                                       #`(group
-                                          (parsed
-                                           #:rhombus/expr
-                                           (append
-                                            #,@(for/list ([arg (in-list args)]
-                                                          #:when (or (eq? (cadr arg) 'arg)
-                                                                     (eq? (cadr arg) 'list)))
-                                                 (cond
-                                                   [(eq? (cadr arg) 'arg)
-                                                    #`(list #,(car arg))]
-                                                   [else
-                                                    (car arg)]))))))
-                                  #f #f
-                                  (let ([kwss (for/list ([arg (in-list args)]
-                                                         #:when (eq? (cadr arg) 'kws))
-                                                (car arg))])
-                                    (cond
-                                      [(null? kwss) #f]
-                                      [(null? (cdr kwss)) #`(group (parsed #:rhombus/expr #,(car kwss)))]
-                                      [else #`(group (parsed #:rhombus/expr (merge-keyword-argument-maps #,@kwss)))]))
-                                  #'#f
-                                  #:static? static?
-                                  #:repetition? repetition?
-                                  #:rator-stx rator-stx
-                                  #:srcloc srcloc
-                                  #:rator-kind rator-kind
-                                  #:rator-arity rator-arity
-                                  #:props-stx props-stx))
-                 term))]
-      [(((~and tag group) op::&-expr rand ...) . gs)
-       (loop #'gs
-             (cons (list (gen-id) 'list #'(to-list 'op.name (rhombus-expression (tag rand ...))) #f)
-                   rev-args))]
-      [(g0 (group dots::...-expr) . gs)
-       (define-values (new-gs extras) (consume-extra-ellipses #'gs))
-       (loop new-gs
-             (cons (list (gen-id) 'list (repetition-as-list #'dots.name #'g0 1 extras))
-                   rev-args))]
-      [(((~and tag group) _::~&-expr rand ...) . gs)
-       (loop #'gs
-             (cons (list (gen-id) 'kws #'(rhombus-expression (tag rand ...)))
-                   rev-args))]
-      [((group kw:keyword (tag::block body ...)) . gs)
-       (loop #'gs
-             (cons (list (gen-id) 'kw #'(rhombus-body-at tag body ...) #'kw)
-                   rev-args))]
-      [(g . gs)
-       (loop #'gs
-             (cons (list (gen-id) 'arg #'(rhombus-expression g))
-                   rev-args))])))
+  (define args
+    (let loop ([gs-stx gs-stx])
+      (syntax-parse gs-stx
+        #:datum-literals (group)
+        [() '()]
+        [((group op::&-expr rand ...) . gs)
+         (cons (arg-list (car (generate-temporaries '(list)))
+                         #`(to-list 'op.name (rhombus-expression (#,group-tag rand ...))))
+               (loop #'gs))]
+        [(g0 (group dots::...-expr) . gs)
+         (define-values (new-gs extras) (consume-extra-ellipses #'gs))
+         (cons (arg-list (car (generate-temporaries '(list-repet)))
+                         (repetition-as-list #'dots.name #'g0 1 extras))
+               (loop new-gs))]
+        [((group _::~&-expr rand ...) . gs)
+         (cons (arg-map (car (generate-temporaries '(map)))
+                        #`(rhombus-expression (#,group-tag rand ...)))
+               (loop #'gs))]
+        [((group kw:keyword (tag::block body ...)) . gs)
+         (cons (arg-kw (car (generate-temporaries '(kw-arg)))
+                       #'(rhombus-body-at tag body ...)
+                       #'kw)
+               (loop #'gs))]
+        [(g . gs)
+         (cons (arg-pos (car (generate-temporaries '(arg)))
+                        #'(rhombus-expression g))
+               (loop #'gs))])))
+  (define extra-arg-ids (generate-temporaries extra-args))
+  #`(let (#,@(for/list ([extra-arg-id (in-list extra-arg-ids)]
+                        [extra-arg (in-list extra-args)])
+               #`[#,extra-arg-id #,extra-arg])
+          #,@(for/list ([arg (in-list args)])
+               #`[#,(arg-id arg) #,(arg-stx arg)]))
+      #,(let ([lists? (for/or ([arg (in-list args)])
+                        (arg-list? arg))])
+          (define-values (term ignored-tail)
+            (generate-call rator args-stx
+                           (append
+                            extra-arg-ids
+                            (if lists?
+                                null
+                                (for/list ([arg (in-list args)]
+                                           #:when (arg-pos? arg))
+                                  (arg-id arg))))
+                           (for/list ([arg (in-list args)]
+                                      #:when (arg-kw? arg))
+                             #`(group #,(arg-kw-kw arg)
+                                      (block (group (parsed #:rhombus/expr #,(arg-id arg))))))
+                           (and lists?
+                                #`(group
+                                   (parsed
+                                    #:rhombus/expr
+                                    (append
+                                     #,@(for/list ([arg (in-list args)]
+                                                   #:when (or (arg-pos? arg)
+                                                              (arg-list? arg)))
+                                          (cond
+                                            [(arg-pos? arg) #`(list #,(arg-id arg))]
+                                            [else (arg-id arg)]))))))
+                           #f #f
+                           (let ([maps (for/list ([arg (in-list args)]
+                                                  #:when (arg-map? arg))
+                                         (arg-id arg))])
+                             (cond
+                               [(null? maps) #f]
+                               [(null? (cdr maps)) #`(group (parsed #:rhombus/expr #,(car maps)))]
+                               [else #`(group (parsed #:rhombus/expr (merge-keyword-argument-maps #,@maps)))]))
+                           #'#f
+                           #:static? static?
+                           #:repetition? repetition?
+                           #:rator-stx rator-stx
+                           #:srcloc srcloc
+                           #:rator-kind rator-kind
+                           #:rator-arity rator-arity
+                           #:props-stx props-stx))
+          term)))
 
 (define function-call-who '|function call|)
 
