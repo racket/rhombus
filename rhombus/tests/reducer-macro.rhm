@@ -11,20 +11,20 @@ block:
     let (_, si):
       let '$(a :: annot_meta.Parsed)' = 'List'
       annot_meta.unpack_predicate(a)
-    reducer_meta.pack('build_reverse',
+    reducer_meta.pack('build_noop',
                       '(l = List.empty)',
                       #false,
-                      'build_cons',
+                      'build_add',
                       #false,
                       #false,
-                      'use_cons',
+                      'use_add',
                       si,
                       '[l, next_l]')
-  expr.macro 'build_reverse $_ $e':
-    'List.reverse($e)'
-  defn.macro 'build_cons [$l, $next_l] $e':
-    'def $next_l = List.cons(call_with_values(fun (): $e, List), $l)'
-  expr.macro 'use_cons [$_, $next_l]':
+  expr.macro 'build_noop $_ $e':
+    e
+  defn.macro 'build_add [$l, $next_l] $e':
+    'def $next_l = List.add($l, call_with_values(fun (): $e, List))'
+  expr.macro 'use_add [$_, $next_l]':
     next_l
   def lst:
     for List.nested (i: 0..3):

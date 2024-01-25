@@ -15,35 +15,33 @@ defn.macro 'together:
               $defn
               ...':
   ~all_stx all_stx
-  def [[id, tmp_id], ...]:
+  def [[id, & _] && ids, ...]:
     for List (defn: [defn, ...]):
-      fun temp_id(id):
-        Syntax.make_temp_id("ns")
       match defn
-      | '$(bound_as defn_meta.space: 'class') $id $_ ...':
-          [id, temp_id(id)]
-      | '$(bound_as defn_meta.space: 'interface') $id $_ ...':
-          [id, temp_id(id)]
+      | '$((bound_as defn_meta.space: 'class')
+             || (bound_as defn_meta.space: 'interface'))
+           $id $_ ...':
+          [id, Syntax.make_temp_id("ns"), Syntax.make_temp_id("ann")]
       | ~else:
           syntax_meta.error("not a class or interface definition",
                             all_stx,
                             defn)
+  def [complete, ...]:
+    for values(accum = []) ([id, ns_id, ann_id]: [ids, ...],
+                            defn: [defn, ...]):
+      accum ++ [
+        'namespace $ns_id:
+           export:
+             except_space annot:
+               $id
+             only_space annot:
+               rename:
+                 $id as $ann_id
+           $defn',
+        'import . $ns_id . $id',
+        'annot.delayed_complete $id: $ns_id . $ann_id',
+      ]
   'annot.delayed_declare $id
    ...
-   $(Syntax.make_sequence(
-       List.reverse(
-         for values(accum = []) (id: [id, ...],
-                                 tmp_id: [tmp_id, ...],
-                                 defn: [defn, ...]):
-           ['annot.delayed_complete $id: $tmp_id . $tmp_id',
-            'import . $tmp_id . $id',
-            'namespace $tmp_id:
-               export:
-                 except_space annot:
-                   $id
-                 rename:
-                   $id as $tmp_id
-               $defn']
-             ++ accum
-       )
-     ))'
+   $complete
+   ...'
