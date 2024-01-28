@@ -309,6 +309,19 @@ it supplies its elements in order.
 }
 
 @doc(
+  fun List.set(lst :: List, n :: NonnegInt, v :: Any) :: List
+){
+
+ Returns a list like @rhombus(lst), but with the @rhombus(n)th element
+ replaced with @rhombus(v), equivalent to @rhombus(List.insert(List.delete(lst, n), n, v)).
+
+@examples(
+  ["a", "b", "c"].set(1, "beta")
+)
+
+}
+
+@doc(
   ~nonterminal:
     list_expr: block expr
   repet.macro 'List.repet($list_expr)'
