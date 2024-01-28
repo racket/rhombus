@@ -149,7 +149,7 @@
          #:literals (begin define-values define-syntaxes rhombus-forward pop-forward #%require provide #%provide quote-syntax
                            define-syntax-parameter)
          [(rhombus-forward sub-form ...)
-          (define introducer (make-syntax-introducer #t))
+          (define introducer (make-syntax-introducer/intdef))
           #`(begin
               #,@(reverse accum)
               (sequence [state base-ctx #,(introducer #'add-ctx) base-ctx stx-params]
@@ -267,6 +267,12 @@
                          [(#:module wrap) #`(wrap #,exp-form)]
                          [_ exp-form]))])
                 (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx stx-params] . forms))])])))
+
+;; use internal-definition contexts to allow scope pruning
+(define-for-syntax (make-syntax-introducer/intdef)
+  (define intdef-ctx (syntax-local-make-definition-context))
+  (lambda (stx)
+    (internal-definition-context-add-scopes intdef-ctx stx)))
 
 (define-syntax (rhombus-forward stx)
   (raise-syntax-error #f
