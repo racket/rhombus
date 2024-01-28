@@ -111,14 +111,14 @@ def tabs:
   let spacer = gui.Spacer()
 
   let ghosts = gui.Obs([])
-  fun ghost_mouse(ev :: gui.MouseEvent):
+  fun ghost_mouse(ev :: gui.MouseEvent, area):
     ghosts.update(fun (l :: List):
                     let keep :~ List:
                       if l.length() < 10 | l | l.rest
                     keep ++ [[ev.x, ev.y]])
 
   let keyed = gui.Obs("")
-  fun accum_key(ev :: gui.KeyEvent):
+  fun accum_key(ev :: gui.KeyEvent, area):
     keyed.update(fun (s :: String):
                    match ev.code
                    | #{#\backspace} || #{#\rubout}:

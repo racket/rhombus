@@ -10,8 +10,8 @@
     constructor (
       data :: MaybeObs.of(Any),
       draw :: Function.of_arity(2),
-      ~mouse: mouse :: Function.of_arity(1) = Function.pass,
-      ~key: key :: Function.of_arity(1) = Function.pass,
+      ~mouse: mouse :: Function.of_arity(2) = Function.pass,
+      ~key: key :: Function.of_arity(2) = Function.pass,
       ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
@@ -38,7 +38,7 @@
  When a mouse or key event is received by a rendered canvas, the
  @rhombus(mouse) or @rhombus(key) funciton is called with a
  @rhombus(MouseEvent, ~class) or @rhombus(KeyEvent, ~class),
- respectively.
+ respectively, and a @rhombus(CanvasContext, ~class).
 
 }
 
@@ -62,5 +62,16 @@
  @item{@rhombus(#'deleted)}
 
 )
+
+}
+
+@doc(
+  interface CanvasContext
+  property (ctx :: CanvasContext).client_size :: Size
+){
+
+ A @rhombus(CanvasContext, ~class) represents a canvas instance that
+ receives mouse or keyboard events so that properties of the instance can
+ be accessed, including its size.
 
 }

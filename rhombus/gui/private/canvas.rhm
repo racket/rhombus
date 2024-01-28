@@ -1,5 +1,7 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/draw/private/rkt
+  rhombus/draw
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
   "type.rhm":
@@ -21,6 +23,7 @@ import:
 
 export:
   Canvas
+  CanvasContext
 
 class Canvas(private _handle):
   implements View
@@ -29,8 +32,8 @@ class Canvas(private _handle):
   constructor (data,
                draw :: Function.of_arity(2),
                ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-               ~key: on_key :: Function.of_arity(1) = Function.pass,
-               ~mouse: on_mouse :: Function.of_arity(1) = Function.pass,
+               ~key: on_key :: Function.of_arity(2) = Function.pass,
+               ~mouse: on_mouse :: Function.of_arity(2) = Function.pass,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -48,8 +51,8 @@ class Canvas(private _handle):
                       ~mixin: fun (c):
                                 mix(add_canvas_callbacks(
                                       c,
-                                      fun (ev): on_key(_KeyEvent(ev)()),
-                                      fun (ev): on_mouse(_MouseEvent(ev)())
+                                      fun (ev, w_handle): on_key(_KeyEvent(ev)(), _CanvasContext(w_handle)),
+                                      fun (ev, w_handle): on_mouse(_MouseEvent(ev)(), _CanvasContext(w_handle))
                                     ))))
 
   export:
@@ -67,3 +70,14 @@ class Canvas(private _handle):
       transparent: transparent,
       no_focus: #{no-focus},
       deleted: deleted }
+
+interface CanvasContext:
+  property client_size :~ draw.Size
+
+class _CanvasContext(private _handle):
+  implements CanvasContext
+  constructor _CanvasContext(handle):
+    super(handle)
+  override property client_size:
+    let (w, h) = rkt.send _handle.#{get-client-size}()
+    draw.Size(w, h)
