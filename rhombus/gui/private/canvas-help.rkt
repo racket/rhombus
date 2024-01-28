@@ -7,8 +7,6 @@
   (class %
     (super-new)
     (define/override (on-char e)
-      (on_key e))
+      (on_key e this))
     (define/override (on-event e)
-      (on_mouse e))))
-
-    
+      (on_mouse e this))))
