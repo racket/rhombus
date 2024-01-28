@@ -4,15 +4,23 @@
 
 @title{Input and Output}
 
+A @deftech{port} is an input or output stream for a file, network
+connection, terminal, etc. An @deftech{input port} is specifically for
+output, while an @deftech{output port} is specifically for input.
+
+@dispatch_table(
+  "output port"
+  @rhombus(Port.Output)
+  [out.flush(), Port.Output.flush(out)]
+)
+
 @doc(
   annot.macro 'Port'
   annot.macro 'Port.Input'
   annot.macro 'Port.Output'
 ){
 
- The @rhombus(Port, ~annot) annotation is satisified by a
- @deftech{port}, which is an input or output stream for files, network
- connects, terminals, etc. The @rhombus(Port.Input, ~annot) annotation
+ The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}. The @rhombus(Port.Input, ~annot) annotation
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
  ports, and it is possible for a port to be both.
 
@@ -86,6 +94,14 @@
 
  A @tech{context parameter} for the default port to use when printing
  errors.
+
+}
+
+@doc(
+  fun Port.Output.flush(out :: Port.Output) :: Void
+){
+
+ Flushes the content of @rhombus(out)'s buffer.
 
 }
 
