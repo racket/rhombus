@@ -19,3 +19,17 @@ check:
 check:
   check_later()
   ~is "ok"
+
+// check scope pruning in `let`
+check:
+  import:
+    meta -1:
+      rhombus/meta.syntax_meta
+  let (id1, id2):
+    let id1 = Syntax.literal 'id'
+    values(id1, Syntax.literal 'id')
+  let id3 = Syntax.literal 'id'
+  syntax_meta.equal_name_and_scopes(id1, id2)
+    && syntax_meta.equal_name_and_scopes(id1, id3)
+    && syntax_meta.equal_name_and_scopes(id2, id3)
+  ~is #true
