@@ -2,13 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "interface-parse.rkt")
-         "treelist.rkt"
          "provide.rkt"
          (submod "list.rkt" for-listable)
          (submod "list.rkt" for-compound-repetition)
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
-         "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -57,6 +55,7 @@
   #:fields
   ([to_list Listable.to_list]))
 
+;; also see `to-treelist-who` in "list.rkt"
 (define/method (Listable.to_list v)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (to-treelist who v))

@@ -64,7 +64,7 @@
 (module+ for-listable
   (provide prop:Listable Listable? Listable-ref
            listable?
-           to-treelist))
+           to-treelist to-list))
 
 (module+ normal-call
   (provide (for-syntax normal-call?)))
@@ -1029,33 +1029,46 @@
       (vector? v)
       (Listable? v)))
 
+(define to-treelist-who 'Listable.to_list)
+
 (define (to-treelist who v)
   (cond
     [(treelist? v) v]
     [(list? v) (list->treelist v)]
     [(vector? v) (vector->treelist v)]
-    [(Listable-ref v #f) => (lambda (methods)
-                              (define lst ((vector-ref methods 0) v))
-                              (unless (treelist? lst)
-                                (raise-result-error* who rhombus-realm "List" lst))
-                              lst)]
-    [else (raise-argument-error* who rhombus-realm "Listable" v)]))
+    [else (general-to-treelist who v)]))
+
+(define (to-list who v)
+  (cond
+    [(treelist? v) (treelist->list v)]
+    [(list? v) v]
+    [(vector? v) (vector->list v)]
+    [(general-to-treelist who v) => treelist->list]
+    [else #f]))
+
+(define (general-to-treelist who v)
+  (define methods (Listable-ref v #f))
+  (cond
+    [(not methods)
+     (and who
+          (raise-argument-error* who rhombus-realm "Listable" v))]
+    [else
+     (define lst ((vector-ref methods 0) v))
+     (unless (treelist? lst)
+       (raise-result-error* to-treelist-who rhombus-realm "List" lst))
+     lst]))
 
 (define (ensure-treelist v)
-  (if (listable? v)
-      (to-treelist #f v)
+  (or (to-treelist #f v)
       (raise-arguments-error* 'List rhombus-realm
                               "not a listable for splicing into a pair list"
                               "value" v)))
 
 (define (ensure-list v)
-  (cond
-    [(list? v) v]
-    [(listable? v) (treelist->list (to-treelist #f v))]
-    [else
-     (raise-arguments-error* 'PairList rhombus-realm
-                             "not a listable for splicing into a pair list"
-                             "value" v)]))
+  (or (to-list #f v)
+      (raise-arguments-error* 'PairList rhombus-realm
+                              "not a listable for splicing into a pair list"
+                              "value" v)))
 
 (begin-for-syntax
   (define #%call-id #f)
