@@ -4,7 +4,7 @@
 
 (struct peek-port (in [pos #:mutable]))
 
-(define current-peek-port-key (gensym))
+(define current-peek-port-key (gensym 'current-peek-port))
 (define (current-peek-port) (continuation-mark-set-first #f current-peek-port-key))
 
 ;; make the port once, to minimize overhead:

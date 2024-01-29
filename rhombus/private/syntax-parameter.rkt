@@ -8,7 +8,7 @@
          define-syntax-parameter
          with-syntax-parameters)
 
-(define-for-syntax syntax-parameters-key (gensym 'sxtparams))
+(define-for-syntax syntax-parameters-key (gensym 'syntax-parameters))
 
 (define-for-syntax (current-syntax-parameters-iterator)
   (define iter (continuation-mark-set->iterator #f

@@ -42,7 +42,7 @@
 
 (define default-pretty
   (let-syntax ([ct-gensym (lambda (stx)
-                            (datum->syntax stx `(quote ,(gensym))))])
+                            (datum->syntax stx `(quote ,(gensym 'default-pretty))))])
     (ct-gensym)))
 
 (define (check-output-port who op)

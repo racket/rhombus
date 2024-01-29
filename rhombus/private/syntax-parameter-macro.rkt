@@ -51,7 +51,7 @@
          #:with name::dotted-identifier #'name-seq
          #`(#,(build-syntax-definition/maybe-extension
                'rhombus/syntax_parameter #'name.name #'name.extends
-               #`(syntax-parameter (gensym)
+               #`(syntax-parameter (gensym 'name.name)
                                    (rhombus-body-at tag body ...))))]))))
 
 (define-syntax relet
