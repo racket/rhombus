@@ -425,7 +425,7 @@
   (syntax-parse (unpack-term v who #f)
     #:datum-literals (op)
     [(op o) (syntax-e #'o)]
-    [else
+    [_
      (raise-arguments-error* who rhombus-realm
                              "syntax object does not have just an operator"
                              "syntax object" v)]))

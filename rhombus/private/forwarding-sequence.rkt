@@ -122,7 +122,7 @@
                           #:literals (module module*)
                           [(module . _) #'form]
                           [(module* . _) #'form]
-                          [else
+                          [_
                            (with-continuation-mark
                             syntax-parameters-key #'stx-params
                             (local-expand #'form
