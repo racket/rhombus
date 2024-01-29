@@ -79,6 +79,78 @@ check:
   Map.append({1: 1}, {1: 2}, {1: 3}, {1: 4}) ~is {1: 4}
 
 block:
+  class Entry(key, val):
+    private implements Listable
+    private override to_list(): [key, val]
+  check:
+    Map([1, "1"], PairList[2, "2"], Array(3, "3"), Entry(4, "4"))
+    ~is Map{1: "1", 2: "2", 3: "3", 4: "4"}
+  check:
+    MutableMap([1, "1"], PairList[2, "2"], Array(3, "3"), Entry(4, "4"))
+    ~is_now MutableMap{1: "1", 2: "2", 3: "3", 4: "4"}
+
+block:
+  class Broken():
+    private implements Listable
+    private override to_list(): [1, "1", "oops"]
+  check:
+    Map([1, "1", "oops"])
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "[1, \"1\", \"oops\"]",
+    )
+  check:
+    Map(PairList[1, "1", "oops"])
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "PairList[1, \"1\", \"oops\"]",
+    )
+  check:
+    Map(Array(1, "1", "oops"))
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "Array(1, \"1\", \"oops\")",
+    )
+  check:
+    Map(Broken())
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "Broken()",
+    )
+  check:
+    MutableMap([1, "1", "oops"])
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "[1, \"1\", \"oops\"]",
+    )
+  check:
+    MutableMap(PairList[1, "1", "oops"])
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "PairList[1, \"1\", \"oops\"]",
+    )
+  check:
+    MutableMap(Array(1, "1", "oops"))
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "Array(1, \"1\", \"oops\")",
+    )
+  check:
+    MutableMap(Broken())
+    ~throws values(
+      "contract violation",
+      "expected: Listable.to_list && matching([_, _])",
+      "Broken()",
+    )
+
+block:
   check:
     1 :: Map
     ~throws "does not satisfy annotation"

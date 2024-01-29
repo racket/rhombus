@@ -215,8 +215,8 @@
                          (let ([t (unpack-term a #f #f)])
                            (and t (syntax-e t)))
                          a))
-         (define e (if (and (not (pair? e/l)) (listable? e/l))
-                       (to-list #f e/l)
+         (define e (or (and (not (pair? e/l))
+                            (to-list #f e/l))
                        e/l))
          (cond
            [(pair? e)
@@ -260,7 +260,7 @@
                                   (null? ds))
                             (l-loop ds))])))
            (invalid))]
-      [(listable? e) (group (to-list #f e))]
+      [(to-list #f e) => group]
       [(syntax? e)
        (or (unpack-group e #f #f)
            (invalid))]
@@ -291,7 +291,7 @@
                            (if (eq? head 'block)
                                (loop e #f #t)
                                (invalid))]
-                          [(listable? e) (tail-loop (to-list #f e))]
+                          [(to-list #f e) => tail-loop]
                           [(syntax? e)
                            (define u (unpack-term e #f #f))
                            (define d (and u (syntax-e u)))
@@ -311,7 +311,7 @@
               (invalid))]
          [else (invalid)])]
       [(pair? v) (invalid)]
-      [(listable? v) (loop (to-list #f v) pre-alt? tail?)]
+      [(to-list #f v) => (lambda (v) (loop v pre-alt? tail?))]
       [(syntax? v) (let ([t (unpack-term v #f #f)])
                      (cond
                        [t
@@ -343,15 +343,16 @@
   (check-symbol who v)
   (do-make who (list 'op v) ctx-stx #t #t #f))
 
-(define (check-nonempty-list who l)
-  (unless (and (pair? l) (list? l))
-    (raise-argument-error* who rhombus-realm "Listable.to_list && NonemptyList" l)))
+(define (to-nonempty-list who v-in)
+  (define l (to-list #f v-in))
+  (unless (pair? l)
+    (raise-argument-error* who rhombus-realm "Listable.to_list && NonemptyList" v-in))
+  l)
 
 (define/arity (Syntax.make_group v-in [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (define v (if (listable? v-in) (to-list #f v-in) v-in))
-  (check-nonempty-list who v)
-  (define terms (let loop ([es (to-list #f v)])
+  (define v (to-nonempty-list who v-in))
+  (define terms (let loop ([es v])
                   (cond
                     [(null? es) null]
                     [else
@@ -363,14 +364,9 @@
                            (loop ds))])))
   (datum->syntax #f (cons group-tag terms)))
 
-(define (check-list who l)
-  (unless (listable? l)
-    (raise-argument-error* who rhombus-realm "Listable" l)))
-
 (define/arity (Syntax.make_sequence v [ctx-stx #f])
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (check-list who v)
-  (pack-multi (for/list ([e (in-list (to-list #f v))])
+  (pack-multi (for/list ([e (in-list (to-list who v))])
                 (do-make who e ctx-stx #t #t #t))))
 
 (define (check-readable-string who s)
@@ -532,19 +528,20 @@
       [_
        (proc stx)])))
 
-(define (check-list-of-stx who stxs)
-  (unless (and (list? stxs) (andmap syntax? stxs))
+(define (to-list-of-stx who v-in)
+  (define stxs (to-list #f v-in))
+  (unless (and stxs (andmap syntax? stxs))
     (raise-argument-error* who rhombus-realm
                            "Listable.to_list && List.of(Syntax)"
-                           stxs)))
+                           v-in))
+  stxs)
 
 ;; also reraws:
 (define/method (Syntax.relocate_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,syntax-static-infos))
-  (define stx (and (syntax? stx-in) (unpack-term stx-in #f #f)))
+  (define stx (unpack-term/maybe stx-in))
   (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
-  (define ctx-stxes (if (listable? ctx-stxes-in) (to-list #f ctx-stxes-in) ctx-stxes-in))
-  (check-list-of-stx who ctx-stxes)
+  (define ctx-stxes (to-list-of-stx who ctx-stxes-in))
 
   (at-relevant-dest-syntax
    stx

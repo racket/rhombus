@@ -15,9 +15,10 @@
          #:datum-literals (parsed)
          [(parsed #:rhombus/expr e) #'e]
          [_ stx])]
-      [(listable? s)
-       (for/list ([e (in-list (to-list #f s))])
-         (loop e))]
+      [(to-list #f s)
+       => (lambda (es)
+            (for/list ([e (in-list es)])
+              (loop e)))]
       [else
        (raise-arguments-error* who rhombus-realm
                                "not a listable nesting of syntax objects"

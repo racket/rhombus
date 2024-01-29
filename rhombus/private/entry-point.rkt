@@ -32,10 +32,6 @@
       (raise-bad-macro-result (proc-name proc)
                               #:syntax-for? #f
                               "entry point arity" form-in))
-    (define (to-list/maybe v)
-      (if (listable? v)
-          (to-list #f v)
-          v))
     (define (arity-list? v)
       (and (pair? v)
            (pair? (cdr v))
@@ -52,17 +48,17 @@
              (exact-integer? form-in))
          form-in]
         [else
-         (define form (to-list/maybe form-in))
+         (define form (to-list #f form-in))
          (unless (arity-list? form) (bad))
          (define-values (mask required-kws-in allowed-kws-in)
            (values (car form) (cadr form) (caddr form)))
          (unless (exact-integer? mask) (bad))
          (define required-kws
-           (check-keyword-list (to-list/maybe required-kws-in)))
+           (check-keyword-list (to-list #f required-kws-in)))
          (define allowed-kws
            (cond
              [(not allowed-kws-in) allowed-kws-in]
-             [else (check-keyword-list (to-list/maybe allowed-kws-in))]))
+             [else (check-keyword-list (to-list #f allowed-kws-in))]))
          (list mask required-kws allowed-kws)]))
     (datum->syntax #f form))
 

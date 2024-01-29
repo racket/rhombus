@@ -154,14 +154,14 @@
        [(and (pair? (cdr l)) (null? (cddr l))) (cadr l)]
        [else (raise-error who "multi-group syntax not allowed in group context" r)])]
     [(group-syntax? r) r]
-    [(listable? r)
-     (define es (to-list #f r))
-     (when (null? es) (cannot-coerce-empty-list who r))
-     (define elems (for/list ([e (in-list es)])
-                     (unpack-term e who at-stx)))
-     (check-valid-group who elems '())
-     (and elems
-          (datum->syntax #f (cons group-blank elems)))]
+    [(to-list #f r)
+     => (lambda (es)
+          (when (null? es) (cannot-coerce-empty-list who r))
+          (define elems (for/list ([e (in-list es)])
+                          (unpack-term e who at-stx)))
+          (check-valid-group who elems '())
+          (and elems
+               (datum->syntax #f (cons group-blank elems))))]
     [else (datum->syntax #f (list group-blank (datum->syntax at-stx r)))]))
 
 ;; "Unpacks" to a `group` form that might be empty
@@ -233,11 +233,13 @@
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
        [(group-syntax? r) (cdr (syntax->list r))]
        [else (list r)])]
-    [(or (treelist? r) (list? r))
-     (define terms (for/list ([e (in-list (to-list #f r))])
-                     (unpack-term e who at-stx)))
-     (check-valid-group who terms '())
-     terms]
+    [(or (and (treelist? r) (treelist->list r))
+         (and (list? r) r))
+     => (lambda (l)
+          (define terms (for/list ([e (in-list l)])
+                          (unpack-term e who at-stx)))
+          (check-valid-group who terms '())
+          terms)]
     [else (list (datum->syntax at-stx r))]))
 
 ;; Unpacks a multi-group sequence into a list of groups,
@@ -267,15 +269,15 @@
   (cond
     [(multi-syntax? r) (cdr (syntax->list r))]
     [(group-syntax? r) (list r)]
-    [(listable? r)
-     (define es (to-list #f r))
-     (cond
-       [(null? es) null]
-       [else
-        ;; unpack assuming a list of elements instead of a list of groups;
-        ;; this means that we don't really have a multi-group splicing form,
-        ;; but that constraint avoids ambiguity
-        (list (unpack-group es who at-stx))])]
+    [(to-list #f r)
+     => (lambda (es)
+          (cond
+            [(null? es) null]
+            [else
+             ;; unpack assuming a list of elements instead of a list of groups;
+             ;; this means that we don't really have a multi-group splicing form,
+             ;; but that constraint avoids ambiguity
+             (list (unpack-group es who at-stx))]))]
     [else (list (datum->syntax #f (list group-blank (datum->syntax at-stx r))))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;

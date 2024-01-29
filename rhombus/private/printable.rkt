@@ -131,11 +131,13 @@
     (raise-argument-error* who rhombus-realm
                            "Listable.to_list && List.of(PrintDesc)"
                            elems))
-  (define elem-pds (if (listable? elems)
-                       (for/list ([elem (in-list (to-list #f elems))])
-                         (or (print-description-unwrap #f elem)
-                             (bad-elems)))
-                       (bad-elems)))
+  (define elem-pds (cond
+                     [(to-list #f elems)
+                      => (lambda (elems)
+                           (for/list ([elem (in-list elems)])
+                             (or (print-description-unwrap #f elem)
+                                 (bad-elems))))]
+                     [else (bad-elems)]))
   (PrintDesc
    (pretty-listlike pre-pd
                     elem-pds

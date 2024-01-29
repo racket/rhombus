@@ -153,7 +153,7 @@
   (set
    delete))
 
-(define Map-build hashalw) ; inlined version of `Map.from_interleaved`
+(define Map-build hashalw)
 
 (define Map-pair-build
   (let ([Map (lambda args
@@ -167,13 +167,13 @@
        (values (car arg) (cadr arg))]
       [(and (treelist? arg) (= 2 (treelist-length arg)))
        (values (treelist-ref arg 0) (treelist-ref arg 1))]
-      [(and (listable? arg) (let ([arg (to-list #f arg)])
-                              (and (pair? arg) (pair? (cdr arg)) (null? (cddr arg))
-                                   arg)))
-       => (lambda (arg)
-            (values (car arg) (cadr arg)))]
+      [(and (vector? arg) (= 2 (vector-length arg)))
+       (values (vector-ref arg 0) (vector-ref arg 1))]
       [else
-       (raise-argument-error* who rhombus-realm "Listable.to_list && matching([_, _])" arg)])))
+       (define lst (to-list #f arg))
+       (unless (and (pair? lst) (pair? (cdr lst)) (null? (cddr lst)))
+         (raise-argument-error* who rhombus-realm "Listable.to_list && matching([_, _])" arg))
+       (values (car lst) (cadr lst))])))
 
 (define (list->map key+vals)
   (for/hashalw ([key+val (in-list key+vals)])
