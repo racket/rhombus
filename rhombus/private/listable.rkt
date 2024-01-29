@@ -22,7 +22,7 @@
 
 (define-class-desc-syntax Listable
   (interface-desc #'()
-                  (vector-immutable (box-immutable 'to_list))
+                  '#(#&to_list)
                   #'#(#:abstract)
                   (hasheq 'to_list 0)
                   #hasheq()

@@ -22,7 +22,7 @@
 
 (define-class-desc-syntax Sequenceable
   (interface-desc #'()
-                  (vector-immutable (box-immutable 'to_sequence))
+                  '#(#&to_sequence)
                   #'#(#:abstract)
                   (hasheq 'to_sequence 0)
                   #hasheq()

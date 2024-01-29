@@ -29,10 +29,10 @@
 
 (define-class-desc-syntax Equatable
   (interface-desc #'()
-                  (vector-immutable (box-immutable 'equals)
-                                    (box-immutable 'hash_code))
+                  '#(#&equals #&hash_code)
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equals 0 'hash_code 1)
+                  (hasheq 'equals 0
+                          'hash_code 1)
                   #hasheq()
                   '()
                   #f
