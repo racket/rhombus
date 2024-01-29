@@ -40,14 +40,14 @@
 (define-annotation-syntax Appendable
   (identifier-annotation #'appendable? #'((#%append general-append))))
 (define (appendable? v)
-  (or (Appendable? v)
-      (hash? v)
-      (treelist? v)
+  (or (treelist? v)
       (list? v)
-      (vector? v)
-      (set? v)
+      (immutable-hash? v)
+      (immutable-set? v)
       (string? v)
-      (bytes? v)))
+      (bytes? v)
+      (vector? v)
+      (Appendable? v)))
 
 (define-class-desc-syntax Appendable
   (interface-desc #'()

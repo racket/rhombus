@@ -56,13 +56,16 @@ check:
   B() is_a Appendable ~is #true
   C() is_a Appendable ~is #true
   A4() is_a Appendable ~is #true
-  
+
   { 1: 2 } is_a Appendable ~is #true
   { 1, 2 } is_a Appendable ~is #true
   [1, 2] is_a Appendable ~is #true
   Array(1, 2) is_a Appendable ~is #true
   "apple" is_a Appendable ~is #true
   #"apple" is_a Appendable ~is #true
+
+  MutableMap{ 1: 2 } is_a Appendable ~is #false
+  MutableSet{ 1, 2 } is_a Appendable ~is #false
 
   #'apple is_a Appendable ~is #false
   4 is_a Appendable ~is #false
@@ -75,7 +78,7 @@ block:
       implements Appendable
       override method append(other):
         0
-    A()    
+    A()
   check:
     gen() ++ gen() ~throws "cannot append an appendable object and other value"
     dynamic("a") ++ "b" ~is "ab"
