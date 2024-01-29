@@ -25,7 +25,7 @@
   #false is_a True
   42 is_a True
 )
-  
+
 }
 
 @doc(
@@ -49,7 +49,9 @@
 ){
 
  Matches if either @rhombus(left_bind) or @rhombus(right_bind) matches.
- No identifiers are bound after a successful match, however.
+ No identifiers are bound after a successful match, however. In other
+ words, @rhombus(left_bind) and @rhombus(right_bind) are used only in
+ matching mode, and implied conversions might be skipped.
 
 @examples(
   fun check_shape(v):

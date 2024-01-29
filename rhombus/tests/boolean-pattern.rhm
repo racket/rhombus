@@ -37,3 +37,51 @@ block:
   check:
     try([])
     ~is "other"
+
+check:
+  import:
+    rhombus/meta open
+  bind.macro 'printed($pat)':
+    let '$(b :: bind_meta.Parsed)' = pat
+    bind_meta.pack('(printed_infoer, [$pat, $b])')
+  bind.infoer 'printed_infoer($si, [$pat, $b])':
+    let '($ann_str,
+          $name,
+          $si,
+          $defs,
+          $matcher,
+          $committer,
+          $binder,
+          $data)':
+      bind_meta.unpack_info(bind_meta.get_info(b, si))
+    '($("printed(" +& ann_str +& ")"),
+      $name,
+      $si,
+      $defs,
+      printed_matcher,
+      printed_committer,
+      printed_binder,
+      [$pat, $matcher, $committer, $binder, $data])'
+  bind.matcher 'printed_matcher($arg, [$pat, $matcher, $_, $_, $data],
+                                $IF, $success, $fail)':
+    'block:
+       println(#%literal $("matcher: " +& pat))
+       $matcher($arg, $data,
+                $IF, $success, $fail)'
+  bind.committer 'printed_committer($arg, [$pat, $_, $committer, $_, $data])':
+    'println(#%literal $("committer: " +& pat))
+     $committer($arg, $data)'
+  bind.binder 'printed_binder($arg, [$pat, $_, $_, $binder, $data])':
+    'println(#%literal $("binder: " +& pat))
+     $binder($arg, $data)'
+  def printed([]) || printed([_]) || printed([_, _]) = []
+  def printed([]) || printed([_]) || printed([_, _]) = [1]
+  def printed([]) || printed([_]) || printed([_, _]) = [1, 2]
+  #void
+  ~prints "matcher: []"
+    ++ "\n" ++ "matcher: []"
+    ++ "\n" ++ "matcher: [_]"
+    ++ "\n" ++ "matcher: []"
+    ++ "\n" ++ "matcher: [_]"
+    ++ "\n" ++ "matcher: [_, _]"
+    ++ "\n"

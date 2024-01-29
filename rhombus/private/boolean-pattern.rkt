@@ -107,34 +107,30 @@
                    #'or-matcher
                    #'or-committer
                    #'or-binder
-                   #'(lhs rhs finish))]))
+                   #'(lhs rhs))]))
 
 (define-syntax (or-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (lhs::binding-info rhs::binding-info finish-id)
+    [(_ arg-id (lhs::binding-info rhs::binding-info)
         IF success fail)
-     #`(begin
-         (define finish-id
-           (let ()
-             (lhs.matcher-id arg-id lhs.data if/blocked
-                             (lambda ()
-                               (lhs.committer-id arg-id lhs.data)
-                               (lhs.binder-id arg-id lhs.data)
-                               (void))
-                             (rhs.matcher-id arg-id rhs.data if/blocked
-                                             (lambda ()
-                                               (rhs.committer-id arg-id rhs.data)
-                                               (rhs.binder-id arg-id rhs.data)
-                                               (void))
-                                             #f))))
-         (IF finish-id success fail))]))
+     ;; preserve the textual order
+     #`(IF ((lambda (right-k)
+              (lhs.matcher-id arg-id lhs.data if/blocked
+                              #t
+                              (right-k)))
+            (lambda ()
+              (rhs.matcher-id arg-id rhs.data if/blocked
+                              #t
+                              #f)))
+           success
+           fail)]))
 
 (define-syntax (or-committer stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs finish-id))
+    [(_ arg-id (lhs rhs))
      #'(begin)]))
 
 (define-syntax (or-binder stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs finish-id))
-     #'(finish-id)]))
+    [(_ arg-id (lhs rhs))
+     #'(begin)]))
