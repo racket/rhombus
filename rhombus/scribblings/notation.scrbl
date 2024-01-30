@@ -18,7 +18,7 @@ and indentation for grouping and nesting. This section offers a brief
 summary of shrubbery notation, but see @(shrubbery_notation) for
 complete details.
 
-@margin_note{To explore shrubbery notation independent of Rhombus, try
+@margin_note_block{To explore shrubbery notation independent of Rhombus, try
  @rhombus(#,(@hash_lang()) #,(@rhombuslangname(shrubbery))). The parsed
  form is represented as an S-expression, so the output is only useful if
  you're familiar with S-expression notation.}
@@ -145,7 +145,7 @@ of its enclosing form. So, the @litchar{|}s below are written with the
 same indentation as @rhombus(if), @rhombus(match), or @rhombus(cond) to
 create the alternative cases within those forms:
 
-@margin_note{In DrRacket, hit Tab to cycle through the possible
+@margin_note_block{In DrRacket, hit Tab to cycle through the possible
  indentations for a line. See also @shrubref("drracket-shrubbery").}
 
 @rhombusblock(

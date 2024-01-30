@@ -7,7 +7,7 @@
 
 @title(~tag: "annotation-macro-protocol"){Annotations as Converters}
 
-@margin_note{See @secref("annotation-vs-bind") for an introduction to
+@margin_note_block{See @secref("annotation-vs-bind") for an introduction to
  the interaction of annotations and bindings.}
 
 Unless otherwise specified, an @tech{annotation} is a @deftech{predicate

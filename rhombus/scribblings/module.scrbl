@@ -16,7 +16,7 @@ expression at the top of a module, then its value gets printed out.
   "Hello, world!"  // prints "Hello, world!", including the quotes
 )
 
-@margin_note{If you have installed the @pkg{rhombus-prototype} package, then
+@margin_note_block{If you have installed the @pkg{rhombus-prototype} package, then
  you can run Rhombus modules in DrRacket or by supplying the file path to
  @exec{racket} on the command line.}
 
@@ -40,7 +40,7 @@ parentheses.
   fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
 )
 
-@margin_note{In DrRacket's interactions area, a single input line is
+@margin_note_block{In DrRacket's interactions area, a single input line is
  accepted as complete as long as it's openers and closers are balanced,
  and as long as it doesn't contain @litchar{:} or @litchar{;} outside of
  an opener--closer pair. A blank line terminates multi-line input. For
@@ -133,7 +133,7 @@ determines the default import prefix.
   math.pi  // prints 3.141592653589793
 )
 
-@margin_note{Technically, the use of @litchar{.} with an import name as a hierarchical reference is not
+@margin_note_block{Technically, the use of @litchar{.} with an import name as a hierarchical reference is not
 the same as the @rhombus(.) operator described in the next section. We stick with
 @rhombus(/, ~impo) for module paths to avoid overloading @litchar{.} further.}
 

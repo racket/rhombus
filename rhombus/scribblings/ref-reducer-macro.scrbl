@@ -81,7 +81,7 @@
     for sum_pos_to_20 (a: 3..): a
 )
 
- @margin_note{It is recommended that a reducer macro only consume a
+ @margin_note_block{It is recommended that a reducer macro only consume a
   finite number of terms, as opposed to the whole tail, to account for
   the @rhombus(maybe_each) position in @rhombus(for).}
 

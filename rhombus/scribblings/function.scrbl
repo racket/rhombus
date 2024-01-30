@@ -94,7 +94,7 @@ prefix operator turns a keyword into an expression that produces the keyword, as
 @rhombus(#'~scale). The operator also works on identifiers, as in @rhombus(#'x),
 to produce a symbol.
 
-@margin_note{The keyword prefix and @rhombus(=) for default values are not
+@margin_note_block{The keyword prefix and @rhombus(=) for default values are not
  binding operators. They are specific to the syntax of @rhombus(fun).}
 
 If an argument name is the same as its keyword (just without the

@@ -104,7 +104,7 @@ to form a repetition of matches:
     '$y ...'
 )
 
-@margin_note{A tail pattern
+@margin_note_block{A tail pattern
  @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind)))
  combined with a tail template
  @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) ...)

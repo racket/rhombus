@@ -389,7 +389,7 @@ separates groups. The following three blocks are the same:
 @rhombusblock(
   hello:
     world
-    universe  
+    universe
 
   hello:
     world; universe
@@ -428,7 +428,7 @@ group contains a block that contains a single group:
 
 @section(~tag: "guillemet"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
 
-@margin_note{See also @secref("type-guillemet").}
+@margin_note_block{See also @secref("type-guillemet").}
 
 A group sequence can be delimited explicitly with @guillemets to
 disable the use of line and column information for parsing between

@@ -32,7 +32,7 @@ loops.
  it---including cases where the recursion is not in tail position or
  where @rhombus(for) is not a good fit for some other reason.
 
- @margin_note{Racket and Scheme programmers will recognize this form as
+ @margin_note_block{Racket and Scheme programmers will recognize this form as
   a kind of ``@as_index{named @tt{let}}.''}
 
  To enable the immediate call of @rhombus(id), each

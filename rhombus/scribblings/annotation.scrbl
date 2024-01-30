@@ -65,7 +65,7 @@ the @rhombus(.) operator can be chained for efficient access:
     l1.p2.x
 )
 
-@margin_note{Using @rhombus(.) to reach an imported binding, as in
+@margin_note_block{Using @rhombus(.) to reach an imported binding, as in
  @rhombus(f2c.fahrenheit_to_celsius), is a different kind of @rhombus(.)
  than the infix expression operator.}
 

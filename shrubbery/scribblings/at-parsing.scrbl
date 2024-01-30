@@ -5,7 +5,7 @@
 
 @title(~tag: "at-parsing"){At-Notation Parsing}
 
-@margin_note{See @secref("at-notation") for an overview of @litchar("@") notation.}
+@margin_note_block{See @secref("at-notation") for an overview of @litchar("@") notation.}
 
 As shown in @secref("token-parsing"), each use of @litchar("@") has
 one of these forms:
@@ -14,7 +14,7 @@ one of these forms:
 
  @item{@bseq(@litchar("@"), @italic{command}, @litchar("("), @italic{argument}, @litchar(","), @elem{...}, @litchar(")"), @italic{braced_text}, @elem{...})
 
-      Converts to 
+      Converts to
       @verbatim(~indent: 2){
         @italic{command_splice}@litchar{(}@italic{argument}@litchar{,} @elem{...}@litchar{,} @litchar{[}@italic{converted_text}, @elem{...}@litchar{]}, @elem{...}@litchar{)}
       }
@@ -43,10 +43,10 @@ one of these forms:
       as a parse error. (This prohibition is intended to support
       better error reporting when S-expression @litchar("@") syntax is
       misused in a shrubbery context.)},
-      
+
  @item{@bseq(@litchar("@"), @italic{command}, @italic{braced_text}, @italic{braced_text}, @elem{...})
 
-      Converts to 
+      Converts to
       @verbatim(~indent: 2){
         @italic{command_splice}@litchar{(}@litchar{[}@italic{converted_text}, @elem{...}@litchar{]}, @elem{...}@litchar{)}
       }
@@ -56,10 +56,10 @@ one of these forms:
       @litchar("@"), with no space allowed between @italic{command}
       and the first @italic{braced_text}. One or more
       @italic{braced_text}s are allowed.},
-      
+
  @item{@bseq(@litchar("@"), @italic{braced_text}, @italic{braced_text}, @elem{...})
 
-      Converts to 
+      Converts to
       @verbatim(~indent: 2){
         @litchar{(}@litchar{[}@italic{converted_text}, @elem{...}@litchar{]}, @elem{...}@litchar{)}
       }
@@ -68,7 +68,7 @@ one of these forms:
       are the same as preceding @litchar("@") cases, with no space allowed
       between @litchar("@") and the first @italic{braced_text}. One or
       more @italic{braced_text}s are allowed.},
-      
+
  @item{@bseq(@litchar("@"), @italic{command})
 
       Converts to
@@ -85,7 +85,7 @@ one of these forms:
 
  @item{@bseq(@litchar("@(«"), @italic{command}, @litchar("»)"))
 
-      Converts to 
+      Converts to
       @verbatim(~indent: 2){
         @italic{command}
       }

@@ -157,7 +157,7 @@ associate static information to @rhombus(zero) using
 so we use @rhombus(statinfo_meta.pack) to pack it from a syntax-object
 representation.
 
-@margin_note{The @rhombus(statinfo_meta.wrap) and
+@margin_note_block{The @rhombus(statinfo_meta.wrap) and
  @rhombus(annot_meta.pack_predicate) functions automatically pack for
  you, because they expect a syntax object that represents static
  information. The overall right-hand side result for
