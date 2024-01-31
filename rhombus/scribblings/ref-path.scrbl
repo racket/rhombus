@@ -7,9 +7,9 @@
 
 @dispatch_table(
   "path"
-  @rhombus(Path)
-  [path.bytes(), Path.bytes(path)]
-  [path.string(), Path.string(path)]
+  Path
+  path.bytes()
+  path.string()
 )
 
 @doc(

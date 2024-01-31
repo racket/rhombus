@@ -1,69 +1,73 @@
 #lang rhombus/static/and_meta
 import:
   lib("scribble/rhombus/manual.rkt") open
-  lib("scribble/manual.rkt").racketvarfont
-  lib("scribble/manual.rkt").racketfont
+  lib("scribble/manual.rkt")
+  meta_label:
+    rhombus open
 
 export:
   dispatch_table
 
-expr.macro
-| 'maybe_rhombus()': '""'
-| 'maybe_rhombus($args)': 'rhombus($args)'
+meta syntax_class DispatchEntry(who):
+  kind ~group
+| '[$lhs, $rhs]'
+| '$(lhs && '$obj . $name($arg, ...)')':
+    field rhs = '$who . $name($obj, $arg, ...)'
+| '$(lhs && '$obj . $name')':
+    field rhs = '$who . $name($obj)'
 
-expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)':
-  fun extract_metavariables(term, ht :~ Map):
-    match term
-    | '($g, ...)': for values(ht = ht):
-                     each g: [g, ...]
-                     extract_group_metavariables(g, ht)
-    | '$(x :: Identifier)':
-        ht ++ { Syntax.unwrap(x): x }
-    | ~else: ht
-  fun extract_group_metavariables(group, ht):
-    match group
-    | '$t ...': for values(ht = ht):
-                  each t: [t, ...]
-                  extract_metavariables(t, ht)
-  fun extract_lhs_metavariables(groups :~ List, ht):
-    for values(ht = ht):
-      each g: groups
-      match g
-      | '$p . _': extract_metavariables(p, ht)
-      | ~else: ht
-  fun extract_rhs_metavariables(groups :~ List, ht):
-    for values(ht = ht):
-      each g: groups
-      match g
-      | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
-      | ~else: ht
-  def vars :~ Map:
-    extract_rhs_metavariables(
-      [rhs, ...],
-      extract_metavariables(
-        '(($lhs_rest, ...), ...)',
-        extract_metavariables(
-          [lhs, ...],
-          {})))
-  def [id, ...]: vars.values()
-  def [name_str, ...]: for List:
-                         each name: [name, ...]
-                         "" +& name.unwrap()
+meta veneer MetaVars(this :~ Map):
+  method extract_arg(arg) :~ MetaVars:
+    match arg
+    | '$(id :: Identifier)':
+        this ++ { id.unwrap(): id }
+    | ~else: this
+  method extract_tail(tail) :~ MetaVars:
+    match tail
+    | '$_ ... ($arg, ...)':
+        for values(this = this) (arg: [arg, ...]):
+          (this :~ MetaVars)
+            .extract_arg(arg)
+    | ~else: this
+  method extract_lhss([lhs, ...]) :~ MetaVars:
+    for values(this = this) (lhs: [lhs, ...]):
+      match lhs
+      | '$obj . $_ $tail':
+          (this :~ MetaVars)
+            .extract_arg(obj)
+            .extract_tail(tail)
+      | ~else: this
+  method extract_rhss([rhs, ...]) :~ MetaVars:
+    for values(this = this) (rhs: [rhs, ...]):
+      match rhs
+      | '$_ . $_ $tail':
+          (this :~ MetaVars)
+            .extract_tail(tail)
+      | ~else: this
+  method vars():
+    this.values()
+
+expr.macro 'dispatch_table($what, $who, $entry, ...)':
+  let '$(_ :: DispatchEntry(who): open); ...' = '$entry; ...'
+  let [id, ...]:
+    ({} :~ MetaVars)
+      .extract_lhss([lhs, ...])
+      .extract_rhss([rhs, ...])
+      .vars()
   '«block:
       rhombus_typeset '$id':
-        '@racketvarfont("" +& #'$id)'
+        '@manual.racketvarfont($(to_string(id)))'
       ...
       [
         @elem{The @rhombus(.) operator can be used on a @($what) expression as
-            equivalent to calling @($who) functions:},
+          equivalent to calling @rhombus($who, ~annot) functions:},
         @nested(
           ~style: #'inset,
           @tabular(
             ~sep: @elem{@hspace(1)is@hspace(1)},
             [
-              [@elem{@rhombus($lhs)@racketfont("." ++ $name_str)@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
+              [@rhombus($lhs), @rhombus($rhs)],
               ...
             ]
-          )
-        )
+          ))
       ]»'

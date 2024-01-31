@@ -29,28 +29,28 @@ in an unspecified order.
 
 @dispatch_table(
   "readbale map (immutable or mutable)"
-  @rhombus(Map)
-  [map.length(), Map.length(map)]
-  [map.keys(try_sort, ...), Map.keys(map, try_sort, ...)]
-  [map.values(), Map.values(map)]
-  [map.get(k), Map.get(map, k)]
-  [map.has_key(k), Map.has_key(map, k)]
-  [map.copy(), Map.copy(map)]
-  [map.snapshot(), Map.snapshot(map)]
+  Map
+  mp.length()
+  mp.keys(try_sort, ...)
+  mp.values()
+  mp.get(k)
+  mp.has_key(k)
+  mp.copy()
+  mp.snapshot()
 )
 
 @dispatch_table(
   "map (immutable only)"
-  @rhombus(Map)
-  [map.append(map2, ...), Map.append(map, map2, ...)]
-  [map.remove(k), Map.remove(map, k)]
+  Map
+  mp.append(map2, ...)
+  mp.remove(k)
 )
 
 @dispatch_table(
   "mutable map"
-  @rhombus(MutableMap)
-  [map.set(k, v), MutableMap.set(map, k, v)]
-  [map.delete(k), MutableMap.delete(map, k)]
+  MutableMap
+  mp.set(k, v)
+  mp.delete(k)
 )
 
 @doc(
@@ -351,10 +351,10 @@ in an unspecified order.
 }
 
 @doc(
-  fun Map.length(map :: ReadableMap) :: Int
+  fun Map.length(mp :: ReadableMap) :: Int
 ){
 
- Returns the number of key--value mappings in @rhombus(map).
+ Returns the number of key--value mappings in @rhombus(mp).
 
 @examples(
   Map.length({"a": 1, "b": 2})
@@ -366,12 +366,12 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.append(map :: Map, ...) :: Map
+  fun Map.append(mp :: Map, ...) :: Map
 ){
 
- Functionally appends @rhombus(map)s, like the @rhombus(++) operator
+ Functionally appends @rhombus(mp)s, like the @rhombus(++) operator
  (but without the special optimization). When a key has a value in
- multiple given @rhombus(map)s, the rightmost value is used.
+ multiple given @rhombus(mp)s, the rightmost value is used.
 
 @examples(
   {1: "a", 2: "b"}.append({1: "c"}, {1: "d"})
@@ -382,12 +382,12 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: ReadableMap,
+  fun Map.keys(mp :: ReadableMap,
                try_sort :: Any = #false)
     :: List
 ){
 
- Returns the keys of @rhombus(map) in a list.  If @rhombus(try_order)
+ Returns the keys of @rhombus(mp) in a list. If @rhombus(try_sort)
  is true, then the elements are sorted to the degree that a built-in
  comparison can sort them.
 
@@ -399,10 +399,10 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.values(map :: ReadableMap) :: List
+  fun Map.values(mp :: ReadableMap) :: List
 ){
 
- Returns the values of @rhombus(map) in a list.
+ Returns the values of @rhombus(mp) in a list.
 
 @examples(
   Map.values({"a": 1, "b": 2})
@@ -412,16 +412,16 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.get(map :: ReadableMap,
+  fun Map.get(mp :: ReadableMap,
               key :: Any,
               default :: Any:
                 fun (): throw Exn.Fail.Contract(....))
     :: Any
 ){
 
- Equivalent @rhombus(map[key]) (with the default implicit
+ Equivalent @rhombus(mp[key]) (with the default implicit
  @rhombus(#%index) form) when @rhombus(default) is not provided,
- otherwise @rhombus(default) is used when @rhombus(map) does
+ otherwise @rhombus(default) is used when @rhombus(mp) does
  not contain a mapping for @rhombus(key). In that case, if
  @rhombus(default) is a function, then the function is called with zero
  arguments to get a result, otherwise @rhombus(default) is returned as
@@ -439,11 +439,11 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.remove(map :: Map, key :: Any) :: Map
+  fun Map.remove(mp :: Map, key :: Any) :: Map
 ){
 
- Returns a map like @rhombus(map), but without a mapping for
- @rhombus(key) is @rhombus(map) has one.
+ Returns a map like @rhombus(mp), but without a mapping for
+ @rhombus(key) is @rhombus(mp) has one.
 
 @examples(
   Map.remove({"a": 1, "b": 2}, "a")
@@ -454,13 +454,13 @@ in an unspecified order.
 
 
 @doc(
-  fun MutableMap.set(map :: MutableMap,
+  fun MutableMap.set(mp :: MutableMap,
                      key :: Any, val :: Any)
     :: Void
 ){
 
- Equivalent to @rhombus(map[key] := val) (with the default implicit
- @rhombus(#%index) form). Changes @rhombus(map) to map @rhombus(key)
+ Equivalent to @rhombus(mp[key] := val) (with the default implicit
+ @rhombus(#%index) form). Changes @rhombus(mp) to map @rhombus(key)
  to @rhombus(val).
 
 @examples(
@@ -475,10 +475,10 @@ in an unspecified order.
 
 
 @doc(
-  fun MutableMap.delete(map :: MutableMap, key :: Any) :: Void
+  fun MutableMap.delete(mp :: MutableMap, key :: Any) :: Void
 ){
 
- Changes @rhombus(map) to remove a mapping for @rhombus(key), if any.
+ Changes @rhombus(mp) to remove a mapping for @rhombus(key), if any.
 
 @examples(
   def m = MutableMap{"a": 1, "b": 2}
@@ -492,11 +492,11 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.has_key(map :: ReadableMap, key :: Any) :: Boolean
+  fun Map.has_key(mp :: ReadableMap, key :: Any) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
- @rhombus(map), @rhombus(#false) otherwise.
+ @rhombus(mp), @rhombus(#false) otherwise.
 
 @examples(
   Map.has_key({"a": 1, "b": 2}, "a")
@@ -507,20 +507,20 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.copy(map :: ReadableMap) :: MutableMap
+  fun Map.copy(mp :: ReadableMap) :: MutableMap
 ){
 
- Creates a mutable map whose initial content matches @rhombus(map).
+ Creates a mutable map whose initial content matches @rhombus(mp).
 
 }
 
 
 
 @doc(
-  fun Map.snapshot(map :: ReadableMap) :: Map
+  fun Map.snapshot(mp :: ReadableMap) :: Map
 ){
 
- Returns an immutable map whose content matches @rhombus(map). If
- @rhombus(map) is immutable, then it is the result.
+ Returns an immutable map whose content matches @rhombus(mp). If
+ @rhombus(mp) is immutable, then it is the result.
 
 }

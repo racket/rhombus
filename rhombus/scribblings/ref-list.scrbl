@@ -23,27 +23,27 @@ it supplies its elements in order.
 
 @dispatch_table(
   "list"
-  @rhombus(List)
-  [lst.length(), List.length(lst)]
-  [lst.get(n), List.get(lst, n)]
-  [lst.first, List.first(lst)]
-  [lst.rest, List.rest(lst)]
-  [lst.insert(lst, n, v), List.insert(lst, n, v)]
-  [lst.add(lst, v), List.add(lst, v)]
-  [lst.delete(lst, n), List.delete(lst, n)]
-  [lst.reverse(), List.reverse(lst)]
-  [lst.append(lst2, ...), List.append(lst, lst2, ...)]
-  [lst.take_left(lst, n), List.take_left(lst, n)]
-  [lst.take_right(lst, n), List.take_right(lst, n)]
-  [lst.drop_left(lst, n), List.drop_left(lst, n)]
-  [lst.drop_right(lst, n), List.drop_right(lst, n)]
-  [lst.sublist(lst, n, m), List.sublist(lst, n, m)]
-  [lst.has_element(lst, v), List.has_element(lst, v)]
-  [lst.remove(lst, v), List.remove(lst, v)]
-  [lst.map(func), List.map(lst, func)]
-  [lst.for_each(func), List.for_each(lst, func)]
-  [lst.sort(arg, ...), List.sort(lst, arg, ...)]
-  [lst.to_list(), List.to_list(lst)]
+  List
+  lst.length()
+  lst.get(n)
+  lst.first,
+  lst.rest,
+  lst.insert(lst, n, v)
+  lst.add(lst, v)
+  lst.delete(lst, n)
+  lst.reverse()
+  lst.append(lst2, ...)
+  lst.take_left(lst, n)
+  lst.take_right(lst, n)
+  lst.drop_left(lst, n)
+  lst.drop_right(lst, n)
+  lst.sublist(lst, n, m)
+  lst.has_element(lst, v)
+  lst.remove(lst, v)
+  lst.map(func)
+  lst.for_each(func)
+  lst.sort(arg, ...)
+  lst.to_list()
 )
 
 @doc(

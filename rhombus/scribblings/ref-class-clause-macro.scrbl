@@ -177,14 +177,14 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 
 @dispatch_table(
   "class information"
-  @rhombus(class_meta.Info)
-  [info.lookup(key), class_meta.Info.lookup(info, key)]
+  class_meta.Info
+  info.lookup(key)
 )
 
 @dispatch_table(
   "interface information"
-  @rhombus(interface_meta.Info)
-  [info.lookup(key), interface_meta.Info.lookup(info, key)]
+  interface_meta.Info
+  info.lookup(key)
 )
 
  The @rhombus(class_meta.Info.lookup) and

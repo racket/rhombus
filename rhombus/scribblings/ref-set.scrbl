@@ -27,28 +27,28 @@ it supplies its elements in an unspecified order.
 
 @dispatch_table(
   "readable set (immutable or mutable)"
-  @rhombus(Set)
-  [set.length(), Set.length(set)]
-  [set.get(v), Set.get(set, v)]
-  [set.to_list(try_sort, ...), Set.to_list(set, try_sort, ...)]
-  [set.copy(), Set.copy(set)]
-  [set.snapshot(), Set.snapshot(set)]
+  Set
+  st.length()
+  st.get(v)
+  st.to_list(try_sort, ...)
+  st.copy()
+  st.snapshot()
 )
 
 @dispatch_table(
   "set (immutable only)"
-  @rhombus(Set)
-  [set.append(set2, ...), Set.append(set, set2, ...)]
-  [set.union(set2, ...), Set.union(set, set2, ...)]
-  [set.intersect(set2, ...), Set.intersect(set, set2, ...)]
-  [set.remove(v), Set.remove(set, v)]
+  Set
+  st.append(set2, ...)
+  st.union(set2, ...)
+  st.intersect(set2, ...)
+  st.remove(v)
 )
 
 @dispatch_table(
   "mutable set"
-  @rhombus(MutableSet)
-  [set.set(v, in), #,(@top_rhombus(MutableSet.set))(set, v, in)]
-  [set.delete(v), MutableSet.delete(set, v)]
+  MutableSet
+  st.set(v, in)
+  st.delete(v)
 )
 
 @doc(
@@ -227,10 +227,10 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.length(set :: ReadableSet) :: Int
+  fun Set.length(st :: ReadableSet) :: Int
 ){
 
- Returns the number of values in @rhombus(set).
+ Returns the number of values in @rhombus(st).
 
 @examples(
   Set.length({"a", "b"})
@@ -242,12 +242,12 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.get(set :: ReadableSet, val :: Any) :: Boolean
+  fun Set.get(st :: ReadableSet, val :: Any) :: Boolean
 ){
 
- Equivalent to @rhombus(set[val]) (with the default implicit
+ Equivalent to @rhombus(st[val]) (with the default implicit
  @rhombus(#%index) form). Returns @rhombus(#true) if @rhombus(val) is
- in @rhombus(set), @rhombus(#false) otherwise.
+ in @rhombus(st), @rhombus(#false) otherwise.
 
 @examples(
   {"a", "b"}.get("a")
@@ -258,12 +258,12 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.append(set :: Set, ...) :: Set
-  fun Set.union(set :: Set, ...) :: Set
-  fun Set.intersect(set :: Set, ...) :: Set
+  fun Set.append(st :: Set, ...) :: Set
+  fun Set.union(st :: Set, ...) :: Set
+  fun Set.intersect(st :: Set, ...) :: Set
 ){
 
- Returns the union of the @rhombus(set)s in the case of
+ Returns the union of the @rhombus(st)s in the case of
  @rhombus(Set.append) or @rhombus(Set.union), or the intersection of the
  sets in the case of @rhombus(Set.intersect).
 
@@ -276,10 +276,10 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.remove(set :: Set, val :: Any) :: Set
+  fun Set.remove(st :: Set, val :: Any) :: Set
 ){
 
- Returns a set like @rhombus(set) but without @rhombus(val), if it is
+ Returns a set like @rhombus(st) but without @rhombus(val), if it is
  present.
 
 @examples(
@@ -291,13 +291,13 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.set(set :: MutableSet,
+  fun MutableSet.set(st :: MutableSet,
                      val :: Any, in :: Any)
     :: Void
 ){
 
- Equivalent to @rhombus(set[val] := in) (with the default implicit
- @rhombus(#%index) form). Changes @rhombus(set) to remove
+ Equivalent to @rhombus(st[val] := in) (with the default implicit
+ @rhombus(#%index) form). Changes @rhombus(st) to remove
  @rhombus(val) if @rhombus(in) is @rhombus(#false), otherwise add
  @rhombus(val).
 
@@ -313,11 +313,11 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.delete(set :: MutableSet, val :: Any)
+  fun MutableSet.delete(st :: MutableSet, val :: Any)
     :: Void
 ){
 
- Changes @rhombus(set) to remove @rhombus(val), if it is present.
+ Changes @rhombus(st) to remove @rhombus(val), if it is present.
 
 @examples(
   def s = MutableSet{1, 2, 3}
@@ -329,12 +329,12 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.to_list(set :: ReadableSet,
+  fun Set.to_list(st :: ReadableSet,
                   try_sort :: Any = #false)
     :: List
 ){
 
- Returns the elements of @rhombus(set) in a list. If @rhombus(try_sort)
+ Returns the elements of @rhombus(st) in a list. If @rhombus(try_sort)
  is true, then the elements are sorted to the degree that a built-in
  comparison can sort them. Note that sets do @emph{not} implement
  @rhombus(Listable, ~class), because the order of elements is
@@ -348,19 +348,19 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.copy(set :: ReadableSet) :: MutableSet
+  fun Set.copy(st :: ReadableSet) :: MutableSet
 ){
 
- Creates a mutable set whose initial content matches @rhombus(set).
+ Creates a mutable set whose initial content matches @rhombus(st).
 
 }
 
 
 @doc(
-  fun Set.snapshot(set :: ReadableSet) :: Set
+  fun Set.snapshot(st :: ReadableSet) :: Set
 ){
 
- Returns an immutable set whose content matches @rhombus(set). If
- @rhombus(set) is immutable, then it is the result.
+ Returns an immutable set whose content matches @rhombus(st). If
+ @rhombus(st) is immutable, then it is the result.
 
 }

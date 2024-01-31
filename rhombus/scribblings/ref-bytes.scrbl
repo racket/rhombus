@@ -17,17 +17,17 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
 
 @dispatch_table(
   "byte string"
-  @rhombus(Bytes)
-  [bstr.length(), Bytes.length(bstr)]
-  [bstr.get(n), Bytes.get(bstr, n)]
-  [bstr.set(n, byte), Bytes.set(bstr, n, byte)]
-  [bstr.append(bstr2, ...), Bytes.append(bstr, bstr2, ...)]
-  [bstr.subbytes(arg, ...), Bytes.subbytes(bstr, arg, ...)]
-  [bstr.copy(), Bytes.copy(bstr)]
-  [bstr.copy_from(arg, ...), Bytes.copy_from(bstr, arg, ...)]
-  [bstr.utf8_string(arg, ...), Bytes.utf8_string(bstr, arg, ...)]
-  [bstr.latin1_string(arg, ...), Bytes.latin1_string(bstr, arg, ...)]
-  [bstr.locale_string(arg, ...), Bytes.locale_string(bstr, arg, ...)]
+  Bytes
+  bstr.length()
+  bstr.get(n)
+  bstr.set(n, byte)
+  bstr.append(bstr2, ...)
+  bstr.subbytes(arg, ...)
+  bstr.copy()
+  bstr.copy_from(arg, ...)
+  bstr.utf8_string(arg, ...)
+  bstr.latin1_string(arg, ...)
+  bstr.locale_string(arg, ...)
 )
 
 

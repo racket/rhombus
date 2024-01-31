@@ -14,9 +14,9 @@ normally bound to implement function calls.
 
 @dispatch_table(
   "function"
-  @rhombus(Function)
-  [f.map(args, ...), Function.map(f, args, ...)]
-  [f.for_each(args, ...), Function.for_each(f, args, ...)]
+  Function
+  f.map(args, ...)
+  f.for_each(args, ...)
 )
 
 @doc(

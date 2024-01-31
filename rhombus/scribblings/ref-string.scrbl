@@ -19,27 +19,27 @@ immutable strings.
 
 @dispatch_table(
   "string"
-  @rhombus(String)
-  [str.append(str2, ...), String.append(str, str2, ...)]
-  [str.length(), String.length(str)]
-  [str.get(n), String.get(str, n)]
-  [str.substring(arg, ...), String.substring(str, arg, ...)]
-  [str.utf8_bytes(arg, ...), String.utf8_bytes(str, arg, ...)]
-  [str.latin1_bytes(arg, ...), String.latin1_bytes(str, arg, ...)]
-  [str.locale_bytes(arg, ...), String.locale_bytes(str, arg, ...)]
-  [str.to_int(), String.to_int(str)]
-  [str.to_number(), String.to_number(str)]
-  [str.to_string(), String.to_string(str)]
-  [str.upcase(arg), String.upcase(str)]
-  [str.downcase(arg), String.downcase(str)]
-  [str.foldcase(arg), String.foldcase(str)]
-  [str.titlecase(arg), String.titlecase(str)]
-  [str.normalize_nfd(), String.normalize_nfd(str)]
-  [str.normalize_nfkd(), String.normalize_nfkd(str)]
-  [str.normalize_nfc(), String.normalize_nfc(str)]
-  [str.normalize_nfkc(), String.normalize_nfkc(str)]
-  [str.grapheme_span(arg, ...), String.grapheme_span(str, arg, ...)]
-  [str.grapheme_count(arg, ...), String.grapheme_count(str, arg, ...)]
+  String
+  str.append(str2, ...)
+  str.length()
+  str.get(n)
+  str.substring(arg, ...)
+  str.utf8_bytes(arg, ...)
+  str.latin1_bytes(arg, ...)
+  str.locale_bytes(arg, ...)
+  str.to_int()
+  str.to_number()
+  str.to_string()
+  str.upcase(arg)
+  str.downcase(arg)
+  str.foldcase(arg)
+  str.titlecase(arg)
+  str.normalize_nfd()
+  str.normalize_nfkd()
+  str.normalize_nfc()
+  str.normalize_nfkc()
+  str.grapheme_span(arg, ...)
+  str.grapheme_count(arg, ...)
 )
 
 @doc(

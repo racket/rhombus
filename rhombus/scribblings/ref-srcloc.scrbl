@@ -6,13 +6,13 @@
 
 @dispatch_table(
   "source location"
-  @rhombus(Srcloc)
-  [srcloc.source, Srcloc.source(srcloc)]
-  [srcloc.line, Srcloc.line(srcloc)]
-  [srcloc.column, Srcloc.column(srcloc)]
-  [srcloc.position, Srcloc.position(srcloc)]
-  [srcloc.span, Srcloc.span(srcloc)]
-  [srcloc.to_report_string(), Srcloc.to_report_string(srcloc)]
+  Srcloc
+  srcloc.source
+  srcloc.line
+  srcloc.column
+  srcloc.position
+  srcloc.span
+  srcloc.to_report_string
 )
 
 @doc(

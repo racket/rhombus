@@ -48,21 +48,21 @@ Metadata for a syntax object can include a source location and the raw
  suffix corresponds to text after the closer.
 
 @dispatch_table(
-  "syntax-object"
-  @rhombus(Syntax)
-  [stx.unwrap(), Syntax.unwrap(stx)]
-  [stx.unwrap_op(), Syntax.unwrap_op(stx)]
-  [stx.unwrap_group(), Syntax.unwrap_group(stx)]
-  [stx.unwrap_sequence(), Syntax.unwrap_sequence(stx)]
-  [stx.unwrap_all(), Syntax.unwrap_all(stx)]
-  [stx.srcloc(), Syntax.srcloc(stx)]
-  [stx.is_original(), Syntax.is_original(stx)]
-  [stx.strip_scopes(), Syntax.strip_scopes(stx)]
-  [stx.replace_scopes(like_stx), Syntax.replace_scopes(stx, like_stx)]
-  [stx.relocate(to), Syntax.relocate(stx, to)]
-  [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
-  [stx.property(key, ...), Syntax.property(stx, key, ...)]
-  [stx.to_source_string(), Syntax.to_source_string(stx)]
+  "syntax object"
+  Syntax
+  stx.unwrap()
+  stx.unwrap_op()
+  stx.unwrap_group()
+  stx.unwrap_sequence()
+  stx.unwrap_all()
+  stx.srcloc()
+  stx.is_original()
+  stx.strip_scopes()
+  stx.replace_scopes(like_stx)
+  stx.relocate(to)
+  stx.relocate_span(like_stxes)
+  stx.property(key, ...)
+  stx.to_source_string()
 )
 
 @doc(

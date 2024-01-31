@@ -20,19 +20,19 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
 @dispatch_table(
   "array",
-  @rhombus(Array),
-  [arr.length(), Array.length(arr)]
-  [arr.get(n), Array.get(arr, n)]
-  [arr.set(n, v), Array.get(arr, n, v)]
-  [arr.append(arr2, ...), Array.append(arr, arr2, ...)]
-  [arr.copy(arg, ...), Array.copy(arr, arg, ...)]
-  [arr.copy_from(arg, ...), Array.copy_from(arr, arg, ...)]
-  [arr.take_left(n), Array.take_left(arr, n)]
-  [arr.take_right(n), Array.take_right(arr, n)]
-  [arr.drop_left(n), Array.drop_left(arr, n)]
-  [arr.drop_right(n), Array.drop_right(arr, n)]
-  [arr.set_in_copy(i, v), Array.set_in_copy(arr, i, v)]
-  [arr.to_list(), Array.to_list(arr)]
+  Array
+  arr.length()
+  arr.get(n)
+  arr.set(n, v)
+  arr.append(arr2, ...)
+  arr.copy(arg, ...)
+  arr.copy_from(arg, ...)
+  arr.take_left(n)
+  arr.take_right(n)
+  arr.drop_left(n)
+  arr.drop_right(n)
+  arr.set_in_copy(i, v)
+  arr.to_list()
 )
 
 @doc(

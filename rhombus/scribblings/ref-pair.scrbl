@@ -15,31 +15,31 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @dispatch_table(
   "pair"
-  @rhombus(Pair)
-  [pr.first, Pair.first(pr)]
-  [pr.rest, Pair.rest(pr)]
+  Pair
+  pr.first
+  pr.rest
 
 )
 
 @dispatch_table(
   "pait list"
-  @rhombus(PairList)
-  [lst.length(), PairList.length(lst)]
-  [lst.get(n), PairList.get(lst, n)]
-  [lst.first, PairList.first(lst)]
-  [lst.rest, PairList.rest(lst)]
-  [lst.reverse(), PairList.reverse(lst)]
-  [lst.append(lst2, ...), PairList.append(lst, lst2, ...)]
-  [lst.take_left(lst, n), PairList.take_left(lst, n)]
-  [lst.take_right(lst, n), PairList.take_right(lst, n)]
-  [lst.drop_left(lst, n), PairList.drop_left(lst, n)]
-  [lst.drop_right(lst, n), PairList.drop_right(lst, n)]
-  [lst.has_element(lst, v), PairList.has_element(lst, v)]
-  [lst.remove(lst, v), PairList.remove(lst, v)]
-  [lst.map(func), PairList.map(lst, func)]
-  [lst.for_each(func), PairList.for_each(lst, func)]
-  [lst.sort(arg, ...), PairList.sort(lst, arg, ...)]
-  [lst.to_list(), PairList.to_list(lst)]
+  PairList
+  lst.length()
+  lst.get(n)
+  lst.first,
+  lst.rest,
+  lst.reverse()
+  lst.append(lst2, ...)
+  lst.take_left(lst, n)
+  lst.take_right(lst, n)
+  lst.drop_left(lst, n)
+  lst.drop_right(lst, n)
+  lst.has_element(lst, v)
+  lst.remove(lst, v)
+  lst.map(func)
+  lst.for_each(func)
+  lst.sort(arg, ...)
+  lst.to_list()
 )
 
 @doc(
