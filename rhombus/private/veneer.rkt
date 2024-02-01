@@ -270,8 +270,9 @@
                                          #f
                                          #f
                                          dot-provider-rhss parent-dot-providers
-                                         #'(name name-extends tail-name
-                                                 name? name-convert constructor-name name-instance name-ref name-of
+                                         #`(name name-extends tail-name
+                                                 #,(and (syntax-e #'check?) #'name?) name-convert
+                                                 constructor-name name-instance name-ref name-of
                                                  #f #f dot-provider-name
                                                  indirect-static-infos
                                                  [] [] []
@@ -399,18 +400,26 @@
                                    v
                                    (lambda () v))
                                (if who
-                                   (raise-binding-failure who "argument" v #,all-ann-str)
+                                   (raise-binding-failure who "argument" v '#,all-ann-str)
                                    #f))]
                         [else
                          #`(if who
                                v
                                (lambda () v))]))))
             #`(define name?
-                (let ([name? ann.predicate])
-                  (lambda (v [who #f])
-                    (or (and #,(if super? #`(#,super? v) #t)
-                             (name? v))
-                        (and who (raise-binding-failure who "argument" v #,all-ann-str))))))))]
+                #,(cond
+                    [(syntax-e #'check?)
+                     #`(let ([name? ann.predicate])
+                         (let ([name? (lambda (v)
+                                        (and #,(if super? #`(#,super? v) #t)
+                                             (name? v)))])
+                           (case-lambda
+                             [(v) (name? v)]
+                             [(v who) (unless (name? v)
+                                        (raise-binding-failure who "argument" v '#,all-ann-str))])))]
+                    [else
+                     #`(lambda (v)
+                         #t)]))))]
       [ann::annotation-binding-form
        #:with arg-parsed::binding-form #'ann.binding
        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
@@ -446,7 +455,7 @@
                                                          cvt1
                                                          (lambda () cvt1))
                                                      (if who
-                                                         (raise-binding-failure who "argument" v #,all-ann-str)
+                                                         (raise-binding-failure who "argument" v '#,all-ann-str)
                                                          #f))]))]
                                      [else
                                       #`(let ([commit (lambda ()
@@ -459,7 +468,9 @@
                                           (if who
                                               (commit)
                                               commit))])
-                                 (raise-binding-failure who "argument" v #,all-ann-str))))])))
+                                 (if who
+                                     (raise-binding-failure who "argument" v '#,all-ann-str)
+                                     #f))))])))
 
 (define-for-syntax (extract-representation-static-infos ann-stx)
   (syntax-parse ann-stx

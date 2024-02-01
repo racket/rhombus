@@ -1,12 +1,12 @@
 #lang rhombus/static/and_meta
 
 veneer RevList(this :: List):
-  implements: MutableIndexable
-              Appendable
+  implements MutableIndexable
   override get(i):
     this[this.length() - i - 1]
   override set(i, v):
     println("dropping " +& v)
+  implements Appendable
   override append(other) :~ RevList:
     this ++ other
   method m():
@@ -30,17 +30,34 @@ block:
     r[2] ~is 1
     r[2] := "plate" ~prints "dropping plate\n"
     (r ++ [4, 5, 6])[0] ~is 6
-    RevList([1, 2, 3]).m() ~is 3
-    RevList([5, 2]).m() ~is 2
-    RevList.m([5, 2]) ~is 2
     (for List (i: r): i) ~is [3, 2, 1]
+
+check:
+  RevList([1, 2, 3]).m() ~is 3
+  RevList.m([1, 2, 3]) ~is 3
+  ([1, 2, 3] :: RevList).m() ~is 3
+  RevList([5, 2]).m() ~is 2
+  RevList.m([5, 2]) ~is 2
+  ([5, 2] :: RevList).m() ~is 2
+
+check:
+  RevList("oops") ~throws values(
+    "argument does not satisfy annotation",
+    "List",
+    "\"oops\"",
+  )
+  "oops" :: RevList ~throws values(
+    "value does not satisfy annotation",
+    "RevList",
+    "\"oops\"",
+  )
 
 veneer InfiniteString(this :: ReadableString.to_string):
   converter
-  implements: Indexable
-              Appendable
+  implements Indexable
   override get(i):
     if i >= this.length() | #{#\space} | this[i]
+  implements Appendable
   override append(other :: InfiniteString) :: InfiniteString:
     this
   method m():
@@ -48,32 +65,49 @@ veneer InfiniteString(this :: ReadableString.to_string):
 
 check:
   InfiniteString("apple") ~is "apple"
+  "apple" :: InfiniteString ~is "apple"
   InfiniteString("apple")[1000] ~is #{#\space}
+  ("apple" :: InfiniteString)[1000] ~is #{#\space}
   InfiniteString("apple").m() ~is "m"
-  InfiniteString(5) ~throws "does not satisfy"
-  InfiniteString.m(5) ~throws "does not satisfy"
+  InfiniteString.m("apple") ~is "m"
+  ("apple" :: InfiniteString).m() ~is "m"
 
+check:
+  InfiniteString(5) ~throws values(
+    "argument does not satisfy annotation",
+    "ReadableString.to_string",
+    "5"
+  )
+  5 :: InfiniteString ~throws values(
+    "value does not satisfy annotation",
+    "InfiniteString",
+    "5"
+  )
+  InfiniteString.m(5) ~throws values(
+    "argument does not satisfy annotation",
+    "ReadableString.to_string",
+    "5"
+  )
 
 veneer RevList2(this :: List):
-  implements: Indexable
+  implements Indexable
   override get(i):
     this[this.length() - i - 1]
-  method m():
-    this.length()
   expression 'RevList2[$elem, ...]':
     '[$elem, ...] :~ RevList2'
 
 check:
   RevList2[1, 2, 3][0] ~is 3
+  ([1, 2, 3] :: RevList2)[0] ~is 3
 
-
-veneer Num (this :: Int):
+veneer Num(this :: Int):
   implements Indexable
   override get(i):
     this + i
-  method m(): [this]
+  method m():
+    [this]
 
-veneer PlusNum (this :: PosInt):
+veneer PlusNum(this :: PosInt):
   implements Indexable
   extends Num
   override method get(v):
@@ -87,6 +121,44 @@ block:
     n.get(2) ~is 7
     n.m() ~is [5]
     n is_a Indexable ~is #false
-    PlusNum(7) ~is 7
-    PlusNum(7)[9] ~is -2
-    PlusNum(7).m() ~is [7]
+
+check:
+  PlusNum(7) ~is 7
+  (7 :: PlusNum) ~is 7
+  PlusNum(7)[9] ~is -2
+  (7 :: PlusNum)[9] ~is -2
+  PlusNum(7).m() ~is [7]
+  PlusNum.m(7) ~is [7]
+  (7 :: PlusNum).m() ~is [7]
+
+veneer IdSet(this :~ Map):
+  method add(id :~ Identifier) :~ IdSet:
+    this ++ { id.unwrap(): id }
+  method to_set():
+    for Set ((id, _): this):
+      id
+
+check:
+  IdSet({}).add('id1').add('id2').to_set() ~is {#'id1, #'id2}
+  ({} :: IdSet).add('id1').add('id2').to_set() ~is {#'id1, #'id2}
+
+check:
+  IdSet("oops") ~is "oops"
+  "oops" :~ IdSet ~is "oops"
+  "oops" :: IdSet ~is "oops"
+
+veneer IdSet2(this :~ Map):
+  converter
+  method add(id :: Identifier) :: IdSet2:
+    this ++ { id.unwrap(): id }
+  method to_set():
+    for Set ((id, _): this):
+      id
+
+check:
+  IdSet2({}).add('id1').add('id2').to_set() ~is {#'id1, #'id2}
+  ({} :: IdSet2).add('id1').add('id2').to_set() ~is {#'id1, #'id2}
+
+check:
+  IdSet2("oops") ~is "oops"
+  "oops" :: IdSet2 ~is "oops"

@@ -2,9 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
-                     shrubbery/property
                      "srcloc.rkt"
-                     "tag.rkt"
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
@@ -23,7 +21,6 @@
                   repetition-transformer
                   identifier-repetition-use)
          (submod "assign.rkt" for-assign) (only-in "assign.rkt" :=)
-         (submod "equal.rkt" for-parse)
          "op-literal.rkt"
          "name-root.rkt"
          "parse.rkt"
@@ -81,11 +78,15 @@
            (build-definitions/maybe-extension
             #f #'name #'name-extends
             #`(lambda (v)
-                #,(if (syntax-e #'name-convert)
-                      #`(name-convert v 'name)
-                      #`(begin
-                          (name? v 'name)
-                          v))))]
+                #,(cond
+                    [(syntax-e #'name-convert)
+                     #`(name-convert v 'name)]
+                    [(syntax-e #'name?)
+                     #`(begin
+                         (name? v 'name)
+                         v)]
+                    [else
+                     #`v])))]
           [(and constructor-given-name
                 (not (free-identifier=? #'name constructor-given-name)))
            (list
