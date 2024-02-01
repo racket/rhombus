@@ -135,23 +135,25 @@
         IF success fail)
      #`(begin
          (define finish-id
-           (let ()
-             (lhs.matcher-id arg-id lhs.data if/blocked
-                             (lambda ()
-                               (lhs.committer-id arg-id lhs.data)
-                               (lhs.binder-id arg-id lhs.data)
-                               (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
-                               ...
-                               left-body)
-                             (let ()
-                               (rhs.matcher-id arg-id rhs.data if/blocked
-                                               (lambda ()
-                                                 (rhs.committer-id arg-id rhs.data)
-                                                 (rhs.binder-id arg-id rhs.data)
-                                                 (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
-                                                 ...
-                                                 right-body)
-                                               #f)))))
+           ;; preserve the textual order
+           ((lambda (fail-k)
+              (lhs.matcher-id arg-id lhs.data if/blocked
+                              (lambda ()
+                                (lhs.committer-id arg-id lhs.data)
+                                (lhs.binder-id arg-id lhs.data)
+                                (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
+                                ...
+                                left-body)
+                              (fail-k)))
+            (lambda ()
+              (rhs.matcher-id arg-id rhs.data if/blocked
+                              (lambda ()
+                                (rhs.committer-id arg-id rhs.data)
+                                (rhs.binder-id arg-id rhs.data)
+                                (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
+                                ...
+                                right-body)
+                              #f))))
          (IF finish-id success fail))]))
 
 (define-syntax (or-committer stx)
