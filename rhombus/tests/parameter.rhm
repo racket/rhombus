@@ -25,3 +25,39 @@ block:
     p() ~is "1"
     (parameterize { p: 2 }: p()) ~is "2"
     (block: p(3); p()) ~is "3"
+
+block:
+  use_static
+  Parameter.def p :: String = "apple"
+  check:
+    p() ~is "apple"
+    p().length() ~is 5
+    (parameterize { p: "banana" }: p()) ~is "banana"
+    (parameterize { p: 0 }: p()) ~throws "annotation"
+
+block:
+  use_static
+  Parameter.def p :: String: "apple"
+  check:
+    p() ~is "apple"
+    p().length() ~is 5
+    (parameterize { p: "banana" }: p()) ~is "banana"
+    (parameterize { p: 0 }: p()) ~throws "annotation"
+
+block:
+  use_static
+  Parameter.def p :~ String = "apple"
+  check:
+    p().length() ~is 5
+
+block:
+  use_static
+  Parameter.def p :: String = #'oops
+  check p() ~is #'oops
+  check p(#'no) ~throws "annotation"
+
+block:
+  use_static
+  Parameter.def p :~ String = #'oops
+  check p() ~is #'oops
+  check p(#'no) ~is #void

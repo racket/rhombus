@@ -26,23 +26,46 @@ parameter's value using @rhombus(parameterize).
 }
 
 @doc(
+  ~nonterminal:
+    id_name: namespace ~defn
+
   fun Parameter.make(
     initial_val :: Any,
     ~name: name :: Symbol = #'parameter,
     ~guard: guard :: maybe(Function.of_arity(1)) = #false
   ) :: Parameter
+
+  defn.macro 'Parameter.def $id_name $maybe_annot = $expr'
+  defn.macro 'Parameter.def $id_name $maybe_annot:
+                $body
+                ...'
+
+  grammar maybe_annot:
+    #,(@rhombus(::, ~bind)) $annot
+    #,(@rhombus(:~, ~bind)) $annot
+    #,(epsilon)
 ){
 
- Creates a @tech{context parameter} whose initial value is
+ The @rhombus(Parameter.make) function creates a @tech{context parameter} whose initial value is
  @rhombus(initial_val) and whose name for debugging purposes as
  @rhombus(name). If @rhombus(guard) is not @rhombus(#false), then it used
  as a filter on any candidate value for the function, whether that value
  is supplied via @rhombus(parameterize) or by calling the context
- parameter as a function with one argument.
+ parameter as a function with one argument. The @rhombus(guard) filter
+ is @emph{not} applied to @rhombus(initial_val).
 
  A context parameter acts a function that returns the parameter's value
  in the current dynamic context when it is called with zero arguments,
  and it mutates the parameter's value when called with one argument.
+
+ The @rhombus(Parameter.def) form defines @rhombus(id_name) to a new
+ @tech{context parameter} whose initial value is produced by
+ @rhombus(expr) or a @rhombus(body) sequence. If an annotation is provided
+ using @rhombus(::, ~bind), then the annotation's predicate or conversion
+ is used for a filter argument like the @rhombus(guard) procedure for
+ @rhombus(Parameter.make). If an annotation is provided with either
+ @rhombus(::, ~bind) or @rhombus(:~, ~bind), static information from
+ the annotation is associated with the result of calling @rhombus(id_name).
 
 @examples(
   ~defn:
@@ -51,6 +74,16 @@ parameter's value using @rhombus(parameterize).
     size()
     size(11)
     size()
+  ~defn:
+    Parameter.def color :: String = "red"
+  ~repl:
+    use_static
+    color().length()
+    ~error:
+      color(5)
+    ~error:
+      parameterize { color: 5 }:
+        "ok"
 )
 
 }
