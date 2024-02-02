@@ -119,3 +119,24 @@ check:
   def [x, ...] = ["1", "2", "3"]
   ["+" ++ x, ...]
   ~is ["+1", "+2", "+3"]
+
+block:
+  class Broken():
+    implements Appendable
+    override method append(other):
+      values("oops", "wow")
+  check Broken() ++ Broken() ~throws values(
+    "results do not satisfy annotation",
+    "Any",
+    "\"oops\"", "\"wow\"",
+  )
+  check (Broken() :: Appendable) ++ Broken() ~throws values(
+    "results do not satisfy annotation",
+    "Any",
+    "\"oops\"", "\"wow\"",
+  )
+  check Broken().append(Broken()) ~throws values(
+    "results do not satisfy annotation",
+    "Any",
+    "\"oops\"", "\"wow\"",
+  )

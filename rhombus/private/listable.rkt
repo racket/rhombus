@@ -8,6 +8,7 @@
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
+         (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
@@ -25,7 +26,7 @@
                   '#(#&to_list)
                   #'#(#:abstract)
                   (hasheq 'to_list 0)
-                  #hasheq()
+                  (hasheq 'to_list #'to-list-result)
                   '()
                   #f
                   #'()
@@ -39,6 +40,9 @@
                   #t
                   #f
                   null))
+
+(define-syntax to-list-result
+  (method-result #'treelist? #t 1 "List" treelist-static-infos 2))
 
 (define-annotation-syntax Listable
   (identifier-annotation #'listable? #'((#%dot-provider listable-instance))))

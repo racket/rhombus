@@ -46,8 +46,10 @@ block:
   block:
     use_static
     check Posn(1, 2).to_list() ~is [1, 2]
+    check Posn(1, 2).to_list().length() ~is 2
     check Listable.to_list(Posn(1, 2)) ~is [1, 2]
     check Listable.to_list(Posn(1, 2)).length() ~is 2
+    check (Posn(1, 2) :~ Listable).to_list() ~is [1, 2]
     check (Posn(1, 2) :~ Listable).to_list().length() ~is 2
 
 block:
@@ -55,29 +57,33 @@ block:
     implements Listable
     override to_list(): "oops"
 
-  check Broken().to_list() ~is "oops"
+  check Broken().to_list() ~throws values(
+    "result does not satisfy annotation",
+    "List",
+    "\"oops\"",
+  )
   check (Broken() :~ Listable).to_list() ~throws values(
-    "contract violation",
-    "expected: List",
+    "result does not satisfy annotation",
+    "List",
     "\"oops\"",
   )
   check Broken() :: Listable.to_list ~throws values(
-    "contract violation",
-    "expected: List",
+    "result does not satisfy annotation",
+    "List",
     "\"oops\"",
   )
   check (Broken() :~ Listable).to_list() ~throws values(
-    "contract violation",
-    "expected: List",
+    "result does not satisfy annotation",
+    "List",
     "\"oops\"",
   )
   check [& Broken()] ~throws values(
-    "contract violation",
-    "expected: List",
+    "result does not satisfy annotation",
+    "List",
     "\"oops\"",
   )
   check PairList[& Broken()] ~throws values(
-    "contract violation",
-    "expected: List",
+    "result does not satisfy annotation",
+    "List",
     "\"oops\"",
   )

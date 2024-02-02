@@ -124,7 +124,8 @@
 
  @item{@rhombus(#,(@rhombus(equals, ~datum))(#,(@rhombus(other, ~var)), #,(@rhombus(recur, ~var))))
   --- takes another object that is an instance of the same class (or a
-  subclass) and returns a boolean to report whether the objects are equal.
+  subclass), and returns a non-@rhombus(#false) value if the objects
+  are equal, @rhombus(#false) otherwise.
   Use the given @rhombus(recur, ~var) function to compare components of
   the two objects, instead of using @rhombus(==) on the components.}
 

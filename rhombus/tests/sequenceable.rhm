@@ -22,9 +22,6 @@ class Posn(x, y):
         $lhs = if pos == 0 | Posn.y(p) | Posn.x(p),
       ~recur_args:
         (pos + 1))'
-  method self_iterate():
-    for (x: this):
-      x
 
 class Posn3D(z):
   extends Posn
@@ -138,7 +135,7 @@ check:
   ~is [1]
 
 // Use `:` form of bindings
-check:
+block:
   class Posn(x, y):
     nonfinal
     implements Sequenceable
@@ -155,10 +152,38 @@ check:
           $lhs: if pos == 0 | Posn.y(p) | Posn.x(p),
         ~recur_args:
           (pos + 1))'
-    method self_iterate():
-      for (x: this):
-        x
-  for List:
-    each elem: Posn(1, 2)
-    elem
-  ~is [2, 1]
+  check:
+    for List:
+      each elem: Posn(1, 2)
+      elem
+    ~is [2, 1]
+  check:
+    for List:
+      each elem: Posn(1, 2) :: Sequence
+      elem
+    ~is ["o"[0], "o"[0], "p"[0], "s"[0]]
+  check:
+    Posn(1, 2).to_sequence()
+    ~is "oops"
+
+block:
+  class Broken():
+    implements Sequenceable
+    override method to_sequence():
+      Box("really not a sequence")
+  check:
+    for List:
+      each elem: Broken() :: Sequence
+      elem
+    ~throws values(
+      "result does not satisfy annotation",
+      "Sequence",
+      "Box(\"really not a sequence\")",
+    )
+  check:
+    Broken().to_sequence()
+    ~throws values(
+      "result does not satisfy annotation",
+      "Sequence",
+      "Box(\"really not a sequence\")",
+    )

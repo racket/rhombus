@@ -31,29 +31,29 @@ class A2():
   override method get(index) :: O:
     O(index)
   override method set(index, val):
-    saved := [index, val]
     if index == "bad"
     | "bad"
-    | #void
+    | saved := [index, val]
 
 interface I3:
   extends MutableIndexable
 
 class A3():
   implements I3
-  field saved = #false
   override method get(index) :: O:
     O(index)
   override method set(index, val):
-    saved := [index, val]
-    if index == "bad"
-    | "bad"
-    | #void
+    #void
 
 class A4():
   private implements Indexable
   private override method get(index) :: O:
     O(index)
+
+class A5():
+  implements Indexable
+  override method get(index):
+    values("oops", "wow")
 
 check:
   A()[0].v ~is 0
@@ -67,9 +67,24 @@ check:
     "Void",
     "\"bad\"",
   )
+  A2().set("bad", #'no) ~throws values(
+    "result does not satisfy annotation",
+    "Void",
+    "\"bad\"",
+  )
   A3()[0].v ~is 0
-  (A3() :: I3)[0] ~is O(0)
+  ((A3() :: I3)[0] :: O).v ~is 0
   A4()[10].v ~is 10
+  A5()["not good"] ~throws values(
+    "results do not satisfy annotation",
+    "Any",
+    "\"oops\"", "\"wow\"",
+  )
+  A5().get("not good") ~throws values(
+    "results do not satisfy annotation",
+    "Any",
+    "\"oops\"", "\"wow\"",
+  )
 
 block:
   def b = B()

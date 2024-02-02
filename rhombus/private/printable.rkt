@@ -8,6 +8,7 @@
          (submod "annotation.rkt" for-class)
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
+         (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "indirect-static-info-key.rkt"
@@ -30,14 +31,15 @@
 
 (define (bounce-to-printer-interface v mode recur)
   (define pd ((vector-ref (Printable-ref v) 0) v mode recur))
-  (print-description-unwrap 'Printable.print pd #t))
+  ;; guarded by method result
+  (print-description-unwrap #f pd))
 
 (define-class-desc-syntax Printable
   (interface-desc #'()
                   '#(#&describe)
                   #'#(#:abstract)
                   (hasheq 'describe 0)
-                  #hasheq()
+                  (hasheq 'describe #'describe-result)
                   '()
                   #f
                   #'()
@@ -52,19 +54,20 @@
                   #f
                   null))
 
+(define-syntax describe-result
+  (method-result #'print-description? #t 1 "PrintDesc" #'() 8))
 
 (define-name-root Printable
-  #:fields   
+  #:fields
   ([describe Printable.describe]
    [render Printable.render]
-
    [current_page_width current-page-width]
    [current_graph print-graph]
    [current_pretty current-print-as-pretty]
    [current_optimal current-pretty-as-optimal]))
 
 (define-name-root PrintDesc
-  #:fields   
+  #:fields
   ([concat PrintDesc.concat]
    [newline PrintDesc.newline]
    [nest PrintDesc.nest]
@@ -74,29 +77,21 @@
    [list PrintDesc.list]
    [block PrintDesc.block]))
 
-(define (get-printer who v)
-  (define vt (Printable-ref v #f))
-  (unless vt
-    (raise-argument-error* who rhombus-realm "Printable" v))
-  vt)
-
 (define-annotation-syntax PrintDesc
-  (identifier-annotation #'printable-description? #'()))
+  (identifier-annotation #'print-description? #'()))
 
-(define (print-description-unwrap who pd [result? #f])
+(define (print-description? pd)
+  (or (PrintDesc? pd)
+      (string? pd)
+      (bytes? pd)))
+
+(define (print-description-unwrap who pd)
   (cond
-    [(PrintDesc? pd)
-     (PrintDesc-doc pd)]
+    [(PrintDesc? pd) (PrintDesc-doc pd)]
     [(string? pd) (pretty-text pd)]
     [(bytes? pd) (pretty-text pd)]
-    [else
-     (and who
-          (if result?
-              (raise-result-error* who rhombus-realm "PrintDesc" pd)
-              (raise-argument-error* who rhombus-realm "PrintDesc" pd)))]))
-
-(define (printable-description? v)
-  (and (print-description-unwrap #f v) #t))
+    [else (and who
+               (raise-argument-error* who rhombus-realm "PrintDesc" pd))]))
 
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc

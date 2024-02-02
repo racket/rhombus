@@ -82,3 +82,35 @@ check:
   b.value := b
   println([b, b, b])
   ~prints "[Box(5), Box(5), Box(5)]\n[#0=Box(#0#), #0#, #0#]\n"
+
+block:
+  class Broken():
+    implements Printable
+    override describe(mode, recur):
+      "oops"
+  check:
+    to_string(Broken())
+    ~is "oops"
+  check:
+    Broken().describe(#'expr, Printable.describe)
+    ~is "oops"
+
+block:
+  class Broken():
+    implements Printable
+    override describe(mode, recur):
+      Box("really not a print description")
+  check:
+    to_string(Broken())
+    ~throws values(
+      "result does not satisfy annotation",
+      "PrintDesc",
+      "Box(\"really not a print description\")",
+    )
+  check:
+    Broken().describe(#'expr, Printable.describe)
+    ~throws values(
+      "result does not satisfy annotation",
+      "PrintDesc",
+      "Box(\"really not a print description\")",
+    )

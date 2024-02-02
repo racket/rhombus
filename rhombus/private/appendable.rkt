@@ -24,6 +24,7 @@
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
+         (only-in "class-method-result.rkt" method-result)
          "is-static.rkt")
 
 (provide (for-spaces (rhombus/class
@@ -53,7 +54,7 @@
                   '#(#&append)
                   #'#(#:abstract)
                   (hasheq 'append 0)
-                  #hasheq()
+                  (hasheq 'append #'append-result)
                   '()
                   #f
                   #'()
@@ -67,6 +68,9 @@
                   #t
                   #f
                   null))
+
+(define-syntax append-result
+  (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))
 
 (define-for-syntax (parse-append form1 form2 self-stx form1-in
                                  static?

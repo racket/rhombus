@@ -63,8 +63,9 @@
 
 (module+ for-listable
   (provide prop:Listable Listable? Listable-ref
-           listable?
-           to-treelist to-list))
+           treelist? listable?
+           to-treelist to-list
+           (for-syntax treelist-static-infos)))
 
 (module+ normal-call
   (provide (for-syntax normal-call?)))
@@ -1029,8 +1030,6 @@
       (vector? v)
       (Listable? v)))
 
-(define to-treelist-who 'Listable.to_list)
-
 (define (to-treelist who v)
   (cond
     [(treelist? v) v]
@@ -1054,8 +1053,7 @@
           (raise-argument-error* who rhombus-realm "Listable" v))]
     [else
      (define lst ((vector-ref methods 0) v))
-     (unless (treelist? lst)
-       (raise-result-error* to-treelist-who rhombus-realm "List" lst))
+     ;; guarded by method result
      lst]))
 
 (define (ensure-treelist v)

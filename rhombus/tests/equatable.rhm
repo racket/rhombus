@@ -10,12 +10,17 @@ class AnythingGoes():
 class NoGo():
   private implements Equatable
   private override equals(other, recur): #false
-  private override hash_code(recur): 0
+  private override hash_code(recur): 1
 
 class Fail():
   private implements Equatable
   private override equals(other, recur): error("failure")
-  private override hash_code(recur): error("failure")
+  private override hash_code(recur): 2
+
+class Broken():
+  implements Equatable
+  override equals(other, recur): values("oops", "wow")
+  override hash_code(recur): "oops"
 
 check AnythingGoes() == AnythingGoes() ~is #true
 check:
@@ -32,7 +37,7 @@ check NoGo() == AnythingGoes()  ~is #false
 
 check NoGo() == NoGo() ~is #false
 block:
-  let ng: NoGo()
+  def ng = NoGo()
   check ng == ng ~is #true
 
 check AnythingGoes() == Fail() ~is #false
@@ -41,8 +46,41 @@ check NoGo() == Fail() ~is #false
 check Fail() == NoGo() ~is #false
 check Fail() == Fail() ~throws "failure"
 block:
-  let f: Fail()
+  def f = Fail()
   check f == f ~is #true
+
+check AnythingGoes() == Broken() ~is #false
+check Broken() == AnythingGoes() ~is #false
+check NoGo() == Broken() ~is #false
+check Broken() == NoGo() ~is #false
+check Broken() == Broken() ~throws values(
+  "results do not satisfy annotation",
+  "Any",
+  "\"oops\"", "\"wow\"",
+)
+block:
+  def f = Broken()
+  check f == f ~is #true
+
+check Equatable.hash(AnythingGoes()) ~is 0
+check Equatable.hash(NoGo()) ~is 1
+check Equatable.hash(Fail()) ~is 2
+check Equatable.hash(Broken()) ~throws values(
+  "result does not satisfy annotation",
+  "Int",
+  "\"oops\"",
+)
+
+check Broken().equals(Broken(), fun (a, b): a == b) ~throws values(
+  "results do not satisfy annotation",
+  "Any",
+  "\"oops\"", "\"wow\"",
+)
+check Broken().hash_code(Equatable.hash) ~throws values(
+  "result does not satisfy annotation",
+  "Int",
+  "\"oops\"",
+)
 
 block:
   class AnythingGoesAbstract():
@@ -53,17 +91,18 @@ block:
   class AnythingGoesConcrete(n):
     extends AnythingGoesAbstract
     override equals(other, recur): #true
-    override hash_code(recur): 0
+    override hash_code(recur): 3
     override method m(): "ok"
 
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+  check Equatable.hash(AnythingGoesConcrete(2)) ~is 3
 
 block:
   class AnythingGoesAbstract():
     nonfinal
     private implements Equatable
     private override equals(other, recur): #true
-    private override hash_code(recur): 0
+    private override hash_code(recur): 4
     abstract m()
 
   class AnythingGoesConcrete(n):
@@ -71,3 +110,4 @@ block:
     override method m(): "ok"
 
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+  check Equatable.hash(AnythingGoesConcrete(2)) ~is 4

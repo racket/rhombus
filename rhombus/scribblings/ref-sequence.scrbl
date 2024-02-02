@@ -226,7 +226,7 @@ internal state, and the state can even be specific to a particular
 
 @itemlist(
 
- @item{@rhombus(#,(@rhombus(to_sequence, ~datum))(#,(@rhombus(index, ~var))))
+ @item{@rhombus(#,(@rhombus(to_sequence, ~datum))())
   --- returns a sequence value, possibly constructed with
   @rhombus(Sequence.make) or @rhombus(Sequence.instantiable).}
 

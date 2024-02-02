@@ -3,8 +3,7 @@
                      "interface-parse.rkt")
          "provide.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in (submod "function-parse.rkt" for-call)
-                  raise-result-failure))
+         (only-in "class-method-result.rkt" method-result))
 
 (provide (for-spaces (rhombus/class)
                      Sequenceable))
@@ -15,17 +14,14 @@
    #false
    (list (cons prop:sequence (lambda (v)
                                (lambda (self)
-                                 (define s ((vector-ref (Sequenceable-ref self) 0) self))
-                                 (unless (sequence? s)
-                                   (raise-result-failure 'to_sequence s "Sequence"))
-                                 s))))))
+                                 ((vector-ref (Sequenceable-ref self) 0) self)))))))
 
 (define-class-desc-syntax Sequenceable
   (interface-desc #'()
                   '#(#&to_sequence)
                   #'#(#:abstract)
                   (hasheq 'to_sequence 0)
-                  #hasheq()
+                  (hasheq 'to_sequence #'to-sequence-result)
                   '()
                   #f
                   #'()
@@ -39,3 +35,6 @@
                   #t
                   #f
                   null))
+
+(define-syntax to-sequence-result
+  (method-result #'sequence? #t 1 "Sequence" #'() 2))

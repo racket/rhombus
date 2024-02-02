@@ -65,7 +65,7 @@
                   '#(#&get)
                   #'#(#:abstract)
                   (hasheq 'get 0)
-                  #hasheq()
+                  (hasheq 'get #'get-result)
                   '()
                   #f
                   #'()
@@ -79,6 +79,9 @@
                   #t
                   #f
                   null))
+
+(define-syntax get-result
+  (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))
 
 (define-annotation-syntax MutableIndexable
   (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-get)
@@ -96,7 +99,7 @@
                   #'#(#:abstract #:abstract)
                   (hasheq 'get 0
                           'set 1)
-                  (hasheq 'set #'void-result)
+                  (hasheq 'set #'set-result)
                   '()
                   #f
                   #'()
@@ -111,7 +114,7 @@
                   #f
                   null))
 
-(define-syntax void-result
+(define-syntax set-result
   (method-result #'void? #t 1 "Void" #'() 8))
 
 (define-for-syntax (parse-indexable-ref-or-set indexable-in stxes more-static?
