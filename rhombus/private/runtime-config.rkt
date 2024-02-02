@@ -59,7 +59,11 @@
    (let ([orig (global-port-print-handler)])
      (lambda (v op [mode 0])
        (if (racket-print-redirect? v)
-           (orig (racket-print-redirect-val v) op 1)
+           ;; As we print unwrapped, we still want to go through
+           ;; the port's print handler, so parameterize instead
+           ;; of calling `orig` directly:
+           (parameterize ([global-port-print-handler orig])
+             (print (racket-print-redirect-val v) op mode))
            (rhombus:print v op 'expr #t)))))
 
   (current-error-message-adjuster

@@ -14,7 +14,8 @@
          "indirect-static-info-key.rkt"
          "static-info.rkt"
          "print-desc.rkt"
-         (submod "print.rkt" for-printable))
+         (submod "print.rkt" for-printable)
+         (submod "print.rkt" redirect))
 
 (provide (for-spaces (rhombus/class
                       rhombus/namespace)
@@ -75,7 +76,8 @@
    [or PrintDesc.or]
    [flat PrintDesc.flat]
    [list PrintDesc.list]
-   [block PrintDesc.block]))
+   [block PrintDesc.block]
+   [special PrintDesc.special]))
 
 (define-annotation-syntax PrintDesc
   (identifier-annotation #'print-description? #'()))
@@ -143,6 +145,16 @@
    (pretty-blocklike (print-description-unwrap who head)
                      (print-description-unwrap who body))))
 
+(define/arity (PrintDesc.special v alt-pd
+                                 #:mode [mode 'write-special]
+                                 #:length [len 1])
+  (define alt (print-description-unwrap who alt-pd))
+  (unless (memq mode '(write-special print))
+    (raise-argument-error* who rhombus-realm "Any.of(#'#{write-special}, #'print, #'write, #'display)" mode))
+  (unless (exact-nonnegative-integer? len)
+    (raise-argument-error* who rhombus-realm "NonnegInt" len))
+  (PrintDesc (pretty-special v len mode alt)))
+
 (define-static-info-syntaxes (print-graph)
   (#%function-arity 3)
   (#%indirect-static-info indirect-function-static-info))
@@ -161,5 +173,5 @@
   (check-output-port who op)
   (unless (exact-nonnegative-integer? column)
     (raise-argument-error* who rhombus-realm "NonnegInt" column))
-  (render-pretty doc op
+  (render-pretty doc op racket-print-redirect
                  #:column column))

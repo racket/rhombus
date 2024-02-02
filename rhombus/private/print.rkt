@@ -164,7 +164,7 @@
 
 (define (print-other v mode op)
   (define doc (pretty v mode (make-hasheq)))
-  (render-pretty doc op))
+  (render-pretty doc op racket-print-redirect))
 
 (define (pretty v mode ht)
   (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))
@@ -334,4 +334,10 @@
 (struct racket-print-redirect (val)
   #:property prop:custom-write
   (lambda (r op mode)
-    (racket-print (racket-print-redirect-val r) op mode)))
+    (case mode
+      [(0 1)
+       (racket-print (racket-print-redirect-val r) op mode)]
+      [(#f)
+       (write (racket-print-redirect-val r) op)]
+      [else
+       (display (racket-print-redirect-val r) op)])))

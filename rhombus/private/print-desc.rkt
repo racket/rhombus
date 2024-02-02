@@ -14,6 +14,7 @@
          pretty-write
 
          pretty-text
+         pretty-special
          pretty-concat
          pretty-concat-list
          pretty-flat
@@ -55,6 +56,9 @@
 
 (define (pretty-text str)
   str)
+
+(define (pretty-special sp len mode doc)
+  (list* 'special (list sp len mode) doc))
 
 (define (pretty-concat . docs)
   (pretty-concat-list docs))
@@ -128,7 +132,9 @@
                             build-concat
                             build-alt
                             build-nest
-                            build-align)
+                            build-align
+                            build-special
+                            can-special?)
   (define ht (make-hasheq))
   (define graph? (print-graph))
   (define (obviously-non-cyclic?)
@@ -151,6 +157,10 @@
                 [(null? docs) fuel]
                 [else (let ([fuel (loop (car docs) saw-ht fuel)])
                         (and fuel (seq-loop (cdr docs) fuel)))]))]
+           [(special)
+            (if can-special?
+                (sub1 fuel)
+                (loop (cddr doc) saw-ht (sub1 fuel)))]
            [else
             (error 'resolve-references "oops ~s" doc)])]
         [else (sub1 fuel)])))
@@ -254,6 +264,12 @@
                                   (build-concat (reverse rev-new-docs))
                                   'ok))
                          is-flat?)]
+                [(special)
+                 (cond
+                   [can-special?
+                    (values saw-ht (build-special (cadr doc)) flat?)]
+                   [else
+                    (loop (cddr doc) saw-ht flat? doc-ht-in)])]
                 [else
                  (error 'resolve-references "oops ~s" doc)]))
             (hash-set! doc-ht doc (cons (cons new-saw-ht is-flat?) new-doc))
@@ -272,7 +288,7 @@
   (unless new-doc (error 'print "no valid flat rendering"))
   new-doc)
 
-(define (render-pretty doc o
+(define (render-pretty doc o make-redirect
                        #:column [col 0])
   (if (current-pretty-as-optimal)
       (pe:pretty-print (resolve-references doc
@@ -281,18 +297,34 @@
                                            pe:u-concat
                                            pe:alt
                                            pe:nest
-                                           pe:align)
+                                           pe:align
+                                           (lambda (spec) (pe:special spec (cadr spec)))
+                                           (port-writes-special? o))
                         #:out o
                         #:offset col
-                        #:page-width (current-page-width))
+                        #:page-width (current-page-width)
+                        #:special (make-write-pretty-special make-redirect))
       (sp:render-pretty (resolve-references doc
                                             (lambda (str) str)
                                             'nl
                                             (lambda (lst) (cons 'seq lst))
                                             (lambda (a b) (list 'or a b))
                                             (lambda (n doc) (list 'nest n doc))
-                                            (lambda (doc) (list 'align doc)))
+                                            (lambda (doc) (list 'align doc))
+                                            (lambda (spec) (list 'special spec (cadr spec)))
+                                            (port-writes-special? o))
                         o
+                        #:write-special (make-write-pretty-special make-redirect)
                         #:width (and (current-print-as-pretty)
                                      (current-page-width))
                         #:column col)))
+
+(define (make-write-pretty-special make-redirect)
+  (lambda (spec o)
+    (define v (car spec))
+    (define mode (caddr spec))
+    (case mode
+      [(write-special) (write-special v o)]
+      [(print) (print (make-redirect v) o)]
+      [(write) (write v o)]
+      [(display) (display v o)])))
