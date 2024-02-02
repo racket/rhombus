@@ -3,7 +3,7 @@
 @title{Rhombus Draw}
 
 @docmodule(~use_sources: lib("rhombus/draw.rhm"),
-           rhombus/draw)
+           draw)
 
 @table_of_contents()
 

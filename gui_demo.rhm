@@ -1,7 +1,7 @@
 #lang rhombus/static
 import:
-  rhombus/draw
-  rhombus/gui
+  draw
+  gui
 
 // ----------------------------------------
 
