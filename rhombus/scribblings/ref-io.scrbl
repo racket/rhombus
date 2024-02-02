@@ -6,12 +6,12 @@
 
 A @deftech{port} is an input or output stream for a file, network
 connection, terminal, etc. An @deftech{input port} is specifically for
-output, while an @deftech{output port} is specifically for input.
+input, while an @deftech{output port} is specifically for output.
 
 @dispatch_table(
   "output port"
-  @rhombus(Port.Output)
-  [out.flush(), Port.Output.flush(out)]
+  Port.Output
+  out.flush()
 )
 
 @doc(
@@ -20,9 +20,10 @@ output, while an @deftech{output port} is specifically for input.
   annot.macro 'Port.Output'
 ){
 
- The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}. The @rhombus(Port.Input, ~annot) annotation
+ The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}.
+ The @rhombus(Port.Input, ~annot) annotation
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
- ports, and it is possible for a port to be both.
+ recognizes output ports, and it is possible for a port to be both.
 
 }
 
@@ -98,7 +99,7 @@ output, while an @deftech{output port} is specifically for input.
 }
 
 @doc(
-  fun Port.Output.flush(out :: Port.Output) :: Void
+  fun Port.Output.flush(out :: Port.Output = Port.Output.current()) :: Void
 ){
 
  Flushes the content of @rhombus(out)'s buffer.
@@ -353,6 +354,27 @@ output, while an @deftech{output port} is specifically for input.
         "two",
       )))
 )
+
+}
+
+@doc(  
+  fun PrintDesc.special(v :: Any,
+                        alt_pd :: PrintDesc,
+                        ~length: length :: NonnegInt = 1,
+                        ~mode: mode :: Any.of(#'#{write-special},
+                                              #'print,
+                                              #'write,
+                                              #'display)
+                                 = #'#{write-special})
+    :: PrintDesc
+){
+
+
+ Prints @rhombus(v) using Racket printing when the output port supports
+ ``special'' output, otherwise prints as the given @rhombus(alt_pd). For
+ the purposes of pretty printing, @rhombus(v) is counted as using
+ @rhombus(length) columns. The @rhombus(mode) argument indicates which
+ Racket printing function is used.
 
 }
 

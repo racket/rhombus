@@ -5,6 +5,8 @@
          racket/syntax-srcloc
          rhombus/parse
          racket/sandbox
+         file/convertible
+         racket/port
          syntax/strip-context
          (only-in rhombus/private/srcloc
                   respan)
@@ -89,6 +91,7 @@
            ...)))]))
 
 (define (make-rhombus-eval [lang 'rhombus])
+  ;; `make-base-eval` attaches `file/convertible`
   (define eval (make-base-eval #:lang lang
                                '(top)))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
@@ -189,27 +192,69 @@
                         (cond
                           [(void? v) null]
                           [else
-                           (define o (open-output-string))
-                           (call-in-sandbox-context eval (lambda () (print v o)))
-                           (format-lines (get-output-string o) (lambda (s) (racketresultfont (keep-spaces s) #:decode? #f)) indent)])))]))))]))))))))
+                           (define-values (in out) (make-pipe-with-specials))
+                           ;; set the print handler so that convertibles are kept intact:
+                           (let ([orig-print (port-print-handler out)])
+                             (port-print-handler out (lambda (v o [mode 0])
+                                                       (if (convertible? v)
+                                                           (write-special v o)
+                                                           (orig-print v o mode)))))
+                           (call-in-sandbox-context eval (lambda () (print v out)))
+                           (close-output-port out)
+                           (format-lines in
+                                         (lambda (s) (racketresultfont (keep-spaces s) #:decode? #f))
+                                         indent)])))]))))]))))))))
   (when once? (close-eval eval))
   (cond
     [hidden? null]
     [label (list label example-block)]
     [else example-block]))
 
-(define (format-lines str format-line extra-indent)
-  (for/list ([line-str (in-list (string-split str "\n"))])
-    (define indent (let loop ([i 0])
+(define (format-lines in-or-str format-str extra-indent)
+  (define split-input
+    (if (string? in-or-str)
+        (map list (string-split in-or-str "\n"))
+        (let loop ([accum null])
+          (define v (read-char-or-special in-or-str))
+          (cond
+            [(eof-object? v) (list (list (list->string (reverse accum))))]
+            [(eqv? v #\newline)
+             (cons (list (list->string (reverse accum)))
+                   (loop null))]
+            [(char? v) (loop (cons v accum))]
+            [else
+             (define l (loop null))
+             (cons (list* (list->string (reverse accum)) v (car l))
+                   (cdr l))]))))
+  (for/list ([line (in-list split-input)])
+    (define indent (let loop ([line line] [i 0])
                      (cond
-                       [(i . >= . (string-length line-str)) i]
-                       [(char=? #\space (string-ref line-str i)) (loop (+ i 1))]
-                       [else i])))
+                       [(null? line) i]
+                       [else
+                        (define line-str (car line))
+                        (cond
+                          [(not (string? line-str)) i]
+                          [(i . >= . (string-length line-str)) (loop (cdr line) i)]
+                          [(char=? #\space (string-ref line-str i)) (loop line (+ i 1))]
+                          [else i])])))
     (define all-indent (+ indent extra-indent))
     (paragraph plain
                (list
                 (if (= all-indent 0) "" (hspace all-indent))
-                (format-line (substring line-str indent))))))
+                (let loop ([line line] [indent indent])
+                  (cond
+                    [(not (eqv? indent 0))
+                     (define line-str (car line))
+                     (define len (string-length line-str))
+                     (if (len . > . indent)
+                         (loop (cons (substring line-str indent) (cdr line)) 0)
+                         (loop (cdr line) (- indent len)))]
+                    [(null? line) null]
+                    [else
+                     (cons (if (string? (car line))
+                               (format-str (car line))
+                               (car line))
+                           (loop (cdr line) 0))]))))))
 
 (define (format-exception exn eval)
   (define o (open-output-string))

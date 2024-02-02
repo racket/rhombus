@@ -10,7 +10,8 @@
 (define (render-pretty doc o
                        #:width [width #f] ; #f => always take first branch
                        #:column [col 0]
-                       #:indent [indent 0])
+                       #:indent [indent 0]
+                       #:write-special [write-special write-special])
   (define-syntax-rule (assume x) x)
   (let loop ([doc doc] [col col] [indent indent] [measure-mode #f] [k #f])
     (define (done column measure-mode)
@@ -70,6 +71,9 @@
              (loop (cadr doc) col indent measure-mode k)]
             [else
              (loop (caddr doc) col indent measure-mode k)])])]
+      [(eq? (car doc) 'special)
+       (unless measure-mode (write-special (cadr doc) o))
+       (done (+ col (caddr doc)) measure-mode)]
       [else
        (error 'render-pretty "bad format: ~v" doc)]))
   (void))
