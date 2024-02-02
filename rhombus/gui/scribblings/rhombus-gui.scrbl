@@ -3,9 +3,9 @@
 @title{Rhombus GUI}
 
 @docmodule(~use_sources: lib("rhombus/gui.rhm"),
-           rhombus/gui)
+           gui)
 
-The @rhombusmodname(rhombus/gui) library is based on
+The @rhombusmodname(gui) library is based on
 @racketmodname(racket/gui/easy).
 
 @table_of_contents()
