@@ -152,13 +152,28 @@
 (define (same-append? a b)
   (eq? a b))
 
-(define (raise-mismatch what v1 v2)
-  (raise-arguments-error* '++ rhombus-realm
-                          (format "cannot append a~a ~a and other value"
-                                  (if (eqv? (string-ref what 0) #\a) "n" "")
-                                  what)
-                          what v1
-                          "other value" v2))
+(define append-who/op '++)
+(define append-who/method 'Appendable.append)
+
+(define (raise-mismatch what v1 v2
+                        #:both-append? [both-append? #f])
+  (define other-what (if both-append?
+                         (string-append "other " what)
+                         "other value"))
+  (raise-arguments-error*
+   append-who/op rhombus-realm
+   (string-append "cannot append "
+                  (case (string-ref what 0)
+                    [(#\a #\i) "an "]
+                    [else "a "])
+                  what " and " other-what
+                  (if both-append?
+                      (string-append ";\n two "
+                                     what
+                                     "s must share the same `append` implementation")
+                      ""))
+   what v1
+   other-what v2))
 
 (define (general-append v1 v2)
   (cond
@@ -172,11 +187,11 @@
      (append v1 v2)]
     [(immutable-hash? v1)
      (unless (immutable-hash? v2)
-       (raise-mismatch "map" v1 v2))
+       (raise-mismatch "immutable map" v1 v2))
      (hash-append v1 v2)]
     [(immutable-set? v1)
      (unless (immutable-set? v2)
-       (raise-mismatch "set" v1 v2))
+       (raise-mismatch "immutable set" v1 v2))
      (set-append v1 v2)]
     [(string? v1)
      (unless (string? v2)
@@ -193,16 +208,21 @@
     [else
      (define app1 (appendable-ref v1 #f))
      (unless app1
-       (raise-argument-error* '++ rhombus-realm "Appendable" v1))
+       (raise-argument-error* append-who/method rhombus-realm "Appendable" v1))
      (define app2 (appendable-ref v2 #f))
      (unless (and app2 (same-append? app1 app2))
-       (raise-mismatch "appendable object" v1 v2))
+       (raise-mismatch "appendable object" v1 v2
+                       #:both-append? (and app2 #t)))
      (app1 v1 v2)]))
 
 (define (check-appendable a1 a2)
   (define app1 (appendable-ref a1 #f))
   (unless app1
-    (raise-argument-error* '++ rhombus-realm "Appendable" a1))
+    (raise-arguments-error*
+     append-who/op rhombus-realm
+     "checked `append` must be applied to an appendable object"
+     "value" a1))
   (define app2 (appendable-ref a2 #f))
   (unless (and app2 (same-append? app1 app2))
-    (raise-mismatch "appendable object" a1 a2)))
+    (raise-mismatch "appendable object" a1 a2
+                    #:both-append? (and app2 #t))))

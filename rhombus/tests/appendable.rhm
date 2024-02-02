@@ -43,13 +43,22 @@ check:
   (A3() ++ A3()).v ~is 3
   (A3() :: I3) ++ A3() ~is O(3)
   (A4() ++ A4()).v ~is 4
-  A() ++ B() ~throws "cannot append an appendable object and other value"
-  B() ++ A() ~throws "cannot append an appendable object and other value"
+  A() ++ B() ~throws values(
+    "cannot append an appendable object and other appendable object",
+    "two appendable objects must share the same `append` implementation",
+  )
+  B() ++ A() ~throws values(
+    "cannot append an appendable object and other appendable object",
+    "two appendable objects must share the same `append` implementation",
+  )
 
 block:
   use_dynamic
   check:
-    dynamic(A()) ++ B() ~throws "cannot append an appendable object and other value"
+    dynamic(A()) ++ B() ~throws values(
+      "cannot append an appendable object and other appendable object",
+      "two appendable objects must share the same `append` implementation",
+    )
 
 check:
   A() is_a Appendable ~is #true
@@ -70,6 +79,20 @@ check:
   #'apple is_a Appendable ~is #false
   4 is_a Appendable ~is #false
 
+check:
+  (MutableMap{ 1: 2 } :~ Appendable)
+    ++ MutableMap{ 3: 4 } ~throws values(
+    "contract violation",
+    "expected: Appendable",
+    "MutableMap{1: 2}",
+  )
+  (MutableSet{ 1, 2 } :~ Appendable)
+    ++ MutableSet{ 3, 4 } ~throws values(
+    "contract violation",
+    "expected: Appendable",
+    "MutableSet{1, 2}",
+  )
+
 block:
   use_dynamic
   fun gen():
@@ -80,7 +103,10 @@ block:
         0
     A()
   check:
-    gen() ++ gen() ~throws "cannot append an appendable object and other value"
+    gen() ++ gen() ~throws values(
+      "cannot append an appendable object and other appendable object",
+      "two appendable objects must share the same `append` implementation",
+    )
     dynamic("a") ++ "b" ~is "ab"
     dynamic([]) ++ ["a"] ~is ["a"]
 

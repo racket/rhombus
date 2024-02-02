@@ -80,8 +80,8 @@ block:
   check:
     dynamic({1, 2, 3}) ++ {4, 5} ~is {1, 2, 3, 4, 5}
     dynamic({1, 2, 3}).append({4, 5}) ~is {1, 2, 3, 4, 5}
-    dynamic({1, 2, 3}) ++ "oops" ~throws "cannot append a set and other value"
-    dynamic({1, 2, 3}) ++ MutableSet{4, 5} ~throws "cannot append a set and other value"
+    dynamic({1, 2, 3}) ++ "oops" ~throws "cannot append an immutable set and other value"
+    dynamic({1, 2, 3}) ++ MutableSet{4, 5} ~throws "cannot append an immutable set and other value"
 
 // See also tests in "rest-args.rhm"
 block:

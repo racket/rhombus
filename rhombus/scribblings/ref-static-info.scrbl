@@ -174,10 +174,12 @@
         dispatch) when the expression is used with @rhombus([]) to
         update an element}
 
-  @item{@rhombus(statinfo_meta.append_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.append_key) --- an identifier or a boxed identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to
-        append the result of another expression}
+        append the result of another expression; for a boxed identifier,
+        the application will be guarded by a check to ensure that both
+        arguments share the same @rhombus(append, ~datum) implementation}
 
   @item{@rhombus(statinfo_meta.dot_provider_key) --- an identifier
         bound to a @rhombus(dot.macro) or

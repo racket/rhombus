@@ -179,8 +179,8 @@ block:
   check:
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3})["a"] ~is 3
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3, "b": 4})["a"] ~is 3
-    dynamic({"a": 1, "b": 2}) ++ "oops" ~throws "cannot append a map and other value"
-    dynamic({"a": 1, "b": 2}) ++ MutableMap{"a": 3} ~throws "cannot append a map and other value"
+    dynamic({"a": 1, "b": 2}) ++ "oops" ~throws "cannot append an immutable map and other value"
+    dynamic({"a": 1, "b": 2}) ++ MutableMap{"a": 3} ~throws "cannot append an immutable map and other value"
     dynamic({"a": 1, "b": 2}).append()["a"] ~is 1
     dynamic({"a": 1, "b": 2}).append({"a": 2})["a"] ~is 2
     dynamic({"a": 1, "b": 2}).append({"a": 2}, {"a": 3})["a"] ~is 3
