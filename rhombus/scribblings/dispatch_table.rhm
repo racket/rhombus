@@ -11,9 +11,11 @@ export:
 meta syntax_class DispatchEntry(who):
   kind ~group
 | '[$lhs, $rhs]'
-| '$(lhs && '$obj . $name($arg, ...)')':
+| '$obj $(dot && '.') $name $(args && '($arg, ...)')':
+    field lhs = '$obj $dot #, $('(@rhombus($name, ~datum))'.relocate(name)) $args'
     field rhs = '$who . $name($obj, $arg, ...)'
-| '$(lhs && '$obj . $name')':
+| '$obj $(dot && '.') $name':
+    field lhs = '$obj $dot #, $('(@rhombus($name, ~datum))'.relocate(name))'
     field rhs = '$who . $name($obj)'
 
 meta veneer MetaVars(this :~ Map):
