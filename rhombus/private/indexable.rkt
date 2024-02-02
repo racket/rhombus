@@ -14,7 +14,7 @@
          "call-result-key.rkt"
          "static-info.rkt"
          (submod "assign.rkt" for-assign)
-         (submod "set.rkt" for-ref)
+         (submod "set.rkt" for-index)
          "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
@@ -49,16 +49,16 @@
                              (list)))
 
 (define-annotation-syntax Indexable
-  (identifier-annotation #'indexable? #'((#%index-get indexable-index))))
+  (identifier-annotation #'indexable? #'((#%index-get indexable-get))))
 (define (indexable? v)
-  (or (Indexable? v)
-      (hash? v)
-      (treelist? v)
+  (or (treelist? v)
       (list? v)
       (vector? v)
+      (hash? v)
       (set? v)
       (string? v)
-      (bytes? v)))
+      (bytes? v)
+      (Indexable? v)))
 
 (define-class-desc-syntax Indexable
   (interface-desc #'()
@@ -81,15 +81,14 @@
                   null))
 
 (define-annotation-syntax MutableIndexable
-  (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-index)
+  (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-get)
                                                  (#%index-set indexable-set!))))
 (define (mutable-indexable? v)
-  (or (MutableIndexable? v)
+  (or (mutable-vector? v)
       (mutable-hash? v)
-      (mutable-vector? v)
-      (and (set? v) (mutable-hash? (set-ht v)))
-      (mutable-string? v)
-      (mutable-bytes? v)))
+      (mutable-set? v)
+      (mutable-bytes? v)
+      (MutableIndexable? v)))
 
 (define-class-desc-syntax MutableIndexable
   (interface-desc #'(Indexable)
@@ -135,7 +134,7 @@
      (define indexable-ref-id (or (syntax-local-static-info indexable #'#%index-get)
                                   (if more-static?
                                       (raise-syntax-error who (not-static) indexable-in)
-                                      #'indexable-index)))
+                                      #'indexable-get)))
      (define-values (assign-expr tail) (build-assign
                                         op
                                         #'assign.name
@@ -152,7 +151,7 @@
        (define indexable-ref-id (or (indexable-static-info #'#%index-get)
                                     (if more-static?
                                         (raise-syntax-error who (not-static) indexable-in)
-                                        #'indexable-index)))
+                                        #'indexable-get)))
        (define e (datum->syntax (quote-syntax here)
                                 (list indexable-ref-id indexable index)
                                 (span-srcloc indexable #'head)
@@ -184,28 +183,32 @@
         (values (wrap-static-info* reloc-e result-static-infos)
                 #'tail)])]))
 
-(define (indexable-index indexable index)
+(define indexable-get-who 'Indexable.get)
+(define indexable-set!-who 'MutableIndexable.set)
+
+(define (indexable-get indexable index)
   (cond
-    [(vector? indexable) (vector-ref indexable index)]
     [(treelist? indexable) (treelist-ref indexable index)]
     [(list? indexable) (list-ref indexable index)]
+    [(vector? indexable) (vector-ref indexable index)]
     [(hash? indexable) (hash-ref indexable index)]
-    [(set? indexable) (hash-ref (set-ht indexable) index #f)]
-    [(indexable-ref indexable #f) => (lambda (ref) (ref indexable index))]
+    [(set? indexable) (set-ref indexable index)]
     [(string? indexable) (string-ref indexable index)]
     [(bytes? indexable) (bytes-ref indexable index)]
     [else
-     (raise-argument-error* 'ref rhombus-realm "Indexable" indexable)]))
+     (define ref (indexable-ref indexable #f))
+     (unless ref
+       (raise-argument-error* indexable-get-who rhombus-realm "Indexable" indexable))
+     (ref indexable index)]))
 
 (define (indexable-set! indexable index val)
   (cond
-    [(and (vector? indexable) (not (immutable? indexable))) (vector-set! indexable index val)]
-    [(and (hash? indexable) (not (immutable? indexable))) (hash-set! indexable index val)]
-    [(and (set? indexable) (not (immutable? (set-ht indexable)))) (if val
-                                                          (hash-set! (set-ht indexable) index #t)
-                                                          (hash-remove! (set-ht indexable) index))]
-    [(setable-ref indexable #f) => (lambda (set) (set indexable index val))]
-    [(and (string? indexable) (not (immutable? indexable))) (string-set! indexable index val)]
-    [(and (bytes? indexable) (not (immutable? indexable))) (bytes-set! indexable index val)]
+    [(mutable-vector? indexable) (vector-set! indexable index val)]
+    [(mutable-hash? indexable) (hash-set! indexable index val)]
+    [(mutable-set? indexable) (set-set! indexable index val)]
+    [(mutable-bytes? indexable) (bytes-set! indexable index val)]
     [else
-     (raise-argument-error* 'assign rhombus-realm "MutableIndexable" indexable)]))
+     (define set (setable-ref indexable #f))
+     (unless set
+       (raise-argument-error* indexable-set!-who rhombus-realm "MutableIndexable" indexable))
+     (set indexable index val)]))

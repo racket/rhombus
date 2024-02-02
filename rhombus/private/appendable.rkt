@@ -19,7 +19,6 @@
          "static-info.rkt"
          (only-in "string.rkt"
                   +&)
-         (submod "set.rkt" for-ref)
          (submod "set.rkt" for-append)
          "repetition.rkt"
          "compound-repetition.rkt"

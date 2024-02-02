@@ -60,10 +60,11 @@
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))
 
-(module+ for-ref
+(module+ for-index
   (provide set?
-           set-ht
-           set))
+           mutable-set?
+           set-ref
+           set-set!))
 
 (module+ for-builtin
   (provide set?
@@ -84,6 +85,11 @@
 (module+ for-append
   (provide set-append
            immutable-set?))
+
+(module+ for-print
+  (provide set?
+           mutable-set?
+           set->list))
 
 (struct set (ht)
   #:property prop:equal+hash
@@ -171,9 +177,12 @@
   (check-readable-set who s)
   (hash-count (set-ht s)))
 
+(define (set-ref s v)
+  (hash-ref (set-ht s) v #f))
+
 (define/method (Set.get s v)
   (check-readable-set who s)
-  (hash-ref (set-ht s) v #f))
+  (set-ref s v))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -189,7 +198,7 @@
 
 (define (list->set l) (apply Set-build* l))
 
-(define (set->list s) (hash-keys (set-ht s)))
+(define (set->list s [try-sort? #f]) (hash-keys (set-ht s) try-sort?))
 
 (define empty-set (set #hashalw()))
 (define-static-info-syntax empty-set
@@ -637,11 +646,14 @@
   (unless (mutable-set? s)
     (raise-argument-error* who rhombus-realm "MutableSet" s)))
 
-(define/method (MutableSet.set s v in?)
-  (check-mutable-set who s)
+(define (set-set! s v in?)
   (if in?
       (hash-set! (set-ht s) v #t)
       (hash-remove! (set-ht s) v)))
+
+(define/method (MutableSet.set s v in?)
+  (check-mutable-set who s)
+  (set-set! s v in?))
 
 (define/method (MutableSet.delete s v)
   (check-mutable-set who s)
@@ -650,4 +662,4 @@
 (define/method (Set.to_list s [try-sort? #f])
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-set who s)
-  (list->treelist (hash-keys (set-ht s) try-sort?)))
+  (list->treelist (set->list s try-sort?)))

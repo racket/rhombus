@@ -6,7 +6,7 @@
          shrubbery/write
          "treelist.rkt"
          "provide.rkt"
-         (submod "set.rkt" for-ref)
+         (submod "set.rkt" for-print)
          "printer-property.rkt"
          "define-arity.rkt"
          "mutability.rkt"
@@ -276,29 +276,23 @@
          (pretty-text (if (mutable-hash? v)
                           "MutableMap{"
                           "{"))
-         (for/list ([k+v (hash-map v cons #t)])
+         (for/list ([k+v (in-list (hash->list v #t))])
            (define k (car k+v))
            (define v (cdr k+v))
            (pretty-blocklike (print k) (print v)))
          (pretty-text "}"))))]
     [(set? v)
      (fresh-ref
-      #:when (mutable-hash? (set-ht v))
+      #:when (mutable-set? v)
       v
       (lambda ()
-        (cond
-          [(eqv? 0 (hash-count (set-ht v)))
-           (if (mutable-hash? (set-ht v))
-               (pretty-text "MutableSet{}")
-               (pretty-text "Set{}"))]
-          [else
-           (pretty-listlike
-            (pretty-text (if (mutable-hash? (set-ht v))
-                             "MutableSet{"
-                             "{"))
-            (for/list ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
-              (print v))
-            (pretty-text "}"))])))]
+        (pretty-listlike
+         (pretty-text (if (mutable-set? v)
+                          "MutableSet{"
+                          "{"))
+         (for/list ([v (in-list (set->list v #t))])
+           (print v))
+         (pretty-text "}"))))]
     [(syntax? v)
      (define s (syntax->datum v))
      (define qs
