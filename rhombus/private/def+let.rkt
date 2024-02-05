@@ -115,7 +115,7 @@
             (lhs-i.binder-id tmp-id lhs-i.data)
             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
             ...
-            (define-values () (values))))))]))
+            #,@(maybe-end-def)))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
                                              #:check-bind-uses [check-bind-uses void])
@@ -159,7 +159,7 @@
             ...
             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
             ... ...
-            (define-values () (values))))))]))
+            #,@(maybe-end-def)))))]))
 
 (define-for-syntax (top-level-decls ids-stx)
   (cond
@@ -167,6 +167,11 @@
      (list
       #`(define-syntaxes #,ids-stx (values)))]
     [else null]))
+
+(define-for-syntax (maybe-end-def)
+  (case (syntax-local-context)
+    [(top-level module) '()]
+    [else (list #'(define-values () (values)))]))
 
 (define (rhs-binding-failure who val binding-str
                              #:position [pos #f])
