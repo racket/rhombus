@@ -62,7 +62,7 @@
            exit-parameterization))
 
 (define-syntax (module-begin stx)
-  (rhombus-module-begin-configure)
+  (check-unbound-identifier-early!)
   (syntax-parse stx
     #:datum-literals (brackets)
     [(_ (brackets g ...))

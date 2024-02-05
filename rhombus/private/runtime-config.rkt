@@ -1,27 +1,42 @@
 #lang racket/base
-(require racket/port
+(require (for-syntax racket/base
+                     syntax/parse/pre)
+         racket/port
          racket/interaction-info
          shrubbery/parse
          shrubbery/print
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)
-         "syntax-parse-config.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "version-case.rkt")
 
 (provide install-runtime-config!
          parameters)
 
-;; Every parameter that's set in `install-runtmie-config`, needed in
-;; "expand-config.rkt":
-(define parameters
-  (list current-interaction-info
-        current-read-interaction
-        print-boolean-long-form
-        global-port-print-handler
-        current-error-message-adjuster
-        error-syntax->string-handler))
+;; TEMP accomodate Racket versions before `syntax/parse/report-config`
+(meta-if-version-at-least
+ "8.9.0.5"
+ (require (only-in syntax/parse/report-config
+                   current-report-configuration))
+ (require (only-in racket/base
+                   [void current-report-configuration])))
 
-(define (install-runtime-config!)
+(define-syntax (define-install!+params stx)
+  (syntax-parse stx
+    #:literals (void)
+    [(_ install! params
+        (~and ((~or* void param) . _)
+              form)
+        ...)
+     #'(begin
+         (define (install!)
+           form ...)
+         (define params
+           (list (~? param) ...)))]))
+
+;; `parameters` is a list of all set parameters, needed in
+;; "expand-config.rkt":
+(define-install!+params install-runtime-config! parameters
   (current-interaction-info '#((submod rhombus reader)
                                get-interaction-info
                                #f))
@@ -108,4 +123,20 @@
          "[end of group]"
          str)))
 
-  (config-syntax-parse!))
+  (current-report-configuration
+   (hasheq 'literal-to-what (lambda (v)
+                              '("identifier" "identifiers"))
+           'literal-to-string (lambda (v)
+                                (format "`~s`" (if (syntax? v)
+                                                   (syntax-e v)
+                                                   v)))
+           'datum-to-what (lambda (v)
+                            (cond
+                              [(symbol? v) '("identifier" "identifiers")]
+                              [(keyword? v) '("keyword" "keywords")]
+                              [else '("literal" "literals")]))
+           'datum-to-string (lambda (v)
+                              (cond
+                                [(symbol? v) (format "`~a`" (substring (format "~v" v) 2))]
+                                [(keyword? v) (substring (format "~v" v) 2)]
+                                [else (format "~v" v)])))))
