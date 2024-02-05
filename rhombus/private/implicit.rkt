@@ -72,7 +72,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(form-id datum . tail)
-        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
+        (check-literal-term #'form-id #'datum)
         (define quoted-datum
           ;; but reraw here
           (reraw (list #'form-id #'datum)
@@ -91,8 +91,8 @@
   (binding-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ datum . tail)
-        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
+       [(form-id datum . tail)
+        (check-literal-term #'form-id #'datum)
         (values (binding-form #'literal-infoer
                               #'(datum))
                 #'tail)]))))
@@ -101,8 +101,8 @@
   (repetition-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ datum . tail)
-        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
+       [(form-id datum . tail)
+        (check-literal-term #'form-id #'datum)
         (values (make-repetition-info #'datum
                                       #'value
                                       (syntax/loc #'datum (quote datum))
@@ -113,10 +113,16 @@
                                       #t)
                 #'tail)]))))
 
-(define-for-syntax (raise-keyword-error datum)
-  (raise-syntax-error #f
-                      "misplaced keyword"
-                      datum))
+(define-for-syntax (check-literal-term form-id d-stx)
+  (define d (syntax-e d-stx))
+  (when (or (symbol? d)
+            (keyword? d)
+            (pair? d)
+            (null? d))
+    (raise-syntax-error #f
+                        "not an allowed literal term"
+                        form-id
+                        d-stx)))
 
 (define-syntax #%parens
   (expression-transformer

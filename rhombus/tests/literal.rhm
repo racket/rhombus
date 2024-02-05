@@ -104,3 +104,53 @@ block:
   check source #%literal 2.0 ~is "#%literal 2.0"
   check source #'symbol ~is "#'symbol"
   check source #'~keyword ~is "#'~keyword"
+
+check:
+  ~eval
+  ~kw
+  ~throws values("not an allowed literal term", "~kw")
+
+check:
+  ~eval
+  #%literal ~kw
+  ~throws values("not an allowed literal term", "~kw")
+
+check:
+  ~eval
+  #%literal id
+  ~throws values("not an allowed literal term", "id")
+
+check:
+  ~eval
+  #%literal +
+  ~throws values("not an allowed literal term", "+")
+
+check:
+  ~eval
+  #%literal ()
+  ~throws values("not an allowed literal term", "()")
+
+check:
+  ~eval
+  #%literal []
+  ~throws values("not an allowed literal term", "[]")
+
+check:
+  ~eval
+  #%literal {}
+  ~throws values("not an allowed literal term", "{}")
+
+check:
+  ~eval
+  #%literal ''
+  ~throws values("not an allowed literal term", "''")
+
+check:
+  ~eval
+  #%literal :«»
+  ~throws values("not an allowed literal term", ":«»")
+
+check:
+  ~eval
+  #%literal |«»
+  ~throws values("not an allowed literal term", "|«»")
