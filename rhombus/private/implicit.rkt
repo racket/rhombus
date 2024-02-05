@@ -71,11 +71,15 @@
   (expression-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(_ datum . tail)
+       [(form-id datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (define quoted-datum
-          ;; copies all props, including originalness
-          (relocate #'datum #'(quote datum) #'datum))
+          ;; but reraw here
+          (reraw (list #'form-id #'datum)
+                 ;; copies all props, including originalness
+                 (relocate #'datum
+                           #`(quote #,(no-srcloc #'datum))
+                           #'datum)))
         (values (cond
                   [(literal-static-infos #'datum)
                    => (lambda (si)

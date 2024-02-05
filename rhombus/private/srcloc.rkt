@@ -9,6 +9,7 @@
          span-srcloc
          relocate
          relocate-id
+         reraw
          relocate+reraw
          respan-empty
          respan
@@ -110,20 +111,22 @@
                        (or (syntax-raw-property head)
                            (symbol->immutable-string (syntax-e head)))))
 
+(define (reraw src-stx stx)
+  (define-values (pfx raw sfx) (extract-raw src-stx))
+  (let* ([stx (syntax-opaque-raw-property stx raw)]
+         [stx (if (null? pfx)
+                  stx
+                  (syntax-raw-prefix-property stx pfx))]
+         [stx (if (null? sfx)
+                  stx
+                  (syntax-raw-suffix-property stx sfx))])
+    stx))
+
 ;; `stx` should be a Racket expression, while `src-stx` can be a srcloc
 ;; or a shrubbery form
 (define (relocate+reraw src-stx stx)
   (cond
-    [(syntax? src-stx)
-     (define-values (pfx raw sfx) (extract-raw src-stx))
-     (let* ([stx (syntax-opaque-raw-property (relocate (maybe-respan src-stx) stx) raw)]
-            [stx (if (null? pfx)
-                     stx
-                     (syntax-raw-prefix-property stx pfx))]
-            [stx (if (null? sfx)
-                     stx
-                     (syntax-raw-suffix-property stx sfx))])
-       stx)]
+    [(syntax? src-stx) (reraw src-stx (relocate (maybe-respan src-stx) stx))]
     [else (relocate src-stx stx)]))
 
 (define (extract-raw stx)
@@ -203,7 +206,7 @@
 ;; list of terms; there's a danger of misinterpreting a `group`
 ;; or `multi` term as constructing a group or multi-group sequence,
 ;; so we against that by treating an identifier with a non-empty 'raw
-;; property as not constructing a group or multi-gropu sequence.
+;; property as not constructing a group or multi-group sequence.
 (define (respan stx)
   (define e (syntax-e stx))
   (define (not-identifier-term? head)
@@ -213,7 +216,7 @@
     (and (eq? (syntax-e a) 'block)
          (or (equal? (syntax-raw-property a) ":")
              (equal? (syntax-raw-property a) "|"))))
-  ;; look inside `stx` for `op` or 
+  ;; look inside `stx` for `op` or group-sequence tag
   (define (term->stx stx)
     (define r (syntax-e stx))
     (cond
