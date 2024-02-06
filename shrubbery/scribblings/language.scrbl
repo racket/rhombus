@@ -124,7 +124,7 @@ pair containing two trees. Raw text can be reconstructed through a
 preorder traversal of the tree.
 
 @deftogether[(
-@defproc*[([(syntax-raw-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-raw-property [stx syntax?]) any/c]
            [(syntax-raw-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
@@ -148,9 +148,9 @@ preorder traversal of the tree.
 }
 
 @deftogether[(
-@defproc*[([(syntax-raw-prefix-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-raw-prefix-property [stx syntax?]) any/c]
            [(syntax-raw-prefix-property [stx syntax?] [val any/c]) syntax?])]
-@defproc*[([(syntax-raw-suffix-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-raw-suffix-property [stx syntax?]) any/c]
            [(syntax-raw-suffix-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
@@ -180,9 +180,9 @@ preorder traversal of the tree.
 }
 
 @deftogether[(
-@defproc*[([(syntax-raw-tail-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-raw-tail-property [stx syntax?]) any/c]
            [(syntax-raw-tail-property [stx syntax?] [val any/c]) syntax?])]
-@defproc*[([(syntax-raw-tail-suffix-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-raw-tail-suffix-property [stx syntax?]) any/c]
            [(syntax-raw-tail-suffix-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
@@ -209,7 +209,7 @@ preorder traversal of the tree.
 }
 
 @deftogether[(
-@defproc*[([(syntax-opaque-raw-property [stx syntax?]) syntax?]
+@defproc*[([(syntax-opaque-raw-property [stx syntax?]) any/c]
            [(syntax-opaque-raw-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
@@ -221,7 +221,7 @@ preorder traversal of the tree.
  The @racket['opaque-raw] property is useful in macro expansion to
  record a macro's input to its output---not only in source location, but
  also in source text.
- 
+
 }
 
 @section{Writing Shrubbery Notation}
