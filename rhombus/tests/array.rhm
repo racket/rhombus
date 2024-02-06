@@ -219,3 +219,13 @@ block:
   block:
     use_dynamic
     check dynamic(Array("a", "b", "c")).to_list() ~is [& Array("a", "b", "c")]
+
+check:
+  to_string(Array()) ~is "Array()"
+  to_string(Array(1, 2, 3)) ~is "Array(1, 2, 3)"
+
+check:
+  def a = Array(1, 2, 3)
+  a[0] := a
+  to_string(a)
+  ~is "#0=Array(#0#, 2, 3)"

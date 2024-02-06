@@ -83,3 +83,9 @@ check:
   Bytes.utf8_string(#"h\303\211llo", #false, 3) ~is "llo"
   Bytes.latin1_string(#"h\311llo") ~is "hÉllo"
   Bytes.locale_string(#"hello") ~is "hello"
+
+check:
+  to_string(#"hello") ~is "hello"
+  to_string(#"hello".copy()) ~is "hello"
+  to_string(#"hello", ~mode: #'expr) ~is "#\"hello\""
+  to_string(#"hello".copy(), ~mode: #'expr) ~is "Bytes.copy(#\"hello\")"

@@ -252,3 +252,7 @@ block:
   def l2 = l ++ l
   check l.to_list() === l ~is #true
   check l2.to_list() === l2 ~is #true
+
+check:
+  to_string([]) ~is "[]"
+  to_string([1, 2, 3]) ~is "[1, 2, 3]"

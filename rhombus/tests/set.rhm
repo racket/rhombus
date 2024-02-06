@@ -381,3 +381,15 @@ check:
   def ReadableSet.empty && empty = dynamic(Set{})
   empty.remove("no such thing")
   ~throws "no such field or method (based on static information)"
+
+check:
+  to_string(Set{}) ~is "Set{}"
+  to_string(Set{1, 2, 3}) ~is "{1, 2, 3}"
+  to_string(MutableSet{}) ~is "MutableSet{}"
+  to_string(MutableSet{1, 2, 3}) ~is "MutableSet{1, 2, 3}"
+
+check:
+  def s = MutableSet{}
+  s[s] := #true
+  to_string(s)
+  ~is "#0=MutableSet{#0#}"

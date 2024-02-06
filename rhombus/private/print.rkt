@@ -253,13 +253,18 @@
        (print (cdr v)))
       (pretty-text ")"))]
     [(vector? v)
-     (pretty-listlike
-      (pretty-text "Array(")
-      (for/list ([e (in-vector v)])
-        (print e))
-      (pretty-text ")"))]
+     (fresh-ref
+      #:when (mutable-vector? v)
+      v
+      (lambda ()
+        (pretty-listlike
+         (pretty-text "Array(")
+         (for/list ([e (in-vector v)])
+           (print e))
+         (pretty-text ")"))))]
     [(box? v)
      (fresh-ref
+      #:when (mutable-box? v)
       v
       (lambda ()
         (pretty-listlike
@@ -286,12 +291,14 @@
       #:when (mutable-set? v)
       v
       (lambda ()
+        (define elems (for/list ([v (in-list (set->list v #t))])
+                        (print v)))
         (pretty-listlike
-         (pretty-text (if (mutable-set? v)
-                          "MutableSet{"
-                          "{"))
-         (for/list ([v (in-list (set->list v #t))])
-           (print v))
+         (pretty-text (cond
+                        [(mutable-set? v) "MutableSet{"]
+                        [(null? elems) "Set{"]
+                        [else "{"]))
+         elems
          (pretty-text "}"))))]
     [(syntax? v)
      (define s (syntax->datum v))

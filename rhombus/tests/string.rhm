@@ -105,3 +105,8 @@ block:
     String.append(copy("this"), copy(", that")) ~is "this, that"
     String.append(copy("this"), " and ", copy("that")) ~is "this and that"
     String.append(copy("this"), ", this", ", and ", copy("that")) ~is "this, this, and that"
+  check:
+    to_string("hello") ~is "hello"
+    to_string(copy("hello")) ~is "hello"
+    to_string("hello", ~mode: #'expr) ~is "\"hello\""
+    to_string(copy("hello"), ~mode: #'expr) ~is "racket.#{string-copy}(\"hello\")"

@@ -462,3 +462,15 @@ check:
   def ReadableMap.empty && empty = dynamic({})
   empty.remove("no such thing")
   ~throws "no such field or method (based on static information)"
+
+check:
+  to_string(Map{}) ~is "{}"
+  to_string(Map{1: 2, 3: 4}) ~is "{1: 2, 3: 4}"
+  to_string(MutableMap{}) ~is "MutableMap{}"
+  to_string(MutableMap{1: 2, 3: 4}) ~is "MutableMap{1: 2, 3: 4}"
+
+check:
+  def m = MutableMap{1: 2, 3: 4}
+  m[1] := m
+  to_string(m)
+  ~is "#0=MutableMap{1: #0#, 3: 4}"

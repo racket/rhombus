@@ -120,3 +120,7 @@ block:
     f.x ~is 10
     f.y ~is 20
     r.v ~is 30
+
+check:
+  to_string(Pair(1, 2)) ~is "Pair(1, 2)"
+  to_string(Pair(1, PairList[2, 3])) ~is "PairList[1, 2, 3]"

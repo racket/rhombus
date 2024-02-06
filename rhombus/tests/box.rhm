@@ -123,6 +123,10 @@ check:
   ~throws "specialization not known"
 
 check:
+  to_string(Box(1)) ~is "Box(1)"
+  to_string(Box(2)) ~is "Box(2)"
+
+check:
   def b = Box(0)
   b.value := b
   to_string(b)

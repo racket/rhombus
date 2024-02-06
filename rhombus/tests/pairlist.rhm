@@ -258,3 +258,7 @@ block:
   check l.to_list() ~is [1, 2, 3]
   check l2.to_list() ~is [1, 2, 3, 1, 2, 3]
   check l2.to_list().length() ~is 6
+
+check:
+  to_string(PairList[]) ~is "PairList[]"
+  to_string(PairList[1, 2, 3]) ~is "PairList[1, 2, 3]"
