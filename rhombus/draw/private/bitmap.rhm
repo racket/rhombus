@@ -40,6 +40,8 @@ class Bitmap():
                             has_alpha,
                             backing_space))()
 
+  export from_file
+
   override property width:
     rkt.send handle.#{get-width}()
 
@@ -75,6 +77,13 @@ class Bitmap():
     rkt.send handle.#{get-argb-pixels}(x, y, width, height, dest)
     dest
 
+  method set_argb_pixels(bstr :: Bytes,
+                         ~x: x :: NonnegInt = 0,
+                         ~y: y :: NonnegInt = 0,
+                         ~width: width :: NonnegInt = width,
+                         ~height: height :: NonnegInt = height) :~ Void:
+    rkt.send handle.#{set-argb-pixels}(x, y, width, height, bstr)
+
   method write(dest,
                ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
                ~quality: quality :: Int.in(0, 100) = 75,
@@ -84,3 +93,6 @@ class Bitmap():
     | error("error writing bitmap")
 
 annot.delayed_complete intf.BitmapForward: Bitmap
+
+fun from_file(name :: String || Path) :: Bitmap:
+  _Bitmap(rkt.#{read-bitmap}(name))()

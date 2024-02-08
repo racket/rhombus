@@ -39,6 +39,23 @@ class Color(private _handle):
   reconstructor(red, green, blue, alpha):
     Color(red, green, blue, alpha)
 
+  method scale(factor :: NonnegReal):
+    if factor <= 1
+    | fun dim(v):
+        math.exact(math.floor(v * factor))
+      Color(dim(red), dim(green), dim(blue), alpha)
+    | fun bright(v):
+        255 - math.exact(math.floor((255 - v) / factor))
+      Color(bright(red), bright(green), bright(blue), alpha)
+
+  method blend(other :: Color):
+    fun mix(a, b):
+      math.exact(math.floor((a * alpha + b * other.alpha) / (alpha + other.alpha)))
+    Color(mix(red, other.red),
+          mix(green, other.green),
+          mix(blue, other.blue),
+          (alpha + other.alpha) / 2)
+
   private implements Printable
   private override describe(mode, recur):
     PrintDesc.list("Color(",

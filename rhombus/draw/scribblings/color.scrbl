@@ -38,3 +38,27 @@
  Properties to access color components.
 
 }
+
+@doc(
+  method (col :: Color).scale(factor :: NonnegReal) :: Color
+){
+
+ Scales a color, making it brighter or darker. If @rhombus(factor) is
+ less than @rhombus(1), the color is darkened by multiplying the red,
+ green, and blue components by @rhombus(factor). If @rhombus(factor) is
+ greater than @rhombus(1), the color is lightened by dividing the gap
+ between the red, green, and blue components and @rhombus(255) by
+ @rhombus(factor).
+
+}
+
+@doc(
+  method (col :: Color).blend(other :: Color) :: Color
+){
+
+ Blends two colors to produce a new one. Each red, green, and blue
+ component contibutes to the corresponding blended component by its
+ weighted average, where each color's alpha is is weight. The result
+ color's alpha is the average of the two color's alphas.
+
+}

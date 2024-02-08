@@ -6,6 +6,7 @@ import:
       Point
       PointLike
       RectLike
+      Rect
 
 export:
   Path
@@ -23,6 +24,13 @@ class Path(private _handle):
     rkt.send handle.#{open?}()
   method reset():
     rkt.send handle.reset()
+
+  method bounding_box() :~ Rect:
+    let (l, t, w, h) =  rkt.send handle.#{get-bounding-box}()
+    Rect(l, t, w, h)
+
+  method append(p :: Path):
+    rkt.send handle.append(p.handle)
 
   method
   | scale(s :: Real):
