@@ -58,11 +58,13 @@
   method (path :: Path).ellipse(r :: RectLike)
     :: Void
   method (path :: Path).arc(r :: RectLike,
-                            start :: Real, end :: Real)
+                            start :: Real, end :: Real,
+                            ~clockwise: clockwise = #false)
     :: Void
 ){
 
- Adds to the path. If the path is currently open, it it first closed.
+ Adds to the path. If the path is currently open, it is first closed,
+ except in the case of @rhombus(Path.arc).
 
 }
 
@@ -73,5 +75,22 @@
 ){
 
  Adjusts a path to scale or rotate every point defining the path.
+
+}
+
+@doc(
+  method (path :: Path).append(other_path :: Path) :: Void
+){
+
+ Adds @rhombus(other_path) to the end of @rhombus(path).
+
+}
+
+@doc(
+  method (path :: Path).bounding_box() :: Rect
+){
+
+ Returns a rectangle that bounds all of the points describing
+ @rhombus(path).
 
 }

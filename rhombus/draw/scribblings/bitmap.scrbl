@@ -57,6 +57,20 @@
 }
 
 @doc(
+  method (bm :: Bitmap).set_argb_pixels(
+    src :: Bytes,
+    ~x: x :: NonnegInt = 0,
+    ~y: y :: NonnegInt = 0,
+    ~width: width :: NonnegInt = width,
+    ~height: height :: NonnegInt = height,
+  ) :: Void
+){
+
+ Sets a region of the bitmap to @rhombus(src).
+
+}
+
+@doc(
   method (bm :: Bitmap).write(
     dest :: Path,
     ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
@@ -66,5 +80,13 @@
 ){
 
  Writes the bitmap to a file.
+
+}
+
+@doc(
+  fun Bitmap.from_file(path :: String || Path) :: Bitmap
+){
+
+  Reads a bitmap from @rhombus(path).
 
 }

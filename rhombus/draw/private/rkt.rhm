@@ -24,6 +24,7 @@ export:
   draw.#{dc<%>}
   send
   is_a
+  draw.#{read-bitmap}
 
 expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
   expr_meta.pack_s_exp(['rkt_send',
