@@ -147,6 +147,7 @@
   def statinfo_meta.sequence_constructor_key :: Identifier
   def statinfo_meta.sequence_element_key :: Identifier
   def statinfo_meta.values_key :: Identifier
+  def statinfo_meta.indirect_key :: Identifier
 ){
 
  @provided_meta()
@@ -205,6 +206,10 @@
   @item{@rhombus(statinfo_meta.values_key) --- a packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),
         one for each value produced by a multiple-value expression}
+
+  @item{@rhombus(statinfo_meta.indirect_key) --- an identifier whose
+        static information is lazily spliced in place of this key
+        and identifier}
 
 )
 

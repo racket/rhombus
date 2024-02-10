@@ -31,7 +31,8 @@
          "dot-provider-key.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
-         "values-key.rkt")
+         "values-key.rkt"
+         "indirect-static-info-key.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 statinfo_meta)))
@@ -60,7 +61,8 @@
      dot_provider_key
      sequence_constructor_key
      sequence_element_key
-     values_key)))
+     values_key
+     indirect_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space)
   (definition-transformer
@@ -160,3 +162,4 @@
 (define-key sequence_constructor_key #%sequence-constructor)
 (define-key sequence_element_key #%sequence-element)
 (define-key values_key #%values)
+(define-key indirect_key #%indirect-static-info)
