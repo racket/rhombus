@@ -1,0 +1,52 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  Random:
+    only_space namespace annot expr
+  RandomState
+
+annot.macro 'RandomState':
+  annot_meta.pack_predicate('rkt.#{pseudo-random-generator-vector?}', '()')
+
+class Random(private _handle):
+  opaque
+  internal _Random
+  constructor
+  | (): super(rkt.#{make-pseudo-random-generator}())
+  | (state :: RandomState):
+      super(rkt.#{vector->pseudo-random-generator}(state))
+
+  export: current
+
+  method
+  | random():
+      rkt.random(_handle)  
+  | random(n :: PosInt):
+      if n < (1 bits.(<<) 31)
+      | rkt.random(n, _handle)
+      | parameterize { rkt.#{current-pseudo-random-generator}: _handle }:
+          math.random(n)
+  | random(start :: Int, end :: Int):
+      unless start < end
+      | error(#'random, "start index is not less than end index")
+      random(end - start) + start
+
+  property
+  | state :: RandomState:
+      rkt.#{pseudo-random-generator->vector}(_handle)  
+  | state := (s :: RandomState):
+      rkt.#{vector->pseudo-random-generator!}(_handle, s)  
+
+def current = rkt.#{make-derived-parameter}(rkt.#{current-pseudo-random-generator},
+                                            fun (prg :: _Random):
+                                              prg._handle,
+                                            fun (handle):
+                                              _Random(handle))
+statinfo.macro 'current':
+  '(($statinfo_meta.indirect_key, Random_returner))'
+
+// placeholder for static information to associate with `current`
+fun Random_returner() :~ Random:
+  #void
