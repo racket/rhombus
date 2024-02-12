@@ -136,8 +136,8 @@
        [else dir])]))
 
 (define (lookup-prefix-implicit alone-name adj-context adj-form in-space operator-ref operator-kind form-kind)
-  (define op-stx (datum->syntax adj-context alone-name))
-  (define op (syntax-local-value* (in-space op-stx) operator-ref))
+  (define op-stx (in-space (datum->syntax adj-context alone-name)))
+  (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (raise-syntax-error #f
                         (format (string-append
@@ -155,8 +155,8 @@
 
 (define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind
                                stop-on-unbound? lookup-space-description)
-  (define op-stx (datum->syntax adj-context adjacent-name))
-  (define op (syntax-local-value* (in-space op-stx) operator-ref))
+  (define op-stx (in-space (datum->syntax adj-context adjacent-name)))
+  (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (cond
       [(identifier? prev-form)
@@ -215,39 +215,47 @@
   #f)
 
 (define (apply-prefix-direct-operator op form stx track-origin checker)
-  (call-as-transformer
-   stx
-   track-origin
-   (lambda (in out)
-     (define proc (operator-proc op))
-     (out (checker (proc (in form) stx) proc)))))
+  (define proc (operator-proc op))
+  (checker (call-as-transformer
+            stx
+            (list form)
+            track-origin
+            (lambda (form)
+              (proc form stx)))
+           proc))
 
 (define (apply-infix-direct-operator op form1 form2 stx track-origin checker)
-  (call-as-transformer
-   stx
-   track-origin
-   (lambda (in out)
-     (define proc (operator-proc op))
-     (checker (out (proc (in form1) (in form2) stx)) proc))))
+  (define proc (operator-proc op))
+  (checker (call-as-transformer
+            stx
+            (list form1 form2)
+            track-origin
+            (lambda (form1 form2)
+              (proc form1 form2 stx)))
+           proc))
 
 (define (apply-prefix-transformer-operator op op-stx tail track-origin checker)
   (define proc (operator-proc op))
-  (call-as-transformer
-   op-stx
-   track-origin
-   (lambda (in out)
-     (define-values (form new-tail) (proc (in tail)))
-     (check-transformer-result (out (checker form proc))
-                               (out new-tail)
-                               proc))))
+  (define-values (form new-tail)
+    (call-as-transformer
+     op-stx
+     (list tail)
+     track-origin
+     (lambda (tail)
+       (define-values (form new-tail) (proc tail))
+       (values (checker form proc)
+               new-tail))))
+  (check-transformer-result form new-tail proc))
 
 (define (apply-infix-transformer-operator op op-stx form1 tail track-origin checker)
   (define proc (operator-proc op))
-  (call-as-transformer
-   op-stx
-   track-origin
-   (lambda (in out)
-     (define-values (form new-tail) (proc (in form1) (in tail)))
-     (check-transformer-result (out (checker form proc))
-                               (out new-tail)
-                               proc))))
+  (define-values (form new-tail)
+    (call-as-transformer
+     op-stx
+     (list form1 tail)
+     track-origin
+     (lambda (form1 tail)
+       (define-values (form new-tail) (proc form1 tail))
+       (values (checker form proc)
+               new-tail))))
+  (check-transformer-result form new-tail proc))

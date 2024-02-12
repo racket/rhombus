@@ -10,29 +10,33 @@
 
 (define no-props (datum->syntax #f #f))
 
-(define current-transformer-introduce (make-parameter (lambda (stx) stx)))
 (define (transform-in stx)
-  ((current-transformer-introduce) stx))
+  (syntax-local-introduce stx))
 (define (transform-out stx)
-  ((current-transformer-introduce) stx))
+  (syntax-local-introduce stx))
 
-(define (call-as-transformer id track-origin thunk)
-  (define intro (make-syntax-introducer))
-  (parameterize ([current-transformer-introduce intro])
-    (thunk intro
-           (lambda (stx)
-             (let loop ([stx stx])
-               (cond
-                 [(syntax? stx)
-                  (track-origin (intro stx)
-                                (let ([du (syntax-property id 'disappeared-use)])
-                                  (if du
-                                      (syntax-property no-props 'disappeared-use du)
-                                      no-props))
-                                id)]
-                 [(pair? stx) (cons (loop (car stx))
-                                    (loop (cdr stx)))]
-                 [else stx]))))))
+(define (call-as-transformer id args track-origin proc)
+  (call-with-values
+   (lambda ()
+     (apply syntax-local-apply-transformer
+            proc
+            id
+            ;; for now, use contexts that imply no use-site scopes:
+            (if (eq? 'top-level (syntax-local-context))
+                'top-level
+                'expression)
+            #f
+            (map syntax-local-introduce args)))
+   (lambda stxes
+     (apply values (map syntax-local-introduce (map (track track-origin id) stxes))))))
+
+(define ((track track-origin id) stx)
+  (track-origin stx
+                (let ([du (syntax-property id 'disappeared-use)])
+                  (if du
+                      (syntax-property no-props 'disappeared-use du)
+                      no-props))
+                id))
 
 (define (check-transformer-result form tail proc)
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
@@ -51,4 +55,3 @@
                    (syntax-track-origin e from-stx id))
                  stx
                  stx))
-

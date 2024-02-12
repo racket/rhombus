@@ -40,7 +40,7 @@
       (syntax-parse stx
         #:datum-literals (group)
         [(_  name:identifier (_::block . clauses))
-         (define data #`[#,stx base-stx #,(syntax-local-introduce #'scope-stx)
+         (define data #`[#,stx #,(syntax-local-introduce #'base-stx) scope-stx
                          name enforest-meta define-operator-definition-transformer])
          #`((rhombus-mixed-nested-forwarding-sequence
              (enforest-finish #,data) rhombus-space-clause
@@ -52,7 +52,7 @@
       (syntax-parse stx
         #:datum-literals (group)
         [(_  name:identifier (_::block . clauses))
-         (define data #`[#,stx base-stx #,(syntax-local-introduce #'scope-stx)
+         (define data #`[#,stx #,(syntax-local-introduce #'base-stx) scope-stx
                          name transform-meta define-identifier-syntax-definition-transformer*])
          #`((rhombus-mixed-nested-forwarding-sequence
              (enforest-finish #,data) rhombus-space-clause

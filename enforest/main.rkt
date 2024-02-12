@@ -211,11 +211,12 @@
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::name . tail)
            (define name-path? (starts-like-name-path? #'head #'tail))
+           (define head-name (and name-path? (in-name-root-space #'head.name)))
            (cond
              [(and name-path?
-                   (syntax-local-value* (in-name-root-space #'head.name) name-root-ref))
+                   (syntax-local-value* head-name name-root-ref))
               => (lambda (v)
-                   (define-values (head tail) (apply-name-root #'head.name v in-space stxes))
+                   (define-values (head tail) (apply-name-root head-name v in-space stxes))
                    (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?))]
              [else
               (define head-id (in-space #'head.name))
@@ -271,11 +272,12 @@
           [() (values init-form stxes)]
           [(head::name . tail)
            (define name-path? (starts-like-name-path? #'head #'tail))
+           (define head-name (and name-path? (in-name-root-space #'head.name)))
            (cond
              [(and name-path?
-                   (syntax-local-value* (in-name-root-space #'head.name) name-root-ref))
+                   (syntax-local-value* head-name name-root-ref))
               => (lambda (v)
-                   (define-values (head tail) (apply-name-root #'head.name v in-space stxes))
+                   (define-values (head tail) (apply-name-root head-name v in-space stxes))
                    (enforest-step init-form (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?))]
              [else
               (define head-id (in-space #'head.name))

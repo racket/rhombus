@@ -173,7 +173,7 @@
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,syntax-static-infos))
-    (transform-in stx))
+    (syntax-local-introduce stx))
 
   (define (unpack-identifier-or-operator who id/op-in)
     (define id/op (unpack-term/maybe id/op-in))
