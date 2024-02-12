@@ -122,9 +122,9 @@
       (define mod (or (import-modifier-ref v)
                       (import-modifier-block-ref v)))
       (and mod
-           (transformer (let ([req (transform-in req)]) ; import transformer scope
+           (transformer (let ([req (syntax-local-introduce req)]) ; import transformer scope
                           (lambda (stx)
-                            ((transformer-proc mod) (transform-in req) ; import-modifier transformer scope
+                            ((transformer-proc mod) (syntax-local-introduce req) ; import-modifier transformer scope
                                                     stx)))))))
 
   (define-rhombus-transform
@@ -506,7 +506,7 @@
                (syntax-parse i
                  #:datum-literals (parsed nspace)
                  [(parsed mod-path parsed-r)
-                  (define-values (mp r) (import-invert (syntax-local-introduce (transform-in #'parsed-r)) #f #f))
+                  (define-values (mp r) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
                   #`(reimport #,id #,mp #,r)]
                  [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
   (cond

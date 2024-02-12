@@ -18,8 +18,6 @@
          transformer
          transformer-ref
 
-         transform-in
-         transform-out
          call-as-transformer
 
          track-sequence-origin
@@ -116,7 +114,8 @@
   (define proc (transformer-proc t))
   (call-as-transformer
    id
+   (list stx)
    track-origin
-   (lambda (in out)
-     (define forms (checker (proc (in stx)) proc))
-     (datum->syntax #f (out forms)))))
+   (lambda (stx)
+     (define forms (checker (proc stx) proc))
+     (datum->syntax #f forms))))

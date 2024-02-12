@@ -158,10 +158,9 @@
     (syntax-parse (unpack-group s who #f)
       [e::expression
        (define-values (expr opaque)
-         (syntax-local-expand-expression
-          (syntax-local-introduce (transform-out #'e.parsed))))
+         (syntax-local-expand-expression #'e.parsed))
        (values (relocate+reraw expr #`(parsed #:rhombus/expr
-                                              #,(transform-in (syntax-local-introduce expr))))
+                                              #,expr))
                (relocate+reraw expr #`(parsed #:rhombus/expr
-                                              #,(transform-in (syntax-local-introduce opaque)))))]))
+                                              #,opaque)))]))
   )

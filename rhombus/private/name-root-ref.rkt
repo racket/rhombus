@@ -50,7 +50,7 @@
                              field-id
                              field-id)
               'disappeared-use
-              (transform-out (in-name-root-space prefix))))
+              (syntax-local-introduce (in-name-root-space prefix))))
            (define (next form-id field-id what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -228,8 +228,8 @@
                                  (syntax-e root-id))
                              (syntax-e field-id))))
    'disappeared-use
-   (let ([root (transform-out (in-name-root-space root-id))])
-     (if (syntax-original? (transform-out field-id))
+   (let ([root (syntax-local-introduce (in-name-root-space root-id))])
+     (if (syntax-original? (syntax-local-introduce field-id))
          ;; enable arrows, etc., from `new-field-id` based on its binding
          (cons (syntax-property (datum->syntax new-field-id
                                                (syntax-e new-field-id)

@@ -41,7 +41,7 @@
         #:with name::dotted-identifier #'name-seq
         (define intro syntax-local-introduce)
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports [name.name name.extends plain #,(intro #'scoped)])
+            (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
             #,(intro
                #`(rhombus-nested form ...))))]))))
 

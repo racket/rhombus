@@ -17,17 +17,20 @@
   
 (define (apply-name-root op-stx lxc in-space stxes)
   (define proc (name-root-proc lxc))
-  (call-as-transformer
-   op-stx
-   syntax-track-origin
-   (lambda (in out)
-     (define-values (target tail) (proc in-space (in stxes)))
-     (unless (or (identifier? target)
-                 (and (syntax? target)
-                      (pair? (syntax-e target))
-                      (eq? 'op (syntax-e (car (syntax-e target))))))
-       (raise-result-error (proc-name proc) "identifier-or-operator?" target))
-     (check-transformer-result (out target) (out tail) proc))))
+  (define-values (target tail)
+    (call-as-transformer
+     op-stx
+     (list stxes)
+     syntax-track-origin
+     (lambda (stxes)
+       (define-values (target tail) (proc in-space stxes))
+       (unless (or (identifier? target)
+                   (and (syntax? target)
+                        (pair? (syntax-e target))
+                        (eq? 'op (syntax-e (car (syntax-e target))))))
+         (raise-result-error (proc-name proc) "identifier-or-operator?" target))
+       (values target tail))))
+  (check-transformer-result target tail proc))
 
 (define (name-root-ref-root v ref)
   (ref v))

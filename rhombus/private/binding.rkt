@@ -57,13 +57,12 @@
                                          "cannot find a transformer for an infoer"
                                          #'infoer-id))]
              #:with info (check-binding-info-result
-                          (transform-out
-                           (let ([form (transform-in #'form)])
-                             (call-as-transformer
-                              #'infoer-id
-                              syntax-track-origin
-                              (lambda (in out)
-                                (out (proc (in form)))))))
+                          (let ([form #'form])
+                            (call-as-transformer
+                             #'infoer-id
+                             (list form)
+                             syntax-track-origin
+                             proc))
                           proc)))
 
   ;; To unpack a binding infoer result:

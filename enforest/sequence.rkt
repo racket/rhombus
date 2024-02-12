@@ -78,11 +78,13 @@
 
 (define (apply-sequence-transformer t id stx tail track-origin checker)
   (define proc (sequence-transformer-proc t))
-  (call-as-transformer
-   id
-   track-origin
-   (lambda (in out)
-     (define-values (forms new-tail) (proc (in stx) (in tail)))
-     (check-transformer-result (out (datum->syntax #f (checker forms proc)))
-                               (out new-tail)
-                               proc))))
+  (define-values (forms new-tail)
+    (call-as-transformer
+     id
+     (list stx tail)
+     track-origin
+     (lambda (stx tail)
+       (define-values (forms new-tail) (proc stx tail))
+       (values (datum->syntax #f (checker forms proc))
+               (datum->syntax #f new-tail)))))
+  (check-transformer-result forms new-tail proc))
