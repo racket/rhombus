@@ -26,6 +26,7 @@ it supplies its elements in order.
   List
   lst.length()
   lst.get(n)
+  lst.set(n, v)
   lst.first,
   lst.rest,
   lst.insert(lst, n, v)
@@ -197,10 +198,14 @@ it supplies its elements in order.
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to
- the end, equivalent to @rhombus(List.insert(ls, elem, List.length(lst))).
+ the end, equivalent to @rhombus(lst.insert(lst.length(), elem)).
 
 @examples(
   List.add([2, 3], 1)
+  [2, 3].add(1)
+  block:
+    let l = [2, 3]
+    l.insert(l.length(), 1)
 )
 
 }
@@ -211,10 +216,11 @@ it supplies its elements in order.
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to
- the front, equivalent to @rhombus(List.insert(ls, elem, 0)).
+ the front, equivalent to @rhombus(lst.insert(0, elem)).
 
 @examples(
   List.cons(1, [2, 3])
+  [2, 3].insert(0, 1)
 )
 
 }
@@ -313,10 +319,14 @@ it supplies its elements in order.
 ){
 
  Returns a list like @rhombus(lst), but with the @rhombus(n)th element
- replaced with @rhombus(v), equivalent to @rhombus(List.insert(List.delete(lst, n), n, v)).
+ replaced with @rhombus(v), equivalent to @rhombus(lst.delete(n).insert(n, v)).
+ Note that this function performs a functional update, as opposed to
+ mutable, which means lists do @emph{not} implement
+ @rhombus(MutableIndexable, ~annot).
 
 @examples(
   ["a", "b", "c"].set(1, "beta")
+  ["a", "b", "c"].delete(1).insert(1, "beta")
 )
 
 }
@@ -443,10 +453,11 @@ it supplies its elements in order.
 
  Returns a sublist of @rhombus(lst) containing elements from index
  @rhombus(n) (inclusive) to @rhombus(m) (exclusive), equivalent to
- @rhombus(List.drop_left(lst, n).take_left(m-n)).
+ @rhombus(lst.drop_left(n).take_left(m-n)).
 
 @examples(
   [1, 2, 3, 4, 5].sublist(1, 3)
+  [1, 2, 3, 4, 5].drop_left(1).take_left(3-1)
 )
 
 

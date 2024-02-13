@@ -70,7 +70,7 @@
       ~x: x :: Int = 0,
       ~y: y :: Int = 0,
       ~timestamp: timestamp :: Int = 0,
-      ~use_altgr: use_altgr = #true,
+      ~use_altgr: use_altgr :: Any = #true,
     )
 
   property (ev :: KeyEvent).code

@@ -59,7 +59,7 @@
     :: Void
   method (path :: Path).arc(r :: RectLike,
                             start :: Real, end :: Real,
-                            ~clockwise: clockwise = #false)
+                            ~clockwise: clockwise :: Any = #false)
     :: Void
 ){
 
