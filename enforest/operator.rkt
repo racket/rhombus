@@ -214,46 +214,46 @@
 (define (lookup-space-description space-sym)
   #f)
 
-(define (apply-prefix-direct-operator op form stx track-origin checker)
+(define (apply-prefix-direct-operator op form stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (checker (call-as-transformer
             stx
             (list form)
-            track-origin
+            track-origin use-site-scopes?
             (lambda (form)
               (proc form stx)))
            proc))
 
-(define (apply-infix-direct-operator op form1 form2 stx track-origin checker)
+(define (apply-infix-direct-operator op form1 form2 stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (checker (call-as-transformer
             stx
             (list form1 form2)
-            track-origin
+            track-origin use-site-scopes?
             (lambda (form1 form2)
               (proc form1 form2 stx)))
            proc))
 
-(define (apply-prefix-transformer-operator op op-stx tail track-origin checker)
+(define (apply-prefix-transformer-operator op op-stx tail track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (define-values (form new-tail)
     (call-as-transformer
      op-stx
      (list tail)
-     track-origin
+     track-origin use-site-scopes?
      (lambda (tail)
        (define-values (form new-tail) (proc tail))
        (values (checker form proc)
                new-tail))))
   (check-transformer-result form new-tail proc))
 
-(define (apply-infix-transformer-operator op op-stx form1 tail track-origin checker)
+(define (apply-infix-transformer-operator op op-stx form1 tail track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (define-values (form new-tail)
     (call-as-transformer
      op-stx
      (list form1 tail)
-     track-origin
+     track-origin use-site-scopes?
      (lambda (form1 tail)
        (define-values (form new-tail) (proc form1 tail))
        (values (checker form proc)

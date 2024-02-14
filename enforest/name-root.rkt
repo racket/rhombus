@@ -21,7 +21,7 @@
     (call-as-transformer
      op-stx
      (list stxes)
-     syntax-track-origin
+     syntax-track-origin #f
      (lambda (stxes)
        (define-values (target tail) (proc in-space stxes))
        (unless (or (identifier? target)

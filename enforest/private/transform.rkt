@@ -15,16 +15,23 @@
 (define (transform-out stx)
   (syntax-local-introduce stx))
 
-(define (call-as-transformer id args track-origin proc)
+(define (call-as-transformer id args track-origin use-site-scopes? proc)
   (call-with-values
    (lambda ()
      (apply syntax-local-apply-transformer
             proc
             id
-            ;; for now, use contexts that imply no use-site scopes:
-            (if (eq? 'top-level (syntax-local-context))
-                'top-level
-                'expression)
+            (cond
+              [use-site-scopes?
+               (define context (syntax-local-context))
+               (if (eq? context 'expression)
+                   (list (gensym)) ; to inherit use-site-scope context
+                   context)]
+              [else
+               ;; use contexts that imply no use-site scopes:
+               (if (eq? 'top-level (syntax-local-context))
+                   'top-level
+                   'expression)])
             #f
             (map syntax-local-introduce args)))
    (lambda stxes
