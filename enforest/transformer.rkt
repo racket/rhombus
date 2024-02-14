@@ -53,7 +53,9 @@
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
               (~optional (~seq #:track-origin track-origin)
-                         #:defaults ([track-origin #'syntax-track-origin])))
+                         #:defaults ([track-origin #'syntax-track-origin]))
+              (~optional (~seq #:use-site-scopes? use-site-scopes?)
+                         #:defaults ([use-site-scopes? #'#f])))
         ...)
      #`(begin
          (define-syntax-class form
@@ -69,7 +71,7 @@
                                                       (begin
                                                         (transform-out ; from an enclosing transformer
                                                          (datum->syntax #f (cons #'hname.name #'hname.tail))))
-                                                      track-origin
+                                                      track-origin use-site-scopes?
                                                       check-result)))
            (pattern ((~datum group) (~and head ((~datum parsed) tag inside . inside-tail)) . tail)
                     #:when (eq? (syntax-e #'tag) 'parsed-tag)
@@ -87,7 +89,7 @@
                                    (apply-transformer t (transform-out implicit-id)
                                                       (transform-out
                                                        (datum->syntax #f (list* implicit-name #'head #'tail)))
-                                                      track-origin
+                                                      track-origin use-site-scopes?
                                                       check-result))))
 
          #,@(if (syntax-e #'transform-id)
@@ -110,12 +112,12 @@
                              #t)])))
                 '()))]))
 
-(define (apply-transformer t id stx track-origin checker)
+(define (apply-transformer t id stx track-origin use-site-scopes? checker)
   (define proc (transformer-proc t))
   (call-as-transformer
    id
    (list stx)
-   track-origin
+   track-origin use-site-scopes?
    (lambda (stx)
      (define forms (checker (proc stx) proc))
      (datum->syntax #f forms))))

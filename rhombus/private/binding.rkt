@@ -61,7 +61,7 @@
                             (call-as-transformer
                              #'infoer-id
                              (list form)
-                             syntax-track-origin
+                             syntax-track-origin #f
                              proc))
                           proc)))
 

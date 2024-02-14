@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "use-site.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt")
 
@@ -15,7 +16,6 @@
 (provide rhombus-module-forwarding-sequence
          rhombus-block-forwarding-sequence
          rhombus-nested-forwarding-sequence
-         rhombus-mixed-forwarding-sequence
          rhombus-mixed-nested-forwarding-sequence
 
          ;; wrap `rhombus-forward` around a sequence of declarations
@@ -45,19 +45,13 @@
     [(_ final . tail)
      #`(sequence [(#:nested final) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
-(define-syntax (rhombus-mixed-forwarding-sequence stx)
+(define-syntax (rhombus-mixed-nested-forwarding-sequence stx)
   ;; Used for something like `class`, where non-expression, non-definition
   ;; forms are expanded to `(quote-syntax (stop-id . _))` and gathered to
-  ;; be passed along to `final`
+  ;; be passed along to `final`. Exports are also gathered.
   (syntax-parse stx
     [(_ (final . data) stop-id . tail)
-     #`(sequence [(#:stop-at (final . data) stop-id) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
-
-(define-syntax (rhombus-mixed-nested-forwarding-sequence stx)
-  ;; Actually used by `class`, which acts like `namespace`, too
-  (syntax-parse stx
-    [(_ (final . data) stop-id . tail)
-     #`(sequence [(#:stop-at* (final . data) stop-id ()) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
+     #`(sequence [(#:stop-at (final . data) stop-id ()) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
 
 (define-syntax (sequence stx)
   (forwarding-sequence-step stx syntax-local-context syntax-local-introduce))
@@ -93,11 +87,11 @@
       [(_ [state base-ctx add-ctx remove-ctx stx-params])
        (define forms #`(begin #,@(reverse accum)))
        (syntax-parse #'state
-         [((~or* #:stop-at #:block-stop-at) (final ...) _ accum ...)
+         [(#:block-stop-at (final ...) _ accum ...)
           #`(begin
               #,forms
               (final ... #,@(reverse (syntax->list #'(accum ...)))))]
-         [(#:stop-at* (final ...) _ binds accum ...)
+         [(#:stop-at (final ...) _ binds accum ...)
           #`(begin
               #,forms
               (final ... [#:ctx base-ctx remove-ctx] #,(reverse (syntax->list #'binds)) #,@(reverse (syntax->list #'(accum ...)))))]
@@ -207,7 +201,9 @@
           (syntax-parse #'new-state
             [((~or #:block #:block-stop-at) . _)
              (for ([req (in-list reqs)])
-               (syntax-local-lift-require (local-introduce req) #'use #f))
+               ;; unlike normal `require`, `syntax-local-lift-require` doesn't remove
+               ;; use-site scopes, so we have to do that ourselves here
+               (syntax-local-lift-require (remove-use-site-scopes (local-introduce req)) #'use #f))
              #`(sequence [new-state base-ctx add-ctx remove-ctx stx-params] . forms)]
             [_
              #`(begin
@@ -220,8 +216,8 @@
           (define rev-prov (reverse (syntax->list #'(prov ...))))
           (define new-state
             (syntax-parse #'state
-              [(#:stop-at* head stop-id binds-tail . tail)
-               #`(#:stop-at* head stop-id (#,@rev-prov . binds-tail) . tail)]
+              [(#:stop-at head stop-id binds-tail . tail)
+               #`(#:stop-at head stop-id (#,@rev-prov . binds-tail) . tail)]
               [[tag head . tail]
                #`(tag head #,@rev-prov . tail)]))
           #`(sequence [#,new-state base-ctx add-ctx remove-ctx stx-params] . forms)]
@@ -230,20 +226,20 @@
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
           #:do [(define next
                   (syntax-parse #'state
-                    [((~and tag (~or* #:stop-at #:block-stop-at)) head stop-id . tail)
+                    [(#:block-stop-at head stop-id . tail)
                      (free-identifier=? #'id #'stop-id)
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence [(tag head stop-id [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
+                          (sequence [(#:block-stop-at head stop-id [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
                       exp-form
                       #'none)]
-                    [(#:stop-at* head stop-id binds . tail)
+                    [(#:stop-at head stop-id binds . tail)
                      (free-identifier=? #'id #'stop-id)
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence [(#:stop-at* head stop-id binds [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
+                          (sequence [(#:stop-at head stop-id binds [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
                       exp-form
                       #'none)]
                     [_ #f]))]
