@@ -1,0 +1,648 @@
+#lang rhombus/and_meta
+
+// This test suite also checks that module and internal-definition
+// contexts agree in behavior.
+
+// check addition of use-site scopes
+check:
+  let x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       let $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  let x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       def $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  def x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       let $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  def x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       def $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+module expr1 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       let $id = "inner"
+       x'
+  def result = m x
+
+check:
+  import self!expr1 open
+  result
+  ~is "outer"
+
+module expr2 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       def $id = "inner"
+       x'
+  def result = m x
+
+check:
+  import self!expr2 open
+  result
+  ~is "outer"
+
+module expr3 ~lang rhombus/and_meta:
+  export result
+  def x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       let $id = "inner"
+       x'
+  def result = m x
+
+check:
+  import self!expr3 open
+  result
+  ~is "outer"
+
+module expr4 ~lang rhombus/and_meta:
+  export result
+  def x = "outer"
+  expr.macro 'm $(id :: Term)':
+    'block:
+       def $id = "inner"
+       x'
+  def result = m x
+
+check:
+  import self!expr4 open
+  result
+  ~is "outer"
+
+check:
+  let x = "outer"
+  defn.macro 'm $id':
+    'block:
+       let $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  let x = "outer"
+  defn.macro 'm $id':
+    'block:
+       def $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  def x = "outer"
+  defn.macro 'm $id':
+    'block:
+       let $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+check:
+  def x = "outer"
+  defn.macro 'm $id':
+    'block:
+       def $id = "inner"
+       x'
+  m x
+  ~is "outer"
+
+module nested_defn1 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  defn.macro 'm $result $id':
+    'def $result:
+       let $id = "inner"
+       x'
+  m result x
+
+check:
+  import self!nested_defn1 open
+  result
+  ~is "outer"
+
+module nested_defn2 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  defn.macro 'm $result $id':
+    'def $result:
+       def $id = "inner"
+       x'
+  m result x
+
+check:
+  import self!nested_defn2 open
+  result
+  ~is "outer"
+
+module nested_defn3 ~lang rhombus/and_meta:
+  export result
+  def x = "outer"
+  defn.macro 'm $result $id':
+    'def $result:
+       let $id = "inner"
+       x'
+  m result x
+
+check:
+  import self!nested_defn3 open
+  result
+  ~is "outer"
+
+module nested_defn4 ~lang rhombus/and_meta:
+  export result
+  def x = "outer"
+  defn.macro 'm $result $id':
+    'def $result:
+       def $id = "inner"
+       x'
+  m result x
+
+check:
+  import self!nested_defn4 open
+  result
+  ~is "outer"
+
+// check removal of use-site scopes
+check:
+  let x = "outer"
+  defn.macro 'm $id':
+    'let $id = "inner"
+     x'
+  m x
+  ~is "inner"
+
+check:
+  let x = "outer"
+  defn.macro 'm $id':
+    'def $id = "inner"
+     x'
+  m x
+  ~is "outer"
+
+check:
+  def x = "outer"
+  defn.macro 'm $id':
+    'let $id = "inner"
+     x'
+  m x
+  ~is "inner"
+
+check:
+  ~eval
+  block:
+    import rhombus/meta open
+    def x = "outer"
+    defn.macro 'm $id':
+      'def $id = "inner"
+       x'
+    m x
+  ~throws "duplicate binding name"
+
+module flat_defn1 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  defn.macro 'm $result $id':
+    'let $id = "inner"
+     def $result = x'
+  m result x
+
+check:
+  import self!flat_defn1 open
+  result
+  ~is "inner"
+
+module flat_defn2 ~lang rhombus/and_meta:
+  export result
+  let x = "outer"
+  defn.macro 'm $result $id':
+    'def $id = "inner"
+     def $result = x'
+  m result x
+
+check:
+  import self!flat_defn2 open
+  result
+  ~is "outer"
+
+module flat_defn3 ~lang rhombus/and_meta:
+  export result
+  def x = "outer"
+  defn.macro 'm $result $id':
+    'let $id = "inner"
+     def $result = x'
+  m result x
+
+check:
+  import self!flat_defn3 open
+  result
+  ~is "inner"
+
+check:
+  ~eval
+  module flat_defn4 ~lang rhombus/and_meta:
+    export result
+    def x = "outer"
+    defn.macro 'm $result $id':
+      'def $id = "inner"
+       def $result = x'
+    m result x
+  ~throws "identifier already defined"
+
+// check interaction with `flip_introduce`
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       block:
+         let $id = $tmp
+         block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       block:
+         def $id = $tmp
+         block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       block:
+         let $id = $tmp
+         block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       block:
+         def $id = $tmp
+         block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+module nested_let1 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       block:
+         let $id = $tmp
+         block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!nested_let1 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+module nested_let2 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       block:
+         def $id = $tmp
+         block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!nested_let2 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+module nested_let3 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       block:
+         let $id = $tmp
+         block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!nested_let3 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+module nested_let4 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       block:
+         def $id = $tmp
+         block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!nested_let4 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       let $id = $tmp
+       block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'letrec_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       def $id = $tmp
+       block $body'
+  def x = "outer"
+  letrec_in x = "inner":
+    x
+  ~is "inner"
+
+check:
+  ~eval
+  block:
+    import rhombus/meta open
+    expr.macro 'letrec_in $id = $rhs ...:
+                  $(body :: Block)':
+      def tmp = syntax_meta.flip_introduce(id)
+      'block:
+         let $tmp = $rhs ...
+         def $id = $tmp
+         block $body'
+    def x = "outer"
+    letrec_in x = x:
+      x
+  ~throws "cannot use before initialization"
+
+check:
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       let $id = $tmp
+       block $body'
+  def x = "outer"
+  values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+  ~is values("inner", "outer")
+
+check:
+  expr.macro 'letrec_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       def $id = $tmp
+       block $body'
+  def x = "outer"
+  letrec_in x = "inner":
+    x
+  ~is "inner"
+
+check:
+  ~eval
+  block:
+    import rhombus/meta open
+    expr.macro 'letrec_in $id = $rhs ...:
+                  $(body :: Block)':
+      def tmp = syntax_meta.flip_introduce(id)
+      'block:
+         def $tmp = $rhs ...
+         def $id = $tmp
+         block $body'
+    def x = "outer"
+    letrec_in x = x:
+      x
+  ~throws "cannot use before initialization"
+
+module flat_let1 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       let $id = $tmp
+       block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!flat_let1 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+module flat_let2 ~lang rhombus/and_meta:
+  export result
+  expr.macro 'letrec_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       let $tmp = $rhs ...
+       def $id = $tmp
+       block $body'
+  def x = "outer"
+  def result = (
+    letrec_in x = "inner":
+      x
+  )
+
+check:
+  import self!flat_let2 open
+  result
+  ~is "inner"
+
+check:
+  ~eval
+  module flat_let2 ~lang rhombus/and_meta:
+    expr.macro 'letrec_in $id = $rhs ...:
+                  $(body :: Block)':
+      def tmp = syntax_meta.flip_introduce(id)
+      'block:
+         let $tmp = $rhs ...
+         def $id = $tmp
+         block $body'
+    def x = "outer"
+    letrec_in x = x:
+      x
+  import self!flat_let2
+  ~throws "cannot use before initialization"
+
+module flat_let3 ~lang rhombus/and_meta:
+  export result1 result2
+  expr.macro 'let_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       let $id = $tmp
+       block $body'
+  def x = "outer"
+  def (result1, result2) = values(
+    let_in x = "inner":
+      x,
+    let_in x = x:
+      x
+  )
+
+check:
+  import self!flat_let3 open
+  values(result1, result2)
+  ~is values("inner", "outer")
+
+module flat_let4 ~lang rhombus/and_meta:
+  export result
+  expr.macro 'letrec_in $id = $rhs ...:
+                $(body :: Block)':
+    def tmp = syntax_meta.flip_introduce(id)
+    'block:
+       def $tmp = $rhs ...
+       def $id = $tmp
+       block $body'
+  def x = "outer"
+  def result = (
+    letrec_in x = "inner":
+      x
+  )
+
+check:
+  import self!flat_let4 open
+  result
+  ~is "inner"
+
+check:
+  ~eval
+  module flat_let4 ~lang rhombus/and_meta:
+    expr.macro 'letrec_in $id = $rhs ...:
+                  $(body :: Block)':
+      def tmp = syntax_meta.flip_introduce(id)
+      'block:
+         def $tmp = $rhs ...
+         def $id = $tmp
+         block $body'
+    def x = "outer"
+    letrec_in x = x:
+      x
+  import self!flat_let4
+  ~throws "cannot use before initialization"
