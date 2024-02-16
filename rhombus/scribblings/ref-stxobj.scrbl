@@ -277,6 +277,7 @@ Metadata for a syntax object can include a source location and the raw
     $id #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
     $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
+    #,(@rhombus(!, ~unquote_bind)) $stx_bind
     #,(@rhombus(pattern, ~unquote_bind)) $pattern_spec
     $other_stx_bind
 ){
@@ -346,9 +347,9 @@ Metadata for a syntax object can include a source location and the raw
  @tech{syntax class} with an identifier. See
  @rhombus(::, ~unquote_bind) for more information.
 
- The @rhombus(&&, ~unquote_bind) and @rhombus(||, ~unquote_bind)
- operators combine matches. See @rhombus(&&, ~unquote_bind) and
- @rhombus(||, ~unquote_bind) for more information.
+ The @rhombus(&&, ~unquote_bind), @rhombus(||, ~unquote_bind), and @rhombus(!, ~unquote_bind)
+ operators combine matches. See @rhombus(&&, ~unquote_bind),
+ @rhombus(||, ~unquote_bind), and @rhombus(!, ~unquote_bind) for more information.
 
  The @rhombus(pattern, ~unquote_bind) form is a shorthand for using
  @rhombus(::, ~unquote_bind) with an inline @rhombus(syntax_class) form.
@@ -389,22 +390,26 @@ Metadata for a syntax object can include a source location and the raw
     stx_bind: def bind ~defn
   unquote_bind.macro '$stx_bind && $stx_bind'
   unquote_bind.macro '$stx_bind || $stx_bind'
+  unquote_bind.macro '! $stx_bind'
 ){
-
 
  Unquote binding operators for use with @rhombus($, ~bind) that combine matches:
  @rhombus(&&, ~unquote_bind) matches whether its left- and right-hand
- bindings would both independetly match, and
+ bindings would both independetly match,
  @rhombus(||, ~unquote_bind) matches when either its left- and
- right-hand binding (or both) would match.
+ right-hand binding (or both) would match, and
+ @rhombus(!, ~unquote_bind) matches when its binding would not match.
 
  A @rhombus(&&, ~unquote_bind) binds all variables from its arguments,
- while @rhombus(||, ~unquote_bind) binds none of them.
+ while @rhombus(||, ~unquote_bind) and @rhombus(!, ~unquote_bind) bind none of them.
 
  Independent matching for @rhombus(&&, ~unquote_bind) means that in a
  term context, combinding a variable binding with a splicing multi-term
  binding will @emph{not} enable a multi-term splicing match for the
  variable; instead, the pattern will fail to match a multi-term splice.
+
+ A @rhombus(!, ~unquote_bind) can only be used in a term context,
+ negating a term binding.
 
 @examples(
   def '$(a && '($_ $_ $_)') done' = '(1 2 3) done'
@@ -412,6 +417,8 @@ Metadata for a syntax object can include a source location and the raw
   def '$('1' || '2') ...' = '1 2 2 1 1'
   def '$(b && '$_ $_ $_')' = '1 2 3' // b in group context
   b
+  def '$(!'2') ...' = '1 3 5 7 9'
+  def '$(!'($_)') ...' = '[] {}'
   ~error:
     def '$(b && '$_ $_ $_') done' = '1 2 3 done' // b in term context
 )

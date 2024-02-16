@@ -2,7 +2,7 @@
 
 check:
   use_static
-  let x && [y] : [10]
+  def x && [y] = [10]
   [[x, y], x.length()]
   ~is [[[10], 10], 1]
 
@@ -37,6 +37,15 @@ block:
   check:
     try([])
     ~is "other"
+
+block:
+  fun try(v):
+    match v
+    | ![x, y]: "not two lists"
+    | ~else: "two lists"
+  check try([1]) ~is "not two lists"
+  check try([1, 2]) ~is "two lists"
+  check try([1, 2, 3]) ~is "not two lists"
 
 check:
   import:

@@ -108,6 +108,10 @@ check:
   ~is ["x"]
 
 check:
+  "x" :: !converting(fun (_ :: !String): error("oops"))
+  ~is "x"
+
+check:
   #false :: False ~is #false
   "x" :: True ~is "x"
   "x" :: False ~throws "does not satisfy"

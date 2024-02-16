@@ -9,7 +9,8 @@
 
 (provide (for-space rhombus/bind
                     &&
-                    \|\|))
+                    \|\|
+                    !))
 
 (module+ for-class
   (provide (for-syntax make-and-binding)))
@@ -20,7 +21,7 @@
 (define-binding-syntax &&
   (binding-infix-operator
    (bind-quote &&)
-   (list (cons (bind-quote \|\|) 'stronger))
+   `((,(bind-quote \|\|) . stronger))
    'automatic
    (lambda (lhs rhs stx)
      (binding-form
@@ -133,4 +134,51 @@
 (define-syntax (or-binder stx)
   (syntax-parse stx
     [(_ arg-id (lhs rhs))
+     #'(begin)]))
+
+;; ----------------------------------------
+;; !
+
+(define-binding-syntax !
+  (binding-prefix-operator
+   (bind-quote !)
+   `((,(bind-quote &&) . stronger)
+     (,(bind-quote \|\|) . stronger))
+   'automatic
+   (lambda (form stx)
+     (binding-form #'not-infoer form))))
+
+(define-syntax (not-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos form::binding-form)
+     #:with impl::binding-impl #'(form.infoer-id () form.data)
+     #:with info::binding-info #'impl.info
+     (binding-info (string-append "!" (syntax-e #'info.annotation-str))
+                   #'info.name-id
+                   #'static-infos
+                   #'()
+                   #'not-matcher
+                   #'not-committer
+                   #'not-binder
+                   #'info)]))
+
+(define-syntax (not-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id info::binding-info
+        IF success fail)
+     #'(IF (let ()
+             (info.matcher-id arg-id info.data if/blocked
+                              #f
+                              #t))
+           success
+           fail)]))
+
+(define-syntax (not-committer stx)
+  (syntax-parse stx
+    [(_ arg-id info)
+     #'(begin)]))
+
+(define-syntax (not-binder stx)
+  (syntax-parse stx
+    [(_ arg-id info)
      #'(begin)]))

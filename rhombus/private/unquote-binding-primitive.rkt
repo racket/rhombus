@@ -32,6 +32,7 @@
                     pattern
                     &&
                     \|\|
+                    !
                     #%literal
                     #%block))
 
@@ -108,7 +109,8 @@
      (unless (or (identifier? form1)
                  (syntax-parse form1
                    [(underscore () () ())
-                    (free-identifier=? #'underscore #'_)]))
+                    (free-identifier=? #'underscore #'_)]
+                   [_ #f]))
        (raise-syntax-error #f
                            "preceding term must be an identifier or `_`"
                            (syntax-parse stx
@@ -475,6 +477,17 @@
               ()
               ())])]))
    'left))
+
+(define-unquote-binding-syntax !
+  (unquote-binding-prefix-operator
+   (unquote-bind-quote !)
+   `()
+   'automatic
+   (lambda (form stx)
+     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term)
+                        (normalize-id form))
+       [#f #'#f]
+       [(pat _ _ _) #'((~not pat) () () ())]))))
 
 (define-unquote-binding-syntax #%literal
   (unquote-binding-transformer
