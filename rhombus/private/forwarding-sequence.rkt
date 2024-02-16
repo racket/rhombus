@@ -4,7 +4,8 @@
                      "srcloc.rkt"
                      "use-site.rkt")
          "syntax-parameter.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "version-case.rkt")
 
 ;; The `rhombus-...-forwarding-sequence` forms handle definitions that are
 ;; only visible to later terms (as created with Rhombus `let`, say,
@@ -142,14 +143,16 @@
        (syntax-parse exp-form
          #:literals (begin define-values define-syntaxes rhombus-forward pop-forward #%require provide #%provide quote-syntax
                            define-syntax-parameter)
-         [(rhombus-forward sub-form ...)
-          (define introducer (make-syntax-introducer/intdef))
+         [((~and tag rhombus-forward) sub-form ...)
+          (define intro (let ([intro (syntax-local-make-definition-context-introducer (syntax-e #'tag))])
+                          (lambda (stx)
+                            (intro stx 'add))))
           #`(begin
               #,@(reverse accum)
-              (sequence [state base-ctx #,(introducer #'add-ctx) base-ctx stx-params]
+              (sequence [state base-ctx #,(intro #'add-ctx) base-ctx stx-params]
                         sub-form ...
-                        (pop-forward base-ctx add-ctx #,(introducer #'remove-ctx)
-                                     . #,(introducer #'forms))))]
+                        (pop-forward base-ctx add-ctx #,(intro #'remove-ctx)
+                                     . #,(intro #'forms))))]
          [(pop-forward base-ctx add-ctx remove-ctx . forms)
           #`(sequence [state base-ctx add-ctx remove-ctx stx-params] . forms)]
          [(define-syntax-parameter key rhs)
@@ -165,11 +168,11 @@
               seq
               #`(begin #,@(reverse accum) #,seq))]
          [((~and def (~or* define-values define-syntaxes)) (id ...) rhs)
-          #:with (new-id ...) ((make-syntax-delta-introducer #'remove-ctx #'base-ctx)
-                               ((make-syntax-delta-introducer #'add-ctx #'base-ctx)
-                                #'(id ...)
-                                'add)
-                               'remove)
+          #:do [(define intro (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)]
+                                    [add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
+                                (lambda (stx)
+                                  (sub (add stx 'add) 'remove))))]
+          #:with (new-id ...) (intro #'(id ...))
           #:with new-state (need-end-expr #'state)
           #`(begin
               #,@(reverse accum)
@@ -264,11 +267,14 @@
                          [_ exp-form]))])
                 (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx stx-params] . forms))])])))
 
-;; use internal-definition contexts to allow scope pruning
-(define-for-syntax (make-syntax-introducer/intdef)
-  (define intdef-ctx (syntax-local-make-definition-context))
-  (lambda (stx)
-    (internal-definition-context-add-scopes intdef-ctx stx)))
+;; TEMP approximate `syntax-local-make-definition-context-introducer`
+(meta-if-version-at-least
+ "8.12.0.8"
+ (begin)
+ (define-for-syntax (syntax-local-make-definition-context-introducer [name 'intdef])
+   (define intdef-ctx (syntax-local-make-definition-context))
+   (lambda (stx [mode 'flip])
+     (internal-definition-context-introduce intdef-ctx stx mode))))
 
 (define-syntax (rhombus-forward stx)
   (raise-syntax-error #f
