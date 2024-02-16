@@ -15,6 +15,7 @@
          "parens.rkt"
          (submod "quasiquote.rkt" for-match)
          (only-in "literal.rkt" literal-infoer)
+         "if-blocked.rkt"
          "version-case.rkt")
 ;; TEMP approximate `case/equal-always`
 (meta-if-version-at-least
@@ -22,7 +23,8 @@
  (require (only-in racket/case case/equal-always))
  (require (only-in racket/base [case case/equal-always])))
 
-(provide match)
+(provide match
+         matches)
 
 (begin-for-syntax
   (define-syntax-class :pattern-clause
@@ -190,3 +192,32 @@
   (syntax-parse stx
     [(_ arg-id (ok? bind-id))
      #'(define bind-id arg-id)]))
+
+(define-syntax matches
+  (expression-infix-operator
+   (expr-quote matches)
+   `((default . weaker))
+   'macro
+   (lambda (form tail)
+     (syntax-parse tail
+       [(op . tail)
+        #:with (~var t (:infix-op+binding+tail #'matches)) #`(#,group-tag . tail)
+        (values
+         (syntax-parse #'t.parsed
+           [b::binding-form
+            #:with b-impl::binding-impl #'(b.infoer-id () b.data)
+            #:with b-info::binding-info #'b-impl.info
+            #`(let ([val #,form])
+                (b-info.matcher-id val b-info.data
+                                   if/blocked #t #f))])
+         #'t.tail)]))
+   'none))
+
+;; for precedence
+(define-binding-syntax matches
+  (binding-infix-operator
+   (bind-quote matches)
+   `((default . stronger))
+   'macro
+   (lambda (stx) (error "should not get here"))
+   'none))
