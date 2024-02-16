@@ -1,6 +1,12 @@
-#lang rhombus
+#lang rhombus/static
 
-use_static
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Equatable.hash(v)
+    Equatable.identity_hash(v)
+    Equatable.hash_code_combine(hc, ...)
+    Equatable.hash_code_combine_unordered(hc, ...)
 
 class AnythingGoes():
   private implements Equatable

@@ -189,7 +189,6 @@
   #:primitive (substring)
   #:static-infos ((#%call-result #,string-static-infos))
   (case-lambda
-    [(str) (string->immutable-string (substring str))]
     [(str start) (string->immutable-string (substring str start))]
     [(str start end) (string->immutable-string (substring str start end))]))
 

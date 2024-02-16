@@ -4,6 +4,7 @@
          "define-operator.rkt"
          "realm.rkt"
          (submod "define-arity.rkt" for-info)
+         "function-arity-key.rkt"
          "indirect-static-info-key.rkt")
 
 (provide (for-space rhombus/namespace
@@ -34,12 +35,12 @@
   (unless (exact-integer? a) (raise-argument-error* 'bits.<< rhombus-realm "Int" a))
   (unless (exact-nonnegative-integer? b) (raise-argument-error* 'bits.<< rhombus-realm "NonnegInt" b))
   (arithmetic-shift a b))
-  
+
 (define (arithmetic-shift-right a b)
   (unless (exact-integer? a) (raise-argument-error* 'bits.<< rhombus-realm "Int" a))
   (unless (exact-nonnegative-integer? b) (raise-argument-error* 'bits.<< rhombus-realm "NonnegInt" b))
   (arithmetic-shift a (- b)))
-  
+
 (define-infix << arithmetic-shift-left)
 (define-infix >> arithmetic-shift-right)
 

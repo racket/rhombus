@@ -6,10 +6,30 @@ block:
     Syntax.make(t, [ctx])
     Syntax.make_group(t, [ctx])
     Syntax.make_sequence(t, [ctx])
-    Syntax.unwrap(stx)
-    Syntax.unwrap_sequence(stx)
+    Syntax.make_op(name, [ctx])
     Syntax.make_id(t, [ctx])
     Syntax.make_temp_id([t])
+    Syntax.unwrap(stx) ~method
+    Syntax.unwrap_op(stx) ~method
+    Syntax.unwrap_group(stx) ~method
+    Syntax.unwrap_sequence(stx) ~method
+    Syntax.unwrap_all(stx) ~method
+    Syntax.srcloc(stx) ~method
+    Syntax.is_original(stx) ~method
+    Syntax.strip_scopes(stx) ~method
+    Syntax.replace_scopes(stx, like_stx) ~method
+    Syntax.relocate(stx, to) ~method
+    Syntax.relocate_span(stx, like_stxes) ~method
+    Syntax.property(stx, key, [val], [is_preserved]) ~method
+    Syntax.to_source_string(stx) ~method
+  static_arity.check ~meta:
+    syntax_meta.error([msg], at_stx, [in_stx])
+    syntax_meta.value(name, [in_space], [fail])
+    syntax_meta.equal_binding(stx1, stx2, [in_space], [phase1], [phase2])
+    syntax_meta.equal_name_and_scopes(stx1, stx2, [phase])
+    syntax_meta.flip_introduce(stx)
+    syntax_meta.is_static(stx)
+    syntax_meta.expanding_phase()
 
 check:
   Syntax.make(1) ~matches '1'
@@ -80,7 +100,7 @@ block:
   check xy.srcloc().column ~is x.srcloc().column + 2
   check xyz.srcloc().line ~is x.srcloc().line + 2
   check xyz.srcloc().column ~is x.srcloc().column + 3
-  
+
 check:
   match 'a: *'
   | 'a: $b': b is_a Operator

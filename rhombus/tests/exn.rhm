@@ -1,6 +1,11 @@
 #lang rhombus
 
 block:
+  import "static_arity.rhm"
+  static_arity.check:
+    error([who], msg)
+
+block:
   use_static
   def v:
     try:

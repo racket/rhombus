@@ -1,5 +1,13 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Symbol.from_string(str)
+    Symbol.uninterned_from_string(str)
+    Symbol.unreadable_from_string(str)
+    Symbol.gen([name])
+
 check:
   #'a :: Symbol ~is #'a
   Symbol.from_string("a") ~is #'a

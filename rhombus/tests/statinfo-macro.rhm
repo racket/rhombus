@@ -1,5 +1,15 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    statinfo_meta.pack(s)
+    statinfo_meta.unpack(s)
+    statinfo_meta.pack_group(s)
+    statinfo_meta.unpack_group(s)
+    statinfo_meta.wrap(form, info)
+    statinfo_meta.lookup(form, key)
+
 namespace sub:
   export x
   statinfo.macro 'x':

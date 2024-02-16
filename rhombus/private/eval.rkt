@@ -53,7 +53,7 @@
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
 
 (define-static-info-syntaxes (current-namespace)
-  (#%function-arity 6)
+  (#%function-arity 3)
   (#%indirect-static-info indirect-function-static-info))
 
 (define/arity (import mod-path)

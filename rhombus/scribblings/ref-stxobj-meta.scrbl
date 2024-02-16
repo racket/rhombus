@@ -14,8 +14,8 @@
                         at_stx :: Syntax)
     :: None
   fun syntax_meta.error(message :: ReadableString,
-                        in_stx :: Syntax,
-                        at_stx :: Syntax || List.of(Syntax))
+                        at_stx :: Syntax,
+                        in_stx :: Syntax || List.of(Syntax))
     :: None
 ){
 

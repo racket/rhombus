@@ -1,5 +1,26 @@
 #lang rhombus/static
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    print(v, [out])
+    println(v, [out])
+    Printable.describe(v)
+    Printable.render(pd, [out])
+    Printable.current_pretty([on])
+    Printable.current_optimal([on])
+    Printable.current_page_width([on])
+    Printable.current_graph([on])
+    PrintDesc.concat(pd, ...)
+    PrintDesc.newline()
+    PrintDesc.nest(n, pd)
+    PrintDesc.align(pd)
+    PrintDesc.or(pd1, pd2)
+    PrintDesc.flat(pd)
+    PrintDesc.list(pre, elems, post)
+    PrintDesc.block(head, body)
+    PrintDesc.special(v, alt_pd)
+
 check to_string("apple") ~is "apple"
 check to_string("apple", ~mode: #'expr) ~is "\"apple\""
 

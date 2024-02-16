@@ -1,6 +1,12 @@
 #lang rhombus/static/and_meta
 import:
-  meta: rhombus: expose: check
+  meta:
+    rhombus expose: check
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    entry_point_meta.pack(s)
 
 check:
   entry_point.macro 'identity':

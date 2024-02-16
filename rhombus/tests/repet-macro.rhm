@@ -1,5 +1,11 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    repet_meta.pack_list(s)
+    repet_meta.unpack_list(s)
+
 repet.macro 'nat3':
   ~op_stx self
   repet_meta.pack_list('($self,

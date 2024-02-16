@@ -1,5 +1,11 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    ModulePath(s)
+    ModulePath.s_exp(mod)
+
 // syntax form
 check:
   ModulePath 'm' +& "" ~is "ModulePath('lib (\"m/main.rhm\")')"

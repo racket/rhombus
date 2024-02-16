@@ -1,6 +1,10 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 
-use_static
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    assign_meta.pack_assignment(s)
+    assign_meta.unpack_left(s)
 
 class Posn(x, mutable y):
   nonfinal

@@ -8,50 +8,99 @@ export:
 // or `[id]` for an optional argument. Use `...` after
 // an argument when any number are allowed. Currently
 // assumes that no keyword arguments are accepted.
+// If `~method` is supplied, also checks method calls.
 
-expr.macro 'static_arity_check:
-              $dotted_id ... ($arg, ...)
+expr.macro 'static_arity_check $(pattern:
+                                   kind ~sequence
+                                 | '~meta': field is_meta = #true
+                                 | '': field is_meta = #false):
+              $(pattern:
+                  kind ~group
+                | '$pre ... $args ~method': field is_method = #true
+                | '$pre ... $(args :: Term)': field is_method = #false)
               ...':
+  fun make_error(_):
+    'error("static_arity.check", "should not get here")'
+  fun extract_args(args):
+    fun
+    | make_less('($arg, ..., $_)'): '($(make_error(arg)), ...)'
+    | make_less(_): #false
+    match args
+    | '($(arg :: Identifier), ...,
+        $(_ :: Identifier), $(bound_as expr_meta.space: '...'))':
+        values('($(make_error(arg)), ...)',
+               make_less('($arg, ...)'),
+               #false)
+    | '($t, ...)':
+        let ([arg, ...], [more, ...]):
+          for values(args :~ List = [], mores :~ List = []):
+            each t: [t, ...]
+            match t
+            | '$(_ :: Identifier)': values(args.add(t), mores)
+            | '[$(_ :: Identifier)]': values(args, mores.add(t))
+        values('($(make_error(t)), ...)',
+               make_less('($arg, ...)'),
+               '($(make_error(arg)), ...,
+                 $(make_error(more)), ...,
+                 $(make_error(#false)))')
+  fun make_check(pres && '$self $_ ...', args, is_method):
+    let check = 'check'.relocate(self)
+    fun finish(kind, '$pre ...', args):
+      let (just, less, more) = extract_args(args)
+      fun make_kw('($arg, ...)'):
+        '$check:
+           ~eval: ev
+           use_static
+           $pre ... (~bad_keyword: $(make_error(#false)), $arg, ...)
+           ~throws values(
+             #%literal $("keyword argument not recognized by called " ++ kind),
+             "static",
+           )'
+      fun make_pos(args):
+        '$check:
+           ~eval: ev
+           use_static
+           $pre ... $args
+           ~throws values(
+             #%literal $("wrong number of arguments in " ++ kind ++ " call"),
+             "static",
+           )'
+      // FIXME "keyword argument not recognized" in method calls
+      '$(match kind
+         | "method": ''
+         | ~else: make_kw(just))
+       $(if less | make_pos(less) | '')
+       $(if more | make_pos(more) | '')'
+    'block:
+       $(finish("function", pres, args))
+       $(if is_method
+         | match args
+           | '($(_ :: Identifier), $(bound_as expr_meta.space: '...'))':
+               ''
+           | '($(_ :: Identifier), $arg, ...)':
+               let '$annot ... . $(method :: Term)' = pres
+               let pres = '($(make_error(#false)) :~ $annot ...) . $method'
+               let args = '($arg, ...)'
+               finish("method", pres, args)
+           | ~else:
+               ''
+         | ''
+         )'
   'block:
-     one_check:
-       $dotted_id ... ($arg, ...)
+     def ev = Evaluator.make_rhombus()
+     $(if is_meta
+       | '«parameterize { Evaluator.current: ev }:
+             Evaluator.import(ModulePath '"static_arity.rhm"!meta')
+           »'
+       | '')
+     $(make_check('$pre ...', args, is_method))
      ...'
 
-expr.macro 'one_check:
-              $dotted_id ... ($arg, ...)':
-  'block:
-     check:
-       ~eval
-       use_static
-       $dotted_id ... (~bad_keyword: 10, '$arg', ...)
-       ~throws values("keyword argument not recognized by called function", "static")
-     $(match '$arg; ...'
-       | '$arg; ...; $last; $(bound_as expr_meta.space: '...')':
-           'check_wrong_fewer:
-              $dotted_id ... ($arg, ...)'
-       | '$arg; ...':
-           'block:
-              check_wrong_fewer:
-                $dotted_id ... ($arg, ...)
-              check_wrong_count:
-                $dotted_id ... ($arg, ..., one more)')'
-
-expr.macro
-| 'check_wrong_fewer:
-     $dotted_id ... ()': '#void'
-| 'check_wrong_fewer:
-     $dotted_id ... ($arg, ..., [$opt_arg])':
-    'check_wrong_fewer:
-       $dotted_id ... ($arg, ...)'
-| 'check_wrong_fewer:
-     $dotted_id ... ($arg, ..., $last)':
-    'check_wrong_count:
-       $dotted_id ... ($arg, ...)'
-
-expr.macro 'check_wrong_count:
-              $dotted_id ... ($arg, ...)':
-  'check:
-     ~eval
-     use_static
-     $dotted_id ... ('$arg', ...)
-     ~throws "wrong number of arguments in function call"'
+// expose meta bindings at phase 0 for `~meta` option
+module meta ~lang rhombus:
+  import:
+    meta -1:
+      rhombus/meta open
+  export:
+    meta -1:
+      all_from(rhombus/meta)

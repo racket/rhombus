@@ -1,5 +1,27 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    to_string(v)
+    String.length(str) ~method
+    String.get(str, i) ~method
+    String.to_string(str) ~method
+    ReadableString.to_string(str) ~method
+    String.to_int(str) ~method
+    String.to_number(str) ~method
+    String.substring(str, start, [end]) ~method
+    String.append(str, ...) ~method
+    String.normalize_nfd(str) ~method
+    String.normalize_nfkd(str) ~method
+    String.normalize_nfc(str) ~method
+    String.normalize_nfkc(str) ~method
+    String.utf8_bytes(str, [err_b], [start], [end]) ~method
+    String.latin1_bytes(str, [err_b], [start], [end]) ~method
+    String.locale_bytes(str, [err_b], [start], [end]) ~method
+    String.grapheme_span(str, [start], [end]) ~method
+    String.grapheme_count(str, [start], [end]) ~method
+
 check:
   "hello" :: String ~is "hello"
   1 +& 2 ++ "3" ~is "123"

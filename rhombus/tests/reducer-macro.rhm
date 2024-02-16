@@ -1,5 +1,13 @@
 #lang rhombus/static/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    reducer_meta.pack(complete_id, binds,
+                      pre_clause_id, step_id, break_id, final_id, step_result_id,
+                      stat_info, data)
+    reducer_meta.unpack(s)
+
 check:
   reducer.macro '(Array.len5)':
     'Array.of_length(5)'

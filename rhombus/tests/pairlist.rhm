@@ -3,17 +3,25 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    PairList(l, ...)
-    PairList.length(lst)
+    PairList(v, ...)
+    PairList.length(lst) ~method
     PairList.cons(a, d)
-    PairList.map(lst, proc)
-    PairList.for_each(lst, proc)
-    PairList.has_element(lst, val)
-    PairList.remove(lst, val)
-    PairList.drop_left(lst, n)
-    PairList.drop_right(lst, n)
-    PairList.take_left(lst, n)
-    PairList.take_right(lst, n)
+    PairList.get(lst, n) ~method
+    PairList.first(lst)
+    PairList.rest(lst)
+    PairList.map(lst, proc) ~method
+    PairList.for_each(lst, proc) ~method
+    PairList.has_element(lst, val) ~method
+    PairList.remove(lst, val) ~method
+    PairList.reverse(lst) ~method
+    PairList.append(lst, ...) ~method
+    PairList.drop_left(lst, n) ~method
+    PairList.drop_right(lst, n) ~method
+    PairList.take_left(lst, n) ~method
+    PairList.take_right(lst, n) ~method
+    PairList.sort(lst, [is_less]) ~method
+    PairList.iota(n)
+    PairList.to_list(lst) ~method
 
 check:
   PairList.length(PairList[1, 2, 3])

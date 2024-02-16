@@ -1,6 +1,14 @@
-#lang rhombus
-import:
-  rhombus/meta open
+#lang rhombus/and_meta
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    bind_meta.unpack(s)
+    bind_meta.unpack_info(s)
+    bind_meta.pack(s)
+    bind_meta.pack_info(s)
+    bind_meta.get_info(s, stat_info)
+    bind_meta.is_immediate(s)
 
 // define a binding operator
 

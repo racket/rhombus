@@ -97,7 +97,6 @@
   #:primitive (subbytes)
   #:static-infos ((#%call-result #,bytes-static-infos))
   (case-lambda
-    [(bstr) (subbytes bstr)]
     [(bstr start) (subbytes bstr start)]
     [(bstr start end) (subbytes bstr start end)]))
 

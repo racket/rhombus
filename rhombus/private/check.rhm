@@ -45,6 +45,9 @@ meta:
 expr.macro '«located '$w'»':
   '[#' $w, $(w.srcloc())]'
 
+expr.macro '«no_scopes $(stx && '$_')»':
+  'Syntax.literal $(stx.strip_scopes())'
+
 expr.macro
 // `~eval` case
 | 'check:
@@ -55,13 +58,13 @@ expr.macro
     ~op_stx: check_id
     'check_same(located '$(check_id)',
                 fun ():
-                  eval_test(Syntax.literal '$result1
-                                            ...
-                                            $result2.suffix
-                                            ...',
+                  eval_test(no_scopes '$result1
+                                       ...
+                                       $result2.suffix
+                                       ...',
                             $eval.make_eval),
                 matcher($result2.mode, : $result2.body),
-                located '$result2.mode')'
+                #'$result2.mode)'
 // normal block
 | 'check:
      $result1
@@ -155,4 +158,4 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
 
 fun eval_test(stx, evalor):
   parameterize { Evaluator.current: evalor }:
-    eval(Syntax.strip_scopes(stx), ~as_interaction: #true)
+    eval(stx, ~as_interaction: #true)

@@ -6,6 +6,7 @@
          "realm.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
+         "function-arity-key.rkt"
          "indirect-static-info-key.rkt")
 
 (provide (for-space rhombus/namespace

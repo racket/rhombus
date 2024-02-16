@@ -1,0 +1,6 @@
+#lang rhombus/and_meta
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    decl_meta.pack_s_exp(tree)

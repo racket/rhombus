@@ -251,13 +251,14 @@
 
 @doc(
   fun math.abs(x :: Real) :: Real
-  fun math.max(x :: Real) :: Real
-  fun math.min(x :: Real) :: Real
+  fun math.max(x :: Real, ...) :: Real
+  fun math.min(x :: Real, ...) :: Real
   fun math.floor(x :: Real) :: Real
   fun math.ceiling(x :: Real) :: Real
   fun math.round(x :: Real) :: Real
   fun math.sqrt(x :: Number) :: Number
-  fun math.log(x :: Number) :: Number
+  fun math.log(x :: Number, base :: Number = math.exp(1))
+    :: Number
   fun math.exp(x :: Number) :: Number
   fun math.expt(base :: Number, power :: Number) :: Number
   fun math.cos(x :: Number) :: Number
@@ -266,7 +267,7 @@
   fun math.acos(x :: Number) :: Number
   fun math.asin(x :: Number) :: Number
   fun math.atan(x :: Number) :: Number
-  fun math.atan(y :: Number, x :: Number) :: Number
+  fun math.atan(y :: Real, x :: Real) :: Number
 ){
 
  The usual functions on numbers.

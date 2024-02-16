@@ -4,8 +4,8 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Path(s)
-    Path.bytes(p)
-    Path.string(p)
+    Path.bytes(p) ~method
+    Path.string(p) ~method
 
 check:
   use_static

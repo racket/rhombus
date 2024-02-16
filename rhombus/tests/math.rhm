@@ -1,5 +1,41 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    math.abs(x)
+    math.max(x, ...)
+    math.min(x, ...)
+    math.floor(x)
+    math.ceiling(x)
+    math.round(x)
+    math.sqrt(x)
+    math.log(x, [b])
+    math.exp(x)
+    math.expt(base, power)
+    math.cos(x)
+    math.sin(x)
+    math.tan(x)
+    math.acos(x)
+    math.asin(x)
+    math.atan([y], x)
+    math.exact(x)
+    math.inexact(x)
+    math.real_part(x)
+    math.imag_part(x)
+    math.magnitude(x)
+    math.angle(x)
+    math.numerator(q)
+    math.denominator(q)
+    math.random([n])
+    math.sum(n, ...)
+    math.product(n, ...)
+    math.equal(n, ...)
+    math.less(n, ...)
+    math.less_or_equal(n, ...)
+    math.greater(n, ...)
+    math.greater_or_equal(n, ...)
+
 check:
   math.equal() ~is #true
   math.equal(1) ~is #true
@@ -25,7 +61,7 @@ check:
   math.less_or_equal(1, 2, 3) ~is #true
   math.less_or_equal(1, 2, 2) ~is #true
   math.less_or_equal(1, 2, -2) ~is #false
-    
+
 check:
   math.greater() ~is #true
   math.greater(-1) ~is #true
@@ -43,7 +79,7 @@ check:
   math.greater_or_equal(-1, -2, -3) ~is #true
   math.greater_or_equal(-1, -2, -2) ~is #true
   math.greater_or_equal(-1, -2, 2) ~is #false
-    
+
 check:
   math.sum() ~is 0
   math.sum(1) ~is 1

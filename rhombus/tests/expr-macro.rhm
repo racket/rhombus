@@ -1,5 +1,15 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    expr_meta.pack_s_exp(tree)
+    expr_meta.pack_expr(s)
+    expr_meta.pack_meta_expr(s)
+    expr_meta.pack_and_meta_expr(s)
+    expr_meta.parse_more(s)
+    expr_meta.parse_all(s)
+
 // postfix as a macro "infix" operator;
 
 fun

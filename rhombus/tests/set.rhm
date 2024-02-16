@@ -4,7 +4,17 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Set(k, ...)
-    Set.length(m)
+    Set.length(st) ~method
+    Set.get(st, val) ~method
+    Set.copy(st) ~method
+    Set.snapshot(st) ~method
+    Set.append(st, ...) ~method
+    Set.union(st, ...) ~method
+    Set.intersect(st, ...) ~method
+    Set.remove(st, v) ~method
+    MutableSet.set(st, v, in) ~method
+    MutableSet.delete(st, v) ~method
+    Set.to_list(st, [try_sort]) ~method
 
 check:
   Set.length({10, 20})

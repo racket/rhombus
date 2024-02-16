@@ -1,9 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base)
          "provide.rkt"
-         "name-root.rkt"
-         (submod "annotation.rkt" for-class)
          "function-arity-key.rkt"
+         "indirect-static-info-key.rkt"
          "static-info.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"

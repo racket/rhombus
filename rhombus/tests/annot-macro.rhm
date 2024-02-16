@@ -1,5 +1,16 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    annot_meta.is_predicate(s)
+    annot_meta.pack_predicate(pred, [stat_info])
+    annot_meta.unpack_predicate(s)
+    annot_meta.is_converter(s)
+    annot_meta.pack_converter(s, body, [stat_info])
+    annot_meta.unpack_converter(s)
+    annot_meta.parse_to_packed_statinfo(s)
+
 class Posn(x, y)
 
 block:

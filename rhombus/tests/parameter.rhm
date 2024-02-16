@@ -1,6 +1,11 @@
 #lang rhombus
 
 block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Parameter.make(val)
+
+block:
   def p = Parameter.make(10)
 
   check:

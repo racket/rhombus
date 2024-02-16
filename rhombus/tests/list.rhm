@@ -3,23 +3,30 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    List(l, ...)
-    List.length(lst)
+    List(v, ...)
+    List.length(lst) ~method
     List.cons(a, d)
-    List.add(lst, a)
-    List.map(lst, proc)
-    List.get(lst, i)
-    List.set(lst, i, v)
-    List.for_each(lst, proc)
-    List.has_element(lst, val)
-    List.remove(lst, val)
-    List.delete(lst, i)
-    List.insert(lst, i, val)
-    List.drop_left(lst, n)
-    List.drop_right(lst, n)
-    List.take_left(lst, n)
-    List.take_right(lst, n)
-    List.sublist(lst, n, m)
+    List.add(lst, a) ~method
+    List.get(lst, i) ~method
+    List.set(lst, i, v) ~method
+    List.first(lst)
+    List.rest(lst)
+    List.map(lst, proc) ~method
+    List.for_each(lst, proc) ~method
+    List.has_element(lst, val) ~method
+    List.remove(lst, val) ~method
+    List.delete(lst, i) ~method
+    List.insert(lst, i, val) ~method
+    List.reverse(lst) ~method
+    List.append(lst, ...) ~method
+    List.drop_left(lst, n) ~method
+    List.drop_right(lst, n) ~method
+    List.take_left(lst, n) ~method
+    List.take_right(lst, n) ~method
+    List.sublist(lst, n, m) ~method
+    List.sort(lst, [is_less]) ~method
+    List.iota(n)
+    List.to_list(lst) ~method
 
 check:
   List.length([1, 2, 3])

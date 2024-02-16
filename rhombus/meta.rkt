@@ -8,7 +8,8 @@
 (provide (for-syntax (all-from-out "private/core-derived.rkt")))
 
 (bounce-meta "private/class-meta.rkt"
-             "private/interface-meta.rkt")
+             "private/interface-meta.rkt"
+             "private/veneer-meta.rkt")
 
 ;; re-export `meta` for non-expression spaces,
 ;; otherwise these can get shadowed (in a sense)

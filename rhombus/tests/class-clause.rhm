@@ -1,6 +1,16 @@
 #lang rhombus/static/and_meta
 
 block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    class_meta.describe(id)
+    class_meta.Info.lookup(info, key) ~method
+    interface_meta.describe(id)
+    interface_meta.Info.lookup(info, key) ~method
+    veneer_meta.describe(id)
+    veneer_meta.Info.lookup(info, key) ~method
+
+block:
   class_clause.macro 'bounce':
     ~info: i
     'method names(): ('$(class_meta.Info.lookup(i, #'name))')

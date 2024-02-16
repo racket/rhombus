@@ -1,5 +1,10 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    defn_meta.pack_s_exp(tree)
+
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 

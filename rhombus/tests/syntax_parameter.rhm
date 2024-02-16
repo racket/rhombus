@@ -1,5 +1,10 @@
 #lang rhombus/and_meta
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~meta:
+    syntax_parameter_meta.lookup(id)
+
 syntax_parameter.bridge today_name:
   "Thursday"
 expr.macro 'today':
@@ -17,7 +22,7 @@ namespace sub:
   expr.macro 'now': 'today'
   check now ~is "Friday"
   export now
-  
+
 check sub.now ~is "Thursday"
 block:
   syntax_parameter.relet today_name:

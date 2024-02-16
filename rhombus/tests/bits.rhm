@@ -1,0 +1,7 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    bits.length(n)
+    bits.field(n, start, end)

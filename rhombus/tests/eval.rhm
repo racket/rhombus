@@ -1,0 +1,10 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    eval(s)
+    Evaluator.make_rhombus_empty()
+    Evaluator.make_rhombus()
+    Evaluator.import(mod)
+    Evaluator.current([ev])

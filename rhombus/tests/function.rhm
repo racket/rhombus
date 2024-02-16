@@ -1,5 +1,11 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Function.map(fn, lst0, lst, ...) ~method
+    Function.for_each(fn, lst0, lst, ...) ~method
+
 check:
   1 is_a Function ~is #false
   1 is_a Function.of_arity(1) ~is #false

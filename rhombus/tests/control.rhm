@@ -1,5 +1,14 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Continuation.Marks.current()
+    Continuation.escape(val, ...)
+    Continuation.PromptTag.make([name])
+    Continuation.call_in(k, fn)
+    Continuation.call_with_immediate_mark(key, fn)
+
 check:
   try:
     1/0

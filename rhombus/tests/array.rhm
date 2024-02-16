@@ -1,5 +1,23 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Array(v, ...)
+    Array.make(n, [v])
+    Array.length(arr) ~method
+    Array.get(arr, n) ~method
+    Array.set(arr, n, v) ~method
+    Array.append(arr, ...) ~method
+    Array.copy(arr, [start], [end]) ~method
+    Array.copy_from(dest_arr, dest_start, src_arr, [src_start], [src_end]) ~method
+    Array.drop_left(arr, n) ~method
+    Array.drop_right(arr, n) ~method
+    Array.take_left(arr, n) ~method
+    Array.take_right(arr, n) ~method
+    Array.set_in_copy(arr, i, v) ~method
+    Array.to_list(arr) ~method
+
 check:
   Array.length(Array(1, 2, 3))
   ~is 3

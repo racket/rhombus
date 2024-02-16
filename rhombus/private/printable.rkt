@@ -11,6 +11,7 @@
          (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
+         "function-arity-key.rkt"
          "indirect-static-info-key.rkt"
          "static-info.rkt"
          "print-desc.rkt"
@@ -155,7 +156,10 @@
     (raise-argument-error* who rhombus-realm "NonnegInt" len))
   (PrintDesc (pretty-special v len mode alt)))
 
-(define-static-info-syntaxes (print-graph)
+(define-static-info-syntaxes (current-page-width
+                              print-graph
+                              current-print-as-pretty
+                              current-pretty-as-optimal)
   (#%function-arity 3)
   (#%indirect-static-info indirect-function-static-info))
 

@@ -4,6 +4,7 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Box(v)
+    Box.value(bx, [val])
 
 check:
   Box(1) ~is_now Box(1)

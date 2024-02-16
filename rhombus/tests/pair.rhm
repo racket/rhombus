@@ -1,5 +1,13 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Pair(fst, snd)
+    Pair.cons(fst, snd)
+    Pair.first(pr)
+    Pair.rest(pr)
+
 check:
   Pair(1, 2)
   ~is Pair.cons(1, 2)

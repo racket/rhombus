@@ -4,6 +4,7 @@
          enforest/syntax-local
          "define-arity.rkt"
          "class-primitive.rkt"
+         (submod "annotation.rkt" for-class)
          "name-root.rkt"
          "interface-parse.rkt"
          (only-in "class-parse.rkt"
@@ -43,8 +44,10 @@
   #:properties
   ()
   #:methods
-  ([lookup interface_meta.Info.lookup]
-   ))
+  ([lookup interface_meta.Info.lookup]))
+
+(define-annotation-syntax Info
+  (identifier-annotation #'interface-data? interface-data-static-infos))
 
 (define/arity (interface_meta.describe id)
   #:static-infos ((#%call-result #,interface-data-static-infos))

@@ -1,5 +1,20 @@
 #lang rhombus
 
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Bytes.make(n, [b])
+    Bytes.length(bstr) ~method
+    Bytes.get(bstr, i) ~method
+    Bytes.set(bstr, i, b) ~method
+    Bytes.append(bstr, ...) ~method
+    Bytes.subbytes(bstr, start, [end]) ~method
+    Bytes.copy(bstr) ~method
+    Bytes.copy_from(dest_bstr, dest_start, src_bstr, [src_start], [src_end]) ~method
+    Bytes.utf8_string(bstr, [err_ch], [start], [end]) ~method
+    Bytes.latin1_string(bstr, [err_ch], [start], [end]) ~method
+    Bytes.locale_string(bstr, [err_ch], [start], [end]) ~method
+
 check:
   #"hello" :: Bytes ~is #"hello"
 
