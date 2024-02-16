@@ -24,6 +24,7 @@ export:
     final
     private
     match
+    matches
     ::
     :~
     is_a
@@ -231,7 +232,7 @@ spacer.bridge fun(self, tail, context, esc):
           fun (self):
             spacer.set(self, if has_name | #'~defn | #'~expr),
           fun (name):
-            unless has_name | has_name := !(name is_a matching(''))
+            unless has_name | has_name := !(name matches '')
         )
   let new_tail = adjust_fun(tail, esc, ~find_name: find_name)
   let new_self = adjust_self(self)
@@ -649,6 +650,10 @@ spacer.bridge match(self, tail, context, esc):
         Syntax.make([#'alts, adjust_block(b), ...]).relocate(a)
       '$self $new_expr $new_a'
   | ~else: '$self $tail'
+
+spacer.bridge matches(self, tail, context, esc):
+  ~in: ~expr
+  '$self $(spacer.adjust_sequence(tail, #'~bind, esc))'
 
 meta:
   fun adjust_colon(tail, esc):

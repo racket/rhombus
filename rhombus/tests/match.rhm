@@ -66,3 +66,8 @@ version_guard.at_least "8.11.1.8":
     | "string": "matched"
     | ~else: "unmatched"
     ~is "unmatched"
+
+check:
+  0 matches (i :: Int when i mod 3 == 0) ~is #true
+  1 matches (i :: Int unless i mod 3 == 0) ~is #true
+  [1, 2, 3] matches ([x, ...] when math.sum(x, ...) == 6) ~is #true

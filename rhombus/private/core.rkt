@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/print
                      (only-in "ellipsis.rkt"
                               [... rhombus...])
                      (only-in "quasiquote.rkt"

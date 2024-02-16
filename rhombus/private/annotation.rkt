@@ -833,7 +833,7 @@
    'none))
 (define-annotation-syntax is_a
   (annotation-infix-operator
-   (annot-quote ::)
+   (annot-quote is_a)
    `((default . stronger))
    'macro
    (lambda (stx) (error "should not get here"))

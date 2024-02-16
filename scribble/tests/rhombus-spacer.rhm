@@ -978,6 +978,27 @@ check_spacer:
       "ok"
 
 check_spacer:
+  1+2 matches 3
+  $datum $none $datum $(expr.full) $datum
+
+  1
+    + 2 matches 3
+
+check_spacer:
+  [1, 2, 3] matches [_, _, _]
+  [$datum, $datum, $datum] $(expr.full) [$bind, $bind, $bind]
+
+  [
+    1,
+    2,
+    3
+  ] matches [
+    _,
+    _,
+    _
+  ]
+
+check_spacer:
   [1, 2, 3] :: List
   [$datum, $datum, $datum] $(expr.full) $annot
 

@@ -80,6 +80,23 @@
 )
 }
 
+
+@doc(
+  expr.macro '$expr matches $bind'
+){
+
+ Produces @rhombus(#true) if the value of @rhombus(expr) matches
+ @rhombus(bind), @rhombus(#false) otherwise. Equivalent to
+ @rhombus(expr is_a matching(bind)).
+
+@examples(
+  [1, 2, 3] matches [_, _, _]
+  [1, 2, 3] is_a matching([_, _, _])
+)
+
+}
+
+
 @doc(
   bind.macro '_'
 ){
