@@ -202,7 +202,6 @@
 }
 
 
-
 @doc(
   operator (! (v :: Any)) :: Boolean
 ){
@@ -210,11 +209,43 @@
  Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),
  @rhombus(#false) otherwise.
 
-
 @examples(
   !#false
   !#true
   !"false"
+)
+
+}
+
+@doc(
+  bind.macro '! $bind'
+){
+
+ Matches if @rhombus(bind) does not match. Because @rhombus(bind) does
+ not match, no identifiers are bound.
+
+@examples(
+  fun
+  | is_two_list(![x, y]): #false
+  | is_two_list(_): #true
+  is_two_list([1])
+  is_two_list([1, 2])
+  is_two_list([1, 2, 3])
+)
+
+}
+
+@doc(
+  annot.macro '! $annot'
+){
+
+ Creates an annotation that accepts a value not satisfying
+ @rhombus(annot). Because @rhombus(annot) is not satisfied, no
+ conversion is performed.
+
+@examples(
+  [1, 2, 3] is_a !List
+  PairList[1, 2, 3] is_a !List
 )
 
 }

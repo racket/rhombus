@@ -9,7 +9,8 @@
 
 (provide (for-space rhombus/annot
                     &&
-                    \|\|))
+                    \|\|
+                    !))
 
 ;; ----------------------------------------
 ;; &&
@@ -17,7 +18,7 @@
 (define-annotation-syntax &&
   (annotation-infix-operator
    (annot-quote &&)
-   (list (cons (annot-quote \|\|) 'stronger))
+   `((,(annot-quote \|\|) . stronger))
    'automatic
    (lambda (lhs rhs stx)
      (syntax-parse (list lhs rhs)
@@ -109,7 +110,6 @@
          (static-infos-intersect #'l.static-infos #'r.static-infos))]))
    'left))
 
-
 (define-syntax (or-infoer stx)
   (syntax-parse stx
     [(_ static-infos (bind-id lhs-i::binding-form lhs-body lhs-static-infos rhs-i::binding-form rhs-body rhs-static-infos))
@@ -136,7 +136,7 @@
      #`(begin
          (define finish-id
            ;; preserve the textual order
-           ((lambda (fail-k)
+           ((lambda (right-k)
               (lhs.matcher-id arg-id lhs.data if/blocked
                               (lambda ()
                                 (lhs.committer-id arg-id lhs.data)
@@ -144,7 +144,7 @@
                                 (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                                 ...
                                 left-body)
-                              (fail-k)))
+                              (right-k)))
             (lambda ()
               (rhs.matcher-id arg-id rhs.data if/blocked
                               (lambda ()
@@ -165,3 +165,63 @@
   (syntax-parse stx
     [(_ arg-id (lhs rhs finish-id result-id . _))
      #'(define result-id (finish-id))]))
+
+;; ----------------------------------------
+;; !
+
+(define-annotation-syntax !
+  (annotation-prefix-operator
+   (annot-quote !)
+   `((,(annot-quote &&) . stronger)
+     (,(annot-quote \|\|) . stronger))
+   'automatic
+   (lambda (form stx)
+     (syntax-parse form
+       [f::annotation-predicate-form
+        (annotation-predicate-form
+         #'(let ([pred f.predicate])
+             (lambda (v)
+               (not (pred v))))
+         #'())]
+       [f::annotation-binding-form
+        (annotation-binding-form
+         (binding-form
+          #'not-infoer
+          #'[result f.binding])
+         #'result
+         #'())]))))
+
+(define-syntax (not-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos [result-id form::binding-form])
+     #:with impl::binding-impl #'(form.infoer-id () form.data)
+     #:with info::binding-info #'impl.info
+     (binding-info (string-append "!" (syntax-e #'info.annotation-str))
+                   #'info.name-id
+                   #'static-infos
+                   #'()
+                   #'not-matcher
+                   #'not-committer
+                   #'not-binder
+                   #'[result-id info])]))
+
+(define-syntax (not-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id [result-id info::binding-info]
+        IF success fail)
+     #'(IF (let ()
+             (info.matcher-id arg-id info.data if/blocked
+                              #f
+                              #t))
+           success
+           fail)]))
+
+(define-syntax (not-committer stx)
+  (syntax-parse stx
+    [(_ arg-id [result-id info])
+     #'(begin)]))
+
+(define-syntax (not-binder stx)
+  (syntax-parse stx
+    [(_ arg-id [result-id info])
+     #'(define result-id arg-id)]))
