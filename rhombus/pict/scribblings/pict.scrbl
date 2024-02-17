@@ -50,6 +50,16 @@
 }
 
 @doc(
+  property (pict :: Pict).children :: List.of(Pict)
+){
+
+ A list of component @tech{picts} that were combined to construct
+ @rhombus(pict). Those picts can be located within @rhombus(pict) using a
+ @tech{finder}.
+
+}
+
+@doc(
   method (pict :: Pict).snapshot() :: StaticPict
   method (pict :: Pict).snapshot(epoch :: Int, n :: Real.in(0, 1)) :: StaticPict
 ){
@@ -64,8 +74,9 @@
 ){
 
  Returns a @tech{pict} that is the same as @rhombus(pict), but with a
- fresh identity and hiding the identity of any cmoponent inside
- @rhombus(pict).
+ fresh identity and hiding the identity of any component inside
+ @rhombus(pict) from a @tech{finder} or the result of the
+ @rhombus(Pict.children) property.
 
 }
 
@@ -256,12 +267,28 @@
 }
 
 @doc(
+  method (pict :: Pict).metadata() :: Map
+  method (pict :: Pict).set_metadata(metadata :: Map) :: Pict
+){
+
+ Gets metadata registered for an immediate pict, or returns a
+ @tech{pict} that is like @rhombus(pict) but with the given metadata.
+
+ Unlike epoch-specific metadata added with
+ @rhombus(Pict.epoch_set_metadata), metadata added by
+ @rhombus(Pict.metadata) is not propagated to new picts that are derived
+ from the returned pict. The @rhombus(Pict.children) property of a pict
+ can be used to search the metadata of its component picts.
+
+}
+
+@doc(
   method (pict :: Pict).epoch_metadata(i :: Int) :: Map
   method (pict :: Pict).epoch_set_metadata(i :: Int,
                                            metadata :: Map) :: Pict
 ){
 
- Gets metadata registerd for an epoch with a pict, or returns a
+ Gets metadata registered for an epoch within a pict, or returns a
  @tech{pict} that is like @rhombus(pict) but with the given metadata for
  the given epoch.
 
