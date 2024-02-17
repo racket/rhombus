@@ -79,7 +79,8 @@ fun pin(content :: Pict,
                                               | if line_width == #'inherit
                                                 | 1
                                                 | line_width
-                                              | 0)
+                                              | 0),
+          [p, content]
         )
     | [p, content]:
         animate_map([p, content],
@@ -123,7 +124,8 @@ fun note(content :: Pict,
                               #{#:thought?}: thought,
                               ~color: (color && as_color(color)) || current_color(),
                               #{#:line-color}: line_color,
-                              #{#:line-width}: line_width)
+                              #{#:line-width}: line_width),
+          [content]
         )
     | ~else:
         animate_map(contents,
