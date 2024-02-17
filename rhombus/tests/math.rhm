@@ -4,8 +4,8 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     math.abs(x)
-    math.max(x, ...)
-    math.min(x, ...)
+    math.max(x, y, ...)
+    math.min(x, y, ...)
     math.floor(x)
     math.ceiling(x)
     math.round(x)

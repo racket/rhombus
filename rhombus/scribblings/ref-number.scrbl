@@ -251,8 +251,8 @@
 
 @doc(
   fun math.abs(x :: Real) :: Real
-  fun math.max(x :: Real, ...) :: Real
-  fun math.min(x :: Real, ...) :: Real
+  fun math.max(x :: Real, y :: Real, ...) :: Real
+  fun math.min(x :: Real, y :: Real, ...) :: Real
   fun math.floor(x :: Real) :: Real
   fun math.ceiling(x :: Real) :: Real
   fun math.round(x :: Real) :: Real

@@ -52,8 +52,12 @@
   (#%function-arity 2)
   (#%indirect-static-info indirect-function-static-info))
 
-(define-static-info-syntaxes (min max expt)
+(define-static-info-syntaxes (expt)
   (#%function-arity 4)
+  (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntaxes (min max)
+  (#%function-arity -2)
   (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (log atan)
