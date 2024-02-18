@@ -271,7 +271,7 @@
                                          #f
                                          dot-provider-rhss parent-dot-providers
                                          #`(name name-extends tail-name
-                                                 #,(and (syntax-e #'check?) #'name?) name-convert
+                                                 name?/checked name-convert
                                                  constructor-name name-instance name-ref name-of
                                                  #f #f dot-provider-name
                                                  indirect-static-infos
@@ -390,29 +390,36 @@
        (list
         (if converter?
             #`(define name-convert
-                (let ([name? ann.predicate])
-                  (lambda (v who)
-                    #,(cond
-                        [(syntax-e #'check?)
-                         #`(if (and #,(if super? #`(#,super? v) #t)
-                                    (name? v))
-                               (if who
-                                   v
-                                   (lambda () v))
-                               (if who
-                                   (raise-binding-failure who "argument" v '#,all-ann-str)
-                                   #f))]
-                        [else
-                         #`(if who
-                               v
-                               (lambda () v))]))))
+                #,(cond
+                    [(syntax-e #'check?)
+                     #`(let ([name? ann.predicate])
+                         (let ([name? (lambda (v)
+                                        #,(if super?
+                                              #`(and (#,super? v)
+                                                     (name? v))
+                                              #`(name? v)))])
+                           (lambda (v who)
+                             (if (name? v)
+                                 (if who
+                                     v
+                                     (lambda () v))
+                                 (if who
+                                     (raise-binding-failure who "argument" v '#,all-ann-str)
+                                     #f)))))]
+                    [else
+                     #`(lambda (v who)
+                         (if who
+                             v
+                             (lambda () v)))]))
             #`(define name?
                 #,(cond
                     [(syntax-e #'check?)
                      #`(let ([name? ann.predicate])
                          (let ([name? (lambda (v)
-                                        (and #,(if super? #`(#,super? v) #t)
-                                             (name? v)))])
+                                        #,(if super?
+                                              #`(and (#,super? v)
+                                                     (name? v))
+                                              #`(name? v)))])
                            (case-lambda
                              [(v) (name? v)]
                              [(v who) (unless (name? v)

@@ -162,3 +162,58 @@ check:
 check:
   IdSet2("oops") ~is "oops"
   "oops" :: IdSet2 ~is "oops"
+
+// check evaluation/expansion of annotations in veneers
+check:
+  veneer Unchecked(this :~ Any.of(error("should not get here")))
+  ~completes
+
+check:
+  veneer Unchecked(this :~ Any.of(error("should not get here"))):
+    converter
+  ~completes
+
+check:
+  veneer Checked(this :: Any.of(error("should get here")))
+  #void
+  ~throws "should get here"
+
+check:
+  veneer Checked(this :: Any.of(error("should get here"))):
+    converter
+  #void
+  ~throws "should get here"
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'meta_error($msg)':
+    syntax_meta.error(msg)
+  veneer Unchecked(this :~ Any.of(meta_error("should not get here")))
+  ~completes
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'meta_error($msg)':
+    syntax_meta.error(msg)
+  veneer Unchecked(this :~ Any.of(meta_error("should not get here"))):
+    converter
+  ~completes
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'meta_error($msg)':
+    syntax_meta.error(msg)
+  veneer Checked(this :: Any.of(meta_error("should get here")))
+  ~throws "should get here"
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'meta_error($msg)':
+    syntax_meta.error(msg)
+  veneer Checked(this :: Any.of(meta_error("should get here"))):
+    converter
+  ~throws "should get here"
