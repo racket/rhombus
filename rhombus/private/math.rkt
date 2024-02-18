@@ -64,12 +64,19 @@
   (#%function-arity 6)
   (#%indirect-static-info indirect-function-static-info))
 
+(define (check-posint who n)
+  (unless (exact-positive-integer? n)
+    (raise-argument-error* who rhombus-realm "PosInt" n)))
+
+(define (check-int who n)
+  (unless (exact-integer? n)
+    (raise-argument-error* who rhombus-realm "Int" n)))
+
 (define/arity #:name random rhombus-random
   (case-lambda
     [() (random)]
     [(n)
-     (unless (exact-positive-integer? n)
-       (raise-argument-error* who rhombus-realm "PosInt" n))
+     (check-posint who n)
      (if (n . < . (arithmetic-shift 1 31))
          (random n)
          (let loop ([n n] [r 0] [len (integer-length n)] [shift 0])
@@ -78,7 +85,16 @@
                (loop (arithmetic-shift n -31)
                      (+ r (arithmetic-shift (random #x7FFFFFFF) shift))
                      (- len 32)
-                     (+ shift 31)))))]))
+                     (+ shift 31)))))]
+    [(start end)
+     (check-int who start)
+     (check-int who end)
+     (unless (start . < . end)
+       (raise-arguments-error* who rhombus-realm
+                               "start index is not less than end index"
+                               "start index" start
+                               "end index" end))
+     (+ (rhombus-random (- end start)) start)]))
 
 (define-syntax (define-nary stx)
   (syntax-parse stx

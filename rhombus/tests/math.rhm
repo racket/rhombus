@@ -27,7 +27,7 @@ block:
     math.angle(x)
     math.numerator(q)
     math.denominator(q)
-    math.random([n])
+    math.random([start], [end])
     math.sum(n, ...)
     math.product(n, ...)
     math.equal(n, ...)

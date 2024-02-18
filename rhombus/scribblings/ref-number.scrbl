@@ -1,6 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      rhombus/random.Random)
 
 @title{Numbers}
 
@@ -349,14 +351,25 @@
 }
 
 @doc(
-  fun math.random() :: Real
-  fun math.random(n :: PosInt) :: NonnegInt
+  fun math.random()
+    :: Real.in(0 ~exclusive, 1 ~exclusive)
+  fun math.random(n :: PosInt)
+    :: Int.in(0, n ~exclusive)
+  fun math.random(start :: Int, end :: Int)
+    :: Int.in(start, end ~exclusive)
 ){
 
- Returns a random number between @rhombus(0.0) (inclusive) and
- @rhombus(1.0) (exclusive) when called with 0 arguments, and returns an
- integer between 0 (inclusive) and @rhombus(n) (exclusive) when called
- with @rhombus(n).
+ When called with no arguments, returns a random real number between
+ @rhombus(0) (exclusive) and @rhombus(1) (exclusive).
+
+ When called with @rhombus(n), returns a random integer between
+ @rhombus(0) (inclusive) and @rhombus(n) (exclusive).
+
+ When called with @rhombus(start) and @rhombus(end), returns a random
+ integer between @rhombus(start) (inclusive) and @rhombus(end)
+ (exclusive).
+
+ See also @rhombus(Random.random).
 
 @examples(
   ~fake:
@@ -365,6 +378,9 @@
   ~fake:
     math.random(17)
     13
+  ~fake:
+    math.random(1, 42)
+    21
 )
 
 }
