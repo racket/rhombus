@@ -360,6 +360,7 @@ in an unspecified order.
   Map.length({"a": 1, "b": 2})
   Map.length({})
   {"a": 1, "b": 2}.length()
+  {}.length()
 )
 
 }

@@ -234,8 +234,9 @@ it supplies its elements in an unspecified order.
 
 @examples(
   Set.length({"a", "b"})
-  Set.length(Set())
+  Set.length(Set{})
   {"a", "b"}.length()
+  Set{}.length()
 )
 
 }

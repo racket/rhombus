@@ -361,7 +361,8 @@ it supplies its elements in order.
 @examples(
   List.length([1, 4, 8])
   List.length([])
-  [1, 4, 8].length
+  [1, 4, 8].length()
+  [].length()
 )
 
 }

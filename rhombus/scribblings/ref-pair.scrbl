@@ -376,7 +376,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 @examples(
   PairList.length(PairList[1, 4, 8])
   PairList.length(PairList[])
-  PairList[1, 4, 8].length
+  PairList[1, 4, 8].length()
+  PairList[].length()
 )
 
 }
