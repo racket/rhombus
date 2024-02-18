@@ -1,0 +1,22 @@
+#lang rhombus
+import:
+  rhombus/random.Random
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~import rhombus/random:
+    Random([state])
+    Random.random(prng, [start], [end]) ~method
+    Random.state(prng, [state])
+    Random.current([prng])
+
+check:
+  use_static
+  // FIXME this should have call result at arity 0
+  def cur :~ Random = Random.current()
+  cur.random()
+  cur.random(1)
+  cur.random(1, 2)
+  cur.state
+  cur.state := cur.state
+  ~completes

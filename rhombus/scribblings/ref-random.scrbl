@@ -1,7 +1,6 @@
 #lang scribble/rhombus/manual
 @(import:
-    "common.rhm" open:
-      except: def
+    "common.rhm" open
     "nonterminal.rhm" open
     meta_label:
       rhombus/random open)
@@ -21,8 +20,10 @@
 }
 
 @doc(
-  method (prng :: Random).random() :: Real.in(0 ~exclusive, 1 ~exclusive)
-  method (prng :: Random).random(n :: PosInt) :: Int.in(0, n ~exclusive)
+  method (prng :: Random).random()
+    :: Real.in(0 ~exclusive, 1 ~exclusive)
+  method (prng :: Random).random(n :: PosInt)
+    :: Int.in(0, n ~exclusive)
   method (prng :: Random).random(start :: Int, end :: Int)
     :: Int.in(start, end ~exclusive)
 ){
@@ -35,8 +36,9 @@
 }
 
 @doc(
-  property (prng :: Random).state :: RandomState
-  property (prng :: Random).state := (s :: RandomState)
+  property
+  | (prng :: Random).state :: RandomState
+  | (prng :: Random).state := (s :: RandomState)
 ){
 
  A property for the state of @rhombus(prng).

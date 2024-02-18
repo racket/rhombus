@@ -12,8 +12,9 @@ export:
 
 expr.macro 'static_arity_check $(pattern:
                                    kind ~sequence
-                                 | '~meta': field is_meta = #true
-                                 | '': field is_meta = #false):
+                                 | '~meta': field import = '"static_arity.rhm"!meta'
+                                 | '~import $imp ...': field import = '$imp ...'
+                                 | '': field import = #false):
               $(pattern:
                   kind ~group
                 | '$pre ... $args ~method': field is_method = #true
@@ -88,9 +89,9 @@ expr.macro 'static_arity_check $(pattern:
          )'
   'block:
      def ev = Evaluator.make_rhombus()
-     $(if is_meta
+     $(if import
        | '«parameterize { Evaluator.current: ev }:
-             Evaluator.import(ModulePath '"static_arity.rhm"!meta')
+             Evaluator.import(ModulePath '$import')
            »'
        | '')
      $(make_check('$pre ...', args, is_method))
