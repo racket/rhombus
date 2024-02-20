@@ -70,9 +70,7 @@ by an evaluator, for example.
 }
 
 @doc(
-  def Evaluator.current :: Parameter
-  fun Evaluator.current() :: Evaluator
-  fun Evaluator.current(ns :: Evaluator) :: Void
+  Parameter.def Evaluator.current :: Parameter
 ){
 
  A @tech{context parameter} for the current evaluator.

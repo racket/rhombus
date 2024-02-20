@@ -174,7 +174,7 @@ paragraph typesetting.
          @item{@litchar{'} → @litchar{’} (curly single close quote)}
 
       )}
- 
+
 )
 
  The @rhombus(width) argument determines the maximum width of a line,
@@ -232,9 +232,7 @@ paragraph typesetting.
 }
 
 @doc(
-  def current_font :: Parameter
-  fun current_font() :: Font
-  fun current_font(font :: Font) :: Void
+  Parameter.def current_font :: draw.Font
 ){
 
  The default font used by functions from @rhombusmodname(pict/text) for
@@ -243,9 +241,7 @@ paragraph typesetting.
 }
 
 @doc(
-  def current_para_width :: Parameter
-  fun current_para_width() :: Real
-  fun current_para_width(width :: Real) :: Void
+  Parameter.def current_para_width :: Real
 ){
 
  The default line width for @rhombus(para) and related functions.
@@ -253,9 +249,7 @@ paragraph typesetting.
 }
 
 @doc(
-  def current_line_sep :: Parameter
-  fun current_line_sep() :: Real
-  fun current_line_sep(sep :: Real) :: Void
+  Parameter.def current_line_sep :: Real
 ){
 
  The default amount of separate used between lines by @rhombus(lines),

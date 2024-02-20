@@ -67,9 +67,7 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Port.Input.current :: Parameter
-  fun Port.Input.current() :: Port.Input
-  fun Port.Input.current(in :: Port.Input) :: Void
+  Parameter.def Port.Input.current :: Port.Input
 ){
 
  A @tech{context parameter} for the default port to use when reading.
@@ -77,9 +75,7 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  def Port.Output.current :: Parameter
-  fun Port.Output.current() :: Port.Output
-  fun Port.Output.current(out :: Port.Output) :: Void
+  Parameter.def Port.Output.current :: Port.Output
 ){
 
  A @tech{context parameter} for the default port to use when printing.
@@ -88,9 +84,7 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Port.Output.current_error :: Parameter
-  fun Port.Output.current_error() :: Port.Output
-  fun Port.Output.current_error(out :: Port.Output) :: Void
+  Parameter.def Port.Output.current_error :: Port.Output
 ){
 
  A @tech{context parameter} for the default port to use when printing
@@ -99,7 +93,8 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun Port.Output.flush(out :: Port.Output = Port.Output.current()) :: Void
+  fun Port.Output.flush(out :: Port.Output = Port.Output.current())
+    :: Void
 ){
 
  Flushes the content of @rhombus(out)'s buffer.
@@ -357,7 +352,7 @@ input, while an @deftech{output port} is specifically for output.
 
 }
 
-@doc(  
+@doc(
   fun PrintDesc.special(v :: Any,
                         alt_pd :: PrintDesc,
                         ~length: length :: NonnegInt = 1,
@@ -380,9 +375,8 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Printable.current_pretty :: Parameter
-  fun Printable.current_pretty() :: Boolean
-  fun Printable.current_pretty(on :: Any) :: Void
+  Parameter.def Printable.current_pretty :: Any.to_boolean
+    = #false
 ){
 
  A @tech{context parameter} that determines the default printing mode.
@@ -393,9 +387,8 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Printable.current_optimal :: Parameter
-  fun Printable.current_optimal() :: Boolean
-  fun Printable.current_optimal(on :: Any) :: Void
+  Parameter.def Printable.current_optimal :: Any.to_boolean
+    = #false
 ){
 
  A @tech{context parameter} that determines whether pretty printing uses
@@ -407,9 +400,8 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Printable.current_page_width :: Parameter
-  fun Printable.current_page_width() :: Boolean
-  fun Printable.current_page_width(on :: Any) :: Void
+  Parameter.def Printable.current_page_width :: NonnegInt
+    = 80
 ){
 
  A @tech{context parameter} for pretty printing that determines the
@@ -419,9 +411,8 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
-  def Printable.current_graph :: Parameter
-  fun Printable.current_graph() :: Boolean
-  fun Printable.current_graph(on :: Any) :: Void
+  Parameter.def Printable.current_graph :: Any.to_boolean
+    = #false
 ){
 
  A @tech{context parameter} that determines whether printing shows

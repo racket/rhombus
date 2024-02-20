@@ -48,6 +48,7 @@ export:
     match_unless
     $
     pattern
+    Parameter
 
 module for_doc:
   export:
@@ -987,3 +988,7 @@ spacer.bridge pattern(self, tail, context, esc):
     | '$(_ :: Name(esc))' || '': name
     | ~else: #false
   '$self $(adjust_syntax_class(tail, esc, adjust_name))'
+
+spacer.bridge Parameter.def(self, tail, context, esc):
+  ~in: ~defn
+  '$self $(adjust_field(tail, esc))'

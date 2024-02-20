@@ -30,7 +30,7 @@
 (define-syntax (define-doc stx)
   (syntax-parse stx
     [(_ id
-        namespace
+        (~optional (~or* #f [from namespace] namespace))
         desc
         space-sym ; id, #f, or expression for procedure
         extract-name
@@ -38,15 +38,11 @@
         extract-typeset)
      #`(begin
          (provide (for-space rhombus/doc id)
-                  #,@(if (syntax-e #'namespace)
-                         #'((for-space rhombus/namespace
-                                       namespace))
-                         #'()))
-         #,@(if (syntax-e #'namespace)
-                #'((require (only-space-in rhombus/namespace
-                                           (rename-in rhombus/meta
-                                                      [namespace namespace]))))
-                #'())
+                  (~? (for-space rhombus/namespace
+                                 namespace)))
+         (~? (require (only-space-in rhombus/namespace
+                                     (only-in (~? from rhombus/meta)
+                                              [namespace namespace]))))
          (define-doc-syntax id
            (make-doc-transformer #:extract-desc (lambda (stx) desc)
                                  #:extract-space-sym #,(if (or (identifier? #'space-sym)
@@ -55,19 +51,7 @@
                                                            #'space-sym)
                                  #:extract-name extract-name
                                  #:extract-metavariables extract-metavariables
-                                 #:extract-typeset extract-typeset)))]
-    [(_ id
-        desc
-        space-sym
-        extract-name
-        extract-metavariables
-        extract-typeset)
-     #'(define-doc id #f
-         desc
-         space-sym
-         extract-name
-         extract-metavariables
-         extract-typeset)]))
+                                 #:extract-typeset extract-typeset)))]))
 
 (begin-for-syntax
   (define-splicing-syntax-class (identifier-target space-name)
@@ -516,6 +500,21 @@
   head-extract-name
   head-extract-metavariables
   head-extract-typeset)
+
+(define-doc Parameter.def [rhombus Parameter]
+  "context parameter"
+  #f
+  (lambda (stx space-name)
+    (syntax-parse stx
+      #:datum-literals (group |.| op)
+      [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) #'id.name]))
+  (lambda (stx space-name vars) vars)
+  (lambda (stx space-name subst)
+    (syntax-parse stx
+      #:datum-literals (group |.| op)
+      [(group ns (~and dot (op |.|)) tag (~var id (identifier-target space-name)) e ...)
+       (rb #:at stx
+           #`(group ns dot tag #,@(subst #'id.name) e ...))])))
 
 (define-doc operator
   "operator"
