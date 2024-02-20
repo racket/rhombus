@@ -112,3 +112,17 @@ check:
   "x" :: True ~is "x"
   "x" :: False ~throws "does not satisfy"
   #false :: True ~throws "does not satisfy"
+
+check:
+  #true :: Any ~is #true
+  #true :: Any.of(#true, #false) ~is #true
+  #true :: Any.to_boolean ~is #true
+  #true :: None ~throws "does not satisfy"
+  #false :: Any ~is #false
+  #false :: Any.of(#true, #false) ~is #false
+  #false :: Any.to_boolean ~is #false
+  #false :: None ~throws "does not satisfy"
+  "x" :: Any ~is "x"
+  "x" :: Any.of(#true, #false) ~throws "does not satisfy"
+  "x" :: Any.to_boolean ~is #true
+  "x" :: None ~throws "does not satisfy"
