@@ -804,7 +804,8 @@
 
 (define-name-root Any
   #:fields
-  ([of Any.of]))
+  ([of Any.of]
+   [to_boolean Any.to_boolean]))
 
 (define-name-root Int
   #:fields
@@ -1016,3 +1017,36 @@
                              ...)))
                    #'())
                   #'tail))]))))
+
+(define-annotation-syntax Any.to_boolean
+  (identifier-binding-annotation (binding-form #'to_boolean-infoer
+                                               #'val)
+                                 #'val
+                                 #'()))
+
+(define-syntax (to_boolean-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos val)
+     (binding-info "to_boolean"
+                   #'val
+                   #'()
+                   #'((val (0)))
+                   #'to_boolean-matcher
+                   #'to_boolean-committer
+                   #'to_boolean-binder
+                   #'(converted-val val))]))
+
+(define-syntax (to_boolean-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (converted-val val) IF success fail)
+     #'(IF #t success fail)]))
+
+(define-syntax (to_boolean-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (converted-val val))
+     #'(define converted-val (and arg-id #t))]))
+
+(define-syntax (to_boolean-binder stx)
+  (syntax-parse stx
+    [(_ arg-id (converted-val val))
+     #'(define val converted-val)]))

@@ -40,12 +40,15 @@
 @doc(
   annot.macro 'Any'
   annot.macro 'Any.of($expr, ...)'
+  annot.macro 'Any.to_boolean'
   annot.macro 'None'
 ){
 
  The @rhombus(Any, ~annot) annotation matches any value. An
  @rhombus(Any.of, ~annot) annotaton matches any value that is equal (in
- the sense of @rhombus(==)) to one of the @rhombus(expr) results.
+ the sense of @rhombus(==)) to one of the @rhombus(expr) results. The
+ @rhombus(Any.to_boolean, ~annot) annotation matches any value and
+ converts non-@rhombus(#false) value to @rhombus(#true).
 
  The @rhombus(None, ~annot) annotation matches no values, or in other
  words, is equivalent to @rhombus(Any.of(), ~annot). It is useful for
@@ -56,6 +59,8 @@
   "hello" is_a Any
   "hello" is_a Any.of("hello", "goodbye")
   "hola" is_a Any.of("hello", "goodbye")
+  "hello" :: Any.to_boolean
+  #false :: Any.to_boolean
   "will not match" is_a None
   "will not match" is_a Any.of()
 )
