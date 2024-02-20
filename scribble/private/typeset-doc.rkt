@@ -311,6 +311,7 @@
 
 (define-for-syntax (call-nonterminal-transformer nt id)
   (syntax-parse ((typeset-meta:Transformer_proc nt) id)
+    #:datum-literals (parsed)
     [(parsed _ e) #'e]))
 
 (define-for-syntax (make-ellipsis-transformer)

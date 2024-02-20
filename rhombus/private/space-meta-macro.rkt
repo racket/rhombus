@@ -227,6 +227,7 @@
   ;; the enforest engine found a `parsed` term
   (if parsed-tag
       (syntax-parse form
+        #:datum-literals (parsed)
         [(parsed tag _)
          #:when (eq? (syntax-e #'tag) parsed-tag)
          form]

@@ -201,6 +201,7 @@
     #:static-infos ((#%call-result #,syntax-static-infos))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed)
       [(parsed #:rhombus/reducer r::reducer-form)
        #`(parens (group chain-back-to-wrapper)
                  (group (parens (group r.id rhombus= (parsed #:rhombus/expr r.init-expr))

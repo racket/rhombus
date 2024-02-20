@@ -169,6 +169,7 @@
     (check-syntax who body)
     (check-syntax who static-infos)
     (syntax-parse binding
+      #:datum-literals (parsed)
       [(parsed #:rhombus/bind _::binding-form)
        #`(parsed #:rhombus/annot
                  #,(annotation-binding-form
