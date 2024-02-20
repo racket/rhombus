@@ -86,9 +86,8 @@ defn.macro 'ly $ly: $expr':
      | '$ly($('$')args)':
          '(parameterize { current_font: $expr }:
              t($('$')args)) :~ Pict'
-     | '$ly: $('$')body':
-         'parameterize { current_font: $expr }:
-            $('$')body'
+     | '$ly: $('$')(body :: Block)':
+         'parameterize { current_font: $expr } $('$')body'
    »'
 
 ly boldly: current_font_as_bold()

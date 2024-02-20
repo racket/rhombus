@@ -66,11 +66,11 @@
 
 @examples(
   ~eval: macro_eval
-  class_clause.macro 'lazy_method $id(): $body':
+  class_clause.macro 'lazy_method $id(): $(body :: Block)':
     'private field result: #false
      method $id():
        result || (block:
-                    def v: $body
+                    def v $body
                     result := v
                     v)'
   class Person(name):

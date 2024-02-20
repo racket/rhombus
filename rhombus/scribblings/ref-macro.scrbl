@@ -171,8 +171,8 @@
 
 @examples(
   ~defn:
-    macro 'thunk: $body':
-      'fun (): $body'
+    macro 'thunk: $(body :: Block)':
+      'fun () $body'
   ~repl:
     thunk: "ok"
     (thunk: "ok")()

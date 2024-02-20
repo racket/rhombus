@@ -8,12 +8,9 @@ export:
   rename:
     rp_def as def
 
-defn.macro 'rp_def $(id :: Identifier): $body0 $body ...':
+defn.macro 'rp_def $(id :: Identifier) $(body && ': $body0; $_; ...')':
   // note: we break out `body0` so we can use it's source
   #{parsed-relocate*}(body0,
                       '$(defn_meta.pack_s_exp(['#{define-runtime-path}',
                                                id,
-                                               expr_meta.pack_and_meta_expr('block:
-                                                                               $body0
-                                                                               $body
-                                                                               ...')]))')
+                                               expr_meta.pack_and_meta_expr('block $body')]))')

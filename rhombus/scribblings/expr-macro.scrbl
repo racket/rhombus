@@ -26,8 +26,8 @@ wraps as a zero-argument function:
     import:
       rhombus/meta open
   ~defn:
-    expr.macro 'thunk: $body':
-      'fun (): $body'
+    expr.macro 'thunk: $(body :: Block)':
+      'fun () $body'
   ~repl:
     thunk: 1 + "oops"
     (thunk: 1 + 3)()
@@ -53,8 +53,8 @@ instead of an arbitrary compile-time expression.
   ~defn:
     :
       // no import needed
-      macro 'thunk: $body':
-        'fun (): $body'
+      macro 'thunk: $(body :: Block)':
+        'fun () $body'
   ~repl:
     (thunk: 1 + 3)()
 )

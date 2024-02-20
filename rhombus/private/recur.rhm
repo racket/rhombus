@@ -10,8 +10,7 @@ export:
 
 expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                                          ...) $(r :: bind_meta.Result):
-              $body
-              ...':
+              $(body :: Block)':
   ~op_stx self_id
   for:
     each:
@@ -45,8 +44,8 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
     wrap_converter('«block:
                        fun $name($recur_arg, ...) :~ providing($r.static_info):
                          $loop_name($arg_id, ...)
-                       $body
-                       ...»',
+                       block $body
+                     »',
                    r.count, r.maybe_converter, r.annotation_string, name)
   fun
   | make_binds_plus_body(mode, [], [], [], [], inside):

@@ -160,7 +160,7 @@ ellipses again.
                         x + 1'
     def 'thunk: $term ...; ...' = thunk_form
   ~repl:
-    'fun () $term ...; ...'
+    'fun (): $term ...; ...'
 )
 
 As a shorthand, when an escaped variable is alone in its group in a
@@ -241,11 +241,23 @@ a group context, annotate the pattern variable with the
       def '$(x :: Term)' = '1 + 2'
 )
 
-You can similarly use the @rhombus(Group,~stxclass) syntax class to
+You can similarly use the @rhombus(Group, ~stxclass) syntax class to
 match a single group instead of a multi-group sequence. There are
 several other predefined syntax classes, such as @rhombus(Identifier, ~stxclass)
 to match an identifier, @rhombus(String, ~stxclass) to match a string
 literal, and @rhombus(Int, ~stxclass) to match an integer literal.
+
+In practice, you should use @rhombus(Block, ~stxclass) to match a
+block, preserving its lexical context for the implicit
+@rhombus(#%body, ~datum) form (see @secref("implicit")).
+
+@examples(
+  ~eval: syntax_eval
+  ~defn:
+    def 'thunk: $(body :: Block)' = thunk_form
+  ~repl:
+    'fun () $body'
+)
 
 
 @(close_eval(syntax_eval))

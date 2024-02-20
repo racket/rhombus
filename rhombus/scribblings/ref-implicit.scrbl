@@ -50,7 +50,7 @@ Here are all of the implicit forms:
        implicit form is not bound by @rhombuslangname(rhombus)}
 
  @item{@rhombus(#%body) --- used by forms that contain a
-        @rhombus(body) sequence, such as @rhombus(begin), the body of
+        @nontermref(body) sequence, such as @rhombus(block), the body of
         @rhombus(fun), and the result part of a @rhombus(match)
         clause; the lexical context of the @litchar{:} or @litchar{|}
         that forms a block determines the @rhombus(#%body) binding

@@ -286,8 +286,8 @@ that the content is more like a top-level or block sequence, and
 separate lines).
 
 @rhombusblock(
-  macro 'thunk: $body':
-    'fun (): $body'
+  macro 'thunk: $(body :: Block)':
+    'fun () $body'
 )
 
 Nested quoting sometimes requires the use of @litchar{'} @litchar{«} ...
