@@ -46,12 +46,10 @@
 }
 
 @doc(
-  def Random.current :: Parameter
-  fun Random.current() :: Random
-  fun Random.current(prng :: Random) :: Void
+  Parameter.def Random.current :: Random = Random()
 ){
 
- A parameter for the pseudo-random number generator that is used by
+ A @tech{context parameter} for the pseudo-random number generator that is used by
  @rhombus(math.random).
 
 }

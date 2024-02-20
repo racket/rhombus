@@ -75,20 +75,12 @@
 }
 
 @doc(
-  def current_color :: Parameter
-  fun current_color() :: Color || String
-  fun current_color(color :: Color || String) :: Void
-
-  def current_horiz_margin :: Parameter
-  fun current_horiz_margin() :: Real
-  fun current_horiz_margin(margin :: Real)
-
-  def current_vert_margin :: Parameter
-  fun current_vert_margin() :: Real
-  fun current_vert_margin(margin :: Real)
+  Parameter.def current_color :: Color || String
+  Parameter.def current_horiz_margin :: Real
+  Parameter.def current_vert_margin :: Real
 ){
 
- Parameters for argument defaults in @rhombus(pin).
+ Context parameters for argument defaults in @rhombus(pin).
 
 }
 

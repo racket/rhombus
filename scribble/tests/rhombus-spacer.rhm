@@ -32,7 +32,7 @@ defn.macro 'def_unquote $name: $context_expr':
   '«def context = $context_expr
     syntax_class Term:
       kind ~term
-    | '$('$') t':
+    | '$('$')t':
         match_when t.property(#'#{typeset-space-name}) == context
     unquote_bind.macro '$name':
       '_ :: Term'
@@ -1386,3 +1386,33 @@ check_spacer:
             = 3
     ):
       case
+
+check_spacer:
+  Parameter.def color = "red"
+  $(defn.full) . $(defn.full) $none $expr $datum
+
+  Parameter.def color
+    = "red"
+
+check_spacer:
+  Parameter.def color :: String = "red"
+  $(defn.full) . $(defn.full) $none $bind $annot $expr $datum
+
+  Parameter.def color
+    :: String
+    = "red"
+
+check_spacer:
+  Parameter.def color: "red"
+  $(defn.full) . $(defn.full) $none: $datum
+
+  Parameter.def color:
+    "red"
+
+check_spacer:
+  Parameter.def color :: String: "red"
+  $(defn.full) . $(defn.full) $none $bind $annot: $datum
+
+  Parameter.def color
+    :: String:
+      "red"

@@ -9,7 +9,7 @@ block:
     Printable.render(pd, [out])
     Printable.current_pretty([on])
     Printable.current_optimal([on])
-    Printable.current_page_width([on])
+    Printable.current_page_width([width])
     Printable.current_graph([on])
     PrintDesc.concat(pd, ...)
     PrintDesc.newline()

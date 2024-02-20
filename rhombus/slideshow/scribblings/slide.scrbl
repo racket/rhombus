@@ -3,7 +3,7 @@
 @(import:
     meta_label:
       rhombus open
-      slideshow open      
+      slideshow open
       draw.Font)
 
 @title(~tag: "slide"){Creating Slides}
@@ -132,12 +132,10 @@
 }
 
 @doc(
-  def current_assembler :: Parameter
-  fun current_assembler() :: Function.of_arity(3)
-  fun current_assembler(assemblr :: Function.of_arity(3)) :: Void
+  Parameter.def current_assembler :: Function.of_arity(3)
 ){
 
- A parameter for a function used to combine a slide title, layout mode,
+ A context parameter for a function used to combine a slide title, layout mode,
  and content pict. The title can be a pict or @rhombus(#false), and the
  layout mode is a value that satifies @rhombus(SlideLayout, ~annot).
 
@@ -153,12 +151,10 @@
 }
 
 @doc(
-  def current_title_font :: Parameter
-  fun current_title_font() :: Font
-  fun current_title_font(font :: Font) :: Void
+  Parameter.def current_title_font :: Font
 ){
 
- A parameter for the font used by @rhombus(titlet).
+ A context parameter for the font used by @rhombus(titlet).
 
 }
 
@@ -193,7 +189,7 @@
  @rhombus(#'nonarchival).
 
 }
-     
+
 @doc(
   annot.macro 'SlideLayout'
 ){
