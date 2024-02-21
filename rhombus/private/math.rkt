@@ -89,7 +89,7 @@
                (+ r (arithmetic-shift (random n) shift))
                (loop (arithmetic-shift n -31)
                      (+ r (arithmetic-shift (random #x7FFFFFFF) shift))
-                     (- len 32)
+                     (- len 31)
                      (+ shift 31)))))]
     [(start end)
      (check-int who start)

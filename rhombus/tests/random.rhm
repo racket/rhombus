@@ -17,6 +17,7 @@ check:
   cur.random()
   cur.random(1)
   cur.random(1, 2)
+  cur.random(2 ** 1024)
   cur.state
   cur.state := cur.state
   ~completes
