@@ -39,6 +39,8 @@ class Path(private _handle):
       rkt.send handle.#{scale}(sx, sy)
   method rotate(radians :: Real):
     rkt.send handle.#{rotate}(radians)
+  method translate(dx :: Real, dy :: Real):
+    rkt.send handle.#{translate}(dx, dy)
 
   method curve_to(pt1 :: PointLike,
                   pt2 :: PointLike,

@@ -72,9 +72,11 @@
   method (path :: Path).scale(s :: Real) :: Void
   method (path :: Path).scale(sx :: Real, sy :: Real) :: Void
   method (path :: Path).rotate(radians :: Real) :: Void
+  method (path :: Path).translate(dx :: Real, dy :: Real) :: Void
 ){
 
- Adjusts a path to scale or rotate every point defining the path.
+ Adjusts a path to scale, rotate, or translate every point defining the
+ path.
 
 }
 
