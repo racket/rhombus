@@ -37,7 +37,7 @@ by an evaluator, for example.
   annot.macro 'Evaluator'
 ){
 
- Represents an evaluator for inetarctive evaluation via @rhombus(eval).
+ Represents an evaluator for interactive evaluation via @rhombus(eval).
  An evaluator is installed as the current one using
  @rhombus(Evaluator.current), usually via @rhombus(parameterize).
 
@@ -61,16 +61,16 @@ by an evaluator, for example.
 }
 
 @doc(
-  fun Evaluator.import(mod :: ModulePath) :: Evaluator
+  fun Evaluator.import(mod :: ModulePath) :: Void
 ){
 
- Imports @rhombus(mod) into the evaluator, even if the @rhombus(import)
+ Imports @rhombus(mod) into the current evaluator, even if the @rhombus(import)
  definition form is not available in the evaluator itself.
 
 }
 
 @doc(
-  Parameter.def Evaluator.current :: Parameter
+  Parameter.def Evaluator.current :: Evaluator
 ){
 
  A @tech{context parameter} for the current evaluator.
