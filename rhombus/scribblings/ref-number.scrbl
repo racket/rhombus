@@ -332,7 +332,6 @@
 }
 
 
-
 @doc(
   fun math.numerator(q :: Rational) :: Integral
   fun math.denominator(q :: Rational) :: Integral
@@ -346,6 +345,37 @@
   math.numerator(256/6)
   math.denominator(256/6)
   math.denominator(0.125)
+)
+
+}
+
+@doc(
+  fun math.gcd(q :: Rational, ...) :: Rational
+  fun math.lcm(q :: Rational, ...) :: Rational
+){
+
+ Coerces each @rhombus(q) to an exact number and finds the greatest
+ common divisor or least common multiple.
+
+ For non-integer arguments, the result for @rhombus(math.gcd) is the
+ greatest common divisor of the numerators divided by the least common
+ multiple of the denominators. The result for @rhombus(math.lcm) for
+ non-integer arguments is the absolute value of the product divided by
+ the @rhombus(math.gcd) of the arguments.
+
+ If no arguments are provided, the result of @rhombus(math.gcd) is
+ @rhombus(0) and the result of @rhombus(math.lcm) is @rhombus(1). If all
+ arguments for @rhombus(math.gcd) are zero, the result is zero. If any
+ argument for @rhombus(math.lcm) is zero, the result is zero, and the
+ result is exact @rhombus(0) if any argument is exact @rhombus(0).
+
+@examples(
+  math.gcd(2, 3, 7)
+  math.gcd(4, 2, 16)
+  math.lcm(2, 3, 7)
+  math.lcm(4, 10, 2)
+  math.gcd()
+  math.lcm()
 )
 
 }

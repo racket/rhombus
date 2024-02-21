@@ -26,6 +26,7 @@
    [random rhombus-random]
    numerator
    denominator
+   gcd lcm
    magnitude angle
    [real_part real-part]
    [imag_part imag-part]
@@ -62,6 +63,10 @@
 
 (define-static-info-syntaxes (log atan)
   (#%function-arity 6)
+  (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntaxes (gcd lcm)
+  (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
 (define (check-posint who n)

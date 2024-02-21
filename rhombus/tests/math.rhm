@@ -27,6 +27,8 @@ block:
     math.angle(x)
     math.numerator(q)
     math.denominator(q)
+    math.gcd(n, ...)
+    math.lcm(n, ...)
     math.random([start], [end])
     math.sum(n, ...)
     math.product(n, ...)
@@ -91,3 +93,11 @@ check:
   math.product(0) ~is 0
   math.product(1, 2) ~is 2
   math.product(1, 2, 3, 4) ~is 24
+
+check:
+  math.gcd() ~is 0
+  math.gcd(11) ~is 11
+  math.gcd(22, 55, 88) ~is 11
+  math.lcm() ~is 1
+  math.lcm(11) ~is 11
+  math.lcm(22, 55, 88) ~is 440
