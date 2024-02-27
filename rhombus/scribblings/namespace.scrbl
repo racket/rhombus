@@ -43,10 +43,10 @@ name with the @rhombus(.) operator.
 A name defined with @rhombus(namespace) can be used with @rhombus(import),
 but the name must be prefixed with @rhombus(., ~impo) to distinguish it from a
 module path. Also, @rhombus(import) can be used in nested blocks
-generally, such as a block created with @rhombus(begin) or
+generally, such as a block created with @rhombus(block) or
 @rhombus(def):
 
-examples(
+@examples(
   ~eval: ns_eval
   ~repl:
     block:
