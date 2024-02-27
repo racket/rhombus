@@ -17,7 +17,7 @@ export:
 
 fun elem(~style: style :: maybe(Style || String || Symbol) = #false,
          pre_content :: PreContent) :~ Element:
-  base.elem(pre_content)
+  base.elem(~style: style, pre_content)
   
 fun italic(pre_content :: PreContent) :~ Element:
   base.italic(pre_content)
