@@ -933,6 +933,8 @@
        [(_ (_::parens n-g) . tail)
         (values (annotation-predicate-form
                  #`(let ([n (rhombus-expression n-g)])
+                     (unless (real? n)
+                       (raise-argument-error* '#,id rhombus-realm "Real" n))
                      (lambda (v)
                        (and (real? v)
                             (#,comp-stx v n))))
@@ -957,7 +959,7 @@
     (pattern g
              #:with comp #'<=)))
 
-(define-for-syntax (make-in-annotation name pred-stx)
+(define-for-syntax (make-in-annotation name pred-stx annot-str)
   (annotation-prefix-operator
    name
    '((default . stronger))
@@ -971,9 +973,9 @@
                  #`(let ([lo-v (rhombus-expression lo.g)]
                          [hi-v (rhombus-expression hi.g)])
                      (unless (#,pred-stx lo-v)
-                       (raise-number-error '#,name 'lower lo-v))
+                       (raise-argument-error* '#,name rhombus-realm '#,annot-str lo-v))
                      (unless (#,pred-stx hi-v)
-                       (raise-number-error '#,name 'upper hi-v))
+                       (raise-argument-error* '#,name rhombus-realm '#,annot-str hi-v))
                      (lambda (v)
                        (and (#,pred-stx v)
                             (lo.comp lo-v v)
@@ -981,22 +983,17 @@
                  #'())
                 #'tail)]))))
 
-(define (raise-number-error who which v)
-  (raise-argument-error* who rhombus-realm
-                         (case who
-                           [(Read.in) "Real"]
-                           [else "Int"])
-                         v))
-
 (define-annotation-syntax Real.in
   (make-in-annotation
    (annot-quote Real.in)
-   #'real?))
+   #'real?
+   "Real"))
 
 (define-annotation-syntax Int.in
   (make-in-annotation
    (annot-quote Int.in)
-   #'exact-integer?))
+   #'exact-integer?
+   "Int"))
 
 (define-annotation-syntax Any.of
   (annotation-prefix-operator

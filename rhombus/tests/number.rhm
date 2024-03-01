@@ -1,7 +1,7 @@
 #lang rhombus
 
 check:
-  5 div 2 ~is 2  
+  5 div 2 ~is 2
   5 rem 2 ~is 1
   5 mod 2 ~is 1
   5 mod -2 ~is -1
@@ -17,6 +17,38 @@ check:
 
   math.exact(5.0) ~is 5
   math.inexact(5) ~is 5.0
+
+check:
+  1 is_a Int ~is #true
+  0 is_a Int ~is #true
+  -1 is_a Int ~is #true
+
+  1 is_a PosInt ~is #true
+  0 is_a PosInt ~is #false
+  -1 is_a PosInt ~is #false
+
+  1 is_a NegInt ~is #false
+  0 is_a NegInt ~is #false
+  -1 is_a NegInt ~is #true
+
+  1 is_a NonnegInt ~is #true
+  0 is_a NonnegInt ~is #true
+  -1 is_a NonnegInt ~is #false
+
+  1 is_a Int.in(1, 2) ~is #true
+  1 is_a Int.in(1 ~inclusive, 2) ~is #true
+  1 is_a Int.in(1 ~exclusive, 2) ~is #false
+  1 is_a Int.in(1, 2 ~inclusive) ~is #true
+  1 is_a Int.in(1, 2 ~exclusive) ~is #true
+
+  2 is_a Int.in(1, 2) ~is #true
+  2 is_a Int.in(1 ~inclusive, 2) ~is #true
+  2 is_a Int.in(1 ~exclusive, 2) ~is #true
+  2 is_a Int.in(1, 2 ~inclusive) ~is #true
+  2 is_a Int.in(1, 2 ~exclusive) ~is #false
+
+  1 is_a Int.in("oops", 2) ~throws values("contract violation", "Int", "\"oops\"")
+  1 is_a Int.in(1, "oops") ~throws values("contract violation", "Int", "\"oops\"")
 
 check:
   1 is_a NonnegReal ~is #true
@@ -57,3 +89,10 @@ check:
   1.0 is_a Real.in(1, 2 ~exclusive) ~is #true
 
   "0.9" is_a Real.in(0, 1) ~is #false
+
+  1 is_a Real.above("oops") ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.at_least("oops") ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.below("oops") ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.at_most("oops") ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.in("oops", 2) ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.in(1, "oops") ~throws values("contract violation", "Real", "\"oops\"")
