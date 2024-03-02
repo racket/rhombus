@@ -62,3 +62,16 @@
  color's alpha is the average of the two color's alphas.
 
 }
+
+@doc(
+  property (col :: Color).handle :: Any
+  fun Color.from_handle(hand :: Any) :: Color
+){
+
+ The @rhombus(Color.handle) property returns a Racket object that
+ corresponds to the drawing context for use directly with
+ @racketmodname(racket/draw). The @rhombus(Color.from_handle) function
+ creates a @rhombus(Color, ~class) from such a Racket object.
+
+}
+

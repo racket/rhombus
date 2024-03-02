@@ -14,6 +14,8 @@ class Color(private _handle):
   internal _Color
   property handle: _handle
 
+  export: from_handle
+
   constructor
   | (name :: String):
       super(rkt.send (rkt.#{the-color-database}).#{find-color}(name))
@@ -64,6 +66,11 @@ class Color(private _handle):
                     recur(blue),
                     recur(alpha)],
                    ")")
+
+fun from_handle(handle):
+  unless handle rkt.is_a rkt.#{color%}
+  | error("Color.from_handle", "not a color handle: " +& handle)
+  _Color(handle)
 
 fun
 | unwrap_color(c :: Color): c.handle
