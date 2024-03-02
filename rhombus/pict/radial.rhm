@@ -4,7 +4,6 @@ import:
   draw
   pict open:
     except:
-      polygon
       circle
   lib("pict/main.rkt") as rkt
 
@@ -25,8 +24,8 @@ export:
   star star_radial
   sun sun_radial
   gear gear_radial
-  polygon polygon_radial
-  circle circle_radial
+  regular_polygon regular_polygon_radial
+  circle_radial
 
   evenly_spaced
   jitter_spaced
@@ -347,20 +346,20 @@ def_radial:
   circle(make, r): make([r])
 
 def_radial:
-  polygon_radial(~sides: n :: PosInt = 5,
-                 ~width: width :: Real = 64,
-                 ~height: height :: Real = 64,
-                 ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
-                 ~inner_radius: d :: Real = math.cos(math.pi/n),
-                 ~outer_radius: od :: Real = 1,
-                 ~inner_pause: inner_pause :: Real = 0,
-                 ~outer_pause: outer_pause :: Real = 0,
-                 ~flat_inner_edge: flat_inner_edge = #true,
-                 ~flat_outer_edge: flat_outer_edge = #true,
-                 ~outer_pull: outer_pull :: Real = 0,
-                 ~inner_pull: inner_pull :: Real = 0,
-                 ~rotate: spin :: Real = if n mod 2 == 0 | math.pi/n | 0)
-  polygon(make, r): make([r])
+  regular_polygon_radial(~sides: n :: PosInt = 5,
+                         ~width: width :: Real = 64,
+                         ~height: height :: Real = 64,
+                         ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+                         ~inner_radius: d :: Real = math.cos(math.pi/n),
+                         ~outer_radius: od :: Real = 1,
+                         ~inner_pause: inner_pause :: Real = 0,
+                         ~outer_pause: outer_pause :: Real = 0,
+                         ~flat_inner_edge: flat_inner_edge = #true,
+                         ~flat_outer_edge: flat_outer_edge = #true,
+                         ~outer_pull: outer_pull :: Real = 0,
+                         ~inner_pull: inner_pull :: Real = 0,
+                         ~rotate: spin :: Real = if n mod 2 == 0 | math.pi/n | 0)
+  regular_polygon(make, r): make([r])
 
 fun arrow_path(~length: length :: Real = 64,
                ~breadth: breadth :: Real = length,          

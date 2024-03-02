@@ -3,10 +3,7 @@
 @(import:
     meta_label:
       rhombus open
-      pict open:
-        except:
-          circle
-          polygon
+      pict open
       pict/radial open)
 
 @(def radial_eval = make_rhombus_eval())
@@ -29,8 +26,7 @@
   fun sun(~rays: n :: PosInt = 10, ....) :: Pict
   fun flower(~petals: n :: PosInt = 6, ....) :: Pict
   fun cloud(~bumps: n :: PosInt = 6, ....) :: Pict
-  fun polygon(~sides: n :: PosInt = 10, ....) :: Pict
-  fun circle(~sides: n :: PosInt = 10, ....) :: Pict
+  fun regular_polygon(~sides: n :: PosInt = 10, ....) :: Pict
   fun gear(~arms: n :: PosInt = 10, ....,
            ~hole: hole :: Real = 0.5) :: Pict
 ){
@@ -47,8 +43,7 @@
   flash(~fill: "red")
   flower(~fill: "purple")
   cloud(~fill: "gray")
-  polygon(~fill: "blue")
-  circle(~fill: "forestgreen")
+  regular_polygon(~fill: "blue")
   gear(~fill: "brown")
 )
 
@@ -79,7 +74,7 @@
  A general function for creating shapes like stars, flowers, polygons
  and gears---shapes that have a radial symmetry involving ``points'' that
  extend to an outer radius from a smaller base radius. Functions like
- @rhombus(star), @rhombus(flower), and @rhombus(polygon) have the same
+ @rhombus(star), @rhombus(flower), and @rhombus(regular_polygon) have the same
  arguments as @rhombus(radial), but with defaults that produce the shapes
  suggested by the names.
 
@@ -202,7 +197,7 @@
   fun sun_radial(~rays: n :: PosInt = 10, ....) :: Radial
   fun flower_radial(~petals: n :: PosInt = 6, ....) :: Radial
   fun cloud_radial(~bumps: n :: PosInt = 6, ....) :: Radial
-  fun polygon_radial(~sides: n :: PosInt = 10, ....) :: Radial
+  fun regular_polygon_radial(~sides: n :: PosInt = 10, ....) :: Radial
   fun circle_radial(~sides: n :: PosInt = 10, ....) :: Radial
   fun gear_radial(~arms: n :: PosInt = 10, ....) :: Radial
 ){
@@ -236,8 +231,8 @@
 
 @examples(
   ~eval: radial_eval
-  polygon_radial().pict(~fill: "orange")
-  polygon_radial(~width: 64).path().bounding_box()
+  regular_polygon_radial().pict(~fill: "orange")
+  regular_polygon_radial(~width: 64).path().bounding_box()
 )
 
 }
@@ -257,7 +252,7 @@
 
 @examples(
   ~eval: radial_eval
-  radials_pict([polygon_radial(~width: 64),
+  radials_pict([regular_polygon_radial(~width: 64),
                 gear_radial(~width: 52)],
                ~fill: "orange")
 )
