@@ -25,7 +25,10 @@ export:
   CompassDirection
     
 Parameter.def current_color :: Color || String:
-  bln.#{current-balloon-color}()
+  let c = bln.#{current-balloon-color}()
+  if c is_a String
+  | c
+  | Color.from_handle(c)
 Parameter.def current_horiz_margin :: Real:
   bln.#{current-balloon-x-margin}()
 Parameter.def current_vert_margin :: Real:

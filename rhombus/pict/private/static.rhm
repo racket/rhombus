@@ -1035,13 +1035,13 @@ fun offset(proc, dx, dy, dx_w, dy_h):
     match q
     | q :: StaticPict:
         let (x, y) = proc(p.handle, q.handle)
-        let (dx_w, dx_h) = size_shift(p.handle, q.handle)
-        values(x + dx, y + dy)
+        let (dx_w, dy_h) = size_shift(p.handle, q.handle)
+        values(x + dx + dx_w, y + dy + dy_h)
     | ~else:
         let q_handle = find_instance(p, q)
         if q_handle
         | let (x, y) = proc(p.handle, q_handle)
-          let (dx_w, dx_h) = size_shift(p.handle, q_handle)
+          let (dx_w, dy_h) = size_shift(p.handle, q_handle)
           values(x + dx + dx_w, y + dy + dy_h)
         | error(#'Find, "cannot find pict")
 
