@@ -31,6 +31,9 @@ export:
   evenly_spaced
   jitter_spaced
 
+  ArrowBoundingBoxMode
+  arrow arrow_path
+
 annot.macro 'BoundingBoxMode': 'Any.of(#'unit, #'shrink, #'stretch)'
 
 class Radial(~points,
@@ -358,3 +361,67 @@ def_radial:
                  ~inner_pull: inner_pull :: Real = 0,
                  ~rotate: spin :: Real = if n mod 2 == 0 | math.pi/n | 0)
   polygon(make, r): make([r])
+
+fun arrow_path(~length: length :: Real = 64,
+               ~breadth: breadth :: Real = length,          
+               ~tail: tail :: Real = 0.5,
+               ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
+               ~indent: indent = (if tail .= 0 | 0.3 | 0),
+               ~rotate: spin :: Real = 0) :~ draw.Path:
+  let p = draw.Path()
+  let h = length * head
+  let a_x = length - h
+  let intersect_x = a_x + (h * indent * (1 - tail))
+  let tail_top_y = breadth * (1 - tail) / 2
+  let tail_bottom_y = breadth - tail_top_y
+  if tail .= 0
+  | p.move_to([intersect_x, tail_top_y])
+  | p.move_to([0, tail_top_y])  
+    p.line_to([intersect_x, tail_top_y])
+  p.line_to([a_x, 0])
+  p.line_to([length, breadth/2])
+  p.line_to([a_x, breadth])
+  unless tail .= 0
+  | p.line_to([intersect_x, tail_bottom_y])
+    p.line_to([0, tail_bottom_y])
+  p.close()
+  p.translate(-length/2, -breadth/2)
+  p.rotate(spin)
+  p
+
+annot.macro 'ArrowBoundingBoxMode': 'Any.of(#'unit, #'shrink, #'line)'
+
+fun arrow(~length: length :: Real = 64,
+          ~breadth: breadth :: Real = length,
+          ~tail: tail :: Real = 0.5,
+          ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
+          ~indent: indent = (if tail .= 0 | 0.3 | 0),
+          ~rotate: spin :: Real = 0,
+          ~fill: fill :: MaybeColor = #false,
+          ~line: line :: MaybeColor = !fill && #'inherit,
+          ~line_width: line_width :: LineWidth = #'inherit,
+          ~bound: bound :: ArrowBoundingBoxMode = #'unit) :~ Pict:
+  let p = arrow_path(~length: length,
+                     ~breadth: breadth,
+                     ~tail: tail,
+                     ~head: head,
+                     ~indent: indent,
+                     ~rotate: spin)
+  let (w, h, pdx, pdy):
+    match bound
+    | #'line:
+        let w = length * math.abs(math.cos(spin))
+        let h = breadth * math.abs(math.sin(spin))
+        values (w, h, w/2, h/2)
+    | #'shrink:
+        let r = p.bounding_box()
+        values(r.width, r.height, -r.x, -r.y)
+    | #'unit:
+        values(length, breadth, length/2, breadth/2)
+  dc(fun (dc :: draw.DC, dx, dy):
+       dc.path(p, ~dx: dx + pdx, ~dy: dy + pdy),
+     ~width: w,
+     ~height: h,
+     ~fill: fill,
+     ~line: line,
+     ~line_width: line_width)

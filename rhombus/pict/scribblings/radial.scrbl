@@ -265,6 +265,68 @@
 }
 
 @doc(
+  fun arrow(
+    ~length: length :: Real = 64,
+    ~breadth: breadth :: Real = length,
+    ~tail: tail :: Real = 0.5,
+    ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
+    ~indent: indent = (if tail .= 0 | 0.3 | 0),
+    ~rotate: rotate :: Real = 0,
+    ~fill: fill :: MaybeColor = #false,
+    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~line_width: line_width :: LineWidth = #'inherit,
+    ~bound: bound :: ArrowBoundingBoxMode = #'unit
+  ) :: Pict
+  fun arrow_path(
+    ~length: length :: Real = 64,
+    ~breadth: breadth :: Real = length,
+    ~tail: tail :: Real = 0.5,
+    ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
+    ~indent: indent = (if tail .= 0 | 0.3 | 0),
+    ~rotate: rotate :: Real = 0
+  ) :: Path
+){
+
+ The @rhombus(arrow) and @rhombus(arrow_path) functons are not in the
+ same category as other @rhombusmodname(pict/radial) functions, but they
+ are related. The @rhombus(arrow) function produces a pict that draws as
+ an arrow, and @rhombus(arrow_path) takes mostly the same arguments to
+ produce a drawing path for an arrow.
+
+ The @rhombus(length) argument determines the length of the arrow. The
+ @rhombus(head) argument determines the fraction of @rhombus(length) that
+ is used for the triangular head, while @rhombus(breadth) determines its
+ breadth of that triangle in a direction perpendicular to the length. The
+ @rhombus(tail) argument determines the thickness of the tail line as a
+ fraction of @rhombus(breadth); if @rhombus(tail) is 0, then no tail is
+ drawn (and @rhombus(head) defaults to @rhombus(1) in that case). The
+ @rhombus(indent) argument determines a fraction of the head's length by
+ which the the tail side of the arrow's is indented at its center,
+ forming a barb along the line if @rhombus(indent) is positive or a more
+ diamond-shaped head if @rhombus(indent) is negative.
+
+ The arrow is rotated by @rhombus(rotate) radians. With a zero rotation,
+ the arrow poitns to the right (i.e., toward a greater x-offset). The
+ arrow is rotated around its center.
+
+ The @rhombus(bound) argument determines the bounding bod of the arrow
+ pict. The default @rhombus(#'unit) mode makes the bounds correspond to
+ an unrotated arrow, and as the arrow is rotated around its center, it is
+ likely to extend outside that box. The @rhombus(#'shrink) mode shrinks
+ or extends the bounding box as needed to cover all of the corners of the
+ arrow. The @rhombus(#'line) mode for @rhombus(bound) creates a bounding
+ box that coveres just the tip of the arrow and the center of the ending
+ edge of the tail.
+
+@examples(
+  ~eval: radial_eval
+  arrow(~fill: "forestgreen")
+  arrow(~tail: 0, ~fill: "blue")
+)
+
+}
+
+@doc(
   fun evenly_spaced(i :: Int, out_of_n :: Int) :: Real
   fun jitter_spaced(jitter :: Real) :: Function.of_arity(2)
 ){
@@ -289,8 +351,17 @@
   annot.macro 'BoundingBoxMode'
 ){
 
- Satisfied by a bounding-box mode: @rhombus(#'unit), @rhombus(#'unit),
+ Satisfied by a bounding-box mode: @rhombus(#'unit),
  @rhombus(#'shrink), or @rhombus(#'stretch).
+
+}
+
+@doc(
+  annot.macro 'ArrowBoundingBoxMode'
+){
+
+ Satisfied by a bounding-box mode for @rhombus(arrow): @rhombus(#'unit),
+ @rhombus(#'shrink), or @rhombus(#'line).
 
 }
 
