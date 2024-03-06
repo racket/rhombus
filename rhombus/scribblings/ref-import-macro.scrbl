@@ -64,27 +64,31 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    impo.modifier 'as_rkt: $(name :: Identifier) ...':
+    impo.modifier 'as_rkt: $(name :: Identifier); ...':
       'rename:
          $name as $(Syntax.make_id("rkt_" +& name, name))
          ...'
   ~repl:
     import:
       lib("racket/base.rkt"):
-        as_rkt: add1 sub1
+        as_rkt:
+          add1
+          sub1
     base.rkt_sub1(base.rkt_add1(1))
   ~defn:
-    impo.modifier 'expose_as_rkt: $(name :: Identifier) ...':
+    impo.modifier 'expose_as_rkt: $(name :: Identifier); ...':
       ~import imp
       let '$(ex_imp :: impo_meta.ParsedModifier(imp))':
-        'expose: $name ...'
+        'expose: $name; ...'
       let '$(rn_imp :: impo_meta.ParsedModifier(ex_imp))':
-        'as_rkt: $name ...'
+        'as_rkt: $name; ...'
       rn_imp
   ~repl:
     import:
       lib("racket/base.rkt"):
-        expose_as_rkt: add1 sub1
+        expose_as_rkt:
+          add1
+          sub1
     rkt_sub1(rkt_add1(1))
 )
 

@@ -300,31 +300,42 @@
 }
 
 @doc(
-  impo.modifier 'expose $id'
+  ~nonterminal:
+    rename_as: rename ~impo
+  impo.modifier 'expose $id_or_rename_as'
   impo.modifier 'expose:
-                   $id ...
+                   $id_or_rename_as
                    ...'
+  grammar id_or_rename_as:
+    $id
+    $rename_as
 ){
 
  Modifies an @rhombus(import) clause so that the listed
  @rhombus(id)s are imported without a prefix. The exposed
  ids remain accessible though the import's prefix, too.
 
+ If @rhombus(as, ~impo) is used, the @rhombus(id) is renamed in
+ addition to being exposed, or in other words, it behaves like a
+ combination of @rhombus(rename, ~impo) and @rhombus(expose, ~impo).
+
 }
 
 @doc(
   ~nonterminal:
     local_id: block id
-  impo.modifier 'rename $id #,(@rhombus(as, ~impo)) $local_id'
+  impo.modifier 'rename $rename_as'
   impo.modifier 'rename:
-                   $id #,(@rhombus(as, ~impo)) $local_id
+                   $rename_as
                    ...'
+  grammar rename_as:
+    $id #,(@rhombus(as, ~impo)) $local_id
 ){
 
  Modifies an @rhombus(import) clause so that @rhombus(local_id)
  is used in place of the imported id name @rhombus(id).
  The new name @rhombus(local_id) applies to modifiers after the
- @rhombus(rename) modifier.
+ @rhombus(rename, ~impo) modifier.
 
 }
 
