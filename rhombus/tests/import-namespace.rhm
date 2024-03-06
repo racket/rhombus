@@ -74,6 +74,25 @@ check:
 check:
   import:
     .n:
+      expose: exint
+      rename: exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  ~is 10
+
+check:
+  import:
+    .n:
+      expose: exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  ~is 10
+
+check:
+  import:
+    .n:
       open
       only_space: expr
   exint

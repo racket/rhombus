@@ -12,7 +12,10 @@
   ~hidden:
     import:
       pict:
-        expose: beside rectangle ellipse
+        expose:
+          beside
+          rectangle
+          ellipse
       pict/radial open
 )
 
@@ -140,7 +143,7 @@
   ~eval: radial_eval
   radial_pict()
   radial_pict(~fill: #'inherit).colorize("red")
-  radial_pict(~width: 64, ~height: 32, ~rotate: math.pi * 1/2)  
+  radial_pict(~width: 64, ~height: 32, ~rotate: math.pi * 1/2)
   radial_pict(~inner_pause: 0.5, ~outer_pause: 0.25, ~fill: "black")
   radial_pict(~outer_pull: 0.25, ~fill: "purple")
   radial_pict(~inner_pull: 0.25, ~fill: "forestgreen")

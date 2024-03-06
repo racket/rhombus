@@ -81,7 +81,7 @@ check:
 
 check:
   ~eval
-  import: .List: 
+  import: .List:
             rename: cons as kons
   List.kons(1, [2])
   ~is List.cons(1, [2])
@@ -89,7 +89,7 @@ check:
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
-  import: .ExList: 
+  import: .ExList:
             rename: cons as kons
   [ExList.kons(1, [2]),
    List.cons(1, [2])]
@@ -99,7 +99,7 @@ check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
   block:
-    import: .ExList: 
+    import: .ExList:
               rename: cons as kons
     [ExList.kons(1, [2]),
      List.cons(1, [2])]
@@ -185,6 +185,13 @@ check:
     lib("rhombus/tests/example-f.rhm"):
       expose prefix
       rename prefix as pfx
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    lib("rhombus/tests/example-f.rhm"):
+      expose prefix as pfx
   [pfx.original, pfx.added]
   ~is ["orig", "add"]
 

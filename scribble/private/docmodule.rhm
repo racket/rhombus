@@ -1,14 +1,14 @@
 #lang rhombus/and_meta
-
 import:
-  lib("scribble/manual.rkt") expose:
-    defmodule racketmodlink
+  lib("scribble/manual.rkt"):
+    expose:
+      defmodule
+      racketmodlink
   "rhombus.rhm" open
-  meta:
-    lib("racket/base.rkt")
   meta_label:
-    rhombus expose:
-      import
+    rhombus:
+      expose:
+        import
 
 export:
   docmodule

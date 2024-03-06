@@ -2,9 +2,6 @@
 import:
   lib("racket/class.rkt"):
     expose:
-      send
-      #{is-a?}
-    rename:
       send as rkt_send
       #{is-a?} as rkt_is_a
   lib("racket/draw.rkt")

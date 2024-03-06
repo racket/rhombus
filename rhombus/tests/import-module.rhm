@@ -80,6 +80,25 @@ check:
 
 check:
   import:
+    lib("rhombus/tests/example-c.rhm") as ex_c:
+      expose: exint
+      rename: exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  ~is 10
+
+check:
+  import:
+    lib("rhombus/tests/example-c.rhm") as ex_c:
+      expose: exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  ~is 10
+
+check:
+  import:
     lib("rhombus/tests/example-c.rhm"):
       open
       only_space: expr
