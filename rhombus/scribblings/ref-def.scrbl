@@ -70,7 +70,10 @@
 
  Like @rhombus(def), but for bindings that become visible only after the
  @rhombus(let) form within its definition context. The @rhombus(let) form
- cannot be used in a top-level context outside of a module or local block.
+ cannot be used in a top-level context outside of a module or local
+ block. The @rhombus(let) can be used with the same name multiple times
+ in a module or block, but the same name cannot be defined with both
+ @rhombus(def) and @rhombus(let) within a module or block.
 
 @examples(
   block:

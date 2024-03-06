@@ -198,20 +198,26 @@ check:
   ~is "inner"
 
 check:
-  let x = "outer"
-  defn.macro 'm $id':
-    'def $id = "inner"
-     x'
-  m x
-  ~is "outer"
+  ~eval
+  import rhombus/meta open
+  block:
+    let x = "outer"
+    defn.macro 'm $id':
+      'def $id = "inner"
+       x'
+    m x
+  ~throws "duplicate definition"
 
 check:
-  def x = "outer"
-  defn.macro 'm $id':
-    'let $id = "inner"
-     x'
-  m x
-  ~is "inner"
+  ~eval
+  import rhombus/meta open
+  block:
+    def x = "outer"
+    defn.macro 'm $id':
+      'let $id = "inner"
+       x'
+    m x
+  ~throws "duplicate definition"
 
 check:
   ~eval
@@ -237,31 +243,27 @@ check:
   result
   ~is "inner"
 
-module flat_defn2 ~lang rhombus/and_meta:
-  export result
-  let x = "outer"
-  defn.macro 'm $result $id':
-    'def $id = "inner"
-     def $result = x'
-  m result x
+check:
+  ~eval
+  module flat_defn2 ~lang rhombus/and_meta:
+    export result
+    let x = "outer"
+    defn.macro 'm $result $id':
+      'def $id = "inner"
+       def $result = x'
+    m result x
+  ~throws "duplicate definition"
 
 check:
-  import self!flat_defn2 open
-  result
-  ~is "outer"
-
-module flat_defn3 ~lang rhombus/and_meta:
-  export result
-  def x = "outer"
-  defn.macro 'm $result $id':
-    'let $id = "inner"
-     def $result = x'
-  m result x
-
-check:
-  import self!flat_defn3 open
-  result
-  ~is "inner"
+  ~eval
+  module flat_defn3 ~lang rhombus/and_meta:
+    export result
+    def x = "outer"
+    defn.macro 'm $result $id':
+      'let $id = "inner"
+       def $result = x'
+    m result x
+  ~throws "duplicate definition"
 
 check:
   ~eval
