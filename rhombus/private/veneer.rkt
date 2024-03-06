@@ -280,7 +280,8 @@
                                                  []
                                                  [dot-id ...]
                                                  []
-                                                 [export ...]))
+                                                 [export ...]
+                                                 base-stx scope-stx))
                (build-class-static-infos #:veneer? #t
                                          #f
                                          super

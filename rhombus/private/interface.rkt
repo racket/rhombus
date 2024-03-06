@@ -267,7 +267,8 @@
                                                      name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]
-                                                     [export ...]))
+                                                     [export ...]
+                                                     base-stx scope-stx))
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
