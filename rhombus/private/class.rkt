@@ -663,7 +663,8 @@
                                                         (quote-syntax private-field-static-infos)
                                                         (quote-syntax private-field-argument))
                                                   ...]
-                                                 [export ...]))
+                                                 [export ...]
+                                                 base-stx scope-stx))
                (build-class-static-infos exposed-internal-id
                                          super
                                          given-constructor-rhs

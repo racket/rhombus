@@ -7,7 +7,8 @@
                      "import-check.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt"
-         "version-case.rkt")
+         "version-case.rkt"
+         "export-check.rkt")
 
 ;; The `rhombus-...-forwarding-sequence` forms handle definitions that are
 ;; only visible to later terms (as created with Rhombus `let`, say,
@@ -104,14 +105,19 @@
               (final ... [#:ctx base-ctx remove-ctx] #,@(reverse (syntax->list #'(bind ...)))))]
          [(#:block #f orig)
           (raise-syntax-error #f "block does not end with an expression" #'orig)]
+         [(#:module _ prov ...)
+          (unless (bound-identifier=? (datum->syntax #'base-ctx 'x)
+                                      (datum->syntax #'remove-ctx 'x))
+            (register-provide-check #'(base-ctx remove-ctx prov ...)))
+          forms]
          [_ forms])]
       [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] (~and form (quote v)) . forms)
        (loop #'(_ state base-ctx add-ctx remove-ctx all-ctx stx-params . forms)
              (cons (syntax-parse #'state
-                     [(#:module #f) #'form]
-                     [(#:module wrap) (if (string? (syntax-e #'v))
-                                          #'form
-                                          #'(wrap form))]
+                     [(#:module #f . _) #'form]
+                     [(#:module wrap . _ ) (if (string? (syntax-e #'v))
+                                               #'form
+                                               #'(wrap form))]
                      [_ #'form])
                    accum))]
       [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] form . forms)
@@ -235,17 +241,23 @@
                  #,(syntax-track-origin #`(#%require #,@reqs) exp-form #'none)
                  (sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))])]
          [(provide prov ...)
-          #:when (syntax-parse #'state
-                   [(#:module . _) #f]
-                   [_ #t])
           (define rev-prov (reverse (syntax->list #'(prov ...))))
-          (define new-state
-            (syntax-parse #'state
-              [(#:stop-at head stop-id binds-tail . tail)
-               #`(#:stop-at head stop-id (#,@rev-prov . binds-tail) . tail)]
-              [[tag head . tail]
-               #`(tag head #,@rev-prov . tail)]))
-          #`(sequence [#,new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)]
+          #`(begin
+              #,@(reverse accum)
+              #,@(syntax-parse #'state
+                   [((~and tag #:module) head . tail)
+                    (define new-state #`(tag head #,@rev-prov . tail))
+                    (list
+                     exp-form
+                     #`(sequence [#,new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))]
+                   [_
+                    (define new-state
+                      (syntax-parse #'state
+                        [(#:stop-at head stop-id binds-tail . tail)
+                         #`(#:stop-at head stop-id (#,@rev-prov . binds-tail) . tail)]
+                        [[tag head . tail]
+                         #`(tag head #,@rev-prov . tail)]))
+                    (list #`(sequence [#,new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))]))]
          [(#%provide . _)
           (raise-syntax-error #f "shouldn't happen" exp-form)]
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
@@ -286,8 +298,8 @@
                               [else #`(#%expression
                                        (with-syntax-parameters stx-params #,(discard-static-infos exp-form)))])])
                        (syntax-parse #'state
-                         [(#:module #f) exp-form]
-                         [(#:module wrap) #`(wrap #,exp-form)]
+                         [(#:module #f . _) exp-form]
+                         [(#:module wrap . _) #`(wrap #,exp-form)]
                          [_ exp-form]))])
                 (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))])])))
 

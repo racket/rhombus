@@ -12,7 +12,8 @@
          "parse.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "export-check.rkt")
 
 (provide (for-space rhombus/defn
                     namespace))
@@ -55,6 +56,7 @@
                                                                               #'forward-base-ctx)
                                                 #'scoped-ctx)
                                                #'base-ctx))
+     (register-field-check #'(forward-base-ctx forward-ctx . fields))
      #'(define-name-root name
          #:extends extends
          #:fields
@@ -67,6 +69,7 @@
                      ((make-syntax-delta-introducer #'all-ctx #'ctx) #'scoped)
                      #'plain))
      (define fields (parse-exports #'(combine-out ex ...) expose))
+     (register-field-check #`(ctx all-ctx #,@fields))
      (define (generate-definitions ext-id int-id rule)
        (for/list ([space+id (in-list (let loop ([rule rule])
                                        (syntax-parse rule
@@ -224,7 +227,7 @@
                                                                (expose space-id)))
                (values space-sym #t)))
            (cond
-             [(null? use-spaces) ht]
+             [(zero? (hash-count use-spaces)) ht]
              [else (add-name-at-all-spaces ht id id use-spaces '#:only)]))]
         [(except-out starting-e exclude-e)
          (define all-except-ht (loop #'exclude-e except-ht #hasheq() spaces spaces-mode))

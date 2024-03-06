@@ -11,6 +11,7 @@
          "class-method-result.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt"
+         "export-check.rkt"
          "parens.rkt"
          "static-info.rkt"
          "expression.rkt"
@@ -52,8 +53,10 @@
                        [public-name-field/mutate ...]
                        [dot-id ...]
                        [private-field-desc ...]
-                       [ex ...])
+                       [ex ...]
+                       base-ctx scope-ctx)
                  names])
+    (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
       (method-static-entries method-mindex method-vtable method-results #'name-ref #'name? final? #f))
     (with-syntax ([(method-name ...) method-names]
@@ -167,8 +170,10 @@
                        name? name-instance name-ref static-name-ref
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
-                       [ex ...])
+                       [ex ...]
+                       base-ctx scope-ctx)
                  names])
+    (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
       (method-static-entries method-mindex method-vtable method-results #'static-name-ref #'name? #f #t))
     (with-syntax ([(method-name ...) method-names]

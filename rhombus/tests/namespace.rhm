@@ -112,3 +112,21 @@ check:
     annot.macro 'Num': 'Real'
   1 :: Num
   ~is 1
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    namespace ~open:
+      export:
+        nonesuch
+  ~throws "exported identifier not defined"
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    namespace ~open:
+      export:
+        nonesuch
+      let nonesuch = 8
+  ~throws "exported identifier defined later"
+
