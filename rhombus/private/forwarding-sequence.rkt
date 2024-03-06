@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "use-site.rkt")
+                     "use-site.rkt"
+                     "id-binding.rkt"
+                     "import-check.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt"
          "version-case.rkt")
@@ -31,20 +33,20 @@
   (syntax-parse stx
     [(_ #:wrap-non-string proc . tail)
      ;; the "non-string" part is a shortcut for Scribble
-     #`(sequence [(#:module proc) base-ctx add-ctx remove-ctx #hasheq()] . tail)]
+     #`(sequence [(#:module proc) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]
     [(_ . tail)
-     #`(sequence [(#:module #f) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
+     #`(sequence [(#:module #f) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-block-forwarding-sequence stx)
   (syntax-parse stx
     [(_ #:orig orig . tail)
-     #`(sequence [(#:block #f orig) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
+     #`(sequence [(#:block #f orig) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-nested-forwarding-sequence stx)
   ;; Used for something like `namespace`
   (syntax-parse stx
     [(_ final . tail)
-     #`(sequence [(#:nested final) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
+     #`(sequence [(#:nested final) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-mixed-nested-forwarding-sequence stx)
   ;; Used for something like `class`, where non-expression, non-definition
@@ -52,7 +54,7 @@
   ;; be passed along to `final`. Exports are also gathered.
   (syntax-parse stx
     [(_ (final . data) stop-id . tail)
-     #`(sequence [(#:stop-at (final . data) stop-id ()) base-ctx add-ctx remove-ctx #hasheq()] . tail)]))
+     #`(sequence [(#:stop-at (final . data) stop-id ()) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (sequence stx)
   (forwarding-sequence-step stx syntax-local-context syntax-local-introduce))
@@ -85,7 +87,7 @@
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
       #:literals (quote)
-      [(_ [state base-ctx add-ctx remove-ctx stx-params])
+      [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params])
        (define forms #`(begin #,@(reverse accum)))
        (syntax-parse #'state
          [(#:block-stop-at (final ...) _ accum ...)
@@ -103,8 +105,8 @@
          [(#:block #f orig)
           (raise-syntax-error #f "block does not end with an expression" #'orig)]
          [_ forms])]
-      [(_ [state base-ctx add-ctx remove-ctx stx-params] (~and form (quote v)) . forms)
-       (loop #'(_ state base-ctx add-ctx remove-ctx stx-params . forms)
+      [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] (~and form (quote v)) . forms)
+       (loop #'(_ state base-ctx add-ctx remove-ctx all-ctx stx-params . forms)
              (cons (syntax-parse #'state
                      [(#:module #f) #'form]
                      [(#:module wrap) (if (string? (syntax-e #'v))
@@ -112,7 +114,7 @@
                                           #'(wrap form))]
                      [_ #'form])
                    accum))]
-      [(_ [state base-ctx add-ctx remove-ctx stx-params] form . forms)
+      [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] form . forms)
        (define exp-form (syntax-parse #'form
                           #:literals (module module*)
                           [(module . _) #'form]
@@ -149,30 +151,45 @@
                             (intro stx 'add))))
           #`(begin
               #,@(reverse accum)
-              (sequence [state base-ctx #,(intro #'add-ctx) base-ctx stx-params]
+              (sequence [state base-ctx #,(intro #'add-ctx) base-ctx #,(intro #'all-ctx) stx-params]
                         sub-form ...
-                        (pop-forward base-ctx add-ctx #,(intro #'remove-ctx)
+                        (pop-forward add-ctx #,(intro #'remove-ctx)
                                      . #,(intro #'forms))))]
-         [(pop-forward base-ctx add-ctx remove-ctx . forms)
-          #`(sequence [state base-ctx add-ctx remove-ctx stx-params] . forms)]
+         [(pop-forward add-ctx remove-ctx . forms)
+          #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)]
          [(define-syntax-parameter key rhs)
           (with-syntax ([stx-params (syntax-parameter-update #'key #'rhs #'stx-params)]
                         [new-state (need-end-expr #'state)])
-            #`(sequence [new-state base-ctx add-ctx remove-ctx stx-params] . forms))]
+            #`(sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))]
          [(begin form-in ...)
           #:with (form ...) (map (lambda (form)
                                    (shift-origin form exp-form))
                                  (syntax->list #'(form-in ...)))
-          (define seq #`(sequence [state base-ctx add-ctx remove-ctx stx-params] form ... . forms))
+          (define seq #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params] form ... . forms))
           (if (null? accum)
               seq
               #`(begin #,@(reverse accum) #,seq))]
          [((~and def (~or* define-values define-syntaxes)) (id ...) rhs)
-          #:do [(define intro (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)]
-                                    [add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
-                                (lambda (stx)
-                                  (sub (add stx 'add) 'remove))))]
-          #:with (new-id ...) (intro #'(id ...))
+          #:do [(define sub (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)])
+                              (lambda (stx) (sub stx 'remove))))
+                (define add (let ([add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
+                              (lambda (stx) (add stx 'add))))
+                (define suball (let ([sub (make-syntax-delta-introducer #'all-ctx #'base-ctx)])
+                                 (lambda (stx) (sub stx 'remove))))
+                (define intro (lambda (stx)
+                                (when (or
+                                       ;; `def` after `let`:
+                                       (and (identifier-binding stx)
+                                            (identifier-distinct-binding stx (sub stx)))
+                                       ;; `let` after `def`:
+                                       (and (let ([ph (syntax-local-phase-level)]
+                                                  [stx (syntax-local-identifier-as-binding
+                                                        (local-introduce stx))])
+                                              (identifier-binding (suball stx) ph #t #t))
+                                            (not (bound-identifier=? stx (add stx)))))
+                                  (raise-syntax-error #f "duplicate definition" stx))
+                                (sub (add stx))))]
+          #:with (new-id ...) (map intro (syntax->list #'(id ...)))
           #:with new-state (need-end-expr #'state)
           #`(begin
               #,@(reverse accum)
@@ -188,15 +205,20 @@
                                                        #,(discard-static-infos #'rhs)))))
                                exp-form
                                exp-form)
-              (sequence [new-state base-ctx add-ctx remove-ctx stx-params] . forms))]
+              (sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))]
          [(#%require req ...)
           #:with new-state (need-end-expr #'state)
-          (define intro (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)]
-                              [add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
-                          (lambda (stx)
-                            (sub (add stx 'add) 'remove))))
+          (define sub (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)])
+                        (lambda (stx) (sub stx 'remove))))
+          (define add (let ([add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
+                        (lambda (stx) (add stx 'add))))
+          (define intro (lambda (stx) (sub (add stx))))
+          (define check? (not (bound-identifier=? (datum->syntax #'base-ctx 'x)
+                                                  (datum->syntax #'remove-ctx 'x))))
           (define reqs
             (for/list ([req (in-list (cdr (syntax->list exp-form)))])
+              (when check?
+                (check-require-bindings req sub))
               (syntax-parse req
                 #:datum-literals (portal)
                 [((~and tag portal) id content) #`(tag #,(intro #'id) content)]
@@ -207,11 +229,11 @@
                ;; unlike normal `require`, `syntax-local-lift-require` doesn't remove
                ;; use-site scopes, so we have to do that ourselves here
                (syntax-local-lift-require (remove-use-site-scopes (local-introduce req)) #'use #f))
-             #`(sequence [new-state base-ctx add-ctx remove-ctx stx-params] . forms)]
+             #`(sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)]
             [_
              #`(begin
                  #,(syntax-track-origin #`(#%require #,@reqs) exp-form #'none)
-                 (sequence [new-state base-ctx add-ctx remove-ctx stx-params] . forms))])]
+                 (sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))])]
          [(provide prov ...)
           #:when (syntax-parse #'state
                    [(#:module . _) #f]
@@ -223,7 +245,7 @@
                #`(#:stop-at head stop-id (#,@rev-prov . binds-tail) . tail)]
               [[tag head . tail]
                #`(tag head #,@rev-prov . tail)]))
-          #`(sequence [#,new-state base-ctx add-ctx remove-ctx stx-params] . forms)]
+          #`(sequence [#,new-state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)]
          [(#%provide . _)
           (raise-syntax-error #f "shouldn't happen" exp-form)]
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
@@ -234,7 +256,8 @@
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence [(#:block-stop-at head stop-id [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
+                          (sequence [(#:block-stop-at head stop-id [keep stx-params] . tail)
+                                     base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))
                       exp-form
                       #'none)]
                     [(#:stop-at head stop-id binds . tail)
@@ -242,7 +265,8 @@
                      (syntax-track-origin
                       #`(begin
                           #,@(reverse accum)
-                          (sequence [(#:stop-at head stop-id binds [keep stx-params] . tail) base-ctx add-ctx remove-ctx stx-params] . forms))
+                          (sequence [(#:stop-at head stop-id binds [keep stx-params] . tail)
+                                     base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))
                       exp-form
                       #'none)]
                     [_ #f]))]
@@ -265,7 +289,7 @@
                          [(#:module #f) exp-form]
                          [(#:module wrap) #`(wrap #,exp-form)]
                          [_ exp-form]))])
-                (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx stx-params] . forms))])])))
+                (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx all-ctx stx-params] . forms))])])))
 
 ;; TEMP approximate `syntax-local-make-definition-context-introducer`
 (meta-if-version-at-least
@@ -289,7 +313,7 @@
 (define-for-syntax (expand-forwarding-sequence bodys accum-scopes stx-params local-introduce expr-k done-k)
   (expand-forwarding-sequence-continue
    #`[;; state:
-      [(#:block-stop-at (expanded) expanded-accum) base-ctx add-ctx remove-ctx #,stx-params]
+      [(#:block-stop-at (expanded) expanded-accum) base-ctx add-ctx remove-ctx all-ctx #,stx-params]
       ;; bodys:
       (#,@bodys (quote-syntax (expanded-accum . #,accum-scopes) #:local))
       ;; expand-context:

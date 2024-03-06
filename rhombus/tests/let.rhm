@@ -33,3 +33,89 @@ check:
     && syntax_meta.equal_name_and_scopes(id1, id3)
     && syntax_meta.equal_name_and_scopes(id2, id3)
   ~is #true
+
+check:
+  def x = 1
+  block:
+    def y = x
+    let x = 2
+    y
+  ~is 1
+
+check:
+  let x = 1
+  block:
+    def y = x
+    let x = 2
+    y
+  ~is 1
+
+check:
+  let x = 1
+  block:
+    let x = 2
+    def y = x
+    y
+  ~is 2
+
+check:
+  ~eval
+  block:
+    def x = 1
+    let x = 2
+    "ok"
+  ~raises "duplicate definition"
+
+check:
+  ~eval
+  block:
+    let x = 2
+    def x = 1
+    "ok"
+  ~raises "duplicate definition"
+
+check:
+  ~eval
+  block:
+    let x = 2
+    let y = 2
+    def x = 1
+    "ok"
+  ~raises "duplicate definition"
+
+check:
+  ~eval
+  import rhombus/meta open
+  block:
+    def x = "outer"
+    defn.macro 'm $id':
+      'let $id = "inner"
+       x'
+    m x
+  ~raises "duplicate definition"
+  
+check:
+  ~eval
+  block:
+    let x = 2
+    import rhombus.List as x
+    "ok"
+  ~raises "duplicate import"
+
+check:
+  ~eval
+  block:
+    let x = 2
+    import rhombus as x
+    "ok"
+  ~raises "duplicate import"
+
+check:
+  ~eval
+  block:
+    let x = 2
+    import rhombus/meta open
+    defn.macro 'm $id':
+      'import rhombus as $id'
+    m x
+  ~raises "duplicate import"
