@@ -78,7 +78,7 @@
     (pattern form::non-...
              #:with ::binding #'form))
 
-  (define (keyword->binding kw)
+  (define (keyword->id-group kw)
     #`(#,group-tag
        #,(datum->syntax kw
                         (string->symbol (keyword->immutable-string (syntax-e kw)))
@@ -89,10 +89,10 @@
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a ...+)))
              #:cut
-             #:with ::binding #'(group a ...))
+             #:with ::binding #`(#,group-tag a ...))
     (pattern (group kw:keyword)
              #:cut
-             #:with ::binding (keyword->binding #'kw)))
+             #:with ::binding (keyword->id-group #'kw)))
 
   (define-syntax-class :plain-binding
     #:attributes (kw parsed)
@@ -131,7 +131,7 @@
              #:cut
              #:with default #`(#,group-tag e ...)
              #:do [(check-argument-annot #'default #'eq)]
-             #:with ::binding (keyword->binding #'kw))
+             #:with ::binding (keyword->id-group #'kw))
     (pattern ::has-kw-binding
              #:with default #'#f)
     (pattern (~and g
@@ -927,9 +927,11 @@
   (define-syntax-class :kw-argument
     #:attributes (kw exp)
     #:datum-literals (group)
+    (pattern (group kw:keyword)
+             #:with exp (keyword->id-group #'kw))
     (pattern (group kw:keyword (_::block exp)))
     (pattern (group kw:keyword (btag::block g ...))
-             #:with exp #'(group (parsed #:rhombus/expr (rhombus-body-at btag g ...))))
+             #:with exp #`(#,group-tag (parsed #:rhombus/expr (rhombus-body-at btag g ...))))
     (pattern exp
              #:with kw #'#f)))
 
@@ -1206,9 +1208,10 @@
          (cons (arg-map (car (generate-temporaries '(map)))
                         #`(rhombus-expression (#,group-tag rand ...)))
                (loop #'gs))]
-        [((group kw:keyword (tag::block body ...)) . gs)
+        [((group kw:keyword (~optional (tag::block body ...))) . gs)
          (cons (arg-kw (car (generate-temporaries '(kw-arg)))
-                       #'(rhombus-body-at tag body ...)
+                       #`(~? (rhombus-body-at tag body ...)
+                             (rhombus-expression #,(keyword->id-group #'kw)))
                        #'kw)
                (loop #'gs))]
         [(g . gs)
