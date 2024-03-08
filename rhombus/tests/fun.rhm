@@ -405,3 +405,50 @@ check:
     ++ "\n" ++ "commit kwrest"
     ++ "\n" ++ "bind kwrest"
     ++ "\n"
+
+// check keyword punning
+block:
+  fun noop(~x, ~y): values(x, y)
+  let x = 1
+  let y = 2
+  check noop(~x, ~y) ~is values(1, 2)
+  let x = 3
+  check noop(~x, ~y) ~is values(3, 2)
+  let y = 4
+  check noop(~x, ~y) ~is values(3, 4)
+
+block:
+  fun noop(~x, ~y, & args): values(x, y, args)
+  let x = 1
+  let y = 2
+  check noop(& [3, 4, 5], ~x, ~y) ~is values(1, 2, [3, 4, 5])
+  let x = 3
+  check noop(& [4, 5, 6], ~x, ~y) ~is values(3, 2, [4, 5, 6])
+  let y = 4
+  check noop(& [5, 6, 7], ~x, ~y) ~is values(3, 4, [5, 6, 7])
+
+block:
+  fun noop(~x, ~y, ~& kw_args): values(x, y, kw_args)
+  let x = 1
+  let y = 2
+  let z = 3
+  check noop(~x, ~y, ~z) ~is values(1, 2, {#'~z: 3})
+  let x = 5
+  let w = 6
+  check noop(~x, ~y, ~z, ~w) ~is values(5, 2, {#'~z: 3, #'~w: 6})
+  let y = 7
+  let h = 8
+  check noop(~x, ~y, ~z, ~w, ~h) ~is values(5, 7, {#'~z: 3, #'~w: 6, #'~h: 8})
+
+block:
+  fun noop(~x, ~y, & args, ~& kw_args): values(x, y, kw_args, args)
+  let x = 1
+  let y = 2
+  let z = 3
+  check noop(& [4, 5, 6], ~x, ~y, ~z) ~is values(1, 2, {#'~z: 3}, [4, 5, 6])
+  let x = 5
+  let w = 6
+  check noop(& [7, 8, 9], ~x, ~y, ~z, ~w) ~is values(5, 2, {#'~z: 3, #'~w: 6}, [7, 8, 9])
+  let y = 7
+  let h = 8
+  check noop(& [9, 10, 11], ~x, ~y, ~z, ~w, ~h) ~is values(5, 7, {#'~z: 3, #'~w: 6, #'~h: 8}, [9, 10, 11])

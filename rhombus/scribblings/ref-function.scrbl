@@ -51,6 +51,7 @@ normally bound to implement function calls.
 
 @doc(
   ~nonterminal:
+    id: block
     fun_expr: block expr
     arg_expr: block expr
     repet_arg: #%call arg
@@ -63,7 +64,9 @@ normally bound to implement function calls.
 
   grammar arg:
     $arg_expr
+    $keyword
     $keyword: $arg_expr
+    $keyword: $body; ...
     $repet #,(@litchar{,}) $ellipses
     & $list_expr
     ~& $map_expr
@@ -91,6 +94,13 @@ normally bound to implement function calls.
   keywords in maps from other @rhombus(~& map_expr) arguments. The
   keyword-value pairs are passed into the function as additional keyword
   arguments.
+
+ Parallel to @rhombus(fun), a single @rhombus(keyword) as an
+ @rhombus(arg) is equivalent to the form @rhombus(keyword: id)
+ @margin_note{This kind of double duty of a single @rhombus(keyword)
+ is sometimes referred to as ``punning.''}
+ where @rhombus(id) is composed from @rhombus(keyword) by taking its
+ string form and lexical context.
 
  The case with an immediate @rhombus(_) group among other
  @rhombus(arg)s is a special case for a function shorthand, and it takes
@@ -254,9 +264,11 @@ normally bound to implement function calls.
  as rejecting a non-matching argument) left-to-right, except that the
  result of a @rhombus(default_expr) is subject to the same constraints
  imposed by annotations and patterns for its argument as an explicitly
- supplied argument would be. An argument form @rhombus(keyword = default_expr)
- is equivalent to the form @rhombus(keyword: id = default_expr)
- for the @rhombus(id) with the same string form as @rhombus(keyword).
+ supplied argument would be. An argument form @rhombus(keyword) or
+ @rhombus(keyword = default_expr) is equivalent to the form
+ @rhombus(keyword: id) or @rhombus(keyword: id = default_expr) where
+ @rhombus(id) is composed from @rhombus(keyword) by taking its
+ string form and lexical context.
  A @rhombus(::) or @rhombus(:~) is not allowed in @rhombus(default_expr),
  unless it is nested in another term, since that might be misread or
  confused as an annotation in @rhombus(bind) for an identifier; for similar
