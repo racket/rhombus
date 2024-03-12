@@ -16,6 +16,12 @@ check:
   math.expt(2, & [3]) ~is 8
   List(5, 6, & [7, 8]) ~is [5, 6, 7, 8]
 
+check:
+  use_static
+  fun init(& xs): xs[0]
+  init(1, 2, 3)
+  ~is 1
+
 fun prlist(& xs :: List): xs
 
 check:

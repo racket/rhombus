@@ -350,7 +350,7 @@
     #:attributes (arg parsed)
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
-             #:with arg::non-...-binding #`(#,group-tag rest-bind #,list-static-infos
+             #:with arg::non-...-binding #`(#,group-tag rest-bind #,treelist-static-infos
                                             #:annot-prefix? #f
                                             (#,group-tag a ...))
              #:with parsed #'arg.parsed)
