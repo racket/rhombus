@@ -46,12 +46,13 @@ paragraph typesetting.
 @doc(
  fun bold(content, ...) :: Pict
  fun italic(content, ...) :: Pict
+ fun underline(content, ...) :: Pict
  fun tt(content, ...) :: Pict
  fun roman(content, ...) :: Pict
 ){
 
  Similar to @rhombus(t), but starts with @rhombus(current_font()) and
- adds boldness, italicness, fixed-widthness, or serifness to obstain the
+ adds boldness, italicness, underlinedness, fixed-widthness, or serifness to obstain the
  font for converting strings.
 
 @examples(

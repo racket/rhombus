@@ -28,6 +28,7 @@ export:
   subscript
   superscript
   strikethrough
+  underline
 
   // `ly` variants are syntactic forms that `parameterize`
   // the argument expressions, so that `italic` can be nested in
@@ -80,6 +81,9 @@ fun current_font_as_tt():
 fun current_font_as_roman():
    (current_font() :~ draw.Font) with (kind = #'roman, name = #false)
 
+fun current_font_as_underline():
+   (current_font() :~ draw.Font) with (has_underline = #true)
+
 defn.macro 'ly $ly: $expr':
   '«
      macro
@@ -94,6 +98,7 @@ ly boldly: current_font_as_bold()
 ly italicly: current_font_as_italic()
 ly ttly: current_font_as_tt()
 ly romanly: current_font_as_roman()
+ly underlinely: current_font_as_underline()
 
 fun bold(a, ...) :~ Pict:
   boldly(a, ...)
@@ -123,6 +128,9 @@ fun strikethrough(~line: line :: MaybeColor = #'inherit,
   pict.pin(~on: p,
            ~at: pict.Find.left_top(p, ~dy: dy + 0.75 * p.ascent),
            pict.line(~dx: p.width, ~line: line, ~line_width: line_width))
+
+fun underline(a, ...) :~ Pict:
+  underlinely(a, ...)
 
 // ----------------------------------------
 
