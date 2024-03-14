@@ -711,8 +711,8 @@ fun maybe_pad(p :~ Pict, dw, dh):
   | p.pad(~horiz: dw/2, ~vert: dh/2)
 
 fun rectangle(~around: around :: maybe(Pict) = #false,
-              ~width: width :: Real || Pict: around || 32,
-              ~height: height :: Real || Pict: around || width,
+              ~width: width :: Real: if around | Pict.width(around) | 32,
+              ~height: height :: Real: if around | Pict.height(around) | width,
               ~fill: fill :: MaybeColor = #false,
               ~line: line :: MaybeColor = !fill && #'inherit,
               ~line_width: line_width :: LineWidth = #'inherit,
@@ -795,7 +795,7 @@ fun convert_some([around, width, height], epoch, duration, retry):
           fun (ps): retry_g(ps, #true))
         
 fun square(~around: around :: maybe(Pict) = #false,
-           ~size: size :: Real || Pict: around || 32,
+           ~size: size :: Real: if around | math.max(Pict.width(around), Pict.width(around)) | 32,
            ~fill: fill :: MaybeColor = #false,
            ~line: line :: MaybeColor = !fill && #'inherit,
            ~line_width: line_width :: LineWidth = #'inherit,
@@ -821,8 +821,8 @@ fun square(~around: around :: maybe(Pict) = #false,
             ~duration: duration)
 
 fun ellipse(~around: around :: maybe(Pict) = #false,
-            ~width: width :: Real || Pict: around || 32,
-            ~height: height :: Real || Pict: around || width,
+            ~width: width :: Real: if around | Pict.width(around) | 32,
+            ~height: height :: Real: if around | Pict.height(around) | width,
             ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
             ~start: start :: Real = 0,
             ~end: end :: Real = 2 * math.pi,
@@ -887,7 +887,7 @@ fun ellipse(~around: around :: maybe(Pict) = #false,
         convert_some([around, width, height], epoch, duration, retry)
 
 fun circle(~around: around :: maybe(Pict) = #false,
-           ~size: size :: Real || Pict: around || 32,
+           ~size: size :: Real: if around | math.max(Pict.width(around), Pict.width(around)) | 32,
            ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
            ~start: start :: Real = 0,
            ~end: end :: Real = 2 * math.pi,

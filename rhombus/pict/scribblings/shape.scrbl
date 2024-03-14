@@ -33,8 +33,8 @@
 @doc(
   fun rectangle(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: Real || Pict = around || 32,
-    ~height: height :: Real || Pict = around || width,
+    ~width: width :: Real: if around | Pict.width(around) | 32,
+    ~height: height :: Real: if around | Pict.height(around) | width,
     ~fill: fill :: MaybeColor = #false,
     ~line: line :: MaybeColor = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
@@ -46,10 +46,7 @@
   ) :: Pict
 ){
 
- Creates a @tech{pict} to draw a rectangle. The rectangle's
- @rhombus(width) and @rhombus(height) can be supplied as numbers, or they
- can be supplied as a @tech{pict}, in which case the given picts' width
- and height are used, respectively. If an @rhombus(around) pict is
+ Creates a @tech{pict} to draw a rectangle. If an @rhombus(around) pict is
  provided, then it both supplies default @rhombus(width) and
  @rhombus(height) values an is @rhombus(overlay)ed on top of the rectangle
  image,
@@ -95,7 +92,9 @@
 @doc(
   fun square(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: Real || Pict = around || 32,
+    ~size: size :: Real: if around
+                         | math.max(Pict.width(around), Pict.width(around))
+                         | 32,
     ~fill: fill :: MaybeColor = #false,
     ~line: line :: MaybeColor = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
@@ -107,8 +106,7 @@
 ){
 
  A shorthand for @rhombus(rectangle) where the width and height are
- specified as @rhombus(size) or, if @rhombus(size) is a pict, as the
- maximum of the pict's width and height.
+ specified as @rhombus(size).
 
 @examples(
   ~eval: pict_eval
@@ -120,8 +118,8 @@
 @doc(
   fun ellipse(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: Real || Pict = around || 32,
-    ~height: height :: Real || Pict = around || width,
+    ~width: width :: Real: if around | Pict.width(around) | 32,
+    ~height: height :: Real: if around | Pict.height(around) | width,
     ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
@@ -150,7 +148,9 @@
 @doc(
   fun circle(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: Real || Pict = around || 32,
+    ~size: size :: Real: if around
+                         | math.max(Pict.width(around), Pict.width(around))
+                         | 32,
     ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
