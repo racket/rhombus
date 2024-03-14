@@ -18,7 +18,16 @@ provides support for font configuration, nestable styles, and basic
 paragraph typesetting.
 
 @doc(
- fun t(content, ...,
+  annot.macro 'TextContent'
+){
+
+ Satisfied by a string, a @tech{pict}, or a list of values that satisfy
+ @rhombus(TextContent, ~annot).
+
+}
+
+@doc(
+ fun t(content :: TextContent, ...,
        ~font: font :: draw.Font = current_font()) :: Pict
 ){
 
@@ -44,11 +53,11 @@ paragraph typesetting.
 }
 
 @doc(
- fun bold(content, ...) :: Pict
- fun italic(content, ...) :: Pict
- fun underline(content, ...) :: Pict
- fun tt(content, ...) :: Pict
- fun roman(content, ...) :: Pict
+ fun bold(content :: TextContent, ...) :: Pict
+ fun italic(content :: TextContent, ...) :: Pict
+ fun underline(content :: TextContent, ...) :: Pict
+ fun tt(content :: TextContent, ...) :: Pict
+ fun roman(content :: TextContent, ...) :: Pict
 ){
 
  Similar to @rhombus(t), but starts with @rhombus(current_font()) and
@@ -65,8 +74,8 @@ paragraph typesetting.
 }
 
 @doc(
-  fun subscript(content, ...) :: Pict
-  fun superscript(content, ...) :: Pict
+  fun subscript(content :: TextContent, ...) :: Pict
+  fun superscript(content :: TextContent, ...) :: Pict
 ){
 
  Like @rhombus(t), but the resulting @tech{pict}'s scale and baseline
@@ -81,7 +90,7 @@ paragraph typesetting.
 }
 
 @doc(
-  fun strikethrough(content, ...,
+  fun strikethrough(content :: TextContent, ...,
                     ~line: line :: MaybeColor = #'inherit,
                     ~line_width: line_width :: LineWidth = 3,
                     ~dy: dy = 0) :: Pict
@@ -137,7 +146,7 @@ paragraph typesetting.
 }
 
 @doc(
-  fun para(content, ...,
+  fun para(content :: TextContent, ...,
            ~width: width = current_para_width(),
            ~horiz: horiz :: pict.HorizAlignment = #'left,
            ~full: full = #false,
@@ -201,12 +210,12 @@ paragraph typesetting.
 }
 
 @doc(
-  fun item(content, ...,
+  fun item(content :: TextContent, ...,
            ~bullet: bullet :: maybe(Pict) = #false,
            ~width: width = current_para_width(),
            ~horiz: align :: pict.HorizAlignment = #'left,
            ~full: full = #false) :: Pict
-  fun subitem(content, ...,
+  fun subitem(content :: TextContent, ...,
               ~bullet: bullet :: maybe(Pict) = #false,
               ~width: width = current_para_width(),
               ~horiz: align :: pict.HorizAlignment = #'left,
@@ -229,6 +238,23 @@ paragraph typesetting.
   )
 )
 
+}
+
+@doc(
+ fun verbatim(content :: TextContent, ...,
+              ~font: font :: draw.Font = current_font()) :: Pict
+){
+
+ Accepts @rhombus(content) similar to @rhombus(tt), but recognizes
+ newline characters as line breaks.
+
+@examples(
+  ~eval: pict_eval
+  @verbatim{
+    Say ``hello''
+    for me!
+  }
+)
 
 }
 

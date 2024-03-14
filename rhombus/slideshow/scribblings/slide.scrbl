@@ -9,13 +9,24 @@
 @title(~tag: "slide"){Creating Slides}
 
 @doc(
+  annot.macro 'SlideContent'
+){
+
+ Satisfied by allowed arguments to @rhombus(slide): a pict,
+ @rhombus(slide.next), a value produced by @rhombus(slide.alts),
+ @rhombus(slide.align), or @rhombus(slide.horiz), or a list of values
+ that satisfy @rhombus(SlideContent, ~annot).
+
+}
+
+@doc(
   fun slide(~title: title :: maybe(String || Pict) = #false,
             ~name: name = title,
             ~layout: layout :: SlideLayout = #'auto,
             ~sep: sep :: Real = slide.gap,
             ~horiz: horiz_align :: HorizAlignment = #'center,
             ~lead_in: lead_in = #false,
-            content, ...) :: Void
+            content :: SlideContent, ...) :: Void
 ){
 
  Registers one or more slides. In the sample case, each
@@ -91,7 +102,7 @@
                  ~sep: sep :: Real = slide.gap,
                  ~horiz: horiz_align :: HorizAlignment = #'center,
                  ~full: full = title && #true,
-                 content, ...) :: Pict
+                 content :: SlideContent, ...) :: Pict
 ){
 
  Like @rhombus(pict), except that the result is a pict (potentially with
@@ -106,19 +117,19 @@
 
 @doc(
   def slide.next
-  fun slide.alts([content, ...], ...)
+  fun slide.alts([content :: SlideContent, ...], ...)
   fun slide.align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
                   ~horiz: horiz :: pict.HorizAlignment = #'left,
-                  content, ...)
+                  content :: SlideContent, ...)
   fun slide.horiz(~sep: sep :: Real || matching(#'inherit) = #'inherit,
                   ~horiz: horiz :: pict.HorizAlignment = #'left,
-                  content, ...)
+                  content :: SlideContent, ...)
   fun slide.left(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-                 content, ...)
+                 content :: SlideContent, ...)
   fun slide.center(~sep: sep :: Real || matching(#'inherit) = #'inherit,
                    content, ...)
   fun slide.right(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-                  content, ...)
+                  content :: SlideContent, ...)
 ){
 
  Constructors for slide descriptions hat are recognized by

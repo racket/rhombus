@@ -17,6 +17,8 @@ export:
   current_para_width
   current_line_sep
 
+  TextContent
+
   // these flatten nested lists of mixtures of strings and picts
   // and convert only the strings, combining all with `beside`;
   // so, they work well with `@` notation
@@ -57,6 +59,16 @@ module ly:
 Parameter.def current_font :: draw.Font:
   draw.Font()
 
+annot.macro 'TextContent':
+  'satisfying(is_text_content)'
+
+fun is_text_content(c):
+  match c
+  | s :: String: #true
+  | p :: Pict: #true
+  | [c, ...]: for all (c: [c, ...]): is_text_content(c)
+  | ~else: #false
+
 fun flatten_string(who, c, font) :~ Pict:
   match c
   | s :: String: pict.text(s, ~font: font)
@@ -66,7 +78,7 @@ fun flatten_string(who, c, font) :~ Pict:
       error(who, "bad text content: " +& to_string(c, ~mode: #'expr))
 
 fun t(~font: font :: draw.Font = current_font(),
-      s, ...) :~ Pict:
+      s :: TextContent, ...) :~ Pict:
   flatten_string(#'t, [s, ...], font)
 
 fun current_font_as_bold():
@@ -100,36 +112,36 @@ ly ttly: current_font_as_tt()
 ly romanly: current_font_as_roman()
 ly underlinely: current_font_as_underline()
 
-fun bold(a, ...) :~ Pict:
+fun bold(a :: TextContent, ...) :~ Pict:
   boldly(a, ...)
 
-fun italic(a, ...) :~ Pict:
+fun italic(a :: TextContent, ...) :~ Pict:
   italicly(a, ...)
 
-fun tt(a, ...) :~ Pict:
+fun tt(a :: TextContent, ...) :~ Pict:
   ttly(a, ...)
 
-fun roman(a, ...) :~ Pict:
+fun roman(a :: TextContent, ...) :~ Pict:
   romanly(a, ...)
 
-fun subscript(arg, ...) :~ Pict:
+fun subscript(arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
   p.lift(-p.height/2).scale(0.75)
 
-fun superscript(arg, ...) :~ Pict:
+fun superscript(arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
   p.lift(p.height/3).scale(0.75)
 
 fun strikethrough(~line: line :: MaybeColor = #'inherit,
                   ~line_width: line_width :: LineWidth = 3,
                   ~dy: dy = 0,
-                  arg, ...) :~ Pict:
+                  arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
   pict.pin(~on: p,
            ~at: pict.Find.left_top(p, ~dy: dy + 0.75 * p.ascent),
            pict.line(~dx: p.width, ~line: line, ~line_width: line_width))
 
-fun underline(a, ...) :~ Pict:
+fun underline(a :: TextContent, ...) :~ Pict:
   underlinely(a, ...)
 
 // ----------------------------------------
@@ -197,7 +209,7 @@ fun para(~width: width = current_para_width(),
          ~horiz: align :: pict.HorizAlignment = #'left,
          ~full: full = #false,
          ~decode: decode = #true,
-         content, ...) :~ Pict:
+         content :: TextContent, ...) :~ Pict:
   recur retry(ps = join_nonbreaking(flatten_para_content(#'slide, decode, [content, ...]))):
     match ps
     | [p :: pict.StaticPict, ...]:
@@ -215,7 +227,7 @@ fun item(~width: width = current_para_width(),
          ~decode: decode = #true,
          ~horiz: align :: pict.HorizAlignment = #'left,
          ~bullet: bullet :: maybe(Pict) = #false,
-         content, ...) :~ Pict:
+         content :: TextContent, ...) :~ Pict:
   let bullet :~ Pict = bullet || t("\u2022")
   pict.beside(~sep: bullet.width,
               ~vert: #'topline,
@@ -231,7 +243,7 @@ fun subitem(~width: width = current_para_width(),
             ~decode: decode = #true,
             ~horiz: align :: pict.HorizAlignment = #'left,
             ~bullet: bullet :: maybe(Pict) = #false,
-            content, ...) :~ Pict:
+            content :: TextContent, ...) :~ Pict:
   let bullet :~ Pict = bullet || t("\u25E6")
   pict.beside(~sep: bullet.width,
               ~vert: #'topline,
@@ -253,7 +265,7 @@ fun flatten_content(who, c) :~ List:
   | ~else:
       error(who, "bad content: " +& to_string(c, ~mode: #'expr))
 
-fun verbatim(content, ...) :~ Pict:
+fun verbatim(content :: TextContent, ...) :~ Pict:
   let content = flatten_content(#'verbatim, [content, ...])
   let [row, ...]:
     recur loop(content = content) :~ List:

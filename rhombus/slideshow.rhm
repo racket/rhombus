@@ -22,6 +22,7 @@ export:
   titlet
   titlely
 
+  SlideContent
   SlideLayout
   current_assembler
 
@@ -72,7 +73,7 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
           ~sep: sep :: Real = gap,
           ~horiz: horiz :: pict.HorizAlignment = #'center,
           ~lead_in: lead_in = #false,
-          content, ...):
+          content :: SlideContent, ...):
   let p = slide_content_pict(~sep: sep, ~horiz: horiz,
                              flatten_slide_content(#'slide, [content, ...]))
   let name = if name is_a String | name | to_string(name)
@@ -101,7 +102,7 @@ fun slide_pict(~title: title :: maybe(String || Pict) = #false,
                ~sep: sep :: Real = gap,
                ~horiz: horiz :: pict.HorizAlignment = #'center,
                ~layout: layout :: SlideLayout = #'auto,
-               content, ...) :~ Pict:
+               content :: SlideContent, ...) :~ Pict:
   let p = slide_content_pict(~sep: sep, ~horiz: horiz,
                              flatten_slide_content(#'slide_pict, [content, ...]))
   if full

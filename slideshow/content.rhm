@@ -6,6 +6,7 @@ import:
   pict/text
 
 export:
+  SlideContent
   slide_content_pict
   nonarchival
 
@@ -48,29 +49,41 @@ fun alts(contents, ...):
 class Align(sep, horiz, cs :: List, width)
 class Horiz(sep, horiz, cs :: List)
 
+annot.macro 'SlideContent': 'satisfying(is_slide_content)'
+
 fun horiz(~sep: sep :: Real || matching(#'inherit) = #'inherit,
           ~horiz: horiz :: pict.HorizAlignment = #'left,
-          content, ...):
+          content :: SlideContent, ...):
   Horiz(sep, horiz, flatten_slide_content(#'horiz, [content, ...]))
 
 fun left(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-         content, ...):
+         content :: SlideContent, ...):
   Horiz(sep, #'left, flatten_slide_content(#'left, [content, ...]))
 
 fun center(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-           content, ...):
+           content :: SlideContent, ...):
   Horiz(sep, #'center, flatten_slide_content(#'center, [content, ...]))
 
 fun right(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-          content, ...):
+          content :: SlideContent, ...):
   Horiz(sep, #'right, flatten_slide_content(#'right, [content, ...]))
 
 def gap = 24
 
 fun align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
           ~horiz: horiz :: pict.HorizAlignment = #'left,
-          content, ...):
+          content :: SlideContent, ...):
   Align(sep, horiz, flatten_slide_content(#'right, [content, ...]), #false)
+
+fun is_slide_content(c):
+  match c
+  | [c, ...]: for all (c: [c, ...]): is_slide_content(c)
+  | p :: Pict: #true
+  | p :: Next: #true
+  | p :: Alts: #true
+  | p :: Horiz: #true
+  | p :: Align: #true
+  | ~else: #false
 
 fun flatten_slide_content(who, c) :~ List:
   match c
