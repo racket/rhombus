@@ -59,7 +59,7 @@
 
 (define-infix rhombus* *
   #:weaker-than (rhombus**)
-  #:same-on-left-as (rhombus/ div mod rem))
+  #:same-as (rhombus/))
 
 (define-infix rhombus/ /
   #:weaker-than (rhombus**))

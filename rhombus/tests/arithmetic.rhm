@@ -15,7 +15,7 @@ check:
 check:
   ~eval
   10 / 2 * 4
-  ~throws "operators at same precedence, but only in the other order"
+  ~is 20
 
 check:
   fun five(x):
@@ -27,8 +27,8 @@ check: 3 ** 4 ~is 3*3*3*3
 check: 2 ** 3 ** 2 ~is 2 ** (3 ** 2)
 check: 2 ** 3 ** 2 == (2 ** 3) ** 2 ~is #false
 check:
-  2**2 + 2**2 - 2**2 * 2**2 div 2**2
-  ~is 4 + 4 - 4 * 4 div 4
+  2**2 + 2**2 - (2**2 * 2**2) div 2**2
+  ~is 4 + 4 - (4 * 4) div 4
 check:
   [2**2 / 2**2 , 2**2 * 2**2 , 2**2 mod 2**2]
   ~is [4/4, 4*4, 4 mod 4]

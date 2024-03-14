@@ -229,7 +229,8 @@
           (write-escaped v op)])]
       [(or (string? v)
            (bytes? v)
-           (exact-integer? v))
+           (exact-integer? v)
+           (and (rational? v) (exact? v)))
        (write* v op)]
       [(flonum? v)
        (cond

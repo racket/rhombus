@@ -194,24 +194,29 @@
 @doc(
   operator ((x :: Number) + (y :: Number)) :: Number
   operator ((x :: Number) - (y :: Number)) :: Number
+  operator (- (x :: Number)) :: Number
   operator ((x :: Number) * (y :: Number)) :: Number
   operator ((x :: Number) / (y :: Number)) :: Number
   operator ((x :: Number) ** (y :: Number)) :: Number
 ){
 
- The usual arithmetic operators with the usual precedence, except that
- @rhombus(/) does not have the same precedence as @rhombus(*) when it
- appears to the left of @rhombus(*).
+ The usual arithmetic operators with the usual precedence.
+
+ Note that forms like @rhombus(+1), @rhombus(-1), and @rhombus(1/2) are
+ immediate numbers, as opposed to uses of the @rhombus(+), @rhombus(-),
+ and @rhombus(/) operators.
 
 @examples(
   1+2
   3-4
+  - 4
   5*6
-  8/2
+  8 / 2
+  7 / 2
+  7.0/2
   1+2*3
   2**10
-  ~error:
-    6/2*3
+  6 / 2 * 3
 )
 
 }
@@ -223,7 +228,9 @@
   operator ((x :: Integral) mod (y :: Integral)) :: Integral
 ){
 
- Integer division (truncating), remainder, and modulo operations.
+ Integer division (truncating), remainder, and modulo operations. These
+ operators have stronger pecedence than @rhombus(+) and @rhombus(-) but
+ no precedence relationship to @rhombus(*), @rhombus(/), or @rhombus(**).
 
 @examples(
   7 div 5

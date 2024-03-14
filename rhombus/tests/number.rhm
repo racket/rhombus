@@ -96,3 +96,8 @@ check:
   1 is_a Real.at_most("oops") ~throws values("contract violation", "Real", "\"oops\"")
   1 is_a Real.in("oops", 2) ~throws values("contract violation", "Real", "\"oops\"")
   1 is_a Real.in(1, "oops") ~throws values("contract violation", "Real", "\"oops\"")
+
+  to_string(1/2) ~is "1/2"
+  to_string(1/2, ~mode: #'expr) ~is "1/2"
+  to_string(#{1+2i}) ~is "1+2i"
+  to_string(#{1+2i}, ~mode: #'expr) ~is "#{1+2i}"

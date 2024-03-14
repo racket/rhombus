@@ -488,8 +488,21 @@
             (ret 'fail new-lexeme 'error #f start-pos new-end-pos 'continuing
                  #:pending-backup pending-backup)])]
         [else
-         (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing
-              #:pending-backup pending-backup)]))]
+         (cond
+           [(and (decimal-integer? lexeme)
+                 (maybe-consume-fraction-denominator input-port lexeme end-pos))
+            => (lambda (denom-lexeme)
+                 (define n (/ (parse-number lexeme) (parse-number denom-lexeme)))
+                 (define fraction-lexeme (string-append lexeme "/" denom-lexeme))
+                 (define fraction-end-pos
+                   (struct-copy position end-pos
+                                [offset (+ (position-offset end-pos) 1 (string-length denom-lexeme))]
+                                [col (let ([c (position-col end-pos)])
+                                       (and c (+ c 1 (string-length denom-lexeme))))]))
+                 (ret 'literal n #:raw fraction-lexeme 'constant #f start-pos fraction-end-pos 'continuing))]
+           [else
+            (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing
+                 #:pending-backup pending-backup)])]))]
    [special-number
     (let ([num (case lexeme
                  [("#inf") +inf.0]
@@ -997,6 +1010,13 @@
    [(eof) #f]
    [any-char #f]))
 
+(define nonzero-uinteger-lexer
+  (lexer
+   [uinteger (and (for/or ([c (in-string lexeme)])
+                    (not (char=? #\0 c)))
+                  (string-length lexeme))]
+   [any-char #f]))
+
 (define (peek-multi-char-operator? input-port)
   (call-with-peeking-port
    input-port
@@ -1004,7 +1024,7 @@
      ((operator-lexer p) . > . 1))))
 
 (define (maybe-consume-trailing-dot input-port lexeme end-pos)
-  (define ch (peek-char input-port))
+  (define ch (peek-char-or-special input-port))
   (cond
     [(eqv? ch #\.)
      (cond
@@ -1019,6 +1039,22 @@
                                                 (and c (add1 c)))]))
         (values #t new-lexeme new-end-pos 1)])]
     [else (values #f lexeme end-pos 0)]))
+
+(define (maybe-consume-fraction-denominator input-port lexeme end-pos)
+  (define ch (peek-char-or-special input-port))
+  (cond
+    [(eqv? ch #\/)
+     (call-with-peeking-port
+      input-port
+      (lambda (p)
+        (read-char p)
+        (define len (nonzero-uinteger-lexer p))
+        (and (exact-integer? len)
+             (not (eqv? #\. (peek-char-or-special p)))
+             (begin
+               (read-char input-port)
+               (read-string len input-port)))))]
+    [else #false]))
 
 (define (peek-operator+identifier? input-port)
   (call-with-peeking-port

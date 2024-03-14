@@ -92,6 +92,8 @@
        [else (other v mode op)])]
     [(exact-integer? v)
      (write v op)]
+    [(and (rational? v) (exact? v))
+     (write v op)]
     [(boolean? v)
      (display (if v "#true" "#false") op)]
     [(void? v)

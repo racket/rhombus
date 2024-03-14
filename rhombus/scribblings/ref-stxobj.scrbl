@@ -189,7 +189,7 @@ Metadata for a syntax object can include a source location and the raw
 @examples(
   match '1 + 2'
   | '$n + $m': [n, m]
-  match '(1/1) (2/1) (3/1)'
+  match '(1 / 1) (2 / 1) (3 / 1)'
   | '($x/1) ...': [x, ...]
   match '1 + 2 * 3'
   | '$x ... * 3': [x, ...]
