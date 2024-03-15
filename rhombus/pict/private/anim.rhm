@@ -599,7 +599,7 @@ fun merge_epochs([p :~ _AnimPict, ...], dalign):
   let max_epoch = math.max(math.max(0, epochs_length(p) - duration_start(p) - 1), ...)
   let ps && [p :~ AnimPict, ...] = [reify_epochs(p, min_epoch, max_epoch), ...]
   let all_epochs:
-    for List (i: min_epoch .. max_epoch + 1):
+    for List (i: min_epoch ..= max_epoch):
       math.max(p.epoch_extent(i), ...)
   values (ps, -min_epoch, max_duration_epoch + 1, all_epochs)
 

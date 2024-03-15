@@ -31,6 +31,7 @@ internal state, and the state can even be specific to a particular
 
 }
 
+
 @doc(
   ~nonterminal:
     n_expr: block expr
@@ -46,13 +47,22 @@ internal state, and the state can even be specific to a particular
  specified, the result is an infinite sequence that contains all integers
  starting from @rhombus(n, ~var).
 
- The @rhombus(..)'s precedence is lower than the arithmetic operators
- @rhombus(+), @rhombus(-), @rhombus(*), and @rhombus(/). In particular,
- @rhombus(n_expr..1+m_expr) creates a sequence that includes
- @rhombus(m, ~var) for many forms @rhombus(m_expr).
+ The @rhombus(..) operator's precedence is lower than the arithmetic operators
+ @rhombus(+), @rhombus(-), @rhombus(*), and @rhombus(/).
 
  A @rhombus(..) expression has static information that makes it
  acceptable as a sequence to @rhombus(for) in static mode.
+
+}
+
+@doc(
+  ~nonterminal:
+    n_expr: block expr
+    m_expr: block expr
+  expr.macro '$n_expr ..= $m_expr'
+){
+
+ Like @rhombus(n_expr .. m_expr), but with an inclusive upper bound.
 
 }
 

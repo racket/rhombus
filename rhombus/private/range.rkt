@@ -10,7 +10,8 @@
          (submod "list.rkt" for-listable)
          "realm.rkt")
 
-(provide ..)
+(provide ..
+         ..=)
 
 (define-syntax ..
   (expression-infix-operator
@@ -31,6 +32,18 @@
                 #'rhs.tail)]))
    'none))
 
+(define-syntax ..=
+  (expression-infix-operator
+   (expr-quote ..=)
+   `((,(expr-quote rhombus-a:+) . weaker)
+     (,(expr-quote rhombus-a:-) . weaker)
+     (,(expr-quote rhombus-a:*) . weaker)
+     (,(expr-quote rhombus-a:/) . weaker))
+   'automatic
+   (lambda (form1 form2 stx)
+     (wrap-as-static-sequence #`(in-listable-inclusive-range #,form1 #,form2)))
+   'none))
+
 (define-for-syntax (wrap-as-static-sequence stx)
   (wrap-static-info stx #'#%sequence-constructor #'#t))
 
@@ -40,16 +53,25 @@
                                      (for/treelist ([e (listable-range-range r)])
                                        e))))
 
-(define-sequence-syntax in-listable-range
-  (lambda () #'in-listable-range/proc)
-  (lambda (stx)
-    (syntax-parse stx
-      [[(d) (_  a b)]
-       #`[(d) (in-range a b)]]
-      [_ #f])))
+(define-syntax (define-listable-range stx)
+  (syntax-parse stx
+    [(_ name in-range)
+     #'(begin
+         (define-sequence-syntax name
+           (lambda () #'proc)
+           (lambda (stx)
+             (syntax-parse stx
+               [[(d) (_ a b)]
+                #'[(d) (in-range a b)]]
+               [_ #f])))
+         (define proc
+           (let ([name (lambda (a b)
+                         (listable-range (in-range a b)))])
+             name)))]))
 
-(define (in-listable-range/proc a b)
-  (listable-range (in-range a b)))
+(define-listable-range in-listable-range in-range)
+
+(define-listable-range in-listable-inclusive-range in-inclusive-range)
 
 (define (check-integer who int)
   (unless (exact-integer? int)
