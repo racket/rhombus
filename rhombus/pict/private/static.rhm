@@ -447,6 +447,7 @@ fun beside(~sep: sep ::Real = 0,
     match remove_nothings(ps):
     | []:
         nothing
+    | [p]: p
     | [p :: _StaticPict, ...]:
         let children = [p, ...]
         let all_instances = [p._instances, ...]
@@ -497,6 +498,7 @@ fun stack(~sep: sep :: Real = 0,
     match remove_nothings(ps):
     | []:
         nothing
+    | [p]: p
     | [p :: _StaticPict, ...]:        
         let children = [p, ...]
         let all_instances = [p._instances, ...]
@@ -539,6 +541,7 @@ fun overlay(~horiz: horiz :: HorizAlignment = #'center,
     match remove_nothings(ps):
     | []:
         nothing
+    | [p]: p
     | [p :: _StaticPict, ...]:
         let children = [p, ...]
         let all_instances = [p._instances, ...]

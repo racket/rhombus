@@ -608,16 +608,21 @@ fun sequential(~join: mode :: SequentialJoin = #'step,
                ~concurrent: as_concurrent = #true,
                ~duration: dalign :: DurationAlignment = #'pad,
                p :: Pict, ...) :~ List.of(AnimPict):
-  let (ps, starts) = make_sequential(for List (p: [p, ...]):
-                                       cond
-                                       | p == nothing: p
-                                       | p is_a StaticPict: AnimPict(p)
-                                       | ~else: p,
-                                     ~join: mode,
-                                     ~keep_nothing: #true)
-  if as_concurrent
-  | concurrent(~duration: dalign, & ps)
-  | ps
+  let ps = [p, ...]
+  match ps
+  | []: []
+  | [p]: [p]
+  | ~else:
+      let (ps, starts) = make_sequential(for List (p: [p, ...]):
+                                           cond
+                                           | p == nothing: p
+                                           | p is_a StaticPict: AnimPict(p)
+                                           | ~else: p,
+                                         ~join: mode,
+                                         ~keep_nothing: #true)
+      if as_concurrent
+      | concurrent(~duration: dalign, & ps)
+      | ps
 
 // can leave `nothing`s in place, but they're not represented in starts
 fun make_sequential(ps :~ List.of(AnimPict),
@@ -706,9 +711,10 @@ fun concurrent(~epoch: ealign :: EpochAlignment = #'center,
 
 fun make_concurrent(ps :~ List.of(AnimPict),
                     ~epoch: ealign,
-                    ~duration: dalign) :~ List.of(AnimPict):  
+                    ~duration: dalign) :~ values(List.of(AnimPict), Int):
   match ps
   | []: values([], 1)
+  | [p :~ AnimPict]: values([p], p.duration)
   | [p, ...]:
       let (ps :~ List, m_duration_start, m_duration, m_epoch_extents :~ List):
         merge_epochs([p, ...], dalign)
@@ -818,33 +824,35 @@ fun switch(~splice: splice :: maybe(matching(#'before || #'after)) = #false,
               if p is_a AnimPict
               | p
               | AnimPict(p))
-  if ps == []
-  | nothing
-  | let (ps, starts :~ List) = make_sequential(ps, ~join: join, ~keep_nothing: #false)
-    let (ps :~ List.of(_AnimPict), m_duration_start, m_duration, m_epoch_extents :~ List):
-      merge_epochs(ps, #'pad)
-    anim_pict(recur loop(i = 0,
-                         start_i = 0,
-                         accum :~ List = []):
-                cond
-                | i == m_epoch_extents.length():
-                    accum
-                | start_i >= starts.length() - 1:
-                    loop(i + 1, start_i, accum.add(ps[start_i]._epochs[i]))
-                | (i - m_duration_start) >= starts[start_i+1]:
-                    loop(i + 1, start_i + 1, accum.add(if join == #'splice && splice == #'before
-                                                       | TransitionPictEpoch(ps[start_i]._epochs[i],
-                                                                             ps[start_i],
-                                                                             ps[start_i + 1]._epochs[i],
-                                                                             ps[start_i + 1])
-                                                       | ps[start_i + 1]._epochs[i]))
-                | ~else:
-                    loop(i + 1, start_i, accum.add(ps[start_i]._epochs[i])),
-              m_epoch_extents,
-              m_duration_start,
-              m_duration,
-              #true,              
-              _AnimPict._before(ps[0]),
-              ps,
-              [],
-              {})
+  match ps
+  | []: nothing
+  | [p]: p
+  | ~else:
+      let (ps, starts :~ List) = make_sequential(ps, ~join: join, ~keep_nothing: #false)
+      let (ps :~ List.of(_AnimPict), m_duration_start, m_duration, m_epoch_extents :~ List):
+        merge_epochs(ps, #'pad)
+      anim_pict(recur loop(i = 0,
+                           start_i = 0,
+                           accum :~ List = []):
+                  cond
+                  | i == m_epoch_extents.length():
+                      accum
+                  | start_i >= starts.length() - 1:
+                      loop(i + 1, start_i, accum.add(ps[start_i]._epochs[i]))
+                  | (i - m_duration_start) >= starts[start_i+1]:
+                      loop(i + 1, start_i + 1, accum.add(if join == #'splice && splice == #'before
+                                                         | TransitionPictEpoch(ps[start_i]._epochs[i],
+                                                                               ps[start_i],
+                                                                               ps[start_i + 1]._epochs[i],
+                                                                               ps[start_i + 1])
+                                                         | ps[start_i + 1]._epochs[i]))
+                  | ~else:
+                      loop(i + 1, start_i, accum.add(ps[start_i]._epochs[i])),
+                m_epoch_extents,
+                m_duration_start,
+                m_duration,
+                #true,
+                _AnimPict._before(ps[0]),
+                ps,
+                [],
+                {})
