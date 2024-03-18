@@ -26,6 +26,7 @@
          "class-method.rkt"
          "class-top-level.rkt"
          "dotted-sequence-parse.rkt"
+         "dot-provider-key.rkt"
          "parens.rkt"
          (submod "namespace.rkt" for-exports)
          "class-able.rkt"

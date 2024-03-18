@@ -6,6 +6,7 @@
          (submod "annot-macro.rkt" for-class)
          (for-syntax "class-transformer.rkt")
          (submod "dot.rkt" for-dot-provider)
+         "dot-provider-key.rkt"
          "dotted-sequence-parse.rkt")
 
 (provide (for-syntax build-class-annotation-form

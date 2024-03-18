@@ -8,7 +8,13 @@
 (provide (for-syntax summarize-arity
                      shift-arity
                      union-arity-summaries
+                     intersect-arity-summaries
                      check-arity))
+
+;; A function arity description is one of
+;;  <mask>
+;;  (<mask> (<required-kw> ...) (<allowed-kw> ...))
+;;  (<mask> (<required-kw> ...) #f) ; = all allowed
 
 (define-for-syntax (summarize-arity kws defaults rest? kw-rest?)
   (define (syntax->list/maybe stx)
@@ -74,7 +80,7 @@
     (for/fold ([a a]) ([k (in-immutable-hash-keys b)])
       (hash-set a k #t))))
 
-(define-for-syntax (union-arity-summaries as)
+(define-for-syntax (combine-arity-summaries as combine)
   (cond
     [(null? as) #f]
     [(null? (cdr as)) (car as)]
@@ -85,16 +91,29 @@
            (list a #hasheq() #hasheq())))
      (define norm-a
        (for/fold ([new-a (normalize (car as))]) ([a (in-list (cdr as))])
-         (let ([a (normalize a)])
-           (list (bitwise-ior (car new-a) (car a))
-                 (hash-intersect (cadr new-a) (cadr a))
-                 (and (caddr new-a) (caddr a) (hash-union (caddr new-a) (caddr a)))))))
+         (combine new-a (normalize a))))
      (define required-kws (hash->list (cadr norm-a)))
      (define allowed-kws (and (caddr norm-a) (hash->list (caddr norm-a))))
      (if (and (null? required-kws)
               (null? allowed-kws))
          (car norm-a)
          (list (car norm-a) required-kws allowed-kws))]))
+
+(define-for-syntax (union-arity-summaries as)
+  (combine-arity-summaries
+   as
+   (lambda (new-a a)
+     (list (bitwise-ior (car new-a) (car a))
+           (hash-intersect (cadr new-a) (cadr a))
+           (and (caddr new-a) (caddr a) (hash-union (caddr new-a) (caddr a)))))))
+
+(define-for-syntax (intersect-arity-summaries as)
+  (combine-arity-summaries
+   as
+   (lambda (new-a a)
+     (list (bitwise-and (car new-a) (car a))
+           (hash-union (cadr new-a) (cadr a))
+           (and (caddr new-a) (caddr a) (hash-intersect (caddr new-a) (caddr a)))))))
 
 (define-for-syntax (check-arity stx fallback-stx a n kws rsts kwrsts kind)
   (define orig-needed (if (pair? a)

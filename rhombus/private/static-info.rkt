@@ -4,9 +4,9 @@
                      enforest/property
                      enforest/syntax-local
                      "introducer.rkt"
-                     "srcloc.rkt")
-         "indirect-static-info-key.rkt"
-         "values-key.rkt")
+                     "srcloc.rkt"
+                     "realm.rkt"
+                     (for-syntax racket/base)))
 
 ;; Represent static information in either of two ways:
 ;;
@@ -20,6 +20,7 @@
 
 (begin-for-syntax
   (provide (property-out static-info)
+           (property-out static-info-key)
            static-info-get-stxs
            in-static-info-space
            wrap-static-info
@@ -35,15 +36,25 @@
            static-info-lookup
            static-infos-intersect
            static-infos-union
+           static-info-identifier-union
+           static-info-identifier-intersect
+           static-infos-result-union
+           static-infos-result-intersect
            static-infos-remove
            make-static-infos))
 
 (provide define-static-info-syntax
          define-static-info-syntaxes
-         define-static-info-syntax/maybe)
+         define-static-info-syntax/maybe
+
+         define-static-info-key-syntax/provide
+
+         #%indirect-static-info
+         #%values)
 
 (begin-for-syntax
   (property static-info (get-stxs))
+  (property static-info-key (union intersect))
 
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
@@ -160,6 +171,30 @@
        (relocate+reraw e2 #`(tag qs #,e2))]
       [_ (relocate+reraw srcloc e)])))
 
+(define-syntax (define-static-info-key-syntax/provide stx)
+  (syntax-parse stx
+    [(_ id:identifier rhs)
+     #`(begin
+         (define-syntax id rhs)
+         (provide id))]))
+
+(define-syntax #%indirect-static-info
+  (static-info-key (lambda (a b) (error "should not union indirect statinfos"))
+                   (lambda (a b) (error "should not intersect indirect statinfos"))))
+
+(define-syntax #%values
+  (let ([merge (lambda (a b combine)
+                 (define as (syntax->list a))
+                 (define bs (syntax->list b))
+                 (and as bs (equal? (length as) (length bs))
+                      (datum->syntax
+                       #f
+                       (map combine as bs))))])
+    (static-info-key (lambda (a b)
+                       (merge a b static-infos-union))
+                     (lambda (a b)
+                       (merge a b static-infos-intersect)))))
+
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx
     [(_ id:identifier #:defined defined:id)
@@ -185,22 +220,151 @@
   (define infos (syntax->list static-infos))
   (static-info (lambda () infos)))
 
+(define-for-syntax (flatten-indirects as)
+  (and as
+       (for*/list ([a (in-list as)]
+                   [e (in-list
+                       (syntax-parse a
+                         [(a-key a-val)
+                          #:when (free-identifier=? #'a-key #'#%indirect-static-info)
+                          (define si (and (identifier? #'a-val)
+                                          (syntax-local-value* (in-static-info-space #'a-val)
+                                                               static-info-ref)))
+                          (if si
+                              (flatten-indirects (let ([infos ((static-info-get-stxs si))])
+                                                   (if (syntax? infos)
+                                                       (syntax->list infos)
+                                                       infos)))
+                              null)]
+                         [_ (list a)]))])
+         e)))
+
 (define-for-syntax (static-infos-intersect as bs)
-  (let ([bs (syntax->list bs)])
-    (for/list ([a (in-list (syntax->list as))]
-               #:when (syntax-parse a
-                        [(a-key a-val)
-                         (for/or ([b (in-list bs)])
-                           (syntax-parse b
-                             [(b-key b-val)
-                              (and (free-identifier=? #'a-key #'b-key)
-                                   (equal-static-info-value? #'a-val #'b-val))]
-                             [_ #f]))]
-                        [_ #f]))
-      a)))
+  (cond
+    [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) as]
+    [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) bs]
+    [else
+     (let ([as (flatten-indirects (if (list? as) as (syntax->list as)))]
+           [bs (flatten-indirects (if (list? bs) bs (syntax->list bs)))])
+       (or
+        (and as
+             bs
+             (for/list ([a (in-list as)]
+                        #:do [(define new-val
+                                (syntax-parse a
+                                  [(a-key a-val)
+                                   (for/or ([b (in-list bs)])
+                                     (syntax-parse b
+                                       [(b-key b-val)
+                                        #:when (free-identifier=? #'a-key #'b-key)
+                                        (let ([key (syntax-local-value* #'a-key static-info-key-ref)])
+                                          (cond
+                                            [key
+                                             ((static-info-key-intersect key) #'a-val #'b-val)]
+                                            [else
+                                             (static-infos-result-intersect #'a-val #'b-val)]))]
+                                       [_ #f]))]
+                                  [_ #f]))]
+                        #:when new-val)
+               (syntax-parse a
+                 [(a-key . _) (datum->syntax #f (list #'a-key new-val))])))
+        #'()))]))
 
 (define-for-syntax (static-infos-union as bs)
-  (append (syntax->list as) bs))
+  (cond
+    [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) bs]
+    [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) as]
+    [else
+     (let ([as (flatten-indirects (if (list? as) as (syntax->list as)))]
+           [bs (flatten-indirects (if (list? bs) bs (syntax->list bs)))])
+       (cond
+         [(not as) (or bs #'())]
+         [(not bs) as]
+         [else
+          (append
+           (for/list ([a (in-list as)]
+                      #:do [(define new-val
+                              (syntax-parse a
+                                [(a-key a-val)
+                                 (define v
+                                   (for/or ([b (in-list bs)])
+                                     (syntax-parse b
+                                       [(b-key b-val)
+                                        #:when (free-identifier=? #'a-key #'b-key)
+                                        (let ([key (syntax-local-value* #'a-key static-info-key-ref)])
+                                          (list
+                                           (cond
+                                             [key
+                                              ((static-info-key-union key) #'a-val #'b-val)]
+                                             [else
+                                              (static-infos-result-union #'a-val #'b-val)])))]
+                                       [_ #f])))
+                                 (if v
+                                     (car v)
+                                     #'a-val)]
+                                [_ #f]))]
+                      #:when new-val)
+             (syntax-parse a
+               [(a-key . _) (datum->syntax #f (list #'a-key new-val))]))
+           (for/list ([b (in-list bs)]
+                      #:unless (syntax-parse b
+                                 [(b-key . _)
+                                  (for/or ([a (in-list as)])
+                                    (syntax-parse a
+                                      [(a-key b-val)
+                                       (free-identifier=? #'a-key #'b-key)]
+                                      [_ #f]))]
+                                 [_ #f]))
+             b))]))]))
+
+(define-for-syntax static-info-identifier-union
+  (lambda (a b)
+    a))
+
+(define-for-syntax static-info-identifier-intersect
+  (lambda (a b)
+    (and (identifier? a)
+         (identifier? b)
+         (free-identifier=? a b)
+         a)))
+
+(define-for-syntax (static-infos-result-union as bs)
+  ;; With `#:at_arities`, for now, we handle only the simple case that the masks coincide
+  (syntax-parse as
+    [(#:at_arities (a-mask a-results) ...)
+     (syntax-parse bs
+       [(#:at_arities (b-mask b-results) ...)
+        (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
+            #`(#:at_arities #,(for/list ([a-results (syntax->list #'(a-results ...))]
+                                         [b-results (syntax->list #'(b-results ...))])
+                                (static-infos-union a-results b-results)))
+            as)]
+       [_
+        as])]
+    [_
+     (syntax-parse bs
+       [(#:at_arities (b-mask b-results) ...)
+        as]
+       [_ (static-infos-union as bs)])]))
+
+(define-for-syntax (static-infos-result-intersect as bs)
+  ;; With `#:at_arities`, for now, we handle only the simple case that the masks coincide
+  (syntax-parse as
+    [(#:at_arities (a-mask a-results) ...)
+     (syntax-parse bs
+       [(#:at_arities (b-mask b-results) ...)
+        (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
+            #`(#:at_arities #,(for/list ([a-results (syntax->list #'(a-results ...))]
+                                         [b-results (syntax->list #'(b-results ...))])
+                                (static-infos-intersect a-results b-results)))
+            #false)]
+       [_
+        #false])]
+    [_
+     (syntax-parse bs
+       [(#:at_arities (b-mask b-results) ...)
+        #false]
+       [_ (static-infos-intersect as bs)])]))
 
 (define-for-syntax (static-infos-remove as key)
   (for/list ([a (in-list (if (syntax? as) (syntax->list as) as))]

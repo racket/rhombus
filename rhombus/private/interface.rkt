@@ -23,6 +23,7 @@
          "class-step.rkt"
          "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
+         "dot-provider-key.rkt"
          (for-syntax "class-transformer.rkt")
          (only-meta-in 1
                        "class-method.rkt")

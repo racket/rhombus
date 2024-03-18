@@ -580,9 +580,10 @@
   (syntax-srcloc (maybe-respan stx)))
 
 (define/method Syntax.property
-  #:static-infos ((#%call-results-at-arities
-                   ((3 #,syntax-static-infos)
-                    (4 #,syntax-static-infos))))
+  #:static-infos ((#%call-result
+                   (#:at_arities
+                    ((8 ())
+                     (16 #,syntax-static-infos)))))
   (case-lambda
     [(stx prop)
      (syntax-property (extract-ctx who stx #:false-ok? #f) prop)]

@@ -20,6 +20,7 @@
          "static-info.rkt"
          "indirect-static-info-key.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "dot-provider-key.rkt"
          (submod "assign.rkt" for-assign)
          "parens.rkt"
          (submod "function-parse.rkt" for-call)

@@ -1032,18 +1032,20 @@
          (define e (relocate+reraw (or srcloc
                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx)))
-         (define result-static-infos (or (rator-static-info #'#%call-result)
+         (define result-static-infos (or (let ([results (rator-static-info #'#%call-result)])
+                                           (and results
+                                                (syntax-parse results
+                                                  [(#:at_arities r)
+                                                   (let loop ([r #'r])
+                                                     (syntax-parse r
+                                                       [((mask results) . rest)
+                                                        (if (bitwise-bit-set? (syntax-e #'mask) (+ num-rands (length extra-rands)))
+                                                            #'results
+                                                            (loop #'rest))]
+                                                       [_ #f]))]
+                                                  [results #'results])))
                                          #'()))
-         (define all-result-static-infos (or (let ([r (rator-static-info #'#%call-results-at-arities)])
-                                               (let loop ([r r])
-                                                 (syntax-parse r
-                                                   [((n (result ...)) . rest)
-                                                    (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands)))
-                                                        #`(result ... . #,result-static-infos)
-                                                        (loop #'rest))]
-                                                   [_ #f])))
-                                             result-static-infos))
-         (values e all-result-static-infos)))])
+         (values e result-static-infos)))])
    tail))
 
 (define-for-syntax (handle-repetition repetition?

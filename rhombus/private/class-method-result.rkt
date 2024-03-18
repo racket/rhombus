@@ -126,7 +126,7 @@
            (define all-static-infos
              (if all-count
                  (for/foldr ([all-static-infoss (for/list ([_ (in-range all-count)])
-                                                  '())]
+                                                  #'())]
                              #:result (if (eqv? all-count 1)
                                           #`#,(car all-static-infoss)
                                           #`((#%values #,all-static-infoss))))
@@ -146,9 +146,10 @@
      (define (gen id [de-method? #f])
        (if (syntax-e id)
            (list #`(define-static-info-syntax #,id
-                     #,(if (eq? (syntax-e #'kind) 'property)
-                           #`(#%call-results-at-arities ((#,(if de-method? 0 1) #,all-static-infos)))
-                           #`(#%call-result #,all-static-infos))
+                     (#%call-result
+                      #,(if (eq? (syntax-e #'kind) 'property)
+                            #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))
+                            all-static-infos))
                      #,@(if (syntax-e #'arity)
                             (list #`(#%function-arity #,(if de-method?
                                                             (de-method-arity #'arity)

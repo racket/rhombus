@@ -6,6 +6,7 @@
                      (only-in enforest/operator operator-proc)
                      "srcloc.rkt")
          "binding.rkt"
+         "dot-provider-key.rkt"
          (submod "bind-macro.rkt" for-class)
          "composite.rkt"
          "parens.rkt"

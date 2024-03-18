@@ -13,6 +13,7 @@
          "dot-parse.rkt"
          "function-arity-key.rkt"
          "call-result-key.rkt"
+         "dot-provider-key.rkt"
          "composite.rkt"
          "class-desc.rkt"
          "define-arity.rkt"

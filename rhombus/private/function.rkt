@@ -8,6 +8,7 @@
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
+         (only-in "implicit.rkt" #%literal)
          "parens.rkt"
          "expression.rkt"
          "definition.rkt"
@@ -198,7 +199,15 @@
                                                     (raise-syntax-error #f "duplicate keyword" kw #f))
                                                   (hash-set ht kw #t))
                                                 #`(#t (accepts-keywords? v '#,(sort (map syntax-e kws) keyword<?)))]))]
-                        [(n ...) (generate-temporaries #'(g ...))])
+                        [(n ...) (generate-temporaries #'(g ...))]
+                        [(function-arity-static ...) (syntax-parse #'(g ...)
+                                                       #:datum-literals (group)
+                                                       [((group n:exact-nonnegative-integer))
+                                                        #:when (free-identifier=? #'#%literal (datum->syntax #'n '#%literal))
+                                                        #`((#%function-arity (#,(arithmetic-shift 1 (syntax-e #'n))
+                                                                              ()
+                                                                              (kw ...))))]
+                                                       [_ #'()])])
             (values (annotation-predicate-form
                      #'(let ([n (rhombus-expression g)]
                              ...)
@@ -209,7 +218,7 @@
                                 (procedure-arity-includes? v n kw-ok?)
                                 ...
                                 kw-check)))
-                     function-static-infos)
+                     #`(function-arity-static ... . #,function-static-infos))
                     #'tail)))]))))
 
 (define (check-nonneg-int who v)

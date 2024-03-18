@@ -1,5 +1,7 @@
 #lang racket/base
+(require (for-syntax racket/base)
+         "static-info.rkt")
 
-(provide #%sequence-constructor)
-
-(define #%sequence-constructor #f)
+(define-static-info-key-syntax/provide #%sequence-constructor
+  (static-info-key static-info-identifier-union
+                   static-info-identifier-intersect))
