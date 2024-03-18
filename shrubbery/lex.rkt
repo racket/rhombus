@@ -488,21 +488,23 @@
             (ret 'fail new-lexeme 'error #f start-pos new-end-pos 'continuing
                  #:pending-backup pending-backup)])]
         [else
+         (define-values (denom-lexeme fraction-pending-backup)
+           (if (decimal-integer? lexeme)
+               (maybe-consume-fraction-denominator input-port lexeme end-pos)
+               (values #f 0)))
          (cond
-           [(and (decimal-integer? lexeme)
-                 (maybe-consume-fraction-denominator input-port lexeme end-pos))
-            => (lambda (denom-lexeme)
-                 (define n (/ (parse-number lexeme) (parse-number denom-lexeme)))
-                 (define fraction-lexeme (string-append lexeme "/" denom-lexeme))
-                 (define fraction-end-pos
-                   (struct-copy position end-pos
-                                [offset (+ (position-offset end-pos) 1 (string-length denom-lexeme))]
-                                [col (let ([c (position-col end-pos)])
-                                       (and c (+ c 1 (string-length denom-lexeme))))]))
-                 (ret 'literal n #:raw fraction-lexeme 'constant #f start-pos fraction-end-pos 'continuing))]
+           [denom-lexeme
+            (define n (/ (parse-number lexeme) (parse-number denom-lexeme)))
+            (define fraction-lexeme (string-append lexeme "/" denom-lexeme))
+            (define fraction-end-pos
+              (struct-copy position end-pos
+                           [offset (+ (position-offset end-pos) 1 (string-length denom-lexeme))]
+                           [col (let ([c (position-col end-pos)])
+                                  (and c (+ c 1 (string-length denom-lexeme))))]))
+            (ret 'literal n #:raw fraction-lexeme 'constant #f start-pos fraction-end-pos 'continuing)]
            [else
             (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing
-                 #:pending-backup pending-backup)])]))]
+                 #:pending-backup (max pending-backup fraction-pending-backup))])]))]
    [special-number
     (let ([num (case lexeme
                  [("#inf") +inf.0]
@@ -1049,12 +1051,13 @@
       (lambda (p)
         (read-char p)
         (define len (nonzero-uinteger-lexer p))
-        (and (exact-integer? len)
-             (not (eqv? #\. (peek-char-or-special p)))
-             (begin
-               (read-char input-port)
-               (read-string len input-port)))))]
-    [else #false]))
+        (values (and (exact-integer? len)
+                     (not (eqv? #\. (peek-char-or-special p)))
+                     (begin
+                       (read-char input-port)
+                       (read-string len input-port)))
+                1)))]
+    [else (values #false 0)]))
 
 (define (peek-operator+identifier? input-port)
   (call-with-peeking-port
