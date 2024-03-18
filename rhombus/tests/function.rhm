@@ -20,6 +20,53 @@ check:
   (fun (x, ~y = 0): #void) is_a Function.of_arity(1, ~y) ~is #true
   (fun (x, ~y): #void) is_a Function.of_arity(1, ~y) ~is #true
 
+block:
+  use_static
+  fun g(x, ...): [x, ...]
+  let f :: Function.of_arity(1) = (g :: Function.of_arity(2))
+  check f(1) ~is [1]
+  check f(1, 2) ~is [1, 2]
+
+check:
+  ~eval
+  use_static
+  fun g(x, ...): [x, ...]
+  def f :: Function.of_arity(1) = (g :: Function.of_arity(2))
+  f()
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  fun g(x, ...): [x, ...]
+  def f :: Function.of_arity(1) = (g :: Function.of_arity(2))
+  f(1, 2, 3)
+  ~throws "wrong number of arguments in function call"
+
+check:
+  use_static
+  fun f1(g :: Function.of_arity(1)):
+    g(1)
+  fun f2(g :: Function.of_arity(1, ~ok)):
+    g(1)
+  fun f3(g :: Function.of_arity(1, ~ok)):
+    g(1, ~ok: 10)
+  ~completes
+
+check:
+  ~eval
+  use_static
+  fun f(g :: Function.of_arity(1)):
+    g(1, ~kw: 10)
+  ~throws "keyword argument not recognized"
+
+check:
+  ~eval
+  use_static
+  fun f(g :: Function.of_arity(1) || Function.of_arity(2)):
+    g(1)
+  ~throws "wrong number of arguments "
+
 check:
   (fun (x): #void) is_a Function.of_arity(#void, error("I throw first!"))
   ~throws "I throw first!"

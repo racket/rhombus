@@ -31,7 +31,6 @@
 
              in-dot-provider-space))
   (provide define-dot-provider-syntax
-           #%dot-provider
            prop:field-name->accessor
            prop:field-name->mutator
            curry-method))

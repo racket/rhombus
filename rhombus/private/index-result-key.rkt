@@ -1,5 +1,7 @@
 #lang racket/base
+(require (for-syntax racket/base)
+         "static-info.rkt")
 
-(provide #%index-result)
-
-(define #%index-result #f)
+(define-static-info-key-syntax/provide #%index-result
+  (static-info-key static-infos-union
+                   static-infos-intersect))

@@ -4,6 +4,8 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
+@(def statinfo_key_defn = @rhombus(statinfo.key, ~defn))
+
 @title{Static Information}
 
 @doc(
@@ -67,7 +69,8 @@
    ((#,(@rhombus(key_id, ~var)), #,(@rhombus(val, ~var))), ...))
 
  Keys for static information are compared based on binding, not merely
- the key's symbolic form.
+ the key's symbolic form. Key identifiers should be defined with
+ @rhombus(statinfo.key, ~defn).
 
  See @secref("annotation-macro") for an example.
 
@@ -133,9 +136,69 @@
  avoid expansion of terms that are nested within a block.
 
  Keys for static information are compared based on binding, not merely
- the key's symbolic form.
+ the key's symbolic form.  Key identifiers should be defined with
+ @statinfo_key_defn.
 
 }
+
+@doc(
+  fun statinfo_meta.gather(expr_stx :: Syntax) :: Syntax
+){
+
+ Returns all of the static information of @rhombus(expr_stx) in unpacked
+ form. The returned static information corresponds to all the possible
+ keys for which @rhombus(statinfo_meta.lookup) would return a value.
+
+}
+
+@doc(
+  fun statinfo_meta.union(statinfo_stx :: Syntax, ...) :: Syntax
+  fun statinfo_meta.intersect(statinfo_stx :: Syntax, ...) :: Syntax
+){
+
+ Takes static information in unpacked form and combines it into one set
+ of static information in unpacked form, where the returned information
+ is the union or intersection of all given information.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    union_proc_expr: block expr
+    intersect_proc_expr: block expr
+
+  defn.macro '«statinfo.key $id:
+                 $clause
+                 ...»'
+  grammar clause:
+    ~union: union_proc_expr
+    ~intersect: intersect_proc_expr
+){
+
+ Binds @rhombus(id) for use as a static info key identifier. Both
+ @rhombus(union_proc_expr) and @rhombus(intersect_proc_expr) are
+ required, and they should each produce a function that accepts two
+ syntax objects as values for static information keyed by @rhombus('id').
+ The union operation is used, for example, on static information from
+ annotations combined with @rhombus(&&, ~annot), and interaction is used
+ on static information from annotations combined with
+ @rhombus(||, ~annot).
+
+ Typically, a definition @rhombus(statinfo.key id) should be paired with
+ a definition @rhombus(meta #,(rhombus(def)) #,(rhombus(id_key, ~var)) = 'id') so
+ that @rhombus(id_key, ~var) can be used directly as a key, instead of
+ @rhombus('id').
+
+ When a static information key is not an identifier bound via
+ @rhombus(statinfo.key, ~defn), then default union and intersection operations
+ are used for the key's values. The default functions use the same merge
+ operations as @rhombus(statinfo_meta.call_result_key), which means that
+ they merge nested static information.
+
+}
+
+
 
 @doc(
   def statinfo_meta.call_result_key :: Identifier

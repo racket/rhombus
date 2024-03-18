@@ -11,6 +11,7 @@
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-arity.rkt"
+         "dot-provider-key.rkt"
          "static-info.rkt"
          "class-able.rkt")
 
@@ -154,7 +155,7 @@
                                               [si (syntax->list #'(public-field-static-infos ...))])
                                      (append
                                       (if (syntax-e maybe-set)
-                                          (list #`(#%call-results-at-arities ((1 #,si)))
+                                          (list #`(#%call-result (#:at_arities ((2 #,si))))
                                                 #'(#%function-arity 6))
                                           (list #`(#%call-result #,si)
                                                 #'(#%function-arity 2)))

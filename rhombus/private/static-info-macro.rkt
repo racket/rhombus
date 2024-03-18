@@ -39,7 +39,8 @@
 
 (define+provide-space statinfo rhombus/statinfo
   #:fields
-  (macro))
+  (macro
+   key))
 
 (begin-for-syntax
   (define-name-root statinfo_meta
@@ -50,6 +51,9 @@
      [unpack_group statinfo_meta.unpack_group]
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
+     [gather statinfo_meta.gather]
+     [union statinfo_meta.union]
+     [intersect statinfo_meta.intersect]
 
      call_result_key
      index_result_key
@@ -64,23 +68,51 @@
      values_key
      indirect_key)))
 
-(define-for-syntax (make-static-info-macro-macro in-space)
+(define-for-syntax (make-static-info-macro-macro in-space convert-id)
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (_::quotes (group name::name)) (body-tag::block body ...))
          #`((define-syntax #,(in-space #'name.name)
-              (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
+              (#,convert-id 'name.name (rhombus-body-at body-tag body ...))))]))))
 
 (define-defn-syntax macro
-  (make-static-info-macro-macro in-static-info-space))
+  (make-static-info-macro-macro in-static-info-space #'convert-static-info))
+
+(define-defn-syntax key
+  (definition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (group)
+        [(_ name::name (body-tag::block
+                        (~and
+                         (~seq (group kw clause-block) ...)
+                         (~seq
+                          (~alt (~optional (group #:union
+                                                  (union-tag::block
+                                                   union-body ...)))
+                                (~optional (group #:intersect
+                                                  (intersect-tag::block
+                                                   intersect-body ...))))
+                          ...))))
+         (unless (attribute union-tag)
+           (raise-syntax-error #f "missing a `~union` clause" stx))
+         (unless (attribute intersect-tag)
+           (raise-syntax-error #f "missing an `~intersect` clause" stx))
+         #`((define-syntax name.name
+              (make-key (~@ kw (rhombus-body-expression clause-block)) ...)))]))))
 
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
     (raise-bad-macro-result who "static info" stx))
   (define si (syntax->list (pack who stx)))
   (static-info (lambda () si)))
+
+(define-for-syntax (convert-static-info-key who val)
+  (unless (static-info-key? val)
+    (raise-argument-error* 'statinfo.key rhombus-realm "static info key" val))
+  val)
 
 (define-for-syntax (pack who stx)
   (pack-static-infos who (unpack-term stx who #f)))
@@ -94,6 +126,41 @@
   (unless (identifier? id)
     (raise-argument-error* who rhombus-realm "Identifier" id-in))
   id)
+
+(define-for-syntax (make-key #:union union #:intersect intersect)
+  (define (check-proc union)
+    (unless (and (procedure? union)
+                 (procedure-arity-includes? union 2))
+      (raise-argument-error* 'statinfo.key rhombus-realm "Function.of_arity(2)" union)))
+  (check-proc union)
+  (check-proc intersect)
+  (static-info-key union intersect))
+
+(define-for-syntax (extract-expr-static-infos who form)
+  (extract-static-infos
+   (syntax-parse (unpack-group form who #f)
+     #:datum-literals (parsed group)
+     [(group (parsed #:rhombus/expr e)) #'e]
+     [(group . (~var name (:hier-name-seq in-name-root-space
+                                          (lambda (x) x)
+                                          name-path-op
+                                          name-root-ref/maybe)))
+      (and (null? (syntax-e #'name.tail))
+           #'name.name)]
+     [(group t) #'t]
+     [g #'g])))
+
+(define-for-syntax (static-infos-merge who statinfos-unpacked merge)
+  (define statinfos
+    (for/list ([stx (in-list statinfos-unpacked)])
+      (check-syntax who stx)
+      (pack-static-infos who stx)))
+  (if (null? statinfos)
+      #'()
+      (unpack-static-infos
+       who
+       (for/fold ([merged (car statinfos)]) ([statinfo (in-list statinfos)])
+         (merge merged statinfo)))))
 
 (begin-for-syntax
   (define/arity (statinfo_meta.pack stx)
@@ -131,20 +198,21 @@
   (define/arity (statinfo_meta.lookup form key-in)
     (check-syntax who form)
     (define key (unpack-identifier who key-in))
-    (define si
-      (extract-static-infos
-       (syntax-parse (unpack-group form who #f)
-         #:datum-literals (parsed group)
-         [(group (parsed #:rhombus/expr e)) #'e]
-         [(group . (~var name (:hier-name-seq in-name-root-space
-                                              (lambda (x) x)
-                                              name-path-op
-                                              name-root-ref/maybe)))
-          (and (null? (syntax-e #'name.tail))
-               #'name.name)]
-         [(group t) #'t]
-         [g #'g])))
+    (define si (extract-expr-static-infos who form))
     (and si (static-info-lookup si key)))
+
+  (define/arity (statinfo_meta.gather form)
+    (check-syntax who form)
+    (define si (extract-expr-static-infos who form))
+    (unpack-static-infos who (or si #'())))
+
+  (define/arity (statinfo_meta.union . statinfos)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (static-infos-merge who statinfos static-infos-union))
+
+  (define/arity (statinfo_meta.intersect . statinfos)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (static-infos-merge who statinfos static-infos-intersect))
   )
 
 (define-syntax-rule (define-key key id)

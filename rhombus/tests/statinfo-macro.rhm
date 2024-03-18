@@ -71,3 +71,22 @@ check:
   statinfo_meta.sequence_element_key.unwrap()
   statinfo_meta.values_key.unwrap()
   ~completes
+
+block:
+  use_static
+  expr.macro 'both ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
+    statinfo_meta.wrap(c, statinfo_meta.union(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+  expr.macro 'either ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
+    statinfo_meta.wrap(c, statinfo_meta.intersect(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+  check (both ([]) ([]): [1])[0] ~is 1
+  check (either ([]) ([]): [1])[0] ~is 1
+  check (both ([]) ([]): "")[0] ~throws "expected: List"
+
+check:
+  ~eval
+  use_static
+  import rhombus/meta open
+  expr.macro 'either ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
+    statinfo_meta.wrap(c, statinfo_meta.intersect(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+  (either ([]) (""): 0) ++ []
+  ~throws "specialization not known"

@@ -1,5 +1,7 @@
 #lang racket/base
+(require (for-syntax racket/base)
+         "static-info.rkt")
 
-(provide #%dot-provider)
-
-(define #%dot-provider #f)
+(define-static-info-key-syntax/provide #%dot-provider
+  (static-info-key static-info-identifier-union
+                   static-info-identifier-intersect))
