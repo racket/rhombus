@@ -21,6 +21,12 @@
  @rhombus(#false)), returns the result of the @rhombus(then_body) clause,
  otherwise returns the result of the @rhombus(else_body) clause.
 
+ Static information is gathered from @rhombus(then_body) and
+ @rhombus(else_body) under the same conditions as the right-hand side of
+ @rhombus(def) (see @secref("static-info-rules")), and the information is
+ intersected to determine the static information of the @rhombus(if)
+ form.
+
 @examples(
   if #true
   | "yes"
@@ -68,6 +74,13 @@
 
  If no @rhombus(clause_test_expr) produces a true value and there is no
  @rhombus(~else) clause, a run-time exception is thrown.
+
+ Static information is gathered from @rhombus(clause_result_body)s or
+ @rhombus(clause_result_expr) under the same conditions as the right-hand
+ side of @rhombus(def) (see @secref("static-info-rules")), and the
+ information is intersected to determine the static information of the
+ @rhombus(cond) form.
+
 
 }
 

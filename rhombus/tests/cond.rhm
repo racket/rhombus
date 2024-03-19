@@ -11,3 +11,52 @@ check:
   | #false: 17
   | ~else: 18
   ~is 18
+
+check:
+  use_static
+  (if #true | [1] | ["one"])[0]
+  ~is 1
+
+check:
+  ~eval
+  use_static
+  (if #true | [1] | "one")[0]
+  ~throws "specialization not known"
+
+check:
+  use_static
+  (cond | 1 == 2: [1] | 2 == 2: ["one"])[0]
+  ~is "one"
+
+check:
+  use_static
+  (cond | 1 == 2: [1] | ~else: ["one"])[0]
+  ~is "one"
+
+check:
+  use_static
+  (cond | 1 == 2: [1] | ~else ["one"])[0]
+  ~is "one"
+
+check:
+  ~eval
+  use_static
+  (if #true | [1] | "one")[0]
+  ~throws "specialization not known"
+
+check:
+  ~eval
+  use_static
+  (cond | #true: [1] | ~else: "one")[0]
+  ~throws "specialization not known"
+
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y)
+  def p = (if #true
+           | Posn(1, 2)
+           | #void)
+  p.x
+  ~throws "no such field or method"

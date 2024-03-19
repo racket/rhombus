@@ -5,6 +5,7 @@
          "expression.rkt"
          "parse.rkt"
          "else-clause.rkt"
+         "static-info.rkt"
          "parens.rkt"
          "realm.rkt")
 
@@ -21,12 +22,17 @@
         (syntax-parse #'(alt ...)
           [((tag-thn::block thn ...)
             (tag-els::block els ...))
+           (define thn-e (enforest-expression-block #'(tag-thn thn ...)))
+           (define els-e (enforest-expression-block #'(tag-els els ...)))
            (values
-            (relocate+reraw
-             (respan stx)
-             #'(if (rhombus-expression (group test ...))
-                   (rhombus-body-at tag-thn thn ...)
-                   (rhombus-body-at tag-els els ...)))
+            (wrap-static-info*
+             (relocate+reraw
+              (respan stx)
+              #`(if (rhombus-expression (group test ...))
+                    #,(discard-static-infos thn-e)
+                    #,(discard-static-infos els-e)))
+             (static-infos-intersect (extract-static-infos thn-e)
+                                     (extract-static-infos els-e)))
             #'())]
           [_
            (raise-syntax-error #f
@@ -42,26 +48,43 @@
                   (_::block (group pred ... (tag::block rhs ...)))
                   ...
                   e::else-clause))
+        (define rhs-es (map enforest-expression-block
+                            (syntax->list #'((tag rhs ...) ...))))
+        (define els-e (syntax-parse #'e.parsed
+                        #:literals (rhombus-body-at)
+                        [(rhombus-body-at tag else-rhs ...)
+                         (enforest-expression-block #'(tag else-rhs ...))]
+                        [(rhombus-expression g)
+                         (enforest-expression-block #'g)]
+                        [_ #'e.parsed]))
         (values
-         (relocate+reraw
-          (respan stx)
-          #'(cond
-              [(rhombus-expression (group pred ...))
-               (rhombus-body-at tag rhs ...)]
-              ...
-              [else e.parsed]))
+         (with-syntax ([(rhs ...) (map discard-static-infos rhs-es)])
+           (wrap-static-info*
+            (relocate+reraw
+             (respan stx)
+             #`(cond
+                 [(rhombus-expression (group pred ...)) rhs]
+                 ...
+                 [else #,(discard-static-infos els-e)]))
+            (for/fold ([si (extract-static-infos els-e)]) ([rhs-e (in-list rhs-es)])
+              (static-infos-intersect si (extract-static-infos rhs-e)))))
          #'())]
        [(form-id (_::alts
                   (_::block (group pred ... (tag::block rhs ...)))
                   ...))
+        (define rhs-es (map enforest-expression-block
+                            (syntax->list #'((tag rhs ...) ...))))
         (values
-         (relocate+reraw
-          (respan stx)
-          #'(cond
-              [(rhombus-expression (group pred ...))
-               (rhombus-body-at tag rhs ...)]
-              ...
-              [else (cond-fallthrough 'form-id)]))
+         (with-syntax ([(rhs ...) (map discard-static-infos rhs-es)])
+           (wrap-static-info*
+            (relocate+reraw
+             (respan stx)
+             #'(cond
+                 [(rhombus-expression (group pred ...)) rhs]
+                 ...
+                 [else (cond-fallthrough 'form-id)]))
+            (for/fold ([si (extract-static-infos (car rhs-es))]) ([rhs-e (in-list (cdr rhs-es))])
+              (static-infos-intersect si (extract-static-infos rhs-e)))))
          #'())]
        [(form-id (_::block))
         (values

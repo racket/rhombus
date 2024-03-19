@@ -27,10 +27,13 @@
  A @rhombus(bind) can be just an identifier or @rhombus(id_name), or it
  can be constructed with a binding operator, such as a pattern form or
  @rhombus(::) for annotations. The number of result values must match
- the number of @rhombus(bind)s.
+ the number of @rhombus(bind)s. Static information is gathered from
+ @rhombus(rhs_expr) or @rhombus(body) and propagated to
+ @rhombus(lhs_bind) as described in @secref("static-info-rules")).
 
- An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and most
- binding operators also create bindings in the @rhombus(expr, ~space) space.
+ An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and
+ most binding operators also create bindings in the
+ @rhombus(expr, ~space) space.
 
  When @rhombus(def) is used with @rhombus(=), then @rhombus(rhs_expr) must
  not contain any immediate @rhombus(=) terms (although @rhombus(=) can
