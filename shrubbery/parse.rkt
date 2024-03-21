@@ -127,11 +127,14 @@
 (define (closer-expected-opener closer) (and (pair? closer) (cdr closer)))
 (define (make-closer-expected str tok) (cons str tok))
 
-(define group-tag (syntax-raw-property (datum->syntax #f 'group) '()))
-(define top-tag (syntax-raw-property (datum->syntax #f 'top) '()))
-(define parens-tag (syntax-raw-property (datum->syntax #f 'parens) '()))
-(define brackets-tag (syntax-raw-property (datum->syntax #f 'brackets) '()))
-(define alts-tag (syntax-raw-property (datum->syntax #f 'alts) '()))
+(define (syntax-raw-identifier-property stx)
+  (syntax-property (syntax-raw-property stx '()) 'identifier-as-keyword #t))
+
+(define group-tag (syntax-raw-identifier-property (datum->syntax #f 'group)))
+(define top-tag (syntax-raw-identifier-property (datum->syntax #f 'top)))
+(define parens-tag (syntax-raw-identifier-property (datum->syntax #f 'parens)))
+(define brackets-tag (syntax-raw-identifier-property (datum->syntax #f 'brackets)))
+(define alts-tag (syntax-raw-identifier-property (datum->syntax #f 'alts)))
 
 (define within-parens-str "within parentheses, brackets, or braces")
 
@@ -1113,10 +1116,12 @@
               (list (car l)))
           post-syntaxes
           (let ([tag (if opener-t
-                         (datum->syntax (token-value opener-t)
-                                        'brackets
-                                        (token-value opener-t)
-                                        (token-value opener-t))
+                         (syntax-property
+                          (datum->syntax (token-value opener-t)
+                                         'brackets
+                                         (token-value opener-t)
+                                         (token-value opener-t))
+                          'identifier-as-keyword #t)
                          brackets-tag)])
             (cond
               [(null? new-content) (list tag)]
@@ -1447,7 +1452,7 @@
 (define (add-span-srcloc start-t end-t l
                          #:alt [alt-start-t #f])
   (define (add-srcloc l s-loc loc)
-    (cons (let* ([stx (datum->syntax* #f (car l) loc stx-for-original-property)])
+    (cons (let* ([stx (datum->syntax* #f (car l) loc stx-for-identifier-as-keyword)])
             (if (syntax? start-t)
                 (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
                        [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)]

@@ -19,6 +19,7 @@
        (lambda (o) (write parsed o))))
     (port-count-lines! in)
     (define parsed-stx (parse-all in))
+    (check-structure parsed-stx)
     (define parsed (syntax->datum parsed-stx))
     (unless (equal? expected parsed)
       (out "expected" expected pretty-write)
@@ -100,6 +101,34 @@
               (parse-all in)
               #f)
       (error 'check-fail "failed to fail: ~s" input))))
+
+;; checks for a 'identifier-as-keyword property on every head identifier
+(define (check-structure parsed-stx)
+  (let loop ([parsed-stx parsed-stx] [top? #t] [head? #f])
+    (cond
+      [(identifier? parsed-stx)
+       (case (and head? (syntax-e parsed-stx))
+         [(group block alts quotes parens brackets braces op top)
+          (unless (syntax-property parsed-stx 'identifier-as-keyword)
+            (error "not tagged as keyword-like identifier" parsed-stx))]
+         [else
+          (when head?
+            (error "unexpected head term" parsed-stx))
+          (when (syntax-property parsed-stx 'identifier-as-keyword)
+            (error "tagged as keyword-like identifier" parsed-stx))])]
+      [head?
+       (error "unexpected head term" parsed-stx)]
+      [(syntax? parsed-stx)
+       (define e (syntax-e parsed-stx))
+       (cond
+         [(and top? (pair? e))
+          (loop (car e) #t #t)
+          (loop (cdr e) #f #f)]
+         [else (loop e #f #f)])]
+      [(pair? parsed-stx)
+       (loop (car parsed-stx) #t #f)
+       (loop (cdr parsed-stx) #f #f)]
+      [else (void)])))
 
 (define (lines s . ss)
   (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
