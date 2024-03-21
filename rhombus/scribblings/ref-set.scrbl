@@ -56,14 +56,21 @@ it supplies its elements in an unspecified order.
   annot.macro 'Set.of($annot)'
   annot.macro 'ReadableSet'
   annot.macro 'MutableSet'
+  annot.macro 'Set.by($key_comp)'
+  annot.macro 'Set.by($key_comp).of($annot)'
+  annot.macro 'MutableSet.by($key_comp)'
 ){
 
- Matches any set in the form without @rhombus(of). The @rhombus(of)
- variant matches a set whose values satisfy @rhombus(annot).
+ The @rhombus(Set, ~annot) annotation matches any set. The @rhombus(of)
+ variants match a set whose values satisfy @rhombus(annot).
 
  @rhombus(ReadableSet, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableSet) constructor).
+
+ The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
+ annotation variants match only sets that use the hash and equality
+ procedures specified by @rhombus(key_comp).
 
  Static information associated by @rhombus(Set, ~annot), etc., makes
  an expression acceptable to @rhombus(for) in static mode.
@@ -75,7 +82,6 @@ it supplies its elements in an unspecified order.
     set_expr: block expr
   expr.macro 'Set{$expr_or_splice, ...}'
   repet.macro 'Set{$repet_or_splice, ...}'
-  fun Set(val :: Any, ...) :: Set
 
   grammar expr_or_splice:
     $expr
@@ -89,6 +95,10 @@ it supplies its elements in an unspecified order.
   grammar ellipsis:
     #,(dots_expr)
 
+  fun Set(val :: Any, ...) :: Set
+  expr.macro 'Set.by($key_comp){$expr_or_splice, ...}'
+  expr.macro 'Set.by($key_comp)'
+  repet.macro 'Set.by($key_comp){$repet_or_splice, ...}'
 ){
 
  Constructs an immutable set containing given values, equivalent to
@@ -98,6 +108,9 @@ it supplies its elements in an unspecified order.
  Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
  while @braces does not, since @rhombus({}) produces an empty map
  instead.
+
+ The @rhombus(Set.by) variants create a map that uses the equality and
+ hashing functions specified by @rhombus(key_comp).
 
 @examples(
   def s = Set{"x", 1, "y", 2}
@@ -116,8 +129,16 @@ it supplies its elements in an unspecified order.
     rest_bind:  def bind ~defn
   bind.macro 'Set{$expr, ...}'
   bind.macro 'Set{$expr, ..., $rest}'
+  bind.macro 'Set($expr, ...)'
+  bind.macro 'Set($expr, ..., $rest)'
   bind.macro 'ReadableSet{$expr, ...}'
   bind.macro 'ReadableSet{$expr, ..., $rest}'
+  bind.macro 'ReadableSet($expr, ...)'
+  bind.macro 'ReadableSet($expr, ..., $rest)'
+  bind.macro 'Set.by($key_comp){$expr, ...}'
+  bind.macro 'Set.by($key_comp){$expr, ..., $rest}'
+  bind.macro 'Set.by($key_comp)($expr, ...)'
+  bind.macro 'Set.by($key_comp)($expr, ..., $rest)'
   grammar rest:
     & $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
@@ -142,6 +163,8 @@ it supplies its elements in an unspecified order.
  @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
  For @rhombus(ReadableSet, ~bind), the @rhombus(& set_bind) will match
  a snapshot (in the sense of @rhombus(Set.snapshot)) of the rest of the set.
+ The @rhombus(Set.by, ~bind) binding forms match only immutable sets
+ constructed using @rhombus(key_comp).
 
 @examples(
   def Set{"x", "y"} = {"x", "y"}
@@ -172,6 +195,8 @@ it supplies its elements in an unspecified order.
     val_expr: block expr
   expr.macro 'MutableSet{$val_expr, ...}'
   fun MutableSet(val :: Any, ...) :: MutableSet
+  expr.macro 'MutableSet.by($key_comp){$val_expr, ...}'
+  expr.macro 'MutableSet.by($key_comp)'
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set

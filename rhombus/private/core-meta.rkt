@@ -30,7 +30,8 @@
         "space-macro.rkt"
         "space-clause-primitive.rkt"
         "namespace-macro.rkt"
-        "syntax-parameter-macro.rkt")
+        "syntax-parameter-macro.rkt"
+        "key-comp-macro.rkt")
 
 (bounce-meta "space-meta-clause-primitive.rkt"
              "unquote-binding-primitive-meta.rkt")

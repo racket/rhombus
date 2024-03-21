@@ -382,6 +382,13 @@
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
+(define-doc key_comp.def key_comp
+  "map configuration"
+  rhombus/key_comp
+  operator-macro-extract-name
+  operator-macro-extract-metavariables
+  operator-macro-extract-typeset)
+
 (define-doc fun
   "function"
   #f

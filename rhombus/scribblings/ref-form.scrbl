@@ -232,3 +232,19 @@
  information on syntax generation.
 
 }
+
+@doc(
+  ~nonterminal_key: block
+  grammar key_comp
+){
+
+ In syntax descriptions, @rhombus(key_comp) stands for any operator or
+ identifier that is defined as an equality and hashing configration for a
+ map's keys.
+
+ The map configurations exported by @rhombuslangname(rhombus) are
+ @rhombus(==, ~key_comp) (the default), @rhombus(===, ~key_comp),
+ @rhombus(is_now, ~key_comp), and @rhombus(is_same_number_or_object, ~key_comp).
+ New configurations can be defined with @top_rhombus(key_comp.def).
+
+}

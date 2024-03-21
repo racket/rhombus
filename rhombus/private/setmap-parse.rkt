@@ -1,6 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/syntax-local
+                     shrubbery/property
                      "tag.rkt")
          "parse.rkt"
          "static-info.rkt"
@@ -8,13 +10,16 @@
          "compound-repetition.rkt"
          (submod "ellipsis.rkt" for-parse)
          "parens.rkt"
-         "op-literal.rkt")
+         "op-literal.rkt"
+         "dotted-sequence-parse.rkt"
+         "key-comp.rkt")
 
 (provide (for-syntax parse-setmap-content
                      build-setmap
 
                      flatten-setmap-arguments
-                     regroup-setmap-arguments))
+                     regroup-setmap-arguments
+                     parse-key-comp))
 
 ;; A Shape is one of:
 ;;  - #f
@@ -231,3 +236,18 @@
            [else (aloop (cdr args) (cdr one-args) (cons (car args) rev-args))]))]
       [(inlined? (car argss)) (cons (inlined (car args)) (loop (cdr args) (cdr argss)))]
       [else (cons (car args) (loop (cdr args) (cdr argss)))])))
+
+(define-for-syntax (parse-key-comp stx k)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(form (~and args (_::parens (group . name::dotted-operator-or-identifier))) . tail)
+     (define mapper (syntax-local-value* (in-key-comp-space #'name.name) key-comp-ref))
+     (unless mapper (raise-syntax-error #f "not bound to a map configuration" stx #'name))
+     (define str (format "~a(~a)" (syntax-e #'form) (syntax-e #'name.name)))
+     (define new-form (syntax-raw-property
+                       (datum->syntax #'form
+                                      (string->symbol str)
+                                      #'form
+                                      #'form)
+                       str))
+     (k #`(#,new-form . tail) (list #'args) str mapper)]))

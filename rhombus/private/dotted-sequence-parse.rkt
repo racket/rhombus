@@ -38,6 +38,7 @@
                                 all)]))
 
   (define-syntax-class :dotted-identifier
+    #:description "dotted identifier"
     #:attributes (name extends tail-name)
     #:datum-literals (op |.|)
     (pattern (~and all ((~seq head-id:identifier (op |.|)) ... tail-id:identifier))
@@ -47,6 +48,7 @@
              #:with tail-name tail-name))
 
   (define-syntax-class :dotted-operator-or-identifier
+    #:description "dotted operator or identifier"
     #:attributes (name extends tail-name)
     #:datum-literals (parens group op |.|)
     (pattern ((op (~and name tail-name)))

@@ -43,7 +43,9 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "rest-bind.rkt"
-         "hash-remove.rkt")
+         "hash-remove.rkt"
+         "key-comp.rkt"
+         "key-comp-property.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -84,6 +86,42 @@
 (module+ for-append
   (provide hash-append
            immutable-hash?))
+
+(module+ for-key-comp
+  (provide equal-always-hash?
+           Map-build Map-pair-build list->map
+           mutable-equal-always-hash?
+           MutableMap-build
+           (for-space rhombus/statinfo
+                      Map-pair-build
+                      MutableMap-build)
+
+           object-hash?
+           ObjectMap-build ObjectMap-pair-build list->object-map
+           mutable-object-hash?
+           MutableObjectMap-build
+           (for-space rhombus/statinfo
+                      ObjectMap-pair-build
+                      MutableObjectMap-build)
+
+           now-hash?
+           NowMap-build NowMap-pair-build list->now-map
+           mutable-now-hash?
+           MutableNowMap-build
+           (for-space rhombus/statinfo
+                      NowMap-pair-build
+                      MutableNowMap-build)
+
+           number-or-object-hash?
+           NumberOrObjectMap-build NumberOrObjectMap-pair-build list->number-or-object-map
+           mutable-number-or-object-hash?
+           MutableNumberOrObjectMap-build
+           (for-space rhombus/statinfo
+                      NumberOrObjectMap-pair-build
+                      MutableNumberOrObjectMap-build)))
+
+(module+ for-key-comp-macro
+  (provide build-map))
 
 (define-for-syntax any-map-static-infos
   #'((#%index-get Map.get)
@@ -129,7 +167,8 @@
    [has_key Map.has_key]
    [copy Map.copy]
    [snapshot Map.snapshot]
-   of)
+   of
+   [by Map.by])
   #:properties
   ()
   #:methods
@@ -146,7 +185,7 @@
   #:parent #f readable-map
   #:fields ()
   #:namespace-fields
-  ()
+  ([by MutableMap.by])
   #:properties
   ()
   #:methods
@@ -154,29 +193,69 @@
    delete))
 
 (define Map-build hashalw)
+(define ObjectMap-build hasheq)
+(define NowMap-build hash)
+(define NumberOrObjectMap-build hasheqv)
+
+(define (equal-always-hash? v) (and (immutable-hash? v) (hash-equal-always? v)))
+(define (object-hash? v) (and (immutable-hash? v) (hash-eq? v)))
+(define (now-hash? v) (and (immutable-hash? v) (hash-equal? v)))
+(define (number-or-object-hash? v) (and (immutable-hash? v) (hash-eqv? v)))
+
+(define (mutable-equal-always-hash? v) (and (mutable-hash? v) (hash-equal-always? v)))
+(define (mutable-object-hash? v) (and (mutable-hash? v) (hash-eq? v)))
+(define (mutable-now-hash? v) (and (mutable-hash? v) (hash-equal? v)))
+(define (mutable-number-or-object-hash? v) (and (mutable-hash? v) (hash-eqv? v)))
 
 (define Map-pair-build
   (let ([Map (lambda args
-               (build-map 'Map args))])
+               (build-map 'Map #hashalw() args))])
     Map))
 
-(define (build-map who args)
-  (for/hashalw ([arg (in-list args)])
+(define ObjectMap-pair-build
+  (let ([|Map.by(===)| (lambda args
+                         (build-map '|Map.by(===)| #hasheq() args))])
+    |Map.by(===)|))
+
+(define NowMap-pair-build
+  (let ([|Map.by(is_now)| (lambda args
+                            (build-map '|Map.by(is_now)| #hash() args))])
+    |Map.by(is_now)|))
+
+(define NumberOrObjectMap-pair-build
+  (let ([|Map.by(is_number_or_object)| (lambda args
+                                         (build-map '|Map.by(is_number_or_object)| #hasheqv() args))])
+    |Map.by(is_number_or_object)|))
+
+(define (build-map who ht args)
+  (for/fold ([ht ht]) ([arg (in-list args)])
     (cond
       [(and (pair? arg) (pair? (cdr arg)) (null? (cddr arg)))
-       (values (car arg) (cadr arg))]
+       (hash-set ht (car arg) (cadr arg))]
       [(and (treelist? arg) (= 2 (treelist-length arg)))
-       (values (treelist-ref arg 0) (treelist-ref arg 1))]
+       (hash-set ht (treelist-ref arg 0) (treelist-ref arg 1))]
       [(and (vector? arg) (= 2 (vector-length arg)))
-       (values (vector-ref arg 0) (vector-ref arg 1))]
+       (hash-set ht (vector-ref arg 0) (vector-ref arg 1))]
       [else
        (define lst (to-list #f arg))
        (unless (and (pair? lst) (pair? (cdr lst)) (null? (cddr lst)))
          (raise-argument-error* who rhombus-realm "Listable.to_list && matching([_, _])" arg))
-       (values (car lst) (cadr lst))])))
+       (hash-set ht (car lst) (cadr lst))])))
 
 (define (list->map key+vals)
   (for/hashalw ([key+val (in-list key+vals)])
+    (values (car key+val) (cdr key+val))))
+
+(define (list->object-map key+vals)
+  (for/hasheq ([key+val (in-list key+vals)])
+    (values (car key+val) (cdr key+val))))
+
+(define (list->now-map key+vals)
+  (for/hash ([key+val (in-list key+vals)])
+    (values (car key+val) (cdr key+val))))
+
+(define (list->number-or-object-map key+vals)
+  (for/hasheqv ([key+val (in-list key+vals)])
     (values (car key+val) (cdr key+val))))
 
 (define (hash-pairs ht)
@@ -225,18 +304,18 @@
            success
            fail)]))
 
-(define-for-syntax (parse-map stx repetition?)
+(define-for-syntax (parse-map stx arg-stxes repetition? map-build-id map-pair-build-id list->map-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss) (parse-setmap-content #'content
                                                         #:shape 'map
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?
-                                                        #:list->map #'list->map))
+                                                        #:list->map list->map-id))
      (values (relocate-wrapped
-              (respan (datum->syntax #f (list #'form-id #'content)))
+              (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
-                            #'Map-build
+                            map-build-id
                             #'hash-extend*
                             #'hash-append
                             #'hash-assert
@@ -244,77 +323,143 @@
                             #:repetition? repetition?
                             #:list->setmap #'list->map))
              #'tail)]
-    [(_ . tail) (values (cond
-                          [repetition? (identifier-repetition-use #'Map-pair-build)]
-                          [else #'Map-pair-build])
-                        #'tail)]))
+    [(form-id . tail) (values (cond
+                                [repetition? (identifier-repetition-use map-pair-build-id)]
+                                [else (relocate+reraw #'form-id map-pair-build-id)])
+                              #'tail)]))
 
 (define-syntax Map
   (expression-transformer
-   (lambda (stx) (parse-map stx #f))))
+   (lambda (stx) (parse-map stx '() #f #'Map-build #'Map-pair-build #'list->map))))
+
+(define-syntax Map.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-map stx arg-stxes #f
+                                  (key-comp-map-build-id mapper)
+                                  (key-comp-map-pair-build-id mapper)
+                                  (key-comp-list->map-id mapper)))))))
 
 (define-for-syntax (make-map-binding-transformer mode)
-  (binding-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id (_::braces . _) . tail)
-        (parse-map-binding (syntax-e #'form-id) stx "braces" mode)]
-       [(form-id (_::parens arg ...) . tail)
-        (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
-          (cond
-            [(null? args) (generate-map-binding (reverse keys) (reverse vals) #f #'tail mode)]
-            [else
-             (syntax-parse (car args)
-               #:datum-literals (group)
-               [(group (_::brackets key val))
-                (loop (cdr args) (cons #'key keys) (cons #'val vals))]
-               [_ (raise-syntax-error #f
-                                      "expected [<key-expr>, <value-binding>]"
-                                      stx
-                                      (car args))])]))]))))
+  (lambda (stx)
+    (syntax-parse stx
+      [(form-id (_::braces . _) . tail)
+       (parse-map-binding (syntax-e #'form-id) stx "braces" mode)]
+      [(form-id (_::parens arg ...) . tail)
+       (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
+         (cond
+           [(null? args) (generate-map-binding (reverse keys) (reverse vals) #f #'tail mode)]
+           [else
+            (syntax-parse (car args)
+              #:datum-literals (group)
+              [(group (_::brackets key val))
+               (loop (cdr args) (cons #'key keys) (cons #'val vals))]
+              [_ (raise-syntax-error #f
+                                     "expected [<key-expr>, <value-binding>]"
+                                     stx
+                                     (car args))])]))])))
 
 (define-binding-syntax Map
-  (make-map-binding-transformer 'Map))
+  (binding-transformer
+   (make-map-binding-transformer #'("Map" immutable-hash? values))))
 (define-binding-syntax ReadableMap
-  (make-map-binding-transformer 'ReadableMap))
+  (binding-transformer
+   (make-map-binding-transformer #'("ReadableMap" hash? hash-snapshot))))
+
+(define-binding-syntax Map.by
+  (binding-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (define mode #`(#,str #,(key-comp-map?-id mapper) values))
+                       ((make-map-binding-transformer mode) stx))))))
 
 (define-repetition-syntax Map
   (repetition-transformer
-   (lambda (stx) (parse-map stx #t))))
+   (lambda (stx) (parse-map stx '() #t #'Map-build #'Map-pair-build #'list->map))))
+
+(define-repetition-syntax Map.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-map stx arg-stxes #t
+                                  (key-comp-map-build-id mapper)
+                                  (key-comp-map-pair-build-id mapper)
+                                  (key-comp-list->map-id mapper)))))))
+
+(define-for-syntax map-annotation-make-predicate
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([(k v) (in-immutable-hash #,arg-id)])
+        (and (#,(car predicate-stxs) k)
+             (#,(cadr predicate-stxs) v)))))
+
+(define-for-syntax map-annotation-make-static-info
+  (lambda (static-infoss)
+    #`((#%index-result #,(cadr static-infoss))
+       (#%sequence-element ((#%values (#,(car static-infoss)
+                                       #,(cadr static-infoss))))))))
 
 (define-annotation-constructor (Map of)
   ()
   #'immutable-hash? map-static-infos
   2
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([(k v) (in-immutable-hash #,arg-id)])
-        (and (#,(car predicate-stxs) k)
-             (#,(cadr predicate-stxs) v))))
-  (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))
-       (#%sequence-element ((#%values (#,(car static-infoss)
-                                       #,(cadr static-infoss)))))))
-  #'map-build-convert #'())
+  map-annotation-make-predicate
+  map-annotation-make-static-info
+  #'map-build-convert #'(#hashalw()))
+
+(define-annotation-syntax Map.by
+  (annotation-prefix-operator
+   #'Map.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         #:datum-literals (op |.| of)
+                         [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
+                          (parse-annotation-of #'(of-id . tail)
+                                               (key-comp-map?-id mapper) map-static-infos
+                                               2 #f
+                                               map-annotation-make-predicate
+                                               map-annotation-make-static-info
+                                               #'map-build-convert #`(#,(key-comp-empty-stx mapper)))]
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-map?-id mapper)
+                                                             map-static-infos)
+                                  #'tail)]))))))
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
-  #`(for/fold ([map #hashalw()])
-              ([(k v) (in-immutable-hash #,arg-id)])
-      #:break (not map)
-      (#,(car build-convert-stxs)
-       k
-       (lambda (k)
-         (#,(cadr build-convert-stxs)
-          v
-          (lambda (v)
-            (hash-set map k v))
-          (lambda () #f)))
-       (lambda () #f))))
+  (syntax-parse data
+    [(empty-ht)
+     #`(for/fold ([map empty-ht])
+                 ([(k v) (in-immutable-hash #,arg-id)])
+         #:break (not map)
+         (#,(car build-convert-stxs)
+          k
+          (lambda (k)
+            (#,(cadr build-convert-stxs)
+             v
+             (lambda (v)
+               (hash-set map k v))
+             (lambda () #f)))
+          (lambda () #f)))]))
 
 (define-static-info-syntax Map-pair-build
   (#%call-result #,map-static-infos)
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntax ObjectMap-pair-build
+  (#%indirect-static-info Map-pair-build))
+(define-static-info-syntax NowMap-pair-build
+  (#%indirect-static-info Map-pair-build))
+(define-static-info-syntax NumberOrObjectMap-pair-build
+  (#%indirect-static-info Map-pair-build))
 
 (define-reducer-syntax Map
   (reducer-transformer
@@ -329,6 +474,21 @@
                            #'ht)
          #'tail)]))))
 
+(define-reducer-syntax Map.by
+  (reducer-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values
+                           (reducer/no-break #'build-map-reduce
+                                             #`([ht #,(key-comp-empty-stx mapper)])
+                                             #'build-map-add
+                                             map-static-infos
+                                             #'ht)
+                           #'tail)]))))))
+
 (define-syntax (build-map-reduce stx)
   (syntax-parse stx
     [(_ ht-id e) #'e]))
@@ -342,12 +502,38 @@
 (define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-infos))
 (define-annotation-syntax ReadableMap (identifier-annotation #'hash? readable-map-static-infos))
 
+(define-annotation-syntax MutableMap.by
+  (annotation-prefix-operator
+   #'MutableMap.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-mutable-map?-id mapper)
+                                                             mutable-map-static-infos)
+                                  #'tail)]))))))
+
 (define MutableMap-build
   (let ([MutableMap (lambda args
-                      (hash-copy (build-map 'MutableMap args)))])
+                      (hash-copy (build-map 'MutableMap #hashalw() args)))])
     MutableMap))
+(define MutableObjectMap-build
+  (let ([|MutableMap.by(===)| (lambda args
+                                (hash-copy (build-map '|MutableMap.by(===)| #hasheq() args)))])
+    |MutableMap.by(===)|))
+(define MutableNowMap-build
+  (let ([|MutableMap.by(is_now)| (lambda args
+                                   (hash-copy (build-map '|MutableMap.by(is_now)| #hash() args)))])
+    |MutableMap.by(is_now)|))
+(define MutableNumberOrObjectMap-build
+  (let ([|MutableMap.by(is_number_or_object)| (lambda args
+                                                (hash-copy (build-map '|MutableMap.by(is_number_or_object)| #hasheqv() args)))])
+    |MutableMap.by(is_number_or_object)|))
 
-(define-for-syntax (parse-mutable-map stx repetition?)
+(define-for-syntax (parse-mutable-map stx repetition? map-build-id mutable-map-build-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss)
@@ -364,33 +550,58 @@
                  (car argss)
                  (lambda args
                    (values (quasisyntax/loc stx
-                             (hash-copy (Map-build #,@args)))
+                             (Map.copy (#,map-build-id #,@args)))
                            mutable-map-static-infos)))]
                [else
                 (wrap-static-info*
                  (quasisyntax/loc stx
-                   (hash-copy (Map-build #,@(if (null? argss) null (car argss)))))
+                   (Map.copy (#,map-build-id #,@(if (null? argss) null (car argss)))))
                  mutable-map-static-infos)])
              #'tail)]
-    [(_ . tail) (values (if repetition?
-                            (identifier-repetition-use #'MutableMap-build)
-                            #'MutableMap-build)
-                        #'tail)]))
+    [(form-id . tail) (values (if repetition?
+                                  (identifier-repetition-use mutable-map-build-id)
+                                  (relocate+reraw #'form-id mutable-map-build-id))
+                              #'tail)]))
 
 (define-syntax MutableMap
   (expression-transformer
-   (lambda (stx) (parse-mutable-map stx #f))))
+   (lambda (stx) (parse-mutable-map stx #f #'Map-build #'MutableMap-build))))
+
+(define-syntax MutableMap.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-map stx #f
+                                          (key-comp-map-build-id mapper)
+                                          (key-comp-mutable-map-build-id mapper)))))))
 
 (define-repetition-syntax MutableMap
   (repetition-transformer
-   (lambda (stx) (parse-mutable-map stx #t))))
+   (lambda (stx) (parse-mutable-map stx #t #'Map-build #'MutableMap-build))))
+
+(define-repetition-syntax MutableMap.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-map stx #t
+                                          (key-comp-map-build-id mapper)
+                                          (key-comp-mutable-map-build-id mapper)))))))
 
 (define-static-info-syntax MutableMap-build
   (#%call-result #,mutable-map-static-infos)
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
-(define-for-syntax (parse-map-binding who stx opener+closer [mode 'Map])
+(define-static-info-syntax MutableObjectMap-build
+  (#%indirect-static-info MutableMap-build))
+(define-static-info-syntax MutableNowMap-build
+  (#%indirect-static-info MutableMap-build))
+(define-static-info-syntax MutableNumberOrObjectMap-build
+  (#%indirect-static-info MutableMap-build))
+
+(define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
   (syntax-parse stx
     #:datum-literals (group)
     [(form-id (_ (group key-e ... (_::block (group val ...))) ...
@@ -427,8 +638,9 @@
                 [tail tail])
     (define tmp-ids (generate-temporaries #'(key ...)))
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
+    (define mode-desc (syntax-parse mode [(desc . _) (syntax-e #'desc)]))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer (cons (symbol->immutable-string mode) (map shrubbery-syntax->string keys))
+      ((make-composite-binding-transformer (cons mode-desc (map shrubbery-syntax->string keys))
                                            #'(lambda (v) #t) ; predicate built into map-matcher
                                            (for/list ([tmp-id (in-list tmp-ids)])
                                              #`(lambda (v) #,tmp-id))
@@ -472,16 +684,15 @@
 
 (define-syntax (map-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data)
+    [(_ arg-id ([desc pred filter] keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data)
         IF success failure)
-     (define readable-map? (eq? (syntax-e #'mode) 'ReadableMap))
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if readable-map? #'hash? #'immutable-hash?) arg-id)
+     #`(IF (pred arg-id)
            (begin
              #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
                                                (list #`(define rest-tmp
                                                          (hash-remove*
-                                                          #,(if readable-map? #'(hash-snapshot arg-id) #'arg-id)
+                                                          (filter arg-id)
                                                           (list #,@key-tmps))))
                                                '())
                                            (list #'(composite-matcher-id 'map composite-data IF success failure)))])
@@ -576,7 +787,15 @@
 
 (define (hash-append a b)
   (let-values ([(a b)
-                (if ((hash-count a) . < . (hash-count b))
+                (if (and ((hash-count a) . < . (hash-count b))
+                         (or (and (hash-equal-always? a)
+                                  (hash-equal-always? b))
+                             (and (hash-eq? a)
+                                  (hash-eq? b))
+                             (and (hash-eqv? a)
+                                  (hash-eqv? b))
+                             (and (hash-equal? a)
+                                  (hash-equal? b))))
                     (values b a)
                     (values a b))])
     (for/fold ([a a]) ([(k v) (in-immutable-hash b)])
@@ -610,12 +829,18 @@
   #:inline
   #:primitive (hash-copy)
   #:static-infos ((#%call-result #,mutable-map-static-infos))
-  (hash-copy ht))
+  (cond
+    [(custom-map-ref ht #f)
+     => (lambda (cm) ((custom-map-copy cm) ht))]
+    [else (hash-copy ht)]))
 
 (define/method (Map.snapshot ht)
   #:static-infos ((#%call-result #,map-static-infos))
   (check-readable-map who ht)
-  (hash-snapshot ht))
+  (cond
+    [(custom-map-ref ht #f)
+     => (lambda (cm) ((custom-map-snapshot cm) ht))]
+    [else (hash-snapshot ht)]))
 
 (define/method (Map.remove ht key)
   #:inline

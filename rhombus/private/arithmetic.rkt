@@ -34,7 +34,8 @@
                      !=
 
                      ===
-                     is_now))
+                     is_now
+                     is_same_number_or_object))
 
 (set-primitive-contract! 'number? "Number")
 
@@ -109,5 +110,6 @@
 (define-eql-infix != not-equal-always?)
 (define-eql-infix === eq?)
 (define-eql-infix is_now equal?)
+(define-eql-infix is_same_number_or_object eqv?)
 
 (define (not-equal-always? a b) (not (equal-always? a b)))

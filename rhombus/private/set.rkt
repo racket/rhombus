@@ -36,7 +36,8 @@
          "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rest-bind.rkt"
-         "hash-remove.rkt")
+         "hash-remove.rkt"
+         "key-comp.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -89,7 +90,46 @@
 (module+ for-print
   (provide set?
            mutable-set?
-           set->list))
+           set->list
+           set-ht))
+
+(module+ for-key-comp
+  (provide immutable-equal-always-set?
+           Set-build Set-build* list->set
+           mutable-equal-always-set?
+           MutableSet-build
+           (for-space rhombus/statinfo
+                      Set-build*
+                      MutableSet-build)
+
+           immutable-object-set?
+           ObjectSet-build ObjectSet-build* list->object-set
+           mutable-object-set?
+           MutableObjectSet-build
+           (for-space rhombus/statinfo
+                      ObjectSet-build*
+                      MutableObjectSet-build)
+
+           immutable-now-set?
+           NowSet-build NowSet-build* list->now-set
+           mutable-now-set?
+           MutableNowSet-build
+           (for-space rhombus/statinfo
+                      NowSet-build*
+                      MutableNowSet-build)
+
+           immutable-number-or-object-set?
+           NumberOrObjectSet-build NumberOrObjectSet-build* list->number-or-object-set
+           mutable-number-or-object-set?
+           MutableNumberOrObjectSet-build
+           (for-space rhombus/statinfo
+                      NumberOrObjectSet-build*
+                      MutableNumberOrObjectSet-build)))
+
+(module+ for-key-comp-macro
+  (provide set?
+           set
+           set-ht))
 
 (struct set (ht)
   #:property prop:equal+hash
@@ -140,7 +180,8 @@
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
-   of)
+   of
+   [by Set.by])
   #:properties
   ()
   #:methods
@@ -159,7 +200,7 @@
   #:parent #f readable-set
   #:fields ()
   #:namespace-fields
-  ()
+  ([by MutableSet.by])
   #:properties
   ()
   #:methods
@@ -168,6 +209,14 @@
 
 (define (immutable-set? v) (and (set? v) (immutable-hash? (set-ht v))))
 (define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
+(define (immutable-equal-always-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-equal-always? (set-ht v))))
+(define (immutable-object-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
+(define (immutable-now-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-equal? (set-ht v))))
+(define (immutable-number-or-object-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-eqv? (set-ht v))))
+(define (mutable-equal-always-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-equal-always? (set-ht v))))
+(define (mutable-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
+(define (mutable-now-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-equal? (set-ht v))))
+(define (mutable-number-or-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eqv? (set-ht v))))
 
 (define (check-readable-set who s)
   (unless (set? s)
@@ -189,6 +238,21 @@
     [(_ elem ...)
      #`(set (hashalw (~@ elem #t) ...))]))
 
+(define-syntax (ObjectSet-build stx)
+  (syntax-parse stx
+    [(_ elem ...)
+     #`(set (hasheq (~@ elem #t) ...))]))
+
+(define-syntax (NowSet-build stx)
+  (syntax-parse stx
+    [(_ elem ...)
+     #`(set (hash (~@ elem #t) ...))]))
+
+(define-syntax (NumberOrObjectSet-build stx)
+  (syntax-parse stx
+    [(_ elem ...)
+     #`(set (hasheqv (~@ elem #t) ...))]))
+
 (define Set-build*
   (let ([Set (lambda vals
                (define base-ht (hashalw))
@@ -196,7 +260,31 @@
                       (hash-set ht val #t))))])
     Set))
 
+(define ObjectSet-build*
+  (let ([|Set.by(===)| (lambda vals
+                         (define base-ht (hasheq))
+                         (set (for/fold ([ht base-ht]) ([val (in-list vals)])
+                                (hash-set ht val #t))))])
+    |Set.by(===)|))
+
+(define NowSet-build*
+  (let ([|Set.by(is_now)| (lambda vals
+                            (define base-ht (hash))
+                            (set (for/fold ([ht base-ht]) ([val (in-list vals)])
+                                   (hash-set ht val #t))))])
+    |Set.by(is_now)|))
+
+(define NumberOrObjectSet-build*
+  (let ([|Set.by(is_number_or_object)| (lambda vals
+                                         (define base-ht (hasheqv))
+                                         (set (for/fold ([ht base-ht]) ([val (in-list vals)])
+                                                (hash-set ht val #t))))])
+    |Set.by(is_number_or_object)|))
+
 (define (list->set l) (apply Set-build* l))
+(define (list->object-set l) (apply ObjectSet-build* l))
+(define (list->now-set l) (apply NowSet-build* l))
+(define (list->number-or-object-set l) (apply NumberOrObjectSet-build* l))
 
 (define (set->list s [try-sort? #f]) (hash-keys (set-ht s) try-sort?))
 
@@ -258,6 +346,21 @@
                            #'ht)
          #'tail)]))))
 
+(define-reducer-syntax Set.by
+  (reducer-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values
+                           (reducer/no-break #'build-set-reduce
+                                             #`([ht #,(key-comp-empty-stx mapper)])
+                                             #'build-set-add
+                                             set-static-infos
+                                             #'ht)
+                           #'tail)]))))))
+
 (define-syntax (build-set-reduce stx)
   (syntax-parse stx
     [(_ ht-id e) #'(set e)]))
@@ -266,54 +369,83 @@
   (syntax-parse stx
     [(_ ht-id v) #'(hash-set ht-id v #t)]))
 
-(define-for-syntax (parse-set stx repetition?)
+(define-for-syntax (parse-set stx arg-stxes repetition? set-build-id set-build*-id list->set-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss) (parse-setmap-content #'content
                                                         #:shape 'set
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?
-                                                        #:list->set #'list->set))
+                                                        #:list->set list->set-id))
      (values (relocate-wrapped
-              (respan (datum->syntax #f (list #'form-id #'content)))
+              (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
-                            #'Set-build
+                            set-build-id
                             #'set-extend*
                             #'set-append
                             #'set-assert
                             set-static-infos
                             #:repetition? repetition?
-                            #:list->setmap #'list->set))
+                            #:list->setmap list->set-id))
              #'tail)]
-    [(_ . tail) (values (if repetition?
-                            (identifier-repetition-use #'Set-build*)
-                            #'Set-build*)
+    [(form-id . tail) (values (if repetition?
+                                  (identifier-repetition-use set-build*-id)
+                                  (relocate+reraw #'form-id set-build*-id))
                         #'tail)]))
 
 (define-syntax Set
   (expression-transformer
-   (lambda (stx) (parse-set stx #f))))
+   (lambda (stx) (parse-set stx '() #f #'Set-build #'Set-build* #'list->set))))
+
+(define-syntax Set.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-set stx arg-stxes #f
+                                  (key-comp-set-build-id mapper)
+                                  (key-comp-set-build*-id mapper)
+                                  (key-comp-list->set-id mapper)))))))
 
 (define-for-syntax (make-set-binding-transformer mode)
-  (binding-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id (~and content (_::braces . _)) . tail)
-        (parse-set-binding (syntax-e #'form-id) stx "braces" mode)]
-       [(form-id (_::parens arg ...) . tail)
-        (parse-set-binding (syntax-e #'form-id) stx "parentheses" mode)]))))
+  (lambda (stx)
+    (syntax-parse stx
+      [(form-id (~and content (_::braces . _)) . tail)
+       (parse-set-binding (syntax-e #'form-id) stx "braces" mode)]
+      [(form-id (_::parens arg ...) . tail)
+       (parse-set-binding (syntax-e #'form-id) stx "parentheses" mode)])))
 
 (define-binding-syntax Set
-  (make-set-binding-transformer 'Set))
+  (binding-transformer
+   (make-set-binding-transformer #'("Set" immutable-set? values))))
 
 (define-binding-syntax ReadableSet
-  (make-set-binding-transformer 'ReadableSet))
+  (binding-transformer
+   (make-set-binding-transformer #'("ReadableSet" set? hash-snapshot))))
+
+(define-binding-syntax Set.by
+  (binding-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (define mode #`(#,str #,(key-comp-set?-id mapper) values))
+                       ((make-set-binding-transformer mode) stx))))))
 
 (define-repetition-syntax Set
   (repetition-transformer
-   (lambda (stx) (parse-set stx #t))))
+   (lambda (stx) (parse-set stx '() #t #'Set-build #'Set-build* #'list->set))))
 
-(define-for-syntax (parse-set-binding who stx opener+closer [mode 'Set])
+(define-repetition-syntax Set.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-set stx arg-stxes #t
+                                  (key-comp-set-build-id mapper)
+                                  (key-comp-set-build*-id mapper)
+                                  (key-comp-list->set-id mapper)))))))
+
+(define-for-syntax (parse-set-binding who stx opener+closer [mode #'("Set" set? values)])
   (syntax-parse stx
     #:datum-literals (group)
     [(form-id (_ (group key-e ...) ...
@@ -344,8 +476,9 @@
   (with-syntax ([(key ...) keys]
                 [tail tail])
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
+    (define mode-desc (syntax-parse mode [(desc . _) (syntax-e #'desc)]))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer (cons (symbol->immutable-string mode) (map shrubbery-syntax->string keys))
+      ((make-composite-binding-transformer (cons mode-desc (map shrubbery-syntax->string keys))
                                            #'(lambda (v) #t) ; predicate built into set-matcher
                                            '()
                                            '()
@@ -383,17 +516,16 @@
 
 (define-syntax (set-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
+    [(_ arg-id ([desc pred filter] keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
         IF success failure)
-     (define readable-set? (eq? (syntax-e #'mode) 'ReadableSet))
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (#,(if readable-set? #'set? #'immutable-set?) arg-id)
+     #`(IF (pred arg-id)
            (begin
              (define ht (set-ht arg-id))
              #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
                                                (list #`(define rest-tmp
                                                          (set (hash-remove*
-                                                               #,(if readable-set? #'(hash-snapshot ht) #'ht)
+                                                               (filter ht)
                                                                (list #,@key-tmps)))))
                                                '())
                                            (list #'(composite-matcher-id 'set composite-data IF success failure)))])
@@ -434,39 +566,84 @@
 
 (define (in-set* s) (in-hash-keys (set-ht s)))
 
+(define-for-syntax set-annotation-make-predicate
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([v (in-immutable-hash-keys (set-ht #,arg-id))])
+        (#,(car predicate-stxs) v))))
+
+(define-for-syntax set-annotation-make-static-info
+  (lambda (static-infoss)
+    #`((#%sequence-element #,(car static-infoss)))))
+
 (define-annotation-constructor (Set of)
   ()
   #'immutable-set? set-static-infos
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([v (in-immutable-hash-keys (set-ht #,arg-id))])
-        (#,(car predicate-stxs) v)))
-  (lambda (static-infoss)
-    #`((#%sequence-element #,(car static-infoss))))
-  #'set-build-convert #'())
+  set-annotation-make-predicate
+  set-annotation-make-static-info
+  #'set-build-convert #'(#hashalw()))
+
+(define-annotation-syntax Set.by
+  (annotation-prefix-operator
+   #'Set.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         #:datum-literals (op |.| of)
+                         [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
+                          (parse-annotation-of #'(of-id . tail)
+                                               (key-comp-set?-id mapper) set-static-infos
+                                               1 #f
+                                               set-annotation-make-predicate
+                                               set-annotation-make-static-info
+                                               #'set-build-convert #`(#,(key-comp-empty-stx mapper)))]
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-set?-id mapper)
+                                                             set-static-infos)
+                                  #'tail)]))))))
 
 (define-syntax (set-build-convert arg-id build-convert-stxs kws data)
-  #`(for/fold ([ht #hashalw()] #:result (and ht (set ht)))
-              ([v (in-immutable-hash-keys (set-ht #,arg-id))])
-      #:break (not ht)
-      (#,(car build-convert-stxs)
-       v
-       (lambda (v) (hash-set ht v #t))
-       (lambda () #f))))
+  (syntax-parse data
+    [(empty-ht)
+     #`(for/fold ([ht empty-ht] #:result (and ht (set ht)))
+                 ([v (in-immutable-hash-keys (set-ht #,arg-id))])
+         #:break (not ht)
+         (#,(car build-convert-stxs)
+          v
+          (lambda (v) (hash-set ht v #t))
+          (lambda () #f)))]))
 
 (define-static-info-syntax Set-build*
   (#%call-result #,set-static-infos)
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
-(define (MutableSet-build . vals)
-  (define ht (make-hashalw))
+(define-static-info-syntax ObjectSet-build*
+  (#%indirect-static-info Set-build*))
+(define-static-info-syntax NowSet-build*
+  (#%indirect-static-info Set-build*))
+(define-static-info-syntax NumberOrObjectSet-build*
+  (#%indirect-static-info Set-build*))
+
+(define (mutable-set-build ht vals)
   (for ([v (in-list vals)])
     (hash-set! ht v #t))
   (set ht))
 
-(define-for-syntax (parse-mutable-set stx repetition?)
+(define (MutableSet-build . vals)
+  (mutable-set-build (make-hashalw) vals))
+(define (MutableObjectSet-build . vals)
+  (mutable-set-build (make-hasheq) vals))
+(define (MutableNowSet-build . vals)
+  (mutable-set-build (make-hash) vals))
+(define (MutableNumberOrObjectSet-build . vals)
+  (mutable-set-build (make-hasheqv) vals))
+
+(define-for-syntax (parse-mutable-set stx repetition? mutable-set-build-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss)
@@ -483,33 +660,70 @@
                  (car argss)
                  (lambda args
                    (values (quasisyntax/loc stx
-                             (MutableSet-build #,@args))
+                             (#,mutable-set-build-id #,@args))
                            mutable-set-static-infos)))]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
-                        (MutableSet-build #,@(if (null? argss) null (car argss))))
+                        (#,mutable-set-build-id #,@(if (null? argss) null (car argss))))
                       mutable-set-static-infos)])
              #'tail)]
-    [(_ . tail) (values (if repetition?
-                            (identifier-repetition-use #'MutableSet-build)
-                            #'MutableSet-build)
-                        #'tail)]))
+    [(form-id . tail) (values (if repetition?
+                                  (identifier-repetition-use #'MutableSet-build)
+                                  (relocate+reraw #'form-id mutable-set-build-id))
+                              #'tail)]))
 
 (define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-infos))
 (define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-infos))
 
+(define-annotation-syntax MutableSet.by
+  (annotation-prefix-operator
+   #'MutableSet.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-mutable-set?-id mapper)
+                                                             mutable-set-static-infos)
+                                  #'tail)]))))))
+
 (define-syntax MutableSet
   (expression-transformer
-   (lambda (stx) (parse-mutable-set stx #f))))
+   (lambda (stx) (parse-mutable-set stx #f #'MutableSet-build))))
 
 (define-repetition-syntax MutableSet
   (repetition-transformer
-   (lambda (stx) (parse-mutable-set stx #t))))
+   (lambda (stx) (parse-mutable-set stx #t  #'MutableSet-build))))
+
+(define-syntax MutableSet.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-set stx #f
+                                          (key-comp-mutable-set-build-id mapper)))))))
+
+(define-repetition-syntax MutableSet.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-set stx #t
+                                          (key-comp-mutable-set-build-id mapper)))))))
 
 (define-static-info-syntax MutableSet-build
   (#%call-result #,mutable-set-static-infos)
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntax MutableObjectSet-build
+  (#%indirect-static-info MutableSet-build))
+(define-static-info-syntax MutableNowSet-build
+  (#%indirect-static-info MutableSet-build))
+(define-static-info-syntax MutableNumberOrObjectSet-build
+  (#%indirect-static-info MutableSet-build))
 
 ;; macro to optimize to an inline functional update
 (define-syntax (Set.append/optimize stx)
@@ -561,7 +775,15 @@
 
 (define (set-append/hash a b)
   (let-values ([(a b)
-                (if ((hash-count a) . < . (hash-count b))
+                (if (and ((hash-count a) . < . (hash-count b))
+                         (or (and (hash-equal-always? a)
+                                  (hash-equal-always? b))
+                             (and (hash-eq? a)
+                                  (hash-eq? b))
+                             (and (hash-eqv? a)
+                                  (hash-eqv? b))
+                             (and (hash-equal? a)
+                                  (hash-equal? b))))
                     (values b a)
                     (values a b))])
     (for/fold ([a a]) ([k (in-immutable-hash-keys b)])

@@ -61,15 +61,23 @@ in an unspecified order.
   annot.macro 'Map.of($key_annot, $val_annot)'
   annot.macro 'ReadableMap'
   annot.macro 'MutableMap'
+  annot.macro 'Map.by($key_comp)'
+  annot.macro 'Map.by($key_comp).of($key_annot, $val_annot)'
+  annot.macro 'MutableMap.by($key_comp)'
 ){
 
- Matches any immutable map in the form without @rhombus(of). The @rhombus(of)
- variant matches an immutable map whose keys satisfy @rhombus(key_annot)
- and whose values satisfy @rhombus(val_annot).
+ The @rhombus(Map, ~annot) annotation matches any immutable map in the
+ form without @rhombus(of). The @rhombus(of) variants match an immutable
+ map whose keys satisfy @rhombus(key_annot) and whose values satisfy
+ @rhombus(val_annot).
 
  @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableMap) constructor).
+
+ The @rhombus(Map.by, ~annot) and @rhombus(MutableMap.by, ~annot)
+ annotation variants match only maps that use the hash and equality
+ procedures specified by @rhombus(key_comp).
 
  Static information associated by @rhombus(Map, ~annot), etc., makes an
  expression acceptable as a sequence to @rhombus(for) in static mode.
@@ -157,6 +165,9 @@ in an unspecified order.
     #,(dots),
   fun Map([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: Map
+  expr.macro 'Map.by($key_comp){$key_val_or_splice, ...}'
+  expr.macro 'Map.by($key_comp)'
+  repet.macro 'Map.by($key_comp){$key_repet_or_splice, ...}'
 ){
 
  Constructs an immutable map containing given keys mapped to the given
@@ -165,12 +176,16 @@ in an unspecified order.
  The @braces form works as a repetition, where @rhombus(key_repet_or_splice)
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
+ The @rhombus(Map.by) variants create a map that uses the equality and
+ hashing functions specified by @rhombus(key_comp) for keys.
+
 @examples(
   def m = Map{"x": 1, "y": 2}
   m
   m["x"]
   Map(["x", 1], ["y", 2])
   Map{"a": 4, "b": 4, & m}
+  Map.by(===){"x" +& "": 1, "" +& "x": 2}
 )
 
 }
@@ -229,6 +244,9 @@ in an unspecified order.
   bind.macro 'ReadableMap{$key_expr: $val_bind, ...}'
   bind.macro 'ReadableMap{$key_expr: $val_bind, ..., $rest}'
   bind.macro 'ReadableMap([$key_expr, $val_bind], ...)'
+  bind.macro 'Map.by($key_comp){$key_expr: $val_bind, ...}'
+  bind.macro 'Map.by($key_comp){$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'Map.by($key_comp)([$key_expr, $val_bind], ...)'
   grammar rest:
     & $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
@@ -255,6 +273,8 @@ in an unspecified order.
  @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
  For @rhombus(ReadableMap, ~bind), the @rhombus(& map_bind) will match
  a snapshot (in the sense of @rhombus(Map.snapshot)) of the rest of the map.
+ The @rhombus(Map.by, ~bind) binding forms match only immutable maps
+ constructed using @rhombus(key_comp).
 
 @examples(
   def Map{"x": x, "y": y} = {"x": 1, "y": 2}
@@ -266,6 +286,9 @@ in an unspecified order.
   def Map{"a": _, key: val, ...} = {"a": 1, "b": 2, "c": 3}
   [key, ...]
   [val, ...]
+  match Map.by(===){}
+  | Map.by(==){}: "by equal"
+  | Map.by(===){}: "by object identity"
 )
 
 }
@@ -273,11 +296,15 @@ in an unspecified order.
 
 @doc(
   reducer.macro 'Map'
+  reducer.macro 'Map.by($key_comp)'
 ){
 
  A @tech{reducer} used with @rhombus(for), expects two results from a
  @rhombus(for) body, and accumulates them into a map using the first
  result as a key and the second result as a value.
+
+ The @rhombus(Map.by, ~reducer) reducer creates a map that uses the
+ equality and hashing functions specified by @rhombus(key_comp).
 
 }
 
@@ -288,6 +315,8 @@ in an unspecified order.
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
   fun MutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: MutableMap
+  expr.macro 'MutableMap.by($key_comp){key_expr: val_expr, ...}'
+  expr.macro 'MutableMap.by($key_comp)'
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map

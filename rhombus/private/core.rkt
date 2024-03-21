@@ -98,6 +98,7 @@
         "box.rkt"
         "map.rkt"
         "set.rkt"
+        "key-comp-primitive.rkt"
         "indexable.rkt"
         "appendable.rkt"
         "listable.rkt"

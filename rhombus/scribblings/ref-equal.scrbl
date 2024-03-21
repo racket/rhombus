@@ -6,13 +6,21 @@
 
 @doc(
   operator ((v1 :: Any) == (v2 :: Any)) :: Boolean
+  key_comp.def '=='
 ){
 
- Reports whether @rhombus(v1) and @rhombus(v2) are equal, which includes
+ The @rhombus(==) operator reports whether @rhombus(v1) and @rhombus(v2) are equal, which includes
  recursively comparing elements of compound data structures. Two numbers
  are @rhombus(==) only if they are both exact or both inexact. Two mutable
  values are @rhombus(==) only if they the same object (i.e., mutating one
  has the same effect as mutating the other).
+
+ The @rhombus(==, ~key_comp) map configuration can be used with forms like
+ the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
+ annotation constructor to specify the default equality and hashing
+ functions for map keys. The @rhombus(Map.by(==), ~annot) annotation, for
+ example, matches only maps that use the default equality and hashing
+ functions.
 
 @examples(
   "apple" == "apple"
@@ -25,13 +33,19 @@
 
 @doc(
   operator ((v1 :: Any) === (v2 :: Any)) :: Boolean
+  key_comp.def '==='
 ){
 
- Reports whether @rhombus(v1) and @rhombus(v2) are the same object.
+ The @rhombus(===) operator reports whether @rhombus(v1) and @rhombus(v2) are the same object.
  Being the @emph{same} is weakly defined, but only @rhombus(==) values
  can possibly be the same object, and mutable values are the same only if
  modifying one has the same effect as modifying the other. Interned
  values like symbols are @rhombus(===) when they are @rhombus(==).
+
+ The @rhombus(===, ~key_comp) map configuration can be used with forms
+ like the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
+ annotation constructor to specify key equality with @rhombus(===) and a
+ corresponding hashing function.
 
 @examples(
   #'apple === #'apple
@@ -73,6 +87,7 @@
 
 @doc(
   operator ((v1 :: Any) is_now (v2 :: Any)) :: Boolean
+  key_comp.def 'is_now'
 ){
 
  Reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
@@ -83,6 +98,12 @@
  other is immutable. However, a mutable map or set is never considered
  equivalent to an immutable map or set, even if they have the same
  content.
+
+ The @rhombus(is_now, ~key_comp) map configuration can be used with forms
+ like the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
+ annotation constructor to specify key equality with @rhombus(is_now) and a
+ corresponding hashing function. Beware, however, that mutating a key after
+ it is mapped will tend to make the map entry inaccessible.
 
 @examples(
   ~repl:
@@ -97,6 +118,20 @@
 
 }
 
+@doc(
+  operator ((v1 :: Any) is_same_number_or_object (v2 :: Any)) :: Boolean
+  key_comp.def 'is_same_number_or_object'
+){
+
+ The @rhombus(is_same_number_or_object) operator checks whether two values
+ are either equal via @rhombus(===) or are two numbers that are
+ @rhombus(==). This comparison is primarily intended for comparing
+ numbers, and especially via @rhombus(is_same_number_or_object, ~key_comp) as a
+ map configuration for equating map keys, where
+ @rhombus(is_same_number_or_object, ~key_comp) can be slightly more efficient
+ than @rhombus(==).
+ 
+}
 
 @doc(
   expr.macro '='

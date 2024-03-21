@@ -155,7 +155,8 @@ expr.macro
          || kw === #'~syntax_class_clause
          || kw === #'~pattern_clause
          || kw === #'~space_clause
-         || kw === #'~space_meta_clause):
+         || kw === #'~space_meta_clause
+         || kw === #'~key_comp):
         let sp = #{full-space-names}(kw)
         '#{typeset-rhombus}(~space: #'$kw, $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
     | ~else:

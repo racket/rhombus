@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -15,6 +17,10 @@ block:
     Map.remove(mp, k) ~method
     MutableMap.set(mp, k, val) ~method
     MutableMap.delete(mp, k) ~method
+    Map.by(==)(p, ...)
+    Map.by(===)(p, ...)
+    Map.by(is_now)(p, ...)
+    Map.by(is_same_number_or_object)(p, ...)
 
 check:
   {"a": 1, #'~b: 2}
@@ -478,3 +484,104 @@ check:
   m[1] := m
   to_string(m)
   ~is "#0=MutableMap{1: #0#, 3: 4}"
+
+block:
+  class Posn(x, y)
+  let a = Posn(1, 2)
+  let b = Posn(1, 2)
+  let ab = Box(1)
+  let bb = Box(1)
+  check a === b ~is #false
+  def m1 = Map.by(===){ a: 1, b: 2 }
+  def m2 = Map.by(is_same_number_or_object){ a: 1, b: 2, 1 / 2: 3, 2 / 4: 4 }
+  def m3 = Map.by(is_now){ ab: 1, bb: 2 }
+  check m1[a] ~is 1
+  check m1[b] ~is 2
+  check m2[a] ~is 1
+  check m2[b] ~is 2
+  check m2[1/2] ~is 4
+  check m2.length() ~is 3
+  check m3[ab] ~is 2
+  check m3.length() ~is 1
+  let str = to_string(m1)
+  check (str == "Map.by(===){Posn(1, 2): 1, Posn(1, 2): 2}" || str == "Map.by(===){Posn(1, 2): 2, Posn(1, 2): 1}") ~is #true
+  check to_string(m2).substring(0, 33) ~is "Map.by(is_same_number_or_object){"
+  check to_string(m3).substring(0, 15) ~is "Map.by(is_now){"
+  check m1 is_a Map ~is #true
+  check m1 is_a Map.by(===) ~is #true
+  check m1 is_a Map.by(==) ~is #false
+  check {} is_a Map.by(==) ~is #true
+  check m2 is_a Map.by(===) ~is #false
+  check m2 is_a Map.by(is_same_number_or_object) ~is #true
+  check m3 is_a Map.by(===) ~is #false
+  check m3 is_a Map.by(is_now) ~is #true
+  check (for Map.by(===) (i: 0..1): values(i, i+1)) ~is Map.by(===){ 0: 1 }
+  check (for Map.by(is_now) (i: 0..1): values(i, i+1)) ~is Map.by(is_now){ 0: 1 }
+  check (for Map.by(is_same_number_or_object) (i: 0..1): values(i, i+1)) ~is Map.by(is_same_number_or_object){ 0: 1 }
+  let [x, ...] = [1, 2, 3]
+  check Map.by(===){ x: x, ...} ~is Map.by(===){ 1: 1, 2: 2, 3: 3 }
+
+  import rhombus/meta open
+  expr.macro 'check_map_by $(key_comp :: Term)':
+    'block:
+       use_static
+       check Map.by($key_comp){} ~is Map.by($key_comp){}
+       check Map.by($key_comp){} ~is_a Map.by($key_comp)
+       check Map.by($key_comp)([1, 2]) ~is Map.by($key_comp){ 1: 2 }
+       check Map.by($key_comp){} ~is_a Map.by($key_comp).of(String, Number)
+       check Map.by($key_comp){ "x" : 1 } ~is_a Map.by($key_comp).of(String, Number)
+       check Map.by($key_comp){ "x" : 1 } is_a Map.by($key_comp).of(String, Number) ~is #true
+       check Map.by($key_comp){ "x" : 1 } is_a Map.by($key_comp).of(Number, String) ~is #false
+       check Map.by($key_comp){} ++ { 0: 1 } ~is Map.by($key_comp){ 0: 1 }
+       check Map.by($key_comp){} ++ { 0: 1, 2: 3 } ~is Map.by($key_comp){ 0: 1, 2: 3 }
+       check Map.by($key_comp){ x: x, $('...')} ~is Map.by($key_comp){ 1: 1, 2: 2, 3: 3 }
+       check Map.by($key_comp){ x: x, $('...')}.length() ~is 3       
+       check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1 : 1 },
+                                                        Map.by($key_comp){ 2 : 2 },
+                                                        Map.by($key_comp){ 3 : 3 }]
+       check (for Map.by($key_comp) (i: 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
+       block:
+         let Map.by($key_comp){ 1: v } = Map.by($key_comp){ 1: "x" }
+         check v ~is "x"
+       block:
+         let Map.by($key_comp){ 1: v, & rest } = Map.by($key_comp){ 1: "x", 2 : 3 }
+         check rest ~is_a Map.by($key_comp)
+         check rest[2] ~is 3
+       let m4 = MutableMap.by($key_comp){}
+       m4[0] := 1
+       check m4[0] ~is 1
+       check m4 ~is_now MutableMap.by($key_comp){ 0: 1 }
+       check m4 ~is_now MutableMap.by($key_comp)([0, 1])
+       check m4 ~is_a MutableMap.by($key_comp)
+       check [MutableMap.by($key_comp){ x: x }, $('...')] ~is_now [MutableMap.by($key_comp){ 1 : 1 },
+                                                                   MutableMap.by($key_comp){ 2 : 2 },
+                                                                   MutableMap.by($key_comp){ 3 : 3 }]'
+  check_map_by ==
+  check_map_by ===
+  check_map_by is_now
+  check_map_by is_same_number_or_object
+
+  version_guard.at_least "8.13.0.99":
+    key_comp.def 'is_anything':
+      ~equals: fun (a, b, recur): #true
+      ~hash_code: fun (a, recur): 1
+    let m = Map.by(is_anything){ 1: 2, 3: 4 }
+    check m.length() ~is 1
+    check m["any value at all"] ~is 4
+    check m.keys() ~is [3]
+
+    key_comp.def 'both_42_or_both_other':
+      ~equals: fun (a, b, recur): if (a == 42) | (b == 42) | (b != 42)
+      ~hash_code: fun (a, recur): if (a == 42) | 42 | 1
+    let m2o = Map.by(both_42_or_both_other){ 1: 2, 42: 9, 3: 4 }
+    check m2o.length() ~is 2
+    check m2o["any non-42 value"] ~is 4
+    check m2o[42] ~is 9
+    check m2o.keys().sort(math.less) ~is [3, 42]
+
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+    check_map_by equals                    
+
+  #void

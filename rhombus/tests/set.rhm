@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -15,6 +17,10 @@ block:
     MutableSet.set(st, v, in) ~method
     MutableSet.delete(st, v) ~method
     Set.to_list(st, [try_sort]) ~method
+    Set.by(==)(p, ...)
+    Set.by(===)(p, ...)
+    Set.by(is_now)(p, ...)
+    Set.by(is_same_number_or_object)(p, ...)
 
 check:
   Set.length({10, 20})
@@ -403,3 +409,105 @@ check:
   s[s] := #true
   to_string(s)
   ~is "#0=MutableSet{#0#}"
+
+block:
+  class Posn(x, y)
+  let a = Posn(1, 2)
+  let b = Posn(1, 2)
+  let ab = Box(1)
+  let bb = Box(1)
+  check a === b ~is #false
+  def s1 = Set.by(===){ a, b }
+  def s2 = Set.by(is_same_number_or_object){ a, b, 1 / 2, 2 / 4 }
+  def s3 = Set.by(is_now){ ab, bb }
+  check s1[a] ~is #true
+  check s1[b] ~is #true
+  check s2[a] ~is #true
+  check s2[b] ~is #true
+  check s2[1/2] ~is #true
+  check s2.length() ~is 3
+  check s3[ab] ~is #true
+  check s3.length() ~is 1
+  let str = to_string(s1)
+  check str ~is "Set.by(===){Posn(1, 2), Posn(1, 2)}"
+  check to_string(s2).substring(0, 33) ~is "Set.by(is_same_number_or_object){"
+  check to_string(s3).substring(0, 15) ~is "Set.by(is_now){"
+  check s1 is_a Set ~is #true
+  check s1 is_a Set.by(===) ~is #true
+  check s1 is_a Set.by(==) ~is #false
+  check Set{} is_a Set.by(==) ~is #true
+  check s2 is_a Set.by(===) ~is #false
+  check s2 is_a Set.by(is_same_number_or_object) ~is #true
+  check s3 is_a Set.by(===) ~is #false
+  check s3 is_a Set.by(is_now) ~is #true
+  check (for Set.by(===) (i: 0..1): i) ~is Set.by(===){ 0 }
+  check (for Set.by(is_now) (i: 0..1): i) ~is Set.by(is_now){ 0 }
+  check (for Set.by(is_same_number_or_object) (i: 0..1): i) ~is Set.by(is_same_number_or_object){ 0 }
+  let [x, ...] = [1, 2, 3]
+  check Set.by(===){ x, ... } ~is Set.by(===){ 1, 2, 3 }
+
+  import rhombus/meta open
+  expr.macro 'check_set_by $(key_comp :: Term)':
+    'block:
+       use_static
+       check Set.by($key_comp){} ~is Set.by($key_comp){}
+       check Set.by($key_comp){} ~is_a Set.by($key_comp)
+       check Set.by($key_comp)(1) ~is Set.by($key_comp){ 1 }
+       check Set.by($key_comp){} ~is_a Set.by($key_comp).of(String)
+       check Set.by($key_comp){ "x" } ~is_a Set.by($key_comp).of(String)
+       check Set.by($key_comp){ "x" } is_a Set.by($key_comp).of(String) ~is #true
+       check Set.by($key_comp){ "x" } is_a Set.by($key_comp).of(Number) ~is #false
+       check Set.by($key_comp){} ++ { 0 } ~is Set.by($key_comp){ 0 }
+       check Set.by($key_comp){} ++ { 0, 2 } ~is Set.by($key_comp){ 0, 2 }
+       check Set.by($key_comp){ x, $('...')} ~is Set.by($key_comp){ 1, 2, 3 }
+       check Set.by($key_comp){ x, $('...')}.length() ~is 3
+       check [Set.by($key_comp){ x }, $('...')] ~is [Set.by($key_comp){ 1 },
+                                                     Set.by($key_comp){ 2 },
+                                                     Set.by($key_comp){ 3 }]
+       
+       check (for Set.by($key_comp) (i: 0..1): i) ~is Set.by($key_comp){ 0 }
+       block:
+         let Set.by($key_comp){ v, $('...') } = Set.by($key_comp){ "x" }
+         check [v, $('...')] ~is ["x"]
+       block:
+         let Set.by($key_comp){ 1, & rest } = Set.by($key_comp){ 1, 2 }
+         check rest ~is_a Set.by($key_comp)
+         check rest[2] ~is #true
+       let m4 = MutableSet.by($key_comp){}
+       m4[0] := #true
+       check m4[0] ~is #true
+       check m4 ~is_now MutableSet.by($key_comp){ 0 }
+       check m4 ~is_now MutableSet.by($key_comp)(0)
+       check m4 ~is_a MutableSet.by($key_comp)
+       check [MutableSet.by($key_comp){ x }, $('...')] ~is_now [MutableSet.by($key_comp){ 1 },
+                                                                MutableSet.by($key_comp){ 2 },
+                                                                MutableSet.by($key_comp){ 3 }]'
+  check_set_by ==
+  check_set_by ===
+  check_set_by is_now
+  check_set_by is_same_number_or_object
+
+  version_guard.at_least "8.13.0.99":
+    key_comp.def 'is_anything':
+      ~equals: fun (a, b, recur): #true
+      ~hash_code: fun (a, recur): 1
+    let m = Set.by(is_anything){ 1, 3 }
+    check m.length() ~is 1
+    check m["any value at all"] ~is #true
+    check m.to_list() ~is [3]
+
+    key_comp.def 'both_42_or_both_other':
+      ~equals: fun (a, b, recur): if (a == 42) | (b == 42) | (b != 42)
+      ~hash_code: fun (a, recur): if (a == 42) | 42 | 1
+    let m2 = Set.by(both_42_or_both_other){ 1, 42, 3 }
+    check m2.length() ~is 2
+    check m2["any non-42 value"] ~is #true
+    check m2[42] ~is #true
+    check m2.to_list().sort(math.less) ~is [3, 42]
+
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+    check_set_by equals
+
+  #void
