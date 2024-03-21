@@ -41,6 +41,7 @@
 
          syntax->token
          stx-for-original-property
+         stx-for-identifier-as-keyword
 
          current-lexer-source
 
@@ -213,6 +214,8 @@
           pending-backup))
 
 (define stx-for-original-property (read-syntax #f (open-input-string "original")))
+(define stx-for-identifier-as-keyword (syntax-property stx-for-original-property 'identifier-as-keyword #t))
+
 (define current-lexer-source (make-parameter "input"))
 
 (define (make-token name e start-pos end-pos [raw #f])
@@ -223,19 +226,21 @@
                       offset
                       (- (position-offset end-pos)
                          offset)))
-  (token name (let loop ([e e] [raw raw])
+  (token name (let loop ([e e] [raw raw] [id-as-keyword? #f])
                 (let ([e (if (pair? e)
-                             (let p-loop ([e e])
+                             (let p-loop ([e e] [id-as-keyword? #t])
                                (cond
-                                 [(null? (cdr e)) (list (loop (car e) raw))]
-                                 [else (cons (loop (car e) #f)
-                                             (p-loop (cdr e)))]))
+                                 [(null? (cdr e)) (list (loop (car e) raw id-as-keyword?))]
+                                 [else (cons (loop (car e) #f id-as-keyword?)
+                                             (p-loop (cdr e) #f))]))
                              e)]
                       [raw (if (pair? e) #f raw)])
                   (define stx (datum->syntax #f
                                              e
                                              loc
-                                             stx-for-original-property))
+                                             (if id-as-keyword?
+                                                 stx-for-identifier-as-keyword
+                                                 stx-for-original-property)))
                   (if (eq? name 'comment)
                       stx
                       (syntax-raw-property stx (or raw (if (string? e) e '()))))))))

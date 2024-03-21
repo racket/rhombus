@@ -84,7 +84,9 @@ resulting shrubbery is not empty, it is parsed in the same way that
  @seclink["raw-text"]{raw-text properties} for text before and after the
  group elements. For an operator, source-location information and properties
  are associated to the operator identifier, and not the
- wrapper @racket[op] identifier.
+ wrapper @racket[op] identifier. Each structuring identifier like
+ @racket[group], @racket[block], @racket[parens], or @racket[op]
+ has the @racket['identifier-as-keyword] syntax property as @racket[#t].
 
  The default @racket['top] mode read @racket[in] until an end-of-file,
  and it expects a sequence of groups that are indented consistently
