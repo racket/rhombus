@@ -17,11 +17,11 @@ bind.macro '$bind unless $expr ...':
                    ($bind, !($expr ...)))')
 
 bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
-  def a_info: bind_meta.get_info(bind, static_info)
-  def '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
+  let a_info = bind_meta.get_info(bind, static_info)
+  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
     bind_meta.unpack_info(a_info)
-  def '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)': a_var_info
-  def ann: Syntax.unwrap(a_ann) +& " when " +& expr_g.to_source_string()
+  let '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)' = a_var_info
+  let ann = Syntax.unwrap(a_ann) +& " when " +& expr_g.to_source_string()
   '($ann,
     $a_name,
     $a_static_info,
@@ -33,9 +33,9 @@ bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
 
 bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
                            $IF, $success, $failure)':
-  def '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
+  let '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
     bind_meta.unpack_info(a_info)
-  def '(($a_var_id, $a_var_use, $a_statinfo), ...)': a_var_info
+  let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
   '«$a_matcher($in_id, $a_data, $IF,
                : $a_committer($in_id, $a_data)
                  $a_binder($in_id, $a_data)

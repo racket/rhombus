@@ -24,8 +24,8 @@ expr.macro 'memory: $(body :: Block)':
   'call_with_memory_use(fun () $body)'
 
 fun call_with_memory_use(proc):
-  def before = runtime.cumulative_memory_use()
-  def (after, results):
+  let before = runtime.cumulative_memory_use()
+  let (after, results):
     call_with_values(proc,
                      fun
                      | (x): values(runtime.cumulative_memory_use(), [x])

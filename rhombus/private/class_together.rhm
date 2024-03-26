@@ -15,7 +15,7 @@ defn.macro 'together:
               $defn
               ...':
   ~all_stx all_stx
-  def [[id, & _] && ids, ...]:
+  let [[id, & _] && ids, ...]:
     for List (defn: [defn, ...]):
       match defn
       | '$((bound_as defn_meta.space: 'class')
@@ -26,7 +26,7 @@ defn.macro 'together:
           syntax_meta.error("not a class or interface definition",
                             all_stx,
                             defn)
-  def [complete, ...]:
+  let [complete, ...]:
     for values(accum = []) ([id, ns_id, ann_id]: [ids, ...],
                             defn: [defn, ...]):
       accum ++ [

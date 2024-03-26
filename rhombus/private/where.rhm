@@ -28,27 +28,27 @@ bind.macro
 | '$bind_left where:
      $(bind_right_expr :: Bind_Right_Expr)
      ...':
-    def ['$(bind_r :: bind_meta.Parsed)', ...] = ['$bind_right_expr.bind ...', ...]
+    let ['$(bind_r :: bind_meta.Parsed)', ...] = ['$bind_right_expr.bind ...', ...]
     bind_meta.pack('(where_infoer,
                      ($bind_left, ($bind_r, $bind_right_expr.expr), ...))')
 | '$bind_left where $bind_right ... = $expr ...':
-    def '$(bind_r :: bind_meta.Parsed)' = '$bind_right ...'
+    let '$(bind_r :: bind_meta.Parsed)' = '$bind_right ...'
     bind_meta.pack('(where_infoer,
                      ($bind_left, ($bind_r, $expr ...)))')
 
 bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
-  def a_info: bind_meta.get_info(bind_a, static_info)
-  def [b_info, ...]: [bind_meta.get_info(bind_b, '()'), ...]
-  def '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
+  let a_info = bind_meta.get_info(bind_a, static_info)
+  let [b_info, ...] = [bind_meta.get_info(bind_b, '()'), ...]
+  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
     bind_meta.unpack_info(a_info)
-  def ['($b_ann, $b_name, $b_static_info, $b_var_info, $_, $_, $_, $_)', ...]:
+  let ['($b_ann, $b_name, $b_static_info, $b_var_info, $_, $_, $_, $_)', ...]:
     [bind_meta.unpack_info(b_info), ...]
-  def [b_tmp_id, ...] = [Syntax.make_temp_id(b_name), ...]
-  def '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)': a_var_info
-  def ['(($b_var_id, [$b_var_use, ...], $b_statinfo), ...)', ...]: [b_var_info, ...]
-  def [[b_keep_statinfo, ...], ...]:
+  let [b_tmp_id, ...] = [Syntax.make_temp_id(b_name), ...]
+  let '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)' = a_var_info
+  let ['(($b_var_id, [$b_var_use, ...], $b_statinfo), ...)', ...] = [b_var_info, ...]
+  let [[b_keep_statinfo, ...], ...]:
     // keep only last b's statinfos, since others are bound early
-    def len = [[b_statinfo, ...], ...].length()
+    let len = [[b_statinfo, ...], ...].length()
     for List:
       each:
         statinfos: [[b_statinfo, ...], ...]
@@ -56,7 +56,7 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
       if i == len-1
       | statinfos
       | statinfos.map(fun (_): '()')
-  def ann: Syntax.unwrap(a_ann) +& " where ...."
+  let ann = Syntax.unwrap(a_ann) +& " where ...."
   '($ann,
     $a_name,
     $a_static_info,
@@ -69,9 +69,9 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
 
 bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...),
                             $IF, $success, $failure)':
-  def '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
+  let '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
     bind_meta.unpack_info(a_info)
-  def '(($a_var_id, $a_var_use, $a_statinfo), ...)': a_var_info
+  let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
   '«$a_matcher($in_id, $a_data, $IF,
                : $a_committer($in_id, $a_data)
                  $a_binder($in_id, $a_data)
@@ -82,9 +82,9 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
                      | loop([], [], []):
                          '$success'
                      | loop([b_info, & b_infos], [b_tmp_id, & b_tmp_ids], [b_expr, & b_exprs]):
-                         def '($_, $b_name, $_, $b_var_info, $b_matcher, $b_committer, $b_binder, $b_data)':
+                         let '($_, $b_name, $_, $b_var_info, $b_matcher, $b_committer, $b_binder, $b_data)':
                            bind_meta.unpack_info(b_info)
-                         def '(($b_var_id, $b_var_use, $b_statinfo), ...)': b_var_info
+                         let '(($b_var_id, $b_var_use, $b_statinfo), ...)' = b_var_info
                          'def $b_tmp_id:
                             let $b_name = $b_expr
                             $b_name
@@ -101,11 +101,11 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
                $failure)»'
 
 bind.committer 'where_committer($in_id, ($a_info, $b, ..., ($b_info, $b_tmp_id, $b_expr)))':
-  def '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
+  let '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
     bind_meta.unpack_info(b_info)
   '$b_committer($b_tmp_id, $b_data)'
 
 bind.committer 'where_binder($in_id, ($a_info, $b, ..., ($b_info, $b_tmp_id, $b_expr)))':
-  def '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
+  let '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
     bind_meta.unpack_info(b_info)
   '$b_binder($b_tmp_id, $b_data)'

@@ -13,6 +13,6 @@ bind.macro '$left described_as $right ...':
                    ($('$right ...'.to_source_string()), $left))')
 
 bind.infoer 'described_as_infoer($static_info, ($str, $left))':
-  def left_info = bind_meta.get_info(left, static_info)
-  def '($left_str, $rest, ...)' = bind_meta.unpack_info(left_info)
+  let left_info = bind_meta.get_info(left, static_info)
+  let '($left_str, $rest, ...)' = bind_meta.unpack_info(left_info)
   '($str, $rest, ...)'

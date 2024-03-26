@@ -20,19 +20,19 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
     | syntax_meta.error("missing initial-value expression",
                         self_id,
                         arg)
-  def loop_name = Syntax.make_id(name +& "_recur")
-  def [arg_info, ...]: [bind_meta.get_info(arg.parsed, '()'), ...]
+  let loop_name = Syntax.make_id(name +& "_recur")
+  let [arg_info, ...] = [bind_meta.get_info(arg.parsed, '()'), ...]
   // if all the bindings are immediate (as opposed to more complex patterns),
   // then we expand similar to Racket's named `let`. Otherwise, to avoid
   // duplicating the binding machinery for the initial call and recursive calls,
   // we'll expand in a way that uses `#{unsafe-undefined}` on the initial call
-  def all_immediate: for values(immed = #true):
+  let all_immediate: for values(immed = #true):
                        each info: [arg_info, ...]
                        immed && bind_meta.is_immediate(info)
-  def ['($_, $a_name, $_, ...)', ...]: [bind_meta.unpack_info(arg_info), ...]
-  def [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
-  def [avail_id, ...] = [Syntax.make_id(a_name +& "_ready_arg"), ...]
-  def [recur_arg, ...] = (for List:
+  let ['($_, $a_name, $_, ...)', ...] = [bind_meta.unpack_info(arg_info), ...]
+  let [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
+  let [avail_id, ...] = [Syntax.make_id(a_name +& "_ready_arg"), ...]
+  let [recur_arg, ...] = (for List:
                             each:
                               kw: [arg.maybe_keyword, ...]
                               id: [arg_id, ...]
@@ -40,7 +40,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                             if kw
                             | '$kw: $id = $avail_id'
                             | '$id')
-  def body_expr:
+  let body_expr:
     wrap_converter('«block:
                        fun $name($recur_arg, ...) :~ providing($r.static_info):
                          $loop_name($arg_id, ...)
@@ -56,9 +56,9 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                          [avail_id, & avail_ids],
                          [init_expr, & init_exprs],
                          inside):
-      def '($ann_str, $a_name, $sis, (($id, $_, $si), ...), $matcher, $committer, $binder, $data)':
+      let '($ann_str, $a_name, $sis, (($id, $_, $si), ...), $matcher, $committer, $binder, $data)':
         bind_meta.unpack_info(arg_info)
-      def next:
+      let next:
           '«block:
               $committer($avail_id, $data)
               $binder($avail_id, $data)
@@ -82,7 +82,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                          [arg.maybe_expr, ...],
                          inside)
   fun undefined(id): '#{unsafe-undefined}'
-  def expr:
+  let expr:
     'block:
        fun $loop_name($arg_id, ...):
          $(make_binds_plus_body_for(if all_immediate | #'immediate | #'general,
@@ -107,7 +107,7 @@ meta:
                           fun (v): v,
                           fun (): bad_result(#' $name,
                                              #%literal $annotation_string))'
-      | def [arg, ...]:
+      | let [arg, ...]:
           for List:
             each i: 0..count
             Syntax.make_id("arg" +& i)

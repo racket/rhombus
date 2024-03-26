@@ -28,7 +28,7 @@ expr.macro 'examples($form, ...)':
   let label = find_kw(#'~label)
   let eval = find_kw(#'~eval)
   let indent = find_kw(#'~indent)
-  def [new_form, ...]:
+  let [new_form, ...]:
     let split_forms :~ List:
       recur split(forms = [form, ...]):
         match forms

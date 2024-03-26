@@ -676,7 +676,7 @@ fun line(~dx: dx :: Real = 0,
          ~dy: dy :: Real = 0,
          ~line: color :: Color || String || matching(#'inherit) = #'inherit,
          ~line_width: width :: LineWidth = #'inherit) :~ Pict:
-  def ln:
+  let ln:
     cond
     | dx == 0: if dy == 0
                | rkt.blank()
@@ -684,10 +684,10 @@ fun line(~dx: dx :: Real = 0,
     | dy == 0: rkt.hline(dx, 0)
     | ~else:
         rkt.dc(fun (dc_handle, ddx, ddy):
-                 def dc = draw.DC.from_handle(dc_handle)
+                 let dc = draw.DC.from_handle(dc_handle)
                  dc.line([ddx, ddy], [ddx + dx, ddy + dy]),
                dx, dy)
-  def cln:
+  let cln:
     if color != #'inherit
     | rkt.colorize(ln, color)
     | ln

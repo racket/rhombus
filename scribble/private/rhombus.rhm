@@ -54,19 +54,19 @@ meta:
     | '$_ $_ $_($stxs)': stxs
 
   fun nested([g, ...], builder, builder_stx, stxs):
-    def [new_g, ...] = [escape_group(g), ...]
+    let [new_g, ...] = [escape_group(g), ...]
     if andmap(is_literal_group, [new_g, ...])
     | literal_term(builder([extract_literal(new_g), ...], head_context(stxs)))
     | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
 
   fun nested_alts([b, ...], stxs):
-    def [new_b, ...] = [escape_term(b), ...]
+    let [new_b, ...] = [escape_term(b), ...]
     if andmap(is_literal_term, [new_b, ...])
     | literal_term(alts_syntax([extract_literal(new_b), ...], head_context(stxs)))
     | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
 
   fun escape_group(g):
-    def new_g = escape_tail(g)
+    let new_g = escape_tail(g)
     if is_literal_group(new_g)
     | literal_group(Syntax.relocate(extract_literal(new_g), group_context(g)))
     | 'Syntax.relocate($new_g, Syntax.literal($(group_context(g))))'
@@ -77,8 +77,8 @@ meta:
         'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
                               Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
-        def new_head = escape_term(head)
-        def new_tail = escape_tail('$tail ...')
+        let new_head = escape_term(head)
+        let new_tail = escape_tail('$tail ...')
         if is_literal_term(new_head) && is_literal_group(new_tail)
         | literal_group(sequence_append_syntax(extract_literal(new_head), extract_literal(new_tail)))
         | 'sequence_append_syntax($new_head, $new_tail)'
@@ -99,7 +99,7 @@ meta:
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
     | '$(id :: Name)':
-        def mv = syntax_meta.value(id, typeset_meta.space, #false)
+        let mv = syntax_meta.value(id, typeset_meta.space, #false)
         match mv
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
@@ -126,7 +126,7 @@ expr.macro
     '#{typeset-rhombus}(~space: #'$sp,
                         $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
 | 'rhombus ($forms, $(kw_stx :: Keyword))':
-    def kw = Syntax.unwrap(kw_stx)
+    let kw = Syntax.unwrap(kw_stx)
     cond
     | (kw === #'~var
          || kw === #'~datum

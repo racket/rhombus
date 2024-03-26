@@ -106,13 +106,13 @@ expr.macro
 | 'matcher($_, $body)': 'fun () $body'
 
 fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
-  def [mode, srcloc :~ Srcloc]:
+  let [mode, srcloc :~ Srcloc]:
     match maybe_loc_mode
     | [mode, srcloc]: maybe_loc_mode
     | mode: [mode, loc_where[1]]
-  def values(got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
-  def expected :~ List = call_capturing_values(expected_thunk)
-  def ok:
+  let values(got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
+  let expected :~ List = call_capturing_values(expected_thunk)
+  let ok:
     match mode
     | #'~prints:
         !exn_msg && (output == expected[0])
@@ -136,7 +136,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
   | fun
     | values_str([v]): to_string(v, ~mode: #'expr)
     | values_str(lst): "values " +& to_string(lst, ~mode: #'expr)
-    def msg:
+    let msg:
       (if #{error-print-source-location}()
        | (if srcloc | srcloc.source +& ":" +& srcloc.line | "???")
        | loc_where[0])
