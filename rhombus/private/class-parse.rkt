@@ -57,7 +57,7 @@
    dots          ; list of symbols for dot syntax
    dot-provider  ; #f or compile-time identifier
    static-infos  ; syntax object for additional instance static-infos
-   flags))       ; 'call (=> public `call` is Callable), 'get, 'set, 'append; others specific to class/interface/veneer
+   flags))       ; 'call (=> public `call` is Callable), 'get, 'set, 'append, 'compare; others specific to class/interface/veneer
 
 (struct class-desc objects-desc
   ;; `flags` from `objects-desc` can include 'authentic, 'prefab, 'no-recon
@@ -79,6 +79,7 @@
    index-method-id       ; for `get`
    index-set-method-id   ; for `set`
    append-method-id      ; for `append`
+   compare-method-id      ; for `compare`
    indirect-call-method-id ; #f or identifier for `call`
    prefab-guard-id))
 

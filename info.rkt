@@ -29,4 +29,4 @@
     "gui-easy"
     "compatibility"))
 
-(define version "0.25")
+(define version "0.26")

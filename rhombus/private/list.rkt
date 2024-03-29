@@ -30,7 +30,8 @@
          "define-arity.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         "rest-bind.rkt")
+         "rest-bind.rkt"
+         "number.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -289,11 +290,13 @@
 (define/method (List.length l)
   #:inline
   #:primitive (treelist-length)
+  #:static-infos ((#%call-result #,int-static-infos))
   (treelist-length l))
 
 (define/method (PairList.length l)
   #:inline
   #:primitive (length)
+  #:static-infos ((#%call-result #,int-static-infos))
   (length l))
 
 (define/method (List.reverse l)

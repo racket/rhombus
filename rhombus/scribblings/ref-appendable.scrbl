@@ -9,8 +9,9 @@
 @title{Appendables}
 
 An @deftech{appendable} value is one that supports @rhombus(++). Maps,
-lists, arrays, sets, strings, and byte strings are all indexable, as are
-instances of classes that implement @rhombus(Appendable, ~class).
+@tech{lists}, @tech{arrays}, @tech{sets}, @tech{strings}, and @tech{byte
+ strings} are all appendable, as are instances of classes that implement
+@rhombus(Appendable, ~class).
 
 @doc(
   ~nonterminal:
@@ -51,7 +52,7 @@ instances of classes that implement @rhombus(Appendable, ~class).
  @rhombus(append, ~datum) method.
 
  The @rhombus(use_static) declaration constrains @rhombus(++) to work
- only when the left-hand argument static information indicating that it
+ only when the left-hand argument has static information indicating that it
  satisfies @rhombus(Appendable, ~annot).
 
 @examples(

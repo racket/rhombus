@@ -6,7 +6,10 @@
          "expression.rkt"
          "repetition.rkt"
          "binding.rkt"
-         "literal.rkt")
+         "literal.rkt"
+         (submod "symbol.rkt" for-static-info)
+         (submod "keyword.rkt" for-static-info)
+         "static-info.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet
@@ -20,10 +23,12 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-name q . tail)
-        (check-quotable #'form-name #'q)
-        (values (relocate+reraw
-                 (respan (datum->syntax #f (list #'form-name #'q)))
-                 #'(quote q))
+        (define si (check-quotable #'form-name #'q))
+        (values (wrap-static-info*
+                 (relocate+reraw
+                  (respan (datum->syntax #f (list #'form-name #'q)))
+                  #'(quote q))
+                 si)
                 #'tail)]))))
 
 (define-repetition-syntax |#'|
@@ -31,13 +36,13 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-name q . tail)
-        (check-quotable #'form-name #'q)
+        (define si (check-quotable #'form-name #'q))
         (values (make-repetition-info #'datum
                                       #'value
                                       (syntax/loc stx (quote q))
                                       0
                                       0
-                                      #'()
+                                      si
                                       #t)
                 #'tail)]))))
 
@@ -53,9 +58,11 @@
 
 (define-for-syntax (check-quotable form-name q)
   (define s (syntax-e q))
-  (unless (or (keyword? s)
-              (symbol? s))
-    (raise-syntax-error #f
-                        "only an identifier or keyword allowed"
-                        (datum->syntax #f (list form-name q))
-                        q)))
+  (cond
+    [(keyword? s) keyword-static-infos]
+    [(symbol? s) symbol-static-infos]
+    [else
+     (raise-syntax-error #f
+                         "only an identifier or keyword allowed"
+                         (datum->syntax #f (list form-name q))
+                         q)]))

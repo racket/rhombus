@@ -8,6 +8,8 @@
 
 A @deftech{character} is Unicode code point.
 
+Characters are @tech{comparable}, which means that generic operations
+like @rhombus(<) and @rhombus(>) work on characters.
 
 @doc(
   annot.macro 'Char'
@@ -151,5 +153,26 @@ A @deftech{character} is Unicode code point.
 
  See also @rhombus(String.grapheme_span) and
  @rhombus(String.grapheme_count).
+
+}
+
+
+
+@doc(
+  annot.macro 'CharCI'
+){
+
+ A @tech{veneer} for a character that redirects @tech{comparable}
+ operations like @rhombus(<) and @rhombus(>) to case-insensitive
+ comparisons, equivalent to using @rhombus(Char.foldcase) on each
+ character before comparing.
+
+ As always for a veneer, @rhombus(CharCI, ~annot) normally should be used in
+ static mode to help ensure that it has the intended effect.
+
+@examples(
+  "a"[0] < "B"[0]
+  ("a"[0] :: CharCI) < ("B"[0] :: CharCI)
+)
 
 }

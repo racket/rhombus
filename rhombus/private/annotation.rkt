@@ -24,7 +24,8 @@
          "parse.rkt"
          "realm.rkt"
          "parens.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "number.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -783,21 +784,21 @@
 (define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
 (define-annotation-syntax None (identifier-annotation #'(lambda (x) #f) #'()))
 (define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
-(define-annotation-syntax Int (identifier-annotation #'exact-integer? #'()))
-(define-annotation-syntax PosInt (identifier-annotation #'exact-positive-integer? #'()))
-(define-annotation-syntax NegInt (identifier-annotation #'exact-negative-integer? #'()))
-(define-annotation-syntax NonnegInt (identifier-annotation #'exact-nonnegative-integer? #'()))
-(define-annotation-syntax Flonum (identifier-annotation #'flonum? #'()))
-(define-annotation-syntax Byte (identifier-annotation #'byte? #'()))
-(define-annotation-syntax Number (identifier-annotation #'number? #'()))
-(define-annotation-syntax Integral (identifier-annotation #'integer? #'()))
-(define-annotation-syntax Rational (identifier-annotation #'rational? #'()))
-(define-annotation-syntax Exact (identifier-annotation #'exact-number? #'()))
-(define-annotation-syntax Inexact (identifier-annotation #'inexact-number? #'()))
-(define-annotation-syntax Real (identifier-annotation #'real? #'()))
-(define-annotation-syntax PosReal (identifier-annotation #'positive-real? #'()))
-(define-annotation-syntax NegReal (identifier-annotation #'negative-real? #'()))
-(define-annotation-syntax NonnegReal (identifier-annotation #'nonnegative-real? #'()))
+(define-annotation-syntax Int (identifier-annotation #'exact-integer? int-static-infos))
+(define-annotation-syntax PosInt (identifier-annotation #'exact-positive-integer? int-static-infos))
+(define-annotation-syntax NegInt (identifier-annotation #'exact-negative-integer? int-static-infos))
+(define-annotation-syntax NonnegInt (identifier-annotation #'exact-nonnegative-integer? int-static-infos))
+(define-annotation-syntax Byte (identifier-annotation #'byte? int-static-infos))
+(define-annotation-syntax Flonum (identifier-annotation #'flonum? flonum-static-infos))
+(define-annotation-syntax Number (identifier-annotation #'number? number-static-infos))
+(define-annotation-syntax Integral (identifier-annotation #'integer? rational-static-infos))
+(define-annotation-syntax Rational (identifier-annotation #'rational? rational-static-infos))
+(define-annotation-syntax Exact (identifier-annotation #'exact-number? rational-static-infos))
+(define-annotation-syntax Inexact (identifier-annotation #'inexact-number? real-static-infos))
+(define-annotation-syntax Real (identifier-annotation #'real? real-static-infos))
+(define-annotation-syntax PosReal (identifier-annotation #'positive-real? real-static-infos))
+(define-annotation-syntax NegReal (identifier-annotation #'negative-real? real-static-infos))
+(define-annotation-syntax NonnegReal (identifier-annotation #'nonnegative-real? real-static-infos))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
 (define-annotation-syntax True (identifier-annotation #'(lambda (x) (and x #t)) #'()))

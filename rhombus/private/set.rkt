@@ -37,7 +37,8 @@
          "class-primitive.rkt"
          "rest-bind.rkt"
          "hash-remove.rkt"
-         "key-comp.rkt")
+         "key-comp.rkt"
+         "number.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -223,6 +224,7 @@
     (raise-argument-error* who rhombus-realm "ReadableSet" s)))
 
 (define/method (Set.length s)
+  #:static-infos ((#%call-result #,int-static-infos))
   (check-readable-set who s)
   (hash-count (set-ht s)))
 

@@ -12,6 +12,10 @@ symbol is similar to a string, but symbols are typically interned and
 they are equal by @rhombus(==) only when they are equal by
 @rhombus(===). The @rhombus(#') operator can produce a symbol value.
 
+Symbols are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on symbols. Comparsion of two symbols
+is the same as comparing the string forms of the symbols.
+
 @doc(
   annot.macro 'Symbol'
 ){

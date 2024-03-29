@@ -312,7 +312,7 @@ sum([1, 2, 3])
 fun
 | is_sorted([] || [_]): #true
 | is_sorted([head, next, tail, ...]):
-   head <= next && is_sorted([next, tail, ...])
+   head .<= next && is_sorted([next, tail, ...])
 
 is_sorted([1, 2, 3, 4, 5])
 is_sorted([1, 2, 30, 4, 5])

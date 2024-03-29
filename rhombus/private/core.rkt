@@ -101,6 +101,7 @@
         "key-comp-primitive.rkt"
         "indexable.rkt"
         "appendable.rkt"
+        "comparable.rkt"
         "listable.rkt"
         "assign.rkt"
         "equal.rkt"

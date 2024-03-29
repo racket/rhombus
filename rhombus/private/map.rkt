@@ -45,7 +45,8 @@
          "rest-bind.rkt"
          "hash-remove.rkt"
          "key-comp.rkt"
-         "key-comp-property.rkt")
+         "key-comp-property.rkt"
+         "number.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -762,6 +763,7 @@
 (define/method (Map.length ht)
   #:inline
   #:primitive (hash-count)
+  #:static-infos ((#%call-result #,int-static-infos))
   (hash-count ht))
 
 (define/method (Map.keys ht [try-sort? #f])

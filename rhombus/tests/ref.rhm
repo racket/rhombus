@@ -154,7 +154,7 @@ fun
 | is_sorted([]): #true
 | is_sorted([head]): #true
 | is_sorted([head, next, tail, ...]):
-   head <= next && is_sorted([next, tail, ...])
+   head .<= next && is_sorted([next, tail, ...])
 
 check:
   is_sorted([1, 2, 30, 4, 5])

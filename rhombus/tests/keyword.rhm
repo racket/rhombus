@@ -10,3 +10,8 @@ check:
   #'~a :: Keyword ~is #'~a
   Keyword.from_string("a") ~is #'~a
   Keyword.from_symbol(#'a) ~is #'~a
+
+check:
+  use_static
+  Keyword.from_string("a") < Keyword.from_symbol(#'a) 
+  ~completes

@@ -42,7 +42,7 @@
 ){
 
  Similar to @rhombus(class), but binds @rhombus(id_name) as a static
- class veneer over an existing representation, instead of creating a new
+ class @deftech{veneer} over an existing representation, instead of creating a new
  representation like @rhombus(class) does. The existing reprsentation is
  indicated by the @rhombus(annot) written after the @rhombus(this)
  pseudo-field (in parentheses after @rhombus(id_name)); this

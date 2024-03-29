@@ -43,6 +43,9 @@ immutable strings.
   str.grapheme_count(arg, ...)
 )
 
+Strings are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on strings.
+
 @doc(
   annot.macro 'String'
   annot.macro 'ReadableString'
@@ -314,5 +317,26 @@ immutable strings.
 
  The @rhombus(start) and @rhombus(end) arguments must be valid indices as
  for @rhombus(String.substring).
+
+}
+
+@doc(
+  annot.macro 'StringCI'
+  annot.macro 'ReadableStringCI'
+){
+
+ A @tech{veneer} for a string that redirects @tech{comparable}
+ operations like @rhombus(<) and @rhombus(>) to case-insensitive
+ comparisons, equivalent to using @rhombus(String.foldcase) on each
+ string before comparing.
+
+ As always for a veneer, @rhombus(StringCI, ~annot) and
+ @rhombus(ReadableStringCI, ~annot) normally should be used in static
+ mode to help ensure that they have the intended effect.
+
+@examples(
+  "apple" < "BANANA"
+  ("apple" :: StringCI) < ("BANANA" :: StringCI)
+)
 
 }

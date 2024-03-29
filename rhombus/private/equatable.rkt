@@ -7,7 +7,9 @@
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          (only-in "class-method-result.rkt" method-result)
-         "define-arity.rkt")
+         "define-arity.rkt"
+         "call-result-key.rkt"
+         "number.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/namespace)
@@ -54,7 +56,7 @@
   (method-result #'(lambda (x) #t) #t 1 "Any" #'() 8))
 
 (define-syntax hash-code-result
-  (method-result #'exact-integer? #t 1 "Int" #'() 4))
+  (method-result #'exact-integer? #t 1 "Int" int-static-infos 4))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))
@@ -70,6 +72,7 @@
    hash_code_combine_unordered))
 
 (define/arity (Equatable.hash v)
+  #:static-infos ((#%call-result #,int-static-infos))
   (equal-always-hash-code v))
 
 (define/arity (identity_hash v)
