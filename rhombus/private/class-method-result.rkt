@@ -11,6 +11,7 @@
          "index-result-key.rkt"
          "index-key.rkt"
          "append-key.rkt"
+         "compare-key.rkt"
          "values-key.rkt"
          (submod "function-parse.rkt" for-build)
          (only-in "function-arity.rkt"
@@ -35,11 +36,12 @@
 (define-syntax (define-method-result-syntax stx)
   (syntax-parse stx
     [(_ id (ret::ret-annotation) (super-result-id ...)
-        maybe-final-id convert-ok? checked-append? kind arity
+        maybe-final-id convert-ok? checked-append? checked-compare? kind arity
         maybe-call-statinfo-id
         maybe-ref-statinfo-id+id
         maybe-set-statinfo-id+id
-        maybe-append-statinfo-id+id)
+        maybe-append-statinfo-id+id
+        maybe-compare-statinfo-id+id)
      #:do [(define-values (proc predicate? count annot-str static-infos)
              (cond
                [(attribute ret.converter)
@@ -187,7 +189,9 @@
          #,@(gen-bounce #'maybe-set-statinfo-id+id #'#%index-set #f)
          #,@(gen-bounce #'maybe-append-statinfo-id+id #'#%append #f
                         ;; boxed identifier means "checked" for `#%append`
-                        #:box-id? (syntax-e #'checked-append?)))]))
+                        #:box-id? (syntax-e #'checked-append?))
+         #,@(gen-bounce #'maybe-compare-statinfo-id+id #'#%compare #f
+                        #:box-id? (syntax-e #'checked-compare?)))]))
 
 (define-for-syntax (de-method-arity arity)
   (datum->syntax #f

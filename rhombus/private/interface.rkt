@@ -112,6 +112,7 @@
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
+                       compare-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -135,6 +136,7 @@
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
+                     [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id])
          (values
           #`(begin
@@ -153,7 +155,7 @@
                                           #,internal-internal-name
                                           instance-static-infos
                                           call-statinfo-indirect index-statinfo-indirect
-                                          index-set-statinfo-indirect append-statinfo-indirect
+                                          index-set-statinfo-indirect append-statinfo-indirect compare-statinfo-indirect
                                           super-call-statinfo-indirect]
                                 exports
                                 [option stx-param] ...))))])))
@@ -168,7 +170,7 @@
                     internal-internal-name-id
                     instance-static-infos
                     call-statinfo-indirect index-statinfo-indirect
-                    index-set-statinfo-indirect append-statinfo-indirect
+                    index-set-statinfo-indirect append-statinfo-indirect compare-statinfo-indirect
                     super-call-statinfo-indirect]
           exports
           [option stx-param] ...)
@@ -216,6 +218,9 @@
          (able-method-status 'set #f supers method-mindex method-vtable method-private))
        (define-values (appendable? here-appendable? public-appendable?)
          (able-method-status 'append #f supers method-mindex method-vtable method-private))
+       (define-values (comparable? here-comparable? public-comparable?)
+         (able-method-status 'compare #f supers method-mindex method-vtable method-private
+                             #:name 'compare_to))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -273,7 +278,7 @@
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
-                                     callable? indexable? setable? appendable?
+                                     callable? indexable? setable? appendable? comparable?
                                      primitive-properties
                                      #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
@@ -289,6 +294,7 @@
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
+                                     #'compare-statinfo-indirect comparable?
                                      #'super-call-statinfo-indirect))))
            #`(begin . #,defns)))])))
 
@@ -342,7 +348,7 @@
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
-                                         callable? indexable? setable? appendable?
+                                         callable? indexable? setable? appendable? comparable?
                                          primitive-properties
                                          names)
   (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
@@ -397,7 +403,8 @@
                                (if callable? '(call) '())
                                (if indexable? '(get) '())
                                (if setable? '(set) '())
-                               (if appendable? '(append) '()))
+                               (if appendable? '(append) '())
+                               (if comparable? '(compare) '()))
                            ;; ----------------------------------------
                            (quote-syntax name)
                            #,(and internal-name

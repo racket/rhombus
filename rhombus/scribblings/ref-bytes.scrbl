@@ -30,6 +30,8 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
   bstr.locale_string(arg, ...)
 )
 
+Byte strings are @tech{comparable}, which means that generic operations
+like @rhombus(<) and @rhombus(>) work on byte strings.
 
 @doc(
   annot.macro 'Bytes'

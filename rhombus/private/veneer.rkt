@@ -108,6 +108,7 @@
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
+                       compare-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -129,6 +130,7 @@
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
+                     [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [indirect-static-infos indirect-static-infos]
                      [instance-static-infos instance-static-infos])
@@ -144,7 +146,8 @@
                          name name-extends tail-name
                          name? name-convert check?
                          name-instance
-                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
+                         append-statinfo-indirect compare-statinfo-indirect
                          super-call-statinfo-indirect
                          indirect-static-infos
                          instance-static-infos
@@ -159,7 +162,8 @@
                     name name-extends tail-name
                     name? name-convert check?
                     name-instance
-                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
+                    append-statinfo-indirect compare-statinfo-indirect
                     super-call-statinfo-indirect
                     indirect-static-infos
                     instance-static-infos
@@ -224,6 +228,9 @@
          (able-method-status 'set super interfaces method-mindex method-vtable method-private))
        (define-values (appendable? here-appendable? public-appendable?)
          (able-method-status 'append super interfaces method-mindex method-vtable method-private))
+       (define-values (comparable? here-comparable? public-comparable?)
+         (able-method-status 'compare super interfaces method-mindex method-vtable method-private
+                             #:name 'compare_to))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -305,6 +312,7 @@
                                   public-indexable?
                                   public-setable?
                                   public-appendable?
+                                  public-comparable?
                                   #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                           name? name-convert check? converter?
                                           dot-provider-name prefab-guard-name
@@ -318,8 +326,10 @@
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
+                                     #'compare-statinfo-indirect comparable?
                                      #'super-call-statinfo-indirect
-                                     #:checked-append? #f))))
+                                     #:checked-append? #f
+                                     #:checked-compare? #f))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-veneer-annotation converter? names)
@@ -494,6 +504,7 @@
                                       public-indexable?
                                       public-setable?
                                       public-appendable?
+                                      public-comparable?
                                       names)
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        name? name-convert check? converter?
@@ -505,7 +516,8 @@
           [method-result-expr (build-method-result-expression method-results)]
           [flags #`(#,@(if public-indexable? '(get) null)
                     #,@(if public-setable? '(set) null)
-                    #,@(if public-appendable? '(append) null))]
+                    #,@(if public-appendable? '(append) null)
+                    #,@(if public-comparable? '(compare) null))]
           [interface-names (interface-names->quoted-list interface-names all-interfaces private-interfaces 'public)])
       (list
        (build-syntax-definition/maybe-extension

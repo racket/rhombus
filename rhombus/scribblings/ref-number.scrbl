@@ -6,6 +6,10 @@
 
 @title{Numbers}
 
+Numbers are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on numbers, while specialized
+operations like @rhombus(.<) and @rhombus(.>) work only on numbers.
+
 @doc(
   annot.macro 'Number'
 ){
@@ -243,17 +247,19 @@
 
 
 @doc(
-  operator ((x :: Number) > (y :: Number)) :: Boolean
-  operator ((x :: Number) >= (y :: Number)) :: Boolean
-  operator ((x :: Number) < (y :: Number)) :: Boolean
-  operator ((x :: Number) <= (y :: Number)) :: Boolean
+  operator ((x :: Number) .> (y :: Number)) :: Boolean
+  operator ((x :: Number) .>= (y :: Number)) :: Boolean
+  operator ((x :: Number) .< (y :: Number)) :: Boolean
+  operator ((x :: Number) .<= (y :: Number)) :: Boolean
 ){
 
- The usual comparsion operators on numbers. See also @rhombus(.=).
+ The usual comparsion operators on numbers prefixed with @litchar{.} to
+ distinsguish them from generic operations like @rhombus(<) on
+ @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=).
 
 @examples(
-  1 < 2
-  3 >= 3.0
+  1 .< 2
+  3 .>= 3.0
 )
 
 }

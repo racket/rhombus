@@ -9,9 +9,10 @@
 @title{Indexables}
 
 An @deftech{indexable} value is one that supports @brackets afterward to
-extract an element at the index within @brackets. Maps, lists, arrays,
-sets, strings, and byte strings are all indexable, as are instances of
-classes that implement @rhombus(Indexable, ~class).
+extract an element at the index within @brackets. @tech{Maps},
+@tech{lists}, @tech{arrays}, @tech{sets}, @tech{strings}, and @tech{byte
+ strings} are all indexable, as are instances of classes that implement
+@rhombus(Indexable, ~class).
 
 @doc(
   ~nonterminal:

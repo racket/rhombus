@@ -4,7 +4,8 @@
                      shrubbery/print
                      "annotation-string.rkt")
          "binding.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "number.rkt")
 
 (provide literal-infoer
          ;; useful for other binding patterns:
@@ -67,13 +68,21 @@
 
 (define-for-syntax string-static-infos #f)
 (define-for-syntax bytes-static-infos #f)
+(define-for-syntax char-static-infos #f)
 (define-for-syntax (install-literal-static-infos! kind static-infos)
   (case kind
     [(string) (set! string-static-infos static-infos)]
     [(bytes) (set! bytes-static-infos static-infos)]
+    [(char) (set! char-static-infos static-infos)]
     [else (error "unrecognized kind" kind)]))
 
 (define-for-syntax (literal-static-infos d-stx)
   (define d (syntax-e d-stx))
   (or (and (string? d) string-static-infos)
-      (and (bytes? d) bytes-static-infos)))
+      (and (bytes? d) bytes-static-infos)
+      (and (exact-integer? d) int-static-infos)
+      (and (flonum? d) flonum-static-infos)
+      (and (rational? d) rational-static-infos)
+      (and (real? d) real-static-infos)
+      (and (number? d) number-static-infos)
+      (and (char? d) char-static-infos)))

@@ -3,13 +3,40 @@
          "provide.rkt"
          "name-root.rkt"
          "define-arity.rkt"
-         (submod "annotation.rkt" for-class))
+         "number.rkt"
+         "call-result-key.rkt"
+         "compare-key.rkt"
+         (submod "annotation.rkt" for-class)
+         (submod "literal.rkt" for-info)
+         (submod "symbol.rkt" for-static-info)
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
-                     Char))
+                     Char)
+         (for-space rhombus/annot
+                    CharCI))
 
-(define-annotation-syntax Char (identifier-annotation #'char? #'()))
+(module+ for-static-info
+  (provide (for-syntax char-static-infos)))
+
+(define-for-syntax char-static-infos
+  #'((#%compare ((< char<?)
+                 (<= char<=?)
+                 (= char=?)
+                 (!= char!=?)
+                 (>= char>=?)
+                 (> char>?)))))
+
+(define-annotation-syntax Char
+  (identifier-annotation #'char? char-static-infos))
+(define-annotation-syntax CharCI
+  (identifier-annotation #'char? #'((#%compare ((< char-ci<?)
+                                                (<= char-ci<=?)
+                                                (= char-ci=?)
+                                                (!= char-ci!=?)
+                                                (>= char-ci>=?)
+                                                (> char-ci>?))))))
 
 (define-name-root Char
   #:fields
@@ -36,9 +63,11 @@
    grapheme_step))
 
 (define/arity (to_int c)
+  #:static-infos ((#%call-result #,int-static-infos))
   (char->integer c))
 
 (define/arity (from_int i)
+  #:static-infos ((#%call-result #,char-static-infos))
   (integer->char i))
 
 (define/arity (utf8_length c)
@@ -78,22 +107,41 @@
   (char-extended-pictographic? c))
 
 (define/arity (general_category c)
+  #:static-infos ((#%call-result #,symbol-static-infos))
   (char-general-category c))
 
 (define/arity (grapheme_break_property c)
+  #:static-infos ((#%call-result #,symbol-static-infos))
   (char-grapheme-break-property c))
 
 (define/arity (upcase c)
+  #:static-infos ((#%call-result #,char-static-infos))
   (char-upcase c))
 
 (define/arity (downcase c)
+  #:static-infos ((#%call-result #,char-static-infos))
   (char-downcase c))
 
 (define/arity (foldcase c)
+  #:static-infos ((#%call-result #,char-static-infos))
   (char-foldcase c))
 
 (define/arity (titlecase c)
+  #:static-infos ((#%call-result #,char-static-infos))
   (char-titlecase c))
 
 (define/arity (grapheme_step c state)
   (char-grapheme-step c state))
+
+(define (char!=? a b)
+  (if (and (char? a) (char? b))
+      (not (char=? a b))
+      (raise-argument-error* '!= rhombus-realm "Char" (if (char? a) b a))))
+
+(define (char-ci!=? a b)
+  (if (and (char? a) (char? b))
+      (not (char-ci=? a b))
+      (raise-argument-error* '!= rhombus-realm "Char" (if (char? a) b a))))
+
+(begin-for-syntax
+  (install-literal-static-infos! 'char char-static-infos))

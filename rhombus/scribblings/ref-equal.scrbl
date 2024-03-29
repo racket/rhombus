@@ -56,18 +56,20 @@
 
 @doc(
   operator ((x :: Number) .= (y :: Number)) :: Boolean
+  operator ((x :: Number) .!= (y :: Number)) :: Boolean
 ){
 
- Reports whether @rhombus(x) and @rhombus(y) are numerically equal,
- where inexact numbers are effectively coerced to exact for
+ Reports whether @rhombus(x) and @rhombus(y) are numerically equal or
+ unequal, where inexact numbers are effectively coerced to exact for
  comparisons to exact numbers. The value @rhombus(#nan) is not
- @rhombus(.=) to itself (but @rhombus(#nan) is @rhombus(==) to
- itself).
+ @rhombus(.=) to itself (but @rhombus(#nan) is @rhombus(==) to itself).
 
 @examples(
   1 .= 1
   1 .= 2
   1.0 .= 1
+  1 .!= 2
+  1 .!= 1.0
 )
 
 }

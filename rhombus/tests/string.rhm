@@ -139,3 +139,53 @@ block:
     to_string(copy("hello")) ~is "hello"
     to_string("hello", ~mode: #'expr) ~is "\"hello\""
     to_string(copy("hello"), ~mode: #'expr) ~is "racket.#{string-copy}(\"hello\")"
+
+block:
+  use_static
+  let a :: StringCI = "a"
+  let A :: StringCI = "A"
+  let b :: StringCI = "b"
+  let B :: StringCI = "B"
+  check:
+    a < B ~is #true
+    b < A ~is #false
+    a <= B ~is #true
+    a <= A ~is #true
+    b <= A ~is #false
+    a >= B ~is #false
+    a >= A ~is #true
+    b >= A ~is #true
+    a > B ~is #false
+    a > A ~is #false
+    b > A ~is #true
+    a compares_equal a ~is #true
+    a compares_equal A ~is #true
+    a compares_equal B ~is #false
+    a compares_unequal a ~is #false
+    a compares_unequal A ~is #false
+    a compares_unequal B ~is #true
+
+block:
+  use_static
+  let a :: ReadableStringCI = "a"
+  let A :: ReadableStringCI = "A"
+  let b :: ReadableStringCI = "b"
+  let B :: ReadableStringCI = "B"
+  check:
+    a < B ~is #true
+    b < A ~is #false
+    a <= B ~is #true
+    a <= A ~is #true
+    b <= A ~is #false
+    a >= B ~is #false
+    a >= A ~is #true
+    b >= A ~is #true
+    a > B ~is #false
+    a > A ~is #false
+    b > A ~is #true
+    a compares_equal a ~is #true
+    a compares_equal A ~is #true
+    a compares_equal B ~is #false
+    a compares_unequal a ~is #false
+    a compares_unequal A ~is #false
+    a compares_unequal B ~is #true

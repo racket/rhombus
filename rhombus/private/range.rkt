@@ -6,9 +6,11 @@
          "parse.rkt"
          (prefix-in rhombus-a: "arithmetic.rkt")
          "sequence-constructor-key.rkt"
+         "sequence-element-key.rkt"
          "treelist.rkt"
          (submod "list.rkt" for-listable)
-         "realm.rkt")
+         "realm.rkt"
+         "number.rkt")
 
 (provide ..
          ..=)
@@ -45,7 +47,8 @@
    'none))
 
 (define-for-syntax (wrap-as-static-sequence stx)
-  (wrap-static-info stx #'#%sequence-constructor #'#t))
+  (wrap-static-info (wrap-static-info stx #'#%sequence-constructor #'#t)
+                    #'#%sequence-element int-static-infos))
 
 (struct listable-range (range)
   #:property prop:sequence (lambda (r) (listable-range-range r))

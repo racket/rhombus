@@ -150,6 +150,7 @@
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
+                       compare-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -186,6 +187,7 @@
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
+                     [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
@@ -228,7 +230,8 @@
                          name name-extends tail-name
                          name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
-                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                         call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
+                         append-statinfo-indirect compare-statinfo-indirect
                          super-call-statinfo-indirect
                          indirect-static-infos
                          instance-static-infos
@@ -249,7 +252,8 @@
                     name name-extends tail-name
                     name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
-                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect append-statinfo-indirect
+                    call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
+                    append-statinfo-indirect compare-statinfo-indirect
                     super-call-statinfo-indirect
                     indirect-static-infos
                     instance-static-infos
@@ -437,6 +441,9 @@
          (able-method-status 'set super interfaces method-mindex method-vtable method-private))
        (define-values (appendable? here-appendable? public-appendable?)
          (able-method-status 'append super interfaces method-mindex method-vtable method-private))
+       (define-values (comparable? here-comparable? public-comparable?)
+         (able-method-status 'compare super interfaces method-mindex method-vtable method-private
+                             #:name 'compare_to))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -584,7 +591,8 @@
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
-                                   has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
+                                   has-extra-fields? here-callable? here-indexable? here-setable?
+                                   here-appendable? here-comparable?
                                    primitive-properties
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
                                            reconstructor-name
@@ -693,6 +701,7 @@
                                  here-indexable? public-indexable?
                                  here-setable? public-setable?
                                  here-appendable? public-appendable?
+                                 here-comparable? public-comparable?
                                  (or (hash-ref options 'reconstructor-fields #f)
                                      (and super (class-desc-reconstructor-fields super)))
                                  #'(name name-extends class:name constructor-maker-name name-defaults name-ref
@@ -722,6 +731,7 @@
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
+                                     #'compare-statinfo-indirect comparable?
                                      #'super-call-statinfo-indirect))))
            #`(begin . #,defns)))])))
 
@@ -730,7 +740,8 @@
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
-                                       has-extra-fields? here-callable? here-indexable? here-setable? here-appendable?
+                                       has-extra-fields? here-callable? here-indexable? here-setable?
+                                       here-appendable? here-comparable?
                                        primitive-properties
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
@@ -959,6 +970,7 @@
                                      here-indexable? public-indexable?
                                      here-setable? public-setable?
                                      here-appendable? public-appendable?
+                                     here-comparable? public-comparable?
                                      force-custom-recon?
                                      names)
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
@@ -988,7 +1000,8 @@
                        #,@(if public-callable? '(call) null)
                        #,@(if public-indexable? '(get) null)
                        #,@(if public-setable? '(set) null)
-                       #,@(if public-appendable? '(append) null))
+                       #,@(if public-appendable? '(append) null)
+                       #,@(if public-comparable? '(compare) null))
                      ;; ----------------------------------------
                      #,final?
                      (quote-syntax name)
@@ -1060,6 +1073,10 @@
                      #,(able-method-for-class-desc 'append here-appendable? public-appendable?
                                                    super
                                                    method-mindex method-vtable method-private)
+                     #,(able-method-for-class-desc 'compare here-comparable? public-comparable?
+                                                   super
+                                                   method-mindex method-vtable method-private
+                                                   #:const '#:method)
                      #,(let ([id (if (syntax-e #'call-statinfo-indirect)
                                      #'call-statinfo-indirect
                                      #'super-call-statinfo-indirect)])

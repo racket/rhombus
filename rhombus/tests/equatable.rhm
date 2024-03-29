@@ -103,6 +103,9 @@ block:
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
   check Equatable.hash(AnythingGoesConcrete(2)) ~is 3
 
+  // check for static info on `hash_code` result
+  check AnythingGoesConcrete(2).hash_code(values) compares_equal AnythingGoesConcrete(2).hash_code(values) ~is #true
+
 block:
   class AnythingGoesAbstract():
     nonfinal
@@ -117,3 +120,6 @@ block:
 
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
   check Equatable.hash(AnythingGoesConcrete(2)) ~is 4
+
+  // check for static info on `hash` result
+  check Equatable.hash(AnythingGoesConcrete(2)) compares_equal Equatable.hash(AnythingGoesConcrete(2)) ~is #true

@@ -7,11 +7,14 @@
          "call-result-key.rkt"
          "index-key.rkt"
          "append-key.rkt"
+         "compare-key.rkt"
          (submod "annotation.rkt" for-class)
          "mutability.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "number.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -31,7 +34,13 @@
   #:no-constructor-static-info
   #:instance-static-info ((#%index-get Bytes.get)
                           (#%index-set Bytes.set)
-                          (#%append Bytes.append))
+                          (#%append Bytes.append)
+                          (#%compare ((< bytes<?)
+                                      (<= bytes<=?)
+                                      (= bytes=?)
+                                      (!= bytes!=?)
+                                      (>= bytes>=?)
+                                      (> bytes>?))))
   #:existing
   #:opaque
   #:fields ()
@@ -90,6 +99,7 @@
 (define/method (Bytes.length bstr)
   #:inline
   #:primitive (bytes-length)
+  #:static-infos ((#%call-result #,int-static-infos))
   (bytes-length bstr))
 
 (define/method Bytes.subbytes
@@ -133,6 +143,21 @@
     [(bstr dest-start src) (bytes-copy! bstr dest-start src)]
     [(bstr dest-start src src-start) (bytes-copy! bstr dest-start src src-start)]
     [(bstr dest-start src src-start src-end) (bytes-copy! bstr dest-start src src-start src-end)]))
+
+(define (bytes!=? a b)
+  (if (and (bytes? a) (bytes? b))
+      (not (bytes=? a b))
+      (raise-argument-error* '!= rhombus-realm "Bytes" (if (bytes? a) b a))))
+
+(define (bytes<=? a b)
+  (if (and (bytes? a) (bytes? b))
+      (not (bytes>? a b))
+      (raise-argument-error* '<= rhombus-realm "Bytes" (if (bytes? a) b a))))
+
+(define (bytes>=? a b)
+  (if (and (bytes? a) (bytes? b))
+      (not (bytes<? a b))
+      (raise-argument-error* '>= rhombus-realm "Bytes" (if (bytes? a) b a))))
 
 (begin-for-syntax
   (install-literal-static-infos! 'bytes bytes-static-infos))

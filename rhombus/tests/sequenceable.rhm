@@ -177,7 +177,7 @@ check:
         ~recur_binds:
           i = 0,
         ~head_guard:
-          i < nr[0],
+          i .< nr[0],
         ~inner_binds:
           $lhs = df[i], // :~ List here would not propagate to body
         ~recur_args:

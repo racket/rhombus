@@ -132,10 +132,10 @@ class Pict():
     PrintDesc.special(snapshot().handle, ~mode: #'print,
                       "Pict(...)")
 
-  abstract property width
-  abstract property height
-  abstract property ascent
-  abstract property descent
+  abstract property width :~ Real
+  abstract property height :~ Real
+  abstract property ascent :~ Real
+  abstract property descent :~ Real
 
   abstract property duration :~ Int
   abstract method epoch_extent(i :: Int) :~ Real

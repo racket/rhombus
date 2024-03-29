@@ -19,3 +19,9 @@ check:
   to_string(Symbol.unreadable_from_string("a")) ~is "a"
   Symbol.gen("a") ~completes
   Symbol.gen(#'a) ~completes
+
+check:
+  use_static
+  Symbol.from_string("a") < Symbol.uninterned_from_string("a")  
+  Symbol.from_string("a") < Symbol.unreadable_from_string("a")
+  ~completes

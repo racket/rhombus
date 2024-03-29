@@ -8,7 +8,7 @@
 
 @title{Sets}
 
-Immutable sets can be constructed using the syntax
+Immutable @deftech{sets} can be constructed using the syntax
 @rhombus({#,(@rhombus(val_expr, ~var)), ...}),
 which creates a set containing the values of the @rhombus(val_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is

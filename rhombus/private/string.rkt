@@ -16,14 +16,17 @@
          "call-result-key.rkt"
          "index-key.rkt"
          "append-key.rkt"
+         "compare-key.rkt"
          "define-arity.rkt"
          (submod "literal.rkt" for-info)
          (submod "annotation.rkt" for-class)
+         (submod "char.rkt" for-static-info)
          "mutability.rkt"
          "pack.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "number.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -36,6 +39,8 @@
                      String)
          (for-space rhombus/annot
                     ReadableString
+                    StringCI
+                    ReadableStringCI
                     ;; temporary:
                     (rename-out [ReadableString StringView])))
 
@@ -47,7 +52,13 @@
 
 (define-for-syntax any-string-static-infos
   #'((#%index-get String.get)
-     (#%append String.append)))
+     (#%append String.append)
+     (#%compare ((< string<?)
+                 (<= string<=?)
+                 (= string=?)
+                 (!= string!=?)
+                 (>= string>=?)
+                 (> string>?)))))
 
 (define-primitive-class ReadableString readable-string
   #:lift-declaration
@@ -123,6 +134,28 @@
 (define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
 (define-annotation-syntax ReadableString (identifier-annotation #'string? readable-string-static-infos))
 
+(define-values-for-syntax (string-ci-static-infos
+                           readable-string-ci-static-infos)
+  (let ([convert
+         (lambda (sis)
+           (datum->syntax
+            #f
+            (for/list ([si (in-list (syntax->list sis))])
+              (syntax-parse si
+                #:datum-literals (#%compare)
+                [(#%compare . _) #'(#%compare ((< string-ci<?)
+                                               (<= string-ci<=?)
+                                               (= string-ci=?)
+                                               (!= string-ci!=?)
+                                               (>= string-ci>=?)
+                                               (> string-ci>?)))]
+                [_ si]))))])
+    (values (convert string-static-infos)
+            (convert readable-string-static-infos))))
+
+(define-annotation-syntax StringCI (identifier-annotation #'immutable-string? string-ci-static-infos))
+(define-annotation-syntax ReadableStringCI (identifier-annotation #'string? readable-string-ci-static-infos))
+
 (define-infix +& append-as-strings
   #:stronger-than (== ===)
   #:static-infos #,string-static-infos)
@@ -164,11 +197,13 @@
 (define/method (String.get s i)
   #:inline
   #:primitive (string-ref)
+  #:static-infos ((#%call-result #,char-static-infos))
   (string-ref s i))
 
 (define/method (String.length s)
   #:inline
   #:primitive (string-length)
+  #:static-infos ((#%call-result #,int-static-infos))
   (string-length s))
 
 (define/method (String.to_string s)
@@ -178,12 +213,14 @@
   (string->immutable-string s))
 
 (define/method (String.to_int s)
+  #:static-infos ((#%call-result #,int-static-infos))
   (check-readable-string who s)
   (define n (string->number s))
   (and (exact-integer? n)
        n))
 
 (define/method (String.to_number s)
+  #:static-infos ((#%call-result #,number-static-infos))
   (check-readable-string who s)
   (string->number s))
 
@@ -282,6 +319,16 @@
 
 (define-grapheme span)
 (define-grapheme count)
+
+(define (string!=? a b)
+  (if (and (string? a) (string? b))
+      (not (string=? a b))
+      (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
+
+(define (string-ci!=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-ci=? a b))
+      (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
 
 (begin-for-syntax
   (install-literal-static-infos! 'string string-static-infos))

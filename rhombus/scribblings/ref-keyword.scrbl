@@ -11,6 +11,11 @@ equal by @rhombus(==) only when they are equal by @rhombus(===).
 
 See also @rhombus(#'), which works for keywords as well as symbols.
 
+Keywords are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on keywords. Comparsion of two keywords
+is the same as comparing the string forms of the keywords.
+
+
 @doc(
   annot.macro 'Keyword'
 ){

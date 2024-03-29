@@ -657,3 +657,9 @@ version_guard.at_least "8.11.1.4":
       each day_str: [fun (): today, fun (): today]
       [day_str(), today]
     ~is [["Friday", "Friday"], ["Friday", "Friday"]]
+
+check:
+  use_static
+  for List (i: 0..2):
+    i < 1
+  ~is [#true, #false]
