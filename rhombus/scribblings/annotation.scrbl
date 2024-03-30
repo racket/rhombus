@@ -26,7 +26,7 @@ the left-hand expression must produce a value that satisfies the
 right-hand annotation, otherwise a run-time exception is thrown. The
 @rhombus(is_a) operator takes an annotation like @rhombus(::), but it
 produces a boolean result indicating whether the result of the left-hand
-expression matches the annotation.
+expression satisfies the annotation.
 
 @examples(
   ~eval: ann_eval
@@ -39,7 +39,7 @@ expression matches the annotation.
 
 When @rhombus(class) defines a new class, an annotation can be
 associated with each field. When the annotation is written with
-@rhombus(::), then the annotation is checked when an instance is
+@rhombus(::, ~bind), then the annotation is checked when an instance is
 created.
 
 @examples(
@@ -65,31 +65,40 @@ the @rhombus(.) operator can be chained for efficient access:
     l1.p2.x
 )
 
-@margin_note_block{Using @rhombus(.) to reach an imported binding, as in
- @rhombus(f2c.fahrenheit_to_celsius), is a different kind of @rhombus(.)
- than the infix expression operator.}
+@margin_note_block{Using @rhombus(., ~datum) to reach an
+ @rhombus(import)ed or @tech{namespace}d binding, as in
+ @rhombus(f2c.fahrenheit_to_celsius, ~datum),
+ is different than the infix expression operator, @rhombus(.).}
 
 More generally, @rhombus(.) access is efficient when the left-hand side
-of @rhombus(.) is an @rhombus(import) prefix, a @tech{namespace}, or
-an expression that can act as a @deftech{dot provider}. A class name
-acts as a namespace to provides access to
-field-accessor functions, as in @rhombus(Posn.x) (which doesn’t get a
-specific @rhombus(x), but produces a function that can be called on a
-@rhombus(Posn) instance to extract its @rhombus(x) field). An identifier
-that is bound using @rhombus(:~) or @rhombus(::) and a class name is
-a dot provider, and it provides access to fields of a class
-instance. More generally, an annotation that is associated to a binding
-or expression with @rhombus(:~) or @rhombus(::) might make the binding
+of @rhombus(.) is an expression that can act as a @deftech{dot provider}.
+A class name also acts as a @tech{namespace} to provides access to
+field-accessor functions, as in @rhombus(Posn.x, ~datum) (which doesn't get a
+specific @rhombus(x, ~datum), but produces a function that can be called on a
+@rhombus(Posn, ~datum) instance to extract its @rhombus(x, ~datum) field).
+An identifier that is bound using @rhombus(:~, ~bind) or
+@rhombus(::, ~bind) (where a class name follows the
+@rhombus(:~, ~bind) or @rhombus(::, ~bind)) is a dot
+provider, and it provides access to fields of a class
+instance. For example, a use of
+@rhombus(#,(@rhombus(p, ~datum)).#,(@rhombus(x, ~datum))) in
+the lexical context of a @rhombus(p, ~datum) that is bound
+via @rhombus(#,(@rhombus(p, ~datum)) :: #,(@rhombus(Posn, ~datum)), ~bind) is an
+efficient access to the @rhombus(x, ~datum) field.
+In general, an annotation that is associated to a binding
+or expression with @rhombus(:~, ~bind) or @rhombus(::, ~bind) might make the binding
 or expression a dot provider. See @secref("static-info") for more
 information on dot providers and other static information.
 
-The @rhombus(use_static) definition form binds the @rhombus(.)
-operator so that it works only in efficient mode with an import, namespace,
-or dot provider. If the left-hand side of the @rhombus(.) is not one of those, then the
-@rhombus(.) defined by @rhombus(use_static) reports a compile-time
-error. The @rhombus(use_dynamic) form binds @rhombus(.) to the
-default @rhombus(.), which allows dynamic field lookup if the left-hand
-side is not a dot provider, namespace, or import prefix.
+The @rhombus(use_static) definition form redefines
+@rhombus(#%dynamism, ~datum) so that the @rhombus(.) operator works
+only in efficient mode with a dot provider, among others. If the
+left-hand side of the @rhombus(.) is not a dot provider, then
+@rhombus(.) under @rhombus(use_static) reports a compile-time
+error. The @rhombus(use_dynamic) form binds
+@rhombus(#%dynamism, ~datum) to the default @rhombus(#%dynamism),
+which allows dynamic field lookup if the left-hand side is not a dot
+provider.
 
 @examples(
   ~eval: ann_eval
