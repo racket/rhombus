@@ -3,7 +3,8 @@
                      "interface-parse.rkt")
          "provide.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result))
+         (only-in "class-method-result.rkt" method-result)
+         "sequence-constructor-key.rkt")
 
 (provide (for-spaces (rhombus/class)
                      Sequenceable))
@@ -37,4 +38,4 @@
                   null))
 
 (define-syntax to-sequence-result
-  (method-result #'sequence? #t 1 "Sequence" #'() 2))
+  (method-result #'sequence? #t 1 "Sequence" #'((#%sequence-constructor #t)) 2))
