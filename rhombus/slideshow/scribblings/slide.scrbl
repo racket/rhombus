@@ -13,7 +13,7 @@
 ){
 
  Satisfied by allowed arguments to @rhombus(slide): a pict,
- @rhombus(slide.next), a value produced by @rhombus(slide.alts),
+ @rhombus(slide.next), @rhombus(slide.sync), a value produced by @rhombus(slide.alts),
  @rhombus(slide.align), or @rhombus(slide.horiz), or a list of values
  that satisfy @rhombus(SlideContent, ~annot).
 
@@ -42,7 +42,7 @@
  content picts via the @rhombus(current_assembler) parameter's value.
 
  Besides immediate picts, the @rhombus(content) values can produce
- descriptions of slides to construct using lists, @rhombus(slide.next),
+ descriptions of slides to construct using lists, @rhombus(slide.next), @rhombus(slide.sync),
  @rhombus(slide.alts), @rhombus(slide.align), and @rhombus(slide.horiz)
  (or one of its shorthands: @rhombus(slide.left), @rhombus(slide.center),
  or @rhombus(slide.right)):
@@ -64,12 +64,19 @@
   before this use, after this use, or both, creating a multi-epoch pict
   wherever it's used.}
 
+ @item{A @rhombus(slide.sync) is similar to @rhombus(slide.next), but it
+  combines a snapshot of the pict from after @rhombus(slide.sync) for
+  all but the last epoch of the pict before @rhombus(slide.sync), and it
+  shifts the time box of the pict after @rhombus(slide.sync) by one less
+  (so that the last epoch of the pict beofre and the first epoch of the
+  pict after are the same).}
+
  @item{A value produced by @rhombus(slide.alts) creates one pict for
   each argument to @rhombus(slide.alts), and the picts are sequentialized
   and then combined with @rhombus(overlay). (That's similar to using
   @rhombus(transition), but the bounding boxes for all alternatives are
   preserved for the combined duration.) The @rhombus(overlay) combination
-  uses @rhombus(#'top) alignment. A @rhombus(slide.next) can be used in
+  uses @rhombus(#'top) alignment. A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
   any alternative, and @rhombus(slide.alts) can be nested; in either of
   those cases, the corresponding alternative will itself be a multi-epoch
   pict.}
@@ -117,6 +124,7 @@
 
 @doc(
   def slide.next
+  def slide.sync
   fun slide.alts([content :: SlideContent, ...], ...)
   fun slide.align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
                   ~horiz: horiz :: pict.HorizAlignment = #'left,

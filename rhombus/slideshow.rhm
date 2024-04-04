@@ -43,6 +43,7 @@ export:
 namespace slide:
   export:
     next
+    sync
     gap
     alts
 

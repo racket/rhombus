@@ -133,6 +133,11 @@ of picts before @rhombus(slide.next), achieving the same result as
         @t{World})
 )
 
+The special value @rhombus(slide.sync) is somewhat like
+@rhombus(slide.next), but instead of hiding the part after
+@rhombus(slide.next) until all epochs have completed in the part before,
+a snapshot of the part after is used during the part before's epochs.
+
 The @rhombus(slide.alts) function is similar to @rhombus(switch). It
 takes any number of arguments and produces those arguments in sequence.
 
