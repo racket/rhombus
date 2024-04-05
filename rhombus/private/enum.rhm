@@ -1,0 +1,59 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+  "symbol.rkt"!#{for-static-info}.#{symbol-static-infos}
+
+use_static
+
+export:
+  enum
+
+defn.macro 'enum $(name :: IdentifierName):
+              $clause
+              ...':
+  ~all_stx: stx
+  let [[sym, ...], ...]:
+    for List (c: [clause, ...]):
+      match c
+      | '~is_a: $ann; ...': []
+      | '~is_a $ann': []
+      | '$(sym :: Identifier) ...': [sym, ...]
+      | ~else:
+          syntax_meta.error("enumeration body form not an identifier sequence of `~satisfying` clause",
+                            stx,
+                            c)
+  let [[ann, ...], ...]:
+    for List (c: [clause, ...]):
+      match c
+      | '~is_a: $(ann :: annot_meta.Parsed); ...': [ann, ...]
+      | '~is_a $(ann :: annot_meta.Parsed)': [ann]
+      | ~else: []
+  for values(accum :~ Set = Set.by(===){}) (sym: [sym, ..., ...]):
+    if accum[sym.unwrap()]
+    | syntax_meta.error("duplicate enum identifier", stx, sym)
+    | accum ++ { sym.unwrap() }
+  '«namespace $name:
+      export:
+        names:
+          $sym
+          ...
+          ...
+      def $sym = #' $sym
+      ...
+      ...
+      bind.macro '$sym': '#'$sym'
+      ...
+      ...
+    fun is_enum(v):
+      match v
+      | #'$sym: #true
+      | ...
+      | ...
+      | _ :: $ann: #true
+      | ...
+      | ...
+      | ~else: #false
+    annot.macro '$name':
+      annot_meta.pack_predicate('is_enum',
+                                statinfo_meta.unpack(#{symbol-static-infos}))
+    »'

@@ -210,12 +210,15 @@
 }
 
 @doc(
-  annot.macro 'SlideLayout'
+  enum SlideLayout:
+    auto
+    center
+    top
+    tall
 ){
 
- Recognizes a slide layout that is used with @rhombus(slide) and
- @rhombus(current_assembler): @rhombus(#'auto), @rhombus(#'center),
- @rhombus(#'top), or @rhombus(#'tall).
+ Slide layout options used with @rhombus(slide) and
+ @rhombus(current_assembler).
 
 }
 

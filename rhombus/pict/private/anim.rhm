@@ -10,6 +10,8 @@ import:
       EpochAlignment
       HorizAlignment
       VertAlignment
+      TimeOrder
+      ColorMode
   "static.rhm"!private:
     expose:
       Pict
@@ -41,17 +43,12 @@ namespace bend:
   fun fast_edges(n :: Real.in(0, 1)):
     rkt.#{fast-edges}(n)
 
-annot.macro 'SequentialJoin':
-  annot_meta.pack_predicate('is_seq_join', '()')
-fun is_seq_join(v):
-  match v
-  | #'step || #'splice: #true
-  | ~else: #false
+enum SequentialJoin:  step splice
 
 fun animate(proc :: Function.of_arity(1),
             ~bend: bend = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
-            ~sustain_edge: sustain_edge :: matching(#'before || #'after) = #'after) :~ Pict:
+            ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
   let proc = fun (n): proc(bend(n))
   AnimPict(proc, ~extent: extent, ~sustain_edge: sustain_edge)
 
@@ -351,7 +348,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
   | _pad(left :: Real, top :: Real, right :: Real, bottom :: Real) :~ AnimPict:
       anim_pict_adjust(this, fun (p :~ StaticPict): p._pad(left, top, right, bottom))
 
-  override method time_clip(~keep: keep :: maybe(matching(#'before || #'after)) = #false,
+  override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ AnimPict:
     anim_pict_like(this,
                    ~epochs:
@@ -504,7 +501,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
   override method shear(horiz :: Real, vert :: Real) :~ Pict:
     anim_pict_adjust(this, fun (p :~ StaticPict): p.shear(horiz, vert))
 
-  override method colorize(c :: (Color || String)) :~ Pict:
+  override method colorize(c :: Color || String) :~ Pict:
     anim_pict_adjust(this, fun (p :~ StaticPict): p.colorize(c))
   override method line_width(w :: NonnegReal) :~ Pict:
     anim_pict_adjust(this, fun (p :~ StaticPict): p.line_width(w))
@@ -816,7 +813,7 @@ private.set_convert(
               {})
 )
 
-fun switch(~splice: splice :: maybe(matching(#'before || #'after)) = #false,
+fun switch(~splice: splice :: maybe(matching(TimeOrder)) = #false,
            ~join: join :: SequentialJoin = if splice | #'splice | #'step,
            p :: Pict, ...) :~ Pict:
   let ps = (for List (p: [p, ...]):

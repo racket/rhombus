@@ -10,13 +10,18 @@ import:
 
 export:
   Color
-  MaybeColor
+  ColorMode
   LineWidth
   HorizAlignment
   VertAlignment
   EpochAlignment
   DurationAlignment
   OverlayOrder
+  TimeOrder
+  ConnectStyle
+  ArcDirection
+  Refocus
+  Rounded
 
   Pict:
     only_space namespace annot
@@ -60,50 +65,23 @@ module private:
     static_instance
     remove_nothings
 
-annot.macro 'MaybeColor':
-  annot_meta.pack_predicate('is_maybe_color', '()')
-fun is_maybe_color(v):
-  !v || (v is_a Color) || (v is_a String) || v == #'inherit
+enum ColorMode:
+  ~is_a Color
+  ~is_a String
+  inherit
 
-annot.macro 'LineWidth':
-  annot_meta.pack_predicate('is_line_width', '()')
-fun is_line_width(v):
-  (v is_a Real) || v == #'inherit
+enum LineWidth:
+  ~is_a Real
+  inherit
 
-annot.macro 'HorizAlignment':
-  annot_meta.pack_predicate('is_horiz_aign', '()')
-fun is_horiz_aign(v):
-  match v
-  | #'left || #'center || #'right: #true
-  | ~else: #false
-
-annot.macro 'VertAlignment':
-  annot_meta.pack_predicate('is_vert_aign', '()')
-fun is_vert_aign(v):
-  match v
-  | #'top || #'topline || #'center || #'baseline || #'bottom: #true
-  | ~else: #false
-
-annot.macro 'EpochAlignment':
-  annot_meta.pack_predicate('is_epoch_align', '()')
-fun is_epoch_align(v):
-  match v
-  | #'early || #'center || #'stretch || #'late: #true
-  | ~else: #false
-
-annot.macro 'DurationAlignment':
-  annot_meta.pack_predicate('is_sustain_align', '()')
-fun is_sustain_align(v):
-  match v
-  | #'sustain || #'pad: #true
-  | ~else: #false
-
-annot.macro 'OverlayOrder':
-  annot_meta.pack_predicate('is_overlay_order', '()')
-fun is_overlay_order(v):
-  match v
-  | #'front || #'back: #true
-  | ~else: #false
+enum HorizAlignment: left center right
+enum VertAlignment: top topline center baseline bottom
+enum EpochAlignment: early center stretch late
+enum DurationAlignment: sustain pad
+enum OverlayOrder: front back
+enum TimeOrder: before after
+enum ConnectStyle: line arrow arrows
+enum ArcDirection: cw ccw
 
 def empty_instances = []
 
@@ -192,7 +170,7 @@ class Pict():
   abstract method freeze(~scale: scale :: Real = 2.0) :~ Pict
 
   abstract method _time_pad(before :: Int, after :: Int) :~ Pict
-  abstract method time_clip(~keep: keep :: maybe(matching(#'before || #'after)) = #false) :~ Pict
+  abstract method time_clip(~keep: keep :: maybe(TimeOrder) = #false) :~ Pict
   method delay(n :: NonnegInt) :~ Pict: time_clip(~keep: #'after).time_pad(~before: 1)
   abstract method sustain(n :: Int = 1) :~ Pict
   abstract method nonsustaining() :~ Pict
@@ -302,7 +280,7 @@ class StaticPict(private _handle,
   override method freeze(~scale: scale :: Real = 2.0):
     static_pict(rkt.freeze(_handle), this, _instances)
   
-  override method time_clip(~keep: keep :: maybe(matching(#'before || #'after)) = #false) :~ Pict:
+  override method time_clip(~keep: keep :: maybe(TimeOrder) = #false) :~ Pict:
     convert([this], #'center, #'pad, fun (ps :~ List): ps[0]).time_clip(~keep: keep)
 
   override method _time_pad(before :: Int, after :: Int) :~ Pict:
@@ -393,7 +371,7 @@ class NothingPict():
 
   override method clip(): this
 
-  override method time_clip(~keep: keep :: maybe(matching(#'before || #'after)) = #false): this
+  override method time_clip(~keep: keep :: maybe(TimeOrder) = #false): this
 
   override method _time_pad(before :: Int, after :: Int): this
   override method sustain(n :: Int = 1): this
@@ -674,7 +652,7 @@ fun make_dc_pict(draw_it, w, h, a, d, line, line_width, fill):
 
 fun line(~dx: dx :: Real = 0,
          ~dy: dy :: Real = 0,
-         ~line: color :: Color || String || matching(#'inherit) = #'inherit,
+         ~line: color :: ColorMode = #'inherit,
          ~line_width: width :: LineWidth = #'inherit) :~ Pict:
   let ln:
     cond
@@ -713,15 +691,23 @@ fun maybe_pad(p :~ Pict, dw, dh):
   | p
   | p.pad(~horiz: dw/2, ~vert: dh/2)
 
+enum Rounded:
+  ~is_a Real
+  default
+
+enum Refocus:
+  ~is_a Pict
+  around
+
 fun rectangle(~around: around :: maybe(Pict) = #false,
               ~width: width :: Real: if around | Pict.width(around) | 32,
               ~height: height :: Real: if around | Pict.height(around) | width,
-              ~fill: fill :: MaybeColor = #false,
-              ~line: line :: MaybeColor = !fill && #'inherit,
+              ~fill: fill :: maybe(ColorMode) = #false,
+              ~line: line :: maybe(ColorMode) = !fill && #'inherit,
               ~line_width: line_width :: LineWidth = #'inherit,
-              ~rounded: rounded :: maybe(Real || matching(#'default)) = #false,
+              ~rounded: rounded :: maybe(Rounded) = #false,
               ~order: order :: OverlayOrder = #'front,
-              ~refocus: refocus :: maybe(Pict || matching(#'around)) = #'around,
+              ~refocus: refocus :: maybe(Refocus) = #'around,
               ~epoch: epoch :: EpochAlignment = #'center,
               ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
   recur retry(around = around, width = width, height = height, ghosted = #false):
@@ -799,11 +785,11 @@ fun convert_some([around, width, height], epoch, duration, retry):
         
 fun square(~around: around :: maybe(Pict) = #false,
            ~size: size :: Real: if around | math.max(Pict.width(around), Pict.width(around)) | 32,
-           ~fill: fill :: MaybeColor = #false,
-           ~line: line :: MaybeColor = !fill && #'inherit,
+           ~fill: fill :: maybe(ColorMode) = #false,
+           ~line: line :: maybe(ColorMode) = !fill && #'inherit,
            ~line_width: line_width :: LineWidth = #'inherit,
            ~order: order :: OverlayOrder = #'front,
-           ~refocus: refocus :: maybe(Pict || matching(#'around)) = #'around,              
+           ~refocus: refocus :: maybe(Refocus) = #'around,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
   let size:
@@ -826,14 +812,14 @@ fun square(~around: around :: maybe(Pict) = #false,
 fun ellipse(~around: around :: maybe(Pict) = #false,
             ~width: width :: Real: if around | Pict.width(around) | 32,
             ~height: height :: Real: if around | Pict.height(around) | width,
-            ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
+            ~arc: arc :: maybe(ArcDirection) = #false,
             ~start: start :: Real = 0,
             ~end: end :: Real = 2 * math.pi,
-            ~fill: fill :: MaybeColor = #false,
-            ~line: line :: MaybeColor = !fill && #'inherit,
+            ~fill: fill :: maybe(ColorMode) = #false,
+            ~line: line :: maybe(ColorMode) = !fill && #'inherit,
             ~line_width: line_width :: LineWidth = #'inherit,
             ~order: order :: OverlayOrder = #'front,
-            ~refocus: refocus :: maybe(Pict || matching(#'around)) = #'around,
+            ~refocus: refocus :: maybe(Refocus) = #'around,
             ~epoch: epoch :: EpochAlignment = #'center,
             ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
   recur retry(around = around, width = width, height = height, ghosted = #false):
@@ -891,14 +877,14 @@ fun ellipse(~around: around :: maybe(Pict) = #false,
 
 fun circle(~around: around :: maybe(Pict) = #false,
            ~size: size :: Real: if around | math.max(Pict.width(around), Pict.width(around)) | 32,
-           ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
+           ~arc: arc :: maybe(ArcDirection) = #false,
            ~start: start :: Real = 0,
            ~end: end :: Real = 2 * math.pi,
            ~clockwise: clockwise :: Boolean = #false,
-           ~fill: fill :: MaybeColor = #false,
-           ~line: line :: MaybeColor = !fill && #'inherit,
+           ~fill: fill :: maybe(ColorMode) = #false,
+           ~line: line :: maybe(ColorMode) = !fill && #'inherit,
            ~line_width: line_width :: LineWidth = #'inherit,
-           ~refocus: refocus :: maybe(Pict || matching(#'around)) = #'around,
+           ~refocus: refocus :: maybe(Refocus) = #'around,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
   let size = match size | p :: Pict: math.max(p.width, p.height) | ~else: size
@@ -916,8 +902,8 @@ fun circle(~around: around :: maybe(Pict) = #false,
           ~duration: duration)
 
 fun polygon([pt :: draw.PointLike.to_point, ...],
-            ~fill: fill :: MaybeColor = #false,
-            ~line: line :: MaybeColor = !fill && #'inherit,
+            ~fill: fill :: maybe(ColorMode) = #false,
+            ~line: line :: maybe(ColorMode) = !fill && #'inherit,
             ~line_width: line_width :: LineWidth = #'inherit) :~ Pict:
   let w = math.max(pt.x, ...)
   let h = math.max(pt.y, ...)
@@ -940,8 +926,8 @@ fun dc(draw :: Function.of_arity(3),
        ~height: height :: Real,
        ~ascent: ascent :: Real = height,
        ~descent: descent :: Real = 0,
-       ~fill: fill :: MaybeColor = #false,
-       ~line: line :: MaybeColor = !fill && #'inherit,
+       ~fill: fill :: maybe(ColorMode) = #false,
+       ~line: line :: maybe(ColorMode) = !fill && #'inherit,
        ~line_width: line_width :: LineWidth = #'inherit) :~ Pict:
   static_pict(make_dc_pict(draw,
                            width,
@@ -1102,8 +1088,8 @@ def_find bottom_right: #{rb-find}
 fun connect(~on: p :: Pict,
             from :: Find,
             to :: Find,
-            ~style: style :: matching(#'line || #'arrow || #'arrows) = #'line,
-            ~line: color :: Color || String || matching(#'inherit) = #'inherit,
+            ~style: style :: ConnectStyle = #'line,
+            ~line: color :: ColorMode = #'inherit,
             ~line_width: width :: LineWidth = #'inherit,
             ~order: order :: OverlayOrder = #'front,
             ~arrow_size: arrow_size :: Real = 16,
@@ -1190,12 +1176,12 @@ fun table(rows :: List.of(List.of(Pict)),
           ~hsep: hsep :: Real || List.of(Real) = 32,
           ~vsep: vsep :: Real || List.of(Real) = 1,
           ~pad: ins :: matching((_ :: Real) || [_ :: Real, _ :: Real] || [_ :: Real, _ :: Real, _ :: Real, _ :: Real]) = 0,
-          ~line: line_c :: maybe(String || Color || matching(#'inherit)) = #false,
+          ~line: line_c :: maybe(ColorMode) = #false,
           ~line_width: line_width :: LineWidth = #'inherit,
           ~order: order :: OverlayOrder = #'front,
-          ~hline: hline :: maybe(String || Color || matching(#'inherit)) = line_c,
+          ~hline: hline :: maybe(ColorMode) = line_c,
           ~hline_width: hline_width :: LineWidth = line_width,
-          ~vline: vline :: maybe(String || Color || matching(#'inherit)) = line_c,
+          ~vline: vline :: maybe(ColorMode) = line_c,
           ~vline_width: vline_width :: LineWidth = line_width) :~ Pict:
   match rows
   | [[elem :~ _StaticPict, ...], ...]:

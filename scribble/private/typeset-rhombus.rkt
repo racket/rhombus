@@ -520,19 +520,19 @@
                         (extract-ptag a)))])))
      (define use-space-names (id-space-name (car elems) space-names
                                             #:as-list? #t))
-     (define target+rest+space (resolve-name-ref use-space-names
+     (define resolved (resolve-name-ref use-space-names
                                                  (if (pair? (cdr elems))
                                                      (add-space (car elems)
                                                                 'rhombus/namespace)
                                                      (car elems))
                                                  dotted-elems
                                                  #:parens ptag))
-     (define target (and target+rest+space (car target+rest+space)))
+     (define target (and resolved (hash-ref resolved 'target)))
      (cond
        [target
-        (define skip (add1 (* 2 (- (length dotted-elems) (length (cadr target+rest+space))))))
+        (define skip (add1 (* 2 (- (length dotted-elems) (length (hash-ref resolved 'remains))))))
         (define id (car elems))
-        (define space-name (caddr target+rest+space))
+        (define space-name (hash-ref resolved 'space))
         (cons (datum->syntax target
                              (element tt-style
                                (make-id-element (add-space id (if (pair? (cdr elems))

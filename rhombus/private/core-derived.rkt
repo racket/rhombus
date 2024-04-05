@@ -9,4 +9,5 @@
         "where.rhm"
         "described_as.rhm"
         "sequence.rhm"
-        "class_together.rhm")
+        "class_together.rhm"
+        "enum.rhm")

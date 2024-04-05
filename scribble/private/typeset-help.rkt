@@ -33,9 +33,10 @@
                   t))
   (syntax-raw-prefix-property t/s (syntax-raw-prefix-property pre)))
 
-;; returns #f or (list target rest space-name)
+;; returns #f or (hash 'taget target 'remains rest 'space space-name 'raw default-raw)
 (define-for-syntax (resolve-name-ref space-names root fields
-                                     #:parens [ptag #f])
+                                     #:parens [ptag #f]
+                                     #:raw [given-raw #f])
   (let loop ([root root] [fields fields])
     (cond
       [(null? fields) #f]
@@ -78,7 +79,7 @@
                                             (or (syntax-raw-suffix-property p) '())
                                             (syntax-raw-tail-suffix-property ptag)))
              p))
-       (define (add-rest p) (and p (list p (cdr fields) space-name)))
+       (define (add-rest p) (and p (hash 'target p 'remains (cdr fields) 'space space-name 'raw raw)))
        (cond
          [dest
           (define loc-stx
@@ -89,7 +90,7 @@
           (define named-dest
             (transfer-parens-suffix
              (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
-                                  raw)))
+                                  (or given-raw raw))))
           (or (loop named-dest (cdr fields))
               (add-rest named-dest))]
          [else
@@ -102,6 +103,6 @@
                                                  'loc-stx
                                                  (append-consecutive-syntax-objects 'loc-stx root #'dot)
                                                  field))
-                                 raw))])
+                                 (or given-raw raw)))])
                  (or (loop named-id (cdr fields))
                      (add-rest named-id))))])])))

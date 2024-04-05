@@ -1,0 +1,82 @@
+#lang rhombus
+
+enum RainbowColor:
+  red
+  orange
+  yellow
+  green
+  blue
+  indigo
+  violet
+
+check RainbowColor.red ~is #'red
+check RainbowColor.violet ~is #'violet
+
+check #'red is_a RainbowColor ~is #true
+check #'pink is_a RainbowColor ~is #false
+check "red" is_a RainbowColor ~is #false
+
+check:
+  match #'red
+  | _ :: RainbowColor: "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
+  match #'pink
+  | _ :: RainbowColor: "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match "red"
+  | _ :: RainbowColor: "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match #'red
+  | RainbowColor.red: "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
+  match #'blue
+  | RainbowColor.red: "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match #'blue
+  | RainbowColor.red: "yes"
+  | RainbowColor.blue: "now yes"
+  | ~else: "no"
+  ~is "now yes"
+
+enum CrayonColor:
+  ~is_a RainbowColor
+  black
+  white
+
+check #'red is_a CrayonColor ~is #true
+check #'pink is_a CrayonColor ~is #false
+check "red" is_a CrayonColor ~is #false
+check #'white is_a CrayonColor ~is #true
+check #'white is_a RainbowColor ~is #false
+
+check:
+  match #'white
+  | _ :: RainbowColor: "rainbow"
+  | _ :: CrayonColor: "crayon"
+  ~is "crayon"
+
+check:
+  match #'blue
+  | _ :: RainbowColor: "rainbow"
+  | _ :: CrayonColor: "crayon"
+  ~is "rainbow"
+
+check:
+  match #'white
+  | CrayonColor.white: "crayon"
+  ~is "crayon"

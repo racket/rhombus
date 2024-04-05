@@ -49,6 +49,7 @@ export:
     $
     pattern
     Parameter
+    enum
 
 module for_doc:
   export:
@@ -992,3 +993,22 @@ spacer.bridge pattern(self, tail, context, esc):
 spacer.bridge Parameter.def(self, tail, context, esc):
   ~in: ~defn
   '$self $(adjust_field(tail, esc))'
+
+spacer.bridge enum(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$e ...: $(body :: Block)':
+      let [new_clause, ...]:
+        match body
+        | ': $clause; ...':
+            for List (clause: [clause, ...]):
+              match clause
+              | '$(tag && '~is_a'): $(b :: Block)':
+                 '$tag $(spacer.adjust_term(b, #'~annot, esc))'.relocate(clause)
+              | '$(tag && '~is_a') $seq':
+                 '$tag $(spacer.adjust_sequence(seq, #'~annot, esc))'.relocate(clause)
+              | ~else:
+                  spacer.set_group(clause, #'~datum)
+      let new_body = ': $new_clause; ...'.relocate(body)
+      '$self $e ... $new_body'
+  | ~else: '$self $tail'

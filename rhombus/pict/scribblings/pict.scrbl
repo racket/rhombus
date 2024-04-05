@@ -61,7 +61,8 @@
 
 @doc(
   method (pict :: Pict).snapshot() :: StaticPict
-  method (pict :: Pict).snapshot(epoch :: Int, n :: Real.in(0, 1)) :: StaticPict
+  method (pict :: Pict).snapshot(epoch :: Int, n :: Real.in(0, 1))
+    :: StaticPict
 ){
 
  Converts an @tech{animated pict} to a @tech{static pict}. The 0-argument
@@ -180,7 +181,8 @@
 }
 
 @doc(
-  method (pict :: Pict).shear(x_factor :: Real, y_factor :: Real) :: Pict
+  method (pict :: Pict).shear(x_factor :: Real,
+                              y_factor :: Real) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but its drawing is
@@ -230,7 +232,7 @@
 
 @doc(
   method (pict :: Pict).time_clip(
-    ~keep: keep :: maybe(matching(#'before || #'after)) = #false,
+    ~keep: keep :: maybe(TimeOrder) = #false,
     ~nonsustaining: nonsustaining = keep != #'after
   ) :: Pict
 ){
@@ -245,7 +247,7 @@
 }
 
 @doc(
-  method (pict :: Pict).colorize(c :: (Color || String)) :: Pict
+  method (pict :: Pict).colorize(c :: Color || String) :: Pict
   method (pict :: Pict).line_width(w :: NonnegReal) :: Pict
 ){
 
@@ -296,5 +298,15 @@
  @rhombus(overlay), the combination's metadata is formed by merging
  metadata maps from the combined picts, and later picts in the
  combination take precedence.
+
+}
+
+@doc(
+  enum TimeOrder:
+    before
+    after
+){
+
+ Options for time directions.
 
 }

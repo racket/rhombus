@@ -22,11 +22,22 @@
   (provide (property-out doc-transformer)
            make-doc-transformer)
 
-  (property doc-transformer (extract-desc
-                             extract-space-sym
-                             extract-defined
-                             extract-metavariables
-                             extract-typeset))
+  ;; For each function in a `doc-transformer`, a `*` means that
+  ;; the value can be one of those, or it can be a list. Values
+  ;; must all be either one of those of a list, and lists need
+  ;; to have the same length. When a list is returned by
+  ;; `extract-space-sym`, only the first element is bounced back,
+  ;; since bouncing back is just a convenience for abstracting over
+  ;; those other handlers.
+  (property doc-transformer (extract-desc       ; stx -> (kind-str)*
+                             extract-space-sym  ; stx -> (space-sym-or-#f)*  ; only first result bounced back
+                             extract-defined    ; stx space-sym-or-#f -> (def-name)* ; see below
+                             extract-metavariables ; stx space-sym-or-#f sym-set -> sym-set ; adds to given set
+                             extract-typeset))  ; stx (space-sym-of-#f)* (stx -> stx)* -> stx
+  ;; A `def-name` as returned by `extract-defined` is one of
+  ;;  - identifier                 ; normal reference in relevant space
+  ;;  - (list root-id typeset-id)  ; `typeset-id` within namespace `root-id`
+  ;;  - (list root-id typeset-id key-str) ; ditto, but key for indexing is `key-str`, not raw-string form of `typeset-id`
 
   (define (make-doc-transformer #:extract-desc extract-desc 
                                 #:extract-space-sym extract-space-sym
