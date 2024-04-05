@@ -12,6 +12,7 @@ export:
 
   // these are re-exported by `slideshow` in a `slide` namespace:
   next
+  sync
   gap
   alts
   align
@@ -36,6 +37,12 @@ class Next():
   override describe(mode, recur):
     "slide.next"
 def next = Next()
+
+class Barrier():
+  implements Printable
+  override describe(mode, recur):
+    "slide.barrier"
+def sync = Barrier()
 
 class Alts(alts :~ List.of(List)):
   implements Printable
@@ -80,6 +87,7 @@ fun is_slide_content(c):
   | [c, ...]: for all (c: [c, ...]): is_slide_content(c)
   | p :: Pict: #true
   | p :: Next: #true
+  | p :: Barrier: #true
   | p :: Alts: #true
   | p :: Horiz: #true
   | p :: Align: #true
@@ -91,6 +99,7 @@ fun flatten_slide_content(who, c) :~ List:
   | p :: pict.NothingPict: []
   | p :: Pict: [p]
   | p :: Next: [p]
+  | p :: Barrier: [p]
   | Alts([]): []
   | Alts([alt]): alt
   | p :: Alts: [p]
@@ -114,6 +123,16 @@ fun next_to_anim(sep, contents) :~ Pict:
         pict.stack(~sep: sep,
                    pre.sustain(post.duration),
                    post.time_pad(~before: pre.duration))
+    | [p :: Barrier, & contents]:
+        let pre = pict.stack(~sep: sep, & accum)
+        let pre = nonarchival(pre, pre.duration-1)
+        let post = loop(sep, contents, [])
+        pict.stack(~sep: sep,
+                   pre.sustain(post.duration-1),
+                   if pre.duration > 1
+                   | pict.switch(post.snapshot().sustain(pre.duration-2),
+                                 post)
+                   | post)
     | [Alts([alt, ...]), & contents]:
         let none = []
         let alts = [loop(sep, alt, none), ...]
@@ -145,6 +164,7 @@ fun align_content(sep, horiz, contents):
           | p :: Pict: values(math.max(max_w, p.width),
                               accum.add(p))
           | next :: Next: values(max_w, accum.add(next))
+          | next :: Barrier: values(max_w, accum.add(next))
           | Alts([alt, ...]):
               let [[w, alt], ...]:
                 [gather_widths(alt), ...]
@@ -173,6 +193,7 @@ fun align_content(sep, horiz, contents):
         | p :: Pict:
             [widener(p)]
         | next :: Next: [next]
+        | next :: Barrier: [next]
         | Alts([alt, ...]):
             [Alts([widen(w, sep, alt, widener), ...])]
         | Horiz(h_sep, horiz, cs):
