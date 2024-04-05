@@ -34,7 +34,8 @@
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
 
-                     extract-all-dot-names)
+                     extract-all-dot-names
+                     add-super-dot-providers)
          no-dynamic-dot-syntax)
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
@@ -47,7 +48,7 @@
   (with-syntax ([(name name-extends tail-name
                        name? name-convert constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
-                       indirect-static-infos
+                       indirect-static-infos dot-providers
                        [public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
                        [public-name-field/mutate ...]
@@ -117,7 +118,7 @@
          #`((define-syntaxes (dot-class-id dot-rhs-id)
               (let ([dot-id dot-rhs])
                 (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
-                                                  (quote-syntax name?) (quote-syntax name-instance))
+                                                  (quote-syntax name?) (quote-syntax dot-providers))
                         dot-id)))
             ...))
         (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
@@ -170,6 +171,7 @@
                        name? name-instance name-ref static-name-ref
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
+                       dot-providers
                        [ex ...]
                        base-ctx scope-ctx)
                  names])
@@ -204,7 +206,7 @@
         #`((define-syntaxes (dot-intf-id dot-rhs-id)
              (let ([dot-id dot-rhs])
                (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
-                                                 (quote-syntax name?) (quote-syntax name-instance))
+                                                 (quote-syntax name?) (quote-syntax dot-providers))
                        dot-id)))
            ...))
        (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
@@ -582,3 +584,19 @@
    (for/list ([super (in-list supers)]
               #:when super)
      (objects-desc-dots super))))
+
+;; A `#%dot-provider` value can be a list of dot-provider identifieries,
+;; which is useful for intersection to reflect a shared super interface.
+;; We only try to do that in cases of single-inheritance, however --- and
+;; only when it will stay single inheritance, so that's why we ignore
+;; `interfaces`.
+(define-for-syntax (add-super-dot-providers name-instance super interfaces)
+  (cond
+    [super
+     (define dot-providers
+       (cond
+         [(class-desc? super) (class-desc-instance-dot-providers super)]
+         [(veneer-desc? super) (veneer-desc-instance-dot-providers super)]
+         [else (error "unknown super")]))
+     (cons name-instance (if (identifier? dot-providers) (list dot-providers) dot-providers))]
+    [else name-instance]))

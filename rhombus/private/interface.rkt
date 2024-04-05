@@ -143,6 +143,7 @@
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-interface-annotation internal-name
                                              annotation-rhs
+                                             supers
                                              #'(name name-extends tail-name
                                                      name? name-instance
                                                      internal-name? internal-name-instance
@@ -238,7 +239,8 @@
                                                           (pair? (cdr parent-dot-providers))))
                                                  (temporary "dot-provider-~a"))
                                             (and (pair? parent-dot-providers)
-                                                 (car parent-dot-providers)))])
+                                                 (car parent-dot-providers)))]
+                     [dot-providers (add-super-dot-providers #'internal-name-instance #f supers)])
          (with-syntax ([internal-name-ref (if internal-internal-name
                                               (temporary "~a-ref" #:name internal-internal-name)
                                               #'name-ref)])
@@ -273,6 +275,7 @@
                                                      name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]
+                                                     dot-providers
                                                      [export ...]
                                                      base-stx scope-stx))
                (build-interface-desc supers parent-names options
@@ -320,7 +323,7 @@
           (or vtable
               (raise-not-an-instance 'name v)))))))
 
-(define-for-syntax (build-interface-annotation internal-name annotation-rhs names)
+(define-for-syntax (build-interface-annotation internal-name annotation-rhs supers names)
   (with-syntax ([(name name-extends tail-name
                        name? name-instance
                        internal-name? internal-name-instance
@@ -328,10 +331,12 @@
                  names])
     (append
      (if internal-name
-         (with-syntax ([internal-name internal-name])
+         (with-syntax ([internal-name internal-name]
+                       [dot-providers (add-super-dot-providers #'internal-name-instance #f supers)])
            (list
-            #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name?)
-                                                                             (quote-syntax ((#%dot-provider internal-name-instance)))))))
+            #`(define-annotation-syntax internal-name
+                (identifier-annotation (quote-syntax internal-name?)
+                                       (quote-syntax ((#%dot-provider dot-providers)))))))
          null)
      (list
       (build-syntax-definition/maybe-extension
@@ -341,9 +346,10 @@
                                      #,((make-syntax-introducer) annotation-rhs)
                                      make-annotation-prefix-operator
                                      "interface")
-           #`(identifier-annotation (quote-syntax name?)
-                                    (quasisyntax ((#%dot-provider name-instance)
-                                                  . indirect-static-infos)))))))))
+           (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
+             #`(identifier-annotation (quote-syntax name?)
+                                      (quasisyntax ((#%dot-provider name-instance)
+                                                    . indirect-static-infos))))))))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots

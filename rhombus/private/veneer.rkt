@@ -138,7 +138,7 @@
           #`(begin
               #,@(top-level-declare #'(name?))
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
-              #,@(build-veneer-annotation converter?
+              #,@(build-veneer-annotation converter? super interfaces
                                           #'(name name? name-convert
                                                   name-instance indirect-static-infos))
               (veneer-finish
@@ -247,7 +247,8 @@
                                               (and (pair? parent-dot-providers)
                                                    (car parent-dot-providers)))]
                        [representation-static-infos (extract-representation-static-infos #'ann.parsed)]
-                       [name?/checked (if (syntax-e #'check?) #'name? #f)])
+                       [name?/checked (if (syntax-e #'check?) #'name? #f)]
+                       [dot-providers (add-super-dot-providers #'name-instance super interfaces)])
            (define defns
              (reorder-for-top-level
               (append
@@ -282,7 +283,7 @@
                                                  name?/checked name-convert
                                                  constructor-name name-instance name-ref name-of
                                                  #f #f dot-provider-name
-                                                 indirect-static-infos
+                                                 indirect-static-infos dot-providers
                                                  [] [] []
                                                  [] []
                                                  []
@@ -316,7 +317,7 @@
                                   #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                           name? name-convert check? converter?
                                           dot-provider-name prefab-guard-name
-                                          instance-static-infos))
+                                          instance-static-infos dot-providers))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
@@ -332,25 +333,26 @@
                                      #:checked-compare? #f))))
            #`(begin . #,defns)))])))
 
-(define-for-syntax (build-veneer-annotation converter? names)
+(define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name? name-convert
                        name-instance indirect-static-infos)
                  names])
-    (cond
-      [(not converter?)
-       (list
-        #`(define-annotation-syntax name
-            (identifier-annotation (quote-syntax name?)
-                                   (quasisyntax ((#%dot-provider name-instance)
-                                                 . indirect-static-infos)))))]
-      [else
-       (list
-        #`(define-annotation-syntax name
-            (identifier-binding-annotation (binding-form #'converter-binding-infoer
-                                                         #'(name name-convert val))
-                                           #'val
-                                           (quasisyntax ((#%dot-provider name-instance)
-                                                         . indirect-static-infos)))))])))
+    (with-syntax ([dot-providers (add-super-dot-providers #'name-instance super interfaces)])
+      (cond
+        [(not converter?)
+         (list
+          #`(define-annotation-syntax name
+              (identifier-annotation (quote-syntax name?)
+                                     (quasisyntax ((#%dot-provider dot-providers)
+                                                   . indirect-static-infos)))))]
+        [else
+         (list
+          #`(define-annotation-syntax name
+              (identifier-binding-annotation (binding-form #'converter-binding-infoer
+                                                           #'(name name-convert val))
+                                             #'val
+                                             (quasisyntax ((#%dot-provider dot-providers)
+                                                           . indirect-static-infos)))))]))))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx
@@ -509,7 +511,7 @@
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        name? name-convert check? converter?
                        dot-provider-name prefab-guard-name
-                       instance-static-infos)
+                       instance-static-infos dot-providers)
                  names])
     (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
           [method-map (build-quoted-method-map method-mindex)]
@@ -537,4 +539,5 @@
                        #,(and (syntax-e #'check?)
                               #'(quote-syntax name?))
                        #,(and (syntax-e #'name-convert)
-                              #'(quote-syntax name-convert))))))))
+                              #'(quote-syntax name-convert))
+                       (quote-syntax dot-providers)))))))

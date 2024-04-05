@@ -41,7 +41,7 @@
                        name-defaults
                        make-internal-name
                        name-instance
-                       indirect-static-infos
+                       indirect-static-infos dot-providers
                        [private-field-name ...]
                        [private-field-desc ...])
                  names])
@@ -165,7 +165,7 @@
                          (quote-syntax (#:c #,(wrap-static-info
                                                #'make-name
                                                #'#%call-result
-                                               (let ([si #`((#%dot-provider name-instance)
+                                               (let ([si #`((#%dot-provider dot-providers)
                                                             . indirect-static-infos)])
                                                  (if super
                                                      #`((#%call-result #,si))

@@ -9,6 +9,8 @@
   (id
    super-id
    predicate-id    ; #f if not checked
-   convert-id))    ; #f if predicate-based
+   convert-id      ; #f if predicate-based
+   instance-dot-providers)) ; `#%dot-provider` value, only for non-final
+
 
 (define (veneer-desc-ref v) (and (veneer-desc? v) v))

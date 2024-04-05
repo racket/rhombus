@@ -50,7 +50,6 @@ check:
   (cond | #true: [1] | ~else: "one")[0]
   ~throws "specialization not known"
 
-
 check:
   ~eval
   use_static
@@ -59,4 +58,32 @@ check:
            | Posn(1, 2)
            | #void)
   p.x
+  ~throws "no such field or method"
+
+check:
+  class Posn(x, y):
+    nonfinal
+    method d(): x + y
+  class Posn3D(z):
+    extends Posn
+    override method d(): x + y + z
+  def p = (if #false
+           | Posn(1, 2)
+           | Posn3D(1, 2, 3))
+  p.d() + p.x + p.y
+  ~is 9
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+    method d(): x + y
+  class Posn3D(z):
+    extends Posn
+    override method d(): x + y + z
+  def p = (if #false
+           | Posn(1, 2)
+           | Posn3D(1, 2, 3))
+  p.z
   ~throws "no such field or method"

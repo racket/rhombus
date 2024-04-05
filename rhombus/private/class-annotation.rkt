@@ -21,6 +21,7 @@
   (with-syntax ([(name name-extends tail-name
                        name-instance name? name-of
                        internal-name-instance indirect-static-infos internal-indirect-static-infos
+                       dot-providers internal-dot-providers
                        make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields super-name-fields super-public-name-fields
                        field-keywords public-field-keywords super-field-keywords super-public-field-keywords)
@@ -29,7 +30,8 @@
                            name-fields keywords
                            super-name-fields super-field-keywords
                            name-instance-stx
-                           make-converted-id indirect-static-infos-stx)
+                           make-converted-id indirect-static-infos-stx
+                           dot-providers-stx)
       (define len (length (syntax->list name-fields)))
       (with-syntax ([(constructor-name-field ...) name-fields]
                     [(field-keyword ...) keywords]
@@ -47,9 +49,9 @@
               ([accessors (list (quote-syntax super-name-field) ...
                                 (quote-syntax constructor-name-field) ...)])
               (quote-syntax name?)
-              #,(with-syntax ([name-instance name-instance-stx]
+              #,(with-syntax ([dot-providers dot-providers-stx]
                               [indirect-static-infos indirect-static-infos-stx])
-                  #`(quasisyntax ((#%dot-provider name-instance)
+                  #`(quasisyntax ((#%dot-provider dot-providers)
                                   . indirect-static-infos)))
               (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
               (super-field-keyword ... field-keyword ...)
@@ -75,7 +77,8 @@
                         #'super-name-fields #'super-field-keywords
                         #'internal-name-instance
                         #'make-converted-internal
-                        #'internal-indirect-static-infos)
+                        #'internal-indirect-static-infos
+                        #'internal-dot-providers)
          null)
      (cond
        [annotation-rhs
@@ -93,7 +96,8 @@
                        #'super-public-name-fields #'super-public-field-keywords
                        #'name-instance
                        #'make-converted-name
-                       #'indirect-static-infos)]))))
+                       #'indirect-static-infos
+                       #'dot-providers)]))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)
