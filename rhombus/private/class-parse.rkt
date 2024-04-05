@@ -65,6 +65,7 @@
    id
    super-id
    class:id
+   instance-dot-providers ; `#%dot-provider` value, only for non-final
    ref-id
    fields                ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
    all-fields            ; #f or (list a-field ...), includes private fields; see below for a-field

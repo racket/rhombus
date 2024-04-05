@@ -213,17 +213,21 @@
           #`(begin
               #,@(top-level-declare #'(name? . constructor-name-fields))
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
-              #,@(build-class-annotation-form super annotation-rhs
-                                              super-constructor-fields
-                                              exposed-internal-id internal-of-id intro
-                                              #'(name name-extends tail-name
-                                                      name-instance name? name-of
-                                                      internal-name-instance indirect-static-infos internal-indirect-static-infos
-                                                      make-converted-name make-converted-internal
-                                                      constructor-name-fields [constructor-public-name-field ...]
-                                                      [super-name-field ...] [super-public-name-field ...]
-                                                      constructor-field-keywords [constructor-public-field-keyword ...]
-                                                      [super-field-keyword ...] [super-public-field-keyword ...]))
+              #,@(with-syntax ([dot-providers (add-super-dot-providers #'name-instance super interfaces)]
+                               [internal-dot-providers (and exposed-internal-id
+                                                            (add-super-dot-providers #'internal-name-instance super interfaces))])
+                   (build-class-annotation-form super annotation-rhs
+                                                super-constructor-fields
+                                                exposed-internal-id internal-of-id intro
+                                                #'(name name-extends tail-name
+                                                        name-instance name? name-of
+                                                        internal-name-instance indirect-static-infos internal-indirect-static-infos
+                                                        dot-providers internal-dot-providers
+                                                        make-converted-name make-converted-internal
+                                                        constructor-name-fields [constructor-public-name-field ...]
+                                                        [super-name-field ...] [super-public-name-field ...]
+                                                        constructor-field-keywords [constructor-public-field-keyword ...]
+                                                        [super-field-keyword ...] [super-public-field-keyword ...])))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
@@ -548,7 +552,8 @@
                                                         (class-desc-prefab-guard-id super))
                                                    (for/or ([converter-stx (in-list (syntax->list #'(field-converter ...)))])
                                                      (syntax-e converter-stx)))
-                                               (temporary "prefab-guard-~a"))])
+                                               (temporary "prefab-guard-~a"))]
+                       [dot-providers (add-super-dot-providers #'name-instance super interfaces)])
            (define defns
              (reorder-for-top-level
               (append
@@ -575,7 +580,7 @@
                (build-class-reconstructor super final?
                                           reconstructor-rhs method-private
                                           #'(name name? constructor-name name-instance
-                                                  indirect-static-infos reconstructor-name
+                                                  indirect-static-infos dot-providers reconstructor-name
                                                   [(recon-field-name recon-field-arg recon-field-acc)
                                                    ...]
                                                   [private-field-name ...]
@@ -629,7 +634,7 @@
                                                 name-defaults
                                                 make-internal-name
                                                 name-instance
-                                                indirect-static-infos
+                                                indirect-static-infos dot-providers
                                                 [private-field-name ...]
                                                 [(list 'private-field-name
                                                        (quote-syntax private-name-field)
@@ -641,7 +646,7 @@
                                          exposed-internal-id intro
                                          #'(name name-extends tail-name
                                                  name-instance name?
-                                                 indirect-static-infos
+                                                 indirect-static-infos dot-providers
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
@@ -660,7 +665,7 @@
                                          #'(name name-extends tail-name
                                                  name? #f constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
-                                                 indirect-static-infos
+                                                 indirect-static-infos dot-providers
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
                                                  [public-name-field ...] [name-field ...]
                                                  [public-name-field/mutate ...]
@@ -706,7 +711,7 @@
                                      (and super (class-desc-reconstructor-fields super)))
                                  #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name prefab-guard-name
-                                         instance-static-infos
+                                         instance-static-infos dot-providers
                                          super-call-statinfo-indirect call-statinfo-indirect
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
@@ -975,7 +980,7 @@
                                      names)
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name prefab-guard-name
-                       instance-static-infos
+                       instance-static-infos dot-providers
                        super-call-statinfo-indirect call-statinfo-indirect
                        fields
                        ([field-name field-argument maybe-set-name-field!] ...)
@@ -1007,6 +1012,7 @@
                      (quote-syntax name)
                      #,(and parent-name #`(quote-syntax #,parent-name))
                      (quote-syntax class:name)
+                     #,(if final? #'#f #`(quote-syntax dot-providers))
                      (quote-syntax name-ref)
                      fields
                      #,(and (or has-private-fields?

@@ -43,10 +43,11 @@
        #:datum-literals (group)
        [(with-id (_::parens (group name:id _::equal rhs ...) ...) . tail)
         (let ([form1 (rhombus-local-expand orig-form1)])
-          (define update-id
+          (define update-id/s
             (syntax-parse form1
               [dp::update-provider #'dp.id]
               [_ #f]))
+          (define update-id (extract-dot-provider-id update-id/s))
           (define updater
             (and update-id
                  (syntax-local-value* (in-update-space update-id) update-transformer-ref)))

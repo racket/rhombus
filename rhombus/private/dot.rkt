@@ -7,6 +7,7 @@
                      "statically-str.rkt"
                      "srcloc.rkt")
          "provide.rkt"
+         "dot-space.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
@@ -42,8 +43,6 @@
 (begin-for-syntax
   (property dot-provider (handler))
 
-  (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot))
-
   (define-syntax-class :dot-provider
     (pattern id:identifier
              #:when (syntax-local-value* (in-dot-provider-space #'id) dot-provider-ref))
@@ -61,11 +60,11 @@
       tail
       (lambda (dot dot-name field-id tail)
         (let ([form1 (rhombus-local-expand form1)])
-          (define dp-id
+          (define dp-id/s
             (syntax-parse form1
               [dp::dot-provider #'dp.id]
               [_ #f]))
-          (build-dot-access form1 dp-id
+          (build-dot-access form1 dp-id/s
                             more-static? #:repetition? #f
                             dot dot-name field-id tail)))))
    'left))
@@ -82,7 +81,7 @@
       (lambda (dot dot-name field-id tail)
         (syntax-parse form1
           [rep::repetition-info
-           (define dp-id
+           (define dp-id/s
              (or (repetition-static-info-lookup #'rep.element-static-infos #'#%dot-provider)
                  (and (zero? (syntax-e #'rep.bind-depth))
                       (identifier? #'rep.seq-expr)
@@ -92,7 +91,7 @@
               dot (list form1)
               (lambda (form1)
                 (define-values (expr new-tail)
-                  (build-dot-access form1 dp-id
+                  (build-dot-access form1 dp-id/s
                                     more-static? #:repetition? #t
                                     dot dot-name field-id tail))
                 (set! tail new-tail)
@@ -131,7 +130,7 @@
      ;; wrap as an operator
      (parse-dot-provider #'((op dot) . tail) finish)]))
 
-(define-for-syntax (build-dot-access form1 dp-id
+(define-for-syntax (build-dot-access form1 dp-id/s
                                      more-static? #:repetition? repetition?
                                      dot dot-name field-id tail)
   (define (generic)
@@ -162,6 +161,7 @@
                          #,assign-expr)
                      tail)]
             [_ (lookup)])])]))
+  (define dp-id (extract-dot-provider-id dp-id/s))
   (cond
     [dp-id
      (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))

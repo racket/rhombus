@@ -246,9 +246,13 @@
         arguments share the same @rhombus(append, ~datum) implementation}
 
   @item{@rhombus(statinfo_meta.dot_provider_key) --- an identifier
-        bound to a @rhombus(dot.macro) or
-        @rhombus(dot.macro_more_static) to implement the expression's
-        behavior as a @tech{dot provider}}
+        bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to
+        implement the expression's behavior as a @tech{dot provider},
+        or a packed sequence of such identifiers. In the case of a sequence, the
+        first identifier is used, but the rest is relevant for an
+        intersection of two sequences, which produces the shared tail,
+        and the union of two sequences, which picks the longer of two
+        sequences when one is a tail of the other.}
 
   @item{@rhombus(statinfo_meta.sequence_constructor_key) --- an identifier
         bound as a variable or a macro that is wrapped around an expression

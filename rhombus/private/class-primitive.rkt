@@ -246,6 +246,13 @@
                                  (quote-syntax Name)
                                  #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
                                  (quote-syntax struct_name)
+                                 (quote-syntax #,(if super
+                                                     (cons #'name-instance
+                                                           (let ([dps (class-desc-instance-dot-providers super)])
+                                                             (if (identifier? dps)
+                                                                 (list dps)
+                                                                 dps)))
+                                                     #'name-instance))
                                  #f ; `ref-id` would only used by the normal class dot provider
                                  (list (list 'super-field-name
                                              (quote-syntax super-name-field)

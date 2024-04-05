@@ -47,7 +47,7 @@
             (proc packed-form dot (no-srcloc #`(#,group-tag lhs dot-op name)) static? packed-tail)]))))
     (syntax->list ids-stx))))
 
-(define-for-syntax (wrap-class-dot-via-class proc name pred instance)
+(define-for-syntax (wrap-class-dot-via-class proc name pred dot-provider)
   (make-expression-prefix-operator
    #'ignored
    '((default . stronger))
@@ -62,7 +62,7 @@
                                         (check-instance '#,name #,pred o)
                                         o)
                                     #'#%dot-provider
-                                    instance))
+                                    dot-provider))
                          |.|
                          #,name))
         (define orig-tail (pack-tail #'tail))
