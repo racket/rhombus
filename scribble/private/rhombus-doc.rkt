@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     shrubbery/property)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
          "typeset-help.rkt"
@@ -31,7 +32,7 @@
   (syntax-parse stx
     [(_ id
         (~optional (~or* #f [from namespace] namespace))
-        desc
+        desc ; string or expression for procedure
         space-sym ; id, #f, or expression for procedure
         extract-name
         extract-metavariables
@@ -44,7 +45,9 @@
                                      (only-in (~? from rhombus/meta)
                                               [namespace namespace]))))
          (define-doc-syntax id
-           (make-doc-transformer #:extract-desc (lambda (stx) desc)
+           (make-doc-transformer #:extract-desc #,(if (string? (syntax-e #'desc))
+                                                      #`(lambda (stx) desc)
+                                                      #`desc)
                                  #:extract-space-sym #,(if (or (identifier? #'space-sym)
                                                                (boolean? (syntax-e #'space-sym)))
                                                            #'(lambda (stx) 'space-sym)
@@ -54,26 +57,30 @@
                                  #:extract-typeset extract-typeset)))]))
 
 (begin-for-syntax
-  (define-splicing-syntax-class (identifier-target space-name)
+  (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
     #:attributes (name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
-             #:do [(define target+remains+space (resolve-name-ref (list space-name)
-                                                                  (in-name-root-space #'root)
-                                                                  (syntax->list #'(field ...))))]
-             #:when target+remains+space
-             #:with name (datum->syntax #f (list #'root (car target+remains+space))))
+             #:do [(define resolved (resolve-name-ref (list space-name)
+                                                      (in-name-root-space #'root)
+                                                      (syntax->list #'(field ...))
+                                                      #:raw raw))]
+             #:when resolved
+             #:with name (datum->syntax #f
+                                        (if raw
+                                            (list #'root (hash-ref resolved 'target) (hash-ref resolved 'raw))
+                                            (list #'root (hash-ref resolved 'target)))))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
     #:attributes (name)
     #:datum-literals (|.| op parens group)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ... (op |.|) ((~and ptag parens) (group (op opname))))
-             #:do [(define target+remains+space (resolve-name-ref (list space-name)
-                                                                  (in-name-root-space #'root)
-                                                                  (syntax->list #'(field ... opname))
-                                                                  #:parens #'ptag))]
-             #:when target+remains+space
-             #:with name (datum->syntax #f (list #'root (car target+remains+space))))
+             #:do [(define resolved (resolve-name-ref (list space-name)
+                                                      (in-name-root-space #'root)
+                                                      (syntax->list #'(field ... opname))
+                                                      #:parens #'ptag))]
+             #:when resolved
+             #:with name (datum->syntax #f (list #'root (hash-ref resolved 'target))))
     (pattern (~seq (op name:identifier)))
     (pattern (~seq (~var || (identifier-target space-name))))))
 
@@ -397,10 +404,10 @@
   head-extract-typeset)
 
 (define-for-syntax (build-dotted root name)
-  (define target+remains+space (resolve-name-ref (list #f) root (list name)))
-  (unless target+remains+space
+  (define resolved (resolve-name-ref (list #f) root (list name)))
+  (unless resolved
     (raise-syntax-error #f "no label binding" root name))
-  (define target (car target+remains+space))
+  (define target (hash-ref resolved 'target))
   (datum->syntax #f (list root
                           ;; 'raw property used to typeset object
                           (datum->syntax target (syntax-e target) name name)
@@ -607,6 +614,85 @@
   head-extract-name
   head-extract-metavariables
   head-extract-typeset)
+
+(define-for-syntax (enum-extract-descs stx)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ ...
+            (block clause ...))
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+       (cons "enumeration"
+             (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
+               "value")))]))
+
+(define-for-syntax (enum-extract-space-names stx)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ ...
+            (block clause ...))
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+       (cons (list 'rhombus/annot)
+             (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
+               (list #f 'rhombus/bind))))]))
+
+(define-for-syntax (enum-extract-names stx space-name)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ (~var id (identifier-target space-name))
+            (block clause ...))
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+       (cons #'id.name
+             (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
+               (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
+                 [((~var sym (identifier-target space-name #:raw (symbol->string (syntax-e sym)))))
+                  #'sym.name]))))]))
+
+(define-for-syntax (enum-extract-typeset stx space-namess substs)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group form (~var id (identifier-target (car space-namess)))
+            (block-tag clause ...))
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+       (with-syntax ([(((def-sym ...) ...) ...)
+                      (let loop ([symss (syntax->list #'((sym ...) ...))]
+                                 [substs (cdr substs)])
+                        (cond
+                          [(null? symss) null]
+                          [else
+                           (let iloop ([syms (syntax->list (car symss))]
+                                       [substs substs]
+                                       [accum null])
+                             (cond
+                               [(null? syms) (cons (reverse accum)
+                                                   (loop (cdr symss) substs))]
+                               [else
+                                (iloop (cdr syms) (cdr substs) (cons ((car substs) (car syms))
+                                                                     accum))]))]))])
+         (with-syntax ([(new-clause ...)
+                        (for/list ([clause (in-list (syntax->list #'(clause ...)))]
+                                   [def-syms (in-list (syntax->list #'(((def-sym ...) ...) ...)))])
+                          (syntax-parse clause
+                            [(group-tag _:identifier ...)
+                             (with-syntax ([((def-sym ...) ...) def-syms])
+                               #'(group-tag def-sym ... ...))]
+                            [_ clause]))])
+           (rb #:at stx
+               #`(group form #,@((car substs) #'id.name)
+                        (block-tag new-clause ...))))))]))
+
+(define-for-syntax (enum-extract-syms clauses)
+  (for/list ([clause (in-list (syntax->list clauses))])
+    (syntax-parse clause
+      #:datum-literals (group)
+      [(group sym:identifier ...) #'(sym ...)]
+      [_ #'()])))
+
+(define-doc enum defn
+  (begin enum-extract-descs)
+  (begin enum-extract-space-names)
+  enum-extract-names
+  (lambda (stx space-name vars) vars)
+  enum-extract-typeset)
 
 (define-doc-syntax grammar
   (make-doc-transformer

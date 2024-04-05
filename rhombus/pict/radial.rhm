@@ -50,8 +50,8 @@ class Radial(~points,
              ~rotate):
   method path() :~ draw.Path:
     radial_path(this)
-  method pict(~fill: fill :: MaybeColor = #false,
-              ~line: line :: MaybeColor = !fill && #'inherit,
+  method pict(~fill: fill :: maybe(ColorMode) = #false,
+              ~line: line :: maybe(ColorMode) = !fill && #'inherit,
               ~line_width: line_width :: LineWidth = #'inherit,
               ~bound: bound :: BoundingBoxMode = #'unit) :~ Pict:
     radials_pict([this],
@@ -123,8 +123,8 @@ fun radial_path(Radial(~points: n,
   p
 
 fun radials_pict([r :: Radial, ...],
-                 ~fill: fill :: MaybeColor = #false,
-                 ~line: line :: MaybeColor = !fill && #'inherit,
+                 ~fill: fill :: maybe(ColorMode) = #false,
+                 ~line: line :: maybe(ColorMode) = !fill && #'inherit,
                  ~line_width: line_width :: LineWidth = #'inherit,
                  ~bound: bound :: BoundingBoxMode = #'unit) :~ Pict:
   if [r, ...].length() == 0
@@ -175,8 +175,8 @@ defn.macro 'def_radial:
     fun $pict($pt_kw: $pt_name $pt_rhs ...,
               $kw: $name $rhs ...,
               ...,
-              ~fill: fill :: MaybeColor = #false,
-              ~line: line :: MaybeColor = !fill && #'inherit,
+              ~fill: fill :: maybe(ColorMode) = #false,
+              ~line: line :: maybe(ColorMode) = !fill && #'inherit,
               ~line_width: line_width :: LineWidth = #'inherit,
               ~bound: bound :: BoundingBoxMode = #'unit,
               $extra_arg,
@@ -396,8 +396,8 @@ fun arrow(~length: length :: Real = 64,
           ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
           ~indent: indent = (if tail .= 0 | 0.3 | 0),
           ~rotate: spin :: Real = 0,
-          ~fill: fill :: MaybeColor = #false,
-          ~line: line :: MaybeColor = !fill && #'inherit,
+          ~fill: fill :: maybe(ColorMode) = #false,
+          ~line: line :: maybe(ColorMode) = !fill && #'inherit,
           ~line_width: line_width :: LineWidth = #'inherit,
           ~bound: bound :: ArrowBoundingBoxMode = #'unit) :~ Pict:
   let p = arrow_path(~length: length,

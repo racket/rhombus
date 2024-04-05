@@ -13,11 +13,12 @@ export:
     adjust_multi
     rename:
       set_space as set
+      set_group_space as set_group
   bridge
   typeset_meta.typeset
     
 meta:
-  fun set_space(stx, context):
+  fun set_space(stx, context) :~ Syntax:
     let context:
       match context
       | context :: Keyword:
@@ -31,6 +32,15 @@ meta:
         Syntax.property(stx, #'#{typeset-space-name}, context, #true)
     | '$(t :: Term) ...':
         '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate(stx)
+
+  fun set_group_space(stx, context) :~ Syntax:
+    match stx
+    | '$(_ :: Term)':
+        // `set_space` won't relocate group
+        match set_space(stx, context)
+        | '$(g :: Group)': g.relocate(stx)
+    | ~else:
+        set_space(stx, context)
 
   fun find_relevant_context(context, in_contexts :~ List):
     let nows :~ PairList = #{full-space-names}(context)

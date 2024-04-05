@@ -64,6 +64,8 @@
 @include_section("ref-dot.scrbl")
 @include_section("ref-values.scrbl")
 @include_section("ref-annotation.scrbl")
+@include_section("ref-enum.scrbl")
+
 @include_section("ref-io.scrbl")
 @include_section("ref-eval.scrbl")
 @include_section("ref-stxobj.scrbl")

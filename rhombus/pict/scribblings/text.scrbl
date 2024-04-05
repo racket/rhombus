@@ -91,7 +91,7 @@ paragraph typesetting.
 
 @doc(
   fun strikethrough(content :: TextContent, ...,
-                    ~line: line :: MaybeColor = #'inherit,
+                    ~line: line :: ColorMode = #'inherit,
                     ~line_width: line_width :: LineWidth = 3,
                     ~dy: dy = 0) :: Pict
 ){
@@ -148,7 +148,7 @@ paragraph typesetting.
 @doc(
   fun para(content :: TextContent, ...,
            ~width: width = current_para_width(),
-           ~horiz: horiz :: pict.HorizAlignment = #'left,
+           ~horiz: horiz :: HorizAlignment = #'left,
            ~full: full = #false,
            ~decode: decode = #true) :: Pict
 ){
@@ -213,12 +213,12 @@ paragraph typesetting.
   fun item(content :: TextContent, ...,
            ~bullet: bullet :: maybe(Pict) = #false,
            ~width: width = current_para_width(),
-           ~horiz: align :: pict.HorizAlignment = #'left,
+           ~horiz: align :: HorizAlignment = #'left,
            ~full: full = #false) :: Pict
   fun subitem(content :: TextContent, ...,
               ~bullet: bullet :: maybe(Pict) = #false,
               ~width: width = current_para_width(),
-              ~horiz: align :: pict.HorizAlignment = #'left,
+              ~horiz: align :: HorizAlignment = #'left,
               ~full: full = #false) :: Pict
 ){
 

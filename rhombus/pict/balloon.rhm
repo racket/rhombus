@@ -6,7 +6,7 @@ import:
       Pict
       Find
       Color
-      MaybeColor
+      ColorMode
       LineWidth
       EpochAlignment
       DurationAlignment
@@ -50,8 +50,8 @@ fun pin(content :: Pict,
         ~dy: dy :: Real = bln.#{spike->dy}(spike),
         ~sprout: sprout :: Real = 0.5,
         ~thought: thought = #false,
-        ~fill: color :: MaybeColor = current_color(),
-        ~line: line_color :: MaybeColor = #false,
+        ~fill: color :: maybe(ColorMode) = current_color(),
+        ~line: line_color :: maybe(ColorMode) = #false,
         ~line_width: line_width :: LineWidth = #'inherit,
         ~epoch: epoch :: EpochAlignment = #'center,
         ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:

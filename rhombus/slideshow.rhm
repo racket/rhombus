@@ -66,7 +66,11 @@ fun titlet(a, ...) :~ Pict:
 
 // ----------------------------------------
 
-annot.macro 'SlideLayout': 'matching(#'auto || #'center || #'top || #'tall)'
+enum SlideLayout:
+  auto
+  center
+  top
+  tall
 
 fun slide(~title: title :: maybe(String || Pict) = #false,
           ~name: name = title,

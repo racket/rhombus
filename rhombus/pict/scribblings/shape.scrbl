@@ -35,12 +35,11 @@
     ~around: around :: maybe(Pict) = #false,
     ~width: width :: Real: if around | Pict.width(around) | 32,
     ~height: height :: Real: if around | Pict.height(around) | width,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~rounded: rounded :: maybe(Real || matching(#'default)) = #false,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Pict || matching(#'around)) = #'around,
+    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -67,7 +66,7 @@
  When the @rhombus(refocus_on) argument is a pict, then
  @rhombus(Pict.refocus) is used on the resulting pict with
  @rhombus(refocus_on) as the second argument. If @rhombus(refocus) is
- @rhombus(#'around) and @rhombus(around) is not @rhombus(#false), then the
+ @rhombus(#'#,(@rhombus(around, ~value))) and @rhombus(around) is not @rhombus(#false), then the
  pict is refocused on @rhombus(around), and then padded if necessary to
  make the width and height match @rhombus(width) and @rhombus(height).
 
@@ -95,11 +94,11 @@
     ~size: size :: Real: if around
                          | math.max(Pict.width(around), Pict.width(around))
                          | 32,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Pict || matching(#'around)) = #'around,
+    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -120,15 +119,14 @@
     ~around: around :: maybe(Pict) = #false,
     ~width: width :: Real: if around | Pict.width(around) | 32,
     ~height: height :: Real: if around | Pict.height(around) | width,
-    ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
+    ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~rounded: rounded :: maybe(Real || matching(#'default)) = #false,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Pict || matching(#'around)) = #'around,
+    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -151,15 +149,14 @@
     ~size: size :: Real: if around
                          | math.max(Pict.width(around), Pict.width(around))
                          | 32,
-    ~arc: arc :: maybe(matching(#'cw || #'ccw)) = #false,
+    ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~rounded: rounded :: maybe(Real || matching(#'default)) = #false,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Pict || matching(#'around)) = #'around,
+    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -177,8 +174,8 @@
 @doc(
   fun polygon(
     [pt :: draw.PointLike.to_point, ...],
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit
   ) :: Pict
 ){
@@ -197,7 +194,7 @@
   fun line(
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
-    ~line: color :: MaybeColor = #'inherit,
+    ~line: color :: maybe(ColorMode) = #'inherit,
     ~line_width: width :: LineWidth = #'inherit
   ) :: Pict
 ){
@@ -268,7 +265,7 @@
     proc :: Function.of_arity(1),
     ~extent: extent :: NonnegReal = 0.5,
     ~bend: bend = bend.fast_middle,
-    ~sustain_edge: sustain_edge :: matching(#'before || #'after) = #'before
+    ~sustain_edge: sustain_edge :: TimeOrder = #'before
   ) :: Pict
 ){
 
@@ -287,19 +284,55 @@
 }
 
 @doc(
-  annot.macro 'MaybeColor'
+  enum ColorMode:
+    ~is_a Color
+    ~is_a String
+    inherit
 ){
 
- A color specification, either @rhombus(#false), a string, a
- @rhombus(draw.Color) object, or @rhombus(#'inherit).
+ A color specification, where @rhombus(#'inherit) allows the color to be
+ configured externally, such as through @rhombus(Pict.colorize).
 
 }
 
 @doc(
-  annot.macro 'LineWidth'
+  enum LineWidth:
+    ~is_a Real
+    inherit
 ){
 
- A line width specification, either a @rhombus(Real) or
- @rhombus(#'inherit).
+ A line-width specification, where @rhombus(#'inherit) allows the color
+ to be configured externally, such as through @rhombus(Pict.line_width).
+
+}
+
+@doc(
+  enum Refocus:
+    ~is_a Pict
+    around
+){
+
+ Refocusing options for functions like @rhombus(rectangle).
+
+}
+
+
+@doc(
+  enum Rounded:
+    ~is_a Real
+    default
+){
+
+ Corner-rounding options for @rhombus(rectangle).
+
+}
+
+@doc(
+  enum ArcDirection:
+    cw
+    ccw
+){
+
+ Arc directions, clockwise or counterclockwise.
 
 }

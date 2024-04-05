@@ -67,8 +67,8 @@
     ~flat_outer_edge: flat_outer_edge = #false,
     ~outer_pull: outer_pull :: Real = 0,
     ~inner_pull: inner_pull :: Real = 0,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: BoundingBoxMode = #'unit
   ) :: Pict
@@ -218,8 +218,8 @@
 
 @doc(
   method (radial :: Radial).pict(
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: BoundingBoxMode = #'unit
   ) :: Pict
@@ -243,8 +243,8 @@
 @doc(
   fun radials_pict(
     radial :: Radial, ...,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: BoundingBoxMode = #'unit
   ) :: Pict
@@ -270,8 +270,8 @@
     ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
     ~indent: indent = (if tail .= 0 | 0.3 | 0),
     ~rotate: rotate :: Real = 0,
-    ~fill: fill :: MaybeColor = #false,
-    ~line: line :: MaybeColor = !fill && #'inherit,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: ArrowBoundingBoxMode = #'unit
   ) :: Pict

@@ -37,8 +37,8 @@
     ~dy: dy :: Real = spike_to_dy(spike),
     ~sprout: sprout :: Real = 0.5,
     ~thought: thought = #false,
-    ~fill: fill :: MaybeColor = current_color(),
-    ~line: line :: MaybeColor = #false,
+    ~fill: fill :: maybe(ColorMode) = current_color(),
+    ~line: line :: maybe(ColorMode) = #false,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~epoch: epoch :: EpochAlignment = #'center,
     ~duration: duration :: DurationAlignment = #'sustain

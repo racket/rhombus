@@ -139,9 +139,9 @@
     ~on: on_pict :: Pict,
     from :: Find,
     to :: Find,
-    ~style: style :: matching(#'line || #'arrow || #'arrows) = #'line,
-    ~line: color :: Color || String || matching(#'inherit) = #'inherit,
-    ~line_width: width :: Real || matching(#'inherit) = #'inherit,
+    ~style: style :: ConnectStyle = #'line,
+    ~line: color :: ConnectMode = #'inherit,
+    ~line_width: width :: LineWidth = #'inherit,
     ~order: order :: OverlayOrder = #'front,
     ~arrow_size: arrow_size :: Real = 16,
     ~arrow_solid: solid = #true,
@@ -187,12 +187,12 @@
                             || [_ :: Real, _ :: Real]
                             || [_ :: Real, _ :: Real, _ :: Real, _ :: Real])
             = 0,
-    ~line: line_c :: maybe(String || Color || matching(#'inherit)) = #false,
-    ~line_width: line_width :: Real || matching(#'inherit) = #'inherit,
-    ~hline: hline :: maybe(String || Color || matching(#'inherit)) = line_c,
-    ~hline_width: hline_width :: Real || matching(#'inherit) = line_width,
-    ~vline: vline :: maybe(String || Color || matching(#'inherit)) = line_c,
-    ~vline_width: vline_width :: Real || matching(#'inherit) = line_width
+    ~line: line_c :: maybe(ColorMode) = #false,
+    ~line_width: line_width :: LineWidth = #'inherit,
+    ~hline: hline :: maybe(ColorMode) = line_c,
+    ~hline_width: hline_width :: LineWidth = line_width,
+    ~vline: vline :: maybe(ColorMode) = line_c,
+    ~vline_width: vline_width :: LineWidth = line_width
   ) :: Pict
 ){
 
@@ -220,7 +220,7 @@
 
 @doc(
   fun switch(
-    ~splice: splice :: maybe(matching(#'before || #'after)) = #false,
+    ~splice: splice :: maybe(TimeOrder) = #false,
     ~join: join :: SequentialJoin = if splice | #'splice | #'step,
     pict :: Pict, ...
   ) :: Pict
@@ -296,7 +296,8 @@
     ~combine: combine :: Function.of_arity(1),
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
-    ~non_sustain_combine: non_sustain_combine :: Function.of_arity(1) = combine
+    ~non_sustain_combine: non_sustain_combine :: Function.of_arity(1)
+                            = combine
   ) :: Pict
 ){
 
@@ -377,58 +378,79 @@
 }
 
 @doc(
-  annot.macro 'HorizAlignment'
+  enum HorizAlignment:
+    left
+    center
+    right
 ){
 
- Recognizes an option for horizontal alignment, which is either
- @rhombus(#'left), @rhombus(#'center), or @rhombus(#'right).
+ Options for horizontal alignment.
 
 }
 
 @doc(
-  annot.macro 'VertAlignment'
+  enum VertAlignment:
+    top
+    topline
+    center
+    baseline
+    bottom
 ){
 
- Recognizes an option for vertical alignment, which is either
- @rhombus(#'top), @rhombus(#'topline), @rhombus(#'center),
- @rhombus(#'baseline), or @rhombus(#'bottom).
+ Options for vertical alignment.
 
 }
 
 @doc(
-  annot.macro 'DurationAlignment'
+  enum DurationAlignment:
+    sustain
+    pad
 ){
 
- Recognizes an option for duration alignment, which is either
- @rhombus(#'sustain) or @rhombus(#'pad).
+ Options for duration alignment.
 
 }
 
 @doc(
-  annot.macro 'EpochAlignment'
+  enum EpochAlignment:
+    early
+    center
+    stretch
+    late
 ){
 
- Recognizes an option for epoch alignment, which is either
- @rhombus(#'early), @rhombus(#'center), @rhombus(#'stretch), or
- @rhombus(#'late).
+ Options for epoch alignment.
 
 }
 
 @doc(
-  annot.macro 'SequentialJoin'
+  enum SequentialJoin:
+    step
+    splice
 ){
 
- Recognizes an option for sequential joining, which is either
- @rhombus(#'step) or @rhombus(#'splice).
+ Options for sequential joining.
 
 }
 
 
 @doc(
-  annot.macro 'OverlayOrder'
+  enum OverlayOrder:
+    front
+    back
 ){
 
- Recognizes an option for overlaying, which is either
- @rhombus(#'front) or @rhombus(#'back).
+ Options for overlaying.
+
+}
+
+@doc(
+  enum ConnectStyle:
+    line
+    arrow
+    arrows
+){
+
+ Options for a @rhombus(connect) style.
 
 }

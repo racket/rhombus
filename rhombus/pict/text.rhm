@@ -6,7 +6,7 @@ import:
     expose:
       Pict
       HorizAlignment
-      MaybeColor
+      ColorMode
       LineWidth
   lib("pict/main.rkt") as rkt_pict
   lib("racket/string.rkt")
@@ -132,7 +132,7 @@ fun superscript(arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
   p.lift(p.height/3).scale(0.75)
 
-fun strikethrough(~line: line :: MaybeColor = #'inherit,
+fun strikethrough(~line: line :: ColorMode = #'inherit,
                   ~line_width: line_width :: LineWidth = 3,
                   ~dy: dy = 0,
                   arg :: TextContent, ...) :~ Pict:
