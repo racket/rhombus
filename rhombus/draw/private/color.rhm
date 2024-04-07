@@ -24,13 +24,13 @@ class Color(private _handle):
   | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0)):
       super(rkt.make_object(rkt.#{color%}, red, green, blue, alpha))
 
-  property red:
+  property red :~ Int:
     rkt.send handle.red()
-  property green:
+  property green :~ Int:
     rkt.send handle.green()
-  property blue:
+  property blue :~ Int:
     rkt.send handle.blue()
-  property alpha:
+  property alpha :~ Real:
     rkt.send handle.alpha()
 
   reconstructor_fields:
@@ -41,7 +41,7 @@ class Color(private _handle):
   reconstructor(red, green, blue, alpha):
     Color(red, green, blue, alpha)
 
-  method scale(factor :: NonnegReal):
+  method scale(factor :: NonnegReal) :~ Color:
     if factor <= 1
     | fun dim(v):
         math.exact(math.floor(v * factor))
@@ -50,7 +50,7 @@ class Color(private _handle):
         255 - math.exact(math.floor((255 - v) / factor))
       Color(bright(red), bright(green), bright(blue), alpha)
 
-  method blend(other :: Color):
+  method blend(other :: Color) :~ Color:
     fun mix(a, b):
       math.exact(math.floor((a * alpha + b * other.alpha) / (alpha + other.alpha)))
     Color(mix(red, other.red),
@@ -67,7 +67,7 @@ class Color(private _handle):
                     recur(alpha)],
                    ")")
 
-fun from_handle(handle):
+fun from_handle(handle) :~ Color:
   unless handle rkt.is_a rkt.#{color%}
   | error("Color.from_handle", "not a color handle: " +& handle)
   _Color(handle)

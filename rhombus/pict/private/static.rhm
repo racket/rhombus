@@ -977,9 +977,7 @@ class Find(private q, private find):
                   | #'center: rkt.#{rc-find}
                   | #'baseline: rkt.#{rbl-find}
                   | #'bottom: rkt.#{rb-find}
-            if dx .= 0 && dy .= 0 && dx_w .= 0 && dy_h .= 0
-            | proc
-            | offset(proc, dx, dy, dx_w, dy_h))
+            offset(proc, dx, dy, dx_w, dy_h))
 
   method in(p :: Pict):
     find(p, q)
