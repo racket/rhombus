@@ -17,6 +17,7 @@ block:
     MutableSet.set(st, v, in) ~method
     MutableSet.delete(st, v) ~method
     Set.to_list(st, [try_sort]) ~method
+    Set.to_sequence(st) ~method
     Set.by(==)(p, ...)
     Set.by(===)(p, ...)
     Set.by(is_now)(p, ...)
@@ -336,6 +337,62 @@ block:
   check m.snapshot() == n ~is #true
   check m.snapshot() === n ~is #false
 
+block:
+  use_static
+  def st = {"a", "b", "c"}
+  check:
+    for Set (x: Set.to_sequence(st)):
+      x
+    ~is {"a", "b", "c"}
+  check:
+    for Set (x: st.to_sequence()):
+      x
+    ~is {"a", "b", "c"}
+
+block:
+  use_static
+  def st = MutableSet{"a", "b", "c"}
+  check:
+    for Set (x: Set.to_sequence(st)):
+      x
+    ~is {"a", "b", "c"}
+  check:
+    for Set (x: st.to_sequence()):
+      x
+    ~is {"a", "b", "c"}
+
+version_guard.at_least "8.13.0.1":
+  check:
+    Set.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: ReadableSet",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ Set).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: ReadableSet",
+      "given: \"oops\"",
+    )
+  check:
+    for Set (x: Set.to_sequence("oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: ReadableSet",
+      "given: \"oops\"",
+    )
+  check:
+    for Set (x: ("oops" :~ Set).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: ReadableSet",
+      "given: \"oops\"",
+    )
+
 check:
   use_static
   class Posn(x, y)
@@ -464,7 +521,7 @@ block:
        check [Set.by($key_comp){ x }, $('...')] ~is [Set.by($key_comp){ 1 },
                                                      Set.by($key_comp){ 2 },
                                                      Set.by($key_comp){ 3 }]
-       
+
        check (for Set.by($key_comp) (i: 0..1): i) ~is Set.by($key_comp){ 0 }
        block:
          let Set.by($key_comp){ v, $('...') } = Set.by($key_comp){ "x" }

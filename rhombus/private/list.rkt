@@ -76,7 +76,7 @@
   #:constructor-arity -1
   #:instance-static-info ((#%index-get List.get)
                           (#%append List.append)
-                          (#%sequence-constructor in-treelist))
+                          (#%sequence-constructor List.to_sequence/optimize))
   #:existing
   #:opaque
   #:fields ()
@@ -121,14 +121,15 @@
    map
    for_each
    sort
-   to_list))
+   to_list
+   to_sequence))
 
 (define-primitive-class PairList list
   #:lift-declaration
   #:constructor-arity -1
   #:instance-static-info ((#%index-get PairList.get)
                           (#%append PairList.append)
-                          (#%sequence-constructor in-list))
+                          (#%sequence-constructor PairList.to_sequence/optimize))
   #:existing
   #:opaque
   #:fields ()
@@ -168,7 +169,8 @@
    map
    for_each
    sort
-   to_list))
+   to_list
+   to_sequence))
 
 (define-name-root NonemptyList
   #:fields
@@ -641,6 +643,32 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-list who lst)
   (list->treelist lst))
+
+(define-sequence-syntax PairList.to_sequence/optimize
+  (lambda () #'PairList.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ lst-expr)] #'[(id) (in-list lst-expr)]]
+      [_ #f])))
+
+(define/method (PairList.to_sequence lst)
+  #:inline
+  #:primitive (in-list)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-list lst))
+
+(define-sequence-syntax List.to_sequence/optimize
+  (lambda () #'List.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ lst-expr)] #'[(id) (in-treelist lst-expr)]]
+      [_ #f])))
+
+(define/method (List.to_sequence lst)
+  #:inline
+  #:primitive (in-treelist)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-treelist lst))
 
 (define/method (List.get l n)
   #:inline

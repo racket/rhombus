@@ -47,6 +47,7 @@ it supplies its elements in order.
   lst.for_each(func)
   lst.sort(arg, ...)
   lst.to_list()
+  lst.to_sequence()
 )
 
 @doc(
@@ -590,5 +591,15 @@ it supplies its elements in order.
 ){
 
  Implements @rhombus(Listable, ~class) by returning @rhombus(lst) unchanged.
+
+}
+
+
+@doc(
+  fun List.to_sequence(lst :: List) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(lst)'s elements in order.
 
 }

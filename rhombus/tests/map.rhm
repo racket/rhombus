@@ -17,6 +17,7 @@ block:
     Map.remove(mp, k) ~method
     MutableMap.set(mp, k, val) ~method
     MutableMap.delete(mp, k) ~method
+    Map.to_sequence(mp) ~method
     Map.by(==)(p, ...)
     Map.by(===)(p, ...)
     Map.by(is_now)(p, ...)
@@ -408,6 +409,62 @@ block:
   check m.snapshot() == n ~is #true
   check m.snapshot() === n ~is #false
 
+block:
+  use_static
+  def mp = {1: "a", 2: "b", 3: "c"}
+  check:
+    for Map ((k, v): Map.to_sequence(mp)):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
+  check:
+    for Map ((k, v): mp.to_sequence()):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
+
+block:
+  use_static
+  def mp = MutableMap{1: "a", 2: "b", 3: "c"}
+  check:
+    for Map ((k, v): Map.to_sequence(mp)):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
+  check:
+    for Map ((k, v): mp.to_sequence()):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
+
+version_guard.at_least "8.13.0.1":
+  check:
+    Map.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: ReadableMap",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ Map).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: ReadableMap",
+      "given: \"oops\"",
+    )
+  check:
+    for Map ((k, v): Map.to_sequence("oops")):
+      values(k, v)
+    ~throws values(
+      "contract violation",
+      "expected: ReadableMap",
+      "given: \"oops\"",
+    )
+  check:
+    for Map ((k, v): ("oops" :~ Map).to_sequence()):
+      values(k, v)
+    ~throws values(
+      "contract violation",
+      "expected: ReadableMap",
+      "given: \"oops\"",
+    )
+
 check:
   use_static
   class Posn(x, y)
@@ -535,7 +592,7 @@ block:
        check Map.by($key_comp){} ++ { 0: 1 } ~is Map.by($key_comp){ 0: 1 }
        check Map.by($key_comp){} ++ { 0: 1, 2: 3 } ~is Map.by($key_comp){ 0: 1, 2: 3 }
        check Map.by($key_comp){ x: x, $('...')} ~is Map.by($key_comp){ 1: 1, 2: 2, 3: 3 }
-       check Map.by($key_comp){ x: x, $('...')}.length() ~is 3       
+       check Map.by($key_comp){ x: x, $('...')}.length() ~is 3
        check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1 : 1 },
                                                         Map.by($key_comp){ 2 : 2 },
                                                         Map.by($key_comp){ 3 : 3 }]
@@ -582,6 +639,6 @@ block:
     key_comp.def 'equals':
       ~equals: fun (a, b, recur): a == b
       ~hash_code: fun (a, recur): Equatable.hash(a)
-    check_map_by equals                    
+    check_map_by equals
 
   #void
