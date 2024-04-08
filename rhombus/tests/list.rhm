@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -29,6 +31,7 @@ block:
     List.sort(lst, [is_less]) ~method
     List.iota(n)
     List.to_list(lst) ~method
+    List.to_sequence(lst) ~method
 
 check:
   List.length([1, 2, 3])
@@ -275,6 +278,50 @@ block:
   def l2 = l ++ l
   check l.to_list() === l ~is #true
   check l2.to_list() === l2 ~is #true
+
+block:
+  use_static
+  def lst = ["a", "b", "c"]
+  check:
+    for List (x: List.to_sequence(lst)):
+      x
+    ~is ["a", "b", "c"]
+  check:
+    for List (x: lst.to_sequence()):
+      x
+    ~is ["a", "b", "c"]
+
+version_guard.at_least "8.13.0.1":
+  check:
+    List.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ List).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: List.to_sequence("oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ List).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
 
 check:
   to_string([]) ~is "[]"

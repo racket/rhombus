@@ -1,6 +1,5 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     racket/symbol
                      syntax/parse/pre
                      racket/syntax
                      "srcloc.rkt"
@@ -140,11 +139,11 @@
           (hash-code (set-ht self))))
   #:property prop:sequence
   (lambda (s)
-    (in-set s)))
+    (Set.to_sequence s)))
 
 (define-for-syntax any-set-static-infos
   #'((#%index-get Set.get)
-     (#%sequence-constructor in-set)))
+     (#%sequence-constructor Set.to_sequence/optimize)))
 
 (define-primitive-class ReadableSet readable-set
   #:lift-declaration
@@ -163,7 +162,8 @@
    [get Set.get]
    [to_list Set.to_list]
    [copy Set.copy]
-   [snapshot Set.snapshot]))
+   [snapshot Set.snapshot]
+   [to_sequence Set.to_sequence]))
 
 (define-primitive-class Set set
   #:lift-declaration
@@ -181,6 +181,7 @@
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
+   [to_sequence Set.to_sequence]
    of
    [by Set.by])
   #:properties
@@ -549,25 +550,6 @@
     [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
      #`(composite-binder-id 'set composite-data)]))
 
-(define-sequence-syntax in-set
-  (lambda () #'in-set*)
-  (lambda (stx)
-    (syntax-case stx ()
-      [[(d) (_ s)]
-       #'[(d)
-          (:do-in
-           ([(ht) (set-ht s)])
-           (void)
-           ([i (hash-iterate-first ht)])
-           i
-           ([(d) (hash-iterate-key ht i)])
-           #t
-           #t
-           [(hash-iterate-next ht i)])]]
-      [_ #f])))
-
-(define (in-set* s) (in-hash-keys (set-ht s)))
-
 (define-for-syntax set-annotation-make-predicate
   (lambda (arg-id predicate-stxs)
     #`(for/and ([v (in-immutable-hash-keys (set-ht #,arg-id))])
@@ -887,3 +869,18 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-set who s)
   (list->treelist (set->list s try-sort?)))
+
+(define-sequence-syntax Set.to_sequence/optimize
+  (lambda () #'Set.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ st-expr)]
+       #'[(id) (in-hash-keys (let ([st st-expr])
+                               (check-readable-set 'Set.to_sequence st)
+                               (set-ht st)))]]
+      [_ #f])))
+
+(define/method (Set.to_sequence st)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (check-readable-set who st)
+  (in-hash-keys (set-ht st)))

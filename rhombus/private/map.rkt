@@ -126,7 +126,7 @@
 
 (define-for-syntax any-map-static-infos
   #'((#%index-get Map.get)
-     (#%sequence-constructor in-hash)))
+     (#%sequence-constructor Map.to_sequence/optimize)))
 
 (define-primitive-class ReadableMap readable-map
   #:lift-declaration
@@ -147,7 +147,8 @@
    [get Map.get]
    [has_key Map.has_key]
    [copy Map.copy]
-   [snapshot Map.snapshot]))
+   [snapshot Map.snapshot]
+   [to_sequence Map.to_sequence]))
 
 (define-primitive-class Map map
   #:lift-declaration
@@ -168,6 +169,7 @@
    [has_key Map.has_key]
    [copy Map.copy]
    [snapshot Map.snapshot]
+   [to_sequence Map.to_sequence]
    of
    [by Map.by])
   #:properties
@@ -770,6 +772,19 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-readable-map who ht)
   (list->treelist (hash-keys ht try-sort?)))
+
+(define-sequence-syntax Map.to_sequence/optimize
+  (lambda () #'Map.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id-k id-v) (_ mp-expr)] #'[(id-k id-v) (in-hash mp-expr)]]
+      [_ #f])))
+
+(define/method (Map.to_sequence ht)
+  #:inline
+  #:primitive (in-hash)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-hash ht))
 
 (define/method (Map.values ht)
   #:static-infos ((#%call-result #,treelist-static-infos))

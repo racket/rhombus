@@ -33,6 +33,7 @@ it supplies its elements in an unspecified order.
   st.to_list(try_sort, ...)
   st.copy()
   st.snapshot()
+  st.to_sequence()
 )
 
 @dispatch_table(
@@ -388,5 +389,15 @@ it supplies its elements in an unspecified order.
 
  Returns an immutable set whose content matches @rhombus(st). If
  @rhombus(st) is immutable, then it is the result.
+
+}
+
+
+@doc(
+  fun Set.to_sequence(st :: ReadableSet) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(st)'s elements in an unspecified order.
 
 }

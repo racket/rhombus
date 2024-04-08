@@ -37,6 +37,7 @@ in an unspecified order.
   mp.has_key(k)
   mp.copy()
   mp.snapshot()
+  mp.to_sequence()
 )
 
 @dispatch_table(
@@ -552,5 +553,16 @@ in an unspecified order.
 
  Returns an immutable map whose content matches @rhombus(mp). If
  @rhombus(mp) is immutable, then it is the result.
+
+}
+
+
+@doc(
+  fun Map.to_sequence(mp :: ReadableMap) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(mp)'s keys and values (as two result
+ values) in an unspecified order.
 
 }

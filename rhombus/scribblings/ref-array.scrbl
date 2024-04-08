@@ -33,6 +33,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   arr.drop_right(n)
   arr.set_in_copy(i, v)
   arr.to_list()
+  arr.to_sequence()
 )
 
 @doc(
@@ -328,5 +329,15 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
  with the same elements as @rhombus(arr) in the same order.
+
+}
+
+
+@doc(
+  fun Array.to_sequence(arr :: Array) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(arr)'s elements in order.
 
 }

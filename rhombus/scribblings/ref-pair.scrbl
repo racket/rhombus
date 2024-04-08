@@ -41,6 +41,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   lst.for_each(func)
   lst.sort(arg, ...)
   lst.to_list()
+  lst.to_sequence()
 )
 
 @doc(
@@ -577,5 +578,15 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
  with the same elements as @rhombus(lst) in the same order. The conversion
  takes @math{O(N)} time.
+
+}
+
+
+@doc(
+  fun PairList.to_sequence(lst :: PairList) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(lst)'s elements in order.
 
 }

@@ -48,7 +48,7 @@
   #:instance-static-info ((#%index-get Array.get)
                           (#%index-set Array.set)
                           (#%append Array.append)
-                          (#%sequence-constructor in-vector))
+                          (#%sequence-constructor Array.to_sequence/optimize))
   #:existing
   #:opaque
   #:fields ()
@@ -72,7 +72,8 @@
    take_left
    take_right
    set_in_copy
-   to_list))
+   to_list
+   to_sequence))
 
 (define-syntax Array
   (expression-transformer
@@ -304,6 +305,19 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-array who v)
   (vector->treelist v))
+
+(define-sequence-syntax Array.to_sequence/optimize
+  (lambda () #'Array.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ arr-expr)] #'[(id) (in-vector arr-expr)]]
+      [_ #f])))
+
+(define/method (Array.to_sequence v)
+  #:inline
+  #:primitive (in-vector)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-vector v))
 
 (define-binding-syntax Array
   (binding-prefix-operator

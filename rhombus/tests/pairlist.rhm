@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -24,6 +26,7 @@ block:
     PairList.sort(lst, [is_less]) ~method
     PairList.iota(n)
     PairList.to_list(lst) ~method
+    PairList.to_sequence(lst) ~method
 
 check:
   PairList.length(PairList[1, 2, 3])
@@ -276,6 +279,50 @@ block:
   check l.to_list() ~is [1, 2, 3]
   check l2.to_list() ~is [1, 2, 3, 1, 2, 3]
   check l2.to_list().length() ~is 6
+
+block:
+  use_static
+  def lst = PairList["a", "b", "c"]
+  check:
+    for List (x: PairList.to_sequence(lst)):
+      x
+    ~is ["a", "b", "c"]
+  check:
+    for List (x: lst.to_sequence()):
+      x
+    ~is ["a", "b", "c"]
+
+version_guard.at_least "8.13.0.1":
+  check:
+    PairList.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: PairList",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ PairList).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: PairList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: PairList.to_sequence("oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: PairList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ PairList).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: PairList",
+      "given: \"oops\"",
+    )
 
 check:
   to_string(PairList[]) ~is "PairList[]"
