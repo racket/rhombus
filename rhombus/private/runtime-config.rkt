@@ -76,6 +76,11 @@
              (values (with-handlers ([exn:fail:read? (lambda (exn) str)])
                        (define c (read (open-input-string str)))
                        (or (get-primitive-contract c)
+                           (and (pair? c)
+                                (eq? (car c) 'procedure-arity-includes/c)
+                                (list? c)
+                                (= 2 (length c))
+                                (format "Function.arity_of(~a)" (cadr c)))
                            (format "~s" c)))
                      'rhombus/primitive)]
             [else (values str realm)]))]

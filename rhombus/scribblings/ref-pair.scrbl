@@ -18,7 +18,6 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   Pair
   pr.first
   pr.rest
-
 )
 
 @dispatch_table(
@@ -27,14 +26,16 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   lst.length()
   lst.get(n)
   lst.first,
+  lst.last,
   lst.rest,
   lst.reverse()
   lst.append(lst2, ...)
-  lst.take_left(lst, n)
-  lst.take_right(lst, n)
-  lst.drop_left(lst, n)
-  lst.drop_right(lst, n)
-  lst.has_element(lst, v)
+  lst.take(lst, n)
+  lst.take_last(lst, n)
+  lst.drop(lst, n)
+  lst.drop_last(lst, n)
+  lst.has_element(lst, v, eqls, ...)
+  lst.find(lst, pred)
   lst.remove(lst, v)
   lst.map(func)
   lst.for_each(func)
@@ -327,6 +328,21 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @examples(
   PairList.first(PairList["a", "b", "c"])
+  PairList["a", "b", "c"].first
+)
+
+}
+
+@doc(
+  fun PairList.last(lst :: NonemptyPairList) :: Any
+){
+
+ Returns the last element of @rhombus(lst).
+ Accessing the last element takes @math{O(N)} time.
+
+@examples(
+  PairList.last(PairList["a", "b", "c"])
+  PairList["a", "b", "c"].last
 )
 
 }
@@ -341,6 +357,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @examples(
   PairList.rest(PairList["a", "b", "c"])
+  PairList["a", "b", "c"].rest
 )
 
 }
@@ -414,56 +431,76 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.take_left(lst :: PairList, n :: NonnegInt) :: PairList
-  fun PairList.take_right(lst :: PairList, n :: NonnegInt) :: PairList
+  fun PairList.take(lst :: PairList, n :: NonnegInt) :: PairList
+  fun PairList.take_last(lst :: PairList, n :: NonnegInt) :: PairList
 ){
 
- Like @rhombus(PairList.take_left) and @rhombus(PairList.take_right), but for
+ Like @rhombus(List.take) and @rhombus(List.take_last), but for
  @tech{pair lists}. Producing the result list takes @math{O(N)} time,
  where @math{N} is the @rhombus(n) argument for taking from the left or
  the length of the pair list for taking from the right.
 
 @examples(
-  PairList[1, 2, 3, 4, 5].take_left(2)
-  PairList[1, 2, 3, 4, 5].take_right(2)
+  PairList[1, 2, 3, 4, 5].take(2)
+  PairList[1, 2, 3, 4, 5].take_last(2)
   ~error:
-    PairList[1].take_left(2)
+    PairList[1].take(2)
 )
 
 }
 
 
 @doc(
-  fun PairList.drop_left(lst :: PairList, n :: NonnegInt) :: PairList
-  fun PairList.drop_right(lst :: PairList, n :: NonnegInt) :: PairList
+  fun PairList.drop(lst :: PairList, n :: NonnegInt) :: PairList
+  fun PairList.drop_last(lst :: PairList, n :: NonnegInt) :: PairList
 ){
 
- Like @rhombus(PairList.drop_left) and @rhombus(PairList.drop_right), but for
+ Like @rhombus(List.drop) and @rhombus(List.drop_last), but for
  @tech{pair lists}. Producing the result list takes @math{O(N)} time,
  where @math{N} is the @rhombus(n) argument for dropping from the left or
  the length of the pair list for dropping from the right.
 
 @examples(
-  PairList[1, 2, 3, 4, 5].drop_left(2)
-  PairList[1, 2, 3, 4, 5].drop_right(2)
+  PairList[1, 2, 3, 4, 5].drop(2)
+  PairList[1, 2, 3, 4, 5].drop_last(2)
   ~error:
-    PairList[1].drop_left(2)
+    PairList[1].drop(2)
 )
 
 }
 
 
 @doc(
-  fun PairList.has_element(lst :: PairList, v :: Any) :: Boolean
+  fun PairList.has_element(lst :: PairList, v :: Any,
+                           eqls :: Function.of_arity(2) = fun (x, y): x == y)
+    :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
- @rhombus(v), @rhombus(#false) otherwise. Searching the pair list
- takes @math{O(N)} time.
+ @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
+ equality. Searching the list takes @math{O(N)} time (multiplified by the
+ cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(
   PairList[1, 2, 3].has_element(2)
   PairList[1, 2, 3].has_element(200)
+)
+
+}
+
+
+@doc(
+  fun PairList.find(lst :: PairList, pred :: Function.of_arity(1)) :: Any
+){
+
+ Returns the first element of @rhombus(lst) for which @rhombus(pred)
+ return true, @rhombus(#false) otherwise. Searching the list
+ takes @math{O(N)} time (multiplied by the cost of @rhombus(pred))
+ to find an element as position @math{N}.
+
+@examples(
+  PairList[1, 2, 3].find(fun (x): x mod 2 .= 0)
+  PairList[1, 2, 3].find(fun (x): x mod 10 .= 9)
 )
 
 }

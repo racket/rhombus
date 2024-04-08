@@ -28,18 +28,20 @@ it supplies its elements in order.
   lst.get(n)
   lst.set(n, v)
   lst.first,
+  lst.last,
   lst.rest,
   lst.insert(lst, n, v)
   lst.add(lst, v)
   lst.delete(lst, n)
   lst.reverse()
   lst.append(lst2, ...)
-  lst.take_left(lst, n)
-  lst.take_right(lst, n)
-  lst.drop_left(lst, n)
-  lst.drop_right(lst, n)
+  lst.take(lst, n)
+  lst.take_last(lst, n)
+  lst.drop(lst, n)
+  lst.drop_last(lst, n)
   lst.sublist(lst, n, m)
-  lst.has_element(lst, v)
+  lst.has_element(lst, v, eqls, ...)
+  lst.find(lst, pred)
   lst.remove(lst, v)
   lst.map(func)
   lst.for_each(func)
@@ -282,9 +284,26 @@ it supplies its elements in order.
 
 @examples(
   List.first(["a", "b", "c"])
+  ["a", "b", "c"].first
 )
 
 }
+
+
+@doc(
+  fun List.last(lst :: NonemptyList) :: Any
+){
+
+ Returns the last element of @rhombus(lst).
+ Accessing the last element takes @math{O(log N)} time.
+
+@examples(
+  List.last(["a", "b", "c"])
+  ["a", "b", "c"].last
+)
+
+}
+
 
 @doc(
   fun List.rest(lst :: NonemptyList) :: List
@@ -295,6 +314,7 @@ it supplies its elements in order.
 
 @examples(
   List.rest(["a", "b", "c"])
+  ["a", "b", "c"].rest
 )
 
 }
@@ -402,13 +422,13 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.take_left(lst :: List, n :: NonnegInt) :: List
-  fun List.take_right(lst :: List, n :: NonnegInt) :: List
+  fun List.take(lst :: List, n :: NonnegInt) :: List
+  fun List.take_last(lst :: List, n :: NonnegInt) :: List
 ){
 
  Returns a list like @rhombus(lst), but with only the first @rhombus(n)
- elements in the case of @rhombus(List.take_left), or only the last
- @rhombus(n) elements in the case of @rhombus(List.take_right). The given
+ elements in the case of @rhombus(List.take), or only the last
+ @rhombus(n) elements in the case of @rhombus(List.take_last). The given
  @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
  @rhombus(Exn.Fail.Contract, ~class) exception is thrown.
  Creating the new list takes @math{O(log N)} time, which is
@@ -416,23 +436,23 @@ it supplies its elements in order.
  elements one at a time.
 
 @examples(
-  [1, 2, 3, 4, 5].take_left(2)
-  [1, 2, 3, 4, 5].take_right(2)
+  [1, 2, 3, 4, 5].take(2)
+  [1, 2, 3, 4, 5].take_last(2)
   ~error:
-    [1].take_left(2)
+    [1].take(2)
 )
 
 }
 
 
 @doc(
-  fun List.drop_left(lst :: List, n :: NonnegInt) :: List
-  fun List.drop_right(lst :: List, n :: NonnegInt) :: List
+  fun List.drop(lst :: List, n :: NonnegInt) :: List
+  fun List.drop_last(lst :: List, n :: NonnegInt) :: List
 ){
 
  Returns a list like @rhombus(lst), but without the first @rhombus(n)
- elements in the case of @rhombus(List.drop_left), or without the last
- @rhombus(n) elements in the case of @rhombus(List.drop_right). The given
+ elements in the case of @rhombus(List.drop), or without the last
+ @rhombus(n) elements in the case of @rhombus(List.drop_last). The given
  @rhombus(lst) must have at least @rhombus(n) elements, otherwise an
  @rhombus(Exn.Fail.Contract, ~class) exception is thrown.
  Creating the new list takes @math{O(log N)} time, which is
@@ -440,10 +460,10 @@ it supplies its elements in order.
  elements one at a time.
 
 @examples(
-  [1, 2, 3, 4, 5].drop_left(2)
-  [1, 2, 3, 4, 5].drop_right(2)
+  [1, 2, 3, 4, 5].drop(2)
+  [1, 2, 3, 4, 5].drop_last(2)
   ~error:
-    [1].drop_left(2)
+    [1].drop(2)
 )
 
 }
@@ -454,11 +474,11 @@ it supplies its elements in order.
 
  Returns a sublist of @rhombus(lst) containing elements from index
  @rhombus(n) (inclusive) to @rhombus(m) (exclusive), equivalent to
- @rhombus(lst.drop_left(n).take_left(m-n)).
+ @rhombus(lst.drop(n).take(m-n)).
 
 @examples(
   [1, 2, 3, 4, 5].sublist(1, 3)
-  [1, 2, 3, 4, 5].drop_left(1).take_left(3-1)
+  [1, 2, 3, 4, 5].drop(1).take(3-1)
 )
 
 
@@ -466,16 +486,36 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.has_element(lst :: List, v :: Any) :: Boolean
+  fun List.has_element(lst :: List, v :: Any,
+                       eqls :: Function.of_arity(2) = fun (x, y): x == y)
+    :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
- @rhombus(v), @rhombus(#false) otherwise. Searching the list
- takes @math{O(N)} time.
+ @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
+ equality. Searching the list takes @math{O(N)} time (multiplified by the
+ cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(
   [1, 2, 3].has_element(2)
   [1, 2, 3].has_element(200)
+)
+
+}
+
+
+@doc(
+  fun List.find(lst :: List, pred :: Function.of_arity(1)) :: Any
+){
+
+ Returns the first element of @rhombus(lst) for which @rhombus(pred)
+ returns true, @rhombus(#false) otherwise. Searching the list
+ takes @math{O(N)} time (multiplied by the cost of @rhombus(pred))
+ to find an element as position @math{N}.
+
+@examples(
+  [1, 2, 3].find(fun (x): x mod 2 .= 0)
+  [1, 2, 3].find(fun (x): x mod 10 .= 9)
 )
 
 }
