@@ -23,7 +23,7 @@ block:
     Syntax.property(stx, key, [val], [is_preserved]) ~method
     Syntax.to_source_string(stx) ~method
   static_arity.check ~meta:
-    syntax_meta.error([msg], at_stx, [in_stx])
+    syntax_meta.error([msg], in_stx, [at_stx])
     syntax_meta.value(name, [in_space], [fail])
     syntax_meta.equal_binding(stx1, stx2, [in_space], [phase1], [phase2])
     syntax_meta.equal_name_and_scopes(stx1, stx2, [phase])
@@ -179,3 +179,19 @@ check:
   Syntax.srcloc('x').line
   'x'.srcloc().line
   ~completes
+
+block:
+  import meta -1:
+    rhombus/meta.syntax_meta
+  check:
+    syntax_meta.error('here')
+    ~throws values("bad syntax", "in: here")
+  check:
+    syntax_meta.error("oops", 'here')
+    ~throws values("oops", "in: here")
+  check:
+    syntax_meta.error("oops", 'here: there', 'there')
+    ~throws values("oops", "in: here: there", "at: there")
+  check:
+    syntax_meta.error("oops", 'here: there', ['there', 'here'])
+    ~throws values("oops", "in: here: there", "at: there")

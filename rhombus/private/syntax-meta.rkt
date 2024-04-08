@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
-                     enforest/transformer
                      shrubbery/print
                      racket/phase+space
                      "realm.rkt"
@@ -16,7 +15,8 @@
                      (submod "annotation.rkt" for-class)
                      (for-syntax racket/base)
                      (submod "syntax-object.rkt" for-quasiquote)
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "treelist.rkt")
          "space.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
@@ -152,7 +152,9 @@
       [(form) (raise-syntax-error (name-of form) "bad syntax" (maybe-respan form))]
       [(msg form) (raise-syntax-error (name-of form) msg (maybe-respan form))]
       [(msg form detail)
-       (define details (map maybe-respan (if (list? detail) detail (list detail))))
+       (define details (map maybe-respan (if (treelist? detail)
+                                             (treelist->list detail)
+                                             (list detail))))
        (if (pair? details)
            (raise-syntax-error (name-of form) msg
                                (maybe-respan form)

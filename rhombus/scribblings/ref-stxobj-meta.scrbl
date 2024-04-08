@@ -8,23 +8,26 @@
 
 
 @doc(
-  fun syntax_meta.error(at_stx :: Syntax)
+  fun syntax_meta.error(in_stx :: Syntax)
     :: None
   fun syntax_meta.error(message :: ReadableString,
-                        at_stx :: Syntax)
+                        in_stx :: Syntax)
     :: None
   fun syntax_meta.error(message :: ReadableString,
-                        at_stx :: Syntax,
-                        in_stx :: Syntax || List.of(Syntax))
+                        in_stx :: Syntax,
+                        at_stx :: Syntax || List.of(Syntax))
     :: None
 ){
 
 @provided_meta()
 
- Throws a syntax-error message concerning @rhombus(at_stx). If
+ Throws a syntax-error message concerning @rhombus(in_stx). If
  @rhombus(message) is not provided, the message is @rhombus("bad syntax").
- If @rhombus(in_stx) is provided, it should be something like an enclosing
- form of @rhombus(at_stx) to provide more context.
+ If @rhombus(at_stx) is provided, it should be something like an enclosed
+ form of @rhombus(in_stx) to provide extra context. Alternatively,
+ @rhombus(at_stx) can be a list of syntax objects, in which case all
+ syntax objects provide extra contexts, least-specific to
+ most-specific.
 
 }
 
