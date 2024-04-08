@@ -8,17 +8,19 @@ block:
     PairList.cons(a, d)
     PairList.get(lst, n) ~method
     PairList.first(lst)
+    PairList.last(lst)
     PairList.rest(lst)
     PairList.map(lst, proc) ~method
     PairList.for_each(lst, proc) ~method
-    PairList.has_element(lst, val) ~method
+    PairList.has_element(lst, val, [eql]) ~method
+    PairList.find(lst, pred) ~method
     PairList.remove(lst, val) ~method
     PairList.reverse(lst) ~method
     PairList.append(lst, ...) ~method
-    PairList.drop_left(lst, n) ~method
-    PairList.drop_right(lst, n) ~method
-    PairList.take_left(lst, n) ~method
-    PairList.take_right(lst, n) ~method
+    PairList.drop(lst, n) ~method
+    PairList.drop_last(lst, n) ~method
+    PairList.take(lst, n) ~method
+    PairList.take_last(lst, n) ~method
     PairList.sort(lst, [is_less]) ~method
     PairList.iota(n)
     PairList.to_list(lst) ~method
@@ -205,7 +207,15 @@ check:
 check:
   PairList[1, 2, 3].has_element(2) ~is #true
   PairList[1, 2, 3].has_element(4) ~is #false
+  PairList[1, 2, 3].has_element(-3, fun (x, y): x == -y) ~is #true
+  PairList[1, 2, 3].has_element(-4, fun (x, y): x == -y) ~is #false
   dynamic(PairList[1, 2, 3]).has_element(1) ~is #true
+  dynamic(PairList[1, 2, 3]).has_element(-1, fun (x, y): x == -y) ~is #true
+
+check:
+  PairList[1, 2, 3].find(fun (x): x > 1) ~is 2
+  PairList[1, 2, 3].find(fun (x): x > 10) ~is #false
+  dynamic(PairList[1, 2, 3]).find(fun (x): x > 1) ~is 2
 
 check:
   PairList[1, 2, 3].remove(2) ~is PairList[1, 3]
@@ -214,30 +224,30 @@ check:
   dynamic(PairList[1, 2, 3]).remove(1) ~is PairList[2, 3]
 
 check:
-  PairList[1, 2, 3].drop_left(2) ~is PairList[3]
-  PairList.drop_left(PairList[1, 2, 3], 2) ~is PairList[3]
-  PairList[1, 2, 3].drop_right(2) ~is PairList[1]
-  PairList.drop_right(PairList[1, 2, 3], 2) ~is PairList[1]
-  PairList[1, 2, 3].take_left(2) ~is PairList[1, 2]
-  PairList.take_left(PairList[1, 2, 3], 2) ~is PairList[1, 2]
-  PairList[1, 2, 3].take_right(2) ~is PairList[2, 3]
-  PairList.take_right(PairList[1, 2, 3], 2) ~is PairList[2, 3]
-  PairList[1, 2, 3].take_left(4) ~throws values(
+  PairList[1, 2, 3].drop(2) ~is PairList[3]
+  PairList.drop(PairList[1, 2, 3], 2) ~is PairList[3]
+  PairList[1, 2, 3].drop_last(2) ~is PairList[1]
+  PairList.drop_last(PairList[1, 2, 3], 2) ~is PairList[1]
+  PairList[1, 2, 3].take(2) ~is PairList[1, 2]
+  PairList.take(PairList[1, 2, 3], 2) ~is PairList[1, 2]
+  PairList[1, 2, 3].take_last(2) ~is PairList[2, 3]
+  PairList.take_last(PairList[1, 2, 3], 2) ~is PairList[2, 3]
+  PairList[1, 2, 3].take(4) ~throws values(
     "list is shorter than the number of elements to take",
     "list length", "3",
     "number to take", "4",
   )
-  PairList[1, 2, 3].take_right(4) ~throws values(
+  PairList[1, 2, 3].take_last(4) ~throws values(
     "list is shorter than the number of elements to take",
     "list length", "3",
     "number to take", "4",
   )
-  PairList[1, 2, 3].drop_left(4) ~throws values(
+  PairList[1, 2, 3].drop(4) ~throws values(
     "list is shorter than the number of elements to drop",
     "list length", "3",
     "number to drop", "4",
   )
-  PairList[1, 2, 3].drop_right(4) ~throws values(
+  PairList[1, 2, 3].drop_last(4) ~throws values(
     "list is shorter than the number of elements to drop",
     "list length", "3",
     "number to drop", "4",

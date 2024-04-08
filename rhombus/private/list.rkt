@@ -90,6 +90,9 @@
   ([first List.first
           (lambda (e)
             (syntax-local-static-info e #'#%index-result))]
+   [last List.last
+         (lambda (e)
+           (syntax-local-static-info e #'#%index-result))]
    [rest List.rest
          (lambda (e)
            (define maybe-index-result
@@ -107,12 +110,13 @@
    delete
    reverse
    append
-   take_left
-   take_right
-   drop_left
-   drop_right
+   take
+   take_last
+   drop
+   drop_last
    sublist
    has_element
+   find
    remove
    map
    for_each
@@ -138,6 +142,9 @@
   ([first PairList.first
           (lambda (e)
             (syntax-local-static-info e #'#%index-result))]
+   [last PairList.last
+         (lambda (e)
+           (syntax-local-static-info e #'#%index-result))]
    [rest PairList.rest
          (lambda (e)
            (define maybe-index-result
@@ -151,11 +158,12 @@
    get
    reverse
    append
-   take_left
-   take_right
-   drop_left
-   drop_right
+   take
+   take_last
+   drop
+   drop_last
    has_element
+   find
    remove
    map
    for_each
@@ -216,6 +224,7 @@
 
 (define/arity (List.cons a d)
   #:inline
+  #:primitive (treelist-cons)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-cons d a))
 
@@ -227,16 +236,19 @@
 
 (define/method (List.add d a)
   #:inline
+  #:primitive (treelist-add)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-add d a))
 
 (define/method (List.insert d pos a)
   #:inline
+  #:primitive (treelist-insert)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-insert d pos a))
 
 (define/method (List.delete d pos)
   #:inline
+  #:primitive (treelist-delete)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-delete d pos))
 
@@ -251,19 +263,31 @@
   (unless (and (pair? l) (list? l))
     (raise-argument-error* who rhombus-realm "NonemptyPairList" l)))
 
-(define/method (List.first l)
-  (check-nonempty-treelist who l)
-  (treelist-ref l 0))
+(define/arity (List.first l)
+  #:primitive (treelist-first)
+  (treelist-first l))
 
-(define/method (List.rest l)
+(define/arity (List.last l)
+  #:primitive (treelist-last)
+  (treelist-last l))
+
+(define/arity (List.rest l)
+  #:primitive (treelist-rest)
   #:static-infos ((#%call-result #,treelist-static-infos))
-  (check-nonempty-treelist who l)
-  (treelist-drop l 1))
+  (treelist-rest l))
 
 (define/arity (PairList.first l)
   #:inline
   (check-nonempty-list who l)
   (car l))
+
+(define/arity (PairList.last l)
+  #:inline
+  (check-nonempty-list who l)
+  (let loop ([l l])
+    (if (null? (cdr l))
+        (car l)
+        (loop (cdr l)))))
 
 (define/arity (PairList.rest l)
   #:inline
@@ -300,11 +324,9 @@
   (length l))
 
 (define/method (List.reverse l)
+  #:primitive (treelist-reverse)
   #:static-infos ((#%call-result #,treelist-static-infos))
-  (check-treelist who l)
-  (list->treelist
-   (for/fold ([accum null]) ([e (in-treelist l)])
-     (cons e accum))))
+  (treelist-reverse l))
 
 (define/method (PairList.reverse l)
   #:static-infos ((#%call-result #,list-static-infos))
@@ -673,25 +695,25 @@
   (check-list who l)
   (list-ref l n))
 
-(define/method (List.take_left l n)
+(define/method (List.take l n)
   #:inline
   #:primitive (treelist-take)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-take l n))
 
-(define/method (List.take_right l n)
+(define/method (List.take_last l n)
   #:inline
   #:primitive (treelist-take-right)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-take-right l n))
 
-(define/method (List.drop_left l n)
+(define/method (List.drop l n)
   #:inline
   #:primitive (treelist-drop)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-drop l n))
 
-(define/method (List.drop_right l n)
+(define/method (List.drop_last l n)
   #:inline
   #:primitive (treelist-drop-right)
   #:static-infos ((#%call-result #,treelist-static-infos))
@@ -715,7 +737,7 @@
                           (string-append "number to " what)
                           (unquoted-printing-string (number->string n))))
 
-(define/method (PairList.take_left orig-l orig-n)
+(define/method (PairList.take orig-l orig-n)
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who orig-l)
   (check-nonneg-int who orig-n)
@@ -726,7 +748,7 @@
       [(null? l) (raise-list-count who "take" orig-l (- orig-n n) orig-n)]
       [else (cons (car l) (loop (cdr l) (sub1 n)))])))
 
-(define/method (PairList.take_right l n)
+(define/method (PairList.take_last l n)
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who l)
   (check-nonneg-int who n)
@@ -735,7 +757,7 @@
     (raise-list-count who "take" l len n))
   (list-tail l (- len n)))
 
-(define/method (PairList.drop_left orig-l orig-n)
+(define/method (PairList.drop orig-l orig-n)
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who orig-l)
   (check-nonneg-int who orig-n)
@@ -746,7 +768,7 @@
       [(null? l) (raise-list-count who "drop" orig-l (- orig-n n) orig-n)]
       [else (loop (cdr l) (sub1 n))])))
 
-(define/method (PairList.drop_right l n)
+(define/method (PairList.drop_last l n)
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who l)
   (check-nonneg-int who n)
@@ -758,6 +780,7 @@
     a))
 
 (define/method (List.remove l v)
+  #:primitive (treelist-remove)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-treelist who l)
   (define len (treelist-length l))
@@ -773,14 +796,23 @@
   (check-list who l)
   (remove v l equal-always?))
 
-(define/method (List.has_element l v)
-  (check-treelist who l)
-  (for/or ([e (in-treelist l)])
-    (equal-always? v e)))
+(define/method (List.has_element l v [eql equal-always?])
+  #:primitive (treelist-member?)
+  (treelist-member? l v eql))
 
-(define/method (PairList.has_element l v)
+(define/method (PairList.has_element l v [eql equal-always?])
   (check-list who l)
-  (and (member v l equal-always?) #t))
+  (check-function-of-arity 2 who eql)
+  (and (member v l eql) #t))
+
+(define/method (List.find l pred)
+  #:primitive (treelist-find)
+  (treelist-find l pred))
+
+(define/method (PairList.find l pred)
+  (check-list who l)
+  (check-function-of-arity 1 who pred)
+  (findf pred l))
 
 (define-for-syntax (wrap-treelist-static-info expr)
   (wrap-static-info* expr treelist-static-infos))
