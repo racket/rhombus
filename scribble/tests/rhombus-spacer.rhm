@@ -50,6 +50,9 @@ defn.macro '(def_unquote.full) $name':
 
 def_unquote none: #false
 def_unquote datum: #false
+namespace datum:
+  export: explicit
+  def_unquote explicit: #'#{datum}
 def_unquote value: #'#{value}
 
 def body_spaces = PairList[#'#{rhombus/defn}, #false]
@@ -1416,3 +1419,35 @@ check_spacer:
   Parameter.def color
     :: String:
       "red"
+
+check_spacer:
+  enum Mouse:
+    itchy
+    mickey minnie
+    jerry
+  $(defn.full) $none:
+    $(datum.explicit)
+    $(datum.explicit) $(datum.explicit)
+    $(datum.explicit)
+
+check_spacer:
+  enum Cat:
+    ~is_a String
+    scratchy
+    tom
+  $(defn.full) $none:
+    ~is_a $annot
+    $(datum.explicit)
+    $(datum.explicit)
+
+check_spacer:
+  enum Cat:
+    ~is_a:
+      String
+    scratchy
+    tom
+  $(defn.full) $none:
+    ~is_a:
+      $annot
+    $(datum.explicit)
+    $(datum.explicit)
