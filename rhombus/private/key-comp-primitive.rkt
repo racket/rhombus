@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 (require (for-syntax racket/base)
          "key-comp.rkt"
          (submod "map.rkt" for-key-comp)
