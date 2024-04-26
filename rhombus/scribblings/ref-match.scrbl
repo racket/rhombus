@@ -3,6 +3,9 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
+@(def var_term = @rhombus(term, ~var))
+@(def var_id = @rhombus(id, ~var))
+
 @title{Matching}
 
 @doc(
@@ -96,7 +99,6 @@
 
 }
 
-
 @doc(
   bind.macro '_'
 ){
@@ -111,6 +113,61 @@
 
 }
 
+
+@doc(
+  expr.macro '_'
+){
+
+ As an expression by itself, @rhombus(_) is a syntax error, but
+ @rhombus(_) is recognized by @rhombus(#%parens) and @rhombus(#%call) in
+ expression-like positions to trigger a function-shorthand conversion.
+
+ The @rhombus(#%parens) conversion applies when @parens are used in an
+ expression position, and at least one @rhombus(_) appears immediately
+ within the parentheses as in
+ @rhombus((#,(var_term) ... _ #,(var_term) ...)). An @defterm{immediate}
+ @rhombus(_) is one that is not more deeply nested in a term within the
+ parentheses. A single immediate @rhombus(_) is replaced by a fresh
+ identifier @var_id as an expression, and then the parenthesized sequence
+ is placed in the body of a function that uses the identifier as an
+ argument, as in
+ @rhombus((fun (#,(var_id)): #,(var_term) ... #,(var_id) #,(var_term) ...)).
+ If multiple immediate @rhombus(_)s are present, each one is replaced by
+ a distinct identifier, the identifiers are used as the arguments of the
+ generated function, and the arguments match the order of the
+ corresponding @rhombus(_).
+
+@examples(
+  ~repl:
+    def subtract = (_ - _)
+    subtract(2, 1)
+    [1, 2, 3].map((_ + 1))
+)
+
+ The @rhombus(#%call) conversion applies when @parens are used after an
+ expression, at least one @rhombus(_) appears by itself as an argument,
+ and no argument uses @rhombus(&) or is a repetition followed by a
+ @rhombus(...). Each @rhombus(_) argument is converted as in the
+ @rhombus(#%parens) conversion, but the conversion applies only for a
+ @rhombus(_) that appears by itself in the group for function-call
+ argument.
+
+@examples(
+  ~repl:
+    def low_bits = bits.field(_, 0, 3)
+    low_bits(15)
+    [1.25, 2.75, 3.0].map(math.round(_))
+)
+
+ A @rhombus(_) combined with other terms as a function-call
+ argument @emph{does not} trigger a function-shorthand conversion.
+
+@examples(
+  ~error:
+    [1, 2, 3].map(_ + 1)
+)
+
+}
 
 @doc(
   ~nonterminal:

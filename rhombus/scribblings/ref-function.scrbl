@@ -59,6 +59,7 @@ normally bound to implement function calls.
 
   expr.macro '$fun_expr #%call ($arg, ...)'
   repet.macro '$fun_expr #%call ($repet_arg, ...)'
+  expr.macro '$fun_expr #%call ($arg, ..., _, $arg, ...)'
 
   grammar arg:
     $arg_expr
@@ -91,6 +92,11 @@ normally bound to implement function calls.
   keyword-value pairs are passed into the function as additional keyword
   arguments.
 
+ The case with an immediate @rhombus(_) group among other
+ @rhombus(arg)s is a special case for a function shorthand, and it takes
+ precedence over parsing the @rhombus(_) as an @rhombus(arg). See
+ @rhombus(_) for more information.
+
  See also @rhombus(use_static).
 
  @see_implicit(@rhombus(#%call), @parens, "expression", ~is_infix: #true)
@@ -98,6 +104,30 @@ normally bound to implement function calls.
 @examples(
   List.length([1, 2, 3])
   List.length #%call ([1, 2, 3])
+)
+
+}
+
+
+@doc(expr.macro '$arg |> $fun'){
+
+ The @rhombus(|>) operator applies its second argument as a function to
+ its first argument. That is, @rhombus(arg |> fun) is equivalent to
+ @rhombus(fun(arg)). The conversion is performed syntactically so that
+ static checking and propoagation of static information may apply, but
+ @rhombus(arg) and @rhombus(fun) are parsed as pressions before the
+ conversion. The @rhombus(|>) operator declares weaker precedence than
+ all other operators.
+
+ A @rhombus(_) function shorthand can be especially useful with
+ @rhombus(|>).
+
+@examples(
+  [1, 2, 3] |> List.length
+  [3, 1, 2]
+    |> List.sort(_)
+    |> ([0] ++ _ ++ [100])
+    |> to_string.map(_)
 )
 
 }
@@ -361,6 +391,10 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     ~error:
       things_to_say("Nachos")
 )
+
+ See also @rhombus(_) for information about function shorthands using
+ @rhombus(_). For example, @rhombus((_ div _)) is a shorthand for
+ @rhombus(fun (x, y): x div y).
 
 }
 

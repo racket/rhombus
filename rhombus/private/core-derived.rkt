@@ -10,4 +10,5 @@
         "described_as.rhm"
         "sequence.rhm"
         "class_together.rhm"
-        "enum.rhm")
+        "enum.rhm"
+        "pipeline.rhm")

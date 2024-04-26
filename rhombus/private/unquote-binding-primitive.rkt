@@ -80,7 +80,7 @@
                            "syntax class expects arguments"
                            stx-class)]
       [else
-       (define-values (call empty-tail)
+       (define-values (call empty-tail to-anon-function?)
          (parse-function-call rator-in '() #`(#,stx-class #,class-args)
                               #:static? #t
                               #:rator-stx stx-class

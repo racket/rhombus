@@ -91,6 +91,7 @@ Here are all of the implicit forms:
   expr.macro '#%parens ($expr)'
   bind.macro '#%parens ($bind)'
   annot.macro '#%parens ($annot)'
+  expr.macro '#%parens ($term ... _ $term ...)'
 ){
 
 @provided_also_meta()
@@ -98,6 +99,11 @@ Here are all of the implicit forms:
  Produces the same value as @rhombus(expr), same binding as
  @rhombus(bind), and so on. Multiple expression, bindings, etc.,
  are disallowed.
+
+ The expression case with an immediate @rhombus(_) in parentheses among
+ other @rhombus(term)s is a special case for a function shorthand, and it
+ takes precedence over parsing the parenthesized sequence as an
+ @rhombus(expr). See @rhombus(_) for more information.
 
 @examples(
   (1+2)

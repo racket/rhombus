@@ -569,7 +569,7 @@
                  ;; a property
                  (syntax-parse #'tail
                    [assign::assign-op-seq
-                    (define-values (assign-call assign-empty-tail)
+                    (define-values (assign-call assign-empty-tail to-anon-function?)
                       (parse-function-call impl (list #'id #'v) #'(method-id (parens))
                                            #:static? static?
                                            #:rator-stx #'head
@@ -586,7 +586,7 @@
                                 #,assign-expr)
                             tail)]
                    [_
-                    (define-values (call new-tail)
+                    (define-values (call new-tail to-anon-function?)
                       (parse-function-call impl (list #'id) #'(method-id (parens))
                                            #:static? static?
                                            #:rator-stx #'head
@@ -598,12 +598,13 @@
                  ;; a method
                  (syntax-parse #'tail
                    [((~and args (tag::parens arg ...)) . tail)
-                    (define-values (call new-tail)
+                    (define-values (call new-tail to-anon-function?)
                       (parse-function-call impl (list #'id) #'(method-id args)
                                            #:static? static?
                                            #:rator-stx #'head
                                            #:rator-kind 'method
-                                           #:rator-arity shape-arity))
+                                           #:rator-arity shape-arity
+                                           #:can-anon-function? #t))
                     (values call #'tail)])])])])]))))
 
 (define-for-syntax (get-private-table desc)
@@ -691,13 +692,16 @@
                                 #`(vector-ref (#,methods-ref-id id) #,index/id)))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
-              (define-values (call new-tail)
+              (define-values (call new-tail to-anon-function?)
                 (parse-function-call rator (list #'id) #'(head args)
                                      #:static? (is-static-context? #'tag)
                                      #:rator-stx #'head
                                      #:rator-arity (and r (method-result-arity r))
-                                     #:rator-kind 'method))
-              (define wrapped-call (add-method-result call r))
+                                     #:rator-kind 'method
+                                     #:can-anon-function? #t))
+              (define wrapped-call (if to-anon-function?
+                                       call
+                                       (add-method-result call r)))
               (values wrapped-call #'tail)])]
           [(head . _)
            (raise-syntax-error #f

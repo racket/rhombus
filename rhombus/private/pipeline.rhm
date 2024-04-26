@@ -1,0 +1,29 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+use_static
+
+export:
+  |>
+
+expr.macro '$arg |> $func':
+  ~op_stx: self
+  ~weaker_than: ~other
+  // Convert to a dynamic or static call:
+  let call:
+    if statinfo_meta.is_static(self)
+    | statinfo_meta.static_call_name
+    | statinfo_meta.dynamic_call_name
+  // The expansion:
+  let expr:
+    'block:
+       let arg = $arg
+       $func $call (arg)'
+  // Propagate static information, if any, for the call result:
+  let ress = statinfo_meta.lookup(func, statinfo_meta.call_result_key)
+  let ress: if ress | statinfo_meta.unpack_call_result(ress) | []
+  let [_, unpacked_res]:
+    ress.find(fun ([mask, unpacked_info]): mask bits.and 2)
+      || [-1, '()']
+  statinfo_meta.wrap(expr, unpacked_res)

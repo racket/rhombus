@@ -41,6 +41,8 @@
          "if-blocked.rkt"
          "realm.rkt"
          "mutability.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_])
          (only-in "values.rkt"
                   [values rhombus-values]))
 
@@ -61,7 +63,8 @@
 
 (module+ for-call
   (provide (for-syntax parse-function-call
-                       wrap-annotation-check)
+                       wrap-annotation-check
+                       build-anonymous-function)
            raise-result-failure))
 
 (begin-for-syntax
@@ -934,7 +937,8 @@
                                         #:rator-stx [rator-stx #f] ; for error reporting
                                         #:srcloc [srcloc #f] ; for `relocate` on result
                                         #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
-                                        #:rator-arity [rator-arity #f])
+                                        #:rator-arity [rator-arity #f]
+                                        #:can-anon-function? [can-anon-function? #f])
   (define (generate rands rsts amp dots kwrsts tag tail)
     (syntax-parse stxes
       [(_ args . _)
@@ -962,7 +966,8 @@
                                            #:rator-kind rator-kind
                                            #:rator-arity rator-arity
                                            #:props-stx #'tag)
-             #'tail)]
+             #'tail
+             #f)]
     [(_ (tag::parens rand ...
                      rep (group dots::...-expr)
                      (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
@@ -981,8 +986,42 @@
         . tail)
      (check-complex-allowed)
      (generate #'(rand ...) (attribute rsts) (and (attribute amp) #'amp.name) #f (attribute kwrsts) #'tag #'tail)]
-    [(_ (tag::parens rand ...) . tail)
-     (generate #'(rand ...) #f #f #f #f #'tag #'tail)]))
+    [(_ (~and args (tag::parens rand ...)) . tail)
+     (define-values (formals rands)
+       (let ([rands #'(rand ...)])
+         (if can-anon-function?
+             (extract-anonymous-function-as-call rands)
+             (values null rands))))
+     (cond
+       [(null? formals)
+        (generate rands #f #f #f #f #'tag #'tail)]
+       [else
+        (values (relocate+reraw stxes
+                                #`(lambda #,formals
+                                    (anonymous-body-call #,rator-in args #,rands #,extra-args tag
+                                                         #,static? #,rator-stx #,srcloc #,rator-kind
+                                                         #,rator-arity)))
+                #'tail
+                #t)])]))
+
+(define-syntax (anonymous-body-call stx)
+  ;; continue parsing a function call that was put into an anonymous-function body
+  (syntax-parse stx
+    [(_ rator-in args rands extra-args tag
+        static? rator-stx srcloc rator-kind
+        rator-arity)
+     (define-values (call-e ignored-tail ignored-to-anonymous-function?)
+       (generate-call #'rator-in #'args (syntax->list #'extra-args) #'rands #f #f #f #f #'()
+                      #:static? (syntax-e #'static?)
+                      #:repetition? #f
+                      #:rator-stx (let ([stx #'rator-stx])
+                                    (and (syntax-e stx) stx))
+                      #:srcloc (let ([stx #'srcloc])
+                                 (and (syntax-e stx) stx))
+                      #:rator-kind (syntax-e #'rator-kind)
+                      #:rator-arity (syntax->datum #'rator-arity)
+                      #:props-stx #'tag))
+     (discard-static-infos call-e)]))
 
 (define-for-syntax (generate-call rator-in args-stx extra-rands rands rsts amp dots kwrsts tail
                                   #:static? static?
@@ -1046,7 +1085,9 @@
                                                   [results #'results])))
                                          #'()))
          (values e result-static-infos)))])
-   tail))
+   tail
+   ;; not converted to an anonymoud function:
+   #f))
 
 (define-for-syntax (handle-repetition repetition?
                                       rator ; already parsed as expression or repetition
@@ -1180,7 +1221,7 @@
                #`[#,(arg-id arg) #,(arg-stx arg)]))
       #,(let ([lists? (for/or ([arg (in-list args)])
                         (arg-list? arg))])
-          (define-values (term ignored-tail)
+          (define-values (term ignored-tail ignored-to-anon-func?)
             (generate-call rator args-stx
                            (append
                             extra-arg-ids
@@ -1273,6 +1314,44 @@
     (check-immutable-hash ht))
   (for/fold ([all-ht ht]) ([ht (in-list hts)])
     (merge all-ht ht)))
+
+(define-for-syntax (build-anonymous-function terms form)
+  (define-values (formals converted)
+    (let loop ([terms (syntax->list terms)])
+      (cond
+        [(null? terms) (values '() null)]
+        [else
+         (define t (car terms))
+         (define-values (formals converted) (loop (cdr terms)))
+         (cond
+           [(and (identifier? (car terms))
+                 (free-identifier=? (car terms) #'rhombus-_))
+            (define id (car (generate-temporaries '(arg))))
+            (values (cons id formals)
+                    (cons (relocate+reraw t
+                                          #`(parsed #:rhombus/expr #,(relocate+reraw t id)))
+                          converted))]
+           [else (values formals (cons t converted))])])))
+  (relocate+reraw form
+                  #`(lambda #,formals (rhombus-expression #,converted))))
+
+(define-for-syntax (extract-anonymous-function-as-call rands)
+  (let loop ([rands (syntax->list rands)])
+    (cond
+      [(null? rands) (values '() null)]
+      [else
+       (define rand (car rands))
+       (define-values (formals converted) (loop (cdr rands)))
+       (syntax-parse rand
+         #:datum-literals (group)
+         #:literals (rhombus-_)
+         [(group rhombus-_)
+          (define id (car (generate-temporaries '(arg))))
+          (values (cons id formals)
+                  (cons (relocate+reraw rand
+                                        #`(group (parsed #:rhombus/expr #,(relocate+reraw rand id))))
+                        converted))]
+         [else (values formals (cons rand converted))])])))
 
 (begin-for-syntax
   (set-parse-function-call! parse-function-call))

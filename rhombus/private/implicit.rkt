@@ -15,7 +15,9 @@
          "parens.rkt"
          "static-info.rkt"
          (submod "literal.rkt" for-info)
-         "is-static.rkt")
+         "is-static.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_]))
 
 (provide (for-space #f
                     #%body
@@ -136,9 +138,13 @@
             [(pair? (cdr args))
              (raise-syntax-error #f "too many expressions" #'head)]
             [else
-             ;; eagerly parse content of parentheses; we could choose to
-             ;; delay parsing by using `rhombus-expression`, instead
              (syntax-parse (car args)
+               #:literals (rhombus-_)
+               ;; check for anonymous-function shorthand:
+               [(_ ... rhombus-_ . _) (values (build-anonymous-function (car args) #'head)
+                                              #'tail)]
+               ;; eagerly parse content of parentheses; we could choose to
+               ;; delay parsing by using `rhombus-expression`, instead
                [e::expression (values (relocate+reraw (maybe-respan #'head) #'e.parsed) #'tail)])]))]))))
 
 (define-binding-syntax #%parens
@@ -178,7 +184,11 @@
    'macro
    (lambda (rator stxes)
      (define static? (is-static-context/tail? stxes))
-     (parse-function-call rator '() stxes #:static? static?))
+     (define-values (proc tail to-anon-function?)
+       (parse-function-call rator '() stxes
+                            #:static? static?
+                            #:can-anon-function? #t))
+     (values proc tail))
    'left))
 
 (define-repetition-syntax #%call
@@ -188,7 +198,11 @@
    'macro
    (lambda (rator stxes)
      (define static? (is-static-context/tail? stxes))
-     (parse-function-call rator '() stxes #:static? static? #:repetition? #t))
+     (define-values (proc tail to-anon-function?)
+       (parse-function-call rator '() stxes
+                            #:static?
+                            static? #:repetition? #t))
+     (values proc tail))
    'left))
 
 (define-syntax #%brackets
