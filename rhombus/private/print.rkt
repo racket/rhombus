@@ -5,6 +5,7 @@
          racket/keyword
          shrubbery/write
          "treelist.rkt"
+         "mutable-treelist.rkt"
          "provide.rkt"
          (submod "set.rkt" for-print)
          "printer-property.rkt"
@@ -240,6 +241,12 @@
      (pretty-listlike
       (pretty-text "[")
       (for/list ([e (in-treelist v)])
+        (print e))
+      (pretty-text "]"))]
+    [(mutable-treelist? v)
+     (pretty-listlike
+      (pretty-text "MutableList[")
+      (for/list ([e (in-mutable-treelist v)])
         (print e))
       (pretty-text "]"))]
     [(list? v)

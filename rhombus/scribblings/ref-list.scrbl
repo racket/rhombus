@@ -30,22 +30,23 @@ it supplies its elements in order.
   lst.first,
   lst.last,
   lst.rest,
-  lst.insert(lst, n, v)
-  lst.add(lst, v)
-  lst.delete(lst, n)
+  lst.insert(n, v)
+  lst.add(v)
+  lst.delete(n)
   lst.reverse()
   lst.append(lst2, ...)
-  lst.take(lst, n)
-  lst.take_last(lst, n)
-  lst.drop(lst, n)
-  lst.drop_last(lst, n)
-  lst.sublist(lst, n, m)
-  lst.has_element(lst, v, eqls, ...)
-  lst.find(lst, pred)
-  lst.remove(lst, v)
+  lst.take(n)
+  lst.take_last(n)
+  lst.drop(n)
+  lst.drop_last(n)
+  lst.sublist(n, m)
+  lst.has_element(v, eqls, ...)
+  lst.find(pred)
+  lst.remove(v)
   lst.map(func)
   lst.for_each(func)
   lst.sort(arg, ...)
+  lst.copy()
   lst.to_list()
   lst.to_sequence()
 )
@@ -581,6 +582,20 @@ it supplies its elements in order.
 @examples(
   List.iota(3)
   List.iota(0)
+)
+
+}
+
+
+@doc(
+  fun List.copy(lst :: List) :: MutableList
+){
+
+ Equivalent to @rhombus(MutableList(& lst)), creates a new @tech{mutable
+  list} with the same elements as @rhombus(lst).
+
+@examples(
+  [1, 2, 3].copy()
 )
 
 }

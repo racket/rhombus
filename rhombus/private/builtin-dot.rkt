@@ -1,6 +1,7 @@
 #lang racket/base
 (require "mutability.rkt"
          "treelist.rkt"
+         "mutable-treelist.rkt"
          (submod "dot.rkt" for-builtin)
          (submod "map.rkt" for-builtin)
          (submod "set.rkt" for-builtin)
@@ -39,6 +40,7 @@
      [(exn? v) (get-exn-method-table v)]
      [(output-port? v) output-port-method-table]
      [(box? v) box-method-table]
+     [(mutable-treelist? v) mutable-treelist-method-table]
      [else #f])))
 
 (set-builtin->mutator-ref!

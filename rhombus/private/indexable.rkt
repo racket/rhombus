@@ -5,6 +5,7 @@
                      "statically-str.rkt"
                      "interface-parse.rkt")
          "treelist.rkt"
+         "mutable-treelist.rkt"
          "provide.rkt"
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
@@ -58,6 +59,7 @@
       (set? v)
       (string? v)
       (bytes? v)
+      (mutable-treelist? v)
       (Indexable? v)))
 
 (define-class-desc-syntax Indexable
@@ -91,6 +93,7 @@
       (mutable-hash? v)
       (mutable-set? v)
       (mutable-bytes? v)
+      (mutable-treelist? v)
       (MutableIndexable? v)))
 
 (define-class-desc-syntax MutableIndexable
@@ -198,6 +201,7 @@
     [(set? indexable) (set-ref indexable index)]
     [(string? indexable) (string-ref indexable index)]
     [(bytes? indexable) (bytes-ref indexable index)]
+    [(mutable-treelist? indexable) (mutable-treelist-ref indexable index)]
     [else
      (define ref (indexable-ref indexable #f))
      (unless ref
@@ -210,6 +214,7 @@
     [(mutable-hash? indexable) (hash-set! indexable index val)]
     [(mutable-set? indexable) (set-set! indexable index val)]
     [(mutable-bytes? indexable) (bytes-set! indexable index val)]
+    [(mutable-treelist? indexable) (mutable-treelist-set! indexable index val)]
     [else
      (define set (setable-ref indexable #f))
      (unless set

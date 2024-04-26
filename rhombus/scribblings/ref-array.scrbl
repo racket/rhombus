@@ -8,7 +8,8 @@
 @title{Arrays}
 
 An @deftech{array} is @tech{indexable} using @brackets to access an array element
-by position (in constant time) via @rhombus(#%index). An array also
+by position (in constant time) via @rhombus(#%index), and it also support element
+assignment via @brackets and @rhombus(:=). An array also
 works with the @rhombus(++) operator to append arrays. An array can be
 used as @tech{sequence}, in which case it supplies its elements in
 order.
@@ -57,7 +58,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  values installed into the array will satisfy @rhombus(annot). The given
  @rhombus(annot) must not be a converting annotation. Static
  information from @rhombus(annot) is not propagated to accesses of
- the array, since there's no gauarantee that the value will still satisfy
+ the array, since there's no guarantee that the value will still satisfy
  the annotation.
 
  The @rhombus(Array.later_of, ~annot) form constructs a @tech{converter
@@ -66,7 +67,7 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  result of the annotation is a view of the original array, but one where
  @rhombus(annot) is checked against a value that would be returned by
  accessing an element of the array or a value to be installed into the
- array. (A different view of the array might changes an element to one that
+ array. (A different view of the array might change an element to one that
  does not astisfy @rhombus(annot).) Static information from
  @rhombus(annot) is propagated to accesses of the array. Note that a
  converter @rhombus(annot) is applied for each access or update.

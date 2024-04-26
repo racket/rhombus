@@ -1,0 +1,340 @@
+#lang rhombus
+import:
+  "version_guard.rhm"
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    MutableList(v, ...)
+    MutableList.length(lst) ~method
+    MutableList.add(lst, a) ~method
+    MutableList.get(lst, i) ~method
+    MutableList.set(lst, i, v) ~method
+    MutableList.map(lst, proc) ~method
+    MutableList.for_each(lst, proc) ~method
+    MutableList.has_element(lst, val, [eql]) ~method
+    MutableList.find(lst, pred) ~method
+    MutableList.remove(lst, val) ~method
+    MutableList.delete(lst, i) ~method
+    MutableList.insert(lst, i, val) ~method
+    MutableList.reverse(lst) ~method
+    MutableList.append(lst, lst) ~method
+    MutableList.drop(lst, n) ~method
+    MutableList.drop_last(lst, n) ~method
+    MutableList.take(lst, n) ~method
+    MutableList.take_last(lst, n) ~method
+    MutableList.sublist(lst, n, m) ~method
+    MutableList.sort(lst, [is_less]) ~method
+    MutableList.to_list(lst) ~method
+    MutableList.to_sequence(lst) ~method
+
+check:
+  MutableList.length(MutableList[1, 2, 3])
+  ~is 3
+
+check:
+  MutableList.length({1, 2, 3})
+  ~throws values("contract violation", "expected: MutableList")
+
+block:
+  use_static
+  check:
+    MutableList[1, 2, 3].length()
+    ~is 3
+  check:
+    MutableList[1, 2, 3][0]
+    ~is 1
+  check:
+    let l = MutableList[1, 2, 3]
+    l[0] := 10
+    l
+    ~is_now MutableList[10, 2, 3]
+  check:
+    MutableList[1, 2, 3].get(0)
+    ~is 1
+  check:
+    let l = MutableList[1, 2, 3]
+    l.set(1, 20)
+    l
+    ~is_now MutableList[1, 20, 3]
+  check:
+    let l = MutableList[1, 2, 3]
+    [l.set(1, "two"), l.snapshot()]
+    ~is [#void, [1, "two", 3]]
+  check:
+    let l = MutableList[1, 2, 3]
+    l.append([4, 5])
+    l
+    ~is_now MutableList[1, 2, 3, 4, 5]
+  check:
+    let l = MutableList[1, 2, 3]
+    l.append(MutableList[4, 5])
+    l
+    ~is_now MutableList[1, 2, 3, 4, 5]
+  check:
+    let l = MutableList[1, 2, 3]
+    l.add(40)
+    l
+    ~is_now MutableList[1, 2, 3, 40]
+  check:
+    let l = MutableList[1, 2, 3]
+    MutableList.cons(40, l)
+    l
+    ~is_now MutableList[40, 1, 2, 3]
+  check:
+    MutableList(1, 2, 3).length()
+    ~is 3
+  check:
+    def lst = MutableList[1, 2, 3]
+    lst.length()
+    ~is 3
+  check:
+    def lst :: MutableList = dynamic(MutableList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def lst :~ MutableList = dynamic(MutableList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def lst :: MutableList.now_of(Int) = dynamic(MutableList[1, 2, 3])
+    lst.length()
+    ~is 3
+  check:
+    def lst :: MutableList.later_of(MutableList) = dynamic(MutableList[MutableList[1, 2, 3]])
+    lst[0].length()
+    ~is 3
+
+check:
+  MutableList[1, 2, 3] is_a Indexable ~is #true
+  MutableList[1, 2, 3] is_a MutableIndexable ~is #true
+  MutableList[1, 2, 3] is_a Appendable ~is #false
+  MutableList[1, 2, 3] is_a Listable ~is #true
+  
+block:
+  check:
+    1 :: MutableList
+    ~throws "does not satisfy annotation"
+  check:
+    1 :: MutableList.now_of(Any)
+    ~throws "does not satisfy annotation"
+
+block:
+  check:
+    dynamic(MutableList[1, 2, 3]).length()
+    ~is 3
+  check:
+    dynamic(MutableList[1, 2, 3])[0]
+    ~is 1
+  check:
+    dynamic(MutableList[1, 2, 3]).get(0)
+    ~is 1
+  check:
+    let l = dynamic(MutableList[1, 2, 3])
+    l[2] := 30
+    l
+    ~is_now MutableList[1, 2, 30]
+  check:
+    let l = dynamic(MutableList[1, 2, 3])
+    l.set(2, 30)
+    l
+    ~is_now MutableList[1, 2, 30]
+  check:
+    let l = dynamic(MutableList[1, 2, 3])
+    [l.append([4, 5]), l.snapshot()]
+    ~is [#void, [1, 2, 3, 4, 5]]
+  check:
+    let l = dynamic(MutableList[1, 2, 3])
+    [l.append(MutableList[4, 5]), l.snapshot()]
+    ~is [#void, [1, 2, 3, 4, 5]]
+
+check:
+  use_static
+  let l = MutableList[1, 2]
+  l.reverse()
+  l
+  ~is_now MutableList[2, 1]
+
+block:
+  let l = MutableList[1, 2]
+  l.map(fun (x): x + 1)
+  l.reverse()
+  check l ~is_now MutableList[3, 2]
+  block:
+    def mutable sum = 0
+    check l.for_each(fun (x): sum := sum + x) ~is #void
+    check sum ~is 5
+
+check:
+  MutableList[1, 2, 3].has_element(2) ~is #true
+  MutableList[1, 2, 3].has_element(4) ~is #false
+  MutableList[1, 2, 3].has_element(-3, fun (x, y): x == -y) ~is #true
+  MutableList[1, 2, 3].has_element(-4, fun (x, y): x == -y) ~is #false
+  dynamic(MutableList[1, 2, 3]).has_element(1) ~is #true
+  dynamic(MutableList[1, 2, 3]).has_element(-1, fun (x, y): x == -y) ~is #true
+
+check:
+  MutableList[1, 2, 3].find(fun (x): x > 1) ~is 2
+  MutableList[1, 2, 3].find(fun (x): x > 10) ~is #false
+  dynamic(MutableList[1, 2, 3]).find(fun (x): x > 1) ~is 2
+
+check: 
+  (block: let l = MutableList[1, 2, 3]; l.remove(2); l) ~is_now MutableList[1, 3]
+  (block: let l = MutableList[1, 2, 3]; l.remove(4); l) ~is_now MutableList[1, 2, 3]
+  (block: let l = MutableList[1, 2, 2, 3]; l.remove(4); l) ~is_now MutableList[1, 2, 2, 3]
+  (block: let l = dynamic(MutableList[1, 2, 3]); l.remove(1); l) ~is_now MutableList[2, 3]
+
+check:
+  [1, 2, 3].insert(2, "x") ~is [1, 2, "x", 3]
+  [1, 2, 3].insert(3, "x") ~is [1, 2, 3, "x"]
+  [1, 2, 3].insert(0, "x") ~is ["x", 1, 2, 3]
+  dynamic([1, 2, 3]).insert(1, "x") ~is [1, "x", 2, 3]
+
+check:
+  [1, 2, 3].delete(2) ~is [1, 2]
+  [1, 2, 3].delete(0) ~is [2, 3]
+  dynamic([1, 2, 3]).delete(1) ~is [1, 3]
+
+check:
+  (block: let l = MutableList[1, 2, 3]; l.drop(2); l) ~is_now MutableList[3]
+  (block: let l = MutableList[1, 2, 3]; l.drop_last(2); l) ~is_now MutableList[1]
+  (block: let l = MutableList[1, 2, 3]; l.take(2); l) ~is_now MutableList[1, 2]
+  (block: let l = MutableList[1, 2, 3]; l.take_last(2); l) ~is_now MutableList[2, 3]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2, 5); l) ~is_now MutableList[3, 4, 5]
+
+check:
+  use_static
+  MutableList().has_element("no such thing")
+  ~is #false
+
+version_guard.at_least "8.13.0.1":
+  check:
+    MutableList.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: MutableList",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ MutableList).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: MutableList",
+      "given: \"oops\"",
+    )
+
+check:
+  to_string(MutableList[]) ~is "MutableList[]"
+  to_string(MutableList[1, 2, 3]) ~is "MutableList[1, 2, 3]"
+
+block:
+  let [x, ...] = [1, 2, 3]
+  check:
+    MutableList(x, ...) ~is_now MutableList[1, 2, 3]
+    MutableList(0, x, ..., 5) ~is_now MutableList[0, 1, 2, 3, 5]
+    MutableList(&[0, -1], x, ..., & MutableList[5, 6]) ~is_now MutableList[0, -1, 1, 2, 3, 5, 6]
+    [3, & MutableList[5, 6]] ~is [3, 5, 6]
+    [MutableList[x], ...] ~is_now [MutableList(1), MutableList(2), MutableList(3)]
+
+check:
+    def arr :: MutableList.later_of(Int) = dynamic(MutableList(1, 2, 3))
+    arr.length()
+    ~is 3
+check:
+    class Posn(x, y)
+    def arr :: MutableList.later_of(Posn) = MutableList(Posn(1, 2))
+    arr[0].x
+    ~is 1
+check:
+  10 :: MutableList.later_of(Any)
+  ~throws "does not satisfy annotation"
+
+check:
+  10 :: MutableList.later_of(converting(fun (_): #false))
+  ~throws "does not satisfy annotation"
+
+check:
+  MutableList(1) :: MutableList.later_of(String)
+  ~completes
+
+check:
+  def a :: MutableList.later_of(
+    converting(fun (n :: Int):
+                 println("run")
+                 n+1)):
+    MutableList(1)
+  println(a[0])
+  a[0] := 1
+  println(a[0])
+  ~prints "run\n2\nrun\nrun\n3\n"
+
+check:
+  def a :: MutableList.later_of(String) = MutableList(1)
+  a[0]
+  ~throws values(
+    "current element does not satisfy annotation",
+    "0",
+    "String",
+  )
+
+check:
+  def a :: MutableList.later_of(String) = MutableList(1, "ok")
+  a[1]
+  ~is "ok"
+
+check:
+  def a :: MutableList.later_of(String) = MutableList("apple")
+  a[0]
+  a[0] := #'oops
+  ~throws values(
+    "new element does not satisfy annotation",
+    "0",
+    "String",
+  )
+
+check:
+  ~eval
+  MutableList(MutableList("apple")) :: MutableList.now_of(MutableList.later_of(String))
+  ~throws "converter annotation not supported for element"
+
+check:
+  use_static
+  def a :: MutableList.later_of(String) = MutableList("apple")
+  a[0] ++ "jack"
+  ~is "applejack"
+
+check:
+  ~eval
+  use_static
+  def a :: MutableList.now_of(String) = MutableList("apple")
+  a[0] ++ "jack"
+  ~throws "specialization not known"
+
+check:
+  def a :: MutableList.later_of(String) = MutableList("apple")
+  a.append(["banana"])
+  a
+  ~is_now MutableList["apple", "banana"]
+
+check:
+  def a :: MutableList.later_of(String) = MutableList("apple")
+  a.append([#'oops])
+  ~throws "appended element does not satisfy annotation"
+
+check:
+  import lib("racket/base.rkt")
+  def orig = MutableList("apple")
+  def a :: MutableList.later_of(ReadableString.to_string) = orig
+  a.append([base.#{string-copy}("banana")])
+  orig.snapshot()
+  ~is ["apple", "banana"]
+
+check:
+  for values(sum = 0) (v: MutableList[1, 2, 3]):
+    sum + v
+  ~is 6
+
+check:
+  for values(sum = 0) (v: dynamic(MutableList[1, 2, 3])):
+    sum + v
+  ~is 6

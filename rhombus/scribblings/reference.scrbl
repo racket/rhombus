@@ -47,6 +47,7 @@
 @include_section("ref-bytes.scrbl")
 @include_section("ref-list.scrbl")
 @include_section("ref-pair.scrbl")
+@include_section("ref-mutable-list.scrbl")
 @include_section("ref-array.scrbl")
 @include_section("ref-map.scrbl")
 @include_section("ref-set.scrbl")

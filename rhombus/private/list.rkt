@@ -6,6 +6,7 @@
          racket/vector
          "treelist.rkt"
          (submod "treelist.rkt" unsafe)
+         "mutable-treelist.rkt"
          "provide.rkt"
          "composite.rkt"
          "expression.rkt"
@@ -42,6 +43,11 @@
                      List
                      PairList)
          (for-spaces (rhombus/namespace
+                      #f
+                      rhombus/repet
+                      rhombus/annot)
+                     MutableList)
+         (for-spaces (rhombus/namespace
                       rhombus/annot)
                      NonemptyList
                      NonemptyPairList))
@@ -53,7 +59,8 @@
 
 (module+ for-builtin
   (provide treelist-method-table
-           list-method-table))
+           list-method-table
+           mutable-treelist-method-table))
 
 (module+ for-implicit
   (provide (for-syntax set-#%call-ids!)))
@@ -122,7 +129,8 @@
    for_each
    sort
    to_list
-   to_sequence))
+   to_sequence
+   copy))
 
 (define-primitive-class PairList list
   #:lift-declaration
@@ -172,6 +180,45 @@
    to_list
    to_sequence))
 
+(define-primitive-class MutableList mutable-treelist
+  #:lift-declaration
+  #:constructor-arity -1
+  #:instance-static-info ((#%index-get MutableList.get)
+                          (#%index-set MutableList.set)
+                          (#%sequence-constructor MutableList.to_sequence/optimize))
+  #:existing
+  #:opaque
+  #:fields ()
+  #:namespace-fields
+  ([cons MutableList.cons]
+   [now_of MutableList.now_of]
+   [later_of MutableList.later_of])
+  #:properties
+  ()
+  #:methods
+  (length
+   get
+   set
+   add
+   insert
+   delete
+   reverse
+   append
+   take
+   take_last
+   drop
+   drop_last
+   sublist
+   has_element
+   find
+   remove
+   map
+   for_each
+   sort
+   to_list
+   snapshot
+   to_sequence))
+
 (define-name-root NonemptyList
   #:fields
   ([of NonemptyList.of]))
@@ -215,6 +262,7 @@
 
 (set-primitive-contract! 'list? "PairList")
 (set-primitive-contract! 'treelist? "List")
+(set-primitive-contract! 'mutable-treelist? "MutableList")
 
 (define (check-treelist who l)
   (unless (treelist? l)
@@ -223,6 +271,10 @@
 (define (check-list who l)
   (unless (list? l)
     (raise-argument-error* who rhombus-realm "PairList" l)))
+
+(define (check-mutable-treelist who l)
+  (unless (mutable-treelist? l)
+    (raise-argument-error* who rhombus-realm "MutableList" l)))
 
 (define/arity (List.cons a d)
   #:inline
@@ -253,6 +305,26 @@
   #:primitive (treelist-delete)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-delete d pos))
+
+(define/arity (MutableList.cons a d)
+  #:inline
+  #:primitive (mutable-treelist-cons!)
+  (mutable-treelist-cons! d a))
+
+(define/method (MutableList.add d a)
+  #:inline
+  #:primitive (mutable-treelist-add!)
+  (mutable-treelist-add! d a))
+
+(define/method (MutableList.insert d pos a)
+  #:inline
+  #:primitive (mutable-treelist-insert!)
+  (mutable-treelist-insert! d pos a))
+
+(define/method (MutableList.delete d pos)
+  #:inline
+  #:primitive (mutable-treelist-delete!)
+  (mutable-treelist-delete! d pos))
 
 (define (nonempty-treelist? l)
   (and (treelist? l) ((treelist-length l) . > . 0)))
@@ -325,6 +397,12 @@
   #:static-infos ((#%call-result #,int-static-infos))
   (length l))
 
+(define/method (MutableList.length l)
+  #:inline
+  #:primitive (mutable-treelist-length)
+  #:static-infos ((#%call-result #,int-static-infos))
+  (mutable-treelist-length l))
+
 (define/method (List.reverse l)
   #:primitive (treelist-reverse)
   #:static-infos ((#%call-result #,treelist-static-infos))
@@ -334,6 +412,10 @@
   #:static-infos ((#%call-result #,list-static-infos))
   (check-list who l)
   (reverse l))
+
+(define/method (MutableList.reverse l)
+  #:primitive (mutable-treelist-reverse!)
+  (mutable-treelist-reverse! l))
 
 ;; used to define `List` and `PairList` further below:
 (define-for-syntax (make-constructor proc-stx build-form static-infos wrap-static-infos
@@ -412,6 +494,64 @@
     #`((#%index-result #,(car static-infoss))))
   #'list-build-convert #'())
 
+(define-annotation-constructor (MutableList MutableList.now_of)
+  ()
+  #'mutable-treelist? mutable-treelist-static-infos
+  1
+  #f
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([e (in-mutable-treelist #,arg-id)])
+        (#,(car predicate-stxs) e)))
+  (lambda (static-infoss)
+    ;; no static info, since mutable and content is checked only initially
+    #'())
+  "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable list content"
+  #'())
+
+(define-annotation-constructor (MutableList/again MutableList.later_of)
+  ()
+  #'mutable-treelist? mutable-treelist-static-infos
+  1
+  #f
+  (lambda (predicate-stxes annot-strs)
+    (define (make-reelementer what)
+      #`(lambda (mlst idx v)
+          (unless (pred v)
+            (raise-reelementer-error '#,what idx v '#,(car annot-strs)))
+          v))
+    #`(lambda (mlst)
+        (let ([pred #,(car predicate-stxes)])
+          (chaperone-mutable-treelist mlst
+                                      #:ref #,(make-reelementer "current")
+                                      #:set #,(make-reelementer "new")
+                                      #:insert #,(make-reelementer "new")
+                                      #:append (lambda (mlst lst)
+                                                 (check-elements #f pred lst '#,(car annot-strs)))))))
+  (lambda (static-infoss)
+    #`((#%index-result #,(car static-infoss))))
+  #'mutable-list-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
+
+(define (check-elements cvt? pred/cvt lst annot-str)
+  (cond
+    [cvt?
+     (for/treelist ([v (in-treelist lst)])
+       (pred/cvt
+        v
+        (lambda (v) v)
+        (lambda ()
+          (raise-binding-failure 'MutableList "appended element" v annot-str))))]
+    [else
+     (for ([v (in-treelist lst)])
+       (unless (pred/cvt v)
+         (raise-binding-failure 'MutableList "appended element" v annot-str)))
+     lst]))
+
+(define (raise-reelementer-error what idx v annot-str)
+  (raise-binding-failure
+   'MutableList (string-append what " element") v annot-str
+   "position" (unquoted-printing-string (number->string idx))))
+
 (define-syntax (treelist-build-convert arg-id build-convert-stxs kws data)
   #`(for/fold ([lst empty-treelist])
               ([v (in-treelist #,arg-id)])
@@ -429,6 +569,23 @@
        v
        (lambda (v) (cons v lst))
        (lambda () #f))))
+
+(define-syntax (mutable-list-build-convert arg-id build-convert-stxs kws data)
+  (with-syntax ([[(annot-str . _) _] data])
+    (define (make-reelementer what)
+      #`(lambda (mlst idx val)
+          (cvt
+           val
+           (lambda (v) v)
+           (lambda ()
+             (raise-reelementer-error '#,what idx val 'annot-str)))))
+    #`(let ([cvt #,(car build-convert-stxs)])
+        (impersonate-mutable-treelist #,arg-id
+                                      #:ref #,(make-reelementer "current")
+                                      #:set #,(make-reelementer "new")
+                                      #:insert #,(make-reelementer "new")
+                                      #:append (lambda (mlst lst)
+                                                 (check-elements #t cvt lst 'annot-str))))))
 
 (define-static-info-syntax empty-treelist
   #:defined treelist-static-infos)
@@ -622,6 +779,14 @@
   (check-function-of-arity 1 who proc)
   (for-each proc lst))
 
+(define/method (MutableList.map lst proc)
+  #:primitive (mutable-treelist-map!)
+  (mutable-treelist-map! lst proc))
+
+(define/method (MutableList.for_each lst proc)
+  #:primitive (mutable-treelist-for-each)
+  (mutable-treelist-for-each lst proc))
+
 (define/method (List.sort lst [less-than? <])
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-treelist who lst)
@@ -634,6 +799,10 @@
   (check-function-of-arity 2 who less-than?)
   (sort lst less-than?))
 
+(define/method (MutableList.sort lst [less-than? <])
+  #:primitive (mutable-treelist-sort!)
+  (mutable-treelist-sort! lst less-than?))
+
 (define/method (List.to_list lst)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-treelist who lst)
@@ -643,6 +812,16 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-list who lst)
   (list->treelist lst))
+
+(define/method (MutableList.to_list lst)
+  #:static-infos ((#%call-result #,treelist-static-infos))
+  (check-mutable-treelist who lst)
+  (mutable-treelist-snapshot lst))
+
+(define/method (MutableList.snapshot lst)
+  #:primitive (mutable-treelist-snapshot)
+  #:static-infos ((#%call-result #,treelist-static-infos))
+  (mutable-treelist-snapshot lst))
 
 (define-sequence-syntax PairList.to_sequence/optimize
   (lambda () #'PairList.to_sequence)
@@ -681,6 +860,35 @@
   #:static-infos ((#%call-result #,treelist-static-infos))
   (treelist-set l n v))
 
+(define/method (List.copy lst)
+  #:inline
+  #:primitive (treelist-copy)
+  #:static-infos ((#%call-result #,mutable-treelist-static-infos))
+  (treelist-copy lst))
+
+(define-sequence-syntax MutableList.to_sequence/optimize
+  (lambda () #'MutableList.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ lst-expr)] #'[(id) (in-mutable-treelist lst-expr)]]
+      [_ #f])))
+
+(define/method (MutableList.to_sequence lst)
+  #:inline
+  #:primitive (in-mutable-treelist)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-mutable-treelist lst))
+
+(define/method (MutableList.get l n)
+  #:inline
+  #:primitive (mutable-treelist-ref)
+  (mutable-treelist-ref l n))
+
+(define/method (MutableList.set l n v)
+  #:inline
+  #:primitive (mutable-treelist-set)
+  (mutable-treelist-set! l n v))
+
 (define/method List.append
   #:inline
   #:primitive (treelist-append)
@@ -716,6 +924,11 @@
          (raise-argument-error* who rhombus-realm "PairList" ln)))
      (apply append ls)]))
 
+(define/method (MutableList.append a b)
+  #:inline
+  #:primitive (mutable-treelist-append!)
+  (mutable-treelist-append! a b))
+
 ;; primitive doesn't check for listness
 (define/method (PairList.get l n)
   #:inline
@@ -748,14 +961,9 @@
   (treelist-drop-right l n))
 
 (define/method (List.sublist l start end)
+  #:primitive (treelist-sublist)
   #:static-infos ((#%call-result #,treelist-static-infos))
-  (check-treelist who l)
-  (define len (treelist-length l))
-  (unless (and (0 . <= . start) (start . <= . len))
-    (raise-range-error* who rhombus-realm "list" "starting " start l 0 len))
-  (unless (and (start . <= . end) (end . <= . len))
-    (raise-range-error* who rhombus-realm "list" "ending " end l start len))
-  (treelist-take (treelist-drop l start) (- end start)))
+  (treelist-sublist l start end))
 
 (define (raise-list-count who what l len n)
   (raise-arguments-error* who rhombus-realm
@@ -807,8 +1015,31 @@
              [i (in-range 0 (- len n))])
     a))
 
+(define/method (MutableList.take l n)
+  #:inline
+  #:primitive (mutable-treelist-take!)
+  (mutable-treelist-take! l n))
+
+(define/method (MutableList.take_last l n)
+  #:inline
+  #:primitive (mutable-treelist-take-right!)
+  (mutable-treelist-take-right! l n))
+
+(define/method (MutableList.drop l n)
+  #:inline
+  #:primitive (mutable-treelist-drop!)
+  (mutable-treelist-drop! l n))
+
+(define/method (MutableList.drop_last l n)
+  #:inline
+  #:primitive (mutable-treelist-drop-right!)
+  (mutable-treelist-drop-right! l n))
+
+(define/method (MutableList.sublist l start end)
+  #:primitive (mutable-treelist-sublist!)
+  (mutable-treelist-sublist! l start end))
+
 (define/method (List.remove l v)
-  #:primitive (treelist-remove)
   #:static-infos ((#%call-result #,treelist-static-infos))
   (check-treelist who l)
   (define len (treelist-length l))
@@ -824,6 +1055,17 @@
   (check-list who l)
   (remove v l equal-always?))
 
+(define/method (MutableList.remove l v)
+  (check-mutable-treelist who l)
+  (for ([vi (in-mutable-treelist l)]
+        [i (in-naturals)])
+    #:break (cond
+              [(equal-always? v vi)
+               (mutable-treelist-delete! l i)
+               #t]
+              [else #f])
+    (void)))
+
 (define/method (List.has_element l v [eql equal-always?])
   #:primitive (treelist-member?)
   (treelist-member? l v eql))
@@ -832,6 +1074,10 @@
   (check-list who l)
   (check-function-of-arity 2 who eql)
   (and (member v l eql) #t))
+
+(define/method (MutableList.has_element l v [eql equal-always?])
+  #:primitive (mutable-treelist-member?)
+  (mutable-treelist-member? l v eql))
 
 (define/method (List.find l pred)
   #:primitive (treelist-find)
@@ -842,11 +1088,18 @@
   (check-function-of-arity 1 who pred)
   (findf pred l))
 
+(define/method (MutableList.find l pred)
+  #:primitive (mutable-treelist-find)
+  (mutable-treelist-find l pred))
+
 (define-for-syntax (wrap-treelist-static-info expr)
   (wrap-static-info* expr treelist-static-infos))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))
+
+(define-for-syntax (wrap-mutable-treelist-static-info expr)
+  (wrap-static-info* expr mutable-treelist-static-infos))
 
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
@@ -1048,6 +1301,11 @@
   (build-*list-form content #'list #'null #'append
                     #'ensure-list #f))
 
+(define-for-syntax (build-mutable-treelist-form content)
+  #`(treelist-copy
+     #,(build-*list-form content #'treelist #'empty-treelist #'treelist-append
+                         #'ensure-treelist #'list->treelist)))
+
 (define-syntax List
   (expression-transformer
    (make-constructor #'treelist build-treelist-form treelist-static-infos wrap-treelist-static-info
@@ -1055,6 +1313,10 @@
 (define-syntax PairList
   (expression-transformer
    (make-constructor #'list build-list-form list-static-infos wrap-list-static-info)))
+(define-syntax MutableList
+  (expression-transformer
+   (make-constructor #'mutable-treelist build-mutable-treelist-form mutable-treelist-static-infos wrap-mutable-treelist-static-info
+                     #:convert-rep #'list->mutable-treelist)))
 
 (define-repetition-syntax List
   (repetition-transformer
@@ -1065,6 +1327,11 @@
   (repetition-transformer
    (make-constructor #:repetition? #t
                      #'list build-list-form list-static-infos wrap-list-static-info)))
+(define-repetition-syntax MutableList
+  (repetition-transformer
+   (make-constructor #:repetition? #t
+                     #'mutable-treelist build-mutable-treelist-form mutable-treelist-static-infos wrap-mutable-treelist-static-info
+                     #:convert-rep #'list->mutable-treelist)))
 
 (define-for-syntax (parse-list-expression stx)
   (parse-*list-form stx build-treelist-form treelist-static-infos wrap-treelist-static-info
@@ -1098,6 +1365,7 @@
   (or (treelist? v)
       (list? v)
       (vector? v)
+      (mutable-treelist? v)
       (Listable? v)))
 
 (define (to-treelist who v)
@@ -1105,6 +1373,7 @@
     [(treelist? v) v]
     [(list? v) (list->treelist v)]
     [(vector? v) (vector->treelist v)]
+    [(mutable-treelist? v) (mutable-treelist-snapshot v)]
     [else (general-to-treelist who v)]))
 
 (define (to-list who v)
@@ -1112,6 +1381,7 @@
     [(treelist? v) (treelist->list v)]
     [(list? v) v]
     [(vector? v) (vector->list v)]
+    [(mutable-treelist? v) (mutable-treelist->list v)]
     [(general-to-treelist who v) => treelist->list]
     [else #f]))
 
