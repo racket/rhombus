@@ -40,10 +40,11 @@
     (define (nary mask direct-id id)
       (ary mask
            (lambda (args reloc)
-             (define-values (proc tail)
+             (define-values (proc tail to-anon-function?)
                (parse-function-call direct-id (list lhs) #`(#,dot #,args)
                                     #:srcloc (reloc #'#false)
-                                    #:static? more-static?))
+                                    #:static? more-static?
+                                    #:can-anon-function? #t))
              proc)
            ;; return partially applied method
            (lambda (reloc)

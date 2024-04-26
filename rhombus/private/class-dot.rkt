@@ -307,14 +307,15 @@
         (define rator #`(method-ref #,name-ref-id #,obj-id #,idx))
         (define r (and ret-info-id
                        (syntax-local-method-result ret-info-id)))
-        (define-values (call new-tail)
+        (define-values (call new-tail to-anon-function?)
           (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))
                                #:static? (is-static-context? #'tag)
                                #:rator-stx (datum->syntax #f name #'rator-id)
-                               #:rator-arity (and r (method-result-arity r))))
+                               #:rator-arity (and r (method-result-arity r))
+                               #:can-anon-function? #t))
         (values (let ([call #`(let ([#,obj-id (rhombus-expression self)])
                                 #,call)])
-                  (if r
+                  (if (and r (not to-anon-function?))
                       (wrap-static-info* call (method-result-static-infos r))
                       call))
                 #'tail)]
@@ -334,7 +335,7 @@
        [(rator-id (~and args (tag::parens self arg ...)) . tail)
         #:when (not (syntax-parse #'self [(_ kw:keyword . _) #t] [_ #f]))
         (define obj-id #'this)
-        (define-values (call new-tail)
+        (define-values (call new-tail to-anon-function?)
           (parse-function-call proc-id (list obj-id) #'(#,obj-id (tag arg ...))
                                #:static? (is-static-context? #'tag)
                                #:rator-stx (datum->syntax #f name #'rator-id)))
@@ -462,7 +463,7 @@
             (cond
               [add-check
                (define obj-id #'obj)
-               (values pos/id obj-id #f (lambda (e)
+               (values pos/id obj-id #f (lambda (e to-anon-function?)
                                           (define static-infos (extract-static-infos e))
                                           (wrap-static-info*
                                            (relocate+reraw form1
@@ -471,7 +472,7 @@
                                                                #,(unwrap-static-infos e)))
                                            static-infos)))]
               [else
-               (values pos/id form1 #f (lambda (e) e))])]
+               (values pos/id form1 #f (lambda (e to-anon-function?) e))])]
            [else
             (define obj-id #'obj)
             (define r (and ret-info-id
@@ -484,23 +485,25 @@
                     obj-id
                     (or shape-arity
                         (and r (method-result-arity r)))
-                    (lambda (e)
+                    (lambda (e to-anon-function?)
                       (define call-e #`(let ([#,obj-id #,form1])
                                          #,@(if add-check
                                                 (list (add-check obj-id))
                                                 null)
                                          #,e))
-                      (if (pair? (syntax-e static-infos))
+                      (if (and (pair? (syntax-e static-infos))
+                               (not to-anon-function?))
                           (wrap-static-info* call-e static-infos)
                           call-e)))]))
-       (define-values (call-stx empty-tail)
+       (define-values (call-stx empty-tail to-anon-function?)
          (parse-function-call rator (list obj-e) #`(#,obj-e #,args)
                               #:rator-stx field-id
                               #:srcloc (respan #`(#,obj-e #,field-id #,args))
                               #:static? more-static?
                               #:rator-arity arity
-                              #:rator-kind (if property? 'property 'method)))
-       (success (wrap call-stx)
+                              #:rator-kind (if property? 'property 'method)
+                              #:can-anon-function? #t))
+       (success (wrap call-stx to-anon-function?)
                 new-tail)]
       [else
        (when (and more-static?
