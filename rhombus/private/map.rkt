@@ -202,12 +202,12 @@
 
 (define (equal-always-hash? v) (and (immutable-hash? v) (hash-equal-always? v)))
 (define (object-hash? v) (and (immutable-hash? v) (hash-eq? v)))
-(define (now-hash? v) (and (immutable-hash? v) (hash-equal? v)))
+(define (now-hash? v) (and (immutable-hash? v) (and (not (custom-map-ref v #f)) (hash-equal? v))))
 (define (number-or-object-hash? v) (and (immutable-hash? v) (hash-eqv? v)))
 
 (define (mutable-equal-always-hash? v) (and (mutable-hash? v) (hash-equal-always? v)))
 (define (mutable-object-hash? v) (and (mutable-hash? v) (hash-eq? v)))
-(define (mutable-now-hash? v) (and (mutable-hash? v) (hash-equal? v)))
+(define (mutable-now-hash? v) (and (mutable-hash? v) (and (not (custom-map-ref v #f)) (hash-equal? v))))
 (define (mutable-number-or-object-hash? v) (and (mutable-hash? v) (hash-eqv? v)))
 
 (define Map-pair-build
@@ -805,14 +805,21 @@
 (define (hash-append a b)
   (let-values ([(a b)
                 (if (and ((hash-count a) . < . (hash-count b))
-                         (or (and (hash-equal-always? a)
-                                  (hash-equal-always? b))
-                             (and (hash-eq? a)
-                                  (hash-eq? b))
-                             (and (hash-eqv? a)
-                                  (hash-eqv? b))
-                             (and (hash-equal? a)
-                                  (hash-equal? b))))
+                         (cond
+                           [(custom-map-ref a #f)
+                            => (lambda (a-cm)
+                                 (eq? a-cm (custom-map-ref b #f)))]
+                           [(hash-equal-always? a)
+                            (hash-equal-always? b)]
+                           [(hash-eq? a)
+                            (hash-eq? b)]
+                           [(hash-eqv? a)
+                            (hash-eqv? b)]
+                           [(hash-equal? a)
+                            (hash-equal? b)]
+                           [else
+                            ;; shouldn't get here, but just in case
+                            #f]))
                     (values b a)
                     (values a b))])
     (for/fold ([a a]) ([(k v) (in-immutable-hash b)])

@@ -16,8 +16,8 @@
          "version-case.rkt")
 
 (meta-if-version-at-least
- "8.13.0.99" ;; fix version when implemented; see also ../test/{map,set}.rhm
- (require (only-in racket/unsafe/ops unsafe-impersonate-hash))
+ "8.13.0.2" ;; fix version when implemented; see also ../test/{map,set}.rhm
+ (require (only-in '#%unsafe unsafe-impersonate-hash))
  (define (unsafe-impersonate-hash . _)
    (error "`key_comp.def` requires a newer version of Racket")))
 
@@ -72,7 +72,8 @@
                                                      (build-map 'hash-snapshot empty-x-map (hash-map ht list))))))
               (define (x-map? v) (eq? (custom-map-ref v #f) x-custom-map))
               (define (wrap ht)
-                (unsafe-impersonate-hash ht
+                (unsafe-impersonate-hash x-custom-map ;; kind for `equal?`
+                                         ht
                                          ;; ref
                                          (lambda (ht key)
                                            (values (x key)

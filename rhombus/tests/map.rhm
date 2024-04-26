@@ -582,26 +582,34 @@ block:
   expr.macro 'check_map_by $(key_comp :: Term)':
     'block:
        use_static
+       def is_equals = (match '$key_comp' | '==': #true | ~else: #false)
+       def is_is_now = (match '$key_comp' | 'is_now': #true | ~else: #false)
        check Map.by($key_comp){} ~is Map.by($key_comp){}
        check Map.by($key_comp){} ~is_a Map.by($key_comp)
+       check Map.by($key_comp){} is_a Map.by(==) ~is is_equals
+       check Map.by($key_comp){} is_a Map.by(is_now) ~is is_is_now
+       check Map.by($key_comp){ "x": 1 } == { "x": 1 } ~is is_equals
+       check Map.by($key_comp){ "x": 1 } == Map.by(is_now){ "x": 1 } ~is is_is_now
+       check { "x": 1 } == Map.by($key_comp){ "x": 1 } ~is is_equals
+       check Map.by(is_now){ "x": 1 }  == Map.by($key_comp){ "x": 1 } ~is is_is_now
        check Map.by($key_comp)([1, 2]) ~is Map.by($key_comp){ 1: 2 }
        check Map.by($key_comp){} ~is_a Map.by($key_comp).of(String, Number)
-       check Map.by($key_comp){ "x" : 1 } ~is_a Map.by($key_comp).of(String, Number)
-       check Map.by($key_comp){ "x" : 1 } is_a Map.by($key_comp).of(String, Number) ~is #true
-       check Map.by($key_comp){ "x" : 1 } is_a Map.by($key_comp).of(Number, String) ~is #false
+       check Map.by($key_comp){ "x": 1 } ~is_a Map.by($key_comp).of(String, Number)
+       check Map.by($key_comp){ "x": 1 } is_a Map.by($key_comp).of(String, Number) ~is #true
+       check Map.by($key_comp){ "x": 1 } is_a Map.by($key_comp).of(Number, String) ~is #false
        check Map.by($key_comp){} ++ { 0: 1 } ~is Map.by($key_comp){ 0: 1 }
        check Map.by($key_comp){} ++ { 0: 1, 2: 3 } ~is Map.by($key_comp){ 0: 1, 2: 3 }
        check Map.by($key_comp){ x: x, $('...')} ~is Map.by($key_comp){ 1: 1, 2: 2, 3: 3 }
        check Map.by($key_comp){ x: x, $('...')}.length() ~is 3
-       check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1 : 1 },
-                                                        Map.by($key_comp){ 2 : 2 },
-                                                        Map.by($key_comp){ 3 : 3 }]
+       check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1: 1 },
+                                                        Map.by($key_comp){ 2: 2 },
+                                                        Map.by($key_comp){ 3: 3 }]
        check (for Map.by($key_comp) (i: 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
        block:
          let Map.by($key_comp){ 1: v } = Map.by($key_comp){ 1: "x" }
          check v ~is "x"
        block:
-         let Map.by($key_comp){ 1: v, & rest } = Map.by($key_comp){ 1: "x", 2 : 3 }
+         let Map.by($key_comp){ 1: v, & rest } = Map.by($key_comp){ 1: "x", 2: 3 }
          check rest ~is_a Map.by($key_comp)
          check rest[2] ~is 3
        let m4 = MutableMap.by($key_comp){}
@@ -610,15 +618,21 @@ block:
        check m4 ~is_now MutableMap.by($key_comp){ 0: 1 }
        check m4 ~is_now MutableMap.by($key_comp)([0, 1])
        check m4 ~is_a MutableMap.by($key_comp)
-       check [MutableMap.by($key_comp){ x: x }, $('...')] ~is_now [MutableMap.by($key_comp){ 1 : 1 },
-                                                                   MutableMap.by($key_comp){ 2 : 2 },
-                                                                   MutableMap.by($key_comp){ 3 : 3 }]'
+       check m4 is_a MutableMap.by(==) ~is is_equals
+       check m4 is_a MutableMap.by(is_now) ~is is_is_now
+       check MutableMap.by($key_comp){ "x": 1 } is_now MutableMap{ "x": 1 } ~is is_equals
+       check MutableMap.by($key_comp){ "x": 1 } is_now MutableMap.by(is_now){ "x": 1 } ~is is_is_now
+       check MutableMap{ "x": 1 }is_now MutableMap.by($key_comp){ "x": 1 } ~is is_equals
+       check MutableMap.by(is_now){ "x": 1 }  is_now MutableMap.by($key_comp){ "x": 1 } ~is is_is_now
+       check [MutableMap.by($key_comp){ x: x }, $('...')] ~is_now [MutableMap.by($key_comp){ 1: 1 },
+                                                                   MutableMap.by($key_comp){ 2: 2 },
+                                                                   MutableMap.by($key_comp){ 3: 3 }]'
   check_map_by ==
   check_map_by ===
   check_map_by is_now
   check_map_by is_same_number_or_object
 
-  version_guard.at_least "8.13.0.99":
+  version_guard.at_least "8.13.0.2":
     key_comp.def 'is_anything':
       ~equals: fun (a, b, recur): #true
       ~hash_code: fun (a, recur): 1

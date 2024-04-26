@@ -37,6 +37,7 @@
          "rest-bind.rkt"
          "hash-remove.rkt"
          "key-comp.rkt"
+         "key-comp-property.rkt"
          "number.rkt")
 
 (provide (for-spaces (rhombus/namespace
@@ -213,11 +214,11 @@
 (define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
 (define (immutable-equal-always-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-equal-always? (set-ht v))))
 (define (immutable-object-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
-(define (immutable-now-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-equal? (set-ht v))))
+(define (immutable-now-set? v) (and (set? v) (immutable-hash? (set-ht v)) (not (custom-map-ref (set-ht v) #f)) (hash-equal? (set-ht v))))
 (define (immutable-number-or-object-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-eqv? (set-ht v))))
 (define (mutable-equal-always-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-equal-always? (set-ht v))))
 (define (mutable-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
-(define (mutable-now-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-equal? (set-ht v))))
+(define (mutable-now-set? v) (and (set? v) (mutable-hash? (set-ht v)) (not (custom-map-ref (set-ht v) #f)) (hash-equal? (set-ht v))))
 (define (mutable-number-or-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eqv? (set-ht v))))
 
 (define (check-readable-set who s)

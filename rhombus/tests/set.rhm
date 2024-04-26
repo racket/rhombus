@@ -507,10 +507,18 @@ block:
   expr.macro 'check_set_by $(key_comp :: Term)':
     'block:
        use_static
+       def is_equals = (match '$key_comp' | '==': #true | ~else: #false)
+       def is_is_now = (match '$key_comp' | 'is_now': #true | ~else: #false)
        check Set.by($key_comp){} ~is Set.by($key_comp){}
        check Set.by($key_comp){} ~is_a Set.by($key_comp)
        check Set.by($key_comp)(1) ~is Set.by($key_comp){ 1 }
        check Set.by($key_comp){} ~is_a Set.by($key_comp).of(String)
+       check Set.by($key_comp){} is_a Set.by(==) ~is is_equals
+       check Set.by($key_comp){} is_a Set.by(is_now) ~is is_is_now
+       check Set.by($key_comp){ "x"} == { "x" } ~is is_equals
+       check Set.by($key_comp){ "x" } == Set.by(is_now){ "x" } ~is is_is_now
+       check { "x" } == Set.by($key_comp){ "x" } ~is is_equals
+       check Set.by(is_now){ "x" }  == Set.by($key_comp){ "x" } ~is is_is_now
        check Set.by($key_comp){ "x" } ~is_a Set.by($key_comp).of(String)
        check Set.by($key_comp){ "x" } is_a Set.by($key_comp).of(String) ~is #true
        check Set.by($key_comp){ "x" } is_a Set.by($key_comp).of(Number) ~is #false
@@ -536,6 +544,12 @@ block:
        check m4 ~is_now MutableSet.by($key_comp){ 0 }
        check m4 ~is_now MutableSet.by($key_comp)(0)
        check m4 ~is_a MutableSet.by($key_comp)
+       check m4 is_a MutableSet.by(==) ~is is_equals
+       check m4 is_a MutableSet.by(is_now) ~is is_is_now
+       check MutableSet.by($key_comp){ "x" } is_now MutableSet{ "x" } ~is is_equals
+       check MutableSet.by($key_comp){ "x" } is_now MutableSet.by(is_now){ "x" } ~is is_is_now
+       check MutableSet{ "x" }is_now MutableSet.by($key_comp){ "x" } ~is is_equals
+       check MutableSet.by(is_now){ "x" }  is_now MutableSet.by($key_comp){ "x" } ~is is_is_now
        check [MutableSet.by($key_comp){ x }, $('...')] ~is_now [MutableSet.by($key_comp){ 1 },
                                                                 MutableSet.by($key_comp){ 2 },
                                                                 MutableSet.by($key_comp){ 3 }]'
@@ -544,7 +558,7 @@ block:
   check_set_by is_now
   check_set_by is_same_number_or_object
 
-  version_guard.at_least "8.13.0.99":
+  version_guard.at_least "8.13.0.2":
     key_comp.def 'is_anything':
       ~equals: fun (a, b, recur): #true
       ~hash_code: fun (a, recur): 1
