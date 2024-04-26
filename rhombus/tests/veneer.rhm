@@ -217,3 +217,19 @@ check:
   veneer Checked(this :: Any.of(meta_error("should get here"))):
     converter
   ~throws "should get here"
+
+veneer WeirdString(this :: String):
+  implements Comparable
+  override compare_to(other):
+    -1
+  override compares_unequal(other):
+    #true
+
+check:
+  ("smaller" :: WeirdString).compare_to("greater") ~is -1
+  ("smaller" :: WeirdString) < ("greater" :: WeirdString) ~is #true
+  ("smaller" :: WeirdString) <= ("greater" :: WeirdString) ~is #true
+  ("smaller" :: WeirdString) > ("greater" :: WeirdString) ~is #false
+  ("smaller" :: WeirdString) >= ("greater" :: WeirdString) ~is #false
+  ("same" :: WeirdString) compares_equal ("same" :: WeirdString) ~is #false
+  ("same" :: WeirdString) compares_unequal ("same" :: WeirdString) ~is #true

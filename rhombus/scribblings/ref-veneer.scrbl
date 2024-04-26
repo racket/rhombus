@@ -110,7 +110,8 @@
 
  A veneer can implement only specific interfaces that serve as bridges
  to static dispatch: @rhombus(Indexable, ~class),
- @rhombus(MutableIndexable, ~class), and @rhombus(Appendable, ~class).
+ @rhombus(MutableIndexable, ~class), @rhombus(Appendable, ~class),
+ and @rhombus(Comparable, ~class).
  Note that @rhombus(is_a) is a dynamic operation, not a static operation.
  So, for example, a value with a veneer that implements
  @rhombus(Indexable, ~class) is not an instance in the sense of
