@@ -110,6 +110,7 @@
     pict :: Pict,
     ~on: on_pict :: Pict,
     ~at: finder :: Find,
+    ~pinhole: pinhole_finder :: Find = Find.left_top(q),
     ~order: order :: OverlayOrder = #'front,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center
@@ -118,8 +119,9 @@
 
  Returns a @tech{pict} that draws @rhombus(pict) in front of or behind
  @rhombus(on_pict) at the location in @rhombus(on_pict) determined by
- @rhombus(finder). The resulting pict's bounding box is the same as
- @rhombus(on_pict)'s.
+ @rhombus(finder), where the location determined by @rhombus(pinhole_finder)
+ in @rhombus(pict) is matched with that location. The resulting pict's
+ bounding box is the same as @rhombus(on_pict)'s.
 
  The picts are first made concurrent via @rhombus(concurrent), passing
  along @rhombus(duration_align) and @rhombus(epoch_align).
