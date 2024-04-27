@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/hier-name-parse
+                     "treelist.rkt"
                      "name-root.rkt"
                      "parse.rkt"
                      "pack.rkt"
@@ -15,7 +16,10 @@
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     (only-in (submod "list.rkt" for-listable)
+                              treelist-static-infos)
+                     "context-stx.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root-ref.rkt"
@@ -32,7 +36,9 @@
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "values-key.rkt"
-         "indirect-static-info-key.rkt")
+         "indirect-static-info-key.rkt"
+         "is-static.rkt"
+         "dynamic-static-name.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 statinfo_meta)))
@@ -49,11 +55,21 @@
      [unpack statinfo_meta.unpack]
      [pack_group statinfo_meta.pack_group]
      [unpack_group statinfo_meta.unpack_group]
+     [pack_call_result statinfo_meta.pack_call_result]
+     [unpack_call_result statinfo_meta.unpack_call_result]
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
      [gather statinfo_meta.gather]
      [union statinfo_meta.union]
      [intersect statinfo_meta.intersect]
+
+     [is_static statinfo_meta.is_static]
+     static_call_name
+     static_dot_name
+     static_index_name
+     dynamic_call_name
+     dynamic_dot_name
+     dynamic_index_name
 
      call_result_key
      index_result_key
@@ -187,6 +203,46 @@
     #`(group . #,(map (lambda (stx) (unpack-static-infos who stx))
                       (syntax->list stx))))
 
+  (define/arity (statinfo_meta.pack_call_result infos)
+    #:static-infos ((#%call-result #,syntax-static-infos))
+    (unless (and (treelist? infos)
+                 (for/and ([r (in-treelist infos)])
+                   (and (treelist? r)
+                        (= 2 (treelist-length r))
+                        (exact-integer? (treelist-ref r 0))
+                        (syntax? (treelist-ref r 1)))))
+      (raise-argument-error* who rhombus-realm
+                             "matching([[_ :: Int, _ :: Syntax], ...])"
+                             infos))
+    (cond
+      [(and (= 1 (treelist-length infos))
+            (eqv? -1 (treelist-ref (treelist-ref infos 0) 0)))
+       (pack-static-infos who (treelist-ref (treelist-ref infos 0) 1))]
+      [else
+       (datum->syntax
+        #f
+        `(#:at_arities
+          ,@(for/list ([i (in-treelist infos)])
+              `(,(treelist-ref i 0)
+                ,(pack-static-infos who (treelist-ref i 1))))))]))
+
+  (define/arity (statinfo_meta.unpack_call_result stx)
+    #:static-infos ((#%call-result #,treelist-static-infos))
+    (check-syntax who stx)
+    (syntax-parse stx
+      [(#:at_arities rs)
+       (for/treelist ([r (in-list (syntax->list #'rs))])
+         (syntax-parse r
+           [(mask:exact-integer results)
+            (treelist (syntax-e #'mask)
+                      (unpack-static-infos who #'results))]
+           [_
+            (raise-arguments-error* who rhombus-realm
+                                    "ill-formed unpacked call result"
+                                    "syntax object" stx)]))]
+      [_
+       (treelist (treelist -1 (unpack-static-infos who stx)))]))
+
   (define/arity (statinfo_meta.wrap form info)
     #:static-infos ((#%call-result #,syntax-static-infos))
     (check-syntax who form)
@@ -213,7 +269,10 @@
   (define/arity (statinfo_meta.intersect . statinfos)
     #:static-infos ((#%call-result #,syntax-static-infos))
     (static-infos-merge who statinfos static-infos-intersect))
-  )
+
+  (define/arity (statinfo_meta.is_static ctx-stx)
+    (define ctx (extract-ctx who ctx-stx))
+    (is-static-context? ctx)))
 
 (define-syntax-rule (define-key key id)
   (begin-for-syntax

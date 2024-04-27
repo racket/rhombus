@@ -109,6 +109,32 @@
 
 }
 
+@doc(
+  fun statinfo_meta.pack_call_result([[arity_mask :: Int,
+                                       statinfo_stx :: Syntax],
+                                      ...])
+    :: Syntax
+  fun statinfo_meta.unpack_call_result(statinfo_stx :: Syntax)
+    :: matching([[_ :: Int, _ :: Syntax], ...])
+){
+
+ @provided_meta()
+
+ Analogous to @rhombus(statinfo_meta.pack) and
+ @rhombus(statinfo_meta.unpack), but for information that represents
+ function-call results, where a result may be specific to different
+ numbers of arguments. Information of this shape is used with
+ @rhombus(statinfo_meta.call_result_key).
+
+ Each @rhombus(arity_mask) has a bit set for each number of arguments
+ where the associated @rhombus(statinfo_stx) describes the function
+ result. For example, a @tech{property} or @tech{context parameter}
+ function may have a result that depends on the number of argument it
+ receives. A mask of @rhombus(-1) indicates a result that applies for any
+ number of arguments. Each @rhombus(statinfo_stx) represents static
+ information for the result in unpacked form.
+
+}
 
 @doc(
   fun statinfo_meta.lookup(expr_stx :: Syntax,
@@ -199,7 +225,6 @@
 }
 
 
-
 @doc(
   def statinfo_meta.call_result_key :: Identifier
   def statinfo_meta.index_result_key :: Identifier
@@ -220,9 +245,9 @@
 
  @itemlist(
 
-  @item{@rhombus(statinfo_meta.call_result_key) --- packed static
+  @item{@rhombus(statinfo_meta.call_result_key) --- packed, per-arity static
         information for the result value if the expression is used as
-        a function to call}
+        a function to call; see @rhombus(statinfo_meta.unpack_call_result)}
 
   @item{@rhombus(statinfo_meta.index_result_key) --- packed static information
         for the result value if the expression is used with
@@ -284,6 +309,35 @@
 
 }
 
+
+@doc(
+  fun statinfo_meta.is_static(context_stx :: Term) :: Boolean
+){
+
+ Reports whether the environment of @rhombus(context_stx) indicates
+ static or dynamic mode. See also @rhombus(use_static).
+
+}
+
+
+@doc(
+  def statinfo_meta.static_call_name :: Name
+  def statinfo_meta.static_dot_name :: Name
+  def statinfo_meta.static_index_name :: Name
+  def statinfo_meta.dynamic_call_name :: Name
+  def statinfo_meta.dynamic_dot_name :: Name
+  def statinfo_meta.dynamic_index_name :: Name
+){
+
+ @provided_meta()
+
+ Names that are bound to @rhombus(#%call), @rhombus(.), and
+ @rhombus(#%index) in static and dynamic modes, respectively. A macro
+ might select among these using @rhombus(statinfo_meta.is_static) or
+ using the @rhombus(~is_static) argument for a @rhombus(dot.macro)
+ definition.
+
+}
 
 @doc(
   class_clause.macro 'static_info: $body; ...'
