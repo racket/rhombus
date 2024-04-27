@@ -17,7 +17,7 @@
 
 (define-syntax #%static invalid-as-expression)
 (define-syntax #%dynamic invalid-as-expression)
-  
+
 (define-for-syntax (is-static-context? tag)
   (free-identifier=? (datum->syntax tag '#%dynamism)
                      (expr-quote #%static)))

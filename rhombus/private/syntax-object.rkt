@@ -24,7 +24,8 @@
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
          (submod "list.rkt" for-compound-repetition)
-         "parens.rkt")
+         "parens.rkt"
+         "context-stx.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -187,26 +188,6 @@
         (values #'(quote-syntax g) #'tail)]))))
 
 ;; ----------------------------------------
-
-(define (extract-ctx who ctx-stx
-                     #:false-ok? [false-ok? #t]
-                     #:update [update #f])
-  (and (or (not false-ok?) ctx-stx)
-       (let ([t (and (syntax? ctx-stx)
-                     (unpack-term ctx-stx #f #f))])
-         (unless t
-           (raise-argument-error* who rhombus-realm (if false-ok? "maybe(Term)" "Term") ctx-stx))
-         (syntax-parse t
-           #:datum-literals (op)
-           [((~and tag op) id) (if update
-                                   (datum->syntax t (list #'tag (update #'id)) t t)
-                                   #'id)]
-           [(head . tail) (if update
-                              (datum->syntax t (cons (update #'head) #'tail) t t)
-                              #'head)]
-           [_ (if update
-                  (update t)
-                  t)]))))
 
 (define (starts-alts? ds)
   (and (pair? ds)
