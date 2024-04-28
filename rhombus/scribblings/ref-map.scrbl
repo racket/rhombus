@@ -62,9 +62,11 @@ in an unspecified order.
   annot.macro 'Map.of($key_annot, $val_annot)'
   annot.macro 'ReadableMap'
   annot.macro 'MutableMap'
+  annot.macro 'WeakMutableMap'
   annot.macro 'Map.by($key_comp)'
   annot.macro 'Map.by($key_comp).of($key_annot, $val_annot)'
   annot.macro 'MutableMap.by($key_comp)'
+  annot.macro 'WeakMutableMap.by($key_comp)'
 ){
 
  The @rhombus(Map, ~annot) annotation matches any immutable map in the
@@ -75,10 +77,13 @@ in an unspecified order.
  @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableMap) constructor).
+ @rhombus(MutableMap, ~annot) matches weak mutable maps (created with, for
+ example, the @rhombus(WeakMutableMap) constructor).
 
- The @rhombus(Map.by, ~annot) and @rhombus(MutableMap.by, ~annot)
- annotation variants match only maps that use the hash and equality
- procedures specified by @rhombus(key_comp).
+ The @rhombus(Map.by, ~annot), @rhombus(MutableMap.by, ~annot), and
+ @rhombus(WeakMutableMap.by, ~annot) annotation variants match only maps
+ that use the hash and equality procedures specified by
+ @rhombus(key_comp).
 
  Static information associated by @rhombus(Map, ~annot), etc., makes an
  expression acceptable as a sequence to @rhombus(for) in static mode.
@@ -338,6 +343,25 @@ in an unspecified order.
 
 
 @doc(
+  ~nonterminal:
+    key_expr: block expr
+    val_expr: block expr
+  expr.macro 'WeakMutableMap{key_expr: val_expr, ...}'
+  fun WeakMutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
+    :: WeakMutableMap
+  expr.macro 'WeakMutableMap.by($key_comp){key_expr: val_expr, ...}'
+  expr.macro 'WeakMutableMap.by($key_comp)'
+){
+
+ Like @rhombus(MutableMap), but creates a map where a key is removed
+ from the map by a garbage collection when the key is reachable only by
+ enumerating the map's keys. A key is not considered reachable merely
+ because it is reachable through the value mapped from the key.
+
+}
+
+
+@doc(
   def Map.empty :: Map = {}
   bind.macro 'Map.empty'
   def ReadableMap.empty :: ReadableMap = {}
@@ -354,7 +378,7 @@ in an unspecified order.
 
  Corresponding to the binding forms, @rhombus(Map.empty) and
  @rhombus(ReadableMap.empty) are bound to @rhombus({}) with
- approapriate static information.
+ appropriate static information.
 
 @examples(
   Map.empty

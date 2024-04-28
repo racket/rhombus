@@ -1,6 +1,7 @@
 #lang rhombus
 import:
   "version_guard.rhm"
+  rhombus/runtime
 
 block:
   import "static_arity.rhm"
@@ -460,6 +461,8 @@ check:
   to_string(Set{1, 2, 3}) ~is "{1, 2, 3}"
   to_string(MutableSet{}) ~is "MutableSet{}"
   to_string(MutableSet{1, 2, 3}) ~is "MutableSet{1, 2, 3}"
+  to_string(WeakMutableSet{}) ~is "WeakMutableSet{}"
+  to_string(WeakMutableSet{1, 2, 3}) ~is "WeakMutableSet{1, 2, 3}"
 
 check:
   def s = MutableSet{}
@@ -549,10 +552,31 @@ block:
        check MutableSet.by($key_comp){ "x" } is_now MutableSet{ "x" } ~is is_equals
        check MutableSet.by($key_comp){ "x" } is_now MutableSet.by(is_now){ "x" } ~is is_is_now
        check MutableSet{ "x" }is_now MutableSet.by($key_comp){ "x" } ~is is_equals
-       check MutableSet.by(is_now){ "x" }  is_now MutableSet.by($key_comp){ "x" } ~is is_is_now
+       check MutableSet.by(is_now){ "x" } is_now MutableSet.by($key_comp){ "x" } ~is is_is_now
        check [MutableSet.by($key_comp){ x }, $('...')] ~is_now [MutableSet.by($key_comp){ 1 },
                                                                 MutableSet.by($key_comp){ 2 },
-                                                                MutableSet.by($key_comp){ 3 }]'
+                                                                MutableSet.by($key_comp){ 3 }]
+       class Boson(v)
+       let m5 = WeakMutableSet.by($key_comp){}
+       let mutable boson = Boson("plus")
+       m5[boson] := #true
+       check m5[boson] ~is #true
+       check m5 ~is_now WeakMutableSet.by($key_comp){ boson }
+       check m5 ~is_now WeakMutableSet.by($key_comp)(boson)
+       check m5 ~is_a WeakMutableSet.by($key_comp)
+       check m5 is_a WeakMutableSet.by(==) ~is is_equals
+       check m5 is_a WeakMutableSet.by(is_now) ~is is_is_now
+       check WeakMutableSet.by($key_comp){ boson } is_now WeakMutableSet{ boson } ~is is_equals
+       check WeakMutableSet.by($key_comp){ boson } is_now WeakMutableSet.by(is_now){ boson } ~is is_is_now
+       check WeakMutableSet{ boson }is_now WeakMutableSet.by($key_comp){ boson } ~is is_equals
+       check WeakMutableSet.by(is_now){ boson } is_now WeakMutableSet.by($key_comp){ boson } ~is is_is_now
+       check [WeakMutableSet.by($key_comp){ x }, $('...')] ~is_now [WeakMutableSet.by($key_comp){ 1 },
+                                                                    WeakMutableSet.by($key_comp){ 2 },
+                                                                    WeakMutableSet.by($key_comp){ 3 }]
+       // make sure the set is weak:
+       boson := #false
+       runtime.gc()
+       check m5.length() ~is 0'
   check_set_by ==
   check_set_by ===
   check_set_by is_now

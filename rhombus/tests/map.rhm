@@ -1,6 +1,7 @@
 #lang rhombus
 import:
   "version_guard.rhm"
+  rhombus/runtime
 
 block:
   import "static_arity.rhm"
@@ -535,6 +536,8 @@ check:
   to_string(Map{1: 2, 3: 4}) ~is "{1: 2, 3: 4}"
   to_string(MutableMap{}) ~is "MutableMap{}"
   to_string(MutableMap{1: 2, 3: 4}) ~is "MutableMap{1: 2, 3: 4}"
+  to_string(WeakMutableMap{}) ~is "WeakMutableMap{}"
+  to_string(WeakMutableMap{1: 2, 3: 4}) ~is "WeakMutableMap{1: 2, 3: 4}"
 
 check:
   def m = MutableMap{1: 2, 3: 4}
@@ -623,10 +626,34 @@ block:
        check MutableMap.by($key_comp){ "x": 1 } is_now MutableMap{ "x": 1 } ~is is_equals
        check MutableMap.by($key_comp){ "x": 1 } is_now MutableMap.by(is_now){ "x": 1 } ~is is_is_now
        check MutableMap{ "x": 1 }is_now MutableMap.by($key_comp){ "x": 1 } ~is is_equals
-       check MutableMap.by(is_now){ "x": 1 }  is_now MutableMap.by($key_comp){ "x": 1 } ~is is_is_now
+       check MutableMap.by(is_now){ "x": 1 } is_now MutableMap.by($key_comp){ "x": 1 } ~is is_is_now
        check [MutableMap.by($key_comp){ x: x }, $('...')] ~is_now [MutableMap.by($key_comp){ 1: 1 },
                                                                    MutableMap.by($key_comp){ 2: 2 },
-                                                                   MutableMap.by($key_comp){ 3: 3 }]'
+                                                                   MutableMap.by($key_comp){ 3: 3 }]
+       class Boson(v)
+       let m5 = WeakMutableMap.by($key_comp){}
+       let mutable boson = Boson("plus")
+       m5[boson] := 1
+       check m5[boson] ~is 1
+       check m5 ~is_now WeakMutableMap.by($key_comp){ boson: 1 }
+       check m5 ~is_now WeakMutableMap.by($key_comp)([boson, 1])
+       check m5 ~is_a WeakMutableMap.by($key_comp)
+       check m5 ~is_a MutableMap.by($key_comp)
+       check m5 is_a WeakMutableMap.by(==) ~is is_equals
+       check m5 is_a WeakMutableMap.by(is_now) ~is is_is_now
+       check WeakMutableMap.by($key_comp){ boson: 1 } is_now WeakMutableMap{ boson: 1 } ~is is_equals
+       check WeakMutableMap.by($key_comp){ boson: 1 } is_now WeakMutableMap.by(is_now){ boson: 1 } ~is is_is_now
+       check WeakMutableMap{ boson: 1 }is_now WeakMutableMap.by($key_comp){ boson: 1 } ~is is_equals
+       check WeakMutableMap.by(is_now){ boson: 1 } is_now WeakMutableMap.by($key_comp){ boson: 1 } ~is is_is_now
+       check [WeakMutableMap.by($key_comp){ x: x }, $('...')] ~is_now [WeakMutableMap.by($key_comp){ 1: 1 },
+                                                                       WeakMutableMap.by($key_comp){ 2: 2 },
+                                                                       WeakMutableMap.by($key_comp){ 3: 3 }]
+       // make sure the map is weak:
+       m5[boson] := boson
+       check m5[boson] ~is boson
+       boson := #false
+       runtime.gc()
+       check m5.length() ~is 0'
   check_map_by ==
   check_map_by ===
   check_map_by is_now

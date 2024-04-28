@@ -15,10 +15,12 @@
   (struct key-comp (name-sym map?-id
                              map-build-id map-pair-build-id list->map-id
                              mutable-map?-id mutable-map-build-id
+                             weak-mutable-map?-id weak-mutable-map-build-id
                              empty-stx
                              set?-id
                              set-build-id set-build*-id list->set-id
-                             mutable-set?-id mutable-set-build-id))
+                             mutable-set?-id mutable-set-build-id
+                             weak-mutable-set?-id weak-mutable-set-build-id))
 
   (define (key-comp-ref v) (and (key-comp? v) v)))
 

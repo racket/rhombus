@@ -57,9 +57,11 @@ it supplies its elements in an unspecified order.
   annot.macro 'Set.of($annot)'
   annot.macro 'ReadableSet'
   annot.macro 'MutableSet'
+  annot.macro 'WeakMutableSet'
   annot.macro 'Set.by($key_comp)'
   annot.macro 'Set.by($key_comp).of($annot)'
   annot.macro 'MutableSet.by($key_comp)'
+  annot.macro 'WeakMutableSet.by($key_comp)'
 ){
 
  The @rhombus(Set, ~annot) annotation matches any set. The @rhombus(of)
@@ -68,6 +70,8 @@ it supplies its elements in an unspecified order.
  @rhombus(ReadableSet, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableSet) constructor).
+ @rhombus(MutableSet, ~annot) matches weak mutable sets (created with, for
+ example, the @rhombus(WeakMutableSet) constructor).
 
  The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
  annotation variants match only sets that use the hash and equality
@@ -218,6 +222,24 @@ it supplies its elements in an unspecified order.
 
 }
 
+
+@doc(
+  ~nonterminal:
+    val_expr: block expr
+  expr.macro 'WeakMutableSet{$val_expr, ...}'
+  fun WeakMutableSet(val :: Any, ...) :: MutableSet
+  expr.macro 'WeakMutableSet.by($key_comp){$val_expr, ...}'
+  expr.macro 'WeakMutableSet.by($key_comp)'
+){
+
+
+ Like @rhombus(MutableSet), but creates a set where an element is
+ removed from the set by a garbage collection when the element is
+ reachable only by enumerating the set's elements.
+
+}
+
+
 @doc(
   def Set.empty :: Set = Set{}
   bind.macro 'Set.empty'
@@ -234,7 +256,7 @@ it supplies its elements in an unspecified order.
 
  Corresponding to the binding forms, @rhombus(Set.empty) and
  @rhombus(ReadableSet.empty) are bound to @rhombus(Set{}) with
- approapriate static information.
+ appropriate static information.
 
 @examples(
   Set.empty

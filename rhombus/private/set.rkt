@@ -51,7 +51,8 @@
                       #f
                       rhombus/repet
                       rhombus/annot)
-                     MutableSet)
+                     MutableSet
+                     WeakMutableSet)
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
@@ -99,33 +100,45 @@
            Set-build Set-build* list->set
            mutable-equal-always-set?
            MutableSet-build
+           weak-mutable-equal-always-set?
+           WeakMutableSet-build
            (for-space rhombus/statinfo
                       Set-build*
-                      MutableSet-build)
+                      MutableSet-build
+                      WeakMutableSet-build)
 
            immutable-object-set?
            ObjectSet-build ObjectSet-build* list->object-set
            mutable-object-set?
            MutableObjectSet-build
+           weak-mutable-object-set?
+           WeakMutableObjectSet-build
            (for-space rhombus/statinfo
                       ObjectSet-build*
-                      MutableObjectSet-build)
+                      MutableObjectSet-build
+                      WeakMutableObjectSet-build)
 
            immutable-now-set?
            NowSet-build NowSet-build* list->now-set
            mutable-now-set?
            MutableNowSet-build
+           weak-mutable-now-set?
+           WeakMutableNowSet-build
            (for-space rhombus/statinfo
                       NowSet-build*
-                      MutableNowSet-build)
+                      MutableNowSet-build
+                      WeakMutableNowSet-build)
 
            immutable-number-or-object-set?
            NumberOrObjectSet-build NumberOrObjectSet-build* list->number-or-object-set
            mutable-number-or-object-set?
            MutableNumberOrObjectSet-build
+           weak-mutable-number-or-object-set?
+           WeakMutableNumberOrObjectSet-build
            (for-space rhombus/statinfo
                       NumberOrObjectSet-build*
-                      MutableNumberOrObjectSet-build)))
+                      MutableNumberOrObjectSet-build
+                      WeakMutableNumberOrObjectSet-build)))
 
 (module+ for-key-comp-macro
   (provide set?
@@ -210,8 +223,24 @@
   (set
    delete))
 
+(define-primitive-class WeakMutableSet weak-mutable-set
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,mutable-set-static-infos
+  #:existing
+  #:opaque
+  #:parent #f mutable-set
+  #:fields ()
+  #:namespace-fields
+  ([by WeakMutableSet.by])
+  #:properties
+  ()
+  #:methods
+  ())
+
 (define (immutable-set? v) (and (set? v) (immutable-hash? (set-ht v))))
 (define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
+(define (weak-mutable-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v))))
 (define (immutable-equal-always-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-equal-always? (set-ht v))))
 (define (immutable-object-set? v) (and (set? v) (immutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
 (define (immutable-now-set? v) (and (set? v) (immutable-hash? (set-ht v)) (not (custom-map-ref (set-ht v) #f)) (hash-equal? (set-ht v))))
@@ -220,6 +249,10 @@
 (define (mutable-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eq? (set-ht v))))
 (define (mutable-now-set? v) (and (set? v) (mutable-hash? (set-ht v)) (not (custom-map-ref (set-ht v) #f)) (hash-equal? (set-ht v))))
 (define (mutable-number-or-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-eqv? (set-ht v))))
+(define (weak-mutable-equal-always-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v)) (hash-equal-always? (set-ht v))))
+(define (weak-mutable-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v)) (hash-eq? (set-ht v))))
+(define (weak-mutable-now-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v)) (not (custom-map-ref (set-ht v) #f)) (hash-equal? (set-ht v))))
+(define (weak-mutable-number-or-object-set? v) (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v)) (hash-eqv? (set-ht v))))
 
 (define (check-readable-set who s)
   (unless (set? s)
@@ -628,6 +661,15 @@
 (define (MutableNumberOrObjectSet-build . vals)
   (mutable-set-build (make-hasheqv) vals))
 
+(define (WeakMutableSet-build . vals)
+  (mutable-set-build (make-weak-hashalw) vals))
+(define (WeakMutableObjectSet-build . vals)
+  (mutable-set-build (make-weak-hasheq) vals))
+(define (WeakMutableNowSet-build . vals)
+  (mutable-set-build (make-weak-hash) vals))
+(define (WeakMutableNumberOrObjectSet-build . vals)
+  (mutable-set-build (make-weak-hasheqv) vals))
+
 (define-for-syntax (parse-mutable-set stx repetition? mutable-set-build-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
@@ -653,11 +695,12 @@
                       mutable-set-static-infos)])
              #'tail)]
     [(form-id . tail) (values (if repetition?
-                                  (identifier-repetition-use #'MutableSet-build)
+                                  (identifier-repetition-use mutable-set-build-id)
                                   (relocate+reraw #'form-id mutable-set-build-id))
                               #'tail)]))
 
 (define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-infos))
+(define-annotation-syntax WeakMutableSet (identifier-annotation #'weak-mutable-set? mutable-set-static-infos))
 (define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-infos))
 
 (define-annotation-syntax MutableSet.by
@@ -674,6 +717,20 @@
                                                              mutable-set-static-infos)
                                   #'tail)]))))))
 
+(define-annotation-syntax WeakMutableSet.by
+  (annotation-prefix-operator
+   #'WeakMutableSet.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-weak-mutable-set?-id mapper)
+                                                             mutable-set-static-infos)
+                                  #'tail)]))))))
+
 (define-syntax MutableSet
   (expression-transformer
    (lambda (stx) (parse-mutable-set stx #f #'MutableSet-build))))
@@ -681,6 +738,14 @@
 (define-repetition-syntax MutableSet
   (repetition-transformer
    (lambda (stx) (parse-mutable-set stx #t  #'MutableSet-build))))
+
+(define-syntax WeakMutableSet
+  (expression-transformer
+   (lambda (stx) (parse-mutable-set stx #f #'WeakMutableSet-build))))
+
+(define-repetition-syntax WeakMutableSet
+  (repetition-transformer
+   (lambda (stx) (parse-mutable-set stx #t  #'WeakMutableSet-build))))
 
 (define-syntax MutableSet.by
   (expression-transformer
@@ -709,6 +774,34 @@
   (#%indirect-static-info MutableSet-build))
 (define-static-info-syntax MutableNumberOrObjectSet-build
   (#%indirect-static-info MutableSet-build))
+
+(define-syntax WeakMutableSet.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-set stx #f
+                                          (key-comp-weak-mutable-set-build-id mapper)))))))
+
+(define-repetition-syntax WeakMutableSet.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-set stx #t
+                                          (key-comp-weak-mutable-set-build-id mapper)))))))
+
+(define-static-info-syntax WeakMutableSet-build
+  (#%call-result #,weak-mutable-set-static-infos)
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntax WeakMutableObjectSet-build
+  (#%indirect-static-info WeakMutableSet-build))
+(define-static-info-syntax WeakMutableNowSet-build
+  (#%indirect-static-info WeakMutableSet-build))
+(define-static-info-syntax WeakMutableNumberOrObjectSet-build
+  (#%indirect-static-info WeakMutableSet-build))
 
 ;; macro to optimize to an inline functional update
 (define-syntax (Set.append/optimize stx)
