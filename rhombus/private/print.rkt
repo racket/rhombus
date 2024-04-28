@@ -290,13 +290,17 @@
         (pretty-listlike
          (pretty-text (cond
                         [(mutable-hash? v)
-                         (cond
-                           [(hash-eq? v) "MutableMap.by(===){"]
-                           [(hash-eqv? v) "MutableMap.by(is_same_number_or_object){"]
-                           [(custom-map-ref v #f)
-                            => (lambda (cm) (format "MutableMap.by(~a){" (custom-map-name cm)))]
-                           [(hash-equal? v) "MutableMap.by(is_now){"]
-                           [else "MutableMap{"])]
+                         (string-append
+                          (if (hash-ephemeron? v)
+                              "Weak"
+                              "")
+                          (cond
+                            [(hash-eq? v) "MutableMap.by(===){"]
+                            [(hash-eqv? v) "MutableMap.by(is_same_number_or_object){"]
+                            [(custom-map-ref v #f)
+                             => (lambda (cm) (format "MutableMap.by(~a){" (custom-map-name cm)))]
+                            [(hash-equal? v) "MutableMap.by(is_now){"]
+                            [else "MutableMap{"]))]
                         [(hash-eq? v) "Map.by(===){"]
                         [(custom-map-ref v #f)
                          => (lambda (cm) (format "Map.by(~a){" (custom-map-name cm)))]
@@ -318,13 +322,17 @@
         (pretty-listlike
          (pretty-text (cond
                         [(mutable-set? v)
-                         (cond
-                           [(hash-eq? (set-ht v)) "MutableSet.by(===){"]
-                           [(custom-map-ref (set-ht v) #f)
-                            => (lambda (cm) (format "MutableSet.by(~a){" (custom-map-name cm)))]
-                           [(hash-equal? (set-ht v)) "MutableSet.by(is_now){"]
-                           [(hash-eqv? (set-ht v)) "MutableSet.by(is_same_number_or_object){"]
-                           [else "MutableSet{"])]
+                         (string-append
+                          (if (hash-weak? (set-ht v))
+                              "Weak"
+                              "")
+                          (cond
+                            [(hash-eq? (set-ht v)) "MutableSet.by(===){"]
+                            [(custom-map-ref (set-ht v) #f)
+                             => (lambda (cm) (format "MutableSet.by(~a){" (custom-map-name cm)))]
+                            [(hash-equal? (set-ht v)) "MutableSet.by(is_now){"]
+                            [(hash-eqv? (set-ht v)) "MutableSet.by(is_same_number_or_object){"]
+                            [else "MutableSet{"]))]
                         [(hash-eq? (set-ht v)) "Set.by(===){"]
                         [(custom-map-ref (set-ht v) #f)
                          => (lambda (cm) (format "Set.by(~a){" (custom-map-name cm)))]

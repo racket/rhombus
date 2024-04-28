@@ -50,10 +50,14 @@
                                                                 (format "Map.by(~s)" (syntax-e #'name.name))))]
                        [x-mutable-map-build (datum->syntax #'here (string->symbol
                                                                    (format "MutableMap.by(~s)" (syntax-e #'name.name))))]
+                       [x-weak-mutable-map-build (datum->syntax #'here (string->symbol
+                                                                        (format "WeakMutableMap.by(~s)" (syntax-e #'name.name))))]
                        [x-set-build (datum->syntax #'here (string->symbol
                                                            (format "Set.by(~s)" (syntax-e #'name.name))))]
                        [x-mutable-set-build (datum->syntax #'here (string->symbol
-                                                                   (format "MutableSet.by(~s)" (syntax-e #'name.name))))])
+                                                                   (format "MutableSet.by(~s)" (syntax-e #'name.name))))]
+                       [x-weak-mutable-set-build (datum->syntax #'here (string->symbol
+                                                                        (format "WeakMutableSet.by(~s)" (syntax-e #'name.name))))])
            #`((define-values (x-equals? x-hash-code)
                 (hash-procedures (~@ kw (rhombus-body-expression clause-block)) ...))
               ;; keys are wrapped in this struct, which lets use our own
@@ -67,6 +71,8 @@
                                                (lambda (ht)
                                                  (mutable-copy! (wrap (make-hash)) ht))
                                                (lambda (ht)
+                                                 (mutable-copy! (wrap (make-ephemeron-hash)) ht))
+                                               (lambda (ht)
                                                  (if (immutable-hash? ht)
                                                      ht
                                                      (build-map 'hash-snapshot empty-x-map (hash-map ht list))))))
@@ -79,8 +85,16 @@
                                            (values (x key)
                                                    (lambda (ht key val) val)))
                                          ;; set
-                                         (lambda (ht key val)
-                                           (values (x key) val))
+                                         (if (not (hash-ephemeron? ht))
+                                             (lambda (ht key val)
+                                               (values (x key) val))
+                                             ;; need to establish a connection between each
+                                             ;; key and its wrapped key:
+                                             (let ([keys (make-ephemeron-hasheq)])
+                                               (lambda (ht key val)
+                                                 (define x-key (x key))
+                                                 (hash-set! keys x-key key)
+                                                 (values x-key val))))
                                          ;; remove
                                          (lambda (ht key)
                                            (x key))
@@ -102,6 +116,11 @@
               (define (x-mutable-map-build args)
                 (define ht (wrap (make-hash)))
                 (build-mutable-map 'x-mutable-map-build ht (to-list 'x-mutable-map-build args)))
+              (define (weak-mutable-x-map? v)
+                (and (mutable-hash? v) (hash-ephemeron? v) (x-map? v)))
+              (define (x-weak-mutable-map-build args)
+                (define ht (wrap (make-ephemeron-hash)))
+                (build-mutable-map 'x-weak-mutable-map-build ht (to-list 'x-weak-mutable-map-build args)))
               (define (immutable-x-set? v)
                 (and (set? v) (immutable-hash? (set-ht v)) (x-map? (set-ht v))))
               (define (x-set-build . args)
@@ -113,14 +132,21 @@
               (define (x-mutable-set-build . args)
                 (define ht (wrap (make-hash)))
                 (build-mutable-set 'x-mutable-set-build ht args))
+              (define (weak-mutable-x-set? v)
+                (and (set? v) (mutable-hash? (set-ht v)) (hash-weak? (set-ht v)) (x-map? (set-ht v))))
+              (define (x-weak-mutable-set-build . args)
+                (define ht (wrap (make-weak-hash)))
+                (build-mutable-set 'x-weak-mutable-set-build ht args))
               (define-key-comp-syntax name.name
                 (key-comp 'name.name #'x-map?
                           #'x-map-build #'x-map-pair-build #'list->x-map
                           #'mutable-x-map? #'x-mutable-map-build
+                          #'weak-mutable-x-map? #'x-weak-mutable-map-build
                           #'empty-x-map
                           #'immutable-x-set?
                           #'x-set-build #'x-set-build #'list->x-set
-                          #'mutable-x-set? #'x-mutable-set-build))))]))))
+                          #'mutable-x-set? #'x-mutable-set-build
+                          #'weak-mutable-x-set? #'x-weak-mutable-set-build))))]))))
 
 (define (hash-procedures #:equals equals #:hash_code hash_code)
   (unless (and (procedure? equals) (procedure-arity-includes? equals 3))

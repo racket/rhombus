@@ -59,7 +59,8 @@
                       #f
                       rhombus/repet
                       rhombus/annot)
-                     MutableMap)
+                     MutableMap
+                     WeakMutableMap)
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
@@ -93,33 +94,45 @@
            Map-build Map-pair-build list->map
            mutable-equal-always-hash?
            MutableMap-build
+           weak-mutable-equal-always-hash?
+           WeakMutableMap-build
            (for-space rhombus/statinfo
                       Map-pair-build
-                      MutableMap-build)
+                      MutableMap-build
+                      WeakMutableMap-build)
 
            object-hash?
            ObjectMap-build ObjectMap-pair-build list->object-map
            mutable-object-hash?
            MutableObjectMap-build
+           weak-mutable-object-hash?
+           WeakMutableObjectMap-build
            (for-space rhombus/statinfo
                       ObjectMap-pair-build
-                      MutableObjectMap-build)
+                      MutableObjectMap-build
+                      WeakMutableObjectMap-build)
 
            now-hash?
            NowMap-build NowMap-pair-build list->now-map
            mutable-now-hash?
            MutableNowMap-build
+           weak-mutable-now-hash?
+           WeakMutableNowMap-build
            (for-space rhombus/statinfo
                       NowMap-pair-build
-                      MutableNowMap-build)
+                      MutableNowMap-build
+                      WeakMutableNowMap-build)
 
            number-or-object-hash?
            NumberOrObjectMap-build NumberOrObjectMap-pair-build list->number-or-object-map
            mutable-number-or-object-hash?
            MutableNumberOrObjectMap-build
+           weak-mutable-number-or-object-hash?
+           WeakMutableNumberOrObjectMap-build
            (for-space rhombus/statinfo
                       NumberOrObjectMap-pair-build
-                      MutableNumberOrObjectMap-build)))
+                      MutableNumberOrObjectMap-build
+                      WeakMutableNumberOrObjectMap-build)))
 
 (module+ for-key-comp-macro
   (provide build-map))
@@ -195,6 +208,21 @@
   (set
    delete))
 
+(define-primitive-class WeakMutableMap weak-mutable-map
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,mutable-map-static-infos
+  #:existing
+  #:opaque
+  #:parent #f mutable-map
+  #:fields ()
+  #:namespace-fields
+  ([by WeakMutableMap.by])
+  #:properties
+  ()
+  #:methods
+  ())
+
 (define Map-build hashalw)
 (define ObjectMap-build hasheq)
 (define NowMap-build hash)
@@ -209,6 +237,11 @@
 (define (mutable-object-hash? v) (and (mutable-hash? v) (hash-eq? v)))
 (define (mutable-now-hash? v) (and (mutable-hash? v) (and (not (custom-map-ref v #f)) (hash-equal? v))))
 (define (mutable-number-or-object-hash? v) (and (mutable-hash? v) (hash-eqv? v)))
+
+(define (weak-mutable-equal-always-hash? v) (and (mutable-hash? v) (hash-ephemeron? v) (hash-equal-always? v)))
+(define (weak-mutable-object-hash? v) (and (mutable-hash? v) (hash-ephemeron? v) (hash-eq? v)))
+(define (weak-mutable-now-hash? v) (and (mutable-hash? v) (hash-ephemeron? v) (and (not (custom-map-ref v #f)) (hash-equal? v))))
+(define (weak-mutable-number-or-object-hash? v) (and (mutable-hash? v) (hash-ephemeron? v) (hash-eqv? v)))
 
 (define Map-pair-build
   (let ([Map (lambda args
@@ -502,7 +535,11 @@
      #'(let-values ([(k v) e])
          (hash-set ht-id k v))]))
 
+(define (ephemeron-mutable-hash? m)
+  (and (hash? m) (hash-ephemeron? m)))
+
 (define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-infos))
+(define-annotation-syntax WeakMutableMap (identifier-annotation #'ephemeron-mutable-hash? weak-mutable-map-static-infos))
 (define-annotation-syntax ReadableMap (identifier-annotation #'hash? readable-map-static-infos))
 
 (define-annotation-syntax MutableMap.by
@@ -536,7 +573,38 @@
                                                 (hash-copy (build-map '|MutableMap.by(is_number_or_object)| #hasheqv() args)))])
     |MutableMap.by(is_number_or_object)|))
 
-(define-for-syntax (parse-mutable-map stx repetition? map-build-id mutable-map-build-id)
+(define-annotation-syntax WeakMutableMap.by
+  (annotation-prefix-operator
+   #'WeakMutableMap.by
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (syntax-parse stx
+                         [(_ . tail)
+                          (values (annotation-predicate-form (key-comp-weak-mutable-map?-id mapper)
+                                                             weak-mutable-map-static-infos)
+                                  #'tail)]))))))
+
+(define WeakMutableMap-build
+  (let ([WeakMutableMap (lambda args
+                          (hash-copy/ephemeron (build-map 'WeakMutableMap #hashalw() args)))])
+    WeakMutableMap))
+(define WeakMutableObjectMap-build
+  (let ([|WeakMutableMap.by(===)| (lambda args
+                                    (hash-copy/ephemeron (build-map '|WeakMutableMap.by(===)| #hasheq() args)))])
+    |WeakMutableMap.by(===)|))
+(define WeakMutableNowMap-build
+  (let ([|WeakMutableMap.by(is_now)| (lambda args
+                                       (hash-copy/ephemeron (build-map '|WeakMutableMap.by(is_now)| #hash() args)))])
+    |WeakMutableMap.by(is_now)|))
+(define WeakMutableNumberOrObjectMap-build
+  (let ([|WeakMutableMap.by(is_number_or_object)| (lambda args
+                                                    (hash-copy/ephemeron (build-map '|WeakMutableMap.by(is_number_or_object)| #hasheqv() args)))])
+    |WeakMutableMap.by(is_number_or_object)|))
+
+(define-for-syntax (parse-mutable-map stx repetition? map-build-id mutable-map-build-id map-copy-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss)
@@ -553,12 +621,12 @@
                  (car argss)
                  (lambda args
                    (values (quasisyntax/loc stx
-                             (Map.copy (#,map-build-id #,@args)))
+                             (#,map-copy-id (#,map-build-id #,@args)))
                            mutable-map-static-infos)))]
                [else
                 (wrap-static-info*
                  (quasisyntax/loc stx
-                   (Map.copy (#,map-build-id #,@(if (null? argss) null (car argss)))))
+                   (#,map-copy-id (#,map-build-id #,@(if (null? argss) null (car argss)))))
                  mutable-map-static-infos)])
              #'tail)]
     [(form-id . tail) (values (if repetition?
@@ -568,7 +636,7 @@
 
 (define-syntax MutableMap
   (expression-transformer
-   (lambda (stx) (parse-mutable-map stx #f #'Map-build #'MutableMap-build))))
+   (lambda (stx) (parse-mutable-map stx #f #'Map-build #'MutableMap-build #'Map.copy))))
 
 (define-syntax MutableMap.by
   (expression-transformer
@@ -577,11 +645,12 @@
                      (lambda (stx arg-stxes str mapper)
                        (parse-mutable-map stx #f
                                           (key-comp-map-build-id mapper)
-                                          (key-comp-mutable-map-build-id mapper)))))))
+                                          (key-comp-mutable-map-build-id mapper)
+                                          #'Map.copy))))))
 
 (define-repetition-syntax MutableMap
   (repetition-transformer
-   (lambda (stx) (parse-mutable-map stx #t #'Map-build #'MutableMap-build))))
+   (lambda (stx) (parse-mutable-map stx #t #'Map-build #'MutableMap-build #'Map.copy))))
 
 (define-repetition-syntax MutableMap.by
   (repetition-transformer
@@ -590,7 +659,8 @@
                      (lambda (stx arg-stxes str mapper)
                        (parse-mutable-map stx #t
                                           (key-comp-map-build-id mapper)
-                                          (key-comp-mutable-map-build-id mapper)))))))
+                                          (key-comp-mutable-map-build-id mapper)
+                                          #'Map.copy))))))
 
 (define-static-info-syntax MutableMap-build
   (#%call-result #,mutable-map-static-infos)
@@ -603,6 +673,46 @@
   (#%indirect-static-info MutableMap-build))
 (define-static-info-syntax MutableNumberOrObjectMap-build
   (#%indirect-static-info MutableMap-build))
+
+(define-syntax WeakMutableMap
+  (expression-transformer
+   (lambda (stx) (parse-mutable-map stx #f #'Map-build #'WeakMutableMap-build #'hash-copy/ephemeron))))
+
+(define-syntax WeakMutableMap.by
+  (expression-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-map stx #f
+                                          (key-comp-map-build-id mapper)
+                                          (key-comp-weak-mutable-map-build-id mapper)
+                                          #'hash-copy/ephemeron))))))
+
+(define-repetition-syntax WeakMutableMap
+  (repetition-transformer
+   (lambda (stx) (parse-mutable-map stx #t #'Map-build #'WeakMutableMap-build #'hash-copy/ephemeron))))
+
+(define-repetition-syntax WeakMutableMap.by
+  (repetition-transformer
+   (lambda (stx)
+     (parse-key-comp stx
+                     (lambda (stx arg-stxes str mapper)
+                       (parse-mutable-map stx #t
+                                          (key-comp-map-build-id mapper)
+                                          (key-comp-weak-mutable-map-build-id mapper)
+                                          #'hash-copy/ephemeron))))))
+
+(define-static-info-syntax WeakMutableMap-build
+  (#%call-result #,weak-mutable-map-static-infos)
+  (#%function-arity -1)
+  (#%indirect-static-info indirect-function-static-info))
+
+(define-static-info-syntax WeakMutableObjectMap-build
+  (#%indirect-static-info WeakMutableMap-build))
+(define-static-info-syntax WeakMutableNowMap-build
+  (#%indirect-static-info WeakMutableMap-build))
+(define-static-info-syntax WeakMutableNumberOrObjectMap-build
+  (#%indirect-static-info WeakMutableMap-build))
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
   (syntax-parse stx
@@ -857,6 +967,20 @@
     [(custom-map-ref ht #f)
      => (lambda (cm) ((custom-map-copy cm) ht))]
     [else (hash-copy ht)]))
+
+(define (hash-copy/ephemeron ht)
+  (cond
+    [(custom-map-ref ht #f)
+     => (lambda (cm) ((custom-map-weak-copy cm) ht))]
+    [else
+     (define mht (cond
+                   [(hash-eq? ht) (make-ephemeron-hasheq)]
+                   [(hash-eqv? ht) (make-ephemeron-hasheqv)]
+                   [(hash-equal? ht) (make-ephemeron-hash)]
+                   [else (make-ephemeron-hashalw)]))
+     (for ([(k v) (in-hash ht)])
+       (hash-set! mht k v))
+     mht]))
 
 (define/method (Map.snapshot ht)
   #:static-infos ((#%call-result #,map-static-infos))
