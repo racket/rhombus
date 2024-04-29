@@ -546,6 +546,49 @@ check:
   ~is "#0=MutableMap{1: #0#, 3: 4}"
 
 block:
+  def orig = MutableMap{"x": 1, 2: 5}
+  check orig :: MutableMap.now_of(String, Int) ~throws "value does not satisfy annotation" // "value" is the map
+  check orig :: MutableMap.now_of(Any, Int) ~is orig
+  check orig :: MutableMap.now_of(Any, matching(1)) ~throws "value does not satisfy annotation"
+  check (orig :: MutableMap.now_of(Any, Int))["x"] := "1" ~is #void
+  check orig ~is_now MutableMap{"x": "1", 2: 5}
+
+block:
+  def orig = MutableMap{"x": 1, 2: 5}
+  def m :: MutableMap.later_of(String, Int) = orig
+  check m["x"] ~is 1
+  check m[2] ~throws "key does not satisfy annotation"
+  check m["x"] := "1" ~throws "value does not satisfy annotation"
+  check to_string(m) ~throws "key does not satisfy annotation"
+  check m["x"] := 10 ~is #void
+  check m["y"] := 11 ~is #void
+  check orig[2] ~is 5
+  check orig["x"] ~is 10
+  check orig["y"] ~is 11
+  check m.delete(2) ~throws "key does not satisfy annotation"
+  check m.delete("y") ~is #void
+  check orig.delete(2) ~is #void
+  check to_string(m) ~is "MutableMap{\"x\": 10}"
+
+check:
+  use_static
+  def m :: MutableMap.later_of(Int, String) = MutableMap{100: "1"}
+  m[100] ++ "!"
+  ~is "1!"
+
+block:
+  def m :: Map.later_of(String, Int) = Map{"x": 1, 2: 5}
+  check m["x"] ~is 1
+  check m[2] ~throws "key does not satisfy annotation"
+  check m ++ {"x": "1"} ~throws "value does not satisfy annotation"
+  check to_string(m) ~throws "key does not satisfy annotation"
+  check m ++ {"x": 10} ~is_a Map
+  check m ++ {"y": 11} ~is_a Map
+  check m.remove(2) ~throws "key does not satisfy annotation"
+  check m.remove("x") ~is_a Map
+  check m.remove("y") ~is_a Map
+
+block:
   class Posn(x, y)
   let a = Posn(1, 2)
   let b = Posn(1, 2)
