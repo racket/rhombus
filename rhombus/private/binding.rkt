@@ -34,7 +34,9 @@
            in-binding-space
            bind-quote
 
-           binding-extension-combine))
+           binding-extension-combine
+
+           (struct-out binding-prefix+infix-operator)))
 
 (provide define-binding-syntax
          raise-binding-failure
@@ -120,6 +122,11 @@
   (define extension-syntax-property-key (gensym 'extension))
   (define (binding-extension-combine id prefix)
     (syntax-property id extension-syntax-property-key prefix)))
+
+(begin-for-syntax
+  (struct binding-prefix+infix-operator (prefix infix)
+    #:property prop:binding-prefix-operator (lambda (self) (binding-prefix+infix-operator-prefix self))
+    #:property prop:binding-infix-operator (lambda (self) (binding-prefix+infix-operator-infix self))))
 
 (define-syntax (identifier-infoer stx)
   (syntax-parse stx

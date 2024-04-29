@@ -3,9 +3,6 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots = @rhombus(..., ~bind))
-@(def dots_expr = @rhombus(...))
-
 @title{Sequences}
 
 A @deftech{sequence} supplies elements to a @rhombus(for) iteration.
@@ -28,41 +25,6 @@ internal state, and the state can even be specific to a particular
  expression acceptable as a sequence to @rhombus(for) in static mode, and
  it is suitable when a more specialized annotation (such as
  @rhombus(List) or @rhombus(Array)) is not available.
-
-}
-
-
-@doc(
-  ~nonterminal:
-    n_expr: block expr
-    m_expr: block expr
-  expr.macro '$n_expr .. $m_expr'
-  expr.macro '$n_expr ..'
-){
-
- If @rhombus(n_expr) produces an integer @rhombus(n, ~var) and
- @rhombus(m_expr) (when supplied) produces an integer @rhombus(m, ~var),
- returns a @tech{listable} @tech{sequence} containing the integers from @rhombus(n, ~var)
- (inclusive) to @rhombus(m, ~var) (exclusive). If @rhombus(m_expr) is not
- specified, the result is an infinite sequence that contains all integers
- starting from @rhombus(n, ~var).
-
- The @rhombus(..) operator's precedence is lower than the arithmetic operators
- @rhombus(+), @rhombus(-), @rhombus(*), and @rhombus(/).
-
- A @rhombus(..) expression has static information that makes it
- acceptable as a sequence to @rhombus(for) in static mode.
-
-}
-
-@doc(
-  ~nonterminal:
-    n_expr: block expr
-    m_expr: block expr
-  expr.macro '$n_expr ..= $m_expr'
-){
-
- Like @rhombus(n_expr .. m_expr), but with an inclusive upper bound.
 
 }
 
