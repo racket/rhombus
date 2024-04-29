@@ -84,13 +84,17 @@
      (check-posint who n)
      (if (n . < . (arithmetic-shift 1 31))
          (random n)
-         (let loop ([n n] [r 0] [len (integer-length n)] [shift 0])
-           (if (len . < . 32)
-               (+ r (arithmetic-shift (random n) shift))
-               (loop (arithmetic-shift n -31)
-                     (+ r (arithmetic-shift (random #x7FFFFFFF) shift))
-                     (- len 31)
-                     (+ shift 31)))))]
+         (let rejection-loop ()
+           (define maybe-result
+             (let loop ([r 0] [len (integer-length n)] [shift 0])
+               (if (len . < . 32)
+                   (+ r (arithmetic-shift (random (add1 (arithmetic-shift n (- shift)))) shift))
+                   (loop (+ r (arithmetic-shift (random #x7FFFFFFF) shift))
+                         (- len 31)
+                         (+ shift 31)))))
+           (if (maybe-result . < . n)
+               maybe-result
+               (rejection-loop))))]
     [(start end)
      (check-int who start)
      (check-int who end)
