@@ -17,8 +17,15 @@ expr.macro 'static_arity_check $(pattern:
                                  | '': field import = #false):
               $(pattern:
                   kind ~group
-                | '$pre ... $args ~method': field is_method = #true
-                | '$pre ... $(args :: Term)': field is_method = #false)
+                | '$pre ... $args ~method':
+                    field method_annot = #false
+                    field is_method = #true
+                | '$pre ... $args ~method $method_annot':
+                    field is_method = #true
+                | '$pre ... $(args :: Term)':
+                    field method_annot = #false
+                    field is_method = #false
+                )
               ...':
   fun make_error(_):
     'error("static_arity.check", "should not get here")'
@@ -44,7 +51,7 @@ expr.macro 'static_arity_check $(pattern:
                '($(make_error(arg)), ...,
                  $(make_error(more)), ...,
                  $(make_error(#false)))')
-  fun make_check(pres && '$self $_ ...', args, is_method):
+  fun make_check(pres && '$self $_ ...', args, is_method, method_annot):
     let check = 'check'.relocate(self)
     fun finish(kind, '$pre ...', args):
       let (just, less, more) = extract_args(args)
@@ -80,7 +87,8 @@ expr.macro 'static_arity_check $(pattern:
                ''
            | '($(_ :: Identifier), $arg, ...)':
                let '$annot ... . $(method :: Term)' = pres
-               let pres = '($(make_error(#false)) :~ $annot ...) . $method'
+               let annot = method_annot || '$annot ...'
+               let pres = '($(make_error(#false)) :~ $annot) . $method'
                let args = '($arg, ...)'
                finish("method", pres, args)
            | ~else:
@@ -94,7 +102,7 @@ expr.macro 'static_arity_check $(pattern:
              Evaluator.import(ModulePath '$import')
            »'
        | '')
-     $(make_check('$pre ...', args, is_method))
+     $(make_check('$pre ...', args, is_method, method_annot))
      ...'
 
 // expose meta bindings at phase 0 for `~meta` option

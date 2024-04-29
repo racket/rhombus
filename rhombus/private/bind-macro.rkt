@@ -71,7 +71,7 @@
   rhombus/bind
   #'make-binding-prefix-operator
   #'make-binding-infix-operator
-  #'prefix+infix)
+  #'binding-prefix+infix-operator)
 
 (begin-for-syntax
   (define-operator-syntax-classes
@@ -97,11 +97,6 @@
 
 (define-for-syntax space
   (space-syntax rhombus/bind))
-
-(begin-for-syntax
-  (struct prefix+infix (prefix infix)
-    #:property prop:binding-prefix-operator (lambda (self) (prefix+infix-prefix self))
-    #:property prop:binding-infix-operator (lambda (self) (prefix+infix-infix self))))
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)

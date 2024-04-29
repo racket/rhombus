@@ -3,7 +3,6 @@
          (for-syntax racket/base
                      syntax/parse/pre)
          "static-info.rkt"
-         "call-result-key.rkt"
          "function-arity-key.rkt"
          "indirect-static-info-key.rkt"
          "rhombus-primitive.rkt")
@@ -30,7 +29,10 @@
   (expand-define/arity stx build-define/arity))
 
 (define-syntax (define/method stx)
-  (expand-define/arity stx build-define/method))
+  (syntax-parse stx
+    [(self (~seq #:direct-id direct-id) . tail)
+     (expand-define/arity #'(self . tail) (build-define/method/direct-id #'direct-id))]
+    [_ (expand-define/arity stx build-define/method)]))
 
 (define-for-syntax (expand-define/arity stx build)
   (syntax-parse stx
@@ -86,7 +88,13 @@
              (#%function-arity #,(or arity-mask (extract-arity-mask rhs)))
              (#%indirect-static-info indirect-function-static-info)))))
 
-(define-for-syntax (build-define/method id name inline? primitive-ids static-infos rhs)
+(define-for-syntax ((build-define/method/direct-id direct-id)
+                    id name inline? primitive-ids static-infos rhs)
+  (build-define/method id name inline? primitive-ids static-infos rhs
+                       #:direct-id direct-id))
+
+(define-for-syntax (build-define/method id name inline? primitive-ids static-infos rhs
+                                        #:direct-id [direct-id id])
   (define (format-id fmt)
     (datum->syntax id (string->symbol (format fmt (syntax-e id)))))
   (define dispatch-id (format-id "~a/dispatch"))
@@ -109,7 +117,7 @@
                         #`[#,args #,(make-apply id #'obj args)])))]))
   (list* #`(define-for-syntax #,dispatch-id
              (lambda (nary)
-               (nary '#,(arithmetic-shift arity-mask -1) (quote-syntax #,id) (quote-syntax #,method-id))))
+               (nary '#,(arithmetic-shift arity-mask -1) (quote-syntax #,direct-id) (quote-syntax #,method-id))))
          #`(define #,method-id
              (lambda (#,obj)
                ;; TODO what should we name the partially applied method?

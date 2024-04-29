@@ -37,7 +37,7 @@
                    #:defaults ([instance-static-infos #'()]))
         (~and creation (~or* #:new #:existing))
         (~optional (~and actual-class (~or* #:class)))
-        (~and mode (~or* #:transparent #:opaque #:translucent))
+        (~and mode (~or* #:transparent #:translucent #:just-binding #:opaque))
         (~optional (~seq #:parent Parent parent)
                    #:defaults ([parent #'#f]
                                [Parent #'#f]))
@@ -91,7 +91,8 @@
          ...)
         )
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
-           (define translucent? (eq? '#:translucent (syntax-e #'mode)))]
+           (define translucent? (eq? '#:translucent (syntax-e #'mode)))
+           (define just-binding? (eq? '#:just-binding (syntax-e #'mode)))]
      #:with name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))))
      #:with struct_name (datum->syntax #'name (string->symbol (format "struct:~a" (syntax-e #'name))))
      #:with ([prop prop-proc (~optional prop-mutator) prop-static-infos] ...)
@@ -200,7 +201,10 @@
                 (list
                  #'(set-primitive-contract! 'name? Name-str)
                  #'(define-annotation-syntax Name
-                     (identifier-annotation #'name? name-static-infos))
+                     (identifier-annotation #'name? name-static-infos)))
+                '())
+         #,@(if (or transparent? translucent? just-binding?)
+                (list
                  #`(define-syntax Name
                      (expression-transformer
                       (lambda (stx)

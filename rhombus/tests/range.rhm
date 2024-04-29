@@ -1,0 +1,1488 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Range.from_to(start, end)
+    Range.from_to_inclusive(start, end)
+    Range.from(start)
+    Range.from_exclusive_to(start, end)
+    Range.from_exclusive_to_inclusive(start, end)
+    Range.from_exclusive(start)
+    Range.to(end)
+    Range.to_inclusive(end)
+    Range.full()
+    Range.start(rge) ~method
+    Range.end(rge) ~method
+    Range.includes_start(rge) ~method
+    Range.includes_end(rge) ~method
+    Range.has_element(rge, v) ~method
+    Range.encloses(rge, ...) ~method
+    Range.is_connected(rge, other) ~method
+    Range.overlaps(rge, other) ~method
+    Range.span(rge, other, ...) ~method
+    Range.gap(rge, other) ~method
+    Range.intersect(rge, ...) ~method
+    Range.to_sequence(rge) ~method SequenceRange
+    Range.step_by(rge, step) ~method SequenceRange
+    Range.to_list(rge) ~method ListRange
+
+// basic sanity checks
+block:
+  def rge = 0..5
+  check rge ~is 0..5
+  check rge ~matches 0..5
+  check rge ~is Range.from_to(0, 5)
+  check rge ~matches Range.from_to(0, 5)
+  check rge ~matches !(0..4)
+  check rge ~matches !(1..5)
+  check rge ~matches !(0..=5)
+  check to_string(rge) ~is "0 .. 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is 5
+      rge.includes_start() ~is #true
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #false
+      rge.encloses(0..5) ~is #true
+      rge.is_connected(0..5) ~is #true
+      rge.overlaps(0..5) ~is #true
+      rge.span(0..5) ~is 0..5
+      rge.gap(0..5) ~is #false
+      rge.intersect(0..5) ~is 0..5
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #true
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).encloses(0..5) ~is #true
+    dynamic(rge).is_connected(0..5) ~is #true
+    dynamic(rge).overlaps(0..5) ~is #true
+    dynamic(rge).span(0..5) ~is 0..5
+    dynamic(rge).gap(0..5) ~is #false
+    dynamic(rge).intersect(0..5) ~is 0..5
+
+block:
+  def rge = 0..=5
+  check rge ~is 0..=5
+  check rge ~matches 0..=5
+  check rge ~is Range.from_to_inclusive(0, 5)
+  check rge ~matches Range.from_to_inclusive(0, 5)
+  check rge ~matches !(0..=4)
+  check rge ~matches !(1..=5)
+  check rge ~matches !(0..5)
+  check to_string(rge) ~is "0 ..= 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is 5
+      rge.includes_start() ~is #true
+      rge.includes_end() ~is #true
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #true
+      rge.encloses(0..=5) ~is #true
+      rge.is_connected(0..=5) ~is #true
+      rge.overlaps(0..=5) ~is #true
+      rge.span(0..=5) ~is 0..=5
+      rge.gap(0..=5) ~is #false
+      rge.intersect(0..=5) ~is 0..=5
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #true
+    dynamic(rge).includes_end() ~is #true
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(0..=5) ~is #true
+    dynamic(rge).is_connected(0..=5) ~is #true
+    dynamic(rge).overlaps(0..=5) ~is #true
+    dynamic(rge).span(0..=5) ~is 0..=5
+    dynamic(rge).gap(0..=5) ~is #false
+    dynamic(rge).intersect(0..=5) ~is 0..=5
+
+block:
+  def rge = 0..
+  check rge ~is 0..
+  check rge ~matches 0..
+  check rge ~is Range.from(0)
+  check rge ~matches Range.from(0)
+  check rge ~matches !(1..)
+  check rge ~matches !(1 <..<)
+  check to_string(rge) ~is "0 .."
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is #inf
+      rge.includes_start() ~is #true
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #true
+      rge.encloses(0..) ~is #true
+      rge.is_connected(0..) ~is #true
+      rge.overlaps(0..) ~is #true
+      rge.span(0..) ~is 0..
+      rge.gap(0..) ~is #false
+      rge.intersect(0..) ~is 0..
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is #inf
+    dynamic(rge).includes_start() ~is #true
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(0..) ~is #true
+    dynamic(rge).is_connected(0..) ~is #true
+    dynamic(rge).overlaps(0..) ~is #true
+    dynamic(rge).span(0..) ~is 0..
+    dynamic(rge).gap(0..) ~is #false
+    dynamic(rge).intersect(0..) ~is 0..
+
+block:
+  def rge = 0 <..< 5
+  check rge ~is 0 <..< 5
+  check rge ~matches 0 <..< 5
+  check rge ~is Range.from_exclusive_to(0, 5)
+  check rge ~matches Range.from_exclusive_to(0, 5)
+  check rge ~matches !(0 <..< 4)
+  check rge ~matches !(1 <..< 5)
+  check rge ~matches !(0 <..= 5)
+  check to_string(rge) ~is "0 <..< 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is 5
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #false
+      rge.has_element(5) ~is #false
+      rge.encloses(0 <..< 5) ~is #true
+      rge.is_connected(0 <..< 5) ~is #true
+      rge.overlaps(0 <..< 5) ~is #true
+      rge.span(0 <..< 5) ~is 0 <..< 5
+      rge.gap(0 <..< 5) ~is #false
+      rge.intersect(0 <..< 5) ~is 0 <..< 5
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #false
+    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).encloses(0 <..< 5) ~is #true
+    dynamic(rge).is_connected(0 <..< 5) ~is #true
+    dynamic(rge).overlaps(0 <..< 5) ~is #true
+    dynamic(rge).span(0 <..< 5) ~is 0 <..< 5
+    dynamic(rge).gap(0 <..< 5) ~is #false
+    dynamic(rge).intersect(0 <..< 5) ~is 0 <..< 5
+
+block:
+  def rge = 0 <..= 5
+  check rge ~is 0 <..= 5
+  check rge ~matches 0 <..= 5
+  check rge ~is Range.from_exclusive_to_inclusive(0, 5)
+  check rge ~matches Range.from_exclusive_to_inclusive(0, 5)
+  check rge ~matches !(0 <..= 4)
+  check rge ~matches !(1 <..= 5)
+  check rge ~matches !(0 <..< 5)
+  check to_string(rge) ~is "0 <..= 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is 5
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #true
+      rge.has_element(0) ~is #false
+      rge.has_element(5) ~is #true
+      rge.encloses(0 <..= 5) ~is #true
+      rge.is_connected(0 <..= 5) ~is #true
+      rge.overlaps(0 <..= 5) ~is #true
+      rge.span(0 <..= 5) ~is 0 <..= 5
+      rge.gap(0 <..= 5) ~is #false
+      rge.intersect(0 <..= 5) ~is 0 <..= 5
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #true
+    dynamic(rge).has_element(0) ~is #false
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(0 <..= 5) ~is #true
+    dynamic(rge).is_connected(0 <..= 5) ~is #true
+    dynamic(rge).overlaps(0 <..= 5) ~is #true
+    dynamic(rge).span(0 <..= 5) ~is 0 <..= 5
+    dynamic(rge).gap(0 <..= 5) ~is #false
+    dynamic(rge).intersect(0 <..= 5) ~is 0 <..= 5
+
+block:
+  def rge = 0 <..<
+  check rge ~is 0 <..<
+  check rge ~matches 0 <..<
+  check rge ~is Range.from_exclusive(0)
+  check rge ~matches Range.from_exclusive(0)
+  check rge ~matches !(1 <..<)
+  check rge ~matches !(0..)
+  check to_string(rge) ~is "0 <..<"
+  block:
+    use_static
+    check:
+      rge.start() ~is 0
+      rge.end() ~is #inf
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #false
+      rge.has_element(5) ~is #true
+      rge.encloses(0 <..<) ~is #true
+      rge.is_connected(0 <..<) ~is #true
+      rge.overlaps(0 <..<) ~is #true
+      rge.span(0 <..<) ~is 0 <..<
+      rge.gap(0 <..<) ~is #false
+      rge.intersect(0 <..<) ~is 0 <..<
+  check:
+    dynamic(rge).start() ~is 0
+    dynamic(rge).end() ~is #inf
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #false
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(0 <..<) ~is #true
+    dynamic(rge).is_connected(0 <..<) ~is #true
+    dynamic(rge).overlaps(0 <..<) ~is #true
+    dynamic(rge).span(0 <..<) ~is 0 <..<
+    dynamic(rge).gap(0 <..<) ~is #false
+    dynamic(rge).intersect(0 <..<) ~is 0 <..<
+
+block:
+  def rge = ..5
+  check rge ~is ..5
+  check rge ~matches ..5
+  check rge ~is Range.to(5)
+  check rge ~matches Range.to(5)
+  check rge ~matches !(..4)
+  check rge ~matches !(..=5)
+  check to_string(rge) ~is ".. 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is #neginf
+      rge.end() ~is 5
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #false
+      rge.encloses(..5) ~is #true
+      rge.is_connected(..5) ~is #true
+      rge.overlaps(..5) ~is #true
+      rge.span(..5) ~is ..5
+      rge.gap(..5) ~is #false
+      rge.intersect(..5) ~is ..5
+  check:
+    dynamic(rge).start() ~is #neginf
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).encloses(..5) ~is #true
+    dynamic(rge).is_connected(..5) ~is #true
+    dynamic(rge).overlaps(..5) ~is #true
+    dynamic(rge).span(..5) ~is ..5
+    dynamic(rge).gap(..5) ~is #false
+    dynamic(rge).intersect(..5) ~is ..5
+
+block:
+  def rge = ..=5
+  check rge ~is ..=5
+  check rge ~matches ..=5
+  check rge ~is Range.to_inclusive(5)
+  check rge ~matches Range.to_inclusive(5)
+  check rge ~matches !(..=4)
+  check rge ~matches !(..5)
+  check to_string(rge) ~is "..= 5"
+  block:
+    use_static
+    check:
+      rge.start() ~is #neginf
+      rge.end() ~is 5
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #true
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #true
+      rge.encloses(..=5) ~is #true
+      rge.is_connected(..=5) ~is #true
+      rge.overlaps(..=5) ~is #true
+      rge.span(..=5) ~is ..=5
+      rge.gap(..=5) ~is #false
+      rge.intersect(..=5) ~is ..=5
+  check:
+    dynamic(rge).start() ~is #neginf
+    dynamic(rge).end() ~is 5
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #true
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(..=5) ~is #true
+    dynamic(rge).is_connected(..=5) ~is #true
+    dynamic(rge).overlaps(..=5) ~is #true
+    dynamic(rge).span(..=5) ~is ..=5
+    dynamic(rge).gap(..=5) ~is #false
+    dynamic(rge).intersect(..=5) ~is ..=5
+
+block:
+  def rge = ..
+  check rge ~is ..
+  check rge ~matches ..
+  check rge ~is Range.full()
+  check rge ~matches Range.full()
+  check to_string(rge) ~is ".."
+  block:
+    use_static
+    check:
+      rge.start() ~is #neginf
+      rge.end() ~is #inf
+      rge.includes_start() ~is #false
+      rge.includes_end() ~is #false
+      rge.has_element(0) ~is #true
+      rge.has_element(5) ~is #true
+      rge.encloses(..) ~is #true
+      rge.is_connected(..) ~is #true
+      rge.overlaps(..) ~is #true
+      rge.span(..) ~is ..
+      rge.gap(..) ~is #false
+      rge.intersect(..) ~is ..
+  check:
+    dynamic(rge).start() ~is #neginf
+    dynamic(rge).end() ~is #inf
+    dynamic(rge).includes_start() ~is #false
+    dynamic(rge).includes_end() ~is #false
+    dynamic(rge).has_element(0) ~is #true
+    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).encloses(..) ~is #true
+    dynamic(rge).is_connected(..) ~is #true
+    dynamic(rge).overlaps(..) ~is #true
+    dynamic(rge).span(..) ~is ..
+    dynamic(rge).gap(..) ~is #false
+    dynamic(rge).intersect(..) ~is ..
+
+// error reporting
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks $variant $op $side':
+    ~op_stx self
+    let throws = '~throws'.relocate(self)
+    match side.unwrap()
+    | #'~left:
+        'check:
+           "oops" $op $throws values(
+             #%literal $(to_string(op) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           Range . $variant("oops") $throws values(
+             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )'
+    | #'~right:
+        'check:
+           $op "oops" $throws values(
+             #%literal $(to_string(op) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           Range . $variant("oops") $throws values(
+             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )'
+    | #'~both:
+        'check:
+           "oops" $op 5 $throws values(
+             #%literal $(to_string(op) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           0 $op "oops" $throws values(
+             #%literal $(to_string(op) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           5 $op 0 $throws values(
+             #%literal $(to_string(op) ++ ": starting point must be less than or equal to ending point"),
+             "starting point: 5",
+             "ending point: 0",
+           )
+           Range . $variant("oops", 5) $throws values(
+             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           Range . $variant(0, "oops") $throws values(
+             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
+             "expected: Int",
+             "given: \"oops\"",
+           )
+           Range . $variant(5, 0) $throws values(
+             #%literal $("Range." ++ to_string(variant) ++ ": starting point must be less than or equal to ending point"),
+             "starting point: 5",
+             "ending point: 0",
+           )'
+  generate_checks from_to .. ~both
+  generate_checks from_to_inclusive ..= ~both
+  generate_checks from .. ~left
+  generate_checks from_exclusive_to <..< ~both
+  generate_checks from_exclusive_to_inclusive <..= ~both
+  generate_checks from_exclusive <..< ~left
+  generate_checks to .. ~right
+  generate_checks to_inclusive ..= ~right
+
+// `SequenceRange` and `ListRange`
+check:
+  0..5 ~is_a Sequence
+  0..5 ~is_a Listable
+  0..=5 ~is_a Sequence
+  0..=5 ~is_a Listable
+  0.. ~is_a Sequence
+  0.. ~is_a !Listable
+
+// sequences
+block:
+  use_static
+  check:
+    for List (x: 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x: (0..5).step_by(2)):
+      x
+    ~is [0, 2, 4]
+  block:
+    def rge = 0..5
+    check:
+      for List (x: rge):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: dynamic(rge) :~ SequenceRange):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: dynamic(rge) :~ ListRange):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.to_sequence()):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: Range.to_sequence(rge)):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.step_by(2)):
+        x
+      ~is [0, 2, 4]
+    check:
+      for List (x: Range.step_by(rge, 2)):
+        x
+      ~is [0, 2, 4]
+
+block:
+  check:
+    for List (x: dynamic(0..5)):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x: dynamic(0..5).step_by(2)):
+      x
+    ~is [0, 2, 4]
+  block:
+    def rge = dynamic(0..5)
+    check:
+      for List (x: rge):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.to_sequence()):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: Range.to_sequence(rge)):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.step_by(2)):
+        x
+      ~is [0, 2, 4]
+    check:
+      for List (x: Range.step_by(rge, 2)):
+        x
+      ~is [0, 2, 4]
+
+block:
+  use_static
+  check:
+    for List (x: 0..=5):
+      x
+    ~is [0, 1, 2, 3, 4, 5]
+  check:
+    for List (x: (0..=5).step_by(2)):
+      x
+    ~is [0, 2, 4]
+  block:
+    def rge = 0..=5
+    check:
+      for List (x: rge):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: dynamic(rge) :~ SequenceRange):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: dynamic(rge) :~ ListRange):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: rge.to_sequence()):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: Range.to_sequence(rge)):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: rge.step_by(2)):
+        x
+      ~is [0, 2, 4]
+    check:
+      for List (x: Range.step_by(rge, 2)):
+        x
+      ~is [0, 2, 4]
+
+block:
+  check:
+    for List (x: dynamic(0..=5)):
+      x
+    ~is [0, 1, 2, 3, 4, 5]
+  check:
+    for List (x: dynamic(0..=5).step_by(2)):
+      x
+    ~is [0, 2, 4]
+  block:
+    def rge = dynamic(0..=5)
+    check:
+      for List (x: rge):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: rge.to_sequence()):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: Range.to_sequence(rge)):
+        x
+      ~is [0, 1, 2, 3, 4, 5]
+    check:
+      for List (x: rge.step_by(2)):
+        x
+      ~is [0, 2, 4]
+    check:
+      for List (x: Range.step_by(rge, 2)):
+        x
+      ~is [0, 2, 4]
+
+block:
+  use_static
+  check:
+    for List (x: 0..,
+              _: 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x: (0..).step_by(2),
+              _: 0..5):
+      x
+    ~is [0, 2, 4, 6, 8]
+  block:
+    def rge = 0..
+    check:
+      for List (x: dynamic(rge) :~ SequenceRange,
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge,
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.to_sequence(),
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: Range.to_sequence(rge),
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.step_by(2),
+                _: 0..5):
+        x
+      ~is [0, 2, 4, 6, 8]
+    check:
+      for List (x: Range.step_by(rge, 2),
+                _: 0..5):
+        x
+      ~is [0, 2, 4, 6, 8]
+
+block:
+  check:
+    for List (x: dynamic(0..),
+              _: 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x: dynamic(0..).step_by(2),
+              _: 0..5):
+      x
+    ~is [0, 2, 4, 6, 8]
+  block:
+    def rge = dynamic(0..)
+    check:
+      for List (x: rge,
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.to_sequence(),
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: Range.to_sequence(rge),
+                _: 0..5):
+        x
+      ~is [0, 1, 2, 3, 4]
+    check:
+      for List (x: rge.step_by(2),
+                _: 0..5):
+        x
+      ~is [0, 2, 4, 6, 8]
+    check:
+      for List (x: Range.step_by(rge, 2),
+                _: 0..5):
+        x
+      ~is [0, 2, 4, 6, 8]
+
+// listables
+check:
+  [& 0..5] ~is [0, 1, 2, 3, 4]
+  [& 0..=5] ~is [0, 1, 2, 3, 4, 5]
+
+block:
+  use_static
+  check:
+    (0..5).to_list().length() ~is 5
+    (0..=5).to_list().length() ~is 6
+
+// errors
+block:
+  check:
+    Range.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ SequenceRange).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    Range.step_by("oops", 2)
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ SequenceRange).step_by(2)
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ SequenceRange)):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: Range.to_sequence("oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ SequenceRange).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: Range.step_by("oops", 2)):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ SequenceRange).step_by(2)):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: SequenceRange",
+      "given: \"oops\"",
+    )
+
+block:
+  check:
+    Range.to_list("oops")
+    ~throws values(
+      "contract violation",
+      "expected: ListRange",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ ListRange).to_list()
+    ~throws values(
+      "contract violation",
+      "expected: ListRange",
+      "given: \"oops\"",
+    )
+
+// errors in optimized cases
+block:
+  check:
+    for List (i: "oops"..5):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: 0.."oops"):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: 5..0):
+      i
+    ~throws values(
+      "starting point must be less than or equal to ending point",
+      "starting point: 5",
+      "ending point: 0",
+    )
+  check:
+    for List (i: "oops"..=5):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: 0..="oops"):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: 5..=0):
+      i
+    ~throws values(
+      "starting point must be less than or equal to ending point",
+      "starting point: 5",
+      "ending point: 0",
+    )
+  check:
+    for List (i: "oops"..):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+
+block:
+  check:
+    for List (i: ("oops"..5).step_by(2)):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: (0.."oops").step_by(2)):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: (5..0).step_by(2)):
+      i
+    ~throws values(
+      "starting point must be less than or equal to ending point",
+      "starting point: 5",
+      "ending point: 0",
+    )
+  check:
+    for List (i: (0..5).step_by("oops")):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: PosInt",
+      "given: \"oops\""
+    )
+  check:
+    for List (i: ("oops"..=5).step_by(2)):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: (0..="oops").step_by(2)):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: (5..=0).step_by(2)):
+      i
+    ~throws values(
+      "starting point must be less than or equal to ending point",
+      "starting point: 5",
+      "ending point: 0",
+    )
+  check:
+    for List (i: (0..=5).step_by("oops")):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: PosInt",
+      "given: \"oops\""
+    )
+  check:
+    for List (i: ("oops"..).step_by(2)):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: Int",
+      "given: \"oops\"",
+    )
+  check:
+    for List (i: (0..).step_by("oops")):
+      i
+    ~throws values(
+      "contract violation",
+      "expected: PosInt",
+      "given: \"oops\""
+    )
+
+// non-unsafe for non-fixnums
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks $(power :: Int)':
+    ~op_stx self
+    let check = 'check'.relocate(self)
+    let power = power.unwrap() - 1
+    let most_positive = 2**power - 1
+    let most_positive_to = most_positive + 5
+    let most_negative = -(2**power)
+    let most_negative_from = most_negative - 5
+    'block:
+       $check:
+         for List (i: (#%literal $most_positive) .. (#%literal $most_positive_to)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: most_positive .. most_positive_to):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: (#%literal $most_negative_from) .. (#%literal $most_negative)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: most_negative_from .. most_negative):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: ((#%literal $most_positive) .. (#%literal $most_positive_to)).step_by(2)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: (most_positive .. most_positive_to).step_by(2)):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: ((#%literal $most_negative_from) .. (#%literal $most_negative)).step_by(2)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: (most_negative_from .. most_negative).step_by(2)):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: (0..5).step_by(#%literal $(most_positive + 1))):
+           i
+         ~is [0]
+       $check:
+         for List (i: (#%literal $most_positive) ..= (#%literal $most_positive_to)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: most_positive ..= most_positive_to):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: (#%literal $most_negative_from) ..= (#%literal $most_negative)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: most_negative_from ..= most_negative):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: ((#%literal $most_positive) ..= (#%literal $most_positive_to)).step_by(2)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: (most_positive ..= most_positive_to).step_by(2)):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: ((#%literal $most_negative_from) ..= (#%literal $most_negative)).step_by(2)):
+           i
+         ~is $(block:
+                 let [num, ...]:
+                   for List (i: (most_negative_from ..= most_negative).step_by(2)):
+                     i
+                 '[#%literal $num, ...]')
+       $check:
+         for List (i: (0..=5).step_by(#%literal $(most_positive + 1))):
+           i
+         ~is [0]'
+  generate_checks 29
+  generate_checks 30
+  generate_checks 31
+  generate_checks 60
+  generate_checks 61
+  generate_checks 62
+  generate_checks 63
+
+// The following checks are borrowed from Rebellion
+// `Range.has_element`
+block:
+  def rng = 2..4
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #true
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #false
+    rng.has_element(5) ~is #false
+
+check:
+  (3..3).has_element(3) ~is #false
+
+block:
+  def rng = 2..=4
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #true
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #true
+    rng.has_element(5) ~is #false
+
+check:
+  (3..=3).has_element(3) ~is #true
+
+block:
+  def rng = 2..
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #true
+    rng.has_element(3) ~is #true
+
+block:
+  def rng = 2 <..< 4
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #false
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #false
+    rng.has_element(5) ~is #false
+
+block:
+  def rng = 2 <..= 4
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #false
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #true
+    rng.has_element(5) ~is #false
+
+block:
+  def rng = 2 <..<
+  check:
+    rng.has_element(1) ~is #false
+    rng.has_element(2) ~is #false
+    rng.has_element(3) ~is #true
+
+block:
+  def rng = ..4
+  check:
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #false
+    rng.has_element(5) ~is #false
+
+block:
+  def rng = ..=4
+  check:
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #true
+    rng.has_element(5) ~is #false
+
+block:
+  def rng = ..
+  check:
+    rng.has_element(1) ~is #true
+    rng.has_element(2) ~is #true
+    rng.has_element(3) ~is #true
+    rng.has_element(4) ~is #true
+    rng.has_element(5) ~is #true
+
+// `Range.encloses`
+check:
+  Range.encloses() ~is #true
+
+block:
+  def rng = 2..9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #false
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #false
+
+block:
+  def rng = 2..=9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+block:
+  def rng = 2..
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #true
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #true
+    rng.encloses(5 <..<) ~is #true
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #true
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+block:
+  def rng = 2 <..< 9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #false
+    rng.encloses(4..=9) ~is #false
+    rng.encloses(2..6) ~is #false
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #false
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #false
+
+block:
+  def rng = 2 <..= 9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #false
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #false
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #false
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+block:
+  def rng = 2 <..<
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #false
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #false
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #false
+    rng.encloses(5..=10) ~is #true
+    rng.encloses(1..5) ~is #false
+    rng.encloses(5..10) ~is #true
+    rng.encloses(5 <..<) ~is #true
+    rng.encloses(..5) ~is #false
+    rng.encloses(5..) ~is #true
+    rng.encloses(..=5) ~is #false
+    rng.encloses(2..=2) ~is #false
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+block:
+  def rng = ..9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #false
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #true
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #true
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #true
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #true
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #false
+
+block:
+  def rng = ..=9
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #false
+    rng.encloses(1..=5) ~is #true
+    rng.encloses(5..=10) ~is #false
+    rng.encloses(1..5) ~is #true
+    rng.encloses(5..10) ~is #false
+    rng.encloses(5 <..<) ~is #false
+    rng.encloses(..5) ~is #true
+    rng.encloses(5..) ~is #false
+    rng.encloses(..=5) ~is #true
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+block:
+  def rng = ..
+  check:
+    rng.encloses() ~is #true
+    rng.encloses(rng) ~is #true
+    rng.encloses(4..=6) ~is #true
+    rng.encloses(2..=6) ~is #true
+    rng.encloses(4..=9) ~is #true
+    rng.encloses(2..6) ~is #true
+    rng.encloses(4..9) ~is #true
+    rng.encloses(1..=10) ~is #true
+    rng.encloses(1..=5) ~is #true
+    rng.encloses(5..=10) ~is #true
+    rng.encloses(1..5) ~is #true
+    rng.encloses(5..10) ~is #true
+    rng.encloses(5 <..<) ~is #true
+    rng.encloses(..5) ~is #true
+    rng.encloses(5..) ~is #true
+    rng.encloses(..=5) ~is #true
+    rng.encloses(2..=2) ~is #true
+    rng.encloses(5..=5) ~is #true
+    rng.encloses(9..=9) ~is #true
+
+check:
+  (..).encloses(2.., 2..=9, 2..9, 2 <..< 9) ~is #true
+
+// `Range.is_connected`
+block:
+  import rhombus/meta open
+  expr.macro '$lhs is_connected $rhs':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       check:
+         Range.is_connected(lhs, lhs) $is #true
+         Range.is_connected(rhs, rhs) $is #true
+         Range.is_connected(lhs, rhs) $is #true
+         Range.is_connected(rhs, lhs) $is #true'
+  expr.macro '$lhs is_not_connected $rhs':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       check:
+         Range.is_connected(lhs, lhs) $is #true
+         Range.is_connected(rhs, rhs) $is #true
+         Range.is_connected(lhs, rhs) $is #false
+         Range.is_connected(rhs, lhs) $is #false'
+  (3..=6) is_connected (4..=8)
+  (1..=9) is_connected (4..=6)
+  (1 <..< 9) is_connected (1..=4)
+  (1 <..< 9) is_connected (4..=9)
+  (1..=5) is_connected (5..=9)
+  (1 <..< 5) is_connected (5..=9)
+  (1..=5) is_connected (5 <..< 9)
+  (1 <..< 5) is_not_connected (5 <..< 9)
+  (1..=2) is_not_connected (7..=8)
+  (..=2) is_not_connected (5..)
+  (..4) is_not_connected (4 <..<)
+  (..4) is_connected (4..)
+  (..=4) is_connected (4 <..<)
+  (..5) is_connected (3..)
+
+// `Range.overlaps`
+block:
+  import rhombus/meta open
+  expr.macro '$lhs does_overlap $rhs':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       check:
+         Range.overlaps(lhs, rhs) $is #true
+         Range.overlaps(rhs, lhs) $is #true'
+  expr.macro '$lhs does_not_overlap $rhs':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       check:
+         Range.overlaps(lhs, rhs) $is #false
+         Range.overlaps(rhs, lhs) $is #false'
+  (1..=5) does_overlap (2..=10)
+  (1..=5) does_overlap (2..=3)
+  (1..=5) does_overlap (5..=10)
+  (1..=5) does_overlap (1..=3)
+  (1..=5) does_overlap (3..=5)
+  (1..=5) does_overlap (1 <..< 3)
+  (1..=5) does_overlap (3 <..< 5)
+  (1..=5) does_not_overlap (10..=20)
+  (1..=5) does_not_overlap (5 <..< 10)
+  (1..=10) does_overlap (1..=10)
+  (1 <..< 10) does_overlap (1 <..< 10)
+  (1..10) does_overlap (1..10)
+  (1 <..= 10) does_overlap (1 <..= 10)
+  (5..5) does_not_overlap (5..5)
+  (5..=5) does_overlap (5..=5)
+  (5 <..< 5) does_not_overlap (5 <..< 5)
+  (5 <..= 5) does_not_overlap (5 <..= 5)
+  (5..=5) does_overlap (5..=10)
+  (5..=5) does_overlap (1..=5)
+  (5..=5) does_not_overlap (5 <..< 10)
+  (5..=5) does_not_overlap (1 <..< 5)
+
+// `Range.span`
+block:
+  import rhombus/meta open
+  expr.macro '$lhs span $rhs is $res':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       def res = $res
+       check:
+         Range.span(lhs) $is lhs
+         Range.span(rhs) $is rhs
+         Range.span(res) $is res
+         Range.span(lhs, lhs) $is lhs
+         Range.span(rhs, rhs) $is rhs
+         Range.span(lhs, rhs) $is res
+         Range.span(rhs, lhs) $is res
+         Range.span(lhs, res) $is res
+         Range.span(rhs, res) $is res'
+  (2..=4) span (8 <..< 16) is (2..16)
+  (3 <..< 8) span (3..=5) is (3..8)
+  (2 <..< 9) span (4..=6) is (2 <..< 9)
+  (2..5) span (7 <..= 9) is (2..=9)
+  (2..) span (5..=6) is (2..)
+  (4..) span (3..=8) is (3..)
+  (4..) span (3 <..< 8) is (3 <..<)
+  (..4) span (2 <..<) is (..)
+  (4 <..<) span (..2) is (..)
+  (..7) span (2..=5) is (..7)
+  (..7) span (2 <..< 7) is (..7)
+  (..7) span (2..=7) is (..=7)
+
+check:
+  (..).span(2.., ..=4, 8 <..< 16) ~is ..
+
+// `Range.gap`
+block:
+  import rhombus/meta open
+  expr.macro '$lhs gap $rhs is $res':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       def res = $res
+       check:
+         Range.gap(lhs, rhs) $is res
+         Range.gap(rhs, lhs) $is res'
+  (2..=7) gap (10..=15) is (7 <..< 10)
+  (..7) gap (10 <..<) is (7..=10)
+  (2..=10) gap (5..=7) is #false
+  (..7) gap (5 <..<) is #false
+  (2..=7) gap (7 <..< 10) is (7 <..= 7)
+  (2 <..< 7) gap (7..=10) is (7..7)
+  (2..=7) gap (7..=10) is #false
+
+// `Range.intersect`
+check:
+  Range.intersect() ~is ..
+
+block:
+  import rhombus/meta open
+  expr.macro '$lhs intersect $rhs is $res':
+    ~op_stx self
+    let is = '~is'.relocate(self)
+    'block:
+       def lhs = $lhs
+       def rhs = $rhs
+       def res = $res
+       check:
+         Range.intersect(lhs) $is lhs
+         Range.intersect(rhs) $is rhs
+         $(if res.unwrap()
+           | 'Range.intersect(res) $is res'
+           | '')
+         Range.intersect(lhs, lhs) $is lhs
+         Range.intersect(rhs, rhs) $is rhs
+         Range.intersect(lhs, rhs) $is res
+         Range.intersect(rhs, lhs) $is res
+         $(if res.unwrap()
+           | 'Range.intersect(lhs, res) $is res
+              Range.intersect(rhs, res) $is res'
+           | '')'
+  (2..=8) intersect (5..=10) is (5..=8)
+  (0..=10) intersect (4..=6) is (4..=6)
+  (0..=5) intersect (5..=10) is (5..=5)
+  (0 <..< 5) intersect (5..=10) is (5..5)
+  (0..=5) intersect (5 <..< 10) is (5 <..= 5)
+  (0 <..< 5) intersect (5 <..< 10) is #false
+
+check:
+  (..).intersect(2.., ..=4, 8 <..< 16) ~is #false
