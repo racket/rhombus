@@ -21,14 +21,14 @@ class Random(private _handle):
   export: current
 
   method
-  | random():
+  | random() :~ Number:
       rkt.random(_handle)
-  | random(n :: PosInt):
+  | random(n :: PosInt) :~ Number:
       if n < (1 bits.(<<) 31)
       | rkt.random(n, _handle)
       | parameterize { rkt.#{current-pseudo-random-generator}: _handle }:
           math.random(n)
-  | random(start :: Int, end :: Int):
+  | random(start :: Int, end :: Int) :~ Number:
       unless start < end
       | error(#'random, "start index is not less than end index")
       random(end - start) + start

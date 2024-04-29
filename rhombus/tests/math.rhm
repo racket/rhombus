@@ -101,3 +101,40 @@ check:
   math.lcm() ~is 1
   math.lcm(11) ~is 11
   math.lcm(22, 55, 88) ~is 440
+
+// make sure each function declares static number result
+check:
+  use_static
+  fun (x):
+    [math.abs(-1) > x,
+     math.max(0) > x,
+     math.min(0) > x,
+     math.floor(0) > x,
+     math.ceiling(0) > x,
+     math.round(0) > x,
+     math.sqrt(0) > x,
+     math.log(1) > x,
+     math.exp(0) > x,
+     math.expt(0, 1) > x,
+     math.cos(0) > x,
+     math.sin(0) > x,
+     math.tan(0) > x,
+     math.acos(0) > x,
+     math.asin(0) > x,
+     math.atan(0) > x,
+     math.exact(0) > x,
+     math.inexact(0) > x,
+     math.real_part(0) > x,
+     math.imag_part(0) > x,
+     math.magnitude(0) > x,
+     math.angle(0) > x,
+     math.numerator(0) > x,
+     math.denominator(0) > x,
+     math.gcd(1) > x,
+     math.lcm(0) > x,
+     math.random() > x,
+     math.random(1) > x,
+     math.random(1, 2) > x,
+     math.sum(0) > x,
+     math.product(0) > x]
+  ~completes
