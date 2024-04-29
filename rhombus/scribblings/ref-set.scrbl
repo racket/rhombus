@@ -55,23 +55,40 @@ it supplies its elements in an unspecified order.
 @doc(
   annot.macro 'Set'
   annot.macro 'Set.of($annot)'
+  annot.macro 'Set.later_of($annot)'
   annot.macro 'ReadableSet'
   annot.macro 'MutableSet'
   annot.macro 'WeakMutableSet'
+  annot.macro 'MutableSet.now_of($annot)'
+  annot.macro 'MutableSet.later_of($annot)'
   annot.macro 'Set.by($key_comp)'
   annot.macro 'Set.by($key_comp).of($annot)'
   annot.macro 'MutableSet.by($key_comp)'
   annot.macro 'WeakMutableSet.by($key_comp)'
 ){
 
- The @rhombus(Set, ~annot) annotation matches any set. The @rhombus(of)
- variants match a set whose values satisfy @rhombus(annot).
-
+ The @rhombus(Set, ~annot) annotation matches any set.
  @rhombus(ReadableSet, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableSet) constructor).
- @rhombus(MutableSet, ~annot) matches weak mutable sets (created with, for
+ @rhombus(WeakMutableSet, ~annot) matches weak mutable sets (created with, for
  example, the @rhombus(WeakMutableSet) constructor).
+
+ The @rhombus(of) and @rhombus(now_of) annotation variants match a set
+ whose elements satisfy @rhombus(annot), where satisfaction of the
+ annotation is confirmed by immediately checking all elements. No future
+ obligation is attached to a set satisfying the annotation, so in the
+ case of @rhombus(MutableSet.now_of), no static information is associated
+ with value access using @brackets.
+
+ The @rhombus(later_of) annotation variants create a @tech{converter
+  annotation} given an annotations for elements; satisfaction of those
+ annotations is confirmed only on demand, both for elements that are
+ extracted from the set and for elements added or appended to the set.
+ For @rhombus(Set.later_of), the key and value annotations must be
+ @tech{predicate annotations}. Since an element annotation is checked on
+ every access, its static information is associated with access using
+ @brackets.
 
  The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
  annotation variants match only sets that use the hash and equality

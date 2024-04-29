@@ -197,6 +197,7 @@
    [snapshot Set.snapshot]
    [to_sequence Set.to_sequence]
    of
+   [later_of Set.later_of]
    [by Set.by])
   #:properties
   ()
@@ -216,7 +217,9 @@
   #:parent #f readable-set
   #:fields ()
   #:namespace-fields
-  ([by MutableSet.by])
+  ([now_of MutableSet.now_of]
+   [later_of MutableSet.later_of]
+   [by MutableSet.by])
   #:properties
   ()
   #:methods
@@ -602,6 +605,42 @@
   set-annotation-make-static-info
   #'set-build-convert #'(#hashalw()))
 
+(define-for-syntax (make-set-later-chaperoner who)
+  (lambda (predicate-stxes annot-strs)
+    #`(lambda (st)
+        (let ([k-pred #,(car predicate-stxes)]
+              [k-str #,(car annot-strs)])
+          (chaperone-struct
+           st
+           set-ht
+           (lambda (st ht)
+             (chaperone-hash ht
+                             ;; ref
+                             (lambda (ht k)
+                               (values (check-set-element '#,who k k-pred k-str)
+                                       (lambda (ht k v) v)))
+                             ;; set
+                             (lambda (ht k v)
+                               (values (check-set-element '#,who k k-pred k-str) v))
+                             ;; remove
+                             (lambda (ht k) (check-set-element '#,who k k-pred k-str))
+                             ;; key
+                             (lambda (ht k) (check-set-element '#,who k k-pred k-str))
+                             ;; clear
+                             (lambda (ht) (void))
+                             ;; equal-key-proc
+                             #f)))))))
+  
+(define-annotation-constructor (Set/again Set.later_of)
+  ()
+  #'immutable-set? set-static-infos
+  1
+  #f
+  (make-set-later-chaperoner 'Set)
+  (lambda (static-infoss) #'())
+  #'mutable-set-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
+
 (define-annotation-syntax Set.by
   (annotation-prefix-operator
    #'Set.by
@@ -699,9 +738,72 @@
                                   (relocate+reraw #'form-id mutable-set-build-id))
                               #'tail)]))
 
-(define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-infos))
 (define-annotation-syntax WeakMutableSet (identifier-annotation #'weak-mutable-set? mutable-set-static-infos))
 (define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-infos))
+
+(define-annotation-constructor (MutableSet MutableSet.now_of)
+  ()
+  #'mutable-set? mutable-set-static-infos
+  1
+  #f
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([k (in-hash-keys (set-ht #,arg-id))])
+        (#,(car predicate-stxs) k)))
+  (lambda (static-infoss) #'())
+  "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable set content"
+  #'())
+
+(define-annotation-constructor (MutableSet/again MutableSet.later_of)
+  ()
+  #'mutable-set? mutable-set-static-infos
+  1
+  #f
+  (make-set-later-chaperoner 'MutableSet)
+  (lambda (static-infoss) #'())
+  #'mutable-set-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
+
+(define (raise-item-check-error who what x annot-str)
+  (raise-binding-failure 'MutableMap what x annot-str))
+
+(define (check-set-element who k k-pred k-str)
+  (unless (k-pred k) (raise-item-check-error who "element" k k-str))
+  k)
+
+(define-syntax (mutable-set-build-convert arg-id build-convert-stxs kws data)
+  (with-syntax ([[(k-annot-str v-annot-str . _) _] data])
+    #`(let ([k-cvt #,(car build-convert-stxs)]
+            [k-str k-annot-str]
+            [v-cvt #,(cadr build-convert-stxs)]
+            [v-str v-annot-str])
+        (impersonate-struct
+         st
+         struct:set
+         set-ht
+         (lambda (ht)
+           (impersonate-hash ht
+                             ;; ref
+                             (lambda (ht k)
+                               (values (convert-set-element k k-cvt k-str)
+                                       (lambda (ht k v) v)))
+                             ;; set
+                             (lambda (ht k v)
+                               (values (convert-set-element k k-cvt k-str) v))
+                             ;; remove
+                             (lambda (ht k) (convert-set-element k k-cvt k-str))
+                             ;; key
+                             (lambda (ht k) (convert-set-element k k-cvt k-str))
+                             ;; clear
+                             (lambda (ht) (void))
+                             ;; equal-key-proc
+                             #f))))))
+
+(define (convert-set-element x cvt annot-str)
+  (cvt
+   x
+   (lambda (x) x)
+   (lambda ()
+     (raise-item-check-error 'MutableSet "element" x annot-str))))
 
 (define-annotation-syntax MutableSet.by
   (annotation-prefix-operator

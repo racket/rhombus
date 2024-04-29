@@ -150,6 +150,25 @@ block:
     ~is [2, 3, 4]
 
 block:
+  use_static
+  def lst :: List.later_of(String) = ["a", "b", 3]
+  check lst[0] ~is "a"
+  check lst[1] ~is "b"
+  check lst[2] ~throws "current element does not satisfy annotation"
+  check (lst ++ ["d", "e"])[3] ~is "d"
+  check (["z"] ++ lst)[0] ~is "z"
+  check (["z"] ++ lst)[3] ~throws "current element does not satisfy annotation"
+  check lst ++ ["d", 5] ~throws "appended element does not satisfy annotation"
+  check [0] ++ lst ~throws "appended element does not satisfy annotation"
+  check lst.add("z")[3] ~is "z"
+  check lst.add(100) ~throws "new element does not satisfy annotation"
+
+check:
+  ~eval
+  [] :: List.later_of(ReadableString.to_string)
+  ~throws "converter annotation not supported for elements"
+
+block:
   check:
     dynamic([1, 2, 3]).length()
     ~is 3

@@ -92,7 +92,8 @@
    [empty empty-treelist]
    [iota List.iota]
    [repet List.repet]
-   [of List.of])
+   [of List.of]
+   [later_of List.later_of])
   #:properties
   ([first List.first
           (lambda (e)
@@ -482,6 +483,42 @@
     #`((#%index-result #,(car static-infoss))))
   #'treelist-build-convert #'())
 
+(define-annotation-constructor (List/again List.later_of)
+  ()
+  #'treelist? treelist-static-infos
+  1
+  #f
+  (lambda (predicate-stxes annot-strs)
+    (define (make-reelementer what)
+      #`(lambda (lst idx v state)
+          (unless (pred v)
+            (raise-reelementer-error 'List '#,what idx v '#,(car annot-strs)))
+          (values v state)))
+    #`(lambda (lst)
+        (let ([pred #,(car predicate-stxes)])
+          (chaperone-treelist lst
+                              #:state #f
+                              #:ref (lambda (lst idx v state)
+                                      (unless (pred v)
+                                        (raise-reelementer-error 'List "current" idx v '#,(car annot-strs)))
+                                      v)
+                              #:set #,(make-reelementer "new")
+                              #:insert #,(make-reelementer "new")
+                              #:append (lambda (lst lst2 state)
+                                         (values (check-elements 'List #f pred lst2 '#,(car annot-strs))
+                                                 state))
+                              #:prepend (lambda (lst2 lst state)
+                                          (values (check-elements 'List #f pred lst2 '#,(car annot-strs))
+                                                  state))
+                              #:delete (lambda (lst idx state) state)
+                              #:take (lambda (lst n state) state)
+                              #:drop (lambda (lst n state) state)))))
+  (lambda (static-infoss)
+    #`((#%index-result #,(car static-infoss))))
+  "converter annotation not supported for elements;\n checking needs a predicate annotation for the list content"
+  #'()
+  #:parse-of parse-annotation-of/chaperone)
+
 (define-annotation-constructor (PairList PairList.of)
   ()
   #'list? list-static-infos
@@ -517,7 +554,7 @@
     (define (make-reelementer what)
       #`(lambda (mlst idx v)
           (unless (pred v)
-            (raise-reelementer-error '#,what idx v '#,(car annot-strs)))
+            (raise-reelementer-error 'MutableList '#,what idx v '#,(car annot-strs)))
           v))
     #`(lambda (mlst)
         (let ([pred #,(car predicate-stxes)])
@@ -526,13 +563,13 @@
                                       #:set #,(make-reelementer "new")
                                       #:insert #,(make-reelementer "new")
                                       #:append (lambda (mlst lst)
-                                                 (check-elements #f pred lst '#,(car annot-strs)))))))
+                                                 (check-elements 'MutableList #f pred lst '#,(car annot-strs)))))))
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'mutable-list-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
-(define (check-elements cvt? pred/cvt lst annot-str)
+(define (check-elements who cvt? pred/cvt lst annot-str)
   (cond
     [cvt?
      (for/treelist ([v (in-treelist lst)])
@@ -540,17 +577,17 @@
         v
         (lambda (v) v)
         (lambda ()
-          (raise-binding-failure 'MutableList "appended element" v annot-str))))]
+          (raise-binding-failure who "appended element" v annot-str))))]
     [else
      (for ([v (in-treelist lst)])
        (unless (pred/cvt v)
-         (raise-binding-failure 'MutableList "appended element" v annot-str)))
+         (raise-binding-failure who "appended element" v annot-str)))
      lst]))
 
-(define (raise-reelementer-error what idx v annot-str)
-  (raise-binding-failure
-   'MutableList (string-append what " element") v annot-str
-   "position" (unquoted-printing-string (number->string idx))))
+(define (raise-reelementer-error who what idx v annot-str)
+  (raise-binding-failure who
+                         (string-append what " element") v annot-str
+                         "position" (unquoted-printing-string (number->string idx))))
 
 (define-syntax (treelist-build-convert arg-id build-convert-stxs kws data)
   #`(for/fold ([lst empty-treelist])
@@ -578,14 +615,14 @@
            val
            (lambda (v) v)
            (lambda ()
-             (raise-reelementer-error '#,what idx val 'annot-str)))))
+             (raise-reelementer-error 'MutableList '#,what idx val 'annot-str)))))
     #`(let ([cvt #,(car build-convert-stxs)])
         (impersonate-mutable-treelist #,arg-id
                                       #:ref #,(make-reelementer "current")
                                       #:set #,(make-reelementer "new")
                                       #:insert #,(make-reelementer "new")
                                       #:append (lambda (mlst lst)
-                                                 (check-elements #t cvt lst 'annot-str))))))
+                                                 (check-elements 'MutableList #t cvt lst 'annot-str))))))
 
 (define-static-info-syntax empty-treelist
   #:defined treelist-static-infos)

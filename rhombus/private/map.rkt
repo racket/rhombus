@@ -184,6 +184,7 @@
    [snapshot Map.snapshot]
    [to_sequence Map.to_sequence]
    of
+   [later_of Map.later_of]
    [by Map.by])
   #:properties
   ()
@@ -201,7 +202,9 @@
   #:parent #f readable-map
   #:fields ()
   #:namespace-fields
-  ([by MutableMap.by])
+  ([by MutableMap.by]
+   [now_of MutableMap.now_of]
+   [later_of MutableMap.later_of])
   #:properties
   ()
   #:methods
@@ -447,6 +450,44 @@
   map-annotation-make-static-info
   #'map-build-convert #'(#hashalw()))
 
+(define-for-syntax (make-map-later-chaperoner who)
+  (lambda (predicate-stxes annot-strs)
+    #`(lambda (ht)
+        (let ([k-pred #,(car predicate-stxes)]
+              [k-str #,(car annot-strs)]
+              [v-pred #,(cadr predicate-stxes)]
+              [v-str #,(cadr annot-strs)])
+          (chaperone-hash ht
+                          ;; ref
+                          (lambda (ht k)
+                            (values (check-map-key '#,who k k-pred k-str)
+                                    (lambda (ht k v)
+                                      (check-map-val '#,who v v-pred v-str))))
+                          ;; set
+                          (lambda (ht k v)
+                            (values (check-map-key '#,who k k-pred k-str)
+                                    (check-map-val '#,who v v-pred v-str)))
+                          ;; remove
+                          (lambda (ht k) (check-map-key '#,who k k-pred k-str))
+                          ;; key
+                          (lambda (ht k) (check-map-key '#,who k k-pred k-str))
+                          ;; clear
+                          (lambda (ht) (void))
+                          ;; equal-key-proc
+                          #f)))))
+
+(define-annotation-constructor (Map/again Map.later_of)
+  ()
+  #'immutable-hash? map-static-infos
+  2
+  #f
+  (make-map-later-chaperoner 'Map)
+  (lambda (static-infoss)
+    #`((#%index-result #,(cadr static-infoss))))
+  "converter annotation not supported for elements;\n checking needs a predicate annotation for the map content"
+  #'()
+  #:parse-of parse-annotation-of/chaperone)
+
 (define-annotation-syntax Map.by
   (annotation-prefix-operator
    #'Map.by
@@ -538,9 +579,83 @@
 (define (ephemeron-mutable-hash? m)
   (and (hash? m) (hash-ephemeron? m)))
 
-(define-annotation-syntax MutableMap (identifier-annotation #'mutable-hash? mutable-map-static-infos))
 (define-annotation-syntax WeakMutableMap (identifier-annotation #'ephemeron-mutable-hash? weak-mutable-map-static-infos))
 (define-annotation-syntax ReadableMap (identifier-annotation #'hash? readable-map-static-infos))
+
+(define-annotation-constructor (MutableMap MutableMap.now_of)
+  ()
+  #'mutable-hash? mutable-map-static-infos
+  2
+  #f
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([(k v) (in-hash #,arg-id)])
+        (and (#,(car predicate-stxs) k)
+             (#,(cadr predicate-stxs) v))))
+  (lambda (static-infoss)
+    ;; no static info, since mutable and content is checked only initially
+    #'())
+  "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable map content"
+  #'())
+
+(define-annotation-constructor (MutableMap/again MutableMap.later_of)
+  ()
+  #'mutable-hash? mutable-map-static-infos
+  2
+  #f
+  (make-map-later-chaperoner 'MutableMap)
+  (lambda (static-infoss)
+    #`((#%index-result #,(cadr static-infoss))))
+  #'mutable-map-build-convert #'()
+  #:parse-of parse-annotation-of/chaperone)
+
+(define (raise-item-check-error who what x annot-str)
+  (raise-binding-failure who what x annot-str))
+
+(define (check-map-item x who what pred annot-str)
+  (unless (pred x) (raise-item-check-error who what x annot-str))
+  x)
+
+(define (check-map-key who k k-pred k-str)
+  (check-map-item k who "key" k-pred k-str))
+(define (check-map-val who v v-pred v-str)
+  (check-map-item v who "value" v-pred v-str))
+
+(define-syntax (mutable-map-build-convert arg-id build-convert-stxs kws data)
+  (with-syntax ([[(k-annot-str v-annot-str . _) _] data])
+    #`(let ([k-cvt #,(car build-convert-stxs)]
+            [k-str k-annot-str]
+            [v-cvt #,(cadr build-convert-stxs)]
+            [v-str v-annot-str])
+        (impersonate-hash ht
+                          ;; ref
+                          (lambda (ht k)
+                            (values (convert-map-key k k-cvt k-str)
+                                    (lambda (ht k v)
+                                      (convert-map-val v v-cvt v-str))))
+                          ;; set
+                          (lambda (ht k v)
+                            (values (convert-map-key k k-cvt k-str)
+                                    (convert-map-val v v-cvt v-str)))
+                          ;; remove
+                          (lambda (ht k) (convert-map-key k k-cvt k-str))
+                          ;; key
+                          (lambda (ht k) (convert-map-key k k-cvt k-str))
+                          ;; clear
+                          (lambda (ht) (void))
+                          ;; equal-key-proc
+                          #f))))
+
+(define (convert-map-item x what cvt annot-str)
+  (cvt
+   x
+   (lambda (x) x)
+   (lambda ()
+     (raise-item-check-error 'MutableMap what x annot-str))))
+
+(define (convert-map-key k k-cvt k-str)
+  (convert-map-item k "key" k-cvt k-str))
+(define (convert-map-val v v-cvt v-str)
+  (convert-map-item v "value" v-cvt v-str))
 
 (define-annotation-syntax MutableMap.by
   (annotation-prefix-operator

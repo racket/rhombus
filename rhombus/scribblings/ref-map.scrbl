@@ -60,8 +60,11 @@ in an unspecified order.
     key_annot: :: annot
   annot.macro 'Map'
   annot.macro 'Map.of($key_annot, $val_annot)'
+  annot.macro 'Map.later_of($key_annot, $val_annot)'
   annot.macro 'ReadableMap'
   annot.macro 'MutableMap'
+  annot.macro 'MutableMap.now_of($key_annot, $val_annot)'
+  annot.macro 'MutableMap.later_of($key_annot, $val_annot)'
   annot.macro 'WeakMutableMap'
   annot.macro 'Map.by($key_comp)'
   annot.macro 'Map.by($key_comp).of($key_annot, $val_annot)'
@@ -69,16 +72,29 @@ in an unspecified order.
   annot.macro 'WeakMutableMap.by($key_comp)'
 ){
 
- The @rhombus(Map, ~annot) annotation matches any immutable map in the
- form without @rhombus(of). The @rhombus(of) variants match an immutable
- map whose keys satisfy @rhombus(key_annot) and whose values satisfy
- @rhombus(val_annot).
-
+ The @rhombus(Map, ~annot) annotation matches any immutable map.
  @rhombus(ReadableMap, ~annot) matches both mutable and immutable maps,
  while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
  for example, the @rhombus(MutableMap) constructor).
- @rhombus(MutableMap, ~annot) matches weak mutable maps (created with, for
- example, the @rhombus(WeakMutableMap) constructor).
+ @rhombus(WeakMutableMap, ~annot) matches weak mutable maps (created with,
+ for example, the @rhombus(WeakMutableMap) constructor).
+
+ The @rhombus(of) and @rhombus(now_of) annotation variants match a map
+ whose keys satisfy @rhombus(key_annot) and whose values satisfy
+ @rhombus(val_annot), where satisfaction of the annotation is confirmed
+ by immediately checking all keys and values. No future obligation is
+ attached to a map satisfying the annotation, so in the case of
+ @rhombus(MutableMap.now_of), no static information is associated with
+ value access using @brackets.
+
+ The @rhombus(later_of) annotation variants create a @tech{converter
+  annotation} given annotations for keys and values; satisfaction of those
+ annotations is confirmed only on demand, both for keys and values that
+ are extracted from the map and for keys and values added or appended to
+ the map. For @rhombus(Map.later_of), the key and value annotations must
+ be @tech{predicate annotations}. Since a value annotation is checked on
+ every access, its static information is associated with access using
+ @brackets.
 
  The @rhombus(Map.by, ~annot), @rhombus(MutableMap.by, ~annot), and
  @rhombus(WeakMutableMap.by, ~annot) annotation variants match only maps

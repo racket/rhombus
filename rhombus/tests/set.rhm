@@ -471,6 +471,40 @@ check:
   ~is "#0=MutableSet{#0#}"
 
 block:
+  def orig = MutableSet{"x", 2}
+  check orig :: MutableSet.now_of(String) ~throws "value does not satisfy annotation"
+  check orig :: MutableSet.now_of(Any) ~is orig
+  check (orig :: MutableSet.now_of(Any))["y"] := #true ~is #void
+  check orig ~is_now MutableSet{"x", "y", 2}
+
+block:
+  def orig = MutableSet{"x", 2}
+  def m :: MutableSet.later_of(String) = orig
+  check m["x"] ~is #true
+  check m[2] ~throws "element does not satisfy annotation"
+  check m[2] := #true ~throws "element does not satisfy annotation"
+  check to_string(m) ~throws "element does not satisfy annotation"
+  check m["x"] := #true ~is #void
+  check m["y"] := #true ~is #void
+  check orig[2] ~is #true
+  check orig["x"] ~is #true
+  check orig["y"] ~is #true
+  check orig["z"] ~is #false
+  check m.delete(2) ~throws "element does not satisfy annotation"
+  check m.delete("y") ~is #void
+  check orig.delete(2) ~is #void
+  check to_string(m) ~is "MutableSet{\"x\"}"
+
+block:
+  def m :: Set.later_of(String) = Set{"x", 2}
+  check m["x"] ~is #true
+  check m[2] ~throws "element does not satisfy annotation"
+  check to_string(m) ~throws "element does not satisfy annotation"
+  check m.remove(2) ~throws "element does not satisfy annotation"
+  check m.remove("x") ~is_a Set
+  check to_string(m) ~throws "element does not satisfy annotation"
+
+block:
   class Posn(x, y)
   let a = Posn(1, 2)
   let b = Posn(1, 2)

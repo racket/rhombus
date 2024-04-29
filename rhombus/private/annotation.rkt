@@ -320,6 +320,11 @@
          #`(#,@(info-maker c-static-infoss)
             . #,static-infos))]
        [(c::annotation-binding-form ...)
+        (unless (identifier? binding-maker-id)
+          (raise-syntax-error #f
+                              (or binding-maker-id
+                                  "argument converter annotations are not supported")
+                              new-stx))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
         (annotation-binding-form
          (binding-form #'annotation-of-infoer
