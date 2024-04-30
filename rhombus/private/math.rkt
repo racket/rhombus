@@ -93,12 +93,13 @@
          (random n)
          (let rejection-loop ()
            (define maybe-result
-             (let loop ([r 0] [len (integer-length n)] [shift 0])
-               (if (len . < . 32)
-                   (+ r (arithmetic-shift (random (add1 (arithmetic-shift n (- shift)))) shift))
-                   (loop (+ r (arithmetic-shift (random #x7FFFFFFF) shift))
-                         (- len 31)
-                         (+ shift 31)))))
+             (let ([m (- n 1)])
+               (let loop ([r 0] [len (integer-length m)] [shift 0])
+                 (if (len . < . 32)
+                     (+ r (arithmetic-shift (random (add1 (arithmetic-shift m (- shift)))) shift))
+                     (loop (+ r (arithmetic-shift (random #x80000000) shift))
+                           (- len 31)
+                           (+ shift 31))))))
            (if (maybe-result . < . n)
                maybe-result
                (rejection-loop))))]
