@@ -92,3 +92,7 @@ block:
     "List",
     "\"oops\"",
   )
+
+check:
+  [& "oops"] ~throws "not a listable for splicing into a list"
+  PairList[& "oops"] ~throws "not a listable for splicing into a pair list"

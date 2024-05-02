@@ -1399,7 +1399,7 @@
 (define (ensure-treelist v)
   (or (to-treelist #f v)
       (raise-arguments-error* 'List rhombus-realm
-                              "not a listable for splicing into a pair list"
+                              "not a listable for splicing into a list"
                               "value" v)))
 
 (define (ensure-list v)
