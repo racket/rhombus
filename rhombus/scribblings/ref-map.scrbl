@@ -43,7 +43,7 @@ in an unspecified order.
 @dispatch_table(
   "map (immutable only)"
   Map
-  mp.append(map2, ...)
+  mp.append(mp2, ...)
   mp.remove(k)
 )
 

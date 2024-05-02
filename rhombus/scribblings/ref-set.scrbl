@@ -39,9 +39,9 @@ it supplies its elements in an unspecified order.
 @dispatch_table(
   "set (immutable only)"
   Set
-  st.append(set2, ...)
-  st.union(set2, ...)
-  st.intersect(set2, ...)
+  st.append(st2, ...)
+  st.union(st2, ...)
+  st.intersect(st2, ...)
   st.remove(v)
 )
 
