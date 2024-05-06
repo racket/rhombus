@@ -10,9 +10,6 @@
          "space-provide.rkt"
          "class+interface.rkt"
          "class-clause.rkt"
-         (submod "class-clause.rkt" for-class)
-         (submod "interface-clause.rkt" for-interface)
-         "space.rkt"
          "name-root.rkt"
          "macro-macro.rkt")
 

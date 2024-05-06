@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "macro-macro.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "macro-rhs.rkt"
                      "srcloc.rkt"
@@ -14,6 +13,7 @@
          "interface-clause.rkt"
          "veneer-clause.rkt"
          "op-literal.rkt"
+         "macro-macro.rkt"
          "parens.rkt")
 
 (provide (for-spaces (rhombus/class_clause
@@ -43,13 +43,12 @@
         (wrap-class-clause #`(#:dot
                               name
                               (block
-                               #,(no-srcloc
-                                  #`(class-dot-transformer
-                                     (form-name (q-tag (g-tag dot
-                                                              d1 left
-                                                              d1 dot-op
-                                                              name))
-                                                template-block))))))]))))
+                               #,(class-dot-transformer
+                                  #'(form-name (q-tag (g-tag dot
+                                                             d1 left
+                                                             d1 dot-op
+                                                             name))
+                                               template-block)))))]))))
 
 (define-class-clause-syntax dot
   (make-macro-clause-transformer))
@@ -61,19 +60,15 @@
   (make-macro-clause-transformer #:clause-transformer veneer-clause-transformer))
 
 (begin-for-syntax
-  (define-syntax (class-dot-transformer stx)
-    (syntax-parse stx
-      #:literals ()
-      #:datum-literals (group named-macro)
-      [(_ pat)
-       (parse-identifier-syntax-transformer #'pat
-                                            #'dot-transformer-compiletime
-                                            '(#:head_stx #:is_static #:tail)
-                                            '(value value pattern)
-                                            (lambda (p ct)
-                                              ct)
-                                            (lambda (ps ct)
-                                              ct))]))
+  (define (class-dot-transformer pat)
+    (parse-identifier-syntax-transformer pat
+                                         #'dot-transformer-compiletime
+                                         '(#:head_stx #:is_static #:tail)
+                                         '(value value pattern)
+                                         (lambda (p ct)
+                                           ct)
+                                         (lambda (ps ct)
+                                           ct)))
 
   (define-syntax (dot-transformer-compiletime stx)
     (syntax-parse stx

@@ -24,7 +24,7 @@
          "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
          "dot-provider-key.rkt"
-         (for-syntax "class-transformer.rkt")
+         "class-transformer.rkt"
          (only-meta-in 1
                        "class-method.rkt")
          (only-in "class-annotation.rkt"
@@ -342,10 +342,10 @@
       (build-syntax-definition/maybe-extension
        'rhombus/annot #'name #'name-extends
        (if annotation-rhs
-           #`(wrap-class-transformer name tail-name
-                                     #,((make-syntax-introducer) annotation-rhs)
-                                     make-annotation-prefix-operator
-                                     "interface")
+           (wrap-class-transformer #'name #'tail-name
+                                   ((make-syntax-introducer) annotation-rhs)
+                                   #'make-annotation-prefix-operator
+                                   "interface")
            (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
              #`(identifier-annotation (quote-syntax name?)
                                       (quasisyntax ((#%dot-provider name-instance)

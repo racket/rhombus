@@ -3,8 +3,7 @@
                      syntax/parse/pre
                      enforest/hier-name-parse
                      "name-path-op.rkt"
-                     "class-parse.rkt"
-                     "macro-expr.rkt")
+                     "class-parse.rkt")
          "provide.rkt"
          "class-clause.rkt"
          "class-clause-tag.rkt"
@@ -54,12 +53,12 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(#,key (block (named-macro macro-expression #,stx pattern template-block))))]
+        (wrap-class-clause #`(#,key (block (named-macro #,stx pattern template-block))))]
        [(form-name (~and rhs (_::alts
                               (_::block (group (_::quotes . _)
                                                (_::block . _)))
                               ...)))
-        (wrap-class-clause #`(#,key (block (named-macro macro-expression #,stx rhs))))]
+        (wrap-class-clause #`(#,key (block (named-macro #,stx rhs))))]
        [(form-name (~and (_::block . _)
                          a-block))
         (wrap-class-clause #`(#,key a-block))]))))

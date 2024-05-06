@@ -26,7 +26,7 @@
          "name-root.rkt"
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
-         (for-syntax "class-transformer.rkt")
+         "class-transformer.rkt"
          "class-dot-transformer.rkt"
          "is-static.rkt"
          "realm.rkt")
@@ -74,10 +74,10 @@
            (list
             (build-syntax-definition/maybe-extension
              #f #'name #'name-extends
-             #`(wrap-class-transformer name tail-name
-                                       #,(intro expression-macro-rhs)
-                                       make-expression-prefix-operator
-                                       "class")))]
+             (wrap-class-transformer #'name #'tail-name
+                                     (intro expression-macro-rhs)
+                                     #'make-expression-prefix-operator
+                                     "class")))]
           [veneer?
            (build-definitions/maybe-extension
             #f #'name #'name-extends
@@ -190,10 +190,10 @@
          #f #'name #'name-extends
          (cond
            [expression-macro-rhs
-            #`(wrap-class-transformer name tail-name
-                                      #,((make-syntax-introducer) expression-macro-rhs)
-                                      make-expression-prefix-operator
-                                      "interface")]
+            (wrap-class-transformer #'name #'tail-name
+                                    ((make-syntax-introducer) expression-macro-rhs)
+                                    #'make-expression-prefix-operator
+                                    "interface")]
            [else #'no-constructor-transformer]))
         #`(define-name-root name
             #:extends name-extends

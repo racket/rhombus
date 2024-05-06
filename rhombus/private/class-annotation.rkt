@@ -4,7 +4,7 @@
                      "class-parse.rkt")
          (submod "annotation.rkt" for-class)
          (submod "annot-macro.rkt" for-class)
-         (for-syntax "class-transformer.rkt")
+         "class-transformer.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dot-provider-key.rkt"
          "dotted-sequence-parse.rkt")
@@ -86,10 +86,10 @@
          ;; build `(define-annotation-syntax name ....)`:
          (build-syntax-definition/maybe-extension
           'rhombus/annot #'name #'name-extends
-          #`(wrap-class-transformer name tail-name
-                                    #,(intro annotation-rhs)
-                                    make-annotation-prefix-operator
-                                    "class")))]
+          (wrap-class-transformer #'name #'tail-name
+                                  (intro annotation-rhs)
+                                  #'make-annotation-prefix-operator
+                                  "class")))]
        [else
         (make-ann-defs #'name #'name-of #f
                        #'constructor-public-name-fields #'public-field-keywords

@@ -11,7 +11,7 @@
          "composite.rkt"
          "parens.rkt"
          (submod "boolean-pattern.rkt" for-class)
-         (for-syntax "class-transformer.rkt")
+         "class-transformer.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt")
 
@@ -59,7 +59,7 @@
         (list
          (build-syntax-definition/maybe-extension
           'rhombus/bind #'name #'name-extends
-          #`(wrap-class-transformer name tail-name #,(intro binding-rhs) make-binding-prefix-operator "class")))]
+          (wrap-class-transformer #'name #'tail-name (intro binding-rhs) #'make-binding-prefix-operator "class")))]
        [else
         (list
          (build-syntax-definition/maybe-extension
