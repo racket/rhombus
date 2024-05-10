@@ -155,11 +155,11 @@
     (for/list ([stx (in-list statinfos-unpacked)])
       (check-syntax who stx)
       (pack-static-infos who stx)))
-  (if (null? statinfos)
-      #'()
-      (unpack-static-infos
-       who
-       (for/fold ([merged (car statinfos)]) ([statinfo (in-list statinfos)])
+  (unpack-static-infos
+   who
+   (if (null? statinfos)
+       #'()
+       (for/fold ([merged (car statinfos)]) ([statinfo (in-list (cdr statinfos))])
          (merge merged statinfo)))))
 
 (begin-for-syntax

@@ -70,7 +70,15 @@ check:
   statinfo_meta.sequence_constructor_key.unwrap()
   statinfo_meta.sequence_element_key.unwrap()
   statinfo_meta.values_key.unwrap()
+  statinfo_meta.indirect_key.unwrap()
   ~completes
+
+block:
+  import:
+    meta -1: rhombus/meta open
+  check:
+    statinfo_meta.union() ~matches '()'
+    statinfo_meta.intersect() ~matches '()'
 
 block:
   use_static
