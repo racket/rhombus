@@ -12,6 +12,7 @@
                   respan)
          (only-in scribble/example
                   make-base-eval
+                  make-base-eval-factory
                   close-eval)
          (only-in scribble/manual
                   hspace
@@ -25,7 +26,12 @@
                   style
                   plain)
          "rhombus.rhm"
-         "hspace.rkt")
+         "hspace.rkt"
+         rhombus/private/version-case
+         ;; so a sandbox can attach these:
+         (only-in rhombus)
+         (only-in rhombus/meta)
+         (only-in rhombus/private/runtime-config))
 
 (provide typeset-examples
          make-rhombus-eval
@@ -95,8 +101,17 @@
 
 (define (make-rhombus-eval [lang 'rhombus])
   ;; `make-base-eval` attaches `file/convertible`
-  (define eval (make-base-eval #:lang lang
-                               '(top)))
+  (define eval
+    (parameterize ([sandbox-namespace-specs
+                    (append (sandbox-namespace-specs)
+                            (meta-if-version-at-least
+                             "8.13.0.4"
+                             '(rhombus
+                               rhombus/meta
+                               rhombus/private/runtime-config)
+                             '()))])
+      (make-base-eval #:lang lang
+                      '(top))))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
   (call-in-sandbox-context eval (lambda () (error-print-source-location #f)))
   eval)

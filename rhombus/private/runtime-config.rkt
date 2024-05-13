@@ -13,6 +13,11 @@
 (provide install-runtime-config!
          parameters)
 
+(meta-if-version-at-least
+ "8.13.0.4"
+ (#%declare #:flatten-requires)
+ (void))
+
 ;; TEMP accomodate Racket versions before `syntax/parse/report-config`
 (meta-if-version-at-least
  "8.9.0.5"

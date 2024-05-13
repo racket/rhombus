@@ -1,9 +1,15 @@
 #lang racket/base
-(require "private/bounce.rkt")
+(require "private/bounce.rkt"
+         "private/version-case.rkt")
 
 (bounce "private/core.rkt"
         "private/core-macro.rkt"
         "private/core-derived.rkt")
+
+(meta-if-version-at-least
+ "8.13.0.4"
+ (#%declare #:flatten-requires)
+ (void))
 
 (module reader syntax/module-reader
   #:language 'rhombus

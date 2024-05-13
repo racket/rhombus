@@ -1,5 +1,6 @@
 #lang racket/base
-(require "private/bounce.rkt")
+(require "private/bounce.rkt"
+         "private/version-case.rkt")
 
 (bounce "private/core-meta.rkt"
         "private/sequence_meta.rhm")
@@ -16,3 +17,8 @@
 ;; by the `meta` expression export
 (bounce #:only (meta) #:spaces (rhombus/impo rhombus/expo)
         "private/core.rkt")
+
+(meta-if-version-at-least
+ "8.13.0.4"
+ (#%declare #:flatten-requires)
+ (void))
