@@ -99,17 +99,20 @@
                  (adjust-top-srcloc (quote-syntax (top e-form))))
            ...)))]))
 
-(define (make-rhombus-eval [lang 'rhombus])
+(define (make-rhombus-eval [lang 'rhombus]
+                           #:attach [attach? #t])
   ;; `make-base-eval` attaches `file/convertible`
   (define eval
     (parameterize ([sandbox-namespace-specs
                     (append (sandbox-namespace-specs)
-                            (meta-if-version-at-least
-                             "8.13.0.4"
-                             '(rhombus
-                               rhombus/meta
-                               rhombus/private/runtime-config)
-                             '()))])
+                            (if attach?
+                                (meta-if-version-at-least
+                                 "8.13.0.4"
+                                 '(rhombus
+                                   rhombus/meta
+                                   rhombus/private/runtime-config)
+                                 '())
+                                '()))])
       (make-base-eval #:lang lang
                       '(top))))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))

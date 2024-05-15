@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def check_eval = make_rhombus_eval())
+@(def check_eval = make_rhombus_eval(~attach: #false))
 @examples(
   ~eval: check_eval
   ~hidden:
