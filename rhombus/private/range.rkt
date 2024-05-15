@@ -291,7 +291,7 @@
 (define-for-syntax (parse-range-binding range . parseds)
   (syntax-parse #`(#,group-tag
                    #,range
-                   (parens #,@(for/list ([parsed parseds])
+                   (parens #,@(for/list ([parsed (in-list parseds)])
                                 #`(#,group-tag (parsed #:rhombus/bind #,parsed)))))
     [b::binding #'b.parsed]))
 

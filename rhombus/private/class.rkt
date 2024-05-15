@@ -939,14 +939,14 @@
             (define vtable (prop-methods-ref v #f))
             (or vtable
                 (raise-not-an-instance 'name v))))
-       (for/list ([def (syntax->list
-                        #'((define public-name-field/mutate
-                             (let ([public-name-field
-                                    (case-lambda
-                                      [(v) (public-name-field v)]
-                                      [(v val) (public-maybe-set-name-field! v val)])])
-                               public-name-field))
-                           ...))]
+       (for/list ([def (in-list (syntax->list
+                                 #'((define public-name-field/mutate
+                                      (let ([public-name-field
+                                             (case-lambda
+                                               [(v) (public-name-field v)]
+                                               [(v val) (public-maybe-set-name-field! v val)])])
+                                        public-name-field))
+                                    ...)))]
                   #:when (syntax-parse def
                            [(_ n (_ ([n2 . _]) . _)) (not (free-identifier=? #'n #'n2))]
                            [_ #t]))

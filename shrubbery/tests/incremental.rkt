@@ -137,9 +137,9 @@
   (define N (sub1 (string-length input)))
   (define (sel-pos i) i)
   ;; try inserting or deleting then re-lexing
-  (for ([ins (if slow?
-                 '("x" "1" "$" ")" "'" " ")
-                 '("x"))])
+  (for ([ins (in-list (if slow?
+                          '("x" "1" "$" ")" "'" " ")
+                          '("x")))])
     (for ([i (in-range N)])
       (define pos (sel-pos i))
 

@@ -379,7 +379,7 @@
   (let loop ([proto proto] [optionals? #t])
     (syntax-parse proto
       [count:exact-integer
-       (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
+       (generate-temporaries (for/list ([i (in-range (syntax-e #'count))]) i))]
       [#(proto internal-proto)
        (vector (loop #'proto #t)
                (loop #'internal-proto #f))]

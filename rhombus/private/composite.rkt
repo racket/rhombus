@@ -385,7 +385,7 @@
     [(and (pair? rest-syms) (null? (cdr rest-syms)))
      ;; simple case: single-values
      (lambda ()
-       (for/list ([getter (reverse accum)])
+       (for/list ([getter (in-list (reverse accum))])
          (getter)))]
     [else
      ;; each getter returns multiple values
