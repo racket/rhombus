@@ -490,7 +490,6 @@
 
 (define-annotation-syntax Map.by
   (annotation-prefix-operator
-   #'Map.by
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -659,7 +658,6 @@
 
 (define-annotation-syntax MutableMap.by
   (annotation-prefix-operator
-   #'MutableMap.by
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -690,7 +688,6 @@
 
 (define-annotation-syntax WeakMutableMap.by
   (annotation-prefix-operator
-   #'WeakMutableMap.by
    '((default . stronger))
    'macro
    (lambda (stx)

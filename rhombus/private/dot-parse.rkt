@@ -65,6 +65,7 @@
               (define-values (assign-expr tail)
                 (build-assign
                  (attribute assign.op)
+                 #'assign.op-name
                  #'assign.name
                  #`(lambda ()
                      #,(mk lhs (lambda (e)

@@ -17,8 +17,7 @@
 
 (define-annotation-syntax &&
   (annotation-infix-operator
-   (annot-quote &&)
-   `((,(annot-quote \|\|) . stronger))
+   (lambda () `((,(annot-quote \|\|) . stronger)))
    'automatic
    (lambda (lhs rhs stx)
      (syntax-parse (list lhs rhs)
@@ -89,7 +88,6 @@
 
 (define-annotation-syntax \|\|
   (annotation-infix-operator
-   (annot-quote \|\|)
    null
    'automatic
    (lambda (lhs rhs stx)
@@ -171,9 +169,8 @@
 
 (define-annotation-syntax !
   (annotation-prefix-operator
-   (annot-quote !)
-   `((,(annot-quote &&) . stronger)
-     (,(annot-quote \|\|) . stronger))
+   (lambda () `((,(annot-quote &&) . stronger)
+                (,(annot-quote \|\|) . stronger)))
    'automatic
    (lambda (form stx)
      (syntax-parse form

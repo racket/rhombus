@@ -577,6 +577,7 @@
                                            #:rator-arity shape-arity))
                     (define-values (assign-expr tail) (build-assign
                                                        (attribute assign.op)
+                                                       #'assign.op-name
                                                        #'assign.name
                                                        #`(lambda () (#,impl obj))
                                                        #`(lambda (v) #,assign-call)
@@ -630,6 +631,7 @@
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
            (build-assign (attribute assign.op)
+                         #'assign.op-name
                          #'assign.name
                          #`(lambda () (#,accessor-id obj-id))
                          #`(lambda (v) (#,maybe-mutator-id obj-id v))
@@ -669,6 +671,7 @@
                                     (string-append "property does not support assignment" statically-str)
                                     id))
               (build-assign (attribute assign.op)
+                            #'assign.op-name
                             #'assign.name
                             #`(lambda () (#,rator obj-id))
                             #`(lambda (v) (#,rator obj-id v))

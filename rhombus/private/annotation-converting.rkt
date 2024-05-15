@@ -26,7 +26,6 @@
 
 (define-annotation-syntax converting
   (annotation-prefix-operator
-   (annot-quote converting)
    '((default . stronger))
    'macro
    (lambda (stx)

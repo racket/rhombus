@@ -12,7 +12,6 @@
 
 (define-binding-syntax rest-bind
   (binding-prefix-operator
-   (bind-quote rest-bind)
    '()
    'macro
    (lambda (tail)

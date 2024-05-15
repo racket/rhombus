@@ -179,7 +179,6 @@
 
 (define-syntax #%call
   (expression-infix-operator
-   (expr-quote #%call)
    '((default . stronger))
    'macro
    (lambda (rator stxes)
@@ -193,7 +192,6 @@
 
 (define-repetition-syntax #%call
   (repetition-infix-operator
-   (repet-quote #%call)
    '((default . stronger))
    'macro
    (lambda (rator stxes)
@@ -229,7 +227,6 @@
 
 (define-syntax #%index
   (expression-infix-operator
-   (expr-quote #%index)
    '((default . stronger))
    'macro
    (lambda (array stxes)
@@ -239,7 +236,6 @@
 
 (define-repetition-syntax #%index
   (repetition-infix-operator
-   (repet-quote #%index)
    '((default . stronger))
    'macro
    (lambda (array stxes)

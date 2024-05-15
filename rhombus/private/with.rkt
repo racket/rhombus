@@ -33,9 +33,9 @@
 
 (define-syntax with
   (expression-infix-operator
-   (expr-quote with)
-   `((,(expr-quote :=) . stronger)
-     (default . weaker))
+   (lambda ()
+     `((,(expr-quote :=) . stronger)
+       (default . weaker)))
    'macro
    (lambda (orig-form1 tail)
      (define more-static? (is-static-context/tail? tail))

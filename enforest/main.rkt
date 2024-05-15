@@ -311,7 +311,7 @@
         (define (dispatch-infix-operator op tail stxes op-stx)
           (define rel-prec (if (not current-op)
                                'weaker
-                               (relative-precedence current-op op)))
+                               (relative-precedence current-op-stx current-op op-stx op)))
           (cond
             [(eq? rel-prec 'weaker)
              (cond
@@ -406,7 +406,7 @@
     (define left-op (lookup left-mode left-op-stx))
     (define right-op (lookup right-mode right-op-stx))
     (if (and left-op right-op)
-        (relative-precedence left-op right-op)
+        (relative-precedence left-op-stx left-op right-op-stx right-op)
         'unbound)))
 
 (define (lookup-operator who what id ref)

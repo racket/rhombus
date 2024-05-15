@@ -214,10 +214,10 @@
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
-    #`(list #,@(for/list ([p (in-list (syntax->list prec))])
-                 (syntax-parse p
-                   [(#:other . spec) #`'(default . spec)]
-                   [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
+    #`(lambda () (list #,@(for/list ([p (in-list (syntax->list prec))])
+                            (syntax-parse p
+                              [(#:other . spec) #`'(default . spec)]
+                              [(op . spec) #`(cons (quote-syntax op) 'spec)])))))
 
   (define (convert-assc assc)
     (if (null? (syntax-e assc))

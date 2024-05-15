@@ -23,7 +23,6 @@
                                                          [completed? #:mutable]))
   (define (make-delayed-annotation proc complete!-id static-info-id)
     (delayed-annotation
-     (quote-syntax ignored)
      '((default . stronger))
      'macro
      proc

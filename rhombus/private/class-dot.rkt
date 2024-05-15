@@ -408,6 +408,7 @@
        #:when (syntax-e (field-desc-mutator-id fld))
        (define-values (assign-expr tail) (build-assign
                                           (attribute assign.op)
+                                          #'assign.op-name
                                           #'assign.name
                                           #`(lambda ()
                                               (#,(relocate field-id accessor-id) obj))

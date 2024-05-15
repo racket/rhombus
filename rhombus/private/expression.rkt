@@ -43,7 +43,7 @@
   (property expression-infix-operator infix-operator)
 
   (define (expression-transformer proc)
-    (expression-prefix-operator (quote-syntax unused) '((default . stronger)) 'macro proc))
+    (expression-prefix-operator '((default . stronger)) 'macro proc))
 
   (define early-unbound? #f)
   (define (check-unbound-identifier-early!)

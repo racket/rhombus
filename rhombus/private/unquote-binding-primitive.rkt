@@ -102,7 +102,6 @@
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
-   (unquote-bind-quote ::)
    null
    'macro
    (lambda (form1 stx)
@@ -438,7 +437,6 @@
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
-   (unquote-bind-quote &&)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -459,7 +457,6 @@
 
 (define-unquote-binding-syntax \|\|
   (unquote-binding-infix-operator
-   (unquote-bind-quote \|\|)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -480,7 +477,6 @@
 
 (define-unquote-binding-syntax !
   (unquote-binding-prefix-operator
-   (unquote-bind-quote !)
    `()
    'automatic
    (lambda (form stx)

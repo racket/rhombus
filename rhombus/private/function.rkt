@@ -171,7 +171,6 @@
 
 (define-annotation-syntax of_arity
   (annotation-prefix-operator
-   (annot-quote of_arity)
    '((default . stronger))
    'macro
    (lambda (stx)

@@ -71,9 +71,8 @@
   (define expr (relocate+reraw loc (rhombus-local-expand form)))
   (relocate+reraw expr #`(parsed #:rhombus/expr #,expr)))
 
-(define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
+(define-for-syntax (make-expression-infix-operator prec protocol proc assc)
   (expression-infix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -93,9 +92,8 @@
                                    proc)))
    assc))
 
-(define-for-syntax (make-expression-prefix-operator name prec protocol proc)
+(define-for-syntax (make-expression-prefix-operator prec protocol proc)
   (expression-prefix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'automatic)

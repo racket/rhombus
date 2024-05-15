@@ -20,6 +20,7 @@
   (define-syntax (prefix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
+          (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
@@ -33,23 +34,23 @@
           (~optional (~seq #:static-infos statinfos)
                      #:defaults ([statinfos #'()])))
        #`(make-expression&repetition-prefix-operator
-          (expr-quote name)
-          (repet-quote name)
-          (list (cons (quote-syntax weaker-op)
-                      'weaker)
-                ...
-                (cons (quote-syntax same-op)
-                      'same)
-                ...
-                (cons (quote-syntax same-on-right-op)
-                      'same-on-right)
-                ...
-                (cons (quote-syntax same-on-left-op)
-                      'same-on-left)
-                ...
-                (cons (quote-syntax stronger-op)
-                      'stronger)
-                ...)
+          (~? precedences-expr
+              (lambda ()
+                (list (cons (quote-syntax weaker-op)
+                            'weaker)
+                      ...
+                      (cons (quote-syntax same-op)
+                            'same)
+                      ...
+                      (cons (quote-syntax same-on-right-op)
+                            'same-on-right)
+                      ...
+                      (cons (quote-syntax same-on-left-op)
+                            'same-on-left)
+                      ...
+                      (cons (quote-syntax stronger-op)
+                            'stronger)
+                      ...)))
           'automatic
           (lambda (form stx)
             (wrap-static-info*
@@ -64,6 +65,7 @@
   (define-syntax (infix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
+          (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
@@ -77,20 +79,20 @@
           (~optional (~seq #:static-infos statinfos)
                      #:defaults ([statinfos #'()])))
        #`(make-expression&repetition-infix-operator
-          (expr-quote name)
-          (repet-quote name)
-          (list (cons (quote-syntax weaker-op)
-                      'weaker)
-                ...
-                (cons (quote-syntax same-op)
-                      'same)
-                ...
-                (cons (quote-syntax same-on-left-op)
-                      'same-on-left)
-                ...
-                (cons (quote-syntax stronger-op)
-                      'stronger)
-                ...)
+          (~? precedences-expr
+              (lambda ()
+                (list (cons (quote-syntax weaker-op)
+                            'weaker)
+                      ...
+                      (cons (quote-syntax same-op)
+                            'same)
+                      ...
+                      (cons (quote-syntax same-on-left-op)
+                            'same-on-left)
+                      ...
+                      (cons (quote-syntax stronger-op)
+                            'stronger)
+                      ...)))
           'automatic
           (lambda (form1 form2 stx)
             (wrap-static-info*

@@ -20,8 +20,7 @@
 
 (define-binding-syntax &&
   (binding-infix-operator
-   (bind-quote &&)
-   `((,(bind-quote \|\|) . stronger))
+   (lambda () `((,(bind-quote \|\|) . stronger)))
    'automatic
    (lambda (lhs rhs stx)
      (binding-form
@@ -76,7 +75,6 @@
 
 (define-binding-syntax \|\|
   (binding-infix-operator
-   (bind-quote \|\|)
    null
    'automatic
    (lambda (lhs rhs stx)
@@ -141,9 +139,9 @@
 
 (define-binding-syntax !
   (binding-prefix-operator
-   (bind-quote !)
-   `((,(bind-quote &&) . stronger)
-     (,(bind-quote \|\|) . stronger))
+   (lambda ()
+     `((,(bind-quote &&) . stronger)
+       (,(bind-quote \|\|) . stronger)))
    'automatic
    (lambda (form stx)
      (binding-form #'not-infoer form))))

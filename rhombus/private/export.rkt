@@ -170,7 +170,6 @@
 
 (define-export-syntax as
   (export-prefix-operator
-   (expo-quote as)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -182,7 +181,6 @@
 
 (define-export-syntax rename
   (export-prefix-operator
-   (expo-quote rename)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -254,7 +252,6 @@
 
 (define-export-syntax names
   (export-prefix-operator
-   (expo-quote names)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -267,7 +264,6 @@
 
 (define-export-syntax all_from
   (export-prefix-operator
-   (expo-quote all_from)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -339,7 +335,6 @@
 
 (define-export-syntax all_defined
   (export-prefix-operator
-   (expo-quote all_defined)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -353,7 +348,6 @@
 
 (define-export-syntax #%juxtapose
   (export-infix-operator
-   (expo-quote #%juxtapose)
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -363,7 +357,7 @@
                                  form1)
                 #'tail)]
        [(_ . tail)
-        #:with (~var e (:export-infix-op+form+tail #'#%juxtapose)) #'(group . tail)
+        #:with (~var e (:export-infix-op+form+tail (expo-quote #%juxtapose))) #'(group . tail)
         (values #`(combine-out #,form1
                                e.parsed)
                 #'e.tail)]))
@@ -371,7 +365,6 @@
 
 (define-export-syntax |.|
   (export-infix-operator
-   (expo-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form stx)

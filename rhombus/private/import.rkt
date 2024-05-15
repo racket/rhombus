@@ -795,7 +795,6 @@
 
 (define-import-syntax #%juxtapose
   (import-infix-operator
-   (impo-quote #%juxtapose)
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -816,36 +815,28 @@
    'left))
 
 (define-import-syntax #%literal
-  (make-module-path-literal-operator import-prefix-operator
-                                     (impo-quote #%literal)))
+  (make-module-path-literal-operator import-prefix-operator))
 
 (define-import-syntax rhombus/
-  (make-module-path-/-operator import-infix-operator
-                               (impo-quote rhombus/)))
+  (make-module-path-/-operator import-infix-operator))
 
 (define-import-syntax rhombus-file
-  (make-module-path-file-operator import-prefix-operator
-                                  (impo-quote rhombus-file)))
+  (make-module-path-file-operator import-prefix-operator))
 
 (define-import-syntax rhombus-lib
-  (make-module-path-lib-operator import-prefix-operator
-                                 (impo-quote rhombus-lib)))
+  (make-module-path-lib-operator import-prefix-operator))
 
 (define-import-syntax rhombus-!
-  (make-module-path-submod-operator import-infix-operator
-                                    (impo-quote rhombus-!)))
+  (make-module-path-submod-operator import-infix-operator))
 
 (define-import-syntax rhombus-self
-  (make-module-path-submod-same-operator import-prefix-operator
-                                         (impo-quote rhombus-self)))
+  (make-module-path-submod-same-operator import-prefix-operator))
 
 (define-import-syntax rhombus-parent
-  (make-module-path-submod-up-operator import-prefix-operator
-                                       (impo-quote rhombus-parent)))
+  (make-module-path-submod-up-operator import-prefix-operator))
 
 (define-for-syntax infix-path-dot
   (import-infix-operator
-   (impo-quote rhombus.)
    '((default . weaker))
    'macro
    ;; infix
@@ -865,7 +856,6 @@
 (define-import-syntax rhombus.
   (import-prefix+infix-operator
    (import-prefix-operator
-    (impo-quote rhombus.)
     '((default . weaker))
     'macro
     (lambda (stx)

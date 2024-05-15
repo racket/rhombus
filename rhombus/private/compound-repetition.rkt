@@ -12,7 +12,7 @@
                      build-compound-repetition))
 
 (begin-for-syntax
-  (define (make-expression&repetition-prefix-operator expr-name repet-name prec protocol exp)
+  (define (make-expression&repetition-prefix-operator prec protocol exp)
     (when (eq? protocol 'macro) (error "macro protocol not currently supported for prefix repetition"))
     (define rep
       (lambda (form self-stx)
@@ -21,10 +21,10 @@
                                    (lambda (form) (values (exp form self-stx)
                                                           #'())))))
     (values
-     (expression-prefix-operator expr-name prec protocol exp)
-     (repetition-prefix-operator repet-name prec protocol rep)))
+     (expression-prefix-operator prec protocol exp)
+     (repetition-prefix-operator (add-repet-space prec) protocol rep)))
 
-  (define (make-expression&repetition-infix-operator expr-name repet-name prec protocol exp assc)
+  (define (make-expression&repetition-infix-operator prec protocol exp assc)
     (define rep
       (if (eq? protocol 'macro)
           ;; used for postfix
@@ -42,14 +42,19 @@
                                        (list form1 form2)
                                        (lambda (form1 form2) (values (exp form1 form2 self-stx)
                                                                      #'()))))))
-    (define (add-repet-space prec)
-      (for/list ([p (in-list prec)])
-        (if (identifier? (car p))
-            (cons (in-repetition-space (car p)) (cdr p))
-            p)))
     (values
-     (expression-infix-operator expr-name prec protocol exp assc)
-     (repetition-infix-operator repet-name (add-repet-space prec) protocol rep assc)))
+     (expression-infix-operator prec protocol exp assc)
+     (repetition-infix-operator (add-repet-space prec) protocol rep assc)))
+
+  (define (add-repet-space get-prec)
+    (lambda ()
+      (let ([prec (if (procedure? get-prec)
+                      (get-prec)
+                      get-prec)])
+        (for/list ([p (in-list prec)])
+          (if (identifier? (car p))
+              (cons (in-repetition-space (car p)) (cdr p))
+              p)))))
 
   (define (repetition-depth form)
     (syntax-parse form

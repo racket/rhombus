@@ -68,8 +68,7 @@
       [_
        #`(class-transformer #,g)]))
   (with-syntax ([make-prefix-operator make-prefix-operator])
-    #`(make-prefix-operator #'name
-                            '((default . stronger))
+    #`(make-prefix-operator '((default . stronger))
                             'macro
                             (let ([name #,lam])
                               (let ([name (lambda (tail head)

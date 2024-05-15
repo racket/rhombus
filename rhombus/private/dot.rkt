@@ -51,7 +51,6 @@
 
 (define-syntax |.|
   (expression-infix-operator
-   (expr-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
@@ -71,7 +70,6 @@
 
 (define-repetition-syntax |.|
   (repetition-infix-operator
-   (repet-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
@@ -105,7 +103,6 @@
 ;; for something like `"a" :: String.length()`
 (define-annotation-syntax |.|
   (annotation-infix-operator
-   (annot-quote |.|)
    '((default . stronger))
    'macro
    (lambda (form1 tail)
@@ -152,6 +149,7 @@
              #:do [(define op (attribute assign.op))]
              (define-values (assign-expr tail) (build-assign
                                                 op
+                                                #'assign.op-name
                                                 #'assign.name
                                                 #`(lambda () (dot-lookup-by-name lhs '#,field-id))
                                                 #`(lambda (v) (dot-assign-by-name lhs '#,field-id v))

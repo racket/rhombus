@@ -109,8 +109,7 @@
 
 (define-syntax ++
   (expression-infix-operator
-   (expr-quote ++)
-   `((,(expr-quote +&) . same))
+   (lambda () `((,(expr-quote +&) . same)))
    'automatic
    (lambda (form1-in form2 self-stx)
      (define static? (is-static-context? self-stx))
@@ -128,8 +127,7 @@
 
 (define-repetition-syntax ++
   (repetition-infix-operator
-   (repet-quote ++)
-   `((,(repet-quote +&) . same))
+   (lambda () `((,(repet-quote +&) . same)))
    'automatic
    (lambda (form1 form2 self-stx)
      (define static? (is-static-context? self-stx))

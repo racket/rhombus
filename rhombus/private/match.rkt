@@ -195,7 +195,6 @@
 
 (define-syntax matches
   (expression-infix-operator
-   (expr-quote matches)
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -216,7 +215,6 @@
 ;; for precedence
 (define-binding-syntax matches
   (binding-infix-operator
-   (bind-quote matches)
    `((default . stronger))
    'macro
    (lambda (stx) (error "should not get here"))

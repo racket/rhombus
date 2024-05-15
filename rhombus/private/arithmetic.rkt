@@ -45,6 +45,9 @@
                        int-static-infos
                        flonum-static-infos)))
 
+(module+ precedence
+  (provide (for-syntax comparison-precedences)))
+
 (define-for-syntax number-static-infos
   ;; comparison actually requires real numbers, but we want to
   ;; propagate a comparsion operation from things like `+`, and
@@ -123,11 +126,28 @@
 (define-infix \|\| or
   #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**))
 
+(define-for-syntax comparison-precedences
+  (lambda ()
+    `((,(expr-quote rhombus+) . weaker)
+      (,(expr-quote rhombus-) . weaker)
+      (,(expr-quote rhombus*) . weaker)
+      (,(expr-quote rhombus/) . weaker)
+      (,(expr-quote mod) . weaker)
+      (,(expr-quote div) . weaker)
+      (,(expr-quote rem) . weaker)
+      (,(expr-quote rhombus**) . weaker)
+      (,(expr-quote .>) . same)
+      (,(expr-quote .>=) . same)
+      (,(expr-quote .=) . same)
+      (,(expr-quote .!=) . same)
+      (,(expr-quote .<) . same)
+      (,(expr-quote .<=) . same)
+      (,(expr-quote \|\|) . stronger)
+      (,(expr-quote &&) . stronger))))
+
 (define-syntax-rule (define-comp-infix name racket-name)
   (define-infix name racket-name
-    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
-    #:same-as (.> .>= .= .!= .<=)
-    #:stronger-than (\|\| &&)
+    #:precedences comparison-precedences
     #:associate 'none))
 
 (set-primitive-who! '= '.=)

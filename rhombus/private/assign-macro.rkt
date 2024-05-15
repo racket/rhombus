@@ -54,6 +54,7 @@
      #:with assign::assign-op-seq #'tail
      #:do [(define op (attribute assign.op))]
      (build-assign op
+                   #'assign.op-name
                    #'assign.name
                    #'ref
                    #'set
@@ -61,9 +62,8 @@
                    #'assign.tail)]
     [_ (raise-bad-macro-result (proc-name proc) "assignment" form)]))
 
-(define-for-syntax (make-assign-operator name prec protocol proc assc)
+(define-for-syntax (make-assign-operator prec protocol proc assc)
   (make-assign-infix-operator
-   name
    prec
    assc
    protocol
@@ -129,6 +129,7 @@
                    (define-values (assign-expr tail)
                      (build-assign
                       op
+                      #'assign.op-name
                       #'assign.name
                       #`(rhombus-expression #,(unpack-group ref 'assign_meta.AssignParsed #f))
                       #`(rhombus-expression #,(unpack-group set 'assign_meta.AssignParsed #f))

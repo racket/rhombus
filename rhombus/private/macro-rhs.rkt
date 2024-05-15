@@ -292,10 +292,6 @@
                         orig-stx))
   (define p (car ps))
   #`(#,make-id
-     (quote-syntax #,(let ([name (parsed-name p)])
-                       (if space-sym
-                           ((make-interned-syntax-introducer space-sym) name 'add)
-                           name)))
      #,(parsed-prec-stx p)
      #,(if (parsed-parsed-right? p)
            #''automatic

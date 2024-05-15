@@ -122,16 +122,19 @@
 (define-annotation-syntax ListRange
   (identifier-annotation #'list-range? list-range-static-infos))
 
-(define-for-syntax range-assoc-table
+(define-for-syntax (range-assoc-table)
   `((,(expr-quote rhombus-a:+) . weaker)
     (,(expr-quote rhombus-a:-) . weaker)
     (,(expr-quote rhombus-a:*) . weaker)
-    (,(expr-quote rhombus-a:/) . weaker)))
+    (,(expr-quote rhombus-a:/) . weaker)
+    (,(expr-quote rhombus-a:**) . weaker)
+    (,(expr-quote rhombus-a:div) . weaker)
+    (,(expr-quote rhombus-a:mod) . weaker)
+    (,(expr-quote rhombus-a:rem) . weaker)))
 
 (define-syntax ..
   (expression-prefix+infix-operator
    (expression-prefix-operator
-    (expr-quote ..)
     range-assoc-table
     'macro
     (lambda (tail)
@@ -148,7 +151,6 @@
                   range-static-infos)
                  #'rhs.tail)])))
    (expression-infix-operator
-    (expr-quote ..)
     range-assoc-table
     'macro
     (lambda (form1 tail)
@@ -169,7 +171,6 @@
 (define-syntax ..=
   (expression-prefix+infix-operator
    (expression-prefix-operator
-    (expr-quote ..=)
     range-assoc-table
     'automatic
     (lambda (form stx)
@@ -177,7 +178,6 @@
        #`(range-to-inclusive/who '..= #,form)
        range-static-infos)))
    (expression-infix-operator
-    (expr-quote ..=)
     range-assoc-table
     'automatic
     (lambda (form1 form2 stx)
@@ -188,7 +188,6 @@
 
 (define-syntax <..<
   (expression-infix-operator
-   (expr-quote <..<)
    range-assoc-table
    'macro
    (lambda (form1 tail)
@@ -208,7 +207,6 @@
 
 (define-syntax <..=
   (expression-infix-operator
-   (expr-quote <..=)
    range-assoc-table
    'automatic
    (lambda (form1 form2 stx)
@@ -220,7 +218,6 @@
 (define-binding-syntax ..
   (binding-prefix+infix-operator
    (binding-prefix-operator
-    (bind-quote ..)
     `()
     'macro
     (lambda (tail)
@@ -233,7 +230,6 @@
          (values (parse-range-binding #'Range.to #'rhs.parsed)
                  #'rhs.tail)])))
    (binding-infix-operator
-    (bind-quote ..)
     `()
     'macro
     (lambda (form1 tail)
@@ -250,13 +246,11 @@
 (define-binding-syntax ..=
   (binding-prefix+infix-operator
    (binding-prefix-operator
-    (bind-quote ..=)
     `()
     'automatic
     (lambda (form stx)
       (parse-range-binding #'Range.to_inclusive form)))
    (binding-infix-operator
-    (bind-quote ..=)
     `()
     'automatic
     (lambda (form1 form2 stx)
@@ -265,7 +259,6 @@
 
 (define-binding-syntax <..<
   (binding-infix-operator
-   (bind-quote <..<)
    `()
    'macro
    (lambda (form1 tail)
@@ -281,7 +274,6 @@
 
 (define-binding-syntax <..=
   (binding-infix-operator
-   (bind-quote <..=)
    `()
    'automatic
    (lambda (form1 form2 stx)

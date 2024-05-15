@@ -136,8 +136,6 @@
   (define (make-prefix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-prefix-operator
-         (expr-quote #,name)
-         (repet-quote #,name)
          #,(convert-prec prec)
          'automatic
          (lambda (arg self-stx)
@@ -149,8 +147,6 @@
   (define (make-infix name op-proc prec assc static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
-         (expr-quote #,name)
-         (repet-quote #,name)
          #,(convert-prec prec)
          'automatic
          (lambda (left right self-stx)
@@ -163,8 +159,6 @@
   (define (make-postfix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
-         (expr-quote #,name)
-         (repet-quote #,name)
          #,(convert-prec prec)
          'macro
          (lambda (left stx)

@@ -65,7 +65,7 @@
                        ()
                        ())))
 
-(define (wrap-prefix name precedence protocol proc)
+(define (wrap-prefix precedence protocol proc)
   (lambda (stx)
     (syntax-parse (unpack-tail stx #f #f)
       [(head . tail) (proc (pack-tail #'tail) #'head)])))

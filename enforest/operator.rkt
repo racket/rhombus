@@ -19,7 +19,6 @@
 
 (provide operator
          operator?
-         operator-name
          operator-precedences
          operator-protocol
          operator-proc ; convention depends on category
@@ -47,32 +46,37 @@
            apply-prefix-transformer-operator
            apply-infix-transformer-operator))
 
-(struct operator (name precedences protocol proc)
-  #:guard (lambda (name precedences protocol proc who)
-            (unless (identifier? name)
-              (raise-argument-error who "identifier?" name))
-            (unless (and (list? precedences)
-                         (for/and ([p (in-list precedences)])
-                           (and (pair? p)
-                                (or (eq? (car p) 'default)
-                                    (identifier? (car p)))
-                                (memq (cdr p) '(weaker stronger same same-on-left same-on-right)))))
-              (raise-argument-error who
-                                    (string-append "(listof (cons/c (or/c identifier? 'default)"
-                                                   " (or/c 'stronger 'weaker 'same 'same-on-left 'same-on-right)))")
-                                    precedences))
+(struct operator (precedences protocol proc)
+  #:guard (lambda (precedences protocol proc who)
+            (when #f ;; change to #t for a debugging check
+              (let ([precedences (cond
+                                   [(and (procedure? precedences)
+                                         (procedure-arity-includes? precedences 0))
+                                    (precedences)]
+                                   [else precedences])])
+                (unless (and (list? precedences)
+                             (for/and ([p (in-list precedences)])
+                               (and (pair? p)
+                                    (or (eq? (car p) 'default)
+                                        (identifier? (car p)))
+                                    (memq (cdr p) '(weaker stronger same same-on-left same-on-right)))))
+                  (raise-argument-error who
+                                        (let ([s (string-append "(listof (cons/c (or/c identifier? 'default)"
+                                                                " (or/c 'stronger 'weaker 'same 'same-on-left 'same-on-right))))")])
+                                          (string-append "(or/c " s "(-> " s "))"))
+                                        precedences))))
             (unless (memq protocol '(automatic macro))
               (raise-argument-error who "(or/c 'automatic 'macro)" protocol))
             (unless (procedure? proc)
               (raise-argument-error who "procedure?" proc))
-            (values name precedences protocol proc)))
+            (values precedences protocol proc)))
             
 (struct prefix-operator operator ())
 (struct infix-operator operator (assoc)
-  #:guard (lambda (name precedences protocol proc assoc who)
+  #:guard (lambda (precedences protocol proc assoc who)
             (unless (memq assoc '(left right none))
               (raise-argument-error who "(or/c 'left 'right 'none)" assoc))
-            (values name precedences protocol proc assoc)))
+            (values precedences protocol proc assoc)))
 
 (define (prefix-operator-ref v) (and (prefix-operator? v) v))
 (define (infix-operator-ref v) (and (infix-operator? v) v))
@@ -89,7 +93,7 @@
 ;;       - 'same (error because no associativity)
 ;;       - 'same-on-left (error because on right)
 ;;       - #f (no precedence relation)
-(define (relative-precedence left-op op)
+(define (relative-precedence left-op-name left-op op-name op)
   (define (find op-name this-op-name precs)
     (let loop ([precs precs] [default #f])
       (cond
@@ -106,17 +110,15 @@
       [(same-on-right) 'same-on-left]
       [(same-on-left) 'same-on-right]
       [else dir]))
-  (define op-name (operator-name op))
-  (define left-op-name (operator-name left-op))
-  (define dir1 (find left-op-name op-name (operator-precedences op)))
-  (define dir2 (invert (find op-name left-op-name (operator-precedences left-op))))
+  (define (extract precs) (if (procedure? precs) (precs) precs))
+  (define dir1 (find left-op-name op-name (extract (operator-precedences op))))
+  (define dir2 (invert (find op-name left-op-name (extract (operator-precedences left-op)))))
   (cond
     [(and dir1 dir2 (not (eq? dir1 dir2)))
      'inconsistent-prec]
     [else
      (define dir (or dir1 dir2
-                     (and (free-identifier=? (operator-name op)
-                                             (operator-name left-op))
+                     (and (free-identifier=? op-name left-op-name)
                           'same)))
      (cond
        [(or (eq? 'same dir)

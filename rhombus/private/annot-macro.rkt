@@ -81,9 +81,8 @@
   (syntax-parse (unpack-group form proc #f)
     [c::annotation #'c.parsed]))
 
-(define-for-syntax (make-annotation-infix-operator name prec protocol proc assc)
+(define-for-syntax (make-annotation-infix-operator prec protocol proc assc)
   (annotation-infix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'macro)
@@ -101,9 +100,8 @@
                                         proc)))
    assc))
 
-(define-for-syntax (make-annotation-prefix-operator name prec protocol proc)
+(define-for-syntax (make-annotation-prefix-operator prec protocol proc)
   (annotation-prefix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'macro)

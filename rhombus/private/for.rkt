@@ -435,7 +435,6 @@
 ;; reducer parsing terminates appropriately
 (define-reducer-syntax #%call
   (reducer-infix-operator
-   (reducer-quote #%call)
    `((default . stronger))
    'macro
    (lambda (stx) (error "should not get here"))

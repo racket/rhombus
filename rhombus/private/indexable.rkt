@@ -143,6 +143,7 @@
                                       #'indexable-get)))
      (define-values (assign-expr tail) (build-assign
                                         op
+                                        #'assign.op-name
                                         #'assign.name
                                         #`(lambda () (#,indexable-ref-id indexable-v index-v))
                                         #`(lambda (v) (#,indexable-set!-id indexable-v index-v v))

@@ -178,7 +178,6 @@
 
 (define-syntax throw
   (expression-prefix-operator
-   (expr-quote throw)
    '((default . weaker))
    'automatic
    (lambda (form1 op-stx)

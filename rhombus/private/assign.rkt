@@ -31,11 +31,12 @@
 
   (define-syntax-class :assign-op-seq
     #:description "assignment operation"
-    #:attributes (op name tail)
+    #:attributes (op op-name name tail)
     (pattern (~var name (:hier-name-seq in-name-root-space in-expression-space name-path-op name-root-ref))
              #:do [(define op (syntax-local-value* #'name.name assign-infix-operator-ref))]
              #:when op
              #:attr op op
+             #:attr op-name #'name.name
              #:with tail #'name.tail))
 
   (define (build-assign/automatic proc self-stx ref set rhs-name rhs)
@@ -44,11 +45,11 @@
   (define (build-assign/macro proc self-stx ref set rhs-name tail)
     (proc ref set (cons self-stx tail) rhs-name))
 
-  (define (build-assign op self-stx ref set rhs-name tail)
+  (define (build-assign op op-name self-stx ref set rhs-name tail)
     (cond
       [(eq? (operator-protocol op) 'automatic)
        (syntax-parse #`(group . #,tail)
-         [(~var e (:infix-op+expression+tail (operator-name op)))
+         [(~var e (:infix-op+expression+tail op-name))
           (values (build-assign/automatic (assign-infix-operator-assign-proc op) self-stx ref set rhs-name
                                           #`(let ([#,rhs-name e.parsed])
                                               #,rhs-name))
@@ -117,8 +118,7 @@
   (struct mutable-variable expression-prefix-operator (id convert-id static-infos)
     #:property prop:rename-transformer (struct-field-index id))
   (define (make-mutable-variable id converter-id static-infos)
-    (mutable-variable (quote-syntax unused)
-                      '((default . stronger))
+    (mutable-variable '((default . stronger))
                       'macro
                       (lambda (stx)
                         (syntax-parse stx
@@ -133,7 +133,7 @@
 (define (raise-mutable-binding-annotation-fail val who)
   (raise-annotation-failure (car who) val (cdr who)))
 
-(define-for-syntax (make-assign-infix-operator name prec assc protocol proc)
+(define-for-syntax (make-assign-infix-operator prec assc protocol proc)
   (define (get-mv form1 self-stx)
     (define inside (syntax-parse (unwrap-static-infos form1)
                      #:literals (rhombus-expression)
@@ -153,7 +153,6 @@
         #`(#,convert-id #,id)
         id))
   (assign-infix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -188,7 +187,6 @@
 
 (define-syntax :=
   (make-assign-infix-operator
-   (expr-quote :=)
    '((default . weaker))
    'left
    'automatic

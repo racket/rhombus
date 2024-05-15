@@ -214,7 +214,6 @@
   (define (identifier-annotation predicate-stx static-infos)
     (define packed (annotation-predicate-form predicate-stx static-infos))
     (annotation-prefix-operator
-     (quote-syntax ignored)
      '((default . stronger))
      'macro
      (lambda (stx)
@@ -225,7 +224,6 @@
   (define (identifier-binding-annotation binding-stx body-stx static-infos)
     (define packed (annotation-binding-form binding-stx body-stx static-infos))
     (annotation-prefix-operator
-     (quote-syntax ignored)
      '((default . stronger))
      'macro
      (lambda (stx)
@@ -337,13 +335,12 @@
             . #,static-infos))])
      tail))
 
-  (define (annotation-constructor name predicate-stx static-infos
+  (define (annotation-constructor predicate-stx static-infos
                                   sub-n kws predicate-maker info-maker
                                   binding-maker-id binding-maker-data
                                   parse-annotation-of)
     (define root
       (annotation-prefix-operator
-       name
        '((default . stronger))
        'macro
        (lambda (stx)
@@ -357,7 +354,6 @@
      root
      ;; `of`:
      (annotation-prefix-operator
-      name
       '((default . stronger))
       'macro
       (lambda (stx)
@@ -399,7 +395,7 @@
        (build-syntax-definitions/maybe-extension
         (list 'rhombus/annot) #'name #:extra-names extra-names #'name-extends
         #'(let binds
-            (annotation-constructor #'annot-name predicate-stx static-infos
+            (annotation-constructor predicate-stx static-infos
                                     sub-n 'kws
                                     predicate-maker info-maker
                                     binding-maker-id binding-maker-data
@@ -408,9 +404,8 @@
          (car defs)
          #`(begin #,@defs))]))
 
-(define-for-syntax (make-annotation-apply-expression-operator name checked?)
+(define-for-syntax (make-annotation-apply-expression-operator checked?)
   (expression-infix-operator
-   name
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -466,9 +461,8 @@
                       in
                       at))
 
-(define-for-syntax (make-annotation-apply-binding-operator name checked?)
+(define-for-syntax (make-annotation-apply-binding-operator checked?)
   (binding-infix-operator
-   name
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -500,18 +494,17 @@
    'none))
 
 (define-syntax ::
-  (make-annotation-apply-expression-operator (expr-quote ::) #t))
+  (make-annotation-apply-expression-operator #t))
 (define-binding-syntax ::
-  (make-annotation-apply-binding-operator (bind-quote ::) #t))
+  (make-annotation-apply-binding-operator #t))
 
 (define-syntax :~
-  (make-annotation-apply-expression-operator (expr-quote :~) #f))
+  (make-annotation-apply-expression-operator #f))
 (define-binding-syntax :~
-  (make-annotation-apply-binding-operator (bind-quote :~) #f))
+  (make-annotation-apply-binding-operator #f))
 
 (define-syntax is_a
   (expression-infix-operator
-   (expr-quote is_a)
    '((default . weaker))
    'macro
    (lambda (form tail)
@@ -833,14 +826,12 @@
 ;; annotation parsing terminates appropriately
 (define-annotation-syntax ::
   (annotation-infix-operator
-   (annot-quote ::)
    `((default . weaker))
    'macro
    (lambda (stx) (error "should not get here"))
    'none))
 (define-annotation-syntax is_a
   (annotation-infix-operator
-   (annot-quote is_a)
    `((default . stronger))
    'macro
    (lambda (stx) (error "should not get here"))
@@ -854,7 +845,6 @@
 
 (define-annotation-syntax matching
   (annotation-prefix-operator
-   (annot-quote matching)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -876,7 +866,6 @@
 
 (define-annotation-syntax satisfying
   (annotation-prefix-operator
-   (annot-quote satisfying)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -901,7 +890,6 @@
 
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
-   (annot-quote #%parens)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -919,7 +907,6 @@
 
 (define-annotation-syntax #%literal
   (annotation-prefix-operator
-   (annot-quote #%literal)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -931,7 +918,6 @@
 
 (define-for-syntax (make-unary-real-annotation id comp-stx)
   (annotation-prefix-operator
-   id
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -965,23 +951,22 @@
     (pattern g
              #:with comp #'<=)))
 
-(define-for-syntax (make-in-annotation name pred-stx annot-str)
+(define-for-syntax (make-in-annotation pred-stx annot-str)
   (annotation-prefix-operator
-   name
    '((default . stronger))
    'macro
    (lambda (stxes)
      (syntax-parse stxes
        #:datum-literals (group)
-       [(_ (_::parens lo::incl-group hi::incl-group)
-           . tail)
+       [(form-id (_::parens lo::incl-group hi::incl-group)
+                 . tail)
         (values (annotation-predicate-form
                  #`(let ([lo-v (rhombus-expression lo.g)]
                          [hi-v (rhombus-expression hi.g)])
                      (unless (#,pred-stx lo-v)
-                       (raise-argument-error* '#,name rhombus-realm '#,annot-str lo-v))
+                       (raise-argument-error* 'form-id rhombus-realm '#,annot-str lo-v))
                      (unless (#,pred-stx hi-v)
-                       (raise-argument-error* '#,name rhombus-realm '#,annot-str hi-v))
+                       (raise-argument-error* 'form-id rhombus-realm '#,annot-str hi-v))
                      (lambda (v)
                        (and (#,pred-stx v)
                             (lo.comp lo-v v)
@@ -991,19 +976,16 @@
 
 (define-annotation-syntax Real.in
   (make-in-annotation
-   (annot-quote Real.in)
    #'real?
    "Real"))
 
 (define-annotation-syntax Int.in
   (make-in-annotation
-   (annot-quote Int.in)
    #'exact-integer?
    "Int"))
 
 (define-annotation-syntax Any.of
   (annotation-prefix-operator
-   (annot-quote Any.of)
    '((default . stronger))
    'macro
    (lambda (stxes)

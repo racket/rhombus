@@ -6,7 +6,7 @@
 
 @title{Notation}
 
-Like most languages, Rhombus syntax builds on a set of rules for parsing
+LiKe most languages, Rhombus syntax builds on a set of rules for parsing
 characters into @deftech{tokens}. Unlike most languages–--but like Lisp,
 Scheme, and Racket---Rhombus syntax uses an additional layer of rules
 for grouping and nesting tokens. For languages in the Lisp family, the

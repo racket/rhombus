@@ -82,7 +82,7 @@
   (property binding-infix-operator infix-operator)
 
   (define (binding-transformer proc)
-    (binding-prefix-operator (quote-syntax unused) '((default . stronger)) 'macro proc))
+    (binding-prefix-operator '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
   (define (binding-form infoer-id data)

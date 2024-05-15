@@ -69,9 +69,8 @@
     [b::reducer #'b.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "reducer" form)]))
 
-(define-for-syntax (make-reducer-infix-operator name prec protocol proc assc)
+(define-for-syntax (make-reducer-infix-operator prec protocol proc assc)
   (reducer-infix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'macro)
@@ -89,9 +88,8 @@
                           proc)))
    assc))
 
-(define-for-syntax (make-reducer-prefix-operator name prec protocol proc)
+(define-for-syntax (make-reducer-prefix-operator prec protocol proc)
   (reducer-prefix-operator
-   name
    prec
    protocol
    (if (eq? protocol 'macro)

@@ -11,6 +11,7 @@
          (submod "annotation.rkt" for-class)
          "parse.rkt"
          (only-in "arithmetic.rkt" .< .<= .= .>= .>)
+         (submod "arithmetic.rkt" precedence)
          (submod "map.rkt" for-append)
          "append-key.rkt"
          "compare-key.rkt"
@@ -249,24 +250,23 @@
                                 (list form1 self-stx form2))
                  #'())))))])])))
 
-(define-for-syntax precedences
-  (operator-precedences (syntax-local-value (quote-syntax .<))))
-(define-for-syntax repet-precedences
-  (operator-precedences (syntax-local-value (repet-quote .<))))
+(define-for-syntax (repet-comparison-precedences)
+  (for/list ([p (in-list (comparison-precedences))])
+    (if (identifier? (car p))
+        (cons (in-repetition-space (car p)) (cdr p))
+        p)))
 
 (define-syntax-rule (define-compare-op def-op op .op)
   (begin
     (define-syntax def-op
       (expression-infix-operator
-       (expr-quote def-op)
-       precedences
+       comparison-precedences
        'automatic
        (make-comp-expression 'op)
        'left))
     (define-repetition-syntax def-op
       (repetition-infix-operator
-       (repet-quote def-op)
-       repet-precedences
+       repet-comparison-precedences
        'automatic
        (make-comp-repetition 'op)
        'left))))

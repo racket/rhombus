@@ -32,7 +32,7 @@
   (property unquote-binding-infix-operator infix-operator)
 
   (define (unquote-binding-transformer proc)
-    (unquote-binding-prefix-operator (quote-syntax ignored) '((default . stronger)) 'macro proc))
+    (unquote-binding-prefix-operator '((default . stronger)) 'macro proc))
 
   (define (make-identifier-unquote-binding id)
     id)

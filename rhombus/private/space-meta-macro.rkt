@@ -235,9 +235,8 @@
          (datum->syntax #f (list 'parsed parsed-tag form))])
       form))
 
-(define ((make-make-prefix-operator new-prefix-operator parsed-tag) name prec protocol proc)
+(define ((make-make-prefix-operator new-prefix-operator parsed-tag) prec protocol proc)
   (new-prefix-operator
-   name
    prec
    protocol
    (cond
@@ -255,9 +254,8 @@
                  proc))
        (object-name proc))])))
 
-(define ((make-make-infix-operator new-infix-operator parsed-tag) name prec protocol proc assc)
+(define ((make-make-infix-operator new-infix-operator parsed-tag) prec protocol proc assc)
   (new-infix-operator
-   name
    prec
    protocol
    (cond

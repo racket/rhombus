@@ -29,7 +29,6 @@
 
 (define-binding-syntax values
   (binding-prefix-operator
-   (bind-quote values)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -42,7 +41,6 @@
 
 (define-annotation-syntax values
   (annotation-prefix-operator
-   (annot-quote values)
    '((default . stronger))
    'macro
    (lambda (stx)

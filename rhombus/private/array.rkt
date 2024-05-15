@@ -115,7 +115,6 @@
 
 (define-annotation-syntax of_length
   (annotation-prefix-operator
-   (annot-quote of_length)
    `((default . stronger))
    'macro
    (lambda (stx)
@@ -321,7 +320,6 @@
 
 (define-binding-syntax Array
   (binding-prefix-operator
-   (bind-quote Array)
    '((default . stronger))
    'macro
    (lambda (stx)
