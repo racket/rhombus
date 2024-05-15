@@ -285,3 +285,4 @@ block:
 block:
   def [x, ...] = [[1, 2], [3, 4]]
   check [[0, & x], ...] ~is [[0, 1, 2], [0, 3, 4]]
+  check [PairList[0, & x], ...] ~is [PairList[0, 1, 2], PairList[0, 3, 4]]

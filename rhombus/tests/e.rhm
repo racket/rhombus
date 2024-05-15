@@ -1,8 +1,0 @@
-#lang rhombus/and_meta
-
-
-block:
-  namespace ns:
-    let z = 200
-    export all_defined
-  10
