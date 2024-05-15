@@ -148,10 +148,10 @@ def tabs:
 
   gui.TabsPanel(["Happy", "Sad"],
                 ~selection: at_tab,
-                at_tab.map(fun (v):
-                             match v
-                             | "Happy": canvas
-                             | "Sad": gui.HPanel(canvas, happy_button)))
+                at_tab.map((match _
+                            | "Happy": canvas
+                            | "Sad": gui.HPanel(canvas, happy_button)
+                            )))
 
 // ----------------------------------------
 

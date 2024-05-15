@@ -73,6 +73,13 @@ def identity = fun (x): x
 identity("hello")
 identity(1 + (fun (x): x)(99))
 
+// a shorthand notation with wildcard is also available, parenthesized
+def identity_short = (_)
+
+identity_short("it works!")
+identity_short(1 + (_)(42))
+
+
 // ------------------------------------------------------------
 "Conditionals"
 
