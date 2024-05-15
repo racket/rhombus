@@ -109,13 +109,20 @@ normally bound to implement function calls.
 }
 
 
-@doc(expr.macro '$arg |> $fun'){
+@doc(
+  ~nonterminal:
+    arg_expr: block expr
+    fun_expr: block expr
+  expr.macro '$arg_expr |> $fun_expr'
+){
 
  The @rhombus(|>) operator applies its second argument as a function to
- its first argument. That is, @rhombus(arg |> fun) is equivalent to
- @rhombus(fun(arg)). The conversion is performed syntactically so that
+ its first argument. That is, @rhombus(arg_expr |> fun_expr) is
+ equivalent to @rhombus(fun_expr(arg_expr)), except that
+ @rhombus(arg_expr) is evaluated before @rhombus(fun_expr), following
+ the textual order. The conversion is performed syntactically so that
  static checking and propoagation of static information may apply, but
- @rhombus(arg) and @rhombus(fun) are parsed as pressions before the
+ @rhombus(arg_expr) and @rhombus(fun_expr) are parsed as expressions before the
  conversion. The @rhombus(|>) operator declares weaker precedence than
  all other operators.
 
