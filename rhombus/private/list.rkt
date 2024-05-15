@@ -63,7 +63,7 @@
            mutable-treelist-method-table))
 
 (module+ for-implicit
-  (provide (for-syntax set-#%call-ids!)))
+  (provide (for-syntax set-#%call-id!)))
 
 (module+ for-compound-repetition
   (provide (for-syntax list-static-infos
@@ -1447,11 +1447,8 @@
 
 (begin-for-syntax
   (define #%call-id #f)
-  (define static-#%call-id #f)
-  (define (set-#%call-ids! id static-id)
-    (set! #%call-id id)
-    (set! static-#%call-id static-id))
+  (define (set-#%call-id! id)
+    (set! #%call-id id))
   (define (normal-call? tag)
     (define id (datum->syntax tag '#%call))
-    (or (free-identifier=? #%call-id id)
-        (free-identifier=? static-#%call-id id))))
+    (free-identifier=? #%call-id id)))

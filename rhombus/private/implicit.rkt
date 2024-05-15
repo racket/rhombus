@@ -269,6 +269,5 @@
                 #'tail)]))))
 
 (begin-for-syntax
-  (set-#%call-ids! (quote-syntax #%call)
-                   (quote-syntax static-#%call))
+  (set-#%call-id! (quote-syntax #%call))
   (set-#%body-id! (quote-syntax #%body)))
