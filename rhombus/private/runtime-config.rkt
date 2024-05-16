@@ -78,16 +78,14 @@
         (lambda (str realm)
           (case realm
             [(racket/primitive)
-             (values (with-handlers ([exn:fail:read? (lambda (exn) str)])
-                       (define c (read (open-input-string str)))
-                       (or (get-primitive-contract c)
-                           (and (pair? c)
-                                (eq? (car c) 'procedure-arity-includes/c)
-                                (list? c)
-                                (= 2 (length c))
-                                (format "Function.arity_of(~a)" (cadr c)))
-                           (format "~s" c)))
-                     'rhombus/primitive)]
+             (with-handlers ([exn:fail:read? (lambda (exn)
+                                               (values str realm))])
+               (define c (read (open-input-string str)))
+               (cond
+                 [(get-primitive-contract c)
+                  => (lambda (new-str)
+                       (values new-str 'rhombus/primitive))]
+                 [else (values str realm)]))]
             [else (values str realm)]))]
        [(message)
         (lambda (who who-realm msg msg-realm)
