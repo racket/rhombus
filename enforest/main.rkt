@@ -144,16 +144,18 @@
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
-                    #:do [(define op (lookup-operator 'prefix-op+form+tail 'prefix (in-space #'op-name.name) prefix-operator-ref))
-                          (define-values (form new-tail) (enforest-step (transform-out #'in-tail) op #'op-name.name #t))]
+                    #:do [(define op-stx (in-space #'op-name.name))
+                          (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
+                          (define-values (form new-tail) (enforest-step (transform-out #'in-tail) op op-stx #t))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))
          (define-syntax-class (infix-op+form+tail op-name)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
-                    #:do [(define op (lookup-operator 'infix-op+form+tail 'infix (in-space #'op-name.name) infix-operator-ref))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
+                    #:do [(define op-stx (in-space #'op-name.name))
+                          (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op op-stx #t))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))
 
