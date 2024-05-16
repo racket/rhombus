@@ -126,16 +126,18 @@ def tabs:
                    | c :: Char: s ++ to_string(c)
                    | ~else: s)
 
-  let canvas = gui.VPanel(gui.Canvas(gui.Obs.combine({ "mood": at_tab,
-                                                       "shape": shape.at_selection,
-                                                       "eyes": eyes.at_is_checked,
-                                                       "moustache": stache.at_is_checked,
-                                                       "scale": scale.at_value,
-                                                       "ghosts": ghosts,
-                                                       "keyed": keyed }),
-                                     draw_face,
-                                     ~mouse: ghost_mouse,
-                                     ~key: accum_key),
+  let canvas = gui.VPanel({ "mood": at_tab,
+                            "shape": shape.at_selection,
+                            "eyes": eyes.at_is_checked,
+                            "moustache": stache.at_is_checked,
+                            "scale": scale.at_value,
+                            "ghosts": ghosts,
+                            "keyed": keyed }
+                            |> gui.Obs.combine(_)
+                            |> gui.Canvas(_,
+                                          draw_face,
+                                          ~mouse: ghost_mouse,
+                                          ~key: accum_key),
                           gui.HPanel(shape, eyes, stache,
                                      spacer,
                                      gui.Label("-"), scale, gui.Label("+"),
@@ -155,5 +157,7 @@ def tabs:
 
 // ----------------------------------------
 
-gui.render(gui.Window(tabs,
-                      ~size: [800, 600]))
+tabs
+  |> gui.Window(_,
+                ~size: [800, 600])
+  |> gui.render(_)

@@ -79,6 +79,12 @@ def identity_short = (_)
 identity_short("it works!")
 identity_short(1 + (_)(42))
 
+// this notation is especially useful in pipelines
+"pipe it" |> identity_short(_)
+
+// `|>` binds weaker than other operators
+// cryptic way to write (1 - 2) + 1, not 1 - (2 + 1)
+1 - 2 |> (_ + 1)
 
 // ------------------------------------------------------------
 "Conditionals"
