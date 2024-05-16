@@ -1,14 +1,17 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
-         racket/port
          racket/interaction-info
-         shrubbery/parse
          shrubbery/print
+         racket/lazy-require
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)
          "rhombus-primitive.rkt"
          "version-case.rkt")
+
+;; For `current-read-interaction` callback:
+(lazy-require [shrubbery/parse (parse-all)]
+              [racket/port (dup-input-port)])
 
 (provide install-runtime-config!
          parameters)
