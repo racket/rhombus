@@ -473,7 +473,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @doc(
   fun PairList.has_element(lst :: PairList, v :: Any,
-                           eqls :: Function.of_arity(2) = fun (x, y): x == y)
+                           eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -500,8 +500,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  to find an element as position @math{N}.
 
 @examples(
-  PairList[1, 2, 3].find(fun (x): x mod 2 .= 0)
-  PairList[1, 2, 3].find(fun (x): x mod 10 .= 9)
+  PairList[1, 2, 3].find((_ mod 2 .= 0))
+  PairList[1, 2, 3].find((_ mod 10 .= 9))
 )
 
 }
@@ -531,8 +531,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  single @tech{pair list} of arguments first, with the function supplied second.
 
 @examples(
-  PairList.map(PairList[1, 2, 3], fun (x): x + 1)
-  PairList[1, 2, 3].map(fun (x): x + 1)
+  PairList.map(PairList[1, 2, 3], (_ + 1))
+  PairList[1, 2, 3].map((_ + 1))
   PairList[1, 2, 3].for_each(println)
 )
 
@@ -541,7 +541,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @doc(
   fun PairList.sort(lst :: PairList,
-                    is_less :: Function.of_arity(2) = math.less)
+                    is_less :: Function.of_arity(2) = (_ .< _))
     :: PairList,
 ){
 
@@ -550,7 +550,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @examples(
   PairList.sort(PairList[1, 3, 2])
-  PairList.sort(PairList[1, 3, 2], math.greater)
+  PairList.sort(PairList[1, 3, 2], (_ .> _))
 )
 
 }

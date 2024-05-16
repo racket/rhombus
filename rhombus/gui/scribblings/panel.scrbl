@@ -64,7 +64,7 @@
       ~selection: selection :: MaybeObs.of(Any),
       ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
       ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-      ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
+      ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
       ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,

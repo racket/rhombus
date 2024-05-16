@@ -379,7 +379,7 @@ and it is not managed by a lock.
 
 @doc(
   fun MutableList.has_element(mlst :: MutableList, v :: Any,
-                              eqls :: Function.of_arity(2) = fun (x, y): x == y)
+                              eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -406,8 +406,8 @@ and it is not managed by a lock.
  to find an element as position @math{N}.
 
 @examples(
-  [1, 2, 3].find(fun (x): x mod 2 .= 0)
-  [1, 2, 3].find(fun (x): x mod 10 .= 9)
+  [1, 2, 3].find((_ mod 2 .= 0))
+  [1, 2, 3].find((_ mod 10 .= 9))
 )
 
 }
@@ -440,7 +440,7 @@ and it is not managed by a lock.
 
 @examples(
   def mlst = MutableList[1, 2, 3]
-  MutableList.map(mlst, fun (x): x + 1)
+  MutableList.map(mlst, (_ + 1))
   mlst
   mlst.for_each(println)
 )
@@ -450,7 +450,7 @@ and it is not managed by a lock.
 
 @doc(
   fun MutableList.sort(mlst :: MutableList,
-                       is_less :: Function.of_arity(2) = math.less)
+                       is_less :: Function.of_arity(2) = (_ .< _))
     :: Void,
 ){
 
@@ -462,7 +462,7 @@ and it is not managed by a lock.
   def mlst = MutableList[1, 3, 2]
   MutableList.sort(mlst)
   mlst
-  MutableList.sort(mlst, math.greater)
+  MutableList.sort(mlst, (_ .> _))
   mlst
 )
 

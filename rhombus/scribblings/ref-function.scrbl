@@ -455,8 +455,8 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  ignored.
 
 @examples(
-  Function.map(fun (x, y): x + y, [1, 2, 3], [4, 5, 6])
-  (fun (x, y): x + y).map([1, 2, 3], [4, 5, 6])
+  Function.map((_ + _), [1, 2, 3], [4, 5, 6])
+  (_ + _).map([1, 2, 3], [4, 5, 6])
   println.for_each([1, 2, 3])
 )
 

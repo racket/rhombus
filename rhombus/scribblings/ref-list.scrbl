@@ -489,7 +489,7 @@ it supplies its elements in order.
 
 @doc(
   fun List.has_element(lst :: List, v :: Any,
-                       eqls :: Function.of_arity(2) = fun (x, y): x == y)
+                       eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -516,8 +516,8 @@ it supplies its elements in order.
  to find an element as position @math{N}.
 
 @examples(
-  [1, 2, 3].find(fun (x): x mod 2 .= 0)
-  [1, 2, 3].find(fun (x): x mod 10 .= 9)
+  [1, 2, 3].find((_ mod 2 .= 0))
+  [1, 2, 3].find((_ mod 10 .= 9))
 )
 
 }
@@ -547,8 +547,8 @@ it supplies its elements in order.
  single list of arguments first, with the function supplied second.
 
 @examples(
-  List.map([1, 2, 3], fun (x): x + 1)
-  [1, 2, 3].map(fun (x): x + 1)
+  List.map([1, 2, 3], (_ + 1))
+  [1, 2, 3].map((_ + 1))
   [1, 2, 3].for_each(println)
 )
 
@@ -557,7 +557,7 @@ it supplies its elements in order.
 
 @doc(
   fun List.sort(lst :: List,
-                is_less :: Function.of_arity(2) = math.less)
+                is_less :: Function.of_arity(2) = (_ .< _))
     :: List,
 ){
 
@@ -566,7 +566,7 @@ it supplies its elements in order.
 
 @examples(
   List.sort([1, 3, 2])
-  List.sort([1, 3, 2], math.greater)
+  List.sort([1, 3, 2], (_ .> _))
 )
 
 }

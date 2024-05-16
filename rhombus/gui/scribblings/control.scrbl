@@ -68,7 +68,7 @@
     constructor (
       choices :: MaybeObs.of(List),
       ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
-      ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
+      ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~selection: selection :: MaybeObs.of(Any) = #false,
       ~action: action :: maybe(Function.of_arity(1)) = #false,
       ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
