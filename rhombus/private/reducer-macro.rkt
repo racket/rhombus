@@ -130,7 +130,7 @@
                                    finish-id-in
                                    static-infos
                                    data)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (define wrapper-id (unpack-identifier who wrapper-id-in))
     (check-syntax who binds)
     (define maybe-pre-clause-id (unpack-maybe-identifier who maybe-pre-clause-id-in))
@@ -196,7 +196,7 @@
 
 (begin-for-syntax
   (define/arity (reducer_meta.unpack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)

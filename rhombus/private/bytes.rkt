@@ -27,7 +27,7 @@
   (provide bytes-method-table))
 
 (module+ static-infos
-  (provide (for-syntax bytes-static-infos)))
+  (provide (for-syntax get-bytes-static-infos)))
 
 (define-primitive-class Bytes bytes
   #:lift-declaration
@@ -60,9 +60,9 @@
    latin1_string
    locale_string))
 
-(define-annotation-syntax Bytes (identifier-annotation #'bytes? bytes-static-infos))
-(define-annotation-syntax MutableBytes (identifier-annotation #'mutable-bytes? bytes-static-infos))
-(define-annotation-syntax ImmutableBytes (identifier-annotation #'immutable-bytes? bytes-static-infos))
+(define-annotation-syntax Bytes (identifier-annotation bytes? #,(get-bytes-static-infos)))
+(define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
+(define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
 
 (set-primitive-contract! 'bytes? "Bytes")
 (set-primitive-contract! '(and/c bytes? (not/c immutable?)) "MutableBytes")
@@ -80,7 +80,7 @@
 (define/method Bytes.append
   #:inline
   #:primitive (bytes-append)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
     [() (bytes)]
     [(b1) (bytes-append b1)]
@@ -91,7 +91,7 @@
 (define/arity Bytes.make
   #:inline
   #:primitive (make-bytes)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
     [(len) (make-bytes len)]
     [(len val) (make-bytes len val)]))
@@ -99,13 +99,13 @@
 (define/method (Bytes.length bstr)
   #:inline
   #:primitive (bytes-length)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (bytes-length bstr))
 
 (define/method Bytes.subbytes
   #:inline
   #:primitive (subbytes)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
     [(bstr start) (subbytes bstr start)]
     [(bstr start end) (subbytes bstr start end)]))
@@ -118,7 +118,7 @@
      #'(define/method method-name
          #:inline
          #:primitive (fn-name)
-         #:static-infos ((#%call-result #,indirect-string-static-infos))
+         #:static-infos ((#%call-result #,(indirect-get-string-static-infos)))
          (case-lambda
            [(bstr) (string->immutable-string (fn-name bstr))]
            [(bstr err-char) (string->immutable-string (fn-name bstr err-char))]
@@ -132,13 +132,13 @@
 (define/method (Bytes.copy bstr)
   #:inline
   #:primitive (bytes-copy)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes-copy bstr))
 
 (define/method Bytes.copy_from
   #:inline
   #:primitive (bytes-copy!)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
     [(bstr dest-start src) (bytes-copy! bstr dest-start src)]
     [(bstr dest-start src src-start) (bytes-copy! bstr dest-start src src-start)]
@@ -160,4 +160,4 @@
       (raise-argument-error* '>= rhombus-realm "Bytes" (if (bytes? a) b a))))
 
 (begin-for-syntax
-  (install-literal-static-infos! 'bytes bytes-static-infos))
+  (install-literal-static-infos! 'bytes get-bytes-static-infos))

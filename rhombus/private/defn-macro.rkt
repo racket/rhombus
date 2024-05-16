@@ -95,7 +95,7 @@
                        #:fields #'()))
 
   (define/arity (defn_meta.pack_s_exp orig-s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     #`(parsed
        #:rhombus/defn
        #,(pack-s-exp who orig-s)))

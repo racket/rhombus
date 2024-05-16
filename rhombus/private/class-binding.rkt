@@ -35,16 +35,18 @@
                     [(super-field-static-infos ...) (if no-super? '() #'super-field-static-infoss)]
                     [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)])
         #`(binding-transformer
-           (make-composite-binding-transformer '#,(symbol->immutable-string (syntax-e #'name))
-                                               (quote-syntax name?)
-                                               #:static-infos (quote-syntax ((#%dot-provider dot-providers)
-                                                                             . indirect-static-infos))
-                                               (list (quote-syntax super-name-field) ...
-                                                     (quote-syntax constructor-name-field) ...)
-                                               #:keywords '(super-field-keyword ... field-keyword ...)
-                                               (list (quote-syntax super-field-static-infos) ...
-                                                     (quote-syntax constructor-field-static-infos) ...)
-                                               #:accessor->info? #t))))
+           (lambda (stx)
+             (composite-binding-transformer stx
+                                            '#,(symbol->immutable-string (syntax-e #'name))
+                                            (quote-syntax name?)
+                                            #:static-infos (quote-syntax ((#%dot-provider dot-providers)
+                                                                          . indirect-static-infos))
+                                            (list (quote-syntax super-name-field) ...
+                                                  (quote-syntax constructor-name-field) ...)
+                                            #:keywords '(super-field-keyword ... field-keyword ...)
+                                            (list (quote-syntax super-field-static-infos) ...
+                                                  (quote-syntax constructor-field-static-infos) ...)
+                                            #:accessor->info? #t)))))
     (append
      (if exposed-internal-id
          (list
@@ -74,10 +76,12 @@
                                                      #:static-infos static-infos
                                                      #:keywords keywords)
   (define t
-    (make-composite-binding-transformer constructor-str predicate accessors static-infoss
-                                        #:static-infos static-infos
-                                        #:keywords keywords
-                                        #:accessor->info? #t))
+    (lambda (tail)
+      (composite-binding-transformer tail
+                                     constructor-str predicate accessors static-infoss
+                                     #:static-infos static-infos
+                                     #:keywords keywords
+                                     #:accessor->info? #t)))
   (cond
     [super-binding-id
      (define p-t (operator-proc

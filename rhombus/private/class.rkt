@@ -990,107 +990,109 @@
      (list
       (build-syntax-definition/maybe-extension
        'rhombus/class #'name #'name-extends
-       #`(class-desc (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
-                     '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
-                     (quote-syntax #,method-vtable)
-                     '#,(build-quoted-method-map method-mindex)
-                     #,(build-method-result-expression method-results)
-                     '#,(map car dots)
-                     #,(and (syntax-e #'dot-provider-name)
-                            #'(quote-syntax dot-provider-name))
-                     (#,(quote-syntax quasisyntax) instance-static-infos)
-                     '(#,@(if authentic? '(authentic) null)
-                       #,@(if prefab? '(prefab) null)
-                       #,@(if no-recon? '(no-recon) null)
-                       #,@(if public-callable? '(call) null)
-                       #,@(if public-indexable? '(get) null)
-                       #,@(if public-setable? '(set) null)
-                       #,@(if public-appendable? '(append) null)
-                       #,@(if public-comparable? '(compare) null))
-                     ;; ----------------------------------------
-                     #,final?
-                     (quote-syntax name)
-                     #,(and parent-name #`(quote-syntax #,parent-name))
-                     (quote-syntax class:name)
-                     #,(if final? #'#f #`(quote-syntax dot-providers))
-                     (quote-syntax name-ref)
-                     fields
-                     #,(and (or has-private-fields?
-                                (and super (class-desc-all-fields super)))
-                            #`(list #,@(map (lambda (i)
-                                              (define (wrap i)
-                                                (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
-                                              (if (pair? i)
-                                                  #`(cons (quote #,(car i)) #,(wrap (cdr i)))
-                                                  (wrap i)))
-                                            (append (if super
-                                                        (or (class-desc-all-fields super)
-                                                            ;; symbol means "inherited from superclass"
-                                                            (for/list ([f (in-list (class-desc-fields super))])
-                                                              (field-desc-name f)))
-                                                        '())
-                                                    (for/list ([name (in-list (syntax->list #'(field-name ...)))]
-                                                               [arg (in-list (syntax->list #'(field-argument ...)))]
-                                                               [mutator (in-list (syntax->list #'(maybe-set-name-field! ...)))]
-                                                               [private? (in-list private?s)])
-                                                      (cond
-                                                        [private? (cons (syntax-e name)
-                                                                        (if (and (not (identifier? arg))
-                                                                                 (syntax-e mutator))
-                                                                            (vector arg)
-                                                                            arg))]
-                                                        [else (syntax-e name)]))))))
-                     #,(if super
-                           (if (class-desc-all-fields super)
-                               (length (class-desc-all-fields super))
-                               (length (class-desc-fields super)))
-                           0)
-                     #,(cond
-                         [(syntax-e #'constructor-maker-name)
-                          #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
-                                                               constructor-keywords constructor-defaults)
-                                            constructor-maker-name]
-                                           #,@(if super
-                                                  (or (class-desc-constructor-makers super)
-                                                      (list (list (encode-protocol super-keywords super-defaults
-                                                                                   super-constructor+-keywords super-constructor+-defaults)
-                                                                  #f)))
-                                                  '())))]
-                         [else #'#f])
-                     #,(and (or (hash-ref options 'expression-rhs #f)
-                                (hash-ref options 'constructor-rhs #f))
-                            #t)
-                     #,(and (hash-ref options 'binding-rhs #f) #t)
-                     #,(and (hash-ref options 'annotation-rhs #f) #t)
-                     #,(if force-custom-recon?
-                           #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
-                           #f)
-                     #,(and (syntax-e #'name-defaults)
-                            #'(quote-syntax name-defaults))
-                     #,(able-method-for-class-desc 'call here-callable? public-callable?
-                                                   super
-                                                   method-mindex method-vtable method-private)
-                     #,(able-method-for-class-desc 'get here-indexable? public-indexable?
-                                                   super
-                                                   method-mindex method-vtable method-private)
-                     #,(able-method-for-class-desc 'set here-setable? public-setable?
-                                                   super
-                                                   method-mindex method-vtable method-private)
-                     #,(able-method-for-class-desc 'append here-appendable? public-appendable?
-                                                   super
-                                                   method-mindex method-vtable method-private)
-                     #,(able-method-for-class-desc 'compare here-comparable? public-comparable?
-                                                   super
-                                                   method-mindex method-vtable method-private
-                                                   #:const '#:method)
-                     #,(let ([id (if (syntax-e #'call-statinfo-indirect)
-                                     #'call-statinfo-indirect
-                                     #'super-call-statinfo-indirect)])
-                         (if (and id (syntax-e id))
-                             #`(quote-syntax #,id)
-                             #f))
-                     #,(and (syntax-e #'prefab-guard-name)
-                            #`(quote-syntax prefab-guard-name)))))
+       #`(class-desc-maker
+          (lambda ()
+            (class-desc (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
+                        '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
+                        (quote-syntax #,method-vtable)
+                        '#,(build-quoted-method-map method-mindex)
+                        #,(build-method-result-expression method-results)
+                        '#,(map car dots)
+                        #,(and (syntax-e #'dot-provider-name)
+                               #'(quote-syntax dot-provider-name))
+                        (#,(quote-syntax quasisyntax) instance-static-infos)
+                        '(#,@(if authentic? '(authentic) null)
+                          #,@(if prefab? '(prefab) null)
+                          #,@(if no-recon? '(no-recon) null)
+                          #,@(if public-callable? '(call) null)
+                          #,@(if public-indexable? '(get) null)
+                          #,@(if public-setable? '(set) null)
+                          #,@(if public-appendable? '(append) null)
+                          #,@(if public-comparable? '(compare) null))
+                        ;; ----------------------------------------
+                        #,final?
+                        (quote-syntax name)
+                        #,(and parent-name #`(quote-syntax #,parent-name))
+                        (quote-syntax class:name)
+                        #,(if final? #'#f #`(quote-syntax dot-providers))
+                        (quote-syntax name-ref)
+                        fields
+                        #,(and (or has-private-fields?
+                                   (and super (class-desc-all-fields super)))
+                               #`(list #,@(map (lambda (i)
+                                                 (define (wrap i)
+                                                   (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
+                                                 (if (pair? i)
+                                                     #`(cons (quote #,(car i)) #,(wrap (cdr i)))
+                                                     (wrap i)))
+                                               (append (if super
+                                                           (or (class-desc-all-fields super)
+                                                               ;; symbol means "inherited from superclass"
+                                                               (for/list ([f (in-list (class-desc-fields super))])
+                                                                 (field-desc-name f)))
+                                                           '())
+                                                       (for/list ([name (in-list (syntax->list #'(field-name ...)))]
+                                                                  [arg (in-list (syntax->list #'(field-argument ...)))]
+                                                                  [mutator (in-list (syntax->list #'(maybe-set-name-field! ...)))]
+                                                                  [private? (in-list private?s)])
+                                                         (cond
+                                                           [private? (cons (syntax-e name)
+                                                                           (if (and (not (identifier? arg))
+                                                                                    (syntax-e mutator))
+                                                                               (vector arg)
+                                                                               arg))]
+                                                           [else (syntax-e name)]))))))
+                        #,(if super
+                              (if (class-desc-all-fields super)
+                                  (length (class-desc-all-fields super))
+                                  (length (class-desc-fields super)))
+                              0)
+                        #,(cond
+                            [(syntax-e #'constructor-maker-name)
+                             #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
+                                                                  constructor-keywords constructor-defaults)
+                                               constructor-maker-name]
+                                              #,@(if super
+                                                     (or (class-desc-constructor-makers super)
+                                                         (list (list (encode-protocol super-keywords super-defaults
+                                                                                      super-constructor+-keywords super-constructor+-defaults)
+                                                                     #f)))
+                                                     '())))]
+                            [else #'#f])
+                        #,(and (or (hash-ref options 'expression-rhs #f)
+                                   (hash-ref options 'constructor-rhs #f))
+                               #t)
+                        #,(and (hash-ref options 'binding-rhs #f) #t)
+                        #,(and (hash-ref options 'annotation-rhs #f) #t)
+                        #,(if force-custom-recon?
+                              #`(list (cons 'recon-field-name (quote-syntax recon-field-acc)) ...)
+                              #f)
+                        #,(and (syntax-e #'name-defaults)
+                               #'(quote-syntax name-defaults))
+                        #,(able-method-for-class-desc 'call here-callable? public-callable?
+                                                      super
+                                                      method-mindex method-vtable method-private)
+                        #,(able-method-for-class-desc 'get here-indexable? public-indexable?
+                                                      super
+                                                      method-mindex method-vtable method-private)
+                        #,(able-method-for-class-desc 'set here-setable? public-setable?
+                                                      super
+                                                      method-mindex method-vtable method-private)
+                        #,(able-method-for-class-desc 'append here-appendable? public-appendable?
+                                                      super
+                                                      method-mindex method-vtable method-private)
+                        #,(able-method-for-class-desc 'compare here-comparable? public-comparable?
+                                                      super
+                                                      method-mindex method-vtable method-private
+                                                      #:const '#:method)
+                        #,(let ([id (if (syntax-e #'call-statinfo-indirect)
+                                        #'call-statinfo-indirect
+                                        #'super-call-statinfo-indirect)])
+                            (if (and id (syntax-e id))
+                                #`(quote-syntax #,id)
+                                #f))
+                        #,(and (syntax-e #'prefab-guard-name)
+                               #`(quote-syntax prefab-guard-name)))))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

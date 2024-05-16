@@ -7,6 +7,7 @@
 
 (begin-for-syntax
   (provide (struct-out key-comp)
+           key-comp-maker
            in-key-comp-space
            key-comp-ref)
   
@@ -22,7 +23,11 @@
                              mutable-set?-id mutable-set-build-id
                              weak-mutable-set?-id weak-mutable-set-build-id))
 
-  (define (key-comp-ref v) (and (key-comp? v) v)))
+  (struct key-comp-maker (proc))
+
+  (define (key-comp-ref v) (or (and (key-comp? v) v)
+                               (and (key-comp-maker? v)
+                                    ((key-comp-maker-proc v))))))
 
 (define-syntax (define-key-comp-syntax stx)
   (syntax-parse stx

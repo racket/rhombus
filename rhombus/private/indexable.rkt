@@ -50,7 +50,7 @@
                              (list)))
 
 (define-annotation-syntax Indexable
-  (identifier-annotation #'indexable? #'((#%index-get indexable-get))))
+  (identifier-annotation indexable? ((#%index-get indexable-get))))
 (define (indexable? v)
   (or (treelist? v)
       (list? v)
@@ -63,31 +63,33 @@
       (Indexable? v)))
 
 (define-class-desc-syntax Indexable
-  (interface-desc #'()
-                  '#(#&get)
-                  #'#(#:abstract)
-                  (hasheq 'get 0)
-                  (hasheq 'get #'get-result)
-                  '()
-                  #f
-                  #'()
-                  '(get veneer)
-                  ;; --------------------
-                  #'Indexable
-                  #'Indexable
-                  #'prop:Indexable
-                  #'prop:Indexable
-                  #'Indexable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'()
+                     '#(#&get)
+                     #'#(#:abstract)
+                     (hasheq 'get 0)
+                     (hasheq 'get #'get-result)
+                     '()
+                     #f
+                     #'()
+                     '(get veneer)
+                     ;; --------------------
+                     #'Indexable
+                     #'Indexable
+                     #'prop:Indexable
+                     #'prop:Indexable
+                     #'Indexable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax get-result
   (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))
 
 (define-annotation-syntax MutableIndexable
-  (identifier-annotation #'mutable-indexable? #'((#%index-get indexable-get)
-                                                 (#%index-set indexable-set!))))
+  (identifier-annotation mutable-indexable? ((#%index-get indexable-get)
+                                             (#%index-set indexable-set!))))
 (define (mutable-indexable? v)
   (or (mutable-vector? v)
       (mutable-hash? v)
@@ -97,25 +99,27 @@
       (MutableIndexable? v)))
 
 (define-class-desc-syntax MutableIndexable
-  (interface-desc #'(Indexable)
-                  '#(#&get #&set)
-                  #'#(#:abstract #:abstract)
-                  (hasheq 'get 0
-                          'set 1)
-                  (hasheq 'set #'set-result)
-                  '()
-                  #f
-                  #'()
-                  '(get set veneer)
-                  ;; --------------------
-                  #'MutableIndexable
-                  #'MutableIndexable
-                  #'prop:MutableIndexable
-                  #'prop:MutableIndexable
-                  #'MutableIndexable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'(Indexable)
+                     '#(#&get #&set)
+                     #'#(#:abstract #:abstract)
+                     (hasheq 'get 0
+                             'set 1)
+                     (hasheq 'set #'set-result)
+                     '()
+                     #f
+                     #'()
+                     '(get set veneer)
+                     ;; --------------------
+                     #'MutableIndexable
+                     #'MutableIndexable
+                     #'prop:MutableIndexable
+                     #'prop:MutableIndexable
+                     #'MutableIndexable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax set-result
   (method-result #'void? #t 1 "Void" #'() 8))

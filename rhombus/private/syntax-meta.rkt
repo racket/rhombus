@@ -174,7 +174,7 @@
       [_ #f]))
 
   (define/arity (syntax_meta.flip_introduce stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (syntax-local-introduce stx))
 
   (define (unpack-identifier-or-operator who id/op-in)
@@ -198,4 +198,4 @@
     (is-static-context? id))
 
   (define-annotation-syntax SyntaxPhase
-    (identifier-annotation #'phase? #'())))
+    (identifier-annotation phase? ())))

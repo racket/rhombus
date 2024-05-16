@@ -113,7 +113,7 @@
 
 (begin-for-syntax
   (define/arity (repet_meta.pack_list stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (group)
@@ -137,7 +137,7 @@
                                  "syntax object" stx)]))
 
   (define/arity (repet_meta.unpack_list stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)

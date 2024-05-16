@@ -101,7 +101,7 @@
         ;; dynamic parsing based on syntax-object literals
         (values #'ModulePath #'tail)]))))
 
-(define-annotation-syntax ModulePath (identifier-annotation #'module-path? #'()))
+(define-annotation-syntax ModulePath (identifier-annotation module-path? ()))
 
 (define-name-root ModulePath
   #:fields

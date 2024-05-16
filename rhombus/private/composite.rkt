@@ -19,63 +19,65 @@
 ;; to a composite datatype, but the `rest` support is currently
 ;; hardwired to lists.
 
-(provide (for-syntax make-composite-binding-transformer))
+(provide (for-syntax composite-binding-transformer))
 
-(define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor or map list, used for contract
-                                                       predicate     ; predicate for the composite value
-                                                       accessors     ; one accessor per component
-                                                       static-infoss ; one set of static info per component
-                                                       #:keywords [keywords #f] ; #f or a list of keywords and #f
-                                                       #:steppers [steppers #f] ; a sequence of `cdr`s for lists
-                                                       #:static-infos [composite-static-infos #'()] ; for the composite value
-                                                       #:accessor->info? [accessor->info? #f] ; extend composite info?
-                                                       #:index-result-info? [index-result-info? #f]
-                                                       #:sequence-element-info? [sequence-element-info? #f]
-                                                       #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
-                                                       #:rest-to-repetition [rest-to-repetition #'values] ; to convert "rest" to a list
-                                                       #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
-  (lambda (tail [rest-arg #f] [stx-in #f])
-    (syntax-parse tail
-      [(form-id (tag::parens a_g ...) . new-tail)
-       #:do [(define stx (or stx-in
-                             (quasisyntax/loc #'form-id
-                               (#,group-tag form-id (tag a_g ...)))))]
-       #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a_g ...)) stx)
-       #:with (a-parsed::binding-form ...) #'(a.parsed ...)
-       ;; `rest-a` will have either 0 items or 1 item
-       #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
-       #:with (rest-a-parsed::binding-form ...) #'(rest-a.parsed ...)
-       (define as (syntax->list #'(a ...)))
-       (unless (= (length as) (length accessors))
-         (raise-syntax-error #f
-                             (format (string-append "pattern arguments not the expected number\n"
-                                                    "  expected: ~a\n"
-                                                    "  given: ~a")
-                                     (length accessors)
-                                     (length as))
-                             stx))
-       (values
-        (binding-form
-         #'composite-infoer
-         #`(#,constructor-str
-            #,predicate
-            #,composite-static-infos
-            #,steppers
-            #,accessors
-            #,static-infoss
-            (a-parsed.infoer-id ... )
-            (a-parsed.data ...)
-            #,accessor->info? #,index-result-info? #,sequence-element-info?
-            #,(and rest-arg
-                   #`(#,rest-accessor
-                      #,rest-to-repetition
-                      #,rest-repetition?
-                      rest-a-parsed.infoer-id ...
-                      rest-a-parsed.data ...))))
-        #'new-tail)]
-      [_ (raise-syntax-error #f
-                             "bad syntax"
-                             (or stx-in tail))])))
+(define-for-syntax (composite-binding-transformer tail
+                                                  #:rest-arg [rest-arg #f]
+                                                  #:stx-info [stx-in #f]
+                                                  constructor-str ; string name for constructor or map list, used for contract
+                                                  predicate     ; predicate for the composite value
+                                                  accessors     ; one accessor per component
+                                                  static-infoss ; one set of static info per component
+                                                  #:keywords [keywords #f] ; #f or a list of keywords and #f
+                                                  #:steppers [steppers #f] ; a sequence of `cdr`s for lists
+                                                  #:static-infos [composite-static-infos #'()] ; for the composite value
+                                                  #:accessor->info? [accessor->info? #f] ; extend composite info?
+                                                  #:index-result-info? [index-result-info? #f]
+                                                  #:sequence-element-info? [sequence-element-info? #f]
+                                                  #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
+                                                  #:rest-to-repetition [rest-to-repetition #'values] ; to convert "rest" to a list
+                                                  #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
+  (syntax-parse tail
+    [(form-id (tag::parens a_g ...) . new-tail)
+     #:do [(define stx (or stx-in
+                           (quasisyntax/loc #'form-id
+                             (#,group-tag form-id (tag a_g ...)))))]
+     #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a_g ...)) stx)
+     #:with (a-parsed::binding-form ...) #'(a.parsed ...)
+     ;; `rest-a` will have either 0 items or 1 item
+     #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
+     #:with (rest-a-parsed::binding-form ...) #'(rest-a.parsed ...)
+     (define as (syntax->list #'(a ...)))
+     (unless (= (length as) (length accessors))
+       (raise-syntax-error #f
+                           (format (string-append "pattern arguments not the expected number\n"
+                                                  "  expected: ~a\n"
+                                                  "  given: ~a")
+                                   (length accessors)
+                                   (length as))
+                           stx))
+     (values
+      (binding-form
+       #'composite-infoer
+       #`(#,constructor-str
+          #,predicate
+          #,composite-static-infos
+          #,steppers
+          #,accessors
+          #,static-infoss
+          (a-parsed.infoer-id ... )
+          (a-parsed.data ...)
+          #,accessor->info? #,index-result-info? #,sequence-element-info?
+          #,(and rest-arg
+                 #`(#,rest-accessor
+                    #,rest-to-repetition
+                    #,rest-repetition?
+                    rest-a-parsed.infoer-id ...
+                    rest-a-parsed.data ...))))
+      #'new-tail)]
+    [_ (raise-syntax-error #f
+                           "bad syntax"
+                           (or stx-in tail))]))
 
 (define-syntax (composite-infoer stx)
   (syntax-parse stx

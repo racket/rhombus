@@ -25,7 +25,7 @@
   (provide veneer-expand-data))
 
 (module+ for-static-info
-  (provide (for-syntax veneer-data-static-infos)))
+  (provide (for-syntax get-veneer-data-static-infos)))
 
 (define-name-root veneer_meta
   #:fields
@@ -46,10 +46,10 @@
   ([lookup veneer_meta.Info.lookup]))
 
 (define-annotation-syntax Info
-  (identifier-annotation #'veneer-data? veneer-data-static-infos))
+  (identifier-annotation veneer-data? #,(get-veneer-data-static-infos)))
 
 (define/arity (veneer_meta.describe id)
-  #:static-infos ((#%call-result #,veneer-data-static-infos))
+  #:static-infos ((#%call-result #,(get-veneer-data-static-infos)))
   (describe who id))
 
 (struct veneer-expand-data veneer-data (stx accum-stx))

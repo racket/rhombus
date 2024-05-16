@@ -48,7 +48,7 @@
   (provide string-method-table))
 
 (module+ static-infos
-  (provide (for-syntax string-static-infos)))
+  (provide (for-syntax get-string-static-infos)))
 
 (define-for-syntax any-string-static-infos
   #'((#%index-get String.get)
@@ -131,41 +131,42 @@
   #:methods
   ())
 
-(define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
-(define-annotation-syntax ReadableString (identifier-annotation #'string? readable-string-static-infos))
+(define-annotation-syntax String (identifier-annotation immutable-string? #,(get-string-static-infos)))
+(define-annotation-syntax ReadableString (identifier-annotation string? #,(get-readable-string-static-infos)))
 
-(define-values-for-syntax (string-ci-static-infos
-                           readable-string-ci-static-infos)
+(define-values-for-syntax (get-string-ci-static-infos
+                           get-readable-string-ci-static-infos)
   (let ([convert
-         (lambda (sis)
-           (datum->syntax
-            #f
-            (for/list ([si (in-list (syntax->list sis))])
-              (syntax-parse si
-                #:datum-literals (#%compare)
-                [(#%compare . _) #'(#%compare ((< string-ci<?)
-                                               (<= string-ci<=?)
-                                               (= string-ci=?)
-                                               (!= string-ci!=?)
-                                               (>= string-ci>=?)
-                                               (> string-ci>?)))]
-                [_ si]))))])
-    (values (convert string-static-infos)
-            (convert readable-string-static-infos))))
+         (lambda (get-sis)
+           (lambda ()
+             (datum->syntax
+              #f
+              (for/list ([si (in-list (syntax->list (get-sis)))])
+                (syntax-parse si
+                  #:datum-literals (#%compare)
+                  [(#%compare . _) #'(#%compare ((< string-ci<?)
+                                                 (<= string-ci<=?)
+                                                 (= string-ci=?)
+                                                 (!= string-ci!=?)
+                                                 (>= string-ci>=?)
+                                                 (> string-ci>?)))]
+                  [_ si])))))])
+    (values (convert get-string-static-infos)
+            (convert get-readable-string-static-infos))))
 
-(define-annotation-syntax StringCI (identifier-annotation #'immutable-string? string-ci-static-infos))
-(define-annotation-syntax ReadableStringCI (identifier-annotation #'string? readable-string-ci-static-infos))
+(define-annotation-syntax StringCI (identifier-annotation immutable-string? #,(get-string-ci-static-infos)))
+(define-annotation-syntax ReadableStringCI (identifier-annotation string? #,(get-readable-string-ci-static-infos)))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)
-  #:static-infos #,string-static-infos)
+  #:static-infos #,(get-string-static-infos))
 
 (define (append-as-strings a b)
   (string-append-immutable (to_string a)
                            (to_string b)))
 
 (define/arity (to_string a #:mode [mode 'text])
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (define (print-to-string a print)
     (define o (open-output-string))
     (print a o)
@@ -197,30 +198,30 @@
 (define/method (String.get s i)
   #:inline
   #:primitive (string-ref)
-  #:static-infos ((#%call-result #,char-static-infos))
+  #:static-infos ((#%call-result #,(get-char-static-infos)))
   (string-ref s i))
 
 (define/method (String.length s)
   #:inline
   #:primitive (string-length)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (string-length s))
 
 (define/method (String.to_string s)
   #:inline
   #:primitive (string->immutable-string)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string s))
 
 (define/method (String.to_int s)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (check-readable-string who s)
   (define n (string->number s))
   (and (exact-integer? n)
        n))
 
 (define/method (String.to_number s)
-  #:static-infos ((#%call-result #,number-static-infos))
+  #:static-infos ((#%call-result #,(get-number-static-infos)))
   (check-readable-string who s)
   (string->number s))
 
@@ -232,7 +233,7 @@
 (define/method String.substring
   #:inline
   #:primitive (substring)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
     [(str start) (string->immutable-string (substring str start))]
     [(str start end) (string->immutable-string (substring str start end))]))
@@ -240,7 +241,7 @@
 (define/method String.append
   #:inline
   #:primitive (string-append-immutable)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
     [() ""]
     [(s) (string->immutable-string s)]
@@ -257,7 +258,7 @@
      #'(define/method (method-name s)
          #:inline
          #:primitive (fn-name)
-         #:static-infos ((#%call-result #,string-static-infos))
+         #:static-infos ((#%call-result #,(get-string-static-infos)))
          (string->immutable-string (fn-name s)))]))
 
 (define-upcase upcase)
@@ -275,7 +276,7 @@
      #'(define/method (method-name s)
          #:inline
          #:primitive (fn-name)
-         #:static-infos ((#%call-result #,string-static-infos))
+         #:static-infos ((#%call-result #,(get-string-static-infos)))
          (string->immutable-string (fn-name s)))]))
 
 (define-normalize nfd)
@@ -291,7 +292,7 @@
      #'(define/method method-name
          #:inline
          #:primitive (fn-name)
-         #:static-infos ((#%call-result #,indirect-bytes-static-infos))
+         #:static-infos ((#%call-result #,(indirect-get-bytes-static-infos)))
          (case-lambda
            [(str) (bytes->immutable-bytes (fn-name str))]
            [(str err-byte) (bytes->immutable-bytes (fn-name str err-byte))]
@@ -331,4 +332,4 @@
       (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
 
 (begin-for-syntax
-  (install-literal-static-infos! 'string string-static-infos))
+  (install-literal-static-infos! 'string get-string-static-infos))

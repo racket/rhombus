@@ -72,7 +72,7 @@
   (provide (for-syntax parse-map-binding)))
 
 (module+ for-info
-  (provide (for-syntax map-static-infos)
+  (provide (for-syntax get-map-static-infos)
            Map-build))
 
 (module+ for-builtin
@@ -137,14 +137,14 @@
 (module+ for-key-comp-macro
   (provide build-map))
 
-(define-for-syntax any-map-static-infos
+(define-for-syntax (get-any-map-static-infos)
   #'((#%index-get Map.get)
      (#%sequence-constructor Map.to_sequence/optimize)))
 
 (define-primitive-class ReadableMap readable-map
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,any-map-static-infos
+  #:instance-static-info #,(get-any-map-static-infos)
   #:existing
   #:opaque
   #:fields ()
@@ -167,7 +167,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%append Map.append/optimize)
-                          . #,any-map-static-infos)
+                          . #,(get-any-map-static-infos))
   #:existing
   #:opaque
   #:parent #f readable-map
@@ -196,7 +196,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%index-set MutableMap.set)
-                          . #,any-map-static-infos)
+                          . #,(get-any-map-static-infos))
   #:existing
   #:opaque
   #:parent #f readable-map
@@ -214,7 +214,7 @@
 (define-primitive-class WeakMutableMap weak-mutable-map
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,mutable-map-static-infos
+  #:instance-static-info #,(get-mutable-map-static-infos)
   #:existing
   #:opaque
   #:parent #f mutable-map
@@ -302,11 +302,11 @@
 
 (define empty-map #hashalw())
 (define-static-info-syntax empty-map
-  #:defined map-static-infos)
+  #:defined get-map-static-infos)
 
 (define empty-readable-map empty-map)
 (define-static-info-syntax empty-readable-map
-  #:defined readable-map-static-infos)
+  #:defined get-readable-map-static-infos)
 
 (define-for-syntax (make-empty-map-binding name+hash?-id+static-infos)
   (binding-transformer
@@ -319,10 +319,10 @@
 
 (define-binding-syntax empty-map
   (make-empty-map-binding
-   #`["Map.empty" immutable-hash? #,map-static-infos]))
+   #`["Map.empty" immutable-hash? #,(get-map-static-infos)]))
 (define-binding-syntax empty-readable-map
   (make-empty-map-binding
-   #`["ReadableMap.empty" hash? #,readable-map-static-infos]))
+   #`["ReadableMap.empty" hash? #,(get-readable-map-static-infos)]))
 
 (define-syntax (empty-map-infoer stx)
   (syntax-parse stx
@@ -358,7 +358,7 @@
                             #'hash-extend*
                             #'hash-append
                             #'hash-assert
-                            map-static-infos
+                            (get-map-static-infos)
                             #:repetition? repetition?
                             #:list->setmap #'list->map))
              #'tail)]
@@ -443,7 +443,7 @@
 
 (define-annotation-constructor (Map of)
   ()
-  #'immutable-hash? map-static-infos
+  #'immutable-hash? #,(get-map-static-infos)
   2
   #f
   map-annotation-make-predicate
@@ -478,7 +478,7 @@
 
 (define-annotation-constructor (Map/again Map.later_of)
   ()
-  #'immutable-hash? map-static-infos
+  #'immutable-hash? #,(get-map-static-infos)
   2
   #f
   (make-map-later-chaperoner 'Map)
@@ -499,14 +499,14 @@
                          #:datum-literals (op |.| of)
                          [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
                           (parse-annotation-of #'(of-id . tail)
-                                               (key-comp-map?-id mapper) map-static-infos
+                                               (key-comp-map?-id mapper) (get-map-static-infos)
                                                2 #f
                                                map-annotation-make-predicate
                                                map-annotation-make-static-info
                                                #'map-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-map?-id mapper)
-                                                             map-static-infos)
+                                                             (get-map-static-infos))
                                   #'tail)]))))))
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
@@ -526,7 +526,7 @@
           (lambda () #f)))]))
 
 (define-static-info-syntax Map-pair-build
-  (#%call-result #,map-static-infos)
+  (#%call-result #,(get-map-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -546,7 +546,7 @@
          (reducer/no-break #'build-map-reduce
                            #'([ht #hashalw()])
                            #'build-map-add
-                           map-static-infos
+                           (get-map-static-infos)
                            #'ht)
          #'tail)]))))
 
@@ -561,7 +561,7 @@
                            (reducer/no-break #'build-map-reduce
                                              #`([ht #,(key-comp-empty-stx mapper)])
                                              #'build-map-add
-                                             map-static-infos
+                                             (get-map-static-infos)
                                              #'ht)
                            #'tail)]))))))
 
@@ -578,12 +578,12 @@
 (define (ephemeron-mutable-hash? m)
   (and (hash? m) (hash-ephemeron? m)))
 
-(define-annotation-syntax WeakMutableMap (identifier-annotation #'ephemeron-mutable-hash? weak-mutable-map-static-infos))
-(define-annotation-syntax ReadableMap (identifier-annotation #'hash? readable-map-static-infos))
+(define-annotation-syntax WeakMutableMap (identifier-annotation ephemeron-mutable-hash? #,(get-weak-mutable-map-static-infos)))
+(define-annotation-syntax ReadableMap (identifier-annotation hash? #,(get-readable-map-static-infos)))
 
 (define-annotation-constructor (MutableMap MutableMap.now_of)
   ()
-  #'mutable-hash? mutable-map-static-infos
+  #'mutable-hash? #,(get-mutable-map-static-infos)
   2
   #f
   (lambda (arg-id predicate-stxs)
@@ -598,7 +598,7 @@
 
 (define-annotation-constructor (MutableMap/again MutableMap.later_of)
   ()
-  #'mutable-hash? mutable-map-static-infos
+  #'mutable-hash? #,(get-mutable-map-static-infos)
   2
   #f
   (make-map-later-chaperoner 'MutableMap)
@@ -666,7 +666,7 @@
                        (syntax-parse stx
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-mutable-map?-id mapper)
-                                                             mutable-map-static-infos)
+                                                             (get-mutable-map-static-infos))
                                   #'tail)]))))))
 
 (define MutableMap-build
@@ -696,7 +696,7 @@
                        (syntax-parse stx
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-weak-mutable-map?-id mapper)
-                                                             weak-mutable-map-static-infos)
+                                                             (get-weak-mutable-map-static-infos))
                                   #'tail)]))))))
 
 (define WeakMutableMap-build
@@ -734,12 +734,12 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,map-copy-id (#,map-build-id #,@args)))
-                           mutable-map-static-infos)))]
+                           (get-mutable-map-static-infos))))]
                [else
                 (wrap-static-info*
                  (quasisyntax/loc stx
                    (#,map-copy-id (#,map-build-id #,@(if (null? argss) null (car argss)))))
-                 mutable-map-static-infos)])
+                 (get-mutable-map-static-infos))])
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use mutable-map-build-id)
@@ -775,7 +775,7 @@
                                           #'Map.copy))))))
 
 (define-static-info-syntax MutableMap-build
-  (#%call-result #,mutable-map-static-infos)
+  (#%call-result #,(get-mutable-map-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -815,7 +815,7 @@
                                           #'hash-copy/ephemeron))))))
 
 (define-static-info-syntax WeakMutableMap-build
-  (#%call-result #,weak-mutable-map-static-infos)
+  (#%call-result #,(get-weak-mutable-map-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -842,7 +842,7 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
-                           #`(#,group-tag rest-bind #,map-static-infos
+                           #`(#,group-tag rest-bind #,(get-map-static-infos)
                               (#,group-tag rst ...))
                            #'tail
                            mode)]
@@ -865,24 +865,24 @@
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
     (define mode-desc (syntax-parse mode [(desc . _) (syntax-e #'desc)]))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer (cons mode-desc (map shrubbery-syntax->string keys))
-                                           #'(lambda (v) #t) ; predicate built into map-matcher
-                                           (for/list ([tmp-id (in-list tmp-ids)])
-                                             #`(lambda (v) #,tmp-id))
-                                           (for/list ([arg (in-list tmp-ids)])
-                                             #'())
-                                           #:static-infos map-static-infos
-                                           #:index-result-info? #t
-                                           #:sequence-element-info? #t
-                                           #:rest-accessor
-                                           (and maybe-rest
-                                                (if rest-repetition?
-                                                    #`(lambda (v) (hash-pairs #,rest-tmp))
-                                                    #`(lambda (v) #,rest-tmp)))
-                                           #:rest-repetition? (and rest-repetition?
-                                                                   'pair))
-       #`(form-id (parens val ...) . tail)
-       maybe-rest))
+      (composite-binding-transformer #`(form-id (parens val ...) . tail)
+                                     #:rest-arg maybe-rest
+                                     (cons mode-desc (map shrubbery-syntax->string keys))
+                                     #'(lambda (v) #t) ; predicate built into map-matcher
+                                     (for/list ([tmp-id (in-list tmp-ids)])
+                                       #`(lambda (v) #,tmp-id))
+                                     (for/list ([arg (in-list tmp-ids)])
+                                       #'())
+                                     #:static-infos (get-map-static-infos)
+                                     #:index-result-info? #t
+                                     #:sequence-element-info? #t
+                                     #:rest-accessor
+                                     (and maybe-rest
+                                          (if rest-repetition?
+                                              #`(lambda (v) (hash-pairs #,rest-tmp))
+                                              #`(lambda (v) #,rest-tmp)))
+                                     #:rest-repetition? (and rest-repetition?
+                                                             'pair)))
     (values
      (syntax-parse composite
        [composite::binding-form
@@ -955,7 +955,7 @@
 
 ;; for `++`
 (define-static-info-syntax Map.append/optimize
-  (#%call-result #,map-static-infos))
+  (#%call-result #,(get-map-static-infos)))
 
 (define hash-extend*
   (case-lambda
@@ -987,11 +987,11 @@
 (define/method (Map.length ht)
   #:inline
   #:primitive (hash-count)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (hash-count ht))
 
 (define/method (Map.keys ht [try-sort? #f])
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-readable-map who ht)
   (list->treelist (hash-keys ht try-sort?)))
 
@@ -1009,7 +1009,7 @@
   (in-hash ht))
 
 (define/method (Map.values ht)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-readable-map who ht)
   (list->treelist (hash-values ht)))
 
@@ -1048,7 +1048,7 @@
       (hash-set a k v))))
 
 (define/method Map.append
-  #:static-infos ((#%call-result #,map-static-infos))
+  #:static-infos ((#%call-result #,(get-map-static-infos)))
   (case-lambda
     [()
      #hashalw()]
@@ -1074,7 +1074,7 @@
 (define/method (Map.copy ht)
   #:inline
   #:primitive (hash-copy)
-  #:static-infos ((#%call-result #,mutable-map-static-infos))
+  #:static-infos ((#%call-result #,(get-mutable-map-static-infos)))
   (cond
     [(custom-map-ref ht #f)
      => (lambda (cm) ((custom-map-copy cm) ht))]
@@ -1095,7 +1095,7 @@
      mht]))
 
 (define/method (Map.snapshot ht)
-  #:static-infos ((#%call-result #,map-static-infos))
+  #:static-infos ((#%call-result #,(get-map-static-infos)))
   (check-readable-map who ht)
   (cond
     [(custom-map-ref ht #f)
@@ -1105,7 +1105,7 @@
 (define/method (Map.remove ht key)
   #:inline
   #:primitive (hash-remove)
-  #:static-infos ((#%call-result #,map-static-infos))
+  #:static-infos ((#%call-result #,(get-map-static-infos)))
   (hash-remove ht key))
 
 (define/method (MutableMap.set ht key val)

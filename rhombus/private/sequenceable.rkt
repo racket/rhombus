@@ -18,24 +18,26 @@
                                  ((vector-ref (Sequenceable-ref self) 0) self)))))))
 
 (define-class-desc-syntax Sequenceable
-  (interface-desc #'()
-                  '#(#&to_sequence)
-                  #'#(#:abstract)
-                  (hasheq 'to_sequence 0)
-                  (hasheq 'to_sequence #'to-sequence-result)
-                  '()
-                  #f
-                  #'()
-                  '()
-                  ;; --------------------
-                  #'Sequenceable
-                  #'Sequenceable
-                  #'prop:Sequenceable
-                  #'prop:Sequenceable
-                  #'Sequenceable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'()
+                     '#(#&to_sequence)
+                     #'#(#:abstract)
+                     (hasheq 'to_sequence 0)
+                     (hasheq 'to_sequence #'to-sequence-result)
+                     '()
+                     #f
+                     #'()
+                     '()
+                     ;; --------------------
+                     #'Sequenceable
+                     #'Sequenceable
+                     #'prop:Sequenceable
+                     #'prop:Sequenceable
+                     #'Sequenceable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax to-sequence-result
   (method-result #'sequence? #t 1 "Sequence" #'((#%sequence-constructor #t)) 2))

@@ -66,14 +66,14 @@
   (provide (for-syntax set-#%call-id!)))
 
 (module+ for-compound-repetition
-  (provide (for-syntax list-static-infos
-                       treelist-static-infos)))
+  (provide (for-syntax get-list-static-infos
+                       get-treelist-static-infos)))
 
 (module+ for-listable
   (provide prop:Listable Listable? Listable-ref
            treelist? listable?
            to-treelist to-list
-           (for-syntax treelist-static-infos)))
+           (for-syntax get-treelist-static-infos)))
 
 (module+ normal-call
   (provide (for-syntax normal-call?)))
@@ -107,8 +107,8 @@
              (syntax-local-static-info e #'#%index-result))
            (if maybe-index-result
                #`((#%index-result #,maybe-index-result)
-                  . #,treelist-static-infos)
-               treelist-static-infos))])
+                  . #,(get-treelist-static-infos))
+               (get-treelist-static-infos)))])
   #:methods
   (length
    get
@@ -161,8 +161,8 @@
              (syntax-local-static-info e #'#%index-result))
            (if maybe-index-result
                #`((#%index-result #,maybe-index-result)
-                  . #,list-static-infos)
-               list-static-infos))])
+                  . #,(get-list-static-infos))
+               (get-list-static-infos)))])
   #:methods
   (length
    get
@@ -230,36 +230,34 @@
 
 (define-binding-syntax List.cons
   (binding-transformer
-   (let ([composite (make-composite-binding-transformer
-                     "List.cons" #'nonempty-treelist? (list #'(lambda (l) (treelist-ref l 0))) (list #'())
-                     #:static-infos treelist-static-infos
-                     #:index-result-info? #t
-                     #:rest-accessor #'(lambda (l) (treelist-drop l 1))
-                     #:rest-to-repetition #'treelist->list
-                     #:rest-repetition? #f)])
-     (lambda (tail)
-       (syntax-parse tail
-         [(form-id (tag::parens elem list) . new-tail)
-          (composite #'(form-id (tag elem) . new-tail)
-                     #`(#,group-tag rest-bind #,treelist-static-infos
-                        #:annot-prefix? #f
-                        list))])))))
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id (tag::parens elem lst) . new-tail)
+        (composite-binding-transformer #'(form-id (tag elem) . new-tail)
+                                       #:rest-arg #`(#,group-tag rest-bind #,(get-treelist-static-infos)
+                                                     #:annot-prefix? #f
+                                                     lst)
+                                       "List.cons" #'nonempty-treelist? (list #'(lambda (l) (treelist-ref l 0))) (list #'())
+                                       #:static-infos (get-treelist-static-infos)
+                                       #:index-result-info? #t
+                                       #:rest-accessor #'(lambda (l) (treelist-drop l 1))
+                                       #:rest-to-repetition #'treelist->list
+                                       #:rest-repetition? #f)]))))
 
 (define-binding-syntax PairList.cons
   (binding-transformer
-   (let ([composite (make-composite-binding-transformer
-                     "PairList.cons" #'nonempty-list? (list #'car) (list #'())
-                     #:static-infos list-static-infos
-                     #:index-result-info? #t
-                     #:rest-accessor #'cdr
-                     #:rest-repetition? #f)])
-     (lambda (tail)
-       (syntax-parse tail
-         [(form-id (tag::parens elem list) . new-tail)
-          (composite #'(form-id (tag elem) . new-tail)
-                     #`(#,group-tag rest-bind #,list-static-infos
-                        #:annot-prefix? #f
-                        list))])))))
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id (tag::parens elem lst) . new-tail)
+        (composite-binding-transformer #'(form-id (tag elem) . new-tail)
+                                       #:rest-arg #`(#,group-tag rest-bind #,(get-list-static-infos)
+                                                     #:annot-prefix? #f
+                                                     lst)
+                                       "PairList.cons" #'nonempty-list? (list #'car) (list #'())
+                                       #:static-infos (get-list-static-infos)
+                                       #:index-result-info? #t
+                                       #:rest-accessor #'cdr
+                                       #:rest-repetition? #f)]))))
 
 (set-primitive-contract! 'list? "PairList")
 (set-primitive-contract! 'treelist? "List")
@@ -280,31 +278,31 @@
 (define/arity (List.cons a d)
   #:inline
   #:primitive (treelist-cons)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-cons d a))
 
 (define/arity (PairList.cons a d)
   #:inline
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who d)
   (cons a d))
 
 (define/method (List.add d a)
   #:inline
   #:primitive (treelist-add)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-add d a))
 
 (define/method (List.insert d pos a)
   #:inline
   #:primitive (treelist-insert)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-insert d pos a))
 
 (define/method (List.delete d pos)
   #:inline
   #:primitive (treelist-delete)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-delete d pos))
 
 (define/arity (MutableList.cons a d)
@@ -348,7 +346,7 @@
 
 (define/arity (List.rest l)
   #:primitive (treelist-rest)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-rest l))
 
 (define/arity (PairList.first l)
@@ -366,7 +364,7 @@
 
 (define/arity (PairList.rest l)
   #:inline
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-nonempty-list who l)
   (cdr l))
 
@@ -375,13 +373,13 @@
     (raise-argument-error* who rhombus-realm "NonnegInt" n)))
 
 (define/arity (List.iota n)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-nonneg-int who n)
   (for/treelist ([i (in-range n)])
     i))
 
 (define/arity (PairList.iota n)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-nonneg-int who n)
   (for/list ([i (in-range n)])
     i))
@@ -389,28 +387,28 @@
 (define/method (List.length l)
   #:inline
   #:primitive (treelist-length)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (treelist-length l))
 
 (define/method (PairList.length l)
   #:inline
   #:primitive (length)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (length l))
 
 (define/method (MutableList.length l)
   #:inline
   #:primitive (mutable-treelist-length)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (mutable-treelist-length l))
 
 (define/method (List.reverse l)
   #:primitive (treelist-reverse)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-reverse l))
 
 (define/method (PairList.reverse l)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who l)
   (reverse l))
 
@@ -419,7 +417,7 @@
   (mutable-treelist-reverse! l))
 
 ;; used to define `List` and `PairList` further below:
-(define-for-syntax (make-constructor proc-stx build-form static-infos wrap-static-infos
+(define-for-syntax (make-constructor proc-stx build-form get-static-infos wrap-static-infos
                                      #:repetition? [repetition? #f]
                                      #:convert-rep [convert-rep #f])
   ;; special cases optimize for `...` and `&`; letting it expand
@@ -431,18 +429,18 @@
       #:datum-literals (group)
       [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
        #:when (normal-call? #'tag)
-       (parse-*list-form stx build-form static-infos wrap-static-infos
+       (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
                          #:convert-rep convert-rep
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(form-id (tag::parens _ ... (group _::&-expr _ ...)) . tail)
        #:when (normal-call? #'tag)
-       (parse-*list-form stx build-form static-infos wrap-static-infos
+       (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
                          #:convert-rep convert-rep
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(form-id (tag::brackets _ ...) . tail)
-       (parse-*list-form stx build-form static-infos wrap-static-infos
+       (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
                          #:convert-rep convert-rep
                          #:repetition? repetition?
                          #:span-form-name? #t)]
@@ -459,21 +457,21 @@
       #'values
       #'cdr))
 
-(define-for-syntax (make-binding generate-binding make-rest-selector static-infos)
+(define-for-syntax (make-binding generate-binding make-rest-selector get-static-infos)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id (_::parens arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector static-infos)]
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos))]
        [(form-id (_::brackets arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector static-infos)]))))
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos))]))))
 
 (define-for-syntax (parse-list-binding stx)
-  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector treelist-static-infos))
+  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos)))
 
 (define-annotation-constructor (List List.of)
   ()
-  #'treelist? treelist-static-infos
+  #'treelist? #,(get-treelist-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -485,7 +483,7 @@
 
 (define-annotation-constructor (List/again List.later_of)
   ()
-  #'treelist? treelist-static-infos
+  #'treelist? #,(get-treelist-static-infos)
   1
   #f
   (lambda (predicate-stxes annot-strs)
@@ -521,7 +519,7 @@
 
 (define-annotation-constructor (PairList PairList.of)
   ()
-  #'list? list-static-infos
+  #'list? #,(get-list-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -533,7 +531,7 @@
 
 (define-annotation-constructor (MutableList MutableList.now_of)
   ()
-  #'mutable-treelist? mutable-treelist-static-infos
+  #'mutable-treelist? #,(get-mutable-treelist-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -547,7 +545,7 @@
 
 (define-annotation-constructor (MutableList/again MutableList.later_of)
   ()
-  #'mutable-treelist? mutable-treelist-static-infos
+  #'mutable-treelist? #,(get-mutable-treelist-static-infos)
   1
   #f
   (lambda (predicate-stxes annot-strs)
@@ -625,10 +623,10 @@
                                                  (check-elements 'MutableList #t cvt lst 'annot-str))))))
 
 (define-static-info-syntax empty-treelist
-  #:defined treelist-static-infos)
+  #:defined get-treelist-static-infos)
 
 (define-static-info-syntax null
-  #:defined list-static-infos)
+  #:defined get-list-static-infos)
 
 (define-binding-syntax empty-treelist
   (binding-transformer
@@ -649,7 +647,7 @@
     [(_ up-static-infos _)
      (binding-info "List.empty"
                    #'empty
-                   (static-infos-union treelist-static-infos #'up-static-infos)
+                   (static-infos-union (get-treelist-static-infos) #'up-static-infos)
                    #'()
                    #'treelist-empty-matcher
                    #'literal-bind-nothing
@@ -661,7 +659,7 @@
     [(_ up-static-infos _)
      (binding-info "PairList.empty"
                    #'empty
-                   (static-infos-union list-static-infos #'up-static-infos)
+                   (static-infos-union (get-list-static-infos) #'up-static-infos)
                    #'()
                    #'empty-matcher
                    #'literal-bind-nothing
@@ -687,7 +685,7 @@
 
 (define-annotation-constructor (NonemptyList NonemptyList.of)
   ()
-  #'nonempty-treelist? treelist-static-infos
+  #'nonempty-treelist? #,(get-treelist-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -699,7 +697,7 @@
 
 (define-annotation-constructor (NonemptyPairList NonemptyPairList.of)
   ()
-  #'nonempty-list? list-static-infos
+  #'nonempty-list? #,(get-list-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -719,7 +717,7 @@
                                      [size 0]
                                      [height 0])
                                   #'build-treelist-accum
-                                  treelist-static-infos
+                                  (get-treelist-static-infos)
                                   #'(root size height))
                 #'tail)]))))
 
@@ -740,7 +738,7 @@
         (values (reducer/no-break #'build-reverse
                                   #'([accum null])
                                   #'build-accum
-                                  list-static-infos
+                                  (get-list-static-infos)
                                   #'accum)
                 #'tail)]))))
 
@@ -793,7 +791,7 @@
                            proc)))
 
 (define/method (List.map lst proc)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-treelist who lst)
   (check-function-of-arity 1 who proc)
   (for/treelist ([e (in-treelist lst)])
@@ -806,7 +804,7 @@
     (proc e)))
 
 (define/method (PairList.map lst proc)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who lst)
   (check-function-of-arity 1 who proc)
   (map proc lst))
@@ -825,13 +823,13 @@
   (mutable-treelist-for-each lst proc))
 
 (define/method (List.sort lst [less-than? <])
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-treelist who lst)
   (check-function-of-arity 2 who less-than?)
   (vector->treelist (vector-sort (treelist->vector lst) less-than?)))
 
 (define/method (PairList.sort lst [less-than? <])
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who lst)
   (check-function-of-arity 2 who less-than?)
   (sort lst less-than?))
@@ -841,23 +839,23 @@
   (mutable-treelist-sort! lst less-than?))
 
 (define/method (List.to_list lst)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-treelist who lst)
   lst)
 
 (define/method (PairList.to_list lst)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-list who lst)
   (list->treelist lst))
 
 (define/method (MutableList.to_list lst)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-mutable-treelist who lst)
   (mutable-treelist-snapshot lst))
 
 (define/method (MutableList.snapshot lst)
   #:primitive (mutable-treelist-snapshot)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (mutable-treelist-snapshot lst))
 
 (define-sequence-syntax PairList.to_sequence/optimize
@@ -894,13 +892,13 @@
 (define/method (List.set l n v)
   #:inline
   #:primitive (treelist-set)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-set l n v))
 
 (define/method (List.copy lst)
   #:inline
   #:primitive (treelist-copy)
-  #:static-infos ((#%call-result #,mutable-treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-mutable-treelist-static-infos)))
   (treelist-copy lst))
 
 (define-sequence-syntax MutableList.to_sequence/optimize
@@ -929,7 +927,7 @@
 (define/method List.append
   #:inline
   #:primitive (treelist-append)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (case-lambda
     [() empty-treelist]
     [(a) (treelist-append a)]
@@ -941,7 +939,7 @@
 (define/method PairList.append
   #:inline
   #:primitive (append)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (case-lambda
     [() null]
     [(a)
@@ -976,30 +974,30 @@
 (define/method (List.take l n)
   #:inline
   #:primitive (treelist-take)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-take l n))
 
 (define/method (List.take_last l n)
   #:inline
   #:primitive (treelist-take-right)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-take-right l n))
 
 (define/method (List.drop l n)
   #:inline
   #:primitive (treelist-drop)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-drop l n))
 
 (define/method (List.drop_last l n)
   #:inline
   #:primitive (treelist-drop-right)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-drop-right l n))
 
 (define/method (List.sublist l start end)
   #:primitive (treelist-sublist)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-sublist l start end))
 
 (define (raise-list-count who what l len n)
@@ -1011,7 +1009,7 @@
                           (unquoted-printing-string (number->string n))))
 
 (define/method (PairList.take orig-l orig-n)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who orig-l)
   (check-nonneg-int who orig-n)
   (let loop ([l orig-l] [n orig-n])
@@ -1022,7 +1020,7 @@
       [else (cons (car l) (loop (cdr l) (sub1 n)))])))
 
 (define/method (PairList.take_last l n)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who l)
   (check-nonneg-int who n)
   (define len (length l))
@@ -1031,7 +1029,7 @@
   (list-tail l (- len n)))
 
 (define/method (PairList.drop orig-l orig-n)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who orig-l)
   (check-nonneg-int who orig-n)
   (let loop ([l orig-l] [n orig-n])
@@ -1042,7 +1040,7 @@
       [else (loop (cdr l) (sub1 n))])))
 
 (define/method (PairList.drop_last l n)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who l)
   (check-nonneg-int who n)
   (define len (length l))
@@ -1077,7 +1075,7 @@
   (mutable-treelist-sublist! l start end))
 
 (define/method (List.remove l v)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-treelist who l)
   (define len (treelist-length l))
   (let loop ([i 0])
@@ -1088,7 +1086,7 @@
       [else (loop (+ i 1))])))
 
 (define/method (PairList.remove l v)
-  #:static-infos ((#%call-result #,list-static-infos))
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who l)
   (remove v l equal-always?))
 
@@ -1130,13 +1128,13 @@
   (mutable-treelist-find l pred))
 
 (define-for-syntax (wrap-treelist-static-info expr)
-  (wrap-static-info* expr treelist-static-infos))
+  (wrap-static-info* expr (get-treelist-static-infos)))
 
 (define-for-syntax (wrap-list-static-info expr)
-  (wrap-static-info* expr list-static-infos))
+  (wrap-static-info* expr (get-list-static-infos)))
 
 (define-for-syntax (wrap-mutable-treelist-static-info expr)
-  (wrap-static-info* expr mutable-treelist-static-infos))
+  (wrap-static-info* expr (get-mutable-treelist-static-infos)))
 
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
@@ -1167,19 +1165,19 @@
   (define pred #`(lambda (v)
                    (and (treelist? v)
                         (#,(if or-more? #'>= #'=) (treelist-length v) #,len))))
-  ((make-composite-binding-transformer "List"
-                                       pred
-                                       (for/list ([i (in-range (length args))])
-                                         #`(lambda (tl) (treelist-ref tl #,i)))
-                                       (for/list ([arg (in-list args)])
-                                         #'())
-                                       #:index-result-info? #t
-                                       #:rest-accessor rest-selector
-                                       #:rest-repetition? rest-repetition?
-                                       #:rest-to-repetition #'treelist->list
-                                       #:static-infos treelist-static-infos)
-   #`(#,form-id (parens . #,args) . #,tail)
-   rest-arg))
+  (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
+                                 #:rest-arg rest-arg
+                                 "List"
+                                 pred
+                                 (for/list ([i (in-range (length args))])
+                                   #`(lambda (tl) (treelist-ref tl #,i)))
+                                 (for/list ([arg (in-list args)])
+                                   #'())
+                                 #:index-result-info? #t
+                                 #:rest-accessor rest-selector
+                                 #:rest-repetition? rest-repetition?
+                                 #:rest-to-repetition #'treelist->list
+                                 #:static-infos (get-treelist-static-infos)))
 
 (define-for-syntax (generate-list-binding form-id len or-more? args tail [rest-arg #f] [rest-selector #f]
                                           [rest-repetition? #t])
@@ -1189,26 +1187,26 @@
                             (if or-more?
                                 #`(and #,check #t)
                                 #`(null? #,check))))))
-  ((make-composite-binding-transformer "PairList"
-                                       pred
-                                       #:steppers (if (null? args)
-                                                      null
-                                                      (cons #'values
-                                                            (for/list ([arg (in-list (cdr args))])
-                                                              #'cdr)))
-                                       (for/list ([arg (in-list args)])
-                                         #'car)
-                                       (for/list ([arg (in-list args)])
-                                         #'())
-                                       #:index-result-info? #t
-                                       #:rest-accessor rest-selector
-                                       #:rest-repetition? rest-repetition?
-                                       #:static-infos list-static-infos)
-   #`(#,form-id (parens . #,args) . #,tail)
-   rest-arg))
+  (composite-binding-transformer  #`(#,form-id (parens . #,args) . #,tail)
+                                  #:rest-arg rest-arg
+                                  "PairList"
+                                  pred
+                                  #:steppers (if (null? args)
+                                                 null
+                                                 (cons #'values
+                                                       (for/list ([arg (in-list (cdr args))])
+                                                         #'cdr)))
+                                  (for/list ([arg (in-list args)])
+                                    #'car)
+                                  (for/list ([arg (in-list args)])
+                                    #'())
+                                  #:index-result-info? #t
+                                  #:rest-accessor rest-selector
+                                  #:rest-repetition? rest-repetition?
+                                  #:static-infos (get-list-static-infos)))
 
-(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector treelist-static-infos))
-(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector list-static-infos))
+(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos))
+(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector get-list-static-infos))
 
 (begin-for-syntax
   (struct list-rest (syntax))
@@ -1345,39 +1343,39 @@
 
 (define-syntax List
   (expression-transformer
-   (make-constructor #'treelist build-treelist-form treelist-static-infos wrap-treelist-static-info
+   (make-constructor #'treelist build-treelist-form get-treelist-static-infos wrap-treelist-static-info
                      #:convert-rep #'list->treelist/optimize)))
 (define-syntax PairList
   (expression-transformer
-   (make-constructor #'list build-list-form list-static-infos wrap-list-static-info)))
+   (make-constructor #'list build-list-form get-list-static-infos wrap-list-static-info)))
 (define-syntax MutableList
   (expression-transformer
-   (make-constructor #'mutable-treelist build-mutable-treelist-form mutable-treelist-static-infos wrap-mutable-treelist-static-info
+   (make-constructor #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos wrap-mutable-treelist-static-info
                      #:convert-rep #'list->mutable-treelist)))
 
 (define-repetition-syntax List
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'treelist build-treelist-form treelist-static-infos wrap-treelist-static-info
+                     #'treelist build-treelist-form get-treelist-static-infos wrap-treelist-static-info
                      #:convert-rep #'list->treelist/optimize)))
 (define-repetition-syntax PairList
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'list build-list-form list-static-infos wrap-list-static-info)))
+                     #'list build-list-form get-list-static-infos wrap-list-static-info)))
 (define-repetition-syntax MutableList
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'mutable-treelist build-mutable-treelist-form mutable-treelist-static-infos wrap-mutable-treelist-static-info
+                     #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos wrap-mutable-treelist-static-info
                      #:convert-rep #'list->mutable-treelist)))
 
 (define-for-syntax (parse-list-expression stx)
-  (parse-*list-form stx build-treelist-form treelist-static-infos wrap-treelist-static-info
+  (parse-*list-form stx build-treelist-form (get-treelist-static-infos) wrap-treelist-static-info
                     #:convert-rep #'list->treelist/optimize
                     #:repetition? #f
                     #:span-form-name? #f))
 
 (define-for-syntax (parse-list-repetition stx)
-  (parse-*list-form stx build-treelist-form treelist-static-infos wrap-treelist-static-info
+  (parse-*list-form stx build-treelist-form (get-treelist-static-infos) wrap-treelist-static-info
                     #:convert-rep #'list->treelist/optimize
                     #:repetition? #t
                     #:span-form-name? #f))

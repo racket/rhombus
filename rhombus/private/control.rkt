@@ -53,11 +53,11 @@
   #:fields
   ([current Continuation.Marks.current]))
 
-(define-annotation-syntax Continuation (identifier-annotation #'continuation? #'()))
+(define-annotation-syntax Continuation (identifier-annotation continuation? ()))
 
-(define-annotation-syntax PromptTag (identifier-annotation #'continuation-prompt-tag? #'()))
+(define-annotation-syntax PromptTag (identifier-annotation continuation-prompt-tag? ()))
 
-(define-annotation-syntax Marks (identifier-annotation #'continuation-mark-set? #'()))
+(define-annotation-syntax Marks (identifier-annotation continuation-mark-set? ()))
 
 (define/arity (Continuation.Marks.current)
   (current-continuation-marks))

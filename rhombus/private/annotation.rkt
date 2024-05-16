@@ -101,8 +101,6 @@
 (begin-for-syntax
   ;; see also "annotation-operator.rkt"
 
-  (property annotation (predicate-stx static-infos))
-
   (define in-annotation-space (make-interned-syntax-introducer/add 'rhombus/annot))
 
   (define-syntax (annot-quote stx)
@@ -211,26 +209,40 @@
   (define (annotation-binding-form binding body static-infos)
     #`(#:bind #,binding #,body #,static-infos))
 
-  (define (identifier-annotation predicate-stx static-infos)
-    (define packed (annotation-predicate-form predicate-stx static-infos))
+  (define-syntax (identifier-annotation stx)
+    (syntax-case stx (unquote-syntax)
+      [(_ pred (unquote-syntax static-infos))
+       #'(make-identifier-annotation (lambda () (values #`pred static-infos)))]
+      [(_ pred static-infos)
+       #'(make-identifier-annotation (lambda () (values #`pred #`static-infos)))]))
+
+  (define (make-identifier-annotation get)
     (annotation-prefix-operator
      '((default . stronger))
      'macro
      (lambda (stx)
+       (define-values (predicate-stx static-infos) (get))
+       (define packed (annotation-predicate-form predicate-stx static-infos))
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
 
-  (define (identifier-binding-annotation binding-stx body-stx static-infos)
-    (define packed (annotation-binding-form binding-stx body-stx static-infos))
+  (define-syntax (identifier-binding-annotation stx)
+    (syntax-case stx ()
+      [(_ binding body static-infos)
+       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)))]))
+
+  (define (make-identifier-binding-annotation get)
     (annotation-prefix-operator
      '((default . stronger))
      'macro
      (lambda (stx)
+       (define-values (binding-stx body-stx static-infos) (get))
+       (define packed (annotation-binding-form binding-stx body-stx static-infos))
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
-
+  
   (define (parse-annotation-of/one stx sub-n kws)
     (syntax-parse stx
       [(form-id (~and subs (_::parens g ...)) . tail)
@@ -335,7 +347,7 @@
             . #,static-infos))])
      tail))
 
-  (define (annotation-constructor predicate-stx static-infos
+  (define (annotation-constructor predicate-stx get-static-infos
                                   sub-n kws predicate-maker info-maker
                                   binding-maker-id binding-maker-data
                                   parse-annotation-of)
@@ -347,7 +359,7 @@
          (syntax-parse stx
            [(_ . tail)
             (values (annotation-predicate-form predicate-stx
-                                               static-infos)
+                                               (get-static-infos))
                     #'tail)]))))
     (values
      ;; root
@@ -358,7 +370,7 @@
       'macro
       (lambda (stx)
         (parse-annotation-of (replace-head-dotted-name stx)
-                             predicate-stx static-infos
+                             predicate-stx (get-static-infos)
                              sub-n kws
                              predicate-maker info-maker
                              binding-maker-id binding-maker-data)))))
@@ -395,7 +407,7 @@
        (build-syntax-definitions/maybe-extension
         (list 'rhombus/annot) #'name #:extra-names extra-names #'name-extends
         #'(let binds
-            (annotation-constructor predicate-stx static-infos
+            (annotation-constructor predicate-stx (lambda () #`static-infos)
                                     sub-n 'kws
                                     predicate-maker info-maker
                                     binding-maker-id binding-maker-data
@@ -779,27 +791,27 @@
 (define (inexact-number? n) (and (number? n) (inexact? n)))
 (define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
 
-(define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
-(define-annotation-syntax None (identifier-annotation #'(lambda (x) #f) #'()))
-(define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
-(define-annotation-syntax Int (identifier-annotation #'exact-integer? int-static-infos))
-(define-annotation-syntax PosInt (identifier-annotation #'exact-positive-integer? int-static-infos))
-(define-annotation-syntax NegInt (identifier-annotation #'exact-negative-integer? int-static-infos))
-(define-annotation-syntax NonnegInt (identifier-annotation #'exact-nonnegative-integer? int-static-infos))
-(define-annotation-syntax Byte (identifier-annotation #'byte? int-static-infos))
-(define-annotation-syntax Flonum (identifier-annotation #'flonum? flonum-static-infos))
-(define-annotation-syntax Number (identifier-annotation #'number? number-static-infos))
-(define-annotation-syntax Integral (identifier-annotation #'integer? rational-static-infos))
-(define-annotation-syntax Rational (identifier-annotation #'rational? rational-static-infos))
-(define-annotation-syntax Exact (identifier-annotation #'exact-number? rational-static-infos))
-(define-annotation-syntax Inexact (identifier-annotation #'inexact-number? real-static-infos))
-(define-annotation-syntax Real (identifier-annotation #'real? real-static-infos))
-(define-annotation-syntax PosReal (identifier-annotation #'positive-real? real-static-infos))
-(define-annotation-syntax NegReal (identifier-annotation #'negative-real? real-static-infos))
-(define-annotation-syntax NonnegReal (identifier-annotation #'nonnegative-real? real-static-infos))
-(define-annotation-syntax Void (identifier-annotation #'void? #'()))
-(define-annotation-syntax False (identifier-annotation #'not #'()))
-(define-annotation-syntax True (identifier-annotation #'(lambda (x) (and x #t)) #'()))
+(define-annotation-syntax Any (identifier-annotation (lambda (x) #t) ()))
+(define-annotation-syntax None (identifier-annotation (lambda (x) #f) ()))
+(define-annotation-syntax Boolean (identifier-annotation boolean? ()))
+(define-annotation-syntax Int (identifier-annotation exact-integer? #,(get-int-static-infos)))
+(define-annotation-syntax PosInt (identifier-annotation exact-positive-integer? #,(get-int-static-infos)))
+(define-annotation-syntax NegInt (identifier-annotation exact-negative-integer? #,(get-int-static-infos)))
+(define-annotation-syntax NonnegInt (identifier-annotation exact-nonnegative-integer? #,(get-int-static-infos)))
+(define-annotation-syntax Byte (identifier-annotation byte? #,(get-int-static-infos)))
+(define-annotation-syntax Flonum (identifier-annotation flonum? #,(get-flonum-static-infos)))
+(define-annotation-syntax Number (identifier-annotation number? #,(get-number-static-infos)))
+(define-annotation-syntax Integral (identifier-annotation integer? #,(get-rational-static-infos)))
+(define-annotation-syntax Rational (identifier-annotation rational? #,(get-rational-static-infos)))
+(define-annotation-syntax Exact (identifier-annotation exact-number? #,(get-rational-static-infos)))
+(define-annotation-syntax Inexact (identifier-annotation inexact-number? #,(get-real-static-infos)))
+(define-annotation-syntax Real (identifier-annotation real? #,(get-real-static-infos)))
+(define-annotation-syntax PosReal (identifier-annotation positive-real? #,(get-real-static-infos)))
+(define-annotation-syntax NegReal (identifier-annotation negative-real? #,(get-real-static-infos)))
+(define-annotation-syntax NonnegReal (identifier-annotation nonnegative-real? #,(get-real-static-infos)))
+(define-annotation-syntax Void (identifier-annotation void? ()))
+(define-annotation-syntax False (identifier-annotation not ()))
+(define-annotation-syntax True (identifier-annotation (lambda (x) (and x #t)) ()))
 
 (define-name-root Any
   #:fields
@@ -1004,10 +1016,10 @@
                   #'tail))]))))
 
 (define-annotation-syntax Any.to_boolean
-  (identifier-binding-annotation (binding-form #'to_boolean-infoer
-                                               #'val)
-                                 #'val
-                                 #'()))
+  (identifier-binding-annotation #,(binding-form #'to_boolean-infoer
+                                                 #'val)
+                                 val
+                                 ()))
 
 (define-syntax (to_boolean-infoer stx)
   (syntax-parse stx

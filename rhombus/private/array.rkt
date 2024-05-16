@@ -82,7 +82,7 @@
        [(form-id . tail) (values (relocate+reraw #'form-id #'array) #'tail)]))))
 
 (define-annotation-constructor (Array now_of)
-  () #'vector? array-static-infos
+  () #'vector? #,(get-array-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -94,7 +94,7 @@
   "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
 
 (define-annotation-constructor (Array/again later_of)
-  () #'vector? array-static-infos
+  () #'vector? #,(get-array-static-infos)
   1
   #f
   (lambda (predicate-stxes annot-strs)
@@ -127,7 +127,7 @@
               (lambda (v)
                 (and (vector? v)
                      (= (vector-length v) n))))
-          array-static-infos)
+          (get-array-static-infos))
          #'tail)]))))
 
 (define (check-nonneg-int who v)
@@ -153,8 +153,8 @@
    'Array (string-append what " element") v annot-str
    "position" (unquoted-printing-string (number->string idx))))
 
-(define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
-(define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))
+(define-annotation-syntax MutableArray (identifier-annotation mutable-vector? #,(get-array-static-infos)))
+(define-annotation-syntax ImmutableArray (identifier-annotation immutable-vector? #,(get-array-static-infos)))
 
 (define-reducer-syntax Array
   (reducer-transformer
@@ -165,7 +165,7 @@
          (reducer/no-break #'build-array-reduce-list
                            #'([accum null])
                            #'build-array-cons
-                           array-static-infos
+                           (get-array-static-infos)
                            #'accum)
          #'tail)]))))
 
@@ -181,7 +181,7 @@
          (reducer/no-break #'build-array-reduce
                            #'([i 0])
                            #'build-array-assign
-                           array-static-infos
+                           (get-array-static-infos)
                            #'[dest
                               (rhombus-expression len-g)
                               (~? (rhombus-expression fill-g) 0)
@@ -197,7 +197,7 @@
                                            (make-vector len fill))])
                             body
                             dest-id)
-                        array-static-infos)]))
+                        (get-array-static-infos))]))
 
 (define-syntax (build-array-assign stx)
   (syntax-parse stx
@@ -232,7 +232,7 @@
 (define/method Array.append
   #:inline
   #:primitive (vector-append)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (case-lambda
     [() (vector)]
     [(v1) (vector-append v1)]
@@ -243,7 +243,7 @@
 (define/arity Array.make
   #:inline
   #:primitive (make-vector)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (case-lambda
     [(len) (make-vector len)]
     [(len val) (make-vector len val)]))
@@ -255,7 +255,7 @@
 
 (define/method Array.copy
   #:primitive (vector-copy)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (case-lambda
     [(v) (vector-copy v)]
     [(v start) (vector-copy v start)]
@@ -271,27 +271,27 @@
 
 (define/method (Array.take_left v n)
   #:primitive (vector-take)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-take v n))
 
 (define/method (Array.take_right v n)
   #:primitive (vector-take-right)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-take-right v n))
 
 (define/method (Array.drop_left v n)
   #:primitive (vector-drop)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-drop v n))
 
 (define/method (Array.drop_right v n)
   #:primitive (vector-drop-right)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-drop-right v n))
 
 (define/method (Array.set_in_copy v i val)
   #:primitive (vector-set/copy)
-  #:static-infos ((#%call-result #,array-static-infos))
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
   (meta-if-version-at-least
    "8.11.1.10"
    (vector-set/copy v i val)
@@ -301,7 +301,7 @@
      v2)))
 
 (define/method (Array.to_list v)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-array who v)
   (vector->treelist v))
 
@@ -324,20 +324,20 @@
    'macro
    (lambda (stx)
      (define (build args len pred rest-arg form-id tail)
-       ((make-composite-binding-transformer "Array"
-                                            pred
-                                            (for/list ([arg (in-list args)]
-                                                       [i (in-naturals)])
-                                              #`(lambda (v) (vector-ref v #,i)))
-                                            (for/list ([arg (in-list args)])
-                                              #'())
-                                            #:static-infos array-static-infos
-                                            #:index-result-info? #t
-                                            #:rest-accessor (and rest-arg
-                                                                 #`(lambda (v) (vector-suffix->list v #,len)))
-                                            #:rest-repetition? (and rest-arg #t))
-        #`(#,form-id (parens . #,args) . #,tail)
-        rest-arg))
+       (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
+                                      #:rest-arg rest-arg
+                                      "Array"
+                                      pred
+                                      (for/list ([arg (in-list args)]
+                                                 [i (in-naturals)])
+                                        #`(lambda (v) (vector-ref v #,i)))
+                                      (for/list ([arg (in-list args)])
+                                        #'())
+                                      #:static-infos (get-array-static-infos)
+                                      #:index-result-info? #t
+                                      #:rest-accessor (and rest-arg
+                                                           #`(lambda (v) (vector-suffix->list v #,len)))
+                                      #:rest-repetition? (and rest-arg #t)))
      (syntax-parse stx
        [(form-id (tag::parens arg ... rest-arg (group _::...-bind)) . tail)
         (define args (syntax->list #'(arg ...)))

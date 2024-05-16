@@ -18,7 +18,7 @@
   (provide path-method-table))
 
 (module+ for-static-info
-  (provide (for-syntax path-static-infos)))
+  (provide (for-syntax get-path-static-infos)))
 
 (define-primitive-class Path path
   #:lift-declaration
@@ -26,7 +26,7 @@
   #:existing
   #:translucent
   #:fields
-  ([bytes Path.bytes #,bytes-static-infos])
+  ([bytes Path.bytes #,(get-bytes-static-infos)])
   #:properties
   ()
   #:methods
@@ -35,7 +35,7 @@
    ))
 
 (define/arity #:name Path (path c)
-  #:static-infos ((#%call-result #,path-static-infos))
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
   (cond
     [(path? c) c]
     [(bytes? c) (bytes->path c)]
@@ -46,11 +46,11 @@
 (define/method (Path.bytes s)
   #:inline
   #:primitive (path->bytes)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
 
 (define/method (Path.string s)
   #:inline
   #:primitive (path->string)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))

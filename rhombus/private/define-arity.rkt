@@ -12,7 +12,7 @@
          define/method)
 
 (module+ for-info
-  (provide indirect-function-static-info
+  (provide indirect-get-function-static-info
            (for-syntax install-function-static-infos!)))
 
 (define-syntax-parameter who-sym #f)
@@ -164,10 +164,10 @@
                                                   (cons (syntax-e #'kw) allowed-kws)
                                                   req-kws)])))
 
-(define-for-syntax function-static-infos #f)
+(define-for-syntax get-function-static-infos #f)
 
-(define-syntax indirect-function-static-info
-  (static-info (lambda () function-static-infos)))
+(define-syntax indirect-get-function-static-info
+  (static-info (lambda () get-function-static-infos)))
 
-(define-for-syntax (install-function-static-infos! static-infos)
-  (set! function-static-infos static-infos))
+(define-for-syntax (install-function-static-infos! get-static-infos)
+  (set! get-function-static-infos get-static-infos))

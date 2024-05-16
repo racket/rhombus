@@ -80,7 +80,7 @@
 
 (define-for-syntax sequence-range-static-infos/sequence
   #`((#%sequence-constructor Range.to_sequence/optimize)
-     (#%sequence-element #,int-static-infos)))
+     (#%sequence-element #,(get-int-static-infos))))
 
 (define-primitive-class SequenceRange sequence-range
   #:lift-declaration
@@ -114,13 +114,13 @@
   ([to_list Range.to_list]))
 
 (define-annotation-syntax SequenceRange
-  (identifier-annotation #'sequence-range? sequence-range-static-infos))
+  (identifier-annotation sequence-range? #,(get-sequence-range-static-infos)))
 
 (define-annotation-syntax Range
-  (identifier-annotation #'range? range-static-infos))
+  (identifier-annotation range? #,(get-range-static-infos)))
 
 (define-annotation-syntax ListRange
-  (identifier-annotation #'list-range? list-range-static-infos))
+  (identifier-annotation list-range? #,(get-list-range-static-infos)))
 
 (define-for-syntax (range-assoc-table)
   `((,(expr-quote rhombus-a:+) . weaker)
@@ -142,13 +142,13 @@
         [(_)
          (values (wrap-static-info*
                   #`(range-full)
-                  range-static-infos)
+                  (get-range-static-infos))
                  #'())]
         [(_ . more)
          #:with (~var rhs (:prefix-op+expression+tail #'..)) #'(group . more)
          (values (wrap-static-info*
                   #`(range-to/who '.. rhs.parsed)
-                  range-static-infos)
+                  (get-range-static-infos))
                  #'rhs.tail)])))
    (expression-infix-operator
     range-assoc-table
@@ -158,13 +158,13 @@
         [(_)
          (values (wrap-static-info*
                   #`(range-from/who '.. #,form1)
-                  sequence-range-static-infos)
+                  (get-sequence-range-static-infos))
                  #'())]
         [(_ . more)
          #:with (~var rhs (:infix-op+expression+tail #'..)) #'(group . more)
          (values (wrap-static-info*
                   #`(range-from-to/who '.. #,form1 rhs.parsed)
-                  list-range-static-infos)
+                  (get-list-range-static-infos))
                  #'rhs.tail)]))
     'none)))
 
@@ -176,14 +176,14 @@
     (lambda (form stx)
       (wrap-static-info*
        #`(range-to-inclusive/who '..= #,form)
-       range-static-infos)))
+       (get-range-static-infos))))
    (expression-infix-operator
     range-assoc-table
     'automatic
     (lambda (form1 form2 stx)
       (wrap-static-info*
        #`(range-from-to-inclusive/who '..= #,form1 #,form2)
-       list-range-static-infos))
+       (get-list-range-static-infos)))
     'none)))
 
 (define-syntax <..<
@@ -195,13 +195,13 @@
        [(_)
         (values (wrap-static-info*
                  #`(range-from-exclusive/who '<..< #,form1)
-                 range-static-infos)
+                 (get-range-static-infos))
                 #'())]
        [(_ . more)
         #:with (~var rhs (:infix-op+expression+tail #'<..<)) #'(group . more)
         (values (wrap-static-info*
                  #`(range-from-exclusive-to/who '<..< #,form1 rhs.parsed)
-                 range-static-infos)
+                 (get-range-static-infos))
                 #'rhs.tail)]))
    'none))
 
@@ -212,7 +212,7 @@
    (lambda (form1 form2 stx)
      (wrap-static-info*
       #`(range-from-exclusive-to-inclusive/who '<..= #,form1 #,form2)
-      range-static-infos))
+      (get-range-static-infos)))
    'none))
 
 (define-binding-syntax ..
@@ -370,8 +370,8 @@
           #:just-binding
           #:parent #f range
           #:fields
-          ((~? [(start) #,int-static-infos])
-           (~? [(end) #,int-static-infos]))
+          ((~? [(start) #,(get-int-static-infos)])
+           (~? [(end) #,(get-int-static-infos)]))
           #:properties
           ()
           #:methods
@@ -488,7 +488,7 @@
     (raise-argument-error* who rhombus-realm "ListRange" r)))
 
 (define/method (Range.start r)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (check-range who r)
   (cond
     [(range-from-to? r) (range-from-to-start r)]
@@ -500,7 +500,7 @@
     [else -inf.0]))
 
 (define/method (Range.end r)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (check-range who r)
   (cond
     [(range-from-to? r) (range-from-to-end r)]
@@ -677,7 +677,7 @@
   (range-implode new-start new-in-start? new-end new-in-end?))
 
 (define/method Range.span
-  #:static-infos ((#%call-result #,range-static-infos))
+  #:static-infos ((#%call-result #,(get-range-static-infos)))
   (case-lambda
     [(r)
      (check-range who r)
@@ -770,7 +770,7 @@
 
 (define/method (Range.to_sequence r)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
-                                  (#%sequence-element #,int-static-infos))))
+                                  (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
   (cond
     [(range-from-to? r) (range-from-to->sequence r)]
@@ -802,11 +802,11 @@
 
 (define-static-info-syntax Range.step_by/optimize
   (#%call-result ((#%sequence-constructor #t)
-                  (#%sequence-element #,int-static-infos))))
+                  (#%sequence-element #,(get-int-static-infos)))))
 
 (define/method #:direct-id Range.step_by/optimize (Range.step_by r step)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
-                                  (#%sequence-element #,int-static-infos))))
+                                  (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
   (check-pos-int who step)
   (cond
@@ -879,7 +879,7 @@
                #,(if step-expr #'step #'1))))])
 
 (define/method (Range.to_list r)
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-list-range who r)
   (cond
     [(range-from-to? r) (range-from-to->list r)]

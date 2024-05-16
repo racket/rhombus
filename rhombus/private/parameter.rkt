@@ -20,13 +20,13 @@
                       rhombus/annot)
                      Parameter))
 
-(define-for-syntax parameter-static-infos
+(define-for-syntax (get-parameter-static-infos)
   #`((#%function-arity 3)))
 
 (define/arity (Parameter.make v
                               #:guard [guard #f]
                               #:name [name 'parameter])
-  #:static-infos ((#%call-result #,parameter-static-infos))
+  #:static-infos ((#%call-result #,(get-parameter-static-infos)))
   (make-parameter v guard name))
 
 (define-name-root Parameter
@@ -35,7 +35,7 @@
    [def Parameter.def]))
 
 (define-annotation-syntax Parameter
-  (identifier-annotation #'parameter? parameter-static-infos))
+  (identifier-annotation parameter? #,(get-parameter-static-infos)))
 
 (define-syntax Parameter.def
   (definition-transformer

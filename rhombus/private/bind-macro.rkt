@@ -104,7 +104,7 @@
 
 (begin-for-syntax
   (define/arity (bind_meta.unpack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
@@ -114,7 +114,7 @@
                   (group (parsed #:rhombus/bind/chain (b.infoer-id b.data)))))]))
 
   (define/arity (bind_meta.unpack_info stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
@@ -138,7 +138,7 @@
                                  (b.matcher-id b.committer-id b.binder-id b.data)))))]))
 
   (define/arity (bind_meta.pack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (group)
@@ -151,11 +151,11 @@
                                  "syntax object" stx)]))
 
   (define/arity (bind_meta.pack_info stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (pack-term #`(parsed #:rhombus/bind/info #,(pack-info who stx))))
 
   (define/arity (bind_meta.get_info stx unpacked-static-infos)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (check-syntax who unpacked-static-infos)
     (syntax-parse (unpack-term stx who #f)

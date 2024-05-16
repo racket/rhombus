@@ -42,12 +42,12 @@
   (make-struct-type-property 'Comparable))
 
 (define-annotation-syntax Comparable
-  (identifier-annotation #'comparable? #'((#%compare ((< general<)
-                                                      (<= general<=)
-                                                      (= general=)
-                                                      (!= general!=)
-                                                      (>= general>=)
-                                                      (> general>))))))
+  (identifier-annotation comparable? ((#%compare ((< general<)
+                                                  (<= general<=)
+                                                  (= general=)
+                                                  (!= general!=)
+                                                  (>= general>=)
+                                                  (> general>))))))
 
 (define (comparable? v)
   (or (real? v)
@@ -58,45 +58,47 @@
       (Comparable? v)))
 
 (define-class-desc-syntax Comparable
-  (interface-desc #'()
-                  '#(#&compare_to #&less #&less_or_equal #&compares_equal #&compares_unequal #&greater_or_equal #&greater)
-                  #'#(#:abstract
-                      Comparable.less
-                      Comparable.less_or_equal
-                      Comparable.compares_equal
-                      Comparable.compares_unequal
-                      Comparable.greater_or_equal
-                      Comparable.greater)
-                  (hasheq 'compare_to 0
-                          'less 1
-                          'less_or_equal 2
-                          'compares_equal 3
-                          'compares_unequal 4
-                          'greater_or_equal 5
-                          'greater 6)
-                  (hasheq 'compare_to #'compare-to-result
-                          'less #'boolean-result
-                          'less_or_equal #'boolean-result
-                          'compares_equal #'boolean-result
-                          'compares_unequal #'boolean-result
-                          'greater_or_equal #'boolean-result
-                          'greater #'boolean-result)
-                  '()
-                  #f
-                  #'()
-                  '(compare veneer)
-                  ;; --------------------
-                  #'Comparable
-                  #'Comparable
-                  #'prop:Comparable
-                  #'prop:Comparable
-                  #'Comparable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'()
+                     '#(#&compare_to #&less #&less_or_equal #&compares_equal #&compares_unequal #&greater_or_equal #&greater)
+                     #'#(#:abstract
+                         Comparable.less
+                         Comparable.less_or_equal
+                         Comparable.compares_equal
+                         Comparable.compares_unequal
+                         Comparable.greater_or_equal
+                         Comparable.greater)
+                     (hasheq 'compare_to 0
+                             'less 1
+                             'less_or_equal 2
+                             'compares_equal 3
+                             'compares_unequal 4
+                             'greater_or_equal 5
+                             'greater 6)
+                     (hasheq 'compare_to #'compare-to-result
+                             'less #'boolean-result
+                             'less_or_equal #'boolean-result
+                             'compares_equal #'boolean-result
+                             'compares_unequal #'boolean-result
+                             'greater_or_equal #'boolean-result
+                             'greater #'boolean-result)
+                     '()
+                     #f
+                     #'()
+                     '(compare veneer)
+                     ;; --------------------
+                     #'Comparable
+                     #'Comparable
+                     #'prop:Comparable
+                     #'prop:Comparable
+                     #'Comparable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax compare-to-result
-  (method-result #'exact-integer? #t 1 "Int" int-static-infos 4))
+  (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))
 
 (define-syntax boolean-result
   (method-result #'boolean? #t 1 "Boolean" #'() 4))

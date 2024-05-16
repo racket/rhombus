@@ -59,8 +59,8 @@
 (define-for-syntax (check-quotable form-name q)
   (define s (syntax-e q))
   (cond
-    [(keyword? s) keyword-static-infos]
-    [(symbol? s) symbol-static-infos]
+    [(keyword? s) (get-keyword-static-infos)]
+    [(symbol? s) (get-symbol-static-infos)]
     [else
      (raise-syntax-error #f
                          "only an identifier or keyword allowed"

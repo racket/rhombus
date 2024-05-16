@@ -4,7 +4,9 @@
                      enforest/proc-name
                      "pack.rkt"
                      "macro-result.rkt"
-                     (submod "interface-meta.rkt" for-static-info))
+                     (submod "interface-meta.rkt" for-static-info)
+                     (for-syntax
+                      racket/base))
          "space-provide.rkt"
          "interface-clause.rkt"
          (submod "interface-clause.rkt" for-interface)
@@ -18,7 +20,7 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/interface_clause
-  #:extra ([#:info interface-data-static-infos value])
+  #:extra ([#:info (get-interface-data-static-infos) value])
   #'make-interface-clause-transformer)
 
 (define-for-syntax (make-interface-clause-transformer proc)

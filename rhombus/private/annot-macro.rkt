@@ -137,7 +137,7 @@
     (eq? (annotation-kind stx who) 'predicate))
 
   (define/arity (annot_meta.pack_predicate predicate [static-infos #'(parens)])
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who predicate)
     (check-syntax who static-infos)
     #`(parsed #:rhombus/annot
@@ -146,8 +146,8 @@
                  (pack-static-infos who (unpack-term static-infos who #f)))))
 
   (define/arity (annot_meta.unpack_predicate stx)
-    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
-                                               #,syntax-static-infos)))))
+    #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos))))))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
@@ -162,7 +162,7 @@
     (eq? (annotation-kind stx who) 'converter))
 
   (define/arity (annot_meta.pack_converter binding body [static-infos #'(parens)])
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who binding)
     (check-syntax who body)
     (check-syntax who static-infos)
@@ -179,9 +179,9 @@
                                  "syntax object" binding)]))
 
   (define/arity (annot_meta.unpack_converter stx)
-    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
-                                               #,syntax-static-infos
-                                               #,syntax-static-infos)))))
+    #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos))))))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
@@ -194,7 +194,7 @@
                                  "syntax object" stx)]))
 
   (define/arity (annot_meta.parse_to_packed_statinfo stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (define group (unpack-group stx #f #f))
     (unless group
       (raise-argument-error* who rhombus-realm "Group" stx))

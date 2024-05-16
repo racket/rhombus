@@ -10,6 +10,7 @@
 
 (provide (struct-out interface-desc)
          (struct-out interface-internal-desc)
+         (rename-out [interface-desc-maker/cache interface-desc-maker])
          interface-desc-ref
          interface-names->interfaces
          interface-set-diff
@@ -29,10 +30,22 @@
 (struct interface-internal-desc interface-desc (private-methods      ; (list symbol ...)
                                                 private-properties)) ; (list symbol ...)
 
-(define (interface-desc-ref v) (and (interface-desc? v) v))
-(define (interface-noninternal-desc-ref v) (and (interface-desc? v)
-                                                (not (interface-internal-desc? v))
-                                                v))
+(struct interface-desc-maker (proc))
+(define (interface-desc-maker/cache proc)
+  (let ([desc #f])
+    (interface-desc-maker
+     (lambda ()
+       (or desc (begin
+                  (set! desc (proc))
+                  desc))))))
+
+(define (interface-desc-ref v) (or (and (interface-desc? v) v)
+                                   (and (interface-desc-maker? v)
+                                        ((interface-desc-maker-proc v)))))
+
+(define (interface-noninternal-desc-ref v) (let ([v (interface-desc-ref v)])
+                                             (and (not (interface-internal-desc? v))
+                                                  v)))
 
 (define (interface-names->interfaces stxes names
                                      #:results [results (lambda (all pruned) pruned)]

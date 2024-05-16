@@ -64,26 +64,26 @@
         (wrap-class-clause #`(#,key a-block))]))))
 
 (define-class-clause-syntax binding
-  (make-macro-clause-transformer #'#:binding))
+  (make-macro-clause-transformer '#:binding))
 
 (define-class-clause-syntax annotation
-  (make-macro-clause-transformer #'#:annotation))
+  (make-macro-clause-transformer '#:annotation))
 
 (define-interface-clause-syntax annotation
-  (make-macro-clause-transformer #'#:annotation
+  (make-macro-clause-transformer '#:annotation
                                  #:clause-transformer interface-clause-transformer))
 
 (define-veneer-clause-syntax annotation
-  (make-macro-clause-transformer #'#:annotation
+  (make-macro-clause-transformer '#:annotation
                                  #:clause-transformer veneer-clause-transformer))
 
 (define-class-clause-syntax expression
-  (make-macro-clause-transformer #'#:expression))
+  (make-macro-clause-transformer '#:expression))
 
 (define-interface-clause-syntax expression
-  (make-macro-clause-transformer #'#:expression
+  (make-macro-clause-transformer '#:expression
                                  #:clause-transformer interface-clause-transformer))
 
 (define-veneer-clause-syntax expression
-  (make-macro-clause-transformer #'#:expression
+  (make-macro-clause-transformer '#:expression
                                  #:clause-transformer veneer-clause-transformer))

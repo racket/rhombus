@@ -1,7 +1,7 @@
 #lang rhombus/private/core
 import:
   "core-meta.rkt" open
-  "symbol.rkt"!#{for-static-info}.#{symbol-static-infos}
+  "symbol.rkt"!#{for-static-info}.#{get-symbol-static-infos}
 
 use_static
 
@@ -55,5 +55,5 @@ defn.macro 'enum $(name :: IdentifierName):
       | ~else: #false
     annot.macro '$name':
       annot_meta.pack_predicate('is_enum',
-                                statinfo_meta.unpack(#{symbol-static-infos}))
+                                statinfo_meta.unpack(#{get-symbol-static-infos}()))
     »'

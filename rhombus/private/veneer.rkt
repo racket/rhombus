@@ -342,17 +342,17 @@
         [(not converter?)
          (list
           #`(define-annotation-syntax name
-              (identifier-annotation (quote-syntax name?)
-                                     (quasisyntax ((#%dot-provider dot-providers)
-                                                   . indirect-static-infos)))))]
+              (identifier-annotation name?
+                                     ((#%dot-provider dot-providers)
+                                      . indirect-static-infos))))]
         [else
          (list
           #`(define-annotation-syntax name
-              (identifier-binding-annotation (binding-form #'converter-binding-infoer
-                                                           #'(name name-convert val))
-                                             #'val
-                                             (quasisyntax ((#%dot-provider dot-providers)
-                                                           . indirect-static-infos)))))]))))
+              (identifier-binding-annotation #,(binding-form #'converter-binding-infoer
+                                                             #'(name name-convert val))
+                                             val
+                                             ((#%dot-provider dot-providers)
+                                              . indirect-static-infos))))]))))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx

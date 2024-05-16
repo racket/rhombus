@@ -666,10 +666,10 @@
                                           #`(pack-element* #,template-e #,depth)
                                           depth
                                           0
-                                          syntax-static-infos
+                                          (get-syntax-static-infos)
                                           #f)]
        [else (wrap-static-info* template-e
-                                syntax-static-infos)])]))
+                                (get-syntax-static-infos))])]))
 
 (define-for-syntax (convert-repetition-template e)
   (convert-template e #:repetition? #t))
@@ -683,7 +683,7 @@
      #:datum-literals (unpack-tail-list*)
      [(unpack-tail-list* _ id 1) #'id]
      [_ #`(pack-tail (unpack-list-tail* (quote-syntax name) #,unpack 0))])
-   syntax-static-infos))
+   (get-syntax-static-infos)))
 
 (define-for-syntax (deepen-template-escapes idrs)
   (for/fold ([new-idrs null]

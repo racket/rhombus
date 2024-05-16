@@ -38,7 +38,7 @@
   (make-struct-type-property 'Appendable))
 
 (define-annotation-syntax Appendable
-  (identifier-annotation #'appendable? #'((#%append general-append))))
+  (identifier-annotation appendable? ((#%append general-append))))
 (define (appendable? v)
   (or (treelist? v)
       (list? v)
@@ -50,24 +50,26 @@
       (Appendable? v)))
 
 (define-class-desc-syntax Appendable
-  (interface-desc #'()
-                  '#(#&append)
-                  #'#(#:abstract)
-                  (hasheq 'append 0)
-                  (hasheq 'append #'append-result)
-                  '()
-                  #f
-                  #'()
-                  '(append veneer)
-                  ;; --------------------
-                  #'Appendable
-                  #'Appendable
-                  #'prop:Appendable
-                  #'prop:Appendable
-                  #'Appendable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'()
+                     '#(#&append)
+                     #'#(#:abstract)
+                     (hasheq 'append 0)
+                     (hasheq 'append #'append-result)
+                     '()
+                     #f
+                     #'()
+                     '(append veneer)
+                     ;; --------------------
+                     #'Appendable
+                     #'Appendable
+                     #'prop:Appendable
+                     #'prop:Appendable
+                     #'Appendable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax append-result
   (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))

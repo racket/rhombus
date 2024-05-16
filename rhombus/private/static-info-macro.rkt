@@ -18,7 +18,7 @@
                      "call-result-key.rkt"
                      (for-syntax racket/base)
                      (only-in (submod "list.rkt" for-listable)
-                              treelist-static-infos)
+                              get-treelist-static-infos)
                      "context-stx.rkt")
          "space-provide.rkt"
          "definition.rkt"
@@ -180,17 +180,17 @@
 
 (begin-for-syntax
   (define/arity (statinfo_meta.pack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (pack who stx))
 
   (define/arity (statinfo_meta.unpack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (unpack-static-infos who stx))
 
   (define/arity (statinfo_meta.pack_group stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (datum->syntax
      #f
@@ -198,13 +198,13 @@
           (cdr (syntax->list (unpack-group stx who #f))))))
 
   (define/arity (statinfo_meta.unpack_group stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     #`(group . #,(map (lambda (stx) (unpack-static-infos who stx))
                       (syntax->list stx))))
 
   (define/arity (statinfo_meta.pack_call_result infos)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (unless (and (treelist? infos)
                  (for/and ([r (in-treelist infos)])
                    (and (treelist? r)
@@ -227,7 +227,7 @@
                 ,(pack-static-infos who (treelist-ref i 1))))))]))
 
   (define/arity (statinfo_meta.unpack_call_result stx)
-    #:static-infos ((#%call-result #,treelist-static-infos))
+    #:static-infos ((#%call-result #,(get-treelist-static-infos)))
     (check-syntax who stx)
     (syntax-parse stx
       [(#:at_arities rs)
@@ -244,7 +244,7 @@
        (treelist (treelist -1 (unpack-static-infos who stx)))]))
 
   (define/arity (statinfo_meta.wrap form info)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who form)
     (check-syntax who info)
     (define e
@@ -263,11 +263,11 @@
     (unpack-static-infos who (or si #'())))
 
   (define/arity (statinfo_meta.union . statinfos)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (static-infos-merge who statinfos static-infos-union))
 
   (define/arity (statinfo_meta.intersect . statinfos)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (static-infos-merge who statinfos static-infos-intersect))
 
   (define/arity (statinfo_meta.is_static ctx-stx)
@@ -278,7 +278,7 @@
   (begin-for-syntax
     (define key (quote-syntax id))
     (define-static-info-syntax key
-      #:defined syntax-static-infos)))
+      #:defined get-syntax-static-infos)))
 
 (define-key call_result_key #%call-result)
 (define-key index_result_key #%index-result)

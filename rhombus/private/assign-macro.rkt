@@ -103,9 +103,9 @@
 
 (begin-for-syntax
   (define/arity (assign_meta.unpack_left stx)
-    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
-                                               #,syntax-static-infos
-                                               #,syntax-static-infos)))))
+    #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos))))))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed left-hand-side)
@@ -115,7 +115,7 @@
                #'rhs-name)]))
 
   (define/arity (assign_meta.pack_assignment stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     #`(parsed #:rhombus/assign
               (assignment

@@ -46,7 +46,7 @@
 
 (define/arity #:name Pair (Pair.cons a d)
   #:inline
-  #:static-infos ((#%call-result #,pair-static-infos))
+  #:static-infos ((#%call-result #,(get-pair-static-infos)))
   (cons a d))
 
 (define/arity (Pair.first p)
@@ -61,16 +61,18 @@
 
 (define-binding-syntax Pair.cons
   (binding-transformer
-   (make-composite-binding-transformer "Pair"
-                                       #'pair?
-                                       #:static-infos pair-static-infos
-                                       (list #'car #'cdr)
-                                       (list #'() #'())
-                                       #:accessor->info? #t)))
+   (lambda (tail)
+     (composite-binding-transformer tail
+                                    "Pair"
+                                    #'pair?
+                                    #:static-infos (get-pair-static-infos)
+                                    (list #'car #'cdr)
+                                    (list #'() #'())
+                                    #:accessor->info? #t))))
 
 (define-annotation-constructor (Pair of)
   ()
-  #'pair? pair-static-infos
+  #'pair? #,(get-pair-static-infos)
   2
   #f
   (lambda (arg-id predicate-stxs)

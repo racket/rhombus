@@ -14,9 +14,9 @@
                      Keyword))
 
 (module+ for-static-info
-  (provide (for-syntax keyword-static-infos)))
+  (provide (for-syntax get-keyword-static-infos)))
 
-(define-for-syntax keyword-static-infos
+(define-for-syntax (get-keyword-static-infos)
   #'((#%compare ((< keyword<?)
                  (<= keyword<=?)
                  (= keyword=?)
@@ -25,7 +25,7 @@
                  (> keyword>?)))))
 
 (define-annotation-syntax Keyword
-  (identifier-annotation #'keyword? keyword-static-infos))
+  (identifier-annotation keyword? #,(get-keyword-static-infos)))
 
 (define-name-root Keyword
   #:fields
@@ -33,11 +33,11 @@
    from_symbol))
 
 (define/arity (from_string s)
-  #:static-infos ((#%call-result #,keyword-static-infos))
+  #:static-infos ((#%call-result #,(get-keyword-static-infos)))
   (string->keyword s))
 
 (define/arity (from_symbol s)
-  #:static-infos ((#%call-result #,keyword-static-infos))
+  #:static-infos ((#%call-result #,(get-keyword-static-infos)))
   (string->keyword (symbol->immutable-string s)))
 
 (define (check-keywords who a b)

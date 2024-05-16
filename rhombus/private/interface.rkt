@@ -335,8 +335,8 @@
                        [dot-providers (add-super-dot-providers #'internal-name-instance #f supers)])
            (list
             #`(define-annotation-syntax internal-name
-                (identifier-annotation (quote-syntax internal-name?)
-                                       (quote-syntax ((#%dot-provider dot-providers)))))))
+                (identifier-annotation internal-name?
+                                       ((#%dot-provider dot-providers))))))
          null)
      (list
       (build-syntax-definition/maybe-extension
@@ -347,9 +347,9 @@
                                    #'make-annotation-prefix-operator
                                    "interface")
            (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
-             #`(identifier-annotation (quote-syntax name?)
-                                      (quasisyntax ((#%dot-provider name-instance)
-                                                    . indirect-static-infos))))))))))
+             #`(identifier-annotation name?
+                                      ((#%dot-provider name-instance)
+                                       . indirect-static-infos)))))))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
@@ -372,60 +372,64 @@
            (list
             #`(define-syntax #,(in-class-desc-space internal-name)
                 ;; could improve by avoiding duplicate information
-                (interface-internal-desc (quote-syntax #,parent-names)
-                                         '#,method-shapes
-                                         (quote-syntax #,method-vtable)
-                                         '#,method-map
-                                         #,method-result-expr
-                                         #f ; dots not used directly
-                                         #f
-                                         (#,(quote-syntax quasisyntax) instance-static-infos)
-                                         '()
-                                         ;; --------------------
-                                         (quote-syntax name)
-                                         #f
-                                         (quote-syntax prop:internal-name)
-                                         (quote-syntax prop:internal-name)
-                                         (quote-syntax internal-name-ref)
-                                         #,custom-annotation?
-                                         #f
-                                         null
-                                         (quote #,(build-quoted-private-method-list 'method method-private))
-                                         (quote #,(build-quoted-private-method-list 'property method-private)))))
+                (interface-desc-maker
+                 (lambda ()
+                   (interface-internal-desc (quote-syntax #,parent-names)
+                                            '#,method-shapes
+                                            (quote-syntax #,method-vtable)
+                                            '#,method-map
+                                            #,method-result-expr
+                                            #f ; dots not used directly
+                                            #f
+                                            (#,(quote-syntax quasisyntax) instance-static-infos)
+                                            '()
+                                            ;; --------------------
+                                            (quote-syntax name)
+                                            #f
+                                            (quote-syntax prop:internal-name)
+                                            (quote-syntax prop:internal-name)
+                                            (quote-syntax internal-name-ref)
+                                            #,custom-annotation?
+                                            #f
+                                            null
+                                            (quote #,(build-quoted-private-method-list 'method method-private))
+                                            (quote #,(build-quoted-private-method-list 'property method-private)))))))
            null)
        (list
         (build-syntax-definition/maybe-extension
          'rhombus/class #'name #'name-extends
-         #`(interface-desc (quote-syntax #,parent-names)
-                           '#,method-shapes
-                           (quote-syntax #,method-vtable)
-                           '#,method-map
-                           #,method-result-expr
-                           '#,(map car dots)
-                           #,(and (syntax-e #'dot-provider-name)
-                                  #'(quote-syntax dot-provider-name))
-                           (#,(quote-syntax quasisyntax) instance-static-infos)
-                           '#,(append
-                               (if callable? '(call) '())
-                               (if indexable? '(get) '())
-                               (if setable? '(set) '())
-                               (if appendable? '(append) '())
-                               (if comparable? '(compare) '()))
-                           ;; ----------------------------------------
-                           (quote-syntax name)
-                           #,(and internal-name
-                                  #`(quote-syntax #,internal-name))
-                           (quote-syntax prop:name)
-                           #,(and (syntax-e #'prop:internal-name)
-                                  #'(quote-syntax prop:internal-name))
-                           (quote-syntax name-ref-or-error)
-                           #,custom-annotation?
-                           #,(let ([id (if (syntax-e #'call-statinfo-indirect)
-                                           #'call-statinfo-indirect
-                                           #'super-call-statinfo-indirect)])
-                               (if (and id (syntax-e id))
-                                   #`(quote-syntax #,id)
-                                   #f))
-                           (list #,@(for/list ([pp (in-list primitive-properties)])
-                                      #`(cons (quote-syntax #,(car pp))
-                                              (quote-syntax #,(cdr pp))))))))))))
+         #`(interface-desc-maker
+            (lambda ()
+              (interface-desc (quote-syntax #,parent-names)
+                              '#,method-shapes
+                              (quote-syntax #,method-vtable)
+                              '#,method-map
+                              #,method-result-expr
+                              '#,(map car dots)
+                              #,(and (syntax-e #'dot-provider-name)
+                                     #'(quote-syntax dot-provider-name))
+                              (#,(quote-syntax quasisyntax) instance-static-infos)
+                              '#,(append
+                                  (if callable? '(call) '())
+                                  (if indexable? '(get) '())
+                                  (if setable? '(set) '())
+                                  (if appendable? '(append) '())
+                                  (if comparable? '(compare) '()))
+                              ;; ----------------------------------------
+                              (quote-syntax name)
+                              #,(and internal-name
+                                     #`(quote-syntax #,internal-name))
+                              (quote-syntax prop:name)
+                              #,(and (syntax-e #'prop:internal-name)
+                                     #'(quote-syntax prop:internal-name))
+                              (quote-syntax name-ref-or-error)
+                              #,custom-annotation?
+                              #,(let ([id (if (syntax-e #'call-statinfo-indirect)
+                                              #'call-statinfo-indirect
+                                              #'super-call-statinfo-indirect)])
+                                  (if (and id (syntax-e id))
+                                      #`(quote-syntax #,id)
+                                      #f))
+                              (list #,@(for/list ([pp (in-list primitive-properties)])
+                                         #`(cons (quote-syntax #,(car pp))
+                                                 (quote-syntax #,(cdr pp))))))))))))))

@@ -22,7 +22,7 @@
   (provide class-expand-data))
 
 (module+ for-static-info
-  (provide (for-syntax class-data-static-infos)))
+  (provide (for-syntax get-class-data-static-infos)))
 
 (define-name-root class_meta
   #:fields
@@ -43,10 +43,10 @@
   ([lookup class_meta.Info.lookup]))
 
 (define-annotation-syntax Info
-  (identifier-annotation #'class-data? class-data-static-infos))
+  (identifier-annotation class-data? #,(get-class-data-static-infos)))
 
 (define/arity (class_meta.describe id)
-  #:static-infos ((#%call-result #,class-data-static-infos))
+  #:static-infos ((#%call-result #,(get-class-data-static-infos)))
   (describe who id))
 
 (struct class-expand-data class-data (stx accum-stx))

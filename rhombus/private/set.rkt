@@ -76,7 +76,7 @@
            mutable-set-method-table))
 
 (module+ for-info
-  (provide (for-syntax set-static-infos)
+  (provide (for-syntax get-set-static-infos)
            Set-build))
 
 (module+ for-build
@@ -155,14 +155,14 @@
   (lambda (s)
     (Set.to_sequence s)))
 
-(define-for-syntax any-set-static-infos
+(define-for-syntax (get-any-set-static-infos)
   #'((#%index-get Set.get)
      (#%sequence-constructor Set.to_sequence/optimize)))
 
 (define-primitive-class ReadableSet readable-set
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,any-set-static-infos
+  #:instance-static-info #,(get-any-set-static-infos)
   #:existing
   #:opaque
   #:fields ()
@@ -183,7 +183,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%append Set.append/optimize)
-                          . #,any-set-static-infos)
+                          . #,(get-any-set-static-infos))
   #:existing
   #:opaque
   #:parent #f readable-set
@@ -211,7 +211,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%index-set MutableSet.set)
-                          . #,any-set-static-infos)
+                          . #,(get-any-set-static-infos))
   #:existing
   #:opaque
   #:parent #f readable-set
@@ -229,7 +229,7 @@
 (define-primitive-class WeakMutableSet weak-mutable-set
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,mutable-set-static-infos
+  #:instance-static-info #,(get-mutable-set-static-infos)
   #:existing
   #:opaque
   #:parent #f mutable-set
@@ -262,7 +262,7 @@
     (raise-argument-error* who rhombus-realm "ReadableSet" s)))
 
 (define/method (Set.length s)
-  #:static-infos ((#%call-result #,int-static-infos))
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (check-readable-set who s)
   (hash-count (set-ht s)))
 
@@ -330,11 +330,11 @@
 
 (define empty-set (set #hashalw()))
 (define-static-info-syntax empty-set
-  #:defined set-static-infos)
+  #:defined get-set-static-infos)
 
 (define empty-readable-set empty-set)
 (define-static-info-syntax empty-readable-set
-  #:defined readable-set-static-infos)
+  #:defined get-readable-set-static-infos)
 
 (define-for-syntax (make-empty-set-binding name+hash?-id+static-infos)
   (binding-transformer
@@ -347,10 +347,10 @@
 
 (define-binding-syntax empty-set
   (make-empty-set-binding
-   #`["Set.empty" immutable-hash? #,set-static-infos]))
+   #`["Set.empty" immutable-hash? #,(get-set-static-infos)]))
 (define-binding-syntax empty-readable-set
   (make-empty-set-binding
-   #`["ReadableSet.empty" hash? #,readable-set-static-infos]))
+   #`["ReadableSet.empty" hash? #,(get-readable-set-static-infos)]))
 
 (define-syntax (empty-set-infoer stx)
   (syntax-parse stx
@@ -382,7 +382,7 @@
          (reducer/no-break #'build-set-reduce
                            #'([ht #hashalw()])
                            #'build-set-add
-                           set-static-infos
+                           (get-set-static-infos)
                            #'ht)
          #'tail)]))))
 
@@ -397,7 +397,7 @@
                            (reducer/no-break #'build-set-reduce
                                              #`([ht #,(key-comp-empty-stx mapper)])
                                              #'build-set-add
-                                             set-static-infos
+                                             (get-set-static-infos)
                                              #'ht)
                            #'tail)]))))))
 
@@ -424,7 +424,7 @@
                             #'set-extend*
                             #'set-append
                             #'set-assert
-                            set-static-infos
+                            (get-set-static-infos)
                             #:repetition? repetition?
                             #:list->setmap list->set-id))
              #'tail)]
@@ -501,7 +501,7 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
-                           #`(#,group-tag rest-bind #,set-static-infos
+                           #`(#,group-tag rest-bind #,(get-set-static-infos)
                               (#,group-tag rst ...))
                            #'tail
                            mode)]
@@ -518,20 +518,20 @@
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
     (define mode-desc (syntax-parse mode [(desc . _) (syntax-e #'desc)]))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer (cons mode-desc (map shrubbery-syntax->string keys))
-                                           #'(lambda (v) #t) ; predicate built into set-matcher
-                                           '()
-                                           '()
-                                           #:static-infos set-static-infos
-                                           #:sequence-element-info? #t
-                                           #:rest-accessor
-                                           (and maybe-rest
-                                                (if rest-repetition?
-                                                    #`(lambda (v) (set->list #,rest-tmp))
-                                                    #`(lambda (v) #,rest-tmp)))
-                                           #:rest-repetition? rest-repetition?)
-       #`(form-id (parens) . tail)
-       maybe-rest))
+      (composite-binding-transformer #`(form-id (parens) . tail)
+                                     #:rest-arg maybe-rest
+                                     (cons mode-desc (map shrubbery-syntax->string keys))
+                                     #'(lambda (v) #t) ; predicate built into set-matcher
+                                     '()
+                                     '()
+                                     #:static-infos (get-set-static-infos)
+                                     #:sequence-element-info? #t
+                                     #:rest-accessor
+                                     (and maybe-rest
+                                          (if rest-repetition?
+                                              #`(lambda (v) (set->list #,rest-tmp))
+                                              #`(lambda (v) #,rest-tmp)))
+                                     #:rest-repetition? rest-repetition?))
     (values
      (syntax-parse composite
        [composite::binding-form
@@ -598,7 +598,7 @@
 
 (define-annotation-constructor (Set of)
   ()
-  #'immutable-set? set-static-infos
+  #'immutable-set? #,(get-set-static-infos)
   1
   #f
   set-annotation-make-predicate
@@ -633,7 +633,7 @@
   
 (define-annotation-constructor (Set/again Set.later_of)
   ()
-  #'immutable-set? set-static-infos
+  #'immutable-set? #,(get-set-static-infos)
   1
   #f
   (make-set-later-chaperoner 'Set)
@@ -652,14 +652,14 @@
                          #:datum-literals (op |.| of)
                          [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
                           (parse-annotation-of #'(of-id . tail)
-                                               (key-comp-set?-id mapper) set-static-infos
+                                               (key-comp-set?-id mapper) (get-set-static-infos)
                                                1 #f
                                                set-annotation-make-predicate
                                                set-annotation-make-static-info
                                                #'set-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-set?-id mapper)
-                                                             set-static-infos)
+                                                             (get-set-static-infos))
                                   #'tail)]))))))
 
 (define-syntax (set-build-convert arg-id build-convert-stxs kws data)
@@ -674,7 +674,7 @@
           (lambda () #f)))]))
 
 (define-static-info-syntax Set-build*
-  (#%call-result #,set-static-infos)
+  (#%call-result #,(get-set-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -726,23 +726,23 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,mutable-set-build-id #,@args))
-                           mutable-set-static-infos)))]
+                           (get-mutable-set-static-infos))))]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
                         (#,mutable-set-build-id #,@(if (null? argss) null (car argss))))
-                      mutable-set-static-infos)])
+                      (get-mutable-set-static-infos))])
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use mutable-set-build-id)
                                   (relocate+reraw #'form-id mutable-set-build-id))
                               #'tail)]))
 
-(define-annotation-syntax WeakMutableSet (identifier-annotation #'weak-mutable-set? mutable-set-static-infos))
-(define-annotation-syntax ReadableSet (identifier-annotation #'set? readable-set-static-infos))
+(define-annotation-syntax WeakMutableSet (identifier-annotation weak-mutable-set? #,(get-mutable-set-static-infos)))
+(define-annotation-syntax ReadableSet (identifier-annotation set? #,(get-readable-set-static-infos)))
 
 (define-annotation-constructor (MutableSet MutableSet.now_of)
   ()
-  #'mutable-set? mutable-set-static-infos
+  #'mutable-set? #,(get-mutable-set-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -754,7 +754,7 @@
 
 (define-annotation-constructor (MutableSet/again MutableSet.later_of)
   ()
-  #'mutable-set? mutable-set-static-infos
+  #'mutable-set? #,(get-mutable-set-static-infos)
   1
   #f
   (make-set-later-chaperoner 'MutableSet)
@@ -814,7 +814,7 @@
                        (syntax-parse stx
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-mutable-set?-id mapper)
-                                                             mutable-set-static-infos)
+                                                             (get-mutable-set-static-infos))
                                   #'tail)]))))))
 
 (define-annotation-syntax WeakMutableSet.by
@@ -827,7 +827,7 @@
                        (syntax-parse stx
                          [(_ . tail)
                           (values (annotation-predicate-form (key-comp-weak-mutable-set?-id mapper)
-                                                             mutable-set-static-infos)
+                                                             (get-mutable-set-static-infos))
                                   #'tail)]))))))
 
 (define-syntax MutableSet
@@ -863,7 +863,7 @@
                                           (key-comp-mutable-set-build-id mapper)))))))
 
 (define-static-info-syntax MutableSet-build
-  (#%call-result #,mutable-set-static-infos)
+  (#%call-result #,(get-mutable-set-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -891,7 +891,7 @@
                                           (key-comp-weak-mutable-set-build-id mapper)))))))
 
 (define-static-info-syntax WeakMutableSet-build
-  (#%call-result #,weak-mutable-set-static-infos)
+  (#%call-result #,(get-weak-mutable-set-static-infos))
   (#%function-arity -1)
   (#%indirect-static-info indirect-function-static-info))
 
@@ -915,7 +915,7 @@
 
 ;; for `++`
 (define-static-info-syntax Set.append/optimize
-  (#%call-result #,set-static-infos))
+  (#%call-result #,(get-set-static-infos)))
 
 (define set-extend*
   (case-lambda
@@ -934,12 +934,12 @@
   v)
 
 (define/method (Set.copy s)
-  #:static-infos ((#%call-result #,mutable-set-static-infos))
+  #:static-infos ((#%call-result #,(get-mutable-set-static-infos)))
   (check-readable-set who s)
   (set (hash-copy (set-ht s))))
 
 (define/method (Set.snapshot s)
-  #:static-infos ((#%call-result #,set-static-infos))
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
   (check-readable-set who s)
   (define ht (set-ht s))
   (if (immutable-hash? ht)
@@ -975,7 +975,7 @@
          (set-append/hash ht (set-ht s)))))
 
 (define/method Set.append
-  #:static-infos ((#%call-result #,set-static-infos))
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
     [() empty-set]
     [(s)
@@ -992,7 +992,7 @@
      (set-append-all s1 ss)]))
 
 (define/method Set.union
-  #:static-infos ((#%call-result #,set-static-infos))
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
     [() empty-set]
     [(s)
@@ -1018,7 +1018,7 @@
       (values k #t))))
 
 (define/method Set.intersect
-  #:static-infos ((#%call-result #,set-static-infos))
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
     [() empty-set]
     [(s)
@@ -1037,7 +1037,7 @@
             (set-intersect/hash ht (set-ht s))))]))
 
 (define/method (Set.remove s v)
-  #:static-infos ((#%call-result #,set-static-infos))
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
   (check-set who s)
   (set (hash-remove (set-ht s) v)))
 
@@ -1059,7 +1059,7 @@
   (hash-remove! (set-ht s) v))
 
 (define/method (Set.to_list s [try-sort? #f])
-  #:static-infos ((#%call-result #,treelist-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-set who s)
   (list->treelist (set->list s try-sort?)))
 

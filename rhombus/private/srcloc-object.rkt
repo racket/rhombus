@@ -20,7 +20,7 @@
   (provide srcloc-method-table))
 
 (module+ for-static-info
-  (provide (for-syntax srcloc-static-infos)))
+  (provide (for-syntax get-srcloc-static-infos)))
 
 (define-primitive-class Srcloc srcloc
   #:lift-declaration
@@ -41,5 +41,5 @@
 (define/method (Srcloc.to_report_string v)
   #:inline
   #:primitive (srcloc->string)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (srcloc->string v)))

@@ -21,7 +21,7 @@
                       rhombus/namespace)
                      Evaluator))
 
-(define-annotation-syntax Evaluator (identifier-annotation #'namespace? #'()))
+(define-annotation-syntax Evaluator (identifier-annotation namespace? ()))
 
 (define-name-root Evaluator
   #:fields

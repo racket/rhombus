@@ -199,10 +199,22 @@
   (syntax-parse stx
     [(_ id:identifier #:defined defined:id)
      #`(define-syntax #,(in-static-info-space #'id)
-         (static-info (lambda () defined)))]
+         (static-info defined))]
     [(_ id:identifier rhs ...)
-     #`(define-syntax #,(in-static-info-space #'id)
-         (static-info (lambda () (list (quasisyntax rhs) ...))))]))
+     (with-syntax ([(q-rhs ...)
+                    (for/list ([rhs (in-list (syntax->list #'(rhs ...)))])
+                      ;; recognizes some common patterns to generate
+                      ;; code that's slightly more compact
+                      (syntax-parse rhs
+                        [(us:identifier e)
+                         #:when (free-transformer-identifier=? #'us #'unsyntax)
+                         #'e]
+                        [(key (us:identifier val))
+                         #:when (free-transformer-identifier=? #'us #'unsyntax)
+                         #'(datum->syntax #f (list (quote-syntax key) val))]
+                        [rhs #'(quasisyntax rhs)]))])
+       #`(define-syntax #,(in-static-info-space #'id)
+           (static-info (lambda () (list q-rhs ...)))))]))
 
 (define-syntax (define-static-info-syntaxes stx)
   (syntax-parse stx

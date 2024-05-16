@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      racket/symbol
                      syntax/parse/pre
+                     enforest/syntax-local
                      "srcloc.rkt"
                      "class-parse.rkt")
          "name-root.rkt"
@@ -109,13 +110,13 @@
      #:with parent-method-table (datum->syntax #'parent (string->symbol (format "~a-method-table" (syntax-e #'parent))))
      #:with name-mutator-table (datum->syntax #'name (string->symbol (format "~a-mutator-method-table" (syntax-e #'name))))
      #:with parent-mutator-table (datum->syntax #'parent (string->symbol (format "~a-mutator-method-table" (syntax-e #'parent))))
-     #:with name-field-list (datum->syntax #'name (string->symbol (format "~a-field-list" (syntax-e #'name))))
+     #:with get-name-field-list (datum->syntax #'name (string->symbol (format "get-~a-field-list" (syntax-e #'name))))
      #:with ((parent-Name.field parent-field-static-infos) ...)
      (if (syntax-e #'parent)
-         (syntax-local-value
-          (datum->syntax #'parent (string->symbol (format "~a-field-list" (syntax-e #'parent)))))
+         ((syntax-local-value
+           (datum->syntax #'parent (string->symbol (format "get-~a-field-list" (syntax-e #'parent))))))
          null)
-     #:with name-static-infos (datum->syntax #'name (string->symbol (format "~a-static-infos" (syntax-e #'name))))
+     #:with get-name-static-infos (datum->syntax #'name (string->symbol (format "get-~a-static-infos" (syntax-e #'name))))
      #:with Name-str (datum->syntax #'here (symbol->immutable-string (syntax-e #'Name)))
      #:with name-instance (datum->syntax #'here (string->symbol (format "~a-instance" (syntax-e #'name))))
      #:with field-list #'((parent-Name.field parent-field-static-infos)
@@ -123,7 +124,7 @@
                           (Name.field (~? field-static-infos ()))
                           ...)
      #:do [(define super (and (syntax-e #'Parent)
-                              (syntax-local-value (in-class-desc-space #'Parent))))
+                              (syntax-local-value* (in-class-desc-space #'Parent) class-desc-ref)))
            (define inherited-field-count (if super
                                              (+ (class-desc-inherited-field-count super)
                                                 (length (class-desc-fields super)))
@@ -180,7 +181,7 @@
                   '())
                 (list declaration))
 
-         (define-for-syntax name-static-infos
+         (define-for-syntax (get-name-static-infos)
            #`((#%dot-provider name-instance)
               . instance-static-infos))
 
@@ -192,7 +193,7 @@
                                #'constructor-static-infos])
                   (list #'(define-static-info-syntax name
                             si ...
-                            (#%call-result #,name-static-infos)
+                            (#%call-result #,(get-name-static-infos))
                             (#%function-arity #,arity-mask)
                             (#%indirect-static-info indirect-function-static-info))))
                 '())
@@ -201,7 +202,7 @@
                 (list
                  #'(set-primitive-contract! 'name? Name-str)
                  #'(define-annotation-syntax Name
-                     (identifier-annotation #'name? name-static-infos)))
+                     (identifier-annotation name? #,(get-name-static-infos))))
                 '())
          #,@(if (or transparent? translucent? just-binding?)
                 (list
@@ -213,17 +214,19 @@
                            (values (relocate-id #'head #'name) #'tail)]))))
                  #`(define-binding-syntax Name
                      (binding-transformer
-                      (make-composite-binding-transformer Name-str
-                                                          #'name?
-                                                          (list (quote-syntax parent-Name.field)
-                                                                ...
-                                                                (quote-syntax Name.field)
-                                                                ...)
-                                                          (list (quote-syntax parent-field-static-infos)
-                                                                ...
-                                                                (~? #`field-static-infos #'())
-                                                                ...)
-                                                          #:static-infos name-static-infos))))
+                      (lambda (tail)
+                        (composite-binding-transformer tail
+                                                       Name-str
+                                                       #'name?
+                                                       (list (quote-syntax parent-Name.field)
+                                                             ...
+                                                             (quote-syntax Name.field)
+                                                             ...)
+                                                       (list (quote-syntax parent-field-static-infos)
+                                                             ...
+                                                             (~? #`field-static-infos #'())
+                                                             ...)
+                                                       #:static-infos (get-name-static-infos))))))
                 '())
 
          (define-name-root Name
@@ -232,60 +235,62 @@
                  #'(ns-field ...)
                  #'(ns-field ... [prop prop-proc] ... [method name-method-proc] ...)))
 
-         (define-syntax name-field-list #`field-list)
+         (define-syntax (get-name-field-list) #`field-list)
 
          #,@(if (attribute actual-class)
                 #`((define-class-desc-syntax Name
-                     (class-desc null
-                                 #() ; no methods
-                                 (quote-syntax #()) ; no methods
-                                 '#hasheq() ; empty method map
-                                 '#hasheq() ; empty method results
-                                 null ; no dot syntax
-                                 #f   ; no dot-provider
-                                 #'() ; no additional instance static-infos
-                                 null ; no flags
-                                 ;; ----------------------------------------
-                                 #f ; not final
-                                 (quote-syntax Name)
-                                 #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
-                                 (quote-syntax struct_name)
-                                 (quote-syntax #,(if super
-                                                     (cons #'name-instance
-                                                           (let ([dps (class-desc-instance-dot-providers super)])
-                                                             (if (identifier? dps)
-                                                                 (list dps)
-                                                                 dps)))
-                                                     #'name-instance))
-                                 #f ; `ref-id` would only used by the normal class dot provider
-                                 (list (list 'super-field-name
-                                             (quote-syntax super-name-field)
-                                             #f
-                                             (quote-syntax super-field-static-infos)
-                                             (quote-syntax super-field-constructor))
-                                       ...
-                                       (list 'field
-                                             (quote-syntax Name.field)
-                                             #f
-                                             (~? #`field-static-infos #'())
-                                             (quote-syntax #f))
-                                       ...)
-                                 #f ; no private fields
-                                 #,inherited-field-count
-                                 #f ; constructor-makers
-                                 #f ; not custom constructor
-                                 #f ; not custom binding
-                                 #f ; not custom annotation
-                                 #f ; no functional-update specialization
-                                 #f ; no arguments with defaults
-                                 #f ; not callable
-                                 #f ; not indexable
-                                 #f ; not mutable indexable
-                                 #f ; not appendable
-                                 #f ; not comparable
-                                 #f ; not callable (again)
-                                 #f ; not prefab
-                                 )))
+                     (class-desc-maker
+                      (lambda ()
+                        (class-desc null
+                                    #() ; no methods
+                                    (quote-syntax #()) ; no methods
+                                    '#hasheq() ; empty method map
+                                    '#hasheq() ; empty method results
+                                    null ; no dot syntax
+                                    #f   ; no dot-provider
+                                    #'() ; no additional instance static-infos
+                                    null ; no flags
+                                    ;; ----------------------------------------
+                                    #f ; not final
+                                    (quote-syntax Name)
+                                    #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
+                                    (quote-syntax struct_name)
+                                    (quote-syntax #,(if super
+                                                        (cons #'name-instance
+                                                              (let ([dps (class-desc-instance-dot-providers super)])
+                                                                (if (identifier? dps)
+                                                                    (list dps)
+                                                                    dps)))
+                                                        #'name-instance))
+                                    #f ; `ref-id` would only used by the normal class dot provider
+                                    (list (list 'super-field-name
+                                                (quote-syntax super-name-field)
+                                                #f
+                                                (quote-syntax super-field-static-infos)
+                                                (quote-syntax super-field-constructor))
+                                          ...
+                                          (list 'field
+                                                (quote-syntax Name.field)
+                                                #f
+                                                (~? #`field-static-infos #'())
+                                                (quote-syntax #f))
+                                          ...)
+                                    #f ; no private fields
+                                    #,inherited-field-count
+                                    #f ; constructor-makers
+                                    #f ; not custom constructor
+                                    #f ; not custom binding
+                                    #f ; not custom annotation
+                                    #f ; no functional-update specialization
+                                    #f ; no arguments with defaults
+                                    #f ; not callable
+                                    #f ; not indexable
+                                    #f ; not mutable indexable
+                                    #f ; not appendable
+                                    #f ; not comparable
+                                    #f ; not callable (again)
+                                    #f ; not prefab
+                                    )))))
                 null)
 
          (define-for-syntax name-dot-dispatch

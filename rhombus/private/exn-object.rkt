@@ -100,8 +100,8 @@
 
 (define-exn Syntax exn:fail:syntax
   #:parent Fail exn:fail
-  #:fields ([(exprs) ((#%index-result #,syntax-static-infos)
-                      . #,list-static-infos)])
+  #:fields ([(exprs) ((#%index-result #,(get-syntax-static-infos))
+                      . #,(get-list-static-infos))])
   #:children (Unbound
               MissingModule))
 
@@ -117,8 +117,8 @@
 
 (define-exn Read exn:fail:read
   #:parent Fail exn:fail
-  #:fields ([(srclocs) ((#%index-result #,srcloc-static-infos)
-                        . #,list-static-infos)])
+  #:fields ([(srclocs) ((#%index-result #,(get-srcloc-static-infos))
+                        . #,(get-list-static-infos))])
   #:children (EOF
               NonChar))
 

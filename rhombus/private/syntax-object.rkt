@@ -44,7 +44,7 @@
   (provide syntax-method-table))
 
 (module+ for-quasiquote
-  (provide (for-syntax syntax-static-infos)))
+  (provide (for-syntax get-syntax-static-infos)))
 
 (define-primitive-class Syntax syntax
   #:lift-declaration
@@ -80,21 +80,21 @@
    to_source_string
    ))
 
-(define-for-syntax treelist-of-syntax-static-infos
-  #`((#%index-result #,syntax-static-infos)
-     . #,treelist-static-infos))
+(define-for-syntax (get-treelist-of-syntax-static-infos)
+  #`((#%index-result #,(get-syntax-static-infos))
+     . #,(get-treelist-static-infos)))
 
 (define-annotation-syntax Syntax
-  (identifier-annotation #'syntax? syntax-static-infos))
+  (identifier-annotation syntax? #,(get-syntax-static-infos)))
 
 (define-annotation-syntax Identifier
-  (identifier-annotation #'is-identifier? syntax-static-infos))
+  (identifier-annotation is-identifier? #,(get-syntax-static-infos)))
 (define (is-identifier? s)
   (and (syntax? s)
        (identifier? (unpack-term s #f #f))))
 
 (define-annotation-syntax Operator
-  (identifier-annotation #'is-operator? syntax-static-infos))
+  (identifier-annotation is-operator? #,(get-syntax-static-infos)))
 (define (is-operator? s)
   (and (syntax? s)
        (let ([t (unpack-term s #f #f)])
@@ -104,7 +104,7 @@
            [_ #f]))))
 
 (define-annotation-syntax Name
-  (identifier-annotation #'syntax-name? syntax-static-infos))
+  (identifier-annotation syntax-name? #,(get-syntax-static-infos)))
 (define (syntax-name? s)
   (and (syntax? s)
        (let ([t (unpack-term s #f #f)])
@@ -122,7 +122,7 @@
                           [_ #f]))))))))
 
 (define-annotation-syntax IdentifierName
-  (identifier-annotation #'syntax-identifier-name? syntax-static-infos))
+  (identifier-annotation syntax-identifier-name? #,(get-syntax-static-infos)))
 (define (syntax-identifier-name? s)
   (and (syntax? s)
        (let ([t (unpack-term s #f #f)])
@@ -136,28 +136,28 @@
                            [_ #f]))))))))
 
 (define-annotation-syntax Term
-  (identifier-annotation #'syntax-term? syntax-static-infos))
+  (identifier-annotation syntax-term? #,(get-syntax-static-infos)))
 (define (syntax-term? s)
   (and (syntax? s)
        (unpack-term s #f #f)
        #t))
 
 (define-annotation-syntax Group
-  (identifier-annotation #'syntax-group? syntax-static-infos))
+  (identifier-annotation syntax-group? #,(get-syntax-static-infos)))
 (define (syntax-group? s)
   (and (syntax? s)
        (unpack-group s #f #f)
        #t))
 
 (define-annotation-syntax TermSequence
-  (identifier-annotation #'syntax-sequence? syntax-static-infos))
+  (identifier-annotation syntax-sequence? #,(get-syntax-static-infos)))
 (define (syntax-sequence? s)
   (and (syntax? s)
        (unpack-group-or-empty s #f #f)
        #t))
 
 (define-annotation-syntax Block
-  (identifier-annotation #'syntax-block? syntax-static-infos))
+  (identifier-annotation syntax-block? #,(get-syntax-static-infos)))
 (define (syntax-block? s)
   (and (syntax? s)
        (syntax-parse (unpack-term s #f #f)
@@ -312,7 +312,7 @@
   (datum->syntax ctx-stx-t (if group? (group v) (loop v pre-alts? tail?))))
 
 (define/arity (Syntax.make v [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (do-make who v ctx-stx #t #t #f))
 
 (define (check-symbol who v)
@@ -320,7 +320,7 @@
     (raise-argument-error* who rhombus-realm "Symbol" v)))
 
 (define/arity (Syntax.make_op v [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-symbol who v)
   (do-make who (list 'op v) ctx-stx #t #t #f))
 
@@ -331,7 +331,7 @@
   l)
 
 (define/arity (Syntax.make_group v-in [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define v (to-nonempty-list who v-in))
   (define terms (let loop ([es v])
                   (cond
@@ -346,7 +346,7 @@
   (datum->syntax #f (cons group-tag terms)))
 
 (define/arity (Syntax.make_sequence v [ctx-stx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (pack-multi (for/list ([e (in-list (to-list who v))])
                 (do-make who e ctx-stx #t #t #t))))
 
@@ -355,7 +355,7 @@
     (raise-argument-error* who rhombus-realm "ReadableString" s)))
 
 (define/arity (Syntax.make_id str [ctx #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-readable-string who str)
   (define istr (string->immutable-string str))
   (syntax-raw-property (datum->syntax (extract-ctx who ctx)
@@ -363,7 +363,7 @@
                        istr))
 
 (define/arity (Syntax.make_temp_id [v #false] #:keep_name [keep-name? #f])
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define id
     (cond
       [keep-name?
@@ -412,12 +412,12 @@
                              "syntax object" v)]))
 
 (define/method (Syntax.unwrap_group v)
-  #:static-infos ((#%call-result #,treelist-of-syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (check-syntax who v)
   (list->treelist (syntax->list (unpack-tail v who #f))))
 
 (define/method (Syntax.unwrap_sequence v)
-  #:static-infos ((#%call-result #,treelist-of-syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (check-syntax who v)
   (list->treelist (syntax->list (unpack-multi-tail v who #f))))
 
@@ -445,12 +445,12 @@
   (normalize (syntax->datum v)))
 
 (define/method (Syntax.strip_scopes v)
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-syntax who v)
   (strip-context v))
 
 (define/method (Syntax.replace_scopes v ctx)
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-syntax who v)
   (replace-context (extract-ctx who ctx #:false-ok? #f) v))
 
@@ -459,7 +459,7 @@
     (raise-argument-error* who rhombus-realm "Syntax || Srcloc || False" ctx)))
 
 (define/method (Syntax.relocate stx ctx-stx)
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-syntax who stx)
   (check-valid-srcloc who ctx-stx)
   (let ([ctx-stx (and (syntax? ctx-stx)
@@ -519,7 +519,7 @@
 
 ;; also reraws:
 (define/method (Syntax.relocate_span stx-in ctx-stxes-in)
-  #:static-infos ((#%call-result #,syntax-static-infos))
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define stx (unpack-term/maybe stx-in))
   (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
   (define ctx-stxes (to-list-of-stx who ctx-stxes-in))
@@ -551,12 +551,12 @@
            stx))))))
 
 (define/method (Syntax.to_source_string stx)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (check-syntax who stx)
   (string->immutable-string (shrubbery-syntax->string stx)))
 
 (define/method (Syntax.srcloc stx)
-  #:static-infos ((#%call-result #,srcloc-static-infos))
+  #:static-infos ((#%call-result #,(get-srcloc-static-infos)))
   (check-syntax who stx)
   (syntax-srcloc (maybe-respan stx)))
 
@@ -564,7 +564,7 @@
   #:static-infos ((#%call-result
                    (#:at_arities
                     ((8 ())
-                     (16 #,syntax-static-infos)))))
+                     (16 #,(get-syntax-static-infos))))))
   (case-lambda
     [(stx prop)
      (syntax-property (extract-ctx who stx #:false-ok? #f) prop)]

@@ -13,8 +13,8 @@
          literal-bind-nothing)
 
 (module+ for-info
-  (provide (for-syntax (rename-out [string-static-infos indirect-string-static-infos]
-                                   [bytes-static-infos indirect-bytes-static-infos])
+  (provide (for-syntax (rename-out [get-string-static-infos indirect-get-string-static-infos]
+                                   [get-bytes-static-infos indirect-get-bytes-static-infos])
                        install-literal-static-infos!
                        literal-static-infos)))
 
@@ -28,12 +28,12 @@
                              (string-append " || " (literal->string datum)))))
                    #'literal
                    ;; assumption: literal static infos are disjoint constants
-                   (or (let ([si (literal-static-infos #'datum0)])
-                         (and si
-                              (for/and ([datum (in-list (syntax->list #'(datum ...)))])
-                                (eq? (literal-static-infos datum) si))
-                              (static-infos-union si #'up-static-infos)))
-                       #'up-static-infos)
+                   (static-infos-union
+                    (or (for/fold ([si (literal-static-infos #'datum0)])
+                                  ([datum (in-list (syntax->list #'(datum ...)))])
+                          (and si (static-infos-intersect si (literal-static-infos datum))))
+                        #'())
+                    #'up-static-infos)
                    #'()
                    #'literal-matcher
                    #'literal-commit-nothing
@@ -66,23 +66,23 @@
     [(_ arg-id datums)
      #'(begin)]))
 
-(define-for-syntax string-static-infos #f)
-(define-for-syntax bytes-static-infos #f)
-(define-for-syntax char-static-infos #f)
-(define-for-syntax (install-literal-static-infos! kind static-infos)
+(define-for-syntax get-string-static-infos #f)
+(define-for-syntax get-bytes-static-infos #f)
+(define-for-syntax get-char-static-infos #f)
+(define-for-syntax (install-literal-static-infos! kind get-static-infos)
   (case kind
-    [(string) (set! string-static-infos static-infos)]
-    [(bytes) (set! bytes-static-infos static-infos)]
-    [(char) (set! char-static-infos static-infos)]
+    [(string) (set! get-string-static-infos get-static-infos)]
+    [(bytes) (set! get-bytes-static-infos get-static-infos)]
+    [(char) (set! get-char-static-infos get-static-infos)]
     [else (error "unrecognized kind" kind)]))
 
 (define-for-syntax (literal-static-infos d-stx)
   (define d (syntax-e d-stx))
-  (or (and (string? d) string-static-infos)
-      (and (bytes? d) bytes-static-infos)
-      (and (exact-integer? d) int-static-infos)
-      (and (flonum? d) flonum-static-infos)
-      (and (rational? d) rational-static-infos)
-      (and (real? d) real-static-infos)
-      (and (number? d) number-static-infos)
-      (and (char? d) char-static-infos)))
+  (or (and (string? d) (get-string-static-infos))
+      (and (bytes? d) (get-bytes-static-infos))
+      (and (exact-integer? d) (get-int-static-infos))
+      (and (flonum? d) (get-flonum-static-infos))
+      (and (rational? d) (get-rational-static-infos))
+      (and (real? d) (get-real-static-infos))
+      (and (number? d) (get-number-static-infos))
+      (and (char? d) (get-char-static-infos))))

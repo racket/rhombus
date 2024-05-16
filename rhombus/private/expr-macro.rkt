@@ -118,31 +118,31 @@
 
 (begin-for-syntax
   (define/arity (expr_meta.pack_s_exp orig-s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     #`(parsed
        #:rhombus/expr
        #,(pack-s-exp who orig-s)))
 
   (define/arity (expr_meta.pack_expr s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (unpack-group s who #f))
     (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g))))
 
   (define/arity (expr_meta.pack_meta_expr s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (unpack-group s who #f))
     (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g))))
 
   (define/arity (expr_meta.pack_and_meta_expr s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (unpack-group s who #f))
     (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
 
   (define/arity (expr_meta.parse_more s)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (syntax-parse (unpack-group s who #f)
       [e::expression
@@ -150,8 +150,8 @@
        (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))
 
   (define/arity (expr_meta.parse_all s)
-    #:static-infos ((#%call-result ((#%values (#,syntax-static-infos
-                                               #,syntax-static-infos)))))
+    #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
+                                               #,(get-syntax-static-infos))))))
     (check-syntax who s)
     (syntax-parse (unpack-group s who #f)
       [e::expression

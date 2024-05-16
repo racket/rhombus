@@ -49,7 +49,7 @@
 
 (define/arity (Box v)
   #:inline
-  #:static-infos ((#%call-result #,box-static-infos))
+  #:static-infos ((#%call-result #,(get-box-static-infos)))
   (box v))
 
 (define/arity Box.value
@@ -61,15 +61,17 @@
 
 (define-binding-syntax Box
   (binding-transformer
-   (make-composite-binding-transformer "Box"
-                                       #'box?
-                                       #:static-infos box-static-infos
-                                       (list #'unbox)
-                                       (list #'()))))
+   (lambda (stx)
+     (composite-binding-transformer stx
+                                    "Box"
+                                    #'box?
+                                    #:static-infos (get-box-static-infos)
+                                    (list #'unbox)
+                                    (list #'())))))
 
 (define-annotation-constructor (Box now_of)
   ()
-  #'box? box-static-infos
+  #'box? #,(get-box-static-infos)
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -81,7 +83,7 @@
 
 (define-annotation-constructor (Box/again later_of)
   ()
-  #'box? box-static-infos
+  #'box? #,(get-box-static-infos)
   1
   #f
   (lambda (predicate-stxes annot-strs)
@@ -117,5 +119,5 @@
 (define (raise-reboxer-error what v annot-str)
   (raise-binding-failure 'Box (string-append what " value") v annot-str))
 
-(define-annotation-syntax MutableBox (identifier-annotation #'mutable-box? box-static-infos))
-(define-annotation-syntax ImmutableBox (identifier-annotation #'immutable-box? box-static-infos))
+(define-annotation-syntax MutableBox (identifier-annotation mutable-box? #,(get-box-static-infos)))
+(define-annotation-syntax ImmutableBox (identifier-annotation immutable-box? #,(get-box-static-infos)))

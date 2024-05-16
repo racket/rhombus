@@ -36,7 +36,7 @@
 (define-identifier-syntax-definition-transformer macro
   rhombus/entry_point
   #:extra ([#:mode (quote-syntax ()) value]
-           [#:adjustment entry-point-adjustment-static-infos value])
+           [#:adjustment (get-entry-point-adjustment-static-infos) value])
   #'make-entry-point-transformer)
 
 (begin-for-syntax
@@ -74,7 +74,7 @@
 
 (begin-for-syntax
   (define/arity (entry_point_meta.pack stx)
-    #:static-infos ((#%call-result #,syntax-static-infos))
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     #`(parsed #:rhombus/entry_point
               (rhombus-expression #,(unpack-group stx who #f))))

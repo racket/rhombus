@@ -8,6 +8,7 @@
 
          (struct-out objects-desc)
          (struct-out class-desc)
+         (rename-out [class-desc-maker/cache class-desc-maker])
          class-desc-ref
 
          (struct-out class-internal-desc)
@@ -84,7 +85,18 @@
    indirect-call-method-id ; #f or identifier for `call`
    prefab-guard-id))
 
-(define (class-desc-ref v) (and (class-desc? v) v))
+(struct class-desc-maker (proc))
+(define (class-desc-maker/cache proc)
+  (let ([desc #f])
+    (class-desc-maker
+     (lambda ()
+       (or desc (begin
+                  (set! desc (proc))
+                  desc))))))
+
+(define (class-desc-ref v) (or (and (class-desc? v) v)
+                               (and (class-desc-maker? v)
+                                    ((class-desc-maker-proc v)))))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
                              private-methods      ; (list symbol ...)

@@ -114,13 +114,13 @@
          #`((maybe-skip
              #,pack-id
              (define/arity (#,pack-id stx)
-               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) syntax-static-infos)))
+               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) (get-syntax-static-infos))))
                #,(with-syntax ([parsed-tag-kw parsed-tag])
                    #`#`(parsed parsed-tag-kw #,(unpack-term stx '#,pack-id #f)))))
             (maybe-skip
              #,unpack-id
              (define/arity (#,unpack-id stx [fail-k #f])
-               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) syntax-static-infos)))
+               #:static-infos ((#%call-result (#,(quote-syntax unsyntax) (get-syntax-static-infos))))
                (unpack-parsed '#,parsed-tag stx fail-k)))))
        (cond
          [(syntax-e #'enforest?)
@@ -328,7 +328,7 @@
     [(_ _ def) #'def]))
 
 (define-annotation-syntax SpaceMeta
-  (identifier-annotation #'space-name? #'()))
+  (identifier-annotation space-name? ()))
 
 (define (unpack-parsed tag stx [fail-k #f])
   (syntax-parse (unpack-term stx #f #f)

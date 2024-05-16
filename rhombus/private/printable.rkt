@@ -37,24 +37,26 @@
   (print-description-unwrap #f pd))
 
 (define-class-desc-syntax Printable
-  (interface-desc #'()
-                  '#(#&describe)
-                  #'#(#:abstract)
-                  (hasheq 'describe 0)
-                  (hasheq 'describe #'describe-result)
-                  '()
-                  #f
-                  #'()
-                  '()
-                  ;; --------------------
-                  #'Printable
-                  #'Printable
-                  #'prop:Printable
-                  #'prop:Printable
-                  #'Printable-ref
-                  #t
-                  #f
-                  null))
+  (interface-desc-maker
+   (lambda ()
+     (interface-desc #'()
+                     '#(#&describe)
+                     #'#(#:abstract)
+                     (hasheq 'describe 0)
+                     (hasheq 'describe #'describe-result)
+                     '()
+                     #f
+                     #'()
+                     '()
+                     ;; --------------------
+                     #'Printable
+                     #'Printable
+                     #'prop:Printable
+                     #'prop:Printable
+                     #'Printable-ref
+                     #t
+                     #f
+                     null))))
 
 (define-syntax describe-result
   (method-result #'print-description? #t 1 "PrintDesc" #'() 8))
@@ -81,7 +83,7 @@
    [special PrintDesc.special]))
 
 (define-annotation-syntax PrintDesc
-  (identifier-annotation #'print-description? #'()))
+  (identifier-annotation print-description? ()))
 
 (define (print-description? pd)
   (or (PrintDesc? pd)

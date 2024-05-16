@@ -51,8 +51,8 @@
               (quote-syntax name?)
               #,(with-syntax ([dot-providers dot-providers-stx]
                               [indirect-static-infos indirect-static-infos-stx])
-                  #`(quasisyntax ((#%dot-provider dot-providers)
-                                  . indirect-static-infos)))
+                  #`((#%dot-provider dot-providers)
+                     . indirect-static-infos))
               (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
               (super-field-keyword ... field-keyword ...)
               (make-class-instance-predicate accessors)

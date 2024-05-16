@@ -161,13 +161,13 @@
                        (treelist-ref lst i))))]))]))
 
 (define-map map for/treelist
-  #:static-infos ((#%call-result #,treelist-static-infos)))
+  #:static-infos ((#%call-result #,(get-treelist-static-infos))))
 (define-map for_each for)
 
 (define-for-syntax (wrap-function-static-info expr)
-  (wrap-static-info* expr function-static-infos))
+  (wrap-static-info* expr (get-function-static-infos)))
 
-(define-annotation-syntax Function (identifier-annotation #'procedure? function-static-infos))
+(define-annotation-syntax Function (identifier-annotation procedure? #,(get-function-static-infos)))
 
 (define-annotation-syntax of_arity
   (annotation-prefix-operator
@@ -217,7 +217,7 @@
                                 (procedure-arity-includes? v n kw-ok?)
                                 ...
                                 kw-check)))
-                     #`(function-arity-static ... . #,function-static-infos))
+                     #`(function-arity-static ... . #,(get-function-static-infos)))
                     #'tail)))]))))
 
 (define (check-nonneg-int who v)
@@ -310,7 +310,7 @@
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.static-infos ...)) function-static-infos arity
+          the-name (syntax->list #'(ret.static-infos ...)) (get-function-static-infos) arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
@@ -341,7 +341,7 @@
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
-          the-name (list #'main-ret.static-infos) function-static-infos arity
+          the-name (list #'main-ret.static-infos) (get-function-static-infos) arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; single-alterative case
@@ -364,7 +364,7 @@
                            #'rhs
                            stx))
          (maybe-add-function-result-definition
-          #'name.name (list #'ret.static-infos) function-static-infos arity
+          #'name.name (list #'ret.static-infos) (get-function-static-infos) arity
           (build-definitions/maybe-extension #f #'name.name #'name.extends
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
@@ -461,4 +461,4 @@
      pass)))
 
 (begin-for-syntax
-  (install-function-static-infos! function-static-infos))
+  (install-function-static-infos! get-function-static-infos))

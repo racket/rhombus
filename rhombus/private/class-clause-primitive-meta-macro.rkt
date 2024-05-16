@@ -78,7 +78,7 @@
                                          (syntax->list #'all-ids)
                                          (syntax->list #'extra-argument-binds)
                                          #'values
-                                         #`(syntax-static-infos #'() syntax-static-infos)
+                                         #`((get-syntax-static-infos) #'() (get-syntax-static-infos))
                                          '(value value pattern)
                                          #:else #'#f
                                          #:cut? #t)])))

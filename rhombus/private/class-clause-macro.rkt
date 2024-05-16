@@ -26,7 +26,7 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/class_clause
-  #:extra ([#:info class-data-static-infos value])
+  #:extra ([#:info (get-class-data-static-infos) value])
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro

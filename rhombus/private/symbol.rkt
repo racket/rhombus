@@ -13,9 +13,9 @@
                      Symbol))
 
 (module+ for-static-info
-  (provide (for-syntax symbol-static-infos)))
+  (provide (for-syntax get-symbol-static-infos)))
 
-(define-for-syntax symbol-static-infos
+(define-for-syntax (get-symbol-static-infos)
   #'((#%compare ((< symbol<?)
                  (<= symbol<=?)
                  (= symbol=?)
@@ -24,8 +24,7 @@
                  (> symbol>?)))))
 
 (define-annotation-syntax Symbol
-  (identifier-annotation #'symbol?
-                         symbol-static-infos))
+  (identifier-annotation symbol? #,(get-symbol-static-infos)))
 
 (define-name-root Symbol
   #:fields
@@ -35,15 +34,15 @@
    gen))
 
 (define/arity (from_string s)
-  #:static-infos ((#%call-result #,symbol-static-infos))
+  #:static-infos ((#%call-result #,(get-symbol-static-infos)))
   (string->symbol s))
 
 (define/arity (uninterned_from_string s)
-  #:static-infos ((#%call-result #,symbol-static-infos))
+  #:static-infos ((#%call-result #,(get-symbol-static-infos)))
   (string->uninterned-symbol s))
 
 (define/arity (unreadable_from_string s)
-  #:static-infos ((#%call-result #,symbol-static-infos))
+  #:static-infos ((#%call-result #,(get-symbol-static-infos)))
   (string->unreadable-symbol s))
 
 (define/arity gen

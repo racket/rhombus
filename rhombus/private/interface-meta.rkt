@@ -26,7 +26,7 @@
   (provide interface-expand-data))
 
 (module+ for-static-info
-  (provide (for-syntax interface-data-static-infos)))
+  (provide (for-syntax get-interface-data-static-infos)))
 
 (define-name-root interface_meta
   #:fields
@@ -47,10 +47,10 @@
   ([lookup interface_meta.Info.lookup]))
 
 (define-annotation-syntax Info
-  (identifier-annotation #'interface-data? interface-data-static-infos))
+  (identifier-annotation interface-data? #,(get-interface-data-static-infos)))
 
 (define/arity (interface_meta.describe id)
-  #:static-infos ((#%call-result #,interface-data-static-infos))
+  #:static-infos ((#%call-result #,(get-interface-data-static-infos)))
   (describe who id))
 
 (struct interface-expand-data interface-data (stx accum-stx))

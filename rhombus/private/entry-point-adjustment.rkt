@@ -16,7 +16,7 @@
                       rhombus/bind
                       rhombus/annot)
                      entry_point_meta.Adjustment)
-         (for-syntax entry-point-adjustment-static-infos))
+         (for-syntax get-entry-point-adjustment-static-infos))
 
 (module+ for-struct
   (provide (struct-out entry-point-adjustment)
@@ -28,8 +28,8 @@
   #:existing
   #:transparent
   #:fields
-  ([(prefix_arguments prefix-arguments) ((#%index-result #,syntax-static-infos)
-                                         . #,treelist-static-infos)]
+  ([(prefix_arguments prefix-arguments) ((#%index-result #,(get-syntax-static-infos))
+                                         . #,(get-treelist-static-infos))]
    [(wrap_body wrap-body) ((#%function-arity 4))]
    [(is_method method?)])
   #:properties

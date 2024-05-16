@@ -76,7 +76,7 @@
          #:do [(define attr (lookup-attribute stx #'var-id #'attr-id #f))]
          #:when attr
          (values (wrap-static-info* (pattern-variable-val-id attr)
-                                    syntax-static-infos)
+                                    (get-syntax-static-infos))
                  #'tail)]
         [_
          (if (eqv? depth 0)
@@ -85,7 +85,7 @@
   (define id-handler
     (lambda (stx)
       (syntax-parse stx
-        [(_ . tail) (values (wrap-static-info* temp-id syntax-static-infos) #'tail)])))
+        [(_ . tail) (values (wrap-static-info* temp-id (get-syntax-static-infos)) #'tail)])))
   (cond
     [no-repetition?
      (if (null? (syntax-e attributes))
@@ -99,7 +99,7 @@
     [else (make-expression+repetition
            name-id
            #`(#,unpack* #'$ #,temp-id #,depth)
-           syntax-static-infos
+           (get-syntax-static-infos)
            #:depth depth
            #:repet-handler (lambda (stx next)
                              (syntax-parse stx
@@ -117,7 +117,7 @@
                                                                  #,var-depth)
                                                               var-depth
                                                               #'0
-                                                              syntax-static-infos
+                                                              (get-syntax-static-infos)
                                                               #f)
                                         #'tail)]
                                [_ (next)]))

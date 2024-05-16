@@ -65,7 +65,7 @@
 (define/arity Port.Output.open_bytes
   #:inline
   #:primitive (open-output-bytes)
-  #:static-infos ((#%call-result #,output-port-static-infos))
+  #:static-infos ((#%call-result #,(get-output-port-static-infos)))
   (case-lambda
     [() (open-output-bytes)]
     [(name) (open-output-bytes name)]))
@@ -73,7 +73,7 @@
 (define/arity Port.Output.open_string
   #:inline
   #:primitive (open-output-string)
-  #:static-infos ((#%call-result #,output-port-static-infos))
+  #:static-infos ((#%call-result #,(get-output-port-static-infos)))
   (case-lambda
     [() (open-output-string)]
     [(name) (open-output-string name)]))
@@ -81,13 +81,13 @@
 (define/method (Port.Output.get_bytes port)
   #:inline
   #:primitive (get-output-bytes)
-  #:static-infos ((#%call-result #,bytes-static-infos))
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (get-output-bytes port))
 
 (define/method (Port.Output.get_string port)
   #:inline
   #:primitive (get-output-string)
-  #:static-infos ((#%call-result #,string-static-infos))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (get-output-string port)))
 
 (define/method (Port.Output.flush [p (current-output-port)])
