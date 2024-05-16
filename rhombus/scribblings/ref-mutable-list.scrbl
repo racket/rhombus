@@ -149,7 +149,9 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.insert(mlst :: MutableList, n :: NonnegInt, elem :: Any) :: Void
+  fun MutableList.insert(mlst :: MutableList,
+                         n :: NonnegInt, elem :: Any)
+    :: Void
 ){
 
  Modifies @rhombus(mlst) to add @rhombus(elem) before the @rhombus(n)th
@@ -218,7 +220,9 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.set(mlst :: MutableList, n :: NonnegInt, v :: Any) :: Void
+  fun MutableList.set(mlst :: MutableList,
+                      n :: NonnegInt, v :: Any)
+    :: Void
 ){
 
  Equivalent to @rhombus(mlst[n] := v) (with the default implicit
@@ -239,7 +243,8 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.delete(mlst :: MutableList, n :: NonnegInt) :: Void
+  fun MutableList.delete(mlst :: MutableList, n :: NonnegInt)
+    :: Void
 ){
 
  Modifies @rhombus(mlst) to delete the @rhombus(n)th
@@ -290,7 +295,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.append(mlst :: MutableList, lst :: List || MutableList) :: Void
+  fun MutableList.append(mlst :: MutableList,
+                         lst :: List || MutableList)
+    :: Void
 ){
 
  Modifies (mslt) to addend the elements of @rhombus(lst) in order.
@@ -307,8 +314,10 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.take(mlst :: MutableList, n :: NonnegInt) :: Void
-  fun MutableList.take_last(mlst :: MutableList, n :: NonnegInt) :: Void
+  fun MutableList.take(mlst :: MutableList, n :: NonnegInt)
+    :: Void
+  fun MutableList.take_last(mlst :: MutableList, n :: NonnegInt)
+    :: Void
 ){
 
  Modifies @rhombus(mlst) to keep only the first @rhombus(n)
@@ -334,8 +343,10 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.drop(mlst :: MutableList, n :: NonnegInt) :: Void
-  fun MutableList.drop_last(mlst :: MutableList, n :: NonnegInt) :: Void
+  fun MutableList.drop(mlst :: MutableList, n :: NonnegInt)
+    :: Void
+  fun MutableList.drop_last(mlst :: MutableList, n :: NonnegInt)
+    :: Void
 ){
 
  Modifies @rhombus(mlst) to remove the first @rhombus(n)
@@ -360,7 +371,9 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.sublist(mlst :: MutableList, n :: NonnegInt, m :: NonnegInt) :: Void
+  fun MutableList.sublist(mlst :: MutableList,
+                          n :: NonnegInt, m :: NonnegInt)
+    :: Void
 ){
 
  Modifies @rhombus(mlst) to keep only elements from index
@@ -397,7 +410,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.find(mlst :: MutableList, pred :: Function.of_arity(1)) :: Any
+  fun MutableList.find(mlst :: MutableList,
+                       pred :: Function.of_arity(1))
+    :: Any
 ){
 
  Returns the first element of @rhombus(mlst) for which @rhombus(pred)
@@ -428,9 +443,11 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.map(mlst :: MutableList, f :: Function.of_arity(1))
+  fun MutableList.map(mlst :: MutableList,
+                      f :: Function.of_arity(1))
     :: Void,
-  fun MutableList.for_each(mlst :: MutableList, f :: Function.of_arity(1))
+  fun MutableList.for_each(mlst :: MutableList,
+                           f :: Function.of_arity(1))
     :: Void,
 ){
 
