@@ -24,8 +24,8 @@
           #:with arg-default arg-default
           #:with arg-rhs (if (syntax-e #'arg-default)
                              #'(if (eq? arg-id unsafe-undefined)
-                                   (let ([arg-info.name-id (rhombus-expression arg-default)])
-                                     arg-info.name-id)
+                                   (let ([arg.name-id (rhombus-expression arg-default)])
+                                     arg.name-id)
                                    arg-id)
                              #'arg-id)
           #`(let ([arg-id arg-rhs])
