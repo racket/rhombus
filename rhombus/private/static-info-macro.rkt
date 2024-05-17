@@ -278,7 +278,7 @@
   (begin-for-syntax
     (define key (quote-syntax id))
     (define-static-info-syntax key
-      #:defined get-syntax-static-infos)))
+      #:getter get-syntax-static-infos)))
 
 (define-key call_result_key #%call-result)
 (define-key index_result_key #%index-result)

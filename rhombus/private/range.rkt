@@ -78,9 +78,9 @@
    gap
    intersect))
 
-(define-for-syntax (get-sequence-range-static-infos/sequence)
-  #`((#%sequence-constructor Range.to_sequence/optimize)
-     (#%sequence-element #,(get-int-static-infos))))
+(define-static-info-getter get-sequence-range-static-infos/sequence
+  (#%sequence-constructor Range.to_sequence/optimize)
+  (#%sequence-element #,(get-int-static-infos)))
 
 (define-primitive-class SequenceRange sequence-range
   #:lift-declaration

@@ -618,10 +618,10 @@
                                                  (check-elements 'MutableList #t cvt lst 'annot-str))))))
 
 (define-static-info-syntax empty-treelist
-  #:defined get-treelist-static-infos)
+  #:getter get-treelist-static-infos)
 
 (define-static-info-syntax null
-  #:defined get-list-static-infos)
+  #:getter get-list-static-infos)
 
 (define-binding-syntax empty-treelist
   (binding-transformer

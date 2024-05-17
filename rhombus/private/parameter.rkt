@@ -20,8 +20,8 @@
                       rhombus/annot)
                      Parameter))
 
-(define-for-syntax (get-parameter-static-infos)
-  #`((#%function-arity 3)))
+(define-static-info-getter get-parameter-static-infos
+  (#%function-arity 3))
 
 (define/arity (Parameter.make v
                               #:guard [guard #f]
@@ -70,4 +70,3 @@
      (if (null? (syntax-e #'static-infos))
          null
          #`((define-static-info-syntax name (#%call-result static-infos)))))))
-

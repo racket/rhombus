@@ -347,7 +347,7 @@
                  #`(let ([#,obj-id (rhombus-expression self)])
                      (unless (#,name?-id #,obj-id) (raise-not-an-instance '#,name #,obj-id))
                      #,(unwrap-static-infos call))
-                 (datum->syntax #f (extract-static-infos call)))
+                 (extract-static-infos call))
                 #'tail)]
        [(head (tag::parens) . _)
         #:when (is-static-context? #'tag)

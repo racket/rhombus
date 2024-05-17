@@ -25,7 +25,7 @@
          (only-in "static-info.rkt"
                   in-static-info-space
                   static-info
-                  make-static-infos)
+                  make-static-info)
          (submod "syntax-object.rkt" for-quasiquote)
          "realm.rkt"
          "wrap-expression.rkt"
@@ -539,4 +539,4 @@
      (list
       #`(define #,extra-bind #,in-extra-id)
       #`(define-syntax #,(in-static-info-space extra-bind)
-          (make-static-infos #,extra-static-infos))))))
+          (make-static-info #,extra-static-infos))))))

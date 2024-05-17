@@ -155,9 +155,9 @@
   (lambda (s)
     (Set.to_sequence s)))
 
-(define-for-syntax (get-any-set-static-infos)
-  #'((#%index-get Set.get)
-     (#%sequence-constructor Set.to_sequence/optimize)))
+(define-static-info-getter get-any-set-static-infos
+  (#%index-get Set.get)
+  (#%sequence-constructor Set.to_sequence/optimize))
 
 (define-primitive-class ReadableSet readable-set
   #:lift-declaration
@@ -330,11 +330,11 @@
 
 (define empty-set (set #hashalw()))
 (define-static-info-syntax empty-set
-  #:defined get-set-static-infos)
+  #:getter get-set-static-infos)
 
 (define empty-readable-set empty-set)
 (define-static-info-syntax empty-readable-set
-  #:defined get-readable-set-static-infos)
+  #:getter get-readable-set-static-infos)
 
 (define-for-syntax (make-empty-set-binding get-name+hash?-id+static-infos)
   (binding-transformer
@@ -632,7 +632,7 @@
                              (lambda (ht) (void))
                              ;; equal-key-proc
                              #f)))))))
-  
+
 (define-annotation-constructor (Set/again Set.later_of)
   ()
   #'immutable-set? #,(get-set-static-infos)

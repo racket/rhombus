@@ -86,7 +86,7 @@
                                stx
                                #'name.name))
          (syntax-parse #'ap.parsed
-           [a::annotation-predicate-form 
+           [a::annotation-predicate-form
             #`((define-syntaxes ()
                  (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
                (#,(delayed-annotation-complete!-id dp) a.predicate))]
@@ -94,7 +94,6 @@
             (raise-syntax-error #f
                                 "supported only for predicate-based annotations"
                                 stx)])]))))
-           
 
 (define-for-syntax (delayed-annotation-complete-compiletime name static-infos)
   (define dp (syntax-local-value* (in-annotation-space name) delayed-annotation-ref))
@@ -109,6 +108,6 @@
   (unless si
     ;; should not happen:
     (raise-syntax-error #f "static info not found" name))
-  ((static-info-get-stxs si) static-infos)
+  ((static-info-get-stxs si) (syntax->list static-infos))
   (set-delayed-annotation-completed?! dp #t)
   (values))

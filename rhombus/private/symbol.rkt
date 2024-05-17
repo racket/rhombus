@@ -6,7 +6,8 @@
          (submod "annotation.rkt" for-class)
          "compare-key.rkt"
          "call-result-key.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -15,13 +16,13 @@
 (module+ for-static-info
   (provide (for-syntax get-symbol-static-infos)))
 
-(define-for-syntax (get-symbol-static-infos)
-  #'((#%compare ((< symbol<?)
-                 (<= symbol<=?)
-                 (= symbol=?)
-                 (!= symbol!=?)
-                 (>= symbol>=?)
-                 (> symbol>?)))))
+(define-static-info-getter get-symbol-static-infos
+  (#%compare ((< symbol<?)
+              (<= symbol<=?)
+              (= symbol=?)
+              (!= symbol!=?)
+              (>= symbol>=?)
+              (> symbol>?))))
 
 (define-annotation-syntax Symbol
   (identifier-annotation symbol? #,(get-symbol-static-infos)))

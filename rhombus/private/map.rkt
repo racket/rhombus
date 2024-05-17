@@ -2,7 +2,6 @@
 (require racket/unsafe/undefined
          (for-syntax racket/base
                      racket/syntax
-                     racket/symbol
                      syntax/parse/pre
                      "srcloc.rkt"
                      "tag.rkt"
@@ -137,9 +136,9 @@
 (module+ for-key-comp-macro
   (provide build-map))
 
-(define-for-syntax (get-any-map-static-infos)
-  #'((#%index-get Map.get)
-     (#%sequence-constructor Map.to_sequence/optimize)))
+(define-static-info-getter get-any-map-static-infos
+  (#%index-get Map.get)
+  (#%sequence-constructor Map.to_sequence/optimize))
 
 (define-primitive-class ReadableMap readable-map
   #:lift-declaration
@@ -302,11 +301,11 @@
 
 (define empty-map #hashalw())
 (define-static-info-syntax empty-map
-  #:defined get-map-static-infos)
+  #:getter get-map-static-infos)
 
 (define empty-readable-map empty-map)
 (define-static-info-syntax empty-readable-map
-  #:defined get-readable-map-static-infos)
+  #:getter get-readable-map-static-infos)
 
 (define-for-syntax (make-empty-map-binding get-name+hash?-id+static-infos)
   (binding-transformer

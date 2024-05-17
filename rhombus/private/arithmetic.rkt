@@ -6,7 +6,8 @@
          "define-operator.rkt"
          "realm.rkt"
          "rhombus-primitive.rkt"
-         "compare-key.rkt")
+         "compare-key.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -48,17 +49,17 @@
 (module+ precedence
   (provide (for-syntax comparison-precedences)))
 
-(define-for-syntax (get-number-static-infos)
+(define-static-info-getter get-number-static-infos
   ;; comparison actually requires real numbers, but we want to
   ;; propagate a comparsion operation from things like `+`, and
   ;; so it's simplest (and good enough in practice) to overapproximate
   ;; by pointing all numbers to `>`, etc.
-  #'((#%compare ((< <)
-                 (<= <=)
-                 (= =)
-                 (!= number!=?)
-                 (>= >=)
-                 (> >)))))
+  (#%compare ((< <)
+              (<= <=)
+              (= =)
+              (!= number!=?)
+              (>= >=)
+              (> >))))
 
 (define-for-syntax (get-real-static-infos)
   (get-number-static-infos))

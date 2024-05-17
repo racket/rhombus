@@ -26,7 +26,8 @@
          "define-arity.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         "number.rkt")
+         "number.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -50,15 +51,15 @@
 (module+ static-infos
   (provide (for-syntax get-string-static-infos)))
 
-(define-for-syntax (get-any-string-static-infos)
-  #'((#%index-get String.get)
-     (#%append String.append)
-     (#%compare ((< string<?)
-                 (<= string<=?)
-                 (= string=?)
-                 (!= string!=?)
-                 (>= string>=?)
-                 (> string>?)))))
+(define-static-info-getter get-any-string-static-infos
+  (#%index-get String.get)
+  (#%append String.append)
+  (#%compare ((< string<?)
+              (<= string<=?)
+              (= string=?)
+              (!= string!=?)
+              (>= string>=?)
+              (> string>?))))
 
 (define-primitive-class ReadableString readable-string
   #:lift-declaration
@@ -139,18 +140,16 @@
   (let ([convert
          (lambda (get-sis)
            (lambda ()
-             (datum->syntax
-              #f
-              (for/list ([si (in-list (syntax->list (get-sis)))])
-                (syntax-parse si
-                  #:datum-literals (#%compare)
-                  [(#%compare . _) #'(#%compare ((< string-ci<?)
-                                                 (<= string-ci<=?)
-                                                 (= string-ci=?)
-                                                 (!= string-ci!=?)
-                                                 (>= string-ci>=?)
-                                                 (> string-ci>?)))]
-                  [_ si])))))])
+             (for/list ([si (in-list (get-sis))])
+               (syntax-parse si
+                 #:datum-literals (#%compare)
+                 [(#%compare . _) #'(#%compare ((< string-ci<?)
+                                                (<= string-ci<=?)
+                                                (= string-ci=?)
+                                                (!= string-ci!=?)
+                                                (>= string-ci>=?)
+                                                (> string-ci>?)))]
+                 [_ si]))))])
     (values (convert get-string-static-infos)
             (convert get-readable-string-static-infos))))
 

@@ -5,7 +5,6 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "srcloc.rkt"
-                     "realm.rkt"
                      (for-syntax racket/base)))
 
 ;; Represent static information in either of two ways:
@@ -41,9 +40,10 @@
            static-infos-result-union
            static-infos-result-intersect
            static-infos-remove
-           make-static-infos))
+           make-static-info))
 
-(provide define-static-info-syntax
+(provide define-static-info-getter
+         define-static-info-syntax
          define-static-info-syntaxes
          define-static-info-syntax/maybe
 
@@ -100,7 +100,7 @@
     (syntax-local-static-info id key-id))
 
   (define (extract-static-infos e)
-    (let loop ([e e] [inner? #f])
+    (let loop ([e e])
       (syntax-parse e
         #:literals (begin quote-syntax)
         [id:identifier
@@ -108,13 +108,10 @@
            [(syntax-local-value* (in-static-info-space #'id)
                                  static-info-ref)
             => (lambda (v)
-                 (define si ((static-info-get-stxs v)))
-                 (if (and inner? (syntax? si))
-                     (syntax->list si)
-                     si))]
+                 ((static-info-get-stxs v)))]
            [else null])]
         [(begin (quote-syntax (~and form (_:identifier _))) e)
-         (cons #'form (loop #'e #t))]
+         (cons #'form (loop #'e))]
         [_ null])))
 
   (define (normalize-static-infos infos)
@@ -195,32 +192,47 @@
                      (lambda (a b)
                        (merge a b static-infos-intersect)))))
 
+(define-for-syntax (make-static-info-getter stx)
+  (define (->compact rhss)
+    (for/list ([rhs (in-list rhss)])
+      ;; recognizes some common patterns to generate
+      ;; code that's slightly more compact
+      (syntax-parse rhs
+        [(us:identifier e)
+         #:when (free-transformer-identifier=? #'us #'unsyntax)
+         #'e]
+        [(key (us:identifier val))
+         #:when (free-transformer-identifier=? #'us #'unsyntax)
+         #'(datum->syntax #f (list (quote-syntax key) val))]
+        [rhs #'(quasisyntax rhs)])))
+  (syntax-parse stx
+    [(rhs ... us:identifier rhs*)
+     #:when (free-transformer-identifier=? #'us #'unsyntax)
+     #`(lambda () (list* #,@(->compact (syntax->list #'(rhs ...))) rhs*))]
+    [(rhs ...)
+     #`(lambda () (list #,@(->compact (syntax->list #'(rhs ...)))))]))
+
+(define-syntax (define-static-info-getter stx)
+  (syntax-parse stx
+    [(_ id:identifier . tail)
+     #`(define-for-syntax id
+         #,(make-static-info-getter #'tail))]))
+
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx
-    [(_ id:identifier #:defined defined:id)
+    [(_ id:identifier #:getter getter:id)
      #`(define-syntax #,(in-static-info-space #'id)
-         (static-info defined))]
-    [(_ id:identifier rhs ...)
-     (with-syntax ([(q-rhs ...)
-                    (for/list ([rhs (in-list (syntax->list #'(rhs ...)))])
-                      ;; recognizes some common patterns to generate
-                      ;; code that's slightly more compact
-                      (syntax-parse rhs
-                        [(us:identifier e)
-                         #:when (free-transformer-identifier=? #'us #'unsyntax)
-                         #'e]
-                        [(key (us:identifier val))
-                         #:when (free-transformer-identifier=? #'us #'unsyntax)
-                         #'(datum->syntax #f (list (quote-syntax key) val))]
-                        [rhs #'(quasisyntax rhs)]))])
-       #`(define-syntax #,(in-static-info-space #'id)
-           (static-info (lambda () (list q-rhs ...)))))]))
+         (static-info getter))]
+    [(_ id:identifier . tail)
+     #`(define-syntax #,(in-static-info-space #'id)
+         (static-info #,(make-static-info-getter #'tail)))]))
 
 (define-syntax (define-static-info-syntaxes stx)
   (syntax-parse stx
-    [(_ (id:identifier ...) rhs ...)
+    [(_ (id:identifier ...) . tail)
      #'(begin
-         (define-static-info-syntax id rhs ...)
+         (define-static-info-getter getter . tail)
+         (define-static-info-syntax id #:getter getter)
          ...)]))
 
 (define-syntax (define-static-info-syntax/maybe stx)
@@ -228,8 +240,10 @@
     [(_ id) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
 
-(define-for-syntax (make-static-infos static-infos)
-  (define infos (syntax->list static-infos))
+(define-for-syntax (make-static-info static-infos)
+  (define infos (if (syntax? static-infos)
+                    (syntax->list static-infos)
+                    static-infos))
   (static-info (lambda () infos)))
 
 (define-for-syntax (flatten-indirects as)
@@ -243,10 +257,7 @@
                                           (syntax-local-value* (in-static-info-space #'a-val)
                                                                static-info-ref)))
                           (if si
-                              (flatten-indirects (let ([infos ((static-info-get-stxs si))])
-                                                   (if (syntax? infos)
-                                                       (syntax->list infos)
-                                                       infos)))
+                              (flatten-indirects ((static-info-get-stxs si)))
                               null)]
                          [_ (list a)]))])
          e)))
@@ -256,8 +267,8 @@
     [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) as]
     [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) bs]
     [else
-     (let ([as (flatten-indirects (if (list? as) as (syntax->list as)))]
-           [bs (flatten-indirects (if (list? bs) bs (syntax->list bs)))])
+     (let ([as (flatten-indirects (if (syntax? as) (syntax->list as) as))]
+           [bs (flatten-indirects (if (syntax? bs) (syntax->list bs) bs))])
        (or
         (and as
              bs
@@ -287,8 +298,8 @@
     [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) bs]
     [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) as]
     [else
-     (let ([as (flatten-indirects (if (list? as) as (syntax->list as)))]
-           [bs (flatten-indirects (if (list? bs) bs (syntax->list bs)))])
+     (let ([as (flatten-indirects (if (syntax? as) (syntax->list as) as))]
+           [bs (flatten-indirects (if (syntax? bs) (syntax->list bs) bs))])
        (cond
          [(not as) (or bs #'())]
          [(not bs) as]

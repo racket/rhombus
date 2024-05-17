@@ -25,7 +25,8 @@
          (submod "string.rkt" static-infos)
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
-         "context-stx.rkt")
+         "context-stx.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -80,9 +81,9 @@
    to_source_string
    ))
 
-(define-for-syntax (get-treelist-of-syntax-static-infos)
-  #`((#%index-result #,(get-syntax-static-infos))
-     . #,(get-treelist-static-infos)))
+(define-static-info-getter get-treelist-of-syntax-static-infos
+  (#%index-result #,(get-syntax-static-infos))
+  . #,(get-treelist-static-infos))
 
 (define-annotation-syntax Syntax
   (identifier-annotation syntax? #,(get-syntax-static-infos)))

@@ -189,9 +189,9 @@
                                   (get-parent-instances))
                (quote-syntax name-instance)))
 
-         (define-for-syntax (get-name-static-infos)
-           #`((#%dot-provider #,(get-name-instances))
-              . instance-static-infos))
+         (define-static-info-getter get-name-static-infos
+           #,#'(#%dot-provider #,(get-name-instances))
+           . instance-static-infos)
 
          #,@(if (attribute constructor-static-infos)
                 (with-syntax ([arity-mask

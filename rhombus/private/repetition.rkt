@@ -178,7 +178,7 @@
                                    want-depth
                                    use-depth)))
      (define infos (if (identifier? #'rep-info.element-static-infos)
-                       (datum->syntax #f (extract-static-infos #'rep-info.element-static-infos))
+                       (extract-static-infos #'rep-info.element-static-infos)
                        #'rep-info.element-static-infos))
      (if (= depth 0)
          (wrap-static-info* #'rep-info.seq-expr infos)
