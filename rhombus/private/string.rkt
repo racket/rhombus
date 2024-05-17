@@ -332,4 +332,4 @@
       (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
 
 (begin-for-syntax
-  (install-literal-static-infos! 'string get-string-static-infos))
+  (install-get-literal-static-infos! 'string get-string-static-infos))

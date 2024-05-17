@@ -310,7 +310,7 @@
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.static-infos ...)) (get-function-static-infos) arity
+          the-name (syntax->list #'(ret.static-infos ...)) arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
@@ -341,7 +341,7 @@
                                 #'(rhs ...)
                                 stx))
          (maybe-add-function-result-definition
-          the-name (list #'main-ret.static-infos) (get-function-static-infos) arity
+          the-name (list #'main-ret.static-infos) arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; single-alterative case
@@ -364,7 +364,7 @@
                            #'rhs
                            stx))
          (maybe-add-function-result-definition
-          #'name.name (list #'ret.static-infos) (get-function-static-infos) arity
+          #'name.name (list #'ret.static-infos) arity
           (build-definitions/maybe-extension #f #'name.name #'name.extends
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
@@ -461,4 +461,4 @@
      pass)))
 
 (begin-for-syntax
-  (install-function-static-infos! get-function-static-infos))
+  (install-get-function-static-infos! get-function-static-infos))

@@ -160,4 +160,4 @@
       (raise-argument-error* '>= rhombus-realm "Bytes" (if (bytes? a) b a))))
 
 (begin-for-syntax
-  (install-literal-static-infos! 'bytes get-bytes-static-infos))
+  (install-get-literal-static-infos! 'bytes get-bytes-static-infos))

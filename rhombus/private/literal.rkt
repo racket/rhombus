@@ -15,7 +15,7 @@
 (module+ for-info
   (provide (for-syntax (rename-out [get-string-static-infos indirect-get-string-static-infos]
                                    [get-bytes-static-infos indirect-get-bytes-static-infos])
-                       install-literal-static-infos!
+                       install-get-literal-static-infos!
                        literal-static-infos)))
 
 (define-syntax (literal-infoer stx)
@@ -69,7 +69,7 @@
 (define-for-syntax get-string-static-infos #f)
 (define-for-syntax get-bytes-static-infos #f)
 (define-for-syntax get-char-static-infos #f)
-(define-for-syntax (install-literal-static-infos! kind get-static-infos)
+(define-for-syntax (install-get-literal-static-infos! kind get-static-infos)
   (case kind
     [(string) (set! get-string-static-infos get-static-infos)]
     [(bytes) (set! get-bytes-static-infos get-static-infos)]

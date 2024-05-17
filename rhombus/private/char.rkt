@@ -144,4 +144,4 @@
       (raise-argument-error* '!= rhombus-realm "Char" (if (char? a) b a))))
 
 (begin-for-syntax
-  (install-literal-static-infos! 'char get-char-static-infos))
+  (install-get-literal-static-infos! 'char get-char-static-infos))

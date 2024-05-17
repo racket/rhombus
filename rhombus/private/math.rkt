@@ -51,29 +51,29 @@
                               magnitude angle
                               real-part imag-part
                               inexact->exact exact->inexact)
+  (#%call-result #,(get-number-static-infos))
   (#%function-arity 2)
-  (#%indirect-static-info indirect-function-static-info)
-  (#%call-result #,(get-number-static-infos)))
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (expt)
+  (#%call-result #,(get-number-static-infos))
   (#%function-arity 4)
-  (#%indirect-static-info indirect-function-static-info)
-  (#%call-result #,(get-number-static-infos)))
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (min max)
+  (#%call-result #,(get-number-static-infos))
   (#%function-arity -2)
-  (#%indirect-static-info indirect-function-static-info)
-  (#%call-result #,(get-number-static-infos)))
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (log atan)
+  (#%call-result #,(get-number-static-infos))
   (#%function-arity 6)
-  (#%indirect-static-info indirect-function-static-info)
-  (#%call-result #,(get-number-static-infos)))
+  (#%indirect-static-info indirect-function-static-info))
 
 (define-static-info-syntaxes (gcd lcm)
+  (#%call-result #,(get-number-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info)
-  (#%call-result #,(get-number-static-infos)))
+  (#%indirect-static-info indirect-function-static-info))
 
 (define (check-posint who n)
   (unless (exact-positive-integer? n)

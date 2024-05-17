@@ -133,6 +133,23 @@ check:
     "required keywords", "~kw1, ~kw2, and ~kw3",
   )
 
+// static info for built-in and defined methods
+block:
+  use_static
+  check:
+    List.sort.map([[1, 2, 3], [3, 1, 2], [2, 3, 1]]) ~is [[1, 2, 3], [1, 2, 3], [1, 2, 3]]
+    print.for_each([1, "2", #"3"]) ~prints "123"
+  class A(val):
+    method sort():
+      List.sort(val)
+    method print():
+      import rhombus
+      rhombus.print(val)
+  check:
+    A.sort.map([A([1, 2, 3]), A([3, 1, 2]), A([2, 3, 1])]) ~is [[1, 2, 3], [1, 2, 3], [1, 2, 3]]
+    A.print.for_each([A(1), A("2"), A(#"3")]) ~prints "123"
+
+// keyword splicing
 block:
   fun take_all(~& _): #void
   check:

@@ -20,7 +20,6 @@
          "nested-bindings.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
-         "values-key.rkt"
          "static-info.rkt"
          "repetition.rkt"
          "op-literal.rkt"
@@ -38,6 +37,7 @@
          "rest-bind.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "map.rkt" for-info)
+         (submod "define-arity.rkt" for-info)
          "if-blocked.rkt"
          "realm.rkt"
          "mutability.rkt"
@@ -684,24 +684,21 @@
                              (lambda () #,next))]))]))))
      shifted-arity))
 
-  (define (maybe-add-function-result-definition name static-infoss static-infos arity defns)
+  (define (maybe-add-function-result-definition name static-infoss arity defns)
     (define result-info?
       (and (pair? static-infoss)
            (pair? (syntax-e (car static-infoss)))
            (for/and ([static-infos (in-list (cdr static-infoss))])
              (same-expression? (car static-infoss) static-infos))))
-    (if (or result-info? arity (pair? (syntax-e static-infos)))
-        (cons #`(define-static-info-syntax #,name
-                  #,@(append
-                      (if result-info?
-                          (list #`(#%call-result #,(car static-infoss)))
-                          null)
-                      (if arity
-                          (list #`(#%function-arity #,arity))
-                          null)
-                      (syntax->list static-infos)))
-              defns)
-        defns))
+    (cons #`(define-static-info-syntax #,name
+              #,@(if result-info?
+                     (list #`(#%call-result #,(car static-infoss)))
+                     null)
+              #,@(if arity
+                     (list #`(#%function-arity #,arity))
+                     null)
+              (#%indirect-static-info indirect-function-static-info))
+          defns))
 
   ;; returns (values (listof n) (listof (listof fcase)))
   ;; where `n` is the argument count, and a negative

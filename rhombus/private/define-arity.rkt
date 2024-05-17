@@ -12,8 +12,8 @@
          define/method)
 
 (module+ for-info
-  (provide indirect-get-function-static-info
-           (for-syntax install-function-static-infos!)))
+  (provide indirect-function-static-info
+           (for-syntax install-get-function-static-infos!)))
 
 (define-syntax-parameter who-sym #f)
 
@@ -166,8 +166,8 @@
 
 (define-for-syntax get-function-static-infos #f)
 
-(define-syntax indirect-get-function-static-info
-  (static-info (lambda () get-function-static-infos)))
+(define-syntax indirect-function-static-info
+  (static-info (lambda () (get-function-static-infos))))
 
-(define-for-syntax (install-function-static-infos! get-static-infos)
+(define-for-syntax (install-get-function-static-infos! get-static-infos)
   (set! get-function-static-infos get-static-infos))

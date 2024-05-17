@@ -194,7 +194,7 @@
                   (list #'(define-static-info-syntax name
                             si ...
                             (#%call-result #,(get-name-static-infos))
-                            (#%function-arity #,arity-mask)
+                            (#%function-arity arity-mask)
                             (#%indirect-static-info indirect-function-static-info))))
                 '())
 
