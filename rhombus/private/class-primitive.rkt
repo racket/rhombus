@@ -93,9 +93,10 @@
         )
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))
-           (define just-binding? (eq? '#:just-binding (syntax-e #'mode)))]
+           (define just-binding? (eq? '#:just-binding (syntax-e #'mode)))
+           (define new? (eq? '#:new (syntax-e #'creation)))]
      #:with name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))))
-     #:with struct_name (datum->syntax #'name (string->symbol (format "struct:~a" (syntax-e #'name))))
+     #:with (~var struct:name) (datum->syntax #'name (string->symbol (format "struct:~a" (syntax-e #'name))))
      #:with ([prop prop-proc (~optional prop-mutator) prop-static-infos] ...)
      #`(#,@(if transparent?
                #`([field Name.field (~? #`field-static-infos #f)] ...)
@@ -103,13 +104,18 @@
         [property property-proc (~? property-mutator) property-si] ...)
      #:with name-dot-dispatch (datum->syntax #'name (string->symbol
                                                      (format "~a-dot-dispatch" (syntax-e #'name))))
-     #:with parent-dot-dispatch (and (syntax-e #'parent)
+     #:attr parent-dot-dispatch (and (syntax-e #'parent)
                                      (datum->syntax #'parent (string->symbol
                                                               (format "~a-dot-dispatch" (syntax-e #'parent)))))
+     #:attr get-parent-instances (and (syntax-e #'parent)
+                                      (datum->syntax #'parent (string->symbol
+                                                               (format "get-~a-instances" (syntax-e #'parent)))))
      #:with name-method-table (datum->syntax #'name (string->symbol (format "~a-method-table" (syntax-e #'name))))
-     #:with parent-method-table (datum->syntax #'parent (string->symbol (format "~a-method-table" (syntax-e #'parent))))
+     #:attr parent-method-table (and (syntax-e #'parent)
+                                     (datum->syntax #'parent (string->symbol (format "~a-method-table" (syntax-e #'parent)))))
      #:with name-mutator-table (datum->syntax #'name (string->symbol (format "~a-mutator-method-table" (syntax-e #'name))))
-     #:with parent-mutator-table (datum->syntax #'parent (string->symbol (format "~a-mutator-method-table" (syntax-e #'parent))))
+     #:attr parent-mutator-table (and (syntax-e #'parent)
+                                      (datum->syntax #'parent (string->symbol (format "~a-mutator-method-table" (syntax-e #'parent)))))
      #:with get-name-field-list (datum->syntax #'name (string->symbol (format "get-~a-field-list" (syntax-e #'name))))
      #:with ((parent-Name.field parent-field-static-infos) ...)
      (if (syntax-e #'parent)
@@ -119,6 +125,7 @@
      #:with get-name-static-infos (datum->syntax #'name (string->symbol (format "get-~a-static-infos" (syntax-e #'name))))
      #:with Name-str (datum->syntax #'here (symbol->immutable-string (syntax-e #'Name)))
      #:with name-instance (datum->syntax #'here (string->symbol (format "~a-instance" (syntax-e #'name))))
+     #:with get-name-instances (datum->syntax #'name (string->symbol (format "get-~a-instances" (syntax-e #'name))))
      #:with field-list #'((parent-Name.field parent-field-static-infos)
                           ...
                           (Name.field (~? field-static-infos ()))
@@ -140,7 +147,7 @@
 
      (define declaration
        (let ([mutator-pairs #'((~? (~@ 'prop prop-mutator)) ...)])
-         (if (eq? (syntax-e #'creation) '#:new)
+         (if new?
              #`(struct name (field ...)
                  #:property prop:field-name->accessor
                  (list* '()
@@ -156,9 +163,7 @@
                                   (hasheq . #,mutator-pairs)))))
              #`(begin
                  (define name-method-table
-                   (hash-add* #,(if (syntax-e #'parent)
-                                    #'parent-method-table
-                                    #'#hasheq())
+                   (hash-add* (~? parent-method-table '#hasheq())
                               (~@ 'prop prop-proc)
                               ...
                               (~@ 'method method-proc)
@@ -166,9 +171,7 @@
                  #,@(if (null? (syntax-e mutator-pairs))
                         '()
                         (list #`(define name-mutator-table
-                                  (hash-add* #,(if (syntax-e #'parent)
-                                                   #'parent-mutator-table
-                                                   #'#hasheq())
+                                  (hash-add* (~? parent-mutator-table '#hasheq())
                                              . #,mutator-pairs))))))))
 
      #`(begin
@@ -181,8 +184,13 @@
                   '())
                 (list declaration))
 
+         (define-for-syntax (get-name-instances)
+           (~? (add-dot-providers (quote-syntax name-instance)
+                                  (get-parent-instances))
+               (quote-syntax name-instance)))
+
          (define-for-syntax (get-name-static-infos)
-           #`((#%dot-provider name-instance)
+           #`((#%dot-provider #,(get-name-instances))
               . instance-static-infos))
 
          #,@(if (attribute constructor-static-infos)
@@ -217,7 +225,7 @@
                       (lambda (tail)
                         (composite-binding-transformer tail
                                                        Name-str
-                                                       #'name?
+                                                       (quote-syntax name?)
                                                        (list (quote-syntax parent-Name.field)
                                                              ...
                                                              (quote-syntax Name.field)
@@ -254,14 +262,8 @@
                                     #f ; not final
                                     (quote-syntax Name)
                                     #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
-                                    (quote-syntax struct_name)
-                                    (quote-syntax #,(if super
-                                                        (cons #'name-instance
-                                                              (let ([dps (class-desc-instance-dot-providers super)])
-                                                                (if (identifier? dps)
-                                                                    (list dps)
-                                                                    dps)))
-                                                        #'name-instance))
+                                    (quote-syntax struct:name)
+                                    (get-name-instances)
                                     #f ; `ref-id` would only used by the normal class dot provider
                                     (list (list 'super-field-name
                                                 (quote-syntax super-name-field)
@@ -297,15 +299,14 @@
            (lambda (field-sym field-proc ary nary fail-k)
              (case field-sym
                [(prop) (field-proc (lambda (e reloc)
-                                     (build-accessor-call #'prop-proc e reloc prop-static-infos))
+                                     (build-accessor-call (quote-syntax prop-proc) e reloc prop-static-infos))
                                    (~? (lambda (e rhs reloc)
-                                         (build-mutator-call #'prop-mutator e rhs reloc))))]
+                                         (build-mutator-call (quote-syntax prop-mutator) e rhs reloc))))]
                ...
                [(method) method-dispatch]
                ...
-               [else #,(if (syntax-e #'parent)
-                           #'(parent-dot-dispatch field-sym field-proc ary nary fail-k)
-                           #'(fail-k))])))
+               [else (~? (parent-dot-dispatch field-sym field-proc ary nary fail-k)
+                         (fail-k))])))
 
          (define-syntax name-instance
            (dot-provider (dot-parse-dispatch name-dot-dispatch)))
@@ -323,6 +324,12 @@
 
 (define-for-syntax (build-mutator-call rator rand rhs reloc)
   (reloc #`(#,rator #,rand #,rhs)))
+
+(define-for-syntax (add-dot-providers dot-provider dot-providers)
+  (cons dot-provider
+        (if (identifier? dot-providers)
+            (list dot-providers)
+            dot-providers)))
 
 (define (hash-add* ht . kvs)
   (let loop ([ht ht] [kvs kvs])

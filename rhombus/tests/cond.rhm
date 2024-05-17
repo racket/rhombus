@@ -51,6 +51,30 @@ check:
   ~throws "specialization not known"
 
 check:
+  use_static
+  (cond
+   | 1 == 2: {1, 2, 3}
+   | ~else: MutableSet{1, 2, 3})
+    .length()
+  ~is 3
+
+check:
+  use_static
+  (cond
+   | 1 == 2: {1: "1", 2: "2", 3: "3"}
+   | ~else: MutableMap{1: "1", 2: "2", 3: "3"})
+    .length()
+  ~is 3
+
+check:
+  use_static
+  (cond
+   | 1 == 2: 1..
+   | ~else: 1..5)
+    .start()
+  ~is 1
+
+check:
   ~eval
   use_static
   class Posn(x, y)
@@ -198,6 +222,33 @@ check:
      | C())
     .whoami()
   ~is "C"
+
+check:
+  ~eval
+  use_static
+  (cond
+   | 1 == 2: {1, 2, 3}
+   | ~else: MutableSet{1, 2, 3})
+    .append()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  (cond
+   | 1 == 2: {1: "1", 2: "2", 3: "3"}
+   | ~else: MutableMap{1: "1", 2: "2", 3: "3"})
+    .append()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  (cond
+   | 1 == 2: 1..
+   | ~else: 1..5)
+    .to_list()
+  ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
