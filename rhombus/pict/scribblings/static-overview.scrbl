@@ -45,7 +45,7 @@ height @math{h}, ascent @math{a}, and descent @math{d}:
 
 In a pict representing a single line of text, the ascent plus descent
 will match the total height of the picture. For multiple lines of text,
-the ascent reflects the top line's baseline, and the descent represented
+the ascent reflects the top line's baseline, and the descent represents
 the bottom line's baseline.
 
 @examples(

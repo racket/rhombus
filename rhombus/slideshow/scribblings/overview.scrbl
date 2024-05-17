@@ -78,9 +78,9 @@ needed to create an ending slide with ``World'' fully faded in:
                 fade_in(@t{World}).sustain()))
 )
 
-Even in that case, the same effect could be ahcieved with two
+Even in that case, the same effect could be achieved with two
 @rhombus(slide) calls, avoiding the need for @rhombus(Pict.sustain), but
-requiring repeition of the ``World'' pict:
+requiring repetition of the ``World'' pict:
 
 @rhombusblock(
   def world = @t{World}
@@ -112,7 +112,7 @@ presentations: vertical layout of multiple picts (especially text) with
 some space in between, and staged display of the stacked components.
 Because those patterns are so common, @rhombus(slide) includes some
 shorthands to implement them. First, when @rhombus(slide) receives
-multipl pict arguments, it combines them with @rhombus(stack) and an
+multiple pict arguments, it combines them with @rhombus(stack) and an
 amount of space that defaults to @rhombus(slide.gap), which is the
 constant @rhombus(24).
 
@@ -171,7 +171,7 @@ spliced into the content sequence.
 Another difference between @rhombus(slide.alts) and @rhombus(switch) is
 that @rhombus(slide.alts) adjusts each of its alternatives so that they
 have the same height. That adjustment prevents slide content from
-jumping around on the screen when it appears after the altertaives, and
+jumping around on the screen when it appears after the alternatives, and
 it prevents the slide content as a whole from shifting due a height
 change (since content is centered on the screen by default).
 
@@ -225,7 +225,7 @@ shorthand for @rhombus(slide.horiz) with @rhombus(~horiz: #'center).
 )
 
 The running example almost looks right, but independently centering
-``draft'' and its strikethough with ``complete'' makes the ``draft''
+``draft'' and its strikethrough with ``complete'' makes the ``draft''
 text shift leftward as the slides advance. To make those nested picts to
 be left-aligned with respect to each other, we can use a nested
 @rhombus(slide.align).
@@ -254,7 +254,7 @@ of content picts. Meanwhile, when an animated pict is used as content
 for the slide sublanguage, that animation composes naturally with any
 animation steps that are created by the sublanguage.
 
-The revserse direcion is also possible. The @rhombus(slide_pict)
+The reverse direction is also possible. The @rhombus(slide_pict)
 function takes slide content and produces the same (potentially)
 animated pict that @rhombus(slide) would create for the same content.
 That pict can then be passed to other functions that work on animated
