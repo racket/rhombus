@@ -154,8 +154,8 @@
     (values (convert get-string-static-infos)
             (convert get-readable-string-static-infos))))
 
-(define-annotation-syntax StringCI (identifier-annotation immutable-string? #,(get-string-ci-static-infos)))
-(define-annotation-syntax ReadableStringCI (identifier-annotation string? #,(get-readable-string-ci-static-infos)))
+(define-annotation-syntax StringCI (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))
+(define-annotation-syntax ReadableStringCI (identifier-annotation string? #,(get-readable-string-ci-static-infos) #:static-only))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)

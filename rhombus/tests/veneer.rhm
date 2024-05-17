@@ -194,6 +194,7 @@ check:
 
 check:
   ~eval
+  use_static
   import rhombus/meta open
   expr.macro 'meta_error($msg)':
     syntax_meta.error(msg)
@@ -233,3 +234,17 @@ check:
   ("smaller" :: WeirdString) >= ("greater" :: WeirdString) ~is #false
   ("same" :: WeirdString) compares_equal ("same" :: WeirdString) ~is #false
   ("same" :: WeirdString) compares_unequal ("same" :: WeirdString) ~is #true
+
+check:
+  ~eval
+  use_dynamic
+  veneer RevList(this :: List)
+  [] :: RevList
+  ~throws "not allowed in a dynamic context"
+
+check:
+  ~eval
+  use_dynamic
+  veneer RevList(this :: List)
+  RevList([])
+  ~throws "not allowed in a dynamic context"

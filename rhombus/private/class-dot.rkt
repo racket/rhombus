@@ -79,18 +79,22 @@
                                      #'make-expression-prefix-operator
                                      "class")))]
           [veneer?
-           (build-definitions/maybe-extension
-            #f #'name #'name-extends
-            #`(lambda (v)
-                #,(cond
-                    [(syntax-e #'name-convert)
-                     #`(name-convert v 'name)]
-                    [(syntax-e #'name?)
-                     #`(begin
-                         (name? v 'name)
-                         v)]
-                    [else
-                     #`v])))]
+           (cons
+            #`(define constructor-name
+                (let ([name (lambda (v)
+                              #,(cond
+                                  [(syntax-e #'name-convert)
+                                   #`(name-convert v 'name)]
+                                  [(syntax-e #'name?)
+                                   #`(begin
+                                       (name? v 'name)
+                                       v)]
+                                  [else
+                                   #`v]))])
+                  name))
+            (build-syntax-definitions/maybe-extension
+             (list #f 'rhombus/repet) #'name #'name-extends
+             #`(class-expression-transformers (quote-syntax name) (quote-syntax constructor-name) #t)))]
           [(and constructor-given-name
                 (not (free-identifier=? #'name constructor-given-name)))
            (list
@@ -372,16 +376,23 @@
                                           req-kws
                                           allowed-kws
                                           name)]))
+(define-for-syntax (check-static stx)
+  (unless (is-static-context/tail? stx)
+    (raise-syntax-error #f
+                        "not allowed in a dynamic context"
+                        stx)))
 
-(define-for-syntax (class-expression-transformers id make-id)
+(define-for-syntax (class-expression-transformers id make-id [static-only? #f])
   (values
    (expression-transformer
     (lambda (stx)
+      (when static-only? (check-static stx))
       (syntax-parse stx
         [(head . tail) (values (relocate-id #'head make-id)
                                #'tail)])))
    (repetition-transformer
     (lambda (stx)
+      (when static-only? (check-static stx))
       (syntax-parse stx
         [(head . tail) (values (identifier-repetition-use (relocate-id #'head make-id))
                                #'tail)])))))

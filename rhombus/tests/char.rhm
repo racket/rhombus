@@ -49,6 +49,16 @@ check:
   Char.titlecase("a"[0]) ~is "A"[0]
   Char.grapheme_step("a"[0], 0) ~is values(#false, 1)
 
+check:
+  ~eval
+  "a"[0] :: CharCI
+  ~throws "not allowed in a dynamic context"
+
+check:
+  ~eval
+  def c :: CharCI = "a"[0]
+  ~throws "not allowed in a dynamic context"
+
 block:
   use_static
   let a :: CharCI = "a"[0]

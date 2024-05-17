@@ -331,12 +331,15 @@ Strings are @tech{comparable}, which means that generic operations like
  string before comparing.
 
  As always for a veneer, @rhombus(StringCI, ~annot) and
- @rhombus(ReadableStringCI, ~annot) normally should be used in static
- mode to help ensure that they have the intended effect.
+ @rhombus(ReadableStringCI, ~annot) work only in static mode (see
+ @rhombus(use_static)) to help ensure that they have the intended effect.
 
 @examples(
-  "apple" < "BANANA"
-  ("apple" :: StringCI) < ("BANANA" :: StringCI)
+  ~hidden:
+    use_static
+  ~repl:
+    "apple" < "BANANA"
+    ("apple" :: StringCI) < ("BANANA" :: StringCI)
 )
 
 }
