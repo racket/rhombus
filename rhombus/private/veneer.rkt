@@ -236,7 +236,7 @@
 
        (with-syntax ([(export ...) exs])
          (with-syntax ([constructor-name (and (not expression-macro-rhs)
-                                              #'name)]
+                                              (car (generate-temporaries (list #'name))))]
                        [(super-name* ...) (if super #'(super-name) '())]
                        [(interface-name ...) interface-names]
                        [(dot-id ...) (map car dots)]
@@ -344,7 +344,8 @@
           #`(define-annotation-syntax name
               (identifier-annotation name?
                                      ((#%dot-provider dot-providers)
-                                      . indirect-static-infos))))]
+                                      . indirect-static-infos)
+                                     #:static-only)))]
         [else
          (list
           #`(define-annotation-syntax name
@@ -352,7 +353,8 @@
                                                              #'(name name-convert val))
                                              val
                                              ((#%dot-provider dot-providers)
-                                              . indirect-static-infos))))]))))
+                                              . indirect-static-infos)
+                                             #:static-only)))]))))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx

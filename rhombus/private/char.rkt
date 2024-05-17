@@ -36,7 +36,8 @@
                                             (= char-ci=?)
                                             (!= char-ci!=?)
                                             (>= char-ci>=?)
-                                            (> char-ci>?))))))
+                                            (> char-ci>?))))
+                         #:static-only))
 
 (define-name-root Char
   #:fields

@@ -9,7 +9,7 @@
 ){
 
  Initially indicates dynamic mode, but intended to be redefined by
- or @rhombus(use_dynamic).
+ @rhombus(use_static) or @rhombus(use_dynamic).
 
  This binding is not exported by @rhombuslangname(rhombus/static), and
  a binding to indicate static mode is exported, instead.

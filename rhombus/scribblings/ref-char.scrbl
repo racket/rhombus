@@ -167,12 +167,16 @@ like @rhombus(<) and @rhombus(>) work on characters.
  comparisons, equivalent to using @rhombus(Char.foldcase) on each
  character before comparing.
 
- As always for a veneer, @rhombus(CharCI, ~annot) normally should be used in
- static mode to help ensure that it has the intended effect.
+ As always for a veneer, @rhombus(CharCI, ~annot) works only in static
+ mode (see @rhombus(use_static)) to help ensure that it has the intended
+ effect.
 
 @examples(
-  "a"[0] < "B"[0]
-  ("a"[0] :: CharCI) < ("B"[0] :: CharCI)
+  ~hidden:
+    use_static
+  ~repl:
+    "a"[0] < "B"[0]
+    ("a"[0] :: CharCI) < ("B"[0] :: CharCI)
 )
 
 }

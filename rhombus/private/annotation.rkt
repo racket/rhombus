@@ -25,7 +25,8 @@
          "realm.rkt"
          "parens.rkt"
          "if-blocked.rkt"
-         "number.rkt")
+         "number.rkt"
+         "is-static.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -214,13 +215,16 @@
       [(_ pred (unquote-syntax static-infos))
        #'(make-identifier-annotation (lambda () (values #`pred static-infos)))]
       [(_ pred static-infos)
-       #'(make-identifier-annotation (lambda () (values #`pred #`static-infos)))]))
+       #'(make-identifier-annotation (lambda () (values #`pred #`static-infos)))]
+      [(_ pred static-infos #:static-only)
+       #'(make-identifier-annotation (lambda () (values #`pred #`static-infos)) #t)]))
 
-  (define (make-identifier-annotation get)
+  (define (make-identifier-annotation get [static-only? #f])
     (annotation-prefix-operator
      '((default . stronger))
      'macro
      (lambda (stx)
+       (when static-only? (check-static stx))
        (define-values (predicate-stx static-infos) (get))
        (define packed (annotation-predicate-form predicate-stx static-infos))
        (values packed (syntax-parse stx
@@ -230,18 +234,27 @@
   (define-syntax (identifier-binding-annotation stx)
     (syntax-case stx ()
       [(_ binding body static-infos)
-       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)))]))
+       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)))]
+      [(_ binding body static-infos #:static-only)
+       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)) #t)]))
 
-  (define (make-identifier-binding-annotation get)
+  (define (make-identifier-binding-annotation get [static-only? #f])
     (annotation-prefix-operator
      '((default . stronger))
      'macro
      (lambda (stx)
+       (when static-only? (check-static stx))
        (define-values (binding-stx body-stx static-infos) (get))
        (define packed (annotation-binding-form binding-stx body-stx static-infos))
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
+
+  (define (check-static stx)
+    (unless (is-static-context/tail? stx)
+      (raise-syntax-error #f
+                          "not allowed in a dynamic context"
+                          stx)))
   
   (define (parse-annotation-of/one stx sub-n kws)
     (syntax-parse stx

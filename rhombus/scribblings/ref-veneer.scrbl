@@ -43,7 +43,7 @@
 
  Similar to @rhombus(class), but binds @rhombus(id_name) as a static
  class @deftech{veneer} over an existing representation, instead of creating a new
- representation like @rhombus(class) does. The existing reprsentation is
+ representation like @rhombus(class) does. The existing representation is
  indicated by the @rhombus(annot) written after the @rhombus(this)
  pseudo-field (in parentheses after @rhombus(id_name)); this
  representation is checked only when using @rhombus(::, ~bind), and not
@@ -54,6 +54,12 @@
  methods, indexing operations, etc., use the veneer instead of the
  underlying representation. Within the @rhombus(veneer) body, however,
  @rhombus(this) has the static information of @rhombus(annot).
+
+ A veneer affects only static resolution of operations. To help avoid
+ confusing behavior when dynamic resolution is chosen in a dynamic-mode
+ context, a veneer can be used as an expression or annotation only in a
+ static-mode context (see @rhombus(use_static)). Using a veneer
+ annotation in a dynamic-mode context is a syntax error.
 
  The veneer's @rhombus(id_name) is bound in several @tech{spaces}:
 
