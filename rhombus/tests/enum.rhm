@@ -80,3 +80,66 @@ check:
   match #'white
   | CrayonColor.white: "crayon"
   ~is "crayon"
+
+// static info
+class A():
+  nonfinal
+  method whoami():
+    "A"
+
+class B():
+  extends A
+  override whoami():
+    "B"
+
+enum AB:
+  ~is_a A
+  ~is_a B
+
+check:
+  A() is_a AB ~is #true
+  B() is_a AB ~is #true
+
+block:
+  use_static
+  check:
+    (A() :: AB).whoami() ~is "A"
+    (B() :: AB).whoami() ~is "B"
+
+check:
+  ~eval
+  use_static
+  class A():
+    method whoami():
+      "A"
+  enum NoIntersection:
+    oops
+    ~is_a A
+  (#'oops :: NoIntersection).whoami()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    method whoami():
+      "A"
+  class B():
+    method whoami():
+      "B"
+  enum NoIntersection:
+    ~is_a A
+    ~is_a B
+  (A() :: NoIntersection).whoami()
+  ~throws "no such field or method (based on static information)"
+
+// duplicate identifier
+check:
+  ~eval
+  enum Dup:
+    dup
+    dup
+  ~throws values(
+    "duplicate enum identifier",
+    "dup",
+  )

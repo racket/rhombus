@@ -20,7 +20,10 @@
  @rhombus(#'id) and as a binding form that matches the symbol
  @rhombus(#'id). The annotation is satisfied by each symbol
  @rhombus(#'id) and by values satisfying any of the @rhombus(annot)s
- specified with @rhombus(~is_a).
+ specified with @rhombus(~is_a). The intersection of @rhombus(annot)s'
+ associated static information (and @rhombus(Symbol, ~annot)'s, if any
+ @rhombus(id) is present) are associated with the resulting
+ annotation.
 
 @examples(
   ~defn:

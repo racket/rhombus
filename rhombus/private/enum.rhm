@@ -1,7 +1,6 @@
 #lang rhombus/private/core
 import:
   "core-meta.rkt" open
-  "symbol.rkt"!#{for-static-info}.#{get-symbol-static-infos}
 
 use_static
 
@@ -12,48 +11,65 @@ defn.macro 'enum $(name :: IdentifierName):
               $clause
               ...':
   ~all_stx: stx
-  let [[sym, ...], ...]:
-    for List (c: [clause, ...]):
+  fun parse_annot(ann):
+    let '$(ann :: annot_meta.Parsed)' = ann
+    ann
+  let ([sym, ...], [ann, ...], _):
+    for values (syms :~ List = [],
+                anns :~ List = [],
+                seen :~ Set = Set.by(===){}):
+      each c: [clause, ...]
       match c
-      | '~is_a: $ann; ...': []
-      | '~is_a $ann': []
-      | '$(sym :: Identifier) ...': [sym, ...]
+      | '~is_a: $ann; ...':
+          values(syms, anns ++ [parse_annot(ann), ...], seen)
+      | '~is_a $ann':
+          values(syms, anns.add(parse_annot(ann)), seen)
+      | '$(sym :: Identifier) ...':
+          let (syms, seen):
+            for values (syms :~ List = syms,
+                        seen :~ Set = seen):
+              each sym: [sym, ...]
+              when seen[sym.unwrap()]
+              | syntax_meta.error("duplicate enum identifier",
+                                  stx,
+                                  sym)
+              values(syms.add(sym), seen ++ { sym.unwrap() })
+          values(syms, anns, seen)
       | ~else:
           syntax_meta.error("enumeration body form not an identifier sequence of `~satisfying` clause",
                             stx,
                             c)
-  let [[ann, ...], ...]:
-    for List (c: [clause, ...]):
-      match c
-      | '~is_a: $(ann :: annot_meta.Parsed); ...': [ann, ...]
-      | '~is_a $(ann :: annot_meta.Parsed)': [ann]
-      | ~else: []
-  for values(accum :~ Set = Set.by(===){}) (sym: [sym, ..., ...]):
-    if accum[sym.unwrap()]
-    | syntax_meta.error("duplicate enum identifier", stx, sym)
-    | accum ++ { sym.unwrap() }
+  let statinfo:
+    fun parse_statinfo(ann):
+      cond
+      | annot_meta.is_predicate(ann):
+          let (_, statinfo) = annot_meta.unpack_predicate(ann)
+          statinfo
+      | annot_meta.is_converter(ann):
+          let (_, _, statinfo) = annot_meta.unpack_converter(ann)
+          statinfo
+    let ann_statinfos = [parse_statinfo(ann), ...]
+    statinfo_meta.intersect(
+      & (match [sym, ...]
+         | []: ann_statinfos
+         | ~else: ann_statinfos.add(parse_statinfo(parse_annot('Symbol'))))
+    )
   '«namespace $name:
       export:
         names:
           $sym
           ...
-          ...
       def $sym = #' $sym
       ...
-      ...
       bind.macro '$sym': '#'$sym'
-      ...
       ...
     fun is_enum(v):
       match v
       | #'$sym: #true
       | ...
-      | ...
       | _ :: $ann: #true
-      | ...
       | ...
       | ~else: #false
     annot.macro '$name':
-      annot_meta.pack_predicate('is_enum',
-                                statinfo_meta.unpack(#{get-symbol-static-infos}()))
+      annot_meta.pack_predicate('is_enum', Syntax.literal '$statinfo')
     »'
