@@ -79,6 +79,13 @@ check:
   Syntax.unwrap_sequence('1') ~matches ['1']
   Syntax.unwrap_all('(1 2, 3 4)') ~is [#'parens, [#'group, 1, 2], [#'group, 3, 4]]
 
+// unwrapping parsed term results in the parsed term
+block:
+  import meta -1:
+    rhombus/meta.expr_meta
+  def parsed = expr_meta.pack_expr('x + 1')
+  check parsed.unwrap() === parsed ~is #true
+
 block:
   import:
     lib("shrubbery/parse.rkt")

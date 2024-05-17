@@ -394,7 +394,7 @@
   (cond
     [(and (pair? u)
           (eq? (syntax-e (car u)) 'parsed))
-     (list->treelist v)]
+     v]
     [else
      (if (and (pair? u)
               (not (list? u)))
