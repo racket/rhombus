@@ -308,21 +308,23 @@
 (define-static-info-syntax empty-readable-map
   #:defined get-readable-map-static-infos)
 
-(define-for-syntax (make-empty-map-binding name+hash?-id+static-infos)
+(define-for-syntax (make-empty-map-binding get-name+hash?-id+static-infos)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
         (values
-         (binding-form #'empty-map-infoer name+hash?-id+static-infos)
+         (binding-form #'empty-map-infoer (get-name+hash?-id+static-infos))
          #'tail)]))))
 
 (define-binding-syntax empty-map
   (make-empty-map-binding
-   #`["Map.empty" immutable-hash? #,(get-map-static-infos)]))
+   (lambda ()
+     #`["Map.empty" immutable-hash? #,(get-map-static-infos)])))
 (define-binding-syntax empty-readable-map
   (make-empty-map-binding
-   #`["ReadableMap.empty" hash? #,(get-readable-map-static-infos)]))
+   (lambda ()
+     #`["ReadableMap.empty" hash? #,(get-readable-map-static-infos)])))
 
 (define-syntax (empty-map-infoer stx)
   (syntax-parse stx

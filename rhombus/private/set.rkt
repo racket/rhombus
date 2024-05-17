@@ -336,21 +336,23 @@
 (define-static-info-syntax empty-readable-set
   #:defined get-readable-set-static-infos)
 
-(define-for-syntax (make-empty-set-binding name+hash?-id+static-infos)
+(define-for-syntax (make-empty-set-binding get-name+hash?-id+static-infos)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
         (values
-         (binding-form #'empty-set-infoer name+hash?-id+static-infos)
+         (binding-form #'empty-set-infoer (get-name+hash?-id+static-infos))
          #'tail)]))))
 
 (define-binding-syntax empty-set
   (make-empty-set-binding
-   #`["Set.empty" immutable-hash? #,(get-set-static-infos)]))
+   (lambda ()
+     #`["Set.empty" immutable-hash? #,(get-set-static-infos)])))
 (define-binding-syntax empty-readable-set
   (make-empty-set-binding
-   #`["ReadableSet.empty" hash? #,(get-readable-set-static-infos)]))
+   (lambda ()
+     #`["ReadableSet.empty" hash? #,(get-readable-set-static-infos)])))
 
 (define-syntax (empty-set-infoer stx)
   (syntax-parse stx
