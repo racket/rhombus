@@ -70,28 +70,3 @@
                                     #'constructor-public-name-fields
                                     #'constructor-public-field-static-infoss
                                     #'public-field-keywords)))]))))
-
-(define-for-syntax (make-curried-binding-transformer super-binding-id
-                                                     constructor-str predicate accessors static-infoss
-                                                     #:static-infos static-infos
-                                                     #:keywords keywords)
-  (define t
-    (lambda (tail)
-      (composite-binding-transformer tail
-                                     constructor-str predicate accessors static-infoss
-                                     #:static-infos static-infos
-                                     #:keywords keywords
-                                     #:accessor->info? #t)))
-  (cond
-    [super-binding-id
-     (define p-t (operator-proc
-                  (syntax-local-value* (in-binding-space super-binding-id) binding-prefix-operator-ref)))
-     (lambda (tail)
-       (syntax-parse tail
-         [(form-id p-term (tag::parens g ...) . new-tail)
-          (define stx (no-srcloc #'(form-id p-term (tag g ...))))
-          (define-values (p-binding p-tail) (p-t #'(form-id p-term)))
-          (define-values (binding c-tail) (t #'(form-id (tag g ...)) #f stx))
-          (values (make-and-binding p-binding binding)
-                  #'new-tail)]))]
-    [else t]))

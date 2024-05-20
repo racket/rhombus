@@ -27,7 +27,6 @@
                            (for/list ([datum (in-list (syntax->list #'(datum ...)))])
                              (string-append " || " (literal->string datum)))))
                    #'literal
-                   ;; assumption: literal static infos are disjoint constants
                    (static-infos-union
                     (or (for/fold ([si (literal-static-infos #'datum0)])
                                   ([datum (in-list (syntax->list #'(datum ...)))])
