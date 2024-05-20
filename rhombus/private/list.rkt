@@ -3,7 +3,6 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "tag.rkt")
-         racket/vector
          "treelist.rkt"
          (submod "treelist.rkt" unsafe)
          "mutable-treelist.rkt"
@@ -327,10 +326,6 @@
 
 (define (nonempty-treelist? l)
   (and (treelist? l) ((treelist-length l) . > . 0)))
-
-(define (check-nonempty-treelist who l)
-  (unless (nonempty-treelist? l)
-    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
 
 (define (check-nonempty-list who l)
   (unless (and (pair? l) (list? l))
@@ -823,10 +818,9 @@
   (mutable-treelist-for-each lst proc))
 
 (define/method (List.sort lst [less-than? <])
+  #:primitive (treelist-sort)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
-  (check-treelist who lst)
-  (check-function-of-arity 2 who less-than?)
-  (vector->treelist (vector-sort (treelist->vector lst) less-than?)))
+  (treelist-sort lst less-than?))
 
 (define/method (PairList.sort lst [less-than? <])
   #:static-infos ((#%call-result #,(get-list-static-infos)))
