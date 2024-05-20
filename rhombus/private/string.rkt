@@ -50,7 +50,7 @@
 (module+ static-infos
   (provide (for-syntax get-string-static-infos)))
 
-(define-for-syntax any-string-static-infos
+(define-for-syntax (get-any-string-static-infos)
   #'((#%index-get String.get)
      (#%append String.append)
      (#%compare ((< string<?)
@@ -63,7 +63,7 @@
 (define-primitive-class ReadableString readable-string
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,any-string-static-infos
+  #:instance-static-info #,(get-any-string-static-infos)
   #:existing
   #:opaque
   #:fields ()
@@ -98,7 +98,7 @@
 (define-primitive-class String string
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,any-string-static-infos
+  #:instance-static-info #,(get-any-string-static-infos)
   #:existing
   #:opaque
   #:parent #f readable-string

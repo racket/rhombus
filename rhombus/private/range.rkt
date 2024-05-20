@@ -78,14 +78,14 @@
    gap
    intersect))
 
-(define-for-syntax sequence-range-static-infos/sequence
+(define-for-syntax (get-sequence-range-static-infos/sequence)
   #`((#%sequence-constructor Range.to_sequence/optimize)
      (#%sequence-element #,(get-int-static-infos))))
 
 (define-primitive-class SequenceRange sequence-range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,sequence-range-static-infos/sequence
+  #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
   #:opaque
   #:parent #f range
@@ -101,7 +101,7 @@
 (define-primitive-class ListRange list-range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,sequence-range-static-infos/sequence
+  #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
   #:opaque
   #:parent #f sequence-range
