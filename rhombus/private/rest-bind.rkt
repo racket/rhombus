@@ -7,8 +7,12 @@
          "parse.rkt"
          "static-info.rkt")
 
-(provide (for-spaces (rhombus/bind)
+(provide (for-spaces (#f
+                      rhombus/bind)
                      rest-bind))
+
+(define-syntax (rest-bind stx)
+  (error "should not get here"))
 
 (define-binding-syntax rest-bind
   (binding-prefix-operator
