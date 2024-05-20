@@ -147,6 +147,59 @@ check:
   ~is "B"
 
 check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    nonfinal
+    extends A
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class C():
+    extends B
+    override whoami():
+      "C"
+    override whoarewe():
+      "A, B, and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
+    .whoami()
+  ~is "C"
+
+check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class C():
+    extends A
+    override whoami():
+      "C"
+    method whoarewe():
+      "A and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
+    .whoami()
+  ~is "C"
+
+check:
   ~eval
   use_static
   class Posn(x, y):
@@ -234,5 +287,60 @@ check:
   (if #false
    | A()
    | B())
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    nonfinal
+    extends A
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class C():
+    extends B
+    override whoami():
+      "C"
+    override whoarewe():
+      "A, B, and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class C():
+    extends A
+    override whoami():
+      "C"
+    method whoarewe():
+      "A and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
     .whoarewe()
   ~throws "no such field or method (based on static information)"

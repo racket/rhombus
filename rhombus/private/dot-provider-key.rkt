@@ -32,19 +32,19 @@
                             bs
                             (let ([a-len (length as)]
                                   [b-len (length bs)])
-                              (let ([common
-                                     (let loop ([rev-as (reverse (list-tail as (max 0 (- a-len b-len))))]
-                                                [rev-bs (reverse (list-tail bs (max 0 (- b-len a-len))))])
-                                       (cond
-                                         [(null? rev-as) null]
-                                         [(free-identifier=? (in-dot-provider-space (car rev-as))
-                                                             (in-dot-provider-space (car rev-bs)))
-                                          (cons (car rev-as) (loop (cdr rev-as) (cdr rev-bs)))]
-                                         [else null]))])
-                                (and (pair? common)
-                                     (if (null? (cdr common))
-                                         (car common)
-                                         common)))))))))
+                              (let loop ([as (list-tail as (max 0 (- a-len b-len)))]
+                                         [bs (list-tail bs (max 0 (- b-len a-len)))])
+                                (cond
+                                  [(null? as) '()]
+                                  [else
+                                   (define common (loop (cdr as) (cdr bs)))
+                                   (if (free-identifier=? (in-dot-provider-space (car as))
+                                                          (in-dot-provider-space (car bs)))
+                                       (cons (car as) common)
+                                       (and (pair? common)
+                                            (if (null? (cdr common))
+                                                (car common)
+                                                common)))]))))))))
 
 (define-for-syntax (extract-dot-provider-id dp-id/s)
   (cond
