@@ -2,12 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "class-parse.rkt"
-                     "veneer-parse.rkt"
                      "static-info-pack.rkt")
-         (submod "dot.rkt" for-dot-provider)
          "entry-point.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-arity.rkt"
@@ -57,7 +54,7 @@
 
   (define instance-static-infos (get-instance-static-infos #f))
   (define internal-instance-static-infos (get-instance-static-infos #t))
-    
+
   (define common-indirect-static-infos
     #`(#,@(if call-statinfo-indirect-id
               #`((#%indirect-static-info #,call-statinfo-indirect-id))
@@ -116,6 +113,7 @@
   (with-syntax ([(name constructor-name name-instance
                        internal-name-instance make-internal-name
                        indirect-static-infos
+                       dot-providers internal-dot-providers
                        [name-field ...]
                        [field-static-infos ...]
                        [public-name-field/mutate ...] [public-maybe-set-name-field! ...]
@@ -125,7 +123,7 @@
      (if (syntax-e #'constructor-name)
          (list
           #`(define-static-info-syntax constructor-name
-              (#%call-result ((#%dot-provider name-instance)
+              (#%call-result ((#%dot-provider dot-providers)
                               . indirect-static-infos))
               (#%function-arity #,(cond
                                     [given-constructor-rhs
@@ -143,7 +141,7 @@
               (syntax-e #'make-internal-name))
          (list
           #`(define-static-info-syntax make-internal-name
-              #,(let ([info #'(#%call-result ((#%dot-provider internal-name-instance)))])
+              #,(let ([info #'(#%call-result ((#%dot-provider internal-dot-providers)))])
                   (if super
                       ;; internal constructor is curried
                       #`(#%call-result (#,info

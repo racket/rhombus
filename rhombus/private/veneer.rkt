@@ -13,7 +13,6 @@
          "provide.rkt"
          "forwarding-sequence.rkt"
          "definition.rkt"
-         (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "binding.rkt"
@@ -302,6 +301,7 @@
                                          #'(name constructor-name name-instance
                                                  #f #f
                                                  indirect-static-infos
+                                                 dot-providers #f
                                                  []
                                                  []
                                                  []

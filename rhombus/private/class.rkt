@@ -19,7 +19,6 @@
          "class-constructor.rkt"
          "class-binding.rkt"
          "class-annotation.rkt"
-         "class-representation.rkt"
          "class-dot.rkt"
          "class-reconstructor.rkt"
          "class-static-info.rkt"
@@ -29,7 +28,6 @@
          "class-top-level.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
-         "parse.rkt"
          (submod "namespace.rkt" for-exports)
          (submod "print.rkt" for-class)
          "class-able.rkt"
@@ -553,7 +551,9 @@
                                                    (for/or ([converter-stx (in-list (syntax->list #'(field-converter ...)))])
                                                      (syntax-e converter-stx)))
                                                (temporary "prefab-guard-~a"))]
-                       [dot-providers (add-super-dot-providers #'name-instance super interfaces)])
+                       [dot-providers (add-super-dot-providers #'name-instance super interfaces)]
+                       [internal-dot-providers (and exposed-internal-id
+                                                    (add-super-dot-providers #'internal-name-instance super interfaces))])
            (define defns
              (reorder-for-top-level
               (append
@@ -688,6 +688,7 @@
                                          #'(name constructor-name name-instance
                                                  internal-name-instance make-internal-name
                                                  indirect-static-infos
+                                                 dot-providers internal-dot-providers
                                                  [name-field ...]
                                                  [field-static-infos ...]
                                                  [public-name-field/mutate ...]

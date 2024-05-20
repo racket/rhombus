@@ -58,9 +58,10 @@ check:
            | Posn(1, 2)
            | #void)
   p.x
-  ~throws "no such field or method"
+  ~throws "no such field or method (based on static information)"
 
 check:
+  use_static
   class Posn(x, y):
     nonfinal
     method d(): x + y
@@ -72,6 +73,78 @@ check:
            | Posn3D(1, 2, 3))
   p.d() + p.x + p.y
   ~is 9
+
+check:
+  use_static
+  class Posn(x, y):
+    nonfinal
+    method d(): x + y
+  class Posn3D(z):
+    extends Posn
+    override method d(): x + y + z
+  def p = (if #false
+           | Posn(1, 2) :: Posn
+           | Posn3D(1, 2, 3) :: Posn3D)
+  p.d() + p.x + p.y
+  ~is 9
+
+check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    internal _B
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A()
+   | _B()())
+    .whoami()
+  ~is "B"
+
+check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    internal _B
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A() :: A
+   | _B()() :: _B)
+    .whoami()
+  ~is "B"
+
+check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    constructor ():
+      super()()
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A()
+   | B())
+    .whoami()
+  ~is "B"
 
 check:
   ~eval
@@ -86,4 +159,80 @@ check:
            | Posn(1, 2)
            | Posn3D(1, 2, 3))
   p.z
-  ~throws "no such field or method"
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+    method d(): x + y
+  class Posn3D(z):
+    extends Posn
+    override method d(): x + y + z
+  def p = (if #false
+           | Posn(1, 2) :: Posn
+           | Posn3D(1, 2, 3) :: Posn3D)
+  p.z
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    internal _B
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A()
+   | _B()())
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    internal _B
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A() :: A
+   | _B()() :: _B)
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class B():
+    extends A
+    constructor ():
+      super()()
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  (if #false
+   | A()
+   | B())
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"

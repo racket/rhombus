@@ -13,7 +13,6 @@
                               added-method-body))
          "forwarding-sequence.rkt"
          "definition.rkt"
-         (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
          (submod "annot-macro.rkt" for-class)
          "interface-clause.rkt"
@@ -32,7 +31,6 @@
          "class-dot.rkt"
          (only-in "class-method.rkt"
                   raise-not-an-instance)
-         "parse.rkt"
          (submod "namespace.rkt" for-exports)
          "class-able.rkt")
 
@@ -348,7 +346,7 @@
                                    "interface")
            (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
              #`(identifier-annotation name?
-                                      ((#%dot-provider name-instance)
+                                      ((#%dot-provider dot-providers)
                                        . indirect-static-infos)))))))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
