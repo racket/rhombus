@@ -118,7 +118,7 @@
 
  Shorthands for @rhombus(Find) at all combinations of @rhombus(~horiz)
  and @rhombus(~vert) arguments in all orders. Each shorthand takes the
- same arguments ad @rhombus(Find), except for the @rhombus(~horiz) and
+ same arguments as @rhombus(Find), except for the @rhombus(~horiz) and
  @rhombus(~vert) arguments.
 
 }
