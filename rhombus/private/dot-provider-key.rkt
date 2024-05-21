@@ -32,19 +32,16 @@
                             bs
                             (let ([a-len (length as)]
                                   [b-len (length bs)])
-                              (let loop ([as (list-tail as (max 0 (- a-len b-len)))]
-                                         [bs (list-tail bs (max 0 (- b-len a-len)))])
-                                (cond
-                                  [(null? as) '()]
-                                  [else
-                                   (define common (loop (cdr as) (cdr bs)))
-                                   (if (free-identifier=? (in-dot-provider-space (car as))
-                                                          (in-dot-provider-space (car bs)))
-                                       (cons (car as) common)
-                                       (and (pair? common)
-                                            (if (null? (cdr common))
-                                                (car common)
-                                                common)))]))))))))
+                              (for/fold ([common '()]
+                                         #:result (and (pair? common)
+                                                       (if (null? (cdr common))
+                                                           (car common)
+                                                           common)))
+                                        ([a (in-list (reverse (list-tail as (max 0 (- a-len b-len)))))]
+                                         [b (in-list (reverse (list-tail bs (max 0 (- b-len a-len)))))])
+                                #:break (not (free-identifier=? (in-dot-provider-space a)
+                                                                (in-dot-provider-space b)))
+                                (cons a common))))))))
 
 (define-for-syntax (extract-dot-provider-id dp-id/s)
   (cond

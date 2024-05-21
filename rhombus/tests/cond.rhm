@@ -224,6 +224,38 @@ check:
   ~is "C"
 
 check:
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class A1():
+    nonfinal
+    extends A
+  class B():
+    extends A1
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class A2():
+    nonfinal
+    extends A
+  class C():
+    extends A2
+    override whoami():
+      "C"
+    method whoarewe():
+      "A and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
+    .whoami()
+  ~is "C"
+
+check:
   ~eval
   use_static
   (cond
@@ -384,6 +416,39 @@ check:
       "A and B"
   class C():
     extends A
+    override whoami():
+      "C"
+    method whoarewe():
+      "A and C"
+  (if #false
+   | A()
+   | if #false
+     | B()
+     | C())
+    .whoarewe()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class A():
+    nonfinal
+    method whoami():
+      "A"
+  class A1():
+    nonfinal
+    extends A
+  class B():
+    extends A1
+    override whoami():
+      "B"
+    method whoarewe():
+      "A and B"
+  class A2():
+    nonfinal
+    extends A
+  class C():
+    extends A2
     override whoami():
       "C"
     method whoarewe():
