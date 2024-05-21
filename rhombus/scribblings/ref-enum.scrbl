@@ -25,6 +25,10 @@
  @rhombus(id) is present) are associated with the resulting
  annotation.
 
+ The @rhombus(id)s and @rhombus(annot)s are tried in sequence, even
+ when they are interleaved. Like @rhombus(is_a), the converting part
+ of any @tech{converter annotation} @rhombus(annot) will not be used.
+
 @examples(
   ~defn:
     enum Mouse:

@@ -143,3 +143,67 @@ check:
     "duplicate enum identifier",
     "dup",
   )
+
+// matching order
+block:
+  fun first(val):
+    println("first")
+    val == #'first
+  fun second(val):
+    println("second")
+    val == #'second
+  fun third(val):
+    println("third")
+    val == #'third
+  enum Order:
+    ~is_a satisfying(first)
+    ~is_a satisfying(second)
+    ~is_a satisfying(third)
+  check #'first is_a Order ~prints "first\n"
+  check #'second is_a Order ~prints "first\nsecond\n"
+  check #'third is_a Order ~prints "first\nsecond\nthird\n"
+
+block:
+  fun first(val):
+    println("first")
+    val == #'first
+  fun second(val):
+    println("second")
+    val == #'second
+  fun third(val):
+    println("third")
+    val == #'third
+  enum Order:
+    ~is_a satisfying(first)
+    first_and_a_half
+    ~is_a satisfying(second)
+    second_and_a_half
+    ~is_a satisfying(third)
+  check #'first is_a Order ~prints "first\n"
+  check #'first_and_a_half is_a Order ~prints "first\n"
+  check #'second is_a Order ~prints "first\nsecond\n"
+  check #'second_and_a_half is_a Order ~prints "first\nsecond\n"
+  check #'third is_a Order ~prints "first\nsecond\nthird\n"
+
+// (non-)converter
+block:
+  enum Order:
+    ~is_a matching(#'first) && converting(fun (v): println("first"); v)
+    ~is_a matching(#'second) && converting(fun (v): println("second"); v)
+    ~is_a matching(#'third) && converting(fun (v): println("third"); v)
+  check #'first is_a Order ~prints ""
+  check #'second is_a Order ~prints ""
+  check #'third is_a Order ~prints ""
+
+block:
+  enum Order:
+    ~is_a matching(#'first) && converting(fun (v): println("first"); v)
+    first_and_a_half
+    ~is_a matching(#'second) && converting(fun (v): println("second"); v)
+    second_and_a_half
+    ~is_a matching(#'third) && converting(fun (v): println("third"); v)
+  check #'first is_a Order ~prints ""
+  check #'first_and_a_half is_a Order ~prints ""
+  check #'second is_a Order ~prints ""
+  check #'second_and_a_half is_a Order ~prints ""
+  check #'third is_a Order ~prints ""

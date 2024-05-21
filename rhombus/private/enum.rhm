@@ -7,6 +7,10 @@ use_static
 export:
   enum
 
+meta namespace Parsed
+meta class Parsed.Symbol(mutable syms :~ List)
+meta class Parsed.Annot(mutable anns :~ List)
+
 defn.macro 'enum $(name :: IdentifierName):
               $clause
               ...':
@@ -14,33 +18,54 @@ defn.macro 'enum $(name :: IdentifierName):
   fun parse_annot(ann):
     let '$(ann :: annot_meta.Parsed)' = ann
     ann
-  let ([sym, ...], [ann, ...], _):
-    for values (syms :~ List = [],
-                anns :~ List = [],
+  let ([parsed, ...], _):
+    for values (parseds :~ List = [],
                 seen :~ Set = Set.by(===){}):
       each c: [clause, ...]
       match c
-      | '~is_a: $ann; ...':
-          values(syms, anns ++ [parse_annot(ann), ...], seen)
-      | '~is_a $ann':
-          values(syms, anns.add(parse_annot(ann)), seen)
+      | (pattern:
+           kind ~group
+         | '~is_a: $ann; ...'
+         | '~is_a $ann_g': field [ann, ...] = [ann_g]):
+          let new_anns = [parse_annot(ann), ...]
+          let parseds:
+            match (parseds is_a NonemptyList) && parseds.last
+            | Parsed.Annot(anns) && parsed:
+                parsed.anns := anns ++ new_anns
+                parseds
+            | ~else:
+                parseds.add(Parsed.Annot(new_anns))
+          values(parseds, seen)
       | '$(sym :: Identifier) ...':
-          let (syms, seen):
-            for values (syms :~ List = syms,
-                        seen :~ Set = seen):
-              each sym: [sym, ...]
+          let new_syms = [sym, ...]
+          let seen:
+            for values (seen :~ Set = seen):
+              each sym: new_syms
               when seen[sym.unwrap()]
               | syntax_meta.error("duplicate enum identifier",
                                   stx,
                                   sym)
-              values(syms.add(sym), seen ++ { sym.unwrap() })
-          values(syms, anns, seen)
+              seen ++ { sym.unwrap() }
+          let parseds:
+            match (parseds is_a NonemptyList) && parseds.last
+            | Parsed.Symbol(syms) && parsed:
+                parsed.syms := syms ++ new_syms
+                parseds
+            | ~else:
+                parseds.add(Parsed.Symbol(new_syms))
+          values(parseds, seen)
       | ~else:
-          syntax_meta.error("enumeration body form not an identifier sequence of `~satisfying` clause",
+          syntax_meta.error("enumeration body form not an identifier sequence or `~is_a` clause",
                             stx,
                             c)
+  let [sym, ...]:
+    for values (syms :~ List = []):
+      each parsed: [parsed, ...]
+      match parsed
+      | Parsed.Symbol([sym, ...]): syms ++ [sym, ...]
+      | ~else: syms
   let statinfo:
-    fun parse_statinfo(ann):
+    fun unpack_statinfo(ann):
       cond
       | annot_meta.is_predicate(ann):
           let (_, statinfo) = annot_meta.unpack_predicate(ann)
@@ -48,12 +73,32 @@ defn.macro 'enum $(name :: IdentifierName):
       | annot_meta.is_converter(ann):
           let (_, _, statinfo) = annot_meta.unpack_converter(ann)
           statinfo
-    let ann_statinfos = [parse_statinfo(ann), ...]
+    let ann_statinfos:
+      for values (statinfos :~ List = []):
+        each parsed: [parsed, ...]
+        match parsed
+        | Parsed.Annot([ann, ...]): statinfos ++ [unpack_statinfo(ann), ...]
+        | ~else: statinfos
     statinfo_meta.intersect(
       & (match [sym, ...]
          | []: ann_statinfos
-         | ~else: ann_statinfos.add(parse_statinfo(parse_annot('Symbol'))))
+         | ~else: ann_statinfos.add(unpack_statinfo(parse_annot('Symbol'))))
     )
+  fun make_is_enum(val):
+    fun loop(parseds):
+      match parseds
+      | []: '#false'
+      | [Parsed.Symbol([sym, ...]), parsed, ...]:
+          'match $val
+           | #' $sym: #true
+           | ...
+           | ~else: $(loop([parsed, ...]))'
+      | [Parsed.Annot([ann, ...]), parsed, ...]:
+          'cond
+           | $val is_a $ann: #true
+           | ...
+           | ~else: $(loop([parsed, ...]))'
+    loop([parsed, ...])
   '«namespace $name:
       export:
         names:
@@ -61,15 +106,10 @@ defn.macro 'enum $(name :: IdentifierName):
           ...
       def $sym = #' $sym
       ...
-      bind.macro '$sym': '#'$sym'
+      bind.macro '$sym': '#' $sym'
       ...
     fun is_enum(v):
-      match v
-      | #'$sym: #true
-      | ...
-      | _ :: $ann: #true
-      | ...
-      | ~else: #false
+      $(make_is_enum('v'))
     annot.macro '$name':
       annot_meta.pack_predicate('is_enum', Syntax.literal '$statinfo')
     »'
