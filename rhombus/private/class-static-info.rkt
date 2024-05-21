@@ -4,7 +4,7 @@
                      "class-parse.rkt"
                      "static-info-pack.rkt")
          "entry-point.rkt"
-         (submod "define-arity.rkt" for-info)
+         (submod "function.rkt" for-info)
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "function-arity.rkt"
@@ -122,51 +122,54 @@
     (append
      (if (syntax-e #'constructor-name)
          (list
-          #`(define-static-info-syntax constructor-name
-              (#%call-result ((#%dot-provider dot-providers)
-                              . indirect-static-infos))
-              (#%function-arity #,(cond
-                                    [given-constructor-rhs
-                                     (syntax-parse given-constructor-rhs
-                                       [(_ e-arity::entry-point-arity)
-                                        (syntax->datum #'e-arity.parsed)])]
-                                    [veneer? #'2]
-                                    [else
-                                     (summarize-arity constructor-keywords
-                                                      constructor-defaults
-                                                      #f #f)]))
-              (#%indirect-static-info indirect-function-static-info)))
+          (with-syntax ([arity-mask
+                         (cond
+                           [given-constructor-rhs
+                            (syntax-parse given-constructor-rhs
+                              [(_ e-arity::entry-point-arity)
+                               (syntax->datum #'e-arity.parsed)])]
+                           [veneer? #'2]
+                           [else (summarize-arity constructor-keywords
+                                                  constructor-defaults
+                                                  #f #f)])])
+            #'(define-static-info-syntax constructor-name
+                (#%call-result ((#%dot-provider dot-providers)
+                                . indirect-static-infos))
+                (#%function-arity arity-mask)
+                . #,(get-function-static-infos))))
          null)
      (if (and exposed-internal-id
               (syntax-e #'make-internal-name))
          (list
-          #`(define-static-info-syntax make-internal-name
-              #,(let ([info #'(#%call-result ((#%dot-provider internal-dot-providers)))])
-                  (if super
-                      ;; internal constructor is curried
-                      #`(#%call-result (#,info
-                                        (#%indirect-static-info indirect-function-static-info)))
-                      info))
-              (#%indirect-static-info indirect-function-static-info)))
+          (with-syntax ([result-infos
+                         (let* ([infos #'((#%dot-provider internal-dot-providers))]
+                                [infos (if super
+                                           (with-syntax ([(info ...) infos])
+                                             #'((#%call-result (info ... . #,(get-function-static-infos)))))
+                                           infos)])
+                           infos)])
+            #'(define-static-info-syntax make-internal-name
+                (#%call-result result-infos)
+                . #,(get-function-static-infos))))
          '())
      (list
       #'(begin
           (define-static-info-syntax/maybe* name-field
             (#%call-result field-static-infos)
-            (#%indirect-static-info indirect-function-static-info))
+            . #,(get-function-static-infos))
           ...))
-     (with-syntax ([((si ...) ...) (for/list ([maybe-set (syntax->list #'(public-maybe-set-name-field! ...))]
-                                              [si (syntax->list #'(public-field-static-infos ...))])
-                                     (append
-                                      (if (syntax-e maybe-set)
-                                          (list #`(#%call-result (#:at_arities ((2 #,si))))
-                                                #'(#%function-arity 6))
-                                          (list #`(#%call-result #,si)
-                                                #'(#%function-arity 2)))
-                                      (list #'(#%indirect-static-info indirect-function-static-info))))])
+     (with-syntax ([(sis ...) (for/list ([maybe-set (in-list (syntax->list #'(public-maybe-set-name-field! ...)))]
+                                         [si (in-list (syntax->list #'(public-field-static-infos ...)))])
+                                (with-syntax ([(info ...)
+                                               (if (syntax-e maybe-set)
+                                                   (list #`(#%call-result (#:at_arities ((2 #,si))))
+                                                         #'(#%function-arity 6))
+                                                   (list #`(#%call-result #,si)
+                                                         #'(#%function-arity 2)))])
+                                  #'(info ... . #,(get-function-static-infos))))])
        (list
         #'(begin
-            (define-static-info-syntax public-name-field/mutate si ...)
+            (define-static-info-syntax public-name-field/mutate . sis)
             ...))))))
 
 (define-syntax (define-static-info-syntax/maybe* stx)

@@ -32,7 +32,6 @@
          "mutability.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rest-bind.rkt"
          "hash-remove.rkt"
@@ -675,17 +674,13 @@
           (lambda (v) (hash-set ht v #t))
           (lambda () #f)))]))
 
-(define-static-info-syntax Set-build*
+(define-static-info-syntaxes (Set-build*
+                              ObjectSet-build*
+                              NowSet-build*
+                              NumberOrObjectSet-build*)
   (#%call-result #,(get-set-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax ObjectSet-build*
-  (#%indirect-static-info Set-build*))
-(define-static-info-syntax NowSet-build*
-  (#%indirect-static-info Set-build*))
-(define-static-info-syntax NumberOrObjectSet-build*
-  (#%indirect-static-info Set-build*))
+  . #,(indirect-get-function-static-infos))
 
 (define (mutable-set-build ht vals)
   (for ([v (in-list vals)])
@@ -864,17 +859,13 @@
                        (parse-mutable-set stx #t
                                           (key-comp-mutable-set-build-id mapper)))))))
 
-(define-static-info-syntax MutableSet-build
+(define-static-info-syntaxes (MutableSet-build
+                              MutableObjectSet-build
+                              MutableNowSet-build
+                              MutableNumberOrObjectSet-build)
   (#%call-result #,(get-mutable-set-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax MutableObjectSet-build
-  (#%indirect-static-info MutableSet-build))
-(define-static-info-syntax MutableNowSet-build
-  (#%indirect-static-info MutableSet-build))
-(define-static-info-syntax MutableNumberOrObjectSet-build
-  (#%indirect-static-info MutableSet-build))
+  . #,(indirect-get-function-static-infos))
 
 (define-syntax WeakMutableSet.by
   (expression-transformer
@@ -892,17 +883,13 @@
                        (parse-mutable-set stx #t
                                           (key-comp-weak-mutable-set-build-id mapper)))))))
 
-(define-static-info-syntax WeakMutableSet-build
+(define-static-info-syntaxes (WeakMutableSet-build
+                              WeakMutableObjectSet-build
+                              WeakMutableNowSet-build
+                              WeakMutableNumberOrObjectSet-build)
   (#%call-result #,(get-weak-mutable-set-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax WeakMutableObjectSet-build
-  (#%indirect-static-info WeakMutableSet-build))
-(define-static-info-syntax WeakMutableNowSet-build
-  (#%indirect-static-info WeakMutableSet-build))
-(define-static-info-syntax WeakMutableNumberOrObjectSet-build
-  (#%indirect-static-info WeakMutableSet-build))
+  . #,(indirect-get-function-static-infos))
 
 ;; macro to optimize to an inline functional update
 (define-syntax (Set.append/optimize stx)

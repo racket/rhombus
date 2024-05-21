@@ -19,7 +19,6 @@
          "class-desc.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "rhombus-primitive.rkt")
 
 (provide define-primitive-class)
@@ -203,7 +202,7 @@
                             si ...
                             (#%call-result #,(get-name-static-infos))
                             (#%function-arity arity-mask)
-                            (#%indirect-static-info indirect-function-static-info))))
+                            . #,(indirect-get-function-static-infos))))
                 '())
 
          #,@(if (or transparent? translucent?)

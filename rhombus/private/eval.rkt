@@ -10,8 +10,7 @@
          "name-root.rkt"
          "realm.rkt"
          (submod "module-path-object.rkt" for-primitive)
-         (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt")
+         (submod "function.rkt" for-info))
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -54,7 +53,7 @@
 
 (define-static-info-syntaxes (current-namespace)
   (#%function-arity 3)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(get-function-static-infos))
 
 (define/arity (import mod-path)
   (unless (module-path? mod-path)

@@ -4,7 +4,6 @@
                      syntax/parse/pre)
          "static-info.rkt"
          "function-arity-key.rkt"
-         "indirect-static-info-key.rkt"
          "rhombus-primitive.rkt")
 
 (provide who
@@ -12,8 +11,8 @@
          define/method)
 
 (module+ for-info
-  (provide indirect-function-static-info
-           (for-syntax install-get-function-static-infos!)))
+  (provide (for-syntax (rename-out [get-function-static-infos indirect-get-function-static-infos])
+                       install-get-function-static-infos!)))
 
 (define-syntax-parameter who-sym #f)
 
@@ -83,10 +82,13 @@
            (if inline?
                (syntax-property def 'compiler-hint:cross-module-inline #t)
                def))
-         #`(define-static-info-syntax #,id
-             #,@(or static-infos '())
-             (#%function-arity #,(or arity-mask (extract-arity-mask rhs)))
-             (#%indirect-static-info indirect-function-static-info)))))
+         (with-syntax ([id id]
+                       [(info ...) (or static-infos '())]
+                       [arity-mask (or arity-mask (extract-arity-mask rhs))])
+           #'(define-static-info-syntax id
+               info ...
+               (#%function-arity arity-mask)
+               . #,(get-function-static-infos))))))
 
 (define-for-syntax ((build-define/method/direct-id direct-id)
                     id name inline? primitive-ids static-infos rhs)
@@ -165,9 +167,6 @@
                                                   req-kws)])))
 
 (define-for-syntax get-function-static-infos #f)
-
-(define-syntax indirect-function-static-info
-  (static-info (lambda () (get-function-static-infos))))
 
 (define-for-syntax (install-get-function-static-infos! get-static-infos)
   (set! get-function-static-infos get-static-infos))

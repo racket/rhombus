@@ -7,6 +7,7 @@
          (submod "string.rkt" static-infos)
          "static-info.rkt"
          "define-arity.rkt"
+         (submod "function.rkt" for-info)
          "class-primitive.rkt"
          "realm.rkt")
 
@@ -59,7 +60,7 @@
 
 (define-static-info-syntaxes (current-input-port current-output-port current-error-port)
   (#%function-arity 3)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(get-function-static-infos))
 
 ;; TODO these need a more specific annotation
 (define/arity Port.Output.open_bytes

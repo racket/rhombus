@@ -6,12 +6,10 @@
          "binding.rkt"
          (submod "annotation.rkt" for-class)
          "reducer.rkt"
-         "parse.rkt"
          "static-info.rkt"
          "function-arity-key.rkt"
          "values-key.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "parens.rkt"
          "op-literal.rkt"
          "var-decl.rkt")
@@ -123,8 +121,8 @@
 
 (define-static-info-syntax values
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define-static-info-syntax call-with-values
   (#%function-arity 4)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))

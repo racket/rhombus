@@ -7,7 +7,6 @@
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "function-arity-key.rkt"
-         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          (submod "arithmetic.rkt" static-infos))
 
@@ -53,27 +52,27 @@
                               inexact->exact exact->inexact)
   (#%call-result #,(get-number-static-infos))
   (#%function-arity 2)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define-static-info-syntaxes (expt)
   (#%call-result #,(get-number-static-infos))
   (#%function-arity 4)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define-static-info-syntaxes (min max)
   (#%call-result #,(get-number-static-infos))
   (#%function-arity -2)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define-static-info-syntaxes (log atan)
   (#%call-result #,(get-number-static-infos))
   (#%function-arity 6)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define-static-info-syntaxes (gcd lcm)
   (#%call-result #,(get-number-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(indirect-get-function-static-infos))
 
 (define (check-posint who n)
   (unless (exact-positive-integer? n)

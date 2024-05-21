@@ -38,7 +38,6 @@
          "mutability.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "rest-bind.rkt"
@@ -526,17 +525,13 @@
              (lambda () #f)))
           (lambda () #f)))]))
 
-(define-static-info-syntax Map-pair-build
+(define-static-info-syntaxes (Map-pair-build
+                              ObjectMap-pair-build
+                              NowMap-pair-build
+                              NumberOrObjectMap-pair-build)
   (#%call-result #,(get-map-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax ObjectMap-pair-build
-  (#%indirect-static-info Map-pair-build))
-(define-static-info-syntax NowMap-pair-build
-  (#%indirect-static-info Map-pair-build))
-(define-static-info-syntax NumberOrObjectMap-pair-build
-  (#%indirect-static-info Map-pair-build))
+  . #,(indirect-get-function-static-infos))
 
 (define-reducer-syntax Map
   (reducer-transformer
@@ -775,17 +770,13 @@
                                           (key-comp-mutable-map-build-id mapper)
                                           #'Map.copy))))))
 
-(define-static-info-syntax MutableMap-build
+(define-static-info-syntaxes (MutableMap-build
+                              MutableObjectMap-build
+                              MutableNowMap-build
+                              MutableNumberOrObjectMap-build)
   (#%call-result #,(get-mutable-map-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax MutableObjectMap-build
-  (#%indirect-static-info MutableMap-build))
-(define-static-info-syntax MutableNowMap-build
-  (#%indirect-static-info MutableMap-build))
-(define-static-info-syntax MutableNumberOrObjectMap-build
-  (#%indirect-static-info MutableMap-build))
+  . #,(indirect-get-function-static-infos))
 
 (define-syntax WeakMutableMap
   (expression-transformer
@@ -815,17 +806,13 @@
                                           (key-comp-weak-mutable-map-build-id mapper)
                                           #'hash-copy/ephemeron))))))
 
-(define-static-info-syntax WeakMutableMap-build
+(define-static-info-syntaxes (WeakMutableMap-build
+                              WeakMutableObjectMap-build
+                              WeakMutableNowMap-build
+                              WeakMutableNumberOrObjectMap-build)
   (#%call-result #,(get-weak-mutable-map-static-infos))
   (#%function-arity -1)
-  (#%indirect-static-info indirect-function-static-info))
-
-(define-static-info-syntax WeakMutableObjectMap-build
-  (#%indirect-static-info WeakMutableMap-build))
-(define-static-info-syntax WeakMutableNowMap-build
-  (#%indirect-static-info WeakMutableMap-build))
-(define-static-info-syntax WeakMutableNumberOrObjectMap-build
-  (#%indirect-static-info WeakMutableMap-build))
+  . #,(indirect-get-function-static-infos))
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
   (syntax-parse stx

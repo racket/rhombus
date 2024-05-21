@@ -10,9 +10,8 @@
          (only-in "class-desc.rkt" define-class-desc-syntax)
          (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
-         (submod "define-arity.rkt" for-info)
+         (submod "function.rkt" for-info)
          "function-arity-key.rkt"
-         "indirect-static-info-key.rkt"
          "static-info.rkt"
          "print-desc.rkt"
          (submod "print.rkt" for-printable)
@@ -163,7 +162,7 @@
                               current-print-as-pretty
                               current-pretty-as-optimal)
   (#%function-arity 3)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(get-function-static-infos))
 
 (define/arity (Printable.describe v
                                   #:mode [mode 'text]

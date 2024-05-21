@@ -5,7 +5,6 @@
                      "annotation-string.rkt")
          "static-info.rkt"
          (submod "define-arity.rkt" for-info)
-         "indirect-static-info-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "index-result-key.rkt"
@@ -147,17 +146,21 @@
                                              (format "~a-result-handler" (syntax-e #'id))))))
      (define (gen id [de-method? #f])
        (if (syntax-e id)
-           (list #`(define-static-info-syntax #,id
-                     (#%call-result
-                      #,(if (eq? (syntax-e #'kind) 'property)
-                            #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))
-                            all-static-infos))
-                     #,@(if (syntax-e #'arity)
-                            (list #`(#%function-arity #,(if de-method?
-                                                            (de-method-arity #'arity)
-                                                            #'arity)))
-                            '())
-                     (#%indirect-static-info indirect-function-static-info)))
+           (list (with-syntax ([id id]
+                               [result-infos
+                                (if (eq? (syntax-e #'kind) 'property)
+                                    #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))
+                                    all-static-infos)]
+                               [(maybe-arity-info ...)
+                                (if (syntax-e #'arity)
+                                    (list #`(#%function-arity #,(if de-method?
+                                                                    (de-method-arity #'arity)
+                                                                    #'arity)))
+                                    '())])
+                   #'(define-static-info-syntax id
+                       (#%call-result result-infos)
+                       maybe-arity-info ...
+                       . #,(indirect-get-function-static-infos))))
            '()))
      (define (gen-bounce ind-id+id key result-key #:box-id? [box-id? #f])
        (if (syntax-e ind-id+id)

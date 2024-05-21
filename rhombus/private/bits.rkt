@@ -3,9 +3,8 @@
          "static-info.rkt"
          "define-operator.rkt"
          "realm.rkt"
-         (submod "define-arity.rkt" for-info)
-         "function-arity-key.rkt"
-         "indirect-static-info-key.rkt")
+         (submod "function.rkt" for-info)
+         "function-arity-key.rkt")
 
 (provide (for-space rhombus/namespace
                     bits))
@@ -48,8 +47,8 @@
 
 (define-static-info-syntaxes (integer-length)
   (#%function-arity 2)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(get-function-static-infos))
 
 (define-static-info-syntaxes (bitwise-bit-field)
   (#%function-arity 8)
-  (#%indirect-static-info indirect-function-static-info))
+  . #,(get-function-static-infos))

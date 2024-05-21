@@ -690,14 +690,19 @@
            (pair? (syntax-e (car static-infoss)))
            (for/and ([static-infos (in-list (cdr static-infoss))])
              (same-expression? (car static-infoss) static-infos))))
-    (cons #`(define-static-info-syntax #,name
-              #,@(if result-info?
-                     (list #`(#%call-result #,(car static-infoss)))
-                     null)
-              #,@(if arity
-                     (list #`(#%function-arity #,arity))
-                     null)
-              (#%indirect-static-info indirect-function-static-info))
+    (cons (with-syntax ([name name]
+                        [(maybe-result-info ...)
+                         (if result-info?
+                             (list #`(#%call-result #,(car static-infoss)))
+                             null)]
+                        [(maybe-arity-info ...)
+                         (if arity
+                             (list #`(#%function-arity #,arity))
+                             null)])
+            #'(define-static-info-syntax name
+                maybe-result-info ...
+                maybe-arity-info ...
+                . #,(indirect-get-function-static-infos)))
           defns))
 
   ;; returns (values (listof n) (listof (listof fcase)))

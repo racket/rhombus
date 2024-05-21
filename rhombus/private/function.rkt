@@ -38,6 +38,9 @@
 (module+ for-builtin
   (provide function-method-table))
 
+(module+ for-info
+  (provide (for-syntax get-function-static-infos)))
+
 (define-primitive-class Function function
   #:lift-declaration
   #:no-constructor-static-info
