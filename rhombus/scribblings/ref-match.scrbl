@@ -230,10 +230,8 @@
 
 
 @doc(
-  ~nonterminal:
-    left_bind: def bind ~defn
   expr.macro 'where'
-  expr.macro '$left_bind where'
+  expr.macro '$expr where'
 ){
 
  As an expression operator, @rhombus(where) always reports a syntax
