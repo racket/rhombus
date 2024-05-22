@@ -47,8 +47,14 @@
   (space-clause-transformer
    (lambda (stx)
      (syntax-parse stx
+       #:datum-literals (group)
        [(_ id:identifier)
-        (wrap-clause #`(#:export_macro id))]))))
+        (wrap-clause #`(#:export_macro id))]
+       [(_ id:identifier
+           (_::block
+            (group kw:keyword)
+            ...))
+        (wrap-clause #`(#:export_macro id kw ...))]))))
 
 (define-space-clause-syntax bridge_definer
   (space-clause-transformer
@@ -71,10 +77,11 @@
        (when (hash-ref options '#:space_path #f)
          (raise-syntax-error #f "multiple space paths declared" orig-stx #'orig-clause))
        (hash-set options '#:space_path #'space-path-name)]
-      [(_ (#:export_macro define-macro))
+      [(_ (#:export_macro define-macro kw ...))
        (when (hash-ref options '#:export_macro #f)
          (raise-syntax-error #f "multiple macro definer names declared" orig-stx #'define-macro))
-       (hash-set options '#:export_macro #'define-macro)]
+       (hash-set (hash-set options '#:export_macro #'define-macro)
+                 '#:export_macro_keywords (syntax->list #'(kw ...)))]
       [(_ (#:export_bridge define-bridge))
        (when (hash-ref options '#:export_bridge #f)
          (raise-syntax-error #f "multiple bridge definer names declared" orig-stx #'define-bridge))

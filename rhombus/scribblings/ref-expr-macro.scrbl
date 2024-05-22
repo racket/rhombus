@@ -232,6 +232,31 @@
 
 }
 
+@doc(
+  fun expr_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
+                                    left_op :: Name,
+                                    right_infix_op :: Name)
+    :: matching(#'weaker || #'stronger || #false)
+  fun expr_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
+                           left_op :: Name,
+                           tail :: Group) :: Boolean
+){
+
+ The @rhombus(expr_meta.relative_precedence) function reports relative
+ precedence between two expression operators, where the left operator may
+ be prefix or infix, but the latter is always infix. Note that
+ associativity for an operator can be inferred through a precedence
+ comparison with itself.
+
+ The @rhombus(expr_meta.ends_parse) function determines whether parsing
+ for the argument of @rhombus(left_op) would end before @rhombus(tail).
+ The end of a parse can be determined by inspecting @rhombus(tail) and
+ using @rhombus(expr_meta.relative_precedence), but there are many cases
+ to consider, including an empty tail and a tail that triggers implicit
+ bindings; those cases are handled consistently by
+ @rhombus(expr_meta.ends_parse).
+
+}
 
 @(macro.close_eval(macro_eval))
 @(macro.close_eval(macro_meta_eval))

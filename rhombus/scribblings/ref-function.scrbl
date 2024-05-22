@@ -428,14 +428,22 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
                        $body
                        ...'
   entry_point.macro 'fun $case_maybe_kw_opt'
-
   entry_point.macro 'fun $maybe_res_annot
                      | $case_maybe_kw
                      | ...'
+  
+  immediate_callee.macro 'fun ($bind, ...):
+                            $body
+                            ...'
+  immediate_callee.macro 'fun $case_maybe_kw_opt'
+  immediate_callee.macro 'fun $maybe_res_annot
+                          | $case_maybe_kw
+                          | ...'
 ){
 
- The @tech{entry point} form of @rhombus(fun, ~entry_point) is the same as the
- expression form of @rhombus(fun).
+ The @tech{entry point} and @tech{immediate callee} forms of
+ @rhombus(fun, ~entry_point) are the same as the expression form of
+ @rhombus(fun).
 
  A binding as an @deftech{entry point} allows a form to work and cooperate
  with contexts such as @rhombus(constructor, ~class_clause) that
@@ -445,6 +453,10 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  an extra argument to make it serve as a method.
  Besides @rhombus(fun, ~entry_point), the @rhombus(macro, ~entry_point) form is
  also bound as entry point.
+
+ A binding as an @tech{immediate callee} allows a form to work and
+ cooperate with contexts such as the right-hand side of the @rhombus(|>)
+ operator to improve static-information propagation.
 
 }
 

@@ -92,26 +92,27 @@
     #:make-identifier-form make-identifier-export
     #:make-operator-form make-identifier-export)
 
-  (define (make-export-modifier-ref ex)
-    ;; "accessor" closes over `ex`:
-    (lambda (v)
-      (define mod (export-modifier-ref v))
-      (and mod
-           (transformer (lambda (stx)
-                          ((transformer-proc mod) (syntax-local-introduce ex) stx))))))
+  (define (make-export-modifier-ref parsed-ex)
+    ;; "accessor" closes over unpecked `parsed-x`
+    (let ([ex (syntax-parse parsed-ex
+                #:datum-literals (parsed)
+                [(parsed #:rhombus/expo req) #'req]
+                [_ (raise-arguments-error
+                    'export_meta.ParsedModifier
+                    "given export to modify is not parsed"
+                    "base export" parsed-ex)])])
+      (lambda (v)
+        (define mod (export-modifier-ref v))
+        (and mod
+             (transformer (lambda (stx ignored-ex)
+                            ((transformer-proc mod) (syntax-local-introduce ex) stx)))))))
 
   (define-rhombus-transform
     #:syntax-class (:export-modifier parsed-ex)
     #:desc "export modifier"
     #:parsed-tag #:rhombus/expo
     #:in-space in-export-space
-    #:transformer-ref (make-export-modifier-ref (syntax-parse parsed-ex
-                                                  #:datum-literals (parsed)
-                                                  [(parsed #:rhombus/expo req) #'req]
-                                                  [_ (raise-arguments-error
-                                                      'export_meta.ParsedModifier
-                                                      "given export to modify is not parsed"
-                                                      "base export" parsed-ex)])))
+    #:transformer-ref (make-export-modifier-ref parsed-ex))
 
   (define-syntax-class :modified-export
     #:attributes (parsed)

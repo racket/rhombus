@@ -55,7 +55,7 @@
                                       '#f
                                       #'rules-rhs
                                       #f #f
-                                      #'() #'()))]
+                                      #'() #'() '()))]
         [(form-id main-op::operator-or-identifier
                   (~optional (_::block
                               (~var main-options (:all-operator-options #f))))
@@ -74,7 +74,8 @@
                                       (if (attribute main-op) #'main-op.name #'#f)
                                       #'#f
                                       (if (attribute main-options) #'main-options.prec #'())
-                                      (if (attribute main-options) #'main-options.assc #'())))]
+                                      (if (attribute main-options) #'main-options.assc #'())
+                                      '()))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (_::block body ...)))
          (list

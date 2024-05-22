@@ -87,7 +87,7 @@
 ;;   * a successful comparison:
 ;;       - 'stronger (left takes precedence)
 ;;       - 'weaker (right takes precedence)
-;;   * an error comparision, where the result desribes why:
+;;   * an error comparision, where the result describes why:
 ;;       - 'inconsistent-prec
 ;;       - 'inconsistent-assoc
 ;;       - 'same (error because no associativity)
@@ -216,27 +216,27 @@
 (define (lookup-space-description space-sym)
   #f)
 
-(define (apply-prefix-direct-operator op form stx track-origin use-site-scopes? checker)
+(define (apply-prefix-direct-operator env op form stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (checker (call-as-transformer
             stx
             (list form)
             track-origin use-site-scopes?
             (lambda (form)
-              (proc form stx)))
+              (apply proc form stx env)))
            proc))
 
-(define (apply-infix-direct-operator op form1 form2 stx track-origin use-site-scopes? checker)
+(define (apply-infix-direct-operator env op form1 form2 stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (checker (call-as-transformer
             stx
             (list form1 form2)
             track-origin use-site-scopes?
             (lambda (form1 form2)
-              (proc form1 form2 stx)))
+              (apply proc form1 form2 stx env)))
            proc))
 
-(define (apply-prefix-transformer-operator op op-stx tail track-origin use-site-scopes? checker)
+(define (apply-prefix-transformer-operator env op op-stx tail track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (define-values (form new-tail)
     (call-as-transformer
@@ -244,12 +244,12 @@
      (list tail)
      track-origin use-site-scopes?
      (lambda (tail)
-       (define-values (form new-tail) (proc tail))
-       (values (checker form proc)
+       (define-values (form new-tail) (apply proc tail env))
+       (values (apply checker form proc env)
                new-tail))))
   (check-transformer-result form new-tail proc))
 
-(define (apply-infix-transformer-operator op op-stx form1 tail track-origin use-site-scopes? checker)
+(define (apply-infix-transformer-operator env op op-stx form1 tail track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
   (define-values (form new-tail)
     (call-as-transformer
@@ -257,7 +257,7 @@
      (list form1 tail)
      track-origin use-site-scopes?
      (lambda (form1 tail)
-       (define-values (form new-tail) (proc form1 tail))
-       (values (checker form proc)
+       (define-values (form new-tail) (apply proc form1 tail env))
+       (values (apply checker form proc env)
                new-tail))))
   (check-transformer-result form new-tail proc))

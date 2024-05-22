@@ -43,6 +43,7 @@ driver and macro-definitions forms.
   ~nonterminal:
     space_id: block id
     meta_namespace_id: block id
+    meta_expr: block expr
 
   decl.macro 'space.enforest $space_id:
                 $space_clause_or_body_or_export
@@ -51,6 +52,9 @@ driver and macro-definitions forms.
   grammar space_clause_or_body_or_export:
     #,(@rhombus(space_path, ~space_clause)) $space_id_path
     #,(@rhombus(macro_definer, ~space_clause)) $id
+    #,(@rhombus(macro_definer, ~space_clause)) $id:
+      $keyword
+      ...
     #,(@rhombus(bridge_definer, ~space_clause)) $id
     #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
@@ -63,14 +67,15 @@ driver and macro-definitions forms.
 
   grammar space_meta_clause_or_body:
     #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id
+    #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id($id, ...)
     #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(identifier_parser, ~space_meta_clause)) $expr
-    #,(@rhombus(parse_checker, ~space_meta_clause)) $expr
+    #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
+    #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
     #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
     #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
-    #,(@rhombus(description, ~space_meta_clause)) $expr
-    #,(@rhombus(operator_description, ~space_meta_clause)) $expr
+    #,(@rhombus(description, ~space_meta_clause)) $meta_expr
+    #,(@rhombus(operator_description, ~space_meta_clause)) $meta_expr
     #,(@rhombus(reflection, ~space_meta_clause)) $id
     $nestable_body
 ){
@@ -159,6 +164,15 @@ driver and macro-definitions forms.
  constraints are imposed on the result of parsing, except that it must be
  represented as a syntax object.
 
+ The @rhombus(parse_syntax_class, ~space_meta_clause) is used with a
+ name followed by a parenthesized sequence of names, the syntax class
+ requires arguments when used in a syntax pattern. Those arguments are
+ propagated to a macro for the new space, which can receive the arguments
+ through declarations that use the keywords listed with
+ @rhombus(macro_definer, ~space_clause). The number of keywords listed
+ with @rhombus(macro_definer, ~space_clause) must match the number of arguments
+ specified with @rhombus(parse_syntax_class, ~space_meta_clause).
+
  When just @rhombus(macro_definer, ~space_clause) and
  @rhombus(parse_syntax_class, ~space_meta_clause) are declared, then each
  macro effectively must produce a fully parsed term. To enable macros in
@@ -211,7 +225,10 @@ driver and macro-definitions forms.
 
  @item{@rhombus(macro_definer, ~space_clause): declares an identifier to
   be bound to a macro-definition form analogous to @rhombus(expr.macro),
-  but for defining macros for the space.}
+  but for defining macros for the space. Keywords listed after the
+  identifier serve as options along the same lines as @rhombus(~op_stx) in
+  @rhombus(expr.macro), and they receive arguments passed to the syntax
+  class as declared by @rhombus(parse_syntax_class, ~space_meta_clause).}
 
  @item{@rhombus(bridge_definer, ~space_clause): declares an identifier to
   be bound to a meta-definition form analogous to @rhombus(meta.bridge),
@@ -221,7 +238,13 @@ driver and macro-definitions forms.
   identifier to be bound as a @rhombus(~group) syntax class with a
   @rhombus(group, ~datum) field; the value of a match is a parsed term,
   while the @rhombus(group, ~datum) field holds the matched unparsed
-  terms.}
+  terms. Identifiers listed in parentheses after the syntax class name are
+  arguments to the syntax class, and they are received by macro
+  implementations through keywords listed in
+  @rhombus(macro_definer, ~space_clause). The number of arguments declared
+  in @rhombus(parse_syntax_class, ~space_meta_clause) must match the
+  number of keywords listed in @rhombus(macro_definer, ~space_clause), and
+  the arguments and keywords are correlated by position.}
 
  @item{@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause):
   declares an identifier to be bound as a @rhombus(~group) syntax class
@@ -316,6 +339,9 @@ driver and macro-definitions forms.
     space_meta_clause_or_body: space.enforest ~decl
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'
+  space_clause.macro 'macro_definer $id:
+                        $keyword
+                        ...'
   space_clause.macro 'bridge_definer $id'
   space_clause.macro 'meta_namespace $meta_namespace_id:
                         $space_meta_clause_or_body
@@ -330,6 +356,7 @@ driver and macro-definitions forms.
 
 @doc(
   space_meta_clause.macro 'parse_syntax_class $id'
+  space_meta_clause.macro 'parse_syntax_class $id($id, ...)'
   space_meta_clause.macro 'parse_prefix_more_syntax_class $id'
   space_meta_clause.macro 'parse_infix_more_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'

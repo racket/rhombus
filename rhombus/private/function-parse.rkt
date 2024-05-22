@@ -10,7 +10,8 @@
                      "same-expression.rkt"
                      "static-info-pack.rkt"
                      (submod "entry-point-adjustment.rkt" for-struct)
-                     (only-in "annotation-string.rkt" annotation-any-string))
+                     (only-in "annotation-string.rkt" annotation-any-string)
+                     "to-list.rkt")
          racket/unsafe/undefined
          "treelist.rkt"
          "to-list.rkt"
@@ -429,7 +430,7 @@
                #:when (not (syntax-e kw)))
       arg))
 
-  (define (build-function adjustments
+  (define (build-function adjustments argument-static-infoss
                           function-name
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
@@ -439,7 +440,8 @@
                           src-ctx)
     (syntax-parse arg-parseds
       [(arg-parsed::binding-form ...)
-       #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
+       #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (syntax->list arg-parseds)))
+       #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
        #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
        #:with (tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))
        #:with (arg ...) args
@@ -525,7 +527,7 @@
               function-name)))
         shifted-arity)]))
 
-  (define (build-case-function adjustments
+  (define (build-case-function adjustments argument-static-infoss
                                function-name
                                main-converter main-annot-str
                                kwss-stx argss-stx arg-parsedss-stx
@@ -606,6 +608,7 @@
                                                     #'try-next))
                        (syntax-parse (fcase-arg-parseds fc)
                          [(arg-parsed::binding-form ...)
+                          #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (fcase-arg-parseds fc)))
                           #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
                           #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
                           #:with (arg ...) (fcase-args fc)
@@ -844,7 +847,12 @@
             #`(let ([#,rest-tmp (treelist-drop #,rest-tmp '#,drop-len)])
                 #,body)))]
         [else wrap/kwrest]))
-    (values new-arg-ids wrap/rest-body)))
+    (values new-arg-ids wrap/rest-body))
+
+  (define (extract-added-static-infos argument-static-infoss n)
+    (if (= n (length argument-static-infoss))
+        argument-static-infoss
+        (for/list ([i (in-range n)]) #'()))))
 
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))
@@ -1320,7 +1328,9 @@
   (for/fold ([all-ht ht]) ([ht (in-list hts)])
     (merge all-ht ht)))
 
-(define-for-syntax (build-anonymous-function terms form)
+(define-for-syntax (build-anonymous-function terms form
+                                             #:adjustments [adjustments #f]
+                                             #:argument-static-infoss [argument-static-infoss #f])
   (define-values (formals converted)
     (let loop ([terms (syntax->list terms)])
       (cond
@@ -1337,8 +1347,24 @@
                                           #`(parsed #:rhombus/expr #,(relocate+reraw t id)))
                           converted))]
            [else (values formals (cons t converted))])])))
-  (relocate+reraw form
-                  #`(lambda #,formals (rhombus-expression #,converted))))
+  (cond
+    [(or adjustments argument-static-infoss)
+     (syntax-parse (map (lambda (f) #`(group #,f)) formals)
+       [(arg::binding ...)
+        (define falses (datum->syntax #f (map (lambda (arg) #'#f) formals)))
+        (define-values (proc arity)
+          (build-function (or adjustments no-adjustments) (or argument-static-infoss '())
+                          'fun
+                          falses formals #'(arg.parsed ...) falses
+                          #'#f #'#f
+                          #'#f #'#f
+                          #f #f
+                          #`(parsed #:rhombus/expr (rhombus-expression #,converted))
+                          form))
+        proc])]
+    [else
+     (relocate+reraw form
+                     #`(lambda #,formals (rhombus-expression #,converted)))]))
 
 (define-for-syntax (extract-anonymous-function-as-call rands)
   (let loop ([rands (syntax->list rands)])

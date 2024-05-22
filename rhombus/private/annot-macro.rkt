@@ -21,7 +21,8 @@
          (submod "annotation.rkt" for-class)
          "macro-macro.rkt"
          "wrap-expression.rkt"
-         "annot-delayed.rkt")
+         "annot-delayed.rkt"
+         "operator-compare.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 annot_meta)))
@@ -47,6 +48,8 @@
      [pack_converter annot_meta.pack_converter]
      [unpack_converter annot_meta.unpack_converter]
      [parse_to_packed_statinfo annot_meta.parse_to_packed_statinfo]
+     [relative_precedence annot_meta.relative_precedence]
+     [ends_parse annot_meta.ends_parse]
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
@@ -202,4 +205,13 @@
       [a::annotation
        #:with ab::annotation-binding-form #'a.parsed
        #'ab.static-infos]))
-  )
+
+  (define/arity (annot_meta.relative_precedence left-mode left-stx right-stx)
+    (get-relative-precedence who left-mode left-stx right-stx
+                             'rhombus/annot annotation-relative-precedence))
+
+  (define/arity (annot_meta.ends_parse left-mode left-stx tail)
+    (ends-parse? who left-mode left-stx tail
+                 'rhombus/annot
+                 annotation-relative-precedence
+                 annotation-infix-operator-ref)))

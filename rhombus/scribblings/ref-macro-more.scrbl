@@ -17,4 +17,5 @@ forms, such as extending @rhombus(import) or @rhombus(for) clauses.
 @include_section("ref-syntax-class-clause-macro.scrbl")
 @include_section("ref-pattern-clause-macro.scrbl")
 @include_section("ref-entry-point-macro.scrbl")
+@include_section("ref-immediate-callee-macro.scrbl")
 @include_section("ref-key-comp-macro.scrbl")

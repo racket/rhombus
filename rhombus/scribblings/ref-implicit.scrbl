@@ -91,7 +91,11 @@ Here are all of the implicit forms:
   expr.macro '#%parens ($expr)'
   bind.macro '#%parens ($bind)'
   annot.macro '#%parens ($annot)'
+  entry_point.macro '#%parens ($entry_point)'
+  immediate_callee.macro '#%parens ($immediate_callee)'
   expr.macro '#%parens ($term ... _ $term ...)'
+  entry_point.macro '#%parens ($term ... _ $term ...)'
+  immediate_callee.macro '#%parens ($term ... _ $term ...)'
 ){
 
 @provided_also_meta()
@@ -104,6 +108,10 @@ Here are all of the implicit forms:
  other @rhombus(term)s is a special case for a function shorthand, and it
  takes precedence over parsing the parenthesized sequence as an
  @rhombus(expr). See @rhombus(_) for more information.
+
+ The @tech{entry point} and @tech{immediate callee} bindings allow
+ parentheses to be used around such forms, and they allow the function
+ shorthand to cooperate in those positions.
 
 @examples(
   (1+2)

@@ -13,6 +13,7 @@
          "expression.rkt"
          "definition.rkt"
          "entry-point.rkt"
+         "immediate-callee.rkt"
          "parse.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
@@ -26,7 +27,8 @@
 
 (provide (for-spaces (#f
                       rhombus/defn
-                      rhombus/entry_point)
+                      rhombus/entry_point
+                      rhombus/immediate_callee)
                      fun)
          (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -280,7 +282,7 @@
 (define-syntax fun
   (expression-transformer
    (lambda (stx)
-     (parse-anonymous-function stx no-adjustments #f))))
+     (parse-anonymous-function stx no-adjustments '() #f))))
 
 (define-defn-syntax fun
   (definition-transformer
@@ -302,7 +304,7 @@
                [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
            (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
          (define-values (proc arity)
-           (build-case-function no-adjustments
+           (build-case-function no-adjustments '()
                                 the-name
                                 #f #f
                                 #'((arg.kw ...) ...)
@@ -333,7 +335,7 @@
                [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
            (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
          (define-values (proc arity)
-           (build-case-function no-adjustments
+           (build-case-function no-adjustments '()
                                 the-name
                                 (attribute main-ret.converter) (attribute main-ret.annot-str)
                                 #'((arg.kw ...) ...)
@@ -358,7 +360,7 @@
          (check-optional-args stx args kws defaults)
          (check-keyword-args stx args kws)
          (define-values (proc arity)
-           (build-function no-adjustments
+           (build-function no-adjustments '()
                            #'name.name
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
@@ -382,7 +384,7 @@
   (entry-point-transformer
    ;; parse function:
    (lambda (stx adjustments)
-     (define-values (term tail) (parse-anonymous-function stx adjustments #t))
+     (define-values (term tail) (parse-anonymous-function stx adjustments '() #t))
      (syntax-parse tail
        [() term]
        [_ (raise-syntax-error #f
@@ -392,17 +394,27 @@
    (lambda (stx)
      (parse-anonymous-function-arity stx))))
 
+(define-immediate-callee-syntax fun
+  (immediate-callee-transformer
+   ;; parse function:
+   (lambda (stx static-infoss op-stx op-mode)
+     (define-values (term tail) (parse-anonymous-function stx no-adjustments static-infoss #t))
+     (pack-immediate-callee term tail))))
+
 (define-syntax fun/read-only-property
   (entry-point-transformer
    ;; parse function:
    (lambda (stx adjustments)
-     (define-values (term tail) (parse-anonymous-function stx adjustments #t))
+     (define-values (term tail) (parse-anonymous-function stx adjustments '() #t))
      term)
    ;; extract arity:
    (lambda (stx)
      1)))
 
-(define-for-syntax (parse-anonymous-function stx [adjustments no-adjustments] [for-entry? #f])
+(define-for-syntax (parse-anonymous-function stx
+                                             [adjustments no-adjustments]
+                                             [argument-static-infos '()]
+                                             [for-entry? #f])
   (syntax-parse stx
     #:datum-literals (group)
     ;; alts case, with maybe a declared return annotation
@@ -416,7 +428,7 @@
            [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
        (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
      (define-values (proc arity)
-       (build-case-function adjustments
+       (build-case-function adjustments argument-static-infos
                             (get-local-name #'form-id)
                             (attribute main-ret.converter) (attribute main-ret.annot-str)
                             #'((arg.kw ...) ...)
@@ -440,7 +452,7 @@
      (check-optional-args stx args kws defaults)
      (check-keyword-args stx args kws)
      (define-values (fun arity)
-       (build-function adjustments
+       (build-function adjustments argument-static-infos
                        (get-local-name #'form-id)
                        #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                        #'rest.arg #'rest.parsed

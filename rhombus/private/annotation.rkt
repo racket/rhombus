@@ -91,6 +91,7 @@
              parse-annotation-of
              parse-annotation-of/chaperone
 
+             annotation-relative-precedence
              build-annotated-expression
              raise-unchecked-disallowed))
 
@@ -129,7 +130,8 @@
     #:prefix-operator-ref annotation-prefix-operator-ref
     #:infix-operator-ref annotation-infix-operator-ref
     #:check-result check-annotation-result
-    #:make-identifier-form raise-not-a-annotation)
+    #:make-identifier-form raise-not-a-annotation
+    #:relative-precedence annotation-relative-precedence)
 
   (define-syntax-class (:annotation-seq prec-op)
     #:attributes (parsed tail)

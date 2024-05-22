@@ -36,7 +36,14 @@
         (wrap-clause #`(#,kw id))]))))
 
 (define-space-meta-clause-syntax parse_syntax_class
-  (make-identifier-transformer '#:syntax_class))
+  (space-meta-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ id:identifier)
+        (wrap-clause #`(#:syntax_class id))]
+       [(_ id:identifier (_::parens (group arg:id) ...))
+        (wrap-clause #`(#:syntax_class id (arg ...)))]))))
 (define-space-meta-clause-syntax parse_prefix_more_syntax_class
   (make-identifier-transformer '#:syntax_class_prefix_more))
 (define-space-meta-clause-syntax parse_infix_more_syntax_class
@@ -79,6 +86,10 @@
       [(_ (#:syntax_class id))
        (check "syntax classes")
        (hash-set options '#:syntax_class #'id)]
+      [(_ (#:syntax_class id (arg ...)))
+       (check "syntax classes")
+       (hash-set (hash-set options '#:syntax_class #'id)
+                 '#:syntax_class_arguments (syntax->list #'(arg ...)))]
       [(_ (#:syntax_class_prefix_more id))
        (check "prefix-more syntax classes" #:enforest-only? #t)
        (hash-set options '#:syntax_class_prefix_more #'id)]

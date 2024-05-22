@@ -22,7 +22,8 @@
          "parse.rkt"
          "wrap-expression.rkt"
          "parse-meta.rkt"
-         "parse-and-meta.rkt")
+         "parse-and-meta.rkt"
+         "operator-compare.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 expr_meta)))
@@ -47,7 +48,9 @@
      [pack_s_exp expr_meta.pack_s_exp]
      [pack_expr expr_meta.pack_expr]
      [pack_meta_expr expr_meta.pack_meta_expr]
-     [pack_and_meta_expr expr_meta.pack_and_meta_expr])))
+     [pack_and_meta_expr expr_meta.pack_and_meta_expr]
+     [relative_precedence expr_meta.relative_precedence]
+     [ends_parse expr_meta.ends_parse])))
 
 (define-for-syntax space
   (space-syntax #f))
@@ -161,4 +164,13 @@
                                               #,expr))
                (relocate+reraw expr #`(parsed #:rhombus/expr
                                               #,opaque)))]))
-  )
+
+  (define/arity (expr_meta.relative_precedence left-mode left-stx right-stx)
+    (get-relative-precedence who left-mode left-stx right-stx
+                             #f expression-relative-precedence))
+
+  (define/arity (expr_meta.ends_parse left-mode left-stx tail)
+    (ends-parse? who left-mode left-stx tail
+                 #f
+                 expression-relative-precedence
+                 expression-infix-operator-ref)))

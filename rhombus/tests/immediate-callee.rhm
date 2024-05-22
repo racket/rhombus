@@ -1,0 +1,47 @@
+#lang rhombus/static/and_meta
+
+import:
+  rhombus/meta open
+
+// Note that the implementation of `|>` serves as one kind of test for `immediate_callee.Parsed`
+
+block:
+  import:
+    rhombus/meta open
+  immediate_callee.macro 'ref0':
+    values('fun (x): x[0]', '')
+  immediate_callee.macro 'p_ref0':
+    values('(fun (x): x[0])', '')
+  immediate_callee.macro 'l_ref0':
+    ~static_infos: sis
+    values('[(fun (x):
+                statinfo.macro 'x': '$(sis[0])'
+                x[0])][0]',
+           '')
+  immediate_callee.macro 'ref1 $tail ...':
+    '(fun (x :~ String): x[0]) $tail ...'
+  check "apple" |> ref0 ~is "apple"[0]
+  check "apple" |> p_ref0 ~is "apple"[0]
+  check "apple" |> l_ref0 ~is "apple"[0]
+  check "apple" |> ref1 ~is "apple"[0]
+  check "apple" |> ref1 |> List ~is ["apple"[0]]
+
+block:
+  fun enlist(v) :~ List: [v]
+
+  immediate_callee.macro 'enlist $tail ...':
+    ~op_stx: all
+    ~static_infos: sis
+    ~in_op_mode mode
+    ~in_op_stx op
+    if expr_meta.ends_parse(mode, op, '$tail ...')
+    | // parse as callee
+      let res = annot_meta.pack_predicate('fun (x): #true',
+                                          sis[0])
+      values('fun (x) :~ List.of($res): [x]',
+             '$tail ...')
+    | // parse as expression
+      'dynamic(enlist) $tail ...'
+
+  use_static
+  check ("apple" |> enlist)[0][0] ~is "apple"[0]

@@ -4,7 +4,7 @@
 (provide check-is-syntax
          parsed-wrong-context-error)
 
-(define (check-is-syntax val proc)
+(define (check-is-syntax val proc . env)
   (unless (syntax? val)
     (raise-result-error (proc-name proc) "syntax?" val))
   val)

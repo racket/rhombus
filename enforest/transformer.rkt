@@ -57,6 +57,9 @@
               (~optional (~seq #:use-site-scopes? use-site-scopes?)
                          #:defaults ([use-site-scopes? #'#f])))
         ...)
+     #:with (sc-arg ...) (syntax-parse #'form
+                           [(_ arg ...) #'(arg ...)]
+                           [_ #'()])
      #`(begin
          (define-syntax-class form
            #:opaque
@@ -67,7 +70,7 @@
                           (define t (syntax-local-value* head-id transformer-ref))]
                     #:when t
                     #:with parsed (transform-in ; back to an enclosing transformer, if any
-                                   (apply-transformer t (transform-out head-id)
+                                   (apply-transformer (list sc-arg ...) t (transform-out head-id)
                                                       (begin
                                                         (transform-out ; from an enclosing transformer
                                                          (datum->syntax #f (cons #'hname.name #'hname.tail))))
@@ -86,14 +89,14 @@
                           (define t (syntax-local-value* implicit-id transformer-ref))]
                     #:when t
                     #:with parsed (transform-in
-                                   (apply-transformer t (transform-out implicit-id)
+                                   (apply-transformer (list sc-arg ...) t (transform-out implicit-id)
                                                       (transform-out
                                                        (datum->syntax #f (list* implicit-name #'head #'tail)))
                                                       track-origin use-site-scopes?
                                                       check-result))))
 
          #,@(if (syntax-e #'transform-id)
-                #`((define (transform-id e)
+                #`((define (transform-id e sc-arg ...)
                      (syntax-parse #`(group . #,e)
                        [(~var p form) #'p.parsed])))
                 #`())
@@ -112,12 +115,12 @@
                              #t)])))
                 '()))]))
 
-(define (apply-transformer t id stx track-origin use-site-scopes? checker)
+(define (apply-transformer env t id stx track-origin use-site-scopes? checker)
   (define proc (transformer-proc t))
   (call-as-transformer
    id
    (list stx)
    track-origin use-site-scopes?
    (lambda (stx)
-     (define forms (checker (proc stx) proc))
+     (define forms (apply checker (apply proc stx env) proc env))
      (datum->syntax #f forms))))

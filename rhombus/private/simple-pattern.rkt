@@ -15,6 +15,7 @@
 
 (provide (for-syntax
           is-simple-pattern?
+          generate-simple-pattern-check
           maybe-bind-tail
           maybe-return-tail
           maybe-bind-all))
@@ -27,6 +28,19 @@
      (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
                         (unquote-bind-quote #%parens))]
     [_ #f]))
+
+(define-for-syntax (generate-simple-pattern-check self-id tail-pattern tail-id)
+  (syntax-parse tail-pattern
+    [() #`(unless (null? (syntax-e (unpack-tail #,tail-id #f #f))) (unexpected-term #,self-id #,tail-id))]
+    ;; other simple patterns always match:
+    [_ #'(void)]))
+
+(define (unexpected-term self-id tail)
+  (define t (syntax-e (unpack-tail tail #f #f)))
+  (raise-syntax-error #f
+                      "unexpected term"
+                      (datum->syntax #f (cons self-id t))
+                      (car t)))
 
 (define-for-syntax (maybe-bind-tail tail-pattern tail)
   (syntax-parse tail-pattern

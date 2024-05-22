@@ -7,7 +7,7 @@
 
 A language implemented with the Rhombus expander may have another
 dimension of name resolution that is orthogonal to different mapping
-spaces. For example, a language include a hierarchical naming strategy
+spaces. For example, a language may include a hierarchical naming strategy
 to reach a binding through sequence of identifiers separated by
 @rhombus(.), and hierarchical references might be used to reach mappings
 for expressions, bindings, or more. In the initial example in this

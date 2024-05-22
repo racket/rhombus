@@ -220,4 +220,21 @@
 }
 
 
+@doc(
+  fun annot_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
+                                     left_op :: Name,
+                                     right_infix_op :: Name)
+    :: matching(#'weaker || #'stronger || #false)
+  fun annot_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
+                            left_op :: Name,
+                            tail :: Group) :: Boolean
+){
+
+ Like @rhombus(expr_meta.relative_precedence) and
+ @rhombus(expr_meta.ends_parse), but for annotation operators.
+
+}
+
+
+
 @(macro.close_eval(macro_eval))

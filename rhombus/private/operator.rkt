@@ -186,7 +186,7 @@
       (cond
         [(and (pair? args) (null? (cdr args))
               (not main-converter))
-         (build-function no-adjustments
+         (build-function no-adjustments '()
                          name
                          (car falsess) (->stx args) (->stx arg-parseds) (car falsess)
                          #'#f #'#f
@@ -196,7 +196,7 @@
                          orig-stx)]
         [else
          (define falses (->stx (for/list ([a (in-list args)]) #'#f)))
-         (build-case-function no-adjustments
+         (build-case-function no-adjustments '()
                               name
                               main-converter main-annot-str
                               (->stx falsess) (->stx (map list args)) (->stx (map list arg-parseds))
@@ -221,7 +221,7 @@
       (cond
         [(and (pair? lefts) (null? (cdr lefts))
               (not main-converter))
-         (build-function no-adjustments
+         (build-function no-adjustments '()
                          name
                          (car falsess)
                          (->stx (list (car lefts) (car rights)))
@@ -234,7 +234,7 @@
                          orig-stx)]
         [else
          (define falses (->stx (for/list ([a (in-list lefts)]) #'#f)))
-         (build-case-function no-adjustments
+         (build-case-function no-adjustments '()
                               name
                               main-converter main-annot-str
                               (->stx falsess)

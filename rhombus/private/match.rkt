@@ -44,7 +44,7 @@
        (define falses (make-consts #f))
        (define falses-stx (make-consts-stx #'#f))
        (define-values (proc arity)
-         (build-case-function no-adjustments
+         (build-case-function no-adjustments '()
                               #'match
                               #f #f
                               (make-consts-stx #'(#f))

@@ -64,7 +64,7 @@
                                         #f
                                         #f
                                         #f #f
-                                        #'() #'()))]
+                                        #'() #'() '()))]
       [_
        #`(class-transformer #,g)]))
   (with-syntax ([make-prefix-operator make-prefix-operator])

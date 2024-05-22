@@ -1,0 +1,50 @@
+#lang rhombus
+
+check:
+  [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    |> List.length
+    |> math.sqrt
+    |> to_string
+  ~is "3"
+
+check:
+  [1, 2, 3].map((- _)) ~is [-1, -2, -3]
+  (- _).map([1, 2, 3]) ~is [-1, -2, -3]
+  [1, 2, 3] |> (- _).map(_) ~is [-1, -2, -3]
+
+check:
+  ~eval
+  (_ . _)
+  ~throws ".: expected an identifier for a field or method name"
+
+check:
+  use_static
+  class Posn(x, y)
+  fun get(n) :~ Posn: Posn(1, 2)
+  (0 |> get).x
+  ~is 1
+
+check:
+  class Posn(x, y)
+  fun get(n, m) :~ Posn: Posn(1, 2)
+  (0 |> get).x
+  ~throws "arity mismatch"
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y)
+  fun get(n, m) :~ Posn: Posn(1, 2)
+  (0 |> get).x
+  ~throws values("wrong number of arguments",
+                 "based on static information")
+
+check:
+  use_static
+  "apple" |> (_[0])
+  ~is "a"[0]
+
+check:
+  use_static
+  "apple" |> (fun (x): x[0])
+  ~is "a"[0]

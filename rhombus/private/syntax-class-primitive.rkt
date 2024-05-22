@@ -46,8 +46,7 @@
 (module+ for-syntax-class
   (provide (for-syntax make-syntax-class)
            define-operator-syntax-classes
-           define-transformer-syntax-class
-           define-transformer-parameterized-syntax-class))
+           define-transformer-syntax-class))
 
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
@@ -115,39 +114,39 @@
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
 
-(define-syntax-rule (define-operator-syntax-classes
-                      Parsed :form parsed-tag
-                      AfterPrefixParsed :prefix-op+form+tail
-                      AfterInfixParsed :infix-op+form+tail)
-  (begin
-    (define-syntax-class-syntax Parsed (make-syntax-class #':form
-                                                          #:kind 'group
-                                                          #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
-                                                          #:root-swap '(parsed . group)))
-    (define-syntax-class-syntax AfterPrefixParsed (make-syntax-class #':prefix-op+form+tail
-                                                                     #:kind 'group
-                                                                     #:arity 2
-                                                                     #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
-                                                                                 (tail #f tail tail unpack-tail-list*))
-                                                                     #:root-swap '(parsed . group)))
-    (define-syntax-class-syntax AfterInfixParsed (make-syntax-class #':infix-op+form+tail
-                                                                    #:kind 'group
-                                                                    #:arity 2
-                                                                    #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
-                                                                                (tail #f tail tail unpack-tail-list*))
-                                                                    #:root-swap '(parsed . group)))))
+(define-syntax (define-operator-syntax-classes stx)
+  (syntax-parse stx
+    [(_ Parsed (~var :form) parsed-tag
+        (~optional (~seq AfterPrefixParsed:id (~var :prefix-op+form+tail)
+                         AfterInfixParsed:id (~var :infix-op+form+tail)))
+        (~optional (~seq #:extra-arity a)
+                   #:defaults ([a #'#f])))
+     #'(begin
+         (define-syntax-class-syntax Parsed (make-syntax-class #':form
+                                                               #:kind 'group
+                                                               #:arity a
+                                                               #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
+                                                               #:root-swap '(parsed . group)))
+         (~? (define-syntax-class-syntax AfterPrefixParsed (make-syntax-class #':prefix-op+form+tail
+                                                                              #:kind 'group
+                                                                              #:arity (if a (+ a 2) 2)
+                                                                              #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
+                                                                                          (tail #f tail tail unpack-tail-list*))
+                                                                              #:root-swap '(parsed . group))))
+         (~? (define-syntax-class-syntax AfterInfixParsed (make-syntax-class #':infix-op+form+tail
+                                                                             #:kind 'group
+                                                                             #:arity (if a (+ a 2) 2)
+                                                                             #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
+                                                                                         (tail #f tail tail unpack-tail-list*))
+                                                                             #:root-swap '(parsed . group)))))]))
 
-(define-syntax-rule (define-transformer-syntax-class
-                      Parsed :form parsed-tag)
-  (define-syntax-class-syntax Parsed (make-syntax-class #':form
-                                                        #:kind 'group
-                                                        #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
-                                                        #:root-swap '(parsed . group))))
-
-(define-syntax-rule (define-transformer-parameterized-syntax-class
-                      Parsed :form parsed-tag)
-  (define-syntax-class-syntax Parsed (make-syntax-class #':form
-                                                        #:kind 'group
-                                                        #:arity 2
-                                                        #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
-                                                        #:root-swap '(parsed . group))))
+(define-syntax (define-transformer-syntax-class stx)
+  (syntax-parse stx
+    [(_ Parsed (~var :form) parsed-tag
+        (~optional (~seq #:arity a)
+                   #:defaults ([a #'#f])))
+     #'(define-syntax-class-syntax Parsed (make-syntax-class #':form
+                                                             #:kind 'group
+                                                             #:arity a
+                                                             #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag)))
+                                                             #:root-swap '(parsed . group)))]))

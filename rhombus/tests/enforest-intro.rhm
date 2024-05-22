@@ -8,6 +8,15 @@ space.enforest ident:
   meta_namespace ident_meta:
     parse_syntax_class Parsed
 
+// threads an `amt` value through expansion:
+space.enforest scaled:
+  space_path demo/scaled
+  macro_definer macro:
+    ~amt
+  meta_namespace scaled_meta:
+    parse_syntax_class Parsed(amt)
+    description "scaled form"
+
 meta:
   def mutable saved :~ List = []
 
@@ -16,11 +25,6 @@ expr.macro 'reset':
   '#void'
 
 ident.macro 'same $(x :: Term)':
-  #//
-  block:
-    import lib("racket/base.rkt")
-    println(base.#{syntax-debug-info}(x))
-    println(base.#{syntax-debug-info}(syntax_meta.flip_introduce(x)))
   saved := [[x, syntax_meta.flip_introduce(x)], & saved]
   x
 
@@ -48,3 +52,25 @@ reset
 check:
   intro
   ~is #true
+
+scaled.macro 'as_scaled ($(x :: expr_meta.Parsed))':
+  ~amt: a
+  '$a * $x'
+
+scaled.macro '$rhs and_as_scaled $(x :: expr_meta.Parsed) $()':
+  ~amt: a
+  '[$rhs, $a * $x]'
+
+expr.macro 'with_scale $n: $(body :: Group)':
+  match body
+  | '$(s :: scaled_meta.Parsed(n.unwrap()))':
+      s
+check:
+  with_scale 2:
+    as_scaled (3 + 4)
+  ~is 14
+
+check:
+  with_scale 2:
+    as_scaled (7 - 8) and_as_scaled 3 + 4
+  ~is [-2, 14]
