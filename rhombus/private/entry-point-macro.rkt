@@ -29,6 +29,9 @@
   (define-name-root entry_point_meta
     #:fields
     ([pack entry_point_meta.pack]
+     [unpack entry_point_meta.unpack]
+     [pack_arity entry_point_meta.pack_arity]
+     [unpack_arity entry_point_meta.unpack_arity]
      Parsed
      Arity
      [Adjustment entry_point_meta.Adjustment])))
@@ -40,10 +43,11 @@
   #'make-entry-point-transformer)
 
 (begin-for-syntax
-  (define-transformer-parameterized-syntax-class
-    Parsed :entry-point #:rhombus/entry_point)
   (define-transformer-syntax-class
-    Arity :entry-point-arity #:rhombus/entry_point))
+    Parsed :entry-point #:rhombus/entry_point
+    #:arity 2)
+  (define-transformer-syntax-class
+    Arity :entry-point-arity #:rhombus/entry_point_arity))
 
 (define-for-syntax (extract-entry-point form proc adjustments)
   (syntax-parse (if (syntax? form)
@@ -78,4 +82,24 @@
     (check-syntax who stx)
     #`(parsed #:rhombus/entry_point
               (rhombus-expression #,(unpack-group stx who #f))))
+  (define/arity (entry_point_meta.unpack stx)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (syntax-parse stx
+      [(parsed #:rhombus/entry_point e)
+       #'(parsed #:rhombus/expr e)]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "not a parsed entry point function"
+                                 "syntax object" stx)]))
+  (define/arity (entry_point_meta.pack_arity a)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    #`(parsed #:rhombus/entry_point_arity #,(check-entry-point-arity-result a entry_point_meta.unpack_arity)))
+  (define/arity (entry_point_meta.unpack_arity stx)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (syntax-parse stx
+      [(parsed #:rhombus/entry_point_arity a) (syntax->datum #'a)]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "not a parsed entry point arity"
+                                 "syntax object" stx)]))
   )

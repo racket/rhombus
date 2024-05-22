@@ -34,7 +34,8 @@
          (only-in (submod "function-parse.rkt" for-build)
                   :rhombus-kw-opt-binding
                   :rhombus-ret-annotation)
-         (only-in "implicit.rkt" #%body))
+         (only-in "implicit.rkt" #%body)
+         "operator-compare.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 bind_meta)))
@@ -60,6 +61,8 @@
      [unpack_info bind_meta.unpack_info]
      [get_info bind_meta.get_info]
      [is_immediate bind_meta.is_immediate]
+     [relative_precedence bind_meta.relative_precedence]
+     [ends_parse bind_meta.ends_parse]
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
@@ -522,3 +525,14 @@
        (lambda (form stx)
          (extract-binding (proc (wrap-parsed form) stx)
                           proc)))))
+
+(begin-for-syntax
+  (define/arity (bind_meta.relative_precedence left-mode left-stx right-stx)
+    (get-relative-precedence who left-mode left-stx right-stx
+                             'rhombus/bind binding-relative-precedence))
+
+  (define/arity (bind_meta.ends_parse left-mode left-stx tail)
+    (ends-parse? who left-mode left-stx tail
+                 'rhombus/bind
+                 binding-relative-precedence
+                 binding-infix-operator-ref)))

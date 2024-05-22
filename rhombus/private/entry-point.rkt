@@ -22,7 +22,7 @@
 
   (property entry-point-transformer transformer (arity-extract))
 
-  (define (check-entry-point-result form proc)
+  (define (check-entry-point-result form proc adjustments)
     (unless (syntax? form)
       (raise-bad-macro-result (proc-name proc) "entry point" form))
     form)
@@ -69,11 +69,7 @@
     #:desc "entry-point form"
     #:parsed-tag #:rhombus/entry_point
     #:in-space in-entry-point-space
-    #:transformer-ref (lambda (v)
-                        (define t (entry-point-transformer-ref v))
-                        (and t (transformer
-                                (lambda (stx)
-                                  ((transformer-proc t) stx adjustments)))))
+    #:transformer-ref entry-point-transformer-ref
     #:check-result check-entry-point-result)
 
   (define-rhombus-transform

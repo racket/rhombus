@@ -231,7 +231,7 @@
                (define falses (map (lambda (f) #f) argss))
                (define falses-stx (datum->syntax #f (map (lambda (f) #'#f) argss)))
                (define-values (handler arity)
-                 (build-case-function no-adjustments
+                 (build-case-function no-adjustments '()
                                       #'prompt_handler
                                       #f #f
                                       (datum->syntax #f
@@ -248,7 +248,7 @@
               [(group #:catch (_::parens arg::binding ...) (~and rhs (_::block . _)))
                (define falses-stx (datum->syntax #f (map (lambda (a) #'#f) (syntax->list #'(arg ...)))))
                (define-values (handler arity)
-                 (build-function no-adjustments
+                 (build-function no-adjustments '()
                                  #'prompt_handler
                                  falses-stx #'(arg ...) #'(arg.parsed ...) falses-stx
                                  #'#f #'#f
@@ -260,7 +260,7 @@
               [(group #:catch bind ...+ (~and rhs (_::block . _)))
                #:with arg::binding #`(#,group-tag bind ...)
                (define-values (handler arity)
-                 (build-function no-adjustments
+                 (build-function no-adjustments '()
                                  #'prompt_handler
                                  #'(#f) #'(arg) #'(arg.parsed) #'(#f)
                                  #'#f #'#f

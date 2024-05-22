@@ -26,7 +26,7 @@
   (define-syntax-class :veneer-clause-form
     (pattern [parsed ...]))
 
-  (define (check-veneer-clause-result form proc)
+  (define (check-veneer-clause-result form proc data)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::veneer-clause-form form]
       [_ (raise-bad-macro-result (proc-name proc) "`veneer` clause" form)]))
@@ -36,20 +36,12 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/veneer_clause) #'id))]))
 
-  (define (make-veneer-clause-transformer-ref veneer-data)
-    ;; "accessor" closes over `veneer-data`:
-    (lambda (v)
-      (define cc (veneer-clause-transformer-ref v))
-      (and cc
-           (transformer (lambda (stx)
-                          ((transformer-proc cc) stx veneer-data))))))
-
   (define-rhombus-transform
     #:syntax-class (:veneer-clause veneer-data)
     #:desc "veneer clause"
     #:parsed-tag #:rhombus/veneer_clause
     #:in-space in-veneer-clause-space
-    #:transformer-ref (make-veneer-clause-transformer-ref veneer-data)
+    #:transformer-ref veneer-clause-transformer-ref
     #:check-result check-veneer-clause-result
     #:track-origin track-parsed-sequence-origin))
 

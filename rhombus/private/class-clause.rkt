@@ -26,7 +26,7 @@
   (define-syntax-class :class-clause-form
     (pattern [parsed ...]))
 
-  (define (check-class-clause-result form proc)
+  (define (check-class-clause-result form proc data)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::class-clause-form form]
       [_ (raise-bad-macro-result (proc-name proc) "`class` clause" form)]))
@@ -36,20 +36,12 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/class_clause) #'id))]))
 
-  (define (make-class-clause-transformer-ref class-data)
-    ;; "accessor" closes over `class-data`:
-    (lambda (v)
-      (define cc (class-clause-transformer-ref v))
-      (and cc
-           (transformer (lambda (stx)
-                          ((transformer-proc cc) stx class-data))))))
-
   (define-rhombus-transform
     #:syntax-class (:class-clause class-data)
     #:desc "class clause"
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-class-clause-space
-    #:transformer-ref (make-class-clause-transformer-ref class-data)
+    #:transformer-ref class-clause-transformer-ref
     #:check-result check-class-clause-result
     #:track-origin track-parsed-sequence-origin))
 

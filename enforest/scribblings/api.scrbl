@@ -159,17 +159,22 @@
                      (code:line #:infix-more-syntax-class infix-more-syntax-class)
                      (code:line #:desc desc)
                      (code:line #:operator-desc operator-desc)
+                     (code:line #:parsed-tag parsed-tag)
                      (code:line #:in-space in-space)
                      (code:line #:prefix-operator-ref prefix-operator-ref)
                      (code:line #:infix-operator-ref infix-operator-ref)
                      (code:line #:name-path-op name-path-op)
                      (code:line #:name-root-ref name-root-ref)
+                     (code:line #:in-name-root-space in-name-root-space)
                      (code:line #:check-result check-result)
                      (code:line #:make-identifier-form make-identifier-form)
                      (code:line #:make-operator-form make-operator-form)
                      (code:line #:juxtapose-implicit-name juxtapose-implicit-name)
                      (code:line #:select-implicit-prefix select-implicit-prefix)
                      (code:line #:select-implicit-infix select-implicit-infix)
+                     (code:line #:track-origin track-origin)
+                     (code:line #:use-site-scopes? use-site-scopes?)
+                     (code:line #:lookup-space-description lookup-space-description)
                      ])]{
 
  The @racket[enforest] name (defaulting to a fresh name) is bound to
@@ -185,10 +190,15 @@
  syntax list of remaining terms (starting with an infix operator that
  has lower precedence than the input operator).
 
- The @racket[syntax-class] name (defaulting to a fresh name) is bound
- to a syntax class (see @racket[define-syntax-class]) that matches and
- enforests a @racket[group] shrubbery representation. A match has a
- @racket[parsed] attribute for the enforestation result.
+ The @racket[syntax-class] is a name (defaulting to a fresh name) or a
+ parenthesized name with arguments. The name is bound to a syntax
+ class (see @racket[define-syntax-class]) that matches and enforests a
+ @racket[group] shrubbery representation, and an error is reported if
+ a match is attempted but fails. A match has a @racket[parsed]
+ attribute for the enforestation result. If @racket[syntax-class] is a
+ parenthesized name with arguments, then each argument is also passed
+ along to a prefix or infix operator after all other arguments (which
+ vary, depending on the protocol).
 
  The @racket[relative-precedence] name, if present, is bound to a
  function that compares the precedence of two operators. The function
@@ -211,12 +221,20 @@
  group. The enforestation is based on the precedence and associatvity
  of the given operator. A match has a @racket[parsed] attribute for
  the enforestation result and a @racket[tail] attribute for the
- remaining terms in a group.
+ remaining terms in a group. If @racket[syntax-class] is a
+ parenthesized name with arguments, then
+ @racket[prefix-more-syntax-class] and
+ @racket[infix-more-syntax-class] accept those additional arguments,
+ too, after the operator-name argument.
 
  The @racket[desc] (defaulting to @racket["form"]) and
  @racket[operator-desc] (defaulting to @racket["operator"]) strings
  are used in error reporting to refer to a form or an operator for a
  form.
+
+ The @racket[parsed-tag] value, which typically a quoted symbol or a
+ keyword, is recognized in a @racket['parsed] form to detect
+ already-parsed forms that are not enforested further.
 
  The @racket[in-space] function (defaulting to the identity function)
  takes an identifier syntax object and adds a space scope if the
@@ -241,6 +259,10 @@
  from an identifier that is followed by an operator recognized by
  @racket[name-path-op].
 
+ The @racket[in-name-root-space] function is analogous to
+ @racket[in-space], but applied to an identifier before searching for
+ a name resolver using @racket[name-root-ref].
+
  The @racket[check-result] function (defaulting to a function that
  checks whether its first argument is a syntax object, returning it
  as-is if so, raising an exception otherwise) takes an enforestation
@@ -248,12 +270,17 @@
  should either raise an exception for earlier detection of errors or
  return its first argument (possibly adjusted). A second argument to
  the function is the procedure that produced the result, which can be
- used for error reporting (e.g., through @racket[object-name]).
+ used for error reporting (e.g., through @racket[object-name]). If
+ @racket[syntax-class] is a parenthesized name with arguments, then
+ @racket[check-result] receives those arguments, too, after all
+ others.
 
  The @racket[make-identifier-form] function (defaulting to the
  identity function) takes an identifier an produces a suitable parsed
  form. If a context does not have a meaning for unbound identifiers, a
- syntax error can be reported.
+ syntax error can be reported. If @racket[syntax-class] is a
+ parenthesized name with arguments, then @racket[make-identifier-form]
+ receives those arguments, too, after all others.
 
  The @racket[make-operator-form] function, if non-@racket[#f], takes
  an operator and produces a suitable parsed form. Absence or
@@ -280,6 +307,21 @@
  a symbol as the name for the implicit infix operator and a syntax
  object whose lexical context is added to the symbol to look up the
  operator binding.
+
+ The @racket[track-origin] function is used to track expansion via
+ prefix and infix operators. It defaults to
+ @racket[syntax-track-origin].
+
+ The @racket[use-site-scopes?] value configures whether expansion
+ process via prefix and infix operators should introduce use-site
+ scopes. See also @racket[syntax-local-apply-transformer]. The default
+ is @racket[#f] to @emph{not} introduce use-site scopes.
+
+ The @racket[lookup-space-description] function is used when reporting
+ a syntax error due to an unbound identifier or operator. The function
+ is called with a symbol representing an interned scope, and if the
+ result is not @racket[#f], it is used as a description of the binding
+ space. The default always returns @racket[#f].
 
 }
 
@@ -308,15 +350,25 @@
          #:grammar ([option
                      (code:line #:syntax-class syntax-class)
                      (code:line #:desc desc)
+                     (code:line #:transform transform)
+                     (code:line #:predicate predicate)
                      (code:line #:transformer-ref transformer-ref)
                      (code:line #:name-path-op name-path-op)
                      (code:line #:name-root-ref name-root-ref)
-                     (code:line #:check-result check-result)])]{
+                     (code:line #:in-name-root-space in-name-root-space)
+                     (code:line #:check-result check-result)
+                     (code:line #:track-origin track-origin)
+                     (code:line #:use-site-scopes? use-site-scopes?)])]{
 
- The @racket[syntax-class] name (defaulting to a fresh name) is bound
- to a syntax class that matches and parses a @racket[group] shrubbery
- representation. A match has a @racket[parsed] attribute for the
- parsed result.
+ The @racket[syntax-class] is a name (defaulting to a fresh name) or a
+ parenthesized name with arguments. The name is bound to a syntax
+ class that matches and parses a @racket[group] shrubbery
+ representation, but unlike a syntax class introduced with
+ @racket[define-enforest], the match can fail without triggering an
+ error. A match has a @racket[parsed] attribute for the parsed result.
+ If @racket[syntax-class] is a parenthesized name with arguments, then
+ each argument is also passed along to a transformer after the syntax
+ argument.
 
  The @racket[desc] string (defaulting to @racket["form"]) is used in
  error reporting to refer to a form.
@@ -327,8 +379,17 @@
  the context, returning @racket[#f] otherwise. Normally, this function
  uses a structure-property accessor.
 
+ If @racket[transform] is not @racket[#f], it is bound to a function
+ that takes syntax and parses it using @racket[syntax-class]. The
+ default is @racket[#f].
+
+ If @racket[predicate] is not @racket[#f], it is bound to a function
+ that takes syntax and reports whether the form starts with an
+ identifier that is bound as a transformer. The default is
+ @racket[#f].
+
  See @racket[define-enforest] for the meanings of @racket[desc],
- @racket[name-path-op], @racket[name-root-ref], and
- @racket[check-result].
+ @racket[name-path-op], @racket[name-root-ref], @racket[in-name-root-space],
+ @racket[check-result], @racket[track-origin], and @racket[use-site-scopes?].
 
 }

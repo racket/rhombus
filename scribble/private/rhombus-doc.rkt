@@ -354,6 +354,13 @@
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
+(define-doc immediate_callee.macro immediate_callee
+  "immediate callee"
+  rhombus/immediate_callee
+  identifier-macro-extract-name
+  identifier-macro-extract-metavariables
+  identifier-macro-extract-typeset)
+
 (define-doc unquote_bind.macro unquote_bind
   "unquote binding"
   rhombus/unquote_bind

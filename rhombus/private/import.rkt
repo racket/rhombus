@@ -117,13 +117,13 @@
     #:name-root-ref name-root-portal-ref)
 
   (define (make-import-modifier-ref req)
-    ;; "accessor" closes over `req`:
+    ;; "accessor" closes over `req` with suitable scope introductions
     (lambda (v)
       (define mod (or (import-modifier-ref v)
                       (import-modifier-block-ref v)))
       (and mod
            (transformer (let ([req (syntax-local-introduce req)]) ; import transformer scope
-                          (lambda (stx)
+                          (lambda (stx ignored-req)
                             ((transformer-proc mod) (syntax-local-introduce req) ; import-modifier transformer scope
                                                     stx)))))))
 

@@ -24,27 +24,19 @@
   (define-syntax-class :interface-clause-form
     (pattern [parsed ...]))
 
-  (define (check-interface-clause-result form proc)
+  (define (check-interface-clause-result form proc data)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::interface-clause-form form]
       [_ (raise-bad-macro-result (proc-name proc) "`class` clause" form)]))
 
   (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface_clause))
 
-  (define (make-interface-clause-transformer-ref class-data)
-    ;; "accessor" closes over `class-data`:
-    (lambda (v)
-      (define cc (interface-clause-transformer-ref v))
-      (and cc
-           (transformer (lambda (stx)
-                          ((transformer-proc cc) stx class-data))))))
-
   (define-rhombus-transform
     #:syntax-class (:interface-clause intf-data)
     #:desc "interface clause"
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-interface-clause-space
-    #:transformer-ref (make-interface-clause-transformer-ref intf-data)
+    #:transformer-ref interface-clause-transformer-ref
     #:check-result check-interface-clause-result
     #:track-origin track-parsed-sequence-origin))
 

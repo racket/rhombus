@@ -43,9 +43,10 @@
          entry-point-adjustment-method-table
          #hasheq())
   #:guard (lambda (args-in wrap is-method? info)
-            (define args (to-treelist #f args-in))
+            (define who 'entry_point_meta.Adjustment)
+            (define args (to-treelist who args-in))
             (unless (and args (for/and ([e (in-treelist args)]) (identifier? e)))
-              (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Listable.to_list && List.of(Identifier)" args-in))
+              (raise-argument-error* who rhombus-realm "Listable.to_list && List.of(Identifier)" args-in))
             (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
-              (raise-argument-error* 'entry_point_meta.Adjustment rhombus-realm "Function.of_arity(2)" wrap))
+              (raise-argument-error* who rhombus-realm "Function.of_arity(2)" wrap))
             (values args wrap (and is-method? #t))))

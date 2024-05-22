@@ -17,6 +17,7 @@
         "veneer-clause-macro.rkt"
         "class-clause-primitive-meta-macro.rkt"
         "entry-point-macro.rkt"
+        "immediate-callee-macro.rkt"
         "static-info-macro.rkt"
         "repet-macro.rkt"
         "dot-macro.rkt"

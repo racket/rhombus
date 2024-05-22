@@ -26,7 +26,7 @@
 
 (define-syntax (define-sequence-transform stx)
   (syntax-parse stx
-    [(_ (~alt (~optional (~seq #:syntax-class form)
+    [(_ (~alt (~optional (~seq #:syntax-class form:id)
                          #:defaults ([form #':form]))
               (~optional (~seq #:apply-transformer apply-transformer)
                          #:defaults ([apply-transformer #'apply-transformer]))
@@ -59,11 +59,11 @@
                     #:when t
                     #:with id head-id
                     #:with tail #'hname.tail))
-         (define (apply-transformer head-name head-tail tail-tail)
+         (define (apply-transformer head-name head-tail tail-tail . env)
            (define head-id (in-space head-name))
            (define t (syntax-local-value* head-id transformer-ref))
            (define-values (parsed remaining-tail)
-             (apply-sequence-transformer t (transform-out head-id)
+             (apply-sequence-transformer env t (transform-out head-id)
                                          (transform-out (datum->syntax #f (cons head-name head-tail)))
                                          tail-tail
                                          track-origin use-site-scopes?
@@ -78,7 +78,7 @@
                        [_ #f])))
                 '()))]))
 
-(define (apply-sequence-transformer t id stx tail track-origin use-site-scopes? checker)
+(define (apply-sequence-transformer env t id stx tail track-origin use-site-scopes? checker)
   (define proc (sequence-transformer-proc t))
   (define-values (forms new-tail)
     (call-as-transformer
@@ -86,7 +86,7 @@
      (list stx tail)
      track-origin use-site-scopes?
      (lambda (stx tail)
-       (define-values (forms new-tail) (proc stx tail))
-       (values (datum->syntax #f (checker forms proc))
+       (define-values (forms new-tail) (apply proc stx tail env))
+       (values (datum->syntax #f (apply checker forms proc env))
                (datum->syntax #f new-tail)))))
   (check-transformer-result forms new-tail proc))

@@ -128,27 +128,36 @@
                                                (_::block (group all-id:identifier))))
                      #:defaults ([all-id #'#f]))))
 
+  (define-syntax-class-mixin extra-options
+    #:datum-literals (group)
+    (~alt (group (~var _ (:keyword-matching extra-kws))
+                 ~!
+                 (~or* (_::block (group _))
+                       _))))
+
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
     operator-options)
 
-  (define-composed-splicing-syntax-class (:self-operator-options space-sym)
-    self-options)
+  (define-composed-splicing-syntax-class (:self-operator-options space-sym extra-kws)
+    self-options
+    extra-options)
 
   (define-composed-splicing-syntax-class (:self-prefix-operator-options space-sym)
     operator-options
     self-options)
 
-  (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym)
+  (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym extra-kws)
     operator-options
-    self-options)
+    self-options
+    extra-options)
 
-  (define-splicing-syntax-class (:macro-maybe-prefix-operator-options space-sym prec?)
+  (define-splicing-syntax-class (:macro-maybe-prefix-operator-options space-sym prec? extra-kws)
     #:attributes (prec self-id all-id)
     (pattern (~and (~fail #:when prec?)
-                   (~var || (:self-operator-options space-sym)))
+                   (~var || (:self-operator-options space-sym extra-kws)))
              #:with prec #'())
     (pattern (~and (~fail #:unless prec?)
-                   (~var || (:macro-prefix-operator-options space-sym)))))
+                   (~var || (:macro-prefix-operator-options space-sym extra-kws)))))
 
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (group)
@@ -162,10 +171,11 @@
     operator-options
     infix-operator-options)
 
-  (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym)
+  (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym extra-kws)
     operator-options
     infix-operator-options
-    self-options)
+    self-options
+    extra-options)
 
   (define-composed-splicing-syntax-class (:postfix-operator-options space-sym)
     operator-options)
@@ -173,6 +183,15 @@
   (define-composed-splicing-syntax-class (:all-operator-options space-sym)
     operator-options
     infix-operator-options)
+
+  (define-composed-splicing-syntax-class (:macro-all-operator-options space-sym extra-kws)
+    operator-options
+    infix-operator-options
+    extra-options)
+
+  (define-composed-splicing-syntax-class (:transformer-options space-sym extra-kws)
+    self-options
+    extra-options)
 
   (define-syntax-class :$+1
     #:attributes (name)
@@ -232,7 +251,8 @@
 
 ;; parse one case (possibly the only case) in a macro definition
 (define-for-syntax (parse-one-macro-definition form-id kind allowed space-sym
-                                               [main-prec #'()] [main-assc #'()])
+                                               [main-prec #'()] [main-assc #'()] [main-kws '()]
+                                               [extra-kws '()] [extra-shapes '()])
   (lambda (g rhs)
     (define (combine-main prec main-prec what)
       (cond
@@ -253,12 +273,13 @@
                              g))
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
-         [(tag::block (~var opt (:macro-infix-operator-options space-sym)) rhs ...)
+         [(tag::block (~var opt (:macro-infix-operator-options space-sym extra-kws)) rhs ...)
           #`(pre-parsed op-name.name
                         op-name.extends
                         infix
                         #,kind
                         opt
+                        #,(extract-extra-binds g extra-kws extra-shapes #'opt main-kws)
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
                         #,(convert-assc (combine-main #'opt.assc main-assc "associativity"))
                         #,parsed-right-id
@@ -276,13 +297,14 @@
                              g))
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
-         [(tag::block (~var opt (:macro-maybe-prefix-operator-options space-sym (memq 'precedence allowed)))
+         [(tag::block (~var opt (:macro-maybe-prefix-operator-options space-sym (memq 'precedence allowed) extra-kws))
                       rhs ...)
           #`(pre-parsed op-name.name
                         op-name.extends
                         prefix
                         #,kind
                         opt
+                        #,(extract-extra-binds g extra-kws extra-shapes #'opt #f)
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
                         #,main-assc
                         #,parsed-right-id
@@ -301,8 +323,13 @@
 
 ;; single-case macro definition:
 (define-for-syntax (parse-operator-definition form-id kind stx g rhs space-sym compiletime-id
-                                              #:allowed [allowed '(prefix infix precedence)])
-  (define p ((parse-one-macro-definition form-id kind allowed space-sym) g rhs))
+                                              #:allowed [allowed '(prefix infix precedence)]
+                                              #:extra-kws [extra-kws '()]
+                                              #:extra-shapes [extra-shapes '()])
+  (define p ((parse-one-macro-definition form-id kind allowed space-sym
+                                         #'() #'() null
+                                         extra-kws extra-shapes)
+             g rhs))
   (define op (pre-parsed-name p))
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym op
@@ -312,10 +339,13 @@
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
-                                               main-name main-extends main-prec main-assc
-                                               #:allowed [allowed '(prefix infix precedence)])
+                                               main-name main-extends main-prec main-assc main-kws
+                                               #:allowed [allowed '(prefix infix precedence)]
+                                               #:extra-kws [extra-kws '()]
+                                               #:extra-shapes [extra-shapes '()])
   (define ps (map (parse-one-macro-definition form-id kind allowed space-sym
-                                              main-prec main-assc)
+                                              main-prec main-assc main-kws
+                                              extra-kws extra-shapes)
                   gs rhss))
   (check-consistent stx
                     (let ([names (map pre-parsed-name ps)])
@@ -340,21 +370,42 @@
         #'make-prefix-id
         #'make-infix-id
         #'prefix+infix-id)
+     #'(define-operator-definition-transformer
+         id
+         'protocol
+         space
+         #:extra ()
+         #'make-prefix-id
+         #'make-infix-id
+         #'prefix+infix-id)]
+    [(_ id
+        'protocol
+        space
+        #:extra ([extra-kw extra-static-infos extra-shape] ...)
+        #'make-prefix-id
+        #'make-infix-id
+        #'prefix+infix-id)
      #`(begin
          (define-defn-syntax id
            (make-operator-definition-transformer-runtime 'protocol
                                                          'space
-                                                         #'compiletime-id))
+                                                         #'compiletime-id
+                                                         '(extra-kw ...)
+                                                         '(extra-shape ...)))
          (begin-for-syntax
            (define-syntax compiletime-id
              (make-operator-definition-transformer-compiletime #'make-prefix-id
                                                                #'make-infix-id
                                                                #'prefix+infix-id
-                                                               'space))))]))
+                                                               'space
+                                                               #'(extra-static-infos ...)
+                                                               '(extra-shape ...)))))]))
 
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
                                                                  space-sym
-                                                                 compiletime-id)
+                                                                 compiletime-id
+                                                                 extra-kws
+                                                                 extra-shapes)
   (define kind protocol)
   (definition-transformer
     (lambda (stx)
@@ -371,11 +422,13 @@
                                            space-sym
                                            compiletime-id
                                            #f #f
-                                           #'() #'()))]
+                                           #'() #'() '()
+                                           #:extra-kws extra-kws
+                                           #:extra-shapes extra-shapes))]
         [(form-id main-op::operator-or-identifier-or-$
                   (~optional
                    (_::block
-                    (~var main-options (:all-operator-options space-sym))))
+                    (~var main-options (:macro-all-operator-options space-sym extra-kws))))
                   (alts-tag::alts ~!
                                   (_::block (group q::operator-syntax-quote
                                                    (~and rhs (_::block body ...))))
@@ -389,7 +442,12 @@
                                            compiletime-id
                                            #'main-op.name #'main-op.extends
                                            (if (attribute main-options) #'main-options.prec #'())
-                                           (if (attribute main-options) #'main-options.assc #'())))]
+                                           (if (attribute main-options) #'main-options.assc #'())
+                                           (if (attribute main-options)
+                                               (extract-extra-binds stx extra-kws extra-shapes #'main-options #f)
+                                               #'())
+                                           #:extra-kws extra-kws
+                                           #:extra-shapes extra-shapes))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (_::block body ...)))
          (list (parse-operator-definition #'form-id
@@ -398,13 +456,17 @@
                                           #'q.g
                                           #'rhs
                                           space-sym
-                                          compiletime-id))]))))
+                                          compiletime-id
+                                          #:extra-kws extra-kws
+                                          #:extra-shapes extra-shapes))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-operator-definition-transformer-compiletime make-prefix-id
                                                                        make-infix-id
                                                                        prefix+infix-id
-                                                                       space-sym)
+                                                                       space-sym
+                                                                       extra-static-infoss
+                                                                       extra-shapes)
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
@@ -412,13 +474,17 @@
          (parse-operator-definition-rhs #'orig-stx #'pre-parsed
                                         space-sym
                                         make-prefix-id
-                                        make-infix-id)]
+                                        make-infix-id
+                                        #:extra-static-infoss extra-static-infoss
+                                        #:extra-shapes extra-shapes)]
         [(form-id #:multi orig-stx pre-parsed ...)
          (parse-operator-definitions-rhs #'orig-stx (syntax->list #'(pre-parsed ...))
                                          space-sym
                                          make-prefix-id
                                          make-infix-id
-                                         prefix+infix-id)]))))
+                                         prefix+infix-id
+                                         #:extra-static-infoss extra-static-infoss
+                                         #:extra-shapes extra-shapes)]))))
 
 ;; ----------------------------------------
 
@@ -501,37 +567,16 @@
     #:datum-literals (group)
     [(form-id q::identifier-syntax-quote
               (~and rhs (tag::block
-                         (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
-                                                                   (_::block (group self-id:identifier))))
-                                          #:defaults ([self-id #'self]))
-                               (~optional (group #:all_stx ~! (~or* all-id:identifier
-                                                                    (_::block (group all-id:identifier))))
-                                          #:defaults ([all-id #'#f]))
-                               (group (~var kw (:keyword-matching extra-kws))
-                                      ~!
-                                      (~or* (_::block (group extra))
-                                            extra)))
-                         ...
+                         (~var opt (:transformer-options #f extra-kws))
                          body ...)))
      (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-     (k p #`(#,compiletime-id (#,p) (self-id) (all-id) (#,(extract-extra-binds stx extra-kws extra-shapes #'(kw ...)
-                                                                               #'(extra ...)))))]
+     (k p #`(#,compiletime-id (#,p) (opt.self-id) (opt.all-id) (#,(extract-extra-binds stx extra-kws extra-shapes #'opt #f))))]
     [(form-id (_::alts
                (_::block
                 (group
                  q::identifier-syntax-quote
                  (~and rhs (tag::block
-                            (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
-                                                                      (_::block (group self-id:identifier))))
-                                             #:defaults ([self-id #'self]))
-                                  (~optional (group #:all_stx ~! (~or* all-id:identifier
-                                                                       (_::block (group all-id:identifier))))
-                                             #:defaults ([all-id #'#f]))
-                                  (group (~var kw (:keyword-matching extra-kws))
-                                         ~!
-                                         (~or* (_::block (group extra))
-                                               extra)))
-                            ...
+                            (~var opt (:transformer-options #f extra-kws))
                             body ...))))
                ...))
          (define ps (for/list ([g (in-list (syntax->list #'(q.g ...)))]
@@ -540,16 +585,35 @@
          (check-consistent stx
                            (map pre-parsed-name ps)
                            "operator")
-         (ks ps #`(#,compiletime-id #,ps (self-id ...) (all-id ...) #,(extract-extra-bindss stx extra-kws extra-shapes #'((kw ...) ...)
-                                                                                            #'((extra ...) ...))))]))
+         (ks ps #`(#,compiletime-id #,ps (opt.self-id ...) (opt.all-id ...) #,(map (lambda (opts)
+                                                                                     (extract-extra-binds stx extra-kws extra-shapes opts #f))
+                                                                                   (syntax->list #'(opt ...)))))]))
 
 (begin-for-syntax
-  (define (extract-extra-binds stx extra-kws extra-shapes kws-stx binds-stx)
+  (define (extract-extra-binds stx extra-kws extra-shapes opts main-kws)
+    (define-values (kws-stx binds-stx)
+      (for/lists (kws-stx binds-stx) ([opt (in-list (syntax->list opts))]
+                                      #:do [(define-values (kw bind)
+                                              (syntax-parse opt
+                                                #:datum-literals (group)
+                                                [(group (~var kw (:keyword-matching extra-kws))
+                                                        ~!
+                                                        (~or* (_::block (group bind))
+                                                              bind))
+                                                 (values #'kw #'bind)]
+                                                [_ (values #f #f)]))]
+                                      #:when kw)
+        (values kw bind)))
     (define shape-ht (for/hasheq ([extra-kw (in-list extra-kws)]
                                   [extra-shape (in-list extra-shapes)])
                        (values extra-kw extra-shape)))
-    (define ht (for/fold ([ht #hasheq()]) ([kw-stx (in-list (syntax->list kws-stx))]
-                                           [bind (in-list (syntax->list binds-stx))])
+    (define main-ht (if main-kws
+                        (for/hasheq ([extra-kw (in-list extra-kws)]
+                                     [main-kw (in-list main-kws)])
+                          (values extra-kw main-kw))
+                        #hasheq()))
+    (define ht (for/fold ([ht main-ht]) ([kw-stx (in-list kws-stx)]
+                                         [bind (in-list binds-stx)])
                  (when (hash-ref ht (syntax-e kw-stx) #f)
                    (raise-syntax-error #f "duplicate option" stx kw-stx))
                  (case (hash-ref shape-ht (syntax-e kw-stx))
@@ -562,11 +626,7 @@
                       (raise-syntax-error #f "expected an identifier" stx bind))])
                  (hash-set ht (syntax-e kw-stx) bind)))
     (for/list ([kw (in-list extra-kws)])
-      (hash-ref ht kw #f)))
-  (define (extract-extra-bindss stx extra-kws extra-shapes kws-stxs binds-stxs)
-    (for/list ([kws-stx (in-list (syntax->list kws-stxs))]
-               [binds-stx (in-list (syntax->list binds-stxs))])
-      (extract-extra-binds stx extra-kws extra-shapes kws-stx binds-stx))))
+      (hash-ref ht kw #f))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infoss-stx extra-shapes)

@@ -6,7 +6,6 @@
                      racket/phase+space
                      "realm.rkt"
                      "pack.rkt"
-                     "name-path-op.rkt"
                      "dotted-sequence.rkt"
                      "realm.rkt"
                      "define-arity.rkt"
@@ -18,9 +17,8 @@
                      "srcloc.rkt"
                      "treelist.rkt")
          "space.rkt"
-         "name-root-space.rkt"
-         "name-root-ref.rkt"
-         "is-static.rkt")
+         "is-static.rkt"
+         "operator-compare.rkt")
 
 (module+ for-unquote
   (provide (for-syntax syntax_meta.equal_binding)))
@@ -49,14 +47,14 @@
                                    [sp expr-space-path]
                                    [fail (lambda ()
                                            (raise-syntax-error who "no binding" id/op))])
-    (define id (extract-name who id/op sp))
+    (define id (extract-name/sp who id/op sp))
     (syntax-local-value id (if (and (procedure? fail)
                                     (procedure-arity-includes? fail 0))
                                fail
                                (lambda () fail))))
 
   (define (extract-free-name who stx sp)
-    (extract-name who stx sp #:build-dotted? #t))
+    (extract-name/sp who stx sp #:build-dotted? #t))
 
   (define/arity syntax_meta.equal_binding
     (case-lambda
@@ -88,39 +86,11 @@
                    [n2 (in-list l2)])
            (bound-identifier=? n1 n2 phase))))
 
-  (define (extract-name who stx sp
-                        #:build-dotted? [build-dotted? #f])
+  (define (extract-name/sp who stx sp
+                           #:build-dotted? [build-dotted? #f])
     (unless (space-name? sp) (raise-argument-error* who rhombus-realm "SpaceMeta" sp))
-    (define in-space (let ([space-sym (space-name-symbol sp)])
-                       (if space-sym
-                           (make-interned-syntax-introducer space-sym)
-                           (lambda (x) x))))
-    (define s (unpack-term stx #f #f))
-    (or (cond
-          [(identifier? s) (in-space s)]
-          [s
-           (syntax-parse s
-             #:datum-literals (op)
-             [(op id) (in-space #'id)]
-             [_ #f])]
-          [else
-           (define g (unpack-group stx #f #f))
-           (and g
-                (syntax-parse g
-                  #:datum-literals (group)
-                  [(group . (~var name (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref/maybe)))
-                   #:when (null? (syntax-e #'name.tail))
-                   (in-space #'name.name)]
-                  [(group n::dotted-operator-or-identifier-sequence)
-                   (cond
-                     [build-dotted?
-                      (define l (syntax->list #'n))
-                      (datum->syntax (car l)
-                                     (build-dot-symbol l #:skip-dots? #t))]
-                     [else
-                      (datum->syntax #f 'none)])]
-                  [_ #f]))])
-        (raise-argument-error* who rhombus-realm "Name" stx)))
+    (extract-name who stx (space-name-symbol sp)
+                  #:build-dotted? build-dotted?))
 
   (define (extract-name-components who stx)
     (define s (unpack-term stx #f #f))

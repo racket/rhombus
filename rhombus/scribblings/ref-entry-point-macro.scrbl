@@ -51,7 +51,7 @@
 @itemlist(
 
  @item{@rhombus(#'arity): gets an encoding of the arity that the
-  generated function will have, not counting any antra arguments that
+  generated function will have, not counting any extra arguments that
   might be added through an adjustment. The encoding for an arity is
   explained below. The @rhombus(adj_id) specified by @rhombus(~adjustment)
   is bound to @rhombus(#false). This mode of expansion is sometimes used
@@ -63,7 +63,7 @@
   the latter case, the function should be potentially adjusted with extra
   leading arguments and a wrapper for the body, where the adjustments are
   provided via a @rhombus(entry_point_meta.Adjustment, ~class) value for
-  @rhombus(adj_id). Adjusts might add a ``self'' argument for a method,
+  @rhombus(adj_id). Adjustments might add a ``self'' argument for a method,
   for example, and wrap a body to bind names for direct access to object
   fields and methods.}
 
@@ -76,7 +76,7 @@
  function can receives that many by-position arguments. A list value
  starts with an arity for by-position arguments, but also has a list of
  keywords that are allowed and a list of keywords that are required; the
- list of allowed keywords can be @rhombus(#false) to indicate athat any
+ list of allowed keywords can be @rhombus(#false) to indicate that any
  keyword is allowed. The context of an entry point may constrain the
  acceptable arities or use arity information for a more efficient
  expansion.
@@ -136,14 +136,26 @@
 
 @doc(
   fun entry_point_meta.pack(stx :: Syntax) :: Syntax
+  fun entry_point_meta.unpack(stx :: Syntax) :: Syntax
+  fun entry_point_meta.pack_arity(arity :: False || Int || List) :: Syntax
+  fun entry_point_meta.unpack_arity(stx :: Syntax) :: False || Int || List
 ){
 
  @provided_meta()
 
- Packs an expression for a function as a result for a
- @rhombus(entry_point.macro) expansion, distinguishing it from an
- unpacked syntax objects that represents expansion to another @tech{entry
-  point} form.
+ The @rhombus(entry_point_meta.pack) function packs an expression for a
+ function as a result for a @rhombus(entry_point.macro) expansion,
+ distinguishing it from an unpacked syntax objects that represents
+ expansion to another @tech{entry point} form. The
+ @rhombus(entry_point_meta.unpack) function is the inverse of
+ @rhombus(entry_point_meta.pack).
+
+ The @rhombus(entry_point_meta.pack_arity) and
+ @rhombus(entry_point_meta.unpack_arity) functions similarly handle
+ encodings of entry-point arity results. An entry point macro should
+ @emph{not} explicitly pack its result with
+ @rhombus(entry_point_meta.pack_arity), but these functions can be useful
+ when using the @rhombus(entry_point_meta.Arity, ~stxclass) syntax class.
 
 }
 

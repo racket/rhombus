@@ -7,7 +7,7 @@ use_static
 export:
   |>
 
-expr.macro '$arg |> $func':
+expr.macro '$arg |> $tail ...':
   ~op_stx: self
   ~weaker_than: ~other
   // Convert to a dynamic or static call:
@@ -15,6 +15,14 @@ expr.macro '$arg |> $func':
     if statinfo_meta.is_static(self)
     | statinfo_meta.static_call_name
     | statinfo_meta.dynamic_call_name
+  // Parse function as entry point, if possible, to supply static info of `arg`
+  let arg_si = statinfo_meta.pack(statinfo_meta.gather(arg))
+  let (func, tail):
+    match '$tail ...'
+    | '$(func :: immediate_callee_meta.Parsed([arg_si], #'infix, self))':
+        values(func, '$func.tail ...')
+    | '$(func :: expr_meta.AfterInfixParsed(self))':
+        values(func, '$func.tail ...')
   // The expansion:
   let expr:
     'block:
@@ -26,4 +34,5 @@ expr.macro '$arg |> $func':
   let [_, unpacked_res]:
     ress.find(fun ([mask, unpacked_info]): mask bits.and 2)
       || [-1, '()']
-  statinfo_meta.wrap(expr, unpacked_res)
+  values(statinfo_meta.wrap(expr, unpacked_res),
+         tail)

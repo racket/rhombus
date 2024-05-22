@@ -386,7 +386,7 @@
 
  @provided_meta()
 
- Matches forms that combine a binding with an optional kyword and
+ Matches forms that combine a binding with an optional keyword and
  optional default-value expression, like @rhombus(bind_maybe_kw_opt) for
  @rhombus(fun).
 
@@ -452,6 +452,22 @@
   which is useful for raising an exception when conversion fails.}
 
 )
+
+}
+
+
+@doc(
+  fun bind_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
+                                    left_op :: Name,
+                                    right_infix_op :: Name)
+    :: matching(#'weaker || #'stronger || #false)
+  fun bind_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
+                           left_op :: Name,
+                           tail :: Group) :: Boolean
+){
+
+ Like @rhombus(expr_meta.relative_precedence) and
+ @rhombus(expr_meta.ends_parse), but for binding operators.
 
 }
 
