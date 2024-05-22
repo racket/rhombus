@@ -138,15 +138,17 @@
                 (define ht (wrap (make-weak-hash)))
                 (build-mutable-set 'x-weak-mutable-set-build ht args))
               (define-key-comp-syntax name.name
-                (key-comp 'name.name #'x-map?
-                          #'x-map-build #'x-map-pair-build #'list->x-map
-                          #'mutable-x-map? #'x-mutable-map-build
-                          #'weak-mutable-x-map? #'x-weak-mutable-map-build
-                          #'empty-x-map
-                          #'immutable-x-set?
-                          #'x-set-build #'x-set-build #'list->x-set
-                          #'mutable-x-set? #'x-mutable-set-build
-                          #'weak-mutable-x-set? #'x-weak-mutable-set-build))))]))))
+                (key-comp-maker
+                 (lambda ()
+                   (key-comp 'name.name #'x-map?
+                             #'x-map-build #'x-map-pair-build #'list->x-map
+                             #'mutable-x-map? #'x-mutable-map-build
+                             #'weak-mutable-x-map? #'x-weak-mutable-map-build
+                             #'empty-x-map
+                             #'immutable-x-set?
+                             #'x-set-build #'x-set-build #'list->x-set
+                             #'mutable-x-set? #'x-mutable-set-build
+                             #'weak-mutable-x-set? #'x-weak-mutable-set-build))))))]))))
 
 (define (hash-procedures #:equals equals #:hash_code hash_code)
   (unless (and (procedure? equals) (procedure-arity-includes? equals 3))
