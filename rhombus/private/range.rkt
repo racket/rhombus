@@ -339,6 +339,8 @@
      (syntax-local-lift-module-end-declaration
       #'(struct name range ((~? start) (~? end))
           #:omit-define-syntaxes
+          #:authentic
+          #:sealed
           #:constructor-name unsafe-name
           #:property prop:field-name->accessor (list* '() range-method-table #hasheq())
           #:property prop:equal+hash (list
@@ -392,9 +394,9 @@
                            (unsafe-name))])
                Name)))]))
 
-(struct range ())
-(struct sequence-range range ())
-(struct list-range sequence-range ())
+(struct range () #:authentic)
+(struct sequence-range range () #:authentic)
+(struct list-range sequence-range () #:authentic)
 
 (define-range list-range range-from-to Range.from_to ".." start end
   range-from-to->sequence
@@ -463,6 +465,8 @@
   #f)
 
 (struct range-sequence (start inc cont?)
+  #:authentic
+  #:sealed
   #:property prop:sequence (lambda (r)
                              (make-do-sequence
                               (lambda ()

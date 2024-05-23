@@ -374,6 +374,8 @@
   (print v op mode))
 
 (struct racket-print-redirect (val)
+  #:authentic
+  #:sealed
   #:property prop:custom-write
   (lambda (r op mode)
     (case mode

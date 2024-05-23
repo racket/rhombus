@@ -22,15 +22,15 @@
          pretty-nest
          pretty-align
          pretty-or
-         
+
          pretty-listlike
          pretty-blocklike
 
          render-pretty)
 
-(struct PrintDesc (doc))
+(struct PrintDesc (doc) #:authentic #:sealed)
 
-(struct pretty-ref ([doc #:mutable]))
+(struct pretty-ref ([doc #:mutable]) #:authentic #:sealed)
 
 (define current-print-as-pretty (make-parameter #f
                                                 (lambda (v) (and v #t))

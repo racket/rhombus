@@ -145,6 +145,7 @@
            set-ht))
 
 (struct set (ht)
+  #:sealed
   #:property prop:equal+hash
   (list (lambda (self other eql? mode)
           (eql? (set-ht self) (set-ht other)))

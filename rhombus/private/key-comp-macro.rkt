@@ -63,6 +63,8 @@
               ;; keys are wrapped in this struct, which lets use our own
               ;; hash function for the keys
               (struct x (v)
+                #:authentic
+                #:sealed
                 #:property prop:equal+hash (list (lambda (a b recur mode)
                                                    (x-equals? (x-v a) (x-v b) recur))
                                                  (lambda (a recur mode)

@@ -32,6 +32,8 @@
 
 
 (struct module-path (raw)
+  #:authentic
+  #:sealed
   #:property prop:equal+hash (list
                               (lambda (v v2 eql?)
                                 (eql? (module-path-raw v) (module-path-raw v2)))
