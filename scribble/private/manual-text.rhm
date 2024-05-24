@@ -40,7 +40,7 @@ fun tech(pre_content :: PreContent,
   tech(pre_content,
        ~key: key,
        #{#:normalize?}: normalize,
-       ~doc: doc && ModulePath.s_exp(doc),
+       ~doc: doc && (doc :~ ModulePath).s_exp(),
        #{#:tag-prefixes}: convert_list(prefixes),
        #{#:indirect?}: indirect)
 

@@ -19,9 +19,9 @@ fun title(~tag: tag :: maybe(String || List.of(String)) = #false,
           pre_content :: PreContent):
   base.title(~tag: convert_list(tag),
              #{#:tag-prefix}:
-               if tag_prefix is_a ModulePath
-               | ModulePath.s_exp(tag_prefix)
-               | tag_prefix,
+               match tag_prefix
+               | mp :: ModulePath: mp.s_exp()
+               | ~else: tag_prefix,
              ~style: convert_list(style),
              ~version: vers,
              ~date: date,
@@ -34,9 +34,9 @@ defn.macro 'def_section $section: $rkt_section':
                 pre_content :: PreContent):
      base . $rkt_section(~tag: convert_list(tag),
                          #{#:tag-prefix}:
-                           if tag_prefix is_a ModulePath
-                           | ModulePath.s_exp(tag_prefix)
-                           | tag_prefix,
+                           match tag_prefix
+                           | mp :: ModulePath: mp.s_exp()
+                           | ~else: tag_prefix,
                          ~style: convert_list(style),
                          pre_content)'
 

@@ -37,7 +37,7 @@ fun secref(tag :: String,
            ~underline: underline = #true,
            ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false):
   base.secref(tag,
-              ~doc: module_path && ModulePath.s_exp(module_path),
+              ~doc: module_path && (module_path :~ ModulePath).s_exp(),
               #{#:tag-prefixes}: convert_list(prefixes),
               #{#:underline?}: underline,
               #{#:link-render-style}: ref_style && core.#{link-render-style}(ref_style))
@@ -48,7 +48,7 @@ fun Secref(tag :: String,
            ~underline: underline = #true,
            ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false):
   base.Secref(tag,
-              ~doc: module_path && ModulePath.s_exp(module_path),
+              ~doc: module_path && (module_path :~ ModulePath).s_exp(),
               #{#:tag-prefixes}: convert_list(prefixes),
               #{#:underline?}: underline,
               #{#:link-render-style}: ref_style && core.#{link-render-style}(ref_style))
@@ -60,7 +60,7 @@ fun seclink(tag :: String,
             ~indirect: indirect = #false,
             pre_content :: Content = []):
   base.seclink(tag,
-               ~doc: module_path && ModulePath.s_exp(module_path),
+               ~doc: module_path && (module_path :~ ModulePath).s_exp(),
                #{#:tag-prefixes}: convert_list(prefixes),
                #{#:underline?}: underline,
                #{#:indirect?}: indirect,
@@ -69,7 +69,7 @@ fun seclink(tag :: String,
 fun docref(module_path :: ModulePath,
            ~underline: underline = #true,
            ~indirect: indirect = #false):
-  base.#{other-doc}(ModulePath.s_exp(module_path),
+  base.#{other-doc}(module_path.s_exp(),
                     #{#:underline?}: underline,
                     #{#:indirect?}: indirect)
 

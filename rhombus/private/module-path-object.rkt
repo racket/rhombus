@@ -11,8 +11,11 @@
          (submod "module-path.rkt" for-import-export)
          "expression.rkt"
          (submod "annotation.rkt" for-class)
-         "name-root.rkt"
+         (submod "dot.rkt" for-dot-provider)
+         "class-primitive.rkt"
          "define-arity.rkt"
+         "static-info.rkt"
+         "call-result-key.rkt"
          "realm.rkt"
          "module-path-parse.rkt"
          "parens.rkt"
@@ -30,10 +33,23 @@
            module-path?
            module-path-raw))
 
+(define/method (ModulePath.s_exp mp)
+  (module-path-s-exp who mp))
+
+(define-primitive-class ModulePath module-path
+  #:no-constructor-static-info
+  #:existing
+  #:opaque
+  #:fields ()
+  #:properties
+  ()
+  #:methods
+  (s_exp))
 
 (struct module-path (raw)
   #:authentic
   #:sealed
+  #:property prop:field-name->accessor (list* '() module-path-method-table #hasheq())
   #:property prop:equal+hash (list
                               (lambda (v v2 eql?)
                                 (eql? (module-path-raw v) (module-path-raw v2)))
@@ -89,6 +105,8 @@
                                       (loop (cdr more)))])))]))])]
        [else `(group (op ???) (group ,raw))])]))
 
+(define-annotation-syntax ModulePath
+  (identifier-annotation module-path? #,(get-module-path-static-infos)))
 
 (define-syntax ModulePath-form
   (expression-transformer
@@ -97,24 +115,21 @@
        #:datum-literals (group)
        [(_ (_::quotes mod-path::module-path) . tail)
         ;; syntactic form with static parsing based on binding
-        (values #`(module-path (quote #,(convert-symbol-module-path #'mod-path.parsed)))
+        (values (wrap-static-info*
+                 #`(module-path (quote #,(convert-symbol-module-path #'mod-path.parsed)))
+                 (get-module-path-static-infos))
                 #'tail)]
        [(_ . tail)
         ;; dynamic parsing based on syntax-object literals
         (values #'ModulePath #'tail)]))))
 
-(define-annotation-syntax ModulePath (identifier-annotation module-path? ()))
-
-(define-name-root ModulePath
-  #:fields
-  ([s_exp ModulePath.s_exp]))
-
-(define/arity (ModulePath.s_exp mp)
+(define (module-path-s-exp who mp)
   (unless (module-path? mp)
     (raise-argument-error* who rhombus-realm "ModulePath" mp))
   (module-path-raw mp))
 
 (define/arity (ModulePath stx)
+  #:static-infos ((#%call-result #,(get-module-path-static-infos)))
   (define g (and (syntax? stx) (unpack-group stx #f #f)))
   (unless g (raise-argument-error* who rhombus-realm "Group" stx))
   (define (bad)

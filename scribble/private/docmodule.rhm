@@ -1,4 +1,4 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 import:
   lib("scribble/manual.rkt"):
     expose:
@@ -19,17 +19,19 @@ export:
 meta:
   fun as_racket_mod_name(mod):
     match mod
-    | '$(a :: Identifier)': mod
-    | '$a / $b ...':
-        Syntax.make_id(Syntax.unwrap(a)
-                         +& "/"
-                         +& as_racket_mod_name('$b ...'))
+    | '$(a :: Identifier)':
+        a
+    | '$(a :: Identifier) $('/ $(b :: Identifier)') ...':
+        String.append(to_string(a),
+                      & (for List (b: [b, ...]):
+                           "/" ++ to_string(b)))
+          |> Syntax.make_id(_)
     | 'lib($str)':
         ['lib', str]
 
   fun
   | pack_tree(PairList[v, ...]): PairList[pack_tree(v), ...]
-  | pack_tree([v, ...]): pack_tree(PairList[pack_tree(v), ...])
+  | pack_tree([v, ...]): PairList[pack_tree(v), ...]
   | pack_tree(v): Syntax.make(v, #false)
 
   syntax_class Option
@@ -37,9 +39,9 @@ meta:
       field [form, ...]: ['~lang']
   | '~no_declare':
       field [form, ...]: ['#{#:no-declare}']
-  | '~use_sources: $modpath; ...':
+  | '~use_sources: $mod ...; ...':
       field [form, ...]: ['#{#:use-sources}',
-                          pack_tree([ModulePath.s_exp(ModulePath('$modpath')),
+                          pack_tree([ModulePath('$mod ...').s_exp(),
                                      ...])]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
@@ -55,12 +57,12 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
     | ['defmodule',
        '#{#:require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
        expr_meta.pack_expr('@rhombusmodname($mod ...)'),
-       '#{#:module-paths}', pack_tree([ModulePath.s_exp(ModulePath('$mod ...'))]),
+       '#{#:module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
        option.form, ..., ...])
 
 expr.macro 'rhombusmodname ($mod ...)':
   expr_meta.pack_s_exp(['racketmodlink',
-                        pack_tree(ModulePath.s_exp(ModulePath('$mod ...'))),
+                        pack_tree(ModulePath('$mod ...').s_exp()),
                         expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
 
 expr.macro 'rhombuslangname ($mod ...)':

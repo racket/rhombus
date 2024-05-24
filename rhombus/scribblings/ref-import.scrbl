@@ -438,15 +438,23 @@
   ~nonterminal:
     module_path: import ~defn
   annot.macro 'ModulePath'
+
   fun ModulePath(mod_stx :: Group) :: ModulePath
   expr.macro '«ModulePath '$module_path'»'
-  fun ModulePath.s_exp(modmath :: ModulePath) :: Any
+
+  fun ModulePath.s_exp(mp :: ModulePath) :: Any
 ){
 
  The @rhombus(ModulePath, ~annot) annotation recognizes values that
  represent module paths, and the @rhombus(ModulePath) function and
  expression form create such a value for a syntax-object
  @rhombus(mod_stx) or a quoted @rhombus(module_path).
+
+@dispatch_table(
+  "module path"
+  ModulePath
+  mp.s_exp()
+)
 
  The format of a @rhombus(module_path) or the content of
  @rhombus(mod_stx) is the same as for @rhombus(import, ~defn), except
