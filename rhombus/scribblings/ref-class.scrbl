@@ -180,10 +180,11 @@
  then an additional field is added to the class, but the additional field
  is not represented by an arguments to the default constructor, annotation form,
  or binding-pattern form. Instead, the @rhombus(expr) or
- @rhombus(body) block the  @rhombus(field, ~class_clause) gives the added
+ @rhombus(body) block the @rhombus(field, ~class_clause) gives the added
  field its initial value; that expression or block is evaluated each time an instance
- of the class is created, but it cannot refer to @rhombus(this),
- fields of the class, methods of the class, or properties of the class. All fields
+ of the class is created, and it can refer to @rhombus(field_spec) names
+ and earlier @rhombus(field, ~class_clause) names, but it cannot refer to @rhombus(this),
+ later fields of the class, methods of the class, or properties of the class. All fields
  added through a @rhombus(field, ~class_clause) clause are mutable, and they
  can be updated in a custom constructor (form example) using
  @tech{assignment operators} such as @rhombus(:=). The

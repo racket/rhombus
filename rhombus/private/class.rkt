@@ -324,6 +324,7 @@
 
        (define constructor-keywords (syntax->list #'(constructor-field-keyword ...)))
        (define constructor-defaults (syntax->list #'(constructor-field-default ...)))
+       (define constructor-static-infoss (syntax->list #'(constructor-field-static-infos ...)))
        (define-values (constructor-public-fields constructor-private-fields)
          (partition-fields constructor-fields constructor-private?s #:result values))
        (define-values (constructor-public-keywords constructor-private-keywords)
@@ -338,14 +339,17 @@
                                            (expose given-constructor-name))
                                       expression-macro-rhs)
 
-       (define has-defaults? (any-stx? constructor-defaults))
+       (define has-defaults? (or (pair? added-fields) (any-stx? constructor-defaults)))
        (define has-keywords? (any-stx? constructor-keywords))
        (define-values (super-constructor-fields super-keywords super-defaults)
          (extract-super-constructor-fields super))
        (define-values (super-constructor+-fields super-constructor+-keywords super-constructor+-defaults)
+         ;; The "constructor+" list corresponds to private fields in the internal constructor as well
+         ;; as the main constructor --- that is, all the fields listed in parentheses after the class name
          (extract-super-internal-constructor-fields super super-constructor-fields super-keywords super-defaults))
        (define super-has-keywords? (any-stx? super-keywords))
-       (define super-has-defaults? (any-stx? super-constructor+-defaults))
+       (define super-has-defaults? (and super (identifier? (class-desc-defaults-id super))))
+
        (define super-has-by-position-default? (for/or ([kw (in-list super-keywords)]
                                                        [df (in-list super-defaults)])
                                                 (and (not (syntax-e kw))
@@ -453,7 +457,8 @@
        (with-syntax ([class:name (temporary "class:~a")]
                      [make-name (temporary "make-~a")]
                      [name-ref (temporary "~a-ref")]
-                     [name-defaults (and (or super-has-defaults? (and has-defaults? (not final?)))
+                     [name-defaults (and (or super-has-defaults? has-defaults?)
+                                         (not final?)
                                          (temporary "~a-defaults"))]
                      [(name-field ...) all-name-fields]
                      [(set-name-field! ...) (for/list ([id (in-list maybe-set-name-fields)]
@@ -615,14 +620,16 @@
                                            [dot-id ...]
                                            ((recon-field-name recon-field-acc)
                                             ...)))
-               (build-added-field-arg-definitions added-fields)
+               (build-added-field-arg-definitions added-fields
+                                                  constructor-fields
+                                                  constructor-static-infoss)
                ;; note: class name as expression is bound via `build-class-dot-handling`
                (build-class-constructor super constructor-rhs given-constructor-stx-params
                                         added-fields constructor-private?s
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
                                         constructor-defaults super-defaults super-constructor+-defaults
-                                        (syntax->list #'(constructor-field-static-infos ...))
+                                        constructor-static-infoss
                                         method-private
                                         need-constructor-wrapper?
                                         abstract-name

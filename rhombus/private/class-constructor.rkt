@@ -61,19 +61,41 @@
                        (cons #`(define-static-info-syntax/maybe #,(car fields)
                                  #,@(car constructor-field-static-infoss))
                              accum)))])))
-    (define (build-field-init id) #`(#%plain-app #,id))
+    (define non-constructor-fields
+      ;; recycling the names of the functions to call as binding for the result of the call
+      (map added-field-arg-id added-fields))
+    (define all-field-names (append constructor-fields non-constructor-fields))
+    (define super-all-field-names (if super
+                                      (append super-constructor+-fields
+                                              (generate-temporaries
+                                               (list-tail (or (class-desc-all-fields super)
+                                                              (class-desc-fields super))
+                                                          (length super-constructor+-fields))))
+                                      null))
+    (define (make-added-field-bindings)
+      (let loop ([non-constructor-fields non-constructor-fields]
+                 [args constructor-fields])
+        (cond
+          [(null? non-constructor-fields) '()]
+          [else
+           (define id (car non-constructor-fields))
+           (cons #`[#,id (#%plain-app #,id #,@args)]
+                 (loop (cdr non-constructor-fields) (cons id args)))])))
     (append
      (if (syntax-e #'name-defaults)
          (list
           ;; default-value expressions should see only earlier fields
           ;; from `constructor-fields`, so use some temporary names
           ;; to make sure they can't be referenced
-          (let ([super-tmps (generate-temporaries super-constructor+-fields)]
-                [tmps (generate-temporaries constructor-fields)])
+          (let* ([super-tmps (generate-temporaries super-constructor+-fields)]
+                 [all-super-tmps (append super-tmps
+                                         (generate-temporaries (list-tail super-all-field-names
+                                                                          (length super-constructor+-fields))))]
+                 [tmps (generate-temporaries constructor-fields)])
             #`(define (name-defaults #,@(append super-tmps tmps))
                 (let-values #,(cond
                                 [super-has-defaults?
-                                 #`([#,super-tmps
+                                 #`([#,all-super-tmps
                                      (#,(class-desc-defaults-id super) . #,super-tmps)])]
                                 [else '()])
                   (let* #,(for/list ([f (in-list constructor-fields)]
@@ -89,7 +111,8 @@
                                           #,tmp)]]
                               [else
                                #`[#,f #,tmp]]))
-                    (values #,@super-tmps #,@constructor-fields))))))
+                    (let* #,(make-added-field-bindings)
+                      (values #,@all-super-tmps #,@constructor-fields #,@non-constructor-fields)))))))
          null)
      (if need-constructor-wrapper?
          (list
@@ -100,7 +123,7 @@
                                                         [df (in-list (append (cond
                                                                                [(and super
                                                                                      (class-desc-constructor-makers super))
-                                                                                ;; no need for optional arguments, because protocol
+                                                                                ;; no need for optional-argument defaults, because protocol
                                                                                 ;; composition will supply `unsafe-undefined` for
                                                                                 ;; missing arguments
                                                                                 (map (lambda (v) #'#f) super-constructor+-defaults)]
@@ -121,63 +144,21 @@
                                                      (list kw arg)
                                                      (list arg)))))
                        (let-values #,(cond
-                                       [(and super-has-defaults? (or final? (not has-defaults?)))
-                                        #`([#,super-constructor+-fields
-                                            (#,(class-desc-defaults-id super) . #,super-constructor+-fields)])]
-                                       [(and has-defaults? (not final?))
+                                       [(syntax-e #'name-defaults)
                                         (define fields (append super-constructor+-fields constructor-fields))
-                                        #`([#,fields (name-defaults . #,fields)])]
+                                        (define all-fields (append super-all-field-names all-field-names))
+                                        #`([#,all-fields (name-defaults . #,fields)])]
+                                       [super-has-defaults?
+                                        #`([#,super-all-field-names
+                                            (#,(class-desc-defaults-id super) . #,super-constructor+-fields)])]
                                        [else '()])
-                         #,(if abstract-name
-                               #`(raise-abstract-methods 'name)
-                               #`(make-all-name #,@(or (and super
-                                                            (class-desc-all-fields super)
-                                                            (let loop ([fields (class-desc-all-fields super)]
-                                                                       [public-fields (class-desc-fields super)]
-                                                                       [c+-fs super-constructor+-fields])
-                                                              (cond
-                                                                [(null? c+-fs) (let loop ([fields fields]
-                                                                                          [public-fields public-fields])
-                                                                                 (cond
-                                                                                   [(null? fields) '()]
-                                                                                   [(and (symbol? (car fields))
-                                                                                         (let ([arg (field-desc-constructor-arg (car public-fields))])
-                                                                                           (and (identifier? arg)
-                                                                                                arg)))
-                                                                                    => (lambda (arg)
-                                                                                         (cons (build-field-init arg)
-                                                                                               (loop (cdr fields) (cdr public-fields))))]
-                                                                                   [else
-                                                                                    (define f (car fields))
-                                                                                    (cons (if (and (pair? f)
-                                                                                                   (identifier? (cdr f)))
-                                                                                              (build-field-init (cdr f))
-                                                                                              f)
-                                                                                          (loop (cdr fields)
-                                                                                                (if (symbol? f)
-                                                                                                    (cdr public-fields)
-                                                                                                    public-fields)))]))]
-                                                                [(and (symbol? (car fields))
-                                                                      (let ([arg (field-desc-constructor-arg (car public-fields))])
-                                                                        (and (identifier? arg)
-                                                                             arg)))
-                                                                 => (lambda (arg)
-                                                                      (cons (build-field-init arg)
-                                                                            (loop (cdr fields) (cdr public-fields) c+-fs)))]
-                                                                [(and (pair? (car fields))
-                                                                      (identifier? (cdar fields)))
-                                                                 (cons (build-field-init (cdar fields))
-                                                                       (loop (cdr fields) public-fields c+-fs))]
-                                                                [else
-                                                                 (cons (car c+-fs) (loop (cdr fields)
-                                                                                         (if (symbol? (car fields)) (cdr public-fields) public-fields)
-                                                                                         (cdr c+-fs)))])))
-                                                       (for/list ([f (in-list (if super (class-desc-fields super) null))])
-                                                         (if (identifier? (field-desc-constructor-arg f))
-                                                             (build-field-init (field-desc-constructor-arg f))
-                                                             (field-desc-name f))))
-                                                #,@constructor-fields
-                                                #,@(map (lambda (f) (build-field-init (added-field-arg-id f))) added-fields)))))])
+                         (let* #,(if (and has-defaults? final?)
+                                     (make-added-field-bindings)
+                                     #'())
+                           #,(if abstract-name
+                                 #`(raise-abstract-methods 'name)
+                                 #`(make-all-name #,@super-all-field-names
+                                                  #,@all-field-names)))))])
                 name)))
          null)
      (cond
