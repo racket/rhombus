@@ -28,6 +28,7 @@
                                             constructor-fields super-constructor-fields super-constructor+-fields
                                             keywords super-keywords super-constructor+-keywords
                                             defaults super-defaults super-constructor+-defaults
+                                            constructor-field-static-infoss
                                             method-private
                                             need-constructor-wrapper?
                                             abstract-name
@@ -45,6 +46,21 @@
                        [private-field-name ...]
                        [private-field-desc ...])
                  names])
+    (define static-info-declss
+      ;; static infos of previous constructor arguments to be used for each construct field
+      ;; that has a default-value expression
+      (let loop ([fields constructor-fields]
+                 [static-infoss constructor-field-static-infoss]
+                 [accum '()])
+        (cond
+          [(null? fields) '()]
+          [else
+           (cons accum
+                 (loop (cdr fields)
+                       (cdr static-infoss)
+                       (cons #`(define-static-info-syntax/maybe #,(car fields)
+                                 #,@(car constructor-field-static-infoss))
+                             accum)))])))
     (define (build-field-init id) #`(#%plain-app #,id))
     (append
      (if (syntax-e #'name-defaults)
@@ -62,11 +78,14 @@
                                 [else '()])
                   (let* #,(for/list ([f (in-list constructor-fields)]
                                      [tmp (in-list tmps)]
-                                     [df (in-list defaults)])
+                                     [df (in-list defaults)]
+                                     [static-info-decls (in-list static-info-declss)])
                             (cond
                               [(syntax-e df)
                                #`[#,f (if (eq? #,tmp unsafe-undefined)
-                                          (let ([#,f #,df]) #,f)
+                                          (let ()
+                                            #,@static-info-decls
+                                            (let ([#,f #,df]) #,f))
                                           #,tmp)]]
                               [else
                                #`[#,f #,tmp]]))
@@ -87,10 +106,15 @@
                                                                                 (map (lambda (v) #'#f) super-constructor+-defaults)]
                                                                                [else
                                                                                 super-constructor+-defaults])
-                                                                             defaults))])
+                                                                             defaults))]
+                                                        [static-info-decls (append (for/list ([cf (in-list super-constructor+-fields)])
+                                                                                     '())
+                                                                                   static-info-declss)])
                                                (let ([arg (if (syntax-e df)
                                                               (if final?
-                                                                  #`[#,f #,df]
+                                                                  #`[#,f (let ()
+                                                                           #,@static-info-decls
+                                                                           #,df)]
                                                                   #`[#,f unsafe-undefined])
                                                               f)])
                                                  (if (keyword? (syntax-e kw))

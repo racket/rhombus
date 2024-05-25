@@ -622,6 +622,7 @@
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
                                         constructor-defaults super-defaults super-constructor+-defaults
+                                        (syntax->list #'(constructor-field-static-infos ...))
                                         method-private
                                         need-constructor-wrapper?
                                         abstract-name

@@ -918,3 +918,23 @@ check:
   class Pack(mutable vs :: List.of(Int))
   Pack.vs(1, 2, 3)
   ~throws "wrong number of arguments in function call (based on static information)"
+
+// make sure static info is propagated for earlier constructor arguments to later defaults
+check:
+  block:
+    class B(b :: String, c = b[0])
+    B("apple")
+  block:
+    class A(a):
+      nonfinal
+    class B(b :: String, c = b[0]):
+      extends A
+    B(1, "apple")
+  block:
+    class A(a):
+      nonfinal
+    class B(b :: String, c = b[0]):
+      extends A
+      nonfinal
+    B(1, "apple")
+  ~completes
