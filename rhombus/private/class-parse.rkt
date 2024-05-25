@@ -120,6 +120,7 @@
 ;;  - (cons sym arg): private as internal constructor argument; sym is name, and see below for arg
 ;;  - (cons sym (vector arg)): like the previous case, but mutable
 ;;  - (cons sym identifier): private and not in constructor; sym is name, and calling identifier supplies default
+;;  - (cons sym (vector identifier)): like the previous case, but *im*mutable
 
 ;; An arg is one of the following:
 ;;  - #f: by-position, required
@@ -138,7 +139,7 @@
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
 
-(struct added-field (id arg-id arg-default arg-stx-params form-id static-infos converter annotation-str mode))
+(struct added-field (id arg-id arg-default arg-stx-params form-id static-infos converter annotation-str mode mutability))
 (struct added-method (id rhs-id rhs stx-params maybe-ret result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
@@ -344,7 +345,11 @@
                 [rev-defaults '()])
        (cond
          [(null? all-fields) (values (reverse rev-fields) (reverse rev-keywords) (reverse rev-defaults))]
-         [(and (pair? (car all-fields)) (identifier? (cdar all-fields))) ; not in constructor
+         [(and (pair? (car all-fields))
+               ;; not in constructor?
+               (or (identifier? (cdar all-fields))
+                   (and (vector? (cdar all-fields))
+                        (identifier? (vector-ref (cdar all-fields) 0)))))
           (loop (cdr all-fields) fields rev-fields rev-keywords rev-defaults)]
          [(pair? (car all-fields)) ; private field in internal constructor, only
           (define f (car (generate-temporaries (list (caar all-fields)))))
@@ -368,7 +373,9 @@
       (and (class-desc-all-fields super)
            (for/or ([af (in-list (class-desc-all-fields super))])
              (and (pair? af)
-                  (or (vector? (cdr af))
+                  (if (vector? (cdr af))
+                      (let ([v (vector-ref (cdr af) 0)])
+                        (not (identifier? v)))
                       (identifier? (cdr af))))))))
 
 (define (super-has-mutable-constructor-field? super)

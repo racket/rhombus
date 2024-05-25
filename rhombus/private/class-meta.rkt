@@ -148,8 +148,8 @@
           [(field_mutabilities)
            (append (for/list ([mutable? (in-list (syntax->list constructor-mutables))])
                      (if (syntax-e mutable?) 'mutable 'immutable))
-                   (map (lambda (n) 'mutable)
-                        (class-clause-extract who (class-expand-data-accum-stx info) 'field-names)))]
+                   (map syntax-e
+                        (class-clause-extract who (class-expand-data-accum-stx info) 'field-mutabilities)))]
           [(field_visibilities)
            (append (for/list ([private? (in-list (syntax->list constructor-privates))])
                      (if (syntax-e private?) 'private 'public))
@@ -230,12 +230,16 @@
                             (sub1 inherited)))]
                [(positive? inherited)
                 (loop (cdr all-fields) fields (sub1 inherited))]
-               [(identifier? (cdar all-fields))
+               [(or (identifier? (cdar all-fields))
+                    (and (vector? (cdar all-fields))
+                         (identifier? (vector-ref (cdar all-fields) 0))))
                 (cons (case key
                         [(field_names) (datum->syntax #f (caar all-fields))]
                         [(field_keywords) #f]
                         [(field_constructives) 'absent]
-                        [(field_mutabilities) 'mutable]
+                        [(field_mutabilities) (if (identifier? (cdar all-fields))
+                                                  'mutable
+                                                  'immutable)]
                         [(field_visibilities) 'private])
                       (loop (cdr all-fields)
                             fields

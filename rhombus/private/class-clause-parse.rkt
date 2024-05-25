@@ -83,10 +83,12 @@
                ;; needed to define a veneer annotation;
                ;; leave checking to `parse-options'
                (hash-set options 'converter? #t)]
-              [(#:field . _)
+              [(#:field mutability . _)
                ;; needed for whether to support converting field annotations;
                ;; leave general handling to `parse-options'
-               (hash-set options 'has-mutable-field? #t)]
+               (if (eq? 'mutable (syntax-e #'mutability))
+                   (hash-set options 'has-mutable-field? #t)
+                   options)]
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_ options]))
@@ -175,7 +177,7 @@
               [(#:static-infos expr)
                ;; covered in annotation pass
                options]
-              [(#:field id rhs-id ann-seq default form-id mode)
+              [(#:field mutability id rhs-id ann-seq default form-id mode)
                (with-syntax ([(converter annotation-str static-infos)
                               (with-continuation-mark
                                syntax-parameters-key (car stx-paramss)
@@ -188,7 +190,8 @@
                                                               #'static-infos
                                                               #'converter
                                                               #'annotation-str
-                                                              (syntax-e #'mode))
+                                                              (syntax-e #'mode)
+                                                              (syntax-e #'mutability))
                                                  (hash-ref options 'fields null))))]
               [(#:primitive-property prop-id val-id)
                (hash-set options 'primitive-properties
@@ -328,10 +331,11 @@
                                                         [(implements_visibilities)
                                                          '(private)]
                                                         [else null])]
-                       [(#:field id rhs-id ann-seq default form-id mode)
+                       [(#:field mutability id rhs-id ann-seq default form-id mode)
                         (case key
                           [(field-names) (list #'id)]
                           [(field-visibilities) (list #'mode)]
+                          [(field-mutabilities) (list #'mutability)]
                           [else null])]
                        [(#:internal id) (case key
                                           [(internal_names) (list #'id)]

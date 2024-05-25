@@ -237,6 +237,49 @@ block:
                                    $('mutables visibilities constructives')
                                    $('methods mvisibilities marities defaults')'
 
+  block:
+    class Posn(x, y):
+      nonfinal
+      internal _Posn
+      field m = "m"
+      immutable i = "i"
+      private field pm = "pm"
+      private immutable pi = "pi"
+    class Posn3D(z):
+      extends Posn
+      field m3 = "m"
+      immutable i3 = "i"
+      private field pm3 = "pm"
+      private immutable pi3 = "pi"
+      bounce
+    def p = Posn3D(1, 2, 3)
+    check:
+      p.names() ~matches 'Posn3D'
+      p.supers() ~matches 'Posn'
+      p.intfs() ~matches ''
+      p.internals() ~matches ''
+      p.fields() ~matches 'z m3 i3 pm3 pi3'
+      p.keywords() ~matches '#false #false #false #false #false'
+      p.mutables() ~matches 'immutable mutable immutable mutable immutable'
+      p.visibilities() ~matches 'public public public private private'
+      p.constructives() ~matches 'required absent absent absent absent'
+      dname Posn ~matches 'Posn'
+      dsuper Posn ~matches ''
+      dinterfaces Posn ~matches ''
+      dfields Posn ~matches 'x y m i'
+      dfield_keywords Posn ~matches '#false #false #false #false'
+      dfield_visabilities Posn ~matches 'public public public public'
+      dfield_constructives Posn ~matches 'required required absent absent'
+      dfield_mutabilities Posn ~matches 'immutable immutable mutable immutable'
+      dname _Posn ~matches 'Posn'
+      dsuper _Posn ~matches ''
+      dinterfaces _Posn ~matches ''
+      dfields _Posn ~matches 'x y m i pm pi'
+      dfield_keywords _Posn ~matches '#false #false #false #false  #false #false'
+      dfield_visabilities _Posn ~matches 'public public public public private private'
+      dfield_constructives _Posn ~matches 'required required absent absent  absent absent'
+      dfield_mutabilities _Posn ~matches 'immutable immutable mutable immutable  mutable immutable'
+
 // Make sure that introduced names can be referenced directly
 
 block:

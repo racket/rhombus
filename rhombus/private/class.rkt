@@ -305,7 +305,9 @@
        (define fields (append constructor-fields extra-fields))
        (define mutables (append (syntax->list #'(constructor-field-mutable ...))
                                 (for/list ([f (in-list added-fields)])
-                                  #'#t)))
+                                  (if (eq? (added-field-mutability f) 'mutable)
+                                      #'#t
+                                      #'#f))))
        (define constructor-private?s (map syntax-e (syntax->list #'(constructor-field-private ...))))
        (define has-private-constructor-fields? (for/or ([priv (in-list constructor-private?s)])
                                                  priv))
@@ -1030,7 +1032,11 @@
                                    (and super (class-desc-all-fields super)))
                                #`(list #,@(map (lambda (i)
                                                  (define (wrap i)
-                                                   (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
+                                                   (cond
+                                                     [(identifier? i) #`(quote-syntax #,i)]
+                                                     [(and (vector? i) (identifier? (vector-ref i 0)))
+                                                      #`(vector (quote-syntax #,(vector-ref i 0)))]
+                                                     [else #`(quote #,i)]))
                                                  (if (pair? i)
                                                      #`(cons (quote #,(car i)) #,(wrap (cdr i)))
                                                      (wrap i)))
@@ -1046,10 +1052,13 @@
                                                                   [private? (in-list private?s)])
                                                          (cond
                                                            [private? (cons (syntax-e name)
-                                                                           (if (and (not (identifier? arg))
-                                                                                    (syntax-e mutator))
-                                                                               (vector arg)
-                                                                               arg))]
+                                                                           (if (identifier? arg)
+                                                                               (if (syntax-e mutator)
+                                                                                   arg
+                                                                                   (vector arg))
+                                                                               (if (syntax-e mutator)
+                                                                                   (vector arg)
+                                                                                   arg)))]
                                                            [else (syntax-e name)]))))))
                         #,(if super
                               (if (class-desc-all-fields super)

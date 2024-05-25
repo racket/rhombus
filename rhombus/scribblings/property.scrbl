@@ -6,7 +6,7 @@
 
 @title(~tag: "properties"){Fields and Properties}
 
-A @rhombus(mutable) declaration before a field enables assignment to the
+A @rhombus(mutable, ~bind) declaration before a field enables assignment to the
 field using @rhombus(:=). An assignment can appear within methods using
 the field name directly, or it can appear on a @rhombus(.) expression
 that accesses a field in an object.
@@ -31,16 +31,23 @@ clauses. These fields are not represented the class's constructor, and
 so a @rhombus(field, ~class_clause) has an expression to provide the
 field's initial value. A field added with @rhombus(field, ~class_clause)
 is always mutatble, and @rhombus(:=) can be used to assign to the field.
+An immutable field can be added in the same way with 
+or @rhombus(immutable field, ~class_clause) or, equivalently,
+just @rhombus(immutable, ~class_clause).
 
 @examples(
   ~eval: method_eval
   ~defn:
     class Posn(x, y):
       field name = "Jane Doe"
+      immutable dist = x+y
   ~repl:
     def p = Posn(3, 4)
     p.name := "Dotty"
     p.name
+    p.dist
+    ~error:
+      p.dist := 0
 )
 
 Sometimes, you want a value associated to an object that is not stored

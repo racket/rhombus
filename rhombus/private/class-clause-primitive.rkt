@@ -30,6 +30,7 @@
                     prefab
                     authentic
                     field
+                    immutable
                     constructor
                     reconstructor
                     reconstructor_fields)
@@ -130,21 +131,44 @@
        [(_) (wrap-class-clause #`(#:prefab))]))))
 
 (begin-for-syntax
-  (define-splicing-syntax-class (:field-spec mode)
+  (define-splicing-syntax-class (:field-spec mode mutability)
     #:description "field identifier with optional annotation"
     #:attributes (form)
     (pattern (~seq form-id d::var-decl)
              #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(d.bind ...)
              #:with ann-seq #'(~? c.seq #f)
-             #:with form (wrap-class-clause #`(#:field id
+             #:with form (wrap-class-clause #`(#:field #,mutability id
                                                tmp-id ann-seq d.default form-id
-                                               #,mode)))))
+                                               #,mode))))
+
+  (define-syntax-rule (define-clause-form-syntax-class id form-id desc)
+    (define-syntax-class id
+      #:attributes (name)
+      #:description desc
+      #:opaque
+      (pattern ::name
+               #:when (free-identifier=? (in-class-clause-space #'name)
+                                         (class-clause-quote form-id)))))
+  (define-clause-form-syntax-class :field field "the literal `field`")
+  (define-clause-form-syntax-class :immutable immutable "the literal `immutable`")
+  (define-clause-form-syntax-class :method method "the literal `method`")
+  (define-clause-form-syntax-class :property property "the literal `property`")
+  (define-clause-form-syntax-class :override override "the literal `override`")
+  (define-clause-form-syntax-class :implements implements "the literal `implements`"))
 
 (define-class-clause-syntax field
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [((~var f (:field-spec 'public)))
+       [((~var f (:field-spec 'public 'mutable)))
+        #'f.form]))))
+
+(define-class-clause-syntax immutable
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'public 'immutable)))) #'f.form]
+       [((~var f (:field-spec 'public 'immutable)))
         #'f.form]))))
 
 (begin-for-syntax
@@ -325,21 +349,6 @@
                               (name ...)
                               ((group fun (parens) rhs) ...)))]))))
 
-(begin-for-syntax
-  (define-syntax-rule (define-clause-form-syntax-class id form-id desc)
-    (define-syntax-class id
-      #:attributes (name)
-      #:description desc
-      #:opaque
-      (pattern ::name
-               #:when (free-identifier=? (in-class-clause-space #'name)
-                                         (class-clause-quote form-id)))))
-  (define-clause-form-syntax-class :field field "the literal `field`")
-  (define-clause-form-syntax-class :method method "the literal `method`")
-  (define-clause-form-syntax-class :property property "the literal `property`")
-  (define-clause-form-syntax-class :override override "the literal `override`")
-  (define-clause-form-syntax-class :implements implements "the literal `implements`"))
-
 (define-for-syntax (parse-final stx data)
   (syntax-parse stx
     [(_ _::override _::method (~var m (:method-impl #'#:final-override))) #'m.form]
@@ -436,7 +445,9 @@
       [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
       [(_ _::override _::method (~var m (:method-impl #'#:private-override))) #'m.form]
       [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
-      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'private)))) #'f.form]
+      [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
+      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
+      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'mutable)))) #'f.form]
       [(_ (~var m (:method-impl #'#:private))) #'m.form])))
 
 (define-class-clause-syntax private

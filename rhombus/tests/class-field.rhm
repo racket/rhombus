@@ -24,3 +24,22 @@ block:
   check C("apple").s ~is "1apple"
   check C("apple").b ~is "1"[0]
   check C("apple").more ~is "a"[0]
+
+check:
+  class Posn(x, y):
+    immutable dist = x + y
+  Posn(1, 2).dist
+  ~is 3
+
+check:
+  class Posn(x, y):
+    immutable field dist = x + y
+  Posn(1, 2).dist
+  ~is 3
+
+check:
+  class Posn(x, y):
+    private immutable field dist = x + y
+    method get_dist(): dist
+  Posn(1, 2).get_dist()
+  ~is 3

@@ -14,6 +14,7 @@
     property_impl: method ~class_clause
     method_decl: method ~class_clause
     property_decl: method ~class_clause
+    field_impl: field ~class_clause
 
   defn.macro 'class $id_name($field_spec, ...)'
   defn.macro 'class $id_name($field_spec, ...):
@@ -47,10 +48,11 @@
     $export
 
   grammar class_clause:
-    #,(@rhombus(field, ~class_clause)) $id $maybe_annot = $expr
-    #,(@rhombus(field, ~class_clause)) $id $maybe_annot: $body; ...
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $id $maybe_annot = $expr
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $id $maybe_annot: $body; ...
+    #,(@rhombus(field, ~class_clause)) $field_impl
+    #,(@rhombus(immutable, ~class_clause)) $field_impl
+    #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
     #,(@rhombus(method, ~class_clause)) $method_impl
     #,(@rhombus(override, ~class_clause)) $method_impl
     #,(@rhombus(final, ~class_clause)) $method_impl
@@ -176,7 +178,7 @@
  expressions, as if the definitions and expressions appeared before the
  @rhombus(class) form.
 
- When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
+ When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form,
  then an additional field is added to the class, but the additional field
  is not represented by an arguments to the default constructor, annotation form,
  or binding-pattern form. Instead, the @rhombus(expr) or
@@ -185,10 +187,10 @@
  of the class is created, and it can refer to @rhombus(field_spec) names
  and earlier @rhombus(field, ~class_clause) names, but it cannot refer to @rhombus(this),
  later fields of the class, methods of the class, or properties of the class. All fields
- added through a @rhombus(field, ~class_clause) clause are mutable, and they
+ added through a @rhombus(field, ~class_clause) clause without @rhombus(immutable, ~class_clause) are mutable, and they
  can be updated in a custom constructor (form example) using
  @tech{assignment operators} such as @rhombus(:=). The
- @rhombus(field, ~class_clause) can appear any number of times as a
+ @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form can appear any number of times as a
  @rhombus(class_clause), with or without a
  @rhombus(private, ~class_clause) prefix.
 
@@ -520,8 +522,13 @@
 @doc(
   ~nonterminal:
     maybe_annot: class ~defn
-  class_clause.macro 'field $id $maybe_annot = $expr'
-  class_clause.macro 'field $id $maybe_annot: $body; ...'
+  class_clause.macro 'field $field_impl'
+  class_clause.macro 'immutable $field_impl'
+  class_clause.macro 'immutable field $field_impl'
+
+  grammar field_impl:
+    $id $maybe_annot = $expr
+    $id $maybe_annot: $body; ...
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to add fields to
@@ -646,10 +653,13 @@
   ~nonterminal:
     method_impl: method ~class_clause
     property_impl: method ~class_clause
+    field_impl: field ~class_clause
 
   class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_name ...'
   class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
-  class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_decl'
+  class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_impl'
+  class_clause.macro 'private #,(@rhombus(immutabe, ~class_clause)) $field_impl'
+  class_clause.macro 'private #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl'
   class_clause.macro 'private $method_impl'
   class_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'private #,(@rhombus(property, ~class_clause)) $property_impl'
@@ -671,7 +681,7 @@
  @rhombus(interface), and @rhombus(method, ~class_clause) for more
  information on field, method, and property declarations. A
  @rhombus(private, ~class_clause) without
- @rhombus(implements, ~class_clause), @rhombus(field, ~class_clause),
+ @rhombus(implements, ~class_clause), @rhombus(field, ~class_clause), @rhombus(immutable, ~class_clause),
  @rhombus(method, ~class_clause), @rhombus(override, ~class_clause),
  or @rhombus(property, ~class_clause) is
  equivalent to @rhombus(private, ~class_clause) followed by
