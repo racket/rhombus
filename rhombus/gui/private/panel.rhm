@@ -23,7 +23,7 @@ export:
   GroupPanel
   TabsPanel
 
-symbol_map_annot PanelStyleSymbol convert_style:
+symbol_map_annot PanelStyle convert_style:
   { deleted: deleted,
     border: border,
     vscroll: vscroll,
@@ -43,7 +43,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
 
      constructor ($arg :: $arg_annot ..., ...,
                   ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'center],
-                  ~style: style :: MaybeObs.of(List.of($(name).StyleSymbol)) = [],
+                  ~styles: style :: MaybeObs.of(List.of($(name).Style)) = [],
                   ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                   ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                   ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -69,25 +69,31 @@ def_panel HPanel():
   ~easy: hpanel
 
   export:
-    StyleSymbol
+    only_space annot:
+      Style
+    only_space namespace:
+      rename: PanelStyle as Style
 
-  annot.macro 'StyleSymbol': 'PanelStyleSymbol'
+  annot.macro 'Style': 'PanelStyle'
 
 def_panel VPanel():
   ~easy: vpanel
 
   export:
-    StyleSymbol
+    only_space annot:
+      Style
+    only_space namespace:
+      rename: PanelStyle as Style
 
-  annot.macro 'StyleSymbol': 'PanelStyleSymbol'
+  annot.macro 'Style': 'PanelStyle'
 
 def_panel GroupPanel(label :: MaybeObs.of(LabelString) => (obs.unwrap)):
   ~easy: group
 
   export:
-    StyleSymbol
+    Style
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { deleted: deleted }
 
 class TabsPanel(private _handle, private _at_selection :: Obs):
@@ -100,7 +106,7 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
                ~selection: selection :: MaybeObs.of(Any) = #false,
                ~action: action :: maybe(Function.of_arity(3)) = #false,
                ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-               ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
+               ~styles: style :: MaybeObs.of(List.of(TabsPanel.Style)) = [],
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -131,9 +137,9 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
     _at_selection.map(values)
 
   export:
-    StyleSymbol
+    Style
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { no_border: #{no-border},
       can_reorder: #{can-reorder},
       can_close: #{can-close},

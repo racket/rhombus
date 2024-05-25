@@ -76,14 +76,11 @@
 }
 
 @doc(
-  annot.macro 'Region.Fill'
+  enum Region.Fill:
+    even_odd
+    winding
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'even_odd)}
-  @item{@rhombus(#'winding)}
-)
+ A region polygon-fill mode.
 
 }

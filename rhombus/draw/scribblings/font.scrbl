@@ -50,43 +50,50 @@
 }
 
 @doc(
-  annot.macro 'Font.Kind'
+  enum Font.Kind:
+    default
+    decorative
+    roman
+    script
+    swiss
+    modern
+    symbol
+    system
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'default)}
-  @item{@rhombus(#'decorative)}
-  @item{@rhombus(#'roman)}
-  @item{@rhombus(#'script)}
-  @item{@rhombus(#'swiss)}
-  @item{@rhombus(#'modern)}
-  @item{@rhombus(#'symbol)}
-  @item{@rhombus(#'system)}
-)
+ A font kind.
 
 }
 
 @doc(
-  annot.macro 'Font.Style'
+  enum Font.Style:
+    normal
+    slant
+    italic
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'normal)}
-  @item{@rhombus(#'slant)}
-  @item{@rhombus(#'italic)}
-)
+ A font style.
 
 }
 
 @doc(
-  annot.macro 'Font.Weight'
+  enum Font.Weight:
+    ~is_a Int.in(100, 1000 ~inclusive)
+    thin
+    ultralight
+    light
+    semilight
+    book
+    normal
+    medium
+    semibold
+    bold
+    ultrabold
+    heavy
+    ultraheavy
 ){
 
- Satisfied by either an integer in @rhombus(100) to @rhombus(1000)
+ A font weight, either an integer in @rhombus(100) to @rhombus(1000)
  (inclusive) or one of the following symbols:
 
 @itemlist(
@@ -103,5 +110,27 @@
   @item{@rhombus(#'heavy) (equivalent to @rhombus(900))}
   @item{@rhombus(#'ultraheavy) (equivalent to @rhombus(1000))}
 )
+
+}
+
+@doc(
+  enum Font.Smoothing:
+    default
+    partly_smoothed
+    smoothed
+    unsmoothed
+){
+
+ A font smoothing (anti-aliasing) mode.
+
+}
+
+@doc(
+  enum Font.Hinting:
+    aligned
+    unaligned
+){
+
+ A font hinting (to adjust anti-aliasing) mode.
 
 }

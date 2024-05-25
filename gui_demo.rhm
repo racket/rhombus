@@ -107,7 +107,9 @@ def tabs:
   let scale = gui.Slider(~value: 50,
                          ~min_value: 1,
                          ~max_value: 100,
-                         ~style: [#'plain, #'horizontal])
+                         // Could write `gui.Slider.Style.plain`,
+                         // etc., but we write symbols for convenience:
+                         ~styles: [#'plain, #'horizontal])
   let spacer = gui.Spacer()
 
   let ghosts = gui.Obs([])

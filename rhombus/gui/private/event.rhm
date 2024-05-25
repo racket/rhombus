@@ -37,7 +37,7 @@ class KeyMouseEvent(private _handle):
     super(hand)
 
   // result is cached in subclasses:
-  property down:
+  property downs:
     Set{} get_all_down handle
       .shift
       .control
@@ -48,7 +48,7 @@ class KeyMouseEvent(private _handle):
       .mod4
       .mod5
 
-  // `sym` is restructed to appropriate values in subclasses:
+  // `sym` is restricted to appropriate values in subclasses:
   method is_down(sym):
     expr.macro 'match_down | $key | ...':
       'match sym
@@ -79,7 +79,7 @@ class MouseEvent():
   private field down_set = #false
 
   constructor (~kind: kind :: MouseEvent.Kind = #'motion,
-               ~down: down :: Set.of(MouseEvent.DownSymbol) = Set{},
+               ~downs: down :: Set.of(MouseEvent.Down) = Set{},
                ~x: x :: Int = 0,
                ~y: y :: Int = 0,
                ~timestamp: timestamp :: Int = 0):
@@ -94,17 +94,17 @@ class MouseEvent():
   property kind:
     unconvert_kind(rkt.send handle.#{get-event-type}())
 
-  override property down :: Set:
+  override property downs :: Set:
     down_set || (block:
                    let s:
-                     super.down get_all_down handle
+                     super.downs get_all_down handle
                        .left
                        .middle
                        .right
                    down_set := s
                    s)
 
-  override method is_down(sym :: MouseEvent.DownSymbol):
+  override method is_down(sym :: MouseEvent.Down):
     super.is_down(sym)
 
   method is_button_changed(which :: MouseEvent.Button = #'any):
@@ -118,7 +118,7 @@ class MouseEvent():
 
   export:
     Kind
-    DownSymbol
+    Down
     Button
 
   symbol_map_annot Kind convert_kind unconvert_kind:
@@ -132,7 +132,7 @@ class MouseEvent():
       right_up: #{right-up},
       motion: motion }
 
-  symbol_set_annot DownSymbol:
+  symbol_set_annot Down:
     { left, middle, right,
       shift, control, meta, alt,
       caps, mod3, mod4, mod5 }
@@ -152,7 +152,7 @@ class KeyEvent():
                ~other_shift_code: other_shift_code :: maybe(Char || KeyEvent.Key) = #false,
                ~other_altgr_code: other_altgr_code :: maybe(Char || KeyEvent.Key) = #false,
                ~other_shift_altgr_code: other_shift_altgr_code :: maybe(Char || KeyEvent.Key) = #false,
-               ~down: down :: Set.of(KeyEvent.DownSymbol) = Set{},
+               ~downs: down :: Set.of(KeyEvent.Down) = Set{},
                ~x: x :: Int = 0,
                ~y: y :: Int = 0,
                ~timestamp: timestamp :: Int = 0,
@@ -173,13 +173,13 @@ class KeyEvent():
     when other_shift_altgr_code | rkt.send evt.#{set-other-shift-altgr-key-code}(other_shift_altgr_code)
     super(evt)()
 
-  override property down :: Set:
+  override property downs :: Set:
     down_set || (block:
-                   let s = super.down
+                   let s = super.downs
                    down_set := s
                    s)
 
-  override method is_down(sym :: KeyEvent.DownSymbol):
+  override method is_down(sym :: KeyEvent.Down):
     super.is_down(sym)
 
   property code: rkt.send handle.#{get-key-code}()
@@ -192,7 +192,7 @@ class KeyEvent():
   property wheel_steps: rkt.send handle.#{get-wheel-steps}()
 
   export:
-    DownSymbol
+    Down
     Key
 
   symbol_map_annot  Key convert_key:
@@ -271,6 +271,6 @@ class KeyEvent():
       release: release,
       press: press }
 
-  symbol_set_annot DownSymbol:
+  symbol_set_annot Down:
     { shift, control, meta, alt,
       caps, mod3, mod4, mod5 }

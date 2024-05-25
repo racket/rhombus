@@ -14,7 +14,7 @@
       ~key: key :: Function.of_arity(2) = Function.pass,
       ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(Canvas.Style)) = [],
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -43,25 +43,20 @@
 }
 
 @doc(
-  annot.macro 'Canvas.StyleSymbol'
+  enum Canvas.Style:
+    control_border
+    combo
+    vscroll
+    hscroll
+    resize_corner
+    gl
+    no_autoclear
+    transparent
+    no_focus
+    deleted
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'control_border)}
- @item{@rhombus(#'combo)}
- @item{@rhombus(#'vscroll)}
- @item{@rhombus(#'hscroll)}
- @item{@rhombus(#'resize_corner)}
- @item{@rhombus(#'gl)}
- @item{@rhombus(#'no_autoclear)}
- @item{@rhombus(#'transparent)}
- @item{@rhombus(#'no_focus)}
- @item{@rhombus(#'deleted)}
-
-)
+ A canvas style symbol.
 
 }
 

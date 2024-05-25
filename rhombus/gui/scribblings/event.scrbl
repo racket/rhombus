@@ -8,7 +8,7 @@
   class MouseEvent():
     constructor (
       ~kind: kind :: MouseEvent.Kind = #'motion,
-      ~down: down :: Set.of(MouseEvent.DownSymbol) = Set{},
+      ~downs: downs :: Set.of(MouseEvent.Down) = Set{},
       ~x: x :: Int = 0,
       ~y: y :: Int = 0,
       ~timestamp: timestamp :: Int = 0,
@@ -16,8 +16,8 @@
 
   property (ev :: MouseEvent).kind
     :: MouseEvent.Kind
-  property (ev :: MouseEvent).down
-    :: Set.of(MouseEvent.DownSymbol)
+  property (ev :: MouseEvent).downs
+    :: Set.of(MouseEvent.Down)
   property (ev :: MouseEvent).x :: Int
   property (ev :: MouseEvent).y :: Int
   property (ev :: MouseEvent).timestamp :: Int
@@ -29,11 +29,11 @@
 
 @doc(
   method (ev :: MouseEvent).is_down(
-    sym :: MouseEvent.DownSymbol
+    sym :: MouseEvent.Down
   ) :: Boolean
 ){
 
-  Checks whether @rhombus(MouseEvent.down(ev)) would include @rhombus(sym),
+  Checks whether @rhombus(MouseEvent.downs(ev)) would include @rhombus(sym),
   potentially avoiding the construction of a set internally.
 
 }
@@ -66,7 +66,7 @@
       ~other_shift_code: os_code :: maybe(Char || KeyEvent.Key) = #false,
       ~other_altgr_code: oa_code :: maybe(Char || KeyEvent.Key) = #false,
       ~other_shift_altgr_code: osa_code :: maybe(Char || KeyEvent.Key) = #false,
-      ~down: down :: Set.of(KeyEvent.DownSymbol) = Set{},
+      ~downs: downs :: Set.of(KeyEvent.Down) = Set{},
       ~x: x :: Int = 0,
       ~y: y :: Int = 0,
       ~timestamp: timestamp :: Int = 0,
@@ -85,8 +85,8 @@
     :: maybe(Char || KeyEvent.Key)
   property (ev :: KeyEvent).other_shift_altgr_code
     :: maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).down
-    :: Set.of(KeyEvent.DownSymbol)
+  property (ev :: KeyEvent).downs
+    :: Set.of(KeyEvent.Down)
   property (ev :: KeyEvent).x :: Int
   property (ev :: KeyEvent).y :: Int
   property (ev :: KeyEvent).timestamp :: Int
@@ -98,186 +98,158 @@
 
 @doc(
   method (ev :: KeyEvent).is_down(
-    sym :: KeyEvent.DownSymbol
+    sym :: KeyEvent.Down
   ) :: Boolean
 ){
 
- Checks whether @rhombus(KeyEvent.down(ev)) would include @rhombus(sym),
+ Checks whether @rhombus(KeyEvent.downs(ev)) would include @rhombus(sym),
  potentially avoiding the construction of a set internally.
 
 }
 
 
 @doc(
-  annot.macro 'MouseEvent.Kind'
+  enum MouseEvent.Kind:
+    enter
+    leave
+    left_down
+    left_up
+    middle_down
+    middle_up
+    right_down
+    right_up
+    motion    
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'enter)}
- @item{@rhombus(#'leave)}
- @item{@rhombus(#'left_down)}
- @item{@rhombus(#'left_up)}
- @item{@rhombus(#'middle_down)}
- @item{@rhombus(#'middle_up)}
- @item{@rhombus(#'right_down)}
- @item{@rhombus(#'right_up)}
- @item{@rhombus(#'motion)}
-
-)
+ General category for a mouse event.
 
 }
 
 
 @doc(
-  annot.macro 'MouseEvent.DownSymbol'
+  enum MouseEvent.Down:
+    shift
+    control
+    meta
+    alt
+    caps
+    mod3
+    mod4
+    mod5
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'left)}
- @item{@rhombus(#'middle)}
- @item{@rhombus(#'right)}
- @item{@rhombus(#'shift)}
- @item{@rhombus(#'control)}
- @item{@rhombus(#'meta)}
- @item{@rhombus(#'alt)}
- @item{@rhombus(#'caps)}
- @item{@rhombus(#'mod3)}
- @item{@rhombus(#'mod4)}
- @item{@rhombus(#'mod5)}
-
-)
+ Modifier keys that can be down during a mouse event.
 
 }
 
 
 @doc(
-  annot.macro 'MouseEvent.Button'
+  enum MouseEvent.Button:
+    left
+    middle
+    right
+    any
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'left)}
- @item{@rhombus(#'middle)}
- @item{@rhombus(#'right)}
- @item{@rhombus(#'any)}
-
-)
+ Mouse buttons that can be down during a mouse event.
 
 }
 
 @doc(
-  annot.macro 'KeyEvent.DownSymbol'
+  enum KeyEvent.Down:
+    shift
+    control
+    meta
+    alt
+    caps
+    mod3
+    mod4
+    mod5
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'shift)}
- @item{@rhombus(#'control)}
- @item{@rhombus(#'meta)}
- @item{@rhombus(#'alt)}
- @item{@rhombus(#'caps)}
- @item{@rhombus(#'mod3)}
- @item{@rhombus(#'mod4)}
- @item{@rhombus(#'mod5)}
-
-)
+ Modifier keys that can be down during a key event.
 
 }
 
 
 @doc(
-  annot.macro 'KeyEvent.Key'
+  enum KeyEvent.Key:
+    start
+    cancel
+    clear
+    shift
+    rshift
+    control
+    rcontrol
+    menu
+    pause
+    capital
+    prior
+    next
+    end
+    home
+    left
+    up
+    right
+    down
+    escape
+    select
+    print
+    execute
+    snapshot
+    insert
+    help
+    numpad0
+    numpad1
+    numpad2
+    numpad3
+    numpad4
+    numpad5
+    numpad6
+    numpad7
+    numpad8
+    numpad9
+    numpad_enter
+    multiply
+    add
+    separator
+    subtract
+    decimal
+    divide
+    f1
+    f2
+    f3
+    f4
+    f5
+    f6
+    f7
+    f8
+    f9
+    f10
+    f11
+    f12
+    f13
+    f14
+    f15
+    f16
+    f17
+    f18
+    f19
+    f20
+    f21
+    f22
+    f23
+    f24
+    numlock
+    scroll
+    wheel_up
+    wheel_down
+    wheel_left
+    wheel_right
+    release
+    press
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'start)}
- @item{@rhombus(#'cancel)}
- @item{@rhombus(#'clear)}
- @item{@rhombus(#'shift)}
- @item{@rhombus(#'rshift)}
- @item{@rhombus(#'control)}
- @item{@rhombus(#'rcontrol)}
- @item{@rhombus(#'menu)}
- @item{@rhombus(#'pause)}
- @item{@rhombus(#'capital)}
- @item{@rhombus(#'prior)}
- @item{@rhombus(#'next)}
- @item{@rhombus(#'end)}
- @item{@rhombus(#'home)}
- @item{@rhombus(#'left)}
- @item{@rhombus(#'up)}
- @item{@rhombus(#'right)}
- @item{@rhombus(#'down)}
- @item{@rhombus(#'escape)}
- @item{@rhombus(#'select)}
- @item{@rhombus(#'print)}
- @item{@rhombus(#'execute)}
- @item{@rhombus(#'snapshot)}
- @item{@rhombus(#'insert)}
- @item{@rhombus(#'help)}
- @item{@rhombus(#'numpad0)}
- @item{@rhombus(#'numpad1)}
- @item{@rhombus(#'numpad2)}
- @item{@rhombus(#'numpad3)}
- @item{@rhombus(#'numpad4)}
- @item{@rhombus(#'numpad5)}
- @item{@rhombus(#'numpad6)}
- @item{@rhombus(#'numpad7)}
- @item{@rhombus(#'numpad8)}
- @item{@rhombus(#'numpad9)}
- @item{@rhombus(#'numpad_enter)}
- @item{@rhombus(#'multiply)}
- @item{@rhombus(#'add)}
- @item{@rhombus(#'separator)}
- @item{@rhombus(#'subtract)}
- @item{@rhombus(#'decimal)}
- @item{@rhombus(#'divide)}
- @item{@rhombus(#'f1)}
- @item{@rhombus(#'f2)}
- @item{@rhombus(#'f3)}
- @item{@rhombus(#'f4)}
- @item{@rhombus(#'f5)}
- @item{@rhombus(#'f6)}
- @item{@rhombus(#'f7)}
- @item{@rhombus(#'f8)}
- @item{@rhombus(#'f9)}
- @item{@rhombus(#'f10)}
- @item{@rhombus(#'f11)}
- @item{@rhombus(#'f12)}
- @item{@rhombus(#'f13)}
- @item{@rhombus(#'f14)}
- @item{@rhombus(#'f15)}
- @item{@rhombus(#'f16)}
- @item{@rhombus(#'f17)}
- @item{@rhombus(#'f18)}
- @item{@rhombus(#'f19)}
- @item{@rhombus(#'f20)}
- @item{@rhombus(#'f21)}
- @item{@rhombus(#'f22)}
- @item{@rhombus(#'f23)}
- @item{@rhombus(#'f24)}
- @item{@rhombus(#'numlock)}
- @item{@rhombus(#'scroll)}
- @item{@rhombus(#'wheel_up)}
- @item{@rhombus(#'wheel_down)}
- @item{@rhombus(#'wheel_left)}
- @item{@rhombus(#'wheel_right)}
- @item{@rhombus(#'release)}
- @item{@rhombus(#'press)}
-
-)
+ Keys that can be pressed or released for a key event.
 
 }

@@ -14,7 +14,7 @@
       ~position: position :: MaybeObs.of(Position) = #'center,
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(Window.Style)) = [],
       ~mixin: mix :: Function = values,
       child :: MaybeObs.of(View), ...
     )
@@ -26,23 +26,18 @@
 }
 
 @doc(
-  annot.macro 'Window.StyleSymbol'
+  enum Window.Style:
+    no_resize_border
+    no_caption
+    no_system_menu
+    hide_menu_bar
+    toolbar_button
+    float
+    metal
+    fullscreen_button
+    fullscreen_aux
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'no_resize_border)}
- @item{@rhombus(#'no_caption)}
- @item{@rhombus(#'no_system_menu)}
- @item{@rhombus(#'hide_menu_bar)}
- @item{@rhombus(#'toolbar_button)}
- @item{@rhombus(#'float)}
- @item{@rhombus(#'metal)}
- @item{@rhombus(#'fullscreen_button)}
- @item{@rhombus(#'fullscreen_aux)}
-
-)
+  A window style option.
 
 }

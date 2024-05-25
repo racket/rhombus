@@ -38,53 +38,44 @@
 }
 
 @doc(
-  annot.macro 'Pen.Style'
+  enum Pen.Style:
+    transparent
+    solid
+    xor
+    hilite
+    dot
+    long_dash
+    show_dash
+    dot_dash
+    xor_dot
+    xor_long_dot
+    xor_short_dot
+    xor_dot_dash
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'transparent)}
-  @item{@rhombus(#'solid)}
-  @item{@rhombus(#'xor)}
-  @item{@rhombus(#'hilite)}
-  @item{@rhombus(#'dot)}
-  @item{@rhombus(#'long_dash)}
-  @item{@rhombus(#'show_dash)}
-  @item{@rhombus(#'dot_dash)}
-  @item{@rhombus(#'xor_dot)}
-  @item{@rhombus(#'xor_long_dot)}
-  @item{@rhombus(#'xor_short_dot)}
-  @item{@rhombus(#'xor_dot_dash)}
-)
+ Line-drawing mode.
 
 }
 
 @doc(
-  annot.macro 'Pen.Cap'
+  enum Pen.Cap:
+    round
+    projecting
+    butt
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'round)}
-  @item{@rhombus(#'projecting)}
-  @item{@rhombus(#'butt)}
-)
+ Line-ending modes.
 
 }
 
 @doc(
-  annot.macro 'Pen.Join'
+  enum Pen.Join:
+    round
+    bevel
+    miter
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'round)}
-  @item{@rhombus(#'bevel)}
-  @item{@rhombus(#'miter)}
-)
+ Line-joining modes.
 
 }
 

@@ -79,12 +79,11 @@ class Font(private _handle):
   symbol_set_annot Style:
     { normal, italic, slant }
 
-  annot.macro 'Weight': 'Int.in(100, 1000) || WeightSymbol'
-
-  symbol_set_annot WeightSymbol:
+  symbol_set_annot Weight:
+    ~is_a Int.in(100, 1000)
     { thin, ultralight, light, semilight, book, normal,
       medium, semibold, bold, ultrabold, heavy, ultraheavy }
-
+    
   symbol_map_annot Smoothing convert_smoothing unconvert_smoothing:
     { default: default,
       partly_smoothed: #{partly-smoothed},

@@ -29,7 +29,7 @@ class Slider(private _handle, private _at_value :: Obs):
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal]):
+               ~styles: style :: List.of(Slider.Style) = [#'horizontal]):
     let at_value = obs.to_obs(value)
     let action = action || (fun (val):
                               at_value.value := val)
@@ -45,9 +45,9 @@ class Slider(private _handle, private _at_value :: Obs):
           at_value)
 
   export:
-    StyleSymbol
+    Style
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { horizontal: horizontal,
       vertical: vertical,
       plain: plain,

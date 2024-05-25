@@ -203,44 +203,35 @@
 }
 
 @doc(
-  annot.macro 'DC.BitmapOverlay'
+  enum DC.BitmapOverlay:
+    solid
+    opaque
+    xor
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'solid)}
-  @item{@rhombus(#'opaque)}
-  @item{@rhombus(#'xor)}
-)
+ Bitmap transfer modes.
 
 }
 
 @doc(
-  annot.macro 'DC.TextCombine'
+  enum DC.TextCombine:
+    kern
+    grapheme
+    char
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'kern)}
-  @item{@rhombus(#'grapheme)}
-  @item{@rhombus(#'char)}
-)
+ Typesetting modes for text.
 
 }
 
 
 @doc(
-  annot.macro 'DC.Fill'
+  enum DC.Fill:
+    even_odd
+    winding
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'even_odd)}
-  @item{@rhombus(#'winding)}
-)
+ Polygon fill modes.
 
 }
 

@@ -35,25 +35,22 @@
 }
 
 @doc(
-  annot.macro 'Brush.Style'
+  enum Brush.Style:
+    transparent
+    solid
+    opaque
+    xor
+    hilite
+    panel
+    bdiagonal_hatch
+    crossdiag_hatch
+    fdiagonal_hatch
+    cross_hatch
+    horizontal_hatch
+    vertical_hatch
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-  @item{@rhombus(#'transparent)}
-  @item{@rhombus(#'solid)}
-  @item{@rhombus(#'opaque)}
-  @item{@rhombus(#'xor)}
-  @item{@rhombus(#'hilite)}
-  @item{@rhombus(#'panel)}
-  @item{@rhombus(#'bdiagonal_hatch)}
-  @item{@rhombus(#'crossdiag_hatch)}
-  @item{@rhombus(#'fdiagonal_hatch)}
-  @item{@rhombus(#'cross_hatch)}
-  @item{@rhombus(#'horizontal_hatch)}
-  @item{@rhombus(#'vertical_hatch)}
-)
+ Brush-filling mode.
 
 }
 

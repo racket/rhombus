@@ -15,7 +15,7 @@
                                           _ :: Button.LabelPosition])),
       ~action: action :: Function.of_arity(0) = fun (): #void,
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(Button.Style)) = [],
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -72,7 +72,7 @@
       ~selection: selection :: MaybeObs.of(Any) = #false,
       ~action: action :: maybe(Function.of_arity(1)) = #false,
       ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-      ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(Choice.Style)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -123,7 +123,7 @@
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
       ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal],
+      ~styles: styles :: List.of(Slider.Style) = [#'horizontal],
     )
 
   property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
@@ -185,7 +185,7 @@
       ~label: label :: MaybeObs.of(LabelString) = "",
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
-      ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
+      ~styles: styles :: MaybeObs.of(List.of(Input.Style)) = [#'single],
       ~font : font :: Font = normal_control_font,
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
       ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
@@ -226,94 +226,67 @@
 
 
 @doc(
-  annot.macro 'Button.StyleSymbol'
+  enum Button.Style:
+    border
+    multi_line
+    deleted
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'border)}
- @item{@rhombus(#'multi_line)}
- @item{@rhombus(#'deleted)}
-
-)
+ A button style option.
 
 }
 
 @doc(
-  annot.macro 'Button.LabelPosition'
+  enum Button.LabelPosition:
+    left
+    top
+    right
+    bottom
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'left)}
- @item{@rhombus(#'top)}
- @item{@rhombus(#'right)}
- @item{@rhombus(#'bottom)}
-
-)
+ A button label-position option for text combined with an image.
 
 }
 
 
 @doc(
-  annot.macro 'Choice.StyleSymbol'
+  enum Choice.Style:
+    horizontal_label
+    vertical_label
+    deleted
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'horizontal_label)}
- @item{@rhombus(#'vertical_label)}
- @item{@rhombus(#'deleted)}
-
-)
-
-}
-
-
-
-
-@doc(
-  annot.macro 'Slider.StyleSymbol'
-){
-
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'horizontal)}
- @item{@rhombus(#'vertical)}
- @item{@rhombus(#'plain)}
- @item{@rhombus(#'horizontal_label)}
- @item{@rhombus(#'vertical_label)}
- @item{@rhombus(#'deleted)}
-
-)
+ A choice control style option.
 
 }
 
 
 @doc(
-  annot.macro 'Input.StyleSymbol'
+  enum Slider.Style:
+    horizontal
+    vertical
+    plain
+    horizontal_label
+    vertical_label
+    deleted
 ){
 
- Satisfied by the following symbols:
+ A slider style option.
 
-@itemlist(
+}
 
- @item{@rhombus(#'deleted)}
- @item{@rhombus(#'horizontal_label)}
- @item{@rhombus(#'hscroll)}
- @item{@rhombus(#'multiple)}
- @item{@rhombus(#'password)}
- @item{@rhombus(#'single)}
- @item{@rhombus(#'vertical_label)}
 
-)
+@doc(
+  enum Input.StyleSymbol:
+    deleted
+    horizontal_label
+    hscroll
+    multiple
+    password
+    single
+    vertical_label
+){
+
+ An input style option.
 
 }

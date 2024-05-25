@@ -26,7 +26,7 @@ class Choice(private _handle, private _at_selection :: Obs):
                ~selection: selection :: MaybeObs.of(Any) = #false,
                ~action: action :: maybe(Function.of_arity(1)) = #false,
                ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-               ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+               ~styles: style :: MaybeObs.of(List.of(Choice.Style)) = [],
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
@@ -49,9 +49,9 @@ class Choice(private _handle, private _at_selection :: Obs):
     _at_selection.map(values)
 
   export:
-    StyleSymbol
+    Style
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { horizontal_label: #{horizontal-label},
       vertical_label: #{vertical-label},
       deleted: deleted }

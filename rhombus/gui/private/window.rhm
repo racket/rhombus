@@ -31,7 +31,7 @@ class Window(private _handle):
                ~position: position :: MaybeObs.of(Position) = #'center,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
+               ~styles: style :: MaybeObs.of(List.of(Window.Style)) = [],
                ~mixin: mix :: Function = values,
                child :: MaybeObs.of(View),
                ...):
@@ -47,9 +47,9 @@ class Window(private _handle):
                       ...))
 
   export:
-    StyleSymbol
+    Style
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { no_resize_border: #{no-resize-border},
       no_caption: #{no-caption},
       no_system_menu: #{no-system-menu},

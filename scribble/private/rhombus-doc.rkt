@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/property)
+                     shrubbery/property
+                     racket/list)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
          "typeset-help.rkt"
@@ -651,7 +652,7 @@
        (cons #'id.name
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
-                 [((~var sym (identifier-target space-name #:raw (symbol->string (syntax-e sym)))))
+                 [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
                   #'sym.name]))))]))
 
 (define-for-syntax (enum-extract-typeset stx space-namess substs)

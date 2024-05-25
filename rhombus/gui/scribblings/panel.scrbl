@@ -9,7 +9,7 @@
     implements View
     constructor (
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~style: style :: MaybeObs.of(List.of(HPanel.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(HPanel.Style)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -21,7 +21,7 @@
     implements View
     constructor (
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~style: style :: MaybeObs.of(List.of(VPanel.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(VPanel.Style)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -42,7 +42,7 @@
     constructor (
       label :: MaybeObs.of(LabelString),
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~style: style :: MaybeObs.of(List.of(GroupPanel.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(GroupPanel.Style)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -66,7 +66,7 @@
       ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
+      ~styles: styles :: MaybeObs.of(List.of(TabsPanel.Style)) = [],
       ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
       ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
       ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -122,57 +122,52 @@
 
 
 @doc(
-  annot.macro 'HPanel.StyleSymbol'
-  annot.macro 'VPanel.StyleSymbol'
+  enum HPanel.Style:
+    deleted
+    border
+    vscroll
+    hscroll
+    auto_vscroll
+    auto_hscroll
+    hide_vscroll
+    hide_hscroll
+
+  enum VPanel.Style:
+    deleted
+    border
+    vscroll
+    hscroll
+    auto_vscroll
+    auto_hscroll
+    hide_vscroll
+    hide_hscroll
 ){
 
- Satisfied by the following symbols (the same for horizontal and vertical panels):
-
-@itemlist(
-
- @item{@rhombus(#'deleted)}
- @item{@rhombus(#'border)}
- @item{@rhombus(#'vscroll)}
- @item{@rhombus(#'hscroll)}
- @item{@rhombus(#'auto_vscroll)}
- @item{@rhombus(#'auto_hscroll)}
- @item{@rhombus(#'hide_vscroll)}
- @item{@rhombus(#'hide_hscroll)}
-
-)
+ A panel style option (the same for horizontal and vertical panels).
 
 }
 
 @doc(
-  annot.macro 'GroupPanel.StyleSymbol'
+  enum GroupPanel.Style:
+    deleted
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'deleted)}
-
-)
+ A group panel style option.
 
 }
 
 
 @doc(
-  annot.macro 'TabsPanel.StyleSymbol'
+  enum TabsPanel.Style:
+    deleted
+    no_border
+    can_reorder
+    can_close
+    new_button
+    flat_portable
+
 ){
 
- Satisfied by the following symbols:
-
-@itemlist(
-
- @item{@rhombus(#'deleted)}
- @item{@rhombus(#'no_border)}
- @item{@rhombus(#'can_reorder)}
- @item{@rhombus(#'can_close)}
- @item{@rhombus(#'new_button)}
- @item{@rhombus(#'flat_portable)}
-
-)
+ A tab panel style option.
 
 }

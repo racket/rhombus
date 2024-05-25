@@ -28,7 +28,7 @@ class Button(private _handle):
                                                    _ :: Button.LabelPosition])),
                ~action: action :: Function.of_arity(0) = values,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
+               ~styles: style :: MaybeObs.of(List.of(Button.Style)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
@@ -41,10 +41,10 @@ class Button(private _handle):
                       ~stretch: obs.unwrap_list(stretch, values)))
 
   export:
-    StyleSymbol
+    Style
     LabelPosition
 
-  symbol_map_annot StyleSymbol convert_style:
+  symbol_map_annot Style convert_style:
     { border: border,
       multi_line: #{multi-line},
       deleted: deleted }
