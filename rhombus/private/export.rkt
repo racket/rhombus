@@ -75,8 +75,27 @@
     (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "export" form))
     form)
 
+  (define namespace-syntax-property-key (gensym 'namespace))
+
   (define (make-identifier-export id)
-    #`(all-spaces-out #,id))
+    (cond
+      [(syntax-property id namespace-syntax-property-key)
+       => (lambda (ns-id)
+            (define outs
+              (name-root-all-out ns-id id (cons #f (syntax-local-module-interned-scope-symbols))))
+            #`(combine-out #,@(for/list ([id+space-sym (in-list outs)])
+                                (define id (car id+space-sym))
+                                (define space-sym (cdr id+space-sym))
+                                #`(only-spaces-out (all-spaces-out #,id) #,space-sym))))]
+      [else #`(all-spaces-out #,id)]))
+  (define (export-extension-combine prefix field-id id)
+    (syntax-property field-id namespace-syntax-property-key prefix))
+
+  (define name-root-export-ref
+    (make-name-root-ref #:binding-ref (lambda (v)
+                                        (or (export-prefix-operator-ref v)
+                                            (export-infix-operator-ref v)))
+                        #:binding-extension-combine export-extension-combine))
 
   (define-rhombus-enforest
     #:syntax-class :export
@@ -90,7 +109,8 @@
     #:infix-operator-ref export-infix-operator-ref
     #:check-result check-export-result
     #:make-identifier-form make-identifier-export
-    #:make-operator-form make-identifier-export)
+    #:make-operator-form make-identifier-export
+    #:name-root-ref name-root-export-ref)
 
   (define (make-export-modifier-ref parsed-ex)
     ;; "accessor" closes over unpecked `parsed-x`
@@ -107,12 +127,17 @@
              (transformer (lambda (stx ignored-ex)
                             ((transformer-proc mod) (syntax-local-introduce ex) stx)))))))
 
+  (define name-root-export-modifier-ref
+    (make-name-root-ref #:binding-ref export-modifier-ref
+                        #:binding-extension-combine export-extension-combine))
+
   (define-rhombus-transform
     #:syntax-class (:export-modifier parsed-ex)
     #:desc "export modifier"
     #:parsed-tag #:rhombus/expo
     #:in-space in-export-space
-    #:transformer-ref (make-export-modifier-ref parsed-ex))
+    #:transformer-ref (make-export-modifier-ref parsed-ex)
+    #:name-root-ref name-root-export-modifier-ref)
 
   (define-syntax-class :modified-export
     #:attributes (parsed)

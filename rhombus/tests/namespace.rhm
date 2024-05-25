@@ -130,3 +130,89 @@ check:
       let nonesuch = 8
   ~throws "exported identifier defined later"
 
+block:
+  import rhombus/meta open
+  namespace A:
+    export:
+      only_space namespace:
+        B
+    namespace B:
+      export x
+      def x = "x"
+
+  check A.B.x ~is "x"
+
+block:
+  import rhombus/meta open
+  namespace A:
+    export:
+      except_space namespace:
+        y
+      only_space namespace:
+        rename:
+          B as y
+    def y = 7
+    namespace B:
+      export x
+      def x = "x"
+
+  check A.y ~is 7
+  check A.y.x ~is "x"
+
+block:
+  import rhombus/meta open
+  namespace A:
+    export:
+      except_space namespace:
+        y
+      only_space namespace:
+        rename:
+          B as y
+    def y = 7
+    namespace B:
+      export x
+      def x = "x"
+
+  check A.y.x ~is "x"
+  check A.y ~is 7
+
+block:
+  import rhombus/meta open
+  namespace Q:
+    namespace N:
+      export:
+        x
+      def x = "x"
+      annot.macro 'x': 'Int'
+    export:
+      N.x
+  check Q.x ~is "x"
+  check 10 :: Q.x ~is 10
+
+block:
+  import rhombus/meta open
+  namespace Q:
+    namespace N:
+      export:
+        only_space expr:
+          x
+      def x = "x"
+      annot.macro 'x': 'Int'
+    export:
+      N.x
+  check Q.x ~is "x"
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace Q:
+    namespace N:
+      export:
+        only_space expr:
+          x
+      def x = "x"
+      annot.macro 'x': 'Int'
+    export:
+      N.x
+  10 :: Q.x
+  ~throws "identifier not provided by Q"

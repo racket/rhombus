@@ -120,7 +120,7 @@
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/bind) #'id))]))
 
   (define extension-syntax-property-key (gensym 'extension))
-  (define (binding-extension-combine id prefix)
+  (define (binding-extension-combine prefix field-id id)
     (syntax-property id extension-syntax-property-key prefix)))
 
 (begin-for-syntax

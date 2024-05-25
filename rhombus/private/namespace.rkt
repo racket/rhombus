@@ -315,6 +315,7 @@
            [(null? l) #t]
            [(eq? (car l) '#:only) (null? (cdr l))]
            [(eq? (car l) '#:space) (loop (cddr l))]
+           [(eq? (car l) '#:except) (pair? (cdr l))]
            [else #f])))
      (define use-int (if (need-int? old) old-int new-int))
      (define (to-set l) (for/hasheq ([s (in-list l)]) (values s #t)))
@@ -330,12 +331,12 @@
            (list* '#:space (hash-map space-table list) rule)))
      (list* (car old)
             use-int
-            (let loop ([old (cddr old)] [new (cddr new)] [space-table #hasheq()])
+            (let loop ([old (cddr old)] [new (cddr new)] [old-int old-int] [new-int new-int] [space-table #hasheq()])
               (cond
                 [(null? old) (add-table space-table new)]
                 [(null? new) (add-table space-table old)]
                 [(eq? (car new) '#:space)
-                 (loop old (cddr new) (add-to-table space-table (cadr new)))]
+                 (loop old (cddr new) old-int new-int (add-to-table space-table (cadr new)))]
                 [(eq? (car old) '#:except)
                  (cond
                    [(eq? (car new) '#:except)
@@ -359,9 +360,9 @@
                                       null
                                       (cons '#:except spaces)))]
                       [else
-                       (loop old (cddr new) (add-spaces-to-table new-int (cdr new) space-table))])]
+                       (loop old (cddr new) old-int new-int (add-spaces-to-table new-int (cdr new) space-table))])]
                    [else
-                    (loop old (cddr new) (add-to-table space-table (cadr new)))])]
+                    (loop old (cddr new) old-int new-int (add-to-table space-table (cadr new)))])]
                 [(eq? (car old) '#:only)
                  (cond
                    [(eq? (car new) '#:only)
@@ -370,6 +371,6 @@
                        (add-table space-table
                                   (cons '#:only (hash-keys (to-set (append (cdr old) (cdr new))))))]
                       [else
-                       (loop new (cddr old) (add-spaces-to-table old-int (cdr old) space-table))])]
-                   [else (loop new old space-table)])]
-                [else (loop new old space-table)])))]))
+                       (loop new (cddr old) new-int old-int (add-spaces-to-table old-int (cdr old) space-table))])]
+                   [else (loop new old new-int old-int space-table)])]
+                [else (loop new old new-int old-int space-table)])))]))

@@ -37,7 +37,7 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (let loop ([root root] [fields fields])
+  (let loop ([root root] [fields fields] [root-raw #f])
     (cond
       [(null? fields) #f]
       [else
@@ -53,7 +53,9 @@
            [(and (pair? space-names) (null? (cdr space-names)))
             (define space-name (car space-names))
             (define intro (make-intro space-name))
-            (define dest (and lookup (lookup #f "identifier" field intro)))
+            (define dest (and lookup
+                              (or (lookup #f "identifier" field intro)
+                                  (lookup #f "identifier" field in-name-root-space))))
             (and dest (cons dest space-name))]
            [else
             (for/or ([space-name (in-list space-names)])
@@ -62,13 +64,14 @@
               (and dest
                    (or (not space-name)
                        (identifier-distinct-binding (intro dest) dest #f)
-                       (identifier-distinct-binding ((make-intro 'rhombus/namespace) dest) dest #f))
+                       (identifier-distinct-binding (in-name-root-space dest) dest #f))
                    (cons dest space-name)))]))
        (define dest (and dest+space-name (car dest+space-name)))
        (define space-name (and dest+space-name (cdr dest+space-name)))
        (define parens? (and ptag (null? (cdr fields))))
        (define raw (format "~a.~a~a~a"
-                           (or (syntax-raw-property root)
+                           (or root-raw
+                               (syntax-raw-property root)
                                (syntax-e root))
                            (if parens? "(" "")
                            (syntax-e field)
@@ -91,7 +94,7 @@
             (transfer-parens-suffix
              (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
                                   (or given-raw raw))))
-          (or (loop named-dest (cdr fields))
+          (or (loop named-dest (cdr fields) raw)
               (add-rest named-dest))]
          [else
           (define id ((make-intro space-name) (datum->syntax root (string->symbol raw))))
@@ -104,5 +107,5 @@
                                                  (append-consecutive-syntax-objects 'loc-stx root #'dot)
                                                  field))
                                  (or given-raw raw)))])
-                 (or (loop named-id (cdr fields))
+                 (or (loop named-id (cdr fields) raw)
                      (add-rest named-id))))])])))

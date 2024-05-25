@@ -23,16 +23,27 @@
                      extensible-name-root
                      portal-syntax->lookup
                      portal-syntax->import
-                     portal-syntax->extends))
+                     portal-syntax->extends
+                     name-root-all-out))
 
-(define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f]
-                                       #:non-portal-ref [non-portal-ref #f]
-                                       #:binding-extension-combine [binding-extension-combine (lambda (id prefix) id)]
+;; * `binding-ref` as non-#f means that we're parsing a binding, so we
+;;    want to follow namespaces, but a tail non-bound name is one to
+;;    be bound (so don't complain if it's not bound). This path is
+;;    also used for exports.
+;; * `non-portal-ref` as non-#f is similar. but for imports; we want to build
+;;    a "dotted" form
+(define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f] ;; see above
+                                       #:non-portal-ref [non-portal-ref #f] ;; see above
+                                       #:binding-extension-combine [binding-extension-combine (lambda (prefix field-id id) id)]
                                        #:quiet-fail? [quiet-fail? #f])
   (lambda (v)
     (define (make self-id get)
       (enforest:name-root
        (lambda (in-space stxes)
+         ;; This search loop lets us traverse A.B.C.D to
+         ;; keep going as long as there are namespace bindings,
+         ;; but back up if we don't find a binding in the space
+         ;; indicated by `in-space`
          (let loop ([stxes stxes]
                     [gets
                      ;; reverse order search path: (cons get prefix)
@@ -57,36 +68,38 @@
                                          #:datum-literals (op parens |.|)
                                          [((op |.|) . _) #f]
                                          [_ #t])))
-             (define id
+             (define (get-id in-id-space ns? fail-ok?)
                (or (for/or ([get+prefix (in-list (reverse gets))])
                      (define get (car get+prefix))
                      (define prefix (cdr get+prefix))
                      (cond
                        [(not get)
                         (define name (build-name prefix field-id))
-                        (and (or (identifier-binding* (in-space name))
-                                 (identifier-binding* (in-name-root-space name)))
+                        (and (identifier-binding* (in-id-space name))
                              (relocate-field form-id field-id name))]
                        [else
                         (define sub-id (if prefix
                                            (build-name prefix field-id)
                                            field-id))
-                        (let ([id (get #f what sub-id in-space)])
+                        (let ([id (get #f what sub-id in-id-space)])
                           (and id
-                               (or (not binding-end?)
-                                   (syntax-local-value* (in-space id) binding-ref))
+                               (or ns?
+                                   (not binding-end?)
+                                   (syntax-local-value* (in-id-space id) binding-ref))
                                (relocate-field form-id field-id id)))]))
                    (cond
+                     [fail-ok? #f]
                      [(or binding-end?
                           quiet-fail?)
                       (let ([prefix (cdar (reverse gets))])
                         (binding-extension-combine
-                         (relocate-field form-id field-id (build-name prefix field-id))
-                         (in-name-root-space prefix)))]
+                         (in-name-root-space prefix)
+                         field-id
+                         (relocate-field form-id field-id (build-name prefix field-id))))]
                      [else
                       ;; try again with the shallowest to report an error
                       (let ([get (caar gets)])
-                        (get form-id what field-id in-space))])))
+                        (get form-id what field-id in-id-space))])))
              ;; keep looking at dots?
              (define more-dots?
                (syntax-parse tail
@@ -94,15 +107,17 @@
                  [((op |.|) _:identifier . _) #t]
                  [((op |.|) (parens (group target (op _))) . tail) #t]
                  [_ #f]))
+             (define ns-id (and more-dots? (get-id in-name-root-space #t #t)))
              (define v (and (or more-dots?
                                 non-portal-ref)
-                            (syntax-local-value* (in-name-root-space id) (lambda (v) (and (portal-syntax? v) v)))))
+                            ns-id
+                            (syntax-local-value* (in-name-root-space ns-id) (lambda (v) (and (portal-syntax? v) v)))))
              (cond
                [v
                 (portal-syntax->lookup (portal-syntax-content v)
                                        (lambda (self-id next-get)
                                          (if more-dots?
-                                             (loop (cons id tail)
+                                             (loop (cons ns-id tail)
                                                    (cons
                                                     (cons next-get #f)
                                                     (for/list ([get+prefix (in-list gets)])
@@ -115,6 +130,7 @@
                [non-portal-ref
                 (non-portal-ref form-id field-id tail)]
                [else
+                (define id (get-id in-space #f #f))
                 (values id tail)]))
            (syntax-parse stxes
              #:datum-literals (op parens group |.|)
@@ -155,8 +171,7 @@
                                           name))
                 (define pre-id (datum->syntax pre-ctx (syntax-e name)))
                 (cond
-                  [(or (identifier-distinct-binding* (in-space id) (in-space pre-id))
-                       (identifier-distinct-binding* (in-name-root-space id) (in-name-root-space pre-id)))
+                  [(identifier-distinct-binding* (in-space id) (in-space pre-id))
                    id]
                   [who-stx
                    (raise-syntax-error #f
@@ -242,6 +257,26 @@
                                 #t)
                root)
          root))))
+
+(define-for-syntax (name-root-all-out ns-id name space-syms)
+  (define v (syntax-local-value* (in-name-root-space ns-id)
+                                 (lambda (v) (and (portal-syntax? v) v))))
+  (if (not v)
+      null
+      (portal-syntax->lookup (portal-syntax-content v)
+                             (lambda (self-id get)
+                               (for/list ([space-sym (in-list space-syms)]
+                                          #:do [(define in-space
+                                                  (if space-sym
+                                                      (make-interned-syntax-introducer space-sym)
+                                                      (lambda (x) x)))
+                                                (define id (get #f #f name in-space))]
+                                          #:when (and id
+                                                      (if space-sym
+                                                          (identifier-distinct-binding* (in-space id 'add)
+                                                                                        (in-space id 'remove))
+                                                          (identifier-binding* id))))
+                                 (cons id space-sym))))))
 
 (define-for-syntax (replace-head-dotted-name stx)
   (define head (car (syntax-e stx)))
