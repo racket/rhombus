@@ -333,6 +333,8 @@
          (partition-fields constructor-keywords constructor-private?s #:result values))
        (define-values (constructor-public-defaults constructor-private-defaults)
          (partition-fields constructor-defaults constructor-private?s #:result values))
+       (define constructor-converters (syntax->list #'(constructor-field-converter ...)))
+       (define constructor-annotation-strs (map syntax-e (syntax->list #'(constructor-field-annotation-str ...))))
 
        (define expose (make-expose #'scope-stx #'base-stx))
        (check-consistent-construction stxes mutables private?s constructor-defaults options
@@ -341,8 +343,10 @@
                                            (expose given-constructor-name))
                                       expression-macro-rhs)
 
-       (define has-defaults? (or (pair? added-fields) (any-stx? constructor-defaults)))
-       (define has-keywords? (any-stx? constructor-keywords))
+       (define has-defaults? (or (pair? added-fields)
+                                 (any-stx? constructor-defaults)
+                                 (for/or ([converter (in-list constructor-converters)])
+                                   (and (syntax-e converter) #t))))
        (define-values (super-constructor-fields super-keywords super-defaults)
          (extract-super-constructor-fields super))
        (define-values (super-constructor+-fields super-constructor+-keywords super-constructor+-defaults)
@@ -422,7 +426,8 @@
          (hash-ref options 'reconstructor-stx-params #f))
 
        (define need-constructor-wrapper?
-         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
+         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-converters
+                                          constructor-rhs
                                           has-private-constructor-fields?
                                           super-has-keywords? super-has-defaults? abstract-name super))
 
@@ -631,7 +636,7 @@
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
                                         constructor-defaults super-defaults super-constructor+-defaults
-                                        constructor-static-infoss
+                                        constructor-static-infoss constructor-converters constructor-annotation-strs
                                         method-private
                                         need-constructor-wrapper?
                                         abstract-name
@@ -815,18 +820,6 @@
                                            ((make-syntax-introducer)
                                             (datum->syntax #f (string->symbol (format "make-prefab-~a" (syntax-e #'name)))))
                                            #'make-all-name)])
-      (define guard-expr
-        (build-guard-expr (let ([fields (and super (class-desc-all-fields super))])
-                            (if fields
-                                (generate-temporaries fields)
-                                #'(super-field-name ...)))
-                          fields
-                          (syntax->list #'(field-converter ...))
-                          (map syntax-e
-                               (syntax->list #'(field-annotation-str ...)))
-                          #:super (and prefab?
-                                       super
-                                       (class-desc-prefab-guard-id super))))
       (define all-interfaces
         (close-interfaces-over-superinterfaces
          (if abstract-name
@@ -934,8 +927,7 @@
                                             #,(if prefab? (quote-syntax 'prefab) #f)
                                             #f
                                             '(immutable-field-index ...)
-                                            #,(and (not prefab?)
-                                                   guard-expr)
+                                            #f
                                             'name)])
               (values class:name name name?
                       (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
@@ -964,7 +956,18 @@
          def)
        (if (syntax-e #'prefab-guard-name)
            (list
-            #`(define prefab-guard-name #,guard-expr)
+            #`(define prefab-guard-name
+                #,(build-guard-expr (let ([fields (and super (class-desc-all-fields super))])
+                                      (if fields
+                                          (generate-temporaries fields)
+                                          #'(super-field-name ...)))
+                                    fields
+                                    (syntax->list #'(field-converter ...))
+                                    (map syntax-e
+                                         (syntax->list #'(field-annotation-str ...)))
+                                    #:super (and prefab?
+                                                 super
+                                                 (class-desc-prefab-guard-id super))))
             #`(define make-all-name
                 (let ([name (lambda (super-field-name ... field-name ...)
                               (let-values ([(super-field-name ... field-name ...)

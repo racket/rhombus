@@ -11,6 +11,7 @@
          "static-info.rkt"
          "class-this.rkt"
          "entry-point.rkt"
+         (submod "annotation.rkt" for-class)
          "realm.rkt"
          "wrap-expression.rkt"
          (only-in "syntax-parameter.rkt"
@@ -29,6 +30,7 @@
                                             keywords super-keywords super-constructor+-keywords
                                             defaults super-defaults super-constructor+-defaults
                                             constructor-field-static-infoss
+                                            constructor-converters constructor-annotation-strs
                                             method-private
                                             need-constructor-wrapper?
                                             abstract-name
@@ -72,7 +74,37 @@
                                                               (class-desc-fields super))
                                                           (length super-constructor+-fields))))
                                       null))
-    (define (make-added-field-bindings)
+    (define (build-converted who f val converter annotation-str)
+      (cond
+        [(not (syntax-e converter)) val]
+        [else #`(#,converter
+                 (let ([#,f #,val]) #,f)
+                 #,who
+                 (lambda (val who)
+                   (raise-annotation-failure who val '#,annotation-str)))]))
+    (define constructor-field-tmps (generate-temporaries constructor-fields))
+    (define (build-constructor-field-bindings who)
+      (for/list ([f (in-list constructor-fields)]
+                 [tmp (in-list constructor-field-tmps)]
+                 [df (in-list defaults)]
+                 [static-info-decls (in-list static-info-declss)]
+                 [converter (in-list constructor-converters)]
+                 [annotation-str (in-list constructor-annotation-strs)])
+        (cond
+          [(syntax-e df)
+           #`[#,f #,(build-converted
+                     who
+                     f
+                     #`(if (eq? #,tmp unsafe-undefined)
+                           (let ()
+                             #,@static-info-decls
+                             (let ([#,f #,df]) #,f))
+                           #,tmp)
+                     converter
+                     annotation-str)]]
+          [else
+           #`[#,f #,(build-converted who f tmp converter annotation-str)]])))
+    (define (build-added-field-bindings)
       (let loop ([non-constructor-fields non-constructor-fields]
                  [args constructor-fields])
         (cond
@@ -90,35 +122,23 @@
           (let* ([super-tmps (generate-temporaries super-constructor+-fields)]
                  [all-super-tmps (append super-tmps
                                          (generate-temporaries (list-tail super-all-field-names
-                                                                          (length super-constructor+-fields))))]
-                 [tmps (generate-temporaries constructor-fields)])
-            #`(define (name-defaults #,@(append super-tmps tmps))
+                                                                          (length super-constructor+-fields))))])
+            #`(define (name-defaults who #,@(append super-tmps constructor-field-tmps))
                 (let-values #,(cond
                                 [super-has-defaults?
                                  #`([#,all-super-tmps
-                                     (#,(class-desc-defaults-id super) . #,super-tmps)])]
+                                     (#,(class-desc-defaults-id super) who . #,super-tmps)])]
                                 [else '()])
-                  (let* #,(for/list ([f (in-list constructor-fields)]
-                                     [tmp (in-list tmps)]
-                                     [df (in-list defaults)]
-                                     [static-info-decls (in-list static-info-declss)])
-                            (cond
-                              [(syntax-e df)
-                               #`[#,f (if (eq? #,tmp unsafe-undefined)
-                                          (let ()
-                                            #,@static-info-decls
-                                            (let ([#,f #,df]) #,f))
-                                          #,tmp)]]
-                              [else
-                               #`[#,f #,tmp]]))
-                    (let* #,(make-added-field-bindings)
-                      (values #,@all-super-tmps #,@constructor-fields #,@non-constructor-fields)))))))
+                  (let* #,(append
+                           (build-constructor-field-bindings #'who)
+                           (build-added-field-bindings))
+                    (values #,@all-super-tmps #,@constructor-fields #,@non-constructor-fields))))))
          null)
      (if need-constructor-wrapper?
          (list
           #`(define make-name
               (let ([name
-                     (lambda #,(apply append (for/list ([f (in-list (append super-constructor+-fields constructor-fields))]
+                     (lambda #,(apply append (for/list ([f (in-list (append super-constructor+-fields constructor-field-tmps))]
                                                         [kw (in-list (append super-constructor+-keywords keywords))]
                                                         [df (in-list (append (cond
                                                                                [(and super
@@ -130,31 +150,37 @@
                                                                                [else
                                                                                 super-constructor+-defaults])
                                                                              defaults))]
-                                                        [static-info-decls (append (for/list ([cf (in-list super-constructor+-fields)])
-                                                                                     '())
-                                                                                   static-info-declss)])
+                                                        [static-info-decls (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
+                                                                                              '())
+                                                                                            static-info-declss))]
+                                                        [converter (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
+                                                                                      #'#f)
+                                                                                    constructor-converters))]
+                                                        [annotation-str (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
+                                                                                           #f)
+                                                                                         constructor-annotation-strs))])
                                                (let ([arg (if (syntax-e df)
-                                                              (if final?
-                                                                  #`[#,f (let ()
-                                                                           #,@static-info-decls
-                                                                           #,df)]
-                                                                  #`[#,f unsafe-undefined])
+                                                              #`[#,f unsafe-undefined]
                                                               f)])
                                                  (if (keyword? (syntax-e kw))
                                                      (list kw arg)
                                                      (list arg)))))
                        (let-values #,(cond
                                        [(syntax-e #'name-defaults)
-                                        (define fields (append super-constructor+-fields constructor-fields))
+                                        (define fields (append super-constructor+-fields constructor-field-tmps))
                                         (define all-fields (append super-all-field-names all-field-names))
-                                        #`([#,all-fields (name-defaults . #,fields)])]
+                                        #`([#,all-fields (name-defaults 'name . #,fields)])]
                                        [super-has-defaults?
                                         #`([#,super-all-field-names
-                                            (#,(class-desc-defaults-id super) . #,super-constructor+-fields)])]
+                                            (#,(class-desc-defaults-id super) 'name . #,super-constructor+-fields)])]
                                        [else '()])
-                         (let* #,(if (and has-defaults? final?)
-                                     (make-added-field-bindings)
-                                     #'())
+                         (let* #,(if (syntax-e #'name-defaults)
+                                     #'()
+                                     (append
+                                      (build-constructor-field-bindings #''name)
+                                      (if has-defaults?
+                                          (build-added-field-bindings)
+                                          null)))
                            #,(if abstract-name
                                  #`(raise-abstract-methods 'name)
                                  #`(make-all-name #,@super-all-field-names
@@ -255,7 +281,8 @@
                          #,@(class-desc-constructor-makers super))))))])
          null))))
 
-(define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-rhs
+(define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults converters
+                                                    constructor-rhs
                                                     has-private-constructor-fields?
                                                     super-has-keywords? super-has-defaults?
                                                     abstract-name
@@ -263,6 +290,7 @@
   (or (pair? extra-fields)
       (any-stx? keywords)
       (any-stx? defaults)
+      (any-stx? converters)
       (and (or super-has-keywords?
                super-has-defaults?)
            (or (not (class-desc-constructor-makers super))

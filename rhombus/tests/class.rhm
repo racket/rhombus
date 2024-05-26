@@ -938,3 +938,9 @@ check:
       nonfinal
     B(1, "apple")
   ~completes
+
+// make sure annotation conversion apply default-value expressions that should use the results
+check:
+  class B(b :: Listable.to_list, c = b)
+  B(PairList["apple"]).c
+  ~is ["apple"]
