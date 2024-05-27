@@ -32,7 +32,7 @@
 (define-identifier-syntax-definition-transformer both_macro
   #:multi (rhombus/class_clause
            rhombus/interface_clause)
-  #:extra ([#:info #'() value])
+  #:extra ([#:info (quote-syntax ()) value])
   #'make-class-and-interface-clause-transformer)
 
 (define-for-syntax (make-class-clause-transformer proc)

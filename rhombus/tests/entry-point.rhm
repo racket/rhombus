@@ -47,7 +47,7 @@ check:
     ~adjustment adj
     if (mode == #'arity)
     | [2, [], []]
-    | def [id, ...] = adj.prefix_arguments
+    | let [id, ...] = adj.prefix_arguments
       entry_point_meta.pack('fun ($id, ..., x):
                                $(adj.wrap_body(2, 'x'))')
 
@@ -56,7 +56,6 @@ check:
       identity
   C().m("ok")
   ~is "ok"
-
 
 check:
   entry_point.macro 'kw_identity':
@@ -70,4 +69,22 @@ check:
     method m:
       kw_identity
   C().m(~kw: "ok")
+  ~is "ok"
+
+check:
+  entry_point.macro 'check_static_info':
+    ~mode mode
+    ~adjustment adj
+    cond
+    | mode compares_equal dynamic(#'arity):
+        [2, [], []]
+    | mode compares_equal dynamic(#'function):
+        let [id, ...] = adj.prefix_arguments
+        entry_point_meta.pack('fun ($id, ..., x):
+                                 $(adj.wrap_body(2, 'x'))')
+
+  class C():
+    method m:
+      check_static_info
+  C().m("ok")
   ~is "ok"

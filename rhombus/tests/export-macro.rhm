@@ -42,7 +42,7 @@ check:
   ~is "hi"
 
 check:
-  expo.macro 'swap $a $b':    
+  expo.macro 'swap $a $b':
     def '$(ma :: expo_meta.Parsed)' = 'rename $a as $b'
     def '$(mb :: expo_meta.Parsed)' = 'rename $b as $a'
     '$ma #%juxtapose $mb'
@@ -51,4 +51,16 @@ check:
     def hello = "hello"
     export: swap hi hello
   n.hello
+  ~is "hi"
+
+check:
+  use_static
+  expo.modifier 'check_static_info':
+    ~all_stx stx
+    ~export exp
+    exp.relocate(stx)
+  namespace n:
+    def hi = "hi"
+    export: hi: check_static_info
+  n.hi
   ~is "hi"

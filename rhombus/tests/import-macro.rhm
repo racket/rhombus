@@ -18,7 +18,7 @@ check:
   import: rkt r
   r.car(PairList[1, 2])
   ~is 1
-                                       
+
 check:
   impo.modifier 'just $id':
     'only: $id'
@@ -33,7 +33,7 @@ check:
   import: do lib("racket/base.rkt") as r
   r.car(PairList[1, 2])
   ~is 1
-                                       
+
 check:
   impo.modifier 'do $tail ...':
     ~import imp
@@ -53,3 +53,15 @@ check:
   import: rkts base r
   r.car(r.cons(1, 2))
   ~is 1
+
+check:
+  use_static
+  impo.modifier 'check_static_info':
+    ~all_stx stx
+    ~import imp
+    imp.relocate(stx)
+  import:
+    lib("racket/base.rkt").car:
+      check_static_info
+  car(Pair("hi", "hello"))
+  ~is "hi"

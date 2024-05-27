@@ -6,11 +6,12 @@
 
 (begin-for-syntax
   (define-syntax-class :not-block
-    #:datum-literals (op parens braces brackets quotes)
+    #:datum-literals (op parens braces brackets quotes parsed)
     (pattern _:identifier)
     (pattern _:keyword)
     (pattern (op . _))
     (pattern (parens . _))
     (pattern (braces . _))
     (pattern (brackets . _))
-    (pattern (quotes . _))))
+    (pattern (quotes . _))
+    (pattern (parsed . _))))

@@ -1,13 +1,8 @@
 #lang rhombus/static/and_meta
 
-import:
-  rhombus/meta open
-
 // Note that the implementation of `|>` serves as one kind of test for `immediate_callee.Parsed`
 
 block:
-  import:
-    rhombus/meta open
   immediate_callee.macro 'ref0':
     values('fun (x): x[0]', '')
   immediate_callee.macro 'p_ref0':
@@ -30,7 +25,6 @@ block:
   fun enlist(v) :~ List: [v]
 
   immediate_callee.macro 'enlist $tail ...':
-    ~op_stx: all
     ~static_infos: sis
     ~in_op_mode mode
     ~in_op_stx op
@@ -43,5 +37,23 @@ block:
     | // parse as expression
       'dynamic(enlist) $tail ...'
 
-  use_static
   check ("apple" |> enlist)[0][0] ~is "apple"[0]
+
+block:
+  fun check_static_info(v): v
+
+  immediate_callee.macro 'check_static_info $tail ...':
+    ~op_stx: self
+    ~static_infos: sis
+    ~in_op_mode mode
+    ~in_op_stx op
+    if (mode compares_equal dynamic(#'infix))
+      && op.unwrap() == #'#{\|>}
+      && expr_meta.ends_parse(mode, op, '$tail ...')
+    | let res = annot_meta.pack_predicate('fun (x): #true',
+                                          sis[0].relocate(#false))
+      values('fun (x) :~ $res: x',
+             '$tail ...')
+    | 'dynamic(check_static_info) $tail ...'
+
+  check ("apple" |> check_static_info)[0] ~is "apple"[0]

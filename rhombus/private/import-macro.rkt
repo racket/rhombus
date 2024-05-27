@@ -3,19 +3,16 @@
                      syntax/parse/pre
                      enforest/proc-name
                      enforest/transformer-result
-                     "srcloc.rkt"
                      "pack.rkt"
                      "macro-result.rkt"
                      "tail-returner.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     (submod "syntax-object.rkt" for-quasiquote)
                      (for-syntax racket/base))
          "space-provide.rkt"
-         "name-root.rkt"
          (submod "import.rkt" for-meta)
-         "space.rkt"
-         "macro-macro.rkt"
-         "parse.rkt")
+         "macro-macro.rkt")
 
 (define+provide-space impo rhombus/impo
   #:fields
@@ -38,7 +35,7 @@
 
 (define-identifier-syntax-definition-transformer modifier
   rhombus/impo
-  #:extra ([#:import (quote-syntax ()) value])
+  #:extra ([#:import (get-syntax-static-infos) value])
   #'make-import-modifier)
 
 (begin-for-syntax

@@ -11,6 +11,7 @@
                      "realm.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
+                     (submod "symbol.rkt" for-static-info)
                      "call-result-key.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
@@ -38,7 +39,7 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/entry_point
-  #:extra ([#:mode (quote-syntax ()) value]
+  #:extra ([#:mode (get-symbol-static-infos) value]
            [#:adjustment (get-entry-point-adjustment-static-infos) value])
   #'make-entry-point-transformer)
 
@@ -82,24 +83,28 @@
     (check-syntax who stx)
     #`(parsed #:rhombus/entry_point
               (rhombus-expression #,(unpack-group stx who #f))))
+
   (define/arity (entry_point_meta.unpack stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse stx
+      #:datum-literals (parsed)
       [(parsed #:rhombus/entry_point e)
        #'(parsed #:rhombus/expr e)]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed entry point function"
                                  "syntax object" stx)]))
+
   (define/arity (entry_point_meta.pack_arity a)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     #`(parsed #:rhombus/entry_point_arity #,(check-entry-point-arity-result a entry_point_meta.unpack_arity)))
+
   (define/arity (entry_point_meta.unpack_arity stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse stx
+      #:datum-literals (parsed)
       [(parsed #:rhombus/entry_point_arity a) (syntax->datum #'a)]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed entry point arity"
-                                 "syntax object" stx)]))
-  )
+                                 "syntax object" stx)])))

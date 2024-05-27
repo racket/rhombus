@@ -13,8 +13,7 @@
                      "tail-returner.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (submod "symbol.rkt" for-static-info)
-                     "call-result-key.rkt"
-                     "to-list.rkt"
+                     "index-result-key.rkt"
                      (submod "list.rkt" for-listable)
                      "static-info-pack.rkt"
                      (for-syntax racket/base))
@@ -37,8 +36,8 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/immediate_callee
-  #:extra ([#:static_infos #`((#%index-result-key #,(get-syntax-static-infos))
-                              #,(get-treelist-static-infos))
+  #:extra ([#:static_infos #`((#%index-result #,(get-syntax-static-infos))
+                              . #,(get-treelist-static-infos))
             value]
            [#:in_op_mode (get-symbol-static-infos)
             value]
@@ -47,11 +46,6 @@
   #'make-immediate-callee-transformer)
 
 (begin-for-syntax
-  (define (unpack-parsed*/part kw sel)
-    (lambda args
-      (define v (apply (unpack-parsed* kw) args))
-      (datum->syntax #f (sel (syntax-e v)))))
-
   (define-syntax-class (:immediate-callee/split static-infoss op-mode op-stx)
     #:attributes (parsed tail)
     (pattern (~var callee (:immediate-callee (to-list 'immediate_callee_meta.Parsed static-infoss)
@@ -77,7 +71,7 @@
                        #:arity 8 ; actually an arity mask
                        #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr))
                                    (tail #f tail tail unpack-tail-list*))
-                       #:root-swap '(parsed . <group))))
+                       #:root-swap '(parsed . group))))
 
 (define-for-syntax (extract-immediate-callee form tail proc static-infoss op-mode op-stx)
   (define stx (if (syntax? form)
@@ -126,7 +120,3 @@
                                op-mode
                                op-stx)])))
      (extract-immediate-callee form new-tail proc static-infoss op-mode op-stx))))
-
-(define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
