@@ -537,7 +537,7 @@
                        '#,flags
                        ;; ----------------------------------------
                        (quote-syntax name)
-                       (quote-syntax #,parent-name)
+                       #,(and parent-name #`(quote-syntax #,parent-name))
                        #,(and (syntax-e #'check?)
                               #'(quote-syntax name?))
                        #,(and (syntax-e #'name-convert)

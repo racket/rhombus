@@ -59,14 +59,13 @@
                                       name name-extends tail-name]
                             ;; data accumulated from parsed clauses:
                             ()))
-     (define interface-data-stx #f)
      #`(#,(cond
             [(null? (syntax-e body))
              #`(interface-annotation+finish #,finish-data [#:ctx base base] ())]
             [else
              #`(rhombus-mixed-nested-forwarding-sequence
                 (interface-annotation+finish #,finish-data) rhombus-class
-                (interface-body-step (#,interface-data-stx ()) . #,(intro body)))]))]))
+                (interface-body-step #,finish-data . #,(intro body)))]))]))
 
 (define-class-body-step interface-body-step
   :interface-clause

@@ -58,7 +58,6 @@
 (define (veneer-expand-data-internal-info-name data)
   (syntax-parse (veneer-expand-data-stx data)
     [(_ base-stx scope-stx
-        for-together?
         name
         . _)
      #'name]))
@@ -75,19 +74,20 @@
         (veneer-expand-data-internal-info-name info)]
        [else
         (veneer-desc-id (veneer-describe-data-desc info))])]
-    [(method_names method_arities method_visibilities
-                   property_names property_arities property_visibilities)
+    [(extends internal_names
+              method_names method_arities method_visibilities
+              property_names property_arities property_visibilities)
      (cond
        [(veneer-expand-data? info)
         (define r (class-clause-extract who (veneer-expand-data-accum-stx info) key))
-        (case key
-          [(uses_default_annotation) (null? r)]
-          [else r])]
+        r]
        [else
         (define desc (veneer-describe-data-desc info))
         (case key
           [(internal_names) null]
-          [(extends) (syntax->list (veneer-desc-super-id desc))]
+          [(extends)
+           (define super (veneer-desc-super-id desc))
+           (if super (list super) null)]
           [else
            (method-shape-extract (objects-desc-method-shapes desc)
                                  null

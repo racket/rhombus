@@ -8,24 +8,26 @@
 
 @(def dollar = @rhombus($))
 
-@title{Class and Interface Clause Macros}
+@title{Class, Interface, and Veneer Clause Macros}
 
 @doc(
   space.transform class
 ){
 
- The @tech{space} for class and interface names as bound by
- @rhombus(class) and @rhombus(interface).
+ The @tech{space} for class, interface, and veneer names as bound by
+ @rhombus(class), @rhombus(interface), and @rhombus(veneer).
 
 }
 
 @doc(
   space.transform class_clause
   space.transform interface_clause
+  space.transform veneer_clause
 ){
 
  The @tech{spaces} for bindings of identifiers that implement
- @rhombus(class) and @rhombus(interface) clauses, respectively.
+ @rhombus(class), @rhombus(interface), and @rhombus(veneer) clauses,
+ respectively.
 
 }
 
@@ -100,8 +102,9 @@
                | ...»'
 ){
 
-Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses and binding
-in the @rhombus(interface_clause, ~space) @tech{space}.
+ Like @rhombus(class_clause.macro), but for @rhombus(interface)
+ clauses and binding in the @rhombus(interface_clause, ~space)
+ @tech{space}.
 
 }
 
@@ -131,20 +134,48 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 }
 
 @doc(
+  ~nonterminal:
+    defined_name: defn.macro ~defn
+    option: class_clause.macro ~defn
+
+  defn.macro '«veneer_clause.macro '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
+  defn.macro '«veneer_clause.macro
+               | '$defined_name $pattern ...':
+                   $option; ...
+                   $body
+                   ...
+               | ...»'
+){
+
+ Like @rhombus(class_clause.macro), but for @rhombus(veneer)
+ clauses and binding in the @rhombus(veneer_clause, ~space)
+ @tech{space}.
+
+}
+
+@doc(
   fun class_meta.describe(name :: Identifier)
     :: class_meta.Info
   fun interface_meta.describe(name :: Identifier)
     :: interface_meta.Info
+  fun veneer_meta.describe(name :: Identifier)
+    :: veneer_meta.Info
 ){
 
 @provided_meta()
 
  Returns an object containing information about @rhombus(name), which
  must be bound as a class name or internal class name for
- @rhombus(class_meta.describe) or as an interface name or internal
- interface name for @rhombus(interface_meta.describe). Use
- @rhombus(class_meta.Info.lookup) or @rhombus(interface_meta.Info.lookup)
- to extract details from the information object.
+ @rhombus(class_meta.describe), as an interface name or internal
+ interface name for @rhombus(interface_meta.describe), or as a veneer
+ name for @rhombus(veneer_meta.describe). Use
+ @rhombus(class_meta.Info.lookup),
+ @rhombus(interface_meta.Info.lookup),
+ or @rhombus(veneer_meta.Info.lookup) to extract details from the
+ information object.
 
 }
 
@@ -154,9 +185,16 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
     info :: class_meta.Info,
     key :: Symbol
   ) :: Any
+
   annot.macro 'interface_meta.Info'
   fun interface_meta.Info.lookup(
     info :: interface_meta.Info,
+    key :: Symbol
+  ) :: Any
+
+  annot.macro 'veneer_meta.Info'
+  fun veneer_meta.Info.lookup(
+    info :: veneer_meta.Info,
     key :: Symbol
   ) :: Any
 ){
@@ -166,9 +204,11 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
  A value satisfying @rhombus(class_meta.Info, ~annot) can be obtained
  from @rhombus(class_meta.describe) or recieved by a class-clause macro
  through an @rhombus(~info) declaration. Similarly, a value satisfying
- @rhombus(interface_meta.Info, ~annot) can be obtained by
- @rhombus(interface_meta.describe) or recieved by a interface-clause
- macro through an @rhombus(~info) declaration. In a macro declared with
+ @rhombus(interface_meta.Info, ~annot) or
+ @rhombus(veneer_meta.Info, ~annot) can be obtained by
+ @rhombus(interface_meta.describe) or @rhombus(veneer_meta.describe),
+ or received by an interface- or veneer-clause macro through an
+ @rhombus(~info) declaration. In a macro declared with
  @rhombus(class_and_interface_clause.macro), a value received by
  @rhombus(~info) is an instance of either
  @rhombus(class_meta.Info, ~annot) or
@@ -187,24 +227,32 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
   info.lookup(key)
 )
 
- The @rhombus(class_meta.Info.lookup) and
- @rhombus(interface_meta.Info.lookup) functions access information via a
+@dispatch_table(
+  "veneer information"
+  veneer_meta.Info
+  info.lookup(key)
+)
+
+ The @rhombus(class_meta.Info.lookup),
+ @rhombus(interface_meta.Info.lookup),
+ and @rhombus(veneer_meta.Info.lookup) functions access information via a
  @rhombus(key) symbol. The currently recognized keys are described below,
  but more may be added in the future.
 
- When receieved within a class-clause or interface-clause macro, the
- information reported for a key covers only class and interface clauses
+ When receieved within a class-, interface-, or veneer-clause macro, the
+ information reported for a key covers only class, interface, or veneer clauses
  before the macro use, so a use of the same key in the same class but in
  a later clause may report different information. Furthermore, the
- information has not been fully checked; for example, the name of a class
- or interface being extended is reported as it appears, and has not yet
- been checked to be a valid class or interface name, and multiple names
+ information has not been fully checked; for example, the name of a class,
+ interface, or veneer being extended is reported as it appears, and has not yet
+ been checked to be a valid class, interface, or veneer name, and multiple names
  may be reported if a class contains multiple @rhombus(extends, ~class_clause) clauses.
  Similarly, field- or method-name lists may include duplicates.
 
- When obtained via @rhombus(class_meta.describe) or
- @rhombus(interface_meta.describe), the information covers the whole body
- of the referenced @rhombus(class) or @rhombus(interface) form. When a
+ When obtained via @rhombus(class_meta.describe),
+ @rhombus(interface_meta.describe),
+ or @rhombus(veneer_meta.describe), the information covers the whole body
+ of the referenced @rhombus(class), @rhombus(interface), or @rhombus(veneer) form. When a
  class or interface name is used, then information about private fields
  and methods is omitted from queries; using an internal name for a class
  or interface includes information about private fields and methods. A
@@ -318,7 +366,7 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 
 )
 
-Reocgnized keys for interfaces:
+ Reocgnized keys for interfaces:
 
 @itemlist(
 
@@ -346,6 +394,35 @@ Reocgnized keys for interfaces:
  @item{@rhombus(#'uses_default_annotation): A boolean indicating
   whether the interface name in an annotation position refers to a default
   annotation form.}
+
+)
+
+ Reocgnized keys for veneers:
+
+@itemlist(
+
+ @item{@rhombus(#'name): An identifier for the veneer being defined, including
+  any dotted-name prefix in the @rhombus(veneer) declaration.}
+
+ @item{@rhombus(#'extends): A list of indentifiers for veneers declared
+  as superveneers. Normally, the list will be empty or have one element,
+  but a multi-identifier list can be reported for a clause macro if a
+  @rhombus(veneer) form has multiple @rhombus(extends, ~veneer_clause)
+  clauses (even though an error will be reported later).}
+
+ @item{@rhombus(#'internal_names): The same as for classes.}
+
+ @item{@rhombus(#'method_names): The same as for classes.}
+
+ @item{@rhombus(#'method_arities): The same as for classes.}
+
+ @item{@rhombus(#'method_visibilities): The same as for classes.}
+
+ @item{@rhombus(#'property_names): The same as for classes.}
+
+ @item{@rhombus(#'property_arities): The same as for classes.}
+
+ @item{@rhombus(#'property_visibilities): The same as for classes.}
 
 )
 

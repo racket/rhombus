@@ -13,7 +13,7 @@ block:
 block:
   class_clause.macro 'bounce':
     ~info: i
-    'method names(): ('$(class_meta.Info.lookup(i, #'name))')
+    'method names(): ('$(i.lookup(#'name))')
      method supers(): ('$(i.lookup(#'extends))')
      method intfs(): ('$(i.lookup(#'implements))')
      method internals(): ('$(i.lookup(#'internal_names))')
@@ -30,39 +30,78 @@ block:
                           $(i.lookup(#'uses_default_annotation))')'
   interface_clause.macro 'ibounce':
     ~info: i
-    'method supers(): ('$(interface_meta.Info.lookup(i, #'extends))')
+    'method names(): ('$(i.lookup(#'name))')
+     method supers(): ('$(i.lookup(#'extends))')
+     method internals(): ('$(i.lookup(#'internal_names))')
      method methods(): ('$(i.lookup(#'method_names))')
-     method arities(): ('$(i.lookup(#'method_arities))')
-     method visibilities(): ('$(i.lookup(#'method_visibilities))')'
+     method mvisibilities(): ('$(i.lookup(#'method_visibilities))')
+     method marities(): ('$(i.lookup(#'method_arities))')
+     method properties(): ('$(i.lookup(#'property_names))')
+     method pvisibilities(): ('$(i.lookup(#'property_visibilities))')
+     method parities(): ('$(i.lookup(#'property_arities))')
+     method defaults(): ('$(i.lookup(#'uses_default_annotation))')'
+  veneer_clause.macro 'vbounce':
+    ~info: i
+    'method names(): ('$(i.lookup(#'name))')
+     method supers(): ('$(i.lookup(#'extends))')
+     method internals(): ('$(i.lookup(#'internal_names))')
+     method methods(): ('$(i.lookup(#'method_names))')
+     method mvisibilities(): ('$(i.lookup(#'method_visibilities))')
+     method marities(): ('$(i.lookup(#'method_arities))')
+     method properties(): ('$(i.lookup(#'property_names))')
+     method pvisibilities(): ('$(i.lookup(#'property_visibilities))')
+     method parities(): ('$(i.lookup(#'property_arities))')'
   defn.macro 'def_describe $name $key':
     '«expr.macro '$name $('$')(id :: Identifier)': '('$('$')(class_meta.describe(id).lookup(#'$key))')'»'
   defn.macro 'def_idescribe $name $key':
     '«expr.macro '$name $('$')(id :: Identifier)': '('$('$')(interface_meta.describe(id).lookup(#'$key))')'»'
+  defn.macro 'def_vdescribe $name $key':
+    '«expr.macro '$name $('$')(id :: Identifier)': '('$('$')(veneer_meta.describe(id).lookup(#'$key))')'»'
   def_describe dname name
   def_describe dsuper extends
   def_describe dinterfaces implements
   def_describe dinterfaces_vis implements_visibilities
   def_describe dinternals internal_names
   def_describe dfields field_names
-  def_describe dfield_visabilities field_visibilities
+  def_describe dfield_visibilities field_visibilities
   def_describe dfield_keywords field_keywords
   def_describe dfield_constructives field_constructives
   def_describe dfield_mutabilities field_mutabilities
   def_describe dmethods method_names
-  def_describe darities method_arities
+  def_describe dmethod_visibilities method_visibilities
+  def_describe dmethod_arities method_arities
+  def_describe dproperties property_names
+  def_describe dproperty_visibilities property_visibilities
+  def_describe dproperty_arities property_arities
   expr.macro 'dctr $(name :: Term)': '$(class_meta.describe(name).lookup(#'uses_default_constructor))'
   expr.macro 'dbind $(name :: Term)': '$(class_meta.describe(name).lookup(#'uses_default_binding))'
   expr.macro 'dann $(name :: Term)': '$(class_meta.describe(name).lookup(#'uses_default_annotation))'
   def_idescribe diname name
   def_idescribe disuper extends
+  def_idescribe diinternals internal_names
   def_idescribe dimethods method_names
+  def_idescribe dimethod_visibilities method_visibilities
+  def_idescribe dimethod_arities method_arities
+  def_idescribe diproperties property_names
+  def_idescribe diproperty_visibilities property_visibilities
+  def_idescribe diproperty_arities property_arities
   expr.macro 'diann $(name :: Term)': '$(interface_meta.describe(name).lookup(#'uses_default_annotation))'
+  def_vdescribe dvname name
+  def_vdescribe dvsuper extends
+  def_vdescribe dvinternals internal_names
+  def_vdescribe dvmethods method_names
+  def_vdescribe dvmethod_visibilities method_visibilities
+  def_vdescribe dvmethod_arities method_arities
+  def_vdescribe dvproperties property_names
+  def_vdescribe dvproperty_visibilities property_visibilities
+  def_vdescribe dvproperty_arities property_arities
 
   block:
     interface Pointy
     interface VeryPointy:
       extends Pointy
-      method get_extent(): "very_small"
+      property extent: "very_small"
+      method get_extent(): extent
       ibounce
     class Posn(x, y):
       nonfinal
@@ -91,48 +130,69 @@ block:
       p.mvisibilities() ~matches 'public'
       p.marities() ~matches '1'
       p.defaults() ~matches '#true; #true; #true'
+      p0.names() ~matches 'VeryPointy'
       p0.supers() ~matches 'Pointy'
+      p0.internals() ~matches ''
       p0.methods() ~matches 'get_extent'
-      p0.visibilities() ~matches 'public'
-      p0.arities() ~matches '1'
+      p0.mvisibilities() ~matches 'public'
+      p0.marities() ~matches '1'
+      p0.properties() ~matches 'extent'
+      p0.pvisibilities() ~matches 'public'
+      p0.parities() ~matches '1'
+      p0.defaults() ~matches '#true'
 
     block:
       check:
         dname Posn ~matches 'Posn'
         dsuper Posn ~matches ''
         dinterfaces Posn ~matches ''
+        dinternals Posn ~matches ''
         dfields Posn ~matches 'x y'
         dfield_keywords Posn ~matches '#false #false'
-        dfield_visabilities Posn ~matches 'public public'
+        dfield_visibilities Posn ~matches 'public public'
         dfield_constructives Posn ~matches 'required required'
         dfield_mutabilities Posn ~matches 'immutable immutable'
         dmethods Posn ~matches 'is_origin'
-        darities Posn ~matches '1'
-        dinternals Posn ~matches ''
+        dmethod_visibilities Posn ~matches 'public'
+        dmethod_arities Posn ~matches '1'
+        dproperties Posn ~matches ''
+        dproperty_visibilities Posn ~matches ''
+        dproperty_arities Posn ~matches ''
       check:
         dname Posn3D ~matches 'Posn3D'
         dsuper Posn3D ~matches 'Posn'
         dinterfaces Posn3D ~matches 'Pointy'
         dfields Posn3D ~matches 'x y z color'
         dfield_keywords Posn3D ~matches '#false #false #false #false'
-        dfield_visabilities Posn3D ~matches 'public public public public'
+        dfield_visibilities Posn3D ~matches 'public public public public'
         dfield_constructives Posn3D ~matches 'required required required absent'
         dfield_mutabilities Posn3D ~matches 'immutable immutable immutable mutable'
         dmethods Posn3D ~matches 'is_origin get_color
                                     $('names supers intfs internals fields keywords')
                                     $('mutables visibilities constructives')
-                                    $('methods mvisibilities marities defaults')'
+                                    $('methods mvisibilities marities')
+                                    $('defaults')'
+        dproperties Posn3D ~matches ''
+        dproperty_visibilities Posn3D ~matches ''
+        dproperty_arities Posn3D ~matches ''
       check:
         dname Posn0D ~matches 'Posn0D'
         dsuper Posn0D ~matches ''
         dinterfaces Posn0D ~matches 'VeryPointy'
         dfields Posn0D ~matches ''
         dfield_keywords Posn0D ~matches ''
-        dfield_visabilities Posn0D ~matches ''
+        dfield_visibilities Posn0D ~matches ''
         dfield_constructives Posn0D ~matches ''
         dfield_mutabilities Posn0D ~matches ''
         dmethods Posn0D ~matches 'get_extent
-                                    $('supers methods arities visibilities')'
+                                    $('names supers internals')
+                                    $('methods mvisibilities marities')
+                                    $('properties pvisibilities parities')
+                                    $('defaults')'
+
+        dproperties Posn0D ~matches 'extent'
+        dproperty_visibilities Posn0D ~matches 'public'
+        dproperty_arities Posn0D ~matches '1'
 
   block:
     interface Pointy:
@@ -158,16 +218,27 @@ block:
       internal _Posn4D
       private implements: Secret
     def p = Posn3D(1)
-    def p4 = Posn4D(1)
     check:
       diname Pointy ~matches 'Pointy'
       disuper Pointy ~matches ''
+      diinternals Pointy ~matches ''
       dimethods Pointy ~matches 'here'
+      dimethod_visibilities Pointy ~matches 'public'
+      dimethod_arities Pointy ~matches '1'
+      diproperties Pointy ~matches ''
+      diproperty_visibilities Pointy ~matches ''
+      diproperty_arities Pointy ~matches ''
       diann Pointy ~is #true
     check:
       diname _Pointy ~matches 'Pointy'
       disuper _Pointy ~matches ''
+      diinternals _Pointy ~matches ''
       dimethods _Pointy ~matches 'inside here'
+      dimethod_visibilities _Pointy ~matches 'private public'
+      dimethod_arities _Pointy ~matches '#false 1'
+      diproperties _Pointy ~matches ''
+      diproperty_visibilities _Pointy ~matches ''
+      diproperty_arities _Pointy ~matches ''
       diann _Pointy ~is #true
     check:
       p.fields() ~matches 'x y z color size'
@@ -184,13 +255,14 @@ block:
       dinterfaces Posn3D ~matches 'Pointy'
       dfields Posn3D ~matches 'x y color'
       dfield_keywords Posn3D ~matches '#false ~y #false'
-      dfield_visabilities Posn3D ~matches 'public public public'
+      dfield_visibilities Posn3D ~matches 'public public public'
       dfield_constructives Posn3D ~matches 'required optional absent'
       dfield_mutabilities Posn3D ~matches 'immutable mutable mutable'
       dmethods Posn3D ~matches 'here get_color
                                   $('names supers intfs internals fields keywords')
                                   $('mutables visibilities constructives')
-                                  $('methods mvisibilities marities defaults')'
+                                  $('methods mvisibilities marities')
+                                  $('defaults')'
       dctr Posn3D ~is #true
       dbind Posn3D ~is #true
       dann Posn3D ~is #true
@@ -201,13 +273,14 @@ block:
       dinterfaces_vis _Posn3D ~matches 'public'
       dfields _Posn3D ~matches 'x y z color size'
       dfield_keywords _Posn3D ~matches '#false ~y #false #false #false'
-      dfield_visabilities _Posn3D ~matches 'public public private public private'
+      dfield_visibilities _Posn3D ~matches 'public public private public private'
       dfield_constructives _Posn3D ~matches 'required optional optional absent absent'
       dfield_mutabilities _Posn3D ~matches 'immutable mutable immutable mutable mutable'
       dmethods _Posn3D ~matches 'get_size here get_color
                                    $('names supers intfs internals fields keywords')
                                    $('mutables visibilities constructives')
-                                   $('methods mvisibilities marities defaults')'
+                                   $('methods mvisibilities marities')
+                                   $('defaults')'
     check:
       dname Posn4D ~matches 'Posn4D'
       dsuper Posn4D ~matches 'Posn3D'
@@ -215,13 +288,14 @@ block:
       dinterfaces_vis Posn4D ~matches ''
       dfields Posn4D ~matches 'x y color w q angle'
       dfield_keywords Posn4D ~matches '#false ~y #false ~w #false #false'
-      dfield_visabilities Posn4D ~matches 'public public public public public public'
+      dfield_visibilities Posn4D ~matches 'public public public public public public'
       dfield_constructives Posn4D ~matches 'required optional absent optional optional absent'
       dfield_mutabilities Posn4D ~matches 'immutable mutable mutable immutable immutable mutable'
       dmethods Posn4D ~matches 'here get_color
                                   $('names supers intfs internals fields keywords')
                                   $('mutables visibilities constructives')
-                                  $('methods mvisibilities marities defaults')'
+                                  $('methods mvisibilities marities')
+                                  $('defaults')'
     check:
       dname _Posn4D ~matches 'Posn4D'
       dsuper _Posn4D ~matches 'Posn3D'
@@ -229,13 +303,14 @@ block:
       dinterfaces_vis _Posn4D ~matches 'private'
       dfields _Posn4D ~matches 'x y color w q s weight angle'
       dfield_keywords _Posn4D ~matches '#false ~y #false ~w #false #false #false #false'
-      dfield_visabilities _Posn4D ~matches 'public public public public public private private public'
+      dfield_visibilities _Posn4D ~matches 'public public public public public private private public'
       dfield_constructives _Posn4D ~matches 'required optional absent optional optional optional absent absent'
       dfield_mutabilities _Posn4D ~matches 'immutable mutable mutable immutable immutable immutable mutable mutable'
       dmethods _Posn4D ~matches 'here get_color
                                    $('names supers intfs internals fields keywords')
                                    $('mutables visibilities constructives')
-                                   $('methods mvisibilities marities defaults')'
+                                   $('methods mvisibilities marities')
+                                   $('defaults')'
 
   block:
     class Posn(x, y):
@@ -268,7 +343,7 @@ block:
       dinterfaces Posn ~matches ''
       dfields Posn ~matches 'x y m i'
       dfield_keywords Posn ~matches '#false #false #false #false'
-      dfield_visabilities Posn ~matches 'public public public public'
+      dfield_visibilities Posn ~matches 'public public public public'
       dfield_constructives Posn ~matches 'required required absent absent'
       dfield_mutabilities Posn ~matches 'immutable immutable mutable immutable'
       dname _Posn ~matches 'Posn'
@@ -276,9 +351,53 @@ block:
       dinterfaces _Posn ~matches ''
       dfields _Posn ~matches 'x y m i pm pi'
       dfield_keywords _Posn ~matches '#false #false #false #false  #false #false'
-      dfield_visabilities _Posn ~matches 'public public public public private private'
+      dfield_visibilities _Posn ~matches 'public public public public private private'
       dfield_constructives _Posn ~matches 'required required absent absent  absent absent'
       dfield_mutabilities _Posn ~matches 'immutable immutable mutable immutable  mutable immutable'
+
+  block:
+    veneer Posn(this :~ Array.of_length(2)):
+      property x: this[0]
+      property y: this[1]
+      method is_origin(): x == 0 && y == 0
+    veneer Posn3D(this :~ Array.of_length(3)):
+      extends Posn
+      property z: this[2]
+      property color: "red"
+      method get_color(): color
+      vbounce
+    def p = Posn3D(Array(1, 2, 3))
+    check:
+      p.names() ~matches 'Posn3D'
+      p.supers() ~matches 'Posn'
+      p.internals() ~matches ''
+      p.methods() ~matches 'get_color'
+      p.mvisibilities() ~matches 'public'
+      p.marities() ~matches '1'
+      p.properties() ~matches 'z color'
+      p.pvisibilities() ~matches 'public public'
+      p.parities() ~matches '1 1'
+
+    block:
+      check:
+        dvname Posn ~matches 'Posn'
+        dvsuper Posn ~matches ''
+        dvinternals Posn ~matches ''
+        dvmethods Posn ~matches 'is_origin'
+        dvmethod_visibilities Posn ~matches 'public'
+        dvmethod_arities Posn ~matches '1'
+        dvproperties Posn ~matches 'x y'
+        dvproperty_visibilities Posn ~matches 'public public'
+        dvproperty_arities Posn ~matches '1 1'
+      check:
+        dvname Posn3D ~matches 'Posn3D'
+        dvsuper Posn3D ~matches 'Posn'
+        dvinternals Posn3D ~matches ''
+        dvmethods Posn3D ~matches 'is_origin get_color
+                                     $('names supers internals')
+                                     $('methods mvisibilities marities')
+                                     $('properties pvisibilities parities')'
+        dvproperties Posn3D ~matches 'x y z color'
 
 // Make sure that introduced names can be referenced directly
 

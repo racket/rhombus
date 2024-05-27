@@ -4,7 +4,8 @@
                      enforest/proc-name
                      "pack.rkt"
                      "macro-result.rkt"
-                     (submod "veneer-meta.rkt" for-static-info))
+                     (submod "veneer-meta.rkt" for-static-info)
+                     (for-syntax racket/base))
          "space-provide.rkt"
          "veneer-clause.rkt"
          "macro-macro.rkt")
@@ -15,7 +16,7 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/veneer_clause
-  #:extra ([#:info veneer-data-static-infos value])
+  #:extra ([#:info (get-veneer-data-static-infos) value])
   #'make-veneer-clause-transformer)
 
 (define-for-syntax (make-veneer-clause-transformer proc)

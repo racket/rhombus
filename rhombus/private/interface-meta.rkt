@@ -59,7 +59,6 @@
 (define (interface-expand-data-internal-info-name data)
   (syntax-parse (interface-expand-data-stx data)
     [(_ base-stx scope-stx
-        for-together?
         name
         . _)
      #'name]))

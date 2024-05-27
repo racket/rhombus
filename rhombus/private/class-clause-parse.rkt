@@ -391,14 +391,14 @@
     [(property_names)
      (append
       private-properties
-      (for ([ma (in-vector shapes)]
-            #:do [(define m (unwrap ma))]
-            #:when (pair? m))
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
+                 #:when (pair? m))
         (let ([m (car m)])
           (datum->syntax #f (if (box? m) (unbox m) m)))))]
     [(property_arities)
      (append
-      (for/list ([m (in-list private-methods)])
+      (for/list ([m (in-list private-properties)])
         #f)
       (for/list ([ma (in-vector shapes)]
                  #:do [(define m (unwrap ma))]
