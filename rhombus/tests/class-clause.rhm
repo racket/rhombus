@@ -451,3 +451,70 @@ block:
       gen private: five
     Posn(1, 2).five()
     ~is 5
+
+block:
+  class_clause.macro 'check_options $all $op':
+    ~all_stx stx
+    ~op_stx self
+    '«property $all: Syntax.literal '$stx'
+      property $op: Syntax.literal '$self'
+      »'
+
+  check:
+    class Something():
+      check_options stx self
+    def something = Something()
+    values(something.stx, something.self)
+    ~matches values('check_options stx self', 'check_options')
+
+block:
+  interface_clause.macro 'check_options $all $op':
+    ~all_stx stx
+    ~op_stx self
+    '«property $all: Syntax.literal '$stx'
+      property $op: Syntax.literal '$self'
+      »'
+
+  check:
+    interface Somethingable:
+      check_options stx self
+    class Something():
+      implements Somethingable
+    def something = Something()
+    values(something.stx, something.self)
+    ~matches values('check_options stx self', 'check_options')
+
+block:
+  class_and_interface_clause.macro 'check_options $all $op':
+    ~all_stx stx
+    ~op_stx self
+    '«property $all: Syntax.literal '$stx'
+      property $op: Syntax.literal '$self'
+      »'
+
+  check:
+    interface Somethingable:
+      check_options istx iself
+    class Something():
+      implements Somethingable
+      check_options cstx cself
+    def something = Something()
+    values(something.istx, something.iself,
+           something.cstx, something.cself)
+    ~matches values('check_options istx iself', 'check_options',
+                    'check_options cstx cself', 'check_options')
+
+block:
+  veneer_clause.macro 'check_options $all $op':
+    ~all_stx stx
+    ~op_stx self
+    '«property $all: Syntax.literal '$stx'
+      property $op: Syntax.literal '$self'
+      »'
+
+  check:
+    veneer Something(this :~ False):
+      check_options stx self
+    def something = Something(#false)
+    values(something.stx, something.self)
+    ~matches values('check_options stx self', 'check_options')

@@ -29,7 +29,7 @@
     ~tail '$pattern'
 ){
 
- Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that
+ Similar to @rhombus(defn.macro), but binds a @tech{dot provider} that
  is normally referenced indirectly via @tech{static information},
  instead of directly. The @rhombus(pattern) sequence after the leading
  @rhombus(defined_name) should match a sequence of three
@@ -87,16 +87,17 @@
     ~head_stx $id
     ~is_static: $id
     ~is_static $id
-    ~tail '$pattern'
     ~tail: '$pattern'
+    ~tail '$pattern'
 ){
 
  A form for @rhombus(class), @rhombus(interface), or @rhombus(veneer) to bind a macro that
  is normally triggered by using the @rhombus(defined_id) after @rhombus(.) on an
  expression that has the class's or interface's annotation. The macro can also be
- triggered by @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)) for a class
- or initerface @rhombus(name, ~var), which is treated as
- @rhombus((obj_expr :: #,(@rhombus(name, ~var))).defined_id).
+ triggered by @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)) for a class,
+ interface, or veneer @rhombus(name, ~var) (more specifically, for the
+ defined @tech{namespace}), in which case the @rhombus(obj_expr) is
+ checked to be a correct instance.
 
  The pattern for @rhombus(dot, ~class_clause) is constrained to have an
  escape for @rhombus(left_id) as the left-hand expression (which has the
@@ -107,6 +108,6 @@
  @rhombus(dot.macro), except that @rhombus(~head_stx) is also allowed as
  an option. An identifier after @rhombus(~head_stx) is bound to the
  called form, either @rhombus(obj_expr.defined_id) or
- @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)).
+ @rhombus(defined_id(obj_expr)).
 
 }

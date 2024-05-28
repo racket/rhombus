@@ -248,3 +248,32 @@ check:
   veneer RevList(this :: List)
   RevList([])
   ~throws "not allowed in a dynamic context"
+
+// options in `dot`
+block:
+  import rhombus/meta open
+  veneer Something(this :~ False):
+    dot '$left . check_options':
+      ~op_stx self
+      ~head_stx call
+      ~is_static is_static
+      ~tail '$()'
+      'values(
+         Syntax.literal '$self',
+         Syntax.literal '$call',
+         #%literal $is_static,
+       )'
+  check:
+    Something(#false).check_options
+    ~matches values(
+      '.',
+      '$_ . check_options',
+      #true,
+    )
+  check:
+    Something.check_options(Something(#false))
+    ~matches values(
+      'check_options',
+      'check_options($_)',
+      #true,
+    )

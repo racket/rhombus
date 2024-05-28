@@ -1,9 +1,7 @@
-#lang rhombus
+#lang rhombus/static
 import:
   meta:
     rhombus expose: macro
-
-use_static
 
 block:
   class Posn(x, y)
@@ -906,7 +904,6 @@ block:
   check p with (x = 10).get_z() ~is 1
 
 block:
-  use_static
   class Pack(mutable vs :: List.of(Int))
   check Pack([1, 2]).vs[0] ~is 1
   check Pack.vs(Pack([1, 2]))[1] ~is 2
@@ -944,3 +941,32 @@ check:
   class B(b :: Listable.to_list, c = b)
   B(PairList["apple"]).c
   ~is ["apple"]
+
+// options in `dot`
+block:
+  import rhombus/meta open
+  class Something():
+    dot '$left . check_options':
+      ~op_stx self
+      ~head_stx call
+      ~is_static is_static
+      ~tail '$()'
+      'values(
+         Syntax.literal '$self',
+         Syntax.literal '$call',
+         #%literal $is_static,
+       )'
+  check:
+    Something().check_options
+    ~matches values(
+      '.',
+      '$_ . check_options',
+      #true,
+    )
+  check:
+    Something.check_options(Something())
+    ~matches values(
+      'check_options',
+      'check_options($_)',
+      #true,
+    )

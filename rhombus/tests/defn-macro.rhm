@@ -122,3 +122,36 @@ block:
    import .n open
    dz w
    check w ~is 0
+
+// options
+check:
+  defn.macro 'check_options $all $op':
+    ~all_stx stx
+    ~op_stx self
+    '«def $all = Syntax.literal '$stx'
+      def $op = Syntax.literal '$self'
+      »'
+  check_options stx self
+  values(stx, self)
+  ~matches values(
+    'check_options stx self',
+    'check_options',
+  )
+
+check:
+  defn.sequence_macro 'check_options $all $op; $tail; ...':
+    ~all_stx stx
+    ~op_stx self
+    values(
+      '«def $all = Syntax.literal '$stx'
+        def $op = Syntax.literal '$self'
+        »',
+      '$tail; ...'
+    )
+  check_options stx self
+  values(stx, self)
+  ~matches values(
+    'check_options stx self
+     values(stx, self)',
+    'check_options',
+  )

@@ -41,6 +41,7 @@
                          impl))
   (define (maybe-cons id ids) (if (syntax-e id) (cons id ids) ids)))
 (define (make-all l) (pack-tail l))
+(define (make-all-sequence l) (pack-multi-tail l))
 
 (define-unquote-binding-syntax _Term
   (unquote-binding-transformer
@@ -468,18 +469,23 @@
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id all-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list all-id) (list #'())
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list (if (syntax-e all-id) #'all #'#f)) (list #'())
                                     make-transformer-id #'() (list)
-                                    #:tail-ids #'(tail-id)
+                                    #:tail-ids (list #'extra-tail)
                                     #:wrap-for-tail
                                     (lambda (body)
                                       (define-values (pattern idrs sidrs vars can-be-empty?)
                                         (convert-pattern #`(multi . #,gs-stx)))
                                       (with-syntax ([((p-id id-ref) ...) idrs]
                                                     [(((s-id ...) sid-ref) ...) sidrs])
-                                        #`(syntax-parse tail-id
+                                        #`(syntax-parse extra-tail
                                             #:disable-colon-notation
                                             [#,pattern
+                                             #,@(if (syntax-e all-id)
+                                                    #`((define #,all-id (make-all-sequence (cons (unpack-group all #f #f)
+                                                                                                 (unpack-multi extra-tail #f #f))))
+                                                       (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
+                                                    '())
                                              (let ([p-id id-ref] ...)
                                                (let-syntaxes ([(s-id ...) sid-ref] ...)
                                                  #,body))])))))

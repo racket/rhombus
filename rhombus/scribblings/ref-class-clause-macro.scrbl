@@ -47,7 +47,11 @@
                | ...»'
   grammar option:
     ~op_stx: $id
+    ~op_stx $id
+    ~all_stx: $id
+    ~all_stx $id
     ~info: $id
+    ~info $id
 ){
 
  Like @rhombus(defn.macro), but defines a name in the
@@ -59,7 +63,7 @@
  use, where each group can be either a another @rhombus(class) clause, an
  expression, a defintion, or an export.
 
- In addition to an @rhombus(~op_stx) option like @rhombus(defn.macro),
+ In addition to @rhombus(~op_stx) and @rhombus(~all_stx) options like @rhombus(defn.macro),
  the optional @rhombus(~info) body form binds an @rhombus(id) to
  a @rhombus(class_meta.Info, ~annot) value. Use the
  @rhombus(class_meta.Info.lookup) function to access information about

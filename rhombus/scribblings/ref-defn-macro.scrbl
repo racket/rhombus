@@ -34,15 +34,18 @@
   defn.macro 'defn.macro $prefix_macro_patterns'
 
   grammar prefix_macro_patterns:
-    '$defined_name $pattern ...':
+    prefix_macro_case
+    Z| prefix_macro_case
+     | ...
+
+  grammar prefix_macro_case:
+    $prefix_macro_pattern:
       $option; ...
       $body
       ...
-    Z| '$defined_name $pattern ...':
-         $option; ...
-         $body
-         ...
-     | ...
+
+  grammar prefix_macro_pattern:
+    '$defined_name $pattern ...'
 
   grammar defined_name:
     $id
@@ -54,6 +57,8 @@
   grammar option:
     ~op_stx: $id
     ~op_stx $id
+    ~all_stx: $id
+    ~all_stx $id
 ){
 
  Defines @rhombus(defined_name) as a macro
@@ -65,12 +70,14 @@
  The expansion result must be a sequence of groups that are inlined in
  place of the definition-macro use.
 
- The @rhombus(option)s in the macro body must be distinct; since there
- is only one option currently, either the @rhombus(~op_stx) option is
- present or not. The @rhombus(~op_stx) option, if present, binds an
- identifier for a use of the macro (which cannot be matched directly in
- the @rhombus(pattern), since that position is used for the name
- that @rhombus(defn.macro) binds).
+ The @rhombus(option)s in the macro body must be distinct. The
+ @rhombus(~op_stx) option, if present, binds an identifier for a use
+ of the macro (which cannot be matched directly in the
+ @rhombus(pattern), since that position is used for the name that
+ @rhombus(defn.macro) binds). The @rhombus(~all_stx) option binds an
+ identifier to the input that is matched by the
+ @rhombus(prefix_macro_pattern), which includes the identifier or
+ operator that @rhombus(~op_stx) would capture.
 
  Using @vbar alternatives, a single definition can have any number of
  @rhombus(pattern)s, which are tried in order. The @rhombus(defined_name)

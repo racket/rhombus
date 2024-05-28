@@ -1,6 +1,4 @@
-#lang rhombus/and_meta
-
-use_static
+#lang rhombus/static/and_meta
 
 class Posn(x, y)
 
@@ -109,3 +107,17 @@ block:
     use_dynamic
     ("x" :: MyStr).is_static
     ~is #false
+
+check:
+  expr.macro 'check_options':
+    statinfo_meta.wrap('#false',
+                       '(($(statinfo_meta.dot_provider_key), check_options_dot_provider))')
+  dot.macro 'check_options_dot_provider $left $dot $right':
+    ~op_stx self
+    ~is_static is_static
+    ~tail '$()'
+    match right
+    | 'op': '«Syntax.literal '$self'»'
+    | 'static': '#%literal $is_static'
+  values(check_options.op, check_options.static)
+  ~matches values('.', #true)

@@ -10,7 +10,8 @@
          "dot-provider-key.rkt"
          "parse.rkt"
          "parens.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "is-static.rkt")
 
 (provide (for-syntax compose-dot-providers
                      wrap-class-dot-provider-transformers
@@ -42,8 +43,8 @@
       (define proc (syntax-local-value id))
       (wrap-dot-provider-transformer
        (lambda (packed-form dot static? packed-tail)
-         (syntax-parse packed-form
-           [(_ (_ lhs dot-op name . _))
+         (syntax-parse (unpack-tail packed-form proc #f)
+           [(lhs dot-op name . _)
             (proc packed-form dot (no-srcloc #`(#,group-tag lhs dot-op name)) static? packed-tail)]))))
     (syntax->list ids-stx))))
 
@@ -51,27 +52,30 @@
   (make-expression-prefix-operator
    '((default . stronger))
    'macro
-   (lambda (packed-tail self)
-     (syntax-parse packed-tail
-       [(_ (_ (~and p (_::parens g)) . tail))
+   (lambda (packed-tail self-stx)
+     (syntax-parse (unpack-tail packed-tail proc #f)
+       [((~and p (_::parens g)) . tail)
         #:with e::expression #'g
-        (define new-g #`((parsed #:rhombus/expr
-                                 #,(wrap-static-info
-                                    #`(let ([o e.parsed])
-                                        (check-instance '#,name #,pred o)
-                                        o)
-                                    #'#%dot-provider
-                                    dot-provider))
-                         |.|
-                         #,name))
+        (define new-g (pack-tail
+                       #`((parsed #:rhombus/expr
+                                  #,(wrap-static-info
+                                     #`(let ([o e.parsed])
+                                         (check-instance '#,name #,pred o)
+                                         o)
+                                     #'#%dot-provider
+                                     dot-provider))
+                          (op |.|)
+                          #,name)))
+        (define call-g (no-srcloc #`(#,group-tag #,self-stx p)))
+        (define is-static? (is-static-context? self-stx))
         (define orig-tail (pack-tail #'tail))
         (call-with-values
          (lambda ()
-           (proc (pack-tail new-g) name new-g #f orig-tail))
+           (proc new-g name call-g is-static? orig-tail))
          ;; different default tail:
          (case-lambda
            [(e) (values e orig-tail)]
-           [args (apply values args)]))]))))
+           [(e tail) (values e tail)]))]))))
 
 (define (check-instance name pred v)
   (unless (pred v)

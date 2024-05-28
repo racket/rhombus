@@ -142,10 +142,6 @@
     self-options
     extra-options)
 
-  (define-composed-splicing-syntax-class (:self-prefix-operator-options space-sym)
-    operator-options
-    self-options)
-
   (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym extra-kws)
     operator-options
     self-options
@@ -192,6 +188,9 @@
   (define-composed-splicing-syntax-class (:transformer-options space-sym extra-kws)
     self-options
     extra-options)
+
+  (define-composed-splicing-syntax-class (:sequence-transformer-options space-sym)
+    self-options)
 
   (define-syntax-class :$+1
     #:attributes (name)
@@ -664,16 +663,13 @@
        #:datum-literals (group)
        [(form-id q::identifier-sequence-syntax-quote
                  (~and rhs (tag::block
-                            (~optional (group #:op_stx (_::block (group self-id:identifier)))
-                                       #:defaults ([self-id #'self]))
-                            (~optional (group #:all_stx (_::block (group all-id:identifier)))
-                                       #:defaults ([all-id #'#f]))
+                            (~var opt (:sequence-transformer-options space-sym))
                             body ...)))
         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
         (define name (pre-parsed-name p))
         (build-syntax-definitions/maybe-extension
          (list space-sym) name (pre-parsed-extends p)
-         #`(let ([#,name (#,compiletime-id #,p q.gs self-id all-id)])
+         #`(let ([#,name (#,compiletime-id #,p q.gs opt.self-id opt.all-id)])
              #,name))]))))
 
 (begin-for-syntax

@@ -28,37 +28,34 @@
 ;; inclusion in `rhombus/meta` (which would then need a meta-meta
 ;; rhombus)
 
-(define-for-syntax (make-macro-clause-transformer
-                    #:clause-transformer [clause-transformer class-clause-transformer])
-  (clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:datum-literals (group op |.|)
-       [(form-name (q-tag::quotes ((~and g-tag group)
-                                   d1::$-bind
-                                   left:identifier
-                                   (op |.|)
-                                   name:identifier))
-                   (~and (_::block . _)
-                         template-block))
-        (wrap-class-clause #`(#:dot
-                              name
-                              (block
-                               #,(class-dot-transformer
-                                  #'(form-name (q-tag (g-tag dot
-                                                             d1 left
-                                                             d1 dot-op
-                                                             name))
-                                               template-block)))))]))))
+(define-for-syntax (parse-dot stx data)
+  (syntax-parse stx
+    #:datum-literals (group op |.|)
+    [(form-name (q-tag::quotes ((~and g-tag group)
+                                d1::$-bind
+                                left:identifier
+                                (op |.|)
+                                name:identifier))
+                (~and (_::block . _)
+                      template-block))
+     (wrap-class-clause #`(#:dot
+                           name
+                           (block
+                            #,(class-dot-transformer
+                               #'(form-name (q-tag (g-tag dot
+                                                          d1 left
+                                                          d1 dot-op
+                                                          name))
+                                            template-block)))))]))
 
 (define-class-clause-syntax dot
-  (make-macro-clause-transformer))
+  (class-clause-transformer parse-dot))
 
 (define-interface-clause-syntax dot
-  (make-macro-clause-transformer #:clause-transformer interface-clause-transformer))
+  (interface-clause-transformer parse-dot))
 
 (define-veneer-clause-syntax dot
-  (make-macro-clause-transformer #:clause-transformer veneer-clause-transformer))
+  (veneer-clause-transformer parse-dot))
 
 (begin-for-syntax
   (define (class-dot-transformer pat)
