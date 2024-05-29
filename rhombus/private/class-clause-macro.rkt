@@ -5,8 +5,8 @@
                      "pack.rkt"
                      "macro-result.rkt"
                      (submod "class-meta.rkt" for-static-info)
-                     (for-syntax
-                      racket/base))
+                     (only-in "static-info.rkt"
+                              get-empty-static-infos))
          "space-provide.rkt"
          "class+interface.rkt"
          "class-clause.rkt"
@@ -26,13 +26,13 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/class_clause
-  #:extra ([#:info (get-class-data-static-infos) value])
+  #:extra ([#:info get-class-data-static-infos value])
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
   #:multi (rhombus/class_clause
            rhombus/interface_clause)
-  #:extra ([#:info (quote-syntax ()) value])
+  #:extra ([#:info get-empty-static-infos value])
   #'make-class-and-interface-clause-transformer)
 
 (define-for-syntax (make-class-clause-transformer proc)

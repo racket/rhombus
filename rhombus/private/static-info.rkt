@@ -40,7 +40,7 @@
            static-infos-result-union
            static-infos-result-intersect
            static-infos-remove
-           make-static-info))
+           get-empty-static-infos))
 
 (provide define-static-info-getter
          define-static-info-syntax
@@ -240,11 +240,7 @@
     [(_ id) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
 
-(define-for-syntax (make-static-info static-infos)
-  (define infos (if (syntax? static-infos)
-                    (syntax->list static-infos)
-                    static-infos))
-  (static-info (lambda () infos)))
+(define-static-info-getter get-empty-static-infos)
 
 (define-for-syntax (flatten-indirects as)
   (and as

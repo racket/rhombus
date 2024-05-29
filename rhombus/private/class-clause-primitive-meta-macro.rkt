@@ -3,8 +3,9 @@
                      syntax/parse/pre
                      (submod "syntax-object.rkt" for-quasiquote)
                      "macro-rhs.rkt"
-                     "srcloc.rkt"
                      "parse.rkt"
+                     (only-in "static-info.rkt"
+                              get-empty-static-infos)
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "provide.rkt"
@@ -78,7 +79,7 @@
                                          (syntax->list #'all-ids)
                                          (syntax->list #'extra-argument-binds)
                                          #'values
-                                         #`((get-syntax-static-infos) #'() (get-syntax-static-infos))
+                                         #'(get-syntax-static-infos get-empty-static-infos get-syntax-static-infos)
                                          '(value value pattern)
                                          #:else #'#f
                                          #:cut? #t)])))

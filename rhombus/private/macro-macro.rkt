@@ -381,7 +381,7 @@
     [(_ id
         'protocol
         space
-        #:extra ([extra-kw extra-static-infos extra-shape] ...)
+        #:extra ([extra-kw extra-get-static-infos extra-shape] ...)
         #'make-prefix-id
         #'make-infix-id
         #'prefix+infix-id)
@@ -398,7 +398,7 @@
                                                                #'make-infix-id
                                                                #'prefix+infix-id
                                                                'space
-                                                               #'(extra-static-infos ...)
+                                                               #'(extra-get-static-infos ...)
                                                                '(extra-shape ...)))))]))
 
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
@@ -465,7 +465,7 @@
                                                                        make-infix-id
                                                                        prefix+infix-id
                                                                        space-sym
-                                                                       extra-static-infoss
+                                                                       extra-get-static-infoss-stx
                                                                        extra-shapes)
     (lambda (stx)
       (syntax-parse stx
@@ -475,7 +475,7 @@
                                         space-sym
                                         make-prefix-id
                                         make-infix-id
-                                        #:extra-static-infoss extra-static-infoss
+                                        #:extra-get-static-infoss extra-get-static-infoss-stx
                                         #:extra-shapes extra-shapes)]
         [(form-id #:multi orig-stx pre-parsed ...)
          (parse-operator-definitions-rhs #'orig-stx (syntax->list #'(pre-parsed ...))
@@ -483,7 +483,7 @@
                                          make-prefix-id
                                          make-infix-id
                                          prefix+infix-id
-                                         #:extra-static-infoss extra-static-infoss
+                                         #:extra-get-static-infoss extra-get-static-infoss-stx
                                          #:extra-shapes extra-shapes)]))))
 
 ;; ----------------------------------------
@@ -514,7 +514,7 @@
   (syntax-parse stx
     #:literals (syntax)
     [(_ id #:multi (space ...)
-        #:extra ([extra-kw extra-static-infos extra-shape] ...)
+        #:extra ([extra-kw extra-get-static-infos extra-shape] ...)
         #'make-transformer-id)
      #`(begin
          (define-defn-syntax id
@@ -524,7 +524,8 @@
                                                                   '(extra-shape ...)))
          (begin-for-syntax
            (define-syntax compiletime-id
-             (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id #'(extra-static-infos ...) '(extra-shape ...)))))]
+             (make-identifier-syntax-definition-transformer-compiletime
+              #'make-transformer-id #'(extra-get-static-infos ...) '(extra-shape ...)))))]
     [(_ id #:multi m
         #'make-transformer-id)
      #'(define-identifier-syntax-definition-transformer id #:multi m
@@ -629,7 +630,8 @@
       (hash-ref ht kw #f))))
 
 (begin-for-syntax
-  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infoss-stx extra-shapes)
+  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime
+                      make-transformer-id extra-get-static-infoss-stx extra-shapes)
     (lambda (stx)
       (syntax-parse stx
         [(_ pre-parseds self-ids all-ids extra-argument-binds)
@@ -638,7 +640,7 @@
                                            (syntax->list #'all-ids)
                                            (syntax->list #'extra-argument-binds)
                                            make-transformer-id
-                                           extra-static-infoss-stx
+                                           extra-get-static-infoss-stx
                                            extra-shapes)]))))
 
 (define-syntax (define-identifier-syntax-definition-sequence-transformer stx)

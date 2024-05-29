@@ -3,12 +3,13 @@
                      syntax/parse/pre
                      "space-meta-macro.rkt"
                      "expose.rkt"
+                     (only-in "static-info.rkt"
+                              get-empty-static-infos)
                      (for-syntax racket/base))
          "provide.rkt"
          "space-provide.rkt"
          "name-root.rkt"
          "declaration.rkt"
-         "definition.rkt"
          "space.rkt"
          "parens.rkt"
          "parse.rkt"
@@ -121,7 +122,7 @@
               (define-operator-definition-transformer _define-macro
                 'macro
                 #,space-path-name
-                #:extra ([extra-kw (quote-syntax ()) value] ...)
+                #:extra ([extra-kw get-empty-static-infos value] ...)
                 #'make-prefix-operator
                 #'make-infix-operator
                 #'make-prefix+infix-operator))

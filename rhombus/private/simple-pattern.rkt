@@ -9,8 +9,7 @@
          "pattern-variable.rkt"
          "pack.rkt"
          (only-in "static-info.rkt"
-                  in-static-info-space
-                  static-info)
+                  define-static-info-syntax)
          (submod "syntax-object.rkt" for-quasiquote))
 
 (provide (for-syntax
@@ -62,8 +61,9 @@
   (cond
     [(syntax-e all-id)
      (list
-      (syntax-parse tail-pattern
-        [() #`(define #,all-id #,self-id)]
-        [(~or* (_ _ _) (_ _ _ _)) #`(define #,all-id (#,make-all-id (cons #,self-id #,tail)))])
-      #`(define-syntax #,(in-static-info-space all-id) (static-info get-syntax-static-infos)))]
+      #`(define #,all-id
+          #,(syntax-parse tail-pattern
+              [() self-id]
+              [(~or* (_ _ _) (_ _ _ _)) #`(#,make-all-id (cons #,self-id #,tail))]))
+      #`(define-static-info-syntax #,all-id #:getter get-syntax-static-infos))]
     [else '()]))

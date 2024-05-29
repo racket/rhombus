@@ -45,7 +45,8 @@
   (provide syntax-method-table))
 
 (module+ for-quasiquote
-  (provide (for-syntax get-syntax-static-infos)))
+  (provide (for-syntax get-syntax-static-infos
+                       get-treelist-of-syntax-static-infos)))
 
 (define-primitive-class Syntax syntax
   #:lift-declaration
@@ -61,8 +62,7 @@
    [make_group Syntax.make_group]
    [make_sequence Syntax.make_sequence]
    [make_id Syntax.make_id]
-   [make_temp_id Syntax.make_temp_id]
-   )
+   [make_temp_id Syntax.make_temp_id])
   #:properties
   ()
   #:methods
@@ -78,8 +78,7 @@
    relocate
    relocate_span
    property
-   to_source_string
-   ))
+   to_source_string))
 
 (define-static-info-getter get-treelist-of-syntax-static-infos
   (#%index-result #,(get-syntax-static-infos))

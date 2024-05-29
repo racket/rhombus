@@ -1,9 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "name-root.rkt"
                      "pack.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
-                     (for-syntax racket/base))
+                     (only-in "static-info.rkt"
+                              get-empty-static-infos))
          "space-provide.rkt"
          (submod "dot.rkt" for-dot-provider)
          "macro-macro.rkt"
@@ -20,8 +20,8 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/dot
-  #:extra ([#:is_static (quote-syntax ()) value]
-           [#:tail (get-syntax-static-infos) pattern])
+  #:extra ([#:is_static get-empty-static-infos value]
+           [#:tail get-syntax-static-infos pattern])
   #'make-dot-provider-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)

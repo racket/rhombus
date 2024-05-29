@@ -39,8 +39,8 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/entry_point
-  #:extra ([#:mode (get-symbol-static-infos) value]
-           [#:adjustment (get-entry-point-adjustment-static-infos) value])
+  #:extra ([#:mode get-symbol-static-infos value]
+           [#:adjustment get-entry-point-adjustment-static-infos value])
   #'make-entry-point-transformer)
 
 (begin-for-syntax

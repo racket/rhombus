@@ -35,7 +35,7 @@
 
 (define-identifier-syntax-definition-transformer modifier
   rhombus/impo
-  #:extra ([#:import (get-syntax-static-infos) value])
+  #:extra ([#:import get-syntax-static-infos value])
   #'make-import-modifier)
 
 (begin-for-syntax

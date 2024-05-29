@@ -13,7 +13,6 @@
                      "tail-returner.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (submod "symbol.rkt" for-static-info)
-                     "index-result-key.rkt"
                      (submod "list.rkt" for-listable)
                      "static-info-pack.rkt"
                      (for-syntax racket/base))
@@ -36,13 +35,9 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/immediate_callee
-  #:extra ([#:static_infos #`((#%index-result #,(get-syntax-static-infos))
-                              . #,(get-treelist-static-infos))
-            value]
-           [#:in_op_mode (get-symbol-static-infos)
-            value]
-           [#:in_op_stx (get-syntax-static-infos)
-            value])
+  #:extra ([#:static_infos get-treelist-of-syntax-static-infos value]
+           [#:in_op_mode get-symbol-static-infos value]
+           [#:in_op_stx get-syntax-static-infos value])
   #'make-immediate-callee-transformer)
 
 (begin-for-syntax

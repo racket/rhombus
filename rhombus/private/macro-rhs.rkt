@@ -23,9 +23,7 @@
          "pack.rkt"
          "parens.rkt"
          (only-in "static-info.rkt"
-                  in-static-info-space
-                  static-info
-                  make-static-info)
+                  define-static-info-syntax)
          (submod "syntax-object.rkt" for-quasiquote)
          "realm.rkt"
          "wrap-expression.rkt"
@@ -114,21 +112,20 @@
                      (tail-rule-template tail))]
           [else
            #`(rhombus-body-expression #,rhs)]))
-      (with-syntax ([(left-id-static ...) (map in-static-info-space (syntax->list #'(left-id ...)))])
-        #`[#,pattern
-           (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
-             (define-syntax left-id-static (static-info get-syntax-static-infos))
-             ...
-             (define-syntax #,(in-static-info-space #'self-id) (static-info get-syntax-static-infos))
-             (let-syntaxes ([(sid ...) sid-ref] ...)
-               #,@(if (syntax-e all-id)
-                      #`((define #,all-id
-                           #,(if implicit-tail?
-                                 #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
-                                 #`(make-all (list* left-id ... self tail))))
-                         (define-syntax #,(in-static-info-space all-id) (static-info get-syntax-static-infos)))
-                      '())
-               #,body))])))
+      #`[#,pattern
+         (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
+           (define-static-info-syntax #,self-id #:getter get-syntax-static-infos)
+           (define-static-info-syntax left-id #:getter get-syntax-static-infos)
+           ...
+           (let-syntaxes ([(sid ...) sid-ref] ...)
+             #,@(if (syntax-e all-id)
+                    #`((define #,all-id
+                         #,(if implicit-tail?
+                               #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
+                               #`(make-all (list* left-id ... self tail))))
+                       (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
+                    '())
+             #,body))]))
   (define (convert-rule-template block ids)
     (syntax-parse block
       #:datum-literals (group)
@@ -166,12 +163,12 @@
                 (define right-id #'parsed-right-id)
                 (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
                 #`(lambda (#,@extra-args left #,right-id self-id extra-kw-id ...)
-                    (define-syntax #,(in-static-info-space #'left) (static-info get-syntax-static-infos))
-                    (define-syntax #,(in-static-info-space right-id) (static-info get-syntax-static-infos))
-                    (define-syntax #,(in-static-info-space #'self-id) (static-info get-syntax-static-infos))
+                    (define-static-info-syntax left #:getter get-syntax-static-infos)
+                    (define-static-info-syntax #,right-id #:getter get-syntax-static-infos)
+                    (define-static-info-syntax self-id #:getter get-syntax-static-infos)
                     #,@(if (syntax-e #'all-id)
                            #`((define all-id (make-all (list left self-id #,right-id)))
-                              (define-syntax #,(in-static-info-space #'all-id) (static-info get-syntax-static-infos)))
+                              (define-static-info-syntax all-id #:getter get-syntax-static-infos))
                            '())
                     #,(adjust-result
                        adjustments
@@ -210,11 +207,11 @@
                 (define arg-id #'parsed-right-id)
                 (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
                 #`(lambda (#,@extra-args #,arg-id self-id extra-kw-id ...)
-                    (define-syntax #,(in-static-info-space arg-id) (static-info get-syntax-static-infos))
-                    (define-syntax #,(in-static-info-space #'self-id) (static-info get-syntax-static-infos))
+                    (define-static-info-syntax #,arg-id #:getter get-syntax-static-infos)
+                    (define-static-info-syntax self-id #:getter get-syntax-static-infos)
                     #,@(if (syntax-e #'all-id)
                            #`((define all-id (make-all (list self-id #,arg-id)))
-                              (define-syntax #,(in-static-info-space #'all-id) (static-info get-syntax-static-infos)))
+                              (define-static-info-syntax all-id #:getter get-syntax-static-infos))
                            '())
                     #,(adjust-result
                        adjustments
@@ -229,7 +226,7 @@
                    ;; shortcut for a simple identifier macro; `self` and `tail` are bound
                    #`[#t
                       (let ([self-id self])
-                        (define-syntax #,(in-static-info-space #'self-id) (static-info get-syntax-static-infos))
+                        (define-static-info-syntax self-id #:getter get-syntax-static-infos)
                         #,@(maybe-bind-all #'all-id #'self-id #'make-all #'tail-pattern #'tail)
                         #,@(maybe-bind-tail #'tail-pattern #'tail)
                         #,(maybe-return-tail
@@ -329,7 +326,7 @@
                                                   space-sym
                                                   make-prefix-id make-infix-id
                                                   #:adjustments [adjustments no-adjustments]
-                                                  #:extra-static-infoss [extra-static-infoss #'()]
+                                                  #:extra-get-static-infoss [extra-get-static-infoss-stx #'()]
                                                   #:extra-shapes [extra-shapes '()])
   (define case-shape (select-case-shape pre-parsed))
   (define p (parse-one-macro-definition pre-parsed adjustments case-shape))
@@ -343,7 +340,7 @@
                                                    space-sym
                                                    make-prefix-id make-infix-id prefix+infix-id
                                                    #:adjustments [adjustments no-adjustments]
-                                                   #:extra-static-infoss [extra-static-infoss #'()]
+                                                   #:extra-get-static-infoss [extra-get-static-infoss-stx #'()]
                                                    #:extra-shapes [extra-shapes '()])
   (define case-shape 'syntax-parse)
   (define ps (map (lambda (p) (parse-one-macro-definition p adjustments case-shape)) pre-parseds))
@@ -391,7 +388,7 @@
 
 (define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids all-ids extra-bindss
                                                      make-transformer-id
-                                                     extra-static-infoss-stx
+                                                     extra-get-static-infoss-stx
                                                      extra-shapes
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values]
@@ -418,7 +415,7 @@
                                     #`[#t
                                        (let ([#,self-id self])
                                          #,(generate-simple-pattern-check self-id #'tail-pattern #'tail)
-                                         (define-syntax #,(in-static-info-space self-id) (static-info get-syntax-static-infos))
+                                         (define-static-info-syntax #,self-id #:getter get-syntax-static-infos)
                                          #,@(maybe-bind-all all-id self-id #'make-all #'tail-pattern #'tail)
                                          #,@(maybe-bind-tail #'tail-pattern #'tail)
                                          #,(wrap-for-tail
@@ -445,18 +442,18 @@
                                                                                                             #:splice? #t
                                                                                                             #:splice-pattern values))
                                     (define-values (extra-patterns wrap-extra)
-                                      (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes))
+                                      (build-extra-patterns in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes))
                                     (with-syntax ([((p-id id-ref) ...) idrs]
                                                   [(((s-id ...) sid-ref) ...) sidrs])
                                       #`[#,pattern
                                          #,@(if cut? #'(#:cut) '())
                                          #,@extra-patterns
-                                         #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+                                         #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes)
                                          (define #,self-id self)
-                                         (define-syntax #,(in-static-info-space self-id) (static-info get-syntax-static-infos))
+                                         (define-static-info-syntax #,self-id #:getter get-syntax-static-infos)
                                          #,@(if (syntax-e all-id)
                                                 #`((define #,all-id (make-all (cons self (unpack-tail tail #f #f))))
-                                                   (define-syntax #,(in-static-info-space all-id) (static-info get-syntax-static-infos)))
+                                                   (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
                                                 '())
                                          #,(wrap-extra
                                             #`(let ([p-id id-ref] ...)
@@ -510,14 +507,14 @@
      [args (apply raise-result-arity-error* who rhombus-realm 1 #f args)])))
 
 
-(define-for-syntax (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+(define-for-syntax (build-extra-patterns in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes)
   (for/fold ([rev-withs '()]
              [wrap (lambda (x) x)]
              #:result (values (reverse rev-withs)
                               wrap))
             ([in-extra-id (in-list in-extra-ids)]
              [extra-bind (in-list (syntax->list extra-binds-stx))]
-             [extra-static-infos (in-list (syntax->list extra-static-infoss-stx))]
+             [extra-get-static-infos (in-list (syntax->list extra-get-static-infoss-stx))]
              [extra-shape (in-list extra-shapes)]
              #:when (syntax-e extra-bind)
              #:when (eq? extra-shape 'pattern))
@@ -539,16 +536,15 @@
              (let-syntaxes ([(s-id ...) sid-ref] ...)
                #,(wrap x))))))))
 
-(define-for-syntax (build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+(define-for-syntax (build-extra-bindings in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes)
   (apply
    append
    (for/list ([in-extra-id (in-list in-extra-ids)]
               [extra-bind (in-list (syntax->list extra-binds-stx))]
-              [extra-static-infos (in-list (syntax->list extra-static-infoss-stx))]
+              [extra-get-static-infos (in-list (syntax->list extra-get-static-infoss-stx))]
               [extra-shape (in-list extra-shapes)]
               #:when (syntax-e extra-bind)
               #:unless (eq? extra-shape 'pattern))
      (list
       #`(define #,extra-bind #,in-extra-id)
-      #`(define-syntax #,(in-static-info-space extra-bind)
-          (make-static-info #,extra-static-infos))))))
+      #`(define-static-info-syntax #,extra-bind #:getter #,extra-get-static-infos)))))

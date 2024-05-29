@@ -35,7 +35,7 @@
 
 (define-identifier-syntax-definition-transformer modifier
   rhombus/expo
-  #:extra ([#:export (get-syntax-static-infos) value])
+  #:extra ([#:export get-syntax-static-infos value])
   #'make-export-modifier)
 
 (begin-for-syntax
