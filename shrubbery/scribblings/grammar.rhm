@@ -24,10 +24,10 @@ fun nonterm(pre_content :: util.PreContent):
   bnf.nonterm(pre_content)
 
 fun kleenestar(pre_content :: util.PreContent):
-  bnf.nonterm(pre_content)
+  bnf.kleenestar(pre_content)
 
 fun kleeneplus(pre_content :: util.PreContent):
-  bnf.nonterm(pre_content)
+  bnf.kleeneplus(pre_content)
 
 fun bseq(c :: util.Content, ...):
   bnf.#{BNF-seq}(c, ...)
