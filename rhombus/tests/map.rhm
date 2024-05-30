@@ -726,3 +726,201 @@ block:
     check_map_by equals
 
   #void
+
+// splicing of repetitions
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  def [k && v, ...] = [1, 2, 3]
+  check :
+    {k: v, ...}
+    ~is {1: 1, 2: 2, 3: 3}
+  check :
+    Map.by(===){k: v, ...}
+    ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  check :
+    Map.by(is_same_number_or_object){k: v, ...}
+    ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  check :
+    Map.by(is_now){k: v, ...}
+    ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(equals){k: v, ...}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+
+// splicing of mixed-kind sets
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  check:
+    {& {1: 1, 2: 2, 3: 3}}
+    ~is {1: 1, 2: 2, 3: 3}
+  check:
+    {& Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is {1: 1, 2: 2, 3: 3}
+  check:
+    {& Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is {1: 1, 2: 2, 3: 3}
+  check:
+    {& Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is {1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      {& Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is {1: 1, 2: 2, 3: 3}
+  check:
+    {0: 0, & {1: 1, 2: 2, 3: 3}}
+    ~is {0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    {0: 0, & Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is {0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    {0: 0, & Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is {0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    {0: 0, & Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is {0: 0, 1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      {0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is {0: 0, 1: 1, 2: 2, 3: 3}
+
+  check:
+    Map.by(===){& {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){& Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){& Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){& Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(===){& Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(===){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){0: 0, & {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){0: 0, & Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){0: 0, & Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(===){0: 0, & Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(===){0: 0, 1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(===){0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(===){0: 0, 1: 1, 2: 2, 3: 3}
+
+  check:
+    Map.by(is_same_number_or_object){& {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){& Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){& Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){& Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_same_number_or_object){& Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){0: 0, & {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){0: 0, & Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){0: 0, & Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_same_number_or_object){0: 0, & Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_same_number_or_object){0: 0, 1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_same_number_or_object){0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(is_same_number_or_object){0: 0, 1: 1, 2: 2, 3: 3}
+
+  check:
+    Map.by(is_now){& {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){& Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){& Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){& Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_now){& Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(is_now){1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){0: 0, & {1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){0: 0, & Map.by(===){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){0: 0, & Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){0: 0, 1: 1, 2: 2, 3: 3}
+  check:
+    Map.by(is_now){0: 0, & Map.by(is_now){1: 1, 2: 2, 3: 3}}
+    ~is Map.by(is_now){0: 0, 1: 1, 2: 2, 3: 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_now){0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(is_now){0: 0, 1: 1, 2: 2, 3: 3}
+
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(equals){& {1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){& Map.by(===){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){& Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){& Map.by(is_now){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){& Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){0: 0, & {1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){0: 0, & Map.by(===){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){0: 0, & Map.by(is_same_number_or_object){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){0: 0, & Map.by(is_now){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}
+    check:
+      Map.by(equals){0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
+      ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}

@@ -37,7 +37,8 @@
          "hash-remove.rkt"
          "key-comp.rkt"
          "key-comp-property.rkt"
-         "number.rkt")
+         "number.rkt"
+         "same-hash.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -417,8 +418,7 @@
      (define-values (shape argss) (parse-setmap-content #'content
                                                         #:shape 'set
                                                         #:who (syntax-e #'form-id)
-                                                        #:repetition? repetition?
-                                                        #:list->set list->set-id))
+                                                        #:repetition? repetition?))
      (values (relocate-wrapped
               (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
@@ -714,7 +714,6 @@
                              #:shape 'set
                              #:who (syntax-e #'form-id)
                              #:repetition? repetition?
-                             #:list->set #'list->set
                              #:no-splice "mutable sets"))
      (values (cond
                [repetition?
@@ -943,14 +942,7 @@
 (define (set-append/hash a b)
   (let-values ([(a b)
                 (if (and ((hash-count a) . < . (hash-count b))
-                         (or (and (hash-equal-always? a)
-                                  (hash-equal-always? b))
-                             (and (hash-eq? a)
-                                  (hash-eq? b))
-                             (and (hash-eqv? a)
-                                  (hash-eqv? b))
-                             (and (hash-equal? a)
-                                  (hash-equal? b))))
+                         (same-hash? a b))
                     (values b a)
                     (values a b))])
     (for/fold ([a a]) ([k (in-immutable-hash-keys b)])

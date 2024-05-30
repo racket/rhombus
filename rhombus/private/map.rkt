@@ -44,7 +44,8 @@
          "hash-remove.rkt"
          "key-comp.rkt"
          "key-comp-property.rkt"
-         "number.rkt")
+         "number.rkt"
+         "same-hash.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -349,8 +350,7 @@
      (define-values (shape argss) (parse-setmap-content #'content
                                                         #:shape 'map
                                                         #:who (syntax-e #'form-id)
-                                                        #:repetition? repetition?
-                                                        #:list->map list->map-id))
+                                                        #:repetition? repetition?))
      (values (relocate-wrapped
               (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
@@ -360,7 +360,7 @@
                             #'hash-assert
                             (get-map-static-infos)
                             #:repetition? repetition?
-                            #:list->setmap #'list->map))
+                            #:list->setmap list->map-id))
              #'tail)]
     [(form-id . tail) (values (cond
                                 [repetition? (identifier-repetition-use map-pair-build-id)]
@@ -720,7 +720,6 @@
                              #:shape 'map
                              #:who (syntax-e #'form-id)
                              #:repetition? repetition?
-                             #:list->map #'list->map
                              #:no-splice "mutable maps"))
      (values (cond
                [repetition?
@@ -1015,21 +1014,7 @@
 (define (hash-append a b)
   (let-values ([(a b)
                 (if (and ((hash-count a) . < . (hash-count b))
-                         (cond
-                           [(custom-map-ref a #f)
-                            => (lambda (a-cm)
-                                 (eq? a-cm (custom-map-ref b #f)))]
-                           [(hash-equal-always? a)
-                            (hash-equal-always? b)]
-                           [(hash-eq? a)
-                            (hash-eq? b)]
-                           [(hash-eqv? a)
-                            (hash-eqv? b)]
-                           [(hash-equal? a)
-                            (hash-equal? b)]
-                           [else
-                            ;; shouldn't get here, but just in case
-                            #f]))
+                         (same-hash? a b))
                     (values b a)
                     (values a b))])
     (for/fold ([a a]) ([(k v) (in-immutable-hash b)])

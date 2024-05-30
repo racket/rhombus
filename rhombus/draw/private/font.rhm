@@ -31,9 +31,9 @@ class Font(private _handle):
     let hand:
       if name
       | rkt.make_object(rkt.#{font%}, size, name, kind, style, weight, has_underline,
-                        convert_smoothing(smoothing), in_pixels, hinting, norm_hash(features))
+                        convert_smoothing(smoothing), in_pixels, hinting, Map.by(is_now){& features})
       | rkt.make_object(rkt.#{font%}, size, kind, style, weight, has_underline,
-                        convert_smoothing(smoothing), in_pixels, hinting, norm_hash(features))
+                        convert_smoothing(smoothing), in_pixels, hinting, Map.by(is_now){& features})
     super(hand)
 
   property name: rkt.send handle.#{get-face}()
@@ -107,8 +107,3 @@ class Font(private _handle):
       v.length() == 4 && ok(v[0]) && ok(v[1]) && ok(v[2]) && ok(v[3])
   | is_feature_string(_):
       #false
-
-  fun norm_hash(map :: Map):
-    racket.hash(& (for values(list = PairList[]):
-                     each values(k, v): map
-                     PairList[k, v, & list]))

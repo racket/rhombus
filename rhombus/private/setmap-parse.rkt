@@ -21,29 +21,24 @@
                      regroup-setmap-arguments
                      parse-key-comp))
 
-;; A Shape is one of:
-;;  - #f
-;;  - 'set
-;;  - 'map
-
 (begin-for-syntax
-  (struct inlined (rep)))
+  (struct rest-rep (stx)))
 
 ;; parse-setmap-content :
 ;;   Syntax #:shape Shape #:who (U #f Symbol) -> (values Shape (Listof (U (Listof Stx) Stx)))
 ;; Parses the braces syntax of a set or map form into 2 values:
-;;  * shape, where false means it's compatible with both set and map
+;;  * shape, which is one of
+;;     - #f (compatible with both set and map)
+;;     - 'set
+;;     - 'map
 ;;  * argss, which is a list of arg lists and splices;
 ;     for a map shape, each arg list is an alternating list of keys and values;
-;;    `inlined` values appear in the `argss` list for a repetition to be spliced
-;;    when generating a new repetition
+;;    `rest-rep` values appear in the `argss` list to indicate a `...` splice
 (define-for-syntax (parse-setmap-content stx
                                          #:shape [init-shape #f]
                                          #:who [who #f]
                                          #:raw? [raw? #f]
                                          #:repetition? [repetition? #f]
-                                         #:list->set [list->set #f]
-                                         #:list->map [list->map #f]
                                          #:no-splice [no-splice #f])
   (define (one-argument e)
     (cond
@@ -57,9 +52,9 @@
        (syntax-parse e
          [rep::repetition
           (define the-rep (flatten-repetition #'rep.parsed extra-ellipses))
-          (if repetition?
-              (inlined the-rep)
-              #`(#,list->set #,(repetition-as-list the-rep 1)))])]))
+          (rest-rep (if repetition?
+                        the-rep
+                        (repetition-as-list the-rep 1)))])]))
   (define (repetition-map-arguments key-e val-e extra-ellipses)
     (cond
       [raw? (list key-e val-e)]
@@ -75,9 +70,9 @@
                             (values #`(cons #,key #,val)
                                     #'())))
                          extra-ellipses))
-       (if repetition?
-           (list (inlined pair-rep))
-           (list #`(#,list->map #,(repetition-as-list pair-rep 1))))]))
+       (list (rest-rep (if repetition?
+                           pair-rep
+                           (repetition-as-list pair-rep 1))))]))
   (syntax-parse stx
     #:datum-literals (group)
     [(_::braces elem ...)
@@ -177,33 +172,32 @@
                                  #:repetition? [repetition? #f]
                                  #:list->setmap [list->setmap #f])
   (define (build argss)
-    (let loop ([base #f] [argss argss])
+    (for/fold ([base #f]
+               #:result (or base
+                            (quasisyntax/loc stx
+                              (#,build-id))))
+              ([args (in-list argss)])
       (cond
-        [(null? argss)
-         (or base
-             (quasisyntax/loc stx (#,build-id)))]
-        [(list? (car argss))
+        [(list? args)
          ;; nonsplice arguments
-         (loop (if base
-                   (quasisyntax/loc stx
-                     (#,extend*-id #,base #,@(car argss)))
-                   (quasisyntax/loc stx
-                     (#,build-id #,@(car argss))))
-               (cdr argss))]
+         (if base
+             (quasisyntax/loc stx
+               (#,extend*-id #,base #,@args))
+             (quasisyntax/loc stx
+               (#,build-id #,@args)))]
         [else
          ;; a `&` or `...` splice
-         (define e (let ([e (car argss)])
-                     (if (inlined? e)
-                         #`(#,list->setmap #,(inlined-rep e))
-                         e)))
-         (loop (if base
-                   (quasisyntax/loc stx
-                     (#,append-id #,base #,e))
-                   (if (inlined? e)
-                       e
-                       (quasisyntax/loc stx
-                         (#,assert-id #,e))))
-               (cdr argss))])))
+         (define e
+           (cond
+             [(rest-rep? args) #`(#,list->setmap #,(rest-rep-stx args))]
+             [else #`(#,assert-id #,args)]))
+         (if base
+             (quasisyntax/loc stx
+               (#,append-id #,base #,e))
+             (if (rest-rep? args)
+                 e
+                 (quasisyntax/loc stx
+                   (#,append-id (#,build-id) #,e))))])))
   (cond
     [repetition? (build-compound-repetition
                   stx
@@ -211,8 +205,8 @@
                   (lambda args
                     (values (build (regroup-setmap-arguments args argss))
                             static-info))
-                  #:is-sequence? inlined?
-                  #:extract (lambda (v) (if (inlined? v) (inlined-rep v) v)))]
+                  #:is-sequence? rest-rep?
+                  #:extract (lambda (v) (if (rest-rep? v) (rest-rep-stx v) v)))]
     [else (wrap-static-info* (build argss) static-info)]))
 
 ;; flatten arguments that represent normal arguments and splices
@@ -234,7 +228,7 @@
            [(null? one-args) (cons (reverse rev-args)
                                    (loop args (cdr argss)))]
            [else (aloop (cdr args) (cdr one-args) (cons (car args) rev-args))]))]
-      [(inlined? (car argss)) (cons (inlined (car args)) (loop (cdr args) (cdr argss)))]
+      [(rest-rep? (car argss)) (cons (rest-rep (car args)) (loop (cdr args) (cdr argss)))]
       [else (cons (car args) (loop (cdr args) (cdr argss)))])))
 
 (define-for-syntax (parse-key-comp stx k)

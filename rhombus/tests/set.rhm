@@ -640,3 +640,201 @@ block:
     check_set_by equals
 
   #void
+
+// splicing of repetitions
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  def [x, ...] = [1, 2, 3]
+  check:
+    {x, ...}
+    ~is {1, 2, 3}
+  check:
+    Set.by(===){x, ...}
+    ~is Set.by(===){1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){x, ...}
+    ~is Set.by(is_same_number_or_object){1, 2, 3}
+  check:
+    Set.by(is_now){x, ...}
+    ~is Set.by(is_now){1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(equals){x, ...}
+      ~is Set.by(equals){1, 2, 3}
+
+// splicing of mixed-kind sets
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  check:
+    Set{& {1, 2, 3}}
+    ~is {1, 2, 3}
+  check:
+    Set{& Set.by(===){1, 2, 3}}
+    ~is {1, 2, 3}
+  check:
+    Set{& Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is {1, 2, 3}
+  check:
+    Set{& Set.by(is_now){1, 2, 3}}
+    ~is {1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set{& Set.by(equals){1, 2, 3}}
+      ~is {1, 2, 3}
+  check:
+    {0, & {1, 2, 3}}
+    ~is {0, 1, 2, 3}
+  check:
+    {0, & Set.by(===){1, 2, 3}}
+    ~is {0, 1, 2, 3}
+  check:
+    {0, & Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is {0, 1, 2, 3}
+  check:
+    {0, & Set.by(is_now){1, 2, 3}}
+    ~is {0, 1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      {0, & Set.by(equals){1, 2, 3}}
+      ~is {0, 1, 2, 3}
+
+  check:
+    Set.by(===){& {1, 2, 3}}
+    ~is Set.by(===){1, 2, 3}
+  check:
+    Set.by(===){& Set.by(===){1, 2, 3}}
+    ~is Set.by(===){1, 2, 3}
+  check:
+    Set.by(===){& Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(===){1, 2, 3}
+  check:
+    Set.by(===){& Set.by(is_now){1, 2, 3}}
+    ~is Set.by(===){1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(===){& Set.by(equals){1, 2, 3}}
+      ~is Set.by(===){1, 2, 3}
+  check:
+    Set.by(===){0, & {1, 2, 3}}
+    ~is Set.by(===){0, 1, 2, 3}
+  check:
+    Set.by(===){0, & Set.by(===){1, 2, 3}}
+    ~is Set.by(===){0, 1, 2, 3}
+  check:
+    Set.by(===){0, & Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(===){0, 1, 2, 3}
+  check:
+    Set.by(===){0, & Set.by(is_now){1, 2, 3}}
+    ~is Set.by(===){0, 1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(===){0, & Set.by(equals){1, 2, 3}}
+      ~is Set.by(===){0, 1, 2, 3}
+
+  check:
+    Set.by(is_same_number_or_object){& {1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){& Set.by(===){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){& Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){& Set.by(is_now){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_same_number_or_object){& Set.by(equals){1, 2, 3}}
+      ~is Set.by(is_same_number_or_object){1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){0, & {1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){0, 1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){0, & Set.by(===){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){0, 1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){0, & Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){0, 1, 2, 3}
+  check:
+    Set.by(is_same_number_or_object){0, & Set.by(is_now){1, 2, 3}}
+    ~is Set.by(is_same_number_or_object){0, 1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_same_number_or_object){0, & Set.by(equals){1, 2, 3}}
+      ~is Set.by(is_same_number_or_object){0, 1, 2, 3}
+
+  check:
+    Set.by(is_now){& {1, 2, 3}}
+    ~is Set.by(is_now){1, 2, 3}
+  check:
+    Set.by(is_now){& Set.by(===){1, 2, 3}}
+    ~is Set.by(is_now){1, 2, 3}
+  check:
+    Set.by(is_now){& Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(is_now){1, 2, 3}
+  check:
+    Set.by(is_now){& Set.by(is_now){1, 2, 3}}
+    ~is Set.by(is_now){1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_now){& Set.by(equals){1, 2, 3}}
+      ~is Set.by(is_now){1, 2, 3}
+  check:
+    Set.by(is_now){0, & {1, 2, 3}}
+    ~is Set.by(is_now){0, 1, 2, 3}
+  check:
+    Set.by(is_now){0, & Set.by(===){1, 2, 3}}
+    ~is Set.by(is_now){0, 1, 2, 3}
+  check:
+    Set.by(is_now){0, & Set.by(is_same_number_or_object){1, 2, 3}}
+    ~is Set.by(is_now){0, 1, 2, 3}
+  check:
+    Set.by(is_now){0, & Set.by(is_now){1, 2, 3}}
+    ~is Set.by(is_now){0, 1, 2, 3}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_now){0, & Set.by(equals){1, 2, 3}}
+      ~is Set.by(is_now){0, 1, 2, 3}
+
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(equals){& {1, 2, 3}}
+      ~is Set.by(equals){1, 2, 3}
+    check:
+      Set.by(equals){& Set.by(===){1, 2, 3}}
+      ~is Set.by(equals){1, 2, 3}
+    check:
+      Set.by(equals){& Set.by(is_same_number_or_object){1, 2, 3}}
+      ~is Set.by(equals){1, 2, 3}
+    check:
+      Set.by(equals){& Set.by(is_now){1, 2, 3}}
+      ~is Set.by(equals){1, 2, 3}
+    check:
+      Set.by(equals){& Set.by(equals){1, 2, 3}}
+      ~is Set.by(equals){1, 2, 3}
+    check:
+      Set.by(equals){0, & {1, 2, 3}}
+      ~is Set.by(equals){0, 1, 2, 3}
+    check:
+      Set.by(equals){0, & Set.by(===){1, 2, 3}}
+      ~is Set.by(equals){0, 1, 2, 3}
+    check:
+      Set.by(equals){0, & Set.by(is_same_number_or_object){1, 2, 3}}
+      ~is Set.by(equals){0, 1, 2, 3}
+    check:
+      Set.by(equals){0, & Set.by(is_now){1, 2, 3}}
+      ~is Set.by(equals){0, 1, 2, 3}
+    check:
+      Set.by(equals){0, & Set.by(equals){1, 2, 3}}
+      ~is Set.by(equals){0, 1, 2, 3}
