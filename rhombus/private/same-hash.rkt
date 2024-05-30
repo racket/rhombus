@@ -1,7 +1,8 @@
 #lang racket/base
 (require "key-comp-property.rkt")
 
-(provide same-hash?)
+(provide same-hash?
+         same-hash-empty)
 
 (define (same-hash? a b)
   (cond
@@ -13,3 +14,13 @@
           (eq? (custom-map-ref a #f)
                (custom-map-ref b #f)))]
     [else #f]))
+
+(define (same-hash-empty ht)
+  (cond
+    [(hash-equal-always? ht) #hashalw()]
+    [(hash-eq? ht) #hasheq()]
+    [(hash-eqv? ht) #hasheqv()]
+    [(custom-map-ref ht #f)
+     => (lambda (cm)
+          ((custom-map-get-empty cm)))]
+    [else #hash()]))

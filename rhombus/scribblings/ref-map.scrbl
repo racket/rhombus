@@ -149,7 +149,9 @@ in an unspecified order.
  (for a map) or value elements (for a set) are included in the result map
  or set. When @rhombus(& map_expr) or @rhombus(& set_expr) appears among
  the content, the immutable map or immutable set produced by @rhombus(map_expr) or
- @rhombus(set_expr) is included in the result map or set.
+ @rhombus(set_expr) is included in the result map or set. This
+ inclusion respects the @tech{map configuration} specified by the
+ construction.
 
  Mappings or elements are added to the result map or set left-to-right,
  which means that a later @rhombus(key_expr) or @rhombus(elem_expr) may
@@ -444,9 +446,21 @@ in an unspecified order.
  (but without the special optimization). When a key has a value in
  multiple given @rhombus(mp)s, the rightmost value is used.
 
+ When @rhombus(mp)s use different @tech{map configurations}, the
+ leftmost one is respected. Conceptually, in the binary case, each
+ key--value mapping from the right @rhombus(mp) is added to the left
+ @rhombus(mp).
+
 @examples(
   {1: "a", 2: "b"}.append({1: "c"}, {1: "d"})
   {1: "a", 2: "b"} ++ {1: "c"} ++ {1: "d"}
+  {1: "a", 2: "b"}.append(
+    Map.by(is_same_number_or_object){1: "d"},
+    Map.by(is_now){1: "c"},
+  )
+  {1: "a", 2: "b"}
+    ++ Map.by(is_same_number_or_object){1: "d"}
+    ++ Map.by(is_now){1: "c"}
 )
 
 }

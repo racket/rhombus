@@ -121,7 +121,8 @@
 }
 
 @doc(
-  operator ((v1 :: Any) is_same_number_or_object (v2 :: Any)) :: Boolean
+  operator ((v1 :: Any) is_same_number_or_object (v2 :: Any))
+    :: Boolean
   key_comp.def 'is_same_number_or_object'
 ){
 
@@ -132,7 +133,7 @@
  map configuration for equating map keys, where
  @rhombus(is_same_number_or_object, ~key_comp) can be slightly more efficient
  than @rhombus(==).
- 
+
 }
 
 @doc(

@@ -924,3 +924,116 @@ block:
     check:
       Map.by(equals){0: 0, & Map.by(equals){1: 1, 2: 2, 3: 3}}
       ~is Map.by(equals){0: 0, 1: 1, 2: 2, 3: 3}
+
+// append of mixed-kind maps
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  check:
+    {}.append(
+      {#'equal_always: #'equal_always},
+      Map.by(===){#'eq: #'eq},
+      Map.by(is_same_number_or_object){#'eqv: #'eqv},
+      Map.by(is_now){#'equal: #'equal},
+    ) ~is {
+      #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal
+    }
+  version_guard.at_least "8.13.0.2":
+    check:
+      {}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+        Map.by(equals){#'custom: #'custom},
+      ) ~is {
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
+      }
+
+  check:
+    Map.by(===){}.append(
+      {#'equal_always: #'equal_always},
+      Map.by(===){#'eq: #'eq},
+      Map.by(is_same_number_or_object){#'eqv: #'eqv},
+      Map.by(is_now){#'equal: #'equal},
+    ) ~is Map.by(===){
+      #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal
+    }
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(===){}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+        Map.by(equals){#'custom: #'custom},
+      ) ~is Map.by(===){
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
+      }
+
+  check:
+    Map.by(is_same_number_or_object){}.append(
+      {#'equal_always: #'equal_always},
+      Map.by(===){#'eq: #'eq},
+      Map.by(is_same_number_or_object){#'eqv: #'eqv},
+      Map.by(is_now){#'equal: #'equal},
+    ) ~is Map.by(is_same_number_or_object){
+      #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal
+    }
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_same_number_or_object){}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+        Map.by(equals){#'custom: #'custom},
+      ) ~is Map.by(is_same_number_or_object){
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
+      }
+
+  check:
+    Map.by(is_now){}.append(
+      {#'equal_always: #'equal_always},
+      Map.by(===){#'eq: #'eq},
+      Map.by(is_same_number_or_object){#'eqv: #'eqv},
+      Map.by(is_now){#'equal: #'equal},
+    ) ~is Map.by(is_now){
+      #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal
+    }
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(is_now){}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+        Map.by(equals){#'custom: #'custom},
+      ) ~is Map.by(is_now){
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
+      }
+
+  version_guard.at_least "8.13.0.2":
+    check:
+      Map.by(equals){}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+      ) ~is Map.by(equals){
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal
+      }
+    check:
+      Map.by(equals){}.append(
+        {#'equal_always: #'equal_always},
+        Map.by(===){#'eq: #'eq},
+        Map.by(is_same_number_or_object){#'eqv: #'eqv},
+        Map.by(is_now){#'equal: #'equal},
+        Map.by(equals){#'custom: #'custom},
+      ) ~is Map.by(equals){
+        #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
+      }

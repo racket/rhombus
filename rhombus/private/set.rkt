@@ -991,13 +991,15 @@
      (set-append-all s1 ss)]))
 
 (define (set-intersect/hash a b)
+  (define new-ht (same-hash-empty a))
   (let-values ([(a b)
                 (if ((hash-count a) . < . (hash-count b))
                     (values b a)
                     (values a b))])
-    (for/hashalw ([k (in-immutable-hash-keys b)]
-                  #:when (hash-ref a k #f))
-      (values k #t))))
+    (for/fold ([new-ht new-ht])
+              ([k (in-immutable-hash-keys b)]
+               #:when (hash-ref a k #f))
+      (hash-set new-ht k #t))))
 
 (define/method Set.intersect
   #:static-infos ((#%call-result #,(get-set-static-infos)))

@@ -68,8 +68,8 @@ it supplies its elements in an unspecified order.
 ){
 
  The @rhombus(Set, ~annot) annotation matches any set.
- @rhombus(ReadableSet, ~annot) matches both mutable and immutable maps,
- while @rhombus(MutableSet, ~annot) matches mutable maps (created with,
+ @rhombus(ReadableSet, ~annot) matches both mutable and immutable sets,
+ while @rhombus(MutableSet, ~annot) matches mutable sets (created with,
  for example, the @rhombus(MutableSet) constructor).
  @rhombus(WeakMutableSet, ~annot) matches weak mutable sets (created with, for
  example, the @rhombus(WeakMutableSet) constructor).
@@ -131,7 +131,7 @@ it supplies its elements in an unspecified order.
  while @braces does not, since @rhombus({}) produces an empty map
  instead.
 
- The @rhombus(Set.by) variants create a map that uses the equality and
+ The @rhombus(Set.by) variants create a set that uses the equality and
  hashing functions specified by @rhombus(key_comp).
 
 @examples(
@@ -326,18 +326,53 @@ it supplies its elements in an unspecified order.
 @doc(
   fun Set.append(st :: Set, ...) :: Set
   fun Set.union(st :: Set, ...) :: Set
-  fun Set.intersect(st :: Set, ...) :: Set
 ){
 
- Returns the union of the @rhombus(st)s in the case of
- @rhombus(Set.append) or @rhombus(Set.union), or the intersection of the
- sets in the case of @rhombus(Set.intersect).
+ Functionally appends @rhombus(st)s, like the @rhombus(++) operator
+ (but without the special optimization).
+
+ When @rhombus(st)s use different @tech{map configurations}, the
+ leftmost one is respected. Conceptually, in the binary case, each
+ element from the right @rhombus(st) is added to the left
+ @rhombus(st).
 
 @examples(
   {1, 2, 3}.append({2, 3}, {3, 4})
   {1, 2, 3}.union({2, 3}, {3, 4})
-  {1, 2, 3}.intersect({2, 3}, {3, 4})
+  {1, 2, 3} ++ {2, 3} ++ {3, 4}
+  {1, 2, 3}.append(
+    Set.by(is_same_number_or_object){2, 3},
+    Set.by(is_now){3, 4},
   )
+  {1, 2, 3}.union(
+    Set.by(is_same_number_or_object){2, 3},
+    Set.by(is_now){3, 4},
+  )
+  {1, 2, 3}
+    ++ Set.by(is_same_number_or_object){2, 3}
+    ++ Set.by(is_now){3, 4}
+)
+
+}
+
+@doc(
+  fun Set.intersect(st :: Set, ...) :: Set
+){
+
+ Returns the intersection of @rhombus(st)s.
+
+ When @rhombus(st)s use different @tech{map configurations}, the
+ leftmost one is respected. Conceptually, in the binary case, each
+ element present in both @rhombus(st)s is kept in a @rhombus(st) that
+ uses the same @tech{map configuration} as the left @rhombus(st).
+
+@examples(
+  {1, 2, 3}.intersect({2, 3}, {3, 4})
+  {1, 2, 3}.intersect(
+    Set.by(is_same_number_or_object){2, 3},
+    Set.by(is_now){3, 4},
+  )
+)
 
 }
 

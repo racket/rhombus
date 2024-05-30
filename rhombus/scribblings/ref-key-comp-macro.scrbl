@@ -21,10 +21,11 @@
     ~hash_code: $hash_code_proc_expr
 ){
 
- Defines @rhombus(op_or_id_name) as a map configuration like
- @rhombus(===, ~key_comp) and for use with forms like @rhombus(Map.by).
+ Defines @rhombus(op_or_id_name) as a @deftech{map configuration} like
+ @rhombus(===, ~key_comp) and for use with forms like @rhombus(Map.by)
+ and @rhombus(Set.by).
 
- The result of @rhombus(equal_proc_expr) should be a procedure that
+ The result of @rhombus(equals_proc_expr) should be a procedure that
  takes three arguments: two values to compare, and a function to use for
  recursive comparison.
 

@@ -70,14 +70,12 @@
                                                  (lambda (a recur mode)
                                                    (x-hash-code (x-v a) recur))))
               (define x-custom-map (custom-map 'name.name
-                                               (lambda (ht)
-                                                 (mutable-copy! (wrap (make-hash)) ht))
-                                               (lambda (ht)
-                                                 (mutable-copy! (wrap (make-ephemeron-hash)) ht))
-                                               (lambda (ht)
-                                                 (if (immutable-hash? ht)
-                                                     ht
-                                                     (build-map 'hash-snapshot empty-x-map (hash-map ht list))))))
+                                               (lambda ()
+                                                 (wrap #hash()))
+                                               (lambda ()
+                                                 (wrap (make-hash)))
+                                               (lambda ()
+                                                 (wrap (make-ephemeron-hash)))))
               (define (x-map? v) (eq? (custom-map-ref v #f) x-custom-map))
               (define (wrap ht)
                 (unsafe-impersonate-hash x-custom-map ;; kind for `equal?`
@@ -167,11 +165,6 @@
 (define (build-mutable-map who ht args)
   (for ([p (in-list (args->pairs who args))])
     (hash-set! ht (car p) (cadr p)))
-  ht)
-
-(define (mutable-copy! ht ht-in)
-  (for ([(k v) (in-hash ht-in)])
-    (hash-set! ht k v))
   ht)
 
 (define (build-mutable-set who ht args)

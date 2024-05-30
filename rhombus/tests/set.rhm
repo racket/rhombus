@@ -838,3 +838,254 @@ block:
     check:
       Set.by(equals){0, & Set.by(equals){1, 2, 3}}
       ~is Set.by(equals){0, 1, 2, 3}
+
+// append, union and intersection of mixed-kind sets
+block:
+  version_guard.at_least "8.13.0.2":
+    import rhombus/meta open
+    key_comp.def 'equals':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): Equatable.hash(a)
+
+  check:
+    Set{}.append(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is {#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set{}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is {#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set{}.union(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is {#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set{}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is {#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set{}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set{}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set{}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set{}
+
+  check:
+    Set.by(===){}.append(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(===){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(===){}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(===){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(===){}.union(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(===){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(===){}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(===){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(===){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(===){}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(===){}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(===){}
+
+  check:
+    Set.by(is_same_number_or_object){}.append(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_same_number_or_object){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_same_number_or_object){}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_same_number_or_object){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(is_same_number_or_object){}.union(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_same_number_or_object){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_same_number_or_object){}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_same_number_or_object){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(is_same_number_or_object){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_same_number_or_object){}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_same_number_or_object){}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_same_number_or_object){}
+
+  check:
+    Set.by(is_now){}.append(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_now){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_now){}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_now){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(is_now){}.union(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_now){#'equal_always, #'eq, #'eqv, #'equal}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_now){}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_now){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+  check:
+    Set.by(is_now){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_now){}
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(is_now){}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(is_now){}
+
+  version_guard.at_least "8.13.0.2":
+    check:
+      Set.by(equals){}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+      ) ~is Set.by(equals){#'equal_always, #'eq, #'eqv, #'equal}
+    check:
+      Set.by(equals){}.append(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(equals){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+    check:
+      Set.by(equals){}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+      ) ~is Set.by(equals){#'equal_always, #'eq, #'eqv, #'equal}
+    check:
+      Set.by(equals){}.union(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(equals){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
+    check:
+      Set.by(equals){}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+      ) ~is Set.by(equals){}
+    check:
+      Set.by(equals){}.intersect(
+        {#'equal_always},
+        Set.by(===){#'eq},
+        Set.by(is_same_number_or_object){#'eqv},
+        Set.by(is_now){#'equal},
+        Set.by(equals){#'custom},
+      ) ~is Set.by(equals){}

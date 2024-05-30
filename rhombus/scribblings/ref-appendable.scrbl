@@ -18,6 +18,8 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
     map_expr: block expr
     key_expr: block expr
     val_expr: block expr
+    set_expr: block expr
+    elem_expr: block expr
 
   operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
   operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
@@ -40,11 +42,11 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
  lists, pair lists, strings, and byte strings, the elements of @rhombus(v1) appear
  first in the result followed by the elements of @rhombus(v2).
 
- The combination
- @rhombus(#,(@rhombus(map_expr)) ++ {#,(@rhombus(key_expr)): #,(@rhombus(val_expr))})
- is recognized by the compiler and turned into an efficient functional update of the
- map produced by @rhombus(map_expr), as opposed to creating an intermediate map.
- Set update is handled similarly.
+ The combination @rhombus(map_expr ++ {key_expr: val_expr}) or
+ @rhombus(set_expr ++ {elem_expr}) is recognized by the compiler and
+ turned into an efficient functional update of the map or set produced
+ by @rhombus(map_expr) or @rhombus(set_expr), as opposed to creating
+ an intermediate map or set.
 
  When @rhombus(v1) is an instance of a class that implements
  @rhombus(Appendable, ~class), then @rhombus(v2) must be an instance of

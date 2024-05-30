@@ -1045,35 +1045,36 @@
   (hash-has-key? ht key))
 
 (define/method (Map.copy ht)
-  #:inline
   #:primitive (hash-copy)
   #:static-infos ((#%call-result #,(get-mutable-map-static-infos)))
   (cond
     [(custom-map-ref ht #f)
-     => (lambda (cm) ((custom-map-copy cm) ht))]
+     => (lambda (cm)
+          (define mht ((custom-map-get-mutable-empty cm)))
+          (for ([(k v) (in-hash ht)])
+            (hash-set! mht k v))
+          mht)]
     [else (hash-copy ht)]))
 
 (define (hash-copy/ephemeron ht)
-  (cond
-    [(custom-map-ref ht #f)
-     => (lambda (cm) ((custom-map-weak-copy cm) ht))]
-    [else
-     (define mht (cond
-                   [(hash-eq? ht) (make-ephemeron-hasheq)]
-                   [(hash-eqv? ht) (make-ephemeron-hasheqv)]
-                   [(hash-equal? ht) (make-ephemeron-hash)]
-                   [else (make-ephemeron-hashalw)]))
-     (for ([(k v) (in-hash ht)])
-       (hash-set! mht k v))
-     mht]))
+  (define mht (cond
+                [(hash-eq? ht) (make-ephemeron-hasheq)]
+                [(hash-eqv? ht) (make-ephemeron-hasheqv)]
+                [(hash-equal? ht)
+                 (cond
+                   [(custom-map-ref ht #f)
+                    => (lambda (cm)
+                         ((custom-map-get-weak-empty cm)))]
+                   [else (make-ephemeron-hash)])]
+                [else (make-ephemeron-hashalw)]))
+  (for ([(k v) (in-hash ht)])
+    (hash-set! mht k v))
+  mht)
 
 (define/method (Map.snapshot ht)
   #:static-infos ((#%call-result #,(get-map-static-infos)))
   (check-readable-map who ht)
-  (cond
-    [(custom-map-ref ht #f)
-     => (lambda (cm) ((custom-map-snapshot cm) ht))]
-    [else (hash-snapshot ht)]))
+  (hash-snapshot ht))
 
 (define/method (Map.remove ht key)
   #:inline
