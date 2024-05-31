@@ -11,9 +11,9 @@ block:
     Set.get(st, val) ~method
     Set.copy(st) ~method
     Set.snapshot(st) ~method
-    Set.append(st, ...) ~method
-    Set.union(st, ...) ~method
-    Set.intersect(st, ...) ~method
+    Set.append(st0, st, ...) ~method
+    Set.union(st0, st, ...) ~method
+    Set.intersect(st0, st, ...) ~method
     Set.remove(st, v) ~method
     MutableSet.set(st, v, in) ~method
     MutableSet.delete(st, v) ~method
@@ -241,7 +241,6 @@ check:
   ~is "other"
 
 check:
-  Set.append() ~is Set{}
   Set.append({1}) ~is {1}
   Set.append({1}, {2}) ~is {1, 2}
   Set.append({1}, {2}, {1}) ~is {1, 2}

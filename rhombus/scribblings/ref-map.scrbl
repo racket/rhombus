@@ -439,15 +439,15 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.append(mp :: Map, ...) :: Map
+  fun Map.append(mp0 :: Map, mp :: Map, ...) :: Map
 ){
 
- Functionally appends @rhombus(mp)s, like the @rhombus(++) operator
+ Functionally appends @rhombus(mp)s (including @rhombus(mp0)), like the @rhombus(++) operator
  (but without the special optimization). When a key has a value in
  multiple given @rhombus(mp)s, the rightmost value is used.
 
- When @rhombus(mp)s use different @tech{map configurations}, the
- leftmost one is respected. Conceptually, in the binary case, each
+ When @rhombus(mp)s use different @tech{map configurations}, that of
+ @rhombus(mp0) is respected. Conceptually, in the binary case, each
  key--value mapping from the right @rhombus(mp) is added to the left
  @rhombus(mp).
 

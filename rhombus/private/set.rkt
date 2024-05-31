@@ -959,7 +959,6 @@
 (define/method Set.append
   #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
-    [() empty-set]
     [(s)
      (check-set who s)
      s]
@@ -976,7 +975,6 @@
 (define/method Set.union
   #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
-    [() empty-set]
     [(s)
      (check-set who s)
      s]
@@ -1004,7 +1002,6 @@
 (define/method Set.intersect
   #:static-infos ((#%call-result #,(get-set-static-infos)))
   (case-lambda
-    [() empty-set]
     [(s)
      (check-set who s)
      s]

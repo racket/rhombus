@@ -324,15 +324,15 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.append(st :: Set, ...) :: Set
-  fun Set.union(st :: Set, ...) :: Set
+  fun Set.append(st0 :: Set, st :: Set, ...) :: Set
+  fun Set.union(st0 :: Set, st :: Set, ...) :: Set
 ){
 
- Functionally appends @rhombus(st)s, like the @rhombus(++) operator
+ Functionally appends @rhombus(st)s (including @rhombus(st0)), like the @rhombus(++) operator
  (but without the special optimization).
 
- When @rhombus(st)s use different @tech{map configurations}, the
- leftmost one is respected. Conceptually, in the binary case, each
+ When @rhombus(st)s use different @tech{map configurations}, that of
+ @rhombus(st0) is respected. Conceptually, in the binary case, each
  element from the right @rhombus(st) is added to the left
  @rhombus(st).
 
@@ -356,13 +356,13 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.intersect(st :: Set, ...) :: Set
+  fun Set.intersect(st0 :: Set, st :: Set, ...) :: Set
 ){
 
- Returns the intersection of @rhombus(st)s.
+ Returns the intersection of @rhombus(st)s (including @rhombus(st0)).
 
- When @rhombus(st)s use different @tech{map configurations}, the
- leftmost one is respected. Conceptually, in the binary case, each
+ When @rhombus(st)s use different @tech{map configurations}, that of
+ @rhombus(st0) is respected. Conceptually, in the binary case, each
  element present in both @rhombus(st)s is kept in a @rhombus(st) that
  uses the same @tech{map configuration} as the left @rhombus(st).
 

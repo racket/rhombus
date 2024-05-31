@@ -14,7 +14,7 @@ block:
     Map.has_key(mp, k) ~method
     Map.copy(mp) ~method
     Map.snapshot(mp) ~method
-    Map.append(mp, ...) ~method
+    Map.append(mp0, mp, ...) ~method
     Map.remove(mp, k) ~method
     MutableMap.set(mp, k, val) ~method
     MutableMap.delete(mp, k) ~method
@@ -84,7 +84,6 @@ block:
     ~is 2
 
 check:
-  Map.append() ~is {}
   Map.append({1: 1}) ~is {1: 1}
   Map.append({1: 1}, {1: 2}) ~is {1: 2}
   Map.append({1: 1}, {1: 2}, {1: 3}) ~is {1: 3}

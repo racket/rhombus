@@ -1023,8 +1023,6 @@
 (define/method Map.append
   #:static-infos ((#%call-result #,(get-map-static-infos)))
   (case-lambda
-    [()
-     #hashalw()]
     [(ht)
      (check-map who ht)
      ht]
