@@ -4,13 +4,27 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/for-body)
-         (only-in '#%kernel
-                  vector-copy
-                  vector*-copy vector*-append vector*-set/copy)
          '#%flfxnum
          racket/hash-code
          racket/private/sort
-         (only-in racket/private/for prop:stream))
+         (only-in racket/private/for prop:stream)
+         "version-case.rkt")
+
+(meta-if-version-at-least
+ "8.11.1.10"
+ (require (only-in '#%kernel
+                   vector-copy
+                   vector*-copy vector*-append vector*-set/copy))
+ (begin
+   (require (only-in racket/vector
+                     vector-copy
+                     vector-append))
+   (define vector*-copy vector-copy)
+   (define vector*-append vector-append)
+   (define vector*-set/copy (lambda (vec i val)
+                              (define new-vec (vector-copy vec))
+                              (vector*-set! vec i val)
+                              vec))))
 
 (#%declare #:unsafe)
 
