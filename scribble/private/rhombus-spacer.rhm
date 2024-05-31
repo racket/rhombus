@@ -50,6 +50,12 @@ export:
     pattern
     Parameter
     enum
+    Map
+    MutableMap
+    WeakMutableMap
+    Set
+    MutableSet
+    WeakMutableSet
 
 module for_doc:
   export:
@@ -1012,3 +1018,42 @@ spacer.bridge enum(self, tail, context, esc):
       let new_body = ': $new_clause; ...'.relocate(body)
       '$self $e ... $new_body'
   | ~else: '$self $tail'
+
+meta:
+  fun make_adjust_by(esc):
+    fun (t):
+      match t
+      | '$(p && '($(g :: Group))')':
+          let new_g = spacer.adjust_group(g, #'~key_comp, esc)
+          '($new_g)'.relocate(p)
+      | ~else: t
+
+spacer.bridge Map.by(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge MutableMap.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge WeakMutableMap.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge Set.by(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge MutableSet.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge WeakMutableSet.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  let adjust = make_adjust_by(esc)
+  '$self $(adjust_one(tail, context, esc, adjust))'

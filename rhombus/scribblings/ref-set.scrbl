@@ -204,10 +204,14 @@ it supplies its elements in an unspecified order.
 
 @doc(
   reducer.macro 'Set'
+  reducer.macro 'Set.by($key_comp)'
 ){
 
  A @tech{reducer} used with @rhombus(for), accumulates values into a
  set.
+
+ The @rhombus(Set.by, ~reducer) reducer creates a set that uses the
+ equality and hashing functions specified by @rhombus(key_comp).
 
 }
 

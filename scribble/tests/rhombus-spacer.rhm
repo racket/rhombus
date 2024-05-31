@@ -83,6 +83,7 @@ def_unquote.full impo
 def_unquote.full expo
 def_unquote.full pattern_clause
 def_unquote.full syntax_class_clause
+def_unquote.full key_comp
 
 // NOTE Test cases should be duplicated in a "very pretty" style to
 // reveal potential `.relocate` problems.  If you can't figure out
@@ -1451,3 +1452,268 @@ check_spacer:
       $annot
     $(datum.explicit)
     $(datum.explicit)
+
+check_spacer:
+  Map.by(===){
+    1: 1,
+    2: 2,
+    3: 3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum: $datum,
+    $datum: $datum,
+    $datum: $datum,
+  }
+
+  Map
+    . by (
+      ===
+    ) {
+      1:
+        1,
+      2:
+        2,
+      3:
+        3,
+    }
+
+check_spacer:
+  Map.by(===){}
+    :: Map.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  Map
+    . by (
+      ===
+    ) {
+    }
+    :: Map
+    . by (
+      ===
+    )
+
+check_spacer:
+  def Map.by(===){}
+    = Map.by(===){}
+  $(defn.full) $(bind.full) . $(bind.full) ($key_comp){}
+    = $(expr.full) . $(expr.full) ($key_comp){}
+
+  def Map
+    . by (
+      ===
+    ) {
+    }
+    = Map
+    . by (
+      ===
+    ) {
+    }
+
+check_spacer:
+  MutableMap.by(===){
+    1: 1,
+    2: 2,
+    3: 3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum: $datum,
+    $datum: $datum,
+    $datum: $datum,
+  }
+
+  MutableMap
+    . by (
+      ===
+    ) {
+      1:
+        1,
+      2:
+        2,
+      3:
+        3,
+    }
+
+check_spacer:
+  MutableMap.by(===){}
+    :: MutableMap.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  MutableMap
+    . by (
+      ===
+    ) {
+    }
+    :: MutableMap
+    . by (
+      ===
+    )
+
+check_spacer:
+  WeakMutableMap.by(===){
+    1: 1,
+    2: 2,
+    3: 3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum: $datum,
+    $datum: $datum,
+    $datum: $datum,
+  }
+
+  WeakMutableMap
+    . by (
+      ===
+    ) {
+      1:
+        1,
+      2:
+        2,
+      3:
+        3,
+    }
+
+check_spacer:
+  WeakMutableMap.by(===){}
+    :: WeakMutableMap.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  WeakMutableMap
+    . by (
+      ===
+    ) {
+    }
+    :: WeakMutableMap
+    . by (
+      ===
+    )
+
+check_spacer:
+  Set.by(===){
+    1,
+    2,
+    3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum,
+    $datum,
+    $datum,
+  }
+
+  Set
+    . by (
+      ===
+    ) {
+      1,
+      2,
+      3,
+    }
+
+check_spacer:
+  Set.by(===){}
+    :: Set.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  Set
+    . by (
+      ===
+    ) {
+    }
+    :: Set
+    . by (
+      ===
+    )
+
+check_spacer:
+  def Set.by(===){}
+    = Set.by(===){}
+  $(defn.full) $(bind.full) . $(bind.full) ($key_comp){}
+    = $(expr.full) . $(expr.full) ($key_comp){}
+
+  def Set
+    . by (
+      ===
+    ) {
+    }
+    = Set
+    . by (
+      ===
+    ) {
+    }
+
+check_spacer:
+  MutableSet.by(===){
+    1,
+    2,
+    3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum,
+    $datum,
+    $datum,
+  }
+
+  MutableSet
+    . by (
+      ===
+    ) {
+      1,
+      2,
+      3,
+    }
+
+check_spacer:
+  MutableSet.by(===){}
+    :: MutableSet.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  MutableSet
+    . by (
+      ===
+    ) {
+    }
+    :: MutableSet
+    . by (
+      ===
+    )
+
+check_spacer:
+  WeakMutableSet.by(===){
+    1,
+    2,
+    3,
+  }
+  $(expr.full) . $(expr.full) ($key_comp) {
+    $datum,
+    $datum,
+    $datum,
+  }
+
+  WeakMutableSet
+    . by (
+      ===
+    ) {
+      1,
+      2,
+      3,
+    }
+
+check_spacer:
+  WeakMutableSet.by(===){}
+    :: WeakMutableSet.by(===)
+  $(expr.full) . $(expr.full) ($key_comp){}
+    :: $(annot.full) . $(annot.full) ($key_comp)
+
+  WeakMutableSet
+    . by (
+      ===
+    ) {
+    }
+    :: WeakMutableSet
+    . by (
+      ===
+    )
