@@ -30,6 +30,7 @@ it supplies its elements in an unspecified order.
   Set
   st.length()
   st.get(v)
+  st.has_element(v)
   st.to_list(try_sort, ...)
   st.copy()
   st.snapshot()
@@ -313,6 +314,7 @@ it supplies its elements in an unspecified order.
 
 @doc(
   fun Set.get(st :: ReadableSet, val :: Any) :: Boolean
+  fun Set.has_element(st :: ReadableSet, val :: Any) :: Boolean
 ){
 
  Equivalent to @rhombus(st[val]) (with the default implicit
@@ -321,6 +323,7 @@ it supplies its elements in an unspecified order.
 
 @examples(
   {"a", "b"}.get("a")
+  {"a", "b"}.has_element("a")
   {"a", "b"}["a"]
 )
 

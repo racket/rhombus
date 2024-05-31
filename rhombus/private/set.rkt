@@ -175,6 +175,7 @@
   #:methods
   ([length Set.length]
    [get Set.get]
+   [has_element Set.has_element]
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
@@ -193,6 +194,7 @@
   ([empty empty-set]
    [length Set.length]
    [get Set.get]
+   [has_element Set.has_element]
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
@@ -271,6 +273,10 @@
   (hash-ref (set-ht s) v #f))
 
 (define/method (Set.get s v)
+  (check-readable-set who s)
+  (set-ref s v))
+
+(define/method (Set.has_element s v)
   (check-readable-set who s)
   (set-ref s v))
 

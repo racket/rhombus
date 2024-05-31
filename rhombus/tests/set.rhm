@@ -9,6 +9,7 @@ block:
     Set(k, ...)
     Set.length(st) ~method
     Set.get(st, val) ~method
+    Set.has_element(st, val) ~method
     Set.copy(st) ~method
     Set.snapshot(st) ~method
     Set.append(st0, st, ...) ~method
@@ -42,6 +43,9 @@ block:
     ~is #true
   check:
     {"a", "b"}.get("a")
+    ~is #true
+  check:
+    {"a", "b"}.has_element("a")
     ~is #true
   check:
     {1, 2, 3} ++ {4, 5} ~is {1, 2, 3, 4, 5}
@@ -94,6 +98,9 @@ block:
     ~is #true
   check:
     dynamic({"a", "b"}).get("a")
+    ~is #true
+  check:
+    dynamic({"a", "b"}).has_element("a")
     ~is #true
   check:
     dynamic({1, 2, 3}) ++ {4, 5} ~is {1, 2, 3, 4, 5}
