@@ -20,7 +20,7 @@
          "module-path-parse.rkt"
          "parens.rkt"
          "pack.rkt"
-         (for-template "parens.rkt"))
+         "parens-sc.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace

@@ -2,7 +2,7 @@
 (require racket/symbol
          syntax/parse/pre
          "operator-parse.rkt"
-         (for-template "parens.rkt"))
+         "parens-sc.rkt")
 
 (provide :dotted-identifier-sequence
          :dotted-operator-or-identifier-sequence

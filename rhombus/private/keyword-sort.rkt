@@ -1,7 +1,7 @@
 #lang racket/base
 (require racket/keyword
          syntax/parse/pre
-         (for-template "parens.rkt"))
+         "parens-sc.rkt")
 
 (provide sort-with-respect-to-keywords)
 

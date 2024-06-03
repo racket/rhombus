@@ -18,7 +18,7 @@
          "op-literal.rkt"
          "static-info.rkt"
          (only-in "implicit.rkt" #%parens) ; for implicit `parens` in `:esc`
-         (for-template "parens.rkt")
+         "parens-sc.rkt"
          (submod "syntax-object.rkt" for-quasiquote)
          "pattern-variable.rkt"
          "unquote-binding.rkt"

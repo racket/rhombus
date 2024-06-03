@@ -1,7 +1,7 @@
 #lang racket/base
 (require syntax/parse/pre
          "realm.rkt"
-         (for-template "parens.rkt"))
+         "parens-sc.rkt")
 
 (provide unpack-uses
          pack-uses)
