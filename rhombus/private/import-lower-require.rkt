@@ -464,7 +464,9 @@
       [else
        (define sym (if (identifier? sym/id) (syntax-e sym/id) sym/id))
        (hash-values
-        (for*/hasheq ([exts (in-hash-values spaces->exts)]
+        (for*/hasheq ([exts (in-hash-values (if (pair? spaces->exts)
+                                                (car spaces->exts)
+                                                spaces->exts))]
                       [ext (in-hash-keys exts)])
           (cond
             [(equal? ext "") (values sym (if (not and-sym)

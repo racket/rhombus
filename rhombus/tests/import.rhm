@@ -215,3 +215,11 @@ check:
       only prefix
   [ex.prefix.original, ex.prefix.added]
   ~is ["orig", "add"]
+
+check:
+  import:
+    rhombus/meta open
+    rhombus.String as S:
+      only_space annot
+  #void
+  ~completes
