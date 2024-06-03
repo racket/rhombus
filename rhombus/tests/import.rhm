@@ -221,5 +221,23 @@ check:
     rhombus/meta open
     rhombus.String as S:
       only_space annot
-  #void
+  "apple" :: S
   ~completes
+
+check:
+  ~eval
+  import:
+    rhombus/meta open
+    rhombus.String as S:
+      only_space annot
+  def '$(s :: S)' = '"5"'
+  ~throws "not bound as a syntax class"
+
+check:
+  ~eval
+  import:
+    rhombus/meta open
+    rhombus.String as S:
+      only_space annot
+  S.substring
+  ~throws "S: undefined"

@@ -316,7 +316,7 @@
           [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
     (define any-space-limited?
-      (for/and ([spaces* (in-hash-values syms)])
+      (for/or ([spaces* (in-hash-values syms)])
         (pair? spaces*)))
     (define space->ids
       (and any-space-limited?
