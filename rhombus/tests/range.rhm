@@ -1486,3 +1486,20 @@ block:
 
 check:
   (..).intersect(2.., ..=4, 8 <..< 16) ~is #false
+
+// raw text of operator forms
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    ~weaker_than: ~other
+    '#%literal $(expr.to_source_string())'
+  check source .. ~is ".."
+  check source ..2 ~is "..2"
+  check source 1.. ~is "1.."
+  check source 1..2 ~is "1..2"
+  check source ..=2 ~is "..=2"
+  check source 1..=2 ~is "1..=2"
+  check source 1 <..< ~is "1 <..<"
+  check source 1 <..< 2 ~is "1 <..< 2"
+  check source 1 <..= 2 ~is "1 <..= 2"

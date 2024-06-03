@@ -3,6 +3,7 @@
                      (only-in racket/fixnum
                               fixnum-for-every-system?)
                      syntax/parse/pre
+                     "srcloc.rkt"
                      "tag.rkt")
          racket/hash-code
          (only-in racket/unsafe/ops
@@ -141,13 +142,18 @@
       (syntax-parse tail
         [(_)
          (values (wrap-static-info*
-                  #`(range-full)
+                  (relocate+reraw
+                   (respan tail)
+                   #`(range-full))
                   (get-range-static-infos))
                  #'())]
         [(_ . more)
          #:with (~var rhs (:prefix-op+expression+tail #'..)) #'(group . more)
          (values (wrap-static-info*
-                  #`(range-to/who '.. rhs.parsed)
+                  (relocate+reraw
+                   (respan tail)
+                   #`(range-to/who '..
+                                   #,(discard-static-infos #'rhs.parsed)))
                   (get-range-static-infos))
                  #'rhs.tail)])))
    (expression-infix-operator
@@ -157,13 +163,20 @@
       (syntax-parse tail
         [(_)
          (values (wrap-static-info*
-                  #`(range-from/who '.. #,form1)
+                  (relocate+reraw
+                   (respan (datum->syntax #f (list form1 tail)))
+                   #`(range-from/who '..
+                                     #,(discard-static-infos form1)))
                   (get-sequence-range-static-infos))
                  #'())]
         [(_ . more)
          #:with (~var rhs (:infix-op+expression+tail #'..)) #'(group . more)
          (values (wrap-static-info*
-                  #`(range-from-to/who '.. #,form1 rhs.parsed)
+                  (relocate+reraw
+                   (respan (datum->syntax #f (list form1 tail)))
+                   #`(range-from-to/who '..
+                                        #,(discard-static-infos form1)
+                                        #,(discard-static-infos #'rhs.parsed)))
                   (get-list-range-static-infos))
                  #'rhs.tail)]))
     'none)))
@@ -175,14 +188,21 @@
     'automatic
     (lambda (form stx)
       (wrap-static-info*
-       #`(range-to-inclusive/who '..= #,form)
+       (relocate+reraw
+        (respan (datum->syntax #f (list stx form)))
+        #`(range-to-inclusive/who '..=
+                                  #,(discard-static-infos form)))
        (get-range-static-infos))))
    (expression-infix-operator
     range-assoc-table
     'automatic
     (lambda (form1 form2 stx)
       (wrap-static-info*
-       #`(range-from-to-inclusive/who '..= #,form1 #,form2)
+       (relocate+reraw
+        (respan (datum->syntax #f (list form1 stx form2)))
+        #`(range-from-to-inclusive/who '..=
+                                       #,(discard-static-infos form1)
+                                       #,(discard-static-infos form2)))
        (get-list-range-static-infos)))
     'none)))
 
@@ -194,13 +214,20 @@
      (syntax-parse tail
        [(_)
         (values (wrap-static-info*
-                 #`(range-from-exclusive/who '<..< #,form1)
+                 (relocate+reraw
+                  (respan (datum->syntax #f (list form1 tail)))
+                  #`(range-from-exclusive/who '<..<
+                                              #,(discard-static-infos form1)))
                  (get-range-static-infos))
                 #'())]
        [(_ . more)
         #:with (~var rhs (:infix-op+expression+tail #'<..<)) #'(group . more)
         (values (wrap-static-info*
-                 #`(range-from-exclusive-to/who '<..< #,form1 rhs.parsed)
+                 (relocate+reraw
+                  (respan (datum->syntax #f (list form1 tail)))
+                  #`(range-from-exclusive-to/who '<..<
+                                                 #,(discard-static-infos form1)
+                                                 #,(discard-static-infos #'rhs.parsed)))
                  (get-range-static-infos))
                 #'rhs.tail)]))
    'none))
@@ -211,7 +238,11 @@
    'automatic
    (lambda (form1 form2 stx)
      (wrap-static-info*
-      #`(range-from-exclusive-to-inclusive/who '<..= #,form1 #,form2)
+      (relocate+reraw
+       (respan (datum->syntax #f (list form1 stx form2)))
+       #`(range-from-exclusive-to-inclusive/who '<..=
+                                                #,(discard-static-infos form1)
+                                                #,(discard-static-infos form2)))
       (get-range-static-infos)))
    'none))
 
