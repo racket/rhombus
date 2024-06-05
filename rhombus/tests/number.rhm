@@ -101,3 +101,157 @@ check:
   to_string(1/2, ~mode: #'expr) ~is "1/2"
   to_string(#{1+2i}) ~is "1+2i"
   to_string(#{1+2i}, ~mode: #'expr) ~is "#{1+2i}"
+
+// error reporting
+check:
+  "oops" + 2 ~throws values(
+    "+: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 + "oops" ~throws values(
+    "+: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  "oops" - 2 ~throws values(
+    "-: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 - "oops" ~throws values(
+    "-: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  - "oops" ~throws values(
+    "-: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  "oops" * 2 ~throws values(
+    "*: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 * "oops" ~throws values(
+    "*: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  "oops" / 2 ~throws values(
+    "/: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 / "oops" ~throws values(
+    "/: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  "oops" ** 2 ~throws values(
+    "**: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 ** "oops" ~throws values(
+    "**: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+
+check:
+  "oops" div 2 ~throws values(
+    "div: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+  1 div "oops" ~throws values(
+    "div: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+  "oops" rem 2 ~throws values(
+    "rem: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+  1 rem "oops" ~throws values(
+    "rem: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+  "oops" mod 2 ~throws values(
+    "mod: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+  1 mod "oops" ~throws values(
+    "mod: contract violation",
+    "expected: Integral",
+    "given: \"oops\"",
+  )
+
+check:
+  "oops" .> 2 ~throws values(
+    ".>: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  1 .> "oops" ~throws values(
+    ".>: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  "oops" .>= 2 ~throws values(
+    ".>=: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  1 .>= "oops" ~throws values(
+    ".>=: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  "oops" .< 2 ~throws values(
+    ".<: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  1 .< "oops" ~throws values(
+    ".<: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  "oops" .<= 2 ~throws values(
+    ".<=: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+  1 .<= "oops" ~throws values(
+    ".<=: contract violation",
+    "expected: Real",
+    "given: \"oops\"",
+  )
+
+check:
+  "oops" .= 2 ~throws values(
+    ".=: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 .= "oops" ~throws values(
+    ".=: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  "oops" .!= 2 ~throws values(
+    ".!=: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )
+  1 .!= "oops" ~throws values(
+    ".!=: contract violation",
+    "expected: Number",
+    "given: \"oops\"",
+  )

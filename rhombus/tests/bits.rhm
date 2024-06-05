@@ -5,3 +5,100 @@ block:
   static_arity.check:
     bits.length(n)
     bits.field(n, start, end)
+
+// error reporting
+check:
+  "oops" bits.and 2 ~throws values(
+    "bits.and: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.and "oops" ~throws values(
+    "bits.and: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  "oops" bits.or 2 ~throws values(
+    "bits.or: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.or "oops" ~throws values(
+    "bits.or: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  "oops" bits.xor 2 ~throws values(
+    "bits.xor: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.xor "oops" ~throws values(
+    "bits.xor: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  bits.not "oops" ~throws values(
+    "bits.not: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+
+check:
+  "oops" bits.(<<) 2 ~throws values(
+    "bits.(<<): contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.(<<) "oops" ~throws values(
+    "bits.(<<): contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+  "oops" bits.(>>) 2 ~throws values(
+    "bits.(>>): contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.(>>) "oops" ~throws values(
+    "bits.(>>): contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+  "oops" bits.(?) 2 ~throws values(
+    "bits.(?): contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  1 bits.(?) "oops" ~throws values(
+    "bits.(?): contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  bits.length("oops") ~throws values(
+    "bits.length: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  bits.field("oops", 2, 3) ~throws values(
+    "bits.field: contract violation",
+    "expected: Int",
+    "given: \"oops\"",
+  )
+  bits.field(1, "oops", 3) ~throws values(
+    "bits.field: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+  bits.field(1, 2, "oops") ~throws values(
+    "bits.field: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+  bits.field(1, 2, 1) ~throws values(
+    "bits.field: starting index must be less than or equal to ending index",
+    "starting index: 2",
+    "ending index: 1",
+  )

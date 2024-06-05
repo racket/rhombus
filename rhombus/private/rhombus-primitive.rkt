@@ -30,8 +30,6 @@
 (define (get-primitive-who who/rkt)
   (hash-ref primitive-who-table who/rkt #f))
 
-(set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt")
-
 (set-primitive-contract-combinator!
  'procedure-arity-includes/c
  (lambda (form)

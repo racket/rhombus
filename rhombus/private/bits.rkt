@@ -1,10 +1,13 @@
 #lang racket/base
-(require "name-root.rkt"
-         "static-info.rkt"
+(require (for-syntax racket/base)
+         (only-in racket/base
+                  [bitwise-bit-set? racket:bitwise-bit-set?])
+         "name-root.rkt"
          "define-operator.rkt"
          "realm.rkt"
-         (submod "function.rkt" for-info)
-         "function-arity-key.rkt")
+         "define-arity.rkt"
+         (submod "arithmetic.rkt" static-infos)
+         "call-result-key.rkt")
 
 (provide (for-space rhombus/namespace
                     bits))
@@ -15,40 +18,77 @@
    [xor bits.xor]
    [and bits.and]
    [or bits.or]
-   <<
-   >>
-   ?
-   [length integer-length]
-   [field bitwise-bit-field]))
+   [<< |bits.(<<)|]
+   [>> |bits.(>>)|]
+   [? |bits.(?)|]
+   [length bits.length]
+   [field bits.field]))
 
-(define-prefix bits.not bitwise-not)
-(define-infix bits.and bitwise-and
-  #:weaker-than (bits.not))
-(define-infix bits.or bitwise-ior
-  #:weaker-than (bits.and bits.not))
-(define-infix bits.xor bitwise-xor
+(define-prefix #:who bits.not bitwise-not
+  #:static-infos #,(get-int-static-infos))
+(define-infix #:who bits.and bitwise-and
   #:weaker-than (bits.not)
-  #:same-as (bits.or))
+  #:static-infos #,(get-int-static-infos))
+(define-infix #:who bits.or bitwise-ior
+  #:weaker-than (bits.and bits.not)
+  #:static-infos #,(get-int-static-infos))
+(define-infix #:who bits.xor bitwise-xor
+  #:weaker-than (bits.not)
+  #:same-as (bits.or)
+  #:static-infos #,(get-int-static-infos))
+
+(define (check-int who n)
+  (unless (exact-integer? n)
+    (raise-argument-error* who rhombus-realm "Int" n)))
+
+(define (check-nonneg-int who n)
+  (unless (exact-nonnegative-integer? n)
+    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
 
 (define (arithmetic-shift-left a b)
-  (unless (exact-integer? a) (raise-argument-error* 'bits.<< rhombus-realm "Int" a))
-  (unless (exact-nonnegative-integer? b) (raise-argument-error* 'bits.<< rhombus-realm "NonnegInt" b))
+  (define who '|bits.(<<)|)
+  (check-int who a)
+  (check-nonneg-int who b)
   (arithmetic-shift a b))
 
 (define (arithmetic-shift-right a b)
-  (unless (exact-integer? a) (raise-argument-error* 'bits.<< rhombus-realm "Int" a))
-  (unless (exact-nonnegative-integer? b) (raise-argument-error* 'bits.<< rhombus-realm "NonnegInt" b))
+  (define who '|bits.(>>)|)
+  (check-int who a)
+  (check-nonneg-int who b)
   (arithmetic-shift a (- b)))
 
-(define-infix << arithmetic-shift-left)
-(define-infix >> arithmetic-shift-right)
+(define-infix |bits.(<<)| arithmetic-shift-left
+  #:static-infos #,(get-int-static-infos))
+(define-infix |bits.(>>)| arithmetic-shift-right
+  #:static-infos #,(get-int-static-infos))
 
-(define-infix ? bitwise-bit-set?)
+;; TEMP do our own error reporting to accommodate for racket/racket#5009
+(define (bitwise-bit-set? n m)
+  (define who '|bits.(?)|)
+  (unless (exact-nonnegative-integer? m)
+    (check-int who n)
+    (raise-argument-error* who rhombus-realm "NonnegInt" m))
+  (racket:bitwise-bit-set? n m))
+(define-infix #:who |bits.(?)| bitwise-bit-set?)
 
-(define-static-info-syntaxes (integer-length)
-  (#%function-arity 2)
-  . #,(get-function-static-infos))
+(define/arity (bits.length n)
+  #:inline
+  #:primitive (integer-length)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (integer-length n))
 
-(define-static-info-syntaxes (bitwise-bit-field)
-  (#%function-arity 8)
-  . #,(get-function-static-infos))
+;; TEMP ibid
+(define/arity (bits.field n start end)
+  #:primitive (bitwise-bit-field)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (unless (and (exact-nonnegative-integer? start)
+               (exact-nonnegative-integer? end)
+               (start . <= . end))
+    (check-int who n)
+    (check-nonneg-int who start)
+    (check-nonneg-int who end)
+    (raise-arguments-error* who rhombus-realm
+                            "starting index must be less than or equal to ending index"
+                            "starting index" (unquoted-printing-string (number->string start))
+                            "ending index" (unquoted-printing-string (number->string end))))
+  (bitwise-bit-field n start end))

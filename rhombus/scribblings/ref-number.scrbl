@@ -6,15 +6,21 @@
 
 @title{Numbers}
 
-Numbers are @tech{comparable}, which means that generic operations like
-@rhombus(<) and @rhombus(>) work on numbers, while specialized
-operations like @rhombus(.<) and @rhombus(.>) work only on numbers.
+Real numbers are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on real numbers, while specialized
+operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 @doc(
   annot.macro 'Number'
 ){
 
-  Matches any number.
+ Matches any number.
+
+ Although only real numbers are comparable, to make the results of
+ arithmetic operations easier to compare in static mode, static
+ information associated by @rhombus(Number, ~annot) specifies
+ @rhombus(Real, ~annot)-specific @rhombus(Comparable, ~class)
+ operations.
 
 @examples(
   5 is_a Number
@@ -30,7 +36,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on numbers.
   annot.macro 'Inexact'
 ){
 
- Matches exact and inexcat numbers, respectively. An inexact number is
+ Matches exact and inexact numbers, respectively. An inexact number is
  one that is represented as a floating-point number or a complex number
  with an inexact real or imaginary part. These two annotations are
  mutually exclusive.
@@ -247,15 +253,16 @@ operations like @rhombus(.<) and @rhombus(.>) work only on numbers.
 
 
 @doc(
-  operator ((x :: Number) .> (y :: Number)) :: Boolean
-  operator ((x :: Number) .>= (y :: Number)) :: Boolean
-  operator ((x :: Number) .< (y :: Number)) :: Boolean
-  operator ((x :: Number) .<= (y :: Number)) :: Boolean
+  operator ((x :: Real) .> (y :: Real)) :: Boolean
+  operator ((x :: Real) .>= (y :: Real)) :: Boolean
+  operator ((x :: Real) .< (y :: Real)) :: Boolean
+  operator ((x :: Real) .<= (y :: Real)) :: Boolean
 ){
 
- The usual comparsion operators on numbers prefixed with @litchar{.} to
+ The usual comparsion operators on real numbers prefixed with @litchar{.} to
  distinsguish them from generic operations like @rhombus(<) on
- @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=).
+ @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=),
+ which work on all numbers.
 
 @examples(
   1 .< 2

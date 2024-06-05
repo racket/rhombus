@@ -2,24 +2,24 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-         "expression.rkt"
          "repetition.rkt"
          "compound-repetition.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "rhombus-primitive.rkt")
 
 (provide define-prefix
          define-infix
-         
+
          (for-syntax prefix
                      infix))
 
 (begin-for-syntax
   (require (for-syntax racket/base
-                       syntax/parse/pre
-                       "expression-space.rkt"))
+                       syntax/parse/pre))
+
   (define-syntax (prefix stx)
     (syntax-parse stx
-      [(_ name:identifier prim:identifier
+      [(_ prim:identifier
           (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
@@ -64,7 +64,7 @@
 
   (define-syntax (infix stx)
     (syntax-parse stx
-      [(_ name:identifier prim:identifier
+      [(_ prim:identifier
           (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
@@ -106,14 +106,30 @@
              #`statinfos))
           assoc)])))
 
-(define-syntax (define-infix stx)
-  (syntax-parse stx
-    [(_ name spec ...)
-     #`(define-syntaxes (name #,(in-repetition-space #'name))
-         (infix name spec ...))]))
-
 (define-syntax (define-prefix stx)
   (syntax-parse stx
-    [(_ name spec ...)
-     #`(define-syntaxes (name #,(in-repetition-space #'name))
-         (prefix name spec ...))]))
+    [(_ (~optional (~seq (~and #:who
+                               (~bind [who? #t]))
+                         (~optional ext-name:identifier)))
+        name:identifier prim:identifier
+        spec ...)
+     #`(begin
+         #,@(if (attribute who?)
+                (list #`(set-primitive-who! 'prim '(~? ext-name name)))
+                '())
+         (define-syntaxes (name #,(in-repetition-space #'name))
+           (prefix prim spec ...)))]))
+
+(define-syntax (define-infix stx)
+  (syntax-parse stx
+    [(_ (~optional (~seq (~and #:who
+                               (~bind [who? #t]))
+                         (~optional ext-name:identifier)))
+        name:identifier prim:identifier
+        spec ...)
+     #`(begin
+         #,@(if (attribute who?)
+                (list #`(set-primitive-who! 'prim '(~? ext-name name)))
+                '())
+         (define-syntaxes (name #,(in-repetition-space #'name))
+           (infix prim spec ...)))]))

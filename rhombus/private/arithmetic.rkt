@@ -1,5 +1,6 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse/pre)
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -71,6 +72,10 @@
   (get-real-static-infos))
 
 (set-primitive-contract! 'number? "Number")
+(set-primitive-contract! 'real? "Real")
+(set-primitive-contract! 'integer? "Integral")
+(set-primitive-contract! 'exact-integer? "Int")
+(set-primitive-contract! 'exact-nonngative-integer? "NonnegInt")
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
@@ -78,10 +83,12 @@
   #:static-infos #,(get-number-static-infos))
 
 (define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
-  (prefix rhombus- - #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
+  (prefix -
+          #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
           #:static-infos #,(get-number-static-infos)))
 (define-values-for-syntax (minus-expr-infix minus-repet-infix)
-  (infix rhombus- - #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
+  (infix -
+         #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
          #:static-infos #,(get-number-static-infos)))
 
 (define-syntax rhombus-
@@ -103,17 +110,17 @@
   #:weaker-than (rhombus**)
   #:static-infos #,(get-number-static-infos))
 
-(define-infix rhombus** expt
+(define-infix #:who ** rhombus** expt
   #:associate 'right
   #:static-infos #,(get-number-static-infos))
 
-(define-infix div quotient
+(define-infix #:who div quotient
   #:weaker-than (rhombus**)
   #:static-infos #,(get-real-static-infos))
-(define-infix mod modulo
+(define-infix #:who mod modulo
   #:weaker-than (rhombus**)
   #:static-infos #,(get-real-static-infos))
-(define-infix rem remainder
+(define-infix #:who rem remainder
   #:weaker-than (rhombus**)
   #:static-infos #,(get-real-static-infos))
 
@@ -127,54 +134,59 @@
 (define-infix \|\| or
   #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**))
 
-(define-for-syntax comparison-precedences
-  (lambda ()
-    `((,(expr-quote rhombus+) . weaker)
-      (,(expr-quote rhombus-) . weaker)
-      (,(expr-quote rhombus*) . weaker)
-      (,(expr-quote rhombus/) . weaker)
-      (,(expr-quote mod) . weaker)
-      (,(expr-quote div) . weaker)
-      (,(expr-quote rem) . weaker)
-      (,(expr-quote rhombus**) . weaker)
-      (,(expr-quote .>) . same)
-      (,(expr-quote .>=) . same)
-      (,(expr-quote .=) . same)
-      (,(expr-quote .!=) . same)
-      (,(expr-quote .<) . same)
-      (,(expr-quote .<=) . same)
-      (,(expr-quote \|\|) . stronger)
-      (,(expr-quote &&) . stronger))))
+(define-for-syntax (comparison-precedences)
+  `((,(expr-quote rhombus+) . weaker)
+    (,(expr-quote rhombus-) . weaker)
+    (,(expr-quote rhombus*) . weaker)
+    (,(expr-quote rhombus/) . weaker)
+    (,(expr-quote mod) . weaker)
+    (,(expr-quote div) . weaker)
+    (,(expr-quote rem) . weaker)
+    (,(expr-quote rhombus**) . weaker)
+    (,(expr-quote .>) . same)
+    (,(expr-quote .>=) . same)
+    (,(expr-quote .=) . same)
+    (,(expr-quote .!=) . same)
+    (,(expr-quote .<) . same)
+    (,(expr-quote .<=) . same)
+    (,(expr-quote \|\|) . stronger)
+    (,(expr-quote &&) . stronger)))
 
-(define-syntax-rule (define-comp-infix name racket-name)
-  (define-infix name racket-name
-    #:precedences comparison-precedences
-    #:associate 'none))
-
-(set-primitive-who! '= '.=)
+(define-syntax (define-comp-infix stx)
+  (syntax-parse stx
+    [(_ (~optional (~and who #:who)) name racket-name)
+     #'(define-infix (~? who) name racket-name
+         #:precedences comparison-precedences
+         #:associate 'none)]))
 
 (define (number!=? a b)
-  (if (and (number? a) (number? b))
-      (not (= a b))
-      (raise-argument-error* '!= rhombus-realm "Number" (if (number? a) b a))))
+  (define (check n)
+    (unless (number? n)
+      (raise-argument-error* '.!= rhombus-realm "Number" n)))
+  (check a)
+  (check b)
+  (not (= a b)))
 
-(define-comp-infix .< <)
-(define-comp-infix .<= <=)
-(define-comp-infix .= =)
+(define-comp-infix #:who .< <)
+(define-comp-infix #:who .<= <=)
+(define-comp-infix #:who .= =)
 (define-comp-infix .!= number!=?)
-(define-comp-infix .>= >=)
-(define-comp-infix .> >)
+(define-comp-infix #:who .>= >=)
+(define-comp-infix #:who .> >)
 
-(define-syntax-rule (define-eql-infix name racket-name)
-  (define-infix name racket-name
-    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
-    #:stronger-than (\|\| &&)
-    #:associate 'none))
+(define-syntax (define-eql-infix stx)
+  (syntax-parse stx
+    [(_ name racket-name)
+     #'(define-infix name racket-name
+         #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
+         #:stronger-than (\|\| &&)
+         #:associate 'none)]))
+
+(define (not-equal-always? a b)
+  (not (equal-always? a b)))
 
 (define-eql-infix == equal-always?)
 (define-eql-infix != not-equal-always?)
 (define-eql-infix === eq?)
 (define-eql-infix is_now equal?)
 (define-eql-infix is_same_number_or_object eqv?)
-
-(define (not-equal-always? a b) (not (equal-always? a b)))

@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/operator
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt")
@@ -12,10 +11,7 @@
          "parse.rkt"
          (only-in "arithmetic.rkt" .< .<= .= .>= .>)
          (submod "arithmetic.rkt" precedence)
-         (submod "map.rkt" for-append)
-         "append-key.rkt"
          "compare-key.rkt"
-         "call-result-key.rkt"
          "static-info.rkt"
          "repetition.rkt"
          "compound-repetition.rkt"
@@ -258,7 +254,7 @@
         (cons (in-repetition-space (car p)) (cdr p))
         p)))
 
-(define-syntax-rule (define-compare-op def-op op .op)
+(define-syntax-rule (define-compare-op def-op op)
   (begin
     (define-syntax def-op
       (expression-infix-operator
@@ -273,12 +269,12 @@
        (make-comp-repetition 'op)
        'left))))
 
-(define-compare-op rhombus< < .<)
-(define-compare-op rhombus<= <= .<=)
-(define-compare-op compares_equal = .=)
-(define-compare-op compares_unequal != .!=)
-(define-compare-op rhombus>= >= .>=)
-(define-compare-op rhombus> > .>)
+(define-compare-op rhombus< <)
+(define-compare-op rhombus<= <=)
+(define-compare-op compares_equal =)
+(define-compare-op compares_unequal !=)
+(define-compare-op rhombus>= >=)
+(define-compare-op rhombus> >)
 
 ;; checking for the same `compare` method relies on the fact that `class`
 ;; will generate a new procedure each time that `compare` is overridden
@@ -321,9 +317,9 @@
   (begin
     (define (general-op v1 v2)
       (cond
-        [(number? v1)
-         (unless (number? v2)
-           (raise-mismatch "number" 'op v1 v2))
+        [(real? v1)
+         (unless (real? v2)
+           (raise-mismatch "real number" 'op v1 v2))
          (wrap (num-op v1 v2))]
         [(char? v1)
          (unless (char? v2)
