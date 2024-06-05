@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "consistent.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          racket/keyword
          "treelist.rkt"
          "provide.rkt"

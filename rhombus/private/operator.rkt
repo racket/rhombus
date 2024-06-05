@@ -4,7 +4,7 @@
                      "srcloc.rkt"
                      "consistent.rkt"
                      "same-expression.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          "expression.rkt"
          (only-in "repetition.rkt"
                   in-repetition-space

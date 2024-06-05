@@ -7,7 +7,7 @@
                      "veneer-parse.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          racket/stxparam
          "expression.rkt"
          "parse.rkt"

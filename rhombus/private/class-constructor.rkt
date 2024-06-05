@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "class-parse.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          racket/unsafe/undefined
          racket/stxparam
          "parens.rkt"

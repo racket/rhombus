@@ -5,7 +5,7 @@
                      "srcloc.rkt"
                      "annotation-string.rkt"
                      "tag.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"

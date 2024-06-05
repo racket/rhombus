@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "tag.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          syntax/parse/pre
          "provide.rkt"
          "name-root.rkt"

@@ -2,45 +2,22 @@
 (require (for-syntax racket/base)
          "treelist.rkt"
          "to-list.rkt"
-         "provide.rkt"
-         "class-primitive.rkt"
          "dot-property.rkt"
-         "realm.rkt"
-         "function-arity-key.rkt"
-         "index-result-key.rkt"
-         (submod "list.rkt" for-compound-repetition)
-         (submod "syntax-object.rkt" for-quasiquote))
+         "realm.rkt")
 
-(provide (for-spaces (rhombus/namespace
-                      #f
-                      rhombus/bind
-                      rhombus/annot)
-                     entry_point_meta.Adjustment)
-         (for-syntax get-entry-point-adjustment-static-infos))
-
-(module+ for-struct
-  (provide (struct-out entry-point-adjustment)
-           no-adjustments)
-  (define no-adjustments
-    (entry-point-adjustment '() (lambda (arity stx) stx) #f)))
-
-(define-primitive-class entry_point_meta.Adjustment entry-point-adjustment
-  #:existing
-  #:transparent
-  #:fields
-  ([(prefix_arguments prefix-arguments) ((#%index-result #,(get-syntax-static-infos))
-                                         . #,(get-treelist-static-infos))]
-   [(wrap_body wrap-body) ((#%function-arity 4))]
-   [(is_method method?)])
-  #:properties
-  ()
-  #:methods
-  ())
+(provide (struct-out entry-point-adjustment)
+         no-adjustments)
 
 (struct entry-point-adjustment (prefix-arguments wrap-body method?)
   #:property prop:field-name->accessor
   (list* null
-         entry-point-adjustment-method-table
+         ;; Duplicates the table that is constructed by
+         ;; `define-primitive-class` in "entry-point-adjustment-meta.rkt",
+         ;; but this module is often used for-syntax, and we don't need
+         ;; all of Rhombus's meta support for those uses
+         (hasheq 'prefix_arguments (lambda (e) (entry-point-adjustment-prefix-arguments e))
+                 'wrap_body (lambda (e) (entry-point-adjustment-wrap-body e))
+                 'is_method (lambda (e) (entry-point-adjustment-method? e)))
          #hasheq())
   #:guard (lambda (args-in wrap is-method? info)
             (define who 'entry_point_meta.Adjustment)
@@ -50,3 +27,6 @@
             (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
               (raise-argument-error* who rhombus-realm "Function.of_arity(2)" wrap))
             (values args wrap (and is-method? #t))))
+
+(define no-adjustments
+  (entry-point-adjustment '() (lambda (arity stx) stx) #f))

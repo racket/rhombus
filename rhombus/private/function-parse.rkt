@@ -9,7 +9,7 @@
                      "tag.rkt"
                      "same-expression.rkt"
                      "static-info-pack.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct)
+                     "entry-point-adjustment.rkt"
                      (only-in "annotation-string.rkt" annotation-any-string)
                      "to-list.rkt")
          racket/unsafe/undefined

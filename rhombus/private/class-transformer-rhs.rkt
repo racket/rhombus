@@ -3,7 +3,7 @@
          (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          "macro-rhs.rkt"
          "entry-point.rkt"
          "pack.rkt")

@@ -7,6 +7,7 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      "entry-point-adjustment.rkt"
+                     "entry-point-adjustment-meta.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
                      "define-arity.rkt"

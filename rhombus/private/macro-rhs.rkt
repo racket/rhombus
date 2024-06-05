@@ -5,7 +5,7 @@
                      syntax/parse/pre
                      "treelist.rkt"
                      "pack.rkt"
-                     (submod "entry-point-adjustment.rkt" for-struct))
+                     "entry-point-adjustment.rkt")
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"
