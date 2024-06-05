@@ -1,5 +1,40 @@
 #lang rhombus
 
 check:
-  #false || !(#false || #false)
-  ~is #true
+  #false || !(#false || #false) ~is #true
+  #false && !(#false || #false) ~is #false
+
+check:
+  #true || !(#true || #true) ~is #true
+  #true && !(#true || #true) ~is #false
+
+check:
+  #true || print("reached") ~prints ""
+  #true && print("reached") ~prints "reached"
+  #false || print("reached") ~prints "reached"
+  #false && print("reached") ~prints ""
+
+block:
+  def [x, ...] = [#true, #true, #false]
+  def [y, ...] = [#true, #false, #false]
+  check [x || y, ...] ~is [#true, #true, #false]
+  check [x && y, ...] ~is [#true, #false, #false]
+
+block:
+  def [x, ...] = [#true, #true, #false]
+  check:
+    Function.pass(x && println("reached"), ...)
+    ~prints "reached\nreached\n"
+  check:
+    Function.pass(x || println("reached"), ...)
+    ~prints "reached\n"
+
+block:
+  def [x, ...] = [#true, #true, #false]
+  def [y, ...] = [1, 2, 3]
+  check:
+    Function.pass(x && println("reached: " +& y), ...)
+    ~prints "reached: 1\nreached: 2\n"
+  check:
+    Function.pass(x || println("reached: " +& y), ...)
+    ~prints "reached: 3\n"

@@ -28,16 +28,23 @@
 
 }
 
+
 @doc(
-  expr.macro '$expr || $expr'
+  ~nonterminal:
+    left_expr: block expr
+    right_expr: block expr
+    left_repet: block repet
+    right_repet: block repet
+  expr.macro '$left_expr || $right_expr'
+  repet.macro '$left_repet || $right_repet'
 ){
 
- Produces the value of the first @rhombus(expr) if it is
- non-@rhombus(#false), otherwise produces the value(s) of the second
- @rhombus(expr).
+ Produces the value of @rhombus(left_expr) if it is
+ non-@rhombus(#false), otherwise produces the value(s) of
+ @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
+ position with respect to the @rhombus(||) form, if evaluated at all.
 
- The second @rhombus(expr) is evaluated in tail position with respect to
- the @rhombus(||) form.
+ The @rhombus(||) form can also serve as @tech{repetitions}.
 
 }
 
@@ -108,15 +115,21 @@
 
 
 @doc(
-  expr.macro '$expr && $expr'
+  ~nonterminal:
+    left_expr: block expr
+    right_expr: block expr
+    left_repet: block repet
+    right_repet: block repet
+  expr.macro '$left_expr && $right_expr'
+  repet.macro '$left_repet && $right_repet'
 ){
 
- Produces @rhombus(#false) if the the value of the first @rhombus(expr)
- is @rhombus(#false), otherwise produces the value(s) of the second
- @rhombus(expr).
+ Produces @rhombus(#false) if the value of @rhombus(left_expr) is
+ @rhombus(#false), otherwise produces the value(s) of
+ @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
+ position with respect to the @rhombus(&&) form, if evaluated at all.
 
- The second @rhombus(expr) is evaluated in tail position with respect to
- the @rhombus(&&) form.
+ The @rhombus(&&) form can also serve as @tech{repetitions}.
 
 }
 
