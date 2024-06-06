@@ -135,7 +135,9 @@
  If multiple immediate @rhombus(_)s are present, each one is replaced by
  a distinct identifier, the identifiers are used as the arguments of the
  generated function, and the arguments match the order of the
- corresponding @rhombus(_).
+ corresponding @rhombus(_). Moreover, static information is gathered
+ from the parenthesized sequence, by parsing it as an expression, and
+ propagated as result information.
 
 @examples(
   ~repl:
@@ -150,7 +152,8 @@
  @rhombus(...). Each @rhombus(_) argument is converted as in the
  @rhombus(#%parens) conversion, but the conversion applies only for a
  @rhombus(_) that appears by itself in the group for function-call
- argument.
+ argument. Moreover, result information is gathered from the inner
+ function and propagted to the outer function.
 
 @examples(
   ~repl:

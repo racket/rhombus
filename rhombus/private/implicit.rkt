@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/name-parse
                      "srcloc.rkt"
                      "pack.rkt")
          "expression.rkt"
@@ -20,9 +19,9 @@
          "static-info.rkt"
          (submod "literal.rkt" for-info)
          "is-static.rkt"
-         (only-in "underscore.rkt"
-                  [_ rhombus-_])
-         "operator-compare.rkt")
+         "operator-compare.rkt"
+         (only-in "op-literal.rkt"
+                  :_-expr))
 
 (provide (for-space #f
                     #%body
@@ -148,10 +147,8 @@
              (raise-syntax-error #f "too many expressions" #'head)]
             [else
              (syntax-parse (car args)
-               #:literals (rhombus-_)
                ;; check for anonymous-function shorthand:
-               [(_ ... rhombus-_ . _) (values (build-anonymous-function (car args) #'head)
-                                              #'tail)]
+               [(_ ... _::_-expr . _) (values (build-anonymous-function (car args) #'head) #'tail)]
                ;; eagerly parse content of parentheses; we could choose to
                ;; delay parsing by using `rhombus-expression`, instead
                [e::expression (values (relocate+reraw (maybe-respan #'head) #'e.parsed) #'tail)])]))]))))
@@ -170,9 +167,8 @@
              (raise-syntax-error #f "too many expressions" #'head)]
             [else
              (syntax-parse (car args)
-               #:literals (rhombus-_)
                ;; check for anonymous-function shorthand:
-               [(_ ... rhombus-_ . _) (build-anonymous-function (car args) #'head
+               [(_ ... _::_-expr . _) (build-anonymous-function (car args) #'head
                                                                 #:adjustments adjustments)]
                [(~var e (:entry-point adjustments)) #'e.parsed]
                [_ (raise-syntax-error #f "not an entry point" #'head)])]))]))
@@ -182,16 +178,16 @@
        #:datum-literals (group)
        [(_ (~and head (_::parens arg-g)))
         (syntax-parse #'arg-g
-          #:literals (rhombus-_)
-          [(_ ... rhombus-_ . _)
-           (for/sum ([t (in-list (cdr (syntax->list #'arg-g)))])
-             (if (and (identifier? t)
-                      (free-identifier=? t #'rhombus-_))
-                 1
-                 0))]
+          [(_ ... _::_-expr . _)
+           (arithmetic-shift
+            1
+            (for/sum ([t (in-list (cdr (syntax->list #'arg-g)))])
+              (syntax-parse t
+                [_::_-expr 1]
+                [_ 0])))]
           [e::entry-point-arity #'e.parsed]
-          [_ #false])]
-       [_ #false]))))
+          [_ #f])]
+       [_ #f]))))
 
 (define-immediate-callee-syntax #%parens
   (immediate-callee-transformer
@@ -202,9 +198,8 @@
         #:when (ends-parse? 'parens op-mode op-stx (pack-tail #'tail)
                             #f expression-relative-precedence expression-infix-operator-ref)
         (syntax-parse #'arg
-          #:literals (rhombus-_)
           ;; check for anonymous-function shorthand:
-          [(_ ... rhombus-_ . _)
+          [(_ ... _::_-expr . _)
            (pack-immediate-callee (build-anonymous-function #'arg #'head
                                                             #:argument-static-infoss static-infoss)
                                   #'tail)]
@@ -275,8 +270,8 @@
      (define static? (is-static-context/tail? stxes))
      (define-values (proc tail to-anon-function?)
        (parse-function-call rator '() stxes
-                            #:static?
-                            static? #:repetition? #t))
+                            #:static? static?
+                            #:repetition? #t))
      (values proc tail))
    'left))
 

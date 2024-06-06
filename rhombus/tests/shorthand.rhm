@@ -1,0 +1,49 @@
+#lang rhombus
+
+// propagation of static info
+check:
+  use_static
+  def decreasing_sort = List.sort(_, (_ .> _))
+  decreasing_sort([1, 2, 3]).map((_ + 1))
+  ~is [4, 3, 2]
+
+check:
+  use_static
+  def cons_zero = ([0] ++ _)
+  cons_zero([1, 2, 3]).map((_ + 1))
+  ~is [1, 2, 3, 4]
+
+check:
+  ~eval
+  use_static
+  def sort = List.sort(_, _)
+  sort([1, 2, 3])
+  ~throws values("wrong number of arguments",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def identity = (_)
+  identity(1, 2)
+  ~throws values("wrong number of arguments",
+                 "based on static information")
+
+// arity info in entry-point forms
+block:
+  use_static
+  class AList(lst :~ List):
+    method append:
+      (this.lst ++ _)
+  check AList([1, 2, 3]).append([4]) ~is [1, 2, 3, 4]
+  check AList.append(AList([1, 2, 3]), [4]) ~is [1, 2, 3, 4]
+
+// raw text of shorthands
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    '#%literal $(expr.to_source_string())'
+  check source (_ ++ _) ~is "(_ ++ _)"
+  check source [1, 2, 3].map(_) ~is "[1, 2, 3].map(_)"
+  check source List.map([1, 2, 3], _) ~is "map([1, 2, 3], _)"

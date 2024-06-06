@@ -291,7 +291,7 @@
 (define-syntax fun
   (expression-transformer
    (lambda (stx)
-     (parse-anonymous-function stx no-adjustments '() #f))))
+     (parse-anonymous-function stx no-adjustments '()))))
 
 (define-defn-syntax fun
   (definition-transformer
@@ -393,7 +393,7 @@
   (entry-point-transformer
    ;; parse function:
    (lambda (stx adjustments)
-     (define-values (term tail) (parse-anonymous-function stx adjustments '() #t))
+     (define-values (term tail) (parse-anonymous-function stx adjustments '()))
      (syntax-parse tail
        [() term]
        [_ (raise-syntax-error #f
@@ -407,14 +407,14 @@
   (immediate-callee-transformer
    ;; parse function:
    (lambda (stx static-infoss op-stx op-mode)
-     (define-values (term tail) (parse-anonymous-function stx no-adjustments static-infoss #t))
+     (define-values (term tail) (parse-anonymous-function stx no-adjustments static-infoss))
      (pack-immediate-callee term tail))))
 
 (define-syntax fun/read-only-property
   (entry-point-transformer
    ;; parse function:
    (lambda (stx adjustments)
-     (define-values (term tail) (parse-anonymous-function stx adjustments '() #t))
+     (define-values (term tail) (parse-anonymous-function stx adjustments '()))
      term)
    ;; extract arity:
    (lambda (stx)
@@ -422,8 +422,7 @@
 
 (define-for-syntax (parse-anonymous-function stx
                                              [adjustments no-adjustments]
-                                             [argument-static-infos '()]
-                                             [for-entry? #f])
+                                             [argument-static-infos '()])
   (syntax-parse stx
     #:datum-literals (group)
     ;; alts case, with maybe a declared return annotation

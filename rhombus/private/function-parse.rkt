@@ -42,8 +42,6 @@
          "if-blocked.rkt"
          "realm.rkt"
          "mutability.rkt"
-         (only-in "underscore.rkt"
-                  [_ rhombus-_])
          (only-in "values.rkt"
                   [values rhombus-values]))
 
@@ -609,7 +607,7 @@
                        (syntax-parse (fcase-arg-parseds fc)
                          [(arg-parsed::binding-form ...)
                           #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (fcase-arg-parseds fc)))
-                          #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
+                          #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
                           #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
                           #:with (arg ...) (fcase-args fc)
                           #:with (this-arg-id ...) this-args
@@ -986,7 +984,7 @@
                                       (~parse kwrsts #'(kwrst-tag kwrst ...)))))
         . tail)
      (check-complex-allowed)
-     (generate #'(rand ...) #'rep #f #'dots.name (attribute kwrsts) #'tag #'tail)]
+     (generate (syntax->list #'(rand ...)) #'rep #f #'dots.name (attribute kwrsts) #'tag #'tail)]
     [(_ (~or* (~and (tag::parens rand ...
                                  ((~and rst-tag group) amp::&-expr rst ...)
                                  (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
@@ -997,22 +995,47 @@
                     (~parse kwrsts #'(kwrst-tag kwrst ...))))
         . tail)
      (check-complex-allowed)
-     (generate #'(rand ...) (attribute rsts) (and (attribute amp) #'amp.name) #f (attribute kwrsts) #'tag #'tail)]
+     (generate (syntax->list #'(rand ...)) (attribute rsts) (and (attribute amp) #'amp.name) #f (attribute kwrsts) #'tag #'tail)]
     [(_ (~and args (tag::parens rand ...)) . tail)
      (define-values (formals rands)
-       (let ([rands #'(rand ...)])
+       (let ([rands (syntax->list #'(rand ...))])
          (if can-anon-function?
-             (extract-anonymous-function-as-call rands)
+             (convert-wildcards
+              rands
+              (lambda (rand)
+                (syntax-parse rand
+                  #:datum-literals (group)
+                  [(group _::_-expr) #t]
+                  [_ #f]))
+              (lambda (rand id)
+                (relocate+reraw
+                 rand
+                 #`(group (parsed #:rhombus/expr #,(relocate+reraw rand id))))))
              (values null rands))))
      (cond
        [(null? formals)
         (generate rands #f #f #f #f #'tag #'tail)]
        [else
-        (values (relocate+reraw stxes
-                                #`(lambda #,formals
-                                    (anonymous-body-call #,rator-in args #,rands #,extra-args tag
-                                                         #,static? #,rator-stx #,srcloc #,rator-kind
-                                                         #,rator-arity)))
+        (define static-infos (cond
+                               [(syntax-local-static-info rator-in #'#%call-result)
+                                => (lambda (results)
+                                     (find-call-result-at
+                                      results
+                                      (+ (length rands) (length extra-args))))]
+                               [else #'()]))
+        (define arity (arithmetic-shift 1 (length formals)))
+        (values (let* ([fun (relocate+reraw
+                             (or srcloc
+                                 (respan (datum->syntax #f (list rator-in #'args))))
+                             #`(lambda (#,@formals)
+                                 (anonymous-body-call #,rator-in args #,rands #,extra-args tag
+                                                      #,static? #,rator-stx #,srcloc #,rator-kind
+                                                      #,rator-arity)))]
+                       [fun (if (null? (syntax-e static-infos))
+                                fun
+                                (wrap-static-info fun #'#%call-result static-infos))]
+                       [fun (wrap-static-info fun #'#%function-arity arity)])
+                  fun)
                 #'tail
                 #t)])]))
 
@@ -1023,7 +1046,7 @@
         static? rator-stx srcloc rator-kind
         rator-arity)
      (define-values (call-e ignored-tail ignored-to-anonymous-function?)
-       (generate-call #'rator-in #'args (syntax->list #'extra-args) #'rands #f #f #f #f #'()
+       (generate-call #'rator-in #'args (syntax->list #'extra-args) (syntax->list #'rands) #f #f #f #f #'()
                       #:static? (syntax-e #'static?)
                       #:repetition? #f
                       #:rator-stx (let ([stx #'rator-stx])
@@ -1032,8 +1055,9 @@
                                  (and (syntax-e stx) stx))
                       #:rator-kind (syntax-e #'rator-kind)
                       #:rator-arity (syntax->datum #'rator-arity)
-                      #:props-stx #'tag))
-     (discard-static-infos call-e)]))
+                      #:props-stx #'tag
+                      #:call-result? #f))
+     call-e]))
 
 (define-for-syntax (generate-call rator-in args-stx extra-rands rands rsts amp dots kwrsts tail
                                   #:static? static?
@@ -1042,7 +1066,8 @@
                                   #:srcloc srcloc
                                   #:rator-kind rator-kind
                                   #:rator-arity rator-arity
-                                  #:props-stx props-stx)
+                                  #:props-stx props-stx
+                                  #:call-result? [call-result? #t])
   (values
    (syntax-parse rands
      [(rand::kw-argument ...)
@@ -1061,7 +1086,7 @@
              (when a
                (let* ([a (if (syntax? a) (syntax->datum a) a)])
                  (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind)))))
-         (define num-rands (length (syntax->list #'(rand.kw ...))))
+         (define num-rands (length rands))
          (define arg-formss (for/list ([kw kws]
                                        [arg (in-list args)])
                               (if (syntax-e kw)
@@ -1083,23 +1108,31 @@
          (define e (relocate+reraw (or srcloc
                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx)))
-         (define result-static-infos (or (let ([results (rator-static-info #'#%call-result)])
-                                           (and results
-                                                (syntax-parse results
-                                                  [(#:at_arities r)
-                                                   (let loop ([r #'r])
-                                                     (syntax-parse r
-                                                       [((mask results) . rest)
-                                                        (if (bitwise-bit-set? (syntax-e #'mask) (+ num-rands (length extra-rands)))
-                                                            #'results
-                                                            (loop #'rest))]
-                                                       [_ #f]))]
-                                                  [results #'results])))
-                                         #'()))
+         (define result-static-infos (cond
+                                       [(and call-result?
+                                             (rator-static-info #'#%call-result))
+                                        => (lambda (results)
+                                             (find-call-result-at
+                                              results
+                                              (+ num-rands (length extra-rands))))]
+                                       [else #'()]))
          (values e result-static-infos)))])
    tail
-   ;; not converted to an anonymoud function:
+   ;; not converted to an anonymous function:
    #f))
+
+;; does not support keyword arguments, for now
+(define-for-syntax (find-call-result-at results arity)
+  (syntax-parse results
+    [(#:at_arities r)
+     (let loop ([r #'r])
+       (syntax-parse r
+         [((mask results) . rest)
+          (if (bitwise-bit-set? (syntax-e #'mask) arity)
+              #'results
+              (loop #'rest))]
+         [_ #'()]))]
+    [_ results]))
 
 (define-for-syntax (handle-repetition repetition?
                                       rator ; already parsed as expression or repetition
@@ -1330,59 +1363,71 @@
 
 (define-for-syntax (build-anonymous-function terms form
                                              #:adjustments [adjustments #f]
-                                             #:argument-static-infoss [argument-static-infoss #f])
-  (define-values (formals converted)
-    (let loop ([terms (syntax->list terms)])
+                                             #:argument-static-infoss [argument-static-infoss '()])
+  (define-values (formals convert-ones)
+    (convert-wildcards
+     (syntax->list terms)
+     (lambda (term)
+       (syntax-parse term
+         [_::_-expr #t]
+         [_ #f]))
+     (lambda (term id)
+       (lambda (static-infos)
+         (relocate+reraw
+          term
+          #`(parsed
+             #:rhombus/expr
+             #,(wrap-static-info* (relocate+reraw term id) static-infos)))))))
+  (define converted
+    (let loop ([convert-ones convert-ones]
+               [static-infoss (extract-added-static-infos argument-static-infoss (length formals))])
       (cond
-        [(null? terms) (values '() null)]
+        [(null? convert-ones)
+         (unless (null? static-infoss)
+           (error "number of wildcards must match number of static infos"))
+         '()]
+        [(procedure? (car convert-ones))
+         (cons ((car convert-ones) (car static-infoss))
+               (loop (cdr convert-ones) (cdr static-infoss)))]
         [else
-         (define t (car terms))
-         (define-values (formals converted) (loop (cdr terms)))
-         (cond
-           [(and (identifier? (car terms))
-                 (free-identifier=? (car terms) #'rhombus-_))
-            (define id (car (generate-temporaries '(arg))))
-            (values (cons id formals)
-                    (cons (relocate+reraw t
-                                          #`(parsed #:rhombus/expr #,(relocate+reraw t id)))
-                          converted))]
-           [else (values formals (cons t converted))])])))
-  (cond
-    [(or adjustments argument-static-infoss)
-     (syntax-parse (map (lambda (f) #`(group #,f)) formals)
-       [(arg::binding ...)
-        (define falses (datum->syntax #f (map (lambda (arg) #'#f) formals)))
-        (define-values (proc arity)
-          (build-function (or adjustments no-adjustments) (or argument-static-infoss '())
-                          'fun
-                          falses formals #'(arg.parsed ...) falses
-                          #'#f #'#f
-                          #'#f #'#f
-                          #f #f
-                          #`(parsed #:rhombus/expr (rhombus-expression #,converted))
-                          form))
-        proc])]
-    [else
-     (relocate+reraw form
-                     #`(lambda #,formals (rhombus-expression #,converted)))]))
+         (cons (car convert-ones)
+               (loop (cdr convert-ones) static-infoss))])))
+  (define arity (arithmetic-shift 1 (length formals)))
+  (define-values (prefix-args wrap-body)
+    (if adjustments
+        (values (treelist->list (entry-point-adjustment-prefix-arguments adjustments))
+                (let ([wrap (entry-point-adjustment-wrap-body adjustments)])
+                  (lambda (body)
+                    (wrap-expression (wrap arity #`(parsed #:rhombus/expr #,body))))))
+        (values '() values)))
+  (define-values (body static-infos)
+    (let ([body (rhombus-local-expand (wrap-body #`(rhombus-expression #,converted)))])
+      (values (discard-static-infos body)
+              (extract-static-infos body))))
+  (define shifted-arity (arithmetic-shift arity (length prefix-args)))
+  (let* ([fun (relocate+reraw
+               form
+               #`(lambda (#,@prefix-args #,@formals)
+                   #,(discard-static-infos body)))]
+         [fun (if (null? static-infos)
+                  fun
+                  (wrap-static-info fun #'#%call-result static-infos))]
+         [fun (wrap-static-info fun #'#%function-arity shifted-arity)])
+    fun))
 
-(define-for-syntax (extract-anonymous-function-as-call rands)
-  (let loop ([rands (syntax->list rands)])
+(define-for-syntax (convert-wildcards stxs convert? convert-one)
+  (let loop ([stxs stxs])
     (cond
-      [(null? rands) (values '() null)]
+      [(null? stxs) (values '() null)]
       [else
-       (define rand (car rands))
-       (define-values (formals converted) (loop (cdr rands)))
-       (syntax-parse rand
-         #:datum-literals (group)
-         #:literals (rhombus-_)
-         [(group rhombus-_)
+       (define stx (car stxs))
+       (define-values (formals converted) (loop (cdr stxs)))
+       (cond
+         [(convert? stx)
           (define id (car (generate-temporaries '(arg))))
-          (values (cons id formals)
-                  (cons (relocate+reraw rand
-                                        #`(group (parsed #:rhombus/expr #,(relocate+reraw rand id))))
-                        converted))]
-         [else (values formals (cons rand converted))])])))
+          (values (cons id formals) (cons (convert-one stx id) converted))]
+         [else
+          (values formals (cons stx converted))])])))
 
 (begin-for-syntax
   (set-parse-function-call! parse-function-call))

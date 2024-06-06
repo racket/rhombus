@@ -48,3 +48,39 @@ check:
   use_static
   "apple" |> (fun (x): x[0])
   ~is "a"[0]
+
+check:
+  use_static
+  "apple" |> (fun | (x): x[0])
+  ~is "a"[0]
+
+check:
+  use_static
+  "a"
+    |> (_ ++ "b")
+    |> (_ ++ "c")
+  ~is "abc"
+
+check:
+  use_static
+  [1, 2, 3]
+    |> List.sort(_, (_ .> _))
+    |> (_.map((_ + 1)))
+    |> (_ ++ [1])
+  ~is [4, 3, 2, 1]
+
+check:
+  ~eval
+  use_static
+  [1, 2, 3]
+    |> List.sort(_, _)
+  ~throws values("wrong number of arguments",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  [1, 2, 3]
+    |> ([0] ++ _ ++ _)
+  ~throws values("wrong number of arguments",
+                 "based on static information")

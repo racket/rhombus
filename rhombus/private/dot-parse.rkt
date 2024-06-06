@@ -22,19 +22,25 @@
            [(bitwise-bit-set? mask n)
             (success-k (n-k #'(p-tag g ...)
                             (lambda (e)
-                              (relocate (respan #`(#,lhs args)) e)))
+                              (relocate+reraw
+                               (respan (datum->syntax #f (list lhs dot field-stx #'args)))
+                               e)))
                        #'new-tail)]
            [else
             (if more-static?
                 (bad (string-append "wrong number of arguments in method call" statically-str))
                 (success-k (no-k (lambda (e)
-                                   (relocate (respan #`(#,lhs #,field-stx)) e)))
+                                   (relocate+reraw
+                                    (respan (datum->syntax #f (list lhs dot field-stx)))
+                                    e)))
                            tail))])]
         [_
          (if more-static?
              (bad "expected parentheses afterward")
              (success-k (no-k (lambda (e)
-                                (relocate (respan #`(#,lhs #,field-stx)) e)))
+                                (relocate+reraw
+                                 (respan (datum->syntax #f (list lhs dot field-stx)))
+                                 e)))
                         tail))]))
 
     (define (nary mask direct-id id)
@@ -42,7 +48,7 @@
            (lambda (args reloc)
              (define-values (proc tail to-anon-function?)
                (parse-function-call direct-id (list lhs) #`(#,dot #,args)
-                                    #:srcloc (reloc #'#false)
+                                    #:srcloc (reloc #'#f)
                                     #:static? more-static?
                                     #:can-anon-function? #t))
              proc)
@@ -55,7 +61,9 @@
              (lambda (mk)
                (success-k (mk lhs
                               (lambda (e)
-                                (relocate (respan #`(#,lhs #,field-stx)) e)))
+                                (relocate+reraw
+                                 (respan (datum->syntax #f (list lhs dot field-stx)))
+                                 e)))
                           tail))])
         (case-lambda
           [(mk) (just-access mk)]
@@ -69,11 +77,15 @@
                  #'assign.name
                  #`(lambda ()
                      #,(mk lhs (lambda (e)
-                                 (relocate (respan #`(#,lhs #,field-stx)) e))))
+                                 (relocate+reraw
+                                  (respan (datum->syntax #f (list lhs dot field-stx)))
+                                  e))))
                  #`(lambda (v)
                      #,(mk-set lhs #'v
                                (lambda (e)
-                                 (relocate (respan #`(#,lhs #,field-stx)) e))))
+                                 (relocate+reraw
+                                  (respan (datum->syntax #f (list lhs dot field-stx)))
+                                  e))))
                  #'value
                  #'assign.tail))
               (success-k assign-expr tail)]
