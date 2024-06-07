@@ -4,7 +4,7 @@
 
 @title(~style: #'toc){Meta and Macros Reference}
 
-@docmodule(~use_sources: lib("rhombus/private/core-meta.rkt"),
+@docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!#{core-meta},
            rhombus/meta)
 
 @docmodule(~lang, ~no_declare, rhombus/and_meta)

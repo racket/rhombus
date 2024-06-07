@@ -2,21 +2,21 @@
 (require "private/bounce.rkt"
          "private/version-case.rkt")
 
-(bounce "private/core-meta.rkt"
-        "private/sequence_meta.rhm")
+(bounce (submod "private/amalgam.rkt" core-meta)
+        (submod "private/amalgam.rkt" core-meta sequence_meta))
 
-(require (for-syntax "private/core-derived.rkt"))
-(provide (for-syntax (all-from-out "private/core-derived.rkt")))
+(require (for-syntax (submod "private/amalgam.rkt" core-derived)))
+(provide (for-syntax (all-from-out (submod "private/amalgam.rkt" core-derived))))
 
-(bounce-meta "private/class-meta.rkt"
-             "private/interface-meta.rkt"
-             "private/veneer-meta.rkt")
+(bounce (submod "private/amalgam.rkt" core-meta class-meta)
+        (submod "private/amalgam.rkt" core-meta interface-meta)
+        (submod "private/amalgam.rkt" core-meta veneer-meta))
 
 ;; re-export `meta` for non-expression spaces,
 ;; otherwise these can get shadowed (in a sense)
 ;; by the `meta` expression export
 (bounce #:only (meta) #:spaces (rhombus/impo rhombus/expo)
-        "private/core.rkt")
+        (submod "private/amalgam.rkt" core))
 
 (meta-if-version-at-least
  "8.13.0.4"

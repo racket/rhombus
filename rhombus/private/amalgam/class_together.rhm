@@ -1,0 +1,47 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+
+use_static
+
+export:
+  only_space namespace:
+    class
+
+namespace class:
+  export together
+
+defn.macro 'together:
+              $defn
+              ...':
+  ~all_stx all_stx
+  let [[id, & _] && ids, ...]:
+    for List (defn: [defn, ...]):
+      match defn
+      | '$((bound_as defn_meta.space: 'class')
+             || (bound_as defn_meta.space: 'interface'))
+           $id $_ ...':
+          [id, Syntax.make_temp_id("ns"), Syntax.make_temp_id("ann")]
+      | ~else:
+          syntax_meta.error("not a class or interface definition",
+                            all_stx,
+                            defn)
+  let [complete, ...]:
+    for values(accum = []) ([id, ns_id, ann_id]: [ids, ...],
+                            defn: [defn, ...]):
+      accum ++ [
+        'namespace $ns_id:
+           export:
+             except_space annot:
+               $id
+             only_space annot:
+               rename:
+                 $id as $ann_id
+           $defn',
+        'import . $ns_id . $id',
+        'annot.delayed_complete $id: $ns_id . $ann_id',
+      ]
+  'annot.delayed_declare $id
+   ...
+   $complete
+   ...'

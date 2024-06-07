@@ -3,9 +3,9 @@
 @title(~style: #'toc){Core Reference}
 
 @docmodule(~lang,
-           ~use_sources: lib("rhombus/private/core.rkt")
-                         lib("rhombus/private/core-macro.rkt")
-                         lib("rhombus/private/core-meta.rkt"),
+           ~use_sources: lib("rhombus/private/amalgam.rkt")!core
+                         lib("rhombus/private/amalgam.rkt")!#{core-macro}
+                         lib("rhombus/private/amalgam.rkt")!#{core-meta},
            rhombus)
 
 @local_table_of_contents()

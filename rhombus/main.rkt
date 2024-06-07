@@ -2,9 +2,9 @@
 (require "private/bounce.rkt"
          "private/version-case.rkt")
 
-(bounce "private/core.rkt"
-        "private/core-macro.rkt"
-        "private/core-derived.rkt")
+(bounce (submod "private/amalgam.rkt" core)
+        (submod "private/amalgam.rkt" core-macro)
+        (submod "private/amalgam.rkt" core-derived))
 
 (meta-if-version-at-least
  "8.13.0.4"

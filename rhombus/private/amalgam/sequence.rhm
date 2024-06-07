@@ -1,0 +1,55 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt")
+
+use_static
+
+export:
+  Sequence
+
+annot.macro 'Sequence':
+  annot_meta.pack_predicate('base.#{sequence?}',
+                            '(($statinfo_meta.sequence_constructor_key, #true))')
+
+namespace Sequence:
+  export:
+    make
+    instantiable
+    instantiate
+
+fun make(~initial_position: init_pos,
+         ~continue_at_position: continue_at_pos = #false,
+         ~continue_at_value: continue_at_val = #false,
+         ~early_position_to_next: early_next_pos = #false,
+         ~position_to_element: pos_to_element,
+         ~continue_after_position_and_value: continue_at_pos_val = #false,
+         ~position_to_next: next_pos) :~ Sequence:
+  base.#{make-do-sequence}(
+    fun ():
+      values(pos_to_element,
+             early_next_pos,
+             next_pos,
+             init_pos,
+             continue_at_pos,
+             continue_at_val,
+             continue_at_pos_val)
+  )
+
+fun instantiable(thunk) :~ Sequence:
+  base.#{make-do-sequence}(thunk)
+
+fun instantiate(~initial_position: init_pos,
+                ~continue_at_position: continue_at_pos = #false,
+                ~continue_at_value: continue_at_val = #false,
+                ~early_position_to_next: early_next_pos = #false,
+                ~position_to_element: pos_to_element,
+                ~continue_after_position_and_value: continue_at_pos_val = #false,
+                ~position_to_next: next_pos):
+  values(pos_to_element,
+         early_next_pos,
+         next_pos,
+         init_pos,
+         continue_at_pos,
+         continue_at_val,
+         continue_at_pos_val)

@@ -7,8 +7,6 @@
                     [doc-typeset-rhombusblock rb])
          "typeset-help.rkt"
          rhombus/private/name-root
-         (only-in rhombus/private/name-root-space
-                  in-name-root-space)
          (submod "rhombus-spacer.rhm" for_doc) ; for spacer bindings
          (only-in scribble/manual
                   hspace)

@@ -1,7 +1,7 @@
 #lang racket/base
 (require "private/bounce.rkt"
-         (only-in "private/parse.rkt" rhombus-definition)
-         (only-in "private/dynamic-static.rkt" use_static))
+         (only-in (submod "private/amalgam.rkt" parse) rhombus-definition)
+         (only-in (submod "private/amalgam.rkt" dynamic-static) use_static))
 
 (rhombus-definition (group use_static)) ;; defines `#%dynamism`
 

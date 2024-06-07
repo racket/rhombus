@@ -2,9 +2,8 @@
 (require (for-syntax racket/base
                      shrubbery/property
                      racket/syntax-srcloc)
-         (only-in rhombus/private/name-root-ref
-                  portal-syntax->lookup)
-         (only-in rhombus/private/name-root-space
+         (only-in rhombus/private/name-root
+                  portal-syntax->lookup
                   in-name-root-space))
 
 (provide (for-syntax

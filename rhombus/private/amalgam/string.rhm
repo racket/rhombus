@@ -1,0 +1,20 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt").#{string->immutable-string}
+
+use_static
+
+export:
+  ReadableString
+
+namespace ReadableString:
+  export:
+    to_string
+
+  fun to_string(s :: ReadableString) :~ String:
+    #{string->immutable-string}(s)
+
+  annot.macro 'to_string':
+    'converting(fun (s :: ReadableString) :~ String:
+                 #{string->immutable-string}(s))'

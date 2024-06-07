@@ -1,4 +1,10 @@
 #lang racket/base
-(require "private/runtime-config.rkt")
+(require (submod "private/amalgam.rkt" runtime-config)
+         "private/version-case.rkt")
+
+(meta-if-version-at-least
+ "8.13.0.4"
+ (#%declare #:flatten-requires)
+ (void))
 
 (install-runtime-config!)
