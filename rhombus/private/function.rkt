@@ -23,7 +23,8 @@
          "realm.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
-         "class-primitive.rkt")
+         "class-primitive.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -51,14 +52,22 @@
   #:fields ()
   #:namespace-fields
   (of_arity
-   pass
-   )
+   pass)
   #:properties
   ()
   #:methods
   (map
-   for_each
-   ))
+   for_each))
+
+(set-primitive-who! 'application '|function call|)
+
+(set-primitive-contract-combinator!
+ 'procedure-arity-includes/c
+ (lambda (form)
+   (and (pair? (cdr form))
+        (exact-nonnegative-integer? (cadr form))
+        (null? (cddr form))
+        (string-append "Function.of_arity(" (number->string (cadr form)) ")"))))
 
 (define (check-proc who proc)
   (unless (procedure? proc)

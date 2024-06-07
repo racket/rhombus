@@ -1,5 +1,6 @@
 #lang racket/base
 (provide set-primitive-contract!
+         set-primitive-contract-combinator!
          get-primitive-contract
          set-primitive-who!
          get-primitive-who)
@@ -29,13 +30,3 @@
 
 (define (get-primitive-who who/rkt)
   (hash-ref primitive-who-table who/rkt #f))
-
-(set-primitive-contract-combinator!
- 'procedure-arity-includes/c
- (lambda (form)
-   (and (pair? (cdr form))
-        (exact-nonnegative-integer? (cadr form))
-        (null? (cddr form))
-        (string-append "Function.of_arity(" (number->string (cadr form)) ")"))))
-
-(set-primitive-who! 'application '|function call|)

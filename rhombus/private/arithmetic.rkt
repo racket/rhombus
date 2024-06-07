@@ -75,7 +75,7 @@
 (set-primitive-contract! 'real? "Real")
 (set-primitive-contract! 'integer? "Integral")
 (set-primitive-contract! 'exact-integer? "Int")
-(set-primitive-contract! 'exact-nonngative-integer? "NonnegInt")
+(set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt")
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
