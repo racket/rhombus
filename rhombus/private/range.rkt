@@ -443,7 +443,7 @@
 (define (range-from-to->list r)
   (define start (range-from-to-start r))
   (define end (range-from-to-end r))
-  (for/treelist ([i (Range.to_sequence/optimize (range-from-to start end))])
+  (for/treelist ([i (in-range start end)])
     i))
 
 (define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" start end
@@ -460,7 +460,7 @@
 (define (range-from-to-inclusive->list r)
   (define start (range-from-to-inclusive-start r))
   (define end (range-from-to-inclusive-end r))
-  (for/treelist ([i (Range.to_sequence/optimize (range-from-to-inclusive start end))])
+  (for/treelist ([i (in-inclusive-range start end)])
     i))
 
 (define-range sequence-range range-from Range.from ".." start #f
@@ -593,21 +593,21 @@
 (define (range-implode start in-start? end in-end?)
   (if (eqv? start -inf.0)
       (if (eqv? end +inf.0)
-          (range-full)
+          (unsafe-range-full)
           (if in-end?
-              (range-to-inclusive end)
-              (range-to end)))
+              (unsafe-range-to-inclusive end)
+              (unsafe-range-to end)))
       (if (eqv? end +inf.0)
           (if in-start?
-              (range-from start)
-              (range-from-exclusive start))
+              (unsafe-range-from start)
+              (unsafe-range-from-exclusive start))
           (if in-start?
               (if in-end?
-                  (range-from-to-inclusive start end)
-                  (range-from-to start end))
+                  (unsafe-range-from-to-inclusive start end)
+                  (unsafe-range-from-to start end))
               (if in-end?
-                  (range-from-exclusive-to-inclusive start end)
-                  (range-from-exclusive-to start end))))))
+                  (unsafe-range-from-exclusive-to-inclusive start end)
+                  (unsafe-range-from-exclusive-to start end))))))
 
 ;; `lower?`: `in-start?` or `(not in-end?)`
 (define (bound<? point lower?
@@ -770,7 +770,8 @@
 
 (define/method Range.intersect
   (case-lambda
-    [() (range-full)]
+    [()
+     (unsafe-range-full)]
     [(r)
      (check-range who r)
      r]
@@ -793,13 +794,13 @@
     (syntax-parse stx
       [[(id) (_ inner)]
        (syntax-parse (unwrap-static-infos #'inner)
-         #:literals (range-from-to range-from-to-inclusive range-from)
-         [(range-from-to start-expr end-expr)
-          (range-sequence/optimize 'Range.from_to #'id #'start-expr #'end-expr 'exclusive)]
-         [(range-from-to-inclusive start-expr end-expr)
-          (range-sequence/optimize 'Range.from_to_inclusive #'id #'start-expr #'end-expr 'inclusive)]
-         [(range-from start-expr)
-          (range-sequence/optimize 'Range.from #'id #'start-expr #f 'infinite)]
+         #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
+         [(range-from-to/who 'who start-expr end-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'exclusive)]
+         [(range-from-to-inclusive/who 'who start-expr end-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'inclusive)]
+         [(range-from/who 'who start-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #f 'infinite)]
          [_ #f])]
       [_ #f])))
 
@@ -819,17 +820,17 @@
       [[(id) (_ inner step-expr)]
        (define step-who 'Range.step_by)
        (syntax-parse (unwrap-static-infos #'inner)
-         #:literals (range-from-to range-from-to-inclusive range-from)
-         [(range-from-to start-expr end-expr)
-          (range-sequence/optimize 'Range.from_to #'id #'start-expr #'end-expr 'exclusive
+         #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
+         [(range-from-to/who 'who start-expr end-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'exclusive
                                    #:step-who step-who
                                    #:step-expr #'step-expr)]
-         [(range-from-to-inclusive start-expr end-expr)
-          (range-sequence/optimize 'Range.from_to_inclusive #'id #'start-expr #'end-expr 'inclusive
+         [(range-from-to-inclusive/who 'who start-expr end-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'inclusive
                                    #:step-who step-who
                                    #:step-expr #'step-expr)]
-         [(range-from start-expr)
-          (range-sequence/optimize 'Range.from #'id #'start-expr #f 'infinite
+         [(range-from/who 'who start-expr)
+          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #f 'infinite
                                    #:step-who step-who
                                    #:step-expr #'step-expr)]
          [_ #f])]

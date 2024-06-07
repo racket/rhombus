@@ -788,7 +788,7 @@ block:
     for List (i: "oops"..5):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -796,7 +796,7 @@ block:
     for List (i: 0.."oops"):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -804,7 +804,7 @@ block:
     for List (i: 5..0):
       i
     ~throws values(
-      "starting point must be less than or equal to ending point",
+      "..: starting point must be less than or equal to ending point",
       "starting point: 5",
       "ending point: 0",
     )
@@ -812,7 +812,7 @@ block:
     for List (i: "oops"..=5):
       i
     ~throws values(
-      "contract violation",
+      "..=: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -820,7 +820,7 @@ block:
     for List (i: 0..="oops"):
       i
     ~throws values(
-      "contract violation",
+      "..=: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -828,7 +828,7 @@ block:
     for List (i: 5..=0):
       i
     ~throws values(
-      "starting point must be less than or equal to ending point",
+      "..=: starting point must be less than or equal to ending point",
       "starting point: 5",
       "ending point: 0",
     )
@@ -836,7 +836,7 @@ block:
     for List (i: "oops"..):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -846,7 +846,7 @@ block:
     for List (i: ("oops"..5).step_by(2)):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -854,7 +854,7 @@ block:
     for List (i: (0.."oops").step_by(2)):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -862,7 +862,7 @@ block:
     for List (i: (5..0).step_by(2)):
       i
     ~throws values(
-      "starting point must be less than or equal to ending point",
+      "..: starting point must be less than or equal to ending point",
       "starting point: 5",
       "ending point: 0",
     )
@@ -878,7 +878,7 @@ block:
     for List (i: ("oops"..=5).step_by(2)):
       i
     ~throws values(
-      "contract violation",
+      "..=: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -886,7 +886,7 @@ block:
     for List (i: (0..="oops").step_by(2)):
       i
     ~throws values(
-      "contract violation",
+      "..=: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
@@ -894,7 +894,7 @@ block:
     for List (i: (5..=0).step_by(2)):
       i
     ~throws values(
-      "starting point must be less than or equal to ending point",
+      "..=: starting point must be less than or equal to ending point",
       "starting point: 5",
       "ending point: 0",
     )
@@ -910,7 +910,7 @@ block:
     for List (i: ("oops"..).step_by(2)):
       i
     ~throws values(
-      "contract violation",
+      "..: contract violation",
       "expected: Int",
       "given: \"oops\"",
     )
