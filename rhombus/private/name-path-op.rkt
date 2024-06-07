@@ -1,5 +1,3 @@
 #lang racket/base
-
-(provide name-path-op)
-
-(define name-path-op '|.|)
+(require "bounce.rkt")
+(bounce "amalgam/name-path-op.rkt")  ; ok to duplicate

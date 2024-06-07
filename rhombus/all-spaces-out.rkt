@@ -1,4 +1,4 @@
 #lang racket/base
-(require "private/all-spaces-out.rkt")
+(require (submod "private/amalgam.rkt" name-root))
 
 (provide all-spaces-out)

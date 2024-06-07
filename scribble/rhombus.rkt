@@ -3,12 +3,10 @@
                      syntax/parse/pre)
          rhombus/all-spaces-out
          rhombus/private/parse
-         rhombus/private/forwarding-sequence
          (prefix-in doc: scribble/doclang2)
          scribble/private/manual-defaults
          rhombus/private/bounce
-         "private/util.rhm"
-         (submod rhombus/private/core module-begin))
+         "private/util.rhm")
 
 (provide (rename-out [module-begin #%module-begin]))
 

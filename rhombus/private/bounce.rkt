@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     syntax/parse/pre))
+(require (for-syntax racket/base))
 
 (provide bounce
          bounce-meta)

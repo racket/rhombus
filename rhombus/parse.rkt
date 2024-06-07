@@ -1,5 +1,5 @@
 #lang racket/base
 
-(require "private/parse.rkt")
+(require (submod "private/amalgam.rkt" parse))
 
-(provide (all-from-out "private/parse.rkt"))
+(provide (all-from-out (submod "private/amalgam.rkt" parse)))

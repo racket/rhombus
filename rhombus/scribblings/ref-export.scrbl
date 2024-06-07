@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open
     "nonterminal.rhm" open
-    lib("rhombus/private/module-path.rkt")!#{for-meta}.modpath)
+    lib("rhombus/private/module-path-meta.rkt").modpath)
 
 @title{Export}
 

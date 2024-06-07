@@ -2,7 +2,7 @@
 import:
   lib("racket/runtime-path.rkt").#{define-runtime-path}
   meta:
-    "private/parsed-relocate.rkt".#{parsed-relocate*}
+    "private/srcloc.rkt".#{parsed-relocate*}
 
 export:
   rename:

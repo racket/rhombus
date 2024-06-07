@@ -3,8 +3,7 @@
                      racket/keyword
                      racket/symbol
                      syntax/parse/pre
-                     enforest/syntax-local
-                     enforest/hier-name-parse
+                     rhombus/private/enforest
                      shrubbery/property
                      rhombus/private/name-path-op
                      "add-space.rkt"
@@ -19,9 +18,8 @@
          "typeset-key-help.rkt"
          "defining-element.rkt"
          shrubbery/print
-         (only-in rhombus/private/name-root-ref
-                  name-root-ref)
-         (only-in rhombus/private/name-root-space
+         (only-in rhombus/private/name-root
+                  name-root-ref
                   in-name-root-space
                   name-root-quote)
          (only-in "rhombus.rhm"

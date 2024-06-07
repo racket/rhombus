@@ -3,7 +3,6 @@
 import:
   meta:
     lib("racket/base.rkt")
-  lib("rhombus/private/space.rkt").#{space-name}
 
 export:
   typeset

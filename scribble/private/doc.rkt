@@ -1,9 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/transformer
-                     enforest/property
-                     enforest/proc-name
+                     rhombus/private/enforest
                      rhombus/private/introducer))
 
 (provide define-doc-syntax)

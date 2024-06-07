@@ -15,7 +15,8 @@
     "gui-lib"
     "pict-lib"
     "pict-balloon2"
-    "slideshow-lib"))
+    "slideshow-lib"
+    "compiler-lib"))
 
 (define build-deps
   '("at-exp-lib"
