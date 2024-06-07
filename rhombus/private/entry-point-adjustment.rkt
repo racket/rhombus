@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base)
-         "treelist.rkt"
+(require "treelist.rkt"
          "to-list.rkt"
          "dot-property.rkt"
          "realm.rkt")
@@ -21,7 +20,7 @@
          #hasheq())
   #:guard (lambda (args-in wrap is-method? info)
             (define who 'entry_point_meta.Adjustment)
-            (define args (to-treelist who args-in))
+            (define args (to-treelist #f args-in))
             (unless (and args (for/and ([e (in-treelist args)]) (identifier? e)))
               (raise-argument-error* who rhombus-realm "Listable.to_list && List.of(Identifier)" args-in))
             (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))

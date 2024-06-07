@@ -1,12 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         "treelist.rkt"
-         "to-list.rkt"
          "provide.rkt"
          "entry-point-adjustment.rkt"
          "class-primitive.rkt"
-         "dot-property.rkt"
-         "realm.rkt"
          "function-arity-key.rkt"
          "index-result-key.rkt"
          (submod "list.rkt" for-compound-repetition)
@@ -18,12 +14,6 @@
                       rhombus/annot)
                      entry_point_meta.Adjustment)
          (for-syntax get-entry-point-adjustment-static-infos))
-
-(module+ for-struct
-  (provide (struct-out entry-point-adjustment)
-           no-adjustments)
-  (define no-adjustments
-    (entry-point-adjustment '() (lambda (arity stx) stx) #f)))
 
 (define-primitive-class entry_point_meta.Adjustment entry-point-adjustment
   #:existing
