@@ -1087,7 +1087,7 @@
                (let* ([a (if (syntax? a) (syntax->datum a) a)])
                  (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind)))))
          (define num-rands (length rands))
-         (define arg-formss (for/list ([kw kws]
+         (define arg-formss (for/list ([kw (in-list kws)]
                                        [arg (in-list args)])
                               (if (syntax-e kw)
                                   (list kw arg)

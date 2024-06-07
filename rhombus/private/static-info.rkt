@@ -354,8 +354,8 @@
      (syntax-parse bs
        [(#:at_arities (b-mask b-results) ...)
         (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
-            #`(#:at_arities #,(for/list ([a-results (syntax->list #'(a-results ...))]
-                                         [b-results (syntax->list #'(b-results ...))])
+            #`(#:at_arities #,(for/list ([a-results (in-list (syntax->list #'(a-results ...)))]
+                                         [b-results (in-list (syntax->list #'(b-results ...)))])
                                 (static-infos-union a-results b-results)))
             as)]
        [_
@@ -373,16 +373,16 @@
      (syntax-parse bs
        [(#:at_arities (b-mask b-results) ...)
         (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
-            #`(#:at_arities #,(for/list ([a-results (syntax->list #'(a-results ...))]
-                                         [b-results (syntax->list #'(b-results ...))])
+            #`(#:at_arities #,(for/list ([a-results (in-list (syntax->list #'(a-results ...)))]
+                                         [b-results (in-list (syntax->list #'(b-results ...)))])
                                 (static-infos-intersect a-results b-results)))
-            #false)]
+            #f)]
        [_
-        #false])]
+        #f])]
     [_
      (syntax-parse bs
        [(#:at_arities (b-mask b-results) ...)
-        #false]
+        #f]
        [_ (static-infos-intersect as bs)])]))
 
 (define-for-syntax (static-infos-remove as key)

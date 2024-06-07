@@ -105,7 +105,7 @@
       (define super-vtable (syntax-e (objects-desc-method-vtable super)))
       (define private? (hash-ref private-interfaces super #f))
       (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht] [from-ht from-ht])
-                ([shape (objects-desc-method-shapes super)]
+                ([shape (in-vector (objects-desc-method-shapes super))]
                  [super-i (in-naturals)])
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))

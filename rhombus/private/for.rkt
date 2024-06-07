@@ -307,14 +307,16 @@
      (syntax-parse state-stx
        [[finish rev-clauses rev-bodys matcher binder stx-params]
         #`[finish
-           ([(tmp-id ...) #,(cond
-                              [(identifier? seq-ctr)
-                               (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
-                                   (unwrap-static-infos
-                                    (rhombus-local-expand
-                                     #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs)))))))
-                                   #`(#,seq-ctr rhs))]
-                              [else (unwrap-static-infos #'rhs)])]
+           ([(tmp-id ...) #,(relocate ; this helps debugging info
+                             rhs-blk-stx
+                             (cond
+                               [(identifier? seq-ctr)
+                                (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
+                                    (unwrap-static-infos
+                                     (rhombus-local-expand
+                                      #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs)))))))
+                                    #`(#,seq-ctr rhs))]
+                               [else (unwrap-static-infos #'rhs)]))]
             . rev-clauses)
            ()
            (begin
@@ -367,7 +369,9 @@
         ;; since `for` uses `local-expand` to recognize optimized patterns,
         ;; and since `with-syntax-parameters` also uses `local-expand-expression`,
         ;; this `with-syntax-parameters` wrapper doesn't interfere with optimization
-        #`[bind (with-syntax-parameters #,stx-params rhs)]])]))
+        ;; also, assign source location to help debugging info
+        #`[bind #,(quasisyntax/loc #'rhs
+                    (with-syntax-parameters #,stx-params rhs))]])]))
 
 ;; ----------------------------------------
 

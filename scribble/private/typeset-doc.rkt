@@ -165,9 +165,9 @@
                                         #:result (let ([key-rev-strsss (for/list ([rev-keys (in-list (reverse rev-keyss))])
                                                                         (for/list ([key (in-list (reverse rev-keys))])
                                                                           (hash-ref seen key '())))])
-                                                   (for/list ([rev-mk-as-defs (reverse rev-mk-as-defss)]
+                                                   (for/list ([rev-mk-as-defs (in-list (reverse rev-mk-as-defss))]
                                                               [key-rev-strss (in-list key-rev-strsss)])
-                                                     (for/list ([mk-as-def (reverse rev-mk-as-defs)]
+                                                     (for/list ([mk-as-def (in-list (reverse rev-mk-as-defs))]
                                                                 [key-rev-strs (in-list key-rev-strss)])
                                                        (mk-as-def key-rev-strs)))))
                  ([def-names (in-list def-namess)]
