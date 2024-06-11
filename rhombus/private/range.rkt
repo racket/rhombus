@@ -495,20 +495,10 @@
   #f
   #f)
 
-(struct range-sequence (start inc cont?)
-  #:authentic
-  #:sealed
-  #:property prop:sequence (lambda (r)
-                             (make-do-sequence
-                              (lambda ()
-                                (values
-                                 values
-                                 #f
-                                 (range-sequence-inc r)
-                                 (range-sequence-start r)
-                                 (range-sequence-cont? r)
-                                 #f
-                                 #f)))))
+(define (range-sequence start inc cont?)
+  (make-do-sequence
+   (lambda ()
+     (values values #f inc start cont? #f #f))))
 
 (define (check-range who r)
   (unless (range? r)
