@@ -83,6 +83,11 @@ when the ending point is not @rhombus(#inf), the range is
  @rhombus(Range.from, ~expr), @rhombus(Range.to, ~expr), and
  @rhombus(Range.full, ~expr), respectively.
 
+ When @rhombus(start_expr .. end_expr) or @rhombus(start_expr ..) is
+ used in an @rhombus(each, ~for_clause) clause of @rhombus(for), the
+ optimization is more aggressive in that no intermediate sequence is
+ created.
+
 }
 
 @doc(
@@ -99,6 +104,10 @@ when the ending point is not @rhombus(#inf), the range is
 
  The same as @rhombus(Range.from_to_inclusive, ~expr) and
  @rhombus(Range.to_inclusive, ~expr), respectively.
+
+ When @rhombus(start_expr ..= end_expr) is used in an
+ @rhombus(each, ~for_clause) clause of @rhombus(for), the optimization
+ is more aggressive in that no intermediate sequence is created.
 
 }
 
@@ -450,11 +459,9 @@ when the ending point is not @rhombus(#inf), the range is
  Returns a @tech{sequence} of integers in @rhombus(rge) in order,
  stepping by the given @rhombus(step) size.
 
- When invoked as
- @rhombus((#,(@rhombus(start, ~var)) .. #,(@rhombus(end, ~var))).step_by(step)),
- @rhombus((#,(@rhombus(start, ~var)) ..= #,(@rhombus(end, ~var))).step_by(step)),
- or @rhombus((#,(@rhombus(start, ~var)) ..).step_by(step))
- in an @rhombus(each, ~for_clause) clause of @rhombus(for), the
- sequence is optimized.
+ When invoked as @rhombus(rge.step_by(step)) in an
+ @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
+ optimized, in addition to the optimization in @rhombus(..) or
+ @rhombus(..=).
 
 }

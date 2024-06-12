@@ -778,20 +778,37 @@
        #:break (not r)
        (range-intersect r other-r))]))
 
+(define-for-syntax (sequence-range-normalize/inline range-expr)
+  (syntax-parse range-expr
+    #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
+    [(range-from-to/who 'who start-expr end-expr)
+     (values (syntax-e #'who)
+             (unwrap-static-infos #'start-expr) (unwrap-static-infos #'end-expr)
+             'exclusive)]
+    [(range-from-to-inclusive/who 'who start-expr end-expr)
+     (values (syntax-e #'who)
+             (unwrap-static-infos #'start-expr) (unwrap-static-infos #'end-expr)
+             'inclusive)]
+    [(range-from/who 'who start-expr)
+     (values (syntax-e #'who)
+             (unwrap-static-infos #'start-expr) #f
+             'infinite)]
+    [_
+     (values #f
+             #f #f
+             #f)]))
+
 (define-sequence-syntax Range.to_sequence/optimize
   (lambda () #'Range.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ inner)]
-       (syntax-parse (unwrap-static-infos #'inner)
-         #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
-         [(range-from-to/who 'who start-expr end-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'exclusive)]
-         [(range-from-to-inclusive/who 'who start-expr end-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'inclusive)]
-         [(range-from/who 'who start-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #f 'infinite)]
-         [_ #f])]
+      [[(id) (_ range-expr/statinfo)]
+       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
+       (define-values (who start-expr end-expr type)
+         (sequence-range-normalize/inline range-expr))
+       (if who
+           (range-sequence/inline #'id who start-expr end-expr type)
+           (range-sequence/optimize #'id range-expr))]
       [_ #f])))
 
 (define/method (Range.to_sequence r)
@@ -807,23 +824,19 @@
   (lambda () #'Range.step_by)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ inner step-expr)]
+      [[(id) (_ range-expr/statinfo step-expr/statinfo)]
+       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define step-who 'Range.step_by)
-       (syntax-parse (unwrap-static-infos #'inner)
-         #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
-         [(range-from-to/who 'who start-expr end-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'exclusive
-                                   #:step-who step-who
-                                   #:step-expr #'step-expr)]
-         [(range-from-to-inclusive/who 'who start-expr end-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #'end-expr 'inclusive
-                                   #:step-who step-who
-                                   #:step-expr #'step-expr)]
-         [(range-from/who 'who start-expr)
-          (range-sequence/optimize (syntax-e #'who) #'id #'start-expr #f 'infinite
-                                   #:step-who step-who
-                                   #:step-expr #'step-expr)]
-         [_ #f])]
+       (define step-expr (unwrap-static-infos #'step-expr/statinfo))
+       (define-values (who start-expr end-expr type)
+         (sequence-range-normalize/inline range-expr))
+       (if who
+           (range-sequence/inline #'id who start-expr end-expr type
+                                  #:step-who step-who
+                                  #:step-expr step-expr)
+           (range-sequence/optimize #'id range-expr
+                                    #:step-who step-who
+                                    #:step-expr step-expr))]
       [_ #f])))
 
 (define-static-info-syntax Range.step_by/optimize
@@ -840,12 +853,9 @@
     [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r step)]
     [else (range-from->sequence r step)]))
 
-(define-for-syntax (range-sequence/optimize who id start-expr-in end-expr-in type
-                                            #:step-who [step-who #f]
-                                            #:step-expr [step-expr-in #f])
-  (define (maybe-unwrap-static-infos maybe-stx)
-    (and maybe-stx
-         (unwrap-static-infos maybe-stx)))
+(define-for-syntax (range-sequence/inline id who start-expr end-expr type
+                                          #:step-who [step-who #f]
+                                          #:step-expr [step-expr #f])
   (define (maybe-unwrap-fixnum stx)
     (syntax-parse stx
       #:literals (quote)
@@ -854,9 +864,6 @@
        (and (fixnum-for-every-system? datum)
             datum)]
       [_ #f]))
-  (define start-expr (maybe-unwrap-static-infos start-expr-in))
-  (define end-expr (maybe-unwrap-static-infos end-expr-in))
-  (define step-expr (maybe-unwrap-static-infos step-expr-in))
   (define use-unsafe? (and (maybe-unwrap-fixnum start-expr)
                            (let* ([end (and end-expr
                                             (maybe-unwrap-fixnum end-expr))]
@@ -902,7 +909,46 @@
              #t
              ((#,(if use-unsafe? #'unsafe-fx+ #'+)
                pos
-               #,(if step-expr #'step #'1))))])
+               #,(if step-expr #'step #''1))))])
+
+(define (sequence-range-normalize r)
+  (cond
+    [(range-from-to? r)
+     (values (range-from-to-start r)
+             (range-from-to-end r)
+             <)]
+    [(range-from-to-inclusive? r)
+     (values (range-from-to-inclusive-start r)
+             (range-from-to-inclusive-end r)
+             <=)]
+    [else
+     (values (range-from-start r)
+             #f
+             #f)]))
+
+(define-for-syntax (range-sequence/optimize id range-expr
+                                            #:step-who [step-who #f]
+                                            #:step-expr [step-expr #f])
+  #`[(#,id) (:do-in
+             ([(start end <?) (let ([range #,range-expr])
+                                (unless (variable-reference-from-unsafe? (#%variable-reference))
+                                  (check-sequence-range 'Range.to_sequence range))
+                                (sequence-range-normalize range))]
+              #,@(if step-expr
+                     (list #`[(step) (let ([step #,step-expr])
+                                       (unless (variable-reference-from-unsafe? (#%variable-reference))
+                                         (check-pos-int '#,step-who step))
+                                       step)])
+                     '()))
+             (void)
+             ([pos start])
+             (if end (pos . <? . end) #t)
+             ([(#,id) pos])
+             #t
+             #t
+             ((+
+               pos
+               #,(if step-expr #'step #''1))))])
 
 (define/method (Range.to_list r)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
