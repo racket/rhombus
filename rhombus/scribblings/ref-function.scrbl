@@ -123,6 +123,7 @@ normally bound to implement function calls.
   ~nonterminal:
     arg_expr: block expr
     fun_expr: block expr
+  expr.macro '$arg_expr |> $immediate_callee'
   expr.macro '$arg_expr |> $fun_expr'
 ){
 
@@ -130,11 +131,18 @@ normally bound to implement function calls.
  its first argument. That is, @rhombus(arg_expr |> fun_expr) is
  equivalent to @rhombus(fun_expr(arg_expr)), except that
  @rhombus(arg_expr) is evaluated before @rhombus(fun_expr), following
- the textual order. The conversion is performed syntactically so that
- static checking and propoagation of static information may apply, but
+ the textual order.
+ @margin_note{This form is known as a ``pipeline.'' Accordingly,
+ @rhombus(|>) is the ``pipe-forward'' operator.}
+ The conversion is performed syntactically so that
+ static checking and propagation of static information may apply, but
  @rhombus(arg_expr) and @rhombus(fun_expr) are parsed as expressions before the
  conversion. The @rhombus(|>) operator declares weaker precedence than
  all other operators.
+
+ Alternatively, the right-hand side can be an @tech{immediate callee},
+ in which case the static information for @rhombus(arg_expr) is
+ supplied to it.
 
  A @rhombus(_) function shorthand can be especially useful with
  @rhombus(|>).
@@ -431,7 +439,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
   entry_point.macro 'fun $maybe_res_annot
                      | $case_maybe_kw
                      | ...'
-  
+
   immediate_callee.macro 'fun ($bind, ...):
                             $body
                             ...'

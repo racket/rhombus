@@ -17,9 +17,6 @@ export:
   rhombusblock_etc
 
 meta:
-  fun | andmap(proc, []): #true
-      | andmap(proc, [a, a1, ...]): proc(a) && andmap(proc, [a1, ...])
-
   fun head_context(stxs):
     match stxs
     | '$head $_ ...':
@@ -55,13 +52,15 @@ meta:
 
   fun nested([g, ...], builder, builder_stx, stxs):
     let [new_g, ...] = [escape_group(g), ...]
-    if andmap(is_literal_group, [new_g, ...])
+    if (for all (new_g: [new_g, ...]):
+          is_literal_group(new_g))
     | literal_term(builder([extract_literal(new_g), ...], head_context(stxs)))
     | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
 
   fun nested_alts([b, ...], stxs):
     let [new_b, ...] = [escape_term(b), ...]
-    if andmap(is_literal_term, [new_b, ...])
+    if (for all (new_b: [new_b, ...]):
+          is_literal_term(new_b))
     | literal_term(alts_syntax([extract_literal(new_b), ...], head_context(stxs)))
     | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
 
@@ -126,39 +125,40 @@ expr.macro
     '#{typeset-rhombus}(~space: #'$sp,
                         $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
 | 'rhombus ($forms, $(kw_stx :: Keyword))':
-    let kw = Syntax.unwrap(kw_stx)
-    cond
-    | (kw === #'~var
-         || kw === #'~datum
-         || kw === #'~value
-         || kw === #'~result):
-        '#{typeset-rhombus}(~space: #'$kw, $(literal_group(forms)))'
-    | (kw === #'~expr
-         || kw === #'~defn
-         || kw === #'~decl
-         || kw === #'~bind
-         || kw === #'~impo
-         || kw === #'~expo
-         || kw === #'~modpath
-         || kw === #'~annot
-         || kw === #'~repet
-         || kw === #'~stxclass
-         || kw === #'~reducer
-         || kw === #'~class
-         || kw === #'~space
-         || kw === #'~for_clause
-         || kw === #'~class_clause
-         || kw === #'~interface_clause
-         || kw === #'~veneer_clause
-         || kw === #'~entry_point
-         || kw === #'~unquote_bind
-         || kw === #'~syntax_class_clause
-         || kw === #'~pattern_clause
-         || kw === #'~space_clause
-         || kw === #'~space_meta_clause
-         || kw === #'~key_comp):
+    let kw = kw_stx.unwrap()
+    match kw
+    | (#'~var
+         || #'~datum
+         || #'~value
+         || #'~result):
+        '#{typeset-rhombus}(~space: #'$kw_stx, $(literal_group(forms)))'
+    | (#'~expr
+         || #'~defn
+         || #'~decl
+         || #'~bind
+         || #'~impo
+         || #'~expo
+         || #'~modpath
+         || #'~annot
+         || #'~repet
+         || #'~stxclass
+         || #'~reducer
+         || #'~class
+         || #'~space
+         || #'~for_clause
+         || #'~class_clause
+         || #'~interface_clause
+         || #'~veneer_clause
+         || #'~entry_point
+         || #'~unquote_bind
+         || #'~syntax_class_clause
+         || #'~pattern_clause
+         || #'~space_clause
+         || #'~space_meta_clause
+         || #'~key_comp
+         || #'~immediate_callee):
         let sp = #{full-space-names}(kw)
-        '#{typeset-rhombus}(~space: #'$kw, $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
+        '#{typeset-rhombus}(~space: #'$kw_stx, $(escape_group(spacer.adjust_group(forms, sp, '#,'))))'
     | ~else:
         syntax_meta.error("invalid space", kw_stx)
 

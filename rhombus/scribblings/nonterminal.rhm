@@ -8,6 +8,7 @@ export:
   expr
   repet
   entry_point
+  immediate_callee
   bind
   annot
   reducer
@@ -30,6 +31,7 @@ manual.nonterminal:
   expr: block
   repet: block
   entry_point: block
+  immediate_callee: block
   bind: def ~defn
   annot: ::
   reducer: for

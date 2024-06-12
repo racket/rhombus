@@ -79,6 +79,21 @@
 
 @doc(
   ~nonterminal_key: block
+  grammar immediate_callee
+){
+
+ In syntax descriptions, @rhombus(immediate_callee) stands for an
+ @tech{immediate callee}, which is syntactically an immediate
+ function. The @rhombus(fun, ~immediate_callee) expression form also
+ works as an immediate-callee form, as well as the
+ @rhombus(#%parens, ~immediate_callee) form when used with
+ @rhombus(_).
+
+}
+
+
+@doc(
+  ~nonterminal_key: block
   grammar defn
 ){
 
