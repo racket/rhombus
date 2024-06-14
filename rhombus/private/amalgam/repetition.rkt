@@ -13,7 +13,8 @@
          "static-info.rkt"
          "index-result-key.rkt"
          "indirect-static-info-key.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "treelist.rkt")
 
 (provide define-repetition-syntax)
 (begin-for-syntax
@@ -27,6 +28,7 @@
 
             repetition-as-list
             repetition-as-list/unchecked
+            repetition-as-list/non-immediate
             repetition-as-deeper-repetition
             flatten-repetition
 
@@ -131,7 +133,7 @@
                                                               depth
                                                               #'0
                                                               element-static-infos
-                                                              #f)
+                                                              #t)
                                         #'tail)])))))))
 
   (define (repetition-transformer proc)
@@ -162,7 +164,11 @@
     [rep::repetition
      (repetition-as-list/direct #'rep.parsed depth 'unchecked)]))
 
-(define-for-syntax (repetition-as-list/direct rep-parsed depth mode)
+(define-for-syntax (repetition-as-list/non-immediate stx depth)
+  (repetition-as-list/direct stx depth 'checked #:to-immediate? #f))
+
+(define-for-syntax (repetition-as-list/direct rep-parsed depth mode
+                                              #:to-immediate? [to-immediate? #t])
   (syntax-parse rep-parsed
     [rep-info::repetition-info
      (define want-depth (syntax-e #'rep-info.bind-depth))
@@ -180,32 +186,50 @@
      (define infos (if (identifier? #'rep-info.element-static-infos)
                        (extract-static-infos #'rep-info.element-static-infos)
                        #'rep-info.element-static-infos))
+     (define seq-expr
+       (cond
+         [(or (syntax-e #'rep-info.immediate?)
+              (not to-immediate?))
+          #'rep-info.seq-expr]
+         [else
+          (let loop ([seq-expr #'rep-info.seq-expr] [depth depth] [want-depth want-depth])
+            (cond
+              [(= depth 0)
+               (let loop ([seq-expr seq-expr] [want-depth want-depth])
+                 (cond
+                   [(= depth 0) #`(#,seq-expr)]
+                   [else #`(for/list ([e (in-list #,seq-expr)])
+                             #,(loop #'e (sub1 want-depth)))]))]
+              [else
+               #`(for/list ([elem (in-list #,seq-expr)])
+                   #,(loop #'elem (sub1 depth) (sub1 want-depth)))]))]))
      (if (= depth 0)
-         (wrap-static-info* #'rep-info.seq-expr infos)
-         (wrap-static-info #'rep-info.seq-expr #'#%index-result infos))]))
+         (wrap-static-info* seq-expr infos)
+         (wrap-static-info seq-expr #'#%index-result infos))]))
 
 (define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos
                                                     #:convert [convert #f])
   (syntax-parse rep-parsed
     [rep-info::repetition-info
      (define depth (+ 1 (syntax-e #'rep-info.use-depth)))
+     (define convert* (or convert #'values))
      (make-repetition-info #'rep-info.rep-expr
                            #'rep-info.name
                            (syntax-parse #'rep-info.seq-expr
                              #:literals (nested-convert list)
-                             [(nested-convert (list c ...) e)
-                              #`(nested-convert (list c ... #,convert) e)]
+                             [(nested-convert (list c ...) e immed?)
+                              #`(nested-convert (list c ... #,convert*) e rep-info.immediate?)]
                              [e
-                              (if convert
+                              (if (or convert (not (syntax-e #'rep-info.immediate?)))
                                   (with-syntax ([(c ...) (for/list ([i (in-range depth)])
                                                            #'values)])
-                                    #`(nested-convert (list c ... #,convert) e))
+                                    #`(nested-convert (list c ... #,convert*) e rep-info.immediate?))
                                   #'e)])
                            #'rep-info.bind-depth
                            depth
                            #`((#%index-result rep-info.element-static-infos)
                               . #,static-infos)
-                           #'rep-info.immediate?)]))
+                           #t)]))
 
 (define-for-syntax (flatten-repetition rep-parsed count)
   (cond
@@ -219,19 +243,19 @@
                               #'rep-info.bind-depth
                               (+ count (syntax-e #'rep-info.use-depth))
                               #'rep-info.element-static-infos
-                              #f)])]))
+                              #'rep-info.immediate?)])]))
 
 (define (flatten lists count)
   (if (zero? count)
       lists
       (flatten (apply append lists) (sub1 count))))
 
-(define (nested-convert converts e)
+(define (nested-convert converts e immediate?)
   (cond
-    [(null? converts) e]
+    [(null? converts) (if immediate? e (e))]
     [else ((car converts)
            (for/list ([e (in-list e)])
-             (nested-convert (cdr converts) e)))]))
+             (nested-convert (cdr converts) e immediate?)))]))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

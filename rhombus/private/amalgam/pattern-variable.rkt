@@ -118,7 +118,7 @@
                                                               var-depth
                                                               #'0
                                                               (get-syntax-static-infos)
-                                                              #f)
+                                                              #t)
                                         #'tail)]
                                [_ (next)]))
            #:expr-handler expr-handler)]))
