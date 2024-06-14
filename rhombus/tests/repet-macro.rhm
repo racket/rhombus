@@ -37,7 +37,7 @@ repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
                          $depth,
                          $use_depth,
                          $si,
-                         #false)')
+                         #true)')
 
 check:
   [enum(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]

@@ -667,7 +667,7 @@
                                           depth
                                           0
                                           (get-syntax-static-infos)
-                                          #f)]
+                                          #t)]
        [else (wrap-static-info* template-e
                                 (get-syntax-static-infos))])]))
 

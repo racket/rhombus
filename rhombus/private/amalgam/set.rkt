@@ -729,7 +729,8 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,mutable-set-build-id #,@args))
-                           (get-mutable-set-static-infos))))]
+                           (get-mutable-set-static-infos)))
+                 #:maybe-immediate? #t)]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
                         (#,mutable-set-build-id #,@(if (null? argss) null (car argss))))

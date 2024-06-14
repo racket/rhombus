@@ -729,7 +729,8 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,map-copy-id (#,map-build-id #,@args)))
-                           (get-mutable-map-static-infos))))]
+                           (get-mutable-map-static-infos)))
+                 #:maybe-immediate? #t)]
                [else
                 (wrap-static-info*
                  (quasisyntax/loc stx

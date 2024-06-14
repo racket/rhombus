@@ -61,14 +61,15 @@
       [else
        (define key-parsed (syntax-parse key-e [key::repetition #'key.parsed]))
        (define val-parsed (syntax-parse val-e [val::repetition #'val.parsed]))
-       ;; This could be faster than building list of pair
+       ;; This could be faster than building a list of pairs
        ;; to convert to a hash table...
        (define pair-rep (flatten-repetition
                          (build-compound-repetition
                           stx (list key-parsed val-parsed)
                           (lambda (key val)
                             (values #`(cons #,key #,val)
-                                    #'())))
+                                    #'()))
+                          #:maybe-immediate? #t)
                          extra-ellipses))
        (list (rest-rep (if repetition?
                            pair-rep
@@ -205,6 +206,7 @@
                   (lambda args
                     (values (build (regroup-setmap-arguments args argss))
                             static-info))
+                  #:maybe-immediate? #t
                   #:is-sequence? rest-rep?
                   #:extract (lambda (v) (if (rest-rep? v) (rest-rep-stx v) v)))]
     [else (wrap-static-info* (build argss) static-info)]))

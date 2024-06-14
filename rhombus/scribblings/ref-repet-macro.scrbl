@@ -104,10 +104,10 @@
  @rhombus(statinfo_meta.pack).
 
  The @rhombus(is_immediate, ~var) component must be a literal boolean. A
- @rhombus(#true) indicates that @rhombus(list_expr, ~var) can be efficiently
- evaluated multiple times, while @rhombus(#false) indicates that
- @rhombus(list_expr, ~var) should be lifted out of enclosing repetitions
- to avoid evaluating it multiple times.
+ @rhombus(#true) indicates that @rhombus(list_expr, ~var) provides
+ immediate values for the repetition, while @rhombus(#false) indicates
+ that @rhombus(list_expr, ~var) contains a thunk that produces the
+ values.
 
 }
 
@@ -137,7 +137,7 @@
           $depth,
           $use_depth,
           $si,
-          #false)'
+          #true)'
       )
   ~repl:
     def [x, ...] = ["a", "b", "c"]

@@ -762,7 +762,7 @@
                                       1
                                       0
                                       #'()
-                                      #f)
+                                      #t)
                 #'tail)]))))
 
 (define-repetition-syntax List.repet
@@ -1280,6 +1280,7 @@
            stx
            content
            #:is-sequence? list-rest-rep?
+           #:maybe-immediate? #t
            #:extract (lambda (e) (if (list-rest? e) (list-rest-syntax e) e))
            (lambda new-content
              (let ([content (for/list ([e (in-list content)]
