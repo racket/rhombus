@@ -109,6 +109,7 @@
                 (build-map 'x-map-build empty-x-map (args->pairs 'x-map-build args)))
               (define (x-map-pair-build . pairs)
                 (build-map 'x-map-build empty-x-map (to-list 'x-map-build pairs)))
+              (define-syntax for/x-map (make-map-for #'list->x-map))
               (define (list->x-map pairs)
                 (build-map 'list->x-map empty-x-map (to-pairs (to-list 'list->x-map pairs))))
               (define (mutable-x-map? v)
@@ -125,6 +126,7 @@
                 (and (set? v) (immutable-hash? (set-ht v)) (x-map? (set-ht v))))
               (define (x-set-build . args)
                 (list->x-set args))
+              (define-syntax for/x-set (make-set-for #'list->x-set))
               (define (list->x-set args)
                 (x-map-set-build args empty-x-map))
               (define (mutable-x-set? v)
@@ -141,12 +143,12 @@
                 (key-comp-maker
                  (lambda ()
                    (key-comp 'name.name #'x-map?
-                             #'x-map-build #'x-map-pair-build #'list->x-map
+                             #'x-map-build #'x-map-pair-build #'for/x-map
                              #'mutable-x-map? #'x-mutable-map-build
                              #'weak-mutable-x-map? #'x-weak-mutable-map-build
                              #'empty-x-map
                              #'immutable-x-set?
-                             #'x-set-build #'x-set-build #'list->x-set
+                             #'x-set-build #'x-set-build #'for/x-set
                              #'mutable-x-set? #'x-mutable-set-build
                              #'weak-mutable-x-set? #'x-weak-mutable-set-build))))))]))))
 
@@ -183,3 +185,13 @@
 (define (to-pairs l)
   (for/list ([p (in-list l)])
     (list (car p) (cdr p))))
+
+(define-for-syntax (make-map-for list->x)
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ clauses body) #`(#,list->x (for/list clauses (let-values ([(a d) body]) (cons a d))))])))
+
+(define-for-syntax (make-set-for list->x)
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ clauses body) #`(#,list->x (for/list clauses body))])))

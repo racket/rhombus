@@ -9,6 +9,14 @@
 (define (unpack-uses who stx)
   (syntax-parse stx
     [(stx ...)
+     #:with (g ...) (for/list ([stx (in-list (syntax->list #'(stx ...)))])
+                      (syntax-parse stx
+                        [(#:repet (id ...))
+                         #'(group #:repet (#%parens (group (parsed #:rhombus/sequencer id)) ...))]
+                        [kw:keyword
+                         #'(group kw)]
+                        [(#:group g)
+                         #'g]))
      #'(brackets (group stx) ...)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed unpacked uses"
@@ -17,7 +25,14 @@
 (define (pack-uses who stx)
   (syntax-parse stx
     #:datum-literals (group)
-    [(_::brackets (group stx) ...)
+    [(_::brackets g ...)
+     #:with (stx ...) (for/list ([g (in-list (syntax->list #'(g ...)))])
+                        (syntax-parse g
+                          #:datum-literals (group) 
+                          [(group #:repet (#%parens (group (parsed #:rhombus/sequencer id:identifier)) ...))
+                           #'(#:repet (id ...))]
+                          [(group kw:keyword) #'kw]
+                          [_ #`(#:group #,g)]))
      #'(stx ...)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed packed uses"

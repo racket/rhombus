@@ -97,10 +97,11 @@
                           (lambda ()
                             (id-handler stx))))))]
     [else (make-expression+repetition
-           name-id
-           #`(#,unpack* #'$ #,temp-id #,depth)
+           #`(([(elem) (in-list (#,unpack* #'$ #,temp-id #,depth))])
+              #,@(for/list ([i (in-range (sub1 depth))])
+                   #`([(elem) (in-list elem)])))
+           #'elem
            (get-syntax-static-infos)
-           #:depth depth
            #:repet-handler (lambda (stx next)
                              (syntax-parse stx
                                #:datum-literals (op |.|)
@@ -109,16 +110,16 @@
                                 #:when attr
                                 (define var-depth (+ (pattern-variable-depth attr) depth))
                                 (values (make-repetition-info #'(var-id dot-op attr-id)
-                                                              (string->symbol
-                                                               (format "~a.~a" (syntax-e #'var-id) (syntax-e #'attr-id)))
-                                                              #`(#,(pattern-variable-unpack* attr)
-                                                                 #'$
-                                                                 #,(pattern-variable-val-id attr)
-                                                                 #,var-depth)
-                                                              var-depth
-                                                              #'0
+                                                              #`(([(elem) (in-list
+                                                                           (#,(pattern-variable-unpack* attr)
+                                                                            #'$
+                                                                            #,(pattern-variable-val-id attr)
+                                                                            #,var-depth))])
+                                                                 #,@(for/list ([i (in-range (sub1 var-depth))])
+                                                                      #`([(elem) (in-list elem)])))
+                                                              #'elem
                                                               (get-syntax-static-infos)
-                                                              #t)
+                                                              0)
                                         #'tail)]
                                [_ (next)]))
            #:expr-handler expr-handler)]))

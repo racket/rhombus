@@ -46,7 +46,7 @@
   ~defn:
     repet.macro 'nat3':
       ~op_stx self
-      repet_meta.pack_list('($self, n, PairList[0, 1, 2], 1, 0, (), #true)')
+      repet_meta.pack_list('($self, [0, 1, 2], 1, 0, ())')
   ~repl:
     [nat3, ...]
 )
@@ -68,13 +68,12 @@
 
  @rhombusblock(
   '(#,(@rhombus(source_form, ~var)),
-    #,(@rhombus(name_id, ~var)),
-    #,(@rhombus(pair_list_expr, ~var)),
-    #,(@rhombus(total_depth, ~var)),
+    #,(@rhombus(list_expr, ~var)),
+    #,(@rhombus(depth, ~var)),
     #,(@rhombus(use_depth, ~var)),
-    ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
-    #,(@rhombus(is_immediate, ~var)))'
-   )
+    ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...)
+   )'
+ )
 
  The @rhombus(source_form, ~var) group is used for error repoting to
  show the repetition, such as when the repeition is used at the wrong
@@ -84,30 +83,21 @@
  in the sense that it is used as the inferred name for an element of the
  repetition, in case such a name is relevant.
 
- The @rhombus(pair_list_expr, ~var) expression produces a @rhombus(PairList, ~annot) that contains
+ The @rhombus(list_expr, ~var) expression produces a @rhombus(List, ~annot) that contains
  the elements of the repetition. Lists must be nested according to the
  repeition's depth: a list of elements for depth 1, a list of element
  lists for depth 2, and so on.
 
- The @rhombus(total_depth, ~var) integer specifies the depth of the
- original repetition, while @rhombus(use_depth, ~var) specifies how much
- of the original depth has already been extracted; that is, the
- difference @rhombus(total_depth, ~var) minus @rhombus(use_depth, ~var)
- indicates the depth of the list nesting that is produced by
- @rhombus(list_expr, ~var). A non-zero @rhombus(use_depth, ~var) might be
- relevant to reporting the use of a repetition at the wrong depth in
- terms of the original form's depth.
+ The @rhombus(depth, ~var) integer specifies the depth of the
+ repetition. The @rhombus(use_depth, ~var) specifies how much additional
+ depth has already been extracted from an original repetition; a non-zero
+ @rhombus(use_depth, ~var) might be relevant to reporting the use of a
+ repetition at the wrong depth in terms of the original form's depth.
 
  The @rhombus(static_key, ~var)--@rhombus(static_value, ~var) pairs
  describe ``upward'' static information for inidvidual elements of the
  repeition. This information is automatically packed via
  @rhombus(statinfo_meta.pack).
-
- The @rhombus(is_immediate, ~var) component must be a literal boolean. A
- @rhombus(#true) indicates that @rhombus(list_expr, ~var) provides
- immediate values for the repetition, while @rhombus(#false) indicates
- that @rhombus(list_expr, ~var) contains a thunk that produces the
- values.
 
 }
 
@@ -125,19 +115,17 @@
   ~defn:
     repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
       ~op_stx self
-      let '($_, $name, $expr, $depth, $use_depth, $_, $_)':
+      let '($_, $expr, $depth, $use_depth, $_)':
         repet_meta.unpack_list(sub)
       let (_, si):
         let '$(p :: annot_meta.Parsed)' = 'List'
         annot_meta.unpack_predicate(p)
       repet_meta.pack_list(
         '($self(),
-          $name,
-          for PairList (elem: $expr, i: $from ..): [i, elem],
+          for List (elem: $expr, i: $from ..): [i, elem],
           $depth,
           $use_depth,
-          $si,
-          #true)'
+          $si)'
       )
   ~repl:
     def [x, ...] = ["a", "b", "c"]

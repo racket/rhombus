@@ -193,8 +193,10 @@ which matches only things that are fruits according to @rhombus(is_fruit):
         $id,
         // no overall static info:
         (),
-        // `id` is bound, `0` means usable as expression, no static info:
-        (($id, [0], ())),
+        // `id` is bound,
+        //  `~repet ()` means usable as repetition, and
+        //  `()` means no static info:
+        (($id, [~repet ()], ())),
         fruit_matcher,
         fruit_committer,
         fruit_binder,

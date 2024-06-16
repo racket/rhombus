@@ -20,6 +20,7 @@
                                              #:repetition? [repetition? #f])
   (define-values (shape argss)
     (parse-setmap-content stx
+                          #:set-for-form #'for/setalw
                           #:shape init-shape
                           #:who who
                           #:repetition? repetition?))
@@ -33,7 +34,7 @@
                  (if (eq? shape 'set) #'set-assert #'hash-assert)
                  (if (eq? shape 'set) (get-set-static-infos) (get-map-static-infos))
                  #:repetition? repetition?
-                 #:list->setmap (if (eq? shape 'set) #'list->set #'list->map))))
+                 #:rep-for-form (if (eq? shape 'set) #'for/setalw #'for/hashalw))))
 
 (define-for-syntax (parse-setmap-binding who stx)
   ;; we use `parse-setmap-content` just to pick between maps and sets;

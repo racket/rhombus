@@ -362,7 +362,7 @@
      (binding-info (shrubbery-syntax->string #'name)
                    #'val
                    #'()
-                   #'((val (0)))
+                   #'((val (~repeat ())))
                    #'converter-matcher
                    #'converter-committer
                    #'converter-binder

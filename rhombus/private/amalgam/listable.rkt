@@ -78,7 +78,7 @@
      (binding-info "to_list"
                    #'val
                    #'()
-                   #'((val (0)))
+                   #'((val (#:repet ())))
                    #'to_list-matcher
                    #'to_list-committer
                    #'to_list-binder

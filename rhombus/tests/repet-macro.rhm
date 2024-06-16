@@ -9,12 +9,10 @@ block:
 repet.macro 'nat3':
   ~op_stx self
   repet_meta.pack_list('($self,
-                         n,
-                         PairList[0, 1, 2],
+                         List[0, 1, 2],
                          1,
                          0,
-                         (),
-                         #true)')
+                         ())')
 
 check:
   [nat3, ...] ~is [0, 1, 2]
@@ -23,21 +21,19 @@ check:
 
 repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
   ~op_stx self
-  def '($orig, $name, $expr, $depth, $use_depth, $statinfos, $is_immed)':
+  def '($orig, $expr, $depth, $use_depth, $statinfos)':
     repet_meta.unpack_list(sub)
   def (pred, si):
     annot_meta.unpack_predicate(match 'List' | '$(p :: annot_meta.Parsed)': p)
   repet_meta.pack_list('($self(),
-                         $name,
-                         for PairList:
+                         for List:
                            each:
                              elem: $expr
                              i: $from..
                            [i, elem],
                          $depth,
                          $use_depth,
-                         $si,
-                         #true)')
+                         $si)')
 
 check:
   [enum(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]

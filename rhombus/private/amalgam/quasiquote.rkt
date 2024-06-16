@@ -661,13 +661,19 @@
      (define template-e
        (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
      (cond
-       [repetition? (make-repetition-info e
-                                          #'template
-                                          #`(pack-element* #,template-e #,depth)
-                                          depth
-                                          0
-                                          (get-syntax-static-infos)
-                                          #t)]
+       [repetition? (if (eqv? depth 0)
+                        (make-repetition-info e
+                                              null
+                                              #`(pack-element* #,template-e #,depth)
+                                              (get-syntax-static-infos)
+                                              0)
+                        (make-repetition-info e
+                                              #`(([(elem) (in-list (pack-element* #,template-e #,depth))])
+                                                 #,@(for/list ([i (in-range (sub1 depth))])
+                                                      #`([(elem) (in-list elem)])))
+                                              #'elem
+                                              (get-syntax-static-infos)
+                                              0))]
        [else (wrap-static-info* template-e
                                 (get-syntax-static-infos))])]))
 
@@ -677,7 +683,9 @@
 ;; optimization for `'$tail ...'`
 (define-for-syntax (convert-direct-tail-template tail-id name)
   (define unpack (unwrap-static-infos
-                  (repetition-as-list/unchecked #`(group #,tail-id) 1)))
+                  (syntax-parse #`(group #,tail-id)
+                    [rep::repetition
+                     (repetition-as-list/unchecked #'rep.parsed 1)])))
   (wrap-static-info*
    (syntax-parse unpack
      #:datum-literals (unpack-tail-list*)
@@ -736,15 +744,13 @@
          (syntax-parse idr
            #:literals (unpacking)
            [[_ (unpacking depth k rep-info::repetition-info . _)]
-            (max max-depth (- (syntax-e #'rep-info.bind-depth)
-                              (syntax-e #'rep-info.use-depth)))]
+            (max max-depth (length (syntax->list #'rep-info.for-clausess)))]
            [_ max-depth])))
      (for/list ([idr (in-list u-idrs)])
        (syntax-parse idr
          #:literals (unpacking)
          [[pat (unpacking depth k rep-info::repetition-info . u)]
-          #:do [(define want-depth (- (syntax-e #'rep-info.bind-depth)
-                                      (syntax-e #'rep-info.use-depth)))]
+          #:do [(define want-depth (length (syntax->list #'rep-info.for-clausess)))]
           #:when (and (want-depth . < . max-depth)
                       ((syntax-e #'depth) . >= . want-depth))
           ;; ok to skip a `...` layer:
@@ -769,8 +775,7 @@
       (syntax-parse idr
         #:literals (unpacking)
         [[_ (unpacking depth k rep-info::repetition-info . _)]
-         (max max-depth (- (- (syntax-e #'rep-info.bind-depth)
-                              (syntax-e #'rep-info.use-depth))
+         (max max-depth (- (length (syntax->list #'rep-info.for-clausess))
                            (syntax-e #'depth)))]
         [_ max-depth])))
   (let loop ([d depth] [idrs u-idrs] [template template])
@@ -794,7 +799,7 @@
 (define-syntax (unpacking stx)
   (syntax-parse stx
     [(_ depth k rep-info::repetition-info unpack* $-name)
-     (define base-e (repetition-as-list #'rep-info (syntax-e #'depth)))
+     (define base-e (repetition-as-nested-lists #'rep-info (syntax-e #'depth) #'for/list))
      (define unpack*-id #'unpack*)
      (cond
        [(and (identifier? unpack*-id)
@@ -912,12 +917,10 @@
                             #f
                             convert-repetition-template
                             (lambda (e) (make-repetition-info stx
-                                                              #'template
+                                                              null
                                                               #`(quote-syntax #,e)
-                                                              0
-                                                              0
-                                                              #'()
-                                                              #t))))))
+                                                              (get-syntax-static-infos)
+                                                              0))))))
 
 (define-syntax syntax_term
   (expression-prefix-operator
@@ -942,17 +945,20 @@
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
     [(_ static-infos (annotation-str pattern repack tmp-ids (id ...) id-refs (sids ...) sid-refs))
-     (with-syntax ([(id-depth ...) (for/list ([id-ref (in-list (syntax->list #'id-refs))])
-                                     (syntax-parse id-ref
-                                       [(pack _ depth) #'depth]))]
-                   [((sid sid-depth) ...)
+     (define (make-sequencers depth) (for/list ([i (in-range (syntax-e depth))]) #'in-list))
+     (with-syntax ([(id-sequencers ...) (for/list ([id-ref (in-list (syntax->list #'id-refs))])
+                                          (syntax-parse id-ref
+                                            [(pack _ depth) (make-sequencers #'depth)]))]
+                   [((sid sid-sequencers) ...)
                     (for/list ([sids (in-list (syntax->list #'(sids ...)))]
                                [sid-ref (in-list (syntax->list #'sid-refs))])
-                      (extract-pattern-variable-bind-id-and-depth sids sid-ref))])
+                      (define id+depth
+                        (extract-pattern-variable-bind-id-and-depth sids sid-ref))
+                      (list (car id+depth) (make-sequencers (cadr id+depth))))])
        (binding-info #'annotation-str
                      #'syntax
                      #'()
-                     #'((id (id-depth)) ... (sid (sid-depth)) ...)
+                     #'((id ((#:repet id-sequencers))) ... (sid ((#:repet sid-sequencers))) ...)
                      #'syntax-matcher
                      #'syntax-committer
                      #'syntax-binder

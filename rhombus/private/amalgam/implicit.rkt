@@ -114,13 +114,11 @@
        [(form-id datum . tail)
         (check-literal-term #'form-id #'datum)
         (values (make-repetition-info #'datum
-                                      #'value
-                                      (syntax/loc #'datum (quote datum))
-                                      0
-                                      0
+                                      '()
+                                      #'(quote datum)
                                       (or (literal-static-infos #'datum)
                                           #'())
-                                      #t)
+                                      0)
                 #'tail)]))))
 
 (define-for-syntax (check-literal-term form-id d-stx)

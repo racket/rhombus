@@ -172,14 +172,15 @@
  @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pairs.
  Like @rhombus(var_static_key, ~var)s, the meaning of
  @rhombus(var_use, ~var)s is up to cooperating parts in general, but
- two values are recognized by built-in forms:
+ two shapes are recognized by built-in forms:
 
 @itemlist(
 
-  @item{an exact non-negative integer indicates that the variable can be
-  used as an expression (in the case of @rhombus(0)) or repetition at a
-  certain depth (in the case of @rhombus(k, ~var) greater than
-  @rhombus(0)); and}
+  @item{@rhombus(~repeat (#,(@rhombus(sequencer, ~var)), ...))
+  indicates that the variable can be used as repetition at a depth
+  corresponding to the number of @rhombus(sequencer, ~var)s, and also
+  as an expression if the number @rhombus(sequencer, ~var)s is zero;
+  and}
 
   @item{@rhombus(~no_stx) indicates that the variable's is not
   compatible with @rhombus(let), because it needs to be bound early (such

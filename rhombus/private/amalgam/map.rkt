@@ -344,10 +344,11 @@
            success
            fail)]))
 
-(define-for-syntax (parse-map stx arg-stxes repetition? map-build-id map-pair-build-id list->map-id)
+(define-for-syntax (parse-map stx arg-stxes repetition? map-build-id map-pair-build-id rep-for-form)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss) (parse-setmap-content #'content
+                                                        #:map-for-form rep-for-form
                                                         #:shape 'map
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?))
@@ -360,7 +361,7 @@
                             #'hash-assert
                             (get-map-static-infos)
                             #:repetition? repetition?
-                            #:list->setmap list->map-id))
+                            #:rep-for-form rep-for-form))
              #'tail)]
     [(form-id . tail) (values (cond
                                 [repetition? (identifier-repetition-use map-pair-build-id)]
@@ -369,7 +370,7 @@
 
 (define-syntax Map
   (expression-transformer
-   (lambda (stx) (parse-map stx '() #f #'Map-build #'Map-pair-build #'list->map))))
+   (lambda (stx) (parse-map stx '() #f #'Map-build #'Map-pair-build #'for/hash))))
 
 (define-syntax Map.by
   (expression-transformer
@@ -379,7 +380,7 @@
                        (parse-map stx arg-stxes #f
                                   (key-comp-map-build-id mapper)
                                   (key-comp-map-pair-build-id mapper)
-                                  (key-comp-list->map-id mapper)))))))
+                                  (key-comp-map-for-form-id mapper)))))))
 
 (define-for-syntax (make-map-binding-transformer mode)
   (lambda (stx)
@@ -417,7 +418,7 @@
 
 (define-repetition-syntax Map
   (repetition-transformer
-   (lambda (stx) (parse-map stx '() #t #'Map-build #'Map-pair-build #'list->map))))
+   (lambda (stx) (parse-map stx '() #t #'Map-build #'Map-pair-build #'for/map))))
 
 (define-repetition-syntax Map.by
   (repetition-transformer
@@ -427,7 +428,7 @@
                        (parse-map stx arg-stxes #t
                                   (key-comp-map-build-id mapper)
                                   (key-comp-map-pair-build-id mapper)
-                                  (key-comp-list->map-id mapper)))))))
+                                  (key-comp-map-for-form-id mapper)))))))
 
 (define-for-syntax map-annotation-make-predicate
   (lambda (arg-id predicate-stxs)
@@ -729,8 +730,7 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,map-copy-id (#,map-build-id #,@args)))
-                           (get-mutable-map-static-infos)))
-                 #:maybe-immediate? #t)]
+                           (get-mutable-map-static-infos))))]
                [else
                 (wrap-static-info*
                  (quasisyntax/loc stx
@@ -869,6 +869,7 @@
                                           (if rest-repetition?
                                               #`(lambda (v) (hash-pairs #,rest-tmp))
                                               #`(lambda (v) #,rest-tmp)))
+                                     #:rest-to-repetition #'in-list
                                      #:rest-repetition? (and rest-repetition?
                                                              'pair)))
     (values

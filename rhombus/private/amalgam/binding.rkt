@@ -134,7 +134,7 @@
      (binding-info annotation-any-string
                    #'id
                    #'static-infos
-                   #'((id (0) . static-infos))
+                   #'((id ([#:repet ()]) . static-infos))
                    #'always-succeed
                    #'identifier-commit
                    #'identifier-bind
