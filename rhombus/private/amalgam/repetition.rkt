@@ -27,10 +27,12 @@
             make-expression+repetition
 
             repetition-as-list
+            repetition-as-nested-lists
             repetition-as-list/unchecked
-            repetition-as-list/non-immediate
-            repetition-as-deeper-repetition
+            render-repetition
+
             flatten-repetition
+            consume-repetition
 
             :repetition
             :repetition-info
@@ -49,16 +51,18 @@
 
 (begin-for-syntax
   (define-syntax-class :repetition-info
-    (pattern (rep-expr
-              name
-              seq-expr
-              bind-depth:exact-nonnegative-integer
-              use-depth:exact-nonnegative-integer
-              element-static-infos
-              immediate?)))
+    (pattern (rep-expr   ; for error reporting
+              (~and for-clausess  ; a list of `for` binding-clause sets, outer to inner
+                    ;; the length of this list determines the repetition depth
+                    (([(iter-id ...) iter-rhs]
+                      ...) ; inner layer clauses are in parallel
+                     ...)) ; outer layer clauses are nested
+              body       ; body to go inside `for`, produces one value
+              element-static-infos ; describes the result of `body`
+              used-depth:exact-nonnegative-integer))) ; depth of `rep-expr` already consumed, only for error reporting
 
-  (define (make-repetition-info rep-expr name seq-expr bind-depth use-depth element-static-infos immediate?)
-    #`(#,rep-expr #,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos #,immediate?))
+  (define (make-repetition-info rep-expr for-clausess body element-static-infos used-depth)
+    #`(#,rep-expr #,for-clausess #,body #,element-static-infos #,used-depth))
 
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -79,21 +83,17 @@
 
   (define (identifier-repetition-use id)
     (make-repetition-info id
+                          null
                           id
-                          id
-                          0
-                          0
                           #`((#%indirect-static-info #,id))
-                          #t))
+                          0))
 
   (define (identifier-repetition-use/maybe id)
     (make-repetition-info id
-                          id
+                          null
                           #`(rhombus-expression (group #,id))
-                          0
-                          0
                           #`((#%indirect-static-info #,id))
-                          #t))
+                          0))
 
   ;; Form in a repetition context:
   (define-rhombus-enforest
@@ -109,8 +109,7 @@
     #:check-result check-repetition-result
     #:make-identifier-form identifier-repetition-use/maybe)
 
-  (define (make-expression+repetition name seq-expr element-static-infos
-                                      #:depth [depth 1]
+  (define (make-expression+repetition for-clausess for-body element-static-infos
                                       #:expr-handler [expr-handler (lambda (stx fail) (fail))]
                                       #:repet-handler [repet-handler (lambda (stx next) (next))])
     (values
@@ -128,12 +127,10 @@
                              (syntax-parse stx
                                [(id . tail)
                                 (values (make-repetition-info stx
-                                                              name
-                                                              seq-expr
-                                                              depth
-                                                              #'0
+                                                              for-clausess
+                                                              for-body
                                                               element-static-infos
-                                                              #t)
+                                                              0)
                                         #'tail)])))))))
 
   (define (repetition-transformer proc)
@@ -157,108 +154,135 @@
                             "not preceded by a repetition"
                             stx)])]
     [(rep-parsed depth)
-     (repetition-as-list/direct rep-parsed depth 'checked)]))
+     (render-repetition/direct rep-parsed depth 'checked #'for/list)]))
 
-(define-for-syntax (repetition-as-list/unchecked stx depth)
-  (syntax-parse stx
-    [rep::repetition
-     (repetition-as-list/direct #'rep.parsed depth 'unchecked)]))
+(define-for-syntax (repetition-as-nested-lists rep-parsed depth for-form)
+  (cond
+    [(depth . > . 1)
+     (repetition-as-nested-lists (consume-repetition rep-parsed for-form #'()) (sub1 depth) for-form)]
+    [else
+     (render-repetition/direct rep-parsed depth 'checked for-form)]))
+         
+(define-for-syntax (repetition-as-list/unchecked rep-parsed depth)
+  (render-repetition/direct rep-parsed depth 'unchecked #'for/list))
 
-(define-for-syntax (repetition-as-list/non-immediate stx depth)
-  (repetition-as-list/direct stx depth 'checked #:to-immediate? #f))
+(define-for-syntax (render-repetition for-form rep-parsed)
+  (render-repetition/direct rep-parsed 1 'checked for-form))
 
-(define-for-syntax (repetition-as-list/direct rep-parsed depth mode
-                                              #:to-immediate? [to-immediate? #t])
+(define-for-syntax (render-repetition/direct rep-parsed depth mode for-form)
   (syntax-parse rep-parsed
     [rep-info::repetition-info
-     (define want-depth (syntax-e #'rep-info.bind-depth))
-     (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
+     (define want-depth (length (syntax->list #'rep-info.for-clausess)))
      (unless (or (eq? mode 'unchecked)
-                 (= use-depth want-depth))
-       (raise-syntax-error #f
-                           "used with wrong repetition depth"
-                           #'rep-info.rep-expr
-                           #f
-                           null
-                           (format "\n  expected: ~a\n  actual: ~a"
-                                   want-depth
-                                   use-depth)))
+                 (= depth want-depth))
+       (raise-wrong-depth #'rep-info.rep-expr
+                          #'rep-info.used-depth
+                          want-depth
+                          depth))
      (define infos (if (identifier? #'rep-info.element-static-infos)
                        (extract-static-infos #'rep-info.element-static-infos)
                        #'rep-info.element-static-infos))
-     (define seq-expr
-       (cond
-         [(or (syntax-e #'rep-info.immediate?)
-              (not to-immediate?))
-          #'rep-info.seq-expr]
-         [else
-          (let loop ([seq-expr #'rep-info.seq-expr] [depth depth] [want-depth want-depth])
-            (cond
-              [(= depth 0)
-               (let loop ([seq-expr seq-expr] [want-depth want-depth])
-                 (cond
-                   [(= depth 0) #`(#,seq-expr)]
-                   [else #`(for/list ([e (in-list #,seq-expr)])
-                             #,(loop #'e (sub1 want-depth)))]))]
-              [else
-               #`(for/list ([elem (in-list #,seq-expr)])
-                   #,(loop #'elem (sub1 depth) (sub1 want-depth)))]))]))
-     (if (= depth 0)
-         (wrap-static-info* seq-expr infos)
-         (wrap-static-info seq-expr #'#%index-result infos))]))
+     (cond
+       [(= depth 0)
+        (wrap-static-info* #'rep-info.body infos)]
+       [else
+        (define seq-expr
+          (build-for for-form
+                     (insert-clause-separators (syntax->list #'rep-info.for-clausess))
+                     #'rep-info.body))
+        (wrap-static-info seq-expr #'#%index-result infos)])]))
 
-(define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos
-                                                    #:convert [convert #f])
-  (syntax-parse rep-parsed
-    [rep-info::repetition-info
-     (define depth (+ 1 (syntax-e #'rep-info.use-depth)))
-     (define convert* (or convert #'values))
-     (make-repetition-info #'rep-info.rep-expr
-                           #'rep-info.name
-                           (syntax-parse #'rep-info.seq-expr
-                             #:literals (nested-convert list)
-                             [(nested-convert (list c ...) e immed?)
-                              #`(nested-convert (list c ... #,convert*) e rep-info.immediate?)]
-                             [e
-                              (if (or convert (not (syntax-e #'rep-info.immediate?)))
-                                  (with-syntax ([(c ...) (for/list ([i (in-range depth)])
-                                                           #'values)])
-                                    #`(nested-convert (list c ... #,convert*) e rep-info.immediate?))
-                                  #'e)])
-                           #'rep-info.bind-depth
-                           depth
-                           #`((#%index-result rep-info.element-static-infos)
-                              . #,static-infos)
-                           #t)]))
-
-(define-for-syntax (flatten-repetition rep-parsed count)
+(define-for-syntax (flatten-repetition rep-parsed count
+                                       #:pack-element [pack-element values]
+                                       #:unpack-element [unpack-element values])
   (cond
     [(= 0 count) rep-parsed]
     [else
      (syntax-parse rep-parsed
        [rep-info::repetition-info
+        (define for-clausess (syntax->list #'rep-info.for-clausess))
+        (when (count . >= . (length for-clausess))
+          (raise-wrong-depth #'rep-info.rep-expr
+                             #'rep-info.used-depth
+                             (length for-clausess)
+                             (add1 count)
+                             #:at-least? #t))
+        (define keep-count (- (length for-clausess) (add1 count)))
         (make-repetition-info #'rep-info.rep-expr
-                              #'rep-info.name
-                              #`(flatten rep-info.seq-expr #,count)
-                              #'rep-info.bind-depth
-                              (+ count (syntax-e #'rep-info.use-depth))
+                              (let loop ([keep-count keep-count] [for-clausess for-clausess])
+                                (cond
+                                  [(zero? keep-count)
+                                   #`(([(elem) (in-list (for/list #,(insert-clause-separators for-clausess)
+                                                          #,(pack-element #'rep-info.body)))]))]
+                                  [else
+                                   (cons (car for-clausess)
+                                         (loop (sub1 keep-count) (cdr for-clausess)))]))
+                              (unpack-element #'elem)
                               #'rep-info.element-static-infos
-                              #'rep-info.immediate?)])]))
+                              (+ (syntax-e #'rep-info.used-depth) count))])]))
 
-(define (flatten lists count)
-  (if (zero? count)
-      lists
-      (flatten (apply append lists) (sub1 count))))
+(define-for-syntax (consume-repetition rep-parsed for-form static-infos)
+  (syntax-parse rep-parsed
+    [rep-info::repetition-info
+     (define for-clausess (syntax->list #'rep-info.for-clausess))
+     (when (null? for-clausess) (error "bad repetition nesting (internal error)"))
+     (define keep-count (- (length for-clausess) 1))
+     (make-repetition-info #'rep-info.rep-expr
+                           (let loop ([keep-count keep-count] [for-clausess for-clausess])
+                             (cond
+                               [(zero? keep-count)
+                                null]
+                               [else
+                                (cons (car for-clausess)
+                                      (loop (sub1 keep-count) (cdr for-clausess)))]))
+                           (build-for for-form
+                                      (insert-clause-separators (list-tail for-clausess keep-count))
+                                      #'rep-info.body)
+                           #`((#%index-result rep-info.element-static-infos)
+                              . #,static-infos)
+                           (+ (syntax-e #'rep-info.used-depth) 1))]))
 
-(define (nested-convert converts e immediate?)
-  (cond
-    [(null? converts) (if immediate? e (e))]
-    [else ((car converts)
-           (for/list ([e (in-list e)])
-             (nested-convert (cdr converts) e immediate?)))]))
+;; Optimize `for/list` over `in-list`, etc. We do this while
+;; constructing the form, instead of using a `for/list` variant
+;; that recognizes clauses, so that other shortcuts can apply,
+;; especially for syntax objects. Note that we cannot earily optimize
+;; maps and sets this way, since the predicate associated with the
+;; map or set might be different than the constructed one.
+(define-for-syntax (build-for for-form clauses body)
+  (syntax-parse clauses
+    [([(id) (in-form e)])
+     #:when (and (or (and (free-identifier=? for-form #'for/list)
+                          (free-identifier=? #'in-form #'in-list))
+                     (and (free-identifier=? for-form #'for/treelist)
+                          (free-identifier=? #'in-form #'in-treelist)))
+                 (identifier? body)
+                 (free-identifier=? body #'id))
+     #'e]
+    [else #`(#,for-form #,clauses #,body)]))
+
+(define-for-syntax (raise-wrong-depth expr used-depth-stx want-depth actual-depth
+                                      #:at-least? [at-least? #f])
+  (raise-syntax-error #f
+                      "used with wrong repetition depth"
+                      expr
+                      #f
+                      null
+                      (format "\n  expected: ~a\n  actual: ~a~a"
+                              (+ want-depth (syntax-e used-depth-stx))
+                              (if at-least? "at least " "")
+                              (+ actual-depth (syntax-e used-depth-stx)))))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-repetition-space #'id)
          rhs)]))
+
+(define-for-syntax (insert-clause-separators clauses-stxs)
+  (let loop ([clauses-stxs clauses-stxs])
+    (cond
+      [(null? clauses-stxs) null]
+      [(null? (cdr clauses-stxs)) (syntax->list (car clauses-stxs))]
+      [else (append (syntax->list (car clauses-stxs))
+                    (list '#:when #t)
+                    (loop (cdr clauses-stxs)))])))

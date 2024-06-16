@@ -212,3 +212,13 @@ check:
       match y
       | '': "ok"
   ~is "ok"
+
+// Make sure multi-element syntax can be replicated for a repetition
+check:
+  def [x, ...] = [1, 2, 3]
+  def body = '1 2'
+  '$x: $body
+   ...'
+  ~prints_like '1: 1 2
+                2: 1 2
+                3: 1 2'

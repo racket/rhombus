@@ -35,7 +35,7 @@
                                                   #:index-result-info? [index-result-info? #f]
                                                   #:sequence-element-info? [sequence-element-info? #f]
                                                   #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
-                                                  #:rest-to-repetition [rest-to-repetition #'values] ; to convert "rest" to a list
+                                                  #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
                                                   #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (syntax-parse tail
     [(form-id (tag::parens a_g ...) . new-tail)
@@ -153,12 +153,13 @@
                   #'rest-info.annotation-str
                   (with-syntax ([(bind-uses ...)
                                  (if (syntax-e #'rest-repetition?)
-                                     (for/list ([uses (in-list (syntax->list #'(rest-info.bind-uses ...)))]
-                                                [id (in-list (syntax->list #'(rest-info.bind-id ...)))])
-                                       (define depth (uses->depth uses))
-                                       (unless depth
-                                         (raise-syntax-error #f "cannot bind within a repetition" id))
-                                       (list (add1 depth)))
+                                     (let ([in-seq (if (syntax-e #'no-rest-map?) #'rest-to-repetition #'in-list)])
+                                       (for/list ([uses (in-list (syntax->list #'(rest-info.bind-uses ...)))]
+                                                  [id (in-list (syntax->list #'(rest-info.bind-id ...)))])
+                                         (define sequencers (uses->sequencers uses))
+                                         (unless sequencers
+                                           (raise-syntax-error #f "cannot bind within a repetition" id))
+                                         #`((#:repet (#,in-seq #,@sequencers)))))
                                      #'(rest-info.bind-uses ...))])
                     #'((rest-info.bind-id bind-uses rest-info.bind-static-info ...) ...))
                   (syntax-e #'rest-repetition?))]))
@@ -303,21 +304,34 @@
                             rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
-                   (with-syntax ([(depth ...) (for/list ([uses (in-list (syntax->list #'(rest.bind-uses ...)))])
-                                                (add1 (uses->depth uses)))]
+                   (with-syntax ([((sequencer ...) ...) (for/list ([uses (in-list (syntax->list #'(rest.bind-uses ...)))])
+                                                          (define sequencers (uses->sequencers uses))
+                                                          (if (syntax-e #'no-rest-map?)
+                                                              sequencers
+                                                              (for/list ([sequencer (in-list (syntax->list sequencers))])
+                                                                #'in-list)))]
                                  [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids]
-                                 [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))])
-                     (with-syntax ([(rest-seq-tmp-id-as-rep ...)
-                                    (if (syntax-e #'no-rest-map?)
-                                        #'((rest-to-repetition rest-seq-tmp-id)
-                                           ...)
-                                        #'rest-seq-tmp-ids)])
-                       #'((define-syntaxes (rest.bind-id rep-bind-id)
-                            (make-expression+repetition (quote-syntax rest.bind-id)
-                                                        (quote-syntax rest-seq-tmp-id-as-rep)
-                                                        (quote-syntax (rest.bind-static-info ...))
-                                                        #:depth depth))
-                          ...)))
+                                 [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))]
+                                 [(elem-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))])
+                     (with-syntax ([((elem-tmp-id/copy ...) ...)
+                                    (for/list ([elem-tmp-id (in-list (syntax->list #'(elem-tmp-id ...)))]
+                                               [sequencers (in-list (syntax->list #'((sequencer ...) ...)))])
+                                      (for/list ([sequencer (in-list (syntax->list sequencers))])
+                                        elem-tmp-id))])
+                       (with-syntax ([(rest-seq-tmp-id-as-rep ...)
+                                      (with-syntax ([in-seq (if (syntax-e #'no-rest-map?)
+                                                                #'rest-to-repetition
+                                                                #'in-list)])
+                                        #'((([(elem-tmp-id) (in-seq rest-seq-tmp-id)]
+                                             ...)
+                                            ([(elem-tmp-id/copy) (sequencer elem-tmp-id/copy)])
+                                            ...)
+                                           ...))])
+                         #'((define-syntaxes (rest.bind-id rep-bind-id)
+                              (make-expression+repetition (quote-syntax rest-seq-tmp-id-as-rep)
+                                                          (quote-syntax elem-tmp-id)
+                                                          (quote-syntax (rest.bind-static-info ...))))
+                            ...))))
                    #'((rest.binder-id rest-tmp-id rest.data)))]))]))
 
 ;; ------------------------------------------------------------
@@ -350,7 +364,7 @@
              #`(lambda () #,get-rest))
          #`(get-rest-getters
             '(rest.bind-id ...)
-            (#,rest-to-repetition #,get-rest)
+            (for/list ([x (#,rest-to-repetition #,get-rest)]) x)
             (lambda (arg-id)
               (rest.matcher-id arg-id rest.data
                                if/blocked
@@ -363,22 +377,27 @@
 
 (define-syntax (maybe-repetition-as-list stx)
   (syntax-parse stx
-    [(_ id (_ ... 0 _ ...)) #'(rhombus-expression (group id))]
-    [(_ id (_ ... depth:exact-integer _ ...))
+    [(_ id (_ ... (#:repet ()) _ ...)) #'(rhombus-expression (group id))]
+    [(_ id (_ ... (#:repet (sequencer ...)) _ ...))
      ;; unchecked, because this may be an internal identifier where expansion
      ;; hasn't bothered to bind the identifier as a repetition
-     (repetition-as-list/unchecked #'(group id) (syntax-e #'depth))]))
+     (syntax-parse #'(group id)
+       [rep::repetition
+        (let loop ([sequencers (syntax->list #'(sequencer ...))]
+                   [rep #'rep.parsed])
+          (if (null? (cdr sequencers))
+              (repetition-as-list/unchecked rep 1)
+              (loop (cdr sequencers) (consume-repetition rep #'for/list #'()))))])]))
 
 ;; run-time support for "rest" matching
 (define (get-rest-getters rest-syms rest-val get-one-getter)
-  (and (list? rest-val)
-       (let loop ([rest-val rest-val] [accum null])
-         (cond
-           [(null? rest-val) (build-overall-getter rest-syms accum)]
-           [else
-            (define getter (get-one-getter (car rest-val)))
-            (and getter
-                 (loop (cdr rest-val) (cons getter accum)))]))))
+  (let loop ([rest-val rest-val] [accum null])
+    (cond
+      [(null? rest-val) (build-overall-getter rest-syms accum)]
+      [else
+       (define getter (get-one-getter (car rest-val)))
+       (and getter
+            (loop (cdr rest-val) (cons getter accum)))])))
 
 ;; more run-time support for "rest" matching, creates the function
 ;; that is called after a successful match to get all the results
@@ -447,7 +466,8 @@
         "")
     (if (pair? c-str) "}" ")"))))
 
-(define-for-syntax (uses->depth uses)
+(define-for-syntax (uses->sequencers uses)
   (for/or ([use (in-list (syntax->list uses))])
-    (define u (syntax-e use))
-    (and (exact-integer? u) u)))
+    (syntax-parse use
+      [(#:repet (sequencer ...)) #'(sequencer ...)]
+      [_ #f])))

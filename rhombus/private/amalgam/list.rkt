@@ -241,7 +241,7 @@
                                        #:static-infos (get-treelist-static-infos)
                                        #:index-result-info? #t
                                        #:rest-accessor #'(lambda (l) (treelist-drop l 1))
-                                       #:rest-to-repetition #'treelist->list
+                                       #:rest-to-repetition #'in-treelist
                                        #:rest-repetition? #f)]))))
 
 (define-binding-syntax PairList.cons
@@ -257,6 +257,7 @@
                                        #:static-infos (get-list-static-infos)
                                        #:index-result-info? #t
                                        #:rest-accessor #'cdr
+                                       #:rest-to-repetition #'in-list
                                        #:rest-repetition? #f)]))))
 
 (set-primitive-contract! 'list? "PairList")
@@ -415,7 +416,8 @@
 ;; used to define `List` and `PairList` further below:
 (define-for-syntax (make-constructor proc-stx build-form get-static-infos wrap-static-infos
                                      #:repetition? [repetition? #f]
-                                     #:convert-rep [convert-rep #f])
+                                     #:rep-for-form rep-for-form
+                                     #:rep-solo-for-form [rep-solo-for-form rep-for-form])
   ;; special cases optimize for `...` and `&`; letting it expand
   ;; instead to `(apply list ....)` is not so bad, but we can
   ;; avoid a `list?` check in `apply`, and we can expose more static
@@ -426,18 +428,21 @@
       [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
        #:when (normal-call? #'tag)
        (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
-                         #:convert-rep convert-rep
+                         #:rep-for-form rep-for-form
+                         #:rep-solo-for-form rep-solo-for-form
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(form-id (tag::parens _ ... (group _::&-expr _ ...)) . tail)
        #:when (normal-call? #'tag)
        (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
-                         #:convert-rep convert-rep
+                         #:rep-for-form rep-for-form
+                         #:rep-solo-for-form rep-solo-for-form
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(form-id (tag::brackets _ ...) . tail)
        (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
-                         #:convert-rep convert-rep
+                         #:rep-for-form rep-for-form
+                         #:rep-solo-for-form rep-solo-for-form
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(_ . tail)
@@ -750,32 +755,29 @@
   (syntax-parse stx
     [(_ accum e) #'(cons e accum)]))
 
-(define-for-syntax (make-repet g-to-list-stx)
+(define-for-syntax (make-repet g-to-for-clause-stx)
   (repetition-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~and args (_::parens g)) . tail)
         (values (make-repetition-info #'(form-id args)
+                                      #`(([(repet) #,(g-to-for-clause-stx #'g)]))
                                       #'repet
-                                      (g-to-list-stx #'g)
-                                      1
-                                      0
                                       #'()
-                                      #t)
+                                      0)
                 #'tail)]))))
 
 (define-repetition-syntax List.repet
   (make-repet (lambda (g)
-                #`(let ([l (rhombus-expression #,g)])
-                    (check-treelist 'List.repet l)
-                    (treelist->list l)))))
+                #`(in-treelist (let ([l (rhombus-expression #,g)])
+                                 l)))))
 
 (define-repetition-syntax PairList.repet
   (make-repet (lambda (g)
-                #`(let ([l (rhombus-expression #,g)])
-                    (check-list 'PairList.repet l)
-                    l))))
+                #`(in-list (let ([l (rhombus-expression #,g)])
+                             (check-list 'PairList.repet l)
+                             l)))))
 
 (define (check-function-of-arity n who proc)
   (unless (and (procedure? proc)
@@ -1171,7 +1173,7 @@
                                  #:index-result-info? #t
                                  #:rest-accessor rest-selector
                                  #:rest-repetition? rest-repetition?
-                                 #:rest-to-repetition #'treelist->list
+                                 #:rest-to-repetition #'in-treelist
                                  #:static-infos (get-treelist-static-infos)))
 
 (define-for-syntax (generate-list-binding form-id len or-more? args tail [rest-arg #f] [rest-selector #f]
@@ -1198,6 +1200,7 @@
                                   #:index-result-info? #t
                                   #:rest-accessor rest-selector
                                   #:rest-repetition? rest-repetition?
+                                  #:rest-to-repetition #'in-list
                                   #:static-infos (get-list-static-infos)))
 
 (define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos))
@@ -1212,13 +1215,15 @@
                                      build-form
                                      static-infos
                                      wrap-static-info
-                                     #:convert-rep convert-rep
+                                     #:rep-for-form rep-for-form
+                                     #:rep-solo-for-form rep-solo-for-form
                                      #:repetition? repetition?
                                      #:span-form-name? span-form-name?)
   (syntax-parse stx
     #:datum-literals (group)
     [(form-id (~and args (tag arg ...)) . tail)
      ;; a list of syntax, (list-rest-splice syntax), or (list-rest-rep syntax):
+     (define solo? (= 2 (length (syntax->list #'(arg ...)))))
      (define content
        (let loop ([gs-stx #'(arg ...)])
          (syntax-parse gs-stx
@@ -1231,7 +1236,10 @@
                          (define the-rep (flatten-repetition #'rep.parsed extras))
                          (if repetition?
                              the-rep
-                             (repetition-as-list the-rep 1))]))
+                             (render-repetition (if solo?
+                                                    rep-solo-for-form
+                                                    rep-for-form)
+                                                the-rep))]))
             (cons (list-rest-rep e)
                   (loop new-gs))]
            [((~or* (~and (group _::&-expr rand ...+)
@@ -1261,16 +1269,8 @@
           ;; special case, especially to expose static info on rest elements
           (define seq (list-rest-syntax (car content)))
           (cond
-            [repetition? (repetition-as-deeper-repetition
-                          seq static-infos
-                          #:convert convert-rep)]
-            [(not convert-rep) (wrap-static-info seq)]
-            [else (wrap-static-info
-                   ;; rotate static info for `content` out to converted form
-                   (let ([content-static-infos (extract-static-infos seq)])
-                     (wrap-static-info*
-                      #`(#,convert-rep #,(unwrap-static-infos seq))
-                      content-static-infos)))])]
+            [repetition? (consume-repetition seq rep-solo-for-form static-infos)]
+            [else (wrap-static-info seq)])]
          [(not repetition?)
           (wrap-static-info
            (tag-props
@@ -1279,8 +1279,8 @@
           (build-compound-repetition
            stx
            content
+           #:sequence-for-form rep-for-form
            #:is-sequence? list-rest-rep?
-           #:maybe-immediate? #t
            #:extract (lambda (e) (if (list-rest? e) (list-rest-syntax e) e))
            (lambda new-content
              (let ([content (for/list ([e (in-list content)]
@@ -1294,7 +1294,7 @@
       #'tail)]))
 
 (define-for-syntax (build-*list-form content *list-stx empty-*list-stx *list-append-stx
-                                     ensure-*list-stx list->*list-stx)
+                                     ensure-*list-stx)
   ;; group content into a list of list-generating groups,
   ;; and those lists will be appended
   (define (gather group groups)
@@ -1313,10 +1313,7 @@
                        (gather group groups)))]
         [(list-rest-rep? one)
          (values '()
-                 (cons (let ([lst (list-rest-syntax one)])
-                         (if list->*list-stx
-                             #`(#,list->*list-stx #,lst)
-                             lst))
+                 (cons (list-rest-syntax one)
                        (gather group groups)))]
         [else (values (cons one group) groups)])))
   (cond
@@ -1326,53 +1323,58 @@
 
 (define-for-syntax (build-treelist-form content)
   (build-*list-form content #'treelist #'empty-treelist #'treelist-append
-                    #'ensure-treelist #'list->treelist))
+                    #'ensure-treelist))
 
 (define-for-syntax (build-list-form content)
   (build-*list-form content #'list #'null #'append
-                    #'ensure-list #f))
+                    #'ensure-list))
 
 (define-for-syntax (build-mutable-treelist-form content)
   #`(treelist-copy
      #,(build-*list-form content #'treelist #'empty-treelist #'treelist-append
-                         #'ensure-treelist #'list->treelist)))
+                         #'ensure-treelist)))
 
 (define-syntax List
   (expression-transformer
    (make-constructor #'treelist build-treelist-form get-treelist-static-infos wrap-treelist-static-info
-                     #:convert-rep #'list->treelist/optimize)))
+                     #:rep-for-form #'for/treelist)))
 (define-syntax PairList
   (expression-transformer
-   (make-constructor #'list build-list-form get-list-static-infos wrap-list-static-info)))
+   (make-constructor #'list build-list-form get-list-static-infos wrap-list-static-info
+                     #:rep-for-form #'for/list)))
 (define-syntax MutableList
   (expression-transformer
    (make-constructor #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos wrap-mutable-treelist-static-info
-                     #:convert-rep #'list->mutable-treelist)))
+                     #:rep-for-form #'for/treelist
+                     #:rep-solo-for-form #'for/mutable-treelist)))
 
 (define-repetition-syntax List
   (repetition-transformer
    (make-constructor #:repetition? #t
                      #'treelist build-treelist-form get-treelist-static-infos wrap-treelist-static-info
-                     #:convert-rep #'list->treelist/optimize)))
+                     #:rep-for-form #'for/treelist)))
 (define-repetition-syntax PairList
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'list build-list-form get-list-static-infos wrap-list-static-info)))
+                     #'list build-list-form get-list-static-infos wrap-list-static-info
+                     #:rep-for-form #'for/list)))
 (define-repetition-syntax MutableList
   (repetition-transformer
    (make-constructor #:repetition? #t
                      #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos wrap-mutable-treelist-static-info
-                     #:convert-rep #'list->mutable-treelist)))
+                     #:rep-for-form #'for/mutable-treelist)))
 
 (define-for-syntax (parse-list-expression stx)
   (parse-*list-form stx build-treelist-form (get-treelist-static-infos) wrap-treelist-static-info
-                    #:convert-rep #'list->treelist/optimize
+                    #:rep-for-form #'for/treelist
+                    #:rep-solo-for-form #'for/treelist
                     #:repetition? #f
                     #:span-form-name? #f))
 
 (define-for-syntax (parse-list-repetition stx)
   (parse-*list-form stx build-treelist-form (get-treelist-static-infos) wrap-treelist-static-info
-                    #:convert-rep #'list->treelist/optimize
+                    #:rep-for-form #'for/treelist
+                    #:rep-solo-for-form #'for/treelist
                     #:repetition? #t
                     #:span-form-name? #f))
 

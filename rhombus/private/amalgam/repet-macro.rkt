@@ -15,12 +15,14 @@
                      "call-result-key.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
+         "treelist.rkt"
          "space-provide.rkt"
          "repetition.rkt"
          "space.rkt"
          "macro-macro.rkt"
          "parse.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "wrap-expression.rkt")
 
 (define+provide-space repet rhombus/repet
   #:fields
@@ -118,20 +120,25 @@
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (group)
       [(_::parens (group orig-form ...)
-                  (group name:identifier)
                   seq-expr
                   (group bind-depth:exact-nonnegative-integer)
                   (group use-depth:exact-nonnegative-integer)
-                  (group element-static-infos)
-                  (group immediate?:boolean))
+                  (group element-static-infos))
+       #:with (elem) (generate-temporaries '(elem))
        (wrap-parsed
-        (make-repetition-info #'(orig-form ...)
-                              #'name
-                              #'(rhombus-expression seq-expr)
-                              #'bind-depth
-                              #'use-depth
-                              (pack-static-infos who #'element-static-infos)
-                              #'immediate?))]
+        (if (= 0 (syntax-e #'bind-depth))
+            (make-repetition-info #'(orig-form ...)
+                                  #'()
+                                  (wrap-expression #'seq-expr)
+                                  (pack-static-infos who #'element-static-infos)
+                                  #'use-depth)
+            (make-repetition-info #'(orig-form ...)
+                                  #`(([(elem) (in-treelist #,(wrap-expression #'seq-expr))])
+                                     #,@(for/list ([i (in-range (sub1 (syntax-e #'bind-depth)))])
+                                          #`([(elem) (in-treelist elem)])))
+                                  #'elem
+                                  (pack-static-infos who #'element-static-infos)
+                                  #'use-depth)))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "ill-formed unpacked repetiton info"
                                  "syntax object" stx)]))
@@ -142,12 +149,11 @@
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
       [(parsed #:rhombus/repet r::repetition-info)
+       (define depth (length (syntax->list #'r.for-clausess)))
        (pack-term
         #`(parens (group . r.rep-expr)
-                  (group r.name)
-                  (group (parsed #:rhombus/expr r.seq-expr))
-                  (group r.bind-depth)
-                  (group r.use-depth)
-                  (group #,(unpack-static-infos who #'r.element-static-infos))
-                  (group r.immediate?)))]))
+                  (group (parsed #:rhombus/expr #,(repetition-as-nested-lists #'r depth #'for/list)))
+                  (group #,depth)
+                  (group r.used-depth)
+                  (group #,(unpack-static-infos who #'r.element-static-infos))))]))
   )

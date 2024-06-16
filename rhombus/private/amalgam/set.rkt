@@ -83,7 +83,8 @@
   (provide set-append
            set-extend*
            set-assert
-           list->set))
+           list->set
+           for/setalw))
 
 (module+ for-append
   (provide set-append
@@ -138,7 +139,9 @@
            (for-space rhombus/statinfo
                       NumberOrObjectSet-build*
                       MutableNumberOrObjectSet-build
-                      WeakMutableNumberOrObjectSet-build)))
+                      WeakMutableNumberOrObjectSet-build)
+
+           for/set for/seteq for/seteqv for/setalw))
 
 (module+ for-key-comp-macro
   (provide set?
@@ -418,10 +421,11 @@
   (syntax-parse stx
     [(_ ht-id v) #'(hash-set ht-id v #t)]))
 
-(define-for-syntax (parse-set stx arg-stxes repetition? set-build-id set-build*-id list->set-id)
+(define-for-syntax (parse-set stx arg-stxes repetition? set-build-id set-build*-id set-for-form)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
      (define-values (shape argss) (parse-setmap-content #'content
+                                                        #:set-for-form set-for-form
                                                         #:shape 'set
                                                         #:who (syntax-e #'form-id)
                                                         #:repetition? repetition?))
@@ -434,7 +438,7 @@
                             #'set-assert
                             (get-set-static-infos)
                             #:repetition? repetition?
-                            #:list->setmap list->set-id))
+                            #:rep-for-form #'for/setalw))
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use set-build*-id)
@@ -443,7 +447,7 @@
 
 (define-syntax Set
   (expression-transformer
-   (lambda (stx) (parse-set stx '() #f #'Set-build #'Set-build* #'list->set))))
+   (lambda (stx) (parse-set stx '() #f #'Set-build #'Set-build* #'for/setalw))))
 
 (define-syntax Set.by
   (expression-transformer
@@ -453,7 +457,7 @@
                        (parse-set stx arg-stxes #f
                                   (key-comp-set-build-id mapper)
                                   (key-comp-set-build*-id mapper)
-                                  (key-comp-list->set-id mapper)))))))
+                                  (key-comp-set-for-form-id mapper)))))))
 
 (define-for-syntax (make-set-binding-transformer mode)
   (lambda (stx)
@@ -481,7 +485,7 @@
 
 (define-repetition-syntax Set
   (repetition-transformer
-   (lambda (stx) (parse-set stx '() #t #'Set-build #'Set-build* #'list->set))))
+   (lambda (stx) (parse-set stx '() #t #'Set-build #'Set-build* #'for/setalw))))
 
 (define-repetition-syntax Set.by
   (repetition-transformer
@@ -491,7 +495,7 @@
                        (parse-set stx arg-stxes #t
                                   (key-comp-set-build-id mapper)
                                   (key-comp-set-build*-id mapper)
-                                  (key-comp-list->set-id mapper)))))))
+                                  (key-comp-set-for-form-id mapper)))))))
 
 (define-for-syntax (parse-set-binding who stx opener+closer [mode #'("Set" set? values)])
   (syntax-parse stx
@@ -536,9 +540,8 @@
                                      #:sequence-element-info? #t
                                      #:rest-accessor
                                      (and maybe-rest
-                                          (if rest-repetition?
-                                              #`(lambda (v) (set->list #,rest-tmp))
-                                              #`(lambda (v) #,rest-tmp)))
+                                          #`(lambda (v) #,rest-tmp))
+                                     #:rest-to-repetition #'Set.to_sequence/optimize
                                      #:rest-repetition? rest-repetition?))
     (values
      (syntax-parse composite
@@ -729,8 +732,7 @@
                  (lambda args
                    (values (quasisyntax/loc stx
                              (#,mutable-set-build-id #,@args))
-                           (get-mutable-set-static-infos)))
-                 #:maybe-immediate? #t)]
+                           (get-mutable-set-static-infos))))]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
                         (#,mutable-set-build-id #,@(if (null? argss) null (car argss))))
@@ -1065,3 +1067,23 @@
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (check-readable-set who st)
   (in-hash-keys (set-ht st)))
+
+(define-syntax (for/setalw stx)
+  (syntax-parse stx
+    [(_ clauses body)
+     #`(set (for/hashalw clauses (values body #t)))]))
+    
+(define-syntax (for/seteq stx)
+  (syntax-parse stx
+    [(_ clauses body)
+     #`(set (for/hasheq clauses (values body #t)))]))
+
+(define-syntax (for/seteqv stx)
+  (syntax-parse stx
+    [(_ clauses body)
+     #`(set (for/hasheqv clauses (values body #t)))]))
+
+(define-syntax (for/set stx)
+  (syntax-parse stx
+    [(_ clauses body)
+     #`(set (for/hash clauses (values body #t)))]))

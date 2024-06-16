@@ -14,12 +14,12 @@
   (define in-key-comp-space (make-interned-syntax-introducer/add 'rhombus/key_comp))
 
   (struct key-comp (name-sym map?-id
-                             map-build-id map-pair-build-id list->map-id
+                             map-build-id map-pair-build-id map-for-form-id
                              mutable-map?-id mutable-map-build-id
                              weak-mutable-map?-id weak-mutable-map-build-id
                              empty-stx
                              set?-id
-                             set-build-id set-build*-id list->set-id
+                             set-build-id set-build*-id set-for-form-id
                              mutable-set?-id mutable-set-build-id
                              weak-mutable-set?-id weak-mutable-set-build-id))
 

@@ -38,12 +38,10 @@
        [(form-name q . tail)
         (define si (check-quotable #'form-name #'q))
         (values (make-repetition-info #'datum
-                                      #'value
+                                      #'()
                                       (syntax/loc stx (quote q))
-                                      0
-                                      0
                                       si
-                                      #t)
+                                      0)
                 #'tail)]))))
 
 (define-binding-syntax |#'|

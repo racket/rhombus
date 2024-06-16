@@ -35,6 +35,8 @@
 ;     for a map shape, each arg list is an alternating list of keys and values;
 ;;    `rest-rep` values appear in the `argss` list to indicate a `...` splice
 (define-for-syntax (parse-setmap-content stx
+                                         #:set-for-form [set-for-form #f]
+                                         #:map-for-form [map-for-form #'for/hashalw]
                                          #:shape [init-shape #f]
                                          #:who [who #f]
                                          #:raw? [raw? #f]
@@ -54,7 +56,7 @@
           (define the-rep (flatten-repetition #'rep.parsed extra-ellipses))
           (rest-rep (if repetition?
                         the-rep
-                        (repetition-as-list the-rep 1)))])]))
+                        (render-repetition set-for-form the-rep)))])]))
   (define (repetition-map-arguments key-e val-e extra-ellipses)
     (cond
       [raw? (list key-e val-e)]
@@ -67,13 +69,18 @@
                          (build-compound-repetition
                           stx (list key-parsed val-parsed)
                           (lambda (key val)
-                            (values #`(cons #,key #,val)
-                                    #'()))
-                          #:maybe-immediate? #t)
-                         extra-ellipses))
+                            (values #`(values #,key #,val)
+                                    #'())))
+                         extra-ellipses
+                         #:pack-element (lambda (e)
+                                          #`(let-values ([(a d) #,e])
+                                              (cons a d)))
+                         #:unpack-element (lambda (e)
+                                            #`(let ([p #,e])
+                                                (values (car p) (cdr p))))))
        (list (rest-rep (if repetition?
                            pair-rep
-                           (repetition-as-list pair-rep 1))))]))
+                           (render-repetition map-for-form pair-rep))))]))
   (syntax-parse stx
     #:datum-literals (group)
     [(_::braces elem ...)
@@ -171,7 +178,7 @@
                                  assert-id
                                  static-info
                                  #:repetition? [repetition? #f]
-                                 #:list->setmap [list->setmap #f])
+                                 #:rep-for-form rep-for-form)
   (define (build argss)
     (for/fold ([base #f]
                #:result (or base
@@ -190,7 +197,7 @@
          ;; a `&` or `...` splice
          (define e
            (cond
-             [(rest-rep? args) #`(#,list->setmap #,(rest-rep-stx args))]
+             [(rest-rep? args) (rest-rep-stx args)]
              [else #`(#,assert-id #,args)]))
          (if base
              (quasisyntax/loc stx
@@ -206,7 +213,7 @@
                   (lambda args
                     (values (build (regroup-setmap-arguments args argss))
                             static-info))
-                  #:maybe-immediate? #t
+                  #:sequence-for-form rep-for-form
                   #:is-sequence? rest-rep?
                   #:extract (lambda (v) (if (rest-rep? v) (rest-rep-stx v) v)))]
     [else (wrap-static-info* (build argss) static-info)]))

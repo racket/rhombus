@@ -14,12 +14,12 @@
   (key-comp-maker
    (lambda ()
      (key-comp '== #'equal-always-hash?
-               #'Map-build #'Map-pair-build #'list->map
+               #'Map-build #'Map-pair-build #'for/hashalw
                #'mutable-equal-always-hash? #'MutableMap-build
                #'weak-mutable-equal-always-hash? #'WeakMutableMap-build
                #'#hashalw()
                #'immutable-equal-always-set?
-               #'Set-build #'Set-build* #'list->set
+               #'Set-build #'Set-build* #'for/setalw
                #'mutable-equal-always-set? #'MutableSet-build
                #'weak-mutable-equal-always-set? #'WeakMutableSet-build))))
 
@@ -27,12 +27,12 @@
   (key-comp-maker
    (lambda ()
      (key-comp '=== #'object-hash?
-               #'ObjectMap-build #'ObjectMap-pair-build #'list->object-map
+               #'ObjectMap-build #'ObjectMap-pair-build #'for/hasheq
                #'mutable-object-hash? #'MutableObjectMap-build
                #'weak-mutable-object-hash? #'WeakMutableObjectMap-build
                #'#hasheq()
                #'immutable-object-set?
-               #'ObjectSet-build #'ObjectSet-build* #'list->object-set
+               #'ObjectSet-build #'ObjectSet-build* #'for/seteq
                #'mutable-object-set? #'MutableObjectSet-build
                #'weak-mutable-object-set? #'WeakMutableObjectSet-build))))
 
@@ -40,12 +40,12 @@
   (key-comp-maker
    (lambda ()
      (key-comp 'is_now #'now-hash?
-               #'NowMap-build #'NowMap-pair-build #'list->now-map
+               #'NowMap-build #'NowMap-pair-build #'for/hash
                #'mutable-now-hash? #'MutableNowMap-build 
                #'weak-mutable-now-hash? #'WeakMutableNowMap-build 
                #'#hash()
                #'immutable-now-set?
-               #'NowSet-build #'NowSet-build* #'list->now-set
+               #'NowSet-build #'NowSet-build* #'for/set
                #'mutable-now-set? #'MutableNowSet-build
                #'weak-mutable-now-set? #'WeakMutableNowSet-build))))
 
@@ -53,11 +53,11 @@
   (key-comp-maker
    (lambda ()
      (key-comp 'is_same_number_or_object #'number-or-object-hash?
-               #'NumberOrObjectMap-build #'NumberOrObjectMap-pair-build #'list->number-or-object-map
+               #'NumberOrObjectMap-build #'NumberOrObjectMap-pair-build #'for/hasheqv
                #'mutable-number-or-object-hash? #'MutableNumberOrObjectMap-build 
                #'weak-mutable-number-or-object-hash? #'WeakMutableNumberOrObjectMap-build 
                #'#hasheqv()
                #'immutable-number-or-object-set?
-               #'NumberOrObjectSet-build #'NumberOrObjectSet-build* #'list->number-or-object-set
+               #'NumberOrObjectSet-build #'NumberOrObjectSet-build* #'for/seteqv
                #'mutable-number-or-object-set? #'MutableNumberOrObjectSet-build
                #'weak-mutable-number-or-object-set? #'WeakMutableNumberOrObjectSet-build))))
