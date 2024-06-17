@@ -441,5 +441,5 @@
   (reducer-infix-operator
    `((default . stronger))
    'macro
-   (lambda (stx) (error "should not get here"))
+   (lambda (form tail) (error "should not get here"))
    'none))

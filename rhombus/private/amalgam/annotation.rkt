@@ -855,13 +855,13 @@
   (annotation-infix-operator
    `((default . weaker))
    'macro
-   (lambda (stx) (error "should not get here"))
+   (lambda (form tail) (error "should not get here"))
    'none))
 (define-annotation-syntax is_a
   (annotation-infix-operator
    `((default . stronger))
    'macro
-   (lambda (stx) (error "should not get here"))
+   (lambda (form tail) (error "should not get here"))
    'none))
 
 (define (raise-::-annotation-failure who val ctc)

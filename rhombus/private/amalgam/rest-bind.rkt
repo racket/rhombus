@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      "annotation-string.rkt")
          "provide.rkt"
+         "expression.rkt"
          "binding.rkt"
          "parse.rkt"
          "static-info.rkt")
@@ -11,12 +12,15 @@
                       rhombus/bind)
                      rest-bind))
 
-(define-syntax (rest-bind stx)
-  (error "should not get here"))
+(define-syntax rest-bind
+  (expression-prefix-operator
+   `()
+   'macro
+   (lambda (tail) (error "should not get here"))))
 
 (define-binding-syntax rest-bind
   (binding-prefix-operator
-   '()
+   `()
    'macro
    (lambda (tail)
      (syntax-parse tail
