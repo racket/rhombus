@@ -88,6 +88,19 @@ In other words, unless otherwise documented, the depth of a repetition
 formed by combining repetitions is the maximum of the depths of the
 combined repetitions, so @rhombus(z+y) is a repetition of depth 2.
 
+Expressions with side effects or short-circuiting operators can appear
+within a repetition. Each effect and control-flow choice is applied on
+demand per element of the repetition, which can be different than
+constructing an intermediate repetition.
+
+@examples(
+  def [x, ...] = [1, 2, 3]
+  [x > 1 && println(x), ...]
+  block:
+    let [void, ...] = [println(x), ...]
+    [x > 1 && void, ...]
+)
+
 When an identifier is bound as a repetition, it is bound in the
 @rhombus(repet, ~space) space, but also in the @rhombus(expr, ~space).
 The @rhombus(expr, ~space) binding reports an error, but the intent of
