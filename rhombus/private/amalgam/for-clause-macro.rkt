@@ -6,8 +6,6 @@
                      "macro-result.rkt")
          "space-provide.rkt"
          "for-clause.rkt"
-         (submod "for-clause.rkt" for-class)
-         "name-root.rkt"
          "macro-macro.rkt")
 
 (define+provide-space for_clause rhombus/for_clause
@@ -25,4 +23,4 @@
                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
      (unless (syntax? defns)
        (raise-bad-macro-result (proc-name proc) "`for` clause" defns))
-     (datum->syntax #f (unpack-multi defns proc #f)))))
+     #`(#:splice #,@(unpack-multi defns proc #f)))))

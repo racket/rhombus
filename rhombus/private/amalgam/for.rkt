@@ -23,18 +23,14 @@
          "is-static.rkt"
          "forwarding-sequence.rkt"
          "syntax-parameter.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         (only-in "for-clause-primitive.rkt"
+                  each))
 
-(provide (rename-out [rhombus-for for])
-         (for-space rhombus/for_clause
-                    each
-                    keep_when
-                    skip_when
-                    break_when
-                    final_when))
+(provide (rename-out [rhombus-for for]))
 
 (begin-for-syntax
-  (define-syntax-class :maybe_ends_each
+  (define-syntax-class :maybe-ends-each
     #:attributes (each red-parsed)
     #:datum-literals (group)
     (pattern ((_::parens (~and g (group bind ...+ (_::block . _))) ...))
@@ -60,9 +56,9 @@
      (define-values (red-parsed body)
        (syntax-parse stx
          #:datum-literals (group)
-         [(_ pre_t ... (_::block body ... (group #:into red ...)))
+         [(_ pre-t ... (_::block body ... (group #:into red ...)))
           #:cut
-          #:with pre::maybe_ends_each #'(pre_t ...)
+          #:with pre::maybe-ends-each #'(pre-t ...)
           #:do [(when (attribute pre.red-parsed)
                   (raise-syntax-error #f
                                       "cannot have both `~into` and reducer terms before block"
@@ -70,9 +66,9 @@
           #:with redr::reducer #`(#,group-tag red ...)
           (values #'redr.parsed
                   #'((~? pre.each) body ...))]
-         [(_ pre_t ... (_::block body ...))
+         [(_ pre-t ... (_::block body ...))
           #:cut
-          #:with pre::maybe_ends_each #'(pre_t ...)
+          #:with pre::maybe-ends-each #'(pre-t ...)
           (values (attribute pre.red-parsed)
                   #'((~? pre.each) body ...))]))
      (values
@@ -129,13 +125,12 @@
          (raise-syntax-error #f
                              "empty body (after any clauses such as `each`)"
                              (respan #'orig)))
-       #`(#,@(reverse (map (add-clause-stx-params #'stx-params) (syntax->list #'rev-clauses)))
+       #`(#,@(reverse (syntax->list #'rev-clauses))
           #:do [matcher
                 binder
                 (body-wrapper
                  data
-                 (with-syntax-parameters
-                  stx-params
+                 (with-syntax-parameters stx-params
                    (rhombus-body
                     . #,(reverse (syntax->list #'rev-bodys)))))])]
       [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher binder stx-params])
@@ -145,7 +140,7 @@
        (cond
          [(pair? (syntax-e #'rev-clauses))
           ;; emit clauses and bind before processing a (potentially non-empty) body
-          #`(#,@(reverse (map (add-clause-stx-params #'stx-params) (syntax->list #'rev-clauses)))
+          #`(#,@(reverse (syntax->list #'rev-clauses))
              #:do [matcher
                    binder]
              #:splice (for-clause-step orig static?
@@ -175,46 +170,39 @@
                                           [finish () () (void) (void) #,stx-params]
                                           . #,bodys))))]
          [else
-          (with-continuation-mark
-           syntax-parameters-key #'stx-params
-           (syntax-parse #'body0
-             #:datum-literals (group)
-             #:literals (prim-for-clause)
-             [(group prim-for-clause #:each any ...+ rhs-blk)
-              ;; parse binding as binding group
-              #`(#:splice (for-clause-step
-                           orig static?
-                           #,(build-binding-clause/values #'orig
+          (define parsed
+            (with-continuation-mark syntax-parameters-key #'stx-params
+              (syntax-parse #'body0
+                [body0::for-clause #'body0.parsed])))
+          (syntax-parse parsed
+            [(#:each any ...+ rhs-blk)
+             ;; parse a binding
+             #`(#:splice (for-clause-step
+                          orig static?
+                          #,(build-binding-clause/values #'orig
+                                                         #'state
+                                                         #`((#,group-tag any ...))
+                                                         #'rhs-blk
+                                                         (syntax-e #'static?))
+                          . bodys))]
+            [(#:each (_::block (group any ...+ rhs-blk)
+                               ...))
+             ;; parse a block of bindings
+             #`(#:splice (for-clause-step
+                          orig static?
+                          #,(build-binding-clause*/values #'orig
                                                           #'state
-                                                          #`((#,group-tag any ...))
-                                                          #'rhs-blk
+                                                          (syntax->list #`(((#,group-tag any ...)) ...))
+                                                          (syntax->list #'(rhs-blk ...))
                                                           (syntax-e #'static?))
-                           . bodys))]
-             [(group prim-for-clause #:each (_::block (group any ...+ rhs-blk)
-                                                      ...))
-              ;; parse binding as binding group
-              #`(#:splice (for-clause-step
-                           orig static?
-                           #,(build-binding-clause*/values #'orig
-                                                           #'state
-                                                           (syntax->list #`(((#,group-tag any ...)) ...))
-                                                           (syntax->list #'(rhs-blk ...))
-                                                           (syntax-e #'static?))
-                           . bodys))]
-             [(group prim-for-clause (~and kw (~or* #:keep_when #:skip_when #:break_when #:final_when))
-                     rhs)
-              #:with new-kw (case (syntax-e #'kw)
-                              [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
-                              [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
-                              [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
-                              [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
-                              [else #'kw])
-              #`(new-kw
-                 (with-syntax-parameters stx-params rhs)
-                 #:splice (for-clause-step orig static? state . bodys))]
-             [body0::for-clause
-              #:with f::for-clause-form #'body0.parsed
-              #`(#:splice (for-clause-step orig static? state f.parsed ... . bodys))]))])]
+                          . bodys))]
+            [((~and kw (~or* #:when #:unless #:break #:final))
+              rhs)
+             #`(kw
+                (with-syntax-parameters stx-params rhs)
+                #:splice (for-clause-step orig static? state . bodys))]
+            [(#:splice new ...)
+             #`(#:splice (for-clause-step orig static? state new ... . bodys))])])]
       [(_ orig static? [finish rev-clauses rev-bodys matcher binder stx-params]
           body0
           . bodys)
@@ -279,16 +267,18 @@
                                          bindings-stx
                                          rhs-blk-stx
                                          static?)
-  (define lhs-parsed-stxes (for/list ([binding-stx (in-list (syntax->list bindings-stx))])
-                             (syntax-parse binding-stx
-                               [lhs::binding #'lhs.parsed]
-                               [_ (raise-syntax-error #f
-                                                      "expected a binding"
-                                                      (respan orig-stx)
-                                                      (respan binding-stx))])))
-  (syntax-parse lhs-parsed-stxes
-    [(lhs-e::binding-form ...)
-     #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
+  (syntax-parse state-stx
+    [[finish rev-clauses rev-bodys matcher binder stx-params]
+     #:do [(define lhs-parsed-stxes (for/list ([binding-stx (in-list (syntax->list bindings-stx))])
+                                      (syntax-parse binding-stx
+                                        [lhs::binding #'lhs.parsed]
+                                        [_ (raise-syntax-error #f
+                                                               "expected a binding"
+                                                               (respan orig-stx)
+                                                               (respan binding-stx))])))]
+     #:with (lhs-e::binding-form ...) lhs-parsed-stxes
+     #:with rhs (with-continuation-mark syntax-parameters-key #'stx-params
+                  (rhombus-local-expand (enforest-expression-block rhs-blk-stx)))
      #:with (static-infos ...) (normalize-static-infos/values
                                 (length lhs-parsed-stxes)
                                 (or (syntax-local-static-info #'rhs #'#%sequence-element)
@@ -305,138 +295,68 @@
                            (string-append "no specific iteration implementation available" statically-str)
                            (respan orig-stx)
                            (respan rhs-blk-stx)))
-     (syntax-parse state-stx
-       [[finish rev-clauses rev-bodys matcher binder stx-params]
-        #`[finish
-           ([(tmp-id ...) #,(relocate ; this helps debugging info
-                             rhs-blk-stx
-                             (cond
-                               [(identifier? seq-ctr)
-                                (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
-                                    (unwrap-static-infos
+     #`[finish
+        ([(tmp-id ...) #,(relocate ; this helps debugging info
+                          rhs-blk-stx
+                          (add-with-syntax-parameters
+                           #'stx-params
+                           (cond
+                             [(identifier? seq-ctr)
+                              (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
+                                  (unwrap-static-infos
+                                   (with-continuation-mark syntax-parameters-key #'stx-params
                                      (rhombus-local-expand
-                                      #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs)))))))
-                                    #`(#,seq-ctr rhs))]
-                               [else (unwrap-static-infos #'rhs)]))]
-            . rev-clauses)
-           ()
-           (begin
-             matcher
-             (lhs-i.matcher-id tmp-id
-                               lhs-i.data
-                               if/flattened
-                               (begin)
-                               (rhs-binding-failure 'form-id tmp-id 'lhs-i.annotation-str))
-             ...)
-           (begin
-             binder
-             (lhs-i.committer-id tmp-id lhs-i.data)
-             ...
-             (lhs-i.binder-id tmp-id lhs-i.data)
-             ...
-             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-             ... ...
-             (define-values () (values)))
-           stx-params]])]))
+                                      #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs))))))))
+                                  #`(#,seq-ctr rhs))]
+                             [else
+                              (unwrap-static-infos #'rhs)])))]
+         . rev-clauses)
+        ()
+        (begin
+          matcher
+          (lhs-i.matcher-id tmp-id
+                            lhs-i.data
+                            if/flattened
+                            (begin)
+                            (rhs-binding-failure 'form-id tmp-id 'lhs-i.annotation-str))
+          ...)
+        (begin
+          binder
+          (lhs-i.committer-id tmp-id lhs-i.data)
+          ...
+          (lhs-i.binder-id tmp-id lhs-i.data)
+          ...
+          (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+          ... ...
+          (define-values () (values)))
+        stx-params]]))
 
 (define-for-syntax (build-binding-clause*/values orig-stx
                                                  state-stx
                                                  bindings-stxs
                                                  rhs-blk-stxs
                                                  static?)
-    (cond
-      [(null? bindings-stxs) state-stx]
-      [else
-       (define new-state-stx (build-binding-clause/values orig-stx
-                                                          state-stx
-                                                          (car bindings-stxs)
-                                                          (car rhs-blk-stxs)
-                                                          static?))
-       (build-binding-clause*/values orig-stx
-                                     new-state-stx
-                                     (cdr bindings-stxs)
-                                     (cdr rhs-blk-stxs)
-                                     static?)]))
+  (for/fold ([state-stx state-stx])
+            ([bindings-stx (in-list bindings-stxs)]
+             [rhs-blk-stx (in-list rhs-blk-stxs)])
+    (build-binding-clause/values orig-stx
+                                 state-stx
+                                 bindings-stx
+                                 rhs-blk-stx
+                                 static?)))
 
 (define (rhs-binding-failure who val binding-str)
   (raise-binding-failure who "element" val binding-str))
 
-(define-for-syntax ((add-clause-stx-params stx-params) clause)
-  (cond
-    [(zero? (hash-count (syntax-e stx-params))) clause]
-    [else
-     (syntax-parse clause
-       [[bind rhs]
-        ;; since `for` uses `local-expand` to recognize optimized patterns,
-        ;; and since `with-syntax-parameters` also uses `local-expand-expression`,
-        ;; this `with-syntax-parameters` wrapper doesn't interfere with optimization
-        ;; also, assign source location to help debugging info
-        #`[bind #,(quasisyntax/loc #'rhs
-                    (with-syntax-parameters #,stx-params rhs))]])]))
+(define-for-syntax (add-with-syntax-parameters stx-params rhs)
+  (if (eqv? (hash-count (syntax-e stx-params)) 0)
+      rhs
+      ;; FIXME this can hide an otherwise immediate sequence form
+      #`(with-syntax-parameters #,stx-params #,rhs)))
 
 ;; ----------------------------------------
 
-;; To recognize all primitive forms:
-(define-syntax prim-for-clause
-  (for-clause-transformer
-   (lambda (stx)
-     (raise-syntax-error #f "should not try to expand" (respan stx)))))
-
-(begin-for-syntax
-  ;; Like `:var-decl`, but we don't allow `=` here
-  (define-splicing-syntax-class :each-decl
-    #:datum-literals (group)
-    #:attributes ([bind 1] blk)
-    (pattern (~seq bind ...+ (~and blk (_::block . _))))))
-
-(define-for-clause-syntax each
-  (for-clause-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-id d::each-decl)
-        #`[(#,group-tag prim-for-clause #:each d.bind ... d.blk)]]
-       [(form-id (tag::block (group d::each-decl) ...))
-        #`[(#,group-tag prim-for-clause #:each (tag
-                                                (group d.bind ... d.blk)
-                                                ...))]]
-       [_
-        (raise-syntax-error #f
-                            "needs a binding followed by a block, or it needs a block of bindings (each with a block)"
-                            (respan stx))]))))
-
-(define-for-syntax (parse-when stx kw)
-  (syntax-parse stx
-    [(form-id (tag::block g ...))
-     #`[(#,group-tag prim-for-clause #,kw (rhombus-body-at tag g ...))]]
-    [(form-id expr ...+)
-     #`[(#,group-tag prim-for-clause #,kw (rhombus-expression (#,group-tag expr ...)))]]
-    [(form-id)
-     (raise-syntax-error #f
-                         "missing expression"
-                         (respan #'stx))]))
-
-(define-for-clause-syntax keep_when
-  (for-clause-transformer
-   (lambda (stx)
-     (parse-when stx '#:keep_when))))
-
-(define-for-clause-syntax skip_when
-  (for-clause-transformer
-   (lambda (stx)
-     (parse-when stx '#:skip_when))))
-
-(define-for-clause-syntax break_when
-  (for-clause-transformer
-   (lambda (stx)
-     (parse-when stx '#:break_when))))
-
-(define-for-clause-syntax final_when
-  (for-clause-transformer
-   (lambda (stx)
-     (parse-when stx '#:final_when))))
-
-;; not exported, but referenced by `:maybe_ends_each` so that
+;; not exported, but referenced by `:maybe-ends-each` so that
 ;; reducer parsing terminates appropriately
 (define-reducer-syntax #%call
   (reducer-infix-operator

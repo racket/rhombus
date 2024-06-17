@@ -131,6 +131,7 @@
         "pattern.rkt"
         "pattern-clause-primitive.rkt"
         "for.rkt"
+        "for-clause-primitive.rkt"
         "range.rkt"
         "control.rkt"
         "exn-object.rkt"
