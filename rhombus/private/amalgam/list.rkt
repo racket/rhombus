@@ -448,27 +448,31 @@
       [(_ . tail)
        (values proc-stx #'tail)])))
 
-(define-for-syntax (make-treelist-rest-selector args-n for-rep?)
+(define-for-syntax (make-treelist-rest-selector args-n post-args-n)
   (if (= 0 args-n)
-      #'values
-      #`(lambda (v) (treelist-drop v '#,args-n))))
+      (if (= 0 post-args-n)
+          #'values
+          #`(lambda (v) (treelist-drop-right v '#,post-args-n)))
+      (if (= 0 post-args-n)
+          #`(lambda (v) (treelist-drop v '#,args-n))
+          #`(lambda (v) (treelist-drop-right (treelist-drop v '#,args-n) '#,post-args-n)))))
 
-(define-for-syntax (make-list-rest-selector args-n for-rep?)
+(define-for-syntax (make-list-rest-selector args-n zero-post-args-n)
   (if (= 0 args-n)
       #'values
       #'cdr))
 
-(define-for-syntax (make-binding generate-binding make-rest-selector get-static-infos)
+(define-for-syntax (make-binding generate-binding make-rest-selector get-static-infos mid-splice-allowed?)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id (_::parens arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos))]
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos) mid-splice-allowed?)]
        [(form-id (_::brackets arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos))]))))
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos) mid-splice-allowed?)]))))
 
 (define-for-syntax (parse-list-binding stx)
-  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos)))
+  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos) #t))
 
 (define-annotation-constructor (List List.of)
   ()
@@ -1135,49 +1139,79 @@
 
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
-(define-for-syntax (parse-*list-binding stx generate-binding make-rest-selector static-infos)
+(define-for-syntax (parse-*list-binding stx generate-binding make-rest-selector static-infos mid-splice-allowed?)
+  (define (check-allowed-args args after-args op-stx)
+    (define (no op-stx)
+      (raise-syntax-error #f
+                          "second splice or repetition not allowed in a list pattern"
+                          stx
+                          op-stx))
+    (for ([arg (in-list args)])
+      (syntax-parse arg
+        [(group _::&-bind . _) (no op-stx)]
+        [(group _::...-bind . _) (no op-stx)]
+        [_ (void)]))
+    (for ([arg (in-list after-args)])
+      (syntax-parse arg
+        [(group op::&-bind . _) (no #'op)]
+        [(group op::...-bind . _) (no #'op)]
+        [_ (void)]))
+    (unless mid-splice-allowed?
+      (when (pair? after-args)
+        (raise-syntax-error #f
+                            "splice or repetition not allowed before the end of the pattern"
+                            stx
+                            op-stx))))
   (syntax-parse stx
     #:datum-literals (group)
-    [(form-id (_ arg ... (group _::&-bind rest-arg ...)) . tail)
+    [(form-id (_ arg ... (group op::&-bind rest-arg ...) after-arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
-     (define len (length args))
-     (generate-binding #'form-id len #t args #'tail
+     (define after-args (syntax->list #'(after-arg ...)))
+     (check-allowed-args args after-args #'op)
+     (generate-binding #'form-id #t args after-args #'tail
                        #`(#,group-tag rest-bind #,static-infos
                           (#,group-tag rest-arg ...))
-                       (make-rest-selector len #f)
+                       make-rest-selector
                        #f)]
-    [(form-id (_ arg ... rest-arg (group _::...-bind)) . tail)
+    [(form-id (_ arg ... rest-arg (group op::...-bind) after-arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
+     (define after-args (syntax->list #'(after-arg ...)))
+     (check-allowed-args args after-args #'op)
      (define len (length args))
-     (generate-binding #'form-id len #t args #'tail #'rest-arg
-                       (make-rest-selector len #t)
+     (generate-binding #'form-id #t args after-args #'tail #'rest-arg
+                       make-rest-selector
                        #t)]
     [(form-id (_ arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
-     (define len (length args))
-     (generate-binding #'form-id len #f args #'tail)]))
+     (generate-binding #'form-id #f args null #'tail)]))
 
-(define-for-syntax (generate-treelist-binding form-id len or-more? args tail [rest-arg #f] [rest-selector #f]
+(define-for-syntax (generate-treelist-binding form-id or-more? args after-args tail [rest-arg #f] [make-rest-selector #f]
                                               [rest-repetition? #t])
+  (define pre-len (length args))
+  (define post-len (length after-args))
+  (define len (+ pre-len post-len))
   (define pred #`(lambda (v)
                    (and (treelist? v)
                         (#,(if or-more? #'>= #'=) (treelist-length v) #,len))))
-  (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
+  (composite-binding-transformer #`(#,form-id (parens . #,(append args after-args)) . #,tail)
                                  #:rest-arg rest-arg
                                  "List"
                                  pred
-                                 (for/list ([i (in-range (length args))])
-                                   #`(lambda (tl) (treelist-ref tl #,i)))
-                                 (for/list ([arg (in-list args)])
+                                 (for/list ([i (in-range len)])
+                                   (if (i . < . pre-len)
+                                       #`(lambda (tl) (treelist-ref tl #,i))
+                                       #`(lambda (tl) (treelist-ref tl (+ (treelist-length tl) #,(- i len))))))
+                                 (for/list ([i (in-range len)])
                                    #'())
                                  #:index-result-info? #t
-                                 #:rest-accessor rest-selector
+                                 #:rest-accessor (and make-rest-selector (make-rest-selector pre-len post-len))
                                  #:rest-repetition? rest-repetition?
                                  #:rest-to-repetition #'in-treelist
                                  #:static-infos (get-treelist-static-infos)))
 
-(define-for-syntax (generate-list-binding form-id len or-more? args tail [rest-arg #f] [rest-selector #f]
+(define-for-syntax (generate-list-binding form-id or-more? args after-args tail [rest-arg #f] [make-rest-selector #f]
                                           [rest-repetition? #t])
+  (define len (length args))
   (define pred #`(lambda (v)
                    (and (list? v)
                         #,(let ([check #`(maybe-list-tail v #,len)])
@@ -1198,13 +1232,13 @@
                                   (for/list ([arg (in-list args)])
                                     #'())
                                   #:index-result-info? #t
-                                  #:rest-accessor rest-selector
+                                  #:rest-accessor (and make-rest-selector (make-rest-selector len 0))
                                   #:rest-repetition? rest-repetition?
                                   #:rest-to-repetition #'in-list
                                   #:static-infos (get-list-static-infos)))
 
-(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos))
-(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector get-list-static-infos))
+(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos #t))
+(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector get-list-static-infos #f))
 
 (begin-for-syntax
   (struct list-rest (syntax))

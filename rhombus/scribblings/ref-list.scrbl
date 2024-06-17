@@ -113,11 +113,11 @@ it supplies its elements in order.
     list_bind: def bind ~defn
     repet_bind: def bind ~defn
   bind.macro 'List($bind, ...)'
-  bind.macro 'List($bind, ..., $rest)'
+  bind.macro 'List($bind, ..., $rest, $bind, ...)'
   bind.macro '#%brackets [$bind, ...]'
-  bind.macro '#%brackets [$bind, ..., $rest]'
+  bind.macro '#%brackets [$bind, ..., $rest, $bind, ...]'
   bind.macro 'List[$bind, ...]'
-  bind.macro 'List[$bind, ..., $rest]'
+  bind.macro 'List[$bind, ..., $rest, $bind, ...]'
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
     & $list_bind
@@ -128,9 +128,11 @@ it supplies its elements in order.
  Matches a list with as many elements as @rhombus(bind)s, or if
  @rhombus(rest) is included, at least as many elements as
  @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
- rest of the list.
+ remainder of the list. Unlike most binding forms, a list pattern
+ can include a @rhombus(rest) in the middle of a @rhombus(bind)
+ sequence, and not just after @rhombus(bind)s.
 
- When @rhombus(& list_bind) is used, the rest of the list must match
+ When @rhombus(& list_bind) is used, the remainder of the list must match
  the @rhombus(list_bind). Static information associated by
  @rhombus(List) is propagated to @rhombus(list_bind).
 
@@ -151,6 +153,8 @@ it supplies its elements in order.
   def List(1, & xs) = [1, 2, 3]
   xs
   def List(1, x, ...) = [1, 2, 3]
+  [x, ...]
+  def List(1, x, ..., 3) = [1, 2, 3]
   [x, ...]
 )
 
