@@ -184,6 +184,16 @@ struct posn(x, y):
        hc,
        hc)
 
+// operator-continued line should not
+// change indentation of a continuing |
+a
+  + b
+| e
+a
+  + b:
+    d
+| e
+
 INPUT
 
 ;; ----------------------------------------
@@ -755,6 +765,8 @@ INPUT
                (parens (group a (op |.|) y) (group b (op |.|) y)))))
             (group hc)
             (group hc)))))))))
+    (group a (op +) b (alts (block (group e))))
+    (group a (op +) b (block (group d)) (alts (block (group e))))
     (group
      struct
      posn

@@ -649,8 +649,7 @@
                         #:count? (state-count? s)
                         #:line line
                         #:closer (or (and (state-count? s)
-                                          (column-half-next (or (state-operator-column s)
-                                                                (state-column s))))
+                                          (column-half-next (state-column s)))
                                      'any)
                         #:delta (state-delta s)
                         #:raw (state-raw s)
@@ -659,8 +658,7 @@
                         #:bar-closes-line (state-bar-closes-line s)
                         #:can-empty? (state-can-empty? s)
                         #:could-empty-if-start? #t
-                        #:parent-column (or (state-operator-column s)
-                                            (state-column s)))]
+                        #:parent-column (state-column s))]
           [(bar-operator)
            (parse-alts-block t l)]
           [(opener)
