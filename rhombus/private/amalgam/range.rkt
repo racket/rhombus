@@ -926,11 +926,35 @@
              #f
              #f)]))
 
+;; detect wrapper that hides an otherwise immediate sequence range
+(define-syntax (sequence-range/not-inlinable stx)
+  (syntax-parse stx
+    [(_ range-expr)
+     (define expanded
+       (local-expand #'range-expr
+                     'expression
+                     (list #'range-from-to/who
+                           #'range-from-to-inclusive/who
+                           #'range-from/who)))
+     (syntax-parse expanded
+       #:literals (range-from-to/who range-from-to-inclusive/who range-from/who)
+       [(~or* (range-from-to/who _ _ _)
+              (range-from-to-inclusive/who _ _ _)
+              (range-from/who _ _))
+        (raise-syntax-error #f
+                            "should not get here;\n sequence range is inlinable"
+                            stx
+                            #'range-expr
+                            (list expanded))]
+       [_
+        (void)])
+     expanded]))
+
 (define-for-syntax (range-sequence/optimize id range-expr
                                             #:step-who [step-who #f]
                                             #:step-expr [step-expr #f])
   #`[(#,id) (:do-in
-             ([(start end <?) (let ([range #,range-expr])
+             ([(start end <?) (let ([range (sequence-range/not-inlinable #,range-expr)])
                                 (unless (variable-reference-from-unsafe? (#%variable-reference))
                                   (check-sequence-range 'Range.to_sequence range))
                                 (sequence-range-normalize range))]

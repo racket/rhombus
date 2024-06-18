@@ -85,7 +85,7 @@ when the ending point is not @rhombus(#inf), the range is
 
  When @rhombus(start_expr .. end_expr) or @rhombus(start_expr ..) is
  used in an @rhombus(each, ~for_clause) clause of @rhombus(for), the
- optimization is more aggressive in that no intermediate sequence is
+ optimization is more aggressive in that no intermediate range is
  created.
 
 }
@@ -107,7 +107,7 @@ when the ending point is not @rhombus(#inf), the range is
 
  When @rhombus(start_expr ..= end_expr) is used in an
  @rhombus(each, ~for_clause) clause of @rhombus(for), the optimization
- is more aggressive in that no intermediate sequence is created.
+ is more aggressive in that no intermediate range is created.
 
 }
 
