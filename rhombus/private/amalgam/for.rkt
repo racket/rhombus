@@ -209,8 +209,9 @@
                               [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
                               [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
                               [else #'kw])
-              #`(new-kw rhs
-                        #:splice (for-clause-step orig static? state . bodys))]
+              #`(new-kw
+                 (with-syntax-parameters stx-params rhs)
+                 #:splice (for-clause-step orig static? state . bodys))]
              [body0::for-clause
               #:with f::for-clause-form #'body0.parsed
               #`(#:splice (for-clause-step orig static? state f.parsed ... . bodys))]))])]

@@ -612,9 +612,9 @@ version_guard.at_least "8.11.1.4":
   syntax_parameter.bridge today_name:
     "Thursday"
   expr.macro 'today':
-    '$(syntax_parameter_meta.lookup('today_name'))'
+    '#%literal $(syntax_parameter_meta.lookup('today_name'))'
 
-  // check syntax parameter withn body
+  // check syntax parameter within body
   check:
     for List:
       each num_str: ["1","2","3"]
@@ -657,6 +657,73 @@ version_guard.at_least "8.11.1.4":
       each day_str: [fun (): today, fun (): today]
       [day_str(), today]
     ~is [["Friday", "Friday"], ["Friday", "Friday"]]
+
+  syntax_parameter.bridge true_or_false_val:
+    #false
+  expr.macro 'true_or_false':
+    '#%literal $(syntax_parameter_meta.lookup('true_or_false_val'))'
+
+  // check syntax parameter used in guards
+  check:
+    for List:
+      each i: 0..2
+      syntax_parameter.relet true_or_false_val:
+        #true
+      keep_when true_or_false
+      i
+    ~is [0, 1]
+
+  check:
+    for List:
+      each i: 0..2
+      syntax_parameter.relet true_or_false_val:
+        #true
+      skip_when true_or_false
+      i
+    ~is []
+
+  check:
+    for List:
+      each i: 0..2
+      syntax_parameter.relet true_or_false_val:
+        #true
+      break_when true_or_false
+      i
+    ~is []
+
+  check:
+    for List:
+      each i: 0..2
+      syntax_parameter.relet true_or_false_val:
+        #true
+      final_when true_or_false
+      i
+    ~is [0]
+
+  syntax_parameter.bridge a_range_stx:
+    #false
+  for_clause.macro 'each_a_range $id':
+    'each $id: $(syntax_parameter_meta.lookup('a_range_stx'))'
+
+  // check syntax parameter used in `for`-clause macros
+  check:
+    for List:
+      syntax_parameter.relet a_range_stx:
+        '0..2'
+      each_a_range i
+      i
+    ~is [0, 1]
+
+  check:
+    for List:
+      syntax_parameter.relet a_range_stx:
+        '0..2'
+      each_a_range i
+      syntax_parameter.relet a_range_stx:
+        '0..3'
+      each_a_range j
+      i+j
+    ~is [0, 1, 2, 1, 2, 3]
 
 check:
   use_static
