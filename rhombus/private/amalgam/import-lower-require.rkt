@@ -35,7 +35,7 @@
       ;;  - revnames: more rename summary (similarly redundant with `syms`)
       ;;  - only-mentioned?: more about renames/excludes
       (let loop ([r inner-r] [outer-r r])
-        (let extract ([r r] [space '#:all] [step 0])
+        (let extract ([r r] [space '#:all] [step 0] [mentioned #hasheq()])
           (define (root)
             (define all-phase+space+symss (syntax-local-module-exports (syntax->datum mod-path)))
             (define phase+space+symss
@@ -48,7 +48,7 @@
             (define syms (for*/fold ([syms #hasheq()])
                                     ([phase+space+syms (in-list phase+space+symss)]
                                      [full-sym (in-list (cdr phase+space+syms))])
-                           (define-values (sym sym-ext) (extract-symbol-root+ext full-sym))
+                           (define-values (sym sym-ext) (extract-symbol-root+ext full-sym mentioned))
                            (define space (phase+space-space (car phase+space+syms)))
                            (define old-table (hash-ref syms sym #hasheq()))
                            (define old-sym-exts (hash-ref old-table sym #hash()))
@@ -69,7 +69,7 @@
                     (root))]
             [(rename-in mp [orig bind] ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space (add1 step)))
+               (extract #'mp space (add1 step) (add-mentioned #'(orig ...) mentioned)))
              (define-values (new-renames new-revnames removed-syms new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -117,7 +117,7 @@
              (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(only-in mp id ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space (add1 step)))
+               (extract #'mp space (add1 step) (add-mentioned #'(id ...) mentioned)))
              (define-values (new-renames new-revnames new-syms new-covered-ht)
                (for/fold ([new-renames #hasheq()]
                           [new-revnames #hasheq()]
@@ -159,7 +159,7 @@
              (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames #t only-phase)]
             [(except-in mp id ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space (add1 step)))
+               (extract #'mp space (add1 step) (add-mentioned #'(id ...) mentioned)))
              (define-values (new-renames new-revnames new-syms new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -199,7 +199,7 @@
              (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(expose-in mp id ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space (add1 step)))
+               (extract #'mp space (add1 step) (add-mentioned #'(id ...) mentioned)))
              (define-values (new-renames new-revnames new-covered-ht)
                (for/fold ([renames renames]
                           [revnames revnames]
@@ -230,18 +230,18 @@
              (values phase+spaces syms new-covered-ht shift new-renames new-revnames only-mentioned? only-phase)]
             [(for-meta phase mp)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space step))
+               (extract #'mp space step mentioned))
              (define new-shift (and shift (syntax-e #'phase)
                                     (+ shift (syntax-e #'phase))))
              (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned? only-phase)]
             [(for-label mp)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space step))
+               (extract #'mp space step mentioned))
              (define new-shift #f)
              (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned? only-phase)]
             [(only-meta-in phase mp)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space step))
+               (extract #'mp space step mentioned))
              (define new-phase+spaces
                (for/list ([phase+space (in-list phase+spaces)]
                           #:when (eq? (syntax-e #'phase) (phase+space-phase phase+space)))
@@ -254,7 +254,7 @@
              (values phase+spaces syms covered-ht shift renames revnames only-mentioned? new-only-phase)]
             [((~and mode (~or* only-spaces-in except-spaces-in)) mp a-space ...)
              (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned? only-phase)
-               (extract #'mp space step))
+               (extract #'mp space step mentioned))
              (define the-spaces
                (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
                  (values (syntax-e a-space) #t)))
@@ -293,8 +293,8 @@
             [(only-space-in new-space mp)
              (unless (eq? space '#:all)
                (raise-syntax-error 'import "duplicate or conflicting space" #'new-space))
-             (extract #'mp (syntax-e #'new-space) step)]
-            [(rhombus-prefix-in mp name open-id) (extract #'mp space step)]
+             (extract #'mp (syntax-e #'new-space) step mentioned)]
+            [(rhombus-prefix-in mp name open-id) (extract #'mp space step mentioned)]
             [_ (raise-syntax-error 'import
                                    "don't know how to lower"
                                    r)]))))
@@ -447,15 +447,23 @@
                  #,@(apply append (map cdr reqs+defss)))))
      new-covered-ht))
 
-  (define (extract-symbol-root+ext sym)
-    (define str (symbol->immutable-string sym))
-    (let loop ([i 0])
-      (cond
-        [(= i (string-length str)) (values sym "")]
-        [(char=? #\. (string-ref str i)) (values (string->symbol (substring str 0 i))
-                                                 (substring str i))]
-        [else (loop (add1 i))])))
+  (define (extract-symbol-root+ext sym mentioned)
+    (cond
+      [(hash-ref mentioned sym #f)
+       (values sym "")]
+      [else
+       (define str (symbol->immutable-string sym))
+       (let loop ([i 0])
+         (cond
+           [(= i (string-length str)) (values sym "")]
+           [(char=? #\. (string-ref str i)) (values (string->symbol (substring str 0 i))
+                                                    (substring str i))]
+           [else (loop (add1 i))]))]))
 
+  (define (add-mentioned syms mentioned)
+    (for/fold ([mentioned mentioned]) ([sym (in-list (syntax->list syms))])
+      (hash-set mentioned (syntax-e sym) #t)))
+      
   (define (full-symbols spaces->exts sym/id [and-sym #f])
     (cond
       [(not spaces->exts) (if (not and-sym)

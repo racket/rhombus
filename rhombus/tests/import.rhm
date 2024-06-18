@@ -241,3 +241,40 @@ check:
       only_space annot
   S.substring
   ~throws "S: undefined"
+
+// check that an explicit `.` name works in `import` forms
+check:
+  import:
+    "example-g.rkt" open
+  [#{a.x}, #{a.y}]
+  ~is ["x", "y"]
+check:
+  import:
+    "example-g.rkt":
+      expose #{a.x}
+  #{a.x}
+  ~is "x"
+check:
+  import:
+    "example-g.rkt".#{a.x}
+  #{a.x}
+  ~is "x"
+check:
+  import:
+    "example-g.rkt":
+      expose #{a.x} as _x_
+  _x_
+  ~is "x"
+check:
+  import:
+    "example-g.rkt" open:
+      except #{a.x}
+  #{a.y}
+  ~is "y"
+check:
+  import:
+    "example-g.rkt" open:
+      expose #{a.x}
+      rename #{a.x} as _x_
+  _x_
+  ~is "x"
