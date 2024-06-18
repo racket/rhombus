@@ -141,7 +141,9 @@
                                 (string->symbol
                                  (format "~a/~a"
                                          (syntax-e form1)
-                                         (syntax-e #'a)))))
+                                         (syntax-e #'a)))
+                                #f
+                                #'a))
                 #'tail)]))
    'left))
 
@@ -160,7 +162,9 @@
         (values (relocate+reraw
                  (datum->syntax #f (list #'form-id #'arg))
                  (datum->syntax #'str
-                                (list mp-form-id new-str)))
+                                (list mp-form-id new-str)
+                                #f
+                                #'str))
                 #'tail)]))))
 
 (define-for-syntax (make-module-path-file-operator prefix-operator)
@@ -210,7 +214,9 @@
                                     [(submod base path ...)
                                      (syntax->list #'(submod base path ... id))]
                                     [else
-                                     (list #'submod mp #'id)])))
+                                     (list #'submod mp #'id)])
+                                  #f
+                                  #'id))
                   #'tail)])))
    'left))
 
@@ -238,7 +244,9 @@
                  (datum->syntax #'id
                                 (if (eq? 'top-level (syntax-local-context))
                                     (list #'quote #'id)
-                                    (list #'submod "." #'id))))
+                                    (list #'submod "." #'id))
+                                #f
+                                #'id))
                 #'tail)]))))
 
 (define-module-path-syntax rhombus-self
@@ -257,7 +265,9 @@
                                 (append (list #'submod)
                                         (for/list ([name (in-list (syntax->list #'(name ...)))])
                                           "..")
-                                        (list #'id))))
+                                        (list #'id))
+                                #f
+                                #'id))
                 #'tail)]
        [(form-id name::! ...+)
         (values (relocate+reraw
@@ -265,7 +275,9 @@
                  (datum->syntax #'form-id
                                 (append (list #'submod)
                                         (for/list ([name (in-list (syntax->list #'(name ...)))])
-                                          ".."))))
+                                          ".."))
+                                #f
+                                #'form-id))
                 #'())]
        [(form-id  . tail)
         (values (datum->syntax #'form-id
