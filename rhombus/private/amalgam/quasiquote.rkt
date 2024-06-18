@@ -485,6 +485,10 @@
                   (syntax-parse e [(_) #t] [_ #f]))
              ;; defer special case to term context
              #'#f]
+            [(and (eq? kind 'block)
+                  (eq? pat-kind 'group))
+             ;; request to the context to again in 'group mode:
+             #'#f]
             [else
              (define-values (use-e splice?)
                (cond

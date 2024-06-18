@@ -159,3 +159,10 @@ check:
   match '1 1 baz'
   | '$((a :: Sequence) && '1' && '1') ... $(who :: Term)': who
   ~matches 'baz'
+
+// group pattern in a block context
+check:
+  match ': one two three four'
+  | ': $('one two $(tail :: Group)')':
+      tail
+  ~matches 'three four'
