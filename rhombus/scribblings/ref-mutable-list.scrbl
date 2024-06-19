@@ -467,7 +467,7 @@ and it is not managed by a lock.
 
 @doc(
   fun MutableList.sort(mlst :: MutableList,
-                       is_less :: Function.of_arity(2) = (_ .< _))
+                       is_less :: Function.of_arity(2) = (_ < _))
     :: Void,
 ){
 
@@ -479,7 +479,7 @@ and it is not managed by a lock.
   def mlst = MutableList[1, 3, 2]
   MutableList.sort(mlst)
   mlst
-  MutableList.sort(mlst, (_ .> _))
+  MutableList.sort(mlst, (_ > _))
   mlst
 )
 

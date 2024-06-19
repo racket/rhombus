@@ -110,7 +110,7 @@ check:
   MutableList[1, 2, 3] is_a MutableIndexable ~is #true
   MutableList[1, 2, 3] is_a Appendable ~is #false
   MutableList[1, 2, 3] is_a Listable ~is #true
-  
+
 block:
   check:
     1 :: MutableList
@@ -178,22 +178,22 @@ check:
   MutableList[1, 2, 3].find(fun (x): x > 10) ~is #false
   dynamic(MutableList[1, 2, 3]).find(fun (x): x > 1) ~is 2
 
-check: 
+check:
   (block: let l = MutableList[1, 2, 3]; l.remove(2); l) ~is_now MutableList[1, 3]
   (block: let l = MutableList[1, 2, 3]; l.remove(4); l) ~is_now MutableList[1, 2, 3]
   (block: let l = MutableList[1, 2, 2, 3]; l.remove(4); l) ~is_now MutableList[1, 2, 2, 3]
   (block: let l = dynamic(MutableList[1, 2, 3]); l.remove(1); l) ~is_now MutableList[2, 3]
 
 check:
-  [1, 2, 3].insert(2, "x") ~is [1, 2, "x", 3]
-  [1, 2, 3].insert(3, "x") ~is [1, 2, 3, "x"]
-  [1, 2, 3].insert(0, "x") ~is ["x", 1, 2, 3]
-  dynamic([1, 2, 3]).insert(1, "x") ~is [1, "x", 2, 3]
+  (block: let l = MutableList[1, 2, 3]; l.insert(2, "x"); l) ~is_now MutableList[1, 2, "x", 3]
+  (block: let l = MutableList[1, 2, 3]; l.insert(3, "x"); l) ~is_now MutableList[1, 2, 3, "x"]
+  (block: let l = MutableList[1, 2, 3]; l.insert(0, "x"); l) ~is_now MutableList["x", 1, 2, 3]
+  (block: let l = MutableList[1, 2, 3]; dynamic(l).insert(1, "x"); l) ~is_now MutableList[1, "x", 2, 3]
 
 check:
-  [1, 2, 3].delete(2) ~is [1, 2]
-  [1, 2, 3].delete(0) ~is [2, 3]
-  dynamic([1, 2, 3]).delete(1) ~is [1, 3]
+  (block: let l = MutableList[1, 2, 3]; l.delete(2); l) ~is_now MutableList[1, 2]
+  (block: let l = MutableList[1, 2, 3]; l.delete(0); l) ~is_now MutableList[2, 3]
+  (block: let l = MutableList[1, 2, 3]; dynamic(l).delete(1); l) ~is_now MutableList[1, 3]
 
 check:
   (block: let l = MutableList[1, 2, 3]; l.drop(2); l) ~is_now MutableList[3]
@@ -201,6 +201,12 @@ check:
   (block: let l = MutableList[1, 2, 3]; l.take(2); l) ~is_now MutableList[1, 2]
   (block: let l = MutableList[1, 2, 3]; l.take_last(2); l) ~is_now MutableList[2, 3]
   (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2, 5); l) ~is_now MutableList[3, 4, 5]
+
+check:
+  (block: let l = MutableList[1, 2, 3]; l.sort(); l) ~is_now MutableList[1, 2, 3]
+  (block: let l = MutableList[1, 2, 3]; l.sort(fun (x, y): x > y); l) ~is_now MutableList[3, 2, 1]
+  (block: let l = MutableList["", "a", "ab"]; l.sort(); l) ~is_now MutableList["", "a", "ab"]
+  (block: let l = MutableList["", "a", "ab"]; l.sort(fun (x, y): x > y); l) ~is_now MutableList["ab", "a", ""]
 
 check:
   use_static

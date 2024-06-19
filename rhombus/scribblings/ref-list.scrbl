@@ -561,7 +561,7 @@ it supplies its elements in order.
 
 @doc(
   fun List.sort(lst :: List,
-                is_less :: Function.of_arity(2) = (_ .< _))
+                is_less :: Function.of_arity(2) = (_ < _))
     :: List,
 ){
 
@@ -570,7 +570,7 @@ it supplies its elements in order.
 
 @examples(
   List.sort([1, 3, 2])
-  List.sort([1, 3, 2], (_ .> _))
+  List.sort([1, 3, 2], (_ > _))
 )
 
 }

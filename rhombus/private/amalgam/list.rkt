@@ -32,7 +32,8 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "rest-bind.rkt"
-         "number.rkt")
+         "number.rkt"
+         (submod "comparable.rkt" for-builtin))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -824,18 +825,18 @@
   #:primitive (mutable-treelist-for-each)
   (mutable-treelist-for-each lst proc))
 
-(define/method (List.sort lst [less-than? <])
+(define/method (List.sort lst [less-than? general<])
   #:primitive (treelist-sort)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-sort lst less-than?))
 
-(define/method (PairList.sort lst [less-than? <])
+(define/method (PairList.sort lst [less-than? general<])
   #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who lst)
   (check-function-of-arity 2 who less-than?)
   (sort lst less-than?))
 
-(define/method (MutableList.sort lst [less-than? <])
+(define/method (MutableList.sort lst [less-than? general<])
   #:primitive (mutable-treelist-sort!)
   (mutable-treelist-sort! lst less-than?))
 

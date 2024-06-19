@@ -257,6 +257,16 @@ check:
   )
 
 check:
+  PairList[1, 2, 3].sort() ~is PairList[1, 2, 3]
+  PairList.sort(PairList[1, 2, 3]) ~is PairList[1, 2, 3]
+  PairList[1, 2, 3].sort(fun (x, y): x > y) ~is PairList[3, 2, 1]
+  PairList.sort(PairList[1, 2, 3], fun (x, y): x > y) ~is PairList[3, 2, 1]
+  PairList["", "a", "ab"].sort() ~is PairList["", "a", "ab"]
+  PairList.sort(PairList["", "a", "ab"]) ~is PairList["", "a", "ab"]
+  PairList["", "a", "ab"].sort(fun (x, y): x > y) ~is PairList["ab", "a", ""]
+  PairList.sort(PairList["", "a", "ab"], fun (x, y): x > y) ~is PairList["ab", "a", ""]
+
+check:
   use_static
   PairList.rest(PairList[1, 2, 3]).map(math.abs)
   ~is PairList[2, 3]

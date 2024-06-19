@@ -541,7 +541,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @doc(
   fun PairList.sort(lst :: PairList,
-                    is_less :: Function.of_arity(2) = (_ .< _))
+                    is_less :: Function.of_arity(2) = (_ < _))
     :: PairList,
 ){
 
@@ -550,7 +550,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 @examples(
   PairList.sort(PairList[1, 3, 2])
-  PairList.sort(PairList[1, 3, 2], (_ .> _))
+  PairList.sort(PairList[1, 3, 2], (_ > _))
 )
 
 }
