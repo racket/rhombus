@@ -507,17 +507,17 @@ check_spacer:
     ^^^:
       ~weaker_than:
         +
-    |
-      x
-        ^^^ y:
-          x
-            +& y
-            +& x
-    |
+  |
+    x
       ^^^ y:
-        "--"
+        x
           +& y
-          +& "--"
+          +& x
+  |
+    ^^^ y:
+      "--"
+        +& y
+        +& "--"
 
 check_spacer:
   class Posn(x, y):
