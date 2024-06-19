@@ -22,6 +22,10 @@ check:
 check:
   vec.magnitude
   ~is 5
+check:
+  let [vec :: Vector, ...] = [Posn(3, 4), Posn(5, 6)]
+  [vec.angle, ...]
+  ~is [math.atan(4, 3), math.atan(6, 5)]
 
 expr.macro 'or_zero ($p)':
   statinfo_meta.wrap('($p) || Posn(0,0)',
@@ -93,6 +97,13 @@ check:
   (-2 my_plus 2).is_zero
   ~is #true
 
+check:
+  let [x :: MyInt, ...] = [1, 2, 3]
+  [x.add(10), ...]
+  ~is [11, 12, 13]
+
+// check is_static option
+  
 block:
   annot.macro 'MyStr':
     annot_meta.pack_predicate('fun (x): x is_a String',
@@ -121,3 +132,48 @@ check:
     | 'static': '#%literal $is_static'
   values(check_options.op, check_options.static)
   ~matches values('.', #true)
+
+// checking repetition handling
+
+dot.macro 'myint2_dot_provider $left $dot $right':
+  ~is_repet: is_repet
+  ~all_stx: self_stx
+  ~tail: '$tail ...'
+  if is_repet
+  | // assumes a depth-1 `left`
+    let '($_, $expr, $depth, $use_depth, $_)' = repet_meta.unpack_list(left)
+    fun make(list_expr):
+      repet_meta.pack_list('($self_stx,
+                             $list_expr,
+                             $depth,
+                             $use_depth,
+                             ())')
+    match '$right $tail ...'
+    | 'is_zero $tail ...': values(make('for List (v: ($expr :~ List)): v .= 0'),
+                                  '$tail ...')
+    | 'add($(right :: repet_meta.Parsed)) $tail ...':
+        // assumes a depth-1 `right`, too
+        let '($_, $r_expr, $r_depth, $r_use_depth, $_)' = repet_meta.unpack_list(right)
+        values(make('for List (v: ($expr :~ List),
+                               r_v: ($r_expr :~ List)):
+                       v + r_v'),
+               '$tail ...')
+  | values(match right
+           | 'is_zero': '$left .= 0'
+           | 'add': 'fun (v :~ MyInt) :~ MyInt: $left + v',
+           '$tail ...')
+
+annot.macro 'MyInt2':
+  annot_meta.pack_predicate('fun (x): x is_a Int',
+                            '(($(statinfo_meta.dot_provider_key), myint2_dot_provider))')
+
+def (four :~ MyInt2) = 4
+def [more :~ MyInt2, ...] = [5, 6, 7]
+
+check:
+  four.add(5)
+  ~is 9
+
+check:
+  [more.add(more), ...]
+  ~is [10, 12, 14]

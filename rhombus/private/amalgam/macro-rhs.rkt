@@ -394,7 +394,8 @@
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values]
                                                      #:else [else-case #f]
-                                                     #:cut? [cut? #f])
+                                                     #:cut? [cut? #f]
+                                                     #:report-keywords [report-keywords #f])
   (define case-shape (select-transformer-case-shape pre-parseds extra-bindss))
   (define in-extra-ids (generate-temporaries (car extra-bindss)))
   (with-syntax ([((_ id . _) . _) pre-parseds])
@@ -464,7 +465,17 @@
                             #,@(if else-case
                                    #`([_ #,else-case])
                                    null))]))])
-         id))))
+         id)
+       #,@(if report-keywords
+              #`((quote #,(hash-keys
+                           (for/hasheq ([extra-binds-stx (in-list extra-bindss)]
+                                        #:when #t
+                                        [extra-bind (in-list (syntax->list extra-binds-stx))]
+                                        [kw (in-list report-keywords)]
+                                        #:when (syntax-e extra-bind))
+                             (values kw #t))
+                           #t)))
+              null))))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id all-id
                                                               make-transformer-id

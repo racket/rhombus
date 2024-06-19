@@ -20,7 +20,10 @@
          (only-in "repetition.rkt"
                   in-repetition-space
                   repetition-transformer
-                  identifier-repetition-use)
+                  identifier-repetition-use
+                  :repetition-info
+                  :infix-op+repetition-use+tail)
+         "compound-repetition.rkt"
          (submod "assign.rkt" for-assign) (only-in "assign.rkt" :=)
          "op-literal.rkt"
          "name-root.rkt"
@@ -405,7 +408,7 @@
 ;; dot provider for a class instance used before a `.`
 (define-for-syntax ((make-handle-class-instance-dot name internal-fields internal-methods)
                     form1 dot field-id
-                    tail more-static?
+                    tail more-static? repetition?
                     success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) (lambda (v)
                                                                  (or (class-desc-ref v)
@@ -413,48 +416,58 @@
                                                                      (veneer-desc-ref v)))))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define (do-field fld)
-    (define accessor-id (field-desc-accessor-id fld))
-    (syntax-parse tail
-      [assign::assign-op-seq
-       #:when (syntax-e (field-desc-mutator-id fld))
-       (define-values (assign-expr tail) (build-assign
-                                          (attribute assign.op)
-                                          #'assign.op-name
-                                          #'assign.name
-                                          #`(lambda ()
-                                              (#,(relocate field-id accessor-id) obj))
-                                          #`(lambda (v)
-                                              (#,(field-desc-mutator-id fld) obj v))
-                                          #'obj
-                                          #'assign.tail))
-       (success #`(let ([obj #,form1])
-                    #,assign-expr)
-                tail)]
-      [_
-       (define e (relocate+reraw
-                  (respan (datum->syntax #f (list form1 dot field-id)))
-                  (datum->syntax (quote-syntax here)
-                                 (list (relocate field-id accessor-id) form1)
-                                 #f
-                                 #'dot)))
-       (define static-infos (field-desc-static-infos fld))
-       (define more-static-infos (syntax-local-static-info form1 accessor-id))
-       (define all-static-infos (if more-static-infos
-                                    (datum->syntax #f
-                                                   (append (syntax->list more-static-infos)
-                                                           static-infos))
-                                    static-infos))
-       (success (wrap-static-info* e all-static-infos)
-                tail)]))
+    (cond
+      [repetition?
+       ;; let dot-provider dispatcher handle repetition construction:
+       (failure)]
+      [else
+       (define accessor-id (field-desc-accessor-id fld))
+       (syntax-parse tail
+         [assign::assign-op-seq
+          #:when (syntax-e (field-desc-mutator-id fld))
+          (define-values (assign-expr tail) (build-assign
+                                             (attribute assign.op)
+                                             #'assign.op-name
+                                             #'assign.name
+                                             #`(lambda ()
+                                                 (#,(relocate field-id accessor-id) obj))
+                                             #`(lambda (v)
+                                                 (#,(field-desc-mutator-id fld) obj v))
+                                             #'obj
+                                             #'assign.tail))
+          (success #`(let ([obj #,form1])
+                       #,assign-expr)
+                   tail)]
+         [_
+          (define e (relocate+reraw
+                     (respan (datum->syntax #f (list form1 dot field-id)))
+                     (datum->syntax (quote-syntax here)
+                                    (list (relocate field-id accessor-id) form1)
+                                    #f
+                                    #'dot)))
+          (define static-infos (field-desc-static-infos fld))
+          (define more-static-infos (syntax-local-static-info form1 accessor-id))
+          (define all-static-infos (if more-static-infos
+                                       (datum->syntax #f
+                                                      (append (syntax->list more-static-infos)
+                                                              static-infos))
+                                       static-infos))
+          (success (wrap-static-info* e all-static-infos)
+                   tail)])]))
   (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity add-check)
     (define-values (args new-tail)
       (if property?
           (syntax-parse tail
             [(_:::=-expr . tail)
-             #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
-             (values (relocate+reraw #'e.parsed
-                                     #`(#,(no-srcloc #'parens) (group (parsed #:rhombus/expr e.parsed))))
-                     #'e.tail)]
+             #:when (not repetition?)
+             (define-values (e-parsed e-tail)
+               (syntax-parse #'(group  . tail)
+                 [(~var e (:infix-op+expression+tail #':=))
+                  (values #'e.parsed #'e.tail)]))
+             (values (relocate+reraw e-parsed
+                                     #`(#,(no-srcloc #'parens)
+                                        (group (parsed #:rhombus/expr #,e-parsed))))
+                     e-tail)]
             [_ (values (no-srcloc #'(parens)) tail)])
           (syntax-parse tail
             #:datum-literals (op)
@@ -469,53 +482,69 @@
         [else (vector-ref (syntax-e (objects-desc-method-vtable desc)) pos/id*)]))
     (cond
       [args
-       (define-values (rator obj-e arity wrap)
+       (define obj-id #'obj)
+       (define (checked-wrap-call e extra-rands)
+         (define form1 (car extra-rands))
+         (relocate+reraw form1
+                         #`(let ([#,obj-id #,form1])
+                             #,@(if add-check
+                                    (list (add-check obj-id))
+                                    null)
+                             #,e)))
+       ;; Define `wrap-rator` and `wrap-obj-e` instead of just `rator`
+       ;; and `obj-e` so that we can push the relavant operators into
+       ;; the body of a `for` that is generated for a repetition.
+       ;; In the case that a method is extracted from a vtable, we
+       ;; need to have a single `form1` result bound to use in both
+       ;; the rator and the added extra rand (that supplies "self").
+       (define-values (wrap-call rator wrap-rator wrap-obj-e arity static-infos)
          (cond
            [(identifier? pos/id)
             (cond
               [add-check
-               (define obj-id #'obj)
-               (values pos/id obj-id #f (lambda (e to-anon-function?)
-                                          (define static-infos (extract-static-infos e))
-                                          (wrap-static-info*
-                                           (relocate+reraw form1
-                                                           #`(let ([#,obj-id #,form1])
-                                                               #,(add-check obj-id)
-                                                               #,(unwrap-static-infos e)))
-                                           static-infos)))]
+               (values checked-wrap-call
+                       pos/id
+                       (lambda (rator extra-rands) rator)
+                       (lambda (extra-rand extra-rands) obj-id)
+                       #f
+                       #'())]
               [else
-               (values pos/id form1 #f (lambda (e to-anon-function?) e))])]
+               (values (lambda (e extra-rands) e)
+                       pos/id
+                       (lambda (rator extra-rands) rator)
+                       (lambda (extra-rand extra-rands) extra-rand)
+                       #f
+                       #'())])]
            [else
-            (define obj-id #'obj)
             (define r (and ret-info-id
                            (syntax-local-method-result ret-info-id)))
             (define static-infos
               (or (and ret-info-id
                        (method-result-static-infos r))
                   #'()))
-            (values #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id)
-                    obj-id
+            (values checked-wrap-call
+                    #'placeholder
+                    (lambda (placeholder extra-rands) #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id))
+                    (lambda (extra-rand extra-rands) obj-id)
                     (or shape-arity
                         (and r (method-result-arity r)))
-                    (lambda (e to-anon-function?)
-                      (define call-e #`(let ([#,obj-id #,form1])
-                                         #,@(if add-check
-                                                (list (add-check obj-id))
-                                                null)
-                                         #,e))
-                      (if (and (pair? (syntax-e static-infos))
-                               (not to-anon-function?))
-                          (wrap-static-info* call-e static-infos)
-                          call-e)))]))
+                    static-infos)]))
        (define-values (call-stx empty-tail to-anon-function?)
-         (parse-function-call rator (list obj-e) #`(#,obj-e #,args)
+         (parse-function-call (if repetition? (identifier-repetition-use rator) rator)
+                              (list form1)
+                              #`(#,form1 #,args)
+                              #:wrap-call wrap-call
+                              #:wrap-rator wrap-rator
+                              #:wrap-extra-rand wrap-obj-e
                               #:rator-stx field-id
-                              #:srcloc (respan #`(#,obj-e #,field-id #,args))
+                              #:srcloc (respan #`(#,form1 #,field-id #,args))
                               #:static? more-static?
+                              #:repetition? repetition?
                               #:rator-arity arity
                               #:rator-kind (if property? 'property 'method)
-                              #:can-anon-function? #t))
-       (success (wrap call-stx to-anon-function?)
+                              #:result-static-infos static-infos
+                              #:can-anon-function? (not repetition?)))
+       (success call-stx
                 new-tail)]
       [else
        (when (and more-static?
@@ -575,7 +604,8 @@
           (if (identifier? id/fld)
               (do-method id/fld #f #f #f #f #f)
               (do-field id/fld)))]
-    [more-static?
+    [(and more-static?
+          (not repetition?))
      (raise-syntax-error #f
                          (string-append "no such field or method" statically-str)
                          field-id)]

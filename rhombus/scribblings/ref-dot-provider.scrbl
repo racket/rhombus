@@ -27,33 +27,46 @@
     ~is_static $id
     ~tail: '$pattern'
     ~tail '$pattern'
+    ~is_repet: $id
+    ~is_repet $id
 ){
 
  Similar to @rhombus(defn.macro), but binds a @tech{dot provider} that
  is normally referenced indirectly via @tech{static information},
  instead of directly. The @rhombus(pattern) sequence after the leading
  @rhombus(defined_name) should match a sequence of three
- terms: a parsed left-hand expression, a @rhombus(.) term, and a
+ terms: a parsed left-hand expression or repetition, a @rhombus(.) term, and a
  right-hand identifier. The @rhombus(defined_name) is bound in the
  @rhombus(dot, ~space) @tech{space}.
 
- Two extra @rhombus(option)s are supported: @rhombus(~is_static) and
- @rhombus(~tail). The identifier for @rhombus(~is_static) is bound to
+ If the @rhombus(~is_repet) option is specified, then the dot provider
+ can be called in either expression or repetition mode, where the
+ left-hand term and the result correspond to the mode. The dot provider
+ is only called in expression mode if the @rhombus(~is_repet) option is
+ not specified for any pattern case.
+
+ Compared to @rhombus(defn.macro), three extra @rhombus(option)s are supported:
+ @rhombus(~is_static), @rhombus(~tail), and
+ @rhombus(~is_repet). The identifier for @rhombus(~is_static) is bound to
  @rhombus(#true) or @rhombus(#false), depending on whether the use of
  @rhombus(.) to reach the provider was a static or dynamic dot; see
  @rhombus(use_static). The pattern for @rhombus(~tail) is matched to the
  tail of the enclosing group after the @rhombus(.) and subsequent
  identifier. If the @rhombus(~tail) pattern doesn't match, then the case
  containing the @rhombus(~tail) pattern does not match, which is useful
- in a multi-case @rhombus(dot.macro) form.
+ in a multi-case @rhombus(dot.macro) form. The @rhombus(~is_repet) identifier
+ is bound to @rhombus(#true) or @rhombus(#false), depending on whether the
+ dot provider is called in repetition or expression mode.
 
  The result must be either @rhombus(#false), a syntax object, or two
  syntax-object values. A @rhombus(#false) result means that static
  resolution failed, in which case the @rhombus(.) operator will generate
- a fallback lookup that is dynamic and generic---unless the @rhombus(.)
- operator is in static mode, in which case it will report a syntax error.
- A (first) syntax-object result provides an expression form (that normally
- includes the left-hand expression) to replace the @rhombus(.)
+ a fallback lookup. In repetition mode, the fallback is to try expression
+ mode. In expression mode, the fallback implements a lookup
+ that is dynamic and generic---unless the @rhombus(.)
+ operator is in static mode, in which case the fallback will report a syntax error.
+ A (first) syntax-object result provides an expression or repetition form (that normally
+ includes the left-hand expression or repetition) to replace the @rhombus(.)
  expression. When a second syntax-object result is provided, it is used
  as the remainder of the enclosing group for further processing, and the
  default result is the same tail that would be provided for an identifier
@@ -89,6 +102,8 @@
     ~is_static $id
     ~tail: '$pattern'
     ~tail '$pattern'
+    ~is_repet: $id
+    ~is_repet $id
 ){
 
  A form for @rhombus(class), @rhombus(interface), or @rhombus(veneer) to bind a macro that

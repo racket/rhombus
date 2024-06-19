@@ -4,13 +4,16 @@
                      "statically-str.rkt"
                      "srcloc.rkt")
          "parens.rkt"
-         (submod "assign.rkt" for-assign))
+         (submod "assign.rkt" for-assign)
+         (only-in "repetition.rkt"
+                  identifier-repetition-use)
+         "call-result-key.rkt")
 
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!))
 
 (define-for-syntax (dot-parse-dispatch k)
-  (lambda (lhs dot field-stx tail more-static? success-k fail-k)
+  (lambda (lhs dot field-stx tail more-static? repetition? success-k fail-k)
     (define (ary mask n-k no-k)
       (define (bad msg)
         (raise-syntax-error #f msg field-stx))
@@ -44,13 +47,18 @@
                         tail))]))
 
     (define (nary mask direct-id id)
+      (define rator
+        (cond
+          [repetition? (identifier-repetition-use direct-id)]
+          [else direct-id]))
       (ary mask
            (lambda (args reloc)
              (define-values (proc tail to-anon-function?)
-               (parse-function-call direct-id (list lhs) #`(#,dot #,args)
+               (parse-function-call rator (list lhs) #`(#,dot #,args)
                                     #:srcloc (reloc #'#f)
                                     #:static? more-static?
-                                    #:can-anon-function? #t))
+                                    #:can-anon-function? #t
+                                    #:repetition? repetition?))
              proc)
            ;; return partially applied method
            (lambda (reloc)
@@ -91,7 +99,7 @@
               (success-k assign-expr tail)]
              [_ (just-access mk)])])))
 
-    (k (syntax-e field-stx) field ary nary fail-k)))
+    (k (syntax-e field-stx) field ary nary repetition? fail-k)))
 
 (define-for-syntax parse-function-call #f)
 (define-for-syntax (set-parse-function-call! proc)

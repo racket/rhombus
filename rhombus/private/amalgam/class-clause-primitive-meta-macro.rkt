@@ -61,8 +61,8 @@
   (define (class-dot-transformer pat)
     (parse-identifier-syntax-transformer pat
                                          #'dot-transformer-compiletime
-                                         '(#:head_stx #:is_static #:tail)
-                                         '(value value pattern)
+                                         '(#:head_stx #:is_static #:is_repet #:tail)
+                                         '(value value value pattern)
                                          (lambda (p ct)
                                            ct)
                                          (lambda (ps ct)
@@ -75,11 +75,12 @@
                                          (syntax->list #'self-ids)
                                          (syntax->list #'all-ids)
                                          (syntax->list #'extra-argument-binds)
-                                         #'values
-                                         #'(get-syntax-static-infos get-empty-static-infos get-syntax-static-infos)
-                                         '(value value pattern)
+                                         #'wrap-dot-transformer
+                                         #'(get-syntax-static-infos get-empty-static-infos get-empty-static-infos get-syntax-static-infos)
+                                         '(value value value pattern)
                                          #:else #'#f
-                                         #:cut? #t)])))
+                                         #:cut? #t
+                                         #:report-keywords '(#:head_stx #:is_static #:is_repet #:tail))])))
 
 
 (define-for-syntax (parse-static_info stx data)
@@ -96,3 +97,11 @@
 
 (define-veneer-clause-syntax static_info
   (veneer-clause-transformer parse-static_info))
+
+(define-for-syntax (wrap-dot-transformer proc provided-kws)
+  (if (memq '#:is_repet provided-kws)
+      proc
+      (lambda (left dot right static? repetition? tail)
+        (if repetition?
+            #false
+            (proc left dot right static? repetition? tail)))))

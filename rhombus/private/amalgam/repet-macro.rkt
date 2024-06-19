@@ -152,7 +152,7 @@
        (define depth (length (syntax->list #'r.for-clausess)))
        (pack-term
         #`(parens (group . r.rep-expr)
-                  (group (parsed #:rhombus/expr #,(repetition-as-nested-lists #'r depth #'for/list)))
+                  (group (parsed #:rhombus/expr #,(repetition-as-nested-lists #'r depth #'for/treelist)))
                   (group #,depth)
                   (group r.used-depth)
                   (group #,(unpack-static-infos who #'r.element-static-infos))))]))

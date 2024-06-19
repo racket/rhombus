@@ -948,7 +948,11 @@
                                         #:srcloc [srcloc #f] ; for `relocate` on result
                                         #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
                                         #:rator-arity [rator-arity #f]
-                                        #:can-anon-function? [can-anon-function? #f])
+                                        #:result-static-infos [result-static-infos #'()]
+                                        #:can-anon-function? [can-anon-function? #f]
+                                        #:wrap-call [wrap-call (lambda (e extra-rands) e)]
+                                        #:wrap-rator [wrap-rator (lambda (rator extra-rands) rator)]
+                                        #:wrap-extra-rand [wrap-extra-rand (lambda (rand extra-rands) rand)])
   (define (generate rands rsts amp dots kwrsts tag tail)
     (syntax-parse stxes
       [(_ args . _)
@@ -959,7 +963,11 @@
                       #:srcloc srcloc
                       #:rator-kind rator-kind
                       #:rator-arity rator-arity
-                      #:props-stx tag)])) ; intended to capture originalness or errortraceness
+                      #:result-static-infos result-static-infos
+                      #:props-stx tag ; intended to capture originalness or errortraceness
+                      #:wrap-call wrap-call
+                      #:wrap-rator wrap-rator
+                      #:wrap-extra-rand wrap-extra-rand)]))
   (define (check-complex-allowed)
     (when (eq? rator-kind '|syntax class|)
       (raise-syntax-error #f "syntax class call cannot have splicing arguments" rator-stx)))
@@ -975,7 +983,11 @@
                                            #:srcloc srcloc
                                            #:rator-kind rator-kind
                                            #:rator-arity rator-arity
-                                           #:props-stx #'tag)
+                                           #:result-static-infos result-static-infos
+                                           #:props-stx #'tag
+                                           #:wrap-call wrap-call
+                                           #:wrap-rator wrap-rator
+                                           #:wrap-extra-rand wrap-extra-rand)
              #'tail
              #f)]
     [(_ (tag::parens rand ...
@@ -1016,13 +1028,16 @@
        [(null? formals)
         (generate rands #f #f #f #f #'tag #'tail)]
        [else
-        (define static-infos (cond
-                               [(syntax-local-static-info rator-in #'#%call-result)
-                                => (lambda (results)
-                                     (find-call-result-at
-                                      results
-                                      (+ (length rands) (length extra-args))))]
-                               [else #'()]))
+        ;; anonymous-function shorthand
+        (define static-infos (static-infos-union
+                              (cond
+                                [(syntax-local-static-info rator-in #'#%call-result)
+                                 => (lambda (results)
+                                      (find-call-result-at
+                                       results
+                                       (+ (length rands) (length extra-args))))]
+                                [else #'()])
+                              result-static-infos))
         (define arity (arithmetic-shift 1 (length formals)))
         (values (let* ([fun (relocate+reraw
                              (or srcloc
@@ -1067,17 +1082,22 @@
                                   #:rator-kind rator-kind
                                   #:rator-arity rator-arity
                                   #:props-stx props-stx
-                                  #:call-result? [call-result? #t])
+                                  #:result-static-infos [extra-result-static-infos #'()]
+                                  #:call-result? [call-result? #t]
+                                  #:wrap-call [wrap-call (lambda (e extra-rands) e)]
+                                  #:wrap-rator [wrap-rator (lambda (rator extra-rands) rator)]
+                                  #:wrap-extra-rand [wrap-extra-rand (lambda (rand extra-rands) rand)])
   (values
    (syntax-parse rands
      [(rand::kw-argument ...)
       (handle-repetition
        repetition?
        (if repetition? rator-in (rhombus-local-expand rator-in))
+       extra-rands
        (syntax->list #'(rand.exp ...))
        rsts amp dots
        kwrsts
-       (lambda (rator args rest-args kwrest-args rator-static-info)
+       (lambda (rator extra-rands args rest-args kwrest-args rator-static-info)
          (define kws (syntax->list #'(rand.kw ...)))
          (when static?
            (when (or (not kwrsts) (not rsts))
@@ -1092,30 +1112,37 @@
                               (if (syntax-e kw)
                                   (list kw arg)
                                   (list arg))))
+         (define w-rator (wrap-rator rator extra-rands))
+         (define w-extra-rands (for/list ([extra-rand (in-list extra-rands)])
+                                 (wrap-extra-rand extra-rand extra-rands)))
          (define es
            (cond
-             [kwrsts (list (append (list #'keyword-apply/map rator)
-                                   extra-rands
+             [kwrsts (list (append (list #'keyword-apply/map w-rator)
+                                   w-extra-rands
                                    (apply append arg-formss)
                                    (list rest-args))
                            kwrest-args)]
-             [rsts (append (list #'apply rator)
-                           extra-rands
+             [rsts (append (list #'apply w-rator)
+                           w-extra-rands
                            (apply append arg-formss)
                            (list rest-args))]
-             [else (cons rator
-                         (apply append extra-rands arg-formss))]))
-         (define e (relocate+reraw (or srcloc
-                                       (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
-                                   (datum->syntax #'here (map discard-static-infos es) #f props-stx)))
-         (define result-static-infos (cond
-                                       [(and call-result?
-                                             (rator-static-info #'#%call-result))
-                                        => (lambda (results)
-                                             (find-call-result-at
-                                              results
-                                              (+ num-rands (length extra-rands))))]
-                                       [else #'()]))
+             [else (cons w-rator
+                         (apply append w-extra-rands arg-formss))]))
+         (define e (wrap-call
+                    (relocate+reraw (or srcloc
+                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
+                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx))
+                    extra-rands))
+         (define result-static-infos (static-infos-union
+                                      (cond
+                                        [(and call-result?
+                                              (rator-static-info #'#%call-result))
+                                         => (lambda (results)
+                                              (find-call-result-at
+                                               results
+                                               (+ num-rands (length extra-rands))))]
+                                        [else #'()])
+                                      extra-result-static-infos))
          (values e result-static-infos)))])
    tail
    ;; not converted to an anonymous function:
@@ -1136,6 +1163,7 @@
 
 (define-for-syntax (handle-repetition repetition?
                                       rator ; already parsed as expression or repetition
+                                      extra-rands
                                       rands
                                       rsts amp dots
                                       kwrsts
@@ -1157,7 +1185,7 @@
        (and kwrsts
             (syntax-parse kwrsts [kwrst::expression #'kwrst.parsed])))
      (define-values (e result-static-infos)
-       (k rator args rest-args kwrest-args (lambda (key) (syntax-local-static-info rator key))))
+       (k rator extra-rands args rest-args kwrest-args (lambda (key) (syntax-local-static-info rator key))))
      (wrap-static-info* e result-static-infos)]
     [else
      ;; parse arguments as repetitions
@@ -1177,19 +1205,24 @@
                        null))])
        (build-compound-repetition
         rator
-        args
+        (append extra-rands args)
         #:is-sequence? (lambda (e) (pair? e))
         #:extract (lambda (e) (if (pair? e) (car e) e))
-        (lambda one-args
-          (let* ([one-rator (car one-args)]
+        (lambda one-rands+args
+          (let* ([extra-rands (for/list ([r (in-list extra-rands)]
+                                         [a (in-list one-rands+args)])
+                                a)]
+                 [one-rator+args (list-tail one-rands+args (length extra-rands))]
+                 [one-rator (car one-rator+args)]
+                 [one-args (cdr one-rator+args)]
                  [args (for/list ([i (in-range n)]
-                                  [arg (in-list (cdr one-args))])
+                                  [arg (in-list one-args)])
                          arg)]
                  [rest-args (and rsts
-                                 #`(to-list '#,amp #,(list-ref one-args (add1 n))))]
-                 [kwrest-args (and kwrsts (list-ref one-args (+ n 1 (if rsts 1 0))))])
+                                 #`(to-list '#,amp #,(list-ref one-args n)))]
+                 [kwrest-args (and kwrsts (list-ref one-args (+ n (if rsts 1 0))))])
             ;; returns expression plus static infos for result elements
-            (k one-rator args (or rest-args #''()) kwrest-args
+            (k one-rator extra-rands args (or rest-args #''()) kwrest-args
                (lambda (key)
                  (syntax-parse rator
                    [rep::repetition-info
@@ -1230,7 +1263,11 @@
                                                  #:srcloc srcloc
                                                  #:rator-kind rator-kind
                                                  #:rator-arity rator-arity
-                                                 #:props-stx props-stx)
+                                                 #:result-static-infos result-static-infos
+                                                 #:props-stx props-stx
+                                                 #:wrap-call wrap-call
+                                                 #:wrap-rator wrap-rator
+                                                 #:wrap-extra-rand wrap-extra-rand)
   (define args
     (let loop ([gs-stx gs-stx])
       (syntax-parse gs-stx
@@ -1306,7 +1343,11 @@
                            #:srcloc srcloc
                            #:rator-kind rator-kind
                            #:rator-arity rator-arity
-                           #:props-stx props-stx))
+                           #:result-static-infos result-static-infos
+                           #:props-stx props-stx
+                           #:wrap-call wrap-call
+                           #:wrap-rator wrap-rator
+                           #:wrap-extra-rand wrap-extra-rand))
           term)))
 
 (define function-call-who '|function call|)
