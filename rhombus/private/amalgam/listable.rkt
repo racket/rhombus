@@ -52,7 +52,7 @@
 (define-dot-provider-syntax listable-instance
   (dot-provider
    (dot-parse-dispatch
-    (lambda (field-sym field-proc ary nary fail-k)
+    (lambda (field-sym field-proc ary nary repetition? fail-k)
       (case field-sym
         [(to_list) (nary 1 #'Listable.to_list #'Listable.to_list/method)]
         [else (fail-k)])))))

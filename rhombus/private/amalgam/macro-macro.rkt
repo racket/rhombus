@@ -512,9 +512,18 @@
 (define-syntax (define-identifier-syntax-definition-transformer stx)
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id #:multi (space ...)
-        #:extra ([extra-kw extra-get-static-infos extra-shape] ...)
+    [(_ id
+        (~or only-space
+             (~seq #:multi (one-space ...)))
+        (~optional (~seq #:extra ([extra-kw extra-get-static-infos extra-shape] ...))
+                   #:defaults ([(extra-kw 1) '()]
+                               [(extra-get-static-infos 1) '()]
+                               [(extra-shape 1) '()]))
+        (~optional (~and report-keywords #:report-keywords))
         #'make-transformer-id)
+     #:with (space ...) (if (attribute only-space)
+                            #'(only-space)
+                            #'(one-space ...))
      #`(begin
          (define-defn-syntax id
            (make-identifier-syntax-definition-transformer-runtime '(space ...)
@@ -524,19 +533,10 @@
          (begin-for-syntax
            (define-syntax compiletime-id
              (make-identifier-syntax-definition-transformer-compiletime
-              #'make-transformer-id #'(extra-get-static-infos ...) '(extra-shape ...)))))]
-    [(_ id #:multi m
-        #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi m
-         #:extra ()
-         #'make-transformer-id)]
-    [(_ id space
-        #:extra extra
-        #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra extra #'make-transformer-id)]
-    [(_ id space
-        #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra () #'make-transformer-id)]))
+              #'make-transformer-id #'(extra-get-static-infos ...) '(extra-shape ...)
+              #,(if (attribute report-keywords)
+                    #'(quote (extra-kw ...))
+                    #'#f)))))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer-runtime space-syms
                                                                           compiletime-id
@@ -630,7 +630,8 @@
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime
-                      make-transformer-id extra-get-static-infoss-stx extra-shapes)
+                      make-transformer-id extra-get-static-infoss-stx extra-shapes
+                      report-keywords)
     (lambda (stx)
       (syntax-parse stx
         [(_ pre-parseds self-ids all-ids extra-argument-binds)
@@ -640,7 +641,8 @@
                                            (syntax->list #'extra-argument-binds)
                                            make-transformer-id
                                            extra-get-static-infoss-stx
-                                           extra-shapes)]))))
+                                           extra-shapes
+                                           #:report-keywords report-keywords)]))))
 
 (define-syntax (define-identifier-syntax-definition-sequence-transformer stx)
   (syntax-parse stx

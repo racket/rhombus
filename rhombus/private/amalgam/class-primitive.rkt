@@ -295,16 +295,22 @@
                 null)
 
          (define-for-syntax name-dot-dispatch
-           (lambda (field-sym field-proc ary nary fail-k)
+           (lambda (field-sym field-proc ary nary repetition? fail-k)
              (case field-sym
-               [(prop) (field-proc (lambda (e reloc)
-                                     (build-accessor-call (quote-syntax prop-proc) e reloc prop-static-infos))
-                                   (~? (lambda (e rhs reloc)
-                                         (build-mutator-call (quote-syntax prop-mutator) e rhs reloc))))]
+               [(prop)
+                (cond
+                  [repetition?
+                   ;; let dot-provider dispatcher handle repetition construction:
+                   (fail-k)]
+                  [else
+                   (field-proc (lambda (e reloc)
+                                 (build-accessor-call (quote-syntax prop-proc) e reloc prop-static-infos))
+                               (~? (lambda (e rhs reloc)
+                                     (build-mutator-call (quote-syntax prop-mutator) e rhs reloc))))])]
                ...
                [(method) method-dispatch]
                ...
-               [else (~? (parent-dot-dispatch field-sym field-proc ary nary fail-k)
+               [else (~? (parent-dot-dispatch field-sym field-proc ary nary repetition? fail-k)
                          (fail-k))])))
 
          (define-syntax name-instance

@@ -81,22 +81,28 @@
           [rep::repetition-info
            (define dp-id/s
              (or (repetition-static-info-lookup #'rep.element-static-infos #'#%dot-provider)
-                 (and (zero? (syntax-e #'rep.bind-depth))
-                      (identifier? #'rep.seq-expr)
-                      (syntax-local-value* (in-dot-provider-space #'rep.seq-expr) dot-provider-ref))))
-           (define rep
-             (build-compound-repetition
-              dot (list form1)
-              (lambda (form1)
-                (define-values (expr new-tail)
-                  (build-dot-access form1 dp-id/s
-                                    more-static? #:repetition? #t
-                                    dot dot-name field-id tail))
-                (set! tail new-tail)
-                (values expr
-                        (extract-static-infos expr)))))
-           (values rep
-                   tail)]))))
+                 (and (null? (syntax->list #'rep.for-clausess))
+                      (identifier? #'rep.body)
+                      (syntax-local-value* (in-dot-provider-space #'rep.body) dot-provider-ref))))
+           (build-dot-access
+            form1 dp-id/s
+            more-static? #:repetition? #t
+            dot dot-name field-id tail
+            #:generic
+            (lambda ()
+              (define rep
+                (build-compound-repetition
+                 dot (list form1)
+                 (lambda (form1)
+                   (define-values (expr new-tail)
+                     (build-dot-access form1 dp-id/s
+                                       more-static? #:for-repetition? #t
+                                       dot dot-name field-id tail))
+                   (set! tail new-tail)
+                   (values expr
+                           (extract-static-infos expr)))))
+              (values rep
+                      tail)))]))))
    'left))
 
 ;; annotation, declared explicitly to create a syntax error
@@ -128,10 +134,14 @@
      (parse-dot-provider #'((op dot) . tail) finish)]))
 
 (define-for-syntax (build-dot-access form1 dp-id/s
-                                     more-static? #:repetition? repetition?
-                                     dot dot-name field-id tail)
+                                     more-static?
+                                     dot dot-name field-id tail
+                                     #:repetition? [repetition? #f]
+                                     #:for-repetition? [for-repetition? #f]
+                                     #:generic [alt-generic #f])
   (define (generic)
     (cond
+      [alt-generic (alt-generic)]
       [more-static?
        (raise-syntax-error #f
                            (string-append "no such field or method" statically-str)
@@ -142,7 +152,7 @@
                                  #`(dot-lookup-by-name #,form1 '#,field-id))
                  tail))
        (cond
-         [repetition? (lookup)]
+         [for-repetition? (lookup)]
          [else
           (syntax-parse tail
             [assign::assign-op-seq
@@ -168,6 +178,7 @@
      ((dot-provider-handler p) form1 dot field-id
                                tail
                                more-static?
+                               repetition?
                                success-k generic)]
     [else (generic)]))
 
