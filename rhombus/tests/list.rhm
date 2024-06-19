@@ -277,6 +277,16 @@ check:
   List.sublist([1, 2, 3, 4, 5, 6], 2, 5) ~is [3, 4, 5]
 
 check:
+  [1, 2, 3].sort() ~is [1, 2, 3]
+  List.sort([1, 2, 3]) ~is [1, 2, 3]
+  [1, 2, 3].sort(fun (x, y): x > y) ~is [3, 2, 1]
+  List.sort([1, 2, 3], fun (x, y): x > y) ~is [3, 2, 1]
+  ["", "a", "ab"].sort() ~is ["", "a", "ab"]
+  List.sort(["", "a", "ab"]) ~is ["", "a", "ab"]
+  ["", "a", "ab"].sort(fun (x, y): x > y) ~is ["ab", "a", ""]
+  List.sort(["", "a", "ab"], fun (x, y): x > y) ~is ["ab", "a", ""]
+
+check:
   use_static
   List.rest([1, 2, 3]).map(math.abs)
   ~is [2, 3]

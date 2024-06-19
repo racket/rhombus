@@ -10,11 +10,9 @@
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
          "parse.rkt"
-         (only-in "arithmetic.rkt" .< .<= .= .>= .>)
          (submod "arithmetic.rkt" precedence)
          "compare-key.rkt"
          "static-info.rkt"
-         "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
@@ -33,6 +31,14 @@
                       [rhombus> >])
                      compares_equal
                      compares_unequal))
+
+(module+ for-builtin
+  (provide general<
+           general<=
+           general=
+           general!=
+           general>=
+           general>))
 
 (define-values (prop:Comparable Comparable? Comparable-ref)
   (make-struct-type-property 'Comparable))
@@ -295,10 +301,7 @@
                          "other value"))
   (raise-arguments-error*
    op rhombus-realm
-   (string-append "cannot compare "
-                  (case (string-ref what 0)
-                    [(#\a #\i) "an "]
-                    [else "a "])
+   (string-append "cannot compare a "
                   what " and " other-what
                   (if both-compare?
                       (string-append ";\n two "
