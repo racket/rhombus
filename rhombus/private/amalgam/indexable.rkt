@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          "treelist.rkt"
          "mutable-treelist.rkt"
          "provide.rkt"
@@ -22,7 +23,6 @@
          "index-property.rkt"
          "mutability.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "parens.rkt")
 
 (provide (for-spaces (rhombus/class
@@ -85,7 +85,9 @@
                      null))))
 
 (define-syntax get-result
-  (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))
+  (method-result-maker
+   (lambda ()
+     (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))))
 
 (define-annotation-syntax MutableIndexable
   (identifier-annotation mutable-indexable? ((#%index-get indexable-get)
@@ -122,7 +124,9 @@
                      null))))
 
 (define-syntax set-result
-  (method-result #'void? #t 1 "Void" #'() 8))
+  (method-result-maker
+   (lambda ()
+     (method-result #'void? #t 1 "Void" #'() 8))))
 
 (define-for-syntax (parse-indexable-ref-or-set indexable-in stxes more-static?
                                                #:repetition? [repetition? #f])

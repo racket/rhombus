@@ -1,14 +1,14 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          "provide.rkt"
          (submod "list.rkt" for-listable)
          (submod "list.rkt" for-compound-repetition)
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
@@ -44,7 +44,9 @@
                      null))))
 
 (define-syntax to-list-result
-  (method-result #'treelist? #t 1 "List" (get-treelist-static-infos) 2))
+  (method-result-maker
+   (lambda ()
+     (method-result #'treelist? #t 1 "List" (get-treelist-static-infos) 2))))
 
 (define-annotation-syntax Listable
   (identifier-annotation listable? ((#%dot-provider listable-instance))))

@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          (only-in racket/vector
                   vector-append)
          "treelist.rkt"
@@ -24,7 +25,6 @@
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "is-static.rkt")
 
 (provide (for-spaces (rhombus/class
@@ -72,7 +72,9 @@
                      null))))
 
 (define-syntax append-result
-  (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))
+  (method-result-maker
+   (lambda ()
+     (method-result #'(lambda (x) #t) #t 1 "Any" #'() 4))))
 
 (define-for-syntax (parse-append form1 form2 self-stx form1-in
                                  static?

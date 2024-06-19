@@ -5,6 +5,7 @@
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
+                     "class-method-result.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "entry-point-adjustment.rkt")
@@ -14,7 +15,7 @@
          "expression.rkt"
          "entry-point.rkt"
          "class-this.rkt"
-         "class-method-result.rkt"
+         "class-define-method-result.rkt"
          "index-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
@@ -362,7 +363,7 @@
                                          #:checked-compare? [checked-compare? #t])
   (define defs
     (for/list ([added (in-list added-methods)])
-      #`(define-method-result-syntax #,(added-method-result-id added)
+      #`(define-method-result #,(added-method-result-id added)
           #,(added-method-maybe-ret added)
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
           ;; When calls do not go through vtable, also add static info

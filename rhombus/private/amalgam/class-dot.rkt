@@ -6,9 +6,9 @@
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
+                     "class-method-result.rkt"
                      "statically-str.rkt")
          "class-method.rkt"
-         "class-method-result.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt"
          "export-check.rkt"

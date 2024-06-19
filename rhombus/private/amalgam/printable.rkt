@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          "to-list.rkt"
          "provide.rkt"
          "printer-property.rkt"
@@ -8,7 +9,6 @@
          (submod "annotation.rkt" for-class)
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          (submod "function.rkt" for-info)
          "function-arity-key.rkt"
@@ -58,7 +58,9 @@
                      null))))
 
 (define-syntax describe-result
-  (method-result #'print-description? #t 1 "PrintDesc" #'() 8))
+  (method-result-maker
+   (lambda ()
+     (method-result #'print-description? #t 1 "PrintDesc" #'() 8))))
 
 (define-name-root Printable
   #:fields

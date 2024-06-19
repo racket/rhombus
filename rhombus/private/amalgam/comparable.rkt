@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -17,7 +18,6 @@
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "is-static.rkt"
          "number.rkt")
 
@@ -94,10 +94,14 @@
                      null))))
 
 (define-syntax compare-to-result
-  (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))
+  (method-result-maker
+   (lambda ()
+     (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))))
 
 (define-syntax boolean-result
-  (method-result #'boolean? #t 1 "Boolean" #'() 4))
+  (method-result-maker
+   (lambda ()
+     (method-result #'boolean? #t 1 "Boolean" #'() 4))))
 
 (define-for-syntax (parse-compare op form1 form2 self-stx form1-in
                                   static?

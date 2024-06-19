@@ -1,9 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          "provide.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "sequence-constructor-key.rkt")
 
 (provide (for-spaces (rhombus/class)
@@ -40,4 +40,6 @@
                      null))))
 
 (define-syntax to-sequence-result
-  (method-result #'sequence? #t 1 "Sequence" #'((#%sequence-constructor #t)) 2))
+  (method-result-maker
+   (lambda ()
+     (method-result #'sequence? #t 1 "Sequence" #'((#%sequence-constructor #t)) 2))))

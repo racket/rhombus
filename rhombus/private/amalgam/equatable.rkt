@@ -1,12 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "class-method-result.rkt")
          racket/hash-code
          "provide.rkt"
          "name-root.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         (only-in "class-method-result.rkt" method-result)
          "define-arity.rkt"
          "call-result-key.rkt"
          "number.rkt")
@@ -55,10 +55,14 @@
                      null))))
 
 (define-syntax equals-result
-  (method-result #'(lambda (x) #t) #t 1 "Any" #'() 8))
+  (method-result-maker
+   (lambda ()
+     (method-result #'(lambda (x) #t) #t 1 "Any" #'() 8))))
 
 (define-syntax hash-code-result
-  (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))
+  (method-result-maker
+   (lambda ()
+     (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))
