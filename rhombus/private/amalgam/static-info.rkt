@@ -134,14 +134,22 @@
         (for/list ([_ (in-range num)])
           #'())))
 
+  ;; use on sub-expressions to discover otherwise immediate forms that
+  ;; are hidden
   (define (unwrap-static-infos e)
-    (syntax-parse e
-      #:literals (begin quote-syntax)
-      [(begin (quote-syntax (_:identifier _)) e)
-       (unwrap-static-infos #'e)]
-      [_ e]))
+    (define unwrapped-e
+      (let loop ([e e] [unwrapped? #f])
+        (syntax-parse e
+          #:literals (begin quote-syntax)
+          [(begin (quote-syntax (_:identifier _)) e) (loop #'e #t)]
+          [_ (and unwrapped? e)])))
+    (if unwrapped-e
+        ;; we need to track origin here to transfer any potential
+        ;; information added by enforestation
+        (syntax-track-origin unwrapped-e e #'begin)
+        e))
 
-  ;; use on subterms when constructing a parsed primitive form
+  ;; use on sub-expressions when constructing a parsed primitive form
   ;; with the goal of simplifying the result expansion
   (define (discard-static-infos e)
     (unwrap-static-infos e))

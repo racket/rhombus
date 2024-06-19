@@ -1107,32 +1107,38 @@
                (let* ([a (if (syntax? a) (syntax->datum a) a)])
                  (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind)))))
          (define num-rands (length rands))
-         (define arg-formss (for/list ([kw (in-list kws)]
-                                       [arg (in-list args)])
-                              (if (syntax-e kw)
-                                  (list kw arg)
-                                  (list arg))))
-         (define w-rator (wrap-rator rator extra-rands))
+         (define arg-forms (apply append
+                                  (for/list ([kw (in-list kws)]
+                                             [arg (in-list args)])
+                                    (if (syntax-e kw)
+                                        (list kw (discard-static-infos arg))
+                                        (list (discard-static-infos arg))))))
+         (define w-rator (discard-static-infos (wrap-rator rator extra-rands)))
          (define w-extra-rands (for/list ([extra-rand (in-list extra-rands)])
-                                 (wrap-extra-rand extra-rand extra-rands)))
-         (define es
-           (cond
-             [kwrsts (list (append (list #'keyword-apply/map w-rator)
-                                   w-extra-rands
-                                   (apply append arg-formss)
-                                   (list rest-args))
-                           kwrest-args)]
-             [rsts (append (list #'apply w-rator)
-                           w-extra-rands
-                           (apply append arg-formss)
-                           (list rest-args))]
-             [else (cons w-rator
-                         (apply append w-extra-rands arg-formss))]))
-         (define e (wrap-call
-                    (relocate+reraw (or srcloc
-                                        (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
-                                    (datum->syntax #'here (map discard-static-infos es) #f props-stx))
-                    extra-rands))
+                                 (discard-static-infos (wrap-extra-rand extra-rand extra-rands))))
+         (define call-e (relocate+reraw
+                         (or srcloc
+                             (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
+                         (datum->syntax
+                          #'here
+                          (cond
+                            [kwrsts `(,(datum->syntax
+                                        #'here
+                                        `(,#'keyword-apply/map ,w-rator
+                                                               ,@w-extra-rands
+                                                               ,@arg-forms
+                                                               ,(discard-static-infos rest-args)))
+                                      ,(discard-static-infos kwrest-args))]
+                            [rsts `(,#'apply ,w-rator
+                                             ,@w-extra-rands
+                                             ,@arg-forms
+                                             ,(discard-static-infos rest-args))]
+                            [else `(,w-rator
+                                    ,@w-extra-rands
+                                    ,@arg-forms)])
+                          #f
+                          props-stx)))
+         (define w-call-e (wrap-call call-e extra-rands))
          (define result-static-infos (static-infos-union
                                       (cond
                                         [(and call-result?
@@ -1143,7 +1149,7 @@
                                                (+ num-rands (length extra-rands))))]
                                         [else #'()])
                                       extra-result-static-infos))
-         (values e result-static-infos)))])
+         (values w-call-e result-static-infos)))])
    tail
    ;; not converted to an anonymous function:
    #f))

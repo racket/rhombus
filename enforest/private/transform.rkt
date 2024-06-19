@@ -35,9 +35,12 @@
             #f
             (map syntax-local-introduce args)))
    (lambda stxes
-     (apply values (map syntax-local-introduce (map (track track-origin id) stxes))))))
+     (apply values
+            (map (lambda (stx)
+                   (track track-origin id (syntax-local-introduce stx)))
+                 stxes)))))
 
-(define ((track track-origin id) stx)
+(define (track track-origin id stx)
   (track-origin stx
                 (let ([du (syntax-property id 'disappeared-use)])
                   (if du
