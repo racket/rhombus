@@ -36,11 +36,11 @@
     $op_name
 
   grammar modifier:
-    #,(@rhombus(except, ~impo)) $except_decl
-    #,(@rhombus(meta, ~impo)) $meta_decl
-    #,(@rhombus(meta_label, ~impo))
-    #,(@rhombus(only_space, ~impo)) $only_space_decl
-    #,(@rhombus(except_space, ~impo)) $except_space_decl
+    #,(@rhombus(except, ~expo)) $except_decl
+    #,(@rhombus(meta, ~expo)) $meta_decl
+    #,(@rhombus(meta_label, ~expo))
+    #,(@rhombus(only_space, ~expo)) $only_space_decl
+    #,(@rhombus(except_space, ~expo)) $except_space_decl
     $other_modifier
 
 ){
