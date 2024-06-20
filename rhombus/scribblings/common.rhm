@@ -49,10 +49,10 @@ fun provided_note(txt):
   scribble.smaller(txt)
 
 fun provided_meta():
-  @scribble.elem{@provided_note{Provided as @manual.rhombus(meta, ~expo).}}
+  @provided_note{Provided as @manual.rhombus(meta, ~expo).}
 
 fun provided_also_meta():
-  @scribble.elem{@provided_note{Provided both normally and as @manual.rhombus(meta, ~expo).}}
+  @provided_note{Provided both normally and as @manual.rhombus(meta, ~expo).}
 
 fun provided_interface_only():
   @provided_note{Provided only in the @manual.rhombus(class, ~space) space, not
