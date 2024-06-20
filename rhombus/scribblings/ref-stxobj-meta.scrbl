@@ -106,11 +106,14 @@
  operations cancel for any part of the macro's input that is used in the
  macro's output.
 
- A macro can flip introduction to implement a non-hygienic expansion for
- an introduced identifier. Flipping introduction may also be helpful when
- syntax is preserved through side channels, or in unusual cases when
- checking for the originaless of a term with
- @rhombus(Syntax.is_original).
+ A macro can flip introduction to implement a non-hygienic expansion
+ for an introduced identifier, but generally @rhombus(Syntax.make_id)
+ is more reliable for this purpose, because there can be extra scopes
+ that differentiate macro-definition and use sites. Flipping
+ introduction may also be helpful when a syntax object from the
+ macro's input is preserved through side channels, so that the added
+ scope is canceled, or in unusual cases when checking for the
+ originaless of a term with @rhombus(Syntax.is_original).
 
 }
 
@@ -118,6 +121,8 @@
   fun syntax_meta.is_static(stx :: Operator || Identifier)
     :: Boolean
 ){
+
+@provided_meta()
 
  Check whether the identifier @rhombus(#%dynamism) using the scopes of
  @rhombus(stx) is bound to indicate static mode. See @rhombus(use_static)
