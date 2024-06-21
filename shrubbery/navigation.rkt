@@ -1,7 +1,5 @@
 #lang racket/base
 (require racket/class
-         racket/list
-         "lex.rkt"
          "private/edit-help.rkt")
 
 ;; Conventions are the same as in "indentation.rkt"
@@ -11,41 +9,52 @@
 (define (shrubbery-grouping-position t pos limit-pos direction)
   (case direction
     [(backward)
-     (define-values (s e) (skip-whitespace #:and-separators? #t t (sub1 pos) -1))
-     (define category (classify-position t s))
-     (case category
-       [(closer) (send t backward-match e 0)]
-       [(opener bar-operator block-operator) e]
-       [else s])]
+     (cond
+       [(start-of-s-exp t (sub1 pos))]
+       [else
+        (define-values (s e) (skip-whitespace #:and-separators? #t t (sub1 pos) -1))
+        (define category (classify-position t s))
+        (case category
+          [(closer at-closer) (send t backward-match e 0)]
+          [(opener at-opener bar-operator block-operator) e]
+          [else s])])]
     [(forward)
-     (define-values (s e) (skip-whitespace #:and-separators? #t t pos 1))
+     (define s
+       (cond
+         [(start-of-s-exp t pos)]
+         [else
+          (define-values (s e) (skip-whitespace #:and-separators? #t t pos 1))
+          s]))
      (end-of-current t s)]
     [(down)
      (define-values (s e) (skip-whitespace #:and-separators? #t t pos 1))
      (define category (classify-position t s))
      (case category
-       [(opener)
-        e]
-       [(block-operator bar-operator)
-        e]
+       [(opener at-opener) e]
+       [(block-operator bar-operator) e]
        [else #f])]
     [(up)
-     (define pos-start (line-start t pos))
-     (define-values (ns ne) (skip-whitespace t pos 1
-                                             #:stay-on-line (if (only-whitespace-between? t pos-start pos)
-                                                                #f
-                                                                pos-start)))
-     (define start (line-start t ns))
+     (define ns
+       (cond
+         [(start-of-s-exp t pos)]
+         [else
+          (define pos-start (line-start t pos))
+          (define-values (s e) (skip-whitespace t pos 1
+                                                #:stay-on-line (if (only-whitespace-between? t pos-start pos)
+                                                                   #f
+                                                                   pos-start)))
+          s]))
      (case (classify-position t ns)
        [(bar-operator)
         ;; immediately before a `|` is a special case
         (start-of-alts t ns)]
        [else
+        (define start (line-start t ns))
         (define-values (s e) (skip-whitespace t (sub1 ns) -1
                                               #:stay-on-line start))
         (define category (classify-position t s))
         (case category
-          [(opener) s]
+          [(opener at-opener) s]
           [else
            (define sog (start-of-group #:or-out? #t t e start))
            (and sog
@@ -126,4 +135,3 @@
                   [else (loop s last-bar col s #f bar-start s-start)])]
                [else
                 (loop s last-bar col last-block (if (outdented? s) s last-pos) bar-start s-start)])])])])))
-

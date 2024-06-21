@@ -15,24 +15,31 @@
          end-of-current
          start-of-group
          skip-whitespace
-         skip-hash-lang)
+         skip-hash-lang
+         start-of-s-exp)
 
 ;; Classify everything before the limit as whitespace:
 (define current-classify-range (make-parameter '(0 . end)))
 
-(define (classify-position t s)
+(define (do-classify-position t s k)
   (define limit (current-classify-range))
   (define attribs (if (or (s . < . (car limit))
                           (and (not (eq? (cdr limit) 'end))
                                (s . > . (cdr limit))))
                       #f
                       (send t classify-position* s)))
-  (if (symbol? attribs)
-      attribs
-      (or (and attribs
-               (or (hash-ref attribs 'rhombus-type #f)
-                   (hash-ref attribs 'type #f)))
-          'whitespace)))
+  (k attribs))
+
+(define (classify-position t s)
+  (do-classify-position
+   t s
+   (lambda (attribs)
+     (if (symbol? attribs)
+         attribs
+         (or (and attribs
+                  (or (hash-ref attribs 'rhombus-type #f)
+                      (hash-ref attribs 'type #f)))
+             'whitespace)))))
 
 (define (get-token-range t pos)
   (define limit (current-classify-range))
@@ -198,9 +205,10 @@
   (define category (classify-position t s))
   (case category
     [(#f) s]
-    [(opener)
+    ;; 's-exp means open `#{`, which has a matching end `}`
+    [(opener at-opener s-exp)
      (send t forward-match s (send t last-position))]
-    [(closer) s]
+    [(closer at-closer) s]
     [(block-operator bar-operator)
      (define-values (next-s next-e) (skip-whitespace t e 1))
      (define start (line-start t next-s))
@@ -343,8 +351,6 @@
             [else
              (loop s s)])]))]))
 
-
-
 (define (skip-whitespace t pos dir
                          #:and-separators? [and-separators? #f]
                          #:stay-on-line [stay-on-line #f])
@@ -388,7 +394,7 @@
   (define category (send t classify-position pos)) ; not `classify-position*`
   (case category
     [(other)
-     ;; keep skiping past non-comment whitespace
+     ;; keep skipping past non-comment whitespace
      (define-values (s e) (get-token-range t pos))
      (let loop ([pos e])
        (case (classify-position t pos)
@@ -397,3 +403,26 @@
           (loop e)]
          [else pos]))]
     [else pos]))
+
+(define (classify-position/rhombus t s)
+  (do-classify-position
+   t s
+   (lambda (attribs)
+     (and (hash? attribs)
+          (hash-ref attribs 'rhombus-type #f)))))
+
+;; find the start of the 's-exp token, skipping the first 'closer
+;; token and any non-Rhombus tokens, or `#f`
+;; this serves as a good enough heuristic to detect whether we're
+;; inside a `#{}` S-expr escape
+(define (start-of-s-exp t pos)
+  (let loop ([pos pos] [first? #t])
+    (define-values (s e) (get-token-range t pos))
+    (case (classify-position/rhombus t s)
+      [(s-exp) s]
+      [(closer) (and first?
+                     (not (eqv? s 0))
+                     (loop (sub1 s) #f))]
+      [(#f) (and (not (eqv? s 0))
+                 (loop (sub1 s) #f))]
+      [else #f])))
