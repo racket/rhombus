@@ -76,7 +76,7 @@
              ...)])))
   (append
    (for/list ([primitive-id (in-list primitive-ids)])
-     #`(set-primitive-who! '#,primitive-id '#,name/id))
+     #`(void (set-primitive-who! '#,primitive-id '#,name/id)))
    (list (let ([def #`(define #,id
                         #,(if name (syntax-property rhs/who 'inferred-name name) rhs/who))])
            (if inline?

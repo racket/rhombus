@@ -26,3 +26,5 @@
            #:module racket/mutability)
 
 #:exclude (#:module syntax/parse/pre)
+
+#:prune-definitions

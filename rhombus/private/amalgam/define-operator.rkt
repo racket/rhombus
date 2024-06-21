@@ -115,7 +115,7 @@
         spec ...)
      #`(begin
          #,@(if (attribute who?)
-                (list #`(set-primitive-who! 'prim '(~? ext-name name)))
+                (list #`(void (set-primitive-who! 'prim '(~? ext-name name))))
                 '())
          (define-syntaxes (name #,(in-repetition-space #'name))
            (prefix prim spec ...)))]))
@@ -129,7 +129,7 @@
         spec ...)
      #`(begin
          #,@(if (attribute who?)
-                (list #`(set-primitive-who! 'prim '(~? ext-name name)))
+                (list #`(void (set-primitive-who! 'prim '(~? ext-name name))))
                 '())
          (define-syntaxes (name #,(in-repetition-space #'name))
            (infix prim spec ...)))]))

@@ -146,7 +146,7 @@
          (define-syntax-class (prefix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
-                    #:with op-name::name/group op-name
+                    #:with (~var op-name :name/group) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
                           (define env (list sc-arg ...))
@@ -156,7 +156,7 @@
          (define-syntax-class (infix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
-                    #:with op-name::name/group op-name
+                    #:with (~var op-name :name/group) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
                           (define env (list sc-arg ...))

@@ -207,7 +207,7 @@
 
          #,@(if (or transparent? translucent?)
                 (list
-                 #'(set-primitive-contract! 'name? Name-str)
+                 #'(void (set-primitive-contract! 'name? Name-str))
                  #'(define-annotation-syntax Name
                      (identifier-annotation name? #,(get-name-static-infos))))
                 '())
