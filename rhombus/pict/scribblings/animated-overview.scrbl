@@ -137,7 +137,7 @@ have to shift manually, and the bounding boxes are independent.
     def one_at_a_time = switch(early_circ, late_rect)
 )
 
-@timeline(rectangle(~around: switch(circ, rect).pad(3)),
+@timeline(switch(rectangle(~around: circ.pad(3)), rectangle(~around: rect.pad(3))),
           ~label: "one_at_a_time"
           [-1, 0, 1, 2])
 
