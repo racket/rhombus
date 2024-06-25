@@ -54,7 +54,6 @@
   #:fields ()
   #:namespace-fields
   ([make Array.make]
-   [of now_of] ;; TEMPORARY
    now_of
    later_of
    of_length)

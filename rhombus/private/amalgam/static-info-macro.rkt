@@ -75,8 +75,6 @@
      index_result_key
      index_get_key
      index_set_key
-     [map_ref_key index_get_key] ; temporary
-     [map_set_key index_set_key] ; temporary
      append_key
      dot_provider_key
      sequence_constructor_key

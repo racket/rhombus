@@ -63,9 +63,7 @@
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
-                     ReadableMap
-                     ;; temporary:
-                     (rename-out [ReadableMap MapView])))
+                     ReadableMap))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))
@@ -177,7 +175,6 @@
    [values Map.values]
    [keys Map.keys]
    [get Map.get]
-   [ref Map.get] ; temporary
    [has_key Map.has_key]
    [copy Map.copy]
    [snapshot Map.snapshot]

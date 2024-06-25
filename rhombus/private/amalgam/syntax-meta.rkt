@@ -27,9 +27,7 @@
   (provide (for-space rhombus/namespace
                       syntax_meta)
            (for-space rhombus/annot
-                      SyntaxPhase)
-           ;; temporary backward compatibility:
-           (rename-out [syntax_meta.error Syntax.error]))
+                      SyntaxPhase))
 
   (define-name-root syntax_meta
     #:fields

@@ -41,9 +41,7 @@
          (for-space rhombus/annot
                     ReadableString
                     StringCI
-                    ReadableStringCI
-                    ;; temporary:
-                    (rename-out [ReadableString StringView])))
+                    ReadableStringCI))
 
 (module+ for-builtin
   (provide string-method-table))
