@@ -56,9 +56,7 @@
          (for-spaces (rhombus/namespace
                       rhombus/bind
                       rhombus/annot)
-                     ReadableSet
-                     ;; temporary:
-                     (rename-out [ReadableSet SetView])))
+                     ReadableSet))
 
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))
