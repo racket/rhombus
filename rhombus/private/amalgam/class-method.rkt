@@ -73,6 +73,7 @@
 ;;   method-vtable   ; index -> function-identifier or '#:abstract
 ;;   method-results  ; symbol -> nonempty list of identifiers; first one implies others
 ;;   method-private  ; symbol -> identifier or (list identifier); list means property; non-super symbol's identifier attached as 'lhs-id
+;;   method-private-inherit ; symbol -> (vector ref-id index maybe-result-id) for private methods overridden from interface
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
 
@@ -100,17 +101,19 @@
   ;; in the same place in the new vtable
   (define-values (ht            ; symbol -> (cons mindex id)
                   super-priv-ht ; symbol -> identifier or (list identifier), implies not in `ht`
+                  priv-inherit-ht ; symbol -> (vector ref-id index maybe-result-id)
                   vtable-ht     ; int -> accessor-identifier or '#:abstract
                   from-ht)      ; symbol -> super
-    (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()] [from-ht #hasheq()]) ([super (in-list supers)])
+    (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [priv-inherit-ht #hasheq()] [vtable-ht #hasheqv()] [from-ht #hasheq()])
+              ([super (in-list supers)])
       (define super-vtable (syntax-e (objects-desc-method-vtable super)))
       (define private? (hash-ref private-interfaces super #f))
-      (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht] [from-ht from-ht])
+      (for/fold ([ht ht] [priv-ht priv-ht] [priv-inherit-ht priv-inherit-ht] [vtable-ht vtable-ht] [from-ht from-ht])
                 ([shape (in-vector (objects-desc-method-shapes super))]
                  [super-i (in-naturals)])
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))
-        (define-values (key val i old-val)
+        (define-values (key val i old-val m-final?)
           (let* ([arity (and (vector? shape) (vector-ref shape 1))]
                  [shape (if (vector? shape) (vector-ref shape 0) shape)]
                  [property? (pair? shape)]
@@ -125,7 +128,8 @@
             (values shape
                     (cons (mindex i final? property? arity #t) shape)
                     i
-                    old-val)))
+                    old-val
+                    final?)))
         (when (hash-ref dot-ht key #f)
           (raise-syntax-error #f (format "name supplied as both method and dot syntax by ~a" supers-str) stx key))
         (cond
@@ -137,6 +141,10 @@
                                 (hash-ref vtable-ht (mindex-index old-i)))]
                              [(pair? old-val) (car old-val)]
                              [else old-val]))
+           (define (overridden?)
+             (for/or ([added (in-list added-methods)])
+               (and (eq? key (syntax-e (added-method-id added)))
+                    (eq? 'override (added-method-replace added)))))
            (unless (or (if (identifier? old-rhs)
                            ;; same implementation?
                            (and (identifier? new-rhs)
@@ -145,21 +153,35 @@
                            (eq? old-rhs new-rhs))
                        ;; from a common superclass/superinterface?
                        (and (not (and (identifier? new-rhs) (identifier? old-rhs)))
-                            (in-common-superinterface? (hash-ref from-ht key) super key))
+                            (in-common-superinterface (hash-ref from-ht key) super key))
                        ;; overridden
-                       (for/or ([added (in-list added-methods)])
-                         (and (eq? key (syntax-e (added-method-id added)))
-                              (eq? 'override (added-method-replace added)))))
+                       (overridden?))
              (raise-syntax-error #f (format "method supplied by multiple ~a and not overridden" supers-str) stx key))
+           (define new-priv-inherit-ht
+             (cond
+               [(not private?) priv-inherit-ht]
+               [(in-common-superinterface (hash-ref from-ht key) super key)
+                => (lambda (common-super)
+                     (hash-set priv-inherit-ht key (vector (interface-desc-internal-ref-id common-super)
+                                                           super-i
+                                                           (hash-ref (objects-desc-method-result common-super) key #f))))]
+               [else
+                (when (overridden?)
+                  (raise-syntax-error #f
+                                      "cannot override method from multiple privately implemented interfaces"
+                                      stx
+                                      key))
+                priv-inherit-ht]))
            (if (or private?
                    (and (pair? old-val) (mindex? (car old-val))
                         (not (and (identifier? new-rhs)
                                   (not (identifier? old-rhs)))))
                    (and (identifier? old-rhs)
                         (not (identifier? new-rhs))))
-               (values ht priv-ht vtable-ht from-ht)
+               (values ht priv-ht new-priv-inherit-ht vtable-ht from-ht)
                (values (hash-set ht key val)
                        (hash-remove priv-ht key)
+                       (hash-remove priv-inherit-ht key)
                        (hash-set vtable-ht i new-rhs)
                        (hash-set from-ht key super)))]
           [private?
@@ -168,11 +190,17 @@
                    (hash-set priv-ht key (if (property-shape? shape)
                                              (list new-rhs)
                                              new-rhs))
+                   (if m-final?
+                       priv-inherit-ht
+                       (hash-set priv-inherit-ht key (vector (interface-desc-internal-ref-id super)
+                                                             super-i
+                                                             (hash-ref (objects-desc-method-result super) key #f))))
                    vtable-ht
                    (hash-set from-ht key super))]
           [else
            (values (hash-set ht key val)
                    priv-ht
+                   priv-inherit-ht
                    (hash-set vtable-ht i new-rhs)
                    (hash-set from-ht key super))]))))
 
@@ -197,7 +225,8 @@
 
   ;; add methods for the new class/interface
   (define-values (new-ht new-vtable-ht priv-ht here-ht)
-    (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
+    (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()])
+              ([added (in-list added-methods)])
       (define id (added-method-id added))
       (define new-here-ht (hash-set here-ht (syntax-e id) id))
       (define (check-consistent-property property?)
@@ -291,14 +320,17 @@
     (for/vector ([i (in-range (hash-count new-vtable-ht))])
       (hash-ref new-vtable-ht i)))
   (define method-results
-    (for/fold ([method-results super-method-results]) ([added (in-list added-methods)]
-                                                       #:when (added-method-result-id added))
+    (for/fold ([method-results super-method-results])
+              ([added (in-list added-methods)]
+               #:when (added-method-result-id added))
       (define sym (syntax-e (added-method-id added)))
       (hash-set method-results sym (cons (added-method-result-id added)
                                          (hash-ref method-results sym '())))))
   (define method-private
     (for/fold ([ht super-priv-ht]) ([(k v) (in-hash priv-ht)])
       (hash-set ht k v)))
+
+  (define method-private-inherit priv-inherit-ht)
 
   (define abstract-name
     (for/or ([v (in-hash-values new-vtable-ht)]
@@ -311,6 +343,7 @@
           method-vtable
           method-results
           method-private
+          method-private-inherit
           here-ht
           abstract-name))
 
@@ -459,7 +492,7 @@
                  (list #`(quote #,sym)
                        #`(quote-syntax #,(car ids)))))))
 
-(define-for-syntax (in-common-superinterface? i j key)
+(define-for-syntax (in-common-superinterface i j key)
   (define (lookup id)
     (and id (syntax-local-value* (in-class-desc-space id)
                                  (lambda (v)
@@ -493,7 +526,7 @@
   (define i-ht (gather i #hasheq() #f))
   (define j-ht (gather j #hasheq() #f))
   (for/or ([k (in-hash-keys i-ht)])
-    (hash-ref j-ht k #f)))
+    (and (hash-ref j-ht k #f) k)))
 
 (define-syntax this
   (expression-transformer
@@ -551,7 +584,7 @@
                     (raise-syntax-error #f "class or interface not found" super-id))
                   (define pos (hash-ref (objects-desc-method-map super) (syntax-e #'method-id) #f))
                   (when found
-                    (unless (in-common-superinterface? (car found) super (syntax-e #'method-id))
+                    (unless (in-common-superinterface (car found) super (syntax-e #'method-id))
                       (raise-syntax-error #f "inherited method is ambiguous" #'method-id)))
                   (and pos (cons super pos))))
               (unless super+pos
@@ -648,7 +681,7 @@
                                       static-infos)
                    #'tail)])]))))
 
-(define-for-syntax (make-method-syntax id index/id result-id kind methods-ref-id)
+(define-for-syntax (make-method-syntax id index/id/intf result-id kind methods-ref-id)
   (define (add-method-result call r)
     (if r
         (wrap-static-info* call (method-result-static-infos r))
@@ -659,9 +692,13 @@
       (lambda (stx)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
-           (define rator (if (identifier? index/id)
-                             index/id
-                             #`(vector-ref (#,methods-ref-id obj-id) #,index/id)))
+           (define rator (cond
+                           [(identifier? index/id/intf) index/id/intf]
+                           [(vector? (syntax-e index/id/intf))
+                            (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
+                            #`(vector-ref (#,ref-id obj-id) #,pos)]
+                           [else
+                            #`(vector-ref (#,methods-ref-id obj-id) #,index/id/intf)]))
            (syntax-parse stx
              [(head . tail)
               #:with assign::assign-op-seq #'tail
@@ -691,9 +728,14 @@
           [(head (~and args (tag::parens arg ...)) . tail)
            (syntax-parse (syntax-parameter-value #'this-id)
              [(id . _)
-              (define rator (if (identifier? index/id)
-                                index/id
-                                #`(vector-ref (#,methods-ref-id id) #,index/id)))
+              (define rator (cond
+                              [(identifier? index/id/intf)
+                               index/id/intf]
+                              [(vector? (syntax-e index/id/intf))
+                               (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
+                               #`(vector-ref (#,ref-id id) #,pos)]
+                              [else
+                               #`(vector-ref (#,methods-ref-id id) #,index/id/intf)]))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (define-values (call new-tail to-anon-function?)
@@ -714,8 +756,8 @@
 
 
 (define-for-syntax (build-methods method-results
-                                  added-methods method-mindex method-names method-private
-                                  reconstructor-rhs reconstructor-stx-params
+                                  added-methods method-mindex method-names method-private method-private-inherit
+                                  reconstructor-rhs reconstructor-stx-params in-final?
                                   names
                                   #:veneer-vtable [veneer-vtable #f])
   (with-syntax ([(name name-instance name? name-convert reconstructor-name
@@ -752,19 +794,35 @@
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))
                            (if (mindex-property? mix) 'property 'method)))]
-                  [((private-method-name private-method-id private-method-id/property private-method-result-id private-method-kind) ...)
+                  [((private-method-name private-method-id/intf private-method-id/intf/property private-method-result-id private-method-kind) ...)
                    (for/list ([m-name (in-list (sort (hash-keys method-private)
                                                      symbol<?))])
                      (define id/property (hash-ref method-private m-name))
-                     (define id (if (pair? id/property) (car id/property) id/property))
+                     (define property? (pair? id/property))
+                     (define-values (id/intf/property result-id)
+                       (cond
+                         [(and (not in-final?)
+                               (hash-ref method-private-inherit m-name #f))
+                          => (lambda (vec)
+                               ;; Override of private implemented, so we need to access internally
+                               ;; by interface vtable in case it's overridden in a subclass; a vector
+                               ;; encodes a property reference and vtable index
+                               (values (if property?
+                                           (list vec)
+                                           vec)
+                                       (vector-ref vec 2)))]
+                         [else (values id/property
+                                       (let ([r (hash-ref method-results m-name #f)])
+                                         (and (pair? r) (car r))))]))
+                     (define id/intf (if property? (car id/intf/property) id/intf/property))
+                     (define id (if property? (car id/property) id/property))
                      (define raw-m-name (or (syntax-property id 'lhs-id) m-name))
                      ;; See above for explanation of `raw-m-name`
                      (list (datum->syntax #'name raw-m-name)
-                           id
-                           id/property
-                           (let ([r (hash-ref method-results m-name #f)])
-                             (and (pair? r) (car r)))
-                           (if (pair? id/property) 'property 'method)))])
+                           id/intf
+                           id/intf/property
+                           result-id
+                           (if property? 'property 'method)))])
       (list
        #`(define-values (#,@(for/list ([added (in-list added-methods)]
                                        #:when (not (eq? 'abstract (added-method-body added))))
@@ -790,14 +848,14 @@
                                                             (quote-syntax methods-ref)))
              ...
              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
-                                                                    (quote-syntax private-method-id)
+                                                                    (quote-syntax private-method-id/intf)
                                                                     (quote-syntax private-method-result-id)
                                                                     (quote private-method-kind)
                                                                     (quote-syntax methods-ref)))
              ...
              (define-syntax new-private-tables (cons (cons (quote-syntax name)
                                                            (hasheq (~@ 'private-method-name
-                                                                       (quote-syntax private-method-id/property))
+                                                                       (quote-syntax private-method-id/intf/property))
                                                                    ...
                                                                    (~@ 'private-field-name
                                                                        private-field-desc)

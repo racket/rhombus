@@ -24,6 +24,8 @@
          (struct-out added-method)
          (struct-out mindex)
 
+         unpack-intf-ref
+
          any-stx?
 
          :options-block
@@ -149,6 +151,23 @@
 
 ;; used for a table produced by `extract-method-tables`
 (struct mindex (index final? property? arity inherited?))
+
+;; When a private method or property overrides one from a privately
+;; implemented interface, and when the enclosing class is not final,
+;; then a subclass might privately (again) override the method or
+;; property. Even though the subclass does not (in principle) know
+;; that the superclass implements the method, it must override the
+;; superclass's method. So, calling the private method via the
+;; superclass needs to be dynamic through the interface's vtable. To
+;; record this indirection, we package the relevant interface's
+;; internal vtable accessor, an index into that vtable, and an
+;; identifier for the method's result.
+(define (unpack-intf-ref vec-stx)
+  (define vec (syntax-e vec-stx))
+  (define maybe-id (vector-ref vec 2))
+  (values (vector-ref vec 0)
+          (syntax-e (vector-ref vec 1))
+          (and (syntax-e maybe-id) maybe-id)))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 

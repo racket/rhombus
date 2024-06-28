@@ -99,10 +99,12 @@
               (intro (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
 
        (define internal-internal-name (or internal-name
-                                          ;; we need an internal accessor if there are any non-abstract,
-                                          ;; non-final methods, since those need a way to access a
-                                          ;; vtable from `this`
-                                          (and (hash-ref options 'has-non-abstract-method? #f)
+                                          ;; we need an internal accessor if there are any
+                                          ;; non-final methods; for non-abstract, we need a way
+                                          ;; to access a vtable from `this`, and for non-final
+                                          ;; generally, we need a way to get a vtable in case
+                                          ;; of subclasses that re-override a private implementation
+                                          (and (hash-ref options 'has-non-final-method? #f)
                                                (temporary "internal-internal-~a"))))
 
        (define-values (call-statinfo-indirect-id
@@ -183,6 +185,7 @@
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
+                       method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
          (extract-method-tables stxes added-methods #f supers #hasheq() #f #f))
@@ -249,8 +252,8 @@
                    (list #'(define-syntaxes (name?) (values)))
                    null)
                (build-methods method-results
-                              added-methods method-mindex method-names method-private
-                              #f #f
+                              added-methods method-mindex method-names method-private method-private-inherit
+                              #f #f #f
                               #'(name name-instance internal-name? #f #f
                                       internal-name-ref
                                       ()
@@ -386,6 +389,7 @@
                                             (quote-syntax prop:internal-name)
                                             (quote-syntax prop:internal-name)
                                             (quote-syntax internal-name-ref)
+                                            (quote-syntax internal-name-ref)
                                             #,custom-annotation?
                                             #f
                                             null
@@ -420,6 +424,8 @@
                               #,(and (syntax-e #'prop:internal-name)
                                      #'(quote-syntax prop:internal-name))
                               (quote-syntax name-ref-or-error)
+                              #,(and (syntax-e #'internal-name-ref)
+                                     #'(quote-syntax internal-name-ref))
                               #,custom-annotation?
                               #,(let ([id (if (syntax-e #'call-statinfo-indirect)
                                               #'call-statinfo-indirect

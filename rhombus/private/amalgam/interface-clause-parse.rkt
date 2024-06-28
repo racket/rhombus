@@ -32,10 +32,10 @@
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
-              [((~or* #:method #:override #:final #:final-override
+              [((~or* #:method #:override #:abstract #:abstract-override
                       #:property #:override-property
-                      #:final-property #:final-override-property) . _)
-               (hash-set options 'has-non-abstract-method? #t)]
+                      #:abstract-property #:abstract-override-property) . _)
+               (hash-set options 'has-non-final-method? #t)]
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_ options]))

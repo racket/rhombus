@@ -67,6 +67,7 @@
                      #'prop:Appendable
                      #'prop:Appendable
                      #'Appendable-ref
+                     #'Appendable-ref
                      #t
                      #f
                      null))))

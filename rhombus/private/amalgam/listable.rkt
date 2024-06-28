@@ -39,6 +39,7 @@
                      #'prop:Listable
                      #'prop:Listable
                      #'Listable-ref
+                     #'Listable-ref
                      #t
                      #f
                      null))))

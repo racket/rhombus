@@ -24,6 +24,7 @@
    prop:id
    prop:internal-internal-id
    ref-id
+   internal-ref-id
    custom-annotation?
    indirect-call-method-id ; same as `class-desc`
    primitive-properties))  ; list of (cons prop-id val-id)
@@ -76,9 +77,12 @@
 
 (define (close-interfaces-over-superinterfaces interfaces private-interfaces)
   (let loop ([seen #hasheq()]
-             [priv-seen private-interfaces]
-             [int+priv?s (for/list ([intf (in-list interfaces)])
-                           (cons intf (hash-ref private-interfaces intf #f)))])
+             [priv-seen #hasheq()]
+             [int+priv?s (append
+                          (for/list ([intf (in-list interfaces)])
+                            (cons intf (hash-ref private-interfaces intf #f)))
+                          (for/list ([intf (in-hash-keys private-interfaces)])
+                            (cons intf #t)))])
     (cond
       [(null? int+priv?s)
        (append (for/list ([intf (in-hash-keys seen)])

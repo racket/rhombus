@@ -50,6 +50,7 @@
                      #'prop:Equatable
                      #'prop:Equatable
                      #'Equatable-ref
+                     #'Equatable-ref
                      #t
                      #f
                      null))))

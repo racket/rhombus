@@ -35,6 +35,7 @@
                      #'prop:Sequenceable
                      #'prop:Sequenceable
                      #'Sequenceable-ref
+                     #'Sequenceable-ref
                      #t
                      #f
                      null))))

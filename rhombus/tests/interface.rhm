@@ -467,3 +467,110 @@ block:
       'check_options($_)',
       #true,
     )
+
+// Check that override of inherited from a private interface
+// works consistently when a subclass overrides again
+block:
+  class V(n)
+
+  interface I:
+    internal _I
+    method m() :~ V
+    property p :~ V
+
+  class C():
+    nonfinal
+    private implements I
+    internal _C
+    private override m(): V(1)
+    private override property p: V(10)
+
+    method m2() :~ V:
+      V(this.m().n)
+    method m3() :~ V:
+      V(this.p.n)
+    method m4() :~ V:
+      V(m().n)
+    method m5() :~ V:
+      V(p.n)
+
+  let c = C()
+  check (c :: _C).m() ~is V(1)
+  check c.m2() ~is V(1)
+  check c.m3() ~is V(10)
+  check c.m4() ~is V(1)
+  check c.m5() ~is V(10)
+  check (c :~ _I).m() ~is V(1)
+  check (c :~ _I).p ~is V(10)
+
+  check c.m2().n ~is 1
+  check c.m3().n ~is 10
+  check (c :~ _I).m().n ~is 1
+  check (c :~ _I).p.n ~is 10
+
+  class C2():
+    extends C
+    internal _C2
+    private implements I
+    private override m(): V(2)
+    private override property p: V(20)
+
+  let c2 = C2()
+  check (c2 :: _C).m() ~is V(2)
+  check (c2 :: _C2).m() ~is V(2)
+  check c2.m2() ~is V(2)
+  check c2.m3() ~is V(20)
+  check c2.m4() ~is V(2)
+  check c2.m5() ~is V(20)
+  check (c2 :~ _I).m() ~is V(2)
+  check (c2 :~ _I).p ~is V(20)
+
+  check (c2 :: _C).m().n ~is 2
+  check (c2 :: _C2).m().n ~is 2
+  check c2.m2().n ~is 2
+  check c2.m3().n ~is 20
+  check (c2 :~ _I).m().n ~is 2
+  check (c2 :~ _I).p.n ~is 20
+
+// Final method form interface is a direct call
+block:
+  interface C:
+    final method call() :: String:
+      "intf"
+  class A(a):
+    nonfinal
+    internal _A
+    private implements C
+  check (A(1) :: _A).call() ~is "intf"
+
+// Private implementation via shared superinterface
+block:
+  interface B:
+    method m()
+  interface I:
+    extends B
+  interface J:
+    extends B
+  class C():
+    nonfinal
+    private implements: I J
+    private override m(): 1
+    method m2(): this.m()
+  class C2():
+    extends C
+    private implements: J
+    private override m(): 2
+  check C2().m2() ~is 2
+
+// Private implementation via shared superinterface
+check:
+  ~eval
+  interface I:
+    method m()
+  interface J:
+    method m()
+  class C():
+    nonfinal
+    private implements: I J
+    private override m(): 1
+  ~throws "cannot override method from multiple privately implemented interfaces"

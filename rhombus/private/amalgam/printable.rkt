@@ -53,6 +53,7 @@
                      #'prop:Printable
                      #'prop:Printable
                      #'Printable-ref
+                     #'Printable-ref
                      #t
                      #f
                      null))))

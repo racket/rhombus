@@ -42,7 +42,8 @@
          no-dynamic-dot-syntax)
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
-                                             has-private? method-private exposed-internal-id internal-of-id
+                                             has-private? method-private method-private-inherit
+                                             exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
                                              exported-of internal-exported-of
                                              dot-provider-rhss parent-dot-providers
@@ -140,10 +141,20 @@
                                       #,default)
                                    default)))))
         (if exposed-internal-id
-            (with-syntax ([([private-method-name private-method-id private-method-id/prop] ...)
+            (with-syntax ([([private-method-name private-method-id private-method-id/intf/prop] ...)
                            (for/list ([(sym id/prop) (in-hash method-private)])
                              (define id (if (pair? id/prop) (car id/prop) id/prop))
-                             (list sym id id/prop))])
+                             (define id/intf/prop
+                               (cond
+                                 [(and (not final?)
+                                       (hash-ref method-private-inherit sym #f))
+                                  => (lambda (vec)
+                                       ;; Override of private implemented
+                                       (if (identifier? id/prop)
+                                           vec
+                                           (list vec)))]
+                                 [else id/prop]))
+                             (list sym id id/intf/prop))])
               (list
                #`(define-syntaxes (#,exposed-internal-id #,(in-repetition-space exposed-internal-id))
                    (class-expression-transformers (quote-syntax name) (quote-syntax make-internal-name)))
@@ -165,7 +176,7 @@
                                                                   ...)
                                                                  (hasheq
                                                                   (~@ 'private-method-name
-                                                                      (quote-syntax private-method-id/prop))
+                                                                      (quote-syntax private-method-id/intf/prop))
                                                                   ...))))))
             null))))))
 
@@ -401,9 +412,13 @@
                                #'tail)])))))
 
 (define-for-syntax (desc-ref-id desc)
-  (if (class-desc? desc)
-      (class-desc-ref-id desc)
-      (interface-desc-ref-id desc)))
+  (cond
+    [(class-desc? desc)
+     (class-desc-ref-id desc)]
+    [(interface-desc? desc)
+     (interface-desc-ref-id desc)]
+    [else
+     #f]))
 
 ;; dot provider for a class instance used before a `.`
 (define-for-syntax ((make-handle-class-instance-dot name internal-fields internal-methods)
@@ -454,7 +469,13 @@
                                        static-infos))
           (success (wrap-static-info* e all-static-infos)
                    tail)])]))
-  (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity add-check)
+  (define (do-method pos/id*
+                     #:result-id [ret-info-id #f]
+                     #:nonfinal? [nonfinal? #f]
+                     #:property? [property? #f]
+                     #:shape-arity [shape-arity #f]
+                     #:add-check [add-check #f]
+                     #:ref-id [ref-id (desc-ref-id desc)])
     (define-values (args new-tail)
       (if property?
           (syntax-parse tail
@@ -524,7 +545,7 @@
                   #'()))
             (values checked-wrap-call
                     #'placeholder
-                    (lambda (placeholder extra-rands) #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id))
+                    (lambda (placeholder extra-rands) #`(method-ref #,ref-id #,obj-id #,pos/id))
                     (lambda (extra-rand extra-rands) obj-id)
                     (or shape-arity
                         (and r (method-result-arity r)))
@@ -556,7 +577,7 @@
          [(identifier? pos/id)
           (success #`(curry-method #,pos/id #,form1) new-tail)]
          [else
-          (success #`(method-curried-ref #,(desc-ref-id desc) #,form1 #,pos/id) new-tail)])]))
+          (success #`(method-curried-ref #,ref-id #,form1 #,pos/id) new-tail)])]))
   (define (make-interface-check desc name)
     (lambda (obj-id)
       #`(void (#,(interface-desc-ref-id desc) #,obj-id))))
@@ -577,37 +598,49 @@
                          (vector-ref (syntax-e (objects-desc-method-vtable desc)) pos)
                          ;; dynamic:
                          pos)
-                     (hash-ref (objects-desc-method-result desc) (syntax-e field-id) #f)
-                     non-final?
-                     ;; property?
-                     (pair? shape-symbol)
-                     shape-arity
+                     #:result-id (hash-ref (objects-desc-method-result desc) (syntax-e field-id) #f)
+                     #:nonfinal? non-final?
+                     #:property? (pair? shape-symbol)
+                     #:shape-arity shape-arity
                      ;; corner case: final method in interface called through
-                     ;; non-internal needs a check that the argument is not
+                     ;; non-internal needs a check that the argument is not merely
                      ;; an internal instance, since the implementation checks only
                      ;; for an internal instance
-                     (and (interface-desc? desc)
-                          (not (interface-internal-desc? desc))
-                          (not non-final?)
-                          (make-interface-check desc field-id))))]
+                     #:add-check (and (interface-desc? desc)
+                                      (not (interface-internal-desc? desc))
+                                      (not non-final?)
+                                      (make-interface-check desc field-id))))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
-     => (lambda (id/property)
-          (define id (if (identifier? id/property)
-                         id/property
-                         (car (syntax-e id/property))))
-          (define property? (pair? (syntax-e id/property)))
-          (do-method id #f #f property? #f #f))]
-    [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
-     => (lambda (id/pos/fld)
+     => (lambda (id/intf/property)
+          (define property? (pair? (syntax-e id/intf/property)))
+          (define id/intf (if property?
+                              (car (syntax-e id/intf/property))
+                              id/intf/property))
           (cond
-            [(identifier? id/pos/fld)
-             (do-method id/pos/fld #f #f #f #f #f)]
-            [(syntax? id/pos/fld)
-             (do-method (car (syntax-e id/pos/fld)) #f #f #t #f #f)]
+            [(identifier? id/intf)
+             (do-method id/intf #:property? property?)]
             [else
-             (do-field id/pos/fld)]))]
+             (define-values (ref-id pos result-id) (unpack-intf-ref id/intf))
+             (do-method pos #:result-id result-id #:property? property? #:nonfinal? #t #:ref-id ref-id)]))]
+    [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
+     => (lambda (id/intf/fld)
+          (cond
+            [(identifier? id/intf/fld)
+             (do-method id/intf/fld)]
+            [(and (syntax? id/intf/fld) (pair? (syntax-e id/intf/fld)))
+             (cond
+               [(vector? (syntax-e (car (syntax-e id/intf/fld))))
+                (define-values (ref-id pos result-id) (unpack-intf-ref (car (syntax-e id/intf/fld))))
+                (do-method pos #:result-id result-id #:property? #t #:nonfinal? #t #:ref-id ref-id)]
+               [else
+                (do-method (car (syntax-e id/intf/fld)) #:property? #t)])]
+            [(syntax? id/intf/fld)
+             (define-values (ref-id pos result-id) (unpack-intf-ref id/intf/fld))
+             (do-method pos #:result-id result-id #:nonfinal? #t #:ref-id ref-id)]
+            [else
+             (do-field id/intf/fld)]))]
     [(and more-static?
           (not repetition?))
      (raise-syntax-error #f

@@ -208,6 +208,7 @@
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
+                       method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
          (extract-method-tables stxes added-methods super interfaces private-interfaces final? #f))
@@ -257,8 +258,8 @@
                                                             name-instance indirect-static-infos))
                (build-methods #:veneer-vtable method-vtable
                               method-results
-                              added-methods method-mindex method-names method-private
-                              #f #f
+                              added-methods method-mindex method-names method-private method-private-inherit
+                              #f #f #f
                               #'(name #f #|<- not `name-instance`|# name?/checked name-convert #f
                                       prop-methods-ref
                                       representation-static-infos ;; instead of `indirect-static-infos`
@@ -273,7 +274,8 @@
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
                                          method-mindex method-vtable method-results final?
-                                         has-private? method-private #f #f
+                                         has-private? method-private method-private-inherit
+                                         #f #f
                                          expression-macro-rhs intro #f
                                          #f
                                          #f

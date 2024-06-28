@@ -122,7 +122,7 @@ check:
   for List:
     each j: Posn3(1, 2) :: Sequence
     j
-  ~throws "does not satisfy annotation"
+  ~throws "don't use this"
 
 check:
   for List:

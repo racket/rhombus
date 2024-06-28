@@ -658,7 +658,7 @@
   class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_name ...'
   class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
   class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_impl'
-  class_clause.macro 'private #,(@rhombus(immutabe, ~class_clause)) $field_impl'
+  class_clause.macro 'private #,(@rhombus(immutable, ~class_clause)) $field_impl'
   class_clause.macro 'private #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl'
   class_clause.macro 'private $method_impl'
   class_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'

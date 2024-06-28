@@ -406,6 +406,7 @@
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
+                       method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
          (extract-method-tables stxes added-methods super interfaces private-interfaces final? prefab?))
@@ -570,8 +571,8 @@
              (reorder-for-top-level
               (append
                (build-methods method-results
-                              added-methods method-mindex method-names method-private
-                              reconstructor-rhs reconstructor-stx-params
+                              added-methods method-mindex method-names method-private method-private-inherit
+                              reconstructor-rhs reconstructor-stx-params final?
                               #'(name name-instance name? #f reconstructor-name
                                       prop-methods-ref
                                       indirect-static-infos
@@ -667,7 +668,8 @@
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling method-mindex method-vtable method-results final?
-                                         has-private? method-private exposed-internal-id #'internal-of
+                                         has-private? method-private method-private-inherit
+                                         exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
                                          (and (not annotation-rhs)
                                               (if has-mutable-constructor-arg?

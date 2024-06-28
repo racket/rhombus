@@ -37,6 +37,7 @@
                      #'prop:Callable
                      #'prop:Callable
                      #'Callable-ref
+                     #'Callable-ref
                      #t
                      #f
                      null))))

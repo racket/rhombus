@@ -80,6 +80,7 @@
                      #'prop:Indexable
                      #'prop:Indexable
                      #'Indexable-ref
+                     #'Indexable-ref
                      #t
                      #f
                      null))))
@@ -118,6 +119,7 @@
                      #'MutableIndexable
                      #'prop:MutableIndexable
                      #'prop:MutableIndexable
+                     #'MutableIndexable-ref
                      #'MutableIndexable-ref
                      #t
                      #f

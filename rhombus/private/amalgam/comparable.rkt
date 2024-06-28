@@ -95,6 +95,7 @@
                      #'prop:Comparable
                      #'prop:Comparable
                      #'Comparable-ref
+                     #'Comparable-ref
                      #t
                      #f
                      null))))
