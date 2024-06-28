@@ -983,3 +983,10 @@ block:
       'check_options($_)',
       #true,
     )
+
+block:
+  class C():
+    private property p: 10
+    method m():
+      this.p
+  check C().m() ~is 10

@@ -600,10 +600,14 @@
           (define property? (pair? (syntax-e id/property)))
           (do-method id #f #f property? #f #f))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
-     => (lambda (id/fld)
-          (if (identifier? id/fld)
-              (do-method id/fld #f #f #f #f #f)
-              (do-field id/fld)))]
+     => (lambda (id/pos/fld)
+          (cond
+            [(identifier? id/pos/fld)
+             (do-method id/pos/fld #f #f #f #f #f)]
+            [(syntax? id/pos/fld)
+             (do-method (car (syntax-e id/pos/fld)) #f #f #t #f #f)]
+            [else
+             (do-field id/pos/fld)]))]
     [(and more-static?
           (not repetition?))
      (raise-syntax-error #f
