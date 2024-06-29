@@ -102,5 +102,9 @@ class's implementation, or via an @rhombus(internal, ~class_clause) name
 that is selectively exported, they can be used to limit access to
 some methods.
 
+Fields and methods can be @rhombus(protected, ~class_clause), which is
+like @rhombus(private, ~class_clause), except that
+@rhombus(protected, ~class_clause) fields and methods are accessible in
+subclasses, and they can be overridden when not @rhombus(final, ~class_clause).
 
 @(close_eval(method_eval))

@@ -261,6 +261,7 @@
                                     #f ; not final
                                     (quote-syntax Name)
                                     #,(and (syntax-e #'Parent) #'(quote-syntax Parent))
+                                    #f
                                     (quote-syntax struct:name)
                                     (get-name-instances)
                                     #f ; `ref-id` would only used by the normal class dot provider

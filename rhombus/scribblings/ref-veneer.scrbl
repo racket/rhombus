@@ -34,6 +34,7 @@
     #,(@rhombus(extends, ~veneer_clause)) $id_name
     #,(@rhombus(implements, ~veneer_clause)) $implements_decl
     #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+    #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(expression, ~veneer_clause)) $expression_decl
     #,(@rhombus(dot, ~veneer_clause)) $dot_decl
     #,(@rhombus(static_info, ~veneer_clause)) $static_info_decl
@@ -81,7 +82,7 @@
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
   and a syntactic form
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))) for each
-  non-@rhombus(private, ~class_clause) method, property, and dot syntax in the veneer
+  non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, and dot syntax in the veneer
   (including inherited methods, properties, and dot syntax), respectively; and}
 
  @item{in the @rhombus(class, ~space) space, a representation of the
@@ -244,6 +245,24 @@
 ){
 
  Like @rhombus(private, ~class_clause) as a class clause, but as a
+ @tech{veneer clause}. See @rhombus(veneer).
+
+}
+
+
+@doc(
+  ~nonterminal:
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+
+  veneer_clause.macro 'protected #,(@rhombus(implements, ~class_clause)) $id_name ...'
+  veneer_clause.macro 'protected #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
+  veneer_clause.macro 'protected $method_impl'
+  veneer_clause.macro 'protected #,(@rhombus(method, ~class_clause)) $method_impl'
+  veneer_clause.macro 'protected #,(@rhombus(property, ~class_clause)) $property_impl'
+){
+
+ Like @rhombus(protected, ~class_clause) as a class clause, but as a
  @tech{veneer clause}. See @rhombus(veneer).
 
 }

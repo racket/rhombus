@@ -14,6 +14,7 @@
          interface-desc-ref
          interface-names->interfaces
          interface-set-diff
+         extract-private-protected-interfaces
          close-interfaces-over-superinterfaces
          interface-names->quoted-list)
 
@@ -70,18 +71,51 @@
        [else (cons (car intfs) (loop (hash-set ht (car intfs) #t) (cdr intfs)))]))))
 
 (define (interface-set-diff l1 l2)
-  (define s2 (for/hasheq ([intf (in-list l2)]) (values intf #t)))
-  (for/hasheq ([intf (in-list l1)]
-               #:unless (hash-ref s2 intf #f))
-    (values intf #t)))
+  (cond
+    [(hash? l1)
+     (for/fold ([s1 l1]) ([intf (in-list l2)])
+       (hash-remove s1 intf))]
+    [else
+     (define s2 (for/hasheq ([intf (in-list l2)]) (values intf #t)))
+     (for/hasheq ([intf (in-list l1)]
+                  #:unless (hash-ref s2 intf #f))
+       (values intf #t))]))
 
-(define (close-interfaces-over-superinterfaces interfaces private-interfaces)
+(define (extract-private-protected-interfaces orig-stx options)
+  (define public-interface-list (close-interfaces-over-superinterfaces
+                                 (interface-names->interfaces orig-stx (hash-ref options 'public-implements '()))
+                                 #hasheq()
+                                 #hasheq()))
+  (define protected-interfaces (interface-set-diff
+                                (interface-names->interfaces orig-stx (hash-ref options 'protected-implements '()))
+                                public-interface-list))
+  (define private-maybe-protected-interfaces (interface-set-diff
+                                              (interface-names->interfaces orig-stx (hash-ref options 'private-implements '()))
+                                              public-interface-list))
+  (define private-interfaces (interface-set-diff
+                              private-maybe-protected-interfaces
+                              (close-interfaces-over-superinterfaces
+                               (hash-keys protected-interfaces)
+                               #hasheq()
+                               #hasheq())))
+  (define protected-promoted-interfaces (if (= (hash-count private-maybe-protected-interfaces)
+                                               (hash-count private-interfaces))
+                                            protected-interfaces
+                                            (for/fold ([protected-interfaces protected-interfaces])
+                                                      ([intf (in-hash-keys private-maybe-protected-interfaces)]
+                                                       #:unless (hash-ref private-interfaces intf #f))
+                                              (hash-set protected-interfaces intf #t))))
+  (values private-interfaces protected-promoted-interfaces))
+
+(define (close-interfaces-over-superinterfaces interfaces private-interfaces protected-interfaces)
   (let loop ([seen #hasheq()]
              [priv-seen #hasheq()]
              [int+priv?s (append
                           (for/list ([intf (in-list interfaces)])
                             (cons intf (hash-ref private-interfaces intf #f)))
                           (for/list ([intf (in-hash-keys private-interfaces)])
+                            (cons intf #t))
+                          (for/list ([intf (in-hash-keys protected-interfaces)])
                             (cons intf #t)))])
     (cond
       [(null? int+priv?s)
@@ -122,14 +156,16 @@
                  (hash-remove priv-seen intf)
                  (append supers (cdr int+priv?s))))])))
 
-(define (interface-names->quoted-list interface-names interfaces only-ht mode)
+(define (interface-names->quoted-list interface-names interfaces only-ht only-ht2 mode)
   (let loop ([seen #hasheq()]
              [names interface-names]
              [intfs interfaces])
     (cond
       [(null? names) '()]
       [(or (hash-ref seen (car intfs) #f)
-           ((if (eq? mode 'public) values not) (hash-ref only-ht (car intfs) #f)))
+           ((if (eq? mode 'public) values not)
+            (or (hash-ref only-ht (car intfs) #f)
+                (hash-ref only-ht2 (car intfs) #f))))
        (loop seen (cdr names) (cdr intfs))]
       [else
        (cons (car names) (loop (hash-set seen (car intfs) #t) (cdr names) (cdr intfs)))])))

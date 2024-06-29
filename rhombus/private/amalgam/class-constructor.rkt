@@ -25,7 +25,7 @@
 ;; Note: `constructor.macro` is handed in "class-dot.rkt"
 
 (define-for-syntax (build-class-constructor super constructor-rhs constructor-stx-params
-                                            added-fields constructor-private?s
+                                            added-fields constructor-exposures
                                             constructor-fields super-constructor-fields super-constructor+-fields
                                             keywords super-keywords super-constructor+-keywords
                                             defaults super-defaults super-constructor+-defaults
@@ -223,7 +223,7 @@
                                                       super-constructor-fields constructor-fields
                                                       super-keywords keywords
                                                       super-defaults defaults
-                                                      constructor-private?s
+                                                      constructor-exposures
                                                       #'make-name)
                             constructor-rhs)
                       #,constructor-stx-params))])
@@ -466,21 +466,21 @@
                                              super-constructor-fields constructor-fields
                                              super-keywords constructor-keywords
                                              super-defaults constructor-defaults
-                                             constructor-private?s
+                                             constructor-exposures
                                              make-name)
   (define proto (encode-protocol constructor-keywords constructor-defaults
                                  constructor-keywords constructor-defaults))
   (define all-formal-args (generate-protocol-formal-arguments proto))
   (define (filter-map-arg proc)
-    (let loop ([args all-formal-args] [private?s constructor-private?s])
+    (let loop ([args all-formal-args] [exposures constructor-exposures])
       (cond
         [(null? args) '()]
-        [(keyword? (syntax-e (car args))) (cons (car args) (loop (cdr args) private?s))]
+        [(keyword? (syntax-e (car args))) (cons (car args) (loop (cdr args) exposures))]
         [else
-         (define a (proc (car args) (car private?s)))
+         (define a (proc (car args) (not (eq? (car exposures) 'public))))
          (if a
-             (cons a (loop (cdr args) (cdr private?s)))
-             (loop (cdr args) (cdr private?s)))])))
+             (cons a (loop (cdr args) (cdr exposures)))
+             (loop (cdr args) (cdr exposures)))])))
   (define formal-args (filter-map-arg (lambda (arg private?)
                                         (and (not private?) arg))))
   (define all-args (filter-map-arg (lambda (arg private?)

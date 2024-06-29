@@ -135,7 +135,7 @@
                         constructor-keywords
                         constructor-defaults
                         constructor-mutables
-                        constructor-privates)
+                        constructor-exposes)
           (class-expand-data-internal-info-fields info))
         (case key
           [(field_names)
@@ -151,18 +151,18 @@
                    (map syntax-e
                         (class-clause-extract who (class-expand-data-accum-stx info) 'field-mutabilities)))]
           [(field_visibilities)
-           (append (for/list ([private? (in-list (syntax->list constructor-privates))])
-                     (if (syntax-e private?) 'private 'public))
+           (append (for/list ([expose (in-list (syntax->list constructor-exposes))])
+                     (syntax-e expose))
                    (map syntax-e
                         (class-clause-extract who (class-expand-data-accum-stx info) 'field-visibilities)))]
           [(field_constructives)
-           (append (for/list ([private? (in-list (syntax->list constructor-privates))]
+           (append (for/list ([expose (in-list (syntax->list constructor-exposes))]
                               [default (in-list (syntax->list constructor-defaults))])
-                     (if (syntax-e private?)
-                         'absent
+                     (if (eq? (syntax-e expose) 'public)
                          (if (syntax-e default)
                              'optional
-                             'required)))
+                             'required)
+                         'absent))
                    (map (lambda (x) 'absent)
                         (class-clause-extract who (class-expand-data-accum-stx info) 'field-names)))]
           [else (error "internal error: key")])]

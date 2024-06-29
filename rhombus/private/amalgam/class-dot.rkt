@@ -133,6 +133,7 @@
         (list
          #`(define-dot-provider-syntax name-instance
              (dot-provider #,(let ([default #`(make-handle-class-instance-dot (quote-syntax name)
+                                                                              #f
                                                                               #hasheq()
                                                                               #hasheq())])
                                (if (syntax-e #'dot-provider-name)
@@ -170,6 +171,7 @@
                                     null)))
                #`(define-dot-provider-syntax internal-name-instance
                    (dot-provider (make-handle-class-instance-dot (quote-syntax name)
+                                                                 #t
                                                                  (hasheq
                                                                   (~@ 'private-field-name
                                                                       private-field-desc)
@@ -230,7 +232,8 @@
        (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
        (list
         #`(define-dot-provider-syntax name-instance
-             (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
+            (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
+                                                                             #f
                                                                               #hasheq()
                                                                               #hasheq())])
 
@@ -242,7 +245,10 @@
        (if internal-name
            (list
             #`(define-dot-provider-syntax internal-name-instance
-                (dot-provider (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
+                (dot-provider (make-handle-class-instance-dot (quote-syntax #,internal-name)
+                                                              #t
+                                                              #hasheq()
+                                                              #hasheq()))))
            null)))))
 
 (define-for-syntax (maybe-dot-provider-definition dot-rhs-ids dot-provider-name parent-dot-providers)
@@ -421,20 +427,17 @@
      #f]))
 
 ;; dot provider for a class instance used before a `.`
-(define-for-syntax ((make-handle-class-instance-dot name internal-fields internal-methods)
+(define-for-syntax ((make-handle-class-instance-dot name do-allow-protected? internal-fields internal-methods)
                     form1 dot field-id
                     tail more-static? repetition?
-                    success failure)
-  (define desc (syntax-local-value* (in-class-desc-space name) (lambda (v)
-                                                                 (or (class-desc-ref v)
-                                                                     (interface-desc-ref v)
-                                                                     (veneer-desc-ref v)))))
+                    success failure-in)
+  (define desc (syntax-local-value* (in-class-desc-space name) objects-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define (do-field fld)
     (cond
       [repetition?
        ;; let dot-provider dispatcher handle repetition construction:
-       (failure)]
+       (failure-in)]
       [else
        (define accessor-id (field-desc-accessor-id fld))
        (syntax-parse tail
@@ -581,35 +584,62 @@
   (define (make-interface-check desc name)
     (lambda (obj-id)
       #`(void (#,(interface-desc-ref-id desc) #,obj-id))))
+  (define (allow-protected?)
+    (or do-allow-protected?
+        (get-private-table desc
+                           #:fail-v #f
+                           #:allow-super-for (syntax-e field-id))))
+  (define (failure)
+    (cond
+      [(and more-static?
+            (not repetition?))
+       (raise-syntax-error #f
+                           (string-append "no such field or method" statically-str)
+                           field-id)]
+      [else (failure-in)]))
   (cond
     [(and (class-desc? desc)
-          (for/or ([field+acc (in-list (class-desc-fields desc))])
-            (and (eq? (field-desc-name field+acc) (syntax-e field-id))
-                 field+acc)))
+          (or (for/or ([field+acc (in-list (class-desc-fields desc))])
+                (and (eq? (field-desc-name field+acc) (syntax-e field-id))
+                     field+acc))
+              (and (class-desc-all-fields desc)
+                   (for/or ([a-field (in-list (class-desc-all-fields desc))]
+                            #:when (protect? a-field))
+                     (define fd (protect-v a-field))
+                     (and (eq? (car fd) (syntax-e field-id))
+                          (allow-protected?)
+                          fd)))))
      => (lambda (fld) (do-field fld))]
     [(hash-ref (objects-desc-method-map desc) (syntax-e field-id) #f)
      => (lambda (pos)
           (define shape (vector-ref (objects-desc-method-shapes desc) pos))
-          (define shape-symbol (and shape (if (vector? shape) (vector-ref shape 0) shape)))
-          (define shape-arity (and shape (vector? shape) (vector-ref shape 1)))
+          (define shape-ex (if (vector? shape) (vector-ref shape 0) shape))
+          (define protected? (protect? shape-ex))
+          (define shape-symbol (if (protect? shape-ex) (protect-v shape-ex) shape-ex))
+          (define shape-arity (and (vector? shape) (vector-ref shape 1)))
           (define non-final? (or (box? shape-symbol) (and (pair? shape-symbol) (box? (car shape-symbol)))))
-          (do-method (if (veneer-desc? desc)
-                         ;; always static:
-                         (vector-ref (syntax-e (objects-desc-method-vtable desc)) pos)
-                         ;; dynamic:
-                         pos)
-                     #:result-id (hash-ref (objects-desc-method-result desc) (syntax-e field-id) #f)
-                     #:nonfinal? non-final?
-                     #:property? (pair? shape-symbol)
-                     #:shape-arity shape-arity
-                     ;; corner case: final method in interface called through
-                     ;; non-internal needs a check that the argument is not merely
-                     ;; an internal instance, since the implementation checks only
-                     ;; for an internal instance
-                     #:add-check (and (interface-desc? desc)
-                                      (not (interface-internal-desc? desc))
-                                      (not non-final?)
-                                      (make-interface-check desc field-id))))]
+          (cond
+            [(and protected?
+                  (not (allow-protected?)))
+             (failure)]
+            [else
+             (do-method (if (veneer-desc? desc)
+                            ;; always static:
+                            (vector-ref (syntax-e (objects-desc-method-vtable desc)) pos)
+                            ;; dynamic:
+                            pos)
+                        #:result-id (hash-ref (objects-desc-method-result desc) (syntax-e field-id) #f)
+                        #:nonfinal? non-final?
+                        #:property? (pair? shape-symbol)
+                        #:shape-arity shape-arity
+                        ;; corner case: final method in interface called through
+                        ;; non-internal needs a check that the argument is not merely
+                        ;; an internal instance, since the implementation checks only
+                        ;; for an internal instance
+                        #:add-check (and (interface-desc? desc)
+                                         (not (interface-internal-desc? desc))
+                                         (not non-final?)
+                                         (make-interface-check desc field-id)))]))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
@@ -641,13 +671,8 @@
              (do-method pos #:result-id result-id #:nonfinal? #t #:ref-id ref-id)]
             [else
              (do-field id/intf/fld)]))]
-    [(and more-static?
-          (not repetition?))
-     (raise-syntax-error #f
-                         (string-append "no such field or method" statically-str)
-                         field-id)]
     [else (failure)]))
-
+  
 (define-for-syntax no-constructor-transformer
   (expression-transformer
    (lambda (stx)

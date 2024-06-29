@@ -1,0 +1,519 @@
+#lang rhombus/static
+
+check:
+  ~eval
+  class C():
+    nonfinal
+    protected m(): 1
+  class D():
+    extends C
+    method m(): 1
+  ~throws "method is already in superclass"
+
+check:
+  ~eval
+  class C():
+    nonfinal
+    method m(): 1
+  class D():
+    extends C
+    protected m(): 1
+  ~throws "method is already in superclass"
+
+check:
+  ~eval
+  class C():
+    nonfinal
+    final protected m(): 1
+  class D():
+    extends C
+    override m(): 1
+  ~throws "cannot override superclass's final method"
+
+check:
+  class C():
+    nonfinal
+    abstract protected m()
+  class D():
+    nonfinal
+    extends C
+  D()
+  ~throws "cannot instantiate class with abstract methods"
+
+// basic
+check:
+  class V(n)
+  class C():
+    protected m() :~ V:
+      V(1)
+    protected property p :~ V:
+      V(10)
+    method m1():
+      m().n
+    method m2():
+      this.m().n
+    method m3(c :: C):
+      c.m().n
+    method o1():
+      p.n
+    method o2():
+      this.p.n
+    method o3(c :: C):
+      c.p.n
+  let c = C()
+  [c.m1(), c.m2(), c.m3(c),
+   c.o1(), c.o2(), c.o3(c),
+   try:
+     use_dynamic
+     dynamic(c).m()
+     ~catch x:
+       "ok",
+   try:
+     use_dynamic
+     dynamic(c).p
+     ~catch x:
+       "also ok"]
+  ~is [1, 1, 1,
+       10, 10, 10,
+       "ok",
+       "also ok"]
+
+// `protected` combinations
+check:
+  class V(n)
+  class C():
+    protected m():
+      1
+    protected method n():
+      2
+    final protected o():
+      3
+    final protected method k():
+      4
+    protected property p:
+      10
+    final protected property q:
+      10
+    method m1():
+      [m(), n(), o(), k(), p, q]
+  C().m1()
+  ~is [1, 2, 3, 4, 10, 10]
+
+// subclass
+check:
+  class V(n)
+  class C():
+    nonfinal
+    protected m() :~ V:
+      V(1)
+    protected property p :~ V:
+      V(10)
+    method m1():
+      [m().n, p.n]
+    method m2():
+      [this.m().n, this.p.n]
+    method m3(c :: C):
+      [c.m().n, c.p.n]
+  class D():
+    extends C
+    method n1():
+      [m().n, p.n]
+    method n2():
+      [this.m().n, this.p.n]
+    method n3(c :: C):
+      [c.m().n, c.p.n]
+  class E():
+    extends C
+    override m():
+      V(2)
+    override property p:
+      V(20)
+  let c = C()
+  let d = D()
+  let e = E()
+  [c.m1(), c.m2(), c.m3(c),
+   d.m1(), d.m2(), d.m3(d),
+   e.m1(), e.m2(), e.m3(e)]
+  ~is [[1, 10], [1, 10], [1, 10],
+       [1, 10], [1, 10], [1, 10],
+       [2, 20], [2, 20], [2, 20]]
+
+// mutable property
+check:
+  class V(n)
+  class C():
+    nonfinal
+    private field secret = 10
+    protected property
+    | p :~ V: V(secret)
+    | p := V(n): secret := n
+    method m1():
+      p := V(p.n + 1)
+      p.n
+    method m2():
+      this.p := V(p.n + 2)
+      this.p.n
+    method m3(c :: C):
+      c.p := V(c.p.n + 3)
+      c.p.n
+  class D():
+    extends C
+    method n1():
+      p := V(p.n + 10)
+      p.n
+    method n2():
+      this.p := V(p.n + 20)
+      this.p.n
+    method n3(c :: C):
+      c.p := V(c.p.n + 30)
+      c.p.n
+  class E():
+    extends C
+    override property
+    | p: V(super.p.n - 1)
+    | p := V(n): super.p := V(n-1)
+  let c = C()
+  let d = D()
+  let e = E()
+  [c.m1(), c.m2(), c.m3(c),
+   d.m1(), d.m2(), d.m3(d),
+   d.n1(), d.n2(), d.n3(d),
+   e.m1(), e.m2(), e.m3(e)]
+  ~is [11, 13, 16,
+       11, 13, 16,
+       26, 46, 76,
+       8, 8, 9]
+
+// via internal annotations
+check:
+  class V(n)
+  class C():
+    nonfinal
+    internal _C
+    protected m() :~ V:
+      V(1)
+    protected property p :~ V:
+      V(10)
+  class D():
+    extends C
+    internal _D
+  class E():
+    extends C
+    internal _E
+    override m():
+      V(2)
+    override property p :~ V:
+      V(20)
+  let c = C()
+  let d = D()
+  let e = E()
+  [[(c :: _C).m().n,
+    (d :: _C).m().n,
+    (d :: _D).m().n,
+    (e :: _C).m().n,
+    (e :: _E).m().n],
+   [(c :: _C).p.n,
+    (d :: _C).p.n,
+    (d :: _D).p.n,
+    (e :: _C).p.n,
+    (e :: _E).p.n]]
+  ~is [[1, 1, 1, 2, 2],
+       [10, 10, 10, 20, 20]]
+
+// interface
+check:
+  class V(n)
+  interface I:
+    abstract protected m() :~ V
+    protected n() :~ V:
+      V(10)
+  class C():
+    implements I
+    override m():
+      V(1)
+    method m1():
+      m().n
+    method m2():
+      this.m().n
+    method m3(i :: I):
+      i.m().n
+    method m4():
+      n().n    
+  let c = C()
+  [c.m1(), c.m2(), c.m3(c), c.m4()]
+  ~is [1, 1, 1, 10]
+
+// interface internal annotation
+check:
+  class V(n)
+  interface I:
+    internal _I
+    abstract protected method m() :~ V
+    protected n() :~ V:
+      V(10)
+  class C():
+    implements I
+    override m():
+      V(1)
+  let c = C()
+  [(c :~ _I).m().n,
+   (c :~ _I).n().n]
+  ~is [1, 10]
+
+// subinterface
+check:
+  class V(n)
+  interface I:
+    abstract protected m() :~ V
+    protected n() :~ V:
+      V(10)
+  interface J:
+    extends I
+  class C():
+    implements J
+    final override m():
+      V(1)
+    method m1():
+      m().n
+    method m2():
+      this.m().n
+    method m3(j :: J):
+      j.m().n
+    method m4():
+      n().n    
+  let c = C()
+  [c.m1(), c.m2(), c.m3(c), c.m4()]
+  ~is [1, 1, 1, 10]
+
+check:
+  ~eval
+  class C():
+    protected m():
+      1
+  C().m()
+  ~throws "no such field or method"
+
+check:
+  ~eval
+  use_static
+  class C():
+    protected m():
+      1
+  C().m()
+  ~throws values("no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  interface I:
+    abstract protected m()
+  class C():
+    implements I
+    override m():
+      V(1)
+  (C() :~ I).m()
+  ~throws "no such field or method"
+
+check:
+  ~eval
+  interface I:
+    abstract protected m()
+  class C():
+    implements I
+    override m():
+      V(1)
+  C().m()
+  ~throws "no such field or method"
+
+check:
+  ~eval
+  interface I:
+    internal _I
+    abstract protected m()
+  class C():
+    implements I
+    override m():
+      V(1)
+  (C() :~ I).m()
+  ~throws "no such field or method"
+
+// fields
+check:
+  class Posn(x, y, protected dist = x + y):
+    method m():
+      [x, y, dist]
+  Posn(1, 2).m()
+  ~is [1, 2, 3]
+
+check:
+  ~eval
+  class Posn(x, y, protected dist = x + y):
+    method m():
+      [x, y, dist]
+  Posn(1, 2).dist
+  ~throws "no such field or method"
+
+// constructor
+check:
+  class Posn(x, y, protected dist):
+    constructor (v):
+      super(v-1, 1, v)      
+    method m():
+      [x, y, dist]
+  Posn(4).m()
+  ~is [3, 1, 4]
+
+check:
+  ~eval
+  class Posn(x, y, protected dist)
+  ~throws "class needs a custom constructor to initialize protected fields"
+
+// mutable
+check:
+  class Posn(x, y, protected mutable dist = x + y):
+    method m():
+      [x, y, dist]
+    method inflate():
+      dist := dist + 1
+  let p = Posn(1, 2)
+  p.inflate()
+  p.m()
+  ~is [1, 2, 4]
+
+// immutable outside of field-spec sequence
+check:
+  class Posn(x, y):
+    protected immutable dist = x + y
+    method m():
+      [x, y, dist]
+  Posn(1, 2).m()
+  ~is [1, 2, 3]
+
+// `immutable field`
+check:
+  class Posn(x, y):
+    protected immutable field dist = x + y
+    method m():
+      [x, y, dist]
+  Posn(1, 2).m()
+  ~is [1, 2, 3]
+
+// mutablle outside of field-spec sequence
+check:
+  class Posn(x, y):
+    protected field dist = x + y
+    method m():
+      [x, y, dist]
+    method inflate():
+      dist := dist + 1
+  let p = Posn(1, 2)
+  p.inflate()
+  p.m()
+  ~is [1, 2, 4]
+
+check:
+  ~eval
+  class Posn(x, y):
+    protected field dist = x + y
+    method m():
+      [x, y, dist]
+  Posn(1, 2).dist
+  ~throws "no such field or method"
+
+// subclass
+check:
+  class Posn(x, y, protected dist = x + y):
+    nonfinal
+    protected slope(): y/x
+    method m():
+      [x, y, dist, slope()]
+  class Posn3D(z):
+    extends Posn
+    method n():
+      [x, y, z, dist, slope(), m()]
+  Posn3D(2, 3, 1).n()
+  ~is [2, 3, 1, 5, 3/2, [2, 3, 5, 3/2]]
+
+// check access of allowed protected members based on shared inheritance
+check:
+  interface I:
+    protected i(): 0
+    abstract protected i2()
+  interface J:
+    extends I
+    method j(): 0
+  class C(protected a = -1):
+    nonfinal
+    protected field b = 0
+    protected m_c(): 1
+    abstract protected n_c()
+  class D():
+    nonfinal
+    extends C
+    method m():
+      [a, b, m_c(), n_c()]
+    method m2(e :: E):
+      [e.a, e.b, e.m_c(), e.n_c()]
+    method m3(f :: F):
+      [f.a, f.b, f.m_c(), f.n_c()]
+  class E():
+    nonfinal
+    implements I
+    extends C
+    method m():
+      [a, b, m_c(), n_c(), i(), i2()]
+    method m2(i :: I):
+      [i.i(), i.i2()]
+    method m3(j :: J):
+      [j.i(), j.i2()]
+  class F():
+    nonfinal
+    extends E
+    method m10():
+      [a, b, m_c(), n_c(), i(), i2()]
+    method m20(i :: I):
+      [i.i(), i.i2()]
+    method m30(j :: J):
+      [j.i(), j.i2()]
+  class G():
+    nonfinal
+    extends C
+    implements J
+    method m2():
+      [a, b, m_c(), n_c(), i(), i2(), j()]
+    method m3(i :: I):
+      [i.i(), i.i2()]
+    method m4(j :: J):
+      [j.i(), j.i2(), j.j()]
+  class Gprot():
+    nonfinal
+    extends C
+    protected implements J
+    method m2():
+      [a, b, m_c(), n_c(), i(), i2(), j()]
+    method m3(i :: I):
+      [i.i(), i.i2()]
+    method m4(j :: J):
+      [j.i(), j.i2(), j.j()]
+  class H():
+    nonfinal
+    extends Gprot
+    method m20():
+      [a, b, m_c(), n_c(), i(), i2(), j()]
+    method m30(i :: I):
+      [i.i(), i.i2()]
+    method m40(j :: J):
+      [j.i(), j.i2(), j.j()]
+  class Gpriv():
+    nonfinal
+    extends C
+    private implements J
+    private override i2(): "ok"
+    method m2():
+      [a, b, m_c(), n_c(), i(), i2(), j()]
+    method m3(i :: I):
+      [i.i(), i.i2()]
+    method m4(j :: J):
+      [j.i(), j.i2(), j.j()]
+  #void
+  ~completes  

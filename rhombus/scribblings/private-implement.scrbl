@@ -6,18 +6,22 @@
 
 @title(~tag: "private-implement"){Private Implementation}
 
-An @rhombus(internal, ~class_clause) name for a class can provide access
-to all internal methods of the class. For more selective control over
-sets of private methods, an interface can be privately implemented.
-Private implementation of a method also supports implementing a publicly
-known interface but without exposing the implementation of of the method
-to untrusted callers.
+Although @rhombus(private, ~class_clause) and
+@rhombus(protected, ~class_clause) are normally used on methods and
+fields, an @rhombus(implements, ~class_clause) clause also can be
+modified by @rhombus(private, ~class_clause) or
+@rhombus(protected, ~class_clause). A private or protected
+implementation of an interface avoids exposing the implementation of the
+interface's method to untrusted callers. The implementation of the
+interface is still accessible via the interface's
+@rhombus(internal, ~class_clause) name, which might be made available
+only to trusted contexts.
 
 For example, suppose that we'd like to customize printing by
-implementing the @rhombus(Printable) interface, but we don't want a public
+implementing the @rhombus(Printable, ~class) interface, but we don't want a public
 @rhombus(print) method. Printing and string conversion access
-customization methods using an internal name for @rhombus(Printable), so
-privately implementing @rhombus(Printable) will achieve the goal.
+customization methods using an internal name for @rhombus(Printable, ~class), so
+privately implementing @rhombus(Printable, ~class) will achieve the goal.
 
 To privately implement an interface, use
 @rhombus(private, ~class_clause) @rhombus(implements, ~class_clause),
@@ -36,5 +40,9 @@ and override the interfaces methods with
       Posn(1, 2).describe(#'expr, Function.pass)
 )
 
+A @rhombus(protected, ~class_clause) implementation of an interface is
+similar to a @rhombus(private, ~class_clause) one, but the implemented
+methods are visible in subclasses, and the methods can be overridden in
+subclasses.
 
 @(close_eval(method_eval))

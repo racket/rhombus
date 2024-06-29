@@ -14,6 +14,9 @@
          "parse.rkt"
          "expression.rkt"
          "entry-point.rkt"
+         (only-in "class-parse.rkt" class-desc-ref)
+         (only-in "interface-parse.rkt" interface-desc-ref)
+         (only-in "veneer-parse.rkt" veneer-desc-ref)
          "class-this.rkt"
          "class-define-method-result.rkt"
          "index-key.rkt"
@@ -42,7 +45,8 @@
                      build-method-result-expression
                      build-methods
 
-                     get-private-table)
+                     get-private-table
+                     objects-desc-ref)
 
          this
          super
@@ -77,7 +81,9 @@
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
 
-(define-for-syntax (extract-method-tables stx added-methods super interfaces private-interfaces final? prefab?)
+(define-for-syntax (extract-method-tables stx added-methods super interfaces
+                                          private-interfaces protected-interfaces
+                                          final? prefab?)
   (define supers (if super (cons super interfaces) interfaces))
   (define-values (super-str supers-str)
     (cond
@@ -108,28 +114,33 @@
               ([super (in-list supers)])
       (define super-vtable (syntax-e (objects-desc-method-vtable super)))
       (define private? (hash-ref private-interfaces super #f))
+      (define i-protected? (hash-ref protected-interfaces super #f))
       (for/fold ([ht ht] [priv-ht priv-ht] [priv-inherit-ht priv-inherit-ht] [vtable-ht vtable-ht] [from-ht from-ht])
                 ([shape (in-vector (objects-desc-method-shapes super))]
                  [super-i (in-naturals)])
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))
-        (define-values (key val i old-val m-final?)
+        (define-values (key val i old-val m-final? protected?)
           (let* ([arity (and (vector? shape) (vector-ref shape 1))]
                  [shape (if (vector? shape) (vector-ref shape 0) shape)]
+                 [protected? (protect? shape)]
+                 [shape (if protected? (protect-v shape) shape)]
                  [property? (pair? shape)]
                  [shape (if (pair? shape) (car shape) shape)]
                  [final? (not (box? shape))]
-                 [shape (if (box? shape) (unbox shape) shape)])
+                 [shape (if (box? shape) (unbox shape) shape)]
+                 [protected? (or protected? i-protected?)])
             (define old-val (or (hash-ref ht shape #f)
                                 (hash-ref priv-ht shape #f)))
             (define i (if (pair? old-val)
                           (mindex-index (car old-val))
                           (hash-count ht)))
             (values shape
-                    (cons (mindex i final? property? arity #t) shape)
+                    (cons (mindex i final? protected? property? arity #t) shape)
                     i
                     old-val
-                    final?)))
+                    final?
+                    protected?)))
         (when (hash-ref dot-ht key #f)
           (raise-syntax-error #f (format "name supplied as both method and dot syntax by ~a" supers-str) stx key))
         (cond
@@ -167,11 +178,14 @@
                                                            (hash-ref (objects-desc-method-result common-super) key #f))))]
                [else
                 (when (overridden?)
-                  (raise-syntax-error #f
-                                      "cannot override method from multiple privately implemented interfaces"
-                                      stx
-                                      key))
+                  (raise-syntax-error #f "cannot override method from multiple privately implemented interfaces" stx key))
                 priv-inherit-ht]))
+           (unless (eq? (and protected? #t)
+                        (and (pair? old-val)
+                             (mindex? (car old-val))
+                             (mindex-protected? (car old-val))
+                             #t))
+             (raise-syntax-error #f "method inherited as both protected and non-protected" stx key))
            (if (or private?
                    (and (pair? old-val) (mindex? (car old-val))
                         (not (and (identifier? new-rhs)
@@ -254,11 +268,12 @@
                  (check-consistent-property (mindex-property? mix))
                  (define idx (mindex-index mix))
                  (define final? (eq? (added-method-disposition added) 'final))
+                 (define protected? (eq? (added-method-exposure added) 'protected))
                  (values (if (or final?
                                  (not (equal? (added-method-arity added) (mindex-arity mix))))
                              (let ([property? (eq? (added-method-kind added) 'property)]
                                    [arity (added-method-arity added)])
-                               (hash-set ht (syntax-e id) (cons (mindex idx final? property? arity #f) id)))
+                               (hash-set ht (syntax-e id) (cons (mindex idx final? protected? property? arity #f) id)))
                              ht)
                          (hash-set vtable-ht idx (added-method-rhs-id added))
                          priv-ht
@@ -297,6 +312,7 @@
                               (cons (mindex pos
                                             (or final?
                                                 (eq? (added-method-disposition added) 'final))
+                                            (eq? (added-method-exposure added) 'protected)
                                             (eq? (added-method-kind added) 'property)
                                             (added-method-arity added)
                                             #f)
@@ -350,6 +366,7 @@
 (define-for-syntax (build-interface-vtable intf method-mindex method-vtable method-names method-private)
   (for/list ([shape (in-vector (objects-desc-method-shapes intf))])
     (define name (let* ([shape (if (vector? shape) (vector-ref shape 0) shape)]
+                        [shape (if (protect? shape) (protect-v shape) shape)]
                         [shape (if (pair? shape) (car shape) shape)]
                         [shape (if (box? shape) (unbox shape) shape)])
                    shape))
@@ -358,7 +375,10 @@
        => (lambda (id) (if (pair? id) (car id) id))]
       [else
        (define pos (mindex-index (hash-ref method-mindex name)))
-       (vector-ref method-vtable pos)])))
+       (define n (vector-ref method-vtable pos))
+       (if (keyword? n)
+           #`(quote #,n)
+           n)])))
 
 (define-for-syntax (build-quoted-method-map method-mindex)
   (for/hasheq ([(sym mix) (in-hash method-mindex)])
@@ -371,9 +391,10 @@
     (define sym ((if (mindex-property? mix) list values)
                  ((if (mindex-final? mix) values box)
                   name)))
+    (define vsym (if (mindex-protected? mix) (protect sym) sym))
     (if (mindex-arity mix)
-        (vector sym (mindex-arity mix))
-        sym)))
+        (vector vsym (mindex-arity mix))
+        vsym)))
 
 (define-for-syntax (build-quoted-private-method-list mode method-private)
   (sort (for/list ([(sym v) (in-hash method-private)]
@@ -595,7 +616,8 @@
               (when (eq? (syntax-e impl) '#:abstract)
                 (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
               (define shape+arity (vector-ref (objects-desc-method-shapes super) pos))
-              (define shape (if (vector? shape+arity) (vector-ref shape+arity 0) shape+arity))
+              (define shape-ex (if (vector? shape+arity) (vector-ref shape+arity 0) shape+arity))
+              (define shape (if (protect? shape-ex) (protect-v shape-ex) shape-ex))
               (define shape-arity (and (vector? shape+arity) (vector-ref shape+arity 1)))
               (define static? (is-static-context? #'dot-op))
               (cond
@@ -642,18 +664,85 @@
                                            #:can-anon-function? #t))
                     (values call #'tail)])])])])]))))
 
-(define-for-syntax (get-private-table desc)
+(define-for-syntax (objects-desc-ref v)
+  (or (class-desc-ref v)
+      (interface-desc-ref v)
+      (veneer-desc-ref v)))
+
+(define-for-syntax (get-private-table desc
+                                      #:fail-v [fail-v #hasheq()]
+                                      #:allow-super-for [allow-super-for-sym #f])
   (define tables (get-private-tables))
   (or (for/or ([t (in-list tables)])
-        (and (free-identifier=? (car t) (cond
-                                          [(class-desc? desc)
-                                           (class-desc-id desc)]
-                                          [(interface-desc? desc)
-                                           (interface-desc-id desc)]
-                                          [else
-                                           (veneer-desc-id desc)]))
+        (define id (car t))
+        (define (match? id)
+          (free-identifier=? id (cond
+                                  [(class-desc? desc)
+                                   (class-desc-id desc)]
+                                  [(interface-desc? desc)
+                                   (interface-desc-id desc)]
+                                  [else
+                                   (veneer-desc-id desc)])))
+        (and (cond
+               [(match? id) #t]
+               [allow-super-for-sym
+                ;; This mode is used for `protected` access. Check
+                ;; whether we're in a subclass/subinterface of the
+                ;; needed one, or check whether the relevant method or
+                ;; field is inherited from a common ancestor.
+                ;; This is potentially slow for a large inheritance tree,
+                ;; but that seems like an unlikely problem in the near
+                ;; term; we do at least use a `seen` table to handle DAGs
+                ;; without unfolding them to trees.
+                (define (get id)
+                  (syntax-local-value* (in-class-desc-space id)
+                                       objects-desc-ref))
+                (define relevant-ancestor-descs
+                  (let loop ([desc desc] [accum #hasheq()])
+                    (define (check id accum)
+                      (define desc (get id))
+                      (if (and (has-protected-method-or-field? desc allow-super-for-sym)
+                               (not (hash-ref accum desc #f)))
+                          (loop desc (hash-set accum desc #t))
+                          accum))
+                    (let ([accum (if (and (class-desc? desc)
+                                          (class-desc-super-id desc))
+                                     (check (class-desc-super-id desc) accum)
+                                     accum)])
+                      (for/fold ([accum accum])
+                                ([id (in-list (syntax->list (objects-desc-interface-ids desc)))])
+                        (check id accum)))))
+                (define seen (make-hasheq))
+                (define (search-id id)
+                  (or (match? id)
+                      (search-desc (get id))))
+                (define (search-desc desc)
+                  (and desc
+                       (or (hash-ref relevant-ancestor-descs desc #f)
+                           (and (not (hash-ref seen desc #f))
+                                (begin
+                                  (hash-set! seen desc #t)
+                                  (or (and (class-desc? desc)
+                                           (or (and (class-desc-super-id desc)
+                                                    (search-id (class-desc-super-id desc)))
+                                               (and (class-desc-protected-interface-ids desc)
+                                                    (for/or ([id (in-list (syntax->list (class-desc-protected-interface-ids desc)))])
+                                                      (search-id id)))))
+                                      (for/or ([id (in-list (syntax->list (objects-desc-interface-ids desc)))])
+                                        (search-id id))))))))
+                (search-id id)]
+               [else #f])
              (cdr t)))
-      #hasheq()))
+      fail-v))
+
+;; ok to return #t for pubic, but only obliged to look for protected
+(define-for-syntax (has-protected-method-or-field? desc sym)
+  (or (hash-ref (objects-desc-method-map desc) sym #f)
+      (and (class-desc? desc)
+           (class-desc-all-fields desc)
+           (for/or ([a-field (in-list (class-desc-all-fields desc))])
+             (and (protect? a-field)
+                  (eq? sym (field-desc-name (protect-v a-field))))))))
 
 (define-for-syntax (make-field-syntax id static-infos accessor-id maybe-mutator-id)
   (expression-transformer
@@ -758,6 +847,7 @@
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private method-private-inherit
                                   reconstructor-rhs reconstructor-stx-params in-final?
+                                  private-interfaces protected-interfaces
                                   names
                                   #:veneer-vtable [veneer-vtable #f])
   (with-syntax ([(name name-instance name? name-convert reconstructor-name
@@ -769,6 +859,12 @@
                        [maybe-set-name-field! ...]
                        [private-field-name ...]
                        [private-field-desc ...]
+                       [(super-protected-field-name
+                         super-protected-name-field
+                         super-protected-maybe-set-name-field!
+                         super-protected-field-static-infos
+                         super-protected-constructor-arg)
+                        ...]
                        [super-name ...]
                        [(recon-field-accessor recon-field-rhs) ...])
                  names])
@@ -776,6 +872,8 @@
                                       (if (identifier? id/l)
                                           (datum->syntax #'name (syntax-e id/l) id/l id/l)
                                           (car (syntax-e id/l))))]
+                  [(super-protected-field-name ...) (for/list ([id (in-list (syntax->list #'(super-protected-field-name ...)))])
+                                                      (datum->syntax #'name (syntax-e id) id id))]
                   [((method-name method-index/id method-result-id method-kind) ...)
                    (for/list ([i (in-range (hash-count method-mindex))])
                      (define raw-m-name (hash-ref method-names i))
@@ -822,7 +920,9 @@
                            id/intf
                            id/intf/property
                            result-id
-                           (if property? 'property 'method)))])
+                           (if property? 'property 'method)))]
+                  [(private-interface-name ...) (append (for/list ([intf (in-hash-keys private-interfaces)])
+                                                          (interface-desc-id intf)))])
       (list
        #`(define-values (#,@(for/list ([added (in-list added-methods)]
                                        #:when (not (eq? 'abstract (added-method-body added))))
@@ -841,6 +941,11 @@
                                                           (quote-syntax name-field)
                                                           (quote-syntax maybe-set-name-field!)))
              ...
+             (define-syntax super-protected-field-name (make-field-syntax (quote-syntax super-protected-field-name)
+                                                                          (quote-syntax super-protected-field-static-infos)
+                                                                          (quote-syntax super-protected-name-field)
+                                                                          (quote-syntax super-protected-maybe-set-name-field!)))
+             ...
              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
                                                             (quote-syntax method-index/id)
                                                             (quote-syntax method-result-id)
@@ -853,14 +958,17 @@
                                                                     (quote private-method-kind)
                                                                     (quote-syntax methods-ref)))
              ...
-             (define-syntax new-private-tables (cons (cons (quote-syntax name)
-                                                           (hasheq (~@ 'private-method-name
-                                                                       (quote-syntax private-method-id/intf/property))
-                                                                   ...
-                                                                   (~@ 'private-field-name
-                                                                       private-field-desc)
-                                                                   ...))
-                                                     (get-private-tables)))
+             (define-syntax new-private-tables (list* (cons (quote-syntax name)
+                                                            (hasheq (~@ 'private-method-name
+                                                                        (quote-syntax private-method-id/intf/property))
+                                                                    ...
+                                                                    (~@ 'private-field-name
+                                                                        private-field-desc)
+                                                                    ...))
+                                                      (cons (quote-syntax private-interface-name) ; for access to protected members
+                                                            #hasheq())
+                                                      ...
+                                                      (get-private-tables)))
              #,@(for/list ([added (in-list added-methods)]
                            #:when (eq? 'abstract (added-method-body added))
                            #:when (syntax-e (added-method-rhs added)))
