@@ -62,6 +62,8 @@
                (add-implements options 'public-implements #'(id ...))]
               [(#:private-implements id ...)
                (add-implements options 'private-implements #'(id ...))]
+              [(#:protected-implements id ...)
+               (add-implements options 'protected-implements #'(id ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(#:annotation block)
@@ -114,6 +116,8 @@
                (add-implements options 'public-implements #'(id ...))]
               [(#:private-implements id ...)
                (add-implements options 'private-implements #'(id ...))]
+              [(#:protected-implements id ...)
+               (add-implements options 'protected-implements #'(id ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(#:constructor id rhs)
@@ -203,25 +207,29 @@
 
 (define-for-syntax (parse-method-clause orig-stx options clause stx-params)
   (syntax-parse clause
-    [((~and tag (~or* #:method #:override #:private #:final #:final-override #:private-override
-                      #:property #:override-property
-                      #:final-property #:final-override-property
+    [((~and tag (~or* #:method #:override #:private #:protected #:final #:final-override #:final-protected #:private-override
+                      #:property #:override-property #:protected-property
+                      #:final-property #:final-override-property #:final-protected-property
                       #:private-property #:private-override-property))
       id rhs maybe-ret)
-     (define-values (body replace disposition kind)
+     (define-values (body replace disposition exposure kind)
        (case (syntax-e #'tag)
-         [(#:method) (values 'method 'method 'abstract 'method)]
-         [(#:override) (values 'method 'override 'abstract 'method)]
-         [(#:private) (values 'method 'method 'private 'method)]
-         [(#:private-override) (values 'method 'override 'private 'method)]
-         [(#:final) (values 'method 'method 'final 'method)]
-         [(#:final-override) (values 'method 'override 'final 'method)]
-         [(#:property) (values 'method 'method 'abstract 'property)]
-         [(#:override-property) (values 'method 'override 'abstract 'property)]
-         [(#:final-property) (values 'method 'method 'final 'property)]
-         [(#:final-override-property) (values 'method 'override 'final 'property)]
-         [(#:private-property) (values 'method 'method 'private 'property)]
-         [(#:private-override-property) (values 'method 'override 'private 'property)]
+         [(#:method) (values 'method 'method 'abstract 'public 'method)]
+         [(#:override) (values 'method 'override 'abstract 'public 'method)]
+         [(#:private) (values 'method 'method 'private 'private 'method)]
+         [(#:private-override) (values 'method 'override 'private 'private 'method)]
+         [(#:protected) (values 'method 'method 'public 'protected 'method)]
+         [(#:final) (values 'method 'method 'final 'public 'method)]
+         [(#:final-override) (values 'method 'override 'final 'public 'method)]
+         [(#:final-protected) (values 'method 'method 'final 'protected 'method)]
+         [(#:property) (values 'method 'method 'abstract 'public 'property)]
+         [(#:override-property) (values 'method 'override 'abstract 'public 'property)]
+         [(#:protected-property) (values 'method 'method 'public 'protected 'property)]
+         [(#:final-property) (values 'method 'method 'final 'public 'property)]
+         [(#:final-override-property) (values 'method 'override 'final 'public 'property)]
+         [(#:final-protected-property) (values 'method 'method 'final 'protected 'property)]
+         [(#:private-property) (values 'method 'method 'private 'private 'property)]
+         [(#:private-override-property) (values 'method 'override 'private 'private 'property)]
          [else (error "method kind not handled" #'tag)]))
      (define arity (extract-arity #'rhs))
      (hash-set options 'methods (cons (added-method #'id
@@ -237,17 +245,22 @@
                                                     body
                                                     replace
                                                     disposition
+                                                    exposure
                                                     kind
                                                     arity)
                                       (hash-ref options 'methods null)))]
-    [((~and tag (~or* #:abstract #:abstract-property #:abstract-override #:abstract-override-property))
+    [((~and tag (~or* #:abstract #:abstract-protected
+                      #:abstract-property #:abstract-protected-property
+                      #:abstract-override #:abstract-override-property))
       id rhs maybe-ret)
-     (define-values (replace kind)
+     (define-values (replace exposure kind)
        (case (syntax-e #'tag)
-         [(#:abstract) (values 'method 'method)]
-         [(#:abstract-property) (values 'method 'property)]
-         [(#:abstract-override) (values 'override 'method)]
-         [(#:abstract-override-property) (values 'override 'property)]
+         [(#:abstract) (values 'method 'public 'method)]
+         [(#:abstract-protected) (values 'method 'protected 'method)]
+         [(#:abstract-property) (values 'method 'public 'property)]
+         [(#:abstract-protected-property) (values 'method 'protected 'property)]
+         [(#:abstract-override) (values 'override 'public 'method)]
+         [(#:abstract-override-property) (values 'override 'public 'property)]
          [else (error "method kind not handled" #'tag)]))
      (define arity (extract-arity #'rhs))
      (hash-set options 'methods (cons (added-method #'id
@@ -263,6 +276,7 @@
                                                     'abstract
                                                     replace
                                                     'abstract
+                                                    exposure
                                                     kind
                                                     arity)
                                       (hash-ref options 'methods null)))]
@@ -331,6 +345,12 @@
                                                         [(implements_visibilities)
                                                          '(private)]
                                                         [else null])]
+                       [(#:protected-implements id ...) (case key
+                                                          [(implements)
+                                                           (syntax->list #'(id ...))]
+                                                          [(implements_visibilities)
+                                                           '(protected)]
+                                                          [else null])]
                        [(#:field mutability id rhs-id ann-seq default form-id mode)
                         (case key
                           [(field-names) (list #'id)]
@@ -342,11 +362,13 @@
                                           [else null])]
                        [(#:method id rhs . _) (method #'id #'rhs 'public)]
                        [(#:override id rhs . _) (method #'id #'rhs 'public)]
+                       [(#:protected id rhs . _) (method #'id #'rhs 'protected)]
                        [(#:private id rhs . _) (method #'id #'rhs 'private)]
                        [(#:private-override id rhs . _) (method #'id #'rhs 'private)]
                        [(#:final id rhs . _) (method #'id #'rhs 'public)]
                        [(#:final-override id rhs . _) (method #'id #'rhs 'public)]
                        [(#:property id rhs . _) (property #'id #'rhs 'public)]
+                       [(#:protected-property id rhs . _) (property #'id #'rhs 'protected)]
                        [(#:override-property id rhs . _) (property #'id #'rhs 'public)]
                        [(#:final-property id rhs . _) (property #'id #'rhs 'public)]
                        [(#:final-overrode-property id rhs . _) (property #'id #'rhs 'public)]
@@ -363,13 +385,14 @@
 
 (define-for-syntax (method-shape-extract shapes private-methods private-properties key)
   (define (unwrap a) (if (vector? a) (vector-ref a 0) a))
+  (define (unprotect a) (if (protect? a) (protect-v a) a))
   (define (unshift-arity a) (and a (shift-arity a -1)))
   (case key
     [(method_names)
      (append
       private-methods
       (for/list ([ma (in-vector shapes)]
-                 #:do [(define m (unwrap ma))]
+                 #:do [(define m (unprotect (unwrap ma)))]
                  #:unless (pair? m))
         (datum->syntax #f (if (box? m) (unbox m) m))))]
     [(method_arities)
@@ -377,7 +400,7 @@
       (for/list ([m (in-list private-methods)])
         #f)
       (for/list ([ma (in-vector shapes)]
-                 #:do [(define m (unwrap ma))]
+                 #:do [(define m (unprotect (unwrap ma)))]
                  #:unless (pair? m))
         (unshift-arity (and (vector? ma) (vector-ref ma 1)))))]
     [(method_visibilities)
@@ -386,13 +409,15 @@
         'private)
       (for/list ([ma (in-vector shapes)]
                  #:do [(define m (unwrap ma))]
-                 #:unless (pair? m))
-        'public))]
+                 #:unless (pair? (unprotect m)))
+        (if (protect? m)
+            'protected
+            'public)))]
     [(property_names)
      (append
       private-properties
       (for/list ([ma (in-vector shapes)]
-                 #:do [(define m (unwrap ma))]
+                 #:do [(define m (unprotect (unwrap ma)))]
                  #:when (pair? m))
         (let ([m (car m)])
           (datum->syntax #f (if (box? m) (unbox m) m)))))]
@@ -401,7 +426,7 @@
       (for/list ([m (in-list private-properties)])
         #f)
       (for/list ([ma (in-vector shapes)]
-                 #:do [(define m (unwrap ma))]
+                 #:do [(define m (unprotect (unwrap ma)))]
                  #:when (pair? m))
         (unshift-arity (and (vector? ma) (vector-ref ma 1)))))]
     [(property_visibilities)
@@ -410,5 +435,7 @@
         'private)
       (for/list ([ma (in-vector shapes)]
                  #:do [(define m (unwrap ma))]
-                 #:when (pair? m))
-        'public))]))
+                 #:when (pair? (unprotect m)))
+        (if (protect? m)
+            'protected
+            'public)))]))

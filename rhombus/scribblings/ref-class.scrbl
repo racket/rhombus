@@ -30,6 +30,8 @@
     #,(@rhombus(private, ~class_clause))
     #,(@rhombus(mutable, ~bind))
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
+    #,(@rhombus(protected, ~class_clause))
+    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(mutable, ~bind))
     #,(epsilon)
 
   grammar maybe_annot:
@@ -53,15 +55,19 @@
     #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
     #,(@rhombus(method, ~class_clause)) $method_impl
     #,(@rhombus(override, ~class_clause)) $method_impl
     #,(@rhombus(final, ~class_clause)) $method_impl
     #,(@rhombus(private, ~class_clause)) $method_impl
+    #,(@rhombus(protected, ~class_clause)) $method_impl
     #,(@rhombus(abstract, ~class_clause)) $method_decl
     #,(@rhombus(property, ~class_clause)) $property_impl
     #,(@rhombus(extends, ~class_clause)) $id_name
     #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(final, ~class_clause))
     #,(@rhombus(nonfinal, ~class_clause))
     #,(@rhombus(internal, ~class_clause)) $id
@@ -86,7 +92,7 @@
  @item{in the @top_rhombus(expr, ~space) space,
   a constructor function or form, which by default is a function that
   takes as many arguments
-  as the supplied non-@rhombus(private, ~class_clause) @rhombus(field_spec)s
+  as the supplied non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) @rhombus(field_spec)s
   in parentheses, and it returns an instance of the class;},
 
  @item{in the @top_rhombus(annot, ~space) space,
@@ -94,13 +100,13 @@
   and by default an annotation constructor @rhombus(id_name.of) or
   @rhombus(id_name.now_of), which
   default takes as many annotation arguments as supplied
-  non-@rhombus(private, ~class_clause) @rhombus(field_spec)s in
+  non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) @rhombus(field_spec)s in
   parentheses; the name is @rhombus(id_name.of) if all such
   @rhombus(field_spec)s are for immutable fields;},
 
  @item{in the @rhombus(bind, ~space) space,
   a binding-pattern constructor, which by default takes as many
-  patterns as the supplied non-@rhombus(private, ~class_clause)
+  patterns as the supplied non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause)
   @rhombus(field_spec)s in parentheses and matches an instance of the
   class where the fields match the corresponding patterns;},
 
@@ -114,7 +120,7 @@
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))),
   and a field accessor
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(field,~var))) for each
-  non-@rhombus(private, ~class_clause) method, property, dot syntax, and field in the class
+  non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, dot syntax, and field in the class
   (including inherited methods, properties, dot syntax, and fields), respectively; and}
 
  @item{in the @rhombus(class, ~space) space, a representation of the
@@ -125,9 +131,11 @@
  Fields, methods, properties, and dot syntax declared in a class can be accessed
  from an object (as opposed to just a class) using @rhombus(.), but fields,
  methods, and properties
- declared as @rhombus(private, ~class_clause) can only be accessed by
+ declared as @rhombus(private, ~class_clause) or @rhombus(protected, ~class_clause) can only be accessed by
  @rhombus(.) within methods and properties of the class or through an identifier bound
- by an @rhombus(internal, ~class_clause) form. In static mode (see
+ by an @rhombus(internal, ~class_clause) form. Fields, methods, and properties
+ declared as @rhombus(protected, ~class_clause) can be accessed in subclass methods,
+ in addition. In static mode (see
  @rhombus(use_static)), a non-@rhombus(property, ~class_clause) method
  must be called like a function; in dynamic mode, a
  method accessed from an object
@@ -143,7 +151,8 @@
  instead of a by-position form for the corresponding fields. The name of
  the field for access with @rhombus(.) is the identifier, if present,
  otherwise the name is the symbolic form of the keyword. When a
- @rhombus(field_spec) has the @rhombus(private, ~class_clause) modifier,
+ @rhombus(field_spec) has the @rhombus(private, ~class_clause)
+ or @rhombus(protected, ~class_clause) modifier,
  however, then it is not included as an argument for the default
  constructor, binding form, or annotation form.
 
@@ -152,7 +161,7 @@
  @rhombus(default_expr) or @rhombus(default_body)s to obtain a value for the argument when it is not
  supplied. If a by-position field has a default-value expression or block, then
  all later by-position fields must have a default. If the class extends a
- superclass that has a non- @rhombus(private, ~class_clause) by-position
+ superclass that has a non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) by-position
  argument with a default, then all by-position arguments of the subclass
  must have a default. A @rhombus(default_expr) or @rhombus(default_body) can refer to earlier field
  names in the same @rhombus(class) to produce a default value. If a
@@ -192,13 +201,13 @@
  @tech{assignment operators} such as @rhombus(:=). The
  @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form can appear any number of times as a
  @rhombus(class_clause), with or without a
- @rhombus(private, ~class_clause) prefix.
+ @rhombus(private, ~class_clause) or @rhombus(protected, ~class_clause) prefix.
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form,
- @rhombus(abstract, ~class_clause) form, method-shaped
- @rhombus(final, ~class_clause) or @rhombus(private, ~class_clause) form,
- or @rhombus(property, ~class_clause) form,
+ @rhombus(abstract, ~class_clause) form, @rhombus(property, ~class_clause) form,m
+ or method- or property-shaped
+ @rhombus(final, ~class_clause), @rhombus(private, ~class_clause), or @rhombus(protected, ~class_clause) form,
  then the clause declares a method or property for the class. These clauses can
  appear any number of times as a @rhombus(class_clause) to add or
  override any number of methods or properties. See @rhombus(method, ~class_clause)
@@ -215,11 +224,11 @@
  implementations (that can be overridden) and have abstract methods and properties,
  but an interface does not have fields; see @rhombus(interface) for more
  information. Prefixing @rhombus(implements, ~class_clause) with
- @rhombus(private, ~class_clause) makes the interface privately
- implemented; see @rhombus(interface) for information on privately
- implementing an interface. A @rhombus(class_clause) can have any number
+ @rhombus(private, ~class_clause) or @rhombus(protected, ~class_clause) makes the interface privately or protectedly
+ implemented, and the interface's methods are private or protected; see @rhombus(interface) for information on privately
+ or protectedly implementing an interface. A @rhombus(class_clause) can have any number
  of @rhombus(implements, ~class_clause) clauses (with or without
- @rhombus(private, ~class_clause)). Any rule that applies to the
+ @rhombus(private, ~class_clause) and @rhombus(protected, ~class_clause)). Any rule that applies to the
  superinterface of an interface also applies to the implemented
  interfaces of class, as well as any superinterface of those interfaces.
 
@@ -236,7 +245,7 @@
  form, binding pattern form, and namespace. A use of the internal
  @rhombus(id) as a constructor creates an instance of the same
  class, but the constructor expects arguments for all fields declared
- with @rhombus(field_spec)s, including private fields. For more
+ with @rhombus(field_spec)s, including private and protected fields. For more
  information on internal names, see @rhombus(constructor, ~class_clause),
  since the details of internal names are closely related to constructor,
  annotation, and binding pattern customization. Any number of
@@ -347,6 +356,7 @@
     #,(@rhombus(override, ~interface_clause)) $method_impl
     #,(@rhombus(final, ~interface_clause)) $method_impl
     #,(@rhombus(private, ~interface_clause)) $method_impl
+    #,(@rhombus(protected, ~interface_clause)) $method_impl
     #,(@rhombus(abstract, ~interface_clause)) $method_decl
     #,(@rhombus(property, ~interface_clause)) $property_impl
     #,(@rhombus(extends, ~interface_clause)) $extends_decl
@@ -378,7 +388,7 @@
 
  Interfaces cannot be instantiated. They are implemented by classes via
  the @rhombus(implements, ~class_clause) form. When a class implements an
- interface (not privately), it has all methods and properties of the interface, and its
+ interface (not privately or protectedly), it has all methods and properties of the interface, and its
  instances satisfy the interface as an annotation.
 
  Typically, an interface declares methods and properties with
@@ -387,21 +397,27 @@
  implementations; those implementations are inherited by classes that implement the
  interface or any subinterface that extends the interface. An interface can
  also have private helper methods and properties, but they are useful only when an
- interface also has implemented public methods or properties that refer to them.
+ interface also has implemented public or protected methods or properties that refer to them.
 
  When a class implements an interface privately using
- @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
+ @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)))
+or protectedly using
+ or @rhombus(#,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
  its instances do not satisfy the interface as an annotation. If the
- privately implemented interface has an internal name declared with
+ privately or protectedly implemented interface has an internal name declared with
  @rhombus(internal, ~interface_clause), however, instances satisfy the
- internal name as an annotation. Methods and properties of a privately implemented
+ internal name as an annotation. Methods and properties of a privately or protectedly implemented
  instance can be accessed only with static @rhombus(.) via the
- internal-name annotation. As long as a method or property belongs to only privately
- implemented interfaces, it can be overridden with
+ internal-name annotation. As long as a method or property belongs to only
+ to privately implemented interfaces, it can be overridden with
  @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(override, ~class_clause))),
- otherwise it is overidden normally. If a class declares the
- implementation of a interface both normally and privately, then the
- interface is implemented normally. Abstract private methods and properties must be
+ otherwise it is overidden normally. Methods of a protectedly implemented interface
+ are treated as protected in the implementing class, even when the
+ methods are declared as non-protected in the interfaces. If a class declares
+ the implementation of a interface both normally and privately or protectedly, then the
+ interface is implemented normally; if an interface is declared as implemented both privately
+ and protectedly, then it is protectedly implemented.
+ Abstract private methods and properties must be
  implemented immediately in the class that privately implements the
  associated interface.
 
@@ -496,6 +512,9 @@
   class_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'final #,(@rhombus(property, ~class_clause)) $property_impl'
   class_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) $method_impl'
+  class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'final $method_impl'
   interface_clause.macro 'final #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) $method_impl'
@@ -503,6 +522,9 @@
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'final #,(@rhombus(property, ~interface_clause)) $property_impl'
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
+  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $method_impl'
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
@@ -587,8 +609,8 @@
 
  These @tech{class clauses} and @tech{interface clauses} are recognized
  by @rhombus(class) and @rhombus(interface) to declare methods and properties, along
- with the method and property forms of @rhombus(final, ~class_clause) and
- @rhombus(private, ~class_clause). The combination
+ with the method and property forms of @rhombus(final, ~class_clause),
+ @rhombus(private, ~class_clause), and @rhombus(protected, ~class_clause). The combination
  @rhombus(override, ~class_clause) followed by
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
@@ -698,6 +720,33 @@
 
 @doc(
   ~nonterminal:
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+    field_impl: field ~class_clause
+
+  class_clause.macro 'protected #,(@rhombus(implements, ~class_clause)) $id_name ...'
+  class_clause.macro 'protected #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
+  class_clause.macro 'protected #,(@rhombus(field, ~class_clause)) $field_impl'
+  class_clause.macro 'protected #,(@rhombus(immutable, ~class_clause)) $field_impl'
+  class_clause.macro 'protected #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl'
+  class_clause.macro 'protected $method_impl'
+  class_clause.macro 'protected #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'protected #,(@rhombus(property, ~class_clause)) $property_impl'
+  interface_clause.macro 'protected $method_impl'
+  interface_clause.macro 'protected #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'protected #,(@rhombus(property, ~interface_clause)) $property_impl'
+){
+
+ Like @rhombus(private, ~class_clause), but protected fields, methods,
+ and properties, can be referenced within subclasses, subinterfaces, and
+ subveneers, and they can be overridden when not
+ @rhombus(final, ~class_clause). An overriding declaration does not use
+ @rhombus(protected, ~class_clause) again.
+
+}
+
+@doc(
+  ~nonterminal:
     method_decl: method ~class_clause
     property_decl: method ~class_clause
 
@@ -706,11 +755,17 @@
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(property, ~class_clause)) $property_decl'
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
+  class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) $method_decl'
+  class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_decl'
+  class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
   interface_clause.macro 'abstract $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(method, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(property, ~interface_clause)) $property_decl'
   interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
@@ -777,11 +832,11 @@
  information.
 
  When used as a @tech{namespace}, @rhombus(id) can access the
- immediate private fields, methods, and properties of the class or interface
+ immediate private and protected fields, methods, and properties of the class or interface
  containing the @rhombus(internal, ~class_clause) declaration. Along
  similar lines, @rhombus(id) as an annotation associates static
  information with an expression or binding so that @rhombus(.) can be
- used to access private fields, methods and properties, but only with @rhombus(.) as
+ used to access private and protected fields, methods and properties, but only with @rhombus(.) as
  statically resolved.
 
 }
@@ -853,7 +908,7 @@
   superclass constructor. Instead of returning an instance of the class,
   it returns a function that accepts arguments as declared by
   @rhombus(field_spec, ~var)s in the new subclass, including
-  @rhombus(private, ~class_clause) clause fields; the result of that function is
+  @rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) clause fields; the result of that function is
   an instance of the new class. Again, the result instance might be an
   instance of a subclass if the new class is not @tech{final}.}
 
@@ -896,7 +951,7 @@
  patterns; instead, use @rhombus(internal, ~class_clause) to bind an
  internal name that acts similar to the class's default binding form, but
  with two differences: it does not expect bindings for superclass fields,
- but it does expect bindings for private fields declared with a
+ but it does expect bindings for private and protected fields declared with a
  @rhombus(field_spec, ~var). When a class has a superclass, then a custom
  binding form is typically implemented using an internal binding form,
  the superclass's binding form, and the @rhombus(&&, ~bind) binding
@@ -914,7 +969,7 @@
  annotation form normally needs an internal annotation name bound with
  @rhombus(internal, ~class_clause); the @rhombus(of) form of that
  annotation expects annotations for only immediate fields of the class,
- but including private ones declared with @rhombus(field_spec, ~var)s.
+ but including private and protected ones declared with @rhombus(field_spec, ~var)s.
  Use the @rhombus(&&, ~annot) annotation operator to combine the internal
  annotation with a superclass annotation. When a superclass has a custom
  annotation form, then a class must have a custom annotation form, too.

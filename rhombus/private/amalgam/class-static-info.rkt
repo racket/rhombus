@@ -17,7 +17,9 @@
                      build-class-static-infos))
 
 
-(define-for-syntax (extract-instance-static-infoss name-id options super interfaces private-interfaces intro)
+(define-for-syntax (extract-instance-static-infoss name-id options super interfaces
+                                                   private-interfaces protected-interfaces
+                                                   intro)
   (define call-statinfo-indirect-id
     (able-statinfo-indirect-id 'call super interfaces name-id intro))
   (define index-statinfo-indirect-id
@@ -48,7 +50,9 @@
            append
            (for/list ([intf (in-list interfaces)]
                       #:unless (and (not internal?)
-                                    (hash-ref private-interfaces intf #f)))
+                                    (or
+                                     (hash-ref private-interfaces intf #f)
+                                     (hash-ref protected-interfaces intf #f))))
              (syntax->list
               (objects-desc-static-infos intf))))))
 

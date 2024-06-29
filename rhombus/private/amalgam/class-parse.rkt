@@ -23,6 +23,7 @@
          (struct-out added-field)
          (struct-out added-method)
          (struct-out mindex)
+         (struct-out protect)
 
          unpack-intf-ref
 
@@ -55,7 +56,7 @@
   (interface-ids ; syntax list of identifiers for implemented/extended interfaces
    method-shapes ; vector of shape; see below
    method-vtable ; syntax-object vector of function identifiers or #'#:abstract
-   method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
+   method-map    ; hash of symbol -> index; inverse of `method-vtable`, could be computed on demand
    method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
    dots          ; list of symbols for dot syntax
    dot-provider  ; #f or compile-time identifier
@@ -67,11 +68,12 @@
   (final?
    id
    super-id
+   protected-interface-ids ; needed for `.` resolution in some cases
    class:id
    instance-dot-providers ; `#%dot-provider` value, only for non-final
    ref-id
    fields                ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
-   all-fields            ; #f or (list a-field ...), includes private fields; see below for a-field
+   all-fields            ; #f or (list a-field ...), includes private and protected fields; see below for a-field
    inherited-field-count ; number of fields that are inherited
    constructor-makers    ; (list constructor-maker ... maybe-default-constuctor-desc)
    custom-constructor?
@@ -103,13 +105,18 @@
 (struct class-internal-desc (id                   ; identifier of non-internal class
                              private-methods      ; (list symbol ...)
                              private-properties   ; (list symbol ...)
-                             private-interfaces)) ; (list identifier ...)
+                             private-interfaces)) ; (list identifier ...), includes protected interfaces
 
 (define (class-internal-desc-ref v) (and (class-internal-desc? v) v))
 
 ;; A shaped is either
+;;  - shaped-expose-symbol
+;;  - (vector shaped-expose-symbol arity) where arity can be a list that includes keyword info
+
+;; A shaped-expose-symbol is either
+;;  - #s(protect shaped-symbol)
 ;;  - shaped-symbol
-;;  - (vector shaped-symbol arity) where arity can be a list that includes keyword info
+(struct protect (v) #:prefab)
 
 ;; A shaped-symbol is one of the following, where a symbol is the method's external name:
 ;;  - symbol: final method
@@ -119,6 +126,7 @@
 
 ;; An a-field is one of the following:
 ;;  - symbol: public (so `class-desc-fields` describes constructor arg)
+;;  - (protect field): protected; `field` content is like an element in `fields` of `class-desc`
 ;;  - (cons sym arg): private as internal constructor argument; sym is name, and see below for arg
 ;;  - (cons sym (vector arg)): like the previous case, but mutable
 ;;  - (cons sym identifier): private and not in constructor; sym is name, and calling identifier supplies default
@@ -141,16 +149,26 @@
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
 
-(struct added-field (id arg-id arg-default arg-stx-params form-id static-infos converter annotation-str mode mutability))
+(struct added-field (id
+                     arg-id
+                     arg-default
+                     arg-stx-params
+                     form-id
+                     static-infos
+                     converter
+                     annotation-str
+                     exposure ; 'public, 'private, or 'protected
+                     mutability))
 (struct added-method (id rhs-id rhs stx-params maybe-ret result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
                          disposition ; 'abstract, 'final, 'private
+                         exposure    ; 'private, 'public, 'protected
                          kind        ; 'method, 'property
                          arity))     ; #f, integer, or (list integer required-list allowed-list)
 
 ;; used for a table produced by `extract-method-tables`
-(struct mindex (index final? property? arity inherited?))
+(struct mindex (index final? protected? property? arity inherited?))
 
 ;; When a private method or property overrides one from a privately
 ;; implemented interface, and when the enclosing class is not final,
@@ -177,7 +195,14 @@
   (pattern (~seq (_::block form ...))))
 
 (define (check-duplicate-field-names stxes ids super interface-dotss)
-  (define super-ids (map field-desc-name (if super (class-desc-fields super) '())))
+  (define super-ids (if super
+                        (append (map field-desc-name (class-desc-fields super))
+                                (if (class-desc-all-fields super)
+                                    (for/list ([a-field (in-list (class-desc-all-fields super))]
+                                               #:when (protect? a-field))
+                                      (car (protect-v a-field)))
+                                    null))
+                        null))
   (define dots-ht (let ([ht (if (not super)
                                 #hasheq()
                                 (for/fold ([ht #hasheq()]) ([dot-name (in-list (objects-desc-dots super))])
@@ -261,17 +286,20 @@
                         stxes
                         parent-name)))
 
-(define (check-consistent-construction stxes mutables private?s defaults options
+(define (check-consistent-construction stxes mutables exposures defaults options
                                        name given-constructor-rhs given-constructor-name expression-macro-rhs)
   (when (for/or ([m (in-list mutables)]
-                 [p? (in-list private?s)]
+                 [exposure (in-list exposures)]
                  [d (in-list defaults)])
           (and (not (syntax-e m))
-               p?
+               (not (eq? exposure 'public))
                (not (syntax-e d))))
     (unless (hash-ref options 'constructor-rhs #f)
       (raise-syntax-error #f
-                          "class needs a custom constructor to initialize private immutable fields"
+                          (format "class needs a custom constructor to initialize ~a fields"
+                                  (for/or ([exposure (in-list exposures)]
+                                           #:when (not (eq? 'public exposure)))
+                                    exposure))
                           stxes)))
   (when (and given-constructor-rhs
              expression-macro-rhs)
@@ -364,15 +392,21 @@
                 [rev-defaults '()])
        (cond
          [(null? all-fields) (values (reverse rev-fields) (reverse rev-keywords) (reverse rev-defaults))]
-         [(and (pair? (car all-fields))
-               ;; not in constructor?
-               (or (identifier? (cdar all-fields))
-                   (and (vector? (cdar all-fields))
-                        (identifier? (vector-ref (cdar all-fields) 0)))))
+         [(or (and (pair? (car all-fields))
+                   ;; not in constructor?
+                   (or (identifier? (cdar all-fields))
+                       (and (vector? (cdar all-fields))
+                            (identifier? (vector-ref (cdar all-fields) 0)))))
+              (and (protect? (car all-fields))
+                   ;; not in constructor?
+                   (identifier? (field-desc-constructor-arg (protect-v (car all-fields))))))
           (loop (cdr all-fields) fields rev-fields rev-keywords rev-defaults)]
-         [(pair? (car all-fields)) ; private field in internal constructor, only
-          (define f (car (generate-temporaries (list (caar all-fields)))))
-          (define arg/v (cdar all-fields))
+         [(or (pair? (car all-fields)) ; private field in internal constructor, only
+              (protect? (car all-fields)))
+          (define pr-protect (car all-fields))
+          (define pr (if (protect? pr-protect) (protect-v pr-protect) pr-protect))
+          (define f (car (generate-temporaries (list (car pr)))))
+          (define arg/v (if (protect? pr-protect) (field-desc-constructor-arg pr) (cdr pr)))
           (define arg (if (vector? arg/v) (vector-ref arg/v 0) arg/v))
           (define k (datum->syntax #f (if (box? arg) (unbox arg) arg)))
           (define d (if (box? arg) #'unsafe-undefined #'#f))
@@ -403,7 +437,7 @@
          (syntax-e (field-desc-mutator-id fld))
          (not (identifier? (field-desc-constructor-arg fld))))))
 
-(define (print-field-shapes super fields keywords private?s)
+(define (print-field-shapes super fields keywords exposures)
   (append
    (if super
        (let ([shapes (for/list ([fld (in-list (class-desc-fields super))]
@@ -415,31 +449,32 @@
                                (field-desc-name fld))))])
          (define all-fields (class-desc-all-fields super))
          (if all-fields
-             ;; insert `#f`s for private fields
+             ;; insert `#f`s for private and protected fields
              (let loop ([all-fields all-fields] [shapes shapes])
                (cond
                  [(null? all-fields) null]
                  [(null? shapes)
-                  ;; only private fields left
+                  ;; only private/protected fields left
                   (cons #f (loop (cdr all-fields) shapes))]
                  [(symbol? (car all-fields))
                   ;; public, maybe keyword
                   (cons (car shapes)
                         (loop (cdr all-fields) (cdr shapes)))]
                  [else
-                  ;; private
+                  ;; private/protected
                   (cons #f
                         (loop (cdr all-fields) shapes))]))
              shapes))
        null)
-   (let loop ([fields fields] [keywords keywords] [private?s private?s])
+   (let loop ([fields fields] [keywords keywords] [exposures exposures])
      (cond
        [(null? keywords) '()]
-       [(car private?s) (cons #f (loop (cdr fields) (cdr keywords) (cdr private?s)))]
+       [(not (eq? (car exposures) 'public))
+        (cons #f (loop (cdr fields) (cdr keywords) (cdr exposures)))]
        [else
         (cons (or (syntax-e (car keywords))
                   (syntax-e (car fields)))
-              (loop (cdr fields) (cdr keywords) (cdr private?s)))]))))
+              (loop (cdr fields) (cdr keywords) (cdr exposures)))]))))
 
 (define (make-accessor-names name field-ids intro)
   (for/list ([field-id (in-list field-ids)])

@@ -121,7 +121,9 @@
 
                        indirect-static-infos
                        internal-indirect-static-infos)
-         (extract-instance-static-infoss #'name options #f supers #hasheq() intro))
+         (extract-instance-static-infoss #'name options #f supers
+                                         #hasheq() #hasheq()
+                                         intro))
 
        (with-syntax ([name? (temporary "~a?")]
                      [name-instance (temporary "~a-instance")]
@@ -188,7 +190,9 @@
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
-         (extract-method-tables stxes added-methods #f supers #hasheq() #f #f))
+         (extract-method-tables stxes added-methods #f supers
+                                #hasheq() #hasheq()
+                                #f #f))
 
        (define dots (hash-ref options 'dots '()))
        (define dot-provider-rhss (map cdr dots))
@@ -254,9 +258,11 @@
                (build-methods method-results
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f
+                              #hasheq() #hasheq()
                               #'(name name-instance internal-name? #f #f
                                       internal-name-ref
                                       ()
+                                      []
                                       []
                                       []
                                       []
@@ -279,7 +285,8 @@
                                                      [export ...]
                                                      base-stx scope-stx))
                (build-interface-desc supers parent-names options
-                                     method-mindex method-names method-vtable method-results method-private dots
+                                     method-mindex method-names method-vtable method-results method-private
+                                     dots
                                      internal-name
                                      callable? indexable? setable? appendable? comparable?
                                      primitive-properties
@@ -352,7 +359,8 @@
                                        . indirect-static-infos)))))))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
-                                         method-mindex method-names method-vtable method-results method-private dots
+                                         method-mindex method-names method-vtable method-results method-private
+                                         dots
                                          internal-name
                                          callable? indexable? setable? appendable? comparable?
                                          primitive-properties

@@ -45,6 +45,7 @@
                      property
                      override
                      private
+                     protected
                      final)
          (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
@@ -154,6 +155,7 @@
   (define-clause-form-syntax-class :method method "the literal `method`")
   (define-clause-form-syntax-class :property property "the literal `property`")
   (define-clause-form-syntax-class :override override "the literal `override`")
+  (define-clause-form-syntax-class :protected protected "the literal `protected`")
   (define-clause-form-syntax-class :implements implements "the literal `implements`"))
 
 (define-class-clause-syntax field
@@ -353,10 +355,13 @@
   (syntax-parse stx
     [(_ _::override _::method (~var m (:method-impl #'#:final-override))) #'m.form]
     [(_ _::method (~var m (:method-impl #'#:final))) #'m.form]
+    [(_ _::protected (~var m (:method-impl #'#:final-protected))) #'m.form]
+    [(_ _::protected _::method (~var m (:method-impl #'#:final-protected))) #'m.form]
     [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
     [(_ _::property (~var m (:property-impl #'#:final-property))) #'m.form]
     [(_ _::override (~var m (:method-impl #'#:final-override))) #'m.form]
     [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
+    [(_ _::protected _::property (~var m (:property-impl #'#:final-protected-property))) #'m.form]
     [(_ (~var m (:method-impl #'#:final))) #'m.form]))
 
 (define-class-clause-syntax final
@@ -463,13 +468,44 @@
 (define-veneer-clause-syntax private
   (veneer-clause-transformer parse-class-private))
 
+(define-for-syntax parse-class-protected
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ tag::implements form ...)
+       (wrap-class-clause #`(#:protected-implements . #,(parse-multiple-names #'(tag form ...))))]
+      [(_ _::method (~var m (:method-impl #'#:protected))) #'m.form]
+      [(_ _::property (~var m (:property-impl #'#:protected-property))) #'m.form]
+      [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
+      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
+      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]      
+      [(_ (~var m (:method-impl #'#:protected))) #'m.form])))
+
+(define-class-clause-syntax protected
+  (class-clause-transformer parse-class-protected))
+
+(define-for-syntax parse-protected
+  (lambda (stx data)
+    (syntax-parse stx
+      [(_ _::method (~var m (:method-impl #'#:protected))) #'m.form]
+      [(_ _::property (~var m (:property-impl #'#:protected-property))) #'m.form]
+      [(_ (~var m (:method-impl #'#:protected))) #'m.form])))
+
+(define-interface-clause-syntax protected
+  (interface-clause-transformer parse-protected))
+
+(define-veneer-clause-syntax protected
+  (veneer-clause-transformer parse-protected))
+
 (define-for-syntax (parse-abstract-clause stx data)
   (syntax-parse stx
     [(_ _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::protected (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::protected _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
     [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs decl.maybe-ret))]
     [(_ _::override (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
     [(_ _::override _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
     [(_ _::override _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::protected _::property decl::property-decl) (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs decl.maybe-ret))]
     [(_ (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))
 
 (define-class-clause-syntax abstract

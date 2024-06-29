@@ -128,7 +128,7 @@ class Pict():
   abstract method ghost(do_ghost = #true) :~ Pict
   abstract method refocus(to_p :: Pict) :~ Pict
 
-  abstract method
+  abstract protected method
   | _pad(amt :: Real) :~ Pict
   | _pad(h_amt :: Real, v_amt :: Real) :~ Pict
   | _pad(left_amt :: Real, top_amt :: Real,
@@ -169,7 +169,7 @@ class Pict():
 
   abstract method freeze(~scale: scale :: Real = 2.0) :~ Pict
 
-  abstract method _time_pad(before :: Int, after :: Int) :~ Pict
+  abstract protected method _time_pad(before :: Int, after :: Int) :~ Pict
   abstract method time_clip(~keep: keep :: maybe(TimeOrder) = #false) :~ Pict
   method delay(n :: NonnegInt) :~ Pict: time_clip(~keep: #'after).time_pad(~before: 1)
   abstract method sustain(n :: Int = 1) :~ Pict
@@ -1216,7 +1216,8 @@ fun table(rows :: List.of(List.of(Pict)),
                         if hsep is_a List | PairList[& hsep] | hsep,
                         if vsep is_a List | PairList[& vsep] | vsep)
       if !hline && !vline && !line_c
-      | static_pict(r, [elem, ..., ...], [elem._instances, ..., ...])._pad(& if ins is_a List | ins | [ins])
+      | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...])
+        p._pad(& if ins is_a List | ins | [ins])
       | let picts = [& picts]
         let col_length = rows.length()
         let ws:

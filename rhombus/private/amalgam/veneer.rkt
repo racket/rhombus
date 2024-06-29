@@ -90,9 +90,8 @@
        (define interface-names (reverse (hash-ref options 'implements '())))
        (define interfaces (interface-names->interfaces #'orig-stx interface-names
                                                        #:for-veneer? #t))
-       (define private-interfaces (interface-set-diff
-                                   (interface-names->interfaces #'orig-stx (hash-ref options 'private-implements '()))
-                                   (interface-names->interfaces #'orig-stx (hash-ref options 'public-implements '()))))
+       (define-values (private-interfaces protected-interfaces)
+         (extract-private-protected-interfaces #'orig-stx options))
 
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
@@ -117,7 +116,9 @@
 
                        indirect-static-infos
                        internal-indirect-static-infos)
-         (extract-instance-static-infoss #'name options super interfaces private-interfaces intro))
+         (extract-instance-static-infoss #'name options super interfaces
+                                         private-interfaces protected-interfaces
+                                         intro))
 
        (with-syntax ([name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [internal-name-instance #f]
@@ -178,9 +179,8 @@
        (define interface-names (reverse (hash-ref options 'implements '())))
        (define-values (all-interfaces interfaces) (interface-names->interfaces stxes interface-names
                                                                                #:results values))
-       (define private-interfaces (interface-set-diff
-                                   (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
-                                   (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
+       (define-values (private-interfaces protected-interfaces)
+         (extract-private-protected-interfaces #'orig-stx options))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
@@ -211,7 +211,9 @@
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces private-interfaces final? #f))
+         (extract-method-tables stxes added-methods super interfaces
+                                private-interfaces protected-interfaces
+                                final? #f))
 
        (check-fields-methods-dots-distinct stxes #hasheq() method-mindex method-names method-decls dots)
        (check-consistent-unimmplemented stxes final? abstract-name #'name)
@@ -260,9 +262,11 @@
                               method-results
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f
+                              private-interfaces protected-interfaces
                               #'(name #f #|<- not `name-instance`|# name?/checked name-convert #f
                                       prop-methods-ref
                                       representation-static-infos ;; instead of `indirect-static-infos`
+                                      []
                                       []
                                       []
                                       []
@@ -310,8 +314,9 @@
                                                  []
                                                  []))
                (build-veneer-desc super options
-                                  parent-name interface-names all-interfaces private-interfaces
-                                  method-mindex method-names method-vtable method-results method-private dots
+                                  parent-name interface-names all-interfaces private-interfaces protected-interfaces
+                                  method-mindex method-names method-vtable method-results method-private
+                                  dots
                                   public-indexable?
                                   public-setable?
                                   public-appendable?
@@ -505,8 +510,9 @@
      #'ann.static-infos]))
 
 (define-for-syntax (build-veneer-desc super options
-                                      parent-name interface-names all-interfaces private-interfaces
-                                      method-mindex method-names method-vtable method-results method-private dots
+                                      parent-name interface-names all-interfaces private-interfaces protected-interfaces
+                                      method-mindex method-names method-vtable method-results method-private
+                                      dots
                                       public-indexable?
                                       public-setable?
                                       public-appendable?
@@ -524,7 +530,9 @@
                     #,@(if public-setable? '(set) null)
                     #,@(if public-appendable? '(append) null)
                     #,@(if public-comparable? '(compare) null))]
-          [interface-names (interface-names->quoted-list interface-names all-interfaces private-interfaces 'public)])
+          [interface-names (interface-names->quoted-list interface-names all-interfaces
+                                                         private-interfaces protected-interfaces
+                                                         'public)])
       (list
        (build-syntax-definition/maybe-extension
         'rhombus/class #'name #'name-extends

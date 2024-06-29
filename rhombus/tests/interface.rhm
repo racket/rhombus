@@ -574,3 +574,71 @@ check:
     private implements: I J
     private override m(): 1
   ~throws "cannot override method from multiple privately implemented interfaces"
+
+// Protected implementation
+check:
+  interface I:
+    method m()
+  class C():
+    nonfinal
+    protected implements: I
+    override m(): 1
+  class D():
+    extends C
+    method n():
+      m()
+  [D().n(),
+   try:
+     use_dynamic
+     dynamic(D()).m()
+     ~catch x:
+       "ok"]
+  ~is [1,
+       "ok"]
+
+// Protected implementation promoted to public
+check:
+  interface I:
+    method m()
+  interface J:
+    extends I
+  class C():
+    nonfinal
+    protected implements: I
+    implements: J
+    override m(): 1
+  class D():
+    extends C
+    method n():
+      m()
+  [D().n(),
+   D().m(),
+   block:
+     use_dynamic
+     dynamic(D()).m()]
+  ~is [1, 1, 1]
+
+// Private implementation promoted to protected
+check:
+  interface I:
+    method m()
+  interface J:
+    extends I
+  class C():
+    nonfinal
+    private implements: I
+    protected implements: J
+    override m(): 1
+  class D():
+    extends C
+    method n():
+      m()
+  [D().n(),
+   try:
+     use_dynamic
+     dynamic(D()).m()
+     ~catch x:
+       "ok"]
+  ~is [1,
+       "ok"]
+

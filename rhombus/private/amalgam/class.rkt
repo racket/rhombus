@@ -69,7 +69,7 @@
                                       (field.keyword ...)
                                       (field.default ...)
                                       (field.mutable ...)
-                                      (field.private ...)
+                                      (field.exposure ...)
                                       (field.ann-seq ...)]
                             ;; data accumulated from parsed clauses:
                             ()))
@@ -97,7 +97,7 @@
                      constructor-field-keywords
                      constructor-field-defaults
                      constructor-field-mutables
-                     constructor-field-privates
+                     constructor-field-exposures
                      constructor-field-ann-seqs]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
@@ -114,9 +114,8 @@
 
        (define interface-names (reverse (hash-ref options 'implements '())))
        (define interfaces (interface-names->interfaces #'orig-stx interface-names))
-       (define private-interfaces (interface-set-diff
-                                   (interface-names->interfaces #'orig-stx (hash-ref options 'private-implements '()))
-                                   (interface-names->interfaces #'orig-stx (hash-ref options 'public-implements '()))))
+       (define-values (private-interfaces protected-interfaces)
+         (extract-private-protected-interfaces #'orig-stx options))
 
        (define-values (internal-id exposed-internal-id extra-exposed-internal-ids)
          (extract-internal-ids options
@@ -158,14 +157,16 @@
 
                        indirect-static-infos
                        internal-indirect-static-infos)
-         (extract-instance-static-infoss #'name options super interfaces private-interfaces intro))
+         (extract-instance-static-infoss #'name options super interfaces
+                                         private-interfaces protected-interfaces
+                                         intro))
 
        (with-syntax ([constructor-name-fields constructor-name-fields]
                      [((constructor-public-name-field constructor-public-field-keyword) ...)
-                      (for/list ([priv?-stx (in-list (syntax->list #'constructor-field-privates))]
+                      (for/list ([exposure-stx (in-list (syntax->list #'constructor-field-exposures))]
                                  [name-field (in-list constructor-name-fields)]
                                  [field-keyword (in-list (syntax->list #'constructor-field-keywords))]
-                                 #:unless (syntax-e priv?-stx))
+                                 #:when (eq? 'public (syntax-e exposure-stx)))
                         (list name-field field-keyword))]
                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [internal-name-instance (and internal-id
@@ -241,7 +242,7 @@
                          constructor-field-keywords
                          constructor-field-defaults
                          constructor-field-mutables
-                         constructor-field-privates
+                         constructor-field-exposures
                          constructor-field-ann-seqs
                          constructor-name-fields]
                exports
@@ -263,7 +264,7 @@
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
                     (constructor-field-mutable ...)
-                    (constructor-field-private ...)
+                    (constructor-field-exposure ...)
                     (constructor-field-ann-seq ...)
                     (constructor-name-field ...)]
           exports
@@ -278,9 +279,8 @@
        (define interface-names (reverse (hash-ref options 'implements '())))
        (define-values (all-interfaces interfaces) (interface-names->interfaces stxes interface-names
                                                                                #:results values))
-       (define private-interfaces (interface-set-diff
-                                   (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
-                                   (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
+       (define-values (private-interfaces protected-interfaces)
+         (extract-private-protected-interfaces #'orig-stx options))
        (define authentic? (hash-ref options 'authentic? #f))
        (define prefab? (hash-ref options 'prefab? #f))
        (define final? (hash-ref options 'final? (not prefab?)))
@@ -308,36 +308,35 @@
                                   (if (eq? (added-field-mutability f) 'mutable)
                                       #'#t
                                       #'#f))))
-       (define constructor-private?s (map syntax-e (syntax->list #'(constructor-field-private ...))))
-       (define has-private-constructor-fields? (for/or ([priv (in-list constructor-private?s)])
+       (define constructor-exposures (map syntax-e (syntax->list #'(constructor-field-exposure ...))))
+       (define has-private-constructor-fields? (for/or ([priv (in-list constructor-exposures)])
                                                  priv))
-       (define private?s (append constructor-private?s
-                                 (for/list ([a (in-list added-fields)])
-                                   (eq? 'private (added-field-mode a)))))
-       (define has-private-fields? (for/or ([priv (in-list private?s)])
-                                     priv))
-       (define (partition-fields l [private?s private?s] #:result [result list])
+       (define exposures (append constructor-exposures
+                                 (map added-field-exposure added-fields)))
+       (define has-private-fields? (for/or ([exposure (in-list exposures)])
+                                     (not (eq? exposure 'public))))
+       (define (partition-fields l [exposures exposures] #:result [result list])
          (for/fold ([pub '()] [priv '()] #:result (result (reverse pub) (reverse priv)))
                    ([e (in-list (if (syntax? l) (syntax->list l) l))]
-                    [p? (in-list private?s)])
-           (if p?
-               (values pub (cons e priv))
-               (values (cons e pub) priv))))
+                    [exposure (in-list exposures)])
+           (if (eq? exposure 'public)
+               (values (cons e pub) priv)
+               (values pub (cons e priv)))))
 
        (define constructor-keywords (syntax->list #'(constructor-field-keyword ...)))
        (define constructor-defaults (syntax->list #'(constructor-field-default ...)))
        (define constructor-static-infoss (syntax->list #'(constructor-field-static-infos ...)))
        (define-values (constructor-public-fields constructor-private-fields)
-         (partition-fields constructor-fields constructor-private?s #:result values))
+         (partition-fields constructor-fields constructor-exposures #:result values))
        (define-values (constructor-public-keywords constructor-private-keywords)
-         (partition-fields constructor-keywords constructor-private?s #:result values))
+         (partition-fields constructor-keywords constructor-exposures #:result values))
        (define-values (constructor-public-defaults constructor-private-defaults)
-         (partition-fields constructor-defaults constructor-private?s #:result values))
+         (partition-fields constructor-defaults constructor-exposures #:result values))
        (define constructor-converters (syntax->list #'(constructor-field-converter ...)))
        (define constructor-annotation-strs (map syntax-e (syntax->list #'(constructor-field-annotation-str ...))))
 
        (define expose (make-expose #'scope-stx #'base-stx))
-       (check-consistent-construction stxes mutables private?s constructor-defaults options
+       (check-consistent-construction stxes mutables exposures constructor-defaults options
                                       #'name given-constructor-rhs
                                       (and given-constructor-name
                                            (expose given-constructor-name))
@@ -350,7 +349,7 @@
        (define-values (super-constructor-fields super-keywords super-defaults)
          (extract-super-constructor-fields super))
        (define-values (super-constructor+-fields super-constructor+-keywords super-constructor+-defaults)
-         ;; The "constructor+" list corresponds to private fields in the internal constructor as well
+         ;; The "constructor+" list corresponds to private+protected fields in the internal constructor as well
          ;; as the main constructor --- that is, all the fields listed in parentheses after the class name
          (extract-super-internal-constructor-fields super super-constructor-fields super-keywords super-defaults))
        (define super-has-keywords? (any-stx? super-keywords))
@@ -409,7 +408,9 @@
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces private-interfaces final? prefab?))
+         (extract-method-tables stxes added-methods super interfaces
+                                private-interfaces protected-interfaces
+                                final? prefab?))
 
        (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
        (check-consistent-unimmplemented stxes final? abstract-name #'name)
@@ -438,9 +439,9 @@
 
        (define has-mutable-constructor-arg?
          (or (for/or ([mut (in-list (syntax->list #'(constructor-field-mutable ...)))]
-                      [priv (in-list (syntax->list #'(constructor-field-private ...)))])
+                      [ex (in-list (syntax->list #'(constructor-field-exposure ...)))])
                (and (syntax-e mut)
-                    (not (syntax-e priv))))
+                    (eq? 'public (syntax-e ex))))
              (and super
                   (super-has-mutable-constructor-field? super))))
        (define has-mutable-internal-constructor-arg?
@@ -533,10 +534,10 @@
                                                                name-field)))]
                        [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
                        [((public-field-argument ...) (private-field-argument ...)) (list public-field-arguments private-field-arguments)]
-                       [(constructor-public-name-field ...) (partition-fields all-name-fields constructor-private?s
+                       [(constructor-public-name-field ...) (partition-fields all-name-fields constructor-exposures
                                                                               #:result (lambda (pub priv) pub))]
                        [(constructor-public-field-static-infos ...) (partition-fields #'(constructor-field-static-infos ...)
-                                                                                      constructor-private?s
+                                                                                      constructor-exposures
                                                                                       #:result (lambda (pub priv) pub))]
                        [(constructor-public-field-keyword ...) constructor-public-keywords]
                        [(super-name* ...) (if super #'(super-name) '())]
@@ -566,13 +567,19 @@
                                                (temporary "prefab-guard-~a"))]
                        [dot-providers (add-super-dot-providers #'name-instance super interfaces)]
                        [internal-dot-providers (and exposed-internal-id
-                                                    (add-super-dot-providers #'internal-name-instance super interfaces))])
+                                                    (add-super-dot-providers #'internal-name-instance super interfaces))]
+                       [super-protected-flds (if (and super (class-desc-all-fields super))
+                                                 (for/list ([a-field (in-list (class-desc-all-fields super))]
+                                                            #:when (protect? a-field))
+                                                   (protect-v a-field))
+                                                 null)])
            (define defns
              (reorder-for-top-level
               (append
                (build-methods method-results
                               added-methods method-mindex method-names method-private method-private-inherit
                               reconstructor-rhs reconstructor-stx-params final?
+                              private-interfaces protected-interfaces
                               #'(name name-instance name? #f reconstructor-name
                                       prop-methods-ref
                                       indirect-static-infos
@@ -587,6 +594,7 @@
                                              (quote-syntax private-field-static-infos)
                                              (quote-syntax private-field-argument))
                                        ...]
+                                      super-protected-flds
                                       [super-name* ... interface-name ...]
                                       [(recon-field-acc recon-field-rhs)
                                        ...]))
@@ -605,10 +613,10 @@
                                                    ...]
                                                   [super-name* ... interface-name ...]))
                (build-class-struct super
-                                   fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
+                                   fields mutables constructor-keywords exposures final? authentic? prefab? opaque?
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
-                                   interfaces private-interfaces
+                                   interfaces private-interfaces protected-interfaces
                                    has-extra-fields? here-callable? here-indexable? here-setable?
                                    here-appendable? here-comparable?
                                    primitive-properties
@@ -633,7 +641,7 @@
                                                   constructor-static-infoss)
                ;; note: class name as expression is bound via `build-class-dot-handling`
                (build-class-constructor super constructor-rhs given-constructor-stx-params
-                                        added-fields constructor-private?s
+                                        added-fields constructor-exposures
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
                                         constructor-defaults super-defaults super-constructor+-defaults
@@ -716,9 +724,10 @@
                                  constructor-public-defaults super-defaults
                                  constructor-keywords super-constructor+-keywords ; includes private fields for internal constructor
                                  constructor-defaults super-constructor+-defaults
-                                 final? has-private-fields? private?s
-                                 parent-name interface-names all-interfaces private-interfaces
-                                 method-mindex method-names method-vtable method-results method-private dots
+                                 final? has-private-fields? exposures
+                                 parent-name interface-names all-interfaces private-interfaces protected-interfaces
+                                 method-mindex method-names method-vtable method-results method-private
+                                 dots
                                  authentic? prefab? (not (syntax-e #'reconstructor-name))
                                  here-callable? public-callable?
                                  here-indexable? public-indexable?
@@ -743,7 +752,7 @@
                                                      (quote-syntax public-field-static-infos)
                                                      (quote-syntax public-field-argument))
                                                ...)
-                                         ([field-name field-argument maybe-set-name-field!] ...)
+                                         ([field-name field-argument name-field maybe-set-name-field! field-static-infos] ...)
                                          [(recon-field-name recon-field-acc) ...]))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
@@ -759,10 +768,10 @@
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
-                                       fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
+                                       fields mutables constructor-keywords exposures final? authentic? prefab? opaque?
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
-                                       interfaces private-interfaces
+                                       interfaces private-interfaces protected-interfaces
                                        has-extra-fields? here-callable? here-indexable? here-setable?
                                        here-appendable? here-comparable?
                                        primitive-properties
@@ -814,9 +823,15 @@
                              ([v (in-vector method-vtable)]
                               [i (in-naturals)])
                      (define name (hash-ref method-names i))
-                     (if (mindex-property? (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
-                         (values ms (cons (list name v) ps))
-                         (values (cons (list name v) ms) ps)))]
+                     (define mix (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
+                     (cond
+                       [(mindex-protected? mix)
+                        ;; omit from dynamic-dispatch table
+                        (values ms ps)]
+                       [(mindex-property? mix)
+                        (values ms (cons (list name v) ps))]
+                       [else
+                        (values (cons (list name v) ms) ps)]))]
                   [(all-dot-name ...) (extract-all-dot-names #'(dot-id ...) (cons super interfaces))]
                   [primitive-make-name (if (syntax-e #'prefab-guard-name)
                                            ((make-syntax-introducer)
@@ -839,12 +854,14 @@
                                 (syntax->list l))))
                          null)
                      interfaces))
-         private-interfaces))
+         private-interfaces
+         protected-interfaces))
       (define all-prim-prop-interfaces
         ;; for primitive properties, we only need to cover immediately
         ;; implemented interfaces; values can be inherited from superclasses
         (close-interfaces-over-superinterfaces interfaces
-                                               private-interfaces))
+                                               private-interfaces
+                                               protected-interfaces))
       (append
        (list
         #`(define-values (class:name primitive-make-name name? name-field ... set-name-field! ...)
@@ -898,7 +915,7 @@
                                                                [opaque? #`((cons prop:print-field-shapes 'opaque))]
                                                                [else
                                                                 (define field-print-shapes
-                                                                  (print-field-shapes super fields constructor-keywords private?s))
+                                                                  (print-field-shapes super fields constructor-keywords exposures))
                                                                 (if (or abstract-name
                                                                         (and (andmap symbol? field-print-shapes)
                                                                              (not has-extra-fields?)))
@@ -983,9 +1000,10 @@
                                      constructor-public-defaults super-defaults
                                      constructor-keywords super-constructor+-keywords
                                      constructor-defaults super-constructor+-defaults
-                                     final? has-private-fields? private?s
-                                     parent-name interface-names all-interfaces private-interfaces
-                                     method-mindex method-names method-vtable method-results method-private dots
+                                     final? has-private-fields? exposures
+                                     parent-name interface-names all-interfaces private-interfaces protected-interfaces
+                                     method-mindex method-names method-vtable method-results method-private
+                                     dots
                                      authentic? prefab? no-recon?
                                      here-callable? public-callable?
                                      here-indexable? public-indexable?
@@ -999,7 +1017,7 @@
                        instance-static-infos dot-providers
                        super-call-statinfo-indirect call-statinfo-indirect
                        fields
-                       ([field-name field-argument maybe-set-name-field!] ...)
+                       ([field-name field-argument name-field maybe-set-name-field! field-static-infos] ...)
                        [(recon-field-name recon-field-acc) ...])
                  names])
     (append
@@ -1008,7 +1026,9 @@
        'rhombus/class #'name #'name-extends
        #`(class-desc-maker
           (lambda ()
-            (class-desc (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'public))
+            (class-desc (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces
+                                                                      private-interfaces protected-interfaces
+                                                                      'public))
                         '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
                         (quote-syntax #,method-vtable)
                         '#,(build-quoted-method-map method-mindex)
@@ -1029,6 +1049,9 @@
                         #,final?
                         (quote-syntax name)
                         #,(and parent-name #`(quote-syntax #,parent-name))
+                        #,(and (positive? (hash-count protected-interfaces))
+                               #`(quote-syntax #,(for/list ([intf (in-hash-keys protected-interfaces)])
+                                                   (interface-desc-id intf))))
                         (quote-syntax class:name)
                         #,(if final? #'#f #`(quote-syntax dot-providers))
                         (quote-syntax name-ref)
@@ -1042,9 +1065,13 @@
                                                      [(and (vector? i) (identifier? (vector-ref i 0)))
                                                       #`(vector (quote-syntax #,(vector-ref i 0)))]
                                                      [else #`(quote #,i)]))
-                                                 (if (pair? i)
-                                                     #`(cons (quote #,(car i)) #,(wrap (cdr i)))
-                                                     (wrap i)))
+                                                 (define (wrap-inner i)
+                                                   (if (pair? i)
+                                                       #`(cons (quote #,(car i)) #,(wrap (cdr i)))
+                                                       (wrap i)))
+                                                 (if (protect? i)
+                                                     #`(protect (list #,@(map wrap-inner (protect-v i))))
+                                                     (wrap-inner i)))
                                                (append (if super
                                                            (or (class-desc-all-fields super)
                                                                ;; symbol means "inherited from superclass"
@@ -1053,17 +1080,26 @@
                                                            '())
                                                        (for/list ([name (in-list (syntax->list #'(field-name ...)))]
                                                                   [arg (in-list (syntax->list #'(field-argument ...)))]
+                                                                  [accessor (in-list (syntax->list #'(name-field ...)))]
                                                                   [mutator (in-list (syntax->list #'(maybe-set-name-field! ...)))]
-                                                                  [private? (in-list private?s)])
-                                                         (cond
-                                                           [private? (cons (syntax-e name)
-                                                                           (if (identifier? arg)
-                                                                               (if (syntax-e mutator)
-                                                                                   arg
-                                                                                   (vector arg))
-                                                                               (if (syntax-e mutator)
-                                                                                   (vector arg)
-                                                                                   arg)))]
+                                                                  [static-infos (in-list (syntax->list #'(field-static-infos ...)))]
+                                                                  [exposure (in-list exposures)])
+                                                         (case exposure
+                                                           [(private)
+                                                            (cons (syntax-e name)
+                                                                  (if (identifier? arg)
+                                                                      (if (syntax-e mutator)
+                                                                          arg
+                                                                          (vector arg))
+                                                                      (if (syntax-e mutator)
+                                                                          (vector arg)
+                                                                          arg)))]
+                                                           [(protected)
+                                                            (protect (list (syntax-e name)
+                                                                           accessor
+                                                                           mutator
+                                                                           static-infos
+                                                                           arg))]
                                                            [else (syntax-e name)]))))))
                         #,(if super
                               (if (class-desc-all-fields super)
@@ -1122,5 +1158,7 @@
               (class-internal-desc (quote-syntax name)
                                    (quote #,(build-quoted-private-method-list 'method method-private))
                                    (quote #,(build-quoted-private-method-list 'property method-private))
-                                   (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces private-interfaces 'private)))))
+                                   (quote-syntax #,(interface-names->quoted-list interface-names all-interfaces
+                                                                                 private-interfaces protected-interfaces
+                                                                                 'private)))))
          null))))
