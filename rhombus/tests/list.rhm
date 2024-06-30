@@ -409,3 +409,11 @@ check:
   ~eval
   def [x, ..., & y, z] = [1, 2]
   ~throws "second splice or repetition not allowed"
+
+check:
+  [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
+  [List.repet("oops"), ...] ~throws values(
+    "contract violation",
+    "expected: List",
+    "given: \"oops\"",
+  )

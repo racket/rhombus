@@ -776,12 +776,15 @@
 (define-repetition-syntax List.repet
   (make-repet (lambda (g)
                 #`(in-treelist (let ([l (rhombus-expression #,g)])
+                                 (unless (variable-reference-from-unsafe? (#%variable-reference))
+                                   (check-treelist 'List.repet l))
                                  l)))))
 
 (define-repetition-syntax PairList.repet
   (make-repet (lambda (g)
                 #`(in-list (let ([l (rhombus-expression #,g)])
-                             (check-list 'PairList.repet l)
+                             (unless (variable-reference-from-unsafe? (#%variable-reference))
+                               (check-list 'PairList.repet l))
                              l)))))
 
 (define (check-function-of-arity n who proc)
@@ -1412,13 +1415,6 @@
                     #:rep-solo-for-form #'for/treelist
                     #:repetition? #t
                     #:span-form-name? #f))
-
-(define-syntax (list->treelist/optimize stx)
-  (syntax-parse stx
-    #:literals (treelist->list)
-    [(_ (treelist->list t)) #'t]
-    [(_ e) #'(list->treelist e)]
-    [_ #'list->treelist]))
 
 (define (maybe-list-tail l n)
   (or (and (eqv? n 0)

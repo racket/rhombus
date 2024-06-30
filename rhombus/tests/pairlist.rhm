@@ -352,3 +352,11 @@ check:
   ~eval
   def PairList[x, ..., & y, z] = [1, 2]
   ~throws "second splice or repetition not allowed"
+
+check:
+  PairList[PairList.repet(PairList[1, 2, 3]), ...] ~is PairList[1, 2, 3]
+  PairList[PairList.repet("oops"), ...] ~throws values(
+    "contract violation",
+    "expected: PairList",
+    "given: \"oops\"",
+  )
