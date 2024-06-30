@@ -308,7 +308,8 @@
   (lambda () #'Array.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ arr-expr)] #'[(id) (in-vector arr-expr)]]
+      [[(id) (_ arr-expr)]
+       #`[(id) (in-vector #,(discard-static-infos #'arr-expr))]]
       [_ #f])))
 
 (define/method (Array.to_sequence v)

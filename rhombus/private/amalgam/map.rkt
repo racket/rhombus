@@ -931,13 +931,15 @@
 ;; macro to optimize to an inline functional update
 (define-syntax (Map.append/optimize stx)
   (syntax-parse stx
-    [(_ map1 map2)
-     (syntax-parse (unwrap-static-infos #'map2)
+    [(_ map1/statinfo map2/statinfo)
+     (define map1 (unwrap-static-infos #'map1/statinfo))
+     (define map2 (unwrap-static-infos #'map2/statinfo))
+     (syntax-parse map2
        [(id:identifier k v)
         #:when (free-identifier=? (expr-quote Map-build) #'id)
-        #'(hash-set map1 k v)]
+        #`(hash-set #,map1 k v)]
        [_
-        #'(Map.append map1 map2)])]))
+        #`(Map.append #,map1 #,map2)])]))
 
 ;; for `++`
 (define-static-info-syntax Map.append/optimize
@@ -985,7 +987,8 @@
   (lambda () #'Map.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id-k id-v) (_ mp-expr)] #'[(id-k id-v) (in-hash mp-expr)]]
+      [[(id-k id-v) (_ mp-expr)]
+       #`[(id-k id-v) (in-hash #,(discard-static-infos #'mp-expr))]]
       [_ #f])))
 
 (define/method (Map.to_sequence ht)

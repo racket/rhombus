@@ -901,13 +901,15 @@
 ;; macro to optimize to an inline functional update
 (define-syntax (Set.append/optimize stx)
   (syntax-parse stx
-    [(_ set1 set2)
-     (syntax-parse (unwrap-static-infos #'set2)
+    [(_ set1/statinfo set2/statinfo)
+     (define set1 (unwrap-static-infos #'set1/statinfo))
+     (define set2 (unwrap-static-infos #'set2/statinfo))
+     (syntax-parse set2
        [(id:identifier v)
         #:when (free-identifier=? (expr-quote Set-build) #'id)
-        #'(set (hash-set (set-ht set1) v #t))]
+        #`(set (hash-set (set-ht #,set1) v #t))]
        [_
-        #'(Set.append set1 set2)])]))
+        #`(Set.append #,set1 #,set2)])]))
 
 ;; for `++`
 (define-static-info-syntax Set.append/optimize
@@ -1056,8 +1058,9 @@
   (lambda (stx)
     (syntax-parse stx
       [[(id) (_ st-expr)]
-       #'[(id) (in-hash-keys (let ([st st-expr])
-                               (check-readable-set 'Set.to_sequence st)
+       #`[(id) (in-hash-keys (let ([st #,(discard-static-infos #'st-expr)])
+                               (unless (variable-reference-from-unsafe? (#%variable-reference))
+                                 (check-readable-set 'Set.to_sequence st))
                                (set-ht st)))]]
       [_ #f])))
 

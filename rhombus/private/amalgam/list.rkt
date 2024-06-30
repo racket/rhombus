@@ -867,7 +867,8 @@
   (lambda () #'PairList.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ lst-expr)] #'[(id) (in-list lst-expr)]]
+      [[(id) (_ lst-expr)]
+       #`[(id) (in-list #,(discard-static-infos #'lst-expr))]]
       [_ #f])))
 
 (define/method (PairList.to_sequence lst)
@@ -880,7 +881,8 @@
   (lambda () #'List.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ lst-expr)] #'[(id) (in-treelist lst-expr)]]
+      [[(id) (_ lst-expr)]
+       #`[(id) (in-treelist #,(discard-static-infos #'lst-expr))]]
       [_ #f])))
 
 (define/method (List.to_sequence lst)
@@ -910,7 +912,8 @@
   (lambda () #'MutableList.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ lst-expr)] #'[(id) (in-mutable-treelist lst-expr)]]
+      [[(id) (_ lst-expr)]
+       #`[(id) (in-mutable-treelist #,(discard-static-infos #'lst-expr))]]
       [_ #f])))
 
 (define/method (MutableList.to_sequence lst)
