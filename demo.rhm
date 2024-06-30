@@ -7,8 +7,8 @@ import:
 // alternatively, use `#lang rhombus/and_meta`
 
 // to ensure that we're not sloppy in examples:
-// alternatively, use `#lang rhombus/static`
 use_static
+// alternatively, use `#lang rhombus/static`
 
 // ------------------------------------------------------------
 "Basics: expressions, variables, and functions"
@@ -228,12 +228,21 @@ block:
 
 def nums_a = Array(1, 2, 3)
 def yes_nums_a :: Array: nums_a
-def yep_nums_a :: Array.of(Int): nums_a
+// `now_of` checks immediately
+def yep_nums_a :: Array.now_of(Int): nums_a
 
 // unlike lists, arrays are mutable and support assignment with `:=`
 nums_a[1]
 nums_a[2] := 30
 nums_a[2]
+
+// `later_of` doesn't check immediately, but checks on read/write
+def really_nums_a :: Array.later_of(Int): nums_a
+really_nums_a[1]
+really_nums_a[2] := 42
+really_nums_a[2]
+// writing non-`Int` would fail
+//  really_nums_a[2] := "oops"
 
 // the `Map` constructor expects `key: value` pairs in `{}`
 def map = Map{17: "hello", 24: "goodbye"}
