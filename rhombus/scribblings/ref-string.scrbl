@@ -9,7 +9,7 @@ works with map-referencing @brackets to access a character via
 @rhombus(#%index). A string also works with the @rhombus(++) operator to
 append strings, but a @rhombus(+&) can be used to append strings with
 the static guaratee that the result is a string. A string can be used as
-@tech{sequence}, in which case it supplies its bytes in order.
+@tech{sequence}, in which case it supplies its characters in order.
 
 Although Racket supports mutable strings, the @rhombus(String, ~annot)
 annotation recognizes only immutable strings, and Rhombus operations
@@ -41,6 +41,7 @@ immutable strings.
   str.normalize_nfkc()
   str.grapheme_span(arg, ...)
   str.grapheme_count(arg, ...)
+  str.to_sequence()
 )
 
 Strings are @tech{comparable}, which means that generic operations like
@@ -58,6 +59,9 @@ Strings are @tech{comparable}, which means that generic operations like
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string.
 
+
+ Static information associated by @rhombus(String, ~annot), etc., makes
+ an expression acceptable as a sequence to @rhombus(for) in static mode.
 }
 
 @doc(
@@ -317,6 +321,15 @@ Strings are @tech{comparable}, which means that generic operations like
 
  The @rhombus(start) and @rhombus(end) arguments must be valid indices as
  for @rhombus(String.substring).
+
+}
+
+@doc(
+  fun String.to_sequence(str :: String) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(str)'s characters in order.
 
 }
 

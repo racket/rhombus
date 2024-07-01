@@ -14,6 +14,7 @@ block:
     Bytes.utf8_string(bstr, [err_ch], [start], [end]) ~method
     Bytes.latin1_string(bstr, [err_ch], [start], [end]) ~method
     Bytes.locale_string(bstr, [err_ch], [start], [end]) ~method
+    Bytes.to_sequence(bstr) ~method
 
 check:
   #"hello" :: Bytes ~is #"hello"
@@ -104,3 +105,19 @@ check:
   to_string(#"hello".copy()) ~is "hello"
   to_string(#"hello", ~mode: #'expr) ~is "#\"hello\""
   to_string(#"hello".copy(), ~mode: #'expr) ~is "Bytes.copy(#\"hello\")"
+
+block:
+  use_static
+  def bstr = #"123"
+  check:
+    for List (x: Bytes.to_sequence(bstr)):
+      x
+    ~is [49, 50, 51]
+  check:
+    for List (x: bstr.to_sequence()):
+      x
+    ~is [49, 50, 51]
+  check:
+    for List (x: bstr):
+      x
+    ~is [49, 50, 51]

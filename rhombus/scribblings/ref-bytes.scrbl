@@ -28,6 +28,7 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
   bstr.utf8_string(arg, ...)
   bstr.latin1_string(arg, ...)
   bstr.locale_string(arg, ...)
+  bstr.to_sequence()
 )
 
 Byte strings are @tech{comparable}, which means that generic operations
@@ -43,6 +44,8 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
  mutable byte strings, and and @rhombus(ImmutableBytes, ~annot) matches
  only immutable byte strings.
 
+ Static information associated by @rhombus(Bytes, ~annot), etc., makes
+ an expression acceptable as a sequence to @rhombus(for) in static mode.
 }
 
 
@@ -194,5 +197,14 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 @examples(
   #"hello".utf8_string()
 )
+
+}
+
+@doc(
+  fun Bytes.to_sequence(bstr :: Bytes) :: Sequence
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of @rhombus(bstr)'s bytes in order.
 
 }
