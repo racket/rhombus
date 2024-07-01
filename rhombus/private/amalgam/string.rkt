@@ -17,6 +17,7 @@
          "index-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
+         "sequence-constructor-key.rkt"
          "define-arity.rkt"
          (submod "literal.rkt" for-info)
          (submod "annotation.rkt" for-class)
@@ -52,6 +53,7 @@
 (define-static-info-getter get-any-string-static-infos
   (#%index-get String.get)
   (#%append String.append)
+  (#%sequence-constructor String.to_sequence/optimize)
   (#%compare ((< string<?)
               (<= string<=?)
               (= string=?)
@@ -92,7 +94,8 @@
    [normalize_nfc String.normalize_nfc]
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
-   [grapheme_count String.grapheme_count]))
+   [grapheme_count String.grapheme_count]
+   [to_sequence String.to_sequence]))
 
 (define-primitive-class String string
   #:lift-declaration
@@ -124,7 +127,8 @@
    [normalize_nfc String.normalize_nfc]
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
-   [grapheme_count String.grapheme_count])
+   [grapheme_count String.grapheme_count]
+   [to_sequence String.to_sequence])
   #:properties
   ()
   #:methods
@@ -317,6 +321,20 @@
 
 (define-grapheme span)
 (define-grapheme count)
+
+(define-sequence-syntax String.to_sequence/optimize
+  (lambda () #'String.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ str-expr)] #'[(id) (in-string str-expr)]]
+      [_ #f])))
+
+(define/method (String.to_sequence str)
+  #:inline
+  #:primitive (in-string)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-string str))
+
 
 (define (string!=? a b)
   (if (and (string? a) (string? b))

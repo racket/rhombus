@@ -22,6 +22,7 @@ block:
     String.locale_bytes(str, [err_b], [start], [end]) ~method
     String.grapheme_span(str, [start], [end]) ~method
     String.grapheme_count(str, [start], [end]) ~method
+    String.to_sequence(str) ~method
 
 check:
   "hello" :: String ~is "hello"
@@ -199,3 +200,19 @@ block:
     a compares_unequal a ~is #false
     a compares_unequal A ~is #false
     a compares_unequal B ~is #true
+
+block:
+  use_static
+  def str = "abc"
+  check:
+    for List (x: String.to_sequence(str)):
+      x
+    ~is [#{#\a}, #{#\b}, #{#\c}]
+  check:
+    for List (x: str.to_sequence()):
+      x
+    ~is [#{#\a}, #{#\b}, #{#\c}]
+  check:
+    for List (x: str):
+      x
+    ~is [#{#\a}, #{#\b}, #{#\c}]

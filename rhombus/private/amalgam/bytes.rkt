@@ -8,6 +8,7 @@
          "index-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
+         "sequence-constructor-key.rkt"
          (submod "annotation.rkt" for-class)
          "mutability.rkt"
          "define-arity.rkt"
@@ -35,6 +36,7 @@
   #:instance-static-info ((#%index-get Bytes.get)
                           (#%index-set Bytes.set)
                           (#%append Bytes.append)
+                          (#%sequence-constructor Bytes.to_sequence/optimize)
                           (#%compare ((< bytes<?)
                                       (<= bytes<=?)
                                       (= bytes=?)
@@ -58,7 +60,8 @@
    copy_from
    utf8_string
    latin1_string
-   locale_string))
+   locale_string
+   to_sequence))
 
 (define-annotation-syntax Bytes (identifier-annotation bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
@@ -143,6 +146,19 @@
     [(bstr dest-start src) (bytes-copy! bstr dest-start src)]
     [(bstr dest-start src src-start) (bytes-copy! bstr dest-start src src-start)]
     [(bstr dest-start src src-start src-end) (bytes-copy! bstr dest-start src src-start src-end)]))
+
+(define-sequence-syntax Bytes.to_sequence/optimize
+  (lambda () #'Bytes.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ bstr-expr)] #'[(id) (in-bytes bstr-expr)]]
+      [_ #f])))
+
+(define/method (Bytes.to_sequence bstr)
+  #:inline
+  #:primitive (in-bytes)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  (in-bytes bstr))
 
 (define (bytes!=? a b)
   (if (and (bytes? a) (bytes? b))
