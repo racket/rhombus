@@ -112,7 +112,7 @@
     ~at: finder :: Find,
     ~pinhole: pinhole_finder :: Find = Find.left_top(q),
     ~order: order :: OverlayOrder = #'front,
-    ~duration: duration_align :: DurationAlignment = #'sustain,
+    ~duration: duration_align :: DurationPinAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center
   ) :: Pict
 ){
@@ -123,8 +123,25 @@
  in @rhombus(pict) is matched with that location. The resulting pict's
  bounding box is the same as @rhombus(on_pict)'s.
 
- The picts are first made concurrent via @rhombus(concurrent), passing
- along @rhombus(duration_align) and @rhombus(epoch_align).
+ By default, the pinned @rhombus(pict) is concurrent to the target
+ @rhombus(on_pict). The picts are first made concurrent via
+ @rhombus(concurrent), passing along @rhombus(duration_align) and
+ @rhombus(epoch_align). This mode is used only when
+ @rhombus(duration_align) satisfies a
+ @rhombus(DurationAlignment, ~annot).
+
+ If @rhombus(duration_align) is @rhombus(#'insert) or
+ @rhombus(#'insert_sustained), then @rhombus(finder) is used both to find
+ a graphical offset and a @tech{time box} offset, and @rhombus(pict) is
+ ``inserted'' at that offset. Specifically, at the time box offset within
+ @rhombus(on_pict), extra epochs are inserted that correspond to a
+ snapshot of @rhombus(on_pict) at the time box offset, and the number of
+ inserted epochs is the @tech{duration} of @rhombus(pict). The given
+ @rhombus(pict) is clipped with @rhombus(Pict.time_clip), keeping
+ @rhombus(#'after) if @rhombus(duration_align) is
+ @rhombus(#'insert_sustained), and then the time box of the clipped
+ @rhombus(pict) is shifted by the time box offset determined by
+ @rhombus(finder).
 
 @examples(
   ~eval: pict_eval
@@ -405,11 +422,22 @@
 
 @doc(
   enum DurationAlignment:
-    sustain
     pad
+    sustain
 ){
 
  Options for duration alignment.
+
+}
+
+@doc(
+  enum DurationPinAlignment:
+    ~is_a DurationAlignment
+    insert
+    insert_sustained
+){
+
+ Options for duration alignment and insert when pinning.
 
 }
 

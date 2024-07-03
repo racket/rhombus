@@ -10,6 +10,7 @@ import:
       LineWidth
       EpochAlignment
       DurationAlignment
+      DurationPinAlignment
       nothing
       animate_map
   lib("pict/balloon2.rkt") as bln
@@ -54,7 +55,7 @@ fun pin(content :: Pict,
         ~line: line_color :: maybe(ColorMode) = #false,
         ~line_width: line_width :: LineWidth = #'inherit,
         ~epoch: epoch :: EpochAlignment = #'center,
-        ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
+        ~duration: duration :: DurationPinAlignment = #'sustain) :~ Pict:
   recur retry_balloon(ps = [p, content]):
     match ps:
     | [_ :: pict.NothingPict, _]:
@@ -85,7 +86,19 @@ fun pin(content :: Pict,
                                               | 0),
           [p, content]
         )
-    | [p, content]:
+    | [p :~ Pict, content :~ Pict]:
+        let (p, content, duration):
+          match duration
+          | #'insert || #'insert_sustained:
+              let dt = at.start_in(p)
+              let content = content.time_clip(~keep: if duration == #'insert_sustained | #'after | #false)
+              let content = content.time_pad(~before: dt+1)
+              values(p.time_insert(dt, 1),
+                     content,
+                     match duration
+                     | #'insert: #'pad
+                     | #'insert_sustained: #'sustain)
+          | ~else: values (p, content, duration)
         animate_map([p, content],
                     ~epoch: epoch,
                     ~duration: duration,

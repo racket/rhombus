@@ -3,6 +3,7 @@
 @(import:
     meta_label:
       rhombus open
+      pict
       pict open:
         except:
           pin
@@ -41,7 +42,7 @@
     ~line: line :: maybe(ColorMode) = #false,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~epoch: epoch :: EpochAlignment = #'center,
-    ~duration: duration :: DurationAlignment = #'sustain
+    ~duration: duration :: DurationPinAlignment = #'sustain
   ) :: Pict
 ){
 
@@ -60,6 +61,10 @@
  case, @rhombus(sprout) determines a position along the corresponding
  endge of the balloon as a fraction of the edge running left-to-right or
  top-to-bottom.
+
+ The @rhombus(duration) argument is used in a way analogous to
+ @rhombus(pict.overlay), which can insert a balloon with @rhombus(content)
+ into a part of the timeline of @rhombus(base).
 
 }
 

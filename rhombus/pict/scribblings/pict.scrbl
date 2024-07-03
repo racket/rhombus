@@ -247,6 +247,43 @@
 }
 
 @doc(
+  method (pict :: Pict).instantaneous() :: Pict
+){
+
+ Creates a @tech{pict} of duration @rhombus(1) that draws a snapshot of
+ @rhombus(pict) at the start of its @tech{time box} and nothing before or
+ after the start of the time box.
+
+ The result is the same as
+
+@rhombusblock(
+  animate(fun (n): if n .= 0 | pict.snapshot() | nothing)
+)
+
+}
+
+
+@doc(
+  method (pict :: Pict).time_insert(epoch :: Int,
+                                    n_epochs :: NonnegInt) :: Pict
+){
+
+ Returns a @tech{pict} that is like @rhombus(pict), but potentially with
+ a longer @tech{duration}. The result is @rhombus(pict) itself if
+ @rhombus(epoch) is outside of @rhombus(pict)'s @tech{time box} or if
+ @rhombus(n_epochs) is @rhombus(0).
+
+ When @rhombus(epoch) is within @rhombus(pict)'s time box---that is,
+ when it is between @rhombus(0) (inclusive) and the duration of
+ @rhombus(pict) (exclusive), then the duration of the resulting pict is
+ larger by @rhombus(n_epochs). The duration is extended by adding epochs
+ that render as @rhombus(Pict.snapshot(pict, epoch, 0)) before the epoch
+ at index @rhombus(epoch).
+
+}
+
+
+@doc(
   method (pict :: Pict).colorize(c :: Color || String) :: Pict
   method (pict :: Pict).line_width(w :: NonnegReal) :: Pict
 ){

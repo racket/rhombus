@@ -25,21 +25,26 @@
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
     ~dhoriz: dhoriz :: Real = 0,
-    ~dvert: dvert :: Real = 0
+    ~dvert: dvert :: Real = 0,
+    ~dt: dt :: Int = 0
   ) :: Find
 ){
 
  Creates a @tech{finder} that locates a @rhombus(pict) within another
  @tech{pict}. The @rhombus(Find.in) method takes the pict that contains
- @rhombus(pict) and returns two numbers, the x-offset and y-offset.
+ @rhombus(pict) and returns two numbers, the x-offset and y-offset, while
+ the @rhombus(Find.start_in) method returns one number of the start of
+ the found @rhombus(pict)'s @tech{time box} relative to a the start of
+ the enclosing pict's time box.
 
  The @rhombus(horiz) and @rhombus(vert) arguments determine the position
- within @rhombus(pict) that is fount. For example, the combination
+ within @rhombus(pict) that is found. For example, the combination
  @rhombus(#'right) and @rhombus(#'bottom) find the bottom-right corner of
  @rhombus(pict)'s bounding box within another pict.
 
  The @rhombus(dx) and @rhombus(dy) offsets are added to an x-offset and
- y-offset that would be returned otherwise.
+ y-offset that would be returned otherwise. The @rhombus(dt) offset is
+ add to a time-box difference that would be returned otherwise.
 
  The @rhombus(dhoriz) and @rhombus(dvert) arguments are multipled by the
  height and width, respectively, of the pict as located within another
@@ -65,14 +70,26 @@
   method (finder :: Find).in(pict :: Pict) :: values(Real, Real)
 ){
 
- Applies @rhombus(finder) to @rhombus(pict). An exception is thrown is a
- needed component pict cannot be found in @rhombus(pict).
+ Applies @rhombus(finder) to @rhombus(pict) to get an x-offset and
+ y-offset. An exception is thrown is a needed component pict cannot be
+ found in @rhombus(pict).
 
  If @rhombus(pict) is an animated picture, then the search corresponds
  to finding within @rhombus(Pict.snapshot(pict)). When a finder for an
  animated pict is provdied to a function like @rhombus(pin), however,
  @rhombus(pin) will produce an animated pict where the finder is used
  separately for each snapshot generated from the combined animated pict.
+
+}
+
+
+@doc(
+  method (finder :: Find).start_in(pict :: Pict) :: Int
+){
+
+ Applies @rhombus(finder) to @rhombus(pict) to get a time-box offset. An
+ exception is thrown is a needed component pict cannot be found in
+ @rhombus(pict).
 
 }
 
