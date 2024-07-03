@@ -1,0 +1,36 @@
+#lang rhombus
+
+import:
+  pict open
+  draw open
+
+export:
+  plot
+
+fun plot(proc):
+  let W = 45
+  let path = Path()
+  path.move_to([0, 0])
+  for (i: 1..=W):
+    path.line_to([i, -W*proc(i/W)])
+  let p:
+    dc(fun (dc :: DC, dx, dy):
+         dc.path(path, ~dx: dx, ~dy: dy + W),
+       ~width: W,
+       ~height: W)
+  let p:
+    rectangle(~around: p.colorize("red").line_width(2))
+  let p:
+    beside.top(text("1"), p).refocus(p)
+  let p:
+    stack.left(p, text("0")).refocus(p)
+  let p:
+    beside.bottom(text("0"), p)
+  let p:
+    stack.right(p, text("1"))
+  p.colorize("lightgray")
+
+module main:
+  plot(bend.fast_middle)
+
+

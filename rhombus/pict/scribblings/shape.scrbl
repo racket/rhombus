@@ -2,6 +2,8 @@
 
 @(import:
     "pict_eval.rhm".pict_eval
+    "plot.rhm".plot
+    pict.bend
     meta_label:
       rhombus open
       pict open
@@ -264,7 +266,7 @@
   fun animate(
     proc :: Function.of_arity(1),
     ~extent: extent :: NonnegReal = 0.5,
-    ~bend: bend = bend.fast_middle,
+    ~bend: bender = bend.fast_middle,
     ~sustain_edge: sustain_edge :: TimeOrder = #'before
   ) :: Pict
 ){
@@ -272,7 +274,48 @@
  Creates an @tech{animated pict}. The @rhombus(proc) should accept a
  @rhombus(Real.in(), ~annot) and produce a @rhombus(StaticPict, ~annot).
 
+ The resulting pict's @tech{duration} is 1, and the @tech{extent} of
+ that duration is determined by the @rhombus(extent) argument. Before the
+ pict's @tech{time box}, its drawing and @tech{bounding box} are the same
+ as @rhombus(Pict.ghost(proc(0))); after its time box, they are the
+ same as @rhombus(Pict.ghost(proc(1))).
+
+ The @rhombus(bender) function adjusts the argument that is passed to
+ @rhombus(proc). If @rhombus(bender) is the identity function, then the
+ number passed to @rhombus(proc) ranges from @rhombus(0) to @rhombus(1)
+ linearly with animation time. The default @rhombus(bend.fast_middle)
+ keeps the argument in the range @rhombus(0) to @rhombus(1), but it
+ causes the argument to @rhombus(proc) change more slowly near
+ @rhombus(0) and @rhombus(1) and more quickly around @rhombus(0.5).
+
+ If @rhombus(sustain_edge) is @rhombus(#'before), then
+ @rhombus(Pict.sustain) for the resulting pict will extend its time box
+ by adding an epoch to the start with the static representation
+ @rhombus(Pict.ghost(proc(0))). If @rhombus(sustain_edge) is
+ @rhombus(#'after), then @rhombus(Pict.sustain) instead adds to the end
+ of the time box with the static representation
+ @rhombus(Pict.ghost(proc(1))).
+
 }
+
+@doc(
+  fun bend.fast_start(n :: Real.in(0, 1)) :: Real.in(0, 1)
+  fun bend.fast_middle(n :: Real.in(0, 1)) :: Real.in(0, 1)
+  fun bend.fast_edges(n :: Real.in(0, 1)) :: Real.in(0, 1)
+  fun bend.fast_end(n :: Real.in(0, 1)) :: Real.in(0, 1)
+){
+
+ Functions that are useful as a @rhombus(~bend) argument to
+ @rhombus(animate) to map a linear animation effect to a non-linear one.
+
+@tabular(~sep: @hspace(2),
+         ~column_properties: [#'center],
+         [[hspace(1), rhombus(bend.fast_start), rhombus(bend.fast_middle),  rhombus(bend.fast_edges),  rhombus(bend.fast_end)],
+          [hspace(1), "", "", "", ""],
+          ["", plot(bend.fast_start), plot(bend.fast_middle),  plot(bend.fast_edges),  plot(bend.fast_end)]])
+
+}
+
 
 @doc(
   fun Pict.from_handle(handle) :: Pict
