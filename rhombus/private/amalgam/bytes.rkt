@@ -15,7 +15,8 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "number.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -151,7 +152,8 @@
   (lambda () #'Bytes.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ bstr-expr)] #'[(id) (in-bytes bstr-expr)]]
+      [[(id) (_ bstr-expr)]
+       #`[(id) (in-bytes #,(discard-static-infos #'bstr-expr))]]
       [_ #f])))
 
 (define/method (Bytes.to_sequence bstr)

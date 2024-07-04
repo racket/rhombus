@@ -326,7 +326,8 @@
   (lambda () #'String.to_sequence)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ str-expr)] #'[(id) (in-string str-expr)]]
+      [[(id) (_ str-expr)]
+       #`[(id) (in-string #,(discard-static-infos #'str-expr))]]
       [_ #f])))
 
 (define/method (String.to_sequence str)
@@ -334,7 +335,6 @@
   #:primitive (in-string)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-string str))
-
 
 (define (string!=? a b)
   (if (and (string? a) (string? b))

@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -216,3 +218,35 @@ block:
     for List (x: str):
       x
     ~is [#{#\a}, #{#\b}, #{#\c}]
+
+version_guard.at_least "8.13.0.1":
+  check:
+    String.to_sequence(#"oops")
+    ~throws values(
+      "contract violation",
+      "expected: ReadableString",
+      "given: #\"oops\"",
+    )
+  check:
+    (#"oops" :~ ReadableString).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: ReadableString",
+      "given: #\"oops\"",
+    )
+  check:
+    for List (x: String.to_sequence(#"oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: ReadableString",
+      "given: #\"oops\"",
+    )
+  check:
+    for List (x: (#"oops" :~ ReadableString).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: ReadableString",
+      "given: #\"oops\"",
+    )

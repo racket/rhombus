@@ -46,6 +46,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
  Static information associated by @rhombus(Bytes, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.
+
 }
 
 

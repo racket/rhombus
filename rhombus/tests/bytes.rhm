@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -121,3 +123,35 @@ block:
     for List (x: bstr):
       x
     ~is [49, 50, 51]
+
+version_guard.at_least "8.13.0.1":
+  check:
+    Bytes.to_sequence("oops")
+    ~throws values(
+      "contract violation",
+      "expected: Bytes",
+      "given: \"oops\"",
+    )
+  check:
+    ("oops" :~ Bytes).to_sequence()
+    ~throws values(
+      "contract violation",
+      "expected: Bytes",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: Bytes.to_sequence("oops")):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: Bytes",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ Bytes).to_sequence()):
+      x
+    ~throws values(
+      "contract violation",
+      "expected: Bytes",
+      "given: \"oops\"",
+    )

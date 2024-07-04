@@ -59,9 +59,9 @@ Strings are @tech{comparable}, which means that generic operations like
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string.
 
-
  Static information associated by @rhombus(String, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.
+
 }
 
 @doc(
@@ -325,7 +325,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.to_sequence(str :: String) :: Sequence
+  fun String.to_sequence(str :: ReadableString) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
