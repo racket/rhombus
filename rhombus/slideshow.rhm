@@ -133,8 +133,8 @@ Parameter.def current_assembler :: Function.of_arity(3):
           // layout decision depends on size, so use size
           // at each step, instead of only the starting size
           if title
-          | pict.animate_map([title, p], ~combine: fun ([title, p]): retry(title, p))
-          | pict.animate_map([p], ~combine: fun ([p]): retry(title, p))
+          | pict.animate_map([title, p], ~combine: fun ([title, p], epoch, n): retry(title, p))
+          | pict.animate_map([p], ~combine: fun ([p], epoch, n): retry(title, p))
       | ~else:
           let back: Pict.from_handle(rkt.#{get-full-page}())
           let head :~ Pict:

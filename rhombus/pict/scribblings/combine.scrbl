@@ -112,7 +112,8 @@
     ~at: finder :: Find,
     ~pinhole: pinhole_finder :: Find = Find.left_top(q),
     ~order: order :: OverlayOrder = #'front,
-    ~duration: duration_align :: DurationPinAlignment = #'sustain,
+    ~duration: duration_align :: DurationAlignment = #'sustain,
+    ~time: time_align :: TimeAlignment = #'start,
     ~epoch: epoch_align :: EpochAlignment = #'center
   ) :: Pict
 ){
@@ -126,22 +127,20 @@
  By default, the pinned @rhombus(pict) is concurrent to the target
  @rhombus(on_pict). The picts are first made concurrent via
  @rhombus(concurrent), passing along @rhombus(duration_align) and
- @rhombus(epoch_align). This mode is used only when
- @rhombus(duration_align) satisfies a
- @rhombus(DurationAlignment, ~annot).
+ @rhombus(epoch_align). This mode is used unless
+ @rhombus(time_align) is @rhombus(#'insert).
 
- If @rhombus(duration_align) is @rhombus(#'insert) or
- @rhombus(#'insert_sustained), then @rhombus(finder) is used both to find
+ If @rhombus(time_align) is @rhombus(#'insert), then @rhombus(finder) is used both to find
  a graphical offset and a @tech{time box} offset, and @rhombus(pict) is
  ``inserted'' at that offset. Specifically, at the time box offset within
  @rhombus(on_pict), extra epochs are inserted that correspond to a
  snapshot of @rhombus(on_pict) at the time box offset, and the number of
- inserted epochs is the @tech{duration} of @rhombus(pict). The given
- @rhombus(pict) is clipped with @rhombus(Pict.time_clip), keeping
- @rhombus(#'after) if @rhombus(duration_align) is
- @rhombus(#'insert_sustained), and then the time box of the clipped
- @rhombus(pict) is shifted by the time box offset determined by
- @rhombus(finder).
+ inserted epochs is the @tech{duration} of @rhombus(pict). When @rhombus(time_align)
+ is @rhombus(#'sync), @rhombus(finder) is used similarly to determine a
+ time box offset, but extra epochs are not added to @rhombus(on_pict).
+ When @rhombus(time_align) is @rhombus(#'start) or @rhombus(#'end), then
+ @rhombus(finder) is @emph{not} used to find a time offset, and instead
+ @rhombus(0) or @rhombus(Pict.duration(on_pict)) is used, instead.
 
 @examples(
   ~eval: pict_eval
@@ -312,10 +311,10 @@
 @doc(
   fun animate_map(
     picts :~ List.of(Pict),
-    ~combine: combine :: Function.of_arity(1),
+    ~combine: combine :: Function.of_arity(2),
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
-    ~non_sustain_combine: non_sustain_combine :: Function.of_arity(1)
+    ~non_sustain_combine: non_sustain_combine :: Function.of_arity(3)
                             = combine
   ) :: Pict
 ){
@@ -323,7 +322,9 @@
  Constructs a @tech{pict} by lifting an operation on @tech{static picts}
  to one on @tech{animated picts}. The @rhombus(combine) function is
  called as needed on a list of static picts corresponding to the input
- @rhombus(pict)s, and it should return a static pict.
+ @rhombus(pict)s, and it should return a static pict. In addition to a
+ list of list of static picts, @rhombus(combine) receives an integer epoch
+ offset and a real number in 0 to 1 for a relative time within the epoch.
 
  The picts are first made concurrent via @rhombus(concurrent), passing
  along @rhombus(duration_align) and @rhombus(epoch_align).
@@ -431,13 +432,14 @@
 }
 
 @doc(
-  enum DurationPinAlignment:
-    ~is_a DurationAlignment
+  enum TimeAlignment:
+    start
     insert
-    insert_sustained
+    sync
+    end
 ){
 
- Options for duration alignment and insert when pinning.
+ Options for time alignment and insertion when pinning.
 
 }
 

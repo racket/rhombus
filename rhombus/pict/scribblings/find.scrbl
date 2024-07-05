@@ -13,7 +13,8 @@
 ){
 
  Satisfied by a @deftech{finder}, which is applied to a pict to obtain
- two numbers representing an x-offset and y-offset.
+ two numbers representing an x-offset and y-offset, or to obtain one
+ number representing a time offset in epochs.
 
 }
 
@@ -35,7 +36,7 @@
  @rhombus(pict) and returns two numbers, the x-offset and y-offset, while
  the @rhombus(Find.start_in) method returns one number of the start of
  the found @rhombus(pict)'s @tech{time box} relative to a the start of
- the enclosing pict's time box.
+ the enclosing pict's time box as measured in epochs.
 
  The @rhombus(horiz) and @rhombus(vert) arguments determine the position
  within @rhombus(pict) that is found. For example, the combination
@@ -55,27 +56,63 @@
 
 }
 
+
 @doc(
-  fun Find.abs(~dx: dx :: Real = 0, -dy: dy :: Real = 0) :: Find
+  fun Find.interpolate(from :: Find,
+                       to :: Find,
+                       ~bend: bender = bend.fast_middle)
+    :: Find
+){
+
+ Creates a @tech{finder} that produces the same result as @rhombus(from)
+ at the start of epoch 0 and before, the same result as @rhombus(to) at
+ the end of epoch 0 and after, and that produces a combination of the two
+ results for points in time within epoch 0. The combination is linear in
+ the result of @rhombus(bender) applied to the relative time within the
+ epoch's extent.
+
+}
+
+
+@doc(
+  fun Find.abs(dx :: Real,
+               dy :: Real,
+               ~dt :: dt :: Int = 0) :: Find
 ){
 
  Creates a @tech{finder} that always returns @rhombus(dx) and
- @rhombus(dy) without needing to locate any particular component
- @tech{pict}.
+ @rhombus(dy) in space or @rhombus(dt) in time without needing to locate
+ any particular component @tech{pict}.
+
+}
+
+
+@doc(
+  fun Find.animate(xy_proc :: Function.of_arity(3),
+                   ~time_box: t_proc :: Function.of_arity(1) = fun(p): 0)
+    :: Find
+){
+
+ Creates a @tech{finder} that uses @rhombus(xy_proc) for @rhombus(Find.in)
+ and @rhombus(t_proc) for @rhombus(Find.start_in).
 
 }
 
 
 @doc(
   method (finder :: Find).in(pict :: Pict) :: values(Real, Real)
+  method (finder :: Find).in(pict :: Pict,
+                             epoch :: Int, n :: RealIn(0, 1))
+    :: values(Real, Real)
 ){
 
  Applies @rhombus(finder) to @rhombus(pict) to get an x-offset and
  y-offset. An exception is thrown is a needed component pict cannot be
- found in @rhombus(pict).
+ found in @rhombus(pict). Calling @rhombus(Find.in) with one argument
+ is a shorthand for calling it with @rhombus(0) for the last two arguments.
 
  If @rhombus(pict) is an animated picture, then the search corresponds
- to finding within @rhombus(Pict.snapshot(pict)). When a finder for an
+ to finding within @rhombus(Pict.snapshot(pict, epoch, n)). When a finder for an
  animated pict is provdied to a function like @rhombus(pin), however,
  @rhombus(pin) will produce an animated pict where the finder is used
  separately for each snapshot generated from the combined animated pict.

@@ -48,13 +48,18 @@ namespace bend:
 enum SequentialJoin:  step splice
 
 fun animate(proc :: Function.of_arity(1),
-            ~bend: bend = rkt.#{fast-middle},
+            ~bend: bend :: Function.of_arity(1) = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
             ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
-  let proc = fun (n): proc(bend(n))
+  let proc:
+    fun (n):
+      let p = proc(bend(n))
+      unless p is_a StaticPict
+      | error(#'animate, "procedure result does not satisfy StaticPict")
+      p
   AnimPict(proc, ~extent: extent, ~sustain_edge: sustain_edge)
 
-set_animate(fun (proc): animate(proc))
+set_animate(fun (proc, n = 0.5): animate(proc, ~extent: n))
 
 class PictEpoch():
   nonfinal
@@ -90,7 +95,7 @@ class StaticPictEpoch(p :~ StaticPict):
   override after() :~ PictEpoch:
     StaticPictEpoch(p.ghost())
   override sustain(extent):
-    [this, 0, this, 0]
+    [this, extent, this, 0]
 
 class LikePictEpoch(e :~ PictEpoch,
                     instance_as :~ Pict):
@@ -830,6 +835,7 @@ fun make_concurrent(ps :~ List.of(AnimPict),
 
 class CombinePictEpoch(combine,
                        pad_combine,
+                       dt,
                        orig_picts :~ List.of(AnimPict),
                        orig_sustainings :~ List,
                        origs :~ List.of(PictEpoch)):
@@ -839,16 +845,16 @@ class CombinePictEpoch(combine,
       static_instances(p, as_p)
     let [orig_pict, ...] = orig_picts
     let [orig :~ PictEpoch, ...] = origs
-    combine([instance(orig_pict, orig.pict(n)), ...])
+    combine([instance(orig_pict, orig.pict(n)), ...], dt, n)
   override preferred_extent() :~ NonnegReal:
     let [orig :~ PictEpoch, ...] = origs
     math.max(& [orig.preferred_extent(), ...])
   override before() :~ PictEpoch:
     let [orig :~ PictEpoch, ...] = origs
-    CombinePictEpoch(pad_combine, pad_combine, orig_picts, orig_sustainings, [orig.before(), ...])
+    CombinePictEpoch(pad_combine, pad_combine, dt-1, orig_picts, orig_sustainings, [orig.before(), ...])
   override after() :~ PictEpoch:
     let [orig :~ PictEpoch, ...] = origs
-    CombinePictEpoch(pad_combine, pad_combine, orig_picts, orig_sustainings, [orig.after(), ...])
+    CombinePictEpoch(pad_combine, pad_combine, dt+1, orig_picts, orig_sustainings, [orig.after(), ...])
   override sustain(extent) :~ maybe(PictEpoch):
     let [orig, ...] = origs
     let [orig_sustaining, ...] = orig_sustainings
@@ -859,9 +865,9 @@ class CombinePictEpoch(combine,
         [orig, extent, post, post.preferred_extent()]
     let [[pre :~ PictEpoch, pre_extent, post :~ PictEpoch, post_extent], ...]:
       [maybe_sustain(orig, orig_sustaining), ...]
-    [CombinePictEpoch(combine, pad_combine, orig_picts, orig_sustainings, [pre, ...]),
+    [CombinePictEpoch(combine, pad_combine, dt, orig_picts, orig_sustainings, [pre, ...]),
      math.max(pre_extent, ...),
-     CombinePictEpoch(combine, pad_combine, orig_picts, orig_sustainings, [post, ...]),
+     CombinePictEpoch(combine, pad_combine, dt+1, orig_picts, orig_sustainings, [post, ...]),
      math.max(post_extent, ...)]     
   override metadata():
     for values(metadata :~ Map = {}) (orig: origs):
@@ -879,7 +885,8 @@ private.set_convert(
                       ~epoch: ealign,
                       ~duration: dalign)
     anim_pict(for List (i: 0..p0._epochs.length()):
-                CombinePictEpoch(combine, pad_combine, [p, ...], [p._sustaining, ...], [p._epochs[i], ...]),
+                let dt = i - p0._duration_start
+                CombinePictEpoch(combine, pad_combine, dt, [p, ...], [p._sustaining, ...], [p._epochs[i], ...]),
               p0._epoch_extents,
               p0._duration_start,
               m_duration,              
@@ -887,7 +894,7 @@ private.set_convert(
               block:
                 fun mk(p :~ _AnimPict):
                   static_instances(p, p._before)
-                combine([mk(p), ...]),
+                combine([mk(p), ...], 0, 0),
               ps,
               0,
               [],

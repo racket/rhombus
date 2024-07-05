@@ -10,7 +10,7 @@ import:
       LineWidth
       EpochAlignment
       DurationAlignment
-      DurationPinAlignment
+      TimeAlignment
       nothing
       animate_map
   lib("pict/balloon2.rkt") as bln
@@ -54,16 +54,17 @@ fun pin(content :: Pict,
         ~fill: color :: maybe(ColorMode) = current_color(),
         ~line: line_color :: maybe(ColorMode) = #false,
         ~line_width: line_width :: LineWidth = #'inherit,
-        ~epoch: epoch :: EpochAlignment = #'center,
-        ~duration: duration :: DurationPinAlignment = #'sustain) :~ Pict:
-  recur retry_balloon(ps = [p, content]):
+        ~epoch: epoch_a :: EpochAlignment = #'center,
+        ~duration: duration :: DurationAlignment = #'sustain,
+        ~time: time :: TimeAlignment = #'start) :~ Pict:
+  recur retry_balloon(ps = [p, content], epoch = 0, n = 0):
     match ps:
     | [_ :: pict.NothingPict, _]:
         nothing
     | [p, _ :: pict.NothingPict]:
         p
     | [p :: pict.StaticPict, content :: pict.StaticPict]:
-        let (at_x, at_y) = at.in(p)
+        let (at_x, at_y) = at.in(p, epoch, n)
         Pict.from_handle(
           bln.#{pin-balloon}(p.handle,
                              p.handle, fun (p, q): values(at_x, at_y),
@@ -87,30 +88,33 @@ fun pin(content :: Pict,
           [p, content]
         )
     | [p :~ Pict, content :~ Pict]:
-        let (p, content, duration):
-          match duration
-          | #'insert || #'insert_sustained:
+        let (p, content):
+          match time
+          | #'insert:
               let dt = at.start_in(p)
-              let content = content.time_clip(~keep: if duration == #'insert_sustained | #'after | #false)
               let content = content.time_pad(~before: dt+1)
-              values(p.time_insert(dt, 1),
-                     content,
-                     match duration
-                     | #'insert: #'pad
-                     | #'insert_sustained: #'sustain)
-          | ~else: values (p, content, duration)
+              values(p.time_insert(dt, 1), content)
+          | #'sync:
+              let dt = at.start_in(p)
+              let content = content.time_pad(~before: dt+1)
+              values(p, content)
+          | #'end:
+              let dt = p.duration
+              let content = content.time_pad(~before: dt+1)
+              values(p, content)
+          | ~else: values (p, content)
         animate_map([p, content],
-                    ~epoch: epoch,
+                    ~epoch: epoch_a,
                     ~duration: duration,
-                    ~combine: fun ([p :: Pict, ...]):
-                                retry_balloon([p, ...]),
+                    ~combine: fun ([p :: Pict, ...], epoch, n):
+                                retry_balloon([p, ...], epoch, n),
                     ~non_sustain_combine:
-                      fun ([p :~ Pict, content :~ Pict]):
+                      fun ([p :~ Pict, content :~ Pict], epoch, n):
                         if content == nothing
                         | p
                         | let pg = p.ghost()
                           let cg = content.ghost()
-                          let b :~ Pict = retry_balloon([pg, cg])
+                          let b :~ Pict = retry_balloon([pg, cg], epoch, n)
                           let b = b.ghost()
                           pict.pin(~on: pict.pin(~on: b, ~at: Find.left_top(pg), p),
                                    ~at: Find.left_top(cg),
@@ -125,9 +129,9 @@ fun note(content :: Pict,
          ~fill: color :: maybe(Color || String) = #false,
          ~line: line_color :: maybe(Color || String) = #false,
          ~line_width: line_width :: Real = 0,
-         ~epoch: epoch :: EpochAlignment = #'center,
+         ~epoch: epoch_a :: EpochAlignment = #'center,
          ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  recur retry(contents = [content]):
+  recur retry(contents = [content], epoch = 0, n = 0):
     match contents:
     | [_ :: pict.NothingPict]:
         nothing
@@ -145,13 +149,13 @@ fun note(content :: Pict,
         )
     | ~else:
         animate_map(contents,
-                    ~epoch: epoch,
+                    ~epoch: epoch_a,
                     ~duration: duration,
                     ~combine: retry,
                     ~non_sustain_combine:
-                      fun ([content :~ Pict]):
+                      fun ([content :~ Pict], epoch, n):
                         let cg = content.ghost()
-                        let b :~ Pict = retry([cg])
+                        let b :~ Pict = retry([cg], epoch, n)
                         let b = b.ghost()
                         pict.pin(~on: b, ~at: Find.left_top(cg), content))
 

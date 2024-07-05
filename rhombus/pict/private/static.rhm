@@ -16,7 +16,7 @@ export:
   VertAlignment
   EpochAlignment
   DurationAlignment
-  DurationPinAlignment
+  TimeAlignment
   OverlayOrder
   TimeOrder
   ConnectStyle
@@ -81,7 +81,7 @@ enum HorizAlignment: left center right
 enum VertAlignment: top topline center baseline bottom
 enum EpochAlignment: early center stretch late
 enum DurationAlignment: sustain pad
-enum DurationPinAlignment: ~is_a DurationAlignment; insert insert_sustained
+enum TimeAlignment: start sync insert end
 enum OverlayOrder: front back
 enum TimeOrder: before after
 enum ConnectStyle: line arrow arrows
@@ -197,7 +197,8 @@ class Pict():
 
   method instantaneous() :~ Pict:
     let p = snapshot()
-    Pict.time_clip(animate(fun (n): if n .= 0 | p | nothing))
+    Pict.time_clip(pict_animate(fun (n): if n .= 0 | p | nothing,
+                                0 /* extent */))
 
 class StaticPict(private _handle,
                  private _children :~ Pict || List,
@@ -298,22 +299,22 @@ class StaticPict(private _handle,
   
   override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict:
-    convert([this], #'center, #'pad, fun (ps :~ List): ps[0]).time_clip(~keep: keep,
-                                                                        ~nonsustaining: nonsustaining)
+    convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0]).time_clip(~keep: keep,
+                                                                               ~nonsustaining: nonsustaining)
 
   override method _time_pad(before :: Int, after :: Int) :~ Pict:
     if before == 0 && after == 0
     | this
-    | convert([this], #'center, #'pad, fun (ps :~ List): ps[0])._time_pad(before, after)
+    | convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0])._time_pad(before, after)
   override method sustain(n :: Int = 1) :~ Pict:  
     if n == 0
     | this
-    | convert([this], #'center, #'pad, fun (ps :~ List): ps[0]).sustain(n)
+    | convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0]).sustain(n)
   override method nonsustaining() :~ Pict:
-    convert([this], #'center, #'pad, fun (ps :~ List): ps[0]).nonsustaining()
+    convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0]).nonsustaining()
 
   override method epoch_set_extent(i :: Int, extent :: NonnegReal):
-    convert([this], #'center, #'pad, fun ([p]): p).epoch_set_extent(i, extent)
+    convert([this], #'center, #'pad, fun ([p], dt, n): p).epoch_set_extent(i, extent)
 
   override method metadata(): _metadata
   override method set_metadata(metadata :: Map):
@@ -323,7 +324,7 @@ class StaticPict(private _handle,
   override method epoch_set_metadata(i :: Int, metadata :: Map):
     if metadata == {}
     | this
-    | convert([this], #'center, #'pad, fun ([p]): p).epoch_set_metadata(i, metadata)
+    | convert([this], #'center, #'pad, fun ([p], dt, n): p).epoch_set_metadata(i, metadata)
 
   override time_insert(at_epoch :: Int, n_epochs :: NonnegInt = 1):
     if at_epoch == 0
@@ -342,10 +343,10 @@ fun set_convert(proc):
   do_convert := proc
 
 fun animate_map(p :~ List.of(Pict),
-                ~combine: combine :: Function.of_arity(1),
+                ~combine: combine :: Function.of_arity(3),
                 ~duration: duration :: DurationAlignment = #'sustain,
                 ~epoch: epoch :: EpochAlignment = #'center,
-                ~non_sustain_combine: non_sustain_combine :: Function.of_arity(1) = combine) :~ Pict:
+                ~non_sustain_combine: non_sustain_combine :: Function.of_arity(3) = combine) :~ Pict:
   do_convert(p, epoch, duration, combine, non_sustain_combine)
 
 class NothingPict():
@@ -445,7 +446,7 @@ fun beside(~sep: sep ::Real = 0,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain,
            p :: Pict, ...) :~ Pict:
-  recur retry (ps = [p, ...]):
+  recur retry (ps = [p, ...], dt = 0, n = 0):
     match remove_nothings(ps):
     | []:
         nothing
@@ -496,7 +497,7 @@ fun stack(~sep: sep :: Real = 0,
           ~epoch: epoch :: EpochAlignment = #'center,
           ~duration: duration :: DurationAlignment = #'sustain,
           p :: Pict, ...) :~ Pict:
-  recur retry (ps = [p, ...]):
+  recur retry (ps = [p, ...], dt = 0, n = 0):
     match remove_nothings(ps):
     | []:
         nothing
@@ -539,7 +540,7 @@ fun overlay(~horiz: horiz :: HorizAlignment = #'center,
             ~epoch: epoch :: EpochAlignment = #'center,
             ~duration: duration :: DurationAlignment = #'sustain,
             p :: Pict, ...) :~ Pict:
-  recur retry (ps = [p, ...]):
+  recur retry (ps = [p, ...], dt = 0, n = 0):
     match remove_nothings(ps):
     | []:
         nothing
@@ -804,8 +805,8 @@ fun convert_some([around, width, height], epoch, duration, retry):
   convert(ps,
           epoch,
           duration,
-          fun (ps): retry_g(ps, #false),
-          fun (ps): retry_g(ps, #true))
+          fun (ps, dt, n): retry_g(ps, #false),
+          fun (ps, dt, n): retry_g(ps, #true))
         
 fun square(~around: around :: maybe(Pict) = #false,
            ~size: size :: Real: if around | math.max(Pict.width(around), Pict.width(around)) | 32,
@@ -966,7 +967,7 @@ fun dc(draw :: Function.of_arity(3),
 
 // ------------------------------------------------------------
 
-class Find(private q, private find, private dt):
+class Find(private q, private find, private t_find_or_dt, private is_animated):
   internal _Find
 
   constructor(q :: Pict,
@@ -1003,10 +1004,14 @@ class Find(private q, private find, private dt):
                   | #'baseline: rkt.#{rbl-find}
                   | #'bottom: rkt.#{rb-find}
             offset(proc, dx, dy, dx_w, dy_h),
-          dt)
+          dt,
+          #false)
 
-  method in(p :: Pict):
-    find(p, q)
+  method
+  | in(p :: Pict):
+      find(p, q, 0, 0)
+  | in(p :: Pict, epoch :: Int, n :: Real.in(0, 1)):
+      find(p, q, epoch, n)
 
   method start_in(p :: Pict) :~ Int:
     fun loop (p :~ Pict, delta):
@@ -1015,10 +1020,19 @@ class Find(private q, private find, private dt):
       | for any (c: p.children,
                  start: (p :~ _Pict)._children_starts):
           loop(c, start + delta)
-    loop(p, dt) || error(#'start_in, "cannot find pict")
+    match t_find_or_dt
+    | dt :: Int:
+        loop(p, dt) || error(#'start_in, "cannot find pict")
+    | ~else:
+        let dt = t_find_or_dt(p)
+        unless dt is_a Int
+        | error(#'start_in, "function did not produce an integer time box difference")
+        dt
 
   export:
     abs
+    animate
+    interpolate
     center
     left
     right
@@ -1043,11 +1057,11 @@ class Find(private q, private find, private dt):
     right_bottom bottom_right
 
 fun offset(proc, dx, dy, dx_w, dy_h):
-  fun (p :: Pict, q :: Pict):
+  fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1)):
     when q == nothing | error(#'Find, "cannot find nothing")
     let p :~ StaticPict = (if p is_a StaticPict
                            | p
-                           | p.snapshot())
+                           | p.snapshot(epoch, n))
     fun size_shift(p_handle, q_handle):
       if dx_w .= 0 && dy_h .= 0
       | values(0, 0)
@@ -1067,9 +1081,45 @@ fun offset(proc, dx, dy, dx_w, dy_h):
           values(x + dx + dx_w, y + dy + dy_h)
         | error(#'Find, "cannot find pict")
 
-fun abs(dx :: Real = 0, dy :: Real = 0,
-        ~dt: dt :: Int = 0):
-  _Find(#false, fun (p, q): values(dx, dy), 0)
+fun abs(dx :: Real, dy :: Real, ~dt: dt :: Int = 0) :: Find:
+  _Find(#false, fun (p, q, epoch, n): values(dx, dy), dt, #false)
+
+fun animate(xy_proc :: Function.of_arity(3),
+            ~time_box: t_proc :: Function.of_arity(1) = fun (p): 0) :: Find:
+  _Find(#false,
+        fun (p, q, epoch, n):
+          call_with_values(
+            fun (): xy_proc(p, epoch, n),
+            fun
+            | (dx :: Real, dy :: Real):
+                values(dx, dy)
+            | (arg, ...):
+                error(#'#{Find.animate}, "invalid result from animation procedure")
+          ),
+        t_proc,
+        #true)
+
+fun interpolate(from :: Find,
+                to :: Find,
+                ~bend: bend :: Function.of_arity(1) = rkt.#{fast-middle}) :: Find:
+  _Find(#false,
+        fun (p, q, epoch, n):
+          let i_n:
+            cond
+            | epoch < 0: 0
+            | epoch >= 1: 1
+            | ~else: bend(n)
+          cond
+          | i_n .= 0: from.in(p, epoch, n)
+          | i_n .= 1: to.in(p, epoch, n)
+          | ~else:
+              let (from_x, from_y) = from.in(p, epoch, n)
+              let (to_x, to_y) = to.in(p, epoch, n)
+              values(from_x * (1 - i_n) + to_x * i_n,
+                     from_y * (1 - i_n) + to_y * i_n),
+        fun (p):
+          from.start_in(p),
+        #true)
 
 defn.macro 'def_find $name: $rkt':
   'fun $name(q :: Pict,
@@ -1078,7 +1128,7 @@ defn.macro 'def_find $name: $rkt':
              ~dhoriz: dx_w :: Real = 0,
              ~dvert: dy_h :: Real = 0,
              ~dt: dt :: Int = 0) :~ Find:
-     _Find(q, offset(rkt . $rkt, dx, dy, dx_w, dy_h), dt)'
+     _Find(q, offset(rkt . $rkt, dx, dy, dx_w, dy_h), dt, #false)'
 
 def_find center: #{cc-find}
 def_find left: #{lc-find}
@@ -1139,13 +1189,19 @@ fun connect(~on: p :: Pict,
             ~label_dy: label_dy :: Real = 0,
             ~epoch: epoch :: EpochAlignment = #'center,
             ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  recur retry(p = p):
+  let p:
+    if p is_a _StaticPict
+      && !(p is_a NothingPict)
+      && (_Find.is_animated(from) || _Find.is_animated(to))
+    | pict_animate(fun (n): p, 0 /* extent */)
+    | p
+  recur retry(p = p, dt = 0, n = 0):
     match p
     | _ :: NothingPict:
         nothing
     | p :: _StaticPict:
-        let (from_x, from_y) = from.in(p)
-        let (to_x, to_y) = to.in(p)
+        let (from_x, from_y) = from.in(p, dt, n)
+        let (to_x, to_y) = to.in(p, dt, n)
         let (proc, [pre, ...], kw_args):
           match style
           | #'line: values(rkt.#{pin-line}, [], {})
@@ -1174,8 +1230,8 @@ fun connect(~on: p :: Pict,
                     p._instances)
     | ~else:
         convert([p], #'center, #'sustain,
-                fun ([p]): retry(p),
-                fun ([p]): p)
+                fun ([p], dt, n): retry(p, dt, n),
+                fun ([p], dt, n): p)
 
 def mutable switch = #false
 fun set_switch(proc):
@@ -1187,10 +1243,18 @@ fun pin(q :: Pict,
         ~pinhole: using :: Find = Find.left_top(q),
         ~order: order :: OverlayOrder = #'front,
         ~epoch: epoch :: EpochAlignment = #'center,
-        ~duration: duration :: DurationPinAlignment = #'sustain) :~ Pict:
-  recur pin_on(p :~ Pict = p, q :~ Pict = q, duration = duration):
-    match duration
-    | #'insert || #'insert_sustained:
+        ~duration: duration :: DurationAlignment = #'sustain,
+        ~time: time :: TimeAlignment = #'start) :~ Pict:
+  let p:
+    if p is_a _StaticPict
+      && !(p is_a NothingPict)
+      && q is_a _StaticPict
+      && (_Find.is_animated(at) || _Find.is_animated(using))
+    | pict_animate(fun (n): p, 0 /* extent */)
+    | p
+  recur pin_on(p :~ Pict = p, q :~ Pict = q, time = time):
+    match time
+    | #'insert:
         cond
         | p is_a NothingPict:
             nothing
@@ -1199,27 +1263,30 @@ fun pin(q :: Pict,
         | ~else:
             let dt = at.start_in(p)
             let dur = q.duration
-            let new_duration:
-              match duration
-              | #'insert: #'pad
-              | #'insert_sustained: #'sustain
             let pre = p.time_pad(~after: dt - p.duration)
             let post = p.time_pad(~before: -dt)
             let mid = p.snapshot(dt, 0).sustain(dur-1)
             let new_p = switch(pre, mid, post)
             let new_q = q.time_pad(~before: dt + 1)
-            let new_q = if duration == #'insert | new_q.time_clip(~keep: #'before) | new_q
-            pin_on(new_p, new_q, new_duration)
+            pin_on(new_p, new_q, #'start)
+    | #'sync:
+        let dt = at.start_in(p)
+        let new_q = q.time_pad(~before: dt)
+        pin_on(p, new_q, #'start)
+    | #'end:
+        let dt = p.duration
+        let new_q = q.time_pad(~before: dt)
+        pin_on(p, new_q, #'start)
     | ~else:
-        recur retry(ps = [p, q]):
+        recur retry(ps = [p, q], dt = 0, n = 0):
           match ps
           | [_ :: NothingPict, _]:
               nothing
           | [p, _ :: NothingPict]:
               p
           | [p :: _StaticPict, q :: _StaticPict]:
-              let (at_x, at_y) = at.in(p)
-              let (dx, dy) = using.in(q)
+              let (at_x, at_y) = at.in(p, dt, n)
+              let (dx, dy) = using.in(q, dt, n)
               static_pict((if order == #'front
                            | rkt.#{pin-over}
                            | rkt.#{pin-under})(p.handle,
@@ -1230,7 +1297,7 @@ fun pin(q :: Pict,
           | [p, q]:
               convert([p, q], epoch, duration,
                       retry,
-                      fun ([p, q]): p)
+                      fun ([p, q], dt, n): p)
 
 // ------------------------------------------------------------
 
@@ -1347,6 +1414,6 @@ fun table(rows :: List.of(List.of(Pict)),
         | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
         | p
 
-def mutable animate = #false
+def mutable pict_animate = #false
 fun set_animate(proc):
-  animate := proc
+  pict_animate := proc

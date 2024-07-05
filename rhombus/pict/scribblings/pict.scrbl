@@ -257,7 +257,8 @@
  The result is the same as
 
 @rhombusblock(
-  Pict.time_clip(animate(fun (n): if n .= 0 | pict.snapshot() | nothing))
+  Pict.time_clip(animate(fun (n): if n .= 0 | pict.snapshot() | nothing,
+                         ~extent: 0))
 )
 
 }
