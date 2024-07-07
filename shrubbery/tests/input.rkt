@@ -194,6 +194,12 @@ a
     d
 | e
 
+(x, y
+    | z)
+(x,
+ y
+ | z)
+
 INPUT
 
 ;; ----------------------------------------
@@ -767,6 +773,8 @@ INPUT
             (group hc)))))))))
     (group a (op +) b (alts (block (group e))))
     (group a (op +) b (block (group d)) (alts (block (group e))))
+    (group (parens (group x) (group y (alts (block (group z))))))
+    (group (parens (group x) (group y (alts (block (group z))))))
     (group
      struct
      posn

@@ -12,6 +12,7 @@
 (struct state (count?          ; parsed based on lines and columns?
                line            ; current group's line and last consumed token's line
                column          ; group's column; below ends group, above starts indented
+               bar-column      ; not #f => use instead of `column` for `|` start
                operator-column ; column for operator that continues group on a new line
                paren-immed     ; immediately in `()` or `[]`: #f, 'normal, or 'at
                bar-closes?     ; does `|` always end a group?
@@ -25,6 +26,7 @@
 (define (make-state #:count? count?
                     #:line line
                     #:column column
+                    #:bar-column [bar-column #f]
                     #:operator-column [operator-column #f]
                     #:paren-immed [paren-immed #f]
                     #:bar-closes? [bar-closes? #f]
@@ -37,6 +39,7 @@
   (state count?
          line
          column
+         bar-column
          operator-column
          paren-immed
          bar-closes?
@@ -69,6 +72,7 @@
                      closer         ; expected closer: a string, EOF, or column (maybe 'any as column)
                      paren-immed    ; immediately in `()` or `[]`: #f, 'normal, or 'at
                      column         ; not #f => required indentation check checking
+                     bar-column     ; not #f => use instead of `column` for blocks
                      check-column?  ; #f => allow any sufficiently large (based on closer) indentation
                      bar-closes?    ; does `|` always end the sequence of groups?
                      bar-closes-line ; `|` (also) ends a sequence of groups on this line
@@ -102,6 +106,7 @@
                closer
                paren-immed
                column
+               #f
                check-column?
                bar-closes?
                bar-closes-line
@@ -260,7 +265,8 @@
               (check-column t column)
               (continue-group (struct-copy group-state sg
                                            [check-column? (next-line?* rest-l last-line)]
-                                           [column column]))])])]
+                                           [column column]
+                                           [bar-column #f]))])])]
        [(less-indented?)
         ;; Next token is less indented than this group sequence
         (done)]
@@ -308,9 +314,15 @@
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))
                          (group-state-count? sg)))
+              (define next-line? (next-line?* rest-l last-line))
+              (define bar-column
+                (if next-line?
+                    (group-state-column sg)
+                    (column+ (token-column (car rest-l)) (cont-delta-column (group-state-delta sg)))))
               ;; In top level or immediately in opener-closer:
               (parse-groups rest-l (struct-copy group-state sg
-                                                [check-column? (next-line?* rest-l last-line)]
+                                                [check-column? next-line?]
+                                                [bar-column bar-column]
                                                 [last-line last-line]
                                                 [comma-time? #f]
                                                 [delta delta]
@@ -352,6 +364,7 @@
                                                       [comma-time? (and (group-state-paren-immed sg) #t)]
                                                       [check-column? (next-line?* close-l close-line)]
                                                       [column (or (group-state-column sg) column)]
+                                                      [bar-column #f]
                                                       [last-line close-line]
                                                       [delta close-delta]
                                                       [commenting #f]
@@ -368,6 +381,7 @@
                  (parse-groups rest-l (struct-copy group-state sg
                                                    [check-column? (next-line?* rest-l last-line)]
                                                    [column (or (group-state-column sg) column)]
+                                                   [bar-column #f]
                                                    [last-line last-line]
                                                    [delta delta]
                                                    [commenting (group-state-tail-commenting sg)]
@@ -422,7 +436,8 @@
                                                      [column (if same-line?
                                                                  (group-state-column sg)
                                                                  column)]
-                                                    [check-column? (next-line?* rest-l group-end-line)]
+                                                     [bar-column #f]
+                                                     [check-column? (next-line?* rest-l group-end-line)]
                                                      [last-line group-end-line]
                                                      [delta group-end-delta]
                                                      [comma-time? (and (group-state-paren-immed sg) #t)]
@@ -469,6 +484,7 @@
                                            #:paren-immed (group-state-paren-immed sg)
                                            #:line line
                                            #:column use-column
+                                           #:bar-column (group-state-bar-column sg)
                                            #:bar-closes? (group-state-bar-closes? sg)
                                            #:bar-closes-line (group-state-bar-closes-line sg)
                                            #:block-mode (group-state-block-mode sg)
@@ -605,7 +621,8 @@
               ;; operator
               (cond
                 [(eq? 'bar-operator (token-name use-t))
-                 (unless (= column (column-half-next (state-column s)))
+                 (unless (= column (column-half-next (or (state-bar-column s)
+                                                         (state-column s))))
                    (fail use-t "wrong indentation"))
                  (parse-block #f use-l
                               #:count? (state-count? s)

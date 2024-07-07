@@ -168,6 +168,12 @@
 (check-fail (lines "x | y | c"
                    "  + 3")
             #rx"wrong indentation")
+(check-fail (lines "(x, y,"
+                   "    z)")
+            #rx"wrong indentation")
+(check-fail (lines "(x, y,"
+                   " | z)")
+            #rx"wrong indentation")
 
 (check-fail "a:\n«c»" #rx"not on the same line")
 (check-fail "a |\n«c»" #rx"not on the same line")
