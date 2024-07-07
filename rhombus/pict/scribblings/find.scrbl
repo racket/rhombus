@@ -93,8 +93,8 @@
     :: Find
 ){
 
- Creates a @tech{finder} that uses @rhombus(xy_proc) for @rhombus(Find.in)
- and @rhombus(t_proc) for @rhombus(Find.start_in).
+ Creates a @tech{finder} that uses @rhombus(xy_proc) for
+ @rhombus(Find.in) and @rhombus(t_proc) for @rhombus(Find.start_in).
 
 }
 
@@ -121,12 +121,38 @@
 
 
 @doc(
+  method (finder :: Find).maybe_in(pict :: Pict)
+    :: values(Real || False, Real || False)
+  method (finder :: Find).maybe_in(pict :: Pict,
+                                   epoch :: Int, n :: RealIn(0, 1))
+    :: values(Real || False, Real || False)
+){
+
+ Like @rhombus(Find.in), but if a location cannot be found in
+ @rhombus(pict), returns two @rhombus(#false)s instead of throwing an
+ exception.
+
+}
+
+
+@doc(
   method (finder :: Find).start_in(pict :: Pict) :: Int
 ){
 
  Applies @rhombus(finder) to @rhombus(pict) to get a time-box offset. An
  exception is thrown is a needed component pict cannot be found in
  @rhombus(pict).
+
+}
+
+
+@doc(
+  method (finder :: Find).delay(dt :: Int) :: Find
+){
+
+ Returns a @tech{finder} that is like @rhombus(finder), but where
+ @rhombus(dt) is subtracted from the epoch hat is supplied to
+ @rhombus(Find.in) or @rhombus(Find.maybe_in).
 
 }
 

@@ -11,6 +11,7 @@ import:
       EpochAlignment
       DurationAlignment
       TimeAlignment
+      FindMode
       nothing
       animate_map
   lib("pict/balloon2.rkt") as bln
@@ -41,6 +42,7 @@ annot.macro 'CompassDirection':
 fun pin(content :: Pict,
         ~on: p :: Pict,
         ~at: at :: Find,
+        ~find: find_mode :: FindMode = #'always,
         ~spike: spike :: CompassDirection,
         ~margin: margin :: maybe(Real) = #false,
         ~horiz_margin: hmargin :: Real = margin || current_horiz_margin(),
@@ -57,64 +59,76 @@ fun pin(content :: Pict,
         ~epoch: epoch_a :: EpochAlignment = #'center,
         ~duration: duration :: DurationAlignment = #'sustain,
         ~time: time :: TimeAlignment = #'start) :~ Pict:
-  recur retry_balloon(ps = [p, content], epoch = 0, n = 0):
+  recur retry_balloon(ps = [p, content], at :~ Find = at, epoch = 0, n = 0):
     match ps:
     | [_ :: pict.NothingPict, _]:
         nothing
     | [p, _ :: pict.NothingPict]:
         p
     | [p :: pict.StaticPict, content :: pict.StaticPict]:
-        let (at_x, at_y) = at.in(p, epoch, n)
-        Pict.from_handle(
-          bln.#{pin-balloon}(p.handle,
-                             p.handle, fun (p, q): values(at_x, at_y),
-                             content.handle,
-                             ~spike: spike,
-                             #{#:x-margin}: hmargin,
-                             #{#:y-margin}: vmargin,
-                             #{#:corner-radius}: corner_radius,
-                             #{#:spike-radius}: spike_radius,
-                             ~dx: dx,
-                             ~dy: dy,
-                             ~sprout: sprout,
-                             #{#:thought?}: thought,
-                             ~color: (color && as_color(color)) || Color(0, 0, 0, 0.0).handle,
-                             #{#:line-color}: line_color || Color(0, 0, 0, 0.0).handle,
-                             #{#:line-width}: if line_color
-                                              | if line_width == #'inherit
-                                                | 1
-                                                | line_width
-                                              | 0),
-          [p, content]
-        )
+        let (at_x, at_y) = at.maybe_in(p, epoch, n)
+        cond
+        | !at_x:
+            if find_mode == #'always
+            | error(#'#{balloon.pin}, "cannot find pict")
+            | p
+        | ~else:
+            Pict.from_handle(
+              bln.#{pin-balloon}(p.handle,
+                                 p.handle, fun (p, q): values(at_x, at_y),
+                                 content.handle,
+                                 ~spike: spike,
+                                 #{#:x-margin}: hmargin,
+                                 #{#:y-margin}: vmargin,
+                                 #{#:corner-radius}: corner_radius,
+                                 #{#:spike-radius}: spike_radius,
+                                 ~dx: dx,
+                                 ~dy: dy,
+                                 ~sprout: sprout,
+                                 #{#:thought?}: thought,
+                                 ~color: (color && as_color(color)) || Color(0, 0, 0, 0.0).handle,
+                                 #{#:line-color}: line_color || Color(0, 0, 0, 0.0).handle,
+                                 #{#:line-width}: if line_color
+                                                  | if line_width == #'inherit
+                                                    | 1
+                                                    | line_width
+                                                  | 0),
+              [p, content]
+            )
     | [p :~ Pict, content :~ Pict]:
-        let (p, content):
+        let (p, content, at):
           match time
+          | dt :: Int:
+              let content = content.time_pad(~before: dt+1)
+              values(p, content, at.delay(dt))
           | #'insert:
               let dt = at.start_in(p)
               let content = content.time_pad(~before: dt+1)
-              values(p.time_insert(dt, 1), content)
+              values(p.time_insert(dt, 1), content, at.delay(dt+1))
           | #'sync:
               let dt = at.start_in(p)
-              let content = content.time_pad(~before: dt+1)
-              values(p, content)
+              let content = content.time_pad(~before: dt)
+              values(p, content, at.delay(dt))
           | #'end:
               let dt = p.duration
-              let content = content.time_pad(~before: dt+1)
-              values(p, content)
+              let content = content.time_pad(~before: dt)
+              values(p, content, at.delay(dt))
           | ~else: values (p, content)
         animate_map([p, content],
                     ~epoch: epoch_a,
                     ~duration: duration,
                     ~combine: fun ([p :: Pict, ...], epoch, n):
-                                retry_balloon([p, ...], epoch, n),
+                                retry_balloon([p, ...], at, epoch, n),
                     ~non_sustain_combine:
+                      // padding (as opposed to sustain) drops the balloon
+                      // image, but keeps the content intact/findable; the
+                      // content takes care of its own pad vs. sustain
                       fun ([p :~ Pict, content :~ Pict], epoch, n):
                         if content == nothing
                         | p
                         | let pg = p.ghost()
                           let cg = content.ghost()
-                          let b :~ Pict = retry_balloon([pg, cg], epoch, n)
+                          let b :~ Pict = retry_balloon([pg, cg], at, epoch, n)
                           let b = b.ghost()
                           pict.pin(~on: pict.pin(~on: b, ~at: Find.left_top(pg), p),
                                    ~at: Find.left_top(cg),

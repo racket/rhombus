@@ -28,6 +28,7 @@
     content :: Pict,
     ~on: base :: Pict,
     ~at: finder :: Find,
+    ~find: find_mode :: FindMode = #'always,
     ~spike: spike :: CompassDirection,
     ~margin: margin :: maybe(Real) = #false,
     ~horiz_margin: hmargin :: Real = margin || current_horiz_margin(),
@@ -65,6 +66,15 @@
  The @rhombus(duration) argument is used in a way analogous to
  @rhombus(pict.overlay), which can insert a balloon with @rhombus(content)
  into a part of the timeline of @rhombus(base).
+
+ The @rhombus(find_mode) argument is used in a way analogous to
+ @rhombus(pict.pin), where @rhombus(#'maybe) mode means that a balloon is
+ not pinned when @rhombus(finder) fails to find a location.
+
+ When the resulting pict's @tech{time box} is padded (as opposed to
+ @tech{sustain}ed), then @rhombus(content) is still pinned onto
+ @rhombus(on_pict) as during the time box, but no balloon is drawn behind
+ @rhombus(content).
 
 }
 

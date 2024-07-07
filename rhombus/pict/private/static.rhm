@@ -21,6 +21,7 @@ export:
   TimeOrder
   ConnectStyle
   ArcDirection
+  FindMode
   Refocus
   Rounded
 
@@ -81,11 +82,12 @@ enum HorizAlignment: left center right
 enum VertAlignment: top topline center baseline bottom
 enum EpochAlignment: early center stretch late
 enum DurationAlignment: sustain pad
-enum TimeAlignment: start sync insert end
+enum TimeAlignment: ~is_a Int; start sync insert end
 enum OverlayOrder: front back
 enum TimeOrder: before after
 enum ConnectStyle: line arrow arrows
 enum ArcDirection: cw ccw
+enum FindMode: always maybe
 
 def empty_instances = []
 
@@ -1009,8 +1011,17 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
 
   method
   | in(p :: Pict):
-      find(p, q, 0, 0)
+      in(p, 0, 0)
   | in(p :: Pict, epoch :: Int, n :: Real.in(0, 1)):
+      let (x, y) = find(p, q, epoch, n)
+      if x
+      | values(x, y)
+      | error(#'#{Find.in}, "cannot find pict")
+
+  method
+  | maybe_in(p :: Pict):
+      maybe_in(p, 0, 0)
+  | maybe_in(p :: Pict, epoch :: Int, n :: Real.in(0, 1)):
       find(p, q, epoch, n)
 
   method start_in(p :: Pict) :~ Int:
@@ -1022,12 +1033,20 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
           loop(c, start + delta)
     match t_find_or_dt
     | dt :: Int:
-        loop(p, dt) || error(#'start_in, "cannot find pict")
+        loop(p, dt) || error(#'#{Find.start_in}, "cannot find pict")
     | ~else:
         let dt = t_find_or_dt(p)
         unless dt is_a Int
-        | error(#'start_in, "function did not produce an integer time box difference")
+        | error(#'#{Find.start_in}, "function did not produce an integer time box difference")
         dt
+
+  method delay(dt :: Int) :~ Find:
+    if is_animated
+    | _Find(q,
+            fun (p, q, epoch, n): find(p, q, epoch - dt, n),
+            t_find_or_dt,
+            #true)
+    | this
 
   export:
     abs
@@ -1058,41 +1077,57 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
 
 fun offset(proc, dx, dy, dx_w, dy_h):
   fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1)):
-    when q == nothing | error(#'Find, "cannot find nothing")
-    let p :~ StaticPict = (if p is_a StaticPict
-                           | p
-                           | p.snapshot(epoch, n))
-    fun size_shift(p_handle, q_handle):
-      if dx_w .= 0 && dy_h .= 0
-      | values(0, 0)
-      | let (l, t) = rkt.#{lt-find}(p_handle, q_handle)
-        let (r, b) = rkt.#{rb-find}(p_handle, q_handle)
-        values((r - l) * dx_w, (b - t) * dy_h)
-    match q
-    | q :: StaticPict:
-        let (x, y) = proc(p.handle, q.handle)
-        let (dx_w, dy_h) = size_shift(p.handle, q.handle)
-        values(x + dx + dx_w, y + dy + dy_h)
+    cond
+    | q == nothing:
+        #false
     | ~else:
-        let q_handle = find_instance(p, q)
-        if q_handle
-        | let (x, y) = proc(p.handle, q_handle)
-          let (dx_w, dy_h) = size_shift(p.handle, q_handle)
-          values(x + dx + dx_w, y + dy + dy_h)
-        | error(#'Find, "cannot find pict")
+        let p :~ StaticPict = (if p is_a StaticPict
+                               | p
+                               | p.snapshot(epoch, n))
+        fun size_shift(p_handle, q_handle):
+          if dx_w .= 0 && dy_h .= 0
+          | values(0, 0)
+          | let (l, t) = rkt.#{lt-find}(p_handle, q_handle)
+            let (r, b) = rkt.#{rb-find}(p_handle, q_handle)
+            values((r - l) * dx_w, (b - t) * dy_h)
+        match q
+        | q :: StaticPict:
+            try:
+              let (x, y) = proc(p.handle, q.handle)
+              let (dx_w, dy_h) = size_shift(p.handle, q.handle)
+              values(x + dx + dx_w, y + dy + dy_h)
+              ~catch x:
+                values(#false, #false)
+        | ~else:
+            let q_handle = find_instance(p, q)
+            if q_handle
+            | let (x, y) = proc(p.handle, q_handle)
+              let (dx_w, dy_h) = size_shift(p.handle, q_handle)
+              values(x + dx + dx_w, y + dy + dy_h)
+            | values(#false, #false)
 
 fun abs(dx :: Real, dy :: Real, ~dt: dt :: Int = 0) :: Find:
   _Find(#false, fun (p, q, epoch, n): values(dx, dy), dt, #false)
 
-fun animate(xy_proc :: Function.of_arity(3),
+fun animate(xy_proc :: Function.of_arity(2) || Function.of_arity(3),
             ~time_box: t_proc :: Function.of_arity(1) = fun (p): 0) :: Find:
   _Find(#false,
         fun (p, q, epoch, n):
           call_with_values(
-            fun (): xy_proc(p, epoch, n),
+            fun ():
+              match xy_proc
+              | xy_proc :: Function.of_arity(3):
+                  xy_proc(p, epoch, n)
+              | xy_proc :: Function.of_arity(2):
+                  xy_proc(p, cond
+                             | epoch < 0: 0
+                             | epoch > 0: 1
+                             | ~else: n),
             fun
             | (dx :: Real, dy :: Real):
                 values(dx, dy)
+            | (_ :: False, _ :: False):
+                values(#false, #false)
             | (arg, ...):
                 error(#'#{Find.animate}, "invalid result from animation procedure")
           ),
@@ -1113,10 +1148,12 @@ fun interpolate(from :: Find,
           | i_n .= 0: from.in(p, epoch, n)
           | i_n .= 1: to.in(p, epoch, n)
           | ~else:
-              let (from_x, from_y) = from.in(p, epoch, n)
-              let (to_x, to_y) = to.in(p, epoch, n)
-              values(from_x * (1 - i_n) + to_x * i_n,
-                     from_y * (1 - i_n) + to_y * i_n),
+              let (from_x, from_y) = from.maybe_in(p, epoch, n)
+              let (to_x, to_y) = to.maybe_in(p, epoch, n)
+              if from_x && to_x
+              | values(from_x * (1 - i_n) + to_x * i_n,
+                       from_y * (1 - i_n) + to_y * i_n)
+              | values(#false, #false),
         fun (p):
           from.start_in(p),
         #true)
@@ -1173,6 +1210,7 @@ def_find bottom_right: #{rb-find}
 fun connect(~on: p :: Pict,
             from :: Find,
             to :: Find,
+            ~find: find_mode :: FindMode = #'always,
             ~style: style :: ConnectStyle = #'line,
             ~line: color :: ColorMode = #'inherit,
             ~line_width: width :: LineWidth = #'inherit,
@@ -1200,34 +1238,40 @@ fun connect(~on: p :: Pict,
     | _ :: NothingPict:
         nothing
     | p :: _StaticPict:
-        let (from_x, from_y) = from.in(p, dt, n)
-        let (to_x, to_y) = to.in(p, dt, n)
-        let (proc, [pre, ...], kw_args):
-          match style
-          | #'line: values(rkt.#{pin-line}, [], {})
-          | #'arrow: values(rkt.#{pin-arrow-line},
-                            [arrow_size],
-                            { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
-          | #'arrows: values(rkt.#{pin-arrows-line},
-                             [arrow_size],
-                             { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
-        static_pict(proc(pre, ...,
-                         p.handle,
-                         p.handle, fun (p, q): values(from_x, from_y),
-                         p.handle, fun (p, q): values(to_x, to_y),
-                         #{#:start-angle}: start_angle,
-                         #{#:start-pull}: start_pull,    
-                         #{#:end-angle}: end_angle,
-                         #{#:end-pull}: end_pull,
-                         #{#:line-width}: as_width(width),
-                         #{#:color}: as_color(color),
-                         #{#:under?}: order == #'back,
-                         #{#:label}: label && (label != nothing) && StaticPict.handle(label),
-                         #{#:x-adjust-label}: label_dx,
-                         #{#:y-adjust-label}: label_dy,
-                         ~& kw_args),
-                    p,
-                    p._instances)
+        let (from_x, from_y) = from.maybe_in(p, dt, n)
+        let (to_x, to_y) = to.maybe_in(p, dt, n)
+        cond
+        | from_x && to_x:
+            let (proc, [pre, ...], kw_args):
+              match style
+              | #'line: values(rkt.#{pin-line}, [], {})
+              | #'arrow: values(rkt.#{pin-arrow-line},
+                                [arrow_size],
+                                { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
+              | #'arrows: values(rkt.#{pin-arrows-line},
+                                 [arrow_size],
+                                 { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
+            static_pict(proc(pre, ...,
+                             p.handle,
+                             p.handle, fun (p, q): values(from_x, from_y),
+                             p.handle, fun (p, q): values(to_x, to_y),
+                             #{#:start-angle}: start_angle,
+                             #{#:start-pull}: start_pull,
+                             #{#:end-angle}: end_angle,
+                             #{#:end-pull}: end_pull,
+                             #{#:line-width}: as_width(width),
+                             #{#:color}: as_color(color),
+                             #{#:under?}: order == #'back,
+                             #{#:label}: label && (label != nothing) && StaticPict.handle(label),
+                             #{#:x-adjust-label}: label_dx,
+                             #{#:y-adjust-label}: label_dy,
+                             ~& kw_args),
+                        p,
+                        p._instances)
+        | ~else:
+            if find_mode == #'maybe
+            | p
+            | error(#'connect, if from_x | "cannot find `~to` pict" | "cannot find `~from p ict")
     | ~else:
         convert([p], #'center, #'sustain,
                 fun ([p], dt, n): retry(p, dt, n),
@@ -1240,6 +1284,7 @@ fun set_switch(proc):
 fun pin(q :: Pict,
         ~on: p :: Pict,
         ~at: at :: Find,
+        ~find: find_mode :: FindMode = #'always,
         ~pinhole: using :: Find = Find.left_top(q),
         ~order: order :: OverlayOrder = #'front,
         ~epoch: epoch :: EpochAlignment = #'center,
@@ -1252,8 +1297,13 @@ fun pin(q :: Pict,
       && (_Find.is_animated(at) || _Find.is_animated(using))
     | pict_animate(fun (n): p, 0 /* extent */)
     | p
-  recur pin_on(p :~ Pict = p, q :~ Pict = q, time = time):
+  recur pin_on(p :~ Pict = p, q :~ Pict = q,
+               at :~ Find = at, using :~ Find = using,
+               time = time):
     match time
+    | dt :: Int:
+        let new_q = q.time_pad(~before: dt)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
     | #'insert:
         cond
         | p is_a NothingPict:
@@ -1267,16 +1317,17 @@ fun pin(q :: Pict,
             let post = p.time_pad(~before: -dt)
             let mid = p.snapshot(dt, 0).sustain(dur-1)
             let new_p = switch(pre, mid, post)
-            let new_q = q.time_pad(~before: dt + 1)
-            pin_on(new_p, new_q, #'start)
+            let q_dt = dt + 1
+            let new_q = q.time_pad(~before: q_dt)
+            pin_on(new_p, new_q, at.delay(q_dt), using.delay(q_dt), #'start)
     | #'sync:
         let dt = at.start_in(p)
         let new_q = q.time_pad(~before: dt)
-        pin_on(p, new_q, #'start)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
     | #'end:
         let dt = p.duration
         let new_q = q.time_pad(~before: dt)
-        pin_on(p, new_q, #'start)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
     | ~else:
         recur retry(ps = [p, q], dt = 0, n = 0):
           match ps
@@ -1285,19 +1336,22 @@ fun pin(q :: Pict,
           | [p, _ :: NothingPict]:
               p
           | [p :: _StaticPict, q :: _StaticPict]:
-              let (at_x, at_y) = at.in(p, dt, n)
+              let (at_x, at_y): at.maybe_in(p, dt, n)
+              when !at_x && find_mode == #'always
+              | error(#'pin, "cannot find pict")
               let (dx, dy) = using.in(q, dt, n)
-              static_pict((if order == #'front
-                           | rkt.#{pin-over}
-                           | rkt.#{pin-under})(p.handle,
-                                               at_x - dx, at_y - dy,
-                                               q.handle),
-                          [p, q],
-                          [p._instances, q._instances])
+              if at_x
+              | static_pict((if order == #'front
+                             | rkt.#{pin-over}
+                             | rkt.#{pin-under})(p.handle,
+                                                 at_x - dx, at_y - dy,
+                                                 q.handle),
+                            [p, q],
+                            [p._instances, q._instances])
+              | p
           | [p, q]:
               convert([p, q], epoch, duration,
-                      retry,
-                      fun ([p, q], dt, n): p)
+                      retry)
 
 // ------------------------------------------------------------
 

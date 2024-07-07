@@ -110,6 +110,7 @@
     pict :: Pict,
     ~on: on_pict :: Pict,
     ~at: finder :: Find,
+    ~find: find_mode :: FindMode = #'always,
     ~pinhole: pinhole_finder :: Find = Find.left_top(q),
     ~order: order :: OverlayOrder = #'front,
     ~duration: duration_align :: DurationAlignment = #'sustain,
@@ -130,17 +131,26 @@
  @rhombus(epoch_align). This mode is used unless
  @rhombus(time_align) is @rhombus(#'insert).
 
- If @rhombus(time_align) is @rhombus(#'insert), then @rhombus(finder) is used both to find
- a graphical offset and a @tech{time box} offset, and @rhombus(pict) is
- ``inserted'' at that offset. Specifically, at the time box offset within
+ The @rhombus(time_align) argument determines a @tech{time box} offset that is
+ applied to @rhombus(pict), @rhombus(finder), and @rhombus(pinhole_finder)
+ before combining it with @rhombus(on_pict).
+ If @rhombus(time_align) is @rhombus(#'insert) or @rhombus(~sync),
+ then @rhombus(finder) is used both to find
+ a graphical offset and a @tech{time box} offset. If @rhombus(time_align)
+ is @rhombus(insert), then at the time box offset within
  @rhombus(on_pict), extra epochs are inserted that correspond to a
  snapshot of @rhombus(on_pict) at the time box offset, and the number of
  inserted epochs is the @tech{duration} of @rhombus(pict). When @rhombus(time_align)
- is @rhombus(#'sync), @rhombus(finder) is used similarly to determine a
- time box offset, but extra epochs are not added to @rhombus(on_pict).
- When @rhombus(time_align) is @rhombus(#'start) or @rhombus(#'end), then
+ When @rhombus(time_align) is an integer, @rhombus(#'start), or @rhombus(#'end), then
  @rhombus(finder) is @emph{not} used to find a time offset, and instead
- @rhombus(0) or @rhombus(Pict.duration(on_pict)) is used, instead.
+ @rhombus(time_align), @rhombus(0), or @rhombus(Pict.duration(on_pict)) is used,
+ respectively.
+
+ If @rhombus(find_mode) is @rhombus(#'always), then if @rhombus(finder)
+ fails to find a position at any time for @rhombus(on_pict), then an
+ exception is thrown. If @rhombus(find_mode) is @rhombus(#'maybe), then
+ when @rhombus(finder) fails to find a position, @rhombus(pict) is not
+ pinned.
 
 @examples(
   ~eval: pict_eval
@@ -157,6 +167,7 @@
     ~on: on_pict :: Pict,
     from :: Find,
     to :: Find,
+    ~find: find_mode :: FindMode = #'always,
     ~style: style :: ConnectStyle = #'line,
     ~line: color :: ConnectMode = #'inherit,
     ~line_width: width :: LineWidth = #'inherit,
@@ -178,6 +189,12 @@
 
  Returns a @tech{pict} like @rhombus(on_pict), but with a line added to
  connect @rhombus(from) to @rhombus(to).
+
+ If @rhombus(find_mode) is @rhombus(#'always), then if @rhombus(form) or
+ @rhombus(to) fails to find a position at any time for @rhombus(on_pict),
+ then an exception is thrown. If @rhombus(find_mode) is
+ @rhombus(#'maybe), then when @rhombus(from) or @rhombus(to) fails to
+ find a position, a line is not added.
 
 @examples(
   ~eval: pict_eval
@@ -433,6 +450,7 @@
 
 @doc(
   enum TimeAlignment:
+    ~is_a Int
     start
     insert
     sync
@@ -475,6 +493,18 @@
  Options for overlaying.
 
 }
+
+@doc(
+  enum FindMode:
+    always
+    maybe
+){
+
+ Options for handling finder failure in function such as @rhombus(pin)
+ and @rhombus(connect).
+
+}
+
 
 @doc(
   enum ConnectStyle:
