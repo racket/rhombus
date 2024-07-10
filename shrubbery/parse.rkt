@@ -1671,56 +1671,15 @@
 
 ;; ----------------------------------------
 
-;; check that line-counting is consistent (always on or always off),
-;; and when it's off, make sure there are no newlines except maybe at
-;; the beginning and/or end
-(define (check-line-counting l)
-  (unless (null? l)
-    (define (fail-inconsistent t)
-      (fail t "port did not consistently report lines and columns"))
-    (let loop ([l l] [saw-non-ws? #f] [newline-t #f] [stack '()])
-      (unless (null? l)
-        (define t (car l))
-        (unless (and (token-line t)
-                     (token-column t))
-          (when (or (token-line t)
-                    (token-column t))
-            (fail-inconsistent t))
-          (when (and saw-non-ws?
-                     (null? stack)
-                     newline-t)
-            (fail newline-t "port does not count lines, but input includes a newline outside of `«` and `»`")))
-        (case (token-name t)
-          [(whitespace comment continue-operator)
-           (loop (cdr l)
-                 saw-non-ws?
-                 (and saw-non-ws?
-                      (or newline-t
-                          (and (null? stack)
-                               (regexp-match? #rx"[\r\n]" (syntax-e (token-value t)))
-                               t)))
-                 stack)]
-          [else
-           (cond
-             [(and (eq? 'opener (token-name t))
-                   (equal? (token-e t) "«"))
-              (loop (cdr l) #t newline-t (cons t stack))]
-             [(and (eq? 'closer (token-name t))
-                   (equal? (token-e t) "»"))
-              (loop (cdr l) #f newline-t (if (pair? stack) (cdr stack) '()))]
-             [else
-              (loop (cdr l) #t newline-t stack)])])))))
-
-;; ----------------------------------------
-
 (define (parse-all in
                    #:source [source (object-name in)]
-                   #:mode [mode 'top]) ; 'top, 'text, 'interactive, or 'line
+                   #:mode [mode 'top] ; 'top, 'text, 'interactive, or 'line
+                   #:start-column [start-column 0])
   (define l (lex-all in fail
                      #:source source
                      #:mode mode
-                     #:consume-eof? #t))
-  (check-line-counting l)
+                     #:consume-eof? #t
+                     #:start-column start-column))
   (define v (if (eq? mode 'text)
                 (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
                 (parse-top-groups l #:interactive? (memq mode '(interactive line)))))

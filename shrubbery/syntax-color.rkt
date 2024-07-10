@@ -1,6 +1,6 @@
 #lang racket/base
 (require "lex.rkt"
-         "lex-comment.rkt"
+         "lex-open-close.rkt"
          syntax-color/racket-lexer
          syntax-color/lexer-contract
          racket/symbol)
@@ -10,7 +10,7 @@
 
 (define (shrubbery-lexer in pos status)
   (let-values ([(tok type paren start end backup status)
-                (lex/comment/status in pos status racket-lexer*/status)])
+                (lex/open-close/status in pos status racket-lexer*/status)])
     (define (to-string-or-eof tok)
       (cond
         [(eof-object? tok) tok]
@@ -20,7 +20,7 @@
         [(symbol? tok) (symbol->immutable-string tok)]
         [else "other"]))
     (values (to-string-or-eof tok) type paren start end backup
-            (if (lex/comment-dont-stop-status? status)
+            (if (lex/open-close-dont-stop-status? status)
                 (dont-stop status)
                 status))))
 

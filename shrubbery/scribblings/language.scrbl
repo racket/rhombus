@@ -64,7 +64,8 @@ resulting shrubbery is not empty, it is parsed in the same way that
 
 @defproc[(parse-all [in input-port?]
                     [#:source source any/c]
-                    [#:mode mode (or/c 'top 'interactive 'line 'text) 'top])
+                    [#:mode mode (or/c 'top 'interactive 'line 'text) 'top]
+                    [#:start-column start-column exact-nonnegative-integer? 0])
          (or/c eof-object? syntax?)]{
 
  Parses shrubbery notation from @racket[in] and returns an S-expression
@@ -105,6 +106,15 @@ resulting shrubbery is not empty, it is parsed in the same way that
  @racket['line] mode, the result may be empty, while
  @racket['interactive] mode continues past a newline if the result would
  be empty.
+
+ The shrubbery parser directly determines line and column changes for
+ the purposes of determining indentation, so it does not require
+ @racket[in] to have line counting enabled for that purpose. The
+ @racket[start-column] argument supplies a number of characters that
+ should be considered before the first character of @racket[in] for
+ parsing. Source locations attached to the result syntax objects
+ @emph{are} based on positions reported by @racket[in] or line and column
+ counting as enabled for @racket[in].
 
 }
 

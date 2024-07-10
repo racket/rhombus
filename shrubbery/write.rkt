@@ -8,7 +8,7 @@
 (provide write-shrubbery
          pretty-shrubbery)
 
-(define rx:identifier #px"^(?:\\p{L}|_)(?:\\p{L}|\\p{N}|_)*$")
+(define rx:identifier #px"^(?:#%)?(?:\\p{L}|_)(?:\\p{L}|\\p{N}|_)*$")
 
 (define (write-shrubbery v [op (current-output-port)]
                          #:pretty? [pretty? #f]

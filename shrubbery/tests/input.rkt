@@ -2011,12 +2011,15 @@ x:
   #{#(let
         f)}
   ~subst
+#{x}(y,
+     z)
 INPUT
   )
 
 (define expected3b
   '(top
-    (group x (block (group #(let f)) (group #:subst)))))
+    (group x (block (group #(let f)) (group #:subst)))
+    (group x (parens (group y) (group z)))))
 
 (define input4
 #<<INPUT

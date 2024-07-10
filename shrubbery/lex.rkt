@@ -1,5 +1,7 @@
 #lang racket/base
 (require parser-tools/lex
+         racket/syntax-srcloc
+         racket/port
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
          "private/property.rkt"
@@ -34,8 +36,10 @@
          token?
          token-value
          token-e
-         token-line
-         token-column
+         token-line   ; not the same as srcloc's line
+         token-column ; not the same as srcloc's column
+         token-end-line   ; like `token-line`
+         token-end-column ; like `token-column`
          token-srcloc
          token-rename
 
@@ -218,6 +222,21 @@
 
 (define current-lexer-source (make-parameter "input"))
 
+(define (count-graphemes s [lines 0] [columns 0])
+  (let loop ([i 0] [lines lines] [columns columns])
+    (cond
+      [(= i (string-length s)) (values lines columns)]
+      [(char=? #\return (string-ref s i))
+       (if (and ((add1 i) . < . (string-length s))
+                (char=? #\newline (string-ref s (add1 i))))
+           (loop (+ i 2) (add1 lines) 0)
+           (loop (+ i 1) (add1 lines) 0))]
+      [(char=? #\newline (string-ref s i))
+       (loop (+ i 1) (add1 lines) 0)]
+      [else
+       (define n (string-grapheme-span s i))
+       (loop (+ i n) lines (+ columns 1))])))
+
 (define (make-token name e start-pos end-pos [raw #f])
   (define offset (position-offset start-pos))
   (define loc (vector (current-lexer-source)
@@ -226,24 +245,33 @@
                       offset
                       (- (position-offset end-pos)
                          offset)))
-  (token name (let loop ([e e] [raw raw] [id-as-keyword? #f])
-                (let ([e (if (pair? e)
-                             (let p-loop ([e e] [id-as-keyword? #t])
-                               (cond
-                                 [(null? (cdr e)) (list (loop (car e) raw id-as-keyword?))]
-                                 [else (cons (loop (car e) #f id-as-keyword?)
-                                             (p-loop (cdr e) #f))]))
-                             e)]
-                      [raw (if (pair? e) #f raw)])
-                  (define stx (datum->syntax #f
-                                             e
-                                             loc
-                                             (if id-as-keyword?
-                                                 stx-for-identifier-as-keyword
-                                                 stx-for-original-property)))
-                  (if (eq? name 'comment)
-                      stx
-                      (syntax-raw-property stx (or raw (if (string? e) e '()))))))))
+  (define-values (line-advance column-advance)
+    (if (eof-object? e)
+        (values 0 0)
+        (count-graphemes (or raw e))))
+  (token name
+         (let loop ([e e] [raw raw] [id-as-keyword? #f])
+           (let ([e (if (pair? e)
+                        (let p-loop ([e e] [id-as-keyword? #t])
+                          (cond
+                            [(null? (cdr e)) (list (loop (car e) raw id-as-keyword?))]
+                            [else (cons (loop (car e) #f id-as-keyword?)
+                                        (p-loop (cdr e) #f))]))
+                        e)]
+                 [raw (if (pair? e) #f raw)])
+             (define stx (datum->syntax #f
+                                        e
+                                        loc
+                                        (if id-as-keyword?
+                                            stx-for-identifier-as-keyword
+                                            stx-for-original-property)))
+             (if (eq? name 'comment)
+                 stx
+                 (syntax-raw-property stx (or raw (if (string? e) e '()))))))
+         #f ; start-line
+         #f ; start-column
+         line-advance
+         column-advance))
 
 (define (read-line-comment name lexeme input-port start-pos
                            #:status [status 'initial]
@@ -329,10 +357,14 @@
       [else
        null])))
 
+(struct counter (start-line start-column status) #:prefab)
 (struct s-exp-mode (depth status in-quotes) #:prefab)
 (struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 (struct in-quotes (status openers) #:prefab)
+
+;; wrapper to hold advances
+(struct s-exp-token (tok line-advance column-advance))
 
 ;; A pending-backup mode causes a non-zero `backup` count for one or
 ;; more future tokens; for example, when parsing `@|{`, there's a peek
@@ -351,6 +383,8 @@
 
 (define (out-of-s-exp-mode status will-see-closer?)
   (cond
+    [(counter? status) (struct-copy counter status
+                                    [status (out-of-s-exp-mode (counter-status status) will-see-closer?)])]
     [(pending-backup-mode? status) (struct-copy pending-backup-mode status
                                                 [status (out-of-s-exp-mode
                                                          (pending-backup-mode-status status)
@@ -374,16 +408,43 @@
                                                                             will-see-closer?)])]
     [else (error 'out-of-s-exp-mode "not in S-expression mode!")]))
 
+(define advance-location
+  (case-lambda
+    [(status tok)
+     (advance-location status
+                       (token-end-line tok)
+                       (token-end-column tok))]
+    [(status line column)
+     (cond
+       [(counter? status)
+        (struct-copy counter status
+                     [start-line line]
+                     [start-column column])]
+       [else
+        (counter line column status)])]))
+
 (define (lex-nested-status? status)
-  (if (pending-backup-mode? status)
-      (lex-nested-status? (pending-backup-mode-status status))
-      (not (or (not status) (symbol? status) (in-quotes? status)))))
+  (let ([status (if (counter? status)
+                    (counter-status status)
+                    status)])
+    (if (pending-backup-mode? status)
+        (lex-nested-status? (pending-backup-mode-status status))
+        (not (or (not status) (symbol? status) (in-quotes? status))))))
 
 (define (lex-dont-stop-status? status)
   ;; anything involving a peek has a pending backup
-  (pending-backup-mode? status))
+  (let ([status (if (counter? status)
+                    (counter-status status)
+                    status)])
+    (pending-backup-mode? status)))
 
-(define (lex/status in pos status-in racket-lexer*/status)
+(define (lex/status in pos status/loc-in racket-lexer*/status)
+  (define-values (start-line start-column status-in)
+    (if (counter? status/loc-in)
+        (values (counter-start-line status/loc-in)
+                (counter-start-column status/loc-in)
+                (counter-status status/loc-in))
+        (values 1 0 status/loc-in)))
   (define prev-pending-backup (if (pending-backup-mode? status-in)
                                   (pending-backup-mode-amount status-in)
                                   0))
@@ -404,9 +465,14 @@
                         ;; go out of S-expression mode by using shrubbery lexer again
                         (adjust-for-quotes shrubbery-lexer/status in (out-of-s-exp-mode status #t))]
                        [else
+                        (define in* (peeking-input-port/count in))
+                        (define start-pos (file-position in*))
                         (define-values (tok type paren start end backup s-exp-status action)
-                          (racket-lexer*/status in pos (s-exp-mode-status status)))
-                        (values tok type paren start end backup
+                          (racket-lexer*/status in* pos (s-exp-mode-status status)))
+                        (define len (- (file-position in*) start-pos))
+                        (define raw (bytes->string/utf-8 (read-bytes len in) #\?))
+                        (define-values (line-advance column-advance) (count-graphemes raw))
+                        (values (s-exp-token tok line-advance column-advance) type paren start end backup
                                 (let ([in-quotes (s-exp-mode-in-quotes status)])
                                   (case action
                                     [(open)
@@ -445,7 +511,7 @@
             (eqv? 0 (string-length (token-e tok))))
        ;; a syntax coloring lexer must not return a token that
        ;; consumes no characters, so just drop it by recurring
-       (lex/status in pos status racket-lexer*/status)]
+       (lex/status in pos (counter start-line start-column status) racket-lexer*/status)]
       [else
        (define new-backup (cond
                             [(zero? prev-pending-backup) backup]
@@ -466,7 +532,24 @@
        (define status/backup (if (zero? new-pending-backup)
                                  status
                                  (pending-backup-mode new-pending-backup status)))
-       (values tok type paren start end new-backup status/backup)])))
+       (define new-tok (if (s-exp-token? tok)
+                           (s-exp-token-tok tok)
+                           (struct-copy token tok
+                                        [start-line start-line]
+                                        [start-column start-column])))
+       (define new-status (let ([line-advance (if (s-exp-token? tok)
+                                                  (s-exp-token-line-advance tok)
+                                                  (token-line-advance tok))]
+                                [column-advance (if (s-exp-token? tok)
+                                                    (s-exp-token-column-advance tok)
+                                                    (token-column-advance tok))])
+                            (counter (+ start-line line-advance)
+                                     (+ (if (eqv? 0 line-advance)
+                                            start-column
+                                            0)
+                                        column-advance)
+                                     status/backup)))
+       (values new-tok type paren start end new-backup new-status)])))
 
 (define-syntax-rule (make-lexer/status number bad-number)
   (lexer
@@ -1072,44 +1155,49 @@
      (and (operator-lexer p)
           (identifier-lexer p)))))
 
-(struct token (name value))
-(struct located-token token (srcloc))
+(struct token (name value
+                    start-line       ; starts as #f, filled in by `lex/status
+                    start-column     ; ditto
+                    line-advance     ; 0 if the token is within a line
+                    column-advance)) ; size of token in columns within its ending line
 
 (define (token-e t)
   (syntax-e (token-value t)))
 
 (define (token-line t)
-  (if (located-token? t)
-      (srcloc-line (located-token-srcloc t))
-      (syntax-line (token-value t))))
+  (token-start-line t))
 
 (define (token-column t)
-  (let ([c (if (located-token? t)
-               (srcloc-column (located-token-srcloc t))
-               (syntax-column (token-value t)))])
-    (if (and c (eq? (token-name t) 'bar-operator))
-        (+ c 0.5)
-        c)))
+  (if (eq? (token-name t) 'bar-operator)
+      (+ (token-start-column t) 0.5)
+      (token-start-column t)))
+
+(define (token-end-line t)
+  (+ (token-start-line t)
+     (token-line-advance t)))
+
+(define (token-end-column t)
+  (if (eqv? 0 (token-line-advance t))
+      (+ (token-column t) (token-column-advance t))
+      (token-column-advance t)))
 
 (define (token-srcloc t)
-  (cond
-    [(located-token? t)
-     (located-token-srcloc t)]
-    [else
-     (define s (token-value t))
-     (srcloc (syntax-source s)
-             (syntax-line s)
-             (syntax-column s)
-             (syntax-position s)
-             (syntax-span s))]))
+  (define s (token-value t))
+  (syntax-srcloc s))
 
 (define (token-rename t name)
   (struct-copy token t [name name]))
 
 (define (syntax->token name s [srcloc #f])
-  (if srcloc
-      (located-token name s srcloc)
-      (token name s)))
+  (define-values (line col lines cols)
+    (if srcloc
+        (apply values srcloc)
+        (values (syntax-line s)
+                (syntax-column s)
+                0
+                (+ (syntax-column s)
+                   (syntax-span s)))))
+  (token name s line col lines cols))
 
 ;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
 ;; for an S-expression escape:
@@ -1117,10 +1205,14 @@
                  #:mode [mode 'top] ; 'top, 'text, 'interactive, or 'line
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
-                 #:consume-eof? [consume-eof? #f])
-  (define status (if (eq? mode 'text)
-                     (make-in-text-status)
-                     'initial))
+                 #:consume-eof? [consume-eof? #f]
+                 #:start-column [start-column 0])
+  (define status (advance-location
+                  (if (eq? mode 'text)
+                      (make-in-text-status)
+                      'initial)
+                  0 ; start-line
+                  start-column))
   (parameterize ([current-lexer-source source])
     (let loop ([status status] [depth 0] [blanks 0] [nonempty? #f] [multi? #f])
       (cond
@@ -1157,13 +1249,15 @@
               [else (cons (wrap tok)
                           (loop new-status depth (+ blanks (if newline? 1 0)) nonempty? multi?))])]
            [else
-            (define a (case name
-                        [(s-exp)
-                         (wrap (finish-s-exp tok in fail))]
-                        [else (wrap tok)]))
-            (define d (loop (case name
-                              [(s-exp) (out-of-s-exp-mode new-status #f)]
-                              [else new-status])
+            (define-values (a next-status)
+              (case name
+                [(s-exp)
+                 (define s-exp-tok (finish-s-exp tok in fail))
+                 (values (wrap s-exp-tok)
+                         (advance-location (out-of-s-exp-mode new-status #f)
+                                           s-exp-tok))]
+                [else (values (wrap tok) new-status)]))
+            (define d (loop next-status
                             (case name
                               [(opener) (add1 depth)]
                               [(closer) (sub1 depth)]
@@ -1180,38 +1274,61 @@
             (cons a d)])]))))
 
 (define (finish-s-exp open-tok in fail)
-  (define v (read-syntax (current-lexer-source) in))
+  (define in* (peeking-input-port/count in))
+  (define start-pos (file-position in*))
+  (define v (read-syntax (current-lexer-source) in*))
   (when (eof-object? v)
     (fail open-tok "expected S-expression after `#{`"))
-  (define end-pos
-    (let loop ()
-      (define-values (line col pos) (port-next-location in))
-      (define c (read-char in))
-      (cond
-        [(eof-object? c)
-         (fail v "expected `}` after S-expression")]
-        [(eqv? c #\})
-         (add1 pos)]
-        [(char-whitespace? c)
-         (loop)]
-        [else
-         (define bad (datum->syntax #f c (list (current-lexer-source)
-                                               line
-                                               col
-                                               pos
-                                               1)))
-         (fail bad "expected only whitespace or `}` after S-expression")])))
+  (let loop ()
+    (define-values (line col pos) (port-next-location in*))
+    (define c (read-char in*))
+    (cond
+      [(eof-object? c)
+       (fail v "expected `}` after S-expression")]
+      [(eqv? c #\})
+       (void)]
+      [(char-whitespace? c)
+       (loop)]
+      [else
+       (define bad (datum->syntax #f c (list (current-lexer-source)
+                                             line
+                                             col
+                                             pos
+                                             1)))
+       (fail bad "expected only whitespace or `}` after S-expression")]))
+  (define end-pos (file-position in*))
+  (define len (- end-pos start-pos))
+  (define raw (bytes->string/utf-8 (read-bytes len in) #\?))
+  (define-values (line-advance column-advance)
+    (count-graphemes raw
+                     (token-line-advance open-tok)
+                     (token-column-advance open-tok)))
   (define result
-    (let ([new-loc (let ([loc (token-srcloc open-tok)])
-                     (struct-copy srcloc loc
-                                  [span (- end-pos (srcloc-position loc))]))])
+    (let ([new-loc (list (token-start-line open-tok)
+                         (token-start-column open-tok)
+                         line-advance
+                         column-advance)]
+          [new-srcloc (and (token-srcloc open-tok)
+                           (struct-copy srcloc (token-srcloc open-tok)
+                                        [span (+ len (srcloc-span (token-srcloc open-tok)))]))])
       (syntax->token (if (identifier? v) 'identifier 'literal)
-                     (syntax-raw-property (datum->syntax v (syntax-e v) new-loc v)
+                     (syntax-raw-property (datum->syntax v (syntax-e v) new-srcloc v)
                                           (format "#{~s}" (syntax->datum v)))
                      new-loc)))
   (when (pair? (syntax-e v))
     (fail result "S-expression in `#{` and `}` must not be a pair"))
   result)
+
+(define (peeking-input-port/count in)
+  (let ([in* (peeking-input-port in)])
+    (cond
+      [(port-counts-lines? in)
+       (port-count-lines! in*)
+       (define-values (line col pos) (port-next-location in))
+       (let ([in* (relocate-input-port in* line col pos)])
+         (port-count-lines! in*)
+         in*)]
+      [else in*])))
 
 (define (closer-for? cl op)
   (equal? cl (case op
