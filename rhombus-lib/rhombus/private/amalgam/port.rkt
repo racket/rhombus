@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
          "provide.rkt"
+         (submod "annotation.rkt" for-class)
          "call-result-key.rkt"
          "function-arity-key.rkt"
          (submod "bytes.rkt" static-infos)
@@ -13,10 +14,14 @@
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
-                     Port))
+                     Port)
+         (for-space rhombus/annot Eof))
+
+(define-annotation-syntax Eof (identifier-annotation eof-object? ()))
 
 (module+ for-builtin
-  (provide output-port-method-table))
+  (provide input-port-method-table
+           output-port-method-table))
 
 (define-primitive-class Port port
   #:existing
@@ -34,13 +39,21 @@
   #:methods ())
 
 (define-primitive-class Input input-port
+  #:lift-declaration
   #:existing
   #:translucent
   #:fields ()
   #:namespace-fields
-  ([current current-input-port])
+  ([current current-input-port]
+   [open_bytes Port.Input.open_bytes]
+   [open_string Port.Input.open_string])
   #:properties ()
-  #:methods ())
+  #:methods
+  ([peek_byte Port.Input.peek_byte]
+   [peek_char Port.Input.peek_char]
+   [read_byte Port.Input.read_byte]
+   [read_bytes Port.Input.read_bytes]
+   [read_char Port.Input.read_char]))
 
 (define-primitive-class Output output-port
   #:lift-declaration
@@ -62,6 +75,18 @@
   (#%function-arity 3)
   . #,(get-function-static-infos))
 
+(define/arity (Port.Input.open_bytes bstr)
+  #:inline
+  #:primitive (open-input-bytes)
+  #:static-infos ((#%call-result #,(get-input-port-static-infos)))
+  (open-input-bytes bstr))
+
+(define/arity (Port.Input.open_string str)
+  #:inline
+  #:primitive (open-input-string)
+  #:static-infos ((#%call-result #,(get-input-port-static-infos)))
+  (open-input-string str))
+
 ;; TODO these need a more specific annotation
 (define/arity Port.Output.open_bytes
   #:inline
@@ -78,6 +103,31 @@
   (case-lambda
     [() (open-output-string)]
     [(name) (open-output-string name)]))
+
+(define/method (Port.Input.peek_byte port [skip 0])
+  #:inline
+  #:primitive (peek-byte)
+  (peek-byte port skip))
+
+(define/method (Port.Input.peek_char port)
+  #:inline
+  #:primitive (peek-char)
+  (peek-char port))
+
+(define/method (Port.Input.read_byte port)
+  #:inline
+  #:primitive (read-byte)
+  (read-byte port))
+
+(define/method (Port.Input.read_bytes port amt)
+  #:inline
+  #:primitive (read-bytes)
+  (bytes->immutable-bytes (read-bytes amt port)))
+
+(define/method (Port.Input.read_char port)
+  #:inline
+  #:primitive (read-char)
+  (read-char port))
 
 (define/method (Port.Output.get_bytes port)
   #:inline
