@@ -73,10 +73,17 @@ fun pin(content :: Pict,
             | error(#'#{balloon.pin}, "cannot find pict")
             | p
         | ~else:
-            Pict.from_handle(
-              bln.#{pin-balloon}(p.handle,
-                                 p.handle, fun (p, q): values(at_x, at_y),
-                                 content.handle,
+            let fill_color = (color && as_color(color)) || Color(0, 0, 0, 0.0).handle
+            let outline_color = line_color || Color(0, 0, 0, 0.0).handle
+            let outline_width: if line_color
+                               | if line_width == #'inherit
+                                 | 1
+                                 | line_width
+                               | 0
+            fun build([handle, content_handle]):
+              bln.#{pin-balloon}(handle,
+                                 handle, fun (p, q): values(at_x, at_y),
+                                 content_handle,
                                  ~spike: spike,
                                  #{#:x-margin}: hmargin,
                                  #{#:y-margin}: vmargin,
@@ -86,15 +93,12 @@ fun pin(content :: Pict,
                                  ~dy: dy,
                                  ~sprout: sprout,
                                  #{#:thought?}: thought,
-                                 ~color: (color && as_color(color)) || Color(0, 0, 0, 0.0).handle,
-                                 #{#:line-color}: line_color || Color(0, 0, 0, 0.0).handle,
-                                 #{#:line-width}: if line_color
-                                                  | if line_width == #'inherit
-                                                    | 1
-                                                    | line_width
-                                                  | 0),
-              [p, content]
-            )
+                                 ~color: fill_color,
+                                 #{#:line-color}: outline_color,
+                                 #{#:line-width}: outline_width)
+            Pict.from_handle(build([p.handle, content.handle]),
+                             [p, content],
+                             build)
     | [p :~ Pict, content :~ Pict]:
         let (p, content, at):
           match time
@@ -113,7 +117,7 @@ fun pin(content :: Pict,
               let dt = p.duration
               let content = content.time_pad(~before: dt)
               values(p, content, at.delay(dt))
-          | ~else: values (p, content)
+          | ~else: values(p, content, at)
         animate_map([p, content],
                     ~epoch: epoch_a,
                     ~duration: duration,
@@ -150,17 +154,17 @@ fun note(content :: Pict,
     | [_ :: pict.NothingPict]:
         nothing
     | [content :: pict.StaticPict]:
-        Pict.from_handle(
+        let color = (color && as_color(color)) || current_color()
+        fun build([content_handle]):
           bln.#{balloon-note}(content.handle,
                               #{#:x-margin}: hmargin,
                               #{#:y-margin}: vmargin,
                               #{#:corner-radius}: corner_radius,
                               #{#:thought?}: thought,
-                              ~color: (color && as_color(color)) || current_color(),
+                              ~color: color,
                               #{#:line-color}: line_color,
-                              #{#:line-width}: line_width),
-          [content]
-        )
+                              #{#:line-width}: line_width)
+        Pict.from_handle(build([content.handle]), [content], build)
     | ~else:
         animate_map(contents,
                     ~epoch: epoch_a,

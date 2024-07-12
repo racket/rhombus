@@ -159,3 +159,20 @@ the identities of all picts (including the ghosted one). The
 same and has the same bounding box, but that hides the identity of all
 picts within the composite, so @rhombus(Find, ~annot) functions cannot find
 them.
+
+Not only are pict identities preserved in a composite pict, but the way
+that those picts are used to produce the composite is also recorded.
+Consequently, a pict supports a replacement operation that replays the
+pict's construction, but using a given pict in place of an original.
+
+@examples(
+  ~eval: pict_eval
+  comp
+  comp.replace(circ, ellipse(~width: 60, ~height: 30, ~fill: "orange"))
+)
+
+The dependency tracking of a composite pict on other picts is
+generalized through the @rhombus(configure) constructor and
+@rhombus(Pict.configure) method, so a pict's construction can be
+parameterized over arbitrary key--value mappings while still producing a
+@rhombus(Pict) object.

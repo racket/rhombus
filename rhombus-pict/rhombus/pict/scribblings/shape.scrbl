@@ -35,11 +35,12 @@
 @doc(
   fun rectangle(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: Real: if around | Pict.width(around) | 32,
-    ~height: height :: Real: if around | Pict.height(around) | width,
+    ~width: width :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~height: height :: AutoReal = #'#,(@rhombus(auto, ~value)),
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
+    ~rounded: rounded :: maybe(Rounded) = #false,              
     ~order: order :: OverlayOrder = #'back,
     ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
@@ -49,7 +50,7 @@
 
  Creates a @tech{pict} to draw a rectangle. If an @rhombus(around) pict is
  provided, then it both supplies default @rhombus(width) and
- @rhombus(height) values an is @rhombus(overlay)ed on top of the rectangle
+ @rhombus(height) values and is @rhombus(overlay)ed on top of the rectangle
  image,
 
  The rectangle has an outline if @rhombus(line) is not @rhombus(#false),
@@ -93,12 +94,11 @@
 @doc(
   fun square(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: Real: if around
-                         | math.max(Pict.width(around), Pict.width(around))
-                         | 32,
+    ~size: size :: AutoReal = #'#,(@rhombus(auto, ~value)),
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
+    ~rounded: rounded :: maybe(Rounded) = #false,              
     ~order: order :: OverlayOrder = #'back,
     ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
     ~epoch: epoch_align :: EpochAlignment = #'center,
@@ -119,8 +119,8 @@
 @doc(
   fun ellipse(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: Real: if around | Pict.width(around) | 32,
-    ~height: height :: Real: if around | Pict.height(around) | width,
+    ~width: width :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~height: height :: AutoReal = #'#,(@rhombus(auto, ~value)),
     ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
@@ -148,9 +148,7 @@
 @doc(
   fun circle(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: Real: if around
-                         | math.max(Pict.width(around), Pict.width(around))
-                         | 32,
+    ~size: size :: AutoReal = #'#,(@rhombus(auto, ~value)),
     ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
@@ -264,7 +262,8 @@
 
 @doc(
   fun animate(
-    proc :: Function.of_arity(1),
+    ~children: children :: List.of(Pict) = [],
+    proc :: Function.of_arity(1 + children.length()),
     ~extent: extent :: NonnegReal = 0.5,
     ~bend: bender = bend.fast_middle,
     ~sustain_edge: sustain_edge :: TimeOrder = #'before
@@ -272,13 +271,16 @@
 ){
 
  Creates an @tech{animated pict}. The @rhombus(proc) should accept a
- @rhombus(Real.in(), ~annot) and produce a @rhombus(StaticPict, ~annot).
+ @rhombus(Real.in(), ~annot) as its first argument and produce a
+ @rhombus(StaticPict, ~annot). The @rhombus(proc) is called with the
+ elements of @rhombus(children) as additional argument, but each of those
+ elements can be adjusted through @rhombus(Pict.replace).
 
  The resulting pict's @tech{duration} is 1, and the @tech{extent} of
  that duration is determined by the @rhombus(extent) argument. Before the
  pict's @tech{time box}, its drawing and @tech{bounding box} are the same
- as @rhombus(Pict.ghost(proc(0))); after its time box, they are the
- same as @rhombus(Pict.ghost(proc(1))).
+ as @rhombus(Pict.ghost(proc(0, & children))); after its time box, they are the
+ same as @rhombus(Pict.ghost(proc(1, & children))).
 
  The @rhombus(bender) function adjusts the argument that is passed to
  @rhombus(proc). If @rhombus(bender) is the identity function, then the
@@ -318,6 +320,26 @@
 
 
 @doc(
+  fun configure(~children: children :: List.of(Pict) = [],
+                proc :: Function.of_arity(children.length() + 1),
+                configuration :: Map)
+    :: Pict
+){
+
+ Creates a pict that is like the result of
+ @rhombus(proc(& children, configuration)), but where @rhombus(children)
+ contains picts that can be adjusted via @rhombus(Pict.replace), and the
+ @rhombus(configuration) map can be adjusted via
+ @rhombus(Pict.configure).
+
+ Unlike a @rhombus(proc) for @rhombus(animate), the @rhombus(proc)
+ provided to @rhombus(configure) can produce any @rhombus(Pict, ~annot)
+ value, not necessarily a @rhombus(StaticPict, ~annot).
+ 
+}
+  
+
+@doc(
   fun Pict.from_handle(handle) :: Pict
 ){
 
@@ -346,6 +368,17 @@
 
  A line-width specification, where @rhombus(#'inherit) allows the color
  to be configured externally, such as through @rhombus(Pict.line_width).
+
+}
+
+@doc(
+  enum AutoReal:
+    ~is_a Real
+    auto
+){
+
+ A dimension with a computed default indicated by @rhombus(#'auto) for
+ functions like @rhombus(rectangle).
 
 }
 

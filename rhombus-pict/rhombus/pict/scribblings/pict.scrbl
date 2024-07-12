@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 
 @(import:
+    "pict_eval.rhm".pict_eval    
     meta_label:
       rhombus open
       pict open
@@ -37,6 +38,21 @@
 ){
 
  Properties for a @tech{pict}'s geometry.
+
+}
+
+@doc(
+  method (pict :: Pict).draw(dc :: DC,
+                             ~dx: dx :: Real = 0,
+                             ~dx: dy :: Real = 0) :: Void
+  method (pict :: Pict).drawer()
+    :: Function.of_arity(1, ~dx, ~dy)
+){
+
+ Draws a @tech{pict} or returns a function that can be used to draw the
+ pict. Repeatedly using the function produced by @rhombus(Pict.drawer)
+ may be faster than repeatedly calling @rhombus(Pict.draw). If the pict
+ is animated, then it is drawn the same as @rhombus(Pict.snapshot(pict)).
 
 }
 
@@ -127,6 +143,55 @@
  @tech{bounding box} adjusted.
 
 }
+
+@doc(
+  method (pict :: Pict).replace(orig :: Pict,
+                                replacement :: Pict) :: Pict
+){
+
+ Returns a @tech{pict} that is like @rhombus(pict), but replays
+ @rhombus(pict)'s construction so that @rhombus(replacement) is used
+ whenever @rhombus(orig) was originally used. Parts of the @rhombus(pict)
+ construction that did not depend on @rhombus(orig) are kept as-is and
+ with their existing identities, while replayed operations create fresh
+ identities.
+
+ To support @rhombus(Pict.replace), the representation of a pict
+ effectively records all primitive operations used to construct the pict.
+ This recording is limited to @rhombus(Pict, ~annot) and @rhombus(Find, ~annot) objects.
+ If, for example, you use @rhombus(Find.in) to obtain a number and then
+ construct a pict using that number, the number itself cannot record its
+ derivation from the picts used with @rhombus(Find.in). In such cases,
+ use @rhombus(configure) or the @rhombus(~children) argument of
+ @rhombus(animate) to establish a connection between the input picts and
+ the result.
+
+@examples(
+  ~eval: pict_eval
+  def s = square(~size: 20, ~fill: "blue")
+  def c = circle(~size: 15, ~fill: "red")
+  def p = beside(~sep: 10, s, s)
+  p
+  p.replace(s, c)
+)
+
+}
+
+
+@doc(
+  method (pict :: Pict).configure(key :: !Pict,
+                                  val : Any)
+    :: Pict
+){
+
+ Produces a pict like @rhombus(pict), but replays @rhombus(pict)'s
+ construction so that any configuration via @rhombus(configure) that uses
+ @rhombus(key) is replaced with one where @rhombus(key) is mapped to
+ @rhombus(val). To avoid confusion between children picts and
+ configuration keys, a @rhombus(key) is constrained to be a non-pict.
+
+}
+
 
 @doc(
   method (pict :: Pict).time_pad(

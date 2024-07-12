@@ -1,0 +1,56 @@
+#lang rhombus/static
+import:
+  pict open
+  draw open
+
+def r = rectangle(~width: 50)
+def c = circle(~size: 40)
+def t = text("hi")
+
+fun image_of(p :~ Pict):
+  let bm = Bitmap(math.exact(math.ceiling(p.width)),
+                  math.exact(math.ceiling(p.height)))
+  let dc = bm.make_dc()
+  p.draw(dc)
+  bm.argb_pixels().snapshot()
+
+check:
+  image_of(c) ~is image_of(c)
+  image_of(r) == image_of(c) ~is #false
+
+check:
+  image_of(r.replace(r, c)) ~is image_of(c)
+  image_of(rectangle(~around: r).replace(r, c)) ~is image_of(rectangle(~around: c))
+  image_of(beside(r, r).replace(r, c)) ~is image_of(beside(c, c))
+
+fun build1(p :~ Pict) :~ Pict:
+  let q = rectangle(~around: p.pad(10))
+  let q = q.refocus(p)
+  let q = beside(q, line(~dx: 20))
+  q
+
+fun build2(p :~ Pict) :~ Pict:
+  let q = rectangle(~around: p.pad(~right: 100))
+  let q = connect(~on: q,
+                  Find.right(p),
+                  Find.right(q),
+                  ~style: #'arrow)
+  q
+
+fun swell(p :~ StaticPict) :~ Pict:
+  animate(fun (n, p :~ Pict):
+            p.scale(1 + n),
+          ~children: [p])
+
+fun build3(p :~ Pict) :~ Pict:
+  overlay(& sequential(p, t))
+
+check:
+  image_of(build1(r).replace(r, c)) ~is image_of(build1(c))
+  image_of(build2(r).replace(r, c)) ~is image_of(build2(c))
+  image_of(swell(r).replace(r, c)) ~is image_of(swell(c))
+  image_of(swell(r).snapshot(0, 0.5).replace(r, c)) ~is image_of(swell(c).snapshot(0, 0.5))
+  image_of(swell(r).replace(r, c).snapshot(0, 0.5)) ~is image_of(swell(c).snapshot(0, 0.5))
+  image_of(build3(r).replace(r, c)) ~is image_of(build3(c))
+  image_of(build3(r).snapshot(1, 0).replace(r, c)) ~is image_of(build3(c).snapshot(1, 0))
+  image_of(build3(r).replace(r, c).snapshot(1, 0)) ~is image_of(build3(c).snapshot(1, 0))

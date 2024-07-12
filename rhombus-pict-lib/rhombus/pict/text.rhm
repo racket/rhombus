@@ -210,7 +210,9 @@ fun para(~width: width = current_para_width(),
          ~full: full = #false,
          ~decode: decode = #true,
          content :: TextContent, ...) :~ Pict:
-  recur retry(ps = join_nonbreaking(flatten_para_content(#'slide, decode, [content, ...]))):
+  recur retry(ps = join_nonbreaking(flatten_para_content(#'slide, decode, [content, ...])),
+              epoch = 0,
+              n = 0):
     match ps
     | [p :: pict.StaticPict, ...]:
         Pict.from_handle(rkt.para(~t: mstr_t,
