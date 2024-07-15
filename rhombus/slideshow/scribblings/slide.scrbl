@@ -112,7 +112,7 @@
                  content :: SlideContent, ...) :: Pict
 ){
 
- Like @rhombus(pict), except that the result is a pict (potentially with
+ Like @rhombus(slide), except that the result is a pict (potentially with
  a multi-epoch duration) instead of registering a slide.
 
  If @rhombus(full) is true, then the resulting pict reperesents a slide
