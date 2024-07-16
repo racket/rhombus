@@ -97,11 +97,18 @@
 }
 
 @doc(
+  ~nonterminal:
+    ellipses: List
   reducer.macro 'any'
+  expr.macro 'any($expr_or_splice, ...)'
+  grammar expr_or_splice:
+    $expr
+    $repet #,(@litchar{,}) $ellipses
 ){
 
- A @tech{reducer} that stops an iteration as soon as a non-@rhombus(#false)
- value is produced for an element and returns that value, otherwise
+ The @rhombus(any, ~reducer) form as a @tech{reducer} is like
+ @rhombus(||): it stops an iteration as soon as a non-@rhombus(#false)
+ value is produced for an element and it returns that value, otherwise it
  returns @rhombus(#false).
 
 @examples(
@@ -109,6 +116,17 @@
     i == 5 && to_string(i)
   for any (i: 0..10):
     i == 10
+)
+
+ The @rhombus(any) expression form is like @rhombus(||), but
+ @rhombus(any) supports repetition arguments, and it stops iterating
+ through a repetition as soon as a non-@rhombus(#false) result is found.
+ When the last @rhombus(expr_or_splice) is an @nontermref(expr), it is in
+ tail position.
+
+@examples(
+  def [x, ...] = [1, 2, 3, 4]
+  any(x > 2 && x, ...)
 )
 
 }
@@ -198,18 +216,33 @@
 
 
 @doc(
+  ~nonterminal:
+    expr_or_splice: any ~reducer
   reducer.macro 'all'
+  expr.macro 'all($expr_or_splice, ...)'
 ){
 
- A @tech{reducer} that stops an iteration as soon as a @rhombus(#false) value
- is produced for an element and otherwise returns the result of the last
- iteration.
+ The @rhombus(all, ~reducer) form as a @tech{reducer} is like
+ @rhombus(&&): it stops an iteration as soon as a @rhombus(#false) value
+ is produced for an element, and it otherwise returns the result of the
+ last iteration.
 
 @examples(
   for all (i: 0..10):
     i == 5
   for all (i: 0..10):
     i < 10 && to_string(i)
+)
+
+ The @rhombus(all) expression form is like @rhombus(&&), but
+ @rhombus(all) supports repetition arguments, and it stops iterating
+ through a repetition as soon as a @rhombus(#false) result is found. When
+ the last @rhombus(expr_or_splice) is a @nontermref(expr), it is in tail
+ position.
+
+@examples(
+  def [x, ...] = [1, 2, 3, 4]
+  all(x < 2, ...)
 )
 
 }

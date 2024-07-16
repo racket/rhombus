@@ -166,8 +166,9 @@
 (define-for-syntax (repetition-as-list/unchecked rep-parsed depth)
   (render-repetition/direct rep-parsed depth 'unchecked #'for/list))
 
-(define-for-syntax (render-repetition for-form rep-parsed)
-  (render-repetition/direct rep-parsed 1 'checked for-form))
+(define-for-syntax (render-repetition for-form rep-parsed
+                                      #:depth [depth 1])
+  (render-repetition/direct rep-parsed depth 'checked for-form))
 
 (define-for-syntax (render-repetition/direct rep-parsed depth mode for-form)
   (syntax-parse rep-parsed
