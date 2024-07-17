@@ -1,6 +1,8 @@
 #lang racket/base
 (require racket/pretty
          "lex.rkt"
+         (rename-in "private/column.rkt"
+                    [column+ lex:column+])
          "srcloc.rkt"
          (submod "print.rkt" for-parse)
          "private/property.rkt"
@@ -125,9 +127,9 @@
 
 (define zero-delta (cont-delta 0 0))
 
-(define (closer-column? c) (or (eq? c 'any) (number? c)))
+(define (closer-column? c) (or (number? c) (and (pair? c) (number? (car c))) (eq? c 'any)))
 
-(define closer-expected? pair?)
+(define (closer-expected? closer) (and (pair? closer) (not (number? (car closer)))))
 (define (closer-expected closer) (if (pair? closer) (car closer) closer))
 (define (closer-expected-opener closer) (and (pair? closer) (cdr closer)))
 (define (make-closer-expected str tok) (cons str tok))
@@ -142,6 +144,10 @@
 (define alts-tag (syntax-raw-identifier-property (datum->syntax #f 'alts)))
 
 (define within-parens-str "within parentheses, brackets, or braces")
+
+(define (make-incomparable t)
+  (lambda ()
+    (fail t "incomparable indentation due to mixed tabs")))
 
 ;; ----------------------------------------
 
@@ -219,7 +225,8 @@
             (group-state-raw sg)))
   (define (check-column t column)
     (when (group-state-check-column? sg)
-      (unless (eqv? column (group-state-column sg))
+      (unless (column=? column (group-state-column sg)
+                        #:incomparable (make-incomparable t))
         (fail t "wrong indentation"))))
   (define closer (group-state-closer sg))
   (cond
@@ -235,7 +242,8 @@
        (and (group-state-count? sg)
             (closer-column? closer)
             column
-            (column . < . closer)))
+            (column . column<? . closer
+                    #:incomparable (make-incomparable t))))
      (cond
        [(eq? (token-name t) 'group-comment)
         (check-no-commenting)
@@ -411,9 +419,11 @@
                                         (= line (group-state-last-line sg))))
                  (when (group-state-check-column? sg)
                    (unless (if (in-block-mode? (group-state-block-mode sg))
-                               (= column (column-half-next (in-block-mode-parent-column (group-state-block-mode sg))))
+                               (column=? column (column-half-next (in-block-mode-parent-column (group-state-block-mode sg)))
+                                         #:incomparable (make-incomparable t))
                                (or same-line?
-                                   (= column (group-state-column sg))))
+                                   (column=? column (group-state-column sg)
+                                             #:incomparable (make-incomparable t))))
                      (fail t "wrong indentation")))
                  (define pre-raw (group-state-raw sg))
                  (define commenting (or (group-state-commenting sg)
@@ -581,7 +591,8 @@
          [else
           ;; no `(check-block-mode)` here, because `|` is allowed after `:`
           (when (and (state-operator-column s)
-                     (not (= (token-column t) (column-half-next (state-operator-column s)))))
+                     (not (column=? (token-column t) (column-half-next (state-operator-column s))
+                                    #:incomparable (make-incomparable t))))
             (fail t "wrong indentation"))
           (parse-block #f l
                        #:count? (state-count? s)
@@ -614,15 +625,17 @@
              (get-own-line-group-comment t l (state-line s) (state-delta s) (state-raw s) (state-count? s)))
            (define column (token-column use-t))
            (cond
-             [(column . > . (state-column s))
+             [(column . column>? . (state-column s)
+                      #:incomparable (make-incomparable use-t))
               ;; More indented forms a nested block when there's
               ;; a preceding `:` (doesn't get here) or starting with `|`;
               ;; more indented continues a group when starting with an
               ;; operator
               (cond
                 [(eq? 'bar-operator (token-name use-t))
-                 (unless (= column (column-half-next (or (state-bar-column s)
-                                                         (state-column s))))
+                 (unless (column=? column (column-half-next (or (state-bar-column s)
+                                                                (state-column s)))
+                                   #:incomparable (make-incomparable use-t))
                    (fail use-t "wrong indentation"))
                  (parse-block #f use-l
                               #:count? (state-count? s)
@@ -637,7 +650,8 @@
                               #:group-commenting group-commenting)]
                 [(and (eq? 'operator (token-name use-t))
                       (or (not (state-operator-column s))
-                          (= column (state-operator-column s))))
+                          (column=? column (state-operator-column s)
+                                    #:incomparable (make-incomparable use-t))))
                  (when group-commenting (fail group-commenting "misplaced group comment"))
                  (keep zero-delta #:operator-column column)]
                 [(and (eq? 'opener (token-name use-t))
@@ -1277,11 +1291,11 @@
                     ;; whitespace-only lines don't count, so next continues
                     ;; on the same line by definition:
                     #f
-                    (cont-delta (column+ (token-column t)
-                                         (+ (if accum-delta?
-                                                (cont-delta-column delta)
-                                                0)
-                                            1))
+                    (cont-delta (column+ (column+ 1
+                                                  (token-column t))
+                                         (if accum-delta?
+                                             (cont-delta-column delta)
+                                             0))
                                 (add1 (cont-delta-line-span delta)))
                     next-raw
                     count?)])]
@@ -1391,7 +1405,8 @@
              (loop (cdr raw) (cons t pending) rev-suffix-raw)]
             [(comment)
              (cond
-               [(eqv? column (token-column t))
+               [(column=? column (token-column t)
+                          #:incomparable (make-incomparable t))
                 (loop (cdr raw) null (cons t (append pending rev-suffix-raw)))]
                [else (done)])]
             [else (done)])]))]))
@@ -1437,17 +1452,22 @@
 
 (define (column-next c)
   (and c
-       (if (integer? c)
-           (add1 c)
-           (add1 (inexact->exact (floor c))))))
+       (cond
+         [(integer? c) (add1 c)]
+         [(number? c) (add1 (inexact->exact (floor c)))]
+         [else (cons (column-next (car c)) (cdr c))])))
 
 (define (column-half-next c)
-  (if (integer? c)
-      (+ c 0.5)
-      (column-next c)))
+  (cond
+    [(integer? c)
+     (+ c 0.5)]
+    [(pair? c) (cons (column-half-next (car c))
+                     (cdr c))]
+    [else
+     (column-next c)]))
 
 (define (column+ c n)
-  (and c (+ c n)))
+  (and c (lex:column+ c n)))
 
 (define (line+ l n)
   (and l (+ l n)))
