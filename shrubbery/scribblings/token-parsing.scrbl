@@ -81,6 +81,24 @@ escape must @emph{not} describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
 ill-formed representations.
 
+Lines and indentation-influencing whitespace are not represented as
+tokens. Instead, each token conceptually has a line and column derived
+from its position in the input sequence of characters. The line for an
+input sequence increments at a linefeed character (code point 0x0A), a
+two-character sequence of return (code point 0x0C) and linefeed, or a
+return character that is not followed by a linefeed character. The
+column of an input sequence for measuring @deftech{indentation}
+increments once per Unicode @defterm{grapheme cluster}, except that tabs
+are treated specially.@margin_note{Note that the use of grapheme
+ clusters is a different counting of columns than built into a Racket or
+ Rhombus input port, which counts by Unicode code points.} More
+generally, a column corresponds to a sequence of spaces and tabs, where
+all non-tab grapheme clusters are treated like a space. A column is more
+indented than another only if it extends the other column's sequence.
+When neither of two columns is a prefix of the other, then the columns
+are incomparable; if parsing depends on an order between incomparable
+columns, then it fails with a ``mix tabs'' error.
+
 For more details on @litchar("@") parsing, see @secref("at-parsing"),
 but the table below describes the shape of @litchar("@") forms.
 

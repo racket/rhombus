@@ -73,7 +73,7 @@ Overall, a document is a sequence of groups:
 @section{Grouping by Lines}
 
 The main grouping rule is that sequences on different lines with the
-same indentation create separate @tech{groups}, one for each line.
+same @tech{indentation} create separate @tech{groups}, one for each line.
 
 @rhombusblock(
   this is the first group
@@ -89,7 +89,7 @@ An @opener_closer pair @parens, @brackets, @braces, or @quotes forms a @tech{ter
 can span lines and encloses nested groups. Within most @opener_closer
 pairs, @litchar{,} separates groups, but @litchar{;} separates group
 with @quotes. Groups can be on separate lines at the same
-indentation, but groups on separate lines still must be separated by
+@tech{indentation}, but groups on separate lines still must be separated by
 @litchar{,} in @parens, @brackets, or @braces. Parsing
 retains whether a term is formed by @parens, @brackets,
 @braces, or @quotes.
@@ -160,7 +160,7 @@ preserved in the parsed representation.
 
 @section{Blocking with @litchar{:} and Indentation}
 
-A sequence of groups has a particular indentation that is determined by
+A sequence of groups has a particular @tech{indentation} that is determined by
 the first group in the sequence. Subsequent groups in a sequence must
 start with the same indentation as the first group.
 
@@ -249,7 +249,7 @@ preceding line does @emph{not} end with @litchar{:}, then the indented line
 does not form a block, and it may instead continue the previous line.
 The operator-starting line continues only if the previous line was not a
 continuing line; however, additional continuing lines can start with an
-operator (not necessarily the same one) at the same indentation as the
+operator (not necessarily the same one) at the same @tech{indentation} as the
 original continuing line. The following two groups are the same:
 
 @rhombusblock(
@@ -286,7 +286,7 @@ with a block that has a @litchar{+ 3} group:
 
 A group can end with a sequence of @tech{alternatives}, each of which
 starts with @litchar{|}. The initial @litchar{|} of the sequence can be
-on a new line, in which case it must have the same indentation as the
+on a new line, in which case it must have the same @tech{indentation} as the
 beginning of its enclosing group, but it does not have to be on a new
 line. If a later @litchar{|} for the same alternative sequence starts a
 new line, it must be indented the same as the initial @litchar{|}
@@ -637,7 +637,7 @@ the start of a group. To comment out an alternative, @litchar{#//} must appear
 on its own line before the alternative or just before a @litchar{|} that does
 @emph{not} start a new line.
 
-The interaction between @litchar{#//} and indentation depends on how it is
+The interaction between @litchar{#//} and @tech{indentation} depends on how it is
 used:
 
 @itemlist(

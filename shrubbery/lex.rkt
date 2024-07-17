@@ -4,6 +4,7 @@
          racket/port
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
+         "private/column.rkt"
          "private/property.rkt"
          "private/peek-port.rkt"
          "private/emoji.rkt")
@@ -221,21 +222,6 @@
 (define stx-for-identifier-as-keyword (syntax-property stx-for-original-property 'identifier-as-keyword #t))
 
 (define current-lexer-source (make-parameter "input"))
-
-(define (count-graphemes s [lines 0] [columns 0])
-  (let loop ([i 0] [lines lines] [columns columns])
-    (cond
-      [(= i (string-length s)) (values lines columns)]
-      [(char=? #\return (string-ref s i))
-       (if (and ((add1 i) . < . (string-length s))
-                (char=? #\newline (string-ref s (add1 i))))
-           (loop (+ i 2) (add1 lines) 0)
-           (loop (+ i 1) (add1 lines) 0))]
-      [(char=? #\newline (string-ref s i))
-       (loop (+ i 1) (add1 lines) 0)]
-      [else
-       (define n (string-grapheme-span s i))
-       (loop (+ i n) lines (+ columns 1))])))
 
 (define (make-token name e start-pos end-pos [raw #f])
   (define offset (position-offset start-pos))
@@ -544,10 +530,10 @@
                                                     (s-exp-token-column-advance tok)
                                                     (token-column-advance tok))])
                             (counter (+ start-line line-advance)
-                                     (+ (if (eqv? 0 line-advance)
-                                            start-column
-                                            0)
-                                        column-advance)
+                                     (column+ column-advance
+                                              (if (eqv? 0 line-advance)
+                                                  start-column
+                                                  0))
                                      status/backup)))
        (values new-tok type paren start end new-backup new-status)])))
 
@@ -1169,7 +1155,7 @@
 
 (define (token-column t)
   (if (eq? (token-name t) 'bar-operator)
-      (+ (token-start-column t) 0.5)
+      (column+ 0.5 (token-start-column t))
       (token-start-column t)))
 
 (define (token-end-line t)
@@ -1178,7 +1164,7 @@
 
 (define (token-end-column t)
   (if (eqv? 0 (token-line-advance t))
-      (+ (token-column t) (token-column-advance t))
+      (column+ (token-column-advance t) (token-column t))
       (token-column-advance t)))
 
 (define (token-srcloc t)

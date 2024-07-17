@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/pretty
+         racket/string
          "../lex.rkt"
          "../parse.rkt"
          "../print.rkt"
@@ -98,7 +99,12 @@
 (define (check-fail input rx)
   (let ([in (open-input-string input)])
     (port-count-lines! in)
-    (unless (with-handlers ([exn:fail? (lambda (exn) (regexp-match? rx (exn-message exn)))])
+    (unless (with-handlers ([exn:fail? (lambda (exn)
+                                         (or (regexp-match? rx (exn-message exn))
+                                             (error 'check-fail
+                                                    "not expected error: ~s\n  input: ~s"
+                                                    (exn-message exn)
+                                                    input)))])
               (parse-all in)
               #f)
       (error 'check-fail "failed to fail: ~s" input))))
@@ -134,9 +140,17 @@
 (define (lines s . ss)
   (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
 
+(define (add-prefix s prefix)
+  (apply string-append (map (lambda (s) (string-append prefix s "\n"))
+                            (string-split s "\n"))))
+
 (check 1 input1 expected1)
 (check '1a input1a expected1a)
 (check '1b input1b expected1b)
+(check '1t (add-prefix input1 "\t") expected1 #:check-print? #f)
+(check '1tsts (add-prefix input1 "\t  \t ") expected1 #:check-print? #f)
+(check '1at (add-prefix input1a "\t") expected1a #:check-print? #f)
+(check '1bt (add-prefix input1b "\t") expected1b #:check-print? #f)
 (check 2 input2 expected2)
 (check 3 input3 expected3)
 (check 3 input3b expected3b #:check-print? #f)
@@ -145,6 +159,37 @@
 (check 6 input6 expected6)
 (check 7 input7 expected7)
 (check 8 input8 expected8)
+
+(check 'mix (string-append "x:\n"
+                           "  apple\tbanana\n"
+                           "  coconut\n"
+                           "y:\n"
+                           "  1\t(2,\n"
+                           "   \t 3)\n"
+                           "z:\n"
+                           "\t  \t A\n"
+                           "\t  \t B(C,\n"
+                           "\t  \t   D:\t\t E\n"
+                           "\t  \t     \t\t F)\n"
+                           "w:\n"
+                           "\t1\n"
+                           "| 2\n"
+                           "q\n"
+                           "| \t1\n"
+                           "  \t| 1.1\n"
+                           "  \t| 1.2\n"
+                           "| 2")
+       '(top
+         (group x (block (group apple banana) (group coconut)))
+         (group y (block (group 1 (parens (group 2) (group 3)))))
+         (group z (block (group A)
+                         (group B (parens (group C)
+                                          (group D (block (group E)
+                                                          (group F)))))))
+         (group w (block (group 1)) (alts (block (group 2))))
+         (group q (alts (block (group 1
+                                      (alts (block (group 1.1)) (block (group 1.2)))))
+                        (block (group 2))))))
 
 (check-fail "x:" #rx"empty block")
 (check-fail "x:\ny" #rx"empty block")
@@ -219,3 +264,9 @@
 (check-fail "1.2.3." #rx"read error")
 
 (check-fail "~#%call" #rx"read error")
+
+(check-fail "\t1\n 2" #rx"mixed tabs")
+(check-fail "\t1\n\t 2" #rx"wrong indentation")
+(check-fail " 1\n \t2" #rx"wrong indentation")
+(check-fail "\ta\n\t| 1\n | 2" #rx"mixed tabs")
+(check-fail "\"x\ty\": 1\n       2" #rx"mixed tabs")
