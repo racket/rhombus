@@ -1,13 +1,5 @@
 # Rhombus Plan
 
-> NOTE: "Rhombus" is the new name for a design project formerly known 
-> as "Racket2", but "Rhombus" **is not the final name of the new language**. 
->
-> "Rhombus" is the name of the project that will develop a language, 
-> and "Rhombus" is a temporary stand-in for a language name to be 
-> determined later. Phase 3 of the plan includes the mandatory step of 
-> picking a new language name.
-
 Rhombus is about building on the good parts of Racket and advancing the 
 frontier of Racket-style language-oriented programming. A significant 
 part of the experiment is trying a surface syntax other than 
@@ -161,7 +153,8 @@ A language name—as opposed to a temporary project name—must be
 picked at this point. By delaying the choice of name until we know what 
 the language is, we avoid confusion and misinformation due to 
 historical properties of Rhombus-in-development that end up not being 
-true about the completed language. 
+true about the completed language.  [Note: In the end, we picked
+Rhombus for the language name, too.]
 
 CONCLUSION: The decision of whether this conversion succeeds—
 including which things really should be converted or not and when 

@@ -1,26 +1,24 @@
-This repository is the iterative-design phase of the Rhombus project,
+This repository is the integration phase of the Rhombus project,
 which is about the design of a new language that is based on Racket.
-“Rhombus” is the project name and a placeholder name for a language
-name to be chosen later.
 
-This repository also serves as a package to implement the current
-Rhombus prototype. Installing the package makes `#lang rhombus` work
-and builds documentation for the prototype.
+This repository also houses the packages that make up the current
+Rhombus implementation. Installing the `rhombus` package makes
+`#lang rhombus` work and builds documentation, while installing
+`rhombus-main-distrbiution` gets a larger set of packages.
 
 # Resources
 
-* [Prototype documentation](https://plt.cs.northwestern.edu/pkg-build/doc/rhombus/index.html)
-  as rendered by the snapshot package build
+* [Documentation](https://docs.racket-lang.org/rhombus/index.html)
+  as rendered by the Racket package-build service
 
 * [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
-
-* [State of Rhombus](resources/state-of-rhombus.md)
 
 * [Project plan](resources/plan.md)
 
 * [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
 
 * Older resources:
+   - [State of Rhombus](resources/state-of-rhombus.md) October 2021
    - A summary of [possible goals](resources/goals.md)
    - References to some [mailing list discussion](resources/refs.md)
    - A summary of [potential syntax guidelines](resources/syntax-considerations.md)
