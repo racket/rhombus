@@ -4,7 +4,7 @@
 
 (define deps
   '(["base" #:version "8.8.0.5"]
-    ["compiler-lib" #:version "1.15"]
+    "compiler-lib"
     ["pretty-expressive" #:version "1.1"]
     "shrubbery-lib"
     "enforest-lib"
