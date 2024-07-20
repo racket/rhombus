@@ -53,7 +53,8 @@
    [peek_char Port.Input.peek_char]
    [read_byte Port.Input.read_byte]
    [read_bytes Port.Input.read_bytes]
-   [read_char Port.Input.read_char]))
+   [read_char Port.Input.read_char]
+   [read_line Port.Input.read_line]))
 
 (define-primitive-class Output output-port
   #:lift-declaration
@@ -128,6 +129,11 @@
   #:inline
   #:primitive (read-char)
   (read-char port))
+
+(define/method (Port.Input.read_line port [mode 'linefeed])
+  #:inline
+  #:primitive (read-line)
+  (string->immutable-string (read-line port mode)))
 
 (define/method (Port.Output.get_bytes port)
   #:inline
