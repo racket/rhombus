@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 
-@title{Rhombus Prototype}
+@title{Rhombus}
 
 Rhombus is an experimental, general-purpose programming language with
 conventional expression syntax that is built on
