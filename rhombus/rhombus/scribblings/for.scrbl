@@ -5,7 +5,7 @@
 @title(~tag: "for"){Iteration}
 
 Many simple forms of iteration can be expressed through repetitions. For
-other cases. Rhombus supports a proper implementation of tail-call
+other cases Rhombus supports a proper implementation of tail-call
 handling (i.e., tail calls do not extend the continuation), so looping
 can be written as a recursive function. Still, a looping construct is
 convenient and useful for writing iterations that are not simple enough
@@ -136,7 +136,7 @@ identifiers.
 In the same way that a @rhombus(List, ~annot) annotation specializes
 element access via @litchar{[}...@litchar{]}, it also specializes how
 @rhombus(each, ~for_clause) within @rhombus(for) iterates through a list. In the
-following example, @rhombus(ll) is annotated as a list of lists, so both
+following example, @rhombus(nss) is annotated as a list of lists, so both
 the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
 

@@ -6,7 +6,7 @@
 
 Functions are values, and they can be passed to other functions. For
 example, the @rhombus(List.find) function (which can be called
-equivalently as a @rhombus(fiind) method on a list) takes a predicate as
+equivalently as a @rhombus(find) method on a list) takes a predicate as
 a function to determine which value to return, the @rhombus(List.map)
 function (or @rhombus(map) method) takes a function to apply to each
 element, and @rhombus(List.sort) (or @rhombus(sort) method), takes a
