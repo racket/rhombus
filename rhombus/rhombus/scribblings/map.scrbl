@@ -47,7 +47,7 @@ itself, the expression will have to be in parentheses.)
     neighborhood["alice"]
 )
 
-You can also put @rhombus(Map) in from of
+You can also put @rhombus(Map) in front of
 @braces, but that makes more sense with map
 constructors other than the @rhombus(Map) default.
 
@@ -74,7 +74,7 @@ map with keys and values.
 
 @rhombus(Map) or its curly-braces shorthand is also an annotation and a
 binding constructor. As an annotation or binding constructor,
-@rhombus(Map) refers to map values genercially, and not to a specific
+@rhombus(Map) refers to map values generically, and not to a specific
 implementation. For example, a list can be passed to a function that
 expects a @rhombus(Map) argument.
 
