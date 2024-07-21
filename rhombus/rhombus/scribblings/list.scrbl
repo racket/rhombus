@@ -83,7 +83,7 @@ pattern.
 Each variable in a pattern preceding @rhombus(..., ~bind) is bound as a
 @tech{repetition}, which cannot be used like a plain variable.
 Instead, a repetition variable must be used in an expression form that
-supports using repetitions, and typically before @rhombus(...). For
+supports using repetitions, typically before @rhombus(...). For
 example, a @brackets or @rhombus(List) expression (as
 opposed to binding) supports @rhombus(...) in place of an element,
 in which case the preceding element form is treated as a repetition
