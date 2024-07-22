@@ -9,6 +9,17 @@ connection, terminal, etc. An @deftech{input port} is specifically for
 input, while an @deftech{output port} is specifically for output.
 
 @dispatch_table(
+  "input port"
+  Port.Input
+  in.peek_byte(arg, ...)
+  in.peek_char(arg, ...)
+  in.read_byte()
+  in.read_bytes(arg, ...)
+  in.read_char()
+  in.read_line(arg, ...)
+)
+
+@dispatch_table(
   "output port"
   Port.Output
   out.get_bytes()
@@ -94,6 +105,19 @@ input, while an @deftech{output port} is specifically for output.
 
 }
 
+@doc(
+  fun Port.Input.open_bytes(bstr :: Bytes) :: Port.Input
+  fun Port.Input.open_string(str :: ReadableString) :: Port.Input
+){}
+
+@doc(
+  fun Port.Input.peek_byte(in :: Port.Input, skip :: NonnegInt = 0) :: Byte || Eof
+  fun Port.Input.peek_char(in :: Port.Input, skip :: NonnegInt = 0) :: Char || Eof
+  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Eof
+  fun Port.Input.read_bytes(in :: Port.Input, amount :: NonnegInt) :: Bytes || Eof
+  fun Port.Input.read_char(in :: Port.Input) :: Char || Eof
+  fun Port.Input.read_line(in :: Port.Input, mode :: Symbol = #'linefeed) :: String || Eof
+){}
 
 @doc(
   fun Port.Output.open_bytes(name :: Symbol) :: Port.Output
