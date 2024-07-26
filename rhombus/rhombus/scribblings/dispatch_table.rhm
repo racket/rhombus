@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  lib("scribble/rhombus/manual.rkt") open
+  lib("rhombus/scribble/manual.rkt") open
   lib("scribble/manual.rkt")
   meta_label:
     rhombus open

@@ -1,7 +1,9 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    meta_label:
+      rhombus/doc.DocSpec)
 
 @(def dots = @rhombus(..., ~bind))
 @(def dots_expr = @rhombus(...))
@@ -171,32 +173,52 @@ normally bound to implement function calls.
   defn.macro 'fun $id_name($bind, ...):
                 $body
                 ...'
-  defn.macro 'fun $id_name $case_maybe_kw_opt'
+  defn.macro 'fun $id_name $case_maybe_kw_opt:
+                $maybe_doc
+                $body
+                ...'
   defn.macro 'fun
-              | $id_name $case_maybe_kw
+              | $id_name $case_maybe_kw:
+                  $body
+                  ...
               | ...'
   defn.macro 'fun $id_name $maybe_res_annot
-              | $id_name $case_maybe_kw
+              | $id_name $case_maybe_kw:
+                  $body
+                  ...
+              | ...'
+  defn.macro 'fun $id_name $maybe_res_annot:
+                $maybe_doc
+              | $id_name $case_maybe_kw:
+                  $body
+                  ...
               | ...'
 
   expr.macro 'fun ($bind, ...):
                 $body
                 ...'
-  expr.macro 'fun $case_maybe_kw_opt'
+  expr.macro 'fun $case_maybe_kw_opt:
+                $body
+                ...'
 
   expr.macro 'fun $maybe_res_annot
-              | $case_maybe_kw
+              | $case_maybe_kw:
+                  $body
+                  ...
               | ...'
 
   grammar case_maybe_kw_opt:
-    ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
-      $body
-      ...
+    ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
 
   grammar case_maybe_kw:
-    ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot:
-      $body
+    ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot
+
+  grammar maybe_doc:
+    ~doc
+    ~doc:
+      $desc_body
       ...
+    #,(epsilon)
 
   grammar bind_maybe_kw_opt:
     $bind
@@ -418,6 +440,16 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     ~error:
       things_to_say("Nachos")
 )
+
+ When @rhombus(~doc) is present and @rhombus(fun) is used in a
+ declaration context, then a @rhombus(doc, ~datum) submodule splice is
+ generated with @rhombusmodname(rhombus/doc) as the submodule's language.
+ In the submodule, @rhombus(id_name) is defined as a
+ @rhombus(DocSpec, ~annot) value to record the function's arguments and
+ result annotation (if any). If a @rhombus(maybe_res_annot) is present
+ with @rhombus(:~, ~bind), it is converted to @rhombus(::, ~bind) in the
+ recorded function shape. Tools such as Rhombus Scribble can implort
+ the submodule to extract the recorded information.
 
  See also @rhombus(_) for information about function shorthands using
  @rhombus(_). For example, @rhombus((_ div _)) is a shorthand for

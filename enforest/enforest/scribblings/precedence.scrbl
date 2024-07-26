@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import: "common.rhm" open)
 
 @title{Operator Precedence and Associativity}

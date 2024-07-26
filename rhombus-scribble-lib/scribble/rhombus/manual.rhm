@@ -1,3 +1,3 @@
 #lang rhombus
-import: "manual.rkt"
+import: rhombus/scribble/manual
 export: all_from(.manual)

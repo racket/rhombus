@@ -1,0 +1,8 @@
+#lang rhombus
+
+import:
+  lib("rhombus/private/doc.rkt")
+
+export:
+  all_from(.doc)
+

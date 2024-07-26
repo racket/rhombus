@@ -78,6 +78,7 @@
    relocate
    relocate_span
    property
+   group_property
    to_source_string))
 
 (define-static-info-getter get-treelist-of-syntax-static-infos
@@ -560,11 +561,7 @@
   (check-syntax who stx)
   (syntax-srcloc (maybe-respan stx)))
 
-(define/method Syntax.property
-  #:static-infos ((#%call-result
-                   (#:at_arities
-                    ((8 ())
-                     (16 #,(get-syntax-static-infos))))))
+(define (make-do-syntax-property who extract-ctx)
   (case-lambda
     [(stx prop)
      (syntax-property (extract-ctx who stx #:false-ok? #f) prop)]
@@ -578,6 +575,32 @@
                   #:false-ok? #f
                   #:update (lambda (t)
                              (syntax-property t prop val preserved?)))]))
+
+(define/method Syntax.property
+  #:static-infos ((#%call-result
+                   (#:at_arities
+                    ((4 ())
+                     (24 #,(get-syntax-static-infos))))))
+  (case-lambda
+    [(stx prop)
+     ((make-do-syntax-property who extract-ctx) stx prop)]
+    [(stx prop val)
+     ((make-do-syntax-property who extract-ctx) stx prop val)]
+    [(stx prop val preserved?)
+     ((make-do-syntax-property who extract-ctx) stx prop val preserved?)]))
+
+(define/method Syntax.group_property
+  #:static-infos ((#%call-result
+                   (#:at_arities
+                    ((4 ())
+                     (24 #,(get-syntax-static-infos))))))
+  (case-lambda
+    [(stx prop)
+     ((make-do-syntax-property who extract-group-ctx) stx prop)]
+    [(stx prop val)
+     ((make-do-syntax-property who extract-group-ctx) stx prop val)]
+    [(stx prop val preserved?)
+     ((make-do-syntax-property who extract-group-ctx) stx prop val preserved?)]))
 
 (define/method (Syntax.is_original v)
   (syntax-original? (extract-ctx who v #:false-ok? #f)))

@@ -5,8 +5,13 @@
 (define deps '("rhombus-scribble-lib"))
 (define implies '("rhombus-scribble-lib"))
 
-(define build-deps '("base"
-                     "rhombus-lib"))
+(define build-deps
+  '("base"
+    "rhombus-lib"
+    "racket-doc"
+    "rhombus"
+    "shrubbery"
+    "rhombus-pict"))
 
 (define pkg-desc "Rhombus text-document and documentation library")
 

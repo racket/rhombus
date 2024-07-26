@@ -8,6 +8,7 @@ export:
     def
     let
     fun
+    doc
     operator
     class
     interface
@@ -245,6 +246,23 @@ spacer.bridge fun(self, tail, context, esc):
   let new_tail = adjust_fun(tail, esc, ~find_name: find_name)
   let new_self = adjust_self(self)
   '$new_self $new_tail'
+
+spacer.bridge doc(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(args && '($clause, ...)') $rest_tail':
+      fun adjust_clause(clause):
+        let new_clause = spacer.adjust_sequence(clause, #'~defn, esc)
+        match new_clause
+        | '$id $tail':
+            '$(spacer.set(id, #'~doc)) $tail'.relocate(clause)
+        | ~else:
+            new_clause.relocate(clause)
+      let new_args:
+        '($(adjust_clause(clause)), ...)'.relocate(args)
+      '$self $new_args $rest_tail'
+  | ~else:
+      '$self $tail'
 
 meta:
   syntax_class OpName(esc):

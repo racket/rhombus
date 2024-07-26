@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
     "nonterminal.rhm" open)
@@ -9,10 +9,17 @@
   defn.macro 'enum $id_name:
                 $enum_clause
                 ...'
+  decl.macro 'enum $id_name:
+                $maybe_doc
+                $enum_clause
+                ...'
   grammar enum_clause:
     $id ...
     ~is_a: $annot; ...
     ~is_a $annot
+  grammar maybe_doc:
+    ~doc
+    #,(epsilon)
 ){
 
  Defines @rhombus(id_name) as a @tech{predicate annotation} and as a
@@ -28,6 +35,10 @@
  The @rhombus(id)s and @rhombus(annot)s are tried in sequence, even
  when they are interleaved. Like @rhombus(is_a), the converting part
  of any @tech{converter annotation} @rhombus(annot) will not be used.
+
+ In a declaration context, @rhombus(~doc) can be specified before
+ clauses to generate documentation information for @rhombus(id_name) in a
+ @rhombus(doc, ~datum) submodule.
 
 @examples(
   ~defn:

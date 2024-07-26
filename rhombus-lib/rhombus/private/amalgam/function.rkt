@@ -1,8 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     syntax/strip-context
+                     shrubbery/property
                      "consistent.rkt"
-                     "entry-point-adjustment.rkt")
+                     "entry-point-adjustment.rkt"
+                     "dotted-sequence.rkt")
          racket/keyword
          "treelist.rkt"
          "provide.rkt"
@@ -24,7 +27,8 @@
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         (submod "module.rkt" for-module+))
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -329,9 +333,11 @@
                                              proc))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
+                  (~optional (_::block (group (~and doc-kw #:doc) . doc)))
                   (alts-tag::alts
                    (_::block
-                    (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
+                    (group name-seq::dotted-identifier-sequence
+                           (~and args-form (_::parens arg::kw-binding ... rest::maybe-arg-rest))
                            ret::ret-annotation
                            (~and rhs (_::block body ...))))
                    ...+))
@@ -354,14 +360,22 @@
                                 (attribute ret.converter) (attribute ret.annot-str)
                                 #'(rhs ...)
                                 stx))
-         (maybe-add-function-result-definition
-          the-name (list #'main-ret.static-infos) arity
-          (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
-                                             proc))]
+         (maybe-add-doc
+          (attribute doc)
+          #'form-id
+          #'(main-name-seq.head-id main-name-seq.tail-id ...)
+          #'([(~@ . name-seq) args-form (~@ . ret)] ...)
+          (attribute doc-kw) stx
+          (maybe-add-function-result-definition
+           the-name (list #'main-ret.static-infos) arity
+           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
+                                              proc)))]
         ;; single-alterative case
-        [(form-id name-seq::dotted-identifier-sequence (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
+        [(form-id name-seq::dotted-identifier-sequence
+                  (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
                   ret::ret-annotation
-                  (~and rhs (_::block body ...)))
+                  (~and rhs (rhs-tag::block (~optional (group (~and doc-kw #:doc) . doc))
+                                            body ...)))
          #:with name::dotted-identifier #'name-seq
          (define args (syntax->list #'(arg ...)))
          (define kws (syntax->list #'(arg.kw ...)))
@@ -375,12 +389,20 @@
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
                            (attribute ret.converter) (attribute ret.annot-str)
-                           #'rhs
+                           (if (attribute doc)
+                               #'(rhs-tag body ...)
+                               #'rhs)
                            stx))
-         (maybe-add-function-result-definition
-          #'name.name (list #'ret.static-infos) arity
-          (build-definitions/maybe-extension #f #'name.name #'name.extends
-                                             proc))]
+         (maybe-add-doc
+          (attribute doc)
+          #'form-id
+          #'(name-seq.head-id name-seq.tail-id ...)
+          #'([(~@ . name-seq) args-form (~@ . ret)])
+          (attribute doc-kw) stx
+          (maybe-add-function-result-definition
+           #'name.name (list #'ret.static-infos) arity
+           (build-definitions/maybe-extension #f #'name.name #'name.extends
+                                              proc)))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or* (~seq (_::parens _ ...) _ ...)
                   (_::alts (_::block (group (_::parens _ ...) . _)) ...+)
@@ -476,6 +498,61 @@
                              fun)])
                (wrap-function-static-info fun))
              #'())]))
+
+(define-for-syntax (maybe-add-doc doc form-id names headers doc-kw-stx orig-stx defns)
+  (cond
+    [(and doc
+          (not (eq? 'top-level (syntax-local-context))))
+     (define id (build-dot-symbol (syntax->list names)))
+     (define gs
+       (syntax-parse doc
+         [((tag::block g ...)) #'(g ...)]
+         [() #'()]
+         [_ (raise-syntax-error #f
+                                "expected nothing or a block after `~doc`"
+                                orig-stx
+                                doc)]))
+     (define (add-form header)
+       #`(group #,form-id #,@header))
+     (define (replace-:~-ret header)
+       (syntax-parse header
+         #:datum-literals (parens op :~)
+         [(pre ... (~and args (parens _ ...))
+               ((~and op-id op) (~and colon-tilde :~))
+               post ...)
+          (datum->syntax header
+                         (append (syntax->list #'(pre ...))
+                                 (list #'args)
+                                 (list (datum->syntax #f
+                                                      (list #'op-id
+                                                            (syntax-raw-property
+                                                             (datum->syntax #'colon-tilde
+                                                                            '::
+                                                                            #'colon-tilde
+                                                                            #'colon-tilde)
+                                                             "::"))))
+                                 (syntax->list #'(post ...))))]
+         [_ header]))
+     (cons
+      #`(rhombus-module+
+         #,(datum->syntax #f 'doc doc-kw-stx)
+         #:orig #,orig-stx
+         #:language (lib "rhombus/doc.rhm")
+         (group export #,id)
+         (group def #,id
+                (op =)
+                DocSpec
+                (parens (group List
+                               (parens
+                                #,@(for/list ([header (in-list (syntax->list headers))])
+                                     #`(group Syntax (op |.|) literal (quotes #,(replace-:~-ret
+                                                                                 (strip-context (add-form header))))))))
+                        (group List
+                               (parens
+                                #,@(for/list ([g (in-list (syntax->list gs))])
+                                     #`(group Syntax (op |.|) literal (quotes #,g))))))))
+      defns)]
+    [else defns]))
 
 (define pass
   (make-keyword-procedure

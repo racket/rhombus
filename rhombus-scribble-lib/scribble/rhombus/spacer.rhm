@@ -1,7 +1,3 @@
 #lang rhombus
-
-import:
-  "../private/spacer.rhm"
-
-export:
-  all_from(.spacer)
+import: rhombus/scribble/spacer
+export: all_from(.spacer)

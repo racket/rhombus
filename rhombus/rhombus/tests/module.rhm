@@ -11,6 +11,14 @@ module separate ~lang rhombus:
   def s1 = "s1"
   export s1
 
+module ~splice combined_with_lang ~lang rhombus:
+  def s2 = "s2"
+  export s2
+
+module ~splice combined_with_lang ~lang rhombus:
+  def s3 = s2 ++ "+1"
+  export s3
+
 // This test will get run multiple times
 // due to the `test` module
 check:
@@ -43,6 +51,12 @@ module test:
     import: rhombus/tests/module!combined
     [combined.c1, combined.c2]
     ~is [1, 2]
+
+  check:
+    ~eval
+    import: rhombus/tests/module!combined_with_lang as combined
+    [combined.s2, combined.s3]
+    ~is ["s2", "s2+1"]
 
 // ----------------------------------------
 

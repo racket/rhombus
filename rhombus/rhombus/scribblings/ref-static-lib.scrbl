@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
    rhombus/meta open
    "common.rhm" open:

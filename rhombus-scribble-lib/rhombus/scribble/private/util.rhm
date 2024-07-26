@@ -1,0 +1,20 @@
+#lang rhombus/static/and_meta
+import:
+  "annot.rhm" open
+  "annot.rhm"!convert open
+
+export:
+  all_from("annot.rhm"):
+    except:
+      Content
+      PreContent
+      PreFlow
+      Tag
+      Taglet
+  rename:
+    Content.to_s_exp as Content
+    PreContent.to_s_exp as PreContent
+    PreFlow.to_s_exp as PreFlow
+    Tag.to_s_exp as Tag
+    Taglet.to_s_exp as Taglet
+  all_from("annot.rhm"!convert)

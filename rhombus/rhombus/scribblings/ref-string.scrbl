@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     "common.rhm" open)
 
@@ -42,6 +42,7 @@ immutable strings.
   str.grapheme_span(arg, ...)
   str.grapheme_count(arg, ...)
   str.to_sequence()
+  str.copy()
 )
 
 Strings are @tech{comparable}, which means that generic operations like
@@ -114,6 +115,19 @@ Strings are @tech{comparable}, which means that generic operations like
   String.append()
   String.append("this")
   String.append("this", " and ", "that")
+)
+
+}
+
+@doc(
+  fun String.make(len :: NonnegInt, c :: Char) :: String
+){
+
+ Creates a string of length @rhombus(n) where every position in the
+ string contains @rhombus(c).
+
+@examples(
+  String.make(5, "x"[0])
 )
 
 }
@@ -330,6 +344,18 @@ Strings are @tech{comparable}, which means that generic operations like
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(str)'s characters in order.
+
+}
+
+@doc(
+  fun String.copy(str :: ReadableString) :: ReadableString
+){
+
+ Creates a mutable copy of @rhombus(str).
+
+@examples(
+  "apple".copy()
+)
 
 }
 

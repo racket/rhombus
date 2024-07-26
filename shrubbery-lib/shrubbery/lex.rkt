@@ -253,7 +253,10 @@
                                             stx-for-original-property)))
              (if (eq? name 'comment)
                  stx
-                 (syntax-raw-property stx (or raw (if (string? e) e '()))))))
+                 (syntax-raw-property stx (or (and raw (string->immutable-string raw))
+                                              (if (string? e)
+                                                  (string->immutable-string e)
+                                                  '()))))))
          #f ; start-line
          #f ; start-column
          line-advance

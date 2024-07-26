@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 
 @title(~style: #'toc){Libraries}
 
@@ -9,3 +9,4 @@
 @include_section("ref-runtime-path.scrbl")
 @include_section("ref-random.scrbl")
 @include_section("ref-unsafe.scrbl")
+@include_section("ref-doc.scrbl")

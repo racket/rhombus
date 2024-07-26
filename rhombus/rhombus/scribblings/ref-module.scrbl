@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
     "nonterminal.rhm" open)
@@ -22,6 +22,9 @@ different than the enclosing (sub)module.
   decl.macro 'module $id:
                 $body
                 ...'
+  decl.macro 'module ~splice $id:
+                $body
+                ...'
   decl.macro 'module $id ~lang $module_path:
                 $body
                 ...'
@@ -29,6 +32,9 @@ different than the enclosing (sub)module.
                 $body
                 ...'
   decl.macro 'module ~late $id ~lang $module_path:
+                $body
+                ...'
+  decl.macro 'module ~splice $id ~lang $module_path:
                 $body
                 ...'
 ){
@@ -39,7 +45,7 @@ different than the enclosing (sub)module.
  that uses @rhombus(!, ~impo).
 
  A @rhombus(~lang) is required to declare a module interactively, and
- @rhombus(~late) is not allowed interactively.
+ @rhombus(~late) or @rhombus(~splcie) is not allowed interactively.
 
  When @rhombus(~lang) is not present, then the submodule's body can
  refer to bindings in the enclosing module, and the submodule implicitly
@@ -58,19 +64,29 @@ different than the enclosing (sub)module.
  the name @rhombus(id).
 
  When @rhombus(~early) is present, or when @rhombus(~lang) is used
- without @rhombus(~late), then the submodule is defined before the rest
+ without @rhombus(~late) or @rhombus(~splice),
+ then the submodule is defined before the rest
  of the enclosing module is expanded. The rest of the module can import
  the submodule using @rhombus(self!, ~impo)@rhombus(id), for example, or
  the submodule might be used from outside the enclosing module. In the
  latter case, the enclosing module need not be instantiated to use the
  submodule.
 
- When @rhombus(~late) is used with @rhombus(~lang) for a submodule, then the submodule
+ When @rhombus(~late) or @rhombus(~splice) is used with @rhombus(~lang)
+ for a submodule, then the submodule
  is expanded only after the enclosing module, similar to use
  @rhombus(module) without @rhombus(~lang). The submodule can import
- from the enclosing mosulde using @rhombus(parent, ~impo), or it can
+ from the enclosing module using @rhombus(parent, ~impo), or it can
  import from sibling submodules using a module path such as
  @rhombus(parent!, ~impo)@rhombus(id).
+
+ Using @rhombus(~splice) without @rhombus(~lang) has no effect, but
+ using it with @rhombus(~lang) means that multiple module definitions are
+ combined, like when not using @rhombus(~lang). When both
+ @rhombus(~splice) and @rhombus(~lang) are used for a submodule name,
+ then every declaration for that name must use @rhombus(~splice) and
+ @rhombus(~lang) with the same @rhombus(module_path) after
+ @rhombus(~lang).
 
 }
 

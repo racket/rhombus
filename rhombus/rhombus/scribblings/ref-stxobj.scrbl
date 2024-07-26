@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
     "nonterminal.rhm" open
@@ -918,13 +918,13 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.property(stx :: Syntax,
+  fun Syntax.property(stx :: Term,
                       key :: Any)
     :: Any
-  fun Syntax.property(stx :: Syntax,
+  fun Syntax.property(stx :: Term,
                       key :: Any, val :: Any,
                       is_preserved :: Any = #false)
-    :: Syntax
+    :: Term
 ){
 
  Returns the value of the @rhombus(key) syntax property of @rhombus(stx)
@@ -935,6 +935,21 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
+
+@doc(
+  fun Syntax.group_property(stx :: Group,
+                            key :: Any)
+    :: Any
+  fun Syntax.group_property(stx :: Group,
+                            key :: Any, val :: Any,
+                            is_preserved :: Any = #false)
+    :: Group
+){
+
+ Like @rhombus(Syntax.property), but for properties on a group syntax
+ object, instead of a term.
+
+}
 
 @doc(
   fun Syntax.to_source_string(stx :: Syntax) :: String

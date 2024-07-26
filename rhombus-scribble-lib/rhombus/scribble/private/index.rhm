@@ -1,0 +1,35 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  index
+  as_index
+  section_index
+  index_section
+
+fun index(words :: (String ||  List.of(String)),
+          ~content: content :: (String ||  List.of(String)) = words,
+          pre_content :: PreContent)
+  :: Element:
+    ~doc
+    let norm_words = (if words is_a String | [words] | words)
+    let norm_content = (if content is_a String | [content] | content)
+    unless List.length(content) == List.length(words)
+    | error(#'index, "words and content mismatch")
+    base.#{index*}(convert_list(words), convert_list(content), pre_content)
+
+fun as_index(pre_content :: PreContent) :: Element:
+  ~doc
+  base.#{as-index}(pre_content)
+
+fun section_index(word :: String, ...):
+  ~doc
+  base.#{section-index}(word, ...)
+
+fun index_section(~tag : tag :: (False || String) = "doc-index")
+  :: Part:
+    ~doc
+    base.#{index-section}(~tag: tag)

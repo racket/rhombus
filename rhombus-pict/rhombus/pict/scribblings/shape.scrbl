@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 
 @(import:
     "pict_eval.rhm".pict_eval

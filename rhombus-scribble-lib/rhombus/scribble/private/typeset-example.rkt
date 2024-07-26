@@ -288,7 +288,7 @@
                                   (parameterize ([error-print-context-length 0]
                                                  [current-error-port o])
                                     ((error-display-handler) (exn-message exn) exn))))
-  (get-output-string o))
+  (string->immutable-string (get-output-string o)))
 
 (define (adjust-top-srcloc stx)
   (define l (syntax->list stx))

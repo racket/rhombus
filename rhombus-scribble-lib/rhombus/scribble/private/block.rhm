@@ -1,0 +1,95 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  para
+  nested
+  centered
+  margin_note
+  margin_note_block
+  Item
+  MarginSide
+  itemlist
+  item
+  verbatim
+  tabular
+
+fun para(~style: style :: maybe(StyleLike) = #false,
+         pre_content :: PreContent) :: FlowBlock:
+  ~doc
+  base.para(~style: style,
+            pre_content)
+
+fun nested(~style: style :: maybe(StyleLike) = #false,
+           pre_flow :: PreFlow) :: FlowBlock:
+  ~doc
+  base.nested(~style: style,
+              pre_flow)
+
+fun centered(pre_flow :: PreFlow) :: FlowBlock:
+  ~doc
+  base.centered(pre_flow)
+
+enum MarginSide:
+  ~doc
+  left
+  right
+
+fun margin_note(~at: at :: MarginSide = #'right,
+                pre_content :: PreContent)
+  :: Element:
+    ~doc
+    base.#{margin-note*}(#{#:left?}: at == #'left,
+                         pre_content)
+
+fun margin_note_block(~at: at :: MarginSide = #'right,
+                      pre_flow :: PreFlow)
+  :: FlowBlock:
+    ~doc
+    base.#{margin-note}(#{#:left?}: at == #'left,
+                        pre_flow)
+
+annot.macro 'Item': 'satisfying(base.#{item?})'
+
+fun itemlist(~style: style :: maybe(StyleLike) = #false,
+             item :: Item,
+             ...)
+  :: FlowBlock:
+    ~doc
+    base.itemlist(~style: style, item, ...)
+
+fun item(pre_flow :: PreFlow) :: Item:
+  ~doc
+  base.item(pre_flow)
+
+enum Cell:
+  ~doc
+  ~is_a FlowBlock
+  ~is_a Content
+  cont
+
+fun tabular(cells :: List.of(List.of(Cell)),
+            ~style: style :: maybe(StyleLike) = #false,
+            ~sep: sep :: maybe(FlowBlock || Content) = #false,
+            ~column_properties: col_props :: List = [],
+            ~row_properties: row_props :: List = [],
+            ~cell_properties: cell_props :: List.of(List) = [],
+            ~sep_properties: sep_props :: maybe(List) = #false)
+  :: FlowBlock:
+    ~doc
+    base.tabular(convert_list_of_lists(cells),
+                 ~style: style,
+                 ~sep: sep,
+                 #{#:column-properties}: convert_list(col_props),
+                 #{#:row-properties}: convert_list(row_props),
+                 #{#:cell-properties}: convert_list_of_lists(cell_props),
+                 #{#:sep-properties}: convert_list(sep_props))
+
+fun verbatim(~indent: indent :: NonnegInt = 0,
+             [content :: Content, ...])
+  :: FlowBlock:
+    ~doc
+    base.verbatim(~indent: indent, content, ...)

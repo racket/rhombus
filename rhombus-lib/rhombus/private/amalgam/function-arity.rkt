@@ -115,6 +115,7 @@
            (hash-union (cadr new-a) (cadr a))
            (and (caddr new-a) (caddr a) (hash-intersect (caddr new-a) (caddr a)))))))
 
+;; `kind` = #f => return boolean, `stx` and `fallback-stx` unused
 (define-for-syntax (check-arity stx fallback-stx a n kws rsts kwrsts kind)
   (define orig-needed (if (pair? a)
                           (list->hash (cadr a))
@@ -127,31 +128,39 @@
   (let loop ([kws kws] [n n] [needed-kws #f] [allowed-kws #f])
     (cond
       [(null? kws)
-       (when (zero? (bitwise-and (if rsts
-                                     (if (zero? n)
-                                         -1
-                                         (bitwise-not (sub1 (arithmetic-shift 1 (sub1 n)))))
-                                     (arithmetic-shift 1 n))
-                                 (if (pair? a) (car a) a)))
-         (raise-syntax-error #f
-                             (case kind
-                               [(property)
-                                (string-append "property does not support assignment" statically-str)]
-                               [else
-                                (string-append "wrong number of "
-                                               (if needed-kws "by-position " "")
-                                               "arguments in " (symbol->immutable-string kind) " call"
-                                               statically-str)])
-                             (error-stx)))
-       (unless kwrsts
-         (define needed (or needed-kws orig-needed))
-         (when (and needed ((hash-count needed) . > . 0))
-           (raise-syntax-error #f
-                               (string-append "missing keyword argument in " (symbol->immutable-string kind) " call"
-                                              statically-str "\n"
-                                              "  keyword: ~"
-                                              (keyword->immutable-string (hash-iterate-key needed (hash-iterate-first needed))))
-                               (error-stx))))]
+       (and
+        (if (zero? (bitwise-and (if rsts
+                                    (if (zero? n)
+                                        -1
+                                        (bitwise-not (sub1 (arithmetic-shift 1 (sub1 n)))))
+                                    (arithmetic-shift 1 n))
+                                (if (pair? a) (car a) a)))
+            (and kind
+                 (raise-syntax-error #f
+                                     (case kind
+                                       [(property)
+                                        (string-append "property does not support assignment" statically-str)]
+                                       [else
+                                        (string-append "wrong number of "
+                                                       (if needed-kws "by-position " "")
+                                                       "arguments in " (symbol->immutable-string kind) " call"
+                                                       statically-str)])
+                                     (error-stx)))
+            #t)
+        (if kwrsts
+            #t
+            (let ()
+              (define needed (or needed-kws orig-needed))
+              (if (and needed ((hash-count needed) . > . 0))
+                  (and kind
+                       (raise-syntax-error
+                        #f
+                        (string-append "missing keyword argument in " (symbol->immutable-string kind) " call"
+                                       statically-str "\n"
+                                       "  keyword: ~"
+                                       (keyword->immutable-string (hash-iterate-key needed (hash-iterate-first needed))))
+                        (error-stx)))
+                  #t))))]
       [(syntax-e (car kws))
        (define kw (syntax-e (car kws)))
        (define needed (hash-remove (or needed-kws orig-needed) kw))
@@ -160,14 +169,17 @@
                                (and (caddr a)
                                     (list->hash (caddr a)))
                                #hasheq())))
-       (when (and allowed
-                  (not (hash-ref allowed kw #f)))
-         (raise-syntax-error #f
-                             (string-append "keyword argument not recognized by called " (symbol->immutable-string kind)
-                                            statically-str "\n"
-                                            "  keyword: ~"
-                                            (keyword->immutable-string kw))
-                             (error-stx)))
-       (loop (cdr kws) n needed allowed)]
+       (and (if (and allowed
+                     (not (hash-ref allowed kw #f)))
+                (and kind
+                     (raise-syntax-error
+                      #f
+                      (string-append "keyword argument not recognized by called " (symbol->immutable-string kind)
+                                     statically-str "\n"
+                                     "  keyword: ~"
+                                     (keyword->immutable-string kw))
+                      (error-stx)))
+                #t)
+            (loop (cdr kws) n needed allowed))]
       [else
        (loop (cdr kws) (add1 n) needed-kws allowed-kws)])))

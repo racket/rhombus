@@ -7,7 +7,9 @@
          (submod "assign.rkt" for-assign)
          (only-in "repetition.rkt"
                   identifier-repetition-use)
-         "call-result-key.rkt")
+         "call-result-key.rkt"
+         "op-literal.rkt"
+         "function-arity.rkt")
 
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!))
@@ -19,10 +21,23 @@
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
         [((~and args (p-tag::parens g ...)) . new-tail)
-         (define gs (syntax->list #'(g ...)))
-         (define n (length gs))
+         (define-values (n kws rsts? kwrsts?)
+           (let loop ([gs (syntax->list #'(g ...))] [n 0] [kws null] [rsts? #f] [kwrsts? #f])
+             (cond
+               [(null? gs) (values n kws rsts? kwrsts?)]
+               [else
+                (syntax-parse (car gs)
+                  #:datum-literals (group op)
+                  [(group kw:keyword . _)
+                   (loop (cdr gs) n (cons #'kw kws) rsts? kwrsts?)]
+                  [(group _::&-expr . _)
+                   (loop (cdr gs) n kws #t kwrsts?)]
+                  [(group _::~&-expr . _)
+                   (loop (cdr gs) n kws rsts? #t)]
+                  [_
+                   (loop (cdr gs) (add1 n) kws rsts? kwrsts?)])])))
          (cond
-           [(bitwise-bit-set? mask n)
+           [(check-arity #f #f mask n kws rsts? kwrsts? #f)
             (success-k (n-k #'(p-tag g ...)
                             (lambda (e)
                               (relocate+reraw

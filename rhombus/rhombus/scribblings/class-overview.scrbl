@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 
 @title(~style: #'toc, ~tag: "class-overview"){Classes and Interfaces}
 

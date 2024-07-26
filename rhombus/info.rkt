@@ -2,7 +2,18 @@
 
 (define collection 'multi)
 
-(define deps '("rhombus-lib"))
+(define deps
+  '("rhombus-lib"
+    ;; The following dependencies serve a similar role to the
+    ;; "rhombus-main-distribution" package, which is to ensure a
+    ;; certain basic set of libraries when someone installs just
+    ;; "rhombus":
+    "shrubbery"
+    "rhombus-draw"
+    "rhombus-gui"
+    "rhombus-pict"
+    "rhombus-scribble"))
+    
 (define implies '("rhombus-lib"))
 
 (define build-deps

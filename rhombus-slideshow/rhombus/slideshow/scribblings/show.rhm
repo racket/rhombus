@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  scribble/rhombus/manual:
+  rhombus/scribble/manual:
     expose:
       make_rhombus_eval
       examples

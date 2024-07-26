@@ -2,13 +2,13 @@
 
 import:
   rhombus/meta open
-  scribble/rhombus/manual
-  scribble/rhombus as scribble
+  rhombus/scribble/manual
+  rhombus/scribble as scribble
   "dispatch_table.rhm" open
   meta_label:
     rhombus open
     rhombus/meta open
-  lib("scribble/private/typeset_meta.rhm") open
+  rhombus/scribble/private/typeset_meta open
 
 export:
   all_from(rhombus/meta)

@@ -91,5 +91,16 @@
 (module+ modpath-meta
   (bounce (submod "amalgam/module-path.rkt" for-meta)))
 
+(module+ modpath
+  (require (only-in (submod "amalgam/module-path.rkt" for-import-export)
+                    :module-path)
+           (for-syntax
+            (only-in "amalgam/module-path-parse.rkt" module-path-convert-parsed)))
+  (provide (for-syntax :module-path
+                       module-path-convert-parsed)))
+
 (module+ pack
   (bounce "amalgam/pack.rkt"))
+
+(module+ doc_spec
+  (bounce "amalgam/doc_spec.rhm"))

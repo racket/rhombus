@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  lib("scribble/rhombus/manual.rkt"):
+  lib("rhombus/scribble/manual.rkt"):
     expose:
       examples
       close_eval

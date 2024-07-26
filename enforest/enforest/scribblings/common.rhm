@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  scribble/rhombus/manual open
+  rhombus/scribble/manual open
   "racket.rkt" open
   meta_label:
     rhombus open

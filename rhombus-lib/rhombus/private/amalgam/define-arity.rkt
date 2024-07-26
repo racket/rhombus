@@ -97,6 +97,10 @@
 
 (define-for-syntax (build-define/method id name inline? primitive-ids static-infos rhs
                                         #:direct-id [direct-id id])
+  (define (arithmetic-shift* a k)
+    (if (exact-integer? a)
+        (arithmetic-shift a k)
+        (cons (arithmetic-shift (car a) k) (cdr a))))
   (define (format-id fmt)
     (datum->syntax id (string->symbol (format fmt (syntax-e id)))))
   (define dispatch-id (format-id "~a/dispatch"))
@@ -119,7 +123,7 @@
                         #`[#,args #,(make-apply id #'obj args)])))]))
   (list* #`(define-for-syntax #,dispatch-id
              (lambda (nary)
-               (nary '#,(arithmetic-shift arity-mask -1) (quote-syntax #,direct-id) (quote-syntax #,method-id))))
+               (nary '#,(arithmetic-shift* arity-mask -1) (quote-syntax #,direct-id) (quote-syntax #,method-id))))
          #`(define #,method-id
              (lambda (#,obj)
                ;; TODO what should we name the partially applied method?

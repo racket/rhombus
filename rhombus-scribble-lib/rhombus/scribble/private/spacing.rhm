@@ -14,13 +14,16 @@ export:
   #{._}
   #{.__}
 
-fun linebreak():
+fun linebreak() :: Element:
+  ~doc
   base.linebreak()
 
-fun nonbreaking(pre_content :: PreContent):
+fun nonbreaking(pre_content :: PreContent) :: Element:
+  ~doc
   base.nonbreaking(pre_content)
 
-fun hspace(n :: NonnegInt):
+fun hspace(n :: NonnegInt) :: Element:
+  ~doc
   base.hspace(n)
 
 def #{~}: base.#{~}

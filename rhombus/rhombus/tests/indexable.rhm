@@ -151,5 +151,5 @@ check:
     ) :~ MutableIndexable)[0] := "b"[0] ~throws values(
     "contract violation",
     "expected: MutableIndexable",
-    "racket.#{string-copy}(\"apple\")",
+    "String.copy(\"apple\")",
   )

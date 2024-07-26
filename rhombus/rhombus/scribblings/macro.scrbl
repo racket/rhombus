@@ -1,4 +1,4 @@
-#lang scribble/rhombus/manual
+#lang rhombus/scribble/manual
 
 @title(~style: #'toc){Syntax Objects and Macros}
 

@@ -11,14 +11,21 @@ export:
   Content
   PreContent
   PreFlow
-  Block
+  FlowBlock
   Part
+  PartDecl
   Tag
   Taglet
   GeneratedTag
-  convert_list
-  convert_list_of_lists
-  convert_pre_part
+  TagSuffix
+  TagPrefix
+  StyleLike
+
+module convert:
+  export:
+    convert_list
+    convert_list_of_lists
+    convert_pre_part
 
 annot.macro 'Element':
   annot_meta.pack_predicate('core.#{element?}')
@@ -31,7 +38,7 @@ annot.macro 'PartRelativeElement':
 annot.macro 'DelayedElement':
   annot_meta.pack_predicate('core.#{delayed-element?}')
 
-annot.macro 'Block':
+annot.macro 'FlowBlock':
   annot_meta.pack_predicate('core.#{block?}')
 
 annot.macro 'Part':
@@ -48,6 +55,9 @@ annot.macro 'PartDecl':
 annot.macro 'Style':
   annot_meta.pack_predicate('core.#{style?}')
 
+annot.macro 'StyleLike':
+  'Style || String || Symbol || List.of(Symbol)'
+
 fun convert_list(v):
   match v
   | l :: List:
@@ -61,20 +71,48 @@ fun convert_list_of_lists(cells :~ List.of(List)):
       cell
 
 annot.macro 'PreContent':
-  'converting(fun (v): convert_pre_content(v)) && True'
+  annot_meta.pack_predicate('convert_pre_content')
+namespace PreContent:
+  export to_s_exp
+  annot.macro 'to_s_exp':
+    'converting(fun (v): convert_pre_content(v)) && True'
 
 annot.macro 'Content':
-  'converting(fun (v): convert_content(v)) && True'
+  annot_meta.pack_predicate('convert_content')
+namespace Content:
+  export to_s_exp
+  annot.macro 'to_s_exp':
+    'converting(fun (v): convert_content(v)) && True'
 
 annot.macro 'PreFlow':
-  'converting(fun (v): convert_pre_flow(v)) && True'
+  annot_meta.pack_predicate('convert_pre_flow')
+namespace PreFlow:
+  export to_s_exp
+  annot.macro 'to_s_exp':
+    'converting(fun (v): convert_pre_flow(v)) && True'
 
 annot.macro 'Tag':
-  'converting(fun (v): convert_tag(v)) && True'
+  annot_meta.pack_predicate('convert_tag')
+namespace Tag:
+  export to_s_exp
+  annot.macro 'to_s_exp':
+    'converting(fun (v): convert_tag(v)) && True'
+
 annot.macro 'Taglet':
-  'converting(fun (v): convert_taglet(v)) && True'
+  annot_meta.pack_predicate('convert_taglet')
+namespace Taglet:
+  export to_s_exp
+  annot.macro 'to_s_exp':
+    'converting(fun (v): convert_taglet(v)) && True'
+
 annot.macro 'GeneratedTag':
   'satisfying(core.#{generated-tag?})'
+
+annot.macro 'TagSuffix':
+  'String || List.of(String)'
+
+annot.macro 'TagPrefix':
+  'String || ModulePath'
 
 fun convert_pre_content(v):
   match v
@@ -123,7 +161,7 @@ fun convert_pre_flow(v):
         | Pair.cons(a, b):
             let new_a = convert_pre_flow(a)
             new_a && Pair.cons(new_a, loop(b))
-  | _ :: Block:
+  | _ :: FlowBlock:
       v
   | #void:
       v
@@ -143,7 +181,7 @@ fun convert_pre_part(v):
         | Pair.cons(a, b):
             let new_a = convert_pre_part(a)
             new_a && Pair.cons(new_a, loop(b))
-  | _ :: (Block || Part || PartDecl):
+  | _ :: (FlowBlock || Part || PartDecl):
       v
   | #void:
       v

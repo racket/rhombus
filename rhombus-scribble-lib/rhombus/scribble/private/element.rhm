@@ -14,36 +14,47 @@ export:
   superscript
   smaller
   larger
+  literal
 
-fun elem(~style: style :: maybe(Style || String || Symbol) = #false,
+fun elem(~style: style :: maybe(StyleLike) = #false,
          pre_content :: PreContent) :~ Element:
+  ~doc
   base.elem(~style: style, pre_content)
   
 fun italic(pre_content :: PreContent) :~ Element:
+  ~doc
   base.italic(pre_content)
 
 fun emph(pre_content :: PreContent) :~ Element:
+  ~doc
   base.emph(pre_content)
 
 fun bold(pre_content :: PreContent) :~ Element:
+  ~doc
   base.bold(pre_content)
 
 fun tt(pre_content :: PreContent) :~ Element:
+  ~doc
   base.tt(pre_content)
 
 fun subscript(pre_content :: PreContent) :~ Element:
+  ~doc
   base.subscript(pre_content)
 
 fun superscript(pre_content :: PreContent) :~ Element:
+  ~doc
   base.superscript(pre_content)
 
 fun smaller(pre_content :: PreContent) :~ Element:
+  ~doc
   base.smaller(pre_content)
 
 fun larger(pre_content :: PreContent) :~ Element:
+  ~doc
   base.larger(pre_content)
 
-fun literal(str :: (String || List.of(String))) :~ Element:
+fun literal(str :: String || List.of(String)) :~ Element:
+  ~doc
   if str is_a String
   | base.literal(str)
   | base.literal(& str)

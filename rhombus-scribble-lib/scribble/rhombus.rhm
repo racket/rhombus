@@ -1,3 +1,3 @@
 #lang rhombus
-import: "rhombus.rkt"
-export: all_from(.rhombus)
+import: rhombus/scribble
+export: all_from(.scribble)

@@ -56,6 +56,11 @@
                                  #:extract-typeset extract-typeset)))]))
 
 (begin-for-syntax
+  (define-splicing-syntax-class :doc-form
+    #:datum-literals (op |.|)
+    (pattern (~seq _:identifier))
+    (pattern (~seq (~seq _:identifier (op |.|)) ... _:identifier)))
+
   (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
     #:attributes (name)
     #:datum-literals (|.| op)
@@ -141,20 +146,20 @@
 (define-for-syntax (identifier-macro-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group op quotes)
-    [(group _ _ _ (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
-    [(group _ _ _ (quotes (~var id (identifier-target space-name)))) #'id.name]))
+    [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
+    [(group _::doc-form (quotes (~var id (identifier-target space-name)))) #'id.name]))
 
 (define-for-syntax (operator-macro-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _ _ _ (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
-    [(group _ _ _ (quotes (group (~var id (target space-name)) . _))) #'id.name]
+    [(group _::doc-form (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
+    [(group _::doc-form (quotes (group (~var id (target space-name)) . _))) #'id.name]
     [_ (identifier-macro-extract-name stx space-name)]))
 
 (define-for-syntax (space-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group)
-    [(group _ _ _ (~var id (identifier-target space-name))) #'id.name]))
+    [(group _::doc-form (~var id (identifier-target space-name))) #'id.name]))
 
 (define-for-syntax (head-extract-metavariables stx space-name vars)
   vars)
@@ -162,24 +167,24 @@
 (define-for-syntax (identifier-macro-extract-metavariables stx space-name vars)
   (syntax-parse stx
     #:datum-literals (group op quotes)
-    [(group _ _ _ (quotes (group (~var _ (identifier-target space-name)) t ...)))
+    [(group _::doc-form (quotes (group (~var _ (identifier-target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [(group _ _ _ (quotes (~var _ (identifier-target space-name))))
+    [(group _::doc-form (quotes (~var _ (identifier-target space-name))))
      vars]))
 
 (define-for-syntax (operator-macro-extract-metavariables stx space-name vars)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _ _ _ (quotes (group (op $) t0:identifier (~var _ (target space-name)) t ...)))
+    [(group _::doc-form (quotes (group (op $) t0:identifier (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group (op $) t0 t ...) vars)]
-    [(group _ _ _ (quotes (group (~var _ (target space-name)) t ...)))
+    [(group _::doc-form (quotes (group (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
     [_ (identifier-macro-extract-metavariables stx space-name vars)]))
 
 (define-for-syntax (space-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals (group)
-    [(group _ _ _ (~var id (identifier-target space-name)) e ...)
+    [(group _::doc-form (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group #,@(subst #'id.name) e ...))]))
 
@@ -193,21 +198,21 @@
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _ _ _ (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
+    [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
          #`(group #,@(subst #'id.name) e ...))]
-    [(group _ _ _ (quotes (~var id (identifier-target space-name))))
+    [(group _::doc-form (quotes (~var id (identifier-target space-name))))
      #`(paragraph plain #,(subst #'id.name))]))
 
 (define-for-syntax (operator-macro-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _ _ _ (quotes (~and g (group (~and $0 (op $)) e0:identifier (~var id (target space-name)) e ...))) . more)
+    [(group _::doc-form (quotes (~and g (group (~and $0 (op $)) e0:identifier (~var id (target space-name)) e ...))) . more)
      (rb #:at #'g
          #:pattern? #t
          #`(group $0 e0 #,@(subst #'id.name) e ...))]
-    [(group _ _ _ (quotes (~and g (group (~var id (target space-name)) e ...))))
+    [(group _::doc-form (quotes (~and g (group (~var id (target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
          #`(group #,@(subst #'id.name) e ...))]
@@ -743,3 +748,10 @@
     (list (p id) (sp "=") (car prods))
     (for/list ([prod (in-list (cdr prods))])
       (list (p "") (sp "|") prod)))))
+
+(define-doc doc
+  "doc entry"
+  rhombus/doc
+  identifier-macro-extract-name
+  identifier-macro-extract-metavariables
+  identifier-macro-extract-typeset)

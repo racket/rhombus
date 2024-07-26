@@ -227,7 +227,7 @@
     ;; (byte) strings at this point are mutable
     ;; refer to `maybe-print-immediate`
     ;; TODO think of a better printed form
-    [(or (and (string? v) "racket.#{string-copy}(")
+    [(or (and (string? v) "String.copy(")
          (and (bytes? v) "Bytes.copy("))
      => (lambda (pre)
           (fresh-ref

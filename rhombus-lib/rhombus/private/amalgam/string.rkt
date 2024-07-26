@@ -79,6 +79,7 @@
    [contains String.contains]
    [append String.append]
    [substring String.substring]
+   [make String.make]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
@@ -95,7 +96,8 @@
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
    [grapheme_count String.grapheme_count]
-   [to_sequence String.to_sequence]))
+   [to_sequence String.to_sequence]
+   [copy String.copy]))
 
 (define-primitive-class String string
   #:lift-declaration
@@ -112,6 +114,7 @@
    [get String.get]
    [contains String.contains]
    [substring String.substring]
+   [make String.make]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
@@ -128,7 +131,8 @@
    [normalize_nfkc String.normalize_nfkc]
    [grapheme_span String.grapheme_span]
    [grapheme_count String.grapheme_count]
-   [to_sequence String.to_sequence])
+   [to_sequence String.to_sequence]
+   [copy String.copy])
   #:properties
   ()
   #:methods
@@ -230,6 +234,13 @@
   (check-readable-string who s1)
   (check-readable-string who s2)
   (string-contains? s1 s2))
+
+(define/method (String.copy s)
+  (string-copy s))
+
+(define/method (String.make n c)
+  #:primitive (make-string)
+  (string->immutable-string (make-string n c)))
 
 (define/method String.substring
   #:inline

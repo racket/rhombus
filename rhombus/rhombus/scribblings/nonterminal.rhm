@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  scribble/rhombus/manual
+  rhombus/scribble/manual
   meta_label:
     rhombus open
 

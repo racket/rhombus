@@ -21,6 +21,7 @@ block:
     Syntax.relocate(stx, to) ~method
     Syntax.relocate_span(stx, like_stxes) ~method
     Syntax.property(stx, key, [val], [is_preserved]) ~method
+    Syntax.group_property(stx, key, [val], [is_preserved]) ~method
     Syntax.to_source_string(stx) ~method
   static_arity.check ~meta:
     syntax_meta.error([msg], in_stx, [at_stx])

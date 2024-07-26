@@ -1,0 +1,21 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("scribble/base.rkt")
+
+export:
+  image
+
+fun image(path :: Path,
+          ~scale: scale :: Real = 1.0,
+          ~suffixes: suffixes :: List.of(String) = [],
+          ~style: style :: maybe(StyleLike) = #false,
+          pre_content :: PreContent = [])
+  :: Element:
+    ~doc
+    base.image(path,
+               ~scale: scale,
+               ~suffixes: convert_list(suffixes),
+               ~style: style,
+               pre_content)

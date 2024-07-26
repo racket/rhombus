@@ -1,0 +1,19 @@
+#lang rhombus/private/amalgam/core
+
+export:
+  DocSpec
+  make_doc_spec
+  is_doc_spec
+  doc_spec_split
+
+class DocSpec(headers :: List.of(Syntax),
+              content :: List.of(Syntax))
+
+fun make_doc_spec(headers, content):
+  DocSpec(headers, content)
+
+fun is_doc_spec(v):
+  v is_a DocSpec
+
+fun doc_spec_split(v :: DocSpec):
+  values(v.headers, v.content)

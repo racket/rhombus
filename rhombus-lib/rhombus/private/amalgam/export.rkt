@@ -211,7 +211,11 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(_ (_::block r::renaming ...))
+       [(_ (_::block g ...))
+        #:with ([r.int-name r.ext-name] ...)
+        (for/list ([g (in-list (syntax->list #'(g ...)))])
+          (syntax-parse g
+            [r::renaming #'[r.int-name r.ext-name]]))
         (values #`(all-spaces-out [r.int-name r.ext-name] ...)
                 #'())]
        [(_ t ...)

@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 import:
-  scribble/rhombus/spacer
-  scribble/rhombus/manual open:
+  rhombus/scribble/spacer
+  rhombus/scribble/manual open:
     only_space spacer.typeset
 
 expr.macro 'check_spacer:

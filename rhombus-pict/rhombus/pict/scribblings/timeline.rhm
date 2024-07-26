@@ -3,7 +3,7 @@
 import:
   pict open
   draw
-  scribble/rhombus.centered
+  rhombus/scribble.centered
   "timeline_pict.rhm"
   "timeline_pict.rhm"!private open
 

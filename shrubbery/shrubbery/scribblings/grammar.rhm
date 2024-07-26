@@ -1,8 +1,7 @@
 #lang rhombus
 
 import:
-  scribble/rhombus open
-  scribble/private/util
+  rhombus/scribble open
   lib("scribble/bnf.rkt")
 
 export:
@@ -20,20 +19,20 @@ fun boptional(content, ...):
 fun bgroup(content, ...):
   [@elem{( }, content, ..., @elem{ )}]
 
-fun nonterm(pre_content :: util.PreContent):
+fun nonterm(pre_content :: PreContent.to_s_exp):
   bnf.nonterm(pre_content)
 
-fun kleenestar(pre_content :: util.PreContent):
+fun kleenestar(pre_content :: PreContent.to_s_exp):
   bnf.kleenestar(pre_content)
 
-fun kleeneplus(pre_content :: util.PreContent):
+fun kleeneplus(pre_content :: PreContent.to_s_exp):
   bnf.kleeneplus(pre_content)
 
-fun bseq(c :: util.Content, ...):
+fun bseq(c :: Content.to_s_exp, ...):
   bnf.#{BNF-seq}(c, ...)
 
 fun balt(e, ...):
   bnf.#{BNF-alt}(e, ...)
 
-fun BNF([nt :: (util.Block || util.Content), clause :: (util.Block || util.Content), ...], ...):
+fun BNF([nt :: (Block || Content.to_s_exp), clause :: (Block || Content.to_s_exp), ...], ...):
   bnf.BNF(PairList[nt, clause, ...], ...)

@@ -2,7 +2,8 @@
 (require racket/symbol)
 
 (provide module-symbol-to-lib-string
-         module-lib-string-to-lib-string)
+         module-lib-string-to-lib-string
+         module-path-convert-parsed)
 
 (define (module-symbol-to-lib-string sym)
   (define str (symbol->immutable-string sym))
@@ -17,3 +18,12 @@
   (and (module-path? `(lib ,new-str))
        (regexp-match? #rx"/" new-str)
        new-str))
+
+(define (module-path-convert-parsed mod-stx)
+  (cond
+    [(identifier? mod-stx)
+     (datum->syntax mod-stx
+                    `(lib ,(module-symbol-to-lib-string (syntax-e mod-stx)))
+                    mod-stx
+                    mod-stx)]
+    [else mod-stx]))

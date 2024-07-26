@@ -12,7 +12,8 @@
     "rhombus"
     "rhombus-draw"
     "rhombus-lib"
-    "rhombus-scribble-lib"))
+    "rhombus-scribble-lib"
+    "racket-doc"))
 
 (define pkg-desc "Rhombus GUI library")
 

@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  lib("rhombus/private/amalgam.rkt")!doc_spec open
+
+export:
+  DocSpec
