@@ -55,7 +55,7 @@ at the same speed as it has in the past, but it means that we will
 maintain our standard commitment to reliability and quality. 
 
 
-Phase 1: Brainstorming (months) 
+Phase 1: Brainstorming (months) (COMPLETED)
 ---------------------- 
 
 GOAL AND OUTPUT: A design sketch and collection of prototype 
@@ -102,7 +102,7 @@ The project leader will also use this first process to identify
 contributors and working-group leaders for the second phase. 
 
 
-Phase 2: Iterative Design (years) 
+Phase 2: Iterative Design (years)  (COMPLETED JUNE 2024)
 ------------------------- 
 
 GOAL AND OUTPUT: Specification and a coherent prototype for the overall 
@@ -138,7 +138,7 @@ Failure is still an option. If the project leader is never able to
 identify such a result, the project will be declared a failure. 
 
 
-Phase 3: Integration (months or years) 
+Phase 3: Integration (months or years) (IN PROGRESS)
 ------------------- 
 
 GOAL AND OUTPUT: Complete language, libraries, and documentation, 
@@ -164,6 +164,7 @@ project leadership.
 Failure is not yet ruled out. If the Racket project leadership never 
 approves the language for direct support, then the project fails. 
 
+**See announcement for details:** https://github.com/racket/rhombus/discussions/521
 
 Phase 4: Production (years)
 ------------------- 
