@@ -52,8 +52,8 @@
 
 ;; stack element representing a `|` that starts a sequence of alternatives;
 ;; shouldn't appear by itself at the head of the stack, but instead
-;; always uder a `multi?` -- -except when trasitioning from a block
-;; to alts mode and the next non-whietsapec/comment token is `|`
+;; always uder a `multi?` --- except when trasitioning from a block
+;; to alts mode and the next non-whitespace/comment token is `|`
 (struct alts (line column) #:prefab)
 
 (define open-tag 'invisible-open-count)
@@ -142,6 +142,9 @@
            (loop #t semicolon-before? lookedahead new-inner-status)]
           [(semicolon-operator)
            (loop comma-before? #t lookedahead new-inner-status)]
+          [(at-content)
+           ;; treat like a comma and/or semicolon
+           (loop #t #t lookedahead new-inner-status)]
           [else
            (values tok
                    comma-before?
@@ -163,11 +166,14 @@
        (values type status)]
       [(or (semicolon-separated? frame)
            (not frame))
-       (values (add type open-tag 2) (struct-copy open-close-tracked status
-                                                  [stack (cons (multi (token-line* tok)
-                                                                      (token-column* tok)
-                                                                      2)
-                                                               stack)]))]
+       (values (add type open-tag (if (not frame)
+                                      1 ;; avoid implicit open that spans the whole input
+                                      2))
+               (struct-copy open-close-tracked status
+                            [stack (cons (multi (token-line* tok)
+                                                (token-column* tok)
+                                                2)
+                                         stack)]))]
       [(not-line-sensitive? status)
        (cond
          [(or (single? frame) (multi? frame))
@@ -229,8 +235,12 @@
               [(closer at-closer EOF)
                (cond
                  [(single? frame) (loop (add type close-tag 1) (pop))]
-                 [(multi? frame) (loop (add type close-tag 2) (pop))]
+                 [(multi? frame) (loop (add type close-tag (if (null? (cdr stack))
+                                                               1 ; avoid close for whole input
+                                                               2))
+                                       (pop))]
                  [(or (opened? frame) (not frame)) (values type status)]
+                 [(alts? frame) (loop type (pop))]
                  [else (error "unrecognized frame at closer" frame)])]
               [(bar-operator)
                (define (consume-frames type stack to-stack)
@@ -409,7 +419,7 @@
              new-status)
   (case name
     [(#f EOF whitespace comment group-comment
-      comma-operator semicolon-operator)
+      comma-operator semicolon-operator at-content)
      (finish type new-status)]
     [(opener at-opener)
      (define-values (open-type open-status) (add-opens type new-status))
