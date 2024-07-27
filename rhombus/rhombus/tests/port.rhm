@@ -4,6 +4,14 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Port.Input.current([in])
+    Port.Input.open_bytes(bstr)
+    Port.Input.open_string(str)
+    Port.Input.peek_byte(in, [skip])
+    Port.Input.peek_char(in, [skip])
+    Port.Input.read_byte(in)
+    Port.Input.read_bytes(in, amount)
+    Port.Input.read_char(in)
+    Port.Input.read_line(in, [mode])
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
     Port.Output.get_bytes(out) ~method

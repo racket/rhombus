@@ -31,6 +31,7 @@ input, while an @deftech{output port} is specifically for output.
   annot.macro 'Port'
   annot.macro 'Port.Input'
   annot.macro 'Port.Output'
+  annot.macro 'Eof'
 ){
 
  The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}.
@@ -38,6 +39,7 @@ input, while an @deftech{output port} is specifically for output.
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
  recognizes output ports, and it is possible for a port to be both.
 
+ The @rhombus(Eof, ~annot) annotation is satisfied by the @rhombus(Eof.eof) value.
 }
 
 @doc(
@@ -107,16 +109,61 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.open_bytes(bstr :: Bytes) :: Port.Input
+){
+ Creates an @tech{input port} that reads bytes from @rhombus(bstr), a
+ @tech{byte string}.
+}
+
+@doc(
   fun Port.Input.open_string(str :: ReadableString) :: Port.Input
+){
+ Creates an @tech{input port} that reads @tech{characters} from @rhombus(str), a
+ @tech{string}.
+}
+
+@doc(
+  fun Port.Input.peek_byte(in :: Port.Input,
+                           skip :: NonnegInt = 0) :: Byte || Eof
+){
+ Like @rhombus(Port.Input.read_byte), but peeks instead of reading, and skips
+ @rhombus(skip) bytes at the start of the port.
+}
+
+@doc(
+  fun Port.Input.peek_char(in :: Port.Input,
+                           skip :: NonnegInt = 0) :: Char || Eof
+){
+ Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
+ @rhombus(skip) bytes (not characters) at the start of the port.
+}
+
+@doc(
+  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Eof
+){
+ Reads a single byte from @rhombus(in).  If no bytes are available before and
+ end-of-file, then @rhombus(Eof.eof) is returned.
+}
+
+@doc(
+  fun Port.Input.read_bytes(in :: Port.Input,
+                            amount :: NonnegInt) :: Bytes || Eof
+){
+ Reads a @tech{byte string} containing the next @rhombus(amount) bytes from
+ @rhombus(in).  If @rhombus(amount) is 0, then an empty byte string is returned.
+ Otherwise if fewer than @rhombus(amount) bytes are available before an
+ end-of-file is encountered, then the returned byte string will contain only
+ those bytes before the end-of-file; that is, the returned byte string's length
+ will be less than @rhombus(amount).  If no bytes are available before an
+ end-of-file, then @rhombus(Eof.eof) is returned.
+}
+
+@doc(
+  fun Port.Input.read_char(in :: Port.Input) :: Char || Eof
 ){}
 
 @doc(
-  fun Port.Input.peek_byte(in :: Port.Input, skip :: NonnegInt = 0) :: Byte || Eof
-  fun Port.Input.peek_char(in :: Port.Input, skip :: NonnegInt = 0) :: Char || Eof
-  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Eof
-  fun Port.Input.read_bytes(in :: Port.Input, amount :: NonnegInt) :: Bytes || Eof
-  fun Port.Input.read_char(in :: Port.Input) :: Char || Eof
-  fun Port.Input.read_line(in :: Port.Input, mode :: Symbol = #'linefeed) :: String || Eof
+  fun Port.Input.read_line(in :: Port.Input,
+                           mode :: Symbol = #'linefeed) :: String || Eof
 ){}
 
 @doc(
