@@ -123,7 +123,7 @@
 (define/method (Port.Input.read_bytes port amt)
   #:inline
   #:primitive (read-bytes)
-  (bytes->immutable-bytes (read-bytes amt port)))
+  (read-bytes amt port))
 
 (define/method (Port.Input.read_char port)
   #:inline
