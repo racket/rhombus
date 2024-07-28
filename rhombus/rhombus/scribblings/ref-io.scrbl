@@ -31,7 +31,7 @@ input, while an @deftech{output port} is specifically for output.
   annot.macro 'Port'
   annot.macro 'Port.Input'
   annot.macro 'Port.Output'
-  annot.macro 'Eof'
+  annot.macro 'Port.Eof'
 ){
 
  The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}.
@@ -39,7 +39,7 @@ input, while an @deftech{output port} is specifically for output.
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
  recognizes output ports, and it is possible for a port to be both.
 
- The @rhombus(Eof, ~annot) annotation is satisfied by the @rhombus(Eof.eof) value.
+ The @rhombus(Port.Eof, ~annot) annotation is satisfied by the @rhombus(Port.eof) value.
 }
 
 @doc(
@@ -99,6 +99,12 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
+ def Port.eof :: Eof
+){
+ A value (distinct from all other values) that represents an end-of-file.
+}
+
+@doc(
   Parameter.def Port.Output.current_error :: Port.Output
 ){
 
@@ -123,7 +129,7 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_byte(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Byte || Eof
+                           skip :: NonnegInt = 0) :: Byte || Port.Eof
 ){
  Like @rhombus(Port.Input.read_byte), but peeks instead of reading, and skips
  @rhombus(skip) bytes at the start of the port.
@@ -131,22 +137,22 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_char(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Char || Eof
+                           skip :: NonnegInt = 0) :: Char || Port.Eof
 ){
  Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
  @rhombus(skip) bytes (not characters) at the start of the port.
 }
 
 @doc(
-  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Eof
+  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Port.Eof
 ){
  Reads a single byte from @rhombus(in).  If no bytes are available before and
- end-of-file, then @rhombus(Eof.eof) is returned.
+ end-of-file, then @rhombus(Port.eof) is returned.
 }
 
 @doc(
   fun Port.Input.read_bytes(in :: Port.Input,
-                            amount :: NonnegInt) :: Bytes || Eof
+                            amount :: NonnegInt) :: Bytes || Port.Eof
 ){
  Reads a @tech{byte string} containing the next @rhombus(amount) bytes from
  @rhombus(in).  If @rhombus(amount) is 0, then an empty byte string is returned.
@@ -154,17 +160,62 @@ input, while an @deftech{output port} is specifically for output.
  end-of-file is encountered, then the returned byte string will contain only
  those bytes before the end-of-file; that is, the returned byte string's length
  will be less than @rhombus(amount).  If no bytes are available before an
- end-of-file, then @rhombus(Eof.eof) is returned.
+ end-of-file, then @rhombus(Port.eof) is returned.
 }
 
 @doc(
-  fun Port.Input.read_char(in :: Port.Input) :: Char || Eof
-){}
+  fun Port.Input.read_char(in :: Port.Input) :: Char || Port.Eof
+){
+ Reads a single character from @rhombus(in) - which may involve reading several
+ bytes to UTF-8-decode them into a character; a minimal number of bytes are
+ read/peeked to perform the decoding. If no bytes are available before an
+ end-of-file, then @rhombus(Port.eof) is returned.
+}
 
 @doc(
   fun Port.Input.read_line(in :: Port.Input,
-                           mode :: Symbol = #'linefeed) :: String || Eof
-){}
+                           mode :: Symbol
+                                     = #'linefeed
+                                     || #'return
+                                     || #'#{return-linefeed}
+                                     || #'any
+                                     || #'#{any-one}) :: String || Port.Eof
+){
+ Returns a string containing the next line of characters from @rhombus(in).
+
+ Characters are read from @rhombus(in) until a line separator or an
+ end-of-file is read. The line separator is not included in the result
+ string (but it is removed from the port's stream). If no characters
+ are read before an end-of-file is encountered, @rhombus(Port.eof) is
+ returned.
+
+ The @rhombus(mode) argument determines the line separator(s). It must be one of
+ the following symbols:
+
+ @itemlist(
+   @item{@rhombus(#'linefeed) breaks lines on linefeed characters.}
+
+   @item{@rhombus(#'return) breaks lines on return characters.}
+
+   @item{
+     @rhombus(#'#{return-linefeed}) breaks lines on return-linefeed combinations.
+     If a return character is not followed by a linefeed character, it is
+     included in the result string; similarly, a linefeed that is not preceded
+     by a return is included in the result string.
+   }
+
+   @item{
+     @rhombus(#'any) breaks lines on any of a return character, linefeed
+     character, or return-linefeed combination. If a return character is
+     followed by a linefeed character, the two are treated as a combination.
+   }
+
+   @item{
+     @rhombus(#'#{any-one}) breaks lines on either a return or linefeed
+     character, without recognizing return-linefeed combinations.
+   }
+ )
+}
 
 @doc(
   fun Port.Output.open_bytes(name :: Symbol) :: Port.Output

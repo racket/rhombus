@@ -14,8 +14,7 @@
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
-                     Port)
-         (for-space rhombus/annot Eof))
+                     Port))
 
 (define-annotation-syntax Eof (identifier-annotation eof-object? ()))
 
@@ -30,6 +29,7 @@
   #:namespace-fields
   (Input
    Output
+   Eof
    eof
    ;; TEMP see `Input` and `Output`
    [current_input current-input-port]
