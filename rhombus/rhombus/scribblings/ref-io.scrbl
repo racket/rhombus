@@ -170,10 +170,10 @@ input, while an @deftech{output port} is specifically for output.
 @doc(
   fun Port.Input.read_char(in :: Port.Input) :: Char || Port.EOF
 ){
- Reads a single character from @rhombus(in) - which may involve reading several
- bytes to UTF-8-decode them into a character; a minimal number of bytes are
- read/peeked to perform the decoding. If no bytes are available before an
- end-of-file, then @rhombus(Port.eof) is returned.
+ Reads a single character from @rhombus(in) --- which may involve reading
+ several bytes to UTF-8-decode them into a character; a minimal number of
+ bytes are read/peeked to perform the decoding. If no bytes are available
+ before an end-of-file, then @rhombus(Port.eof) is returned.
 }
 
 @doc(
