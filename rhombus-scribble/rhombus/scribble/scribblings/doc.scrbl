@@ -390,7 +390,7 @@
   doc '«doc '$id_name $quoted_term ...' $term ...»'
 ){
 
- A @tech{doc entry} form to document dot entry forms.
+ A @tech{doc entry} form to document @tech{doc entry} forms.
 
 }
 
