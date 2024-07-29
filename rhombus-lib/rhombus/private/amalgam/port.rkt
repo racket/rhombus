@@ -135,13 +135,18 @@
   #:primitive (read-char)
   (read-char port))
 
+(define (coerce-read-result v)
+  (cond
+    [(string? v) (string->immutable-string v)]
+    [else v]))
+
 (define/method Port.Input.read_line
   #:inline
   #:primitive (read-line)
   (case-lambda
-    [(port) (string->immutable-string (read-line port))]
+    [(port) (coerce-read-result (read-line port))]
     [(port mode)
-     (string->immutable-string
+     (coerce-read-result
       (read-line port
                  (case/eq mode
                   [(return_linefeed) 'return-linefeed]
