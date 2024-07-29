@@ -39,7 +39,8 @@ input, while an @deftech{output port} is specifically for output.
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
  recognizes output ports, and it is possible for a port to be both.
 
- The @rhombus(Port.EOF, ~annot) annotation is satisfied by the @rhombus(Port.eof) value.
+ The @rhombus(Port.EOF, ~annot) annotation is satisfied by the
+ @rhombus(Port.eof) value.
 }
 
 @doc(
@@ -126,8 +127,8 @@ input, while an @deftech{output port} is specifically for output.
   fun Port.Input.open_string(str :: ReadableString,
                              name :: Symbol = #'string) :: Port.Input
 ){
- Creates an @tech{input port} that reads @tech{characters} from @rhombus(str), a
- @tech{string}.  The optional @rhombus(name) is used as the name for the
+ Creates an @tech{input port} that reads @tech{characters} from @rhombus(str),
+ a @tech{string}.  The optional @rhombus(name) is used as the name for the
  returned port.
 }
 
@@ -189,8 +190,8 @@ input, while an @deftech{output port} is specifically for output.
  are read before an end-of-file is encountered, @rhombus(Port.eof) is
  returned.
 
- The @rhombus(mode) argument determines the line separator(s). It must be one of
- the following symbols:
+ The @rhombus(mode) argument determines the line separator(s). It must be one
+ of the following symbols:
 
  @itemlist(
    @item{
