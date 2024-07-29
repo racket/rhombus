@@ -1,14 +1,18 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     racket/syntax)
          racket/case
+         syntax/parse/define
          "provide.rkt"
          (submod "annotation.rkt" for-class)
          "call-result-key.rkt"
          "function-arity-key.rkt"
          (submod "bytes.rkt" static-infos)
          (submod "string.rkt" static-infos)
+         (submod "symbol.rkt" for-static-info)
          "static-info.rkt"
          "define-arity.rkt"
+         "name-root.rkt"
          (submod "function.rkt" for-info)
          "class-primitive.rkt"
          "realm.rkt")
@@ -18,6 +22,29 @@
                      Port))
 
 (define-annotation-syntax EOF (identifier-annotation eof-object? ()))
+
+(define-syntax-parse-rule (define-simple-symbol-enum name:id vals:id ...)
+  #:with (val-names ...) (for/list ([v (attribute vals)])
+                           (format-id v "~a.~a" #'name v))
+  #:with name? (format-id #'name "~a?" #'name)
+  (begin
+    (define val-names 'vals) ...
+
+    (define (name? v)
+      (and (symbol? v)
+           (case/eq v
+             [(vals ...) #t]
+             [else #f])))
+
+    (define-annotation-syntax name
+      (identifier-annotation name? #,(get-symbol-static-infos)))
+
+    (define-name-root name
+      #:fields
+      ([vals val-names] ...))))
+
+(define-simple-symbol-enum ReadLineMode
+  any any_one linefeed return return_linefeed)
 
 (module+ for-builtin
   (provide input-port-method-table
@@ -32,6 +59,7 @@
    Output
    EOF
    eof
+   ReadLineMode
    ;; TEMP see `Input` and `Output`
    [current_input current-input-port]
    [current_output current-output-port]
