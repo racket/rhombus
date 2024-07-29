@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base)
+         racket/case
          "provide.rkt"
          (submod "annotation.rkt" for-class)
          "call-result-key.rkt"
@@ -134,10 +135,18 @@
   #:primitive (read-char)
   (read-char port))
 
-(define/method (Port.Input.read_line port [mode 'linefeed])
+(define/method Port.Input.read_line
   #:inline
   #:primitive (read-line)
-  (string->immutable-string (read-line port mode)))
+  (case-lambda
+    [(port) (string->immutable-string (read-line port))]
+    [(port mode)
+     (string->immutable-string
+      (read-line port
+                 (case/eq mode
+                  [(return_linefeed) 'return-linefeed]
+                  [(any_one) 'any-one]
+                  [else mode])))]))
 
 (define/method (Port.Output.get_bytes port)
   #:inline

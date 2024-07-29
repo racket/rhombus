@@ -181,9 +181,9 @@ input, while an @deftech{output port} is specifically for output.
                            mode :: Symbol
                                      = #'linefeed
                                      || #'return
-                                     || #'#{return-linefeed}
+                                     || #'return_linefeed
                                      || #'any
-                                     || #'#{any-one}) :: String || Port.Eof
+                                     || #'any_one) :: String || Port.Eof
 ){
  Returns a string containing the next line of characters from @rhombus(in).
 
@@ -202,7 +202,7 @@ input, while an @deftech{output port} is specifically for output.
    @item{@rhombus(#'return) breaks lines on return characters.}
 
    @item{
-     @rhombus(#'#{return-linefeed}) breaks lines on return-linefeed combinations.
+     @rhombus(#'return_linefeed) breaks lines on return-linefeed combinations.
      If a return character is not followed by a linefeed character, it is
      included in the result string; similarly, a linefeed that is not preceded
      by a return is included in the result string.
@@ -215,7 +215,7 @@ input, while an @deftech{output port} is specifically for output.
    }
 
    @item{
-     @rhombus(#'#{any-one}) breaks lines on either a return or linefeed
+     @rhombus(#'any_one) breaks lines on either a return or linefeed
      character, without recognizing return-linefeed combinations.
    }
  )
