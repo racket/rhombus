@@ -172,7 +172,7 @@
   #:inline
   #:primitive (read-line)
   (case-lambda
-    [(port) (coerce-read-result (read-line port))]
+    [(port) (coerce-read-result (read-line port 'any))]
     [(port mode)
      (coerce-read-result
       (read-line port
