@@ -76,17 +76,21 @@
   (#%function-arity 3)
   . #,(get-function-static-infos))
 
-(define/arity (Port.Input.open_bytes bstr)
+(define/arity Port.Input.open_bytes
   #:inline
   #:primitive (open-input-bytes)
   #:static-infos ((#%call-result #,(get-input-port-static-infos)))
-  (open-input-bytes bstr))
+  (case-lambda
+    [(bstr) (open-input-bytes bstr)]
+    [(bstr name) (open-input-bytes bstr name)]))
 
-(define/arity (Port.Input.open_string str)
+(define/arity Port.Input.open_string
   #:inline
   #:primitive (open-input-string)
   #:static-infos ((#%call-result #,(get-input-port-static-infos)))
-  (open-input-string str))
+  (case-lambda
+    [(str) (open-input-string str)]
+    [(str name) (open-input-string str name)]))
 
 ;; TODO these need a more specific annotation
 (define/arity Port.Output.open_bytes

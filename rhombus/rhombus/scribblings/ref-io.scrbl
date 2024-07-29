@@ -114,17 +114,21 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun Port.Input.open_bytes(bstr :: Bytes) :: Port.Input
+  fun Port.Input.open_bytes(bstr :: Bytes,
+                            name :: Symbol = #'string) :: Port.Input
 ){
  Creates an @tech{input port} that reads bytes from @rhombus(bstr), a
- @tech{byte string}.
+ @tech{byte string}.  The optional @rhombus(name) is used as the name for the
+ returned port.
 }
 
 @doc(
-  fun Port.Input.open_string(str :: ReadableString) :: Port.Input
+  fun Port.Input.open_string(str :: ReadableString,
+                             name :: Symbol = #'string) :: Port.Input
 ){
  Creates an @tech{input port} that reads @tech{characters} from @rhombus(str), a
- @tech{string}.
+ @tech{string}.  The optional @rhombus(name) is used as the name for the
+ returned port.
 }
 
 @doc(
