@@ -17,7 +17,7 @@
                       rhombus/namespace)
                      Port))
 
-(define-annotation-syntax Eof (identifier-annotation eof-object? ()))
+(define-annotation-syntax EOF (identifier-annotation eof-object? ()))
 
 (module+ for-builtin
   (provide input-port-method-table
@@ -30,7 +30,7 @@
   #:namespace-fields
   (Input
    Output
-   Eof
+   EOF
    eof
    ;; TEMP see `Input` and `Output`
    [current_input current-input-port]

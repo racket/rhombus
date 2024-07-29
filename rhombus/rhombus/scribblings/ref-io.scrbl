@@ -31,7 +31,7 @@ input, while an @deftech{output port} is specifically for output.
   annot.macro 'Port'
   annot.macro 'Port.Input'
   annot.macro 'Port.Output'
-  annot.macro 'Port.Eof'
+  annot.macro 'Port.EOF'
 ){
 
  The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}.
@@ -39,7 +39,7 @@ input, while an @deftech{output port} is specifically for output.
  recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
  recognizes output ports, and it is possible for a port to be both.
 
- The @rhombus(Port.Eof, ~annot) annotation is satisfied by the @rhombus(Port.eof) value.
+ The @rhombus(Port.EOF, ~annot) annotation is satisfied by the @rhombus(Port.eof) value.
 }
 
 @doc(
@@ -99,7 +99,7 @@ input, while an @deftech{output port} is specifically for output.
 
 
 @doc(
- def Port.eof :: Eof
+ def Port.eof :: Port.EOF
 ){
  A value (distinct from all other values) that represents an end-of-file.
 }
@@ -133,7 +133,7 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_byte(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Byte || Port.Eof
+                           skip :: NonnegInt = 0) :: Byte || Port.EOF
 ){
  Like @rhombus(Port.Input.read_byte), but peeks instead of reading, and skips
  @rhombus(skip) bytes at the start of the port.
@@ -141,14 +141,14 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_char(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Char || Port.Eof
+                           skip :: NonnegInt = 0) :: Char || Port.EOF
 ){
  Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
  @rhombus(skip) bytes (not characters) at the start of the port.
 }
 
 @doc(
-  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Port.Eof
+  fun Port.Input.read_byte(in :: Port.Input) :: Byte || Port.EOF
 ){
  Reads a single byte from @rhombus(in).  If no bytes are available before and
  end-of-file, then @rhombus(Port.eof) is returned.
@@ -156,7 +156,7 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.read_bytes(in :: Port.Input,
-                            amount :: NonnegInt) :: Bytes || Port.Eof
+                            amount :: NonnegInt) :: Bytes || Port.EOF
 ){
  Reads a @tech{byte string} containing the next @rhombus(amount) bytes from
  @rhombus(in).  If @rhombus(amount) is 0, then an empty byte string is returned.
@@ -168,7 +168,7 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun Port.Input.read_char(in :: Port.Input) :: Char || Port.Eof
+  fun Port.Input.read_char(in :: Port.Input) :: Char || Port.EOF
 ){
  Reads a single character from @rhombus(in) - which may involve reading several
  bytes to UTF-8-decode them into a character; a minimal number of bytes are
@@ -183,7 +183,7 @@ input, while an @deftech{output port} is specifically for output.
                                      || #'return
                                      || #'return_linefeed
                                      || #'any
-                                     || #'any_one) :: String || Port.Eof
+                                     || #'any_one) :: String || Port.EOF
 ){
  Returns a string containing the next line of characters from @rhombus(in).
 
