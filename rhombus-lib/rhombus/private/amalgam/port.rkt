@@ -143,10 +143,10 @@
   #:primitive (peek-byte)
   (peek-byte port skip))
 
-(define/method (Port.Input.peek_char port)
+(define/method (Port.Input.peek_char port [skip 0])
   #:inline
   #:primitive (peek-char)
-  (peek-char port))
+  (peek-char port skip))
 
 (define/method (Port.Input.read_byte port)
   #:inline
