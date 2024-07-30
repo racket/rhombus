@@ -138,12 +138,12 @@
     [() (open-output-string)]
     [(name) (open-output-string name)]))
 
-(define/method (Port.Input.peek_byte port [skip 0])
+(define/method (Port.Input.peek_byte port #:skip_bytes [skip 0])
   #:inline
   #:primitive (peek-byte)
   (peek-byte port skip))
 
-(define/method (Port.Input.peek_char port [skip 0])
+(define/method (Port.Input.peek_char port #:skip_bytes [skip 0])
   #:inline
   #:primitive (peek-char)
   (peek-char port skip))

@@ -134,7 +134,8 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_byte(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Byte || Port.EOF
+                           ~skip_bytes: skip :: NonnegInt = 0)
+    :: Byte || Port.EOF
 ){
  Like @rhombus(Port.Input.read_byte), but peeks instead of reading, and skips
  @rhombus(skip) bytes at the start of the port.
@@ -142,7 +143,8 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.peek_char(in :: Port.Input,
-                           skip :: NonnegInt = 0) :: Char || Port.EOF
+                           ~skip_bytes: skip :: NonnegInt = 0)
+    :: Char || Port.EOF
 ){
  Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
  @rhombus(skip) bytes (not characters) at the start of the port.
