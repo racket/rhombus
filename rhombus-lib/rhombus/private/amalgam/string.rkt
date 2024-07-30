@@ -97,7 +97,8 @@
    [grapheme_span String.grapheme_span]
    [grapheme_count String.grapheme_count]
    [to_sequence String.to_sequence]
-   [copy String.copy]))
+   [copy String.copy]
+   [snapshot String.snapshot]))
 
 (define-primitive-class String string
   #:lift-declaration
@@ -132,7 +133,8 @@
    [grapheme_span String.grapheme_span]
    [grapheme_count String.grapheme_count]
    [to_sequence String.to_sequence]
-   [copy String.copy])
+   [copy String.copy]
+   [snapshot String.snapshot])
   #:properties
   ()
   #:methods
@@ -236,7 +238,14 @@
   (string-contains? s1 s2))
 
 (define/method (String.copy s)
+  #:primitive (string-copy)
+  #:static-infos ((#%call-result #,(get-readable-string-static-infos)))
   (string-copy s))
+
+(define/method (String.snapshot s)
+  #:primitive (string->immutable-string)
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (string->immutable-string s))
 
 (define/method (String.make n c)
   #:primitive (make-string)

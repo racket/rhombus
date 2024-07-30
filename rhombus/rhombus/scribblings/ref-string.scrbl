@@ -43,7 +43,11 @@ immutable strings.
   str.grapheme_count(arg, ...)
   str.to_sequence()
   str.copy()
+  str.snapshot()
 )
+
+Two strings are equal by @rhombus(is_now) as long as they have equal
+contents, even if one is mutable and the other is immutable.
 
 Strings are @tech{comparable}, which means that generic operations like
 @rhombus(<) and @rhombus(>) work on strings.
@@ -355,6 +359,20 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @examples(
   "apple".copy()
+)
+
+}
+
+@doc(
+  fun String.snapshot(str :: ReadableString)
+    :: String
+){
+
+ Returns an immutable string as-is or copies a mutable string's content to
+ an immutable string.
+
+@examples(
+  "apple".copy().snapshot()
 )
 
 }

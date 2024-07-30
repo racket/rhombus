@@ -62,7 +62,8 @@
    utf8_string
    latin1_string
    locale_string
-   to_sequence))
+   to_sequence
+   snapshot))
 
 (define-annotation-syntax Bytes (identifier-annotation bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
@@ -161,6 +162,12 @@
   #:primitive (in-bytes)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-bytes bstr))
+
+(define/method (Bytes.snapshot bstr)
+  #:inline
+  #:primitive (bytes->immutable-bytes)
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
+  (bytes->immutable-bytes bstr))
 
 (define (bytes!=? a b)
   (if (and (bytes? a) (bytes? b))

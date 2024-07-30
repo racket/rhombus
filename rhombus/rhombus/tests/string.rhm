@@ -26,6 +26,7 @@ block:
     String.grapheme_count(str, [start], [end]) ~method
     String.to_sequence(str) ~method
     String.copy(str) ~method
+    String.snapshot(str) ~method
 
 check:
   "hello" :: String ~is "hello"
@@ -72,6 +73,9 @@ block:
     "Hello".contains("howdy") ~is #false
     "Hello".copy() ~is_now "Hello"
     "Hello".copy() == "Hello" ~is #false
+    "Hello".snapshot() ~is_now "Hello"
+    "Hello".snapshot() == "Hello" ~is_now #true
+    "Hello".copy().snapshot() == "Hello" ~is_now #true
 
 check:
   dynamic("hello").length() ~is 5
@@ -105,6 +109,8 @@ check:
   dynamic("Hello").grapheme_count(2, 4) ~is 2
   dynamic("Hello").contains("ello") ~is #true
   dynamic("Hello").contains("howdy") ~is #false
+  dynamic("Hello").copy() ~is_now "Hello"
+  dynamic("Hello").snapshot() ~is_now "Hello"
 
 check:
   String.length("hello") ~is 5

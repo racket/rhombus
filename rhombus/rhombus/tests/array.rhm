@@ -13,10 +13,11 @@ block:
     Array.append(arr, ...) ~method
     Array.copy(arr, [start], [end]) ~method
     Array.copy_from(dest_arr, dest_start, src_arr, [src_start], [src_end]) ~method
-    Array.drop_left(arr, n) ~method
-    Array.drop_right(arr, n) ~method
-    Array.take_left(arr, n) ~method
-    Array.take_right(arr, n) ~method
+    Array.snapshot(arr) ~method
+    Array.drop(arr, n) ~method
+    Array.drop_last(arr, n) ~method
+    Array.take(arr, n) ~method
+    Array.take_last(arr, n) ~method
     Array.set_in_copy(arr, i, v) ~method
     Array.to_list(arr) ~method
     Array.to_sequence(arr) ~method
@@ -92,6 +93,8 @@ block:
        let s = Array(4, 5, 6, 7, 8)
        s.copy_from(2, Array(0, 9, 10, 11), 1, 3)
        s) ~is_now Array(4, 5, 9, 10, 8)
+    Array(1, 2, 3).snapshot() ~is Array(1, 2, 3).snapshot()
+    Array(1, 2, 3).snapshot().copy() ~is_now Array(1, 2, 3)
 
 block:
   check:
@@ -227,10 +230,10 @@ check:
   Array("a", "b", "c").copy(1)  ~is_now Array("b", "c")
   Array("a", "b", "c").copy(1, 2)  ~is_now Array("b")
 
-  Array("a", "b", "c").take_left(2) ~is_now Array("a", "b")
-  Array("a", "b", "c").take_right(2) ~is_now Array("b", "c")
-  Array("a", "b", "c").drop_left(2) ~is_now Array("c")
-  Array("a", "b", "c").drop_right(2) ~is_now Array("a")
+  Array("a", "b", "c").take(2) ~is_now Array("a", "b")
+  Array("a", "b", "c").take_last(2) ~is_now Array("b", "c")
+  Array("a", "b", "c").drop(2) ~is_now Array("c")
+  Array("a", "b", "c").drop_last(2) ~is_now Array("a")
 
   Array("a", "b", "c").set_in_copy(1, "x") ~is_now Array("a", "x", "c")
 

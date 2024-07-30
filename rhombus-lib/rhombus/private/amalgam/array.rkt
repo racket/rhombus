@@ -66,10 +66,11 @@
    append
    copy
    copy_from
-   drop_left
-   drop_right
-   take_left
-   take_right
+   snapshot
+   drop
+   drop_last
+   take
+   take_last
    set_in_copy
    to_list
    to_sequence))
@@ -268,22 +269,27 @@
     [(v dest-start src src-start) (vector-copy! v dest-start src src-start)]
     [(v dest-start src src-start src-end) (vector-copy! v dest-start src src-start src-end)]))
 
-(define/method (Array.take_left v n)
+(define/method (Array.snapshot v)
+  #:primitive (vector->immutable-vector)
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
+  (vector->immutable-vector v))
+
+(define/method (Array.take v n)
   #:primitive (vector-take)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-take v n))
 
-(define/method (Array.take_right v n)
+(define/method (Array.take_last v n)
   #:primitive (vector-take-right)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-take-right v n))
 
-(define/method (Array.drop_left v n)
+(define/method (Array.drop v n)
   #:primitive (vector-drop)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-drop v n))
 
-(define/method (Array.drop_right v n)
+(define/method (Array.drop_last v n)
   #:primitive (vector-drop-right)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-drop-right v n))

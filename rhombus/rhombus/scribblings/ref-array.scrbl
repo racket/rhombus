@@ -15,7 +15,7 @@ used as @tech{sequence}, in which case it supplies its elements in
 order.
 
 An array is normally mutable, but immutable arrays can originate from
-Racket. The @rhombus(Array, ~annot) annotation is satisfied by both
+Racket or @rhombus(Array.snapshot). The @rhombus(Array, ~annot) annotation is satisfied by both
 mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 @rhombus(ImmutableArray, ~annot) require one or the other.
 
@@ -28,14 +28,18 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
   arr.append(arr2, ...)
   arr.copy(arg, ...)
   arr.copy_from(arg, ...)
-  arr.take_left(n)
-  arr.take_right(n)
-  arr.drop_left(n)
-  arr.drop_right(n)
+  arr.snapshot()
+  arr.take(n)
+  arr.take_last(n)
+  arr.drop(n)
+  arr.drop_last(n)
   arr.set_in_copy(i, v)
   arr.to_list()
   arr.to_sequence()
 )
+
+Two arrays are equal by @rhombus(is_now) as long as they have equal
+contents, even if one is mutable and the other is immutable.
 
 @doc(
   annot.macro 'Array'
@@ -285,13 +289,27 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 }
 
 @doc(
-  fun Array.take_left(arr :: Array, n :: NonnegInt)
+  fun Array.snapshot(arr :: Array)
+    :: ImmutableArray
+){
+
+ Returns an immutable array as-is or copies a mutable array's content to
+ an immutable array.
+
+@examples(
+  Array("a", "b", "c").snapshot()
+)
+
+}
+
+@doc(
+  fun Array.take(arr :: Array, n :: NonnegInt)
     :: MutableArray
-  fun Array.take_right(arr :: Array, n :: NonnegInt)
+  fun Array.take_last(arr :: Array, n :: NonnegInt)
     :: MutableArray
-  fun Array.drop_left(arr :: Array, n :: NonnegInt)
+  fun Array.drop(arr :: Array, n :: NonnegInt)
     :: MutableArray
-  fun Array.drop_right(arr :: Array, n :: NonnegInt)
+  fun Array.drop_last(arr :: Array, n :: NonnegInt)
     :: MutableArray
 ){
 
@@ -299,10 +317,10 @@ mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
  of @rhombus(arr).
 
 @examples(
-  Array("a", "b", "c").take_left(2)
-  Array("a", "b", "c").take_right(2)
-  Array("a", "b", "c").drop_left(2)
-  Array("a", "b", "c").drop_right(2)
+  Array("a", "b", "c").take(2)
+  Array("a", "b", "c").take_last(2)
+  Array("a", "b", "c").drop(2)
+  Array("a", "b", "c").drop_last(2)
 )
 
 }

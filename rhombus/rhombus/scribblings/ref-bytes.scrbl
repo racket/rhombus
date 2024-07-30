@@ -25,11 +25,15 @@ and @rhombus(ImmutableBytes, ~annot) require one or the other.
   bstr.subbytes(arg, ...)
   bstr.copy()
   bstr.copy_from(arg, ...)
+  bstr.snapshot()
   bstr.utf8_string(arg, ...)
   bstr.latin1_string(arg, ...)
   bstr.locale_string(arg, ...)
   bstr.to_sequence()
 )
+
+Two byte strings are equal by @rhombus(is_now) as long as they have
+equal contents, even if one is mutable and the other is immutable.
 
 Byte strings are @tech{comparable}, which means that generic operations
 like @rhombus(<) and @rhombus(>) work on byte strings.
@@ -169,6 +173,20 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
  @rhombus(src_end) (exclusive) into @rhombus(dest_bstr) starting at
  @rhombus(dest_start). The length of @rhombus(dest_bstr) must be at least
  @rhombus(dest_start + (src_end - src_start)).
+
+}
+
+@doc(
+  fun Bytes.snapshot(str :: Bytes)
+    :: ImmutableBytes
+){
+
+ Returns an immutable byte string as-is or copies a mutable byte
+ string's content to an immutable byte string.
+
+@examples(
+  #"apple".copy().snapshot()
+)
 
 }
 
