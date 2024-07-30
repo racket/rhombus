@@ -151,6 +151,10 @@
   (case-lambda
     [(port) (coerce-read-result (read-line port 'any))]
     [(port mode)
+     (unless (ReadLineMode? mode)
+       (unless (input-port? port)
+         (raise-argument-error* who rhombus-realm "Port.Input" port))
+       (raise-argument-error* who rhombus-realm "Port.Input.ReadLineMode" mode))
      (coerce-read-result
       (read-line port
                  (case mode
