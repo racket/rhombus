@@ -136,6 +136,8 @@
     [(and (identifier? v)
           (display?))
      (display (syntax->datum v) op)]
+    [(eof-object? v)
+     (display "Port.eof" op)]
     [(namespace? v) (display "#<evaluator>" op)]
     [else (other v mode op)]))
 
