@@ -181,7 +181,7 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.read_line(in :: Port.Input,
-                           mode :: ReadLineMode = ReadLineMode.any)
+                           mode :: Port.ReadLineMode = #'any)
     :: String || Port.EOF
 ){
  Returns a string containing the next line of characters from @rhombus(in).
@@ -197,28 +197,28 @@ input, while an @deftech{output port} is specifically for output.
 
  @itemlist(
    @item{
-     @rhombus(Port.ReadLineMode.linefeed) breaks lines on linefeed characters.
+     @rhombus(#'linefeed) breaks lines on linefeed characters.
    }
 
    @item{
-     @rhombus(Port.ReadLineMode.return) breaks lines on return characters.
+     @rhombus(#'return) breaks lines on return characters.
    }
 
    @item{
-     @rhombus(Port.ReadLineMode.return_linefeed) breaks lines on
+     @rhombus(#'return_linefeed) breaks lines on
      return-linefeed combinations.  If a return character is not followed by a
      linefeed character, it is included in the result string; similarly, a
      linefeed that is not preceded by a return is included in the result string.
    }
 
    @item{
-     @rhombus(Port.ReadLineMode.any) breaks lines on any of a return character,
+     @rhombus(#'any) breaks lines on any of a return character,
      linefeed character, or return-linefeed combination. If a return character
      is followed by a linefeed character, the two are treated as a combination.
    }
 
    @item{
-     @rhombus(Port.ReadLineMode.any_one) breaks lines on either a return or
+     @rhombus(#'any_one) breaks lines on either a return or
      linefeed character, without recognizing return-linefeed combinations.
    }
  )
@@ -232,7 +232,7 @@ input, while an @deftech{output port} is specifically for output.
     any
     any_one
 ){
- Line reading modes.
+ Line reading modes for @rhombus(Port.Input.read_line).
 }
 
 @doc(
