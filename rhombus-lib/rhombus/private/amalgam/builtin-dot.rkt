@@ -12,6 +12,7 @@
          (submod "pair.rkt" for-builtin)
          (submod "string.rkt" for-builtin)
          (submod "bytes.rkt" for-builtin)
+         (submod "char.rkt" for-builtin)
          (submod "function.rkt" for-builtin)
          (submod "path-object.rkt" for-builtin)
          (submod "srcloc-object.rkt" for-builtin)
@@ -34,6 +35,7 @@
      [(pair? v) pair-method-table]
      [(string? v) string-method-table]
      [(bytes? v) bytes-method-table]
+     [(char? v) char-method-table]
      [(procedure? v) function-method-table]
      [(path? v) path-method-table]
      [(srcloc? v) srcloc-method-table]

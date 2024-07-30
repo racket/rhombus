@@ -11,6 +11,30 @@ A @deftech{character} is Unicode code point.
 Characters are @tech{comparable}, which means that generic operations
 like @rhombus(<) and @rhombus(>) work on characters.
 
+@dispatch_table(
+  "character"
+  Char
+  ch.to_int()
+  ch.upcase()
+  ch.downcase()
+  ch.foldcase()
+  ch.titlecase()
+  ch.is_alphabetic()
+  ch.is_lowercase()
+  ch.is_uppercase()
+  ch.is_titlecase()
+  ch.is_numeric()
+  ch.is_symbolic()
+  ch.is_punctuation()
+  ch.is_graphic()
+  ch.is_whitespace()
+  ch.is_blank()
+  ch.is_extended_pictographic()
+  ch.general_category()
+  ch.grapheme_break_property()
+  ch.grapheme_step(state)
+)
+
 @doc(
   annot.macro 'Char'
 ){
