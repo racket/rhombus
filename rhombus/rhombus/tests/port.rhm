@@ -1,9 +1,17 @@
-#lang rhombus
+#lang rhombus/static
 
 block:
   import "static_arity.rhm"
   static_arity.check:
     Port.Input.current([in])
+    Port.Input.open_bytes(bstr, [name])
+    Port.Input.open_string(str, [name])
+    Port.Input.peek_byte(in, [skip])
+    Port.Input.peek_char(in, [skip])
+    Port.Input.read_byte(in)
+    Port.Input.read_bytes(in, amount)
+    Port.Input.read_char(in)
+    Port.Input.read_line(in, [mode])
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
     Port.Output.get_bytes(out) ~method
@@ -11,3 +19,45 @@ block:
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
+
+block:
+  let p = Port.Input.open_string("abλcdefμ")
+  check p.peek_byte() ~is "a"[0].to_int()
+  check p.peek_byte(~skip_bytes: 1) ~is "b"[0].to_int()
+  check p.read_byte() ~is "a"[0].to_int()
+  check p.peek_byte(~skip_bytes: 3) ~is "c"[0].to_int()
+  check p.peek_char() ~is "b"[0]
+  check p.peek_char(~skip_bytes: 1) ~is "λ"[0]
+  check p.peek_char(~skip_bytes: 3) ~is "c"[0]
+  check p.read_char() ~is "b"[0]
+  check p.read_char() ~is "λ"[0]
+  check p.peek_char() ~is "c"[0]
+  check p.read_bytes(2) ~is_now #"cd".copy()
+  // check p.read_string(2) ~is "fμ"
+
+block:
+  def str = "a\nb\rc\r\nd\n\re"
+  fun read_many(mode):
+    let p = Port.Input.open_string(str)
+    fun read():
+      if mode
+      | p.read_line(mode)
+      | p.read_line()
+    [read(),
+     read(),
+     read(),
+     read(),
+     read(),
+     read(),
+     read()]     
+  check read_many(#'any) ~is ["a", "b", "c", "d", "", "e", Port.eof]  
+  check read_many(#false) ~is read_many(#'any)
+  check read_many(#'linefeed) ~is ["a", "b\rc\r", "d", "\re", Port.eof, Port.eof, Port.eof]
+  check read_many(#'backward) ~throws "Port.Input.ReadLineMode"
+
+block:
+  let p = Port.Output.open_bytes()
+  print("x", p)
+  check p.get_bytes() ~is_now #"x".copy()
+  check p.get_string() ~is "x"
+  check p.flush() ~is #void
