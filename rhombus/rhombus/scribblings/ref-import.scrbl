@@ -125,7 +125,7 @@
  @item{@rhombus(string): refers to a module using @rhombus(string) as a
    relative path. The string can contain only the characters
    @litchar{a}-@litchar{z}, @litchar{A}-@litchar{Z},
-   @litchar{0}-@litchar{9}, @litchar{-}, @litchar{+}, @litchar{_}, and
+   @litchar{0}-@litchar{9}, @litchar{-}, @litchar{+}, @litchar{_},
    @litchar{/}, @litchar{.}, and @litchar{%}. Furthermore, a @litchar{%} is
    allowed only when followed by two lowercase hexadecimal digits, and the
    digits must form a number that is not the ASCII value of a letter,

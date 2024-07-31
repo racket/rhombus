@@ -63,7 +63,7 @@ fun math(pre_content :: PreContent) :~ Element:
 
 fun filepath(pre_content :: PreContent) :~ Element:
   ~doc
-  manual.math(pre_content)
+  manual.filepath(pre_content)
 
 fun pkg(pre_content :: PreContent) :~ Element:
   ~doc
