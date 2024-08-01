@@ -7,7 +7,9 @@ block:
     Port.Input.open_bytes(bstr, [name])
     Port.Input.open_string(str, [name])
     Port.Input.peek_byte(in, [skip])
+    Port.Input.peek_bytes(in, amount, [skip])
     Port.Input.peek_char(in, [skip])
+    Port.Input.peek_string(in, amount, [skip])
     Port.Input.read_byte(in)
     Port.Input.read_bytes(in, amount)
     Port.Input.read_char(in)
@@ -33,7 +35,24 @@ block:
   check p.read_char() ~is "λ"[0]
   check p.peek_char() ~is "c"[0]
   check p.read_bytes(2) ~is_now #"cd".copy()
-  // check p.read_string(2) ~is "fμ"
+  check p.read_string(3) ~is "efμ"
+
+block:
+  let p = Port.Input.open_string("abcdefg")
+  check p.peek_bytes(4) ~is_now #"abcd"
+  check p.peek_bytes(4, ~skip_bytes: 4) ~is_now #"efg"
+  check p.peek_bytes(4, ~skip_bytes: 7) ~is Port.eof
+  check p.read_bytes(4) ~is_now #"abcd"
+  check p.peek_bytes(4) ~is_now #"efg"
+  check p.read_bytes(4) ~is_now #"efg"
+  check p.read_bytes(4) ~is Port.eof
+
+block:
+  let p = Port.Input.open_string("abλcdefμ")
+  check p.peek_string(2) ~is "ab"
+  check p.peek_string(~skip_bytes: 2, 1) ~is "λ"
+  check p.peek_string(3) ~is "abλ"
+  check p.peek_string(1, ~skip_bytes: 4) ~is "c"
 
 block:
   def str = "a\nb\rc\r\nd\n\re"
