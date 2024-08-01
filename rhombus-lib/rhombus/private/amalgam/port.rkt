@@ -51,11 +51,14 @@
   #:properties ()
   #:methods
   ([peek_byte Port.Input.peek_byte]
+   [peek_bytes Port.Input.peek_bytes]
    [peek_char Port.Input.peek_char]
+   [peek_string Port.Input.peek_string]
    [read_byte Port.Input.read_byte]
    [read_bytes Port.Input.read_bytes]
    [read_char Port.Input.read_char]
-   [read_line Port.Input.read_line]))
+   [read_line Port.Input.read_line]
+   [read_string Port.Input.read_string]))
 
 (define-primitive-class Output output-port
   #:lift-declaration
@@ -115,15 +118,31 @@
     [() (open-output-string)]
     [(name) (open-output-string name)]))
 
+(define (coerce-read-result v)
+  (cond
+    [(string? v) (string->immutable-string v)]
+    [else v]))
+
 (define/method (Port.Input.peek_byte port #:skip_bytes [skip 0])
   #:inline
   #:primitive (peek-byte)
   (peek-byte port skip))
 
+(define/method (Port.Input.peek_bytes port amt #:skip_bytes [skip 0])
+  #:inline
+  #:primitive (peek-bytes)
+  (peek-bytes amt skip port))
+
 (define/method (Port.Input.peek_char port #:skip_bytes [skip 0])
   #:inline
   #:primitive (peek-char)
   (peek-char port skip))
+
+(define/method (Port.Input.peek_string port amt #:skip_bytes [skip 0])
+  #:inline
+  #:primitive (peek-bytes)
+  (coerce-read-result
+   (peek-string amt skip port)))
 
 (define/method (Port.Input.read_byte port)
   #:inline
@@ -140,10 +159,6 @@
   #:primitive (read-char)
   (read-char port))
 
-(define (coerce-read-result v)
-  (cond
-    [(string? v) (string->immutable-string v)]
-    [else v]))
 
 (define/method Port.Input.read_line
   #:inline
@@ -161,6 +176,11 @@
                    [(return_linefeed) 'return-linefeed]
                    [(any_one) 'any-one]
                    [else mode])))]))
+
+(define/method (Port.Input.read_string port amt)
+  #:inline
+  #:primitive (read-string)
+  (coerce-read-result (read-string amt port)))
 
 (define/method (Port.Output.get_bytes port)
   #:inline

@@ -12,11 +12,14 @@ input, while an @deftech{output port} is specifically for output.
   "input port"
   Port.Input
   in.peek_byte(arg, ...)
+  in.peek_bytes(arg, ...)
   in.peek_char(arg, ...)
+  in.peek_string(arg, ...)
   in.read_byte()
   in.read_bytes(arg, ...)
   in.read_char()
   in.read_line(arg, ...)
+  in.read_string(arg)
 )
 
 @dispatch_table(
@@ -142,12 +145,32 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
+  fun Port.Input.peek_bytes(in :: Port.Input,
+                            amount :: NonnegInt,
+                            ~skip_bytes: skip :: NonnegInt = 0)
+    :: Bytes || Port.EOF
+){
+ Like @rhombus(Port.Input.read_bytes), but peeks instead of reading, and skips
+ @rhombus(skip) bytes at the start of the port.
+}
+
+@doc(
   fun Port.Input.peek_char(in :: Port.Input,
                            ~skip_bytes: skip :: NonnegInt = 0)
     :: Char || Port.EOF
 ){
  Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
  @rhombus(skip) bytes (not characters) at the start of the port.
+}
+
+@doc(
+  fun Port.Input.peek_string(in :: Port.Input,
+                             amount :: NonnegInt,
+                             ~skip_bytes: skip :: NonnegInt = 0)
+    :: String || Port.EOF
+){
+ Like @rhombus(Port.Input.read_string), but peeks instead of reading, and skips
+ @rhombus(skip) bytes at the start of the port.
 }
 
 @doc(
@@ -222,6 +245,24 @@ input, while an @deftech{output port} is specifically for output.
      linefeed character, without recognizing return-linefeed combinations.
    }
  )
+}
+
+@doc(
+  fun Port.Input.read_string(in :: Port.Input,
+                             amt :: NonnegInt) :: String || Port.EOF
+){
+ Returns a string containing the next @rhombus(amt) characters from
+ @rhombus(in).
+
+ If @rhombus(amt) is @rhombus(0), then the empty string is
+ returned. Otherwise, if fewer than @rhombus(amt) characters are
+ available before an end-of-file is encountered, then the returned
+ string will contain only those characters before the end-of-file; that
+ is, the returned string's length will be less than @rhombus(amt). (A
+ temporary string of size @rhombus(amt) is allocated while reading the
+ input, even if the size of the result is less than @rhombus(amt)
+ characters.) If no characters are available before an end-of-file,
+ then @rhombus(Port.eof) is returned.
 }
 
 @doc(
