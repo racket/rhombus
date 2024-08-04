@@ -3,27 +3,27 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    Char.to_int(ch)
+    Char.to_int(ch) ~method
     Char.from_int(int)
-    Char.utf8_length(ch)
-    Char.is_alphabetic(ch)
-    Char.is_lowercase(ch)
-    Char.is_uppercase(ch)
-    Char.is_titlecase(ch)
-    Char.is_numeric(ch)
-    Char.is_symbolic(ch)
-    Char.is_punctuation(ch)
-    Char.is_graphic(ch)
-    Char.is_whitespace(ch)
-    Char.is_blank(ch)
-    Char.is_extended_pictographic(ch)
-    Char.general_category(ch)
-    Char.grapheme_break_property(ch)
-    Char.upcase(ch)
-    Char.downcase(ch)
-    Char.foldcase(ch)
-    Char.titlecase(ch)
-    Char.grapheme_step(ch, state)
+    Char.utf8_length(ch) ~method
+    Char.is_alphabetic(ch) ~method
+    Char.is_lowercase(ch) ~method
+    Char.is_uppercase(ch) ~method
+    Char.is_titlecase(ch) ~method
+    Char.is_numeric(ch) ~method
+    Char.is_symbolic(ch) ~method
+    Char.is_punctuation(ch) ~method
+    Char.is_graphic(ch) ~method
+    Char.is_whitespace(ch) ~method
+    Char.is_blank(ch) ~method
+    Char.is_extended_pictographic(ch) ~method
+    Char.general_category(ch) ~method
+    Char.grapheme_break_property(ch) ~method
+    Char.upcase(ch) ~method
+    Char.downcase(ch) ~method
+    Char.foldcase(ch) ~method
+    Char.titlecase(ch) ~method
+    Char.grapheme_step(ch, state) ~method
 
 check:
   "h"[0] :: Char ~is #{#\h}
