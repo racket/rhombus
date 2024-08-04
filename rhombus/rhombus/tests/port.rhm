@@ -6,14 +6,16 @@ block:
     Port.Input.current([in])
     Port.Input.open_bytes(bstr, [name])
     Port.Input.open_string(str, [name])
-    Port.Input.peek_byte(in, [skip])
-    Port.Input.peek_bytes(in, amount, [skip])
-    Port.Input.peek_char(in, [skip])
-    Port.Input.peek_string(in, amount, [skip])
-    Port.Input.read_byte(in)
-    Port.Input.read_bytes(in, amount)
-    Port.Input.read_char(in)
-    Port.Input.read_line(in, [mode])
+    // TODO fix tests for keyword arguments
+    Port.Input.peek_byte(in) ~method
+    Port.Input.peek_bytes(in, amount) ~method
+    Port.Input.peek_char(in) ~method
+    Port.Input.peek_string(in, amount) ~method
+    Port.Input.read_byte(in) ~method
+    Port.Input.read_bytes(in, amount) ~method
+    Port.Input.read_char(in) ~method
+    Port.Input.read_line(in, [mode]) ~method
+    Port.Input.read_string(in, amount) ~method
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
     Port.Output.get_bytes(out) ~method
