@@ -399,7 +399,7 @@
        (cond
          [(not (eq? kind 'term)) (retry)]
          [(rhombus-syntax-class-splicing? rsc)
-          (compat #'pack-tail* #'unpack-group*)]
+          (compat #'pack-tail* #'unpack-element*)] ;; `unpack-element*` keeps `group` or `multi` wrapper
          [else (compat #'pack-term* #'unpack-term*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'group)
        (cond

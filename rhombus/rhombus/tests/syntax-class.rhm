@@ -893,6 +893,20 @@ block:
     m('foo bar: baz')
     ~matches '(foo bar, :« baz »)'
 
+check:
+  syntax_class MaybeA:
+    kind: ~sequence
+  | ''
+  | 'a'
+
+  syntax_class B:
+    kind: ~group
+  | 'b $(a :: MaybeA): "b"'
+
+  match 'b: "b"'
+  | '$(b :: B)': b.a
+  ~matches ''
+
 // check handling of nested `pattern`s
 block:
   fun m(stx):
