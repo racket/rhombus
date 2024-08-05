@@ -3,8 +3,10 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    print(v, [out])
-    println(v, [out])
+    print(v, ...)
+    println(v, ...)
+    show(v, ...)
+    showln(v, ...)
     Printable.describe(v)
     Printable.render(pd, [out])
     Printable.current_pretty([on])
@@ -23,10 +25,59 @@ block:
 
 check to_string("apple") ~is "apple"
 check to_string("apple", ~mode: #'expr) ~is "\"apple\""
+check repr("apple") ~is "\"apple\""
+
+check:
+  print(1)
+  ~prints "1"
+
+check:
+  print(1, 2, "apple")
+  ~prints "1 2 apple"
+
+check:
+  print(1, 2, "apple", ~pretty: #true)
+  ~prints "1\n2\napple"
+
+check:
+  print([1, String.make(80, "a"[0]), 2], ~pretty: #true)
+  ~prints @str{[
+                 1,
+                 "@(String.make(80, "a"[0]))",
+                 2
+               ]}
+
+check:
+  print(1, ~out: Port.Output.current())
+  ~prints "1"
 
 check:
   println(1)
   ~prints "1\n"
+
+check:
+  println(1, ~out: Port.Output.current())
+  ~prints "1\n"
+
+check:
+  show(#'a)
+  ~prints "#'a"
+
+check:
+  show(1, 2, "apple")
+  ~prints "1 2 \"apple\""
+
+check:
+  show(#'a, ~out: Port.Output.current())
+  ~prints "#'a"
+
+check:
+  showln(#'a)
+  ~prints "#'a\n"
+
+check:
+  showln(#'a, ~out: Port.Output.current())
+  ~prints "#'a\n"
 
 check:
   class Posn(x, y):

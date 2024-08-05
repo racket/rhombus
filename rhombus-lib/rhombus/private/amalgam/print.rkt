@@ -19,7 +19,9 @@
                       rhombus/statinfo)
                      (rename-out
                       [rhombus-print print])
-                     println))
+                     println
+                     show
+                     showln))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
@@ -33,6 +35,10 @@
 
 (module+ for-runtime
   (provide (rename-out [do-print print])))
+
+(module+ for-port
+  (provide do-print*
+           default-pretty))
 
 (module+ for-printable
   (provide pretty
@@ -54,21 +60,50 @@
 (define (check-mode who mode)
   (unless (or (eq? mode 'expr)
               (eq? mode 'text))
-    (raise-argument-error* who rhombus-realm "Any.of(#'text, #'expr)" mode)))
+    (raise-argument-error* who rhombus-realm "PrintMode" mode)))
 
-(define/arity #:name print (rhombus-print v [op (current-output-port)]
+(define (do-print* who vs op mode pretty?)
+  (check-output-port who op)
+  (check-mode who mode)
+  (cond
+    [(null? vs) (void)]
+    [(null? (cdr vs)) (do-print (car vs) op mode pretty?)]
+    [else
+     (define sep (cond
+                   [(eq? pretty? default-pretty)
+                    (if (current-print-as-pretty)
+                        "\n"
+                        " ")]
+                   [pretty? "\n"]
+                   [else " "]))
+     (for/fold ([first? #true]) ([v (in-list vs)])
+       (unless first? (display sep op))
+       (do-print v op mode pretty?)
+       #f)
+     (void)]))
+
+(define/arity #:name print (rhombus-print #:out [op (current-output-port)]
                                           #:mode [mode 'text]
-                                          #:pretty [pretty? default-pretty])
-  (check-output-port who op)
-  (check-mode who mode)
-  (do-print v op mode pretty?))
+                                          #:pretty [pretty? default-pretty]
+                                          . vs)
+  (do-print* who vs op mode pretty?))
 
-(define/arity (println v [op (current-output-port)]
+(define/arity (println #:out [op (current-output-port)]
                        #:mode [mode 'text]
-                       #:pretty [pretty? default-pretty])
-  (check-output-port who op)
-  (check-mode who mode)
-  (do-print v op mode pretty?)
+                       #:pretty [pretty? default-pretty]
+                       . vs)
+  (do-print* who vs op mode pretty?)
+  (newline op))
+
+(define/arity (show #:out [op (current-output-port)]
+                    #:pretty [pretty? default-pretty]
+                    . vs)
+  (do-print* who vs op 'expr pretty?))
+
+(define/arity (showln #:out [op (current-output-port)]
+                      #:pretty [pretty? default-pretty]
+                      . vs)
+  (do-print* who vs op 'expr pretty?)
   (newline op))
 
 (define (do-display v op)

@@ -28,6 +28,10 @@ input, while an @deftech{output port} is specifically for output.
   out.get_bytes()
   out.get_string()
   out.flush()
+  out.print(arg, ...)
+  out.println(arg, ...)
+  out.show(arg, ...)
+  out.showln(arg, ...)
 )
 
 @doc(
@@ -47,14 +51,17 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun print(v :: Any,
-            out :: Port.Output = Port.Output.current(),
-            ~mode: mode :: Any.of(#'text, #'expr) = #'text,
+  fun print(v :: Any, ...,
+            ~out: out :: Port.Output = Port.Output.current(),
+            ~mode: mode :: PrintMode = #'text,
             ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
 
- Prints @rhombus(v) to @rhombus(out).
+ Prints each @rhombus(v) to @rhombus(out). In the case that more than
+ one @rhombus(v) is provided, a space is printed between the output for
+ each @rhombus(v)---unless @rhombus(pretty) is @rhombus(#true), in which
+ case a newline is printed between the output of each @rhombus(v).
 
  In @rhombus(#'text) mode, strings, symbols, identifiers, and keywords
  print as their character content, a byte string prints as its raw byte
@@ -64,18 +71,27 @@ input, while an @deftech{output port} is specifically for output.
  @rhombus(Printable, ~class) so that its instances print differently in
  different modes.
 
+ When @rhombus(pretty) is @rhombus(#true), then compound values like
+ lists may print with line breaks to split the output across lines.
  When @rhombus(pretty) is @rhombus(#false), then printing tends to
  use a single line, but also prints faster. The value of the
  @rhombus(Printable.current_pretty) @tech{context parameter} is
  to match @rhombus(pretty) while printing, which affects functions
  like @rhombus(PrintDesc.list).
 
+@examples(
+  print("apple")
+  print("apple", ~mode: #'expr)
+  print("apple", "banana", "coconut")
+  print("apple", "banana", "coconut", ~pretty: #true)
+)
+
 }
 
 @doc(
   fun println(v :: Any,
-              out :: Port.Output = Port.Output.current(),
-              ~mode: mode :: Any.of(#'text, #'expr) = #'text,
+              ~out: out :: Port.Output = Port.Output.current(),
+              ~mode: mode :: PrintMode = #'text,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){
@@ -84,6 +100,30 @@ input, while an @deftech{output port} is specifically for output.
 
 }
 
+@doc(
+  fun show(v :: Any,
+           ~out: out :: Port.Output = Port.Output.current(),
+           ~pretty: pretty = Printable.current_pretty())
+    :: Void
+  fun showln(v :: Any,
+             ~out: out :: Port.Output = Port.Output.current(),
+             ~pretty: pretty = Printable.current_pretty())
+    :: Void
+){
+
+ Like @rhombus(print) and @rhombus(println) with @rhombus(~mode: #'expr).
+
+}
+
+@doc(
+  enum PrintMode:
+    text
+    expr
+){
+
+ A printing mode for use with functions like @rhombus(print).
+
+}
 
 @doc(
   Parameter.def Port.Input.current :: Port.Input
@@ -277,6 +317,31 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
+  fun Port.Output.print(out :: Port.Output,
+                        v :: Any, ...,
+                        ~mode: mode :: PrintMode = #'text)
+    :: Void
+  fun Port.Output.println(out :: Port.Output,
+                          v :: Any, ...,
+                          ~mode: mode :: PrintMode = #'text)
+    :: Void
+  fun Port.Output.show(out :: Port.Output,
+                       v :: Any, ...,
+                       ~mode: mode :: PrintMode = #'text)
+    :: Void
+  fun Port.Output.showln(out :: Port.Output,
+                         v :: Any, ...,
+                         ~mode: mode :: PrintMode = #'text)
+    :: Void
+){
+
+ The same as @rhombus(print), @rhombus(println), @rhombus(show), and
+ @rhombus(showln), but with an output provided as a required intiial
+ argument instead of an optional @rhombus(~out) keyword argument.
+
+}
+
+@doc(
   fun Port.Output.open_bytes(name :: Symbol) :: Port.Output
   fun Port.Output.open_string(name :: Symbol) :: Port.Output
 ){
@@ -306,7 +371,6 @@ input, while an @deftech{output port} is specifically for output.
  the byte string instead.
 
 }
-
 
 @doc(
   fun Port.Output.flush(out :: Port.Output = Port.Output.current())
@@ -355,7 +419,7 @@ input, while an @deftech{output port} is specifically for output.
 @doc(
   fun Printable.describe(
     v :: Any,
-    ~mode: mode :: Any.of(#'text, #'expr) = #'text
+    ~mode: mode :: PrintMode = #'text
   ) :: PrintDesc
 ){
 

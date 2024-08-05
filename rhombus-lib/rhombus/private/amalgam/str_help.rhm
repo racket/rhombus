@@ -1,0 +1,93 @@
+#lang rhombus/private/amalgam/core
+
+use_static
+
+export:
+  extract_flonum_parts
+  count_leading_zeros
+  count_trailing_zeros
+  insert_decimal
+  real_exponent
+
+// gets mantissa, fraction, and exponent as normal printing
+// would render them; assumes that `n` is nonnegative
+fun extract_flonum_parts(n :~ Flonum) :~ values(String, String, Int):
+  let s = to_string(n)
+  fun next_non_digit(i :: Int):
+    cond
+    | i == s.length(): i
+    | s[i].is_numeric(): next_non_digit(i+1)
+    | ~else i
+  let dot_or_exp = next_non_digit(0)
+  cond
+  | dot_or_exp == s.length():
+      values(s, "", 0)
+  | s[dot_or_exp] == "."[0]:
+      let exp = next_non_digit(dot_or_exp + 1)
+      cond
+      | exp == s.length():
+          values(s.substring(0, dot_or_exp),
+                 s.substring(dot_or_exp+1, s.length()),
+                 0)
+      | ~else:
+          values(s.substring(0, dot_or_exp),
+                 s.substring(dot_or_exp+1, exp),
+                 s.substring(exp+1, s.length()).to_int())
+  | ~else:
+      values(s.substring(0, dot_or_exp),
+             "",
+             s.substring(dot_or_exp+1, s.length()).to_int())
+
+// does not count a trailing 0 as "leading" when all
+// digits in `s` are "0"
+fun count_leading_zeros(s :~ String):
+  fun loop(i):
+    cond
+    | i+1 == s.length(): i
+    | s[i] == "0"[0]: loop(i+1)
+    | ~else: i
+  loop(0)
+
+// does count an initial "0" as potentially trailing
+fun count_trailing_zeros(s :~ String):
+  fun loop (i):
+    cond
+    | i == s.length(): i
+    | s[s.length() - i - 1] == "0"[0]: loop(i+1)
+    | ~else: i
+  loop(0)
+
+fun insert_decimal(s :~ String, expo, precision):
+  let s:
+    cond
+    | s.length() <= -expo:
+        String.make((-expo - s.length()) + 1, "0"[0]) ++ s
+    | ~else:
+        s
+  fun trim(s :~ String):
+    let i = count_leading_zeros(s)
+    if i == 0 | s | s.substring(i, s.length())
+  cond
+  | expo <= 0:
+      let m_len = math.max(0, s.length() + expo)
+      let mant = s.substring(0, m_len)
+      let frac = s.substring(m_len, s.length())
+      values(trim(mant),
+             (frac ++ String.make(math.max(0, precision - frac.length()), "0"[0])).substring(0, precision))
+  | expo > 0:
+      values(trim(s ++ String.make(expo, "0"[0])),
+             String.make(precision, "0"[0]))
+
+// determines `expo` so that `n` is between `10**expo` and `10**(expo+1)`;
+// assumes that `n` is nonnegative
+fun real_exponent(n):
+  cond
+  | n .= 0: 0
+  | ~else:
+      let w_2 = bits.length(math.numerator(n)) - bits.length(math.denominator(n))
+      fun loop(expo):
+        cond
+        | n > 10**(expo+1): loop(expo+1)
+        | n < 10**expo: loop(expo-1)
+        | ~else: expo
+      loop(math.floor(math.exact(w_2 / math.log(10))))

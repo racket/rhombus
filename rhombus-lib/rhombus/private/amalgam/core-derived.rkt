@@ -11,4 +11,5 @@
         "sequence.rhm"
         "class_together.rhm"
         "enum.rhm"
-        "pipeline.rhm")
+        "pipeline.rhm"
+        "str.rhm")

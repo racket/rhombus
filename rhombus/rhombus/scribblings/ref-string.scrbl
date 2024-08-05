@@ -71,15 +71,21 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   fun to_string(v :: Any,
-                ~mode: mode :: Any.of(#'text, #'expr) = #'text)
-    :: String
+                ~mode: mode :: PrintMode = #'text) :: String
+  fun repr(v :: Any) :: String
 ){
 
- Coerces @rhombus(v)  to a string.
+ The @rhombus(to_string) function coerces @rhombus(v)  to a string.
 
- The string for of a value corresponds to the way that @rhombus(print)
+ The string form of a value corresponds to the way that @rhombus(print)
  would print, which means that strings, symbols, identifiers, and
  keywords convert as their character content in the default @rhombus(#'text) mode.
+
+ The @rhombus(repr) function is a shorthand for @rhombus(to_string) with
+ @rhombus(~mode: #'expr).
+
+ For converting a syntax object to a string, see also
+ @rhombus(Syntax.to_source_string).
 
 @examples(
   to_string(10)

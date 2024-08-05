@@ -35,7 +35,8 @@
                      +&)
          (for-spaces (#f
                       rhombus/statinfo)
-                     to_string)
+                     to_string
+                     repr)
          (for-spaces (rhombus/annot
                       rhombus/namespace)
                      String)
@@ -194,7 +195,11 @@
     [(expr)
      (print-to-string a rhombus:print)]
     [else
-     (raise-argument-error* who rhombus-realm "Any.of(#'text, #'expr)" mode)]))
+     (raise-argument-error* who rhombus-realm "PrintMode" mode)]))
+
+(define/arity (repr a)
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (to_string a #:mode 'expr))
 
 (set-primitive-contract! 'string? "ReadableString")
 
@@ -249,6 +254,7 @@
 
 (define/method (String.make n c)
   #:primitive (make-string)
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (make-string n c)))
 
 (define/method String.substring
