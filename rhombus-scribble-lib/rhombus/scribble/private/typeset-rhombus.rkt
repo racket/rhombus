@@ -294,9 +294,12 @@
                                       (shape-loop (+ sp-start ws-len) (line-shape-step line-shape e))])
                           (values (cons e es) line-shape))]
                        [else
+                        (define rest-str (if (= sp-start 0)
+                                             show-str
+                                             (substring show-str sp-start)))
                         (define e (element style (if (eq? style 'white-space)
-                                                     show-str
-                                                     (keep-spaces show-str))))
+                                                     rest-str
+                                                     (keep-spaces rest-str))))
                         (values (if (eqv? sp-start 0)
                                     e
                                     (list e))
