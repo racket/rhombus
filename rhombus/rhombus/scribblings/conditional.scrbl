@@ -18,8 +18,8 @@ precedence than @rhombus(&&) and @rhombus(||), while @rhombus(&&) has
 higher precedence than @rhombus(||). Arithmetic operators have higher
 precedence than comparison operators, @rhombus(||), @rhombus(&&), but
 they have no precedence relative to @rhombus(!). The @rhombus(==)
-operator is numerical comparison like Racket's @tt{=}, while
-@rhombus(===) operator is Racket's @tt{equal?}. Comparison
+operator reports structural equality independent of mutations, while
+the @rhombus(===) operator reports object equality. Comparison
 operators are non-associative and have no precedence relationship with
 each other.
 
