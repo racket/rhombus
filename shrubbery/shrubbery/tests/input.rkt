@@ -1896,6 +1896,10 @@ tail @(«| then | else»)
 
 @('«#{x} 'x'»')
 
+@str{Contents: @pct(0.251) apples
+               @pct(1/6) bananas
+               @pct(0.5) cherries}
+
 The end
 INPUT
   )
@@ -2003,6 +2007,22 @@ INPUT
     (group tail (alts (block (group then)) (block (group else))))
     (group tail (alts (block (group then)) (block (group else))))
     (group (parens (group (quotes (group x (quotes (group x)))))))
+    (group
+     str
+     (parens
+      (group
+       (brackets
+        (group "Contents: ")
+        (group pct (parens (group 0.251)))
+        (group " apples")
+        (group "\n")
+        (group "          ")
+        (group pct (parens (group 1/6)))
+        (group " bananas")
+        (group "\n")
+        (group "          ")
+        (group pct (parens (group 0.5)))
+        (group " cherries")))))
     (group The end)))
 
 (define input3b

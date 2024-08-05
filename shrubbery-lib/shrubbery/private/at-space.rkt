@@ -126,8 +126,9 @@
                              s
                              (substring s n)))
        (define rest-trimmed (loop (cdr lst) #f))
+       (define drop-trimmed-s? (eqv? 0 (string-length trimmed-s)))
        (define trimmed
-         (if (eqv? 0 (string-length trimmed-s))
+         (if drop-trimmed-s?
              rest-trimmed
              (cons (list 'content
                          (datum->syntax a
@@ -138,10 +139,14 @@
        (if (eqv? add-back-n 0)
            trimmed
            (cons (list 'content
-                       (syntax-raw-property (datum->syntax a
-                                                           (make-string add-back-n #\space)
-                                                           a)
-                                            '()))
+                       (let ([stx (datum->syntax a
+                                                 (make-string add-back-n #\space)
+                                                 a
+                                                 (and drop-trimmed-s?
+                                                      a))])
+                         (if drop-trimmed-s?
+                             stx
+                             (syntax-raw-property stx '()))))
                  trimmed))]
       [(eq? 'comment (caar lst))
        (cons (car lst) (loop (cdr lst) saw-nl?))]
