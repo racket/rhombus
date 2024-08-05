@@ -109,7 +109,7 @@ Booleans are written with a leading @litchar{#} followed immediately by
 
 
 Strings of Unicode characters use double quotes, and byte strings are
-similar, but with a @litchar{#} prefix. Strings and byte string support
+similar, but with a @litchar{#} prefix. Strings and byte strings support
 the usual escapes, such as @litchar{\n} for a newline character or byte.
 
 @rhombusblock(
@@ -138,8 +138,8 @@ list-structured S-expression that uses immediate parentheses, however.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks and
 indentation for grouping. A line with more indentation starts a
-@deftech{block}, and it’s always after a line that ends @litchar{:}. A
-@litchar{|} alternative also starts a block, and the @litchar{|} itself
+@deftech{block}, and it’s always after a line that ends with a @litchar{:}. 
+A @litchar{|} alternative also starts a block, and the @litchar{|} itself
 can start a new line, in which case it must line up with the start
 of its enclosing form. So, the @litchar{|}s below are written with the
 same indentation as @rhombus(if), @rhombus(match), or @rhombus(cond) to
