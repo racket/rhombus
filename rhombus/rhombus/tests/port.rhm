@@ -23,6 +23,10 @@ block:
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
+    Port.Output.print(v, ...) ~method
+    Port.Output.println(v, ...) ~method
+    Port.Output.show(v, ...) ~method
+    Port.Output.showln(v, ...) ~method
 
 block:
   let p = Port.Input.open_string("abλcdefμ")
@@ -78,7 +82,33 @@ block:
 
 block:
   let p = Port.Output.open_bytes()
-  print("x", p)
+  p.print("x")
   check p.get_bytes() ~is_now #"x".copy()
   check p.get_string() ~is "x"
   check p.flush() ~is #void
+  p.println("y")
+  check p.get_string() ~is "xy\n"
+  p.show("z")
+  check p.get_string() ~is "xy\n\"z\""
+  p.showln("w")
+  check p.get_string() ~is "xy\n\"z\"\"w\"\n"
+
+// make sure `current` functions have static info
+block:
+  let p = Port.Input.open_string("a")
+  check:
+    parameterize { Port.Input.current: p }:
+      Port.Input.current().read_string(1)
+    ~is "a"
+
+block:
+  let p = Port.Output.open_string()
+  parameterize { Port.Output.current: p }:
+    Port.Output.current().println(1)
+  check p.get_string() ~is "1\n"
+
+block:
+  let p = Port.Output.open_string()
+  parameterize { Port.Output.current_error: p }:
+    Port.Output.current_error().println(1)
+  check p.get_string() ~is "1\n"

@@ -12,7 +12,8 @@
          (submod "function.rkt" for-info)
          "class-primitive.rkt"
          "realm.rkt"
-         "enum.rkt")
+         "enum.rkt"
+         (submod "print.rkt" for-port))
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -31,11 +32,7 @@
    Output
    EOF
    eof
-   ReadLineMode
-   ;; TEMP see `Input` and `Output`
-   [current_input current-input-port]
-   [current_output current-output-port]
-   [current_error current-error-port])
+   ReadLineMode)
   #:properties ()
   #:methods ())
 
@@ -74,10 +71,20 @@
   #:methods
   ([get_bytes Port.Output.get_bytes]
    [get_string Port.Output.get_string]
-   [flush Port.Output.flush]))
+   [flush Port.Output.flush]
+   [print Port.Output.print]
+   [println Port.Output.println]
+   [show Port.Output.show]
+   [showln Port.Output.showln]))
 
-(define-static-info-syntaxes (current-input-port current-output-port current-error-port)
+(define-static-info-syntax current-input-port
   (#%function-arity 3)
+  (#%call-result #,(get-input-port-static-infos))
+  . #,(get-function-static-infos))
+
+(define-static-info-syntaxes (current-output-port current-error-port)
+  (#%function-arity 3)
+  (#%call-result #,(get-output-port-static-infos))
   . #,(get-function-static-infos))
 
 (define-annotation-syntax EOF (identifier-annotation eof-object? ()))
@@ -198,3 +205,27 @@
   (unless (output-port? p)
     (raise-argument-error* who rhombus-realm "Port.Output" p))
   (flush-output p))
+
+(define/method (Port.Output.print port
+                                  #:mode [mode 'text]
+                                  #:pretty [pretty? default-pretty]
+                                  . vs)
+  (do-print* who vs port mode pretty?))
+
+(define/method (Port.Output.println port
+                                    #:mode [mode 'text]
+                                    #:pretty [pretty? default-pretty]
+                                    . vs)
+  (do-print* who vs port mode pretty?)
+  (newline port))
+
+(define/method (Port.Output.show port
+                                 #:pretty [pretty? default-pretty]
+                                 . vs)
+  (do-print* who vs port 'expr pretty?))
+
+(define/method (Port.Output.showln port
+                                   #:pretty [pretty? default-pretty]
+                                   . vs)
+  (do-print* who vs port 'expr pretty?)
+  (newline port))

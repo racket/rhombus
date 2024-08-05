@@ -1,0 +1,312 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt")
+  "str_help.rhm" open
+  "maybe.rhm" open
+  "enum.rhm" open
+
+use_static
+
+export:
+  str
+
+fun str(elems :: List):
+  let o = Port.Output.open_string()
+  for (elem: elems):
+    print(elem, ~out: o)
+  o.get_string()
+
+namespace str:
+  export:
+    Align
+
+  enum Align:
+    left
+    center
+    right
+
+  // given a signless string form, formats a number within
+  // a given width, alignment, etc.
+  fun build_number(who,
+                   s :~ String,
+                   n :~ Number,
+                   ~width: ignored_width, // covered by min and max
+                   ~min_width: min_width,
+                   ~max_width: max_width,
+                   ~pad: pad,
+                   ~align: align,
+                   ~clip_align: clip_align,
+                   ~minus_sign: minus_sign,
+                   ~plus_sign: plus_sign,
+                   ~zero_sign: zero_sign,
+                   ~sign_align: sign_align):
+    when min_width && max_width && max_width .< min_width
+    | error(who, "maximum width is less than minimum width")
+    let sign :~ String:
+      cond
+      | max_width == 0: ""
+      | n .= 0: zero_sign
+      | n < 0 || n == -0.0: minus_sign
+      | ~else: plus_sign      
+    // attach sign to number if it's #'center sign alignment
+    let (s :~ String, sign :~ String):
+      if sign_align == #'center
+      | values(sign ++ s, "")
+      | values(s, sign)
+    // available width for number
+    let min_width:
+      if min_width
+      | min_width - sign.length()
+      | s.length()
+    let max_width:
+      if max_width
+      | max_width - sign.length()
+      | s.length()
+    // extend s to fill available width
+    let s :~ String:
+      let len = s.length()
+      cond
+      | len < min_width:
+          match align
+          | #'left:
+              s ++ String.make(min_width - len, pad)
+          | #'center:
+              let m = (min_width - len) div 2
+              String.make(m, pad) ++ s ++ String.make(min_width - len - m, pad)
+          | ~else:                
+              String.make(min_width - len, pad) ++ s
+      | len > max_width:
+          match clip_align
+          | #'left:
+              s.substring(0, max_width)
+          | #'center:
+              let m = (len - max_width) div 2              
+              s.substring(m, m + max_width)
+          | ~else:                
+              s.substring(len - max_width, len)
+      | ~else:
+          s
+    // add sign (for non-#'center alignment)
+    match sign_align
+    | #'left:
+        sign ++ s
+    | #'right:
+        s ++ sign
+    | ~else:
+        s
+
+  decl.nestable_macro 'def_num $name($n :: $annot,                                                        
+                                     $xkw: $xarg :: $xres ...,
+                                     ...):
+                         $defn
+                         ...
+                         $str':
+    let '($kw: $arg :: $res ...,
+          ...)':
+      '(~width: width :: maybe(NonnegInt) = #false,
+        ~min_width: min_width :: maybe(NonnegInt) = width,
+        ~max_width: max_width :: maybe(NonnegInt) = width,
+        ~pad: pad :: Char = " "[0],
+        ~align: align :: Align = #'left,
+        ~clip_align: clip_align :: Align = align,
+        ~minus_sign: minus_sign :: String  = "-",
+        ~plus_sign: plus_sign :: String  = "",
+        ~zero_sign: zero_sign :: String  = "",
+        ~sign_align: sign_align :: Align = #'center)'                                     
+    'export:
+       $name
+     fun $name($n :: $annot,
+               $kw: $arg :: $res ...,
+               ...,
+               $xkw: $xarg :: $xres ...,
+               ...) :: String:
+       $defn
+       ...
+       build_number(#'$name,
+                    $str,
+                    $n,
+                    $kw: $arg,
+                    ...)'
+
+  decl.nestable_macro 'def_int $name $to_string':  
+    'def_num $name(n :: Int):
+       $to_string(math.abs(n))'
+
+  def_int d to_string
+  def_int x (fun (n): base.format("~x", n))
+  def_int X (fun (n): base.#{string-upcase}(base.format("~x", n)))
+  def_int o (fun (n): base.format("~o", n))
+  def_int b (fun (n): base.format("~b", n))
+
+  def_num f(n :: Real,
+            ~precision: precision :: NonnegInt = 6,
+            ~keep_decimal: keep_decimal :: Any = #false,
+            ~decimal: decimal :: String = "."):
+    real_to_string(n,
+                   ~precision: precision,
+                   ~use_exponent: #false,
+                   ~keep_decimal: keep_decimal,
+                   ~decimal: decimal)
+
+  def_num e(n :: Real,
+            ~precision: precision :: NonnegInt = 6,
+            ~keep_decimal: keep_decimal :: Any = #false,
+            ~decimal: decimal :: String = ".",
+            ~exponent: exponent :: String = "e"):
+    real_to_string(n,
+                   ~precision: precision,
+                   ~use_exponent: #true,
+                   ~keep_decimal: keep_decimal,
+                   ~decimal: decimal,
+                   ~exponent: exponent)
+
+  def_num g(n :: Real,
+            ~precision: precision :: NonnegInt = 6,
+            ~keep_decimal: keep_decimal :: Any = #false,
+            ~decimal: decimal :: String = ".",
+            ~exponent: exponent :: String = "e"):
+    real_to_string(n,
+                   ~precision: math.max(1, precision),
+                   ~use_exponent: #true,
+                   ~use_general: #true,
+                   ~keep_decimal: keep_decimal,
+                   ~decimal: decimal,
+                   ~exponent: exponent)
+
+  // format a real number signlessly
+  fun real_to_string(n :: Real,
+                     ~precision: precision,
+                     ~use_exponent: use_exponent = #false,
+                     ~use_general: use_general = #false,
+                     ~keep_decimal: keep_decimal = #false,
+                     ~decimal: decimal,
+                     ~exponent: exponent = "e"):
+    cond
+    | n == #inf || n == #neginf: "inf"
+    | n == #nan: "nan"
+    | ~else:                       
+        let n = math.abs(n)
+        // get parts that preserves available precision, without keeping too much;
+        // keeping only the needed precision is important for rounding correctly
+        fun retry(n, precision, use_exponent):
+          cond
+          | n is_a Flonum:
+              // We can always convert to an exact rational and use the other
+              // path, but we'd like to format flonums as consistently
+              // as possible with plain printing. Default printing uses enough
+              // precision to distinguish floating-point results. If we want
+              // that much or more, then use the default-printing result.
+              // Otherwise, use the exact path to get rounding right.
+              let (mant :~ String, frac :~ String, expo :: Int):
+                extract_flonum_parts(n)
+              let avail_precision:
+                cond
+                | !use_exponent:
+                    frac.length() + expo
+                | ~else:
+                    if mant == "0"
+                    | frac.length() - count_leading_zeros(frac)
+                    | frac.length() + mant.length() - 1
+              if avail_precision > precision
+              | retry(math.exact(n), precision, use_exponent)
+              | let s = mant ++ frac
+                cond
+                | !use_exponent:
+                    let expo = expo - frac.length()
+                    let (mant, frac) = insert_decimal(s, expo, precision)
+                    values(mant, frac, 0)
+                | ~else:
+                    let zeros = count_leading_zeros(s)
+                    let rel_expo = (1 - s.length()) + zeros
+                    let expo:
+                      if mant == "0"
+                      | expo - zeros
+                      | expo + (mant.length() - 1)
+                    let (mant, frac) = insert_decimal(s, rel_expo, precision)
+                    values(mant, frac, expo)
+          | !use_exponent:
+              let n = math.round(n * 10**precision)
+              let mant = n div 10**precision
+              let frac = to_string(n - mant * 10**precision)
+              let frac:
+                if precision == 0
+                | ""
+                | String.make(precision - frac.length(), "0"[0]) ++ frac
+              values(to_string(mant), frac, 0)
+          | ~else:
+              let expo = real_exponent(n)
+              let n = n * 10**(precision-expo)
+              let n = math.round(n)
+              let mant = n div 10**precision
+              let frac = n - mant * 10**precision
+              let (mant, frac :~ String, expo):
+                cond
+                | mant == 10:
+                    // rounding added a digit to the left, so
+                    // we need to bump expo
+                    values ("1",
+                            to_string(frac div 10),
+                            expo+1)
+                | ~else:
+                    values(to_string(mant),
+                           to_string(frac),
+                           expo)
+              values(mant,
+                     if precision == 0
+                     | ""
+                     | String.make(math.max(0, precision - frac.length()), "0"[0]) ++ frac,
+                     expo)
+        let (mant :~ String, frac :~ String, expo :: Int):
+          retry(n, precision, use_exponent)
+        let (mant :~ String, frac :~ maybe(String), expo :: Int, use_exponent):
+          cond
+          | !use_general:
+              values(mant, frac, expo, use_exponent)
+          | ~else:
+              let f_mode = -4 <= expo && expo < precision
+              let (mant :~ String, frac :~ String, expo :: Int):
+                retry(n,
+                      if f_mode
+                      | precision - 1 - expo
+                      | precision - 1,
+                      !f_mode)
+              let frac:
+                let n = count_trailing_zeros(frac)
+                let keep = frac.length() - n
+                cond
+                | keep == 0 && !keep_decimal: #false
+                | ~else: frac.substring(0, keep)
+              values (mant, frac, expo, !f_mode)
+        let s:
+          if (precision == 0 && !keep_decimal) || !frac
+          | mant
+          | mant +& decimal +& frac
+        cond
+        | !use_exponent:
+            s
+        | ~else:
+            s +& exponent +& expo
+
+  export:
+    s
+  fun s(v :: Any,
+        ~width: width :: maybe(NonnegInt) = #false,
+        ~min_width: min_width :: maybe(NonnegInt) = width,
+        ~max_width: max_width :: maybe(NonnegInt) = width,
+        ~pad: pad :: Char = " "[0],
+        ~align: align :: Align = #'left,
+        ~clip_align: clip_align :: Align = #'left) :~ String:
+    build_number(#'s,
+                 to_string(v),
+                 0,
+                 ~width: width,
+                 ~min_width: min_width,
+                 ~max_width: max_width,
+                 ~pad: pad,
+                 ~align: align,
+                 ~clip_align: clip_align,
+                 ~minus_sign: "",
+                 ~plus_sign: "",
+                 ~zero_sign: "",
+                 ~sign_align: #'center)
