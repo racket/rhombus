@@ -12,7 +12,7 @@ identifier (never an operator), and the result syntax object should
 represent a block, which is spliced into the definition context where
 the macro is used.
 
-Here’s the classic @rhombus(def_five) macro:
+Here's the classic @rhombus(def_five) macro:
 
 @examples(
   ~eval: macro_eval

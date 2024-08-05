@@ -65,7 +65,7 @@ value is matched against the corresponding group.
 )
 
 A definition binding with @rhombus(def) or @rhombus(let) can also
-use @rhombus(values) in the outermost pattern, and that’s the same as
+use @rhombus(values) in the outermost pattern, and that's the same as
 not writing @rhombus(values), but it makes the receiver and sender side
 look more the same:
 

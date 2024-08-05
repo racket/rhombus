@@ -41,7 +41,7 @@ Nesting quotes do not require a corresponding nesting of escaping
 even though the escape is inside two layers of quotes.
 
 Like @rhombus($), @rhombus(...) is treated specially within a @(quotes)-quoted term (except,
-like @rhombus($), when it’s the only thing in the term). When @rhombus(...) immediately
+like @rhombus($), when it's the only thing in the term). When @rhombus(...) immediately
 follows a term that includes at least one @rhombus($), the
 form after that @rhombus($) must refer to a repetition. Then,
 instead of the parenthesized group in place of @rhombus($), the term before
@@ -78,7 +78,7 @@ Along the same lines, @rhombus(...) just after a @vbar can replicate a preceding
 )
 
 In other words, @rhombus(...) in various places within a quoted shrubbery
-works the way you’d expect it to work.
+works the way you'd expect it to work.
 
 When @quotes is used in a binding position, it constructs a pattern that
 matches syntax objects, and it binds variables that are escaped in the

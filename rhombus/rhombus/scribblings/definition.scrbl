@@ -93,7 +93,7 @@ argument is not a @rhombus(Posn) instance, and the error is from
 A run-time check implied by @rhombus(::, ~bind) can be expensive, depending on
 the annotation and context. In the case of @rhombus(flip), this check is
 unlikely to matter, but if a programmer uses @rhombus(::, ~bind) everywhere to
-try to get maximum checking and maximum guarantees, it’s easy to create
+try to get maximum checking and maximum guarantees, it's easy to create
 expensive function boundaries. Rhombus programmers are encouraged to use
 @rhombus(:~, ~bind) when the goal is to hint for better performance, and use
 @rhombus(::, ~bind) only where a defensive check is needed, such as for the
@@ -132,7 +132,7 @@ accesses an annotation constructor.
 )
 
 Finally, a class name like @rhombus(Posn) can also work in binding
-positions as a pattern-matching form. Here’s a implementation of
+positions as a pattern-matching form. Here's a implementation of
 @rhombus(flip) that uses pattern matching for its argument:
 
 @examples(
@@ -148,13 +148,13 @@ positions as a pattern-matching form. Here’s a implementation of
 
 As a function-argument pattern, @rhombus(Posn(x, y)) both requires the
 argument to be a @rhombus(Posn) instance and binds the identifiers
-@rhombus(x) and @rhombus(y) to the values of the instance’s fields.
-There’s no need to skip the check that the argument is a @rhombus(Posn),
+@rhombus(x) and @rhombus(y) to the values of the instance's fields.
+There's no need to skip the check that the argument is a @rhombus(Posn),
 because the check is anyway part of extracting @rhombus(x) and
 @rhombus(y) fields.
 
 As you would expect, the fields in a @rhombus(Posn) binding pattern are
-themselves patterns. Here’s a function that works only on the origin:
+themselves patterns. Here's a function that works only on the origin:
 
 @examples(
   ~eval: posn_eval
@@ -168,9 +168,9 @@ themselves patterns. Here’s a function that works only on the origin:
 )
 
 Finally, a function can have a result annotation, which is written with
-@rhombus(:~) or @rhombus(::) after the parentheses for the function’s
+@rhombus(:~) or @rhombus(::) after the parentheses for the function's
 argument. With a @rhombus(::) result annotation, every return value from
-the function is checked against the annotation. Beware that a function’s
+the function is checked against the annotation. Beware that a function's
 body does not count as being tail position when the function is declared
 with a @rhombus(::) result annotation.
 
@@ -214,9 +214,9 @@ visible before the @rhombus(let) form.
 )
 
 The identifier @rhombus(_, ~bind) is similar to @rhombus(Posn) and
-@rhombus(:~, ~bind) in the sense that it’s a binding operator. As a
+@rhombus(:~, ~bind) in the sense that it's a binding operator. As a
 binding, @rhombus(_, ~bind) matches any value and binds no variables.
-Use it as an argument name or subpattern form when you don’t need the
+Use it as an argument name or subpattern form when you don't need the
 corresponding argument or value, but @rhombus(_, ~bind) nested in a
 binding pattern like @rhombus(::, ~bind) can still constrain allowed
 values.

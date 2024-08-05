@@ -101,7 +101,7 @@ definitions.
 Refer to imported bindings using a prefix name and
 then @litchar{.}. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
-that’s why the import of @rhombus("f2c.rhm") leads to the @rhombus(f2c) prefix. To
+that's why the import of @rhombus("f2c.rhm") leads to the @rhombus(f2c) prefix. To
 supply an explicit prefix, use the @rhombus(as, ~impo) modifier:
 
 @rhombusblock(
@@ -148,7 +148,7 @@ The default file suffix for unquoted module paths is
   math.pi  // prints 3.141592653589793
 )
 
-There’s a lot more to the syntax of @rhombus(import) and
+There's a lot more to the syntax of @rhombus(import) and
 @rhombus(export) for renaming, re-exporting, and so on. See the
 documentation of @rhombus(import) and @rhombus(export) for more
 information.

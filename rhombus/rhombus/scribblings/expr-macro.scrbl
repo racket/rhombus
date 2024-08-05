@@ -11,7 +11,7 @@ definitions, and more. Each kind of macro extension has a different
 protocol and a different form for defining a macro. In the case of
 expressions, a macro receives the sequence of terms starting with the
 macro operator/identifier within a group. A macro
-consumes only the tokens that its pattern matches, and it’s right-hand
+consumes only the tokens that its pattern matches, and it's right-hand
 side is an immediate template expression that produces the macro
 expansion. A general form of macro is implemented with arbitrary
 compile-time computation, and it can return terms that the macro's
@@ -36,7 +36,7 @@ wraps as a zero-argument function:
 An @rhombus(expr.macro) form starts with @quotes to describe a pattern
 that matches a sequence of terms. Either the first or second term within
 the pattern is an @emph{unescaped} identifier or operator to be defined;
-conceptually, it’s unescaped because the macro matches a sequence of
+conceptually, it's unescaped because the macro matches a sequence of
 terms that use that identifier or operator literally. If the first term
 in the pattern is an unescaped identifier or operator, a prefix macro is
 defined; otherwise, the second term must be unescaped, and an infix
@@ -86,7 +86,7 @@ prefix would have to be used for all Rhombus forms in compile-time
 code—even for things like @rhombus(values) and @(quotes).
 
 Whether defined by @rhombus(macro) or @rhombus(expr.macro), an
-infix/postfix macro’s left-hand input is always parsed before the
+infix/postfix macro's left-hand input is always parsed before the
 macro's pattern is potentially matched, and an infix/postfix macro's
 pattern must always have just @rhombus($, ~bind) followed by an
 identifier for its left-hand side. The pattern variable is bound to an
@@ -111,12 +111,12 @@ the same way as for @rhombus(operator).
 Since an @rhombus(expr.macro) implementation can use arbitrary
 compile-time code, it can inspect the input syntax objects in more way
 than just pattern matching. However, already-parsed terms will be
-opaque. Currently, there’s no way for a transformer to inspect a parsed
+opaque. Currently, there's no way for a transformer to inspect a parsed
 Rhombus expression (except by escaping to Racket). When the parsed
 expression is injected back into an unparsed shrubbery, as happens in
 @rhombus('try: $left'), it will later simply parse as itself.
 
-Whether an infix or prefix macro’s right-side is parsed depends on the
+Whether an infix or prefix macro's right-side is parsed depends on the
 shape of the macro pattern, and specifically whether the defined
 operator or identifier is followed by just @rhombus($, ~bind) and an
 identifier. If so, the right-hand side of a macro's input is parsed,
@@ -125,7 +125,7 @@ pattern variable stands for an opaque parsed form. With both arguments
 as parsed, you might as well use @rhombus(operator) in many cases, but
 macros provide control over evaluation order. For example, this
 @rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
-side before it’s left-hand side:
+side before it's left-hand side:
 
 @examples(
   ~defn:
@@ -218,7 +218,7 @@ In the same way that @rhombus(operator) supports operators that are both
 prefix and infix, you can use @vbar alternatives with
 @rhombus(expr.macro) to create a prefix-and-infix macro. Furthermore, an
 @rhombus(expr.macro) form can have multiple prefix blocks or multiple
-infix blocks, where the each block’s pattern is tried in order; in that
+infix blocks, where the each block's pattern is tried in order; in that
 case, only the first prefix block (if any) and first infix block (if
 any) can have precedence and associativity declarations that apply to
 all cases---or precedence can be written before all alternatives by

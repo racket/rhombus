@@ -106,7 +106,7 @@ the same precedence as long as @rhombus(*) appears only to the left of
 @rhombus(/),
 
 A precedence declaration in @rhombus(operator) takes the form of keyword
-blocks at the start of the operator’s body. The possible keyword options
+blocks at the start of the operator's body. The possible keyword options
 for prefix operators are @rhombus(~weaker_than),
 @rhombus(~stronger_than), @rhombus(~same_as), or
 @rhombus(~same_as_on_left). For infix operators, those options apply, as
@@ -174,7 +174,7 @@ operator after @rhombus(.) in parentheses:
 If the point of an operator is terseness, however, an import prefix may
 defeat the point. Using a library that supplies operators may be one
 reason to expose an imported name. To
-selectively make an operator accessible without it import’s prefix, use
+selectively make an operator accessible without it import's prefix, use
 the @rhombus(expose, ~impo) import modifier or a dotted import:
 
 @rhombusblock(

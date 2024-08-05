@@ -36,7 +36,7 @@ specialization, but the @rhombus(Map) binding pattern can.
        {"name": "bob", "location": Posn(3, 4)}]
 )
 
-As another example, here’s how a @rhombus(ListOf) annotation constructor
+As another example, here's how a @rhombus(ListOf) annotation constructor
 could be implemented if @rhombus(List.of, ~bind) did not exist already:
 
 @examples(

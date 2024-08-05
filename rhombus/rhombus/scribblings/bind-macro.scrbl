@@ -27,7 +27,7 @@ as a prefix operator to constrain a pattern to number inputs:
 
 More expressive binding operators can use a lower-level protocol where a
 binding is represented by transformers that generate checking and
-binding code. It gets complicated, and it’s tied up with the propagation
+binding code. It gets complicated, and it's tied up with the propagation
 of static information, so the details are in @secref("bind-macro-protocol").
 After an expressive set of binding forms are implemented with the
 low-level interface, however, many others can be implemented though

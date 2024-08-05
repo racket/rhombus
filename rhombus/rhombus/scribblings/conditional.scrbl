@@ -18,8 +18,8 @@ precedence than @rhombus(&&) and @rhombus(||), while @rhombus(&&) has
 higher precedence than @rhombus(||). Arithmetic operators have higher
 precedence than comparison operators, @rhombus(||), @rhombus(&&), but
 they have no precedence relative to @rhombus(!). The @rhombus(==)
-operator is numerical comparison like Racket’s @tt{=}, while
-@rhombus(===) operator is Racket’s @tt{equal?}. Comparison
+operator is numerical comparison like Racket's @tt{=}, while
+@rhombus(===) operator is Racket's @tt{equal?}. Comparison
 operators are non-associative and have no precedence relationship with
 each other.
 
@@ -52,7 +52,7 @@ first test that produces a non-@rhombus(#false) value. The
     fib(5)
 )
 
-If there’s no @rhombus(~else) case and no matching case, then
+If there's no @rhombus(~else) case and no matching case, then
 @rhombus(cond) reports an error at run time (unlike Racket, which
 returns void in that case). Note that @rhombus(~else) is a keyword, and
 not an identifier. If it were an identifier, then @rhombus(else) might
@@ -66,7 +66,7 @@ the @rhombus(match) form is even better. The @rhombus(match) form
 expects an expression and then an alts-block where each @litchar{|} has
 a binding pattern followed by a block. The @rhombus(match) form
 evaluates that first expression, and dispatches to the first block whose
-pattern accepts the expression’s value. Similar to @rhombus(cond),
+pattern accepts the expression's value. Similar to @rhombus(cond),
 @rhombus(match) supports @rhombus(~else) in place of a final binding
 pattern, but using the binding operator @rhombus(_) is more common.
 
@@ -91,10 +91,10 @@ function declaration and the pattern match, like this:
     | fib(n): fib(n-1) + fib(n-2)
 )
 
-There’s no @rhombus(~else) for this fused form, but @rhombus(_, ~bind) can be
+There's no @rhombus(~else) for this fused form, but @rhombus(_, ~bind) can be
 useful in catch-call clauses where the argument is not used. Also, the
 function name and all relevant argument positions have to be repeated in
-every case, but that’s often a readable trade-off. Match-dispatching
+every case, but that's often a readable trade-off. Match-dispatching
 functions cannot have optional arguments, but different cases
 can have different numbers of arguments, and a call will find a matching
 case with the right number of arguments.

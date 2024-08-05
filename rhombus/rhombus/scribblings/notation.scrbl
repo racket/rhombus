@@ -23,7 +23,7 @@ complete details.
  form is represented as an S-expression, so the output is only useful if
  you're familiar with S-expression notation.}
 
-Numbers are decimal, either integer or floating-point, or they’re
+Numbers are decimal, either integer or floating-point, or they're
 hexadecimal, octal, or binary integers written with a @litchar{0x},
 @litchar{0o}, or @litchar{0b} prefix, respectively. An underscore can be
 used to separate digits in a number.
@@ -113,7 +113,7 @@ similar, but with a @litchar{#} prefix. Strings and byte strings support
 the usual escapes, such as @litchar{\n} for a newline character or byte.
 
 @rhombusblock(
-  "This is a string,\n just like you’d expect"
+  "This is a string,\n just like you'd expect"
   #"a byte string"
 )
 
@@ -138,7 +138,7 @@ list-structured S-expression that uses immediate parentheses, however.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks and
 indentation for grouping. A line with more indentation starts a
-@deftech{block}, and it’s always after a line that ends with a @litchar{:}. 
+@deftech{block}, and it's always after a line that ends with a @litchar{:}.
 A @litchar{|} alternative also starts a block, and the @litchar{|} itself
 can start a new line, in which case it must line up with the start
 of its enclosing form. So, the @litchar{|}s below are written with the
@@ -178,7 +178,7 @@ create the alternative cases within those forms:
       wear_hat()
 )
 
-A @litchar{:} isn’t needed before the first @litchar{|} in an
+A @litchar{:} isn't needed before the first @litchar{|} in an
 alts-block, because the @litchar{|} itself is enough of an indication
 that a sequence of alternatives is starting, but a @litchar{:} is
 allowed. Some forms support the combination of a @litchar{:} followed by
@@ -188,14 +188,14 @@ a sequence of @litchar{|} alternatives, but most forms have either a
 Each line within a block forms a @deftech{group}. Groups are important,
 because parsing and macro expansion are constrained to operate on groups
 (although a group can contain nested blocks, etc.). Groups at the same
-level of indentation as a previous line continue that group’s block. A
+level of indentation as a previous line continue that group's block. A
 @litchar{|} can have multiple groups in the subblock to its right.
 A @litchar{:} block or sequence of @litchar{|} alternatives
 can only be at the end of an enclosing group.
 
-A @litchar{:} doesn’t have to be followed by a new line, but it starts a
+A @litchar{:} doesn't have to be followed by a new line, but it starts a
 new block, anyway. Similarly, a @litchar{|} that starts an alternative
-doesn’t have to be on a new line. These examples parse the same as the
+doesn't have to be on a new line. These examples parse the same as the
 previous examples:
 
 @rhombusblock(
@@ -251,8 +251,8 @@ would put @rhombus(x + zero()) inside the definition of @rhombus(zero):
 Parentheses @parens, square brackets @brackets, and curly braces @braces combine a
 sequence of groups. A comma @litchar{,} can be used to separate groups
 on one line between the opener and closer. Furthermore, a @litchar{,} is
-@emph{required} to separate groups, even if they’re not on the same line. You
-can’t have extra @litchar{,}s, except after the last group.
+@emph{required} to separate groups, even if they're not on the same line. You
+can't have extra @litchar{,}s, except after the last group.
 
 @rhombusblock(
   f(1, 2,
@@ -276,7 +276,7 @@ Indentation still works for creating blocks within @parens,
 )
 
 There are some subtleties related to the ``precedence'' of @litchar{:},
-@litchar{|}, @litchar{;}, and @litchar{,}, but they’re likely to work as
+@litchar{|}, @litchar{;}, and @litchar{,}, but they're likely to work as
 you expect in a given example.
 
 Single-quote marks @quotes are used for quoting

@@ -55,7 +55,7 @@ too.
 )
 
 A function argument can be made optional by using @rhombus(=) after the
-argument’s pattern and providing a default-value expression after
+argument's pattern and providing a default-value expression after
 @rhombus(=):
 
 @examples(
@@ -100,7 +100,7 @@ to produce a symbol.
 If an argument name is the same as its keyword (just without the
 @litchar{~}), then the @litchar{:} and argument name can be omitted.
 That only works for an argument that would otherwise be just an
-identifier and maybe a default value, because keywords don’t work as
+identifier and maybe a default value, because keywords don't work as
 variable names in binding patterns.
 
 @examples(

@@ -145,7 +145,7 @@ Lists are indexable using natural numbers starting with
 
 Indexing with @brackets is sensitive to binding-based
 static information in the same way as @rhombus(.). For example, a
-function’s argument can use a binding pattern that indicates a list of
+function's argument can use a binding pattern that indicates a list of
 @rhombus(Posn)s, and then @rhombus(.) can be used after
 @litchar{[}...@litchar{]} to efficiently access a field of a
 @rhombus(Posn) instance:

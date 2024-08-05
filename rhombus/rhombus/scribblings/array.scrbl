@@ -5,7 +5,7 @@
 @title(~tag: "array"){Arrays}
 
 The @rhombus(Array) constructor is similar to @rhombus(List), but it
-creates an array, which has a fixed length at the time that it’s created
+creates an array, which has a fixed length at the time that it's created
 and offers constant-time access to any element of the array. Like a
 list, an array is @tech{indexable}. Unlike a list, an array is mutable, so
 @brackets for indexing can be combined with @rhombus(:=)
