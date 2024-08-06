@@ -245,21 +245,11 @@ INPUT
          (error 'color-test "wrong ~s at offset ~s" (not comment?) i)))
      (loop (add1 i) (add1 j) comment?)]))
 
-(define example2
-#<<INPUT
-<<m:
-__  <<n>>
-__| <<o>
-__  _<p>>>>
-INPUT
-  )
-
-#;
 ;; Check invisible opens and closes; `<` is open, `>` is close,
 ;; and `<`, `>`, and `_` are all stripped before lexing
 (define example2
 #<<INPUT
-<<(<1>, <2>, <3>)>
+_<(<1>, <2>, <3>)>
 
 _<[<1>,
 __ <2>,
@@ -380,17 +370,17 @@ __  <<4>>>
 
 _<@{}>
 
-_<@{< hello
-__  _ there >}>
+_<@{ hello
+__   there }>
 
-_<@{< hello @(<1 + 2>)
-__  _ there >}>
+_<@{ hello <@(<1 + 2>)>
+__   there }>
 
 _<block:
 __  <<1+2>
 __  _<3+4>>>
 
-_<done>>
+_<done>_
 INPUT
   )
 
