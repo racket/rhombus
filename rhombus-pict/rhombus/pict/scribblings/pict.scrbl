@@ -92,8 +92,9 @@
 
  Returns a @tech{pict} that is the same as @rhombus(pict), but with a
  fresh identity and hiding the identity of any component inside
- @rhombus(pict) from a @tech{finder} or the result of the
- @rhombus(Pict.children) property.
+ @rhombus(pict) from a @tech{finder}, traversal via
+ @rhombus(Pict.rebuild), or the result of the @rhombus(Pict.children)
+ property.
 
 }
 
@@ -145,26 +146,66 @@
 }
 
 @doc(
-  method (pict :: Pict).replace(orig :: Pict,
-                                replacement :: Pict) :: Pict
+  method (pict :: Pict).rebuild(filter :: Function.of_arity(1),
+                                ~configure: config_filter :: Function.of_arity(1)
+                                              = fun(config): config)
+    :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but replays
- @rhombus(pict)'s construction so that @rhombus(replacement) is used
- whenever @rhombus(orig) was originally used. Parts of the @rhombus(pict)
- construction that did not depend on @rhombus(orig) are kept as-is and
- with their existing identities, while replayed operations create fresh
- identities.
+ @rhombus(pict)'s construction with @rhombus(filter) applied to each
+ component pict, where @rhombus(filter) may return the pict that it is
+ given or may return a replacement, and with @rhombus(config_filter)
+ applied to each configuration map of a pict created by
+ @rhombus(rebuildable).
 
- To support @rhombus(Pict.replace), the representation of a pict
+ To support @rhombus(Pict.rebuild), the representation of a pict
  effectively records all primitive operations used to construct the pict.
  This recording is limited to @rhombus(Pict, ~annot) and @rhombus(Find, ~annot) objects.
  If, for example, you use @rhombus(Find.in) to obtain a number and then
  construct a pict using that number, the number itself cannot record its
  derivation from the picts used with @rhombus(Find.in). In such cases,
- use @rhombus(configure) or the @rhombus(~children) argument of
+ use @rhombus(rebuildable) or the @rhombus(~children) argument of
  @rhombus(animate) to establish a connection between the input picts and
  the result.
+
+ When traversing the children of @rhombus(pict) to rebuild it, the
+ @rhombus(filter) function is applied to each pict before its own
+ children. When @rhombus(filter) returns a value other than the pict that
+ it is given, rebuilding does not recur to its children. When rebuilding
+ does recur, when @rhombus(filter) returns each of a pict's descendants
+ unchanged, and while @rhombus(config_filter) (if applicable) returns a
+ configuration unchanged, then the original construction of the pict is
+ kept, preserving its identity. Parts of a pict that are rebuilt will
+ have fresh identities.
+
+@examples(
+  ~eval: pict_eval
+  def s = square(~size: 20, ~fill: "blue")
+  def p = beside(~sep: 10, s, Pict.launder(s))
+  p
+  p.rebuild(fun (q): if q == s | s.scale(2) | q)
+)
+
+}
+
+@doc(
+  method (pict :: Pict).replace(orig :: Pict,
+                                replacement :: Pict) :: Pict
+){
+
+ Returns a @tech{pict} that is like @rhombus(pict), but replays
+ @rhombus(pict)'s construction to replace each use of @rhombus(orig)
+ with @rhombus(replacement).
+
+ This operation is equivalent to a use of @rhombus(Pict.rebuild):
+
+@rhombusblock(
+  pict.rebuild(fun (p):
+                 if p == orig
+                 | replacements
+                 | p)
+)
 
 @examples(
   ~eval: pict_eval
@@ -177,21 +218,25 @@
 
 }
 
-
 @doc(
-  method (pict :: Pict).configure(key :: !Pict,
-                                  val : Any)
-    :: Pict
+  method (pict :: Pict).configure(key :: Any, vall :: Any) :: Pict
 ){
 
- Produces a pict like @rhombus(pict), but replays @rhombus(pict)'s
- construction so that any configuration via @rhombus(configure) that uses
- @rhombus(key) is replaced with one where @rhombus(key) is mapped to
- @rhombus(val). To avoid confusion between children picts and
- configuration keys, a @rhombus(key) is constrained to be a non-pict.
+ Returns a @tech{pict} that is like @rhombus(pict), but replays
+ @rhombus(pict)'s construction to replace any configuration map entry for
+ @rhombus(key) with @rhombus(val).
 
+ This operation is equivalent to a use of @rhombus(Pict.rebuild):
+
+@rhombusblock(
+  pict.rebuild(fun (p): p,
+               ~configure:
+                 fun (config :: Map):
+                   if config.has_key(key)
+                   | config ++ { key: val }
+                   | config)
+)
 }
-
 
 @doc(
   method (pict :: Pict).time_pad(
@@ -381,7 +426,7 @@
 
  Unlike epoch-specific metadata added with
  @rhombus(Pict.epoch_set_metadata), metadata added by
- @rhombus(Pict.metadata) is not propagated to new picts that are derived
+ @rhombus(Pict.set_metadata) is not propagated to new picts that are derived
  from the returned pict. The @rhombus(Pict.children) property of a pict
  can be used to search the metadata of its component picts.
 

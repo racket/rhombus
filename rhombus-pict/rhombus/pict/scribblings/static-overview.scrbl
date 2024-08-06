@@ -171,8 +171,7 @@ pict's construction, but using a given pict in place of an original.
   comp.replace(circ, ellipse(~width: 60, ~height: 30, ~fill: "orange"))
 )
 
-The dependency tracking of a composite pict on other picts is
-generalized through the @rhombus(configure) constructor and
-@rhombus(Pict.configure) method, so a pict's construction can be
-parameterized over arbitrary key--value mappings while still producing a
-@rhombus(Pict) object.
+The @rhombus(Pict.replace) operation is a special case of
+@rhombus(Pict.rebuild), which accepts a function that gets the
+opportunity to adjust each pict that was part of a given pict's
+construction.

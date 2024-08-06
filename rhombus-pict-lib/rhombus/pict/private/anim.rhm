@@ -31,7 +31,7 @@ export:
   SequentialJoin
 
   animate
-  configure
+  rebuildable
   sequential
   concurrent
   switch
@@ -55,8 +55,7 @@ namespace bend:
 enum SequentialJoin:  step splice
 
 fun animate(~children: children :: List.of(Pict) = [],
-            ~configuration: configuration :: maybe(Map) = #false,
-            proc :: Function.of_arity(1 + children.length() + (if configuration | 1 | 0)),
+            proc :: Function.of_arity(1 + children.length()),
             ~bend: bend :: Function.of_arity(1) = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
             ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
@@ -67,26 +66,36 @@ fun animate(~children: children :: List.of(Pict) = [],
       | error(#'animate, "procedure result does not satisfy StaticPict")
       p
   AnimPict(~children: children,
-           ~configuration: configuration,
            proc,
            ~extent: extent,
            ~sustain_edge: sustain_edge)
 
-fun configure(~children: children :: List.of(Pict) = [],
-              proc :: Function.of_arity(children.length() + 1),
-              configuration :: Map) :~ Pict:
-  let proc:
-    fun ([child_or_config, ...]):
-      let p = proc(child_or_config, ...)
-      unless p is_a Pict
-      | error(#'configure, "procedure result does not satisfy Pict")
-      p
-  let p = proc(children ++ [configuration])
-  let p: if p is_a StaticPict | animate(fun (n): p, ~extent: 0) | p
-  anim_pict_like(p,
-                 ~children: children,
-                 ~configuration: configuration,
-                 ~rebuild: proc)
+fun rebuildable(~children: children :: List.of(Pict) = [],
+                ~config: config :: maybe(Map) = #false,
+                proc :: Function.of_arity(children.length() + (if config | 1 | 0))) :~ Pict:
+  let p = proc(& children ++ (if config | [config] | []))
+  unless p is_a Pict
+  | error(#'rebuildable, "procedure result does not satisfy Pict")
+  let rebuild:
+    if config
+    | fun ([child, ..., config]):
+        rebuildable(~children: [child, ...],
+                    ~config: config,
+                    proc)
+    | fun (children):
+        rebuildable(~children: children,
+                    proc)
+  cond
+  | p is_a StaticPict:
+      static_instance([p], p,
+                      ~dependencies: children,
+                      ~config: config,
+                      ~rebuild: rebuild)
+  | ~else:
+      anim_pict_like(p,
+                     ~dependencies: children,
+                     ~config: config,
+                     ~rebuild: rebuild)
 
 set_animate(fun (proc, children, n = 0.5):
               animate(proc, ~children: children, ~extent: n))
@@ -254,7 +263,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                _before :~ StaticPict, // for measuring
                _children :~ AnimPict || List.of(AnimPict),
                _dependencies :~ maybe(List),
-               _configuration :~ maybe(Map),
+               _config :~ maybe(Map),
                _child_starts :~ Int || List.of(Int),
                _same_rep_children :~ List,
                _metadata :~ Map,
@@ -364,32 +373,29 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                     p,
                     p,
                     #false, // dependencies
-                    #false, // configuration
+                    #false, // config
                     0,
                     [],
                     {},
                     rebuild)
         | p
   | (~children: children :~ List,
-     ~configuration: configuration :~ maybe(Map),
      proc :~ Function.of_arity(1 + children.length()),
      ~extent: extent :~ NonnegReal,
      ~sustain_edge: sustain_edge):
       let n_children = children.length()
-      let has_config = configuration != #false
-      recur rebuild(children_and_config :~ List:
-                      if configuration | children ++ [configuration] | children):
-        let before :~ Pict = proc(0, & children_and_config)
-        let after :~ Pict = proc(1, & children_and_config)
-        anim_pict([ProcPictEpoch(proc, children_and_config, before, after, extent, sustain_edge)],
+      recur rebuild(children :~ List: children):
+        let before :~ Pict = proc(0, & children)
+        let after :~ Pict = proc(1, & children)
+        anim_pict([ProcPictEpoch(proc, children, before, after, extent, sustain_edge)],
                   [extent],
                   0,
                   1,
                   #true,
                   before,
-                  children_and_config.take(n_children),
+                  children,
                   #false, // dependencies
-                  has_config && children_and_config[n_children],
+                  #false, // config
                   [],
                   [],
                   {},
@@ -706,9 +712,9 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | ~else:
         reify_epochs(i, i).epoch_set_metadata(i, metadata)
 
-  override method _replace(key, val, subst :~ Map):
-    _do_replace(key, val, subst,
-                _children, _dependencies, _configuration,
+  override method _replace(adjuster, subst :~ Map):
+    _do_replace(adjuster, subst,
+                _children, _dependencies, _config,
                 _rebuild)
 
 fun static_instances(p :~ _AnimPict, as_p :~ StaticPict,
@@ -719,7 +725,7 @@ fun static_instances(p :~ _AnimPict, as_p :~ StaticPict,
                   ~rebuild: rebuild)
 
 fun anim_pict(epochs, epoch_extents, duration_start, duration, sustaining, before,
-              children, dependencies, configuration, child_starts, same_rep_children,
+              children, dependencies, config, child_starts, same_rep_children,
               metadata,
               rebuild) :~ AnimPict:
   block:
@@ -728,7 +734,7 @@ fun anim_pict(epochs, epoch_extents, duration_start, duration, sustaining, befor
     when (duration_start > List.length(epochs)) | error("oops duration start " +& duration_start +& " " +& epochs)
     when (duration_start + duration > List.length(epochs)) | error("oops duration")
   _AnimPict()(epochs, epoch_extents, duration_start, duration, sustaining, before,
-              children, dependencies, configuration, child_starts, same_rep_children,
+              children, dependencies, config, child_starts, same_rep_children,
               metadata,
               rebuild)
 
@@ -741,13 +747,13 @@ fun anim_pict_like(this :~ _AnimPict,
                    ~before: before = static_instances(this, this._before),
                    ~children: children = this,
                    ~dependencies: dependencies = #false,
-                   ~configuration: configuration = #false,
+                   ~config: config = #false,
                    ~child_starts: child_starts = 0,
                    ~same_rep_children: same_rep_children = this._same_rep_children.add(this),
                    ~metadata: metadata = {},
                    ~rebuild: rebuild = fun (p): p) :~ AnimPict:
   anim_pict(epochs, epoch_extents, duration_start, duration, _sustaining, before,
-            children, dependencies, configuration, child_starts, same_rep_children,
+            children, dependencies, config, child_starts, same_rep_children,
             metadata,
             rebuild)
 
@@ -1043,7 +1049,7 @@ private.set_convert(
                   combine([mk(p), ...], 0, 0),
                 ps,
                 dependencies,
-                #false, // configuration
+                #false, // config
                 0,
                 [],
                 {},
@@ -1105,7 +1111,7 @@ fun switch(~splice: splice :: maybe(matching(TimeOrder)) = #false,
                 _AnimPict._before(ps[0]),
                 orig_ps,
                 #false, // dependencies
-                #false, // configuration
+                #false, // config
                 0, // picts in `ps` have starts adjusted already
                 [],
                 {},
