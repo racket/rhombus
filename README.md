@@ -1,17 +1,31 @@
 This repository is the integration phase of the Rhombus project,
 which is about the design of a new language that is based on Racket.
 
-This repository also houses the packages that make up the current
-Rhombus implementation. Installing the `rhombus` package makes
-`#lang rhombus` work and builds documentation, while installing
-`rhombus-main-distrbiution` gets a larger set of packages.
+Rhombus offers the same kind of language extensibility as Racket
+itself, but using conventional (infix) notation with the goal of
+making Racket technology more accessible. For an overview of Rhombus's
+goals and design, see
 
-# Resources
+* [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
+  or the [talk video](https://www.youtube.com/watch?v=hkiy1rmKA48)
 
 * [Documentation](https://docs.racket-lang.org/rhombus/index.html)
   as rendered by the Racket package-build service
 
-* [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
+This repository also houses the packages that make up the current
+Rhombus implementation.
+
+# Trying Rhombus
+
+Using [Racket](https://racket-lang.org), install the package `rhombus`
+through DrRacket's "Install Package..." menu item or on the command
+line with
+
+```
+raco pkg install rhombus
+```
+
+# Other Resources
 
 * [Project plan](resources/plan.md)
 
@@ -32,42 +46,14 @@ empowered to participate in the creation of the languages they use. Discussions,
 pull requests, and issues are open to all, and a wide variety of perspectives is
 especially beneficial.
 
-# Using this GitHub Repository
+## Issues and Pull Requests
+
+GitHub [**issues**](../../issues) are for bug reports and feature
+ideas, and [**pull requests**](../../pulls) are for bug-fix candidates
+and other concrete proposals.
 
 ## Conversations as Discussion
 
 GitHub [**discussions**](../../discussions) provide a forum for discussing
 Rhombus broadly, as opposed to discusssing details of specific
 proposals.
-
-
-## Issues as a Wish List
-
-GitHub [**issues**](../../issues) for this repository represent a kind of wish list.
-Post there for an idea about some way that you think a new language
-should be different than the current Racket language. Discuss other
-suggestions there.
-
-## Pull Requests as Draft Proposals
-
-GitHub [**pull requests**](../../pulls) for this repository can represent more concrete
-proposals. Proposals here do not have to be exhaustive, but they
-should be concrete enough to enable discussion of the pros and cons of
-a specific solution. There can and should be multiple conflicting
-proposals for any particular problem or direction, especially at
-first. The intent is to enable brainstorming and discussion toward a
-future, more-complete proposal.
-
-To make a draft proposal, start with "template.md" and create either a
-new ".md" file or a subdirectory containing a ".md" file and other
-supporting material (such as an implementation).
-
-## Pull Requests as Resource Updates
-
-GitHub [**pull requests**](../../pulls) for this repository can also be suggestions
-to update resources listed above. These resources are intended to be
-uncontroversial summaries, although they may point toward
-controversial or conflicting perspectives.
-
-For these kinds of pull requests, please include "[resource]" at the
-start of the pull request title.
