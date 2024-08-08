@@ -146,18 +146,19 @@
 }
 
 @doc(
-  method (pict :: Pict).rebuild(filter :: Function.of_arity(1),
-                                ~configure: config_filter :: Function.of_arity(1)
-                                              = fun(config): config)
-    :: Pict
+  method (pict :: Pict).rebuild(
+    ~pre: pre_adjust :: Function.of_arity(1),
+    ~post: post_adjust :: Function.of_arity(1),
+    ~configure: config_adjust :: Function.of_arity(1)
+                  = fun(config): config
+  ) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but replays
- @rhombus(pict)'s construction with @rhombus(filter) applied to each
- component pict, where @rhombus(filter) may return the pict that it is
- given or may return a replacement, and with @rhombus(config_filter)
- applied to each configuration map of a pict created by
- @rhombus(rebuildable).
+ @rhombus(pict)'s construction with @rhombus(pre_adjust) and
+ @rhombus(post_adjust) applied to each component pict, and with
+ @rhombus(config_adjust) applied to each configuration map of a pict
+ created by @rhombus(rebuildable).
 
  To support @rhombus(Pict.rebuild), the representation of a pict
  effectively records all primitive operations used to construct the pict.
@@ -170,21 +171,30 @@
  the result.
 
  When traversing the children of @rhombus(pict) to rebuild it, the
- @rhombus(filter) function is applied to each pict before its own
- children. When @rhombus(filter) returns a value other than the pict that
- it is given, rebuilding does not recur to its children. When rebuilding
- does recur, when @rhombus(filter) returns each of a pict's descendants
- unchanged, and while @rhombus(config_filter) (if applicable) returns a
- configuration unchanged, then the original construction of the pict is
- kept, preserving its identity. Parts of a pict that are rebuilt will
- have fresh identities.
+ @rhombus(pre_adjust) function is applied to each pict before its own
+ children. When @rhombus(pre_adjust) returns a value other than the pict
+ that it is given, rebuilding does not recur to its children, and the
+ result of @rhombus(pre_adjust) is used immediately as the rebuilt
+ replacement for the given pict. When rebuilding does recur, when a
+ pict's descendants are unchanged and when @rhombus(config_adjust) (if
+ applicable) returns a configuration unchanged, then the original
+ construction of the pict is kept, preserving its identity (while picts
+ will have fresh identities when they are rebuilt due to a changed child
+ or configuration). Finally, @rhombus(post_adjust) is applied to either
+ the rebuilt pict or so-far-preserved original pict to obtain the rebuilt
+ replacement for the original pict. The replacement of a given pict is
+ cached, so @rhombus(pre_adjust) and @rhombus(post_adjust) are each
+ applied at most once to a pict within a call to @rhombus(Pict.rebuild).
 
 @examples(
   ~eval: pict_eval
   def s = square(~size: 20, ~fill: "blue")
   def p = beside(~sep: 10, s, Pict.launder(s))
   p
-  p.rebuild(fun (q): if q == s | s.scale(2) | q)
+  p.rebuild(~pre: fun (q): if q == s | s.scale(2) | q)
+  p.rebuild(~pre: fun (q): if q == s | s.scale(2) | q,
+            ~post: fun (q :~ Pict):
+                     rectangle(~around: q.pad(2), ~line: "red"))
 )
 
 }
@@ -201,10 +211,10 @@
  This operation is equivalent to a use of @rhombus(Pict.rebuild):
 
 @rhombusblock(
-  pict.rebuild(fun (p):
-                 if p == orig
-                 | replacements
-                 | p)
+  pict.rebuild(~pre: fun (p):
+                       if p == orig
+                       | replacement
+                       | p)
 )
 
 @examples(
@@ -229,8 +239,7 @@
  This operation is equivalent to a use of @rhombus(Pict.rebuild):
 
 @rhombusblock(
-  pict.rebuild(fun (p): p,
-               ~configure:
+  pict.rebuild(~configure:
                  fun (config :: Map):
                    if config.has_key(key)
                    | config ++ { key: val }

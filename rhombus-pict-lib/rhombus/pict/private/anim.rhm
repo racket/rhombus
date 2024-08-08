@@ -712,8 +712,8 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | ~else:
         reify_epochs(i, i).epoch_set_metadata(i, metadata)
 
-  override method _replace(adjuster, subst :~ Map):
-    _do_replace(adjuster, subst,
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
+    _do_replace(pre_adjuster, adjuster, config_adjuster, subst,
                 _children, _dependencies, _config,
                 _rebuild)
 

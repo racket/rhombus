@@ -223,73 +223,85 @@ class Pict():
                                 [p],
                                 0 /* extent */))
 
-  method rebuild(adjuster :: Function.of_arity(1),
+  method rebuild(~pre: pre_adjuster :: Function.of_arity(1)
+                         = fun (p): p,
+                 ~post: adjuster :: Function.of_arity(1)
+                          = fun (p): p,
                  ~config: config_adjuster :: Function.of_arity(1)
                             = fun (config): config) :~ Pict:
-    let (p, _) = _replace(fun (v):
-                            if v is_a Pict
-                            | adjuster(v)
-                            | config_adjuster(v),
+    let (p, _) = _replace(pre_adjuster,
+                          adjuster,
+                          config_adjuster,
                           Map.by(===){})
     p
 
   method replace(from :: Pict, to :: Pict) :~ Pict:
-    let (p, _) = _replace(fun (v): v, Map.by(===){ from : to })
+    let (p, _) = _replace(fun (p): p,
+                          fun (p): p,
+                          fun (c): c,
+                          Map.by(===){ from : to })
     p
 
   method configure(key, val) :~ Pict:
-    rebuild(fun (p): p,
-            ~config: fun (config :: Map):
+    rebuild(~config: fun (config :: Map):
                        if config.has_key(key)
                        | config ++ { key: val }
                        | config)
 
-  abstract protected method _replace(adjuster, subst) :~ (Pict, Map)
+  abstract protected method _replace(pre_adjuster, adjuster, config_adjuster, subst) :~ (Pict, Map)
 
-  protected method _do_replace(adjuster, subst :~ Map,
+  protected method _do_replace(pre_adjuster, adjuster, config_adjuster,
+                               subst :~ Map,
                                _children, _dependencies, _config,
                                _rebuild):
     cond
     | subst.has_key(this):
         values(subst[this], subst)
     | ~else:
-        let new = adjuster(this)
+        let new = pre_adjuster(this)
         cond
         | new != this:
             unless new is_a Pict
-            | error(#'rebuild, "adjust function's result does not satisfy Pict")
+            | error(#'rebuild, "pre-adjust function's result does not satisfy Pict")
             values(new, subst ++ { this: new })
         | ~else:
-            match  _dependencies || _children:
-            | [] when !_config:
-                values(this, subst)
-            | [dep, ...]:
-                let ([new_dep, ...], subst :~ Map):
-                  for values(new_deps :~ List = [], subst = subst) (dep: [dep, ...]):
-                    let (new_dep, new_subst):
-                      match dep
-                      | dep :: Pict: dep._replace(adjuster, subst)
-                      | dep :: _Find: dep._replace(adjuster, subst)
-                    values(new_deps.add(new_dep), new_subst)
-                let new_config:
-                  _config && (block:
-                                let c = adjuster(_config)
-                                unless c is_a Map
-                                | error(#'rebuild, "adjust function's result does not satisfy Map")
-                                c)
-                if (all(new_dep === dep, ...)
-                      && new_config == _config)
-                | values(this, subst)
-                | let new: _rebuild([new_dep, ...]
-                                      ++ (if new_config | [new_config] | []))
-                  values(new, subst ++ { this: new })
-            | child :~ _StaticPict:
-                let (new_child, subst :~ Map) = child._replace(adjuster, subst)
-                let new_config: _config && adjuster(_config)
-                if new_child === child
-                | values(this, subst)
-                | let new = _rebuild(new_child)
-                  values(new, subst ++ { this: new })
+            let (new, subst :~ Map):
+              match  _dependencies || _children:
+              | [] when !_config:
+                  values(this, subst)
+              | [dep, ...]:
+                  let ([new_dep, ...], subst :~ Map):
+                    for values(new_deps :~ List = [], subst = subst) (dep: [dep, ...]):
+                      let (new_dep, new_subst):
+                        match dep
+                        | dep :: Pict: dep._replace(pre_adjuster, adjuster, config_adjuster, subst)
+                        | dep :: _Find: dep._replace(pre_adjuster, adjuster, config_adjuster, subst)
+                      values(new_deps.add(new_dep), new_subst)
+                  let new_config:
+                    _config && (block:
+                                  let c = adjuster(_config)
+                                  unless c is_a Map
+                                  | error(#'rebuild, "config-adjust function's result does not satisfy Map")
+                                  c)
+                  let new:
+                    if (all(new_dep === dep, ...)
+                          && new_config == _config)
+                    | this
+                    | _rebuild([new_dep, ...]
+                                 ++ (if new_config | [new_config] | []))
+                  values(new, subst)
+              | child :~ _StaticPict:
+                  let (new_child, subst :~ Map) = child._replace(pre_adjuster, adjuster, config_adjuster, subst)
+                  let new_config: _config && adjuster(_config)
+                  if (new_child === child
+                        && new_config == _config)
+                  | values(this, subst)
+                  | let new = (if new_config | _rebuild(new_child, new_config) | _rebuild(new_child))
+                    values (new, subst)
+            let new = adjuster(new)
+            unless new is_a Pict
+            | error(#'rebuild, "post-adjust function's result does not satisfy Pict")
+            values(new, subst ++ { this: new })
 
 class StaticPict(private _handle,
                  private _children :~ Pict || List,
@@ -444,8 +456,8 @@ class StaticPict(private _handle,
     | sustain(n_epochs)
     | this
 
-  override method _replace(adjuster, subst :~ Map):
-    _do_replace(adjuster, subst,
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
+    _do_replace(pre_adjuster, adjuster, config_adjuster, subst,
                 _children, _dependencies, _config,
                 _rebuild)
 
@@ -541,7 +553,7 @@ class NothingPict():
 
   override method freeze(~scale: scale :: Real = 2.0): this
 
-  override method _replace(adjuster): this
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst): this
 
 def nothing = NothingPict()
 
@@ -1247,10 +1259,10 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
             #true)
     | this
 
-  private method _replace(adjuster, subst :~ Map):
+  private method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
     cond
     | q:
-        let (new_q, subst) = _Pict._replace(q, adjuster, subst)
+        let (new_q, subst) = _Pict._replace(q, pre_adjuster, adjuster, config_adjuster, subst)
         if new_q === q
         | values(this, subst)
         | values(_Find(new_q, find, t_find_or_dt, is_animated),
