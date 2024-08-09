@@ -59,3 +59,11 @@ block:
     check p == q ~is #false
     check p != Path("/") ~is #false
     check p != q ~is #true
+
+block:
+  def s = "/etc"
+  def p1 = Path("/etc")
+  def p2 = (s :: PathString.to_path)
+  check p1 compares_equal p2 ~is #true
+  version_guard.at_least "8.13.0.1":
+    check p1 == p2 ~is #true

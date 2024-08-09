@@ -19,13 +19,20 @@ Paths are @tech{comparable}, which means that generic operations like
 
 @doc(
   annot.macro 'Path'
+  annot.macro 'PathString'
+  annot.macro 'PathString.to_path'
 ){
 
- Matches a path value.
+ Matches a path value.  The @rhombus(PathString, ~annot) annotation allows
+ @rhombus(ReadableString, ~annot) as well as @rhombus(Path, ~annot) values.
+ The @rhombus(PathString.to_path, ~annot)
+ @tech(~doc: guide_doc){converter annotation} allows
+ @rhombus(PathString, ~annot) values, but converts
+ @rhombus(ReadableString, ~annot) values to @rhombus(Path) values.
 }
 
 @doc(
-  fun Path(path :: Bytes || String || Path) :: Path
+  fun Path(path :: Bytes || ReadableString || Path) :: Path
 ){
 
  Constructs a path given a byte string, string, or existing path. When a
