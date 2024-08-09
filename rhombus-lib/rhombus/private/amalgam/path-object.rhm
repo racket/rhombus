@@ -1,0 +1,19 @@
+#lang rhombus/private/amalgam/core
+
+import:
+  "core-meta.rkt" open
+
+use_static
+
+export:
+  PathString
+
+namespace PathString:
+  export:
+    to_path
+
+  fun to_path(p :: PathString) :~ Path:
+    Path(p)
+
+  annot.macro 'to_path':
+    'converting(fun (p :: PathString) :~ Path: to_path(p))'

@@ -6,6 +6,7 @@
          "call-result-key.rkt"
          "define-arity.rkt"
          "compare-key.rkt"
+         (submod "annotation.rkt" for-class)
          (submod "string.rkt" static-infos)
          (submod "bytes.rkt" static-infos))
 
@@ -13,7 +14,9 @@
                       #f
                       rhombus/bind
                       rhombus/annot)
-                     Path))
+                     Path)
+         (for-space rhombus/annot
+                    PathString))
 
 (module+ for-builtin
   (provide path-method-table))
@@ -70,3 +73,5 @@
   #:primitive (path->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))
+
+(define-annotation-syntax PathString (identifier-annotation path-string? ()))
