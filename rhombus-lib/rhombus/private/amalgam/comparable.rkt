@@ -57,6 +57,7 @@
       (bytes? v)
       (symbol? v)
       (keyword? v)
+      (path? v)
       (Comparable? v)))
 
 (define-class-desc-syntax Comparable
@@ -321,7 +322,8 @@
                       string-op
                       bytes-op
                       symbol-op
-                      keyword-op)
+                      keyword-op
+                      path-op)
   (begin
     (define (general-op v1 v2)
       (cond
@@ -349,6 +351,10 @@
          (unless (keyword? v2)
            (raise-mismatch "keyword" 'op v1 v2))
          (wrap (keyword-op v1 v2))]
+        [(path? v1)
+         (unless (path? v2)
+           (raise-mismatch "path" 'op v1 v2))
+         (wrap (path-op v1 v2))]
         [else (method-op v1 v2)]))
     (define (method-op v1 v2)
       (define vt1 (Comparable-ref v1 #f))
@@ -373,7 +379,8 @@
   string<?
   bytes<?
   symbol<?
-  keyword<?)
+  keyword<?
+  path<?)
 
 (define-general general<= method<=
   <= values 2
@@ -382,7 +389,8 @@
   string<=?
   (lambda (a b) (not (bytes>? a b)))
   (lambda (a b) (or (eq? a b) (symbol<? a b)))
-  (lambda (a b) (or (eq? a b) (keyword<? a b))))
+  (lambda (a b) (or (eq? a b) (keyword<? a b)))
+  (lambda (a b) (or (equal? a b) (path<? a b))))
 
 (define-general general= method=
   compares_equal values 3
@@ -391,7 +399,8 @@
   string=?
   bytes=?
   eq?
-  eq?)
+  eq?
+  equal?)
 
 (define-general general!= method!=
   compares_unequal not 4
@@ -400,7 +409,8 @@
   string=?
   bytes=?
   eq?
-  eq?)
+  eq?
+  equal?)
 
 (define-general general>= method>=
   >= values 5
@@ -409,7 +419,8 @@
   string>=?
   (lambda (a b) (not (bytes<? a b)))
   (lambda (a b) (or (eq? a b) (symbol<? b a)))
-  (lambda (a b) (or (eq? a b) (keyword<? b a))))
+  (lambda (a b) (or (eq? a b) (keyword<? b a)))
+  (lambda (a b) (or (equal? a b) (path<? b a))))
 
 (define-general general> method>
   >= values 6
@@ -418,7 +429,8 @@
   string>?
   bytes>?
   (lambda (a b) (symbol<? b a))
-  (lambda (a b) (keyword<? b a)))
+  (lambda (a b) (keyword<? b a))
+  (lambda (a b) (path<? b a)))
 
 (define (Comparable.less a b)
   (< ((vector-ref (Comparable-ref a #f) 0) a b) 0))

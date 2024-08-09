@@ -12,6 +12,9 @@
   path.string()
 )
 
+Paths are @tech{comparable}, which means that generic operations like
+@rhombus(<) and @rhombus(>) work on paths.
+
 @doc(
   annot.macro 'Path'
 ){

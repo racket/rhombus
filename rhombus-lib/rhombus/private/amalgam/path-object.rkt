@@ -5,6 +5,7 @@
          "realm.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
+         "compare-key.rkt"
          (submod "string.rkt" static-infos)
          (submod "bytes.rkt" static-infos))
 
@@ -20,9 +21,27 @@
 (module+ for-static-info
   (provide (for-syntax get-path-static-infos)))
 
+(define (path<=? p q)
+  (or (equal? p q) (path<? p q)))
+
+(define (path!=? p q)
+  (not (equal? p q)))
+
+(define (path>=? p q)
+  (or (equal? p q) (path<? q p)))
+
+(define (path>? p q)
+  (path<? q p))
+
 (define-primitive-class Path path
   #:lift-declaration
   #:no-constructor-static-info
+  #:instance-static-info ((#%compare ((< path<?)
+                                      (<= path<=?)
+                                      (> path>?)
+                                      (>= path>=?)
+                                      (= equal?)
+                                      (!= path!=?))))
   #:existing
   #:translucent
   #:fields

@@ -17,3 +17,40 @@ check:
   def p = dynamic(Path("x"))
   [p.bytes(), p.string()]
   ~is [#"x", "x"]
+
+block:
+  use_static
+  def p = Path("/")
+  def q = Path("/etc")
+  check p < q ~is #true
+  check q > p ~is #true
+  check p == p ~is #true
+  check p == q ~is #false
+  check p != p ~is #false
+  check p != q ~is #true
+  check p compares_equal p ~is #true
+  check p compares_equal q ~is #false
+  check p compares_unequal p ~is #false
+  check p compares_unequal q ~is #true
+  check p <= p ~is #true
+  check p <= q ~is #true
+  check p >= p ~is #true
+  check p >= q ~is #false
+
+block:
+  def p = dynamic(Path("/"))
+  def q = dynamic(Path("/etc"))
+  check p < q ~is #true
+  check q > p ~is #true
+  check p == p ~is #true
+  check p == q ~is #false
+  check p != p ~is #false
+  check p != q ~is #true
+  check p compares_equal p ~is #true
+  check p compares_equal q ~is #false
+  check p compares_unequal p ~is #false
+  check p compares_unequal q ~is #true
+  check p <= p ~is #true
+  check p <= q ~is #true
+  check p >= p ~is #true
+  check p >= q ~is #false
