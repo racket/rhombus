@@ -12,7 +12,7 @@ A @deftech{comparable} value is one that supports @rhombus(<),
 @rhombus(<=), @rhombus(>=),@rhombus(>=), @rhombus(compares_equal), and
 @rhombus(compares_unequal). Real numbers, @tech{characters},
 @tech{strings}, @tech{byte strings}, @tech{symbols}, @tech{keywords},
-and paths are all comparable, as are instances of classes that
+and @tech{paths} are all comparable, as are instances of classes that
 implement @rhombus(Comparable, ~class).
 
 @doc(

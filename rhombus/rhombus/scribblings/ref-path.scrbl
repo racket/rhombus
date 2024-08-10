@@ -5,6 +5,8 @@
 
 @title{Paths}
 
+A @deftech{path} value represents a filesystem path.
+
 @dispatch_table(
   "path"
   Path
