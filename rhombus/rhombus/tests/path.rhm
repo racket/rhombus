@@ -24,10 +24,6 @@ block:
   def q = Path("/etc")
   check p < q ~is #true
   check q > p ~is #true
-  check p == p ~is #true
-  check p == q ~is #false
-  check p != p ~is #false
-  check p != q ~is #true
   check p compares_equal p ~is #true
   check p compares_equal q ~is #false
   check p compares_unequal p ~is #false
@@ -42,10 +38,6 @@ block:
   def q = dynamic(Path("/etc"))
   check p < q ~is #true
   check q > p ~is #true
-  check p == p ~is #true
-  check p == q ~is #false
-  check p != p ~is #false
-  check p != q ~is #true
   check p compares_equal p ~is #true
   check p compares_equal q ~is #false
   check p compares_unequal p ~is #false
