@@ -1,5 +1,8 @@
 #lang rhombus
 
+import:
+  "version_guard.rhm"
+
 block:
   import "static_arity.rhm"
   static_arity.check:
@@ -32,6 +35,11 @@ block:
   check p <= q ~is #true
   check p >= p ~is #true
   check p >= q ~is #false
+  version_guard.at_least "8.14.0.2":
+    check p == Path("/") ~is #true
+    check p == q ~is #false
+    check p != Path("/") ~is #false
+    check p != q ~is #true
 
 block:
   def p = dynamic(Path("/"))
@@ -46,3 +54,8 @@ block:
   check p <= q ~is #true
   check p >= p ~is #true
   check p >= q ~is #false
+  version_guard.at_least "8.14.0.2":
+    check p == Path("/") ~is #true
+    check p == q ~is #false
+    check p != Path("/") ~is #false
+    check p != q ~is #true
