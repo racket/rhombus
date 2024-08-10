@@ -1,5 +1,5 @@
 #lang rhombus
 import:
-  rhombus/scribble/private/typeset_meta open
+  shrubbery/render/private/typeset_meta open
 export:
-  all_from(rhombus/scribble/private/typeset_meta)
+  all_from(shrubbery/render/private/typeset_meta)

@@ -8,7 +8,7 @@ import:
   meta_label:
     rhombus open
     rhombus/meta open
-  rhombus/scribble/private/typeset_meta open
+  shrubbery/render/private/typeset_meta open
 
 export:
   all_from(rhombus/meta)

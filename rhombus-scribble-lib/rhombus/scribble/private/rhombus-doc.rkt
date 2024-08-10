@@ -5,7 +5,7 @@
                      racket/list)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
-         "typeset-help.rkt"
+         (lib "shrubbery/render/private/typeset-help.rkt")
          rhombus/private/name-root
          (submod "rhombus-spacer.rhm" for_doc) ; for spacer bindings
          (only-in scribble/manual

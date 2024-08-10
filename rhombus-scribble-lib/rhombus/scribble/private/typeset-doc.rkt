@@ -10,15 +10,15 @@
                      rhombus/private/treelist
                      rhombus/private/pack
                      syntax/strip-context
-                     "add-space.rkt"
+                     (lib "shrubbery/render/private/add-space.rkt")
                      "typeset-key-help.rkt")
          racket/symbol
-         (prefix-in typeset-meta: "typeset_meta.rhm")
+         (prefix-in typeset-meta: (lib "shrubbery/render/private/typeset_meta.rhm"))
          "metavar.rkt"
          "nonterminal.rkt"
          "doc.rkt"
          (submod "doc.rkt" for-class)
-         "typeset-help.rkt"
+         (lib "shrubbery/render/private/typeset-help.rkt")
          "typeset-key-help.rkt"
          "defining-element.rkt"
          shrubbery/print

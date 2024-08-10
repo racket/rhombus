@@ -8,7 +8,8 @@
     "syntax-color-lib"
     "rhombus-lib"
     ["scribble-lib" #:version "1.50"]
-    "sandbox-lib"))
+    "sandbox-lib"
+    "shrubbery-render-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-scribble\"")
 

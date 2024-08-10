@@ -1,7 +1,7 @@
 #lang rhombus/and_meta
 import:
   "rhombus.rhm" open
-  "typeset_meta.rhm"
+  shrubbery/render/private/typeset_meta
 
 export:
   rhombus_typeset

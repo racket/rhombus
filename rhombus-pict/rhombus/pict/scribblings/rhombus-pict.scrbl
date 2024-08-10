@@ -32,5 +32,6 @@ and steps concurrent to other animated picts provided in the same
 @include_section("text.scrbl")
 @include_section("radial.scrbl")
 @include_section("balloon.scrbl")
+@include_section("rhombus.scrbl")
 
 @close_eval(pict_eval)

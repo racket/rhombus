@@ -1,0 +1,218 @@
+#lang rhombus/static/and_meta
+import:
+  "private/rebuild.rhm" open
+  meta:
+    "private/rebuild.rhm" open
+  "private/typeset_meta.rhm"
+  "spacer.rhm"
+  meta:
+    "private/add-space.rkt".#{full-space-names}
+
+export:
+  macros
+
+meta:
+  Parameter.def current_escape_id = 'escaped'
+
+  fun head_context(stxs):
+    match stxs
+    | '$head $_ ...':
+        Syntax.relocate('#false', head)
+
+  fun head_escape_context(stxs):
+    match stxs
+    | '$head $esc $_ ...':
+        Syntax.relocate_span('#false', [head, esc])
+
+  fun group_context(g):
+    Syntax.relocate('#false', g)
+
+  fun literal_term(stxs):
+    'Syntax.literal($stxs)'
+
+  fun literal_group(stxs):
+    'Syntax.literal_group($stxs)'
+
+  fun is_literal_term(stx):
+    match stx
+    | 'Syntax.literal $_': #true
+    | ~else: #false
+
+  fun is_literal_group(stx):
+    match stx
+    | 'Syntax.literal_group $_': #true
+    | ~else: #false
+
+  fun extract_literal(stx):
+    match stx
+    | '$_ $_ $_($stxs)': stxs
+
+  fun nested([g, ...], builder, builder_stx, stxs):
+    let [new_g, ...] = [escape_group(g), ...]
+    if (for all (new_g: [new_g, ...]):
+          is_literal_group(new_g))
+    | literal_term(builder([extract_literal(new_g), ...], head_context(stxs)))
+    | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
+
+  fun nested_alts([b, ...], stxs):
+    let [new_b, ...] = [escape_term(b), ...]
+    if (for all (new_b: [new_b, ...]):
+          is_literal_term(new_b))
+    | literal_term(alts_syntax([extract_literal(new_b), ...], head_context(stxs)))
+    | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
+
+  fun escape_group(g):
+    let new_g = escape_tail(g)
+    if is_literal_group(new_g)
+    | literal_group(Syntax.relocate(extract_literal(new_g), group_context(g)))
+    | 'Syntax.relocate($new_g, Syntax.literal($(group_context(g))))'
+
+  fun escape_tail(stxs):
+    match stxs
+    | '#,($expr ...) $tail ...':
+        let escaped_id = current_escape_id()
+        'sequence_cons_syntax($escaped_id($expr ...), $(escape_tail('$tail ...')),
+                              Syntax.literal($(head_escape_context(stxs))))'
+    | '$head $tail ...':
+        let new_head = escape_term(head)
+        let new_tail = escape_tail('$tail ...')
+        if is_literal_term(new_head) && is_literal_group(new_tail)
+        | literal_group(sequence_append_syntax(extract_literal(new_head), extract_literal(new_tail)))
+        | 'sequence_append_syntax($new_head, $new_tail)'
+    | ~else: literal_group(stxs)
+
+  fun escape_term(stxs):
+    match stxs
+    | '($(g :: Group), ...)':
+        nested([g, ...], parens_syntax, 'parens_syntax', stxs)
+    | '[$(g :: Group), ...]':
+        nested([g, ...], brackets_syntax, 'brackets_syntax', stxs)
+    | '{$(g :: Group), ...}':
+        nested([g, ...], braces_syntax, 'braces_syntax', stxs)
+    | '«'$(g:: Group); ...'»':
+        nested([g, ...], quotes_syntax, 'quotes_syntax', stxs)
+    | ': $(g :: Group); ...':
+        nested([g, ...], block_syntax, 'block_syntax', stxs)
+    | '| $(b :: Block) | ...':
+        nested_alts([b, ...], stxs)
+    | '$(id :: Name)':
+        let mv = syntax_meta.value(id, typeset_meta.space, #false)
+        match mv
+        | typeset_meta.Transformer(proc):
+            'relocate_expansion($(proc(id)),
+                                Syntax.literal($(head_context(stxs))))'
+        | ~else: literal_term(stxs)
+    | ~else: literal_term(stxs)
+  
+fun sequence_cons_syntax(a, d, context):
+  let a_r: Syntax.relocate(Syntax.make(a), context);
+  match d
+  | '$e ...': '$a_r $e ...'
+
+fun relocate_expansion(e, context):
+  Syntax.relocate(Syntax.make(e), context)
+
+// ----------------------------------------
+
+meta:
+  fun keyword_mode(kw_stx :~ Syntax):
+    match kw_stx.unwrap()
+    | (#'~var
+         || #'~datum
+         || #'~value
+         || #'~result):
+        #'plain
+    | (#'~expr
+         || #'~defn
+         || #'~decl
+         || #'~bind
+         || #'~impo
+         || #'~expo
+         || #'~modpath
+         || #'~annot
+         || #'~repet
+         || #'~stxclass
+         || #'~reducer
+         || #'~class
+         || #'~space
+         || #'~for_clause
+         || #'~class_clause
+         || #'~interface_clause
+         || #'~veneer_clause
+         || #'~entry_point
+         || #'~unquote_bind
+         || #'~syntax_class_clause
+         || #'~pattern_clause
+         || #'~space_clause
+         || #'~space_meta_clause
+         || #'~key_comp
+         || #'~immediate_callee
+         || #'~doc):
+        #'spaced
+    | ~else:
+        syntax_meta.error("invalid space", kw_stx)
+
+  fun escape_top(g, escape_id):
+    parameterize { current_escape_id: escape_id }:
+      escape_group(g)
+  fun escape_top_term(t, escape_id):
+    parameterize { current_escape_id: escape_id }:
+      escape_term(t)
+
+defn.macro 'macros ($rhombus,
+                    $rhombusblock,
+                    $rhombusblock_etc):
+              ~render_line: $typeset_rhombus
+              ~render_block: $typeset_rhombusblock
+              ~escape: $escape
+              ~result: $Result':
+  '«
+     expr.macro
+     | '$rhombus ($('$')(forms :: Group))':
+         '$typeset_rhombus($('$')(escape_top(spacer.adjust_group(forms, #false, '#,'), '$escape'))) :~ $Result'
+     | '$rhombus ($('$')forms, ~at $('$')(name0 :: Name) $('$')(name :: Name) $('...'))':
+         let sp = [Symbol.from_string(String.append(to_string(name0),
+                                                    to_string(name), $('...')))]
+         '$typeset_rhombus(~space: #'$('$')sp,
+                           $('$')(escape_top(spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
+     | '$rhombus ($('$')forms, $('$')(kw_stx :: Keyword))':
+         let kw = kw_stx.unwrap()
+         match keyword_mode(kw_stx)
+         | #'plain:
+             '$typeset_rhombus(~space: #'$('$')kw_stx, $('$')(literal_group(forms))) :~ $Result'
+         | #'spaced:
+             let sp = #{full-space-names}(kw)
+             '$typeset_rhombus(~space: #'$('$')kw_stx, $('$')(escape_top(spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
+
+     expr.macro '$rhombusblock_etc $('$')tail $('...')':
+       ~all_stx stx
+       '$('$')(rhombusblock_etc(stx, '$('$')tail $('...')', '$typeset_rhombusblock', '$escape')) :~ $Result'
+
+     expr.macro '$rhombusblock ($('$')args)':
+       '$typeset_rhombusblock(
+          ~indent_from_block: #false,
+          $('$')(escape_top_term(spacer.adjust_term(': $('$')args', #false, '#,'), '$escape'))
+        ) :~ $Result'
+  »'
+
+meta:
+  fun rhombusblock_etc(stx, '$tail ...', typeset_rhombusblock_stx, escape_id):
+    fun finish([opt, ...], fin_tail):
+      match fin_tail
+      | ': $_': #void
+      | ~else: syntax_meta.error("expected a block", stx)
+      '$typeset_rhombusblock_stx(
+         $opt, ...,
+         $(escape_top_term(spacer.adjust_term(fin_tail, #false, '#,'), escape_id))
+       )'
+    fun check_options(options :~ List):
+      for (opt: options):
+        match opt
+        | '$('~inset' || '~indent' || '~prompt' || '~indent_from_block'): $_': #void
+        | ~else: syntax_meta.error("invalid option", stx, opt)
+    match '$tail ...'
+    | '($option, ...) $new_tail ...':
+        check_options([option, ...])
+        finish([option, ...], '$new_tail ...')
+    | ~else: finish([], '$tail ...')
+

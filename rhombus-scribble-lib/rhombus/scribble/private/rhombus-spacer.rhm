@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 import:
-  "spacer.rhm"
-  "escape.rhm".Escape
+  rhombus/scribble/spacer
+  shrubbery/render/private/escape.Escape
 
 export:
   only_space spacer.typeset:

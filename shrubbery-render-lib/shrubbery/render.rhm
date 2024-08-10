@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  "render/private/render.rkt" open
+
+export:
+  make
