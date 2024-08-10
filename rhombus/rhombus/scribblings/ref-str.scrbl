@@ -27,7 +27,7 @@
     fun pct(n): str.f(n * 100, ~precision: 1) ++ "%"
   ~repl:
     print(@str{Contents: @pct(0.251) apples
-                         @pct(1/3) bananas
+                         @pct(1/6) bananas
                          @pct(0.5) cherries})
 )
 
