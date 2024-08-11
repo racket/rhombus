@@ -8,6 +8,7 @@
 (define build-deps '("base"
                      "pict-doc"
                      "rhombus"
+                     "shrubbery"
                      "rhombus-draw"
                      "rhombus-lib"
                      "rhombus-scribble-lib"

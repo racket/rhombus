@@ -6,6 +6,8 @@
       pict
       pict/rhombus open)
 
+@(def shrubbery_scrbl: ModulePath'lib("shrubbery/scribblings/shrubbery.scrbl")')
+
 @(def rhombus_eval = make_rhombus_eval())
 @examples(
   ~eval: rhombus_eval
@@ -72,9 +74,9 @@ form form rendering literal shrubbery forms as a pict.
  followed by a parenthesized expression is an escape that must produce a
  pict to render in place of the escape.
 
- Prefix a use of @rhombus(rhombus) with @litchar("@") to avoid needing
- to include @litchar{,} between multiple groups that are on separate
- lines.
+ Use @rhombus(rhombusblock) with @litchar("@") notation (see
+ @secref(~doc: shrubbery_scrbl, "at-notation")) to avoid the need to
+ include @litchar{,} between multiple groups that are on separate lines.
 
 @examples(
   ~eval: rhombus_eval,
