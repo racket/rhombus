@@ -89,7 +89,7 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun println(v :: Any,
+  fun println(v :: Any, ...,
               ~out: out :: Port.Output = Port.Output.current(),
               ~mode: mode :: PrintMode = #'text,
               ~pretty: pretty = Printable.current_pretty())
@@ -101,11 +101,11 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun show(v :: Any,
+  fun show(v :: Any, ...,
            ~out: out :: Port.Output = Port.Output.current(),
            ~pretty: pretty = Printable.current_pretty())
     :: Void
-  fun showln(v :: Any,
+  fun showln(v :: Any, ...,
              ~out: out :: Port.Output = Port.Output.current(),
              ~pretty: pretty = Printable.current_pretty())
     :: Void
