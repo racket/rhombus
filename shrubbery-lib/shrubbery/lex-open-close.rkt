@@ -298,7 +298,7 @@
                        [(and column
                              t-column
                              (t-column . < . column))
-                        (loop (add type close-tag 2) (pop))]
+                        (loop (add type close-tag (multi-started frame)) (pop))]
                        [(and column
                              t-column
                              (t-column . > . column))

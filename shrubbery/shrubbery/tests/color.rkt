@@ -380,6 +380,11 @@ _<block:
 __  <<1+2>
 __  _<3+4>>>
 
+_<class Vec3:
+__  <<method: <<1>; <2>>>;
+__  _<private:
+__  __  <<error>>>>>
+
 _<done>_
 INPUT
   )
