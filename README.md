@@ -9,7 +9,7 @@ goals and design, see
 * [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
   or the [talk video](https://www.youtube.com/watch?v=hkiy1rmKA48)
 
-* [Documentation](https://docs.racket-lang.org/rhombus/index.html)
+* [Documentation](https://docs.racket-lang.org/rhombus@rhombus/index.html)
   as rendered by the Racket package-build service
 
 This repository also houses the packages that make up the current
