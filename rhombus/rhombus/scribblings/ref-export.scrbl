@@ -63,7 +63,7 @@
  does not need a block.
 
  An @rhombus(id_name) or @rhombus(op_name) export can be
- an immediate identifier or oerator, or it can be dotted name, such as
+ an immediate identifier or operator, or it can be dotted name, such as
  @rhombus(List.length). The last component of a dotted name is used as
  the export name. See @secref("namespaces") for information on
  @rhombus(id_name) and @rhombus(op_name).
