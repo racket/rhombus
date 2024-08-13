@@ -1,12 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/print
                      "srcloc.rkt")
-         syntax/parse/pre
-         "parse.rkt"
          "expression.rkt"
-         "binding.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          "dollar.rkt"
          "repetition.rkt"
@@ -101,7 +97,7 @@
               #,@(for/list ([i (in-range (sub1 depth))])
                    #`([(elem) (in-list elem)])))
            #'elem
-           (get-syntax-static-infos)
+           get-syntax-static-infos
            #:repet-handler (lambda (stx next)
                              (syntax-parse stx
                                #:datum-literals (op |.|)
@@ -109,7 +105,7 @@
                                 #:do [(define attr (lookup-attribute stx #'var-id #'attr-id #t))]
                                 #:when attr
                                 (define var-depth (+ (pattern-variable-depth attr) depth))
-                                (values (make-repetition-info #'(var-id dot-op attr-id)
+                                (values (make-repetition-info (respan #'(var-id dot-op attr-id))
                                                               #`(([(elem) (in-list
                                                                            (#,(pattern-variable-unpack* attr)
                                                                             #'$

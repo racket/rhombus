@@ -109,7 +109,7 @@
     #:check-result check-repetition-result
     #:make-identifier-form identifier-repetition-use/maybe)
 
-  (define (make-expression+repetition for-clausess for-body element-static-infos
+  (define (make-expression+repetition for-clausess for-body element-get-static-infos
                                       #:expr-handler [expr-handler (lambda (stx fail) (fail))]
                                       #:repet-handler [repet-handler (lambda (stx next) (next))])
     (values
@@ -129,7 +129,7 @@
                                 (values (make-repetition-info stx
                                                               for-clausess
                                                               for-body
-                                                              element-static-infos
+                                                              (element-get-static-infos)
                                                               0)
                                         #'tail)])))))))
 

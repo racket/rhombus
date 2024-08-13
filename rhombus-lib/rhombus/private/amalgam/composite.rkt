@@ -330,7 +330,8 @@
                          #'((define-syntaxes (rest.bind-id rep-bind-id)
                               (make-expression+repetition (quote-syntax rest-seq-tmp-id-as-rep)
                                                           (quote-syntax elem-tmp-id)
-                                                          (quote-syntax (rest.bind-static-info ...))))
+                                                          (lambda ()
+                                                            (quote-syntax (rest.bind-static-info ...)))))
                             ...))))
                    #'((rest.binder-id rest-tmp-id rest.data)))]))]))
 
