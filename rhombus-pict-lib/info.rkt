@@ -8,7 +8,8 @@
     "rhombus-draw-lib"
     "draw-lib"
     "pict-lib"
-    "pict-balloon2"))
+    "pict-balloon2"
+    "shrubbery-render-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-pict\"")
 
