@@ -53,13 +53,9 @@
    (lambda (src in)
      (when (terminal-port? in)
        (flush-output (current-output-port)))
-     (define (ensure-count in)
-       (if (port-counts-lines? in)
-           in
-           (let ([in (dup-input-port in)])
-             (port-count-lines! in)
-             in)))
-     (parse-all (ensure-count in) #:source src #:mode 'interactive)))
+     (define-values (line col pos) (port-next-location in))
+     (parse-all in #:source src #:mode 'interactive
+                #:start-column col)))
 
   (print-boolean-long-form #t)
 
