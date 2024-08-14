@@ -61,7 +61,7 @@ class without a superclass.
       | ():
           super(~x: 0, ~y: 0)
       | (~x: x, ~y: y):
-          super(~x: x, ~y: x)
+          super(~x: x, ~y: y)
       | (~r: r, ~θ: θ):
           super(~x: r*math.cos(θ), ~y: r*math.sin(θ))
   ~repl:
