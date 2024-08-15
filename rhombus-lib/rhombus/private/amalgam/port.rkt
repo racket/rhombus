@@ -90,7 +90,19 @@
 (define-annotation-syntax EOF (identifier-annotation eof-object? ()))
 
 (define-simple-symbol-enum ReadLineMode
-  any any_one linefeed return return_linefeed)
+  linefeed
+  return
+  [return_linefeed return-linefeed]
+  any
+  [any_one any-one])
+
+(define (check-input-port who ip)
+  (unless (input-port? ip)
+    (raise-argument-error* who rhombus-realm "Port.Input" ip)))
+
+(define (check-output-port who op)
+  (unless (output-port? op)
+    (raise-argument-error* who rhombus-realm "Port.Output" op)))
 
 (define/arity Port.Input.open_bytes
   #:inline
@@ -166,23 +178,15 @@
   #:primitive (read-char)
   (read-char port))
 
-
-(define/method Port.Input.read_line
-  #:inline
+(define/method (Port.Input.read_line port
+                                     #:mode [mode-in 'any])
   #:primitive (read-line)
-  (case-lambda
-    [(port) (coerce-read-result (read-line port 'any))]
-    [(port mode)
-     (unless (ReadLineMode? mode)
-       (unless (input-port? port)
-         (raise-argument-error* who rhombus-realm "Port.Input" port))
-       (raise-argument-error* who rhombus-realm "Port.Input.ReadLineMode" mode))
-     (coerce-read-result
-      (read-line port
-                 (case mode
-                   [(return_linefeed) 'return-linefeed]
-                   [(any_one) 'any-one]
-                   [else mode])))]))
+  (define mode (->ReadLineMode mode-in))
+  (unless mode
+    (check-input-port who port)
+    (raise-argument-error* who rhombus-realm "Port.Input.ReadLineMode" mode-in))
+  (coerce-read-result
+   (read-line port mode)))
 
 (define/method (Port.Input.read_string port amt)
   #:inline
@@ -202,8 +206,7 @@
   (string->immutable-string (get-output-string port)))
 
 (define/method (Port.Output.flush [p (current-output-port)])
-  (unless (output-port? p)
-    (raise-argument-error* who rhombus-realm "Port.Output" p))
+  (check-output-port who p)
   (flush-output p))
 
 (define/method (Port.Output.print port

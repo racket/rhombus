@@ -15,7 +15,8 @@
          "static-info.rkt"
          "print-desc.rkt"
          (submod "print.rkt" for-printable)
-         (submod "print.rkt" redirect))
+         (submod "print.rkt" redirect)
+         "enum.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/namespace)
@@ -82,7 +83,8 @@
    [flat PrintDesc.flat]
    [list PrintDesc.list]
    [block PrintDesc.block]
-   [special PrintDesc.special]))
+   [special PrintDesc.special]
+   SpecialMode))
 
 (define-annotation-syntax PrintDesc
   (identifier-annotation print-description? ()))
@@ -100,6 +102,14 @@
     [else (and who
                (raise-argument-error* who rhombus-realm "PrintDesc" pd))]))
 
+(define (check-int who n)
+  (unless (exact-integer? n)
+    (raise-argument-error* who rhombus-realm "Int" n)))
+
+(define (check-nonneg-int who n)
+  (unless (exact-nonnegative-integer? n)
+    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
+
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc
    `(seq ,@(for/list ([pd (in-list pds)])
@@ -109,8 +119,7 @@
   (PrintDesc (pretty-newline)))
 
 (define/arity (PrintDesc.nest n pd)
-  (unless (exact-integer? n)
-    (raise-argument-error* who rhombus-realm "Integer" pd))
+  (check-int who n)
   (PrintDesc
    (pretty-nest n (print-description-unwrap who pd))))
 
@@ -150,14 +159,20 @@
    (pretty-blocklike (print-description-unwrap who head)
                      (print-description-unwrap who body))))
 
+(define-simple-symbol-enum SpecialMode
+  [write_special write-special]
+  print
+  write
+  display)
+
 (define/arity (PrintDesc.special v alt-pd
-                                 #:mode [mode 'write-special]
+                                 #:mode [mode-in 'write_special]
                                  #:length [len 1])
   (define alt (print-description-unwrap who alt-pd))
-  (unless (memq mode '(write-special print))
-    (raise-argument-error* who rhombus-realm "Any.of(#'#{write-special}, #'print, #'write, #'display)" mode))
-  (unless (exact-nonnegative-integer? len)
-    (raise-argument-error* who rhombus-realm "NonnegInt" len))
+  (define mode (->SpecialMode mode-in))
+  (unless mode
+    (raise-argument-error* who rhombus-realm "PrintDesc.SpecialMode" mode-in))
+  (check-nonneg-int who len)
   (PrintDesc (pretty-special v len mode alt)))
 
 (define-static-info-syntaxes (current-page-width
@@ -179,7 +194,6 @@
                                 #:column [column 0])
   (define doc (print-description-unwrap who pd))
   (check-output-port who op)
-  (unless (exact-nonnegative-integer? column)
-    (raise-argument-error* who rhombus-realm "NonnegInt" column))
+  (check-nonneg-int who column)
   (render-pretty doc op racket-print-redirect
                  #:column column))
