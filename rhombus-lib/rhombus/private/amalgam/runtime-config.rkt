@@ -55,7 +55,7 @@
        (flush-output (current-output-port)))
      (define-values (line col pos) (port-next-location in))
      (parse-all in #:source src #:mode 'interactive
-                #:start-column col)))
+                #:start-column (or col 0))))
 
   (print-boolean-long-form #t)
 
