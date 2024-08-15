@@ -13,7 +13,8 @@
          "mutability.rkt"
          "realm.rkt"
          "print-desc.rkt"
-         "key-comp-property.rkt")
+         "key-comp-property.rkt"
+         "enum.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -21,7 +22,10 @@
                       [rhombus-print print])
                      println
                      show
-                     showln))
+                     showln)
+         (for-spaces (rhombus/annot
+                      rhombus/namespace)
+                     PrintMode))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
@@ -57,9 +61,12 @@
   (unless (output-port? op)
     (raise-argument-error* who rhombus-realm "Port.Output" op)))
 
+(define-simple-symbol-enum PrintMode
+  text
+  expr)
+
 (define (check-mode who mode)
-  (unless (or (eq? mode 'expr)
-              (eq? mode 'text))
+  (unless (PrintMode? mode)
     (raise-argument-error* who rhombus-realm "PrintMode" mode)))
 
 (define (do-print* who vs op mode pretty?)

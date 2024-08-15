@@ -9,18 +9,30 @@
 
 (define-syntax (define-simple-symbol-enum stx)
   (syntax-parse stx
-    [(_ name:id val:id ...)
+    [(_ name:id
+        (~or* [val:id rkt-val:id]
+              val:id)
+        ...)
      #:with (val-name ...) (generate-temporaries #'(val ...))
      #:with name? (datum->syntax #'name (string->symbol
                                          (format "~a?" (syntax-e #'name))))
+     #:attr ->name (and (not (null? (syntax-e #'((~? rkt-val) ...))))
+                        (datum->syntax #'name (string->symbol
+                                               (format "->~a" (syntax-e #'name)))))
      #'(begin
          (define val-name 'val) ...
 
          (define (name? v)
-           (and (symbol? v)
-                (case v
-                  [(val ...) #t]
-                  [else #f])))
+           (case v
+             [(val) #t]
+             ...
+             [else #f]))
+
+         (~? (define (->name v)
+               (case v
+                 [(val) '(~? rkt-val val)]
+                 ...
+                 [else #f])))
 
          (define-annotation-syntax name
            (identifier-annotation name? #,(get-symbol-static-infos)))

@@ -270,7 +270,7 @@ input, while an @deftech{output port} is specifically for output.
 
 @doc(
   fun Port.Input.read_line(in :: Port.Input,
-                           mode :: Port.ReadLineMode = #'any)
+                           ~mode: mode :: Port.ReadLineMode = #'any)
     :: String || Port.EOF
 ){
 
@@ -667,14 +667,23 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
+  enum PrintDesc.SpecialMode:
+    write_special
+    print
+    write
+    display
+){
+
+ Modes for @rhombus(PrintDesc.special).
+
+}
+
+@doc(
   fun PrintDesc.special(v :: Any,
                         alt_pd :: PrintDesc,
                         ~length: length :: NonnegInt = 1,
-                        ~mode: mode :: Any.of(#'#{write-special},
-                                              #'print,
-                                              #'write,
-                                              #'display)
-                                 = #'#{write-special})
+                        ~mode: mode :: PrintDesc.SpecialMode
+                                 = #'write_special)
     :: PrintDesc
 ){
 

@@ -14,7 +14,7 @@ block:
     Port.Input.read_byte(in) ~method
     Port.Input.read_bytes(in, amount) ~method
     Port.Input.read_char(in) ~method
-    Port.Input.read_line(in, [mode]) ~method
+    Port.Input.read_line(in) ~method
     Port.Input.read_string(in, amount) ~method
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
@@ -66,18 +66,18 @@ block:
     let p = Port.Input.open_string(str)
     fun read():
       if mode
-      | p.read_line(mode)
+      | p.read_line(~mode: mode)
       | p.read_line()
-    [read(),
-     read(),
-     read(),
-     read(),
-     read(),
-     read(),
-     read()]     
-  check read_many(#'any) ~is ["a", "b", "c", "d", "", "e", Port.eof]  
-  check read_many(#false) ~is read_many(#'any)
-  check read_many(#'linefeed) ~is ["a", "b\rc\r", "d", "\re", Port.eof, Port.eof, Port.eof]
+    recur loop(strs :~ List = []):
+      match read()
+      | _ :: Port.EOF: strs
+      | str: loop(strs.add(str))
+  check read_many(#'linefeed) ~is ["a", "b\rc\r", "d", "\re"]
+  check read_many(#'return) ~is ["a\nb", "c", "\nd\n", "e"]
+  check read_many(#'return_linefeed) ~is ["a\nb\rc", "d\n\re"]
+  check read_many(#'any) ~is ["a", "b", "c", "d", "", "e"]
+  check read_many(#'any_one) ~is ["a", "b", "c", "", "d", "", "e"]
+  check read_many(#false) ~is ["a", "b", "c", "d", "", "e"]
   check read_many(#'backward) ~throws "Port.Input.ReadLineMode"
 
 block:
