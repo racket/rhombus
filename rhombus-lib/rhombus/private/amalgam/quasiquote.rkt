@@ -405,8 +405,8 @@
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
                     ;; but if `pat` match `(group)`, then allow an overall match to `(tag)`
-                    (values #`(~or* ((~datum #,tag) #,pat)
-                                    (~and ((~datum #,tag))
+                    (values #`(~or* (#,(make-datum tag) #,pat)
+                                    (~and (#,(make-datum tag))
                                           ;; sets all pattern variables to nested empties:
                                           (_ . #,(syntax-parse pat
                                                    [(_ . tail) #'tail]))))
@@ -417,7 +417,7 @@
                   ;; handle-maybe-empty-alts
                   (lambda (tag ps idrs sidrs vars)
                     ;; if `(tag . ps)` would match `(alts)`, then let it match `(block)`
-                    (values #`(~or* ((~datum #,tag) . #,ps)
+                    (values #`(~or* (#,(make-datum tag) . #,ps)
                                     (~and ((~datum block))
                                           ;; sets all pattern variables to nested empties:
                                           (_ . #,ps)))
@@ -430,7 +430,7 @@
                     (let ([ps (if tail (append ps tail) ps)])
                       ;; the `(tag . ps)` could match `(group)` or an otherwise misformed group,
                       ;; but that shouldn't be an input
-                      (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t)))
+                      (values #`(#,(make-datum tag) . #,ps) idrs sidrs vars #t)))
                   #:make-describe-op
                   (lambda (e name)
                     #`(~describe #:opaque
