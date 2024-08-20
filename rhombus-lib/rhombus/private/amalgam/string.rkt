@@ -15,6 +15,7 @@
          "realm.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
+         "index-result-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
@@ -53,6 +54,7 @@
 
 (define-static-info-getter get-any-string-static-infos
   (#%index-get String.get)
+  (#%index-result #,(get-char-static-infos)) ;; needed by `for` sequence, for example
   (#%append String.append)
   (#%sequence-constructor String.to_sequence/optimize)
   (#%compare ((< string<?)
