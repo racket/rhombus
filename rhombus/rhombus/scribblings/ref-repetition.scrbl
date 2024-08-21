@@ -140,14 +140,13 @@ positions.
 }
 
 @doc(
+  ~also_meta
   ~nonterminal:
     list_expr: block expr
     list_bind: def bind ~defn
   expr.macro '& list_expr'
   bind.macro '& list_bind'
 ){
-
-@provided_also_meta()
 
  The @rhombus(&) expression operator and binding operator can only be
  used in places where it's specifically recognized, normally either to
@@ -165,14 +164,13 @@ positions.
 }
 
 @doc(
+  ~also_meta
   ~nonterminal:
     map_expr: block expr
     map_bind: def bind ~defn
   expr.macro '~& map_expr'
   bind.macro '~& map_bind'
 ){
-
-@provided_also_meta()
 
  The @rhombus(~&) expression operator and binding operator can only be
  used in places where it's specifically recognized, normally to bind the

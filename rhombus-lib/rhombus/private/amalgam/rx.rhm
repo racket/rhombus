@@ -1,0 +1,553 @@
+#lang rhombus/private/amalgam/core
+import:
+  lib("racket/base.rkt")
+  "core-meta.rkt" open:
+    except #%dynamism
+  meta:
+    "charset.rhm".Charset
+  "rx_charset.rhm".rx_charset_meta
+  "rx_charset.rhm" open
+  "rx_compile.rhm" open
+  "rx_object.rhm" open
+  "rx_match.rhm" open
+
+use_static
+meta:
+  use_static
+
+space.enforest rx:
+  space_path rhombus/rx
+  macro_definer macro
+  meta_namespace rx_meta:
+    description "rx"
+    parse_syntax_class Parsed
+    parse_prefix_more_syntax_class AfterPrefixParsed
+    parse_infix_more_syntax_class AfterInfixParsed
+    reflection space
+
+    export:
+      pack unpack space
+
+    parsed_packer do_pack
+    parsed_unpacker do_unpack
+    fun pack(s :: Syntax) :: Syntax:
+      do_pack(s)
+    fun unpack(stx) :: Syntax:
+      do_unpack(stx, #false)
+
+    identifier_parser: fun (id):
+                         syntax_meta.error("not a regexp form", id)
+
+
+export:
+  // main forms:
+  rx
+  rx_in
+
+  meta:
+    rx_meta
+
+  all_from("rx_charset.rhm")
+
+  RX
+  RXMatch
+
+  // operators for use inside `rx'...'`:
+  only_space rx:
+    ||     // alternatives
+    * ? +  // repetitions
+    .* .?  // allow combinations of `.` with `*` and `?` without space
+    ! lookahead lookbehind
+    word_boundary word_continue
+    cut       // keep any match (prevent backtracking sreach) before this `cut`
+    any       // includes newline
+    char byte // includes newline
+    names:
+      .   // match `any` except newline
+
+    // beginning/end of file/line
+    bof eof
+    bol eol
+
+    $     // capturing-name binding, backreference, or dynamic splicing
+
+    // unnamed capture of subsequent pattern
+    ~~
+
+    // expects `lookahead`, `lookbehind`, or `$` backreference --- or `!` before those
+    if
+
+    // selects byte or char mode explcitly:
+    bytes
+    string
+
+    // adjusts treatment of literal strings in subsequent block:
+    case_sensitive
+    case_insensitive
+
+    // Implicit operators, like the one before a literal string;
+    // we use `names` here so that these names are not
+    // misinterpreted as implicits in the `export` sublanguage!
+    names:
+      #%literal #%comp #%parens #%juxtapose #%call #%brackets #%index
+
+    // same as #%juxtapose, but supports continuing on the next line
+    ++
+
+    // same names as charsets to allow direct use as patterns
+    alpha
+    upper
+    lower
+    digit
+    xdigit
+    alnum
+    word
+    blank
+    newline
+    space
+    graph
+    print
+    cntrl
+    ascii
+    latin1
+
+  // a namspace that exports a pattern and charset for each
+  // Unicode general category
+  unicode
+
+meta:
+  fun rx_macro(stx :~ Syntax, pat, is_full):
+    match pat
+    | #false:
+        let stx_str = to_string(stx)
+        let rkt_rx = #{#rx""}
+        let rkt_full_rx = if is_full | #{#rx"^$"}  | rkt_rx
+        '_RX($rkt_rx, $rkt_full_rx, 0, {}, #false, $stx_str)'
+    | ~else:
+        let '[$ast, [$var, ...]]' = rx_meta.unpack(pat)
+        let stx_str = to_string(stx)
+        let (vars :~ Map, num_captures): map_vars([var, ...])
+        let has_backref = has_backreference(ast, vars)
+        let rkt_rx = compile(ast, vars, num_captures, stx)
+        if rkt_rx is_a Syntax
+        | let [vars_seq, ...]: describe_splice_vars([var, ...], vars)
+          // generate run-time construction of a regexp
+          'splice_regexp($rkt_rx, [$vars_seq, ...], $has_backref, $stx_str)'
+        | let rkt_full_rx:
+            if is_full
+            | compile('sequence(bof, $ast, eof)', vars, num_captures, stx)
+            | rkt_rx
+          // generate static regexp
+          '_RX($rkt_rx, $rkt_full_rx, $num_captures, $vars, $has_backref, $stx_str)'
+
+expr.macro
+| '«rx ''»':
+    ~all_stx: stx
+    rx_macro(stx, #false, #true)
+| '«rx '$(pat :: rx_meta.Parsed)'»':
+    ~all_stx: stx
+    rx_macro(stx, pat, #true)
+
+expr.macro
+| '«rx_in ''»':
+    ~all_stx: stx
+    rx_macro(stx, #false, #false)
+| '«rx_in '$(pat :: rx_meta.Parsed)'»':
+    ~all_stx: stx
+    rx_macro(stx, pat, #false)
+
+rx.macro'$left #%index $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
+  ~weaker_than: #%parens #%juxtapose ++
+  ~same_as: #%brackets
+  values(binary('sequence', left, next),
+         '$next.tail ...')
+
+rx.macro
+| '#%brackets [$(cs_g :: Group)]':
+    ~weaker_than #%parens
+    ~same_as: #%index ~~
+    let '$(cs :: rx_charset_meta.Parsed)' = cs_g
+    rx_meta.pack('[charset($cs), []]')
+| '#%brackets []':
+    // empty charset will never match, but this is not the only
+    // way to produce an empty charset, so allow it
+    ~all_stx: stx
+    rx_meta.pack('[charset($(rx_charset_meta.pack(Charset(), stx))), []]')
+
+rx.macro
+| '#%parens ()':
+    ~weaker_than: #%literal
+    ~same_as: ~~
+    rx_meta.pack('[sequence(), []]')
+| '#%parens ($(p :: rx_meta.Parsed))':
+    p
+
+// Escape operators + end of line operator
+rx.macro
+| '$('$')$(id :: Identifier): $body':
+    ~stronger_than: ~other
+    let '$(p :: rx_meta.Parsed); ...' = body
+    let ['[$pat, [$p_var, ...]]', ...] = [rx_meta.unpack(p), ...]
+    rx_meta.pack('[capture(sequence($pat, ...)), [$id, $p_var, ..., ...]]')
+| '$('$') $(name :: IdentifierName)':
+    if name is_a Identifier
+    | rx_meta.pack('[backref_or_splice($name), [[~maybe_splice, $name]]]')
+    | rx_meta.pack('[splice($name), [[~maybe_splice, ~other]]]')
+| '$('$') $(index :: Int)':
+    rx_meta.pack('[backref($index), []]')
+| '$('$') $(term :: Term)':
+    rx_meta.pack('[splice($term), [[~maybe_splice, ~other]]]')
+| '$('$') $(index :: Int)':
+    ~all_stx: stx
+    unless index.unwrap() is_a PosInt
+    | syntax_meta.error("invalid match index", stx, index)
+    rx_meta.pack('[backref($index), []]')
+
+// the `if` form supports only certain pattern forms
+rx.macro 'if $tst ... | $(thn :: rx_meta.Parsed) | $(els :: rx_meta.Parsed)':
+  fun lookahead(form, arg, tag):
+    let '[$pat, [$arg_var, ...]]' = rx_meta.unpack(arg)
+    values('$form($tag)($pat)', [arg_var, ...])
+  let (tst, [var, ...]):
+    match '$tst ...'
+    | '$('$') $(name :: Identifier)':
+        values('backref($name)', [])
+    | '$('$') $(index :: Int)':
+        values('backref($index)', [])
+    | '$(tag && bound_as rx_meta.space: 'lookahead')($(arg :: rx_meta.Parsed))':
+        lookahead('lookahead', arg, tag)
+    | '$(bound_as rx_meta.space: '!') $(tag && bound_as rx_meta.space: 'lookahead')($(arg :: rx_meta.Parsed))':
+        lookahead('not_lookahead', arg, tag)
+    | '$(tag && bound_as rx_meta.space: 'lookbehind')($(arg :: rx_meta.Parsed))':
+        lookahead('lookbehind', arg, tag)
+    | '$(bound_as rx_meta.space: '!') $(tag && bound_as rx_meta.space: 'lookbehind')($(arg :: rx_meta.Parsed))':
+        lookahead('not_lookbehind', arg, tag)
+  let '[$thn, [$thn_var, ...]]' = rx_meta.unpack(thn)
+  let '[$els, [$els_var, ...]]' = rx_meta.unpack(els    )
+  rx_meta.pack('[if($tst)($thn, $els), [$var, ..., $thn_var, ..., $els_var, ...]]')
+
+rx.macro 'lookahead($(arg :: rx_meta.Parsed))':
+  ~op_stx: self
+  unary('lookahead($self)', arg)
+
+rx.macro 'lookbehind($(arg :: rx_meta.Parsed))':
+  ~op_stx: self
+  unary('lookbehind($self)', arg)
+
+// the `!` operator supports only certain pattern forms
+rx.macro
+| '! $(self && bound_as rx_meta.space:'lookahead')($(arg :: rx_meta.Parsed))':
+    unary('not_lookahead($self)', arg)
+| '! $(self && bound_as rx_meta.space:'lookbehind')($(arg :: rx_meta.Parsed))':
+    unary('not_lookbehind($self)', arg)
+| '! unicode . $(cat :: Identifier)':
+    // make sure the identifier names a Unicode category,
+    // but the result is discarded:
+    let '$(ok :: rx_meta.Parsed)' = 'unicode . $cat'
+    rx_meta.pack('[not_unicode($cat), []]')
+
+rx.macro '#%literal $(s :: Term)':
+  ~weaker_than: * + ? #%comp
+  unless s.unwrap() is_a (String || Bytes)
+  | syntax_meta.error("literal pattern must be a string or byte string",
+                      s)
+  rx_meta.pack('[literal($s), []]')
+
+meta:
+  fun unary(op, arg):
+    let '[$arg, $arg_vars]' = rx_meta.unpack(arg)
+    rx_meta.pack('[$op($arg), $arg_vars]')
+  fun binary(op, left, right):
+    let '[$left, [$left_var, ...]]' = rx_meta.unpack(left)
+    let '[$right, [$right_var, ...]]' = rx_meta.unpack(right    )
+    rx_meta.pack('[$op($left, $right), [$left_var, ..., $right_var, ...]]')
+
+rx.macro '$left #%juxtapose $right':
+  binary('sequence', left, right)
+
+rx.macro '$left ++ $right':
+  ~same_as: #%juxtapose
+  binary('sequence', left, right)
+
+rx.macro '$left #%call $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
+  ~same_as: #%juxtapose ++
+  values(binary('sequence', left, next),
+         '$next.tail ...')
+
+rx.macro 'case_sensitive: $(pat :: rx_meta.Parsed)':
+  unary('mode("-i")', pat)
+
+rx.macro 'case_insensitive: $(pat :: rx_meta.Parsed)':
+  unary('mode("i")', pat)
+
+// unnamed capture group
+rx.macro '~~ $right':
+  ~same_as: #%parens
+  ~stronger_than: #%juxtapose #%call ++ #%comp
+  let '[$p, [$p_var, ...]]' = rx_meta.do_unpack(right)
+  rx_meta.pack('[capture($p), [#false, $p_var, ...]]')
+
+rx.macro ||:
+  ~weaker_than: ~other
+| '$left || $right':
+    binary('or', left, right)
+
+meta:
+  syntax_class Greed:
+    fields:
+      mode
+      [tail, ...]
+    kind: ~sequence
+  | '~greedy $tail ...':
+      field mode = '~greedy'
+  | '~nongreedy $tail ...':
+      field mode = '~nongreedy'
+  | '~possessive $tail ...':
+      field mode = '~possessive'
+  | '$(kw :: Keyword) $tail ...':
+      field mode = '~possessive'
+      syntax_meta.error("invalid mode for repetition", kw)
+  | '$tail ...':
+      field mode = '~greedy'
+
+rx.macro '$left * $(g :: Greed) $()':
+  ~stronger_than: #%juxtapose ++ #%call
+  ~same_as: + ?
+  ~op_stx: self
+  values(unary('repeat(0, #inf, $g.mode, $self)', left),
+         '$g.tail ...')
+
+rx.macro '$left + $(g :: Greed) $()':
+  ~stronger_than: #%juxtapose ++ #%call
+  ~same_as: * ... ?
+  ~op_stx: self
+  values(unary('repeat(1, #inf, $g.mode, $self)', left),
+         '$g.tail ...')
+
+rx.macro '$left ? $(g :: Greed) $()':
+  ~stronger_than: #%juxtapose ++ #%call
+  ~same_as: * ... +
+  ~op_stx: self
+  values(unary('repeat(0, 1, $g.mode, $self)', left),
+         '$g.tail ...')
+
+rx.macro '.* $(g :: Greed) $()':
+  values(rx_meta.pack('[repeat(0, #inf, $g.mode, #false)(any_except_newline), []]'),
+         '$g.tail ...')
+
+rx.macro '.? $(g :: Greed) $()':
+  values(rx_meta.pack('[repeat(0, 1, $g.mode, #false)(any_except_newline), []]'),
+         '$g.tail ...')
+
+rx.macro #%comp:
+  ~stronger_than: #%juxtapose ++ #%call
+  ~same_as: * + ?
+| '$left #%comp $(self && '{$(min :: Int) ..}') $(g :: Greed) $()':
+    values(unary('repeat($min, #inf, $g.mode, $self)', left),
+           '$g.tail ...')
+| '$left #%comp $(self && '{$(min :: Int) .. $(max :: Int)}') $(g :: Greed) $()':
+    values(unary('repeat($min, $max, $g.mode, $self)', left),
+           '$g.tail ...')
+| '$left #%comp $(self && '{$(count :: Int)}') $(g :: Greed) $()':
+    values(unary('repeat($count, $count, $g.mode, $self)', left),
+           '$g.tail ...')
+
+rx.macro '.':
+  ~same_as: $
+  rx_meta.pack('[any_except_newline, []]')
+
+rx.macro 'any':
+  ~same_as: $
+  rx_meta.pack('[any, []]')
+
+rx.macro 'char':
+  ~same_as: $
+  ~op_stx: self
+  rx_meta.pack('[string($self)(any), []]')
+
+rx.macro 'byte':
+  ~same_as: $
+  ~op_stx: self
+  rx_meta.pack('[bytes($self)(any), []]')
+
+rx.macro 'bytes: $(pat :: rx_meta.Parsed)':
+  ~op_stx: self
+  unary('bytes($self)', pat)
+
+rx.macro 'string: $(pat :: rx_meta.Parsed)':
+  ~op_stx: self
+  unary('string($self)', pat)
+
+rx.macro 'bol':
+    rx_meta.pack('[bol, []]')
+
+rx.macro 'eol':
+    rx_meta.pack('[eol, []]')
+
+rx.macro 'bof':
+    rx_meta.pack('[bof, []]')
+
+rx.macro 'eof':
+    rx_meta.pack('[eof, []]')
+
+rx.macro 'word_boundary':
+  rx_meta.pack('[word_boundary, []]')
+
+rx.macro 'word_continue':
+  ~stronger_than: #%juxtapose ++ #%call
+  rx_meta.pack('[word_continue, []]')
+
+rx.macro '$left cut':
+  unary('cut', left)
+
+defn.macro 'def_charset_alias:
+              $name
+              ...':
+  '«
+     rx.macro '$name':
+       let '$('$')(cs :: rx_charset_meta.Parsed)' = '$name'
+       rx_meta.pack('[charset($('$')cs), []]')
+     ...
+   »'
+
+def_charset_alias:
+  alpha
+  upper
+  lower
+  digit
+  xdigit
+  alnum
+  word
+  blank
+  newline
+  space
+  graph
+  print
+  cntrl
+  ascii
+  latin1
+
+// implement Unicode classes directly, instead of going through charsets,
+// since the underlying engine can support direct use more efficiently
+namespace unicode:
+  import "rx_charset.rhm".unicode open
+
+  decl.nestable_macro 'def_cats:
+                         $c
+                         ...':
+     '«
+        export: $c ...
+        rx.macro '$c':
+          rx_meta.pack('[unicode($c), []]')
+        ...
+      »'
+  def_cats:
+    Ll
+    Lu
+    Lt
+    Lm
+    Lx
+    Lo
+    L
+    Nd
+    Nl
+    No
+    N
+    Ps
+    Pe
+    Pi
+    Pf
+    Pc
+    Pd
+    Po
+    P
+    Mn
+    Mc
+    Me
+    M
+    Sc
+    Sk
+    Sm
+    So
+    S
+    Zl
+    Zp
+    Zs
+    Z
+    Cc
+    Cf
+    Cs
+    Cn
+    Co
+    C
+
+// ----------------------------------------
+// Bindings
+
+meta:
+  fun bind_macro(stx :: Syntax, pat, is_full):
+    match pat
+    | #false:
+        let rkt_rx = if is_full | #{#rx"^$"} | #{#rx""}
+        bind_meta.pack('(rx_infoer,
+                         [$rkt_rx,
+                          [],
+                          $("matching(" ++ stx.to_source_string() ++ ")")])')
+    | ~else:
+        let '[$ast, [$var, ...]]' = rx_meta.unpack(pat)
+        let (vars, num_captures): map_vars([var, ...])
+        let ast:
+          if is_full
+          | 'sequence(bof, $ast, eof)'
+          | ast
+        let rkt_rx = compile(ast, vars, num_captures, stx, #false)
+        let [[var, index], ...]:
+          for List (var: [var, ...],
+                    i: 0..):
+            keep_when var is_a Identifier
+            [var, i]
+        bind_meta.pack('(rx_infoer,
+                         [$rkt_rx,
+                          [[$var, $index], ...],
+                          $("matching(" ++ stx.to_source_string() ++ ")")])')
+
+
+bind.macro
+| '«rx ''»':
+    ~all_stx: stx
+    bind_macro(stx, #false, #true)
+| '«rx '$(pat :: rx_meta.Parsed)'»':
+    ~all_stx: stx
+    bind_macro(stx, pat, #true)
+
+bind.macro
+| '«rx_in ''»':
+    ~all_stx: stx
+    bind_macro(stx, #false, #false)
+| '«rx_in '$(pat :: rx_meta.Parsed)'»':
+    ~all_stx: stx
+    bind_macro(stx, pat, #false)
+
+bind.infoer 'rx_infoer($static_info, [$rkt_rx, [[$var, $index], ...], $src_str])':
+  def rx_matched = Syntax.make_temp_id("tmp")
+  '($src_str,
+    rx_match,
+    (),
+    (($var, [], ()), ...),
+    rx_matcher,
+    rx_committer,
+    rx_binder,
+    [$rkt_rx, $rx_matched, [[$var, $index], ...]])'
+
+bind.matcher 'rx_matcher($rhs, [$rkt_rx, $rx_matched, $_], $IF, $success, $failure)':
+  'def $rx_matched = base.#{regexp-match}($rkt_rx, $rhs)
+   $IF $rx_matched
+   | $success
+   | $failure'
+
+bind.binder 'rx_committer($arg, $info)':
+  ''
+
+bind.binder 'rx_binder($arg, [$_, $rx_matched, [[$var, $index], ...]])':
+  'def $var: freeze(PairList.get($rx_matched, $index+1))
+   ...'

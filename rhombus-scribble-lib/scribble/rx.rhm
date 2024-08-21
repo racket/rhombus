@@ -1,0 +1,6 @@
+#lang rhombus
+import:
+  rhombus/scribble/private/rx_doc
+
+export:
+  all_from(.rx_doc)

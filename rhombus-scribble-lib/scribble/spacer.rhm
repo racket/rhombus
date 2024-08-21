@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  lib("rhombus/scribble/spacer.rhm")
+
+export:
+  all_from(.spacer)

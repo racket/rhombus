@@ -21,10 +21,9 @@
 
 
 @doc(
+  ~meta
   def annot_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(annot, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -59,6 +58,7 @@
 
 
 @doc(
+  ~meta
   fun annot_meta.is_predicate(stx :: Syntax) :: Boolean
   fun annot_meta.pack_predicate(fun_stx :: Syntax,
                                 statinfo_stx :: Syntax = '()')
@@ -66,8 +66,6 @@
   fun annot_meta.unpack_predicate(stx :: Syntax)
     :: (Syntax, Syntax)
 ){
-
-@provided_meta()
 
  The @rhombus(annot_meta.is_predicate) function determines whether a
  syntax object represents a parsed @tech{predicate annotation}.  This
@@ -93,6 +91,7 @@
 }
 
 @doc(
+  ~meta
   fun annot_meta.is_converter(stx :: Syntax) :: Boolean
   fun annot_meta.pack_converter(bind_stx :: Syntax,
                                 body_stx :: Syntax,
@@ -101,8 +100,6 @@
   fun annot_meta.unpack_converter(stx :: Syntax)
     :: (Syntax, Syntax, Syntax)
 ){
-
-@provided_meta()
 
  The @rhombus(annot_meta.is_predicate) function determines whether a
  syntax object represents a parsed @tech{converter annotation}. This
@@ -132,11 +129,10 @@
 }
 
 @doc(
+  ~meta
   fun annot_meta.parse_to_packed_statinfo(stx :: Group)
     :: Syntax
 ){
-
-@provided_meta()
 
  A convenience function that parses @rhombus(stx) as an annotation and
  returns just its static-information component in packed form.
@@ -197,6 +193,7 @@
 
 
 @doc(
+  ~meta
   syntax_class annot_meta.Parsed:
     kind: ~group
     fields:
@@ -212,8 +209,6 @@
       group
       [tail, ...]
 ){
-
-@provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for annotations.
 

@@ -88,6 +88,7 @@
 
 
 @doc(
+  ~meta
   syntax_class expo_meta.Parsed:
     kind: ~group
     fields:
@@ -103,8 +104,6 @@
       group
       [tail, ...]
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass),
  @rhombus(expr_meta.AfterPrefixParsed, ~stxclass), , and

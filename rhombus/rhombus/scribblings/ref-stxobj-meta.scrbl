@@ -8,6 +8,7 @@
 
 
 @doc(
+  ~meta
   fun syntax_meta.error(in_stx :: Syntax)
     :: None
   fun syntax_meta.error(message :: ReadableString,
@@ -18,8 +19,6 @@
                         at_stx :: Syntax || List.of(Syntax))
     :: None
 ){
-
-@provided_meta()
 
  Throws a syntax-error message concerning @rhombus(in_stx). If
  @rhombus(message) is not provided, the message is @rhombus("bad syntax").
@@ -33,14 +32,13 @@
 
 
 @doc(
+  ~meta
   fun syntax_meta.value(name :: Name,
                         in_space :: SpaceMeta = expr_meta.space,
                         fail :: Any:
                           fun (): throw Exn.Fail.Contract(....))
     :: Any
 ){
-
-@provided_meta()
 
  Returns the compile-time value of @rhombus(name), if available, in the
  space specified by @rhombus(in_space). If no compile-time value is
@@ -53,6 +51,7 @@
 
 
 @doc(
+  ~meta
   fun syntax_meta.equal_binding(
     stx1 :: Name,
     stx2 :: Name,
@@ -62,8 +61,6 @@
   ) :: Boolean
 ){
 
-@provided_meta()
-
  Checks whether @rhombus(stx1) at phase @rhombus(phase1) refers to the
  same binding as @rhombus(stx2) at @rhombus(phase2) within the space
  reflected by @rhombus(in_space).
@@ -71,14 +68,13 @@
 }
 
 @doc(
+  ~meta
   fun syntax_meta.equal_name_and_scopes(
     stx1 :: Name,
     stx2 :: Name,
     phase :: SyntaxPhase = syntax_meta.expanding_phase()
   ) :: Boolean
 ){
-
-@provided_meta()
 
  Checks whether @rhombus(stx1) and @rhombus(stx2) have the same name (as
  returned by @rhombus(Syntax.unwrap) on an identifier, for example) and
@@ -92,10 +88,9 @@
 
 
 @doc(
+  ~meta
   fun syntax_meta.flip_introduce(stx :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  Returns a syntax object like @rhombus(stx), but where scopes indicating
  that the syntax object is macro-introduced are flipped. The result is
@@ -118,11 +113,10 @@
 }
 
 @doc(
+  ~meta
   fun syntax_meta.is_static(stx :: Operator || Identifier)
     :: Boolean
 ){
-
-@provided_meta()
 
  Check whether the identifier @rhombus(#%dynamism) using the scopes of
  @rhombus(stx) is bound to indicate static mode. See @rhombus(use_static)
@@ -132,10 +126,9 @@
 
 
 @doc(
+  ~meta
   annot.macro 'SyntaxPhase'
 ){
-
-@provided_meta()
 
  Matches an integer or @rhombus(#false).
 
@@ -149,10 +142,9 @@
 
 
 @doc(
+  ~meta
   fun syntax_meta.expanding_phase() :: SyntaxPhase
 ){
-
-@provided_meta()
 
  Returns the phase of expression forms currently being expanded, or
  @rhombus(0) if no expansion is in progress.
@@ -160,12 +152,11 @@
 }
 
 @doc(
+  ~meta
   ~nonterminal:
     space_expr: block expr
   unquote_bind.macro '«bound_as $space_expr: '$op_or_id_name'»'
 ){
-
-@provided_meta()
 
  Unquote binding operator for use with @rhombus($, ~bind). It matches a
  syntax object for an identifier or operator, where the identifier or

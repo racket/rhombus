@@ -18,10 +18,9 @@
 
 
 @doc(
+  ~meta
   def repet_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(repet, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -55,10 +54,9 @@
 
 
 @doc(
+  ~meta
   fun repet_meta.pack_list(stx :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  Packs the implementation of a repetition form to serve as the result of
  expanding a repetition macro, where elements of the repetition are
@@ -102,10 +100,9 @@
 }
 
 @doc(
+  ~meta
   fun repet_meta.unpack_list(stx :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  The inverse of @rhombus(repet_meta.pack_list), which is useful for unpacking
  information about the expansion of nested repetation forms.

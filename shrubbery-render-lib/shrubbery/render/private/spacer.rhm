@@ -4,6 +4,8 @@ import:
   "escape.rhm".Escape
   meta:
     "add-space.rkt".#{full-space-names}
+    rhombus/meta open
+    "space_name.rhm" open
 
 export:
   meta:
@@ -11,13 +13,18 @@ export:
     adjust_term
     adjust_sequence
     adjust_multi
+    adjust_block
     rename:
       set_space as set
       set_group_space as set_group
+    SpaceName
+    Context
   bridge
   typeset_meta.typeset
-    
+
 meta:
+  annot.macro 'Context': 'SpaceName || List.of(SpaceName) || PairList.of(SpaceName)'
+
   fun set_space(stx, context) :~ Syntax:
     let context:
       match context
@@ -52,16 +59,28 @@ meta:
       final_when #true
       values(#true, now)
 
-  fun adjust_term(t :: Term, context, esc) :~ Syntax:
+  fun adjust_term(t :: Term, context :: Context, esc :: Name) :~ Syntax:
     match t
     | '($(g :: Group), ...)':
-        '($(adjust_group(g, context, esc)), ...)'.relocate(t)
+        try_spacer(implicit(#'#%parens, t), t, context, esc,
+                   ~implicit: #true,
+                   fun ():
+                     '($(adjust_group(g, context, esc)), ...)'.relocate(t))
     | '[$(g :: Group), ...]':
-        '[$(adjust_group(g, context, esc)), ...]'.relocate(t)
+        try_spacer(implicit(#'#%brackets, t), t, context, esc,
+                   ~implicit: #true,
+                   fun ():
+                     '[$(adjust_group(g, context, esc)), ...]'.relocate(t))
     | '{$(g :: Group), ...}':
-        '{$(adjust_group(g, context, esc)), ...}'.relocate(t)
+        try_spacer(implicit(#'#%braces, t), t, context, esc,
+                   ~implicit: #true,
+                   fun ():
+                     '{$(adjust_group(g, context, esc)), ...}'.relocate(t))
     | '«'$(g:: Group); ...'»':
-        '«'$(adjust_group(g, context, esc)); ...'»'.relocate(t)
+        try_spacer(implicit(#'#%quotes, t), t, context, esc,
+                   ~implicit: #true,
+                   fun ():
+                     '«'$(adjust_group(g, context, esc)); ...'»'.relocate(t))
     | ': $_':
         adjust_block(t, context, esc)
     | '| $(b :: Block) | ...':
@@ -71,41 +90,24 @@ meta:
     | ~else:
         t
 
-  fun adjust_block(b :: Block, context, esc) :~ Syntax:
+  fun adjust_block(b :: Block, context :: Context, esc :: Name) :~ Syntax:
     match b
     | ': $g; ...':
         ': $(adjust_group(g, context, esc)); ...'.relocate(b)
 
-  fun adjust_group(g :: Group, context, esc) :~ Syntax:
+  fun adjust_group(g :: Group, context, esc :: Name) :~ Syntax:
      match adjust_sequence(g, context, esc)
      | '$(new_g :: Group)': new_g.relocate(g)
      | '': error("group turned into empty sequence: " +& to_string(g, ~mode: #'expr))
 
-  fun adjust_sequence(seq :: TermSequence, context, esc) :~ Syntax:
+  fun adjust_sequence(seq :: TermSequence, context :: Context, esc :: Name) :~ Syntax:
     fun loop(head, tail):
       '$head $(adjust_sequence(tail, context, esc))'
     match seq
     | '$(id :: Name) $tail ...':
-        fun fail():
-          loop(set_space(id, context), '$tail ...')
-        let mv = syntax_meta.value(id, typeset_meta.space, #false)
-        match mv
-        | typeset_meta.Spacer(in_contexts, proc):
-            let (found, relevant_context) = find_relevant_context(context, in_contexts)
-            if found
-            | let res:
-                try:
-                  proc(set_space(id, relevant_context), '$tail ...', context, esc)
-                  ~catch x :: Exn.Fail:
-                    error("error from " +& to_string(id, ~mode: #'expr) +& " spacer\n"
-                            +& "  message: " +& Exn.message(x))
-              match res
-              | '$_ ...': res
-              | ~else:
-                  error(#false, "spacer " +& proc +& " returned wrong value " +& to_string(res, ~mode: #'expr))
-            | fail()
-        | ~else:
-            fail()
+        try_spacer(id, '$tail ...', context, esc,
+                   fun ():
+                     loop(set_space(id, context), '$tail ...'))
     | '$(escape :: Escape(esc)) $tail ...':
         loop(escape, '$tail ...')
     | '$head $tail ...':
@@ -113,10 +115,35 @@ meta:
     | ~else:
         seq
 
-  fun adjust_multi(m, context, esc) :~ Syntax:
+  fun adjust_multi(m, context :: Context, esc :: Name) :~ Syntax:
     match m
     | '$g; ...':
         '$(adjust_group(g, context, esc)); ...'
+
+  fun try_spacer(id, tail, context, esc,
+                 ~implicit = #false,
+                 fail):
+    let mv = syntax_meta.value(id, typeset_meta.space, #false)
+    match mv
+    | typeset_meta.Spacer(in_contexts, proc):
+        let (found, relevant_context) = find_relevant_context(context, in_contexts)
+        if found
+        | let res:
+            try:
+              proc(!implicit && set_space(id, relevant_context), tail, context, esc)
+              ~catch x :: Exn.Fail:
+                error("error from " +& to_string(id, ~mode: #'expr) +& " spacer\n"
+                        +& "  message: " +& Exn.message(x))
+          match res
+          | '$_ ...': res
+          | ~else:
+              error(#false, "spacer " +& proc +& " returned wrong value " +& to_string(res, ~mode: #'expr))
+        | fail()
+    | ~else:
+        fail()
+
+  fun implicit(symbol, stx):
+    Syntax.make(symbol, stx)
 
 defn.macro 'bridge $(name :: Name)($(self :: Identifier),
                                    $(tail :: Identifier),
@@ -130,7 +157,7 @@ defn.macro 'bridge $(name :: Name)($(self :: Identifier),
   'meta.bridge $(typeset_meta.in_space(name)):
      typeset_meta.Spacer(
        [$(quote(space_name)), ...],
-       fun ($self :: Syntax, $tail :: Syntax, $mode, $esc :: Syntax):
+       fun ($self :: maybe(Syntax), $tail :: Syntax, $mode, $esc :: Syntax):
          $body
          ...
      )'

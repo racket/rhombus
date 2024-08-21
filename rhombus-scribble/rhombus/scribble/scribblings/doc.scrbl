@@ -1,6 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      scribble/doc_meta open)
 
 @title(~tag: "doc"){Documenting Bindings}
 
@@ -82,18 +84,23 @@
     ~literal:
       id ...
       ...
+    ~meta
+    ~also_meta
   grammar nt_key_ref:
     $op_or_id_name
     $op_or_id_name $nonterm_op_or_id_name
-    $op_or_id_name $builtin_space
-    $op_or_id_name $nonterm_op_or_id_name $builtin_space
+    $op_or_id_name $space
+    $op_or_id_name $nonterm_op_or_id_name $space
   grammar nt_key:
     $op_or_id_name
-    $op_or_id_name $builtin_space
+    $op_or_id_name $space
+  grammar space:
+    $builtin_space
+    ~at $space_name
 ){
 
  Documents a set of bindings. A documented binding needs to be imported
- into the document's implementation using @rhombus(meta_label).
+ into the document's implementation using @rhombus(meta_label, ~impo).
  meanwhile, an enclosing section needs to include a @rhombus(docmodule)
  to select the module that is documented to export the
  binding---typically a module that reexports from the original
@@ -106,7 +113,8 @@
  function. An @rhombus(entry) can also be @rhombus(~include) to extract
  documentation attached to a definition (e.g., extracted from a
  @rhombus(fun) or @rhombus(enum) definition that includes
- @rhombus(~doc)). All of the documented forms are shown together as one
+ @rhombus(~doc)). New doc entry forms can be defined with
+ @rhombus(doc.bridge, ~defn). All of the documented forms are shown together as one
  documentation box in the rendered document.
 
  Each pre-defined doc entry form has the same name and basic shape as a
@@ -180,6 +188,12 @@
   terated as literals (no metavariables) in @rhombus(entry)s. This form is
   normally not needed, since identifiers used without a @rhombus($, ~bind)
   in @rhombus(entry)s are generally treated as literal.}
+
+ @item{A @rhombus(~meta) form indicates that the documented bindings are
+  provided @rhombus(meta, ~expo), while @rhombus(~also_meta) indicates
+  that the documented bindings are provided both normally and
+  @rhombus(meta, ~expo). At most one of @rhombus(~meta) and
+  @rhombus(~also_meta) can be used. }
 
 )
 

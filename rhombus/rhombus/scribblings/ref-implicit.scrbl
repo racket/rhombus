@@ -88,6 +88,7 @@ Here are all of the implicit forms:
 }
 
 @doc(
+  ~also_meta
   expr.macro '#%parens ($expr)'
   bind.macro '#%parens ($bind)'
   annot.macro '#%parens ($annot)'
@@ -97,8 +98,6 @@ Here are all of the implicit forms:
   entry_point.macro '#%parens ($term ... _ $term ...)'
   immediate_callee.macro '#%parens ($term ... _ $term ...)'
 ){
-
-@provided_also_meta()
 
  Produces the same value as @rhombus(expr), same binding as
  @rhombus(bind), and so on. Multiple expression, bindings, etc.,

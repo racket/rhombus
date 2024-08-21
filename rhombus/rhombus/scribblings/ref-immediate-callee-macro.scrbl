@@ -108,13 +108,12 @@ propagation than would normally take place at a function call.
 
 
 @doc(
+  ~meta
   syntax_class immediate_callee_meta.Parsed(static_infoss, op_mode, op_stx):
     kind: ~group
     fields:
       group
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but for parsing
  immediate callees. The @rhombus(static_infoss) argument should be a list

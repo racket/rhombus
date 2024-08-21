@@ -1,0 +1,25 @@
+#lang rhombus/private/amalgam/core
+import:
+  "when_unless.rhm" open
+
+export:
+  RXMatch
+
+class RXMatch(whole, captures :: List, capture_names :: Map):
+  implements Listable
+  private implements Indexable
+
+  override method to_list():
+    [whole] ++ captures
+  private override method get(index):
+    match index
+    | 0: whole
+    | (index :: PosInt) when index <= captures.length():
+        captures[index - 1]
+    | sym :: Symbol:
+        let index = Map.get(capture_names, sym, #false)
+        if index
+        | captures[index - 1]
+        | error(#'#{RX.get}, "no capture group by that name")
+    | ~else:
+        error(#'#{RX.get}, "invalid match index")

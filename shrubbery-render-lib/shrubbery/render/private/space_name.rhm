@@ -1,0 +1,51 @@
+#lang rhombus/and_meta
+
+export:
+  SpaceName
+  is_builtin_space_keyword
+  normalize_space_name
+
+annot.macro 'SpaceName':
+  'Symbol || False || satisfying(is_builtin_space_keyword)'
+
+namespace SpaceName:
+  export normalized
+  annot.macro 'normalized':
+    'converting(fun (n :: SpaceName):
+                  normalize_space_name(n))'
+
+def space_names:
+  { #'~expr,
+    #'~defn,
+    #'~decl,
+    #'~bind,
+    #'~impo,
+    #'~expo,
+    #'~modpath,
+    #'~annot,
+    #'~repet,
+    #'~stxclass,
+    #'~reducer,
+    #'~class,
+    #'~space,
+    #'~for_clause,
+    #'~class_clause,
+    #'~interface_clause,
+    #'~veneer_clause,
+    #'~entry_point,
+    #'~unquote_bind,
+    #'~syntax_class_clause,
+    #'~pattern_clause,
+    #'~space_clause,
+    #'~space_meta_clause,
+    #'~key_comp,
+    #'~immediate_callee,
+    #'~doc }
+
+fun is_builtin_space_keyword(v):
+  space_names[v]
+
+fun normalize_space_name(v):
+  if space_names[v]
+  | Symbol.from_string("rhombus/" ++ to_string(v))
+  | v

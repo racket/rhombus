@@ -18,10 +18,9 @@
 }
 
 @doc(
+  ~meta
   def decl_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(decl, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -54,13 +53,12 @@
 }
 
 @doc(
+  ~meta
   syntax_class decl_meta.Group:
     kind: ~group
   syntax_class decl_meta.NestableGroup:
     kind: ~group
 ){
-
- @provided_meta()
 
  Like @rhombus(defn_meta.Group, ~stxclass), but for declarations and
  nestable declarations. The @rhombus(decl_meta.Group, ~stxclass) syntax
@@ -72,10 +70,9 @@
 
 
 @doc(
+  ~meta
   fun decl_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
-
-@provided_meta()
 
  Similar to @rhombus(expr_meta.pack_s_exp), but for declarations.
 

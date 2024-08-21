@@ -66,11 +66,10 @@ Metadata for a syntax object can include a source location and the raw
 )
 
 @doc(
+  ~also_meta
   expr.macro '«#%quotes '$term ...; ...'»'
   repet.macro '«#%quotes '$term ...; ...'»'
 ){
-
-@provided_also_meta()
 
  Constructs a syntax object. When a single @rhombus(term) is present,
  the result is a single-term syntax object. When a single
@@ -153,10 +152,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~also_meta
   bind.macro '«#%quotes '$term ...; ...'»'
 ){
-
-@provided_also_meta()
 
  Matches a syntax object consistent with @rhombus(term, ~var)s.
  Identifiers and operators are matched symbolically (unrelatd to
@@ -246,10 +244,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~also_meta
   expr.macro '$ $expr'
 ){
-
-@provided_also_meta()
 
  Only allowed within a @quotes expression form, escapes so that the value of
  @rhombus(expr) is used in place of the @rhombus($) form.
@@ -263,6 +260,8 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
+  ~also_meta
+
   bind.macro '$ $stx_pat_bind_term'
 
   grammar stx_pat_bind_term:
@@ -281,8 +280,6 @@ Metadata for a syntax object can include a source location and the raw
     #,(@rhombus(pattern, ~unquote_bind)) $pattern_spec
     $other_stx_bind
 ){
-
-@provided_also_meta()
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
  unquoted binding pattern. Typically, the unquoted pattern has an
@@ -361,13 +358,12 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~also_meta
   ~nonterminal:
     stx_bind: $ ~bind
   unquote_bind.macro '_'
   unquote_bind.macro '#%parens ($stx_bind)'
 ){
-
-@provided_also_meta()
 
  For use within a @rhombus($, ~bind) escape within a syntax pattern. See
  @rhombus($, ~bind).
@@ -375,10 +371,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~also_meta
   unquote_bind.macro '«#%quotes '$term ...; ...'»'
 ){
-
-@provided_also_meta()
 
  For use within a @rhombus($, ~bind) escape for a nested binding
  pattern. See @rhombus($, ~bind).
@@ -427,6 +422,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
+  ~also_meta
   ~nonterminal:
     arg_expr: block expr
     field_id: block id
@@ -460,8 +456,6 @@ Metadata for a syntax object can include a source location and the raw
     $field_id #,(@rhombus(as, ~impo)) $pattern_id; ...
     $field_id ....
 ){
-
-@provided_also_meta()
 
  Unquote binding operator for use with @rhombus($, ~bind) that binds
  @rhombus(id) for a match to @rhombus(syntax_class).
