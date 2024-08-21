@@ -161,6 +161,7 @@
 }
 
 @doc(
+  ~meta
   fun class_meta.describe(name :: Identifier)
     :: class_meta.Info
   fun interface_meta.describe(name :: Identifier)
@@ -168,8 +169,6 @@
   fun veneer_meta.describe(name :: Identifier)
     :: veneer_meta.Info
 ){
-
-@provided_meta()
 
  Returns an object containing information about @rhombus(name), which
  must be bound as a class name or internal class name for
@@ -184,6 +183,7 @@
 }
 
 @doc(
+  ~meta
   annot.macro 'class_meta.Info'
   fun class_meta.Info.lookup(
     info :: class_meta.Info,
@@ -202,8 +202,6 @@
     key :: Symbol
   ) :: Any
 ){
-
- @provided_meta()
 
  A value satisfying @rhombus(class_meta.Info, ~annot) can be obtained
  from @rhombus(class_meta.describe) or recieved by a class-clause macro

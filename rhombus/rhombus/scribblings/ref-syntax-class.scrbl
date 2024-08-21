@@ -292,6 +292,7 @@
 
 
 @doc(
+  ~also_meta
   syntax_class_clause.macro 'kind: $kind_keyword'
   syntax_class_clause.macro 'kind $kind_keyword'
 
@@ -302,8 +303,6 @@
     ~multi
     ~block
 ){
-
-@provided_also_meta()
 
  Determines the contexts where a syntax class can be used and the kinds
  of matches that it produces:
@@ -406,6 +405,7 @@
 }
 
 @doc(
+  ~also_meta
   ~nonterminal:
     op_or_id_name: namespace ~defn
     id_name: namespace ~defn
@@ -421,8 +421,6 @@
   syntax_class Multi: kind: ~multi
   syntax_class Block: kind: ~block
 ){
-
-@provided_also_meta()
 
  Syntax classes, all of which imply a single-term match except for
  @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass), and

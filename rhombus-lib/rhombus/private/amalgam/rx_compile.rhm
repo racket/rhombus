@@ -1,0 +1,453 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open:
+    except:
+      #%dynamism
+  meta:
+    "charset.rhm".Charset
+    lib("racket/base.rkt") as meta_base
+    "when_unless.rhm" open
+    "recur.rhm" open
+  "rx_charset.rhm".rx_charset_meta
+
+export:
+  meta:
+    map_vars
+    describe_splice_vars
+    compile
+    has_backreference
+
+meta:
+  use_static
+
+  // create a map from symbols to indices
+  fun map_vars(var_seq :~ List):
+    for values(vars :~ Map: {}, di = 0) (var: var_seq):
+      match var
+      | var :: Identifier:
+          values(vars ++ { var.unwrap(): di+1 }, di+1)
+      | '[~maybe_splice, $id]':
+          values(vars, di)
+      | ~else:
+          values(vars, di+1)
+
+  // create a list expression that records names and where splices happen
+  fun describe_splice_vars(var_seq :~ List, vars :~ Map):
+    for List (var: var_seq):
+      skip_when:
+        match var
+        | '[~maybe_splice, $id]': vars.has_key(id.unwrap())
+        | ~else: #false
+      match var
+      | var :: Identifier:
+          '#' $var'
+      | '[~maybe_splice, $id]':
+          '#'~splice'
+      | ~else:
+          '#false'
+
+  // returns a Racket regexp or a syntax list of [byte] strings and identifiers
+  fun compile(ast, vars :~ Map, num_captures, stx, can_splice = #true):
+    // perform a basic match-count check so we can provide
+    // good error messages; but give up on complicated cases,
+    // at least for now, and rely on the Racket engine's checks;
+    // use `#false` for `captures` to indicate giving up
+    fun check_count(ast, captures):
+      match ast
+      | 'any': values(1, 1, captures)
+      | 'any_except_newline': values(1, 1, captures)
+      | 'bol': values(0, 0, captures)
+      | 'eol': values(0, 0, captures)
+      | 'bof': values(0, 0, captures)
+      | 'eof': values(0, 0, captures)
+      | 'cut($ast)': check_count(ast, captures)
+      | 'backref($index)':
+          let name = index.unwrap()
+          let index:
+            if name is_a Int
+            | index
+            | vars.get(name, #false)
+          match captures && Map.get(captures, index, #false)
+          | [min, max]: values(min, max, captures)
+          | ~else: values(0, 0, #false)
+      | 'backref_or_splice($index)':
+          if !can_splice || vars.get(index.unwrap(), #false)
+          | check_count('backref($index)', captures)
+          | values(0, 0, #false)
+      | 'splice($expr)':
+          values(0, 0, #false)
+      | 'mode($mode)($ast)': check_count(ast, captures)
+      | 'literal($str)':
+          let len:
+            match str.unwrap()
+            | str :: String: str.length()
+            | bstr :: Bytes: bstr.length()
+          values(len, len, captures)
+      | '$('unicode' || 'not_unicode')($cat)': values(1, 1, captures)
+      | 'charset($cs)': values(1, 1, captures)
+      | 'sequence($ast, ...)':
+          for values(min = 0, max = 0, captures = captures) (ast: [ast, ...]):
+            let (amin, amax, captures) = check_count(ast, captures)
+            values(min + amin, max + amax, captures)
+      | 'repeat($min, $max, $mode, $op)($ast)':
+          let (amin, amax, captures) = check_count(ast, captures)
+          when captures && amin == 0 && (min.unwrap() != 0 || max.unwrap() != 1)
+          | syntax_meta.error("repetition operand could match an empty string", stx, op)
+          values(amin * min.unwrap(), amax * max.unwrap(), captures)
+      | 'capture($ast)':
+          match captures
+          | captures :: Map:
+              let index = captures.length()
+              let (min, max, captures) = check_count(ast, captures ++ { index: #'unknown })
+              values(min, max, captures && ((captures :~ Map) ++ { index: [min, max] }))
+          | ~else:
+              values(0, 0, #false)
+      | 'or($left, $right)':
+          let (lmin, lmax, captures) = check_count(left, captures)
+          let (rmin, rmax, captures) = check_count(left, captures)
+          values(math.min(lmin, rmin),
+                 math.max(lmax, rmax),
+                 captures)
+      | 'if($tst)($thn, $els)':
+          let (tstmin, tstmax, captures) = check_count(tst, captures)
+          let (thnmin, thnmax, captures) = check_count(thn, captures)
+          let (elsmin, elsmax, captures) = check_count(els, captures)
+          values(math.min(tstmin, thnmin, elsmin),
+                 math.max(tstmax, thnmax, elsmax),
+                 captures)
+      | '$('lookahead' || 'not_lookahead')($_)($ast)':
+          let (_, _, captures) = check_count(ast, captures)
+          values(0, 0, captures)
+      | '$('lookbehind' || 'not_lookbehind')($op)($ast)':
+          let (min, max, captures) = check_count(ast, captures)
+          when captures && max == #inf
+          | syntax_meta.error("lookbehind pattern must match a bounded sequence", stx, op)
+          values(0, 0, captures)
+      | 'bytes($_)($ast)': check_count(ast, captures)
+      | 'string($_)($ast)': check_count(ast, captures)
+      | 'word_boundary': values(0, 0, captures)
+      | 'word_continue': values(0, 0, captures)
+
+    // determine #'byte or #'char mode where
+    // #'any defaults to #'byte, and #'mix means an error
+    fun infer_element(ast, imposed):
+      match ast
+      | 'any': #'any
+      | 'any_except_newline': #'any
+      | 'bol': #'any
+      | 'eol': #'any
+      | 'bof': #'any
+      | 'eof': #'any
+      | 'cut($ast)': infer_element(ast, imposed)
+      | 'backref($index)': #'any
+      | 'backref_or_splice($index)': #'any
+      | 'splice($index)': #'any
+      | 'mode($mode)($ast)': infer_element(ast, imposed)
+      | 'literal($str)':
+          let elem:
+            match str.unwrap()
+            | str :: String:
+                if (for all (c: str):
+                      c.to_int() < 256)
+                | #'any
+                | #'char
+            | ~else:
+                #'byte
+          when (imposed != #'any) && (elem != #'any) && (imposed != elem)
+          | syntax_meta.error((if elem == #'byte | "byte " | "non-Latin-1 ")
+                                ++ "string in a context that requires a "
+                                ++ (if elem == #'byte | "" | "byte ")
+                                ++ "string",
+                              stx,
+                              str)
+          elem
+      | '$('unicode' || 'not_unicode')($cat)':
+          when imposed == #'byte
+          | syntax_meta.error("character class used in a context that requires a byte pattern", stx, cat)
+          #'char
+      | 'charset($cs)':
+          let cs = rx_charset_meta.unpack(cs)
+          let elem:
+            if cs.subtract(Charset(Char.from_int(0), Char.from_int(255))).length() == 0
+            | #'any
+            | #'char
+          when (imposed != #'any) && (elem != #'any) && (imposed != elem)
+          | syntax_meta.error("character range in a context that requires a byte range",
+                              stx,
+                              cs)
+          elem
+      | 'sequence($ast, ...)':
+          for values(elem = #'any) (ast: [ast, ...]):
+            let new_elem = infer_element(ast, imposed)
+            cond
+            | elem == #'any:
+                new_elem
+            | new_elem == #'any:
+                elem
+            | new_elem == elem:
+                elem
+            | ~else:
+                #'mix
+      | 'repeat($min, $max, $mode, $op)($ast)': infer_element(ast, imposed)
+      | 'capture($ast)': infer_element(ast, imposed)
+      | 'or($left, $right)':
+          infer_element('sequence($left, $right)', imposed)
+      | 'if($tst)($thn, $els)':
+          infer_element('sequence($tst, $thn, $els)', imposed)
+      | 'lookahead($_)($ast)':
+          infer_element(ast, imposed)
+      | 'not_lookahead($_)($ast)':
+          infer_element(ast, imposed)
+      | 'lookbehind($_)($ast)':
+          infer_element(ast, imposed)
+      | 'not_lookbehind($_)($ast)':
+          infer_element(ast, imposed)
+      | 'bytes($op)($ast)':
+          when imposed == #'char
+          | syntax_meta.error("byte string mode used in a context that requires a string pattern", stx, op)
+          match infer_element(ast, #'byte)
+          | #'mix: #'mix
+          | ~else: #'byte
+      | 'string($op)($ast)':
+          when imposed == #'byte
+          | syntax_meta.error("string mode used in a context that requires a byte string pattern", stx, op)
+          match infer_element(ast, #'char)
+          | #'mix: #'mix
+          | ~else: #'char
+      | 'word_boundary': #'any
+      | 'word_continue': #'any
+
+    let elem = infer_element(ast, #'any)
+    when elem == #'mix
+    | syntax_meta.error("pattern constaints an inconsistent mixture of character and byte elements",
+                        stx)
+
+    check_count(ast, { 0: #false })
+
+    // when creating a static regexp, the result is a string
+    // (that is converted to a byte string in #'byte mode);
+    // for a slice, we produce instead a list that interleaves
+    // string literals and variable references
+    operator +!:
+      ~weaker_than: ++ +&
+    | ((a :: String) +! (b :: String)): a ++ b
+    | ([s, ..., (a :: String)] +! [(b :: String), e, ...]):
+        [s, ..., a ++ b, e, ...]
+    | ([s, ...] +! [e, ...]):
+        [s, ..., e, ...]
+    | (a +! [e, ...]):
+        [a] +! [e, ...]
+    | ([s, ...] +! b):
+        [s, ...] +! [b]
+
+    fun
+    | join([]): ""
+    | join([a]): a
+    | join([a, b]): a +! b
+    | join([a, b, ...]): a +! join([b, ...])
+
+    //  produces a string or list; see `+!` above
+    fun compile(ast, ~in_seq: in_seq = #false, ~group: group = in_seq):
+      fun return(s):
+        if group
+        | if s is_a String && String.length(s) < 2
+          | s
+          | "(?:" +! s +! ")"
+        | s
+      fun return_alts(s):
+        if in_seq
+        | "(?:" +! s +! ")"
+        | return(s)
+      match ast
+      | 'any':
+          "."
+      | 'any_except_newline':
+          "(?m:.)"
+      | 'bol':
+          "(?m:^)"
+      | 'eol':
+          "(?m:$)"
+      | 'bof':
+          "^"
+      | 'eof':
+          "$"
+      | 'cut($ast)':
+          "(?>" +! compile(ast) +! ")"
+      | 'backref_or_splice($index)':
+          if !can_splice || vars.get(index.unwrap(), #false)
+          | compile('backref($index)', ~in_seq: in_seq, ~group: group)
+          | [index]
+      | 'splice($expr)':
+          when !can_splice
+          | syntax_meta.error("pattern splicing not allowed for bindings", stx, expr)
+          [expr]
+      | 'backref($index)':
+          let idx:
+            match index.unwrap()
+            | name :: Symbol:
+                vars.get(name, #false)
+            | index :: Int:
+                if index > 0 && index <= num_captures
+                | index
+                | #false
+          if idx
+          | "\\" +& idx
+          | syntax_meta.error("invalid backreference index", stx, index)
+      | 'mode($mode_str)($ast)':
+          let mode_str = mode_str.unwrap()
+          "(?" ++ mode_str ++ ":" +! compile(ast) +! ")"
+      | 'literal($str)':
+          let pat = to_string(meta_base.#{regexp-quote}(str.unwrap()))
+          return(if pat is_a Bytes | Bytes.latin1_string(pat) | pat)
+      | 'unicode($cat)':
+          "\\p{" +& cat.unwrap() +& "}"
+      | 'not_unicode($cat)':
+          "\\P{" +& cat.unwrap() +& "}"
+      | 'sequence($(ast :: Group))':
+          compile(ast, ~in_seq: in_seq, ~group: group)
+      | 'sequence($ast, ...)':
+          return_alts(join([compile(ast, ~in_seq: #true), ...]))
+      | 'repeat($min, $max, $rmode, $op)($ast)':
+          let base = compile(ast, ~group: #true)
+          let min = min.unwrap()
+          let max = max.unwrap()
+          let (g_pre :~ String, g_post):
+            match rmode.unwrap()
+            | #'~greedy: values("", "")
+            | #'~nongreedy: values("", "?")
+            | #'~possessive: values("(?>", ")")
+          cond
+          | min == 0 && max == #inf: return(g_pre +! base +! "*" ++ g_post)
+          | min == 1 && max == #inf: return(g_pre +! base +! "+" ++ g_post)
+          | min == 0 && max == 1:
+              // base could be empty, since a 0-length match is allowed
+              let base: if base == "" | "(?:)" | base
+              return(g_pre +! base +! "?" ++ g_post)
+          | max == #inf: return(g_pre +! base +! "{" +& min +& ",}" ++ g_post)
+          | ~else: return(g_pre +! base +! "{" +& min +& "," +& max +& "}" ++ g_post)
+      | 'capture($ast)':
+          "(" +! compile(ast) +! ")"
+      | 'or($left, $right)':
+          return(compile(left, ~group: #true) +! "|" +! compile(right, ~group: #true))
+      | 'bytes($_)($ast)':
+          compile(ast, ~in_seq: in_seq, ~group: group)
+      | 'string($_)($ast)':
+          compile(ast, ~in_seq: in_seq, ~group: group)
+      | 'charset($cs)':
+          compile_range(cs, elem)
+      | 'if($tst)($thn, $els)':
+          "(?"
+            ++ (match tst
+                | 'backref $_':
+                    let s :~ String = compile(tst)
+                    "(" ++ s.substring(1, s.length()) ++ ")"
+                | ~else: compile(tst))
+            +! compile(thn, ~group: #true)
+            +! "|"
+            +! compile(els, ~group: #true)
+            +! ")"
+      | 'lookahead($_)($ast)':
+          "(?=" +! compile(ast) +! ")"
+      | 'not_lookahead($_)($ast)':
+          "(?!" +! compile(ast) +! ")"
+      | 'lookbehind($_)($ast)':
+          "(?<=" +! compile(ast) +! ")"
+      | 'not_lookbehind($_)($ast)':
+          "(?<!" +! compile(ast) +! ")"
+      | '$(str :: String)':
+          return(str.unwrap())
+      | 'word_boundary': "\\b"
+      | 'word_continue': "\\B"
+
+    let str_or_list = compile(ast)
+    match str_or_list
+    | str :: String:
+        // generate a Racket regexp
+        if elem == #'byte
+        | meta_base.#{byte-pregexp}(str.latin1_bytes())
+        | meta_base.#{pregexp}(str)
+    | [e, ...]:
+        // generate splice-construction description
+        fun convert(e):
+          match e
+          | str :: String:
+              if elem == #'byte
+              | str.latin1_bytes()
+              | str
+          | e :: Syntax:
+              let e_str = e.to_source_string()
+              'Pair($e_str, $e)'
+        'PairList($(convert(e)), ...)'
+
+  fun compile_range(cs :~ Syntax, elem):
+    let cs = rx_charset_meta.unpack(cs)
+    match cs.int_ranges()
+    | []:
+        // unmatchable
+        if elem == #'byte
+        | "[^\0-\uFF]"
+        | "[^\u0-\U10FFFF]"
+    | [[s, e]] when s == e:
+        // single character
+        cond
+        | s == "^"[0].to_int(): "\\^"
+        | s == "-"[0].to_int(): "\\-"
+        | s == "["[0].to_int(): "\\["
+        | s == "]"[0].to_int(): "\\]"
+        | s == "\\"[0].to_int(): "\\\\"
+        | ~else: "[" +& Char.from_int(s) +& "]"
+    | [[45, 45], [94, 94]]:
+        // avoid generating `[^-]`:
+        "[-^]"
+    | ~else:
+        let ranges:
+          recur loop(cs :: Charset = cs) :~ String:
+            fun without_one(ch :~ Char) :~ String:
+              let one = Charset(ch)
+              loop(cs.subtract(one))
+            cond
+            | cs.has_edge("-"[0]):
+                // put `-` farthest at end
+                without_one("-"[0]) ++ "-"
+            | cs.has_edge("^"[0]):
+                // put `^` farthest at end, except maybe before `-`;
+                // there must be other things to go before `^` if we
+                // arrived at this case
+                without_one("^"[0]) ++ "^"
+            | cs.has_edge("]"[0]):
+                // put `[` at beginning
+                "[" ++ without_one("]"[0])
+            | cs.has_edge("\\"[0]):
+                "\\\\" ++ without_one("\\"[0])
+            | ~else:
+                // Note: we won't create a `[:` combination, because `:`
+                // is earlier in ASCII than `[`
+                String.append(& for List ([s, e]: cs.int_ranges()):
+                                let s = Char.from_int(s)
+                                let e = Char.from_int(e)
+                                cond
+                                | s == e: "" +& s
+                                | ~else:
+                                    s +& "-" +& e)
+        "[" ++ ranges ++ "]"
+
+  fun has_backreference(ast, vars :~ Map):
+    recur loop(ast = ast):
+      match ast
+      | 'cut($ast)': loop(ast)
+      | 'backref($index)': #true
+      | 'backref_or_splice($index)': vars.has_key(index.unwrap())
+      | 'splice($index)': #false
+      | 'mode($mode)($ast)': loop(ast)
+      | 'sequence($ast, ...)': any(loop(ast), ...)
+      | 'repeat($min, $max, $mode, $op)($ast)': loop(ast)
+      | 'capture($ast)': loop(ast)
+      | 'or($left, $right)': loop(left) || loop(right)
+      | 'if($tst)($thn, $els)': loop(tst) || loop(thn) || loop(els)
+      | 'lookahead($_)($ast)': loop(ast)
+      | 'not_lookahead($_)($ast)': loop(ast)
+      | 'lookbehind($_)($ast)': loop(ast)
+      | 'not_lookbehind($_)($ast)': loop(ast)
+      | 'bytes($_)($ast)': loop(ast)
+      | 'string($_)($ast)': loop(ast)
+      | ~else: #false

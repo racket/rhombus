@@ -23,6 +23,23 @@
          (for-space rhombus/doc
                     grammar))
 
+(module+ for_doc_transformer
+  (provide
+   (for-syntax head-extract-name
+               parens-extract-name
+               identifier-macro-extract-name
+               operator-macro-extract-name
+
+               head-extract-metavariables
+               parens-extract-metavariables
+               identifier-macro-extract-metavariables
+               operator-macro-extract-metavariables
+
+               head-extract-typeset
+               parens-extract-typeset
+               identifier-macro-extract-typeset
+               operator-macro-extract-typeset)))
+
 (define-name-root space_meta_clause
   #:fields
   ())
@@ -194,6 +211,9 @@
     [(group tag (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]))
+
+(define-for-syntax (parens-extract-typeset stx space-name subst)
+  (head-extract-typeset stx space-name subst))
 
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
   (syntax-parse stx

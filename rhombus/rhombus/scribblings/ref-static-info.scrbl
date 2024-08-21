@@ -38,12 +38,11 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.wrap(expr_stx:: Syntax,
                          statinfo_stx :: Syntax)
     :: Syntax
 ){
-
- @provided_meta()
 
  Returns a syntax object for an expression equivalent to
  @rhombus(expr_stx), but with the static information
@@ -56,10 +55,9 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.pack(statinfo_stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  Converts static information described by @rhombus(statinfo_stx) into
  an opaque internal format. The given @rhombus(statinfo_stx) must
@@ -77,10 +75,9 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.unpack(statinfo_stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  The inverse of @rhombus(statinfo_meta.pack). This function is
  potentially useful to parse a result from
@@ -90,13 +87,12 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.pack_group(statinfo_stx :: Syntax)
     :: Syntax
   fun statinfo_meta.unpack_group(statinfo_stx :: Syntax)
     :: Syntax
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(statinfo_meta.pack) and
  @rhombus(statinfo_meta.unpack), but for a sequence of static information
@@ -110,6 +106,7 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.pack_call_result([[arity_mask :: Int,
                                        statinfo_stx :: Syntax],
                                       ...])
@@ -117,8 +114,6 @@
   fun statinfo_meta.unpack_call_result(statinfo_stx :: Syntax)
     :: matching([[_ :: Int, _ :: Syntax], ...])
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(statinfo_meta.pack) and
  @rhombus(statinfo_meta.unpack), but for information that represents
@@ -137,12 +132,11 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.lookup(expr_stx :: Syntax,
                            key :: Identifier)
     :: maybe(Syntax)
 ){
-
-@provided_meta()
 
  Finds static information for @rhombus(expr_stx), which might be a
  name with static information associated to its binding, or it might be an
@@ -226,6 +220,7 @@
 
 
 @doc(
+  ~meta
   def statinfo_meta.call_result_key :: Identifier
   def statinfo_meta.index_result_key :: Identifier
   def statinfo_meta.index_get_key :: Identifier
@@ -237,8 +232,6 @@
   def statinfo_meta.values_key :: Identifier
   def statinfo_meta.indirect_key :: Identifier
 ){
-
- @provided_meta()
 
  Values that can be used to associate static information with an
  expression:
@@ -321,6 +314,7 @@
 
 
 @doc(
+  ~meta
   def statinfo_meta.static_call_name :: Name
   def statinfo_meta.static_dot_name :: Name
   def statinfo_meta.static_index_name :: Name
@@ -328,8 +322,6 @@
   def statinfo_meta.dynamic_dot_name :: Name
   def statinfo_meta.dynamic_index_name :: Name
 ){
-
- @provided_meta()
 
  Names that are bound to @rhombus(#%call), @rhombus(.), and
  @rhombus(#%index) in static and dynamic modes, respectively. A macro

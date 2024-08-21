@@ -1,0 +1,532 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/rx open
+
+check:
+  rx'"x"' ~is_a RX
+  "x" is_a RX ~is #false
+
+fun tl(x): x && Listable.to_list(x)
+
+// match full input
+expr.macro '«M $(rx && ('rx' || 'rx_in'))'$pat ...' $(str :: String)»':
+  'tl($rx'$pat ...'.match($str))'
+
+// match partial input
+expr.macro '«P $(rx && ('rx' || 'rx_in'))'$pat ...' $(str :: String)»':
+  'tl($rx'$pat ...'.match_in($str))'
+
+check:
+  M rx'"x"' "x" ~is ["x"]
+  M rx'"x"' "y" ~is #false
+  M rx'"x"' "ax" ~is #false
+  M rx'"x"' "xz" ~is #false
+
+  M rx'' "" ~is [""]
+  M rx'()' "" ~is [""]
+
+  tl(rx'"x"'.match("ax", ~start: 1)) ~is ["x"]
+  tl(rx'"x"'.match("ax", ~start: 0)) ~is #false
+  tl(rx'"x"'.match("xz", ~end: 1)) ~is ["x"]
+  tl(rx'"x"'.match("xz", ~end: 2)) ~is #false
+
+  P rx'"x"' "ax" ~is ["x"]
+  P rx'"x"' "xb" ~is ["x"]
+
+  tl(rx'"x"'.match_in("xz", ~start: 1)) ~is #false
+  tl(rx'"x"'.match_in("ax", ~end: 1)) ~is #false
+
+  M rx_in'"x"' "ax" ~is ["x"]
+  M rx_in'"x"' "xb" ~is ["x"]
+  P rx_in'"x"' "ax" ~is ["x"]
+  P rx_in'"x"' "xb" ~is ["x"]
+
+block:
+  check:
+    def rx'"apple"' = "apple"
+    ~completes
+  check:
+    def rx'"ap" ($p: "p") "le"' = "apple"
+    p
+    ~is "p"
+  check:
+    match "apple"
+    | rx'.{5}': "yes"
+    ~is "yes"
+  check:
+    match "apple"
+    | rx'($c: .){5}': c
+    ~is "e"
+  check:
+    match "apple"
+    | rx'.{4}': #'yes
+    | ~else: #'no
+    ~is #'no
+  check:
+    match "apple"
+    | rx_in'$all: .{4}': all
+    | ~else: #'no
+    ~is "appl"
+  check:
+    match ""
+    | rx'': #'empty
+    ~is #'empty
+  check:
+    match "apple"
+    | rx'': #'empty
+    | ~else: #'nonempty
+    ~is #'nonempty
+  check:
+    match "more"
+    | rx_in'': #'empty
+    ~is #'empty
+
+check:
+  M rx'"xy"' "xy" ~is ["xy"]
+  M rx'"x" "y"' "xy" ~is ["xy"]
+  M rx'"x" ++ "y"' "xy" ~is ["xy"]
+  M rx'"x" ++ "y" "z" ++ "w"' "xyzw" ~is ["xyzw"]
+  M rx'"x"("y" "z") "w"' "xyzw" ~is ["xyzw"]
+
+block:
+  let m :: RXMatch = rx'"x" $end: "y"'.match("xy")
+  check tl(m) ~is ["xy", "y"]
+  check m[0] ~is "xy"
+  check m[#'end] ~is "y"
+  check m[1] ~is "y"
+
+check:
+  M rx'"x"*' "xy" ~is #false
+  P rx'"x"*' "xy" ~is ["x"]
+  P rx'"x"*' "ax" ~is [""]
+  M rx'"x"*' "" ~is [""]
+  M rx'"x"*' "xx" ~is ["xx"]
+  M rx'"x"*' "xxxxx" ~is ["xxxxx"]
+  M rx'"x"* "y"' "y" ~is ["y"]
+  M rx'"x"* "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"* "xy"' "xxxy" ~is ["xxxy"]
+  M rx'"x"* ~possessive "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"* ~possessive "xy"' "xxxy" ~is #false
+  M rx'"x"* ~greedy $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"* ~nongreedy $end: "x"*' "xxx" ~is ["xxx", "xxx"]
+  M rx'"x"* ~possessive $end: "x"*' "xxx" ~is ["xxx", ""]
+
+check:
+  M rx'"x"+' "xy" ~is #false
+  P rx'"x"+' "xy" ~is ["x"]
+  P rx'"x"+' "ax" ~is ["x"]
+  M rx'"x"+' "" ~is #false
+  M rx'"x"+' "xx" ~is ["xx"]
+  M rx'"x"+' "xxxxx" ~is ["xxxxx"]
+  M rx'"x"+ "y"' "y" ~is #false
+  M rx'"x"+ "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"+ "xy"' "xxxy" ~is ["xxxy"]
+  M rx'"x"+ ~possessive "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"+ ~possessive "xy"' "xxxy" ~is #false
+  M rx'"x"+ ~greedy $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"+ ~nongreedy $end: "x"*' "xxx" ~is ["xxx", "xx"]
+  M rx'"x"+ ~possessive $end: "x"*' "xxx" ~is ["xxx", ""]
+
+check:
+  M rx'"x"?' "xy" ~is #false
+  P rx'"x"?' "xy" ~is ["x"]
+  P rx'"x"?' "ax" ~is [""]
+  M rx'"x"?' "" ~is [""]
+  M rx'"x"?' "xx" ~is #false
+  M rx'"x"? "y"' "y" ~is ["y"]
+  M rx'"x"? "y"' "xy" ~is ["xy"]
+  M rx'"x"? "xy"' "xy" ~is ["xy"]
+  M rx'"x"? ~possessive "y"' "xy" ~is ["xy"]
+  M rx'"x"? ~possessive "xy"' "xy" ~is #false
+  M rx'"x"? ~greedy $end: "x"*' "x" ~is ["x", ""]
+  M rx'"x"? ~nongreedy $end: "x"*' "x" ~is ["x", "x"]
+  M rx'"x"? ~possessive $end: "x"*' "x" ~is ["x", ""]
+  M rx'()?' "" ~is [""]
+
+check:
+  M rx'"x"{1..3}' "xy" ~is #false
+  P rx'"x"{1..3}' "xy" ~is ["x"]
+  P rx'"x"{1..3}' "ax" ~is ["x"]
+  M rx'"x"{1..3}' "" ~is #false
+  M rx'"x"{1..3}' "xx" ~is ["xx"]
+  M rx'"x"{1..3}' "xxx" ~is ["xxx"]
+  M rx'"x"{1..3}' "xxxx" ~is #false
+  M rx'"x"{1..3} "y"' "y" ~is #false
+  M rx'"x"{1..3} "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..3} "xy"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..3} ~possessive "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..3} ~possessive "xy"' "xxxy" ~is #false
+  M rx'"x"{1..3} ~greedy $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"{1..3} ~nongreedy $end: "x"*' "xxx" ~is ["xxx", "xx"]
+  M rx'"x"{1..3} ~possessive $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"{0..3}' "" ~is [""]
+  M rx'"x"{2..}' "x" ~is #false
+  M rx'"x"{2..}' "xx" ~is ["xx"]
+  M rx'"x"{2..}' "xxxxx" ~is ["xxxxx"]
+
+check:
+  M rx'. *' "123" ~is ["123"]
+  M rx'. *' "12\n3" ~is #false
+  M rx'char*' "12\n3" ~is ["12\n3"]
+  M rx'.*' "12\n3" ~is #false
+  M rx'.+' "12\n3" ~is #false
+  M rx'(. || newline)*' "12\n3" ~is ["12\n3"]
+  M rx'any*' "12\n3" ~is ["12\n3"]
+  M rx'.*' "123" ~is ["123"]
+  M rx'.+' "123" ~is ["123"]
+  M rx'.?' "1" ~is ["1"]
+  M rx'.?' "" ~is [""]
+
+check:
+  M rx'"a" || "b"' "a" ~is ["a"]
+  M rx'"a" || "b"' "b" ~is ["b"]
+  M rx'"a" || "b" "c"' "bc" ~is ["bc"]
+  M rx'"a" || "b" "c"' "ac" ~is #false
+
+check:
+  M rx'bol "x" * eol' "xxx" ~is ["xxx"]
+  P rx'bol "x" * eol' "xxx" ~is ["xxx"]
+  M rx'bol "x" * eol' "\nxxx" ~is #false
+  P rx'bol "x" * eol' "\nxxx" ~is [""]
+  P rx'bol "x" * eol' "a\nxxx" ~is ["xxx"]
+  P rx'bof "x" * eof' "\nxxx" ~is #false
+  P rx'bof "x" * eof' "\nxxx" ~is #false
+  P rx'bof char * eof' "\nxxx" ~is ["\nxxx"]
+
+check:
+  M rx'lookahead("x") any any' "xy" ~is ["xy"]
+  M rx'lookahead("x") any any' "yy" ~is #false
+  M rx'any lookbehind("x") any' "xy" ~is ["xy"]
+  M rx'any lookbehind("x") any' "yy" ~is #false
+  M rx'!lookahead("x") any any' "xy" ~is #false
+  M rx'!lookahead("x") any any' "yy" ~is ["yy"]
+  M rx'any !lookbehind("x") any' "xy" ~is #false
+  M rx'any !lookbehind("x") any' "yy" ~is ["yy"]
+
+check:
+  M rx'"x" word_boundary any "y"' "x y" ~is ["x y"]
+  M rx'"x" word_boundary any "y"' "xzy" ~is #false
+  M rx'"x" word_continue any "y"' "x y" ~is #false
+  M rx'"x" word_continue any "y"' "xzy" ~is ["xzy"]
+
+check:
+  M rx'($x: any) $x' "yy" ~is ["yy", "y"]
+  M rx'($x: any) $1' "yy" ~is ["yy", "y"]
+  M rx'($x: any) $x' "xy" ~is #false
+  M rx'~~ any $1' "yy" ~is ["yy", "y"]
+  M rx'($x: any)* "AND" if $x | "yes" | "no"' "ANDno" ~is ["ANDno", #false]
+  M rx'($x: any)* "AND" if $x | "yes" | "no"' "ANDyes" ~is #false
+  M rx'($x: any)* "AND" if $x | "yes" | "no"' "aANDno" ~is #false
+  M rx'($x: any)* "AND" if $x | "yes" | "no"' "aANDyes" ~is ["aANDyes", "a"]
+  M rx'if lookahead("x") | "xx" | "yy"' "xx" ~is ["xx"]
+  M rx'if lookahead("x") | "xx" | "yy"' "yy" ~is ["yy"]
+  M rx'if lookahead("x") | "xx" | "yy"' "xy" ~is #false
+  M rx'if lookahead("x") | "xx" | "yy"' "yx" ~is #false
+  M rx'any if lookbehind("x") | "xx" | "yy"' "xxx" ~is ["xxx"]
+  M rx'any if lookbehind("x") | "xx" | "yy"' "zyy" ~is ["zyy"]
+  M rx'any if lookbehind("x") | "xx" | "yy"' "xxy" ~is #false
+  M rx'any if lookbehind("x") | "xx" | "yy"' "zyx" ~is #false
+  M rx'if !lookahead("y") | "xx" | "yy"' "xx" ~is ["xx"]
+  M rx'if !lookahead("y") | "xx" | "yy"' "yy" ~is ["yy"]
+  M rx'if !lookahead("y") | "xx" | "yy"' "xy" ~is #false
+  M rx'if !lookahead("y") | "xx" | "yy"' "yx" ~is #false
+  M rx'any if !lookbehind("z") | "xx" | "yy"' "xxx" ~is ["xxx"]
+  M rx'any if !lookbehind("z") | "xx" | "yy"' "zyy" ~is ["zyy"]
+  M rx'any if !lookbehind("z") | "xx" | "yy"' "xxy" ~is #false
+  M rx'any if !lookbehind("z") | "xx" | "yy"' "zyx" ~is #false
+
+block:
+  // check that `!` and `if` recognize by binding, not by symbolic name
+  import:
+    rhombus/rx.lookahead as ahead
+    rhombus/rx.lookbehind as back
+    rhombus/rx.(!) as not
+  check:
+    M rx'!ahead("x") any any' "yy" ~is ["yy"]
+    M rx'any !back("x") any' "yy" ~is ["yy"]
+    M rx'if ahead("x") | "xx" | "yy"' "xx" ~is ["xx"]
+    M rx'if not lookahead("y") | "xx" | "yy"' "xx" ~is ["xx"]
+    M rx'any if !back("z") | "xx" | "yy"' "xxx" ~is ["xxx"]
+
+check:
+  tl(rx'any'.match(#"y")) ~is_now [#"y"]
+  tl(rx'any'.match(#"\316\273")) ~is_now [#"\316\273"]
+  tl(rx'any'.match(#"\316")) ~is #false
+  tl(rx'byte'.match(#"\316")) ~is_now [#"\316"]
+  tl(rx'char'.match(#"\316")) ~is #false
+  tl(rx'bytes: any'.match(#"\316")) ~is_now [#"\316"]
+  tl(rx'"x" any'.match(#"x\316")) ~is #false
+  tl(rx'#"x" any'.match(#"x\316")) ~is_now [#"x\316"]
+
+check:
+  M rx'alpha' "a" ~is ["a"]
+  M rx'alpha' "0" ~is #false
+  M rx'alpha' "λ" ~is #false
+  M rx'upper' "A" ~is ["A"]
+  M rx'upper' "a" ~is #false
+  M rx'upper' "Λ" ~is #false
+  M rx'lower' "a" ~is ["a"]
+  M rx'lower' "A" ~is #false
+  M rx'lower' "λ" ~is #false
+  M rx'digit' "0" ~is ["0"]
+  M rx'digit' "9" ~is ["9"]
+  M rx'digit' "a" ~is #false
+  M rx'xdigit' "0" ~is ["0"]
+  M rx'xdigit' "9" ~is ["9"]
+  M rx'xdigit' "a" ~is ["a"]
+  M rx'xdigit' "A" ~is ["A"]
+  M rx'xdigit' "f" ~is ["f"]
+  M rx'xdigit' "F" ~is ["F"]
+  M rx'xdigit' "g" ~is #false
+  M rx'xdigit' "G" ~is #false
+  M rx'xdigit' "-" ~is #false
+  M rx'alnum' "0" ~is ["0"]
+  M rx'alnum' "9" ~is ["9"]
+  M rx'alnum' "a" ~is ["a"]
+  M rx'alnum' "A" ~is ["A"]
+  M rx'alnum' "z" ~is ["z"]
+  M rx'alnum' "Z" ~is ["Z"]
+  M rx'alnum' "_" ~is #false
+  M rx'word' "0" ~is ["0"]
+  M rx'word' "_" ~is ["_"]
+  M rx'word' "$" ~is #false
+  M rx'blank' " " ~is [" "]
+  M rx'blank' "\t" ~is ["\t"]
+  M rx'blank' "\n" ~is #false
+  M rx'space' " " ~is [" "]
+  M rx'space' "\t" ~is ["\t"]
+  M rx'space' "\n" ~is ["\n"]
+  M rx'space' "\r" ~is ["\r"]
+  M rx'space' "\f" ~is ["\f"]
+  M rx'space' "a" ~is #false
+  M rx'graph' "a" ~is ["a"]
+  M rx'graph' " " ~is #false
+  M rx'print' "a" ~is ["a"]
+  M rx'print' " " ~is [" "]
+  M rx'print' "\0" ~is #false
+  M rx'cntrl' "\0" ~is ["\0"]
+  M rx'cntrl' "\x1F" ~is ["\x1F"]
+  M rx'cntrl' "a" ~is #false
+  M rx'ascii' "\x1F" ~is ["\x1F"]
+  M rx'ascii' "\x80" ~is #false
+  M rx'latin1' "\x1F" ~is ["\x1F"]
+  M rx'latin1' "\x80" ~is ["\x80"]
+  M rx'latin1' "\u100" ~is #false
+  M rx'unicode.L' "a" ~is ["a"]
+  M rx'unicode.L' "A" ~is ["A"]
+  M rx'unicode.L' "λ" ~is ["λ"]
+  M rx'unicode.L' "0" ~is #false
+  M rx'unicode.Ll' "a" ~is ["a"]
+  M rx'unicode.Ll' "λ" ~is ["λ"]
+  M rx'unicode.Ll' "A" ~is #false
+  M rx'unicode.Lu' "A" ~is ["A"]
+  M rx'unicode.Lu' "Λ" ~is ["Λ"]
+  M rx'unicode.Lu' "a" ~is #false
+
+check:
+  M rx'[]' "a" ~is #false
+  M rx'["a"-"q"]' "a" ~is ["a"]
+  M rx'["a"-"q"]' "q" ~is ["q"]
+  M rx'["a"-"q"]' "r" ~is #false
+  M rx'["a"-"q" "t"]' "t" ~is ["t"]
+  M rx'["a"-"q" "t"]' "r" ~is #false
+  M rx'[alpha]' "a" ~is ["a"]
+  M rx'[alpha]' "0" ~is #false
+  M rx'[alpha "0"]' "0" ~is ["0"]
+  M rx'[alpha "0"]' "1" ~is #false
+
+  M rx'"a" ["b"]{3}' "abbb" ~is ["abbb"]
+
+  M rx'"0" ["a"-"q"]' "0a" ~is ["0a"]
+  M rx'"0" ["a"-"q"]' "0q" ~is ["0q"]
+
+  M rx'["a"-"q"]*' "a" ~is ["a"]
+  M rx'["a"-"q"]*' "abcd" ~is ["abcd"]
+  M rx'["a"-"q"]*' "abcdz" ~is #false
+  P rx'["a"-"q"]+' "zabcdz" ~is ["abcd"]
+
+  M rx'[! "a"]' "a" ~is #false
+  M rx'[! "a"]' "λ" ~is ["λ"]
+  M rx'[! ("a"--"a")]' "a" ~is ["a"]
+  M rx'[! ("a"--"a")]' "λ" ~is ["λ"]
+
+  M rx'["z" ("a"-"a")]' "a" ~is ["a"]
+  M rx'["z" ("a"-"a")]' "z" ~is ["z"]
+  M rx'["z" ("a"-"a")]' "b" ~is #false
+  M rx'["z" ("a"-"a")]' "λ" ~is #false
+
+  M rx'["a" - "f" && "e" - "z"]' "a" ~is #false
+  M rx'["a" - "f" && "e" - "z"]' "e" ~is ["e"]
+  M rx'["a" - "f" && "e" - "z"]' "f" ~is ["f"]
+  M rx'["a" - "f" && "e" - "z"]' "g" ~is #false
+
+  M rx'["a" - "f" || "z"]' "a" ~is ["a"]
+  M rx'["a" - "f" || "z"]' "z" ~is ["z"]
+  M rx'["a" - "f" || "z"]' "g" ~is #false
+
+check:
+  M rx'[unicode.L "0"]' "a" ~is ["a"]
+  M rx'[unicode.L "0"]' "A" ~is ["A"]
+  M rx'[unicode.L "0"]' "λ" ~is ["λ"]
+  M rx'[unicode.L "0"]' "0" ~is ["0"]
+  M rx'[unicode.L "0"]' "1" ~is #false
+  M rx'[unicode.Ll "0"]' "a" ~is ["a"]
+  M rx'[unicode.Ll "0"]' "λ" ~is ["λ"]
+  M rx'[unicode.Ll "0"]' "0" ~is ["0"]
+  M rx'[unicode.Ll "0"]' "A" ~is #false
+  M rx'[unicode.Lu "0"]' "A" ~is ["A"]
+  M rx'[unicode.Lu "0"]' "Λ" ~is ["Λ"]
+  M rx'[unicode.Lu "0"]' "0" ~is ["0"]
+  M rx'[unicode.Lu "0"]' "a" ~is #false
+
+  M rx'[alpha -- "f"]' "a" ~is ["a"]
+  M rx'[alpha -- "f"]' "z" ~is ["z"]
+  M rx'[alpha -- "f"]' "f" ~is #false
+  M rx'[alpha -- "0"]' "a" ~is ["a"]
+  M rx'[alpha -- "0"]' "0" ~is #false
+
+  M rx'[any -- "0"]' "1" ~is ["1"]
+  M rx'[any -- "0"]' "0" ~is #false
+
+check:
+  M rx'case_sensitive: "aBc"' "abc" ~is #false
+  M rx'case_sensitive: "aBc"' "aBc" ~is ["aBc"]
+  M rx'case_insensitive: "aBc"' "abc" ~is ["abc"]
+  M rx'case_insensitive: "aBc"' "aBC" ~is ["aBC"]
+  M rx'case_insensitive: "aλc"' "aΛc" ~is ["aΛc"]
+
+block:
+  let rx0 = rx'"abc"'
+  let rxor = rx'"a" || "b"'
+  let rx1 = rx'"ab" $c: any'
+  let rxc = rx'($x: "x") $x'
+  check M rx'"+" $rx0 "!"' "+abc!" ~is ["+abc!"]
+  check M rx'"+" $(rx0) "!"' "+abc!" ~is ["+abc!"]
+  namespace n: export rx0
+  check M rx'"+" $n.rx0 "!"' "+abc!" ~is ["+abc!"]
+  check M rx'($x: $rx0) $x' "abcabc" ~is ["abcabc", "abc"]
+  check M rx'"+" $rx1 "!"' "+abc!" ~is ["+abc!", "c"]
+  check ((rx'"+" $rx1 "!"'.match("+abc!")) :~ RXMatch)[#'c] ~is "c"
+  check M rx'$rx1 $d: any' "abcd" ~is ["abcd", "c", "d"]
+  check ((rx'$rx1 $d: any'.match("abcd")) :~ RXMatch)[#'c] ~is "c"
+  check ((rx'$rx1 $d: any'.match("abcd")) :~ RXMatch)[#'d] ~is "d"
+  check M rx'($d: any) $rx1' "dabc" ~is ["dabc", "d", "c"]
+  check ((rx'($d: any) $rx1'.match("dabc")) :~ RXMatch)[#'c] ~is "c"
+  check ((rx'($d: any) $rx1'.match("dabc")) :~ RXMatch)[#'d] ~is "d"
+  check M rx'$rxor $rxor' "ab" ~is ["ab"]
+  check rx'($x: $rx1) $x' ~throws "cannot splice RX that has capture groups"
+  check rx'$rxc' ~throws "cannot splice RX backreferences"
+
+expr.macro 'check_throws $t ... $(msg :: String)':
+  'check:
+     ~eval
+     import rhombus/rx open
+     $t ...
+     ~throws $msg'
+
+check_throws rx'char byte' "mixture of character and byte elements"
+check_throws rx'#"x" char' "mixture of character and byte elements"
+check_throws rx'#"x" string: "x"' "mixture of character and byte elements"
+check_throws rx'(bytes: "x") string: "x"' "mixture of character and byte elements"
+check_throws rx'(bytes: any) string: any' "mixture of character and byte elements"
+check_throws rx'(bytes: string: any)' "string mode used in a context that requires a byte string pattern"
+check_throws rx'(bytes: char)' "string mode used in a context that requires a byte string pattern"
+check_throws rx'(string: bytes: any)' "byte string mode used in a context that requires a string pattern"
+check_throws rx'(string: byte)' "byte string mode used in a context that requires a string pattern"
+check_throws rx'[alpha-"q"]' "expected a single-character set for a range start"
+check_throws rx'()*' "repetition operand could match an empty string"
+check_throws rx'()+' "repetition operand could match an empty string"
+check_throws rx'(){1..2}' "repetition operand could match an empty string"
+check_throws rx'()* ~nongreedy' "repetition operand could match an empty string"
+check_throws rx'lookbehind(.*)' "pattern must match a bounded sequence"
+check_throws rx'($x: .*) $x *' "repetition operand could match an empty string"
+check_throws rx'($x: .*) lookbehind($x)' "pattern must match a bounded sequence"
+check_throws rx'$"5"' "does not satisfy"
+
+block:
+  let r1 = rx'any ["abc"] any'
+  check r1.num_captures ~is 0
+  check r1.capture_names ~is {}
+  check tl(r1.match_range("xbx")) ~is [0..3]
+  check tl(r1.match_range_in("xbx ycy")) ~is [0..3]
+  check r1.matches(#"xbx ycy") ~is_now [#"xbx", #"ycy"]
+  check r1.matches("xbx ycy") ~is ["xbx", "ycy"]
+  check r1.matches(#"xbx ycy") ~is_now [#"xbx", #"ycy"]
+  check r1.split("xbx ycy") ~is ["", " ", ""]
+  check r1.split(#"xbx ycy") ~is_now [#"", #" ", #""]
+  check r1.replace("xbx ycy", "OK") ~is "OK ycy"
+  check r1.replace_all("xbx ycy", "OK") ~is "OK OK"
+  check r1.replace("xbx ycy", "a&b") ~is "a&b ycy"
+  check r1.replace_all("xbx ycy", "a&b") ~is "a&b a&b"
+  check r1.replace(#"xbx ycy", "a&b") ~is_now #"a&b ycy"
+  check r1.replace_all(#"xbx ycy", "a&b") ~is_now #"a&b a&b"
+  check r1.replace("xbx ycy", fun (s): "(" ++ s ++ ")") ~is "(xbx) ycy"
+  check r1.replace_all("xbx ycy", fun (s): "(" ++ s ++ ")") ~is "(xbx) (ycy)"
+  check r1.replace("xbx ycy", fun (s, y): "oops") ~throws "argument does not satisfy annotation"
+  check r1.replace_all("xbx ycy", fun (s, y): "oops") ~throws "argument does not satisfy annotation"
+
+  let r2 = rx'any ~~["abc"] any'
+  check r2.num_captures ~is 1
+  check r2.capture_names ~is {}
+  check tl(r2.match_range("xbx")) ~is [0..3, 1..2]
+  check tl(r2.match_range("!xbx", ~start: 1)) ~is [1..4, 2..3]
+  check tl(r2.match_range_in("xbx ycy")) ~is [0..3, 1..2]
+  check r2.replace("xbx ycy", fun (s, c): "(" ++ c ++ ")") ~is "(b) ycy"
+  check r2.replace_all("xbx ycy", fun (s, c): "(" ++ c ++ ")") ~is "(b) (c)"
+  check r2.replace("xbx ycy", fun (s): "oops") ~throws "argument does not satisfy annotation"
+  check r2.replace_all("xbx ycy", fun (s): "oops") ~throws "argument does not satisfy annotation"
+
+  let r3 = rx'($a: any) ~~["abc"] ($b: any)'
+  check r3.num_captures ~is 3
+  check r3.capture_names ~is { #'a: 1, #'b: 3 }
+
+// Examples from Cooper Coradeschi's thesis
+block:
+  // Cooper's original example:
+  def noisy_phone_number = rx'
+    bof (("+"[digit] /* country code */ space?)?
+           ++ ("(" [digit]{3} ")"|| [digit]{3}) space?
+           ++ ([digit]{3}) ("-")? // telephone prefix with optional dash
+           ++ ([digit]{4})) eof //line number, match must end with last digit
+  '
+  // Simplified:
+  def phone_number = rx'
+    ("+"[digit] /* country code */ space?)?
+      ++ ("(" digit{3} ")" || digit{3}) space?
+      ++ digit{3} "-"? // telephone prefix with optional dash
+      ++ digit{4}      //line number, match must end with last digit
+  '
+  check:
+    noisy_phone_number.is_match("(123) 456-7890") ~is #true
+    phone_number.is_match("(123) 456-7890") ~is #true
+    phone_number.is_match("+1 (123) 456-7890") ~is #true
+    phone_number.is_match("+1 123 456-7890") ~is #true
+    phone_number.is_match("+11234567890") ~is #true
+
+  rx.macro 'n0_255':
+    '~~(digit
+          || digit digit
+          || ["01"] digit digit
+          || "2" ["0" - "4"] digit
+          || "25" ["0" - "5"])'
+  def ip = rx'n0_255 ~~("." n0_255){3}'
+  check:
+    ip.is_match("127.0.0.1") ~is #true
+    ip.is_match("256.0.0.0") ~is #false
+
+  def rx'($total:
+            ($hour: (["0"-"9"] || ("1"["0"-"2"]))) ":"
+              ++ ($minutes: ["0"-"5"][digit]) space
+              ++ ($period: ("a"||"p")"m"))':
+    "12:34 pm"
+  check:
+    total ~is "12:34 pm"
+    hour ~is "12"
+    minutes ~is "34"
+    period ~is "pm"
+
+check:
+  // check that macro result is appropriately recursively expanded:
+  rx.macro 'x': '"a" !lookahead("a")'
+  rx'x'.is_match("a")
+  ~is #true

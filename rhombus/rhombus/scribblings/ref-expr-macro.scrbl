@@ -30,10 +30,9 @@
 
 
 @doc(
+  ~meta
   def expr_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(expr, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -84,6 +83,7 @@
 
 
 @doc(
+  ~meta
   syntax_class expr_meta.Parsed:
     kind: ~group
     fields:
@@ -99,8 +99,6 @@
       group
       [tail, ...]
 ){
-
-@provided_meta()
 
  Syntax classes that match by parsing expressions. The value of the
  binding in each case is an opaque syntax object that represents the @tech{parsed}
@@ -139,10 +137,9 @@
 
 
 @doc(
+  ~meta
   fun expr_meta.parse_more(group :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  Similar to matching @rhombus(stx) using the syntax class
  @rhombus(expr_meta.Parsed, ~stxclass), but further forces expression parsing to
@@ -152,10 +149,9 @@
 
 
 @doc(
+  ~meta
   fun expr_meta.parse_all(group :: Syntax) :: (Syntax, Syntax)
 ){
-
-@provided_meta()
 
  Similar to @rhombus(expr_meta.parse_all), but further forces expansion
  of all nested forms. Avoid this function, and use it only when control
@@ -171,10 +167,9 @@
 
 
 @doc(
+  ~meta
   fun expr_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
-
-@provided_meta()
 
  Converts a tree of terms, which can include @tech{parsed} terms, into a
  new parsed term representing a Racket parenthesized form. The intent is
@@ -197,10 +192,9 @@
 }
 
 @doc(
+  ~meta
   fun expr_meta.pack_expr(group :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  Converts a syntax object, which can be a multi-term syntax object, into
  an @tech{parsed} term, but one that represents a run-time expression with
@@ -216,11 +210,10 @@
 
 
 @doc(
+  ~meta
   fun expr_meta.pack_meta_expr(group :: Syntax) :: Syntax
   fun expr_meta.pack_and_meta_expr(group :: Syntax) :: Syntax
 ){
-
-@provided_meta()
 
  Like @rhombus(expr_meta.pack_expr), but for an expression to be used in
  a compile-time position or @emph{both} a run-time and compile-time

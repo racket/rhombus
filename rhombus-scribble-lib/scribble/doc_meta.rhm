@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  lib("rhombus/scribble/private/doc-macro.rhm") as doc
+
+export:
+  all_from(.doc)

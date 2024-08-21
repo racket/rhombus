@@ -1,0 +1,189 @@
+#lang rhombus/private/amalgam/core
+import:
+  lib("racket/base.rkt")
+  "core-meta.rkt" open
+  "maybe.rhm" open
+  "recur.rhm" open
+  "rx_match.rhm" open
+
+export:
+  RX
+  _RX
+  splice_regexp
+  freeze
+
+expr.macro 'MATCH $body ...':
+  'match $body ...'
+
+class RX(private _rkt_partial_rx,
+         private _rkt_rx,
+         private _num_captures :~ Int,
+         private _vars :~ Map,
+         private _has_backref,
+         private _str):
+  internal _RX
+  constructor (): error("don't instantiate")
+
+  private implements Printable
+  private override describe(mode, recur) :: String:
+    _str
+
+  property handle: _rkt_rx
+  property in_handle: _rkt_partial_rx
+
+  property num_captures :~ Int: _num_captures
+  property capture_names :~ Map: _vars
+  property has_backreference: _has_backref
+  property element :~ Symbol:
+    if base.#{byte-regexp?}(_rkt_rx)
+    | #'char
+    | #'bytes
+
+  class_clause.macro 'match_method $name($input $input_ann, $start, $end, $out, $prefix):
+                        $body':
+    let input_ann:
+      match input_ann
+      | '': ':: String || Bytes || Port.Input'
+      | ~else: input_ann
+    'method $name($input $input_ann,
+                  ~start: $start :: Int = 0,
+                  ~end: $end :: maybe(Int) = #false,
+                  ~unmatched_out: $out :: maybe(Port.Output) = #false,
+                  ~input_prefix: $prefix :: Bytes = #""):
+       $body'
+
+  private method
+  | strings_result(#false): #false
+  | strings_result(m :~ PairList):
+      def mList = (for List (elem: m): freeze(elem))
+      RXMatch(mList[0], mList.rest, _vars)
+
+  match_method match(input, start_pos, end_pos, output_port, input_prefix):
+    strings_result(
+      base.#{regexp-match}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
+    )
+
+  match_method match_in(input, start_pos, end_pos, output_port, input_prefix):
+    strings_result(
+      base.#{regexp-match}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
+    )
+
+  match_method try_match(input :: Port.Input, start_pos, end_pos, output_port, input_prefix):
+    strings_result(
+      base.#{regexp-try-match}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
+    )
+
+  match_method try_match_in(input, start_pos, end_pos, output_port, input_prefix):
+    strings_result(
+      base.#{regexp-try-match}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
+    )
+
+  match_method match_range(input, start_pos, end_pos, output_port, input_prefix):
+    MATCH base.#{regexp-match-positions}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
+    | PairList[Pair(s0, e0), Pair(s, e), ...]:
+        RXMatch(s0 .. e0, [Range.from_to(s, e), ...], _vars)
+    | ~else: #false
+
+  match_method match_range_in(input, start_pos, end_pos, output_port, input_prefix):
+    MATCH base.#{regexp-match-positions}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
+    | PairList[Pair(s0, e0), Pair(s, e), ...]:
+        RXMatch(s0 .. e0, [Range.from_to(s, e), ...], _vars)
+    | ~else: #false
+
+  match_method is_match(input, start_pos, end_pos, output_port, input_prefix):
+    base.#{regexp-match?}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
+
+  match_method is_match_in(input, start_pos, end_pos, output_port, input_prefix):
+    base.#{regexp-match?}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
+
+  method max_lookbehind():
+    base.#{regexp-max-lookbehind}(_rkt_partial_rx)
+
+  method matches(input :: String || Bytes || Port.Input,
+                 ~start: start_pos :: Int = 0,
+                 ~end: end_pos :: maybe(Int) = #false,
+                 ~input_prefix: input_prefix :: Bytes = #"") :~ List:
+    def m :~ PairList = base.#{regexp-match*}(_rkt_partial_rx, input, start_pos, end_pos, input_prefix)
+    for List (elem: m):
+      freeze(elem)
+
+  method split(input :: String || Bytes || Port.Input,
+               ~start: start_pos :: Int = 0,
+               ~end: end_pos :: maybe(Int) = #false,
+               ~input_prefix: input_prefix :: Bytes = #"") :~ List:
+    def m :~ PairList = base.#{regexp-split}(_rkt_partial_rx, input, start_pos, end_pos, input_prefix)
+    for List (elem: m):
+      freeze(elem)
+
+  fun check_filter(who, in, out):
+    cond
+    | in is_a Bytes:
+        unless out is_a Bytes
+        | error(who, "expected byte string result from replacing function")
+    | ~else:
+        unless out is_a String
+        | error(who, "expected string result from replacing function")
+    out
+
+  method replace(input :: String || Bytes,
+                 insert :: String || Bytes || Function.of_arity(num_captures+1),
+                 ~input_prefix: input_prefix :: Bytes = #""):
+    let insert:
+      if insert is_a Function
+      | fun (m, &ms): check_filter(#'#{RX.replace}, m, insert(m, & ms))
+      | base.#{regexp-replace-quote}(insert)
+    freeze(base.#{regexp-replace}(_rkt_partial_rx, input, insert, input_prefix))
+
+  method replace_all(input :: String || Bytes,
+                     insert :: String || Bytes || Function.of_arity(num_captures+1),
+                     ~start: start_pos :: Int = 0,
+                     ~end: end_pos :: maybe(Int) = #false,
+                     ~input_prefix: input_prefix :: Bytes = #""):
+    let insert:
+      if insert is_a Function
+      | fun (m, & ms): check_filter(#'#{RX.replace_all}, m, insert(m, & ms))
+      | base.#{regexp-replace-quote}(insert)
+    freeze(base.#{regexp-replace*}(_rkt_partial_rx, input, insert, start_pos, end_pos, input_prefix))
+
+fun freeze(elem):
+  match elem
+  | str :: ReadableString: to_string(str)
+  | bstr :: Bytes: bstr
+  | ~else: #false
+
+fun splice_regexp(PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
+  fun extract(a):
+    match a
+    | _ :: String: a
+    | Pair(_, regexp :: _RX):
+        when has_backref && (regexp._num_captures != 0)
+        | error("cannot splice RX that has capture groups into a pattern with backreferences")
+        when regexp._has_backref
+        | error("cannot splice RX backreferences into a larger pattern")
+        "(?:" ++ base.#{object-name}(regexp.in_handle) ++ ")"
+    | Pair(src_str, val):
+        error("spliced value for " +& src_str +& " does not satisfy `RX`")
+  let str = String.append(extract(a), ...)
+  let (num_captures, vars):
+    recur loop(vars :~ Map = Map.by(===){}, as = as, var_seq = var_seq, di = 0):
+      match var_seq
+      | []: values(di, vars)
+      | [#false, & var_seq]: loop(vars, as, var_seq, di+1)
+      | [#'~splice, & var_seq]:
+          recur as_loop(as = as):
+            match as
+            | PairList(Pair(_, regexp :: _RX), & as):
+                let vars:
+                  for values(vars :~ Map = vars) ((k, v): regexp._vars):
+                    vars ++ { k: v + di }
+                loop(vars, as, var_seq, di + regexp._num_captures)
+            | PairList(_, & as):
+                as_loop(as)
+      | [sym, & var_seq]:
+          loop(vars ++ { sym: di + 1 }, as, var_seq, di+1)
+  _RX(base.#{pregexp}(str),
+      base.#{pregexp}("^(?:" ++ str ++ ")$"),
+      num_captures,
+      vars,
+      has_backref,
+      src)

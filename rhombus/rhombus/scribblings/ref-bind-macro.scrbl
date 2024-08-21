@@ -20,10 +20,9 @@
 
 
 @doc(
+  ~meta
   def bind_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(bind, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -61,10 +60,9 @@
 }
 
 @doc(
+  ~meta
   fun bind_meta.pack(stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  Packs binding information that is represented by a syntax object with
  two parts: @rhombus(infoer_id, ~var) and @rhombus(data, ~var),
@@ -87,10 +85,9 @@
 }
 
 @doc(
+  ~meta
   fun bind_meta.unpack(stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  The inverse of @rhombus(bind_meta.pack), normally used only internally in
  the expander.
@@ -125,10 +122,9 @@
 }
 
 @doc(
+  ~meta
   fun bind_meta.pack_info(stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  Packs binding information that specific to a use of a binding form,
  which means that ``upward'' has been provided to an infoer, and the
@@ -206,10 +202,9 @@
 }
 
 @doc(
+  ~meta
   fun bind_meta.unpack_info(stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  The inverse of @rhombus(bind_meta.pack_info), which is useful for
  unpacking information about the expansion of nested binding forms
@@ -218,12 +213,11 @@
 }
 
 @doc(
+  ~meta
   fun bind_meta.get_info(bind_stx :: Syntax,
                          static_info :: Syntax)
     :: Syntax
 ){
-
- @provided_meta()
 
  Initiates the expansion of the binding form represented by
  @rhombus(bind_stx) in a context that supplies thet ``upward'' static
@@ -247,10 +241,9 @@
 
 
 @doc(
+  ~meta
   fun bind_meta.is_immediate(info :: Syntax) :: Boolean
 ){
-
- @provided_meta()
 
  Takes the initialized binding-form expansion produced by
  @rhombus(bind_meta.get_info) and restports whether the binding is
@@ -351,6 +344,7 @@
 
 
 @doc(
+  ~meta
   syntax_class bind_meta.Parsed:
     kind: ~group
     fields:
@@ -367,13 +361,12 @@
       [tail, ...]
 ){
 
- @provided_meta()
-
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for bindings.
 
 }
 
 @doc(
+  ~meta
   ~nonterminal:
     bind_maybe_kw_opt: fun ~defn
 
@@ -384,8 +377,6 @@
       maybe_keyword
       maybe_expr
 ){
-
- @provided_meta()
 
  Matches forms that combine a binding with an optional keyword and
  optional default-value expression, like @rhombus(bind_maybe_kw_opt) for
@@ -407,6 +398,7 @@
 }
 
 @doc(
+  ~meta
   ~nonterminal:
     maybe_res_annot: fun ~defn
 
@@ -419,8 +411,6 @@
       static_info
       annotation_string
 ){
-
- @provided_meta()
 
  Matches a sequence of terms (possibly empty) for a result annotation,
  like @rhombus(maybe_res_annot) for @rhombus(fun).

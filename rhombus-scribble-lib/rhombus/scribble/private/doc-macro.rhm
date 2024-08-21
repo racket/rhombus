@@ -1,0 +1,92 @@
+#lang rhombus/static/and_meta
+import:
+  "doc.rkt" as rkt
+  "typeset-doc.rkt":
+    expose:
+      #{doc-typeset-rhombusblock}
+      #{add-metavariable}
+  "rhombus-doc.rkt"!for_doc_transformer open
+
+meta:
+  import:
+    shrubbery/render/private/space_name.SpaceName.normalized as SpaceName
+
+export:
+  doc
+  meta:
+    doc_meta
+    head_extract_name
+    parens_extract_name
+    operator_macro_extract_name
+    identifier_macro_extract_name
+    head_extract_metavariables
+    parens_extract_metavariables
+    operator_macro_extract_metavariables
+    identifier_macro_extract_metavariables
+    head_extract_typeset
+    parens_extract_typeset
+    operator_macro_extract_typeset
+    identifier_macro_extract_typeset
+
+space.transform doc:
+  space_path rhombus/doc
+  bridge_definer bridge
+  meta_namespace doc_meta:
+    reflection space
+    export:
+      transformer
+      add_metavariable
+      typeset_rhombusblock
+
+meta:
+  fun transformer(~extract_desc: extract_desc :: Function.of_arity(1),
+                  ~extract_space: extract_space :: Function.of_arity(1),
+                  ~extract_name: extract_name :: Function.of_arity(2),
+                  ~extract_metavariables: extract_metavariables :: Function.of_arity(3),
+                  ~extract_typeset: extract_typeset :: Function.of_arity(3)):
+    rkt.#{make-doc-transformer}(#{#:extract-desc}: extract_desc,
+                                #{#:extract-space-sym}: extract_space,
+                                #{#:extract-name}: extract_name,
+                                #{#:extract-metavariables}: extract_metavariables,
+                                #{#:extract-typeset}: extract_typeset)
+
+  fun add_metavariable(vars,
+                       id :: Identifier,
+                       ~is_nonterminal = #false):
+    #{add-metavariable}(vars, id, is_nonterminal)
+
+  fun typeset_rhombusblock(form :: Syntax,
+                           ~at: at_form :: Syntax = form,
+                           ~is_pattern = #false,
+                           ~options: options :: Term = '(~inset: #false)'):
+    #{doc-typeset-rhombusblock}(form,
+                                ~at: at_form,
+                                #{#:pattern?}: is_pattern,
+                                ~options: options)
+
+  fun head_extract_name(stx :: Syntax, space :: SpaceName):
+    #{head-extract-name}(stx, space)
+  fun parens_extract_name(stx :: Syntax, space :: SpaceName):
+    #{parens-extract-name}(stx, space)
+  fun operator_macro_extract_name(stx :: Syntax, space :: SpaceName):
+    #{operator-macro-extract-name}(stx, space)
+  fun identifier_macro_extract_name(stx :: Syntax, space :: SpaceName):
+    #{identifier-macro-extract-name}(stx, space)
+
+  fun head_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+    #{head-extract-metavariables}(stx, space, vars)
+  fun parens_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+    #{parens-extract-metavariables}(stx, space, vars)
+  fun operator_macro_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+    #{operator-macro-extract-metavariables}(stx, space, vars)
+  fun identifier_macro_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+    #{identifier-macro-extract-metavariables}(stx, space, vars)
+
+  fun head_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
+    #{head-extract-typeset}(stx, space, subst)
+  fun parens_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
+    #{parens-extract-typeset}(stx, space, subst)
+  fun operator_macro_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
+    #{operator-macro-extract-typeset}(stx, space, subst)
+  fun identifier_macro_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
+    #{identifier-macro-extract-typeset}(stx, space, subst)

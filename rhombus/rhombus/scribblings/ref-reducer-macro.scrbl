@@ -170,6 +170,7 @@
 }
 
 @doc(
+  ~meta
   fun reducer_meta.pack(complete_id :: Identifier,
                         binds :: Syntax,
                         pre_clause_id :: maybe(Identifier),
@@ -181,8 +182,6 @@
                         data :: Syntax)
     :: Syntax
 ){
-
- @provided_meta()
 
  Packs reducer information that is represented by a syntax object with
  eight parts. The parts are taken separately by
@@ -290,10 +289,9 @@
 }
 
 @doc(
+  ~meta
   fun reducer_meta.unpack(stx :: Syntax) :: Syntax
 ){
-
- @provided_meta()
 
  Roughly the inverse of @rhombus(reducer_meta.pack), except that the
  pieces are returned in a combined syntax object instead of as multiple
@@ -305,6 +303,7 @@
 }
 
 @doc(
+  ~meta
   syntax_class reducer_meta.Parsed:
     kind: ~group
     fields:
@@ -320,8 +319,6 @@
       group
       [tail, ...]
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for reducers.
 

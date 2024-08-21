@@ -1,0 +1,54 @@
+#lang rhombus/static/and_meta
+import:
+  scribble/doc_meta open
+  scribble/spacer
+  rhombus/rx open
+
+export:
+  only_space doc:
+    #{rx.macro}
+    #{rx_charset.macro}
+  only_space spacer.typeset:
+    rx
+    #%brackets
+
+doc.bridge #{rx.macro}:
+  doc_meta.transformer(
+    ~extract_desc: fun (stx): "regexp operator",
+    ~extract_space: fun (stx): #'#{rhombus/rx},
+    ~extract_name: operator_macro_extract_name,
+    ~extract_metavariables: operator_macro_extract_metavariables,
+    ~extract_typeset: operator_macro_extract_typeset
+  )
+
+doc.bridge #{rx_charset.macro}:
+  doc_meta.transformer(
+    ~extract_desc: fun (stx): "regexp charset operator",
+    ~extract_space: fun (stx): #'#{rhombus/rx_charset},
+    ~extract_name: operator_macro_extract_name,
+    ~extract_metavariables: operator_macro_extract_metavariables,
+    ~extract_typeset: operator_macro_extract_typeset
+  )
+
+spacer.bridge rx(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(q && '«'$g'»') $tail ...':
+      let g = spacer.adjust_group(g, #'#{rhombus/rx}, esc)
+      let q = '«'$g'»'.relocate(q)
+      '$self $q $tail ...'
+  | ~else:
+      '$self $tail'
+
+spacer.bridge #%brackets(self, tail, context, esc):
+  ~in: rhombus/rx
+  let new_tail:
+    match tail
+    | '[$(g :: Group)]':
+        let g = spacer.adjust_group(g, #'#{rhombus/rx_charset}, esc)
+        '[$g]'
+    | ~else:
+        tail
+  if self
+  | '$self $new_tail'
+  | new_tail

@@ -355,6 +355,7 @@ driver and macro-definitions forms.
 }
 
 @doc(
+  ~meta
   space_meta_clause.macro 'parse_syntax_class $id'
   space_meta_clause.macro 'parse_syntax_class $id($id, ...)'
   space_meta_clause.macro 'parse_prefix_more_syntax_class $id'
@@ -368,8 +369,6 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'reflection $id'
 ){
 
- @provided_meta()
-
  Clause forms for use within a @rhombus(meta_namespace, ~space_clause)
  clause within a @rhombus(space.enforest) or @rhombus(space.transform)
  form. See @rhombus(space.enforest) for more information.
@@ -377,10 +376,9 @@ driver and macro-definitions forms.
 }
 
 @doc(
+  ~meta
   annot.macro 'SpaceMeta'
 ){
-
-@provided_meta()
 
  A @rhombus(SpaceMeta, ~annot) compile-time value reflects a space that
  would be referenced in a run-time position by the space name. For

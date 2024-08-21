@@ -1,0 +1,287 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  "when_unless.rhm" open
+  "recur.rhm" open
+  meta:
+    "charset.rhm".Charset
+
+space.enforest rx_charset:
+  space_path rhombus/rx_charset
+  macro_definer macro
+  meta_namespace rx_charset_meta:
+    description "character set"
+    reflection space
+    parse_syntax_class Parsed
+    parse_prefix_more_syntax_class AfterPrefixParsed
+    parse_infix_more_syntax_class AfterInfixParsed
+    parsed_packer do_pack
+    parsed_unpacker do_unpack
+    export:
+      pack
+      unpack
+    fun pack(charset :: Charset, stx) :~ Syntax:
+      do_pack(Array(charset.raw_int_ranges())).relocate_span([stx])
+    fun unpack(stx :: Syntax) :~ Charset:
+      Charset.from_raw_int_ranges(Array.get(do_unpack(stx, #false).unwrap_all(), 0))
+
+    identifier_parser: fun (id):
+                         syntax_meta.error("not a character set form", id)
+
+export:
+  rx_charset
+  meta:
+    rx_charset_meta
+
+  only_space rx_charset:
+    !
+    -
+    && || --
+    names:
+      #%juxtapose #%parens #%literal #%call
+
+    // predefined charsets, effectively:
+    alpha
+    upper
+    lower
+    digit
+    xdigit
+    alnum
+    word
+    blank
+    newline
+    space
+    graph
+    print
+    cntrl
+    ascii
+    latin1
+    any
+
+  unicode
+
+use_static
+
+
+rx_charset.macro '#%parens ($(charset :: rx_charset_meta.Parsed))':
+  charset
+
+rx_charset.macro '#%literal $(s :: String)':
+  let str :~ String = s.unwrap()
+  let cs:
+    for values(cs :~ Charset = Charset()) (ch: str):
+      cs.union(Charset(ch, ch))
+  rx_charset_meta.pack(cs, s)
+
+rx_charset.macro '! $right':
+  ~weaker_than: ~other
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(right).invert(),
+                       stx)
+
+rx_charset.macro '$left #%juxtapose $right':
+  ~weaker_than: ~other
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)),
+                       stx)
+
+rx_charset.macro '$left #%call ($(right :: rx_charset_meta.Parsed))':
+  ~weaker_than: ~other
+  ~same_as: #%juxtapose
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)),
+                       stx)
+
+rx_charset.macro '$left - $right':
+  ~all_stx: stx
+  ~stronger_than: || &&
+  let left_cs = rx_charset_meta.unpack(left)
+  let right_cs = rx_charset_meta.unpack(right)
+  unless left_cs.length() == 1
+  | syntax_meta.error("expected a single-character set for a range start", stx, left)
+  unless right_cs.length() == 1
+  | syntax_meta.error("expected a single-character set for a range end", stx, right)
+  let start = left_cs.int_ranges()[0][0]
+  let end = right_cs.int_ranges()[0][0]
+  unless start <= end
+  | syntax_meta.error("range end character is before start character", stx, [left, right])
+  rx_charset_meta.pack(Charset(Char.from_int(start), Char.from_int(end)), stx)
+
+rx_charset.macro '$left && $right':
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(left).intersect(rx_charset_meta.unpack(right)), stx)
+
+rx_charset.macro '$left || $right':
+  ~weaker_than: &&
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)), stx)
+
+rx_charset.macro '$left -- $right':
+  ~weaker_than -
+  ~all_stx: stx
+  rx_charset_meta.pack(rx_charset_meta.unpack(left).subtract(rx_charset_meta.unpack(right)), stx)
+
+rx_charset.macro 'alpha':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("a"[0], "z"[0])
+                            .union(Charset("A"[0], "Z"[0])),
+                       stx)
+rx_charset.macro 'upper':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("A"[0], "Z"[0]), stx)
+
+rx_charset.macro 'lower':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("a"[0], "z"[0]), stx)
+
+rx_charset.macro 'digit':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("0"[0], "9"[0]), stx)
+
+rx_charset.macro 'xdigit':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("0"[0], "9"[0])
+                         .union(Charset("a"[0], "f"[0]))
+                         .union(Charset("A"[0], "F"[0])),
+                       stx)
+
+rx_charset.macro 'alnum':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("0"[0], "9"[0])
+                         .union(Charset("a"[0], "z"[0]))
+                         .union(Charset("A"[0], "Z"[0])),
+                       stx)
+
+rx_charset.macro 'word':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("0"[0], "9"[0])
+                         .union(Charset("a"[0], "z"[0]))
+                         .union(Charset("A"[0], "Z"[0]))
+                         .union(Charset("_"[0])),
+                       stx)
+
+rx_charset.macro 'blank':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("\t"[0])
+                         .union(Charset(" "[0])),
+                       stx)
+
+rx_charset.macro 'newline':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("\n"[0]), stx)
+
+rx_charset.macro 'space':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset("\t"[0])
+                         .union(Charset(" "[0]))
+                         .union(Charset("\n"[0]))
+                         .union(Charset("\r"[0]))
+                         .union(Charset("\f"[0])),
+                       stx)
+
+rx_charset.macro 'graph':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset(Char.is_graphic, ~only_ascii: #true),
+                       stx)
+rx_charset.macro 'print':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset(Char.is_graphic, ~only_ascii: #true)
+                         .union(Charset(" "[0]).union(Charset("\t"[0]))),
+                       stx)
+
+rx_charset.macro 'cntrl':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset(Char.from_int(0), Char.from_int(31)),
+                       stx)
+
+rx_charset.macro 'ascii':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset(Char.from_int(0), Char.from_int(127)),
+                       stx)
+
+rx_charset.macro 'latin1':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset(Char.from_int(0), Char.from_int(255)),
+                       stx)
+
+rx_charset.macro 'any':
+  ~all_stx: stx
+  rx_charset_meta.pack(Charset().invert(), stx)
+
+meta:
+  fun lc_sym(stx :~ Syntax):
+    Symbol.from_string(to_string(stx.unwrap()).downcase())
+
+decl.nestable_macro 'def_cats: $cat; ...':
+  '«
+     export:
+       $cat
+       ...
+     rx_charset.macro '$cat':
+       ~all_stx: stx
+       rx_charset_meta.pack(Charset(fun (c):
+                                      Char.general_category(c) == #' $(lc_sym(cat))),
+                            stx)
+     ...
+   »'
+
+decl.nestable_macro 'def_union_cats:
+                       $ucat: $cat ...
+                       ...':
+  '«
+     export:
+       $ucat
+       ...
+     rx_charset.macro '$ucat':
+       ~all_stx: stx
+       rx_charset_meta.pack(Charset(fun (c):
+                                      match Char.general_category(c)
+                                      | #' $(lc_sym(cat)): #true
+                                      | ...
+                                      | ~else: #false),
+                            stx)
+     ...
+   »'
+
+namespace unicode:
+  def_cats:
+    Ll
+    Lu
+    Lt
+    Lm
+    Lo
+    Nd
+    Nl
+    No
+    Ps
+    Pe
+    Pi
+    Pf
+    Pc
+    Pd
+    Po
+    Mn
+    Mc
+    Me
+    Sc
+    Sk
+    Sm
+    So
+    Zl
+    Zp
+    Zs
+    Cc
+    Cf
+    Cs
+    Cn
+    Co
+
+  def_union_cats:
+    Lx: Ll Lu Lt Lm
+    L: Ll Lu Lt Lm Lo
+    N: Nd Nl No
+    P: Ps Pe Pi Pf Pc Pd Po
+    M: Mn Mc Me
+    S: Sc Sk Sm So
+    Z: Zl Zp Zs
+    C: Cc Cf Cs Cn Co

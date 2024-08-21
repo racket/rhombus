@@ -9,6 +9,7 @@
     "rhombus-lib"
     ["scribble-lib" #:version "1.50"]
     "sandbox-lib"
+    "enforest-lib"
     "shrubbery-render-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-scribble\"")

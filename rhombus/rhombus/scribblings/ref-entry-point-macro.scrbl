@@ -116,14 +116,13 @@
 }
 
 @doc(
+  ~meta
   class entry_point_meta.Adjustment(
     prefix_arguments :: Listable.to_list && List.of(Identifier),
     wrap_body :: Function.of_arity(2),
     is_method :: Boolean
   )
 ){
-
- @provided_meta()
 
  Represents an adjustment to an entry point to add extra arguments and
  wrap the generated function's body. The @rhombus(wrap_body) function
@@ -135,13 +134,12 @@
 }
 
 @doc(
+  ~meta
   fun entry_point_meta.pack(stx :: Syntax) :: Syntax
   fun entry_point_meta.unpack(stx :: Syntax) :: Syntax
   fun entry_point_meta.pack_arity(arity :: False || Int || List) :: Syntax
   fun entry_point_meta.unpack_arity(stx :: Syntax) :: False || Int || List
 ){
-
- @provided_meta()
 
  The @rhombus(entry_point_meta.pack) function packs an expression for a
  function as a result for a @rhombus(entry_point.macro) expansion,
@@ -160,6 +158,7 @@
 }
 
 @doc(
+  ~meta
   syntax_class entry_point_meta.Parsed(adj):
     kind: ~group
     fields:
@@ -169,8 +168,6 @@
     fields:
       group
 ){
-
- @provided_meta()
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but for entry
  points to run in either @rhombus(#'function) mode with

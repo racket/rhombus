@@ -20,10 +20,9 @@
 }
 
 @doc(
+  ~meta
   def defn_meta.space :: SpaceMeta
 ){
-
-@provided_meta()
 
  A compile-time value that identifies the same space as
  @rhombus(defn, ~space). See also @rhombus(SpaceMeta, ~annot).
@@ -137,11 +136,10 @@
 }
 
 @doc(
+  ~meta
   syntax_class defn_meta.Group:
     kind: ~group
 ){
-
- @provided_meta()
 
  Syntax class that matches only groups that start with an identifier
  that is bound as a definition form.
@@ -155,11 +153,10 @@
 }
 
 @doc(
+  ~meta
   syntax_class defn_meta.SequenceStartGroup:
     kind: ~group
 ){
-
- @provided_meta()
 
  Syntax class that matches only groups that starts with an identifier
  that is bound as a definition-sequence form.
@@ -168,13 +165,11 @@
 
 
 @doc(
+  ~meta
   fun defn_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
-@provided_meta()
-
  Similar to @rhombus(expr_meta.pack_s_exp), but for definitions.
-
 
 }
 

@@ -9,7 +9,7 @@
 @doc(
   expr.macro 'rhombus($group)'
   expr.macro 'rhombus($group, $builtin_space)'
-  expr.macro 'rhombus($group, ~at: $space_name)'
+  expr.macro 'rhombus($group, ~at $space_name)'
   grammar builtin_space:
     ~var
     ~datum

@@ -4,6 +4,7 @@
 
 @local_table_of_contents()
 
+@include_section("ref-rx.scrbl")
 @include_section("ref-runtime.scrbl")
 @include_section("ref-measure.scrbl")
 @include_section("ref-runtime-path.scrbl")
