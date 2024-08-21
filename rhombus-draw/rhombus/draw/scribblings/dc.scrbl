@@ -12,7 +12,7 @@
   interface DC
 ){
 
- Represents a @deftech{drawing context} that renders to some desination,
+ Represents a @deftech{drawing context} that renders to some destination,
  such as a bitmap or the screen.
 
  One way to get a drawing context is @rhombus(Bitmap.make_dc).
