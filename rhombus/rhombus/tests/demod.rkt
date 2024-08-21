@@ -5,10 +5,17 @@
   (parameterize ([read-accept-reader #t])
     (call-with-input-file* src read)))
 
-(let loop ([exp exp])
-  (cond
-    [(eq? exp '#:no-demod)
-     (error "amalgam is in `#:no-demod` mode")]
-    [(pair? exp)
-     (loop (car exp))
-     (loop (cdr exp))]))
+(define no-demod-mode?
+  (let loop ([exp exp])
+    (cond
+      [(eq? exp '#:no-demod)
+       #t]
+      [(pair? exp)
+       (or (loop (car exp))
+           (loop (cdr exp)))])))
+
+(unless no-demod-mode?
+  (error "amalgam is not in `#:no-demod` mode"))
+#;
+(when no-demod-mode?
+  (error "amalgam is in `#:no-demod` mode"))
