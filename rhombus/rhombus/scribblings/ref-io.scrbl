@@ -6,7 +6,10 @@
 
 A @deftech{port} is an input or output stream for a file, network
 connection, terminal, etc. An @deftech{input port} is specifically for
-input, while an @deftech{output port} is specifically for output.
+input, while an @deftech{output port} is specifically for
+output. Moreover, an @deftech{input string port} or an
+@deftech{output string port} reads from or writes to a
+@tech{byte string}.
 
 @dispatch_table(
   "input port"
@@ -25,8 +28,6 @@ input, while an @deftech{output port} is specifically for output.
 @dispatch_table(
   "output port"
   Port.Output
-  out.get_bytes()
-  out.get_string()
   out.flush()
   out.print(arg, ...)
   out.println(arg, ...)
@@ -34,17 +35,31 @@ input, while an @deftech{output port} is specifically for output.
   out.showln(arg, ...)
 )
 
+@dispatch_table(
+  "output string port"
+  Port.Output
+  out.get_bytes()
+  out.get_string()
+)
+
 @doc(
   annot.macro 'Port'
   annot.macro 'Port.Input'
+  annot.macro 'Port.Input.String'
   annot.macro 'Port.Output'
+  annot.macro 'Port.Output.String'
   annot.macro 'Port.EOF'
 ){
 
- The @rhombus(Port, ~annot) annotation is satisified by a @tech{port}.
+ The @rhombus(Port, ~annot) annotation is satisfied by a @tech{port}.
  The @rhombus(Port.Input, ~annot) annotation
- recognizes input ports specifically, while @rhombus(Port.Output, ~annot)
- recognizes output ports, and it is possible for a port to be both.
+ recognizes @tech{input ports} specifically, while @rhombus(Port.Output, ~annot)
+ recognizes @tech{output ports}, and it is possible for a port to be both.
+
+ Moreover, the @rhombus(Port.Input.String, ~annot) and
+ @rhombus(Port.Output.String, ~annot) annotations recognize
+ @tech{input string ports} and @tech{output string ports},
+ respectively.
 
  The @rhombus(Port.EOF, ~annot) annotation is satisfied by the
  @rhombus(Port.eof) value.
@@ -163,24 +178,24 @@ input, while an @deftech{output port} is specifically for output.
 @doc(
   fun Port.Input.open_bytes(bstr :: Bytes,
                             name :: Symbol = #'string)
-    :: Port.Input
+    :: Port.Input.String
 ){
 
- Creates an @tech{input port} that reads bytes from @rhombus(bstr), a
- @tech{byte string}. The optional @rhombus(name) is used as the name for the
- returned port.
+ Creates an @tech{input string port} that reads bytes from the
+ @tech{byte string} @rhombus(bstr). The optional @rhombus(name) is
+ used as the name for the returned port.
 
 }
 
 @doc(
   fun Port.Input.open_string(str :: ReadableString,
                              name :: Symbol = #'string)
-    :: Port.Input
+    :: Port.Input.String
 ){
 
- Creates an @tech{input port} that reads @tech{characters} from @rhombus(str),
- a @tech{string}. The optional @rhombus(name) is used as the name for the
- returned port.
+ Creates an @tech{input string port} that reads @tech{characters} from
+ the @tech{string} @rhombus(str). The optional @rhombus(name) is used
+ as the name for the returned port.
 
 }
 
@@ -375,11 +390,13 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun Port.Output.open_bytes(name :: Symbol) :: Port.Output
-  fun Port.Output.open_string(name :: Symbol) :: Port.Output
+  fun Port.Output.open_bytes(name :: Symbol = #'string)
+    :: Port.Output.String
+  fun Port.Output.open_string(name :: Symbol = #'string)
+    :: Port.Output.String
 ){
 
- Creates an @tech{output port} that accumulates the output into a
+ Creates an @tech{output string port} that accumulates the output into a
  @tech{byte string}. The optional @rhombus(name) argument is used as
  the name for the returned port.
 
@@ -390,12 +407,14 @@ input, while an @deftech{output port} is specifically for output.
 }
 
 @doc(
-  fun Port.Output.get_bytes(out :: Port.Output) :: Bytes
-  fun Port.Output.get_string(out :: Port.Output) :: String
+  fun Port.Output.get_bytes(out :: Port.Output.String)
+    :: Bytes
+  fun Port.Output.get_string(out :: Port.Output.String)
+    :: String
 ){
 
  @rhombus(Port.Output.get_bytes) returns the bytes accumulated in the
- @tech{output port} @rhombus(out) so far in a freshly allocated
+ @tech{output string port} @rhombus(out) so far in a freshly allocated
  @tech{byte string} (including any bytes written after the port's
  current position, if any).
 

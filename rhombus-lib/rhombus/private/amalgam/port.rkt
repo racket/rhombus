@@ -12,7 +12,8 @@
          "class-primitive.rkt"
          "realm.rkt"
          "enum.rkt"
-         (submod "print.rkt" for-port))
+         (submod "print.rkt" for-port)
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -20,28 +21,30 @@
 
 (module+ for-builtin
   (provide input-port-method-table
-           output-port-method-table))
+           output-port-method-table
+           output-string-port-method-table))
 
 (define-primitive-class Port port
   #:existing
   #:just-annot
   #:fields ()
   #:namespace-fields
-  (Input
-   Output
+  ([Input Port.Input]
+   [Output Port.Output]
    EOF
    eof
    ReadLineMode)
   #:properties ()
   #:methods ())
 
-(define-primitive-class Input input-port
+(define-primitive-class Port.Input input-port
   #:lift-declaration
   #:existing
   #:just-annot
   #:fields ()
   #:namespace-fields
-  ([current current-input-port]
+  ([String Port.Input.String]
+   [current current-input-port]
    [open_bytes Port.Input.open_bytes]
    [open_string Port.Input.open_string])
   #:properties ()
@@ -56,25 +59,51 @@
    [read_line Port.Input.read_line]
    [read_string Port.Input.read_string]))
 
-(define-primitive-class Output output-port
+(define-primitive-class Port.Output output-port
   #:lift-declaration
   #:existing
   #:just-annot
   #:fields ()
   #:namespace-fields
-  ([current current-output-port]
+  ([String Port.Output.String]
+   [current current-output-port]
    [current_error current-error-port]
    [open_bytes Port.Output.open_bytes]
-   [open_string Port.Output.open_string])
+   [open_string Port.Output.open_string]
+   [get_bytes Port.Output.get_bytes]
+   [get_string Port.Output.get_string])
   #:properties ()
   #:methods
-  ([get_bytes Port.Output.get_bytes]
-   [get_string Port.Output.get_string]
-   [flush Port.Output.flush]
+  ([flush Port.Output.flush]
    [print Port.Output.print]
    [println Port.Output.println]
    [show Port.Output.show]
    [showln Port.Output.showln]))
+
+(define (input-string-port? v)
+  (and (input-port? v)
+       (string-port? v)))
+
+(define-annotation-syntax Port.Input.String
+  (identifier-annotation input-string-port? #,(get-input-port-static-infos)))
+
+(define (output-string-port? v)
+  (and (output-port? v)
+       (string-port? v)))
+
+(void (set-primitive-subcontract! '(output-port? string-port?) 'output-string-port?))
+(define-primitive-class Port.Output.String output-string-port
+  #:lift-declaration
+  #:existing
+  #:just-annot
+  #:parent #f output-port
+  #:fields ()
+  #:namespace-fields
+  (#:no-methods)
+  #:properties ()
+  #:methods
+  ([get_bytes Port.Output.get_bytes]
+   [get_string Port.Output.get_string]))
 
 (define-static-info-syntax current-input-port
   (#%function-arity 3)
@@ -119,11 +148,10 @@
     [(str) (open-input-string str)]
     [(str name) (open-input-string str name)]))
 
-;; TODO these need a more specific annotation
 (define/arity Port.Output.open_bytes
   #:inline
   #:primitive (open-output-bytes)
-  #:static-infos ((#%call-result #,(get-output-port-static-infos)))
+  #:static-infos ((#%call-result #,(get-output-string-port-static-infos)))
   (case-lambda
     [() (open-output-bytes)]
     [(name) (open-output-bytes name)]))
@@ -131,7 +159,7 @@
 (define/arity Port.Output.open_string
   #:inline
   #:primitive (open-output-string)
-  #:static-infos ((#%call-result #,(get-output-port-static-infos)))
+  #:static-infos ((#%call-result #,(get-output-string-port-static-infos)))
   (case-lambda
     [() (open-output-string)]
     [(name) (open-output-string name)]))

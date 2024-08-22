@@ -18,8 +18,8 @@ block:
     Port.Input.read_string(in, amount) ~method
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
-    Port.Output.get_bytes(out) ~method
-    Port.Output.get_string(out) ~method
+    Port.Output.get_bytes(out) ~method Port.Output.String
+    Port.Output.get_string(out) ~method Port.Output.String
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
@@ -30,6 +30,8 @@ block:
 
 block:
   let p = Port.Input.open_string("abλcdefμ")
+  check p is_a Port.Input ~is #true
+  check p is_a Port.Input.String ~is #true
   check p.peek_byte() ~is "a"[0].to_int()
   check p.peek_byte(~skip_bytes: 1) ~is "b"[0].to_int()
   check p.read_byte() ~is "a"[0].to_int()
@@ -45,6 +47,8 @@ block:
 
 block:
   let p = Port.Input.open_string("abcdefg")
+  check p is_a Port.Input ~is #true
+  check p is_a Port.Input.String ~is #true
   check p.peek_bytes(4) ~is_now #"abcd"
   check p.peek_bytes(4, ~skip_bytes: 4) ~is_now #"efg"
   check p.peek_bytes(4, ~skip_bytes: 7) ~is Port.eof
@@ -55,6 +59,8 @@ block:
 
 block:
   let p = Port.Input.open_string("abλcdefμ")
+  check p is_a Port.Input ~is #true
+  check p is_a Port.Input.String ~is #true
   check p.peek_string(2) ~is "ab"
   check p.peek_string(~skip_bytes: 2, 1) ~is "λ"
   check p.peek_string(3) ~is "abλ"
@@ -82,6 +88,8 @@ block:
 
 block:
   let p = Port.Output.open_bytes()
+  check p is_a Port.Output ~is #true
+  check p is_a Port.Output.String ~is #true
   p.print("x")
   check p.get_bytes() ~is_now #"x".copy()
   check p.get_string() ~is "x"
@@ -112,3 +120,42 @@ block:
   parameterize { Port.Output.current_error: p }:
     Port.Output.current_error().println(1)
   check p.get_string() ~is "1\n"
+
+block:
+  let p = Port.Output.open_string()
+  parameterize { Port.Output.current: p }:
+    Port.Output.current().println(1)
+  check p.get_string() ~is "1\n"
+  check p.get_bytes() ~is_now #"1\n"
+  block:
+    use_dynamic
+    check dynamic(p).get_string() ~is "1\n"
+    check dynamic(p).get_bytes() ~is_now #"1\n"
+
+check:
+  ~eval
+  use_static
+  (Port.Output.open_string() :: Port.Output).get_string()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  (Port.Output.open_string() :: Port.Output).get_bytes()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ("oops" :~ Port.Output.String).get_string()
+  ~throws values(
+    "contract violation",
+    "expected: Port.Output.String",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ Port.Output.String).get_bytes()
+  ~throws values(
+    "contract violation",
+    "expected: Port.Output.String",
+    "given: \"oops\"",
+  )
