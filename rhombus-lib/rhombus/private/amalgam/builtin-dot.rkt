@@ -40,7 +40,9 @@
     [(srcloc? v) srcloc-method-table]
     [(exn? v) (get-exn-method-table v)]
     [(input-port? v) input-port-method-table]
-    [(output-port? v) output-port-method-table]
+    [(output-port? v) (if (string-port? v)
+                          output-string-port-method-table
+                          output-port-method-table)]
     [(box? v) box-method-table]
     [(mutable-treelist? v) mutable-treelist-method-table]
     [else #f]))
