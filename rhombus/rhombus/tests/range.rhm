@@ -700,36 +700,36 @@ block:
   check:
     Range.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "Range.to_sequence: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ SequenceRange).to_sequence()
     ~throws values(
-      "contract violation",
+      "Range.to_sequence: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
   check:
     Range.step_by("oops", 2)
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ SequenceRange).step_by(2)
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
   check:
-    for List (x: ("oops" :~ SequenceRange)):
+    for List (x: "oops" :~ SequenceRange):
       x
     ~throws values(
-      "contract violation",
+      "Range.to_sequence: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
@@ -737,7 +737,7 @@ block:
     for List (x: Range.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "Range.to_sequence: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
@@ -745,7 +745,7 @@ block:
     for List (x: ("oops" :~ SequenceRange).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "Range.to_sequence: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
@@ -753,7 +753,7 @@ block:
     for List (x: Range.step_by("oops", 2)):
       x
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
@@ -761,7 +761,7 @@ block:
     for List (x: ("oops" :~ SequenceRange).step_by(2)):
       x
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: SequenceRange",
       "given: \"oops\"",
     )
@@ -770,14 +770,14 @@ block:
   check:
     Range.to_list("oops")
     ~throws values(
-      "contract violation",
+      "Range.to_list: contract violation",
       "expected: ListRange",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ ListRange).to_list()
     ~throws values(
-      "contract violation",
+      "Range.to_list: contract violation",
       "expected: ListRange",
       "given: \"oops\"",
     )
@@ -870,7 +870,7 @@ block:
     for List (i: (0..5).step_by("oops")):
       i
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: PosInt",
       "given: \"oops\""
     )
@@ -902,7 +902,7 @@ block:
     for List (i: (0..=5).step_by("oops")):
       i
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: PosInt",
       "given: \"oops\""
     )
@@ -918,7 +918,7 @@ block:
     for List (i: (0..).step_by("oops")):
       i
     ~throws values(
-      "contract violation",
+      "Range.step_by: contract violation",
       "expected: PosInt",
       "given: \"oops\""
     )

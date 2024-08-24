@@ -27,8 +27,24 @@ check:
   ~is 3
 
 check:
+  Array(1, 2, 3).length()
+  ~is 3
+
+check:
   Array.length([1, 2, 3])
-  ~throws values("contract violation", "expected: Array")
+  ~throws values(
+    "Array.length: contract violation",
+    "expected: Array",
+    "given: [1, 2, 3]",
+  )
+
+check:
+  ([1, 2, 3] :~ Array).length()
+  ~throws values(
+    "Array.length: contract violation",
+    "expected: Array",
+    "given: [1, 2, 3]",
+  )
 
 block:
   use_static
@@ -50,7 +66,11 @@ block:
     ~is_now Array(1, 2, 3, 0)
   check:
     Array(1, 2, 3) ++ "oops"
-    ~throws values("contract violation", "expected: Array")
+    ~throws values(
+      "Array.append: contract violation",
+      "expected: Array",
+      "given: \"oops\"",
+    )
   check:
     Array(1, 2, 3).append(Array(4, 5, 6), Array(7, 8, 9))
     ~is_now Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
@@ -248,6 +268,10 @@ block:
   use_static
   def arr = Array("a", "b", "c")
   check:
+    for List (x: arr):
+      x
+    ~is ["a", "b", "c"]
+  check:
     for List (x: Array.to_sequence(arr)):
       x
     ~is ["a", "b", "c"]
@@ -260,22 +284,31 @@ version_guard.at_least "8.13.0.1":
   check:
     Array.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "Array.to_sequence: contract violation",
       "expected: Array",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ Array).to_sequence()
     ~throws values(
-      "contract violation",
+      "Array.to_sequence: contract violation",
       "expected: Array",
       "given: \"oops\"",
     )
   check:
+    for List (x: "oops" :~ Array):
+      x
+    ~throws values(
+      "Array.to_sequence: contract violation",
+      "expected: Array",
+      "given: \"oops\"",
+    )
+
+  check:
     for List (x: Array.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "Array.to_sequence: contract violation",
       "expected: Array",
       "given: \"oops\"",
     )
@@ -283,7 +316,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: ("oops" :~ Array).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "Array.to_sequence: contract violation",
       "expected: Array",
       "given: \"oops\"",
     )
@@ -297,3 +330,19 @@ check:
   a[0] := a
   to_string(a)
   ~is "#0=Array(#0#, 2, 3)"
+
+check:
+  ("oops" :~ Array)[0]
+  ~throws values(
+    "Array.get: contract violation",
+    "expected: Array",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableArray)[0] := 0
+  ~throws values(
+    "Array.set: contract violation",
+    "expected: MutableArray",
+    "given: \"oops\"",
+  )

@@ -73,12 +73,16 @@ check:
 
 check:
   (fun (x): #void) is_a Function.of_arity(#false, 1)
-  ~throws values("contract violation", "expected: NonnegInt")
+  ~throws values(
+    "Function.of_arity: contract violation",
+    "expected: NonnegInt",
+    "given: #false",
+  )
 
 check:
   (fun (x): x).map([1, 2, 3], [4, 5, 6])
   ~throws values(
-    "argument mismatch",
+    "Function.map: argument mismatch",
     "the given function's expected number of arguments does not match the given number of lists",
     "expected", "1",
     "given", "2",

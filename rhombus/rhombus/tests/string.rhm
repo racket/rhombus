@@ -40,10 +40,14 @@ block:
     ~is 5
   check:
     "hello".length() ~is 5
-    "hello"[0] ~is #{#\h}
-    "hello".get(0) ~is #{#\h}
+    "hello"[0] ~is "h"[0]
+    "hello".get(0) ~is "h"[0]
     "hello" ++ " " ++ "world" ~is "hello world"
-    "hello" ++ " " ++ #"world" ~throws values("contract violation", "expected: ReadableString")
+    "hello" ++ " " ++ #"world" ~throws values(
+      "String.append: contract violation",
+      "expected: ReadableString",
+      "given: #\"world\"",
+    )
     "hello".append(" world") ~is "hello world"
     "hello".append(" world", " and bye") ~is "hello world and bye"
     "hello".to_int() ~is #false
@@ -79,8 +83,8 @@ block:
 
 check:
   dynamic("hello").length() ~is 5
-  dynamic("hello")[0] ~is #{#\h}
-  dynamic("hello").get(0) ~is #{#\h}
+  dynamic("hello")[0] ~is "h"[0]
+  dynamic("hello").get(0) ~is "h"[0]
   dynamic("hello" ++ " ") ++ "world" ~is "hello world"
   dynamic("hello" ++ " ") ++ #"world" ~throws "cannot append a string and other value"
   dynamic("hello").append(" world") ~is "hello world"
@@ -216,30 +220,38 @@ block:
   use_static
   def str = "abc"
   check:
+    for List (x: str):
+      x
+    ~is ["a"[0], "b"[0], "c"[0]]
+  check:
     for List (x: String.to_sequence(str)):
       x
-    ~is [#{#\a}, #{#\b}, #{#\c}]
+    ~is ["a"[0], "b"[0], "c"[0]]
   check:
     for List (x: str.to_sequence()):
       x
-    ~is [#{#\a}, #{#\b}, #{#\c}]
-  check:
-    for List (x: str):
-      x
-    ~is [#{#\a}, #{#\b}, #{#\c}]
+    ~is ["a"[0], "b"[0], "c"[0]]
 
 version_guard.at_least "8.13.0.1":
   check:
     String.to_sequence(#"oops")
     ~throws values(
-      "contract violation",
+      "String.to_sequence: contract violation",
       "expected: ReadableString",
       "given: #\"oops\"",
     )
   check:
     (#"oops" :~ ReadableString).to_sequence()
     ~throws values(
-      "contract violation",
+      "String.to_sequence: contract violation",
+      "expected: ReadableString",
+      "given: #\"oops\"",
+    )
+  check:
+    for List (x: #"oops" :~ ReadableString):
+      x
+    ~throws values(
+      "String.to_sequence: contract violation",
       "expected: ReadableString",
       "given: #\"oops\"",
     )
@@ -247,7 +259,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: String.to_sequence(#"oops")):
       x
     ~throws values(
-      "contract violation",
+      "String.to_sequence: contract violation",
       "expected: ReadableString",
       "given: #\"oops\"",
     )
@@ -255,7 +267,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: (#"oops" :~ ReadableString).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "String.to_sequence: contract violation",
       "expected: ReadableString",
       "given: #\"oops\"",
     )

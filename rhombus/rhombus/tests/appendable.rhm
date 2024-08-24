@@ -82,13 +82,13 @@ check:
 check:
   (MutableMap{ 1: 2 } :~ Appendable)
     ++ MutableMap{ 3: 4 } ~throws values(
-    "contract violation",
+    "Appendable.append: contract violation",
     "expected: Appendable",
     "MutableMap{1: 2}",
   )
   (MutableSet{ 1, 2 } :~ Appendable)
     ++ MutableSet{ 3, 4 } ~throws values(
-    "contract violation",
+    "Appendable.append: contract violation",
     "expected: Appendable",
     "MutableSet{1, 2}",
   )

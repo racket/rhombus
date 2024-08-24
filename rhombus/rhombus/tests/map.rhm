@@ -34,7 +34,11 @@ check:
 
 check:
   Map.length({1, 2, 3})
-  ~throws values("contract violation", "expected: ReadableMap")
+  ~throws values(
+    "Map.length: contract violation",
+    "expected: ReadableMap",
+    "given: {1, 2, 3}",
+  )
 
 block:
   use_static
@@ -49,8 +53,16 @@ block:
   check:
     ({"a": 1, "b": 2} ++ {"a": 3})["a"] ~is 3
     ({"a": 1, "b": 2} ++ {"a": 3, "b": 4})["a"] ~is 3
-    {"a": 1, "b": 2} ++ "oops" ~throws values("contract violation", "expected: Map")
-    {"a": 1, "b": 2} ++ MutableMap{"a": 3} ~throws values("contract violation", "expected: Map")
+    {"a": 1, "b": 2} ++ "oops" ~throws values(
+      "Map.append: contract violation",
+      "expected: Map",
+      "given: \"oops\"",
+    )
+    {"a": 1, "b": 2} ++ MutableMap{"a": 3} ~throws values(
+      "Map.append: contract violation",
+      "expected: Map",
+      "given: MutableMap{\"a\": 3}",
+    )
     {"a": 1, "b": 2}.append()["a"] ~is 1
     {"a": 1, "b": 2}.append({"a": 2})["a"] ~is 2
     {"a": 1, "b": 2}.append({"a": 2}, {"a": 3})["a"] ~is 3
@@ -107,56 +119,56 @@ block:
   check:
     Map([1, "1", "oops"])
     ~throws values(
-      "contract violation",
+      "Map: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "[1, \"1\", \"oops\"]",
     )
   check:
     Map(PairList[1, "1", "oops"])
     ~throws values(
-      "contract violation",
+      "Map: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     Map(Array(1, "1", "oops"))
     ~throws values(
-      "contract violation",
+      "Map: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "Array(1, \"1\", \"oops\")",
     )
   check:
     Map(Broken())
     ~throws values(
-      "contract violation",
+      "Map: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "Broken()",
     )
   check:
     MutableMap([1, "1", "oops"])
     ~throws values(
-      "contract violation",
+      "MutableMap: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(PairList[1, "1", "oops"])
     ~throws values(
-      "contract violation",
+      "MutableMap: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(Array(1, "1", "oops"))
     ~throws values(
-      "contract violation",
+      "MutableMap: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "Array(1, \"1\", \"oops\")",
     )
   check:
     MutableMap(Broken())
     ~throws values(
-      "contract violation",
+      "MutableMap: contract violation",
       "expected: Listable.to_list && matching([_, _])",
       "Broken()",
     )
@@ -413,6 +425,10 @@ block:
   use_static
   def mp = {1: "a", 2: "b", 3: "c"}
   check:
+    for Map ((k, v): mp):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
+  check:
     for Map ((k, v): Map.to_sequence(mp)):
       values(k, v)
     ~is {1: "a", 2: "b", 3: "c"}
@@ -424,6 +440,10 @@ block:
 block:
   use_static
   def mp = MutableMap{1: "a", 2: "b", 3: "c"}
+  check:
+    for Map ((k, v): mp):
+      values(k, v)
+    ~is {1: "a", 2: "b", 3: "c"}
   check:
     for Map ((k, v): Map.to_sequence(mp)):
       values(k, v)
@@ -437,14 +457,22 @@ version_guard.at_least "8.13.0.1":
   check:
     Map.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "Map.to_sequence: contract violation",
       "expected: ReadableMap",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ Map).to_sequence()
     ~throws values(
-      "contract violation",
+      "Map.to_sequence: contract violation",
+      "expected: ReadableMap",
+      "given: \"oops\"",
+    )
+  check:
+    for Map ((k, v): "oops" :~ Map):
+      values(k, v)
+    ~throws values(
+      "Map.to_sequence: contract violation",
       "expected: ReadableMap",
       "given: \"oops\"",
     )
@@ -452,7 +480,7 @@ version_guard.at_least "8.13.0.1":
     for Map ((k, v): Map.to_sequence("oops")):
       values(k, v)
     ~throws values(
-      "contract violation",
+      "Map.to_sequence: contract violation",
       "expected: ReadableMap",
       "given: \"oops\"",
     )
@@ -460,7 +488,7 @@ version_guard.at_least "8.13.0.1":
     for Map ((k, v): ("oops" :~ Map).to_sequence()):
       values(k, v)
     ~throws values(
-      "contract violation",
+      "Map.to_sequence: contract violation",
       "expected: ReadableMap",
       "given: \"oops\"",
     )
@@ -1036,3 +1064,19 @@ block:
       ) ~is Map.by(equals){
         #'equal_always: #'equal_always, #'eq: #'eq, #'eqv: #'eqv, #'equal: #'equal, #'custom: #'custom
       }
+
+check:
+  ("oops" :~ Map)[0]
+  ~throws values(
+    "Map.get: contract violation",
+    "expected: ReadableMap",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableMap)[0] := 0
+  ~throws values(
+    "MutableMap.set: contract violation",
+    "expected: MutableMap",
+    "given: \"oops\"",
+  )

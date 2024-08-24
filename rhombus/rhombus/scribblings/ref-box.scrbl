@@ -105,7 +105,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
 @doc(
   fun Box.value(box :: Box) :: Any
-  fun Box.value(box :: Box, val :: Any) :: Void
+  fun Box.value(box :: MutableBox, val :: Any) :: Void
 ){
 
  Accesses or updates the value field of @rhombus(box).

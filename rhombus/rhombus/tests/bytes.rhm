@@ -33,7 +33,11 @@ block:
     #"hello"[0] ~is 104
     #"hello".get(0) ~is 104
     #"hello" ++ #" " ++ #"world" ~is_now #"hello world"
-    #"hello" ++ #" " ++ "world" ~throws values("contract violation", "expected: Bytes")
+    #"hello" ++ #" " ++ "world" ~throws values(
+      "Bytes.append: contract violation",
+      "expected: Bytes",
+      "given: \"world\"",
+    )
     #"hello".append(#" world") ~is_now #"hello world"
     #"hello".append(#" world", #" and bye") ~is_now #"hello world and bye"
     #"hello".subbytes(1) ~is_now #"ello"
@@ -116,6 +120,10 @@ block:
   use_static
   def bstr = #"123"
   check:
+    for List (x: bstr):
+      x
+    ~is [49, 50, 51]
+  check:
     for List (x: Bytes.to_sequence(bstr)):
       x
     ~is [49, 50, 51]
@@ -123,23 +131,27 @@ block:
     for List (x: bstr.to_sequence()):
       x
     ~is [49, 50, 51]
-  check:
-    for List (x: bstr):
-      x
-    ~is [49, 50, 51]
 
 version_guard.at_least "8.13.0.1":
   check:
     Bytes.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "Bytes.to_sequence: contract violation",
       "expected: Bytes",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ Bytes).to_sequence()
     ~throws values(
-      "contract violation",
+      "Bytes.to_sequence: contract violation",
+      "expected: Bytes",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: "oops" :~ Bytes):
+      x
+    ~throws values(
+      "Bytes.to_sequence: contract violation",
       "expected: Bytes",
       "given: \"oops\"",
     )
@@ -147,7 +159,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: Bytes.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "Bytes.to_sequence: contract violation",
       "expected: Bytes",
       "given: \"oops\"",
     )
@@ -155,7 +167,23 @@ version_guard.at_least "8.13.0.1":
     for List (x: ("oops" :~ Bytes).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "Bytes.to_sequence: contract violation",
       "expected: Bytes",
       "given: \"oops\"",
     )
+
+check:
+  ("oops" :~ Bytes)[0]
+  ~throws values(
+    "Bytes.get: contract violation",
+    "expected: Bytes",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableBytes)[0] := 0
+  ~throws values(
+    "Bytes.set: contract violation",
+    "expected: MutableBytes",
+    "given: \"oops\"",
+  )

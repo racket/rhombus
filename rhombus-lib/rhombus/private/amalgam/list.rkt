@@ -321,24 +321,28 @@
   #:primitive (mutable-treelist-delete!)
   (mutable-treelist-delete! d pos))
 
-(define (nonempty-treelist? l)
-  (and (treelist? l) ((treelist-length l) . > . 0)))
-
 (define (check-nonempty-list who l)
-  (unless (and (pair? l) (list? l))
+  (unless (nonempty-list? l)
     (raise-argument-error* who rhombus-realm "NonemptyPairList" l)))
+
+(define (check-nonempty-treelist who l)
+  (unless (nonempty-treelist? l)
+    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
 
 (define/arity (List.first l)
   #:primitive (treelist-first)
+  (check-nonempty-treelist who l)
   (treelist-first l))
 
 (define/arity (List.last l)
   #:primitive (treelist-last)
+  (check-nonempty-treelist who l)
   (treelist-last l))
 
 (define/arity (List.rest l)
   #:primitive (treelist-rest)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (check-nonempty-treelist who l)
   (treelist-rest l))
 
 (define/arity (PairList.first l)
@@ -680,6 +684,9 @@
            success
            fail)]))
 
+(define (nonempty-treelist? l)
+  (and (treelist? l) ((treelist-length l) . > . 0)))
+
 (define (nonempty-list? l)
   (and (pair? l) (list? l)))
 
@@ -923,7 +930,7 @@
 
 (define/method (MutableList.set l n v)
   #:inline
-  #:primitive (mutable-treelist-set)
+  #:primitive (mutable-treelist-set!)
   (mutable-treelist-set! l n v))
 
 (define/method List.append

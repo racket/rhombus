@@ -147,7 +147,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_string()
   ~throws values(
-    "contract violation",
+    "Port.Output.get_string: contract violation",
     "expected: Port.Output.String",
     "given: \"oops\"",
   )
@@ -155,7 +155,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_bytes()
   ~throws values(
-    "contract violation",
+    "Port.Output.get_bytes: contract violation",
     "expected: Port.Output.String",
     "given: \"oops\"",
   )

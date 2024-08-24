@@ -39,7 +39,11 @@ check:
 
 check:
   List.length({1, 2, 3})
-  ~throws values("contract violation", "expected: List")
+  ~throws values(
+    "List.length: contract violation",
+    "expected: List",
+    "given: {1, 2, 3}",
+  )
 
 check:
   [1] :: NonemptyList
@@ -68,10 +72,18 @@ block:
     ~is [1, 2, 3, 4, 5]
   check:
     [1, 2, 3] ++ PairList[4, 5]
-    ~throws values("contract violation", "expected: List")
+    ~throws values(
+      "List.append: contract violation",
+      "expected: List",
+      "given: PairList[4, 5]",
+    )
   check:
     [1, 2, 3] ++ "oops"
-    ~throws values("contract violation", "expected: List")
+    ~throws values(
+      "List.append: contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
   check:
     [1, 2, 3].append([4, 5])
     ~is [1, 2, 3, 4, 5]
@@ -226,11 +238,15 @@ check:
   [1, 2].append() ~is [1, 2]
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
-  [1, 2].append(3) ~throws "contract violation"
+  [1, 2].append(3) ~throws values(
+    "List.append: contract violation",
+    "expected: List",
+    "given: 3"
+  )
 
 check:
   match []
-  | List.cons(hd,tl): "no"
+  | List.cons(hd, tl): "no"
   | []: "empty"
   ~is "empty"
 
@@ -312,6 +328,10 @@ block:
   use_static
   def lst = ["a", "b", "c"]
   check:
+    for List (x: lst):
+      x
+    ~is ["a", "b", "c"]
+  check:
     for List (x: List.to_sequence(lst)):
       x
     ~is ["a", "b", "c"]
@@ -324,14 +344,22 @@ version_guard.at_least "8.13.0.1":
   check:
     List.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "List.to_sequence: contract violation",
       "expected: List",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ List).to_sequence()
     ~throws values(
-      "contract violation",
+      "List.to_sequence: contract violation",
+      "expected: List",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: "oops" :~ List):
+      x
+    ~throws values(
+      "List.to_sequence: contract violation",
       "expected: List",
       "given: \"oops\"",
     )
@@ -339,7 +367,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: List.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "List.to_sequence: contract violation",
       "expected: List",
       "given: \"oops\"",
     )
@@ -347,7 +375,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: ("oops" :~ List).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "List.to_sequence: contract violation",
       "expected: List",
       "given: \"oops\"",
     )
@@ -413,7 +441,39 @@ check:
 check:
   [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
   [List.repet("oops"), ...] ~throws values(
-    "contract violation",
+    "List.repet: contract violation",
     "expected: List",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ List)[0]
+  ~throws values(
+    "List.get: contract violation",
+    "expected: List",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ List).first
+  ~throws values(
+    "List.first: contract violation",
+    "expected: NonemptyList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ List).last
+  ~throws values(
+    "List.last: contract violation",
+    "expected: NonemptyList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ List).rest
+  ~throws values(
+    "List.rest: contract violation",
+    "expected: NonemptyList",
     "given: \"oops\"",
   )

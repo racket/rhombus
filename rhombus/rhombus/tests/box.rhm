@@ -132,3 +132,19 @@ check:
   b.value := b
   to_string(b)
   ~is "#0=Box(#0#)"
+
+check:
+  ("oops" :~ Box).value
+  ~throws values(
+    "Box.value: contract violation",
+    "expected: Box",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableBox).value := 0
+  ~throws values(
+    "Box.value: contract violation",
+    "expected: MutableBox",
+    "given: \"oops\"",
+  )

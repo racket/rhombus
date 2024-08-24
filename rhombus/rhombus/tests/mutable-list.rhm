@@ -33,8 +33,24 @@ check:
   ~is 3
 
 check:
-  MutableList.length({1, 2, 3})
-  ~throws values("contract violation", "expected: MutableList")
+  MutableList[1, 2, 3].length()
+  ~is 3
+
+check:
+  MutableList.length([1, 2, 3])
+  ~throws values(
+    "MutableList.length: contract violation",
+    "expected: MutableList",
+    "given: [1, 2, 3]",
+  )
+
+check:
+  ([1, 2, 3] :~ MutableList).length()
+  ~throws values(
+    "MutableList.length: contract violation",
+    "expected: MutableList",
+    "given: [1, 2, 3]",
+  )
 
 block:
   use_static
@@ -213,18 +229,62 @@ check:
   MutableList().has_element("no such thing")
   ~is #false
 
+block:
+  use_static
+  def lst = MutableList[1, 2, 3]
+  check:
+    for List (x: lst):
+      x
+    ~is [1, 2, 3]
+  check:
+    for List (x: MutableList.to_sequence(lst)):
+      x
+    ~is [1, 2, 3]
+  check:
+    for List (x: lst.to_sequence()):
+      x
+    ~is [1, 2, 3]
+
 version_guard.at_least "8.13.0.1":
+  let who:
+    version_guard.at_least "8.14.0.2"
+    | "MutableList.to_sequence: "
+    | ""
   check:
     MutableList.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      who ++ "contract violation",
       "expected: MutableList",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ MutableList).to_sequence()
     ~throws values(
-      "contract violation",
+      who ++ "contract violation",
+      "expected: MutableList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: "oops" :~ MutableList):
+      x
+    ~throws values(
+      who ++ "contract violation",
+      "expected: MutableList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: MutableList.to_sequence("oops")):
+      x
+    ~throws values(
+      who ++ "contract violation",
+      "expected: MutableList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: ("oops" :~ MutableList).to_sequence()):
+      x
+    ~throws values(
+      who ++ "contract violation",
       "expected: MutableList",
       "given: \"oops\"",
     )
@@ -243,14 +303,16 @@ block:
     [MutableList[x], ...] ~is_now [MutableList(1), MutableList(2), MutableList(3)]
 
 check:
-    def arr :: MutableList.later_of(Int) = dynamic(MutableList(1, 2, 3))
-    arr.length()
-    ~is 3
+  def arr :: MutableList.later_of(Int) = dynamic(MutableList(1, 2, 3))
+  arr.length()
+  ~is 3
+
 check:
-    class Posn(x, y)
-    def arr :: MutableList.later_of(Posn) = MutableList(Posn(1, 2))
-    arr[0].x
-    ~is 1
+  class Posn(x, y)
+  def arr :: MutableList.later_of(Posn) = MutableList(Posn(1, 2))
+  arr[0].x
+  ~is 1
+
 check:
   10 :: MutableList.later_of(Any)
   ~throws "does not satisfy annotation"
@@ -344,3 +406,19 @@ check:
   for values(sum = 0) (v: dynamic(MutableList[1, 2, 3])):
     sum + v
   ~is 6
+
+check:
+  ("oops" :~ MutableList)[0]
+  ~throws values(
+    "MutableList.get: contract violation",
+    "expected: MutableList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableList)[0] := 1
+  ~throws values(
+    "MutableList.set: contract violation",
+    "expected: MutableList",
+    "given: \"oops\"",
+  )

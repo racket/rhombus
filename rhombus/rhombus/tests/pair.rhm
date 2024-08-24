@@ -27,7 +27,35 @@ check:
 
 check:
   Pair.first(1)
-  ~throws values("contract violation", "expected: Pair")
+  ~throws values(
+    "Pair.first: contract violation",
+    "expected: Pair",
+    "given: 1",
+  )
+
+check:
+  (1 :~ Pair).first
+  ~throws values(
+    "Pair.first: contract violation",
+    "expected: Pair",
+    "given: 1",
+  )
+
+check:
+  Pair.rest(2)
+  ~throws values(
+    "Pair.rest: contract violation",
+    "expected: Pair",
+    "given: 2",
+  )
+
+check:
+  (2 :~ Pair).rest
+  ~throws values(
+    "Pair.rest: contract violation",
+    "expected: Pair",
+    "given: 2",
+  )
 
 check:
   Pair("ok", "oops") :: Pair.of(String, Number)

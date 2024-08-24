@@ -34,7 +34,11 @@ check:
 
 check:
   PairList.length({1, 2, 3})
-  ~throws values("contract violation", "expected: PairList")
+  ~throws values(
+    "PairList.length: contract violation",
+    "expected: PairList",
+    "given: {1, 2, 3}",
+  )
 
 check:
   PairList[1] :: NonemptyPairList
@@ -60,10 +64,18 @@ block:
     ~is PairList[1, 2, 3, 4, 5]
   check:
     PairList[1, 2, 3] ++ [4, 5]
-    ~throws values("contract violation", "expected: PairList")
+    ~throws values(
+      "PairList.append: contract violation",
+      "expected: PairList",
+      "given: [4, 5]",
+    )
   check:
     PairList[1, 2, 3] ++ "oops"
-    ~throws values("contract violation", "expected: PairList")
+    ~throws values(
+      "PairList.append: contract violation",
+      "expected: PairList",
+      "given: \"oops\""
+    )
   check:
     PairList[1, 2, 3].append(PairList[4, 5])
     ~is PairList[1, 2, 3, 4, 5]
@@ -199,7 +211,11 @@ check:
   PairList[1, 2].append() ~is PairList[1, 2]
   PairList[1, 2].append(PairList[3]) ~is PairList[1, 2, 3]
   PairList[1, 2].append(PairList[3], PairList[4, 5]) ~is PairList[1, 2, 3, 4, 5]
-  PairList[1, 2].append(3) ~throws "contract violation"
+  PairList[1, 2].append(3) ~throws values(
+    "PairList.append: contract violation",
+    "expected: PairList",
+    "given: 3",
+  )
 
 check:
   match PairList[]
@@ -294,6 +310,10 @@ block:
   use_static
   def lst = PairList["a", "b", "c"]
   check:
+    for List (x: lst):
+      x
+    ~is ["a", "b", "c"]
+  check:
     for List (x: PairList.to_sequence(lst)):
       x
     ~is ["a", "b", "c"]
@@ -306,14 +326,22 @@ version_guard.at_least "8.13.0.1":
   check:
     PairList.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "PairList.to_sequence: contract violation",
       "expected: PairList",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ PairList).to_sequence()
     ~throws values(
-      "contract violation",
+      "PairList.to_sequence: contract violation",
+      "expected: PairList",
+      "given: \"oops\"",
+    )
+  check:
+    for List (x: "oops" :~ PairList):
+      x
+    ~throws values(
+      "PairList.to_sequence: contract violation",
       "expected: PairList",
       "given: \"oops\"",
     )
@@ -321,7 +349,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: PairList.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "PairList.to_sequence: contract violation",
       "expected: PairList",
       "given: \"oops\"",
     )
@@ -329,7 +357,7 @@ version_guard.at_least "8.13.0.1":
     for List (x: ("oops" :~ PairList).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "PairList.to_sequence: contract violation",
       "expected: PairList",
       "given: \"oops\"",
     )
@@ -356,7 +384,39 @@ check:
 check:
   PairList[PairList.repet(PairList[1, 2, 3]), ...] ~is PairList[1, 2, 3]
   PairList[PairList.repet("oops"), ...] ~throws values(
-    "contract violation",
+    "PairList.repet: contract violation",
     "expected: PairList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ PairList)[0]
+  ~throws values(
+    "PairList.get: contract violation",
+    "expected: PairList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ PairList).first
+  ~throws values(
+    "PairList.first: contract violation",
+    "expected: NonemptyPairList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ PairList).last
+  ~throws values(
+    "PairList.last: contract violation",
+    "expected: NonemptyPairList",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ PairList).rest
+  ~throws values(
+    "PairList.rest: contract violation",
+    "expected: NonemptyPairList",
     "given: \"oops\"",
   )

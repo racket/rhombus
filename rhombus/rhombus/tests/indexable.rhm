@@ -135,21 +135,21 @@ check:
 
 check:
   (#'apple :~ Indexable)[0] ~throws values(
-    "contract violation",
+    "Indexable.get: contract violation",
     "expected: Indexable",
     "#'apple",
   )
   ("apple" :~ MutableIndexable)[0] := "b"[0] ~throws values(
-    "contract violation",
+    "MutableIndexable.set: contract violation",
     "expected: MutableIndexable",
     "\"apple\"",
   )
-  ((block:
+  (block:
      import:
        lib("racket/base.rkt").#{string-copy} as copy
-     copy("apple")
-    ) :~ MutableIndexable)[0] := "b"[0] ~throws values(
-    "contract violation",
+     copy("apple") :~ MutableIndexable [0] := "b"[0]
+   ) ~throws values(
+    "MutableIndexable.set: contract violation",
     "expected: MutableIndexable",
     "String.copy(\"apple\")",
   )

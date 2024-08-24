@@ -31,7 +31,11 @@ check:
 
 check:
   Set.length([1, 2, 3])
-  ~throws values("contract violation", "expected: ReadableSet")
+  ~throws values(
+    "Set.length: contract violation",
+    "expected: ReadableSet",
+    "given: [1, 2, 3]",
+  )
 
 block:
   use_static
@@ -50,8 +54,16 @@ block:
   check:
     {1, 2, 3} ++ {4, 5} ~is {1, 2, 3, 4, 5}
     {1, 2, 3}.append({4, 5}) ~is {1, 2, 3, 4, 5}
-    {1, 2, 3} ++ "oops" ~throws values("contract violation", "expected: Set")
-    {1, 2, 3} ++ MutableSet{4, 5} ~throws values("contract violation", "expected: Set")
+    {1, 2, 3} ++ "oops" ~throws values(
+      "Set.append: contract violation",
+      "expected: Set",
+      "given: \"oops\"",
+    )
+    {1, 2, 3} ++ MutableSet{4, 5} ~throws values(
+      "Set.append: contract violation",
+      "expected: Set",
+      "given: MutableSet{4, 5}",
+    )
   check:
     Set("a", "b").length()
     ~is 2
@@ -269,13 +281,25 @@ check:
 block:
   check:
     Set.append(MutableSet{1, 2, 3}, {4}, {5, 6})
-    ~throws values("contract violation", "expected: Set")
+    ~throws values(
+      "Set.append: contract violation",
+      "expected: Set",
+      "given: MutableSet{1, 2, 3}",
+    )
   check:
     Set.intersect(MutableSet{1, 3}, {2, 3}, {3, 4})
-    ~throws values("contract violation", "expected: Set")
+    ~throws values(
+      "Set.intersect: contract violation",
+      "expected: Set",
+      "given: MutableSet{1, 3}",
+    )
   check:
     Set.union(MutableSet{1, 3}, {2, 3}, {3, 4})
-    ~throws values("contract violation", "expected: Set")
+    ~throws values(
+      "Set.union: contract violation",
+      "expected: Set",
+      "given: MutableSet{1, 3}",
+    )
 
 block:
   use_static
@@ -348,6 +372,10 @@ block:
   use_static
   def st = {"a", "b", "c"}
   check:
+    for Set (x: st):
+      x
+    ~is {"a", "b", "c"}
+  check:
     for Set (x: Set.to_sequence(st)):
       x
     ~is {"a", "b", "c"}
@@ -359,6 +387,10 @@ block:
 block:
   use_static
   def st = MutableSet{"a", "b", "c"}
+  check:
+    for Set (x: st):
+      x
+    ~is {"a", "b", "c"}
   check:
     for Set (x: Set.to_sequence(st)):
       x
@@ -372,14 +404,22 @@ version_guard.at_least "8.13.0.1":
   check:
     Set.to_sequence("oops")
     ~throws values(
-      "contract violation",
+      "Set.to_sequence: contract violation",
       "expected: ReadableSet",
       "given: \"oops\"",
     )
   check:
     ("oops" :~ Set).to_sequence()
     ~throws values(
-      "contract violation",
+      "Set.to_sequence: contract violation",
+      "expected: ReadableSet",
+      "given: \"oops\"",
+    )
+  check:
+    for Set (x: "oops" :~ Set):
+      x
+    ~throws values(
+      "Set.to_sequence: contract violation",
       "expected: ReadableSet",
       "given: \"oops\"",
     )
@@ -387,7 +427,7 @@ version_guard.at_least "8.13.0.1":
     for Set (x: Set.to_sequence("oops")):
       x
     ~throws values(
-      "contract violation",
+      "Set.to_sequence: contract violation",
       "expected: ReadableSet",
       "given: \"oops\"",
     )
@@ -395,7 +435,7 @@ version_guard.at_least "8.13.0.1":
     for Set (x: ("oops" :~ Set).to_sequence()):
       x
     ~throws values(
-      "contract violation",
+      "Set.to_sequence: contract violation",
       "expected: ReadableSet",
       "given: \"oops\"",
     )
@@ -1095,3 +1135,19 @@ block:
         Set.by(is_now){#'equal},
         Set.by(equals){#'custom},
       ) ~is Set.by(equals){}
+
+check:
+  ("oops" :~ Set)[0]
+  ~throws values(
+    "Set.get: contract violation",
+    "expected: ReadableSet",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ MutableSet)[0] := 0
+  ~throws values(
+    "MutableSet.set: contract violation",
+    "expected: MutableSet",
+    "given: \"oops\"",
+  )

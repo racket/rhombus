@@ -249,17 +249,12 @@ check:
   #'~apple is_a Comparable ~is #true
 
 check:
-  (MutableMap{ 1: 2 } :~ Appendable)
-    ++ MutableMap{ 3: 4 } ~throws values(
-    "contract violation",
-    "expected: Appendable",
-    "MutableMap{1: 2}",
-  )
-  (MutableSet{ 1, 2 } :~ Appendable)
-    ++ MutableSet{ 3, 4 } ~throws values(
-    "contract violation",
-    "expected: Appendable",
-    "MutableSet{1, 2}",
+  class NotComparable()
+  (NotComparable() :~ Comparable) < NotComparable()
+  ~throws values(
+    "Comparable.compare_to: contract violation",
+    "expected: Comparable",
+    "given: NotComparable()",
   )
 
 block:
