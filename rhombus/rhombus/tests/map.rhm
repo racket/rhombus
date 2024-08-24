@@ -258,50 +258,380 @@ block:
     ~is [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
 
 check:
-  def {"x": y} = {"x": 1}
-  y
-  ~is 1
-
-check:
-  def Map{"x": y} = {"x": 1}
-  y
-  ~is 1
-
-check:
-  def Map(["x", y]) = {"x": 1}
-  y
-  ~is 1
-
-check:
-  def {"x": y} = {"x": 1, "y": 2}
-  y
-  ~is 1
-
-check:
-  def Map{"x": y} = {"x": 1, "y": 2}
-  y
-  ~is 1
-
-check:
-  def ex = "x"
-  def {ex +& "y": y} = {"xy": 1}
-  y
-  ~is 1
-
-check:
-  def {"x": x, "y": y} = {"x": 1, "y": 2}
+  def {"x": x, "y": y = 2} = {"x": 1}
   [x, y]
   ~is [1, 2]
 
 check:
+  def {"x": x, "y": y: 2} = {"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def {"x": x = 1, "y": y = 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def {"x": x: 1, "y": y: 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Map{"x": x, "y": y = 2} = {"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Map{"x": x, "y": y: 2} = {"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Map{"x": x = 1, "y": y = 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Map{"x": x: 1, "y": y: 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Map(["x", x], ["y", y]) = {"x": 1, "y": 2}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x, "y": y = 2} = {"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x, "y": y: 2} = {"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x = 1, "y": y = 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x: 1, "y": y: 2} = {}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap(["x", x], ["y", y]) = {"x": 1, "y": 2}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x, "y": y = 2} = MutableMap{"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x, "y": y: 2} = MutableMap{"x": 1}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x = 1, "y": y = 2} = MutableMap{}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap{"x": x: 1, "y": y: 2} = MutableMap{}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def ReadableMap(["x", x], ["y", y]) = MutableMap{"x": 1, "y": 2}
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def {"x": x} = {"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def Map{"x": x} = {"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def Map(["x", x]) = {"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def ReadableMap{"x": x} = {"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def ReadableMap(["x", x]) = {"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def ReadableMap{"x": x} = MutableMap{"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def ReadableMap(["x", x]) = MutableMap{"x": 1, "y": 2}
+  x
+  ~is 1
+
+check:
+  def ex = "x"
+  def {ex +& "y": xy} = {"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def Map{ex +& "y": xy} = {"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def Map([ex +& "y", xy]) = {"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def ReadableMap{ex +& "y": xy} = {"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def ReadableMap([ex +& "y", xy]) = {"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def ReadableMap{ex +& "y": xy} = MutableMap{"xy": 1}
+  xy
+  ~is 1
+
+check:
+  def ex = "x"
+  def ReadableMap([ex +& "y", xy]) = MutableMap{"xy": 1}
+  xy
+  ~is 1
+
+check:
   def {"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
-  [{key, ...}, {val, ...}]
-  ~is [{"y", "z"}, {2, 3}]
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
 
 check:
   def Map{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
-  [{key, ...}, {val, ...}]
-  ~is [{"y", "z"}, {2, 3}]
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x, key: val, ...} = MutableMap{"x": 1, "y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def {"x": x, & rst} = {"x": 1, "y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def Map{"x": x, & rst} = {"x": 1, "y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def ReadableMap{"x": x, & rst} = {"x": 1, "y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def ReadableMap{"x": x, & rst} = MutableMap{"x": 1, "y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def {"x": x = 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def Map{"x": x = 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x = 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x = 1, key: val, ...} = MutableMap{"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def {"x": x: 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def Map{"x": x: 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x: 1, key: val, ...} = {"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def ReadableMap{"x": x: 1, key: val, ...} = MutableMap{"y": 2, "z": 3}
+  [x, {key, ...}, {val, ...}]
+  ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def {"x": x: 1, & rst} = {"y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def Map{"x": x: 1, & rst} = {"y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def ReadableMap{"x": x: 1, & rst} = {"y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+check:
+  def ReadableMap{"x": x: 1, & rst} = MutableMap{"y": 2, "z": 3}
+  [x, rst]
+  ~is [1, {"y": 2, "z": 3}]
+
+block:
+  fun matcher(mp):
+    match mp
+    | {
+        "x": _:
+               println("didn't match x")
+               #false,
+        "y": _:
+               println("didn't match y")
+               #false,
+        "z": _:
+               println("didn't match z")
+               #false,
+      }:
+        #void
+  check:
+    matcher({})
+    ~prints "didn't match x\ndidn't match y\ndidn't match z\n"
+  check:
+    matcher({"x": #false})
+    ~prints "didn't match y\ndidn't match z\n"
+  check:
+    matcher({"y": #false})
+    ~prints "didn't match x\ndidn't match z\n"
+  check:
+    matcher({"z": #false})
+    ~prints "didn't match x\ndidn't match y\n"
+  check:
+    matcher({"x": #false, "y": #false})
+    ~prints "didn't match z\n"
+  check:
+    matcher({"x": #false, "z": #false})
+    ~prints "didn't match y\n"
+  check:
+    matcher({"y": #false, "z": #false})
+    ~prints "didn't match x\n"
+  check:
+    matcher({"x": #false, "y": #false, "z": #false})
+    ~prints ""
+
+block:
+  fun matcher(mp):
+    match mp
+    | ReadableMap{
+        "x": _:
+               println("didn't match x")
+               #false,
+        "y": _:
+               println("didn't match y")
+               #false,
+        "z": _:
+               println("didn't match z")
+               #false,
+      }:
+        #void
+  check:
+    matcher({})
+    ~prints "didn't match x\ndidn't match y\ndidn't match z\n"
+  check:
+    matcher({"x": #false})
+    ~prints "didn't match y\ndidn't match z\n"
+  check:
+    matcher({"y": #false})
+    ~prints "didn't match x\ndidn't match z\n"
+  check:
+    matcher({"z": #false})
+    ~prints "didn't match x\ndidn't match y\n"
+  check:
+    matcher({"x": #false, "y": #false})
+    ~prints "didn't match z\n"
+  check:
+    matcher({"x": #false, "z": #false})
+    ~prints "didn't match y\n"
+  check:
+    matcher({"y": #false, "z": #false})
+    ~prints "didn't match x\n"
+  check:
+    matcher({"x": #false, "y": #false, "z": #false})
+    ~prints ""
+  check:
+    matcher(MutableMap{})
+    ~prints "didn't match x\ndidn't match y\ndidn't match z\n"
+  check:
+    matcher(MutableMap{"x": #false})
+    ~prints "didn't match y\ndidn't match z\n"
+  check:
+    matcher(MutableMap{"y": #false})
+    ~prints "didn't match x\ndidn't match z\n"
+  check:
+    matcher(MutableMap{"z": #false})
+    ~prints "didn't match x\ndidn't match y\n"
+  check:
+    matcher(MutableMap{"x": #false, "y": #false})
+    ~prints "didn't match z\n"
+  check:
+    matcher(MutableMap{"x": #false, "z": #false})
+    ~prints "didn't match y\n"
+  check:
+    matcher(MutableMap{"y": #false, "z": #false})
+    ~prints "didn't match x\n"
+  check:
+    matcher(MutableMap{"x": #false, "y": #false, "z": #false})
+    ~prints ""
 
 check:
   match {}

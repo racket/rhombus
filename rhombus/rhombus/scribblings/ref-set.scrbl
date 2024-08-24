@@ -149,7 +149,7 @@ it supplies its elements in an unspecified order.
 @doc(
   ~nonterminal:
     set_bind: def bind ~defn
-    rest_bind:  def bind ~defn
+    rest_bind: def bind ~defn
   bind.macro 'Set{$expr, ...}'
   bind.macro 'Set{$expr, ..., $rest}'
   bind.macro 'Set($expr, ...)'
@@ -227,7 +227,7 @@ it supplies its elements in an unspecified order.
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
- that can be updated using @rhombus(:=).
+ that can be updated using an @tech{assignment operator} like @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for construction
  mutable sets, only immutable sets.

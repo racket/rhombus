@@ -217,19 +217,25 @@ in an unspecified order.
 @doc(
   ~nonterminal:
     key_expr: block expr
+    default_expr: block expr
+    default_body: block body
     val_bind: def bind ~defn
     map_bind: def bind ~defn
     set_bind: def bind ~defn
-    rest_key_bind:  def bind ~defn
-    rest_val_bind:  def bind ~defn
-    rest_bind:  def bind ~defn
-  bind.macro '#%braces {$key_expr: $val_bind, ...}'
-  bind.macro '#%braces {$key_expr: $val_bind, ..., map_rest}'
+    rest_key_bind: def bind ~defn
+    rest_val_bind: def bind ~defn
+    rest_bind: def bind ~defn
+  bind.macro '#%braces {$key_val, ...}'
+  bind.macro '#%braces {$key_val, ..., $map_rest}'
+  grammar key_val:
+    $key_expr: $val_bind = $default_expr
+    $key_expr: $val_bind: $default_body; ...
+    $key_expr: $val_bind
   grammar map_rest:
     & $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   bind.macro '#%braces {$expr, ...}'
-  bind.macro '#%braces {$expr, ..., set_rest}'
+  bind.macro '#%braces {$expr, ..., $set_rest}'
   grammar set_rest:
     & $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
@@ -249,8 +255,10 @@ in an unspecified order.
 @examples(
   def {"x": x, "y": y} = Map{"x": 1, "y": 2}
   y
-  def {"b", z, ...} = Set{"a", "b", "c"}
-  [z, ...]
+  def Map{"a": a, "z": z = 0} = {"a": 1, "b": 2, "c": 3}
+  [a, z]
+  def {"b", more, ...} = Set{"a", "b", "c"}
+  [more, ...]
 )
 
 }
@@ -258,19 +266,25 @@ in an unspecified order.
 @doc(
   ~nonterminal:
     key_expr: block expr
+    default_expr: block expr
+    default_body: block body
     val_bind: def bind ~defn
     map_bind: def bind ~defn
     rest_key_bind: def bind ~defn
     rest_val_bind: def bind ~defn
-  bind.macro 'Map{$key_expr: $val_bind, ...}'
-  bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'Map{$key_val, ...}'
+  bind.macro 'Map{$key_val, ..., $rest}'
   bind.macro 'Map([$key_expr, $val_bind], ...)'
-  bind.macro 'ReadableMap{$key_expr: $val_bind, ...}'
-  bind.macro 'ReadableMap{$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'ReadableMap{$key_val, ...}'
+  bind.macro 'ReadableMap{$key_val, ..., $rest}'
   bind.macro 'ReadableMap([$key_expr, $val_bind], ...)'
-  bind.macro 'Map.by($key_comp){$key_expr: $val_bind, ...}'
-  bind.macro 'Map.by($key_comp){$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'Map.by($key_comp){$key_val, ...}'
+  bind.macro 'Map.by($key_comp){$key_val, ..., $rest}'
   bind.macro 'Map.by($key_comp)([$key_expr, $val_bind], ...)'
+  grammar key_val:
+    $key_expr: $val_bind = $default_expr
+    $key_expr: $val_bind: $default_body; ...
+    $key_expr: $val_bind
   grammar rest:
     & $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
@@ -281,6 +295,10 @@ in an unspecified order.
  Matches a map of the keys computed by @rhombus(key_expr) to values
  that match the corresponding @rhombus(val_bind)s.
  The matched map may have additional keys and values.
+ If @rhombus(default_expr) or @rhombus(default_body) is supplied, the
+ key is optional, and the @rhombus(default_expr) or
+ @rhombus(default_body) is used to produce a ``default'' value to
+ further match in case the key is missing in the matched map.
  If @rhombus(& map_bind) is supplied, the rest of the map excluding
  the given @rhombus(key_expr)s must match the @rhombus(map_bind).
  Static information associated by @rhombus(Map) is propagated to @rhombus(map_bind).
@@ -303,8 +321,8 @@ in an unspecified order.
 @examples(
   def Map{"x": x, "y": y} = {"x": 1, "y": 2}
   y
-  def Map{"a": a} = {"a": 1, "b": 2, "c": 3}
-  a
+  def Map{"a": a, "z": z = 0} = {"a": 1, "b": 2, "c": 3}
+  [a, z]
   def Map{"a": _, & rst} = {"a": 1, "b": 2, "c": 3}
   rst
   def Map{"a": _, key: val, ...} = {"a": 1, "b": 2, "c": 3}
@@ -336,15 +354,15 @@ in an unspecified order.
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
-  expr.macro 'MutableMap{key_expr: val_expr, ...}'
+  expr.macro 'MutableMap{$key_expr: $val_expr, ...}'
   fun MutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: MutableMap
-  expr.macro 'MutableMap.by($key_comp){key_expr: val_expr, ...}'
+  expr.macro 'MutableMap.by($key_comp){$key_expr: $val_expr, ...}'
   expr.macro 'MutableMap.by($key_comp)'
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
- that can be updated using and @tech{assignment operator} lik @rhombus(:=).
+ that can be updated using an @tech{assignment operator} like @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for constructing
  mutable maps, only immutable maps.
@@ -364,10 +382,10 @@ in an unspecified order.
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
-  expr.macro 'WeakMutableMap{key_expr: val_expr, ...}'
+  expr.macro 'WeakMutableMap{$key_expr: $val_expr, ...}'
   fun WeakMutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: WeakMutableMap
-  expr.macro 'WeakMutableMap.by($key_comp){key_expr: val_expr, ...}'
+  expr.macro 'WeakMutableMap.by($key_comp){$key_expr: $val_expr, ...}'
   expr.macro 'WeakMutableMap.by($key_comp)'
 ){
 

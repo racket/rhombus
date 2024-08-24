@@ -30,10 +30,10 @@
          "parens.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt"
          "rest-bind.rkt"
          "number.rkt"
-         (submod "comparable.rkt" for-builtin))
+         (submod "comparable.rkt" for-builtin)
+         "list-last.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -342,10 +342,7 @@
 
 (define/arity (PairList.last l)
   (check-nonempty-list who l)
-  (let loop ([l l])
-    (if (null? (cdr l))
-        (car l)
-        (loop (cdr l)))))
+  (list-last l))
 
 (define/arity (PairList.rest l)
   #:static-infos ((#%call-result #,(get-list-static-infos)))
@@ -935,8 +932,7 @@
        (raise-argument-error* who rhombus-realm "PairList" b))
      (append a b)]
     [ls
-     (let ([ln (let loop ([ls ls])
-                 (if (pair? (cdr ls)) (loop (cdr ls)) (car ls)))])
+     (let ([ln (list-last ls)])
        (unless (list? ln)
          (for ([l (in-list ls)])
            (check-list who l))
