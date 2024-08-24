@@ -261,10 +261,6 @@
                                        #:rest-to-repetition #'in-list
                                        #:rest-repetition? #f)]))))
 
-(set-primitive-contract! 'list? "PairList")
-(set-primitive-contract! 'treelist? "List")
-(set-primitive-contract! 'mutable-treelist? "MutableList")
-
 (define (check-treelist who l)
   (unless (treelist? l)
     (raise-argument-error* who rhombus-realm "List" l)))

@@ -7,7 +7,6 @@
          "define-arity.rkt"
          "call-result-key.rkt"
          "composite.rkt"
-         "realm.rkt"
          "mutability.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt")
@@ -34,18 +33,13 @@
   #:fields ()
   #:namespace-fields
   (now_of
-   later_of
-   )
+   later_of)
   #:properties
   ([value Box.value #:mutator Box.value
           (lambda (e)
-            (syntax-local-static-info e #'unbox))]
-   )
+            (syntax-local-static-info e #'unbox))])
   #:methods
   ())
-
-(set-primitive-contract! 'box? "Box")
-(set-primitive-contract! '(and/c box? (not/c immutable?)) "MutableBox")
 
 (define/arity (Box v)
   #:inline
@@ -119,5 +113,7 @@
 (define (raise-reboxer-error what v annot-str)
   (raise-binding-failure 'Box (string-append what " value") v annot-str))
 
+(set-primitive-subcontract! '(box? (not/c immutable?)) 'mutable-box?)
+(set-primitive-contract! 'mutable-box? "MutableBox")
 (define-annotation-syntax MutableBox (identifier-annotation mutable-box? #,(get-box-static-infos)))
 (define-annotation-syntax ImmutableBox (identifier-annotation immutable-box? #,(get-box-static-infos)))

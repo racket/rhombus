@@ -138,7 +138,7 @@
   (#%index-get Map.get)
   (#%sequence-constructor Map.to_sequence/optimize))
 
-(define-primitive-class ReadableMap readable-map
+(define-primitive-class ReadableMap readable-map hash
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info #,(get-any-map-static-infos)
@@ -160,7 +160,8 @@
    [snapshot Map.snapshot]
    [to_sequence Map.to_sequence]))
 
-(define-primitive-class Map map
+(set-primitive-subcontract! '(hash? immutable?) 'immutable-hash?)
+(define-primitive-class Map map immutable-hash
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%append Map.append/optimize)
@@ -188,7 +189,8 @@
   (append
    remove))
 
-(define-primitive-class MutableMap mutable-map
+(set-primitive-subcontract! '(hash? (not/c immutable?)) 'mutable-hash?)
+(define-primitive-class MutableMap mutable-map mutable-hash
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%index-set MutableMap.set)
@@ -212,7 +214,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-mutable-map-static-infos)
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f mutable-map
   #:fields ()
   #:namespace-fields
@@ -963,10 +965,6 @@
                             "not an immutable map for splicing"
                             "value" v))
   v)
-
-(set-primitive-contract! 'hash? "ReadableMap")
-(set-primitive-contract! '(and/c hash? immutable?) "Map")
-(set-primitive-contract! '(and/c hash? (not/c immutable?)) "MutableMap")
 
 (define (check-readable-map who ht)
   (unless (hash? ht)

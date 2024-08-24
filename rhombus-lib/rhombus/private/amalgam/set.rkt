@@ -166,7 +166,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-any-set-static-infos)
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:fields ()
   #:namespace-fields
   ([empty empty-readable-set]
@@ -188,7 +188,7 @@
   #:instance-static-info ((#%append Set.append/optimize)
                           . #,(get-any-set-static-infos))
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f readable-set
   #:fields ()
   #:namespace-fields
@@ -217,7 +217,7 @@
   #:instance-static-info ((#%index-set MutableSet.set)
                           . #,(get-any-set-static-infos))
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f readable-set
   #:fields ()
   #:namespace-fields
@@ -235,7 +235,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-mutable-set-static-infos)
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f mutable-set
   #:fields ()
   #:namespace-fields
@@ -1073,7 +1073,7 @@
   (syntax-parse stx
     [(_ clauses body)
      #`(set (for/hashalw clauses (values body #t)))]))
-    
+
 (define-syntax (for/seteq stx)
   (syntax-parse stx
     [(_ clauses body)

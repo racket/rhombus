@@ -43,7 +43,8 @@
          "realm.rkt"
          "mutability.rkt"
          (only-in "values.rkt"
-                  [values rhombus-values]))
+                  [values rhombus-values])
+         "rhombus-primitive.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -1356,6 +1357,7 @@
                            #:wrap-extra-rand wrap-extra-rand))
           term)))
 
+(set-primitive-who! 'application '|function call|)
 (define function-call-who '|function call|)
 
 (define (check-immutable-hash ht)

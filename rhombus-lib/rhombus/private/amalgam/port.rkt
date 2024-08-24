@@ -1,6 +1,5 @@
 #lang racket/base
-(require (for-syntax racket/base
-                     racket/syntax)
+(require (for-syntax racket/base)
          "provide.rkt"
          (submod "annotation.rkt" for-class)
          "call-result-key.rkt"
@@ -25,7 +24,7 @@
 
 (define-primitive-class Port port
   #:existing
-  #:translucent
+  #:just-annot
   #:fields ()
   #:namespace-fields
   (Input
@@ -39,7 +38,7 @@
 (define-primitive-class Input input-port
   #:lift-declaration
   #:existing
-  #:translucent
+  #:just-annot
   #:fields ()
   #:namespace-fields
   ([current current-input-port]
@@ -60,7 +59,7 @@
 (define-primitive-class Output output-port
   #:lift-declaration
   #:existing
-  #:translucent
+  #:just-annot
   #:fields ()
   #:namespace-fields
   ([current current-output-port]

@@ -25,7 +25,8 @@
 
 (define-syntax (define-primitive-class stx)
   (syntax-parse stx
-    [(_ Name name
+    [(_ Name:id name:id (~optional name/rkt:id
+                                   #:defaults ([name/rkt #'name]))
         (~optional (~and #:lift-declaration
                          (~bind [lift-declaration? #t])))
         (~optional (~or* (~and #:no-constructor-static-info
@@ -37,7 +38,8 @@
                    #:defaults ([instance-static-infos #'()]))
         (~and creation (~or* #:new #:existing))
         (~optional (~and actual-class (~or* #:class)))
-        (~and mode (~or* #:transparent #:translucent #:just-binding #:opaque))
+        (~and mode (~or* #:transparent #:translucent #:just-annot #:just-binding #:opaque))
+        (~optional (~and no-primitive #:no-primitive))
         (~optional (~seq #:parent Parent parent)
                    #:defaults ([parent #'#f]
                                [Parent #'#f]))
@@ -50,8 +52,8 @@
                               (string->symbol (format "~a.~a" (syntax-e #'Name) (syntax-e #'field)))))
                      (~parse name-field
                              (datum->syntax
-                              #'name
-                              (string->symbol (format "~a-~a" (syntax-e #'name) (syntax-e #'_field)))))
+                              #'name/rkt
+                              (string->symbol (format "~a-~a" (syntax-e #'name/rkt) (syntax-e #'_field)))))
                      (~parse Name.field-def
                              #'(define/arity (Name.field obj)
                                  #:inline
@@ -92,10 +94,11 @@
         )
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))
+           (define just-annot? (eq? '#:just-annot (syntax-e #'mode)))
            (define just-binding? (eq? '#:just-binding (syntax-e #'mode)))
            (define new? (eq? '#:new (syntax-e #'creation)))]
-     #:with name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))))
-     #:with (~var struct:name) (datum->syntax #'name (string->symbol (format "struct:~a" (syntax-e #'name))))
+     #:with name? (datum->syntax #'name/rkt (string->symbol (format "~a?" (syntax-e #'name/rkt))))
+     #:with (~var struct:name) (datum->syntax #'name/rkt (string->symbol (format "struct:~a" (syntax-e #'name/rkt))))
      #:with ([prop prop-proc (~optional prop-mutator) prop-static-infos] ...)
      #`(#,@(if transparent?
                #`([field Name.field (~? #`field-static-infos #f)] ...)
@@ -147,7 +150,7 @@
      (define declaration
        (let ([mutator-pairs #'((~? (~@ 'prop prop-mutator)) ...)])
          (if new?
-             #`(struct name (field ...)
+             #`(struct name/rkt (field ...)
                  #:property prop:field-name->accessor
                  (list* '()
                         (hasheq (~@ 'prop prop-proc)
@@ -198,16 +201,20 @@
                                    (arithmetic-shift 1 (length (syntax->list #'field-list))))]
                               [(si ...)
                                #'constructor-static-infos])
-                  (list #'(define-static-info-syntax name
+                  (list #'(define-static-info-syntax name/rkt
                             si ...
                             (#%call-result #,(get-name-static-infos))
                             (#%function-arity arity-mask)
                             . #,(indirect-get-function-static-infos))))
                 '())
 
-         #,@(if (or transparent? translucent?)
+         #,@(if (and (not new?)
+                     (not (attribute no-primitive)))
                 (list
-                 #'(void (set-primitive-contract! 'name? Name-str))
+                 #'(void (set-primitive-contract! 'name? Name-str)))
+                '())
+         #,@(if (or transparent? translucent? just-annot?)
+                (list
                  #'(define-annotation-syntax Name
                      (identifier-annotation name? #,(get-name-static-infos))))
                 '())
@@ -218,7 +225,7 @@
                       (lambda (stx)
                         (syntax-parse stx
                           [(head . tail)
-                           (values (relocate-id #'head #'name) #'tail)]))))
+                           (values (relocate-id #'head (quote-syntax name/rkt)) #'tail)]))))
                  #`(define-binding-syntax Name
                      (binding-transformer
                       (lambda (tail)

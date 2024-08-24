@@ -48,7 +48,7 @@
 (module+ for-info
   (provide (for-syntax get-function-static-infos)))
 
-(define-primitive-class Function function
+(define-primitive-class Function function procedure
   #:lift-declaration
   #:no-constructor-static-info
   #:existing
@@ -62,16 +62,6 @@
   #:methods
   (map
    for_each))
-
-(set-primitive-who! 'application '|function call|)
-
-(set-primitive-contract-combinator!
- 'procedure-arity-includes/c
- (lambda (form)
-   (and (pair? (cdr form))
-        (exact-nonnegative-integer? (cadr form))
-        (null? (cddr form))
-        (string-append "Function.of_arity(" (number->string (cadr form)) ")"))))
 
 (define (check-proc who proc)
   (unless (procedure? proc)
@@ -187,6 +177,13 @@
 
 (define-annotation-syntax Function (identifier-annotation procedure? #,(get-function-static-infos)))
 
+(set-primitive-contract-combinator!
+ 'procedure-arity-includes/c
+ (lambda (form)
+   (and (pair? (cdr form))
+        (exact-nonnegative-integer? (cadr form))
+        (null? (cddr form))
+        (string-append "Function.of_arity(" (number->string (cadr form)) ")"))))
 (define-annotation-syntax of_arity
   (annotation-prefix-operator
    '((default . stronger))

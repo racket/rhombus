@@ -29,20 +29,16 @@
   #:fields ()
   #:namespace-fields
   ([cons Pair.cons]
-   of
-   )
+   of)
   #:properties
   ([first Pair.first
           (lambda (e)
             (syntax-local-static-info e #'car))]
    [rest Pair.rest
          (lambda (e)
-           (syntax-local-static-info e #'cdr))]
-   )
+           (syntax-local-static-info e #'cdr))])
   #:methods
   ())
-
-(set-primitive-contract! 'pair? "Pair")
 
 (define/arity #:name Pair (Pair.cons a d)
   #:inline

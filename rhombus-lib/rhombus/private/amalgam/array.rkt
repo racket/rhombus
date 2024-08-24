@@ -2,8 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-         (only-in racket/base
-                  [vector array])
          racket/vector
          "treelist.rkt"
          "provide.rkt"
@@ -42,7 +40,7 @@
 (module+ for-builtin
   (provide array-method-table))
 
-(define-primitive-class Array array
+(define-primitive-class Array array vector
   #:lift-declaration
   #:constructor-arity -1
   #:instance-static-info ((#%index-get Array.get)
@@ -79,7 +77,7 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id . tail) (values (relocate+reraw #'form-id #'array) #'tail)]))))
+       [(form-id . tail) (values (relocate+reraw #'form-id #'vector) #'tail)]))))
 
 (define-annotation-constructor (Array now_of)
   () #'vector? #,(get-array-static-infos)
@@ -153,6 +151,8 @@
    'Array (string-append what " element") v annot-str
    "position" (unquoted-printing-string (number->string idx))))
 
+(set-primitive-subcontract! '(vector? (not/c immutable?)) 'mutable-vector?)
+(set-primitive-contract! 'mutable-vector? "MutableArray")
 (define-annotation-syntax MutableArray (identifier-annotation mutable-vector? #,(get-array-static-infos)))
 (define-annotation-syntax ImmutableArray (identifier-annotation immutable-vector? #,(get-array-static-infos)))
 
@@ -211,9 +211,6 @@
 (define-syntax (build-array-cons stx)
   (syntax-parse stx
     [(_ accum v) #'(cons v accum)]))
-
-(set-primitive-contract! 'vector? "Array")
-(set-primitive-contract! '(and/c vector? (not/c immutable?)) "MutableArray")
 
 (define/method (Array.get v i)
   #:inline

@@ -17,7 +17,7 @@
 
 (define-primitive-class entry_point_meta.Adjustment entry-point-adjustment
   #:existing
-  #:transparent
+  #:transparent #:no-primitive
   #:fields
   ([(prefix_arguments prefix-arguments) ((#%index-result #,(get-syntax-static-infos))
                                          . #,(get-treelist-static-infos))]

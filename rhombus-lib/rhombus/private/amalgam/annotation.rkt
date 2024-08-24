@@ -26,7 +26,8 @@
          "parens.rkt"
          "if-blocked.rkt"
          "number.rkt"
-         "is-static.rkt")
+         "is-static.rkt"
+         "rhombus-primitive.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -257,7 +258,7 @@
       (raise-syntax-error #f
                           "not allowed in a dynamic context"
                           stx)))
-  
+
   (define (parse-annotation-of/one stx sub-n kws)
     (syntax-parse stx
       [(form-id (~and subs (_::parens g ...)) . tail)
@@ -806,6 +807,11 @@
 (define (inexact-number? n) (and (number? n) (inexact? n)))
 (define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
 
+(set-primitive-contract! 'exact-integer? "Int")
+(set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt")
+(set-primitive-contract! 'number? "Number")
+(set-primitive-contract! 'integer? "Integral")
+(set-primitive-contract! 'real? "Real")
 (define-annotation-syntax Any (identifier-annotation (lambda (x) #t) ()))
 (define-annotation-syntax None (identifier-annotation (lambda (x) #f) ()))
 (define-annotation-syntax Boolean (identifier-annotation boolean? ()))

@@ -49,7 +49,7 @@
   #:no-constructor-static-info
   #:instance-static-info ()
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:fields ()
   #:namespace-fields
   ([from_to Range.from_to]
@@ -88,7 +88,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f range
   #:fields ()
   #:namespace-fields
@@ -104,7 +104,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
-  #:opaque
+  #:opaque #:no-primitive
   #:parent #f sequence-range
   #:fields ()
   #:namespace-fields
@@ -400,7 +400,7 @@
      (syntax-local-lift-module-end-declaration
       #'(define-primitive-class Name name
           #:existing
-          #:just-binding
+          #:just-binding #:no-primitive
           #:parent #f range
           #:fields
           ((~? [(start) #,(get-int-static-infos)])

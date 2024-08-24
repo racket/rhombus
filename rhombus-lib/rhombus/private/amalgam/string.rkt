@@ -27,7 +27,6 @@
          "pack.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt"
          "number.rkt"
          "static-info.rkt")
 
@@ -64,12 +63,12 @@
               (>= string>=?)
               (> string>?))))
 
-(define-primitive-class ReadableString readable-string
+(define-primitive-class ReadableString readable-string string
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info #,(get-any-string-static-infos)
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:namespace-fields
   (;; `to_string` is in "string.rhm"
@@ -103,12 +102,12 @@
    [copy String.copy]
    [snapshot String.snapshot]))
 
-(define-primitive-class String string
+(define-primitive-class String string immutable-string
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info #,(get-any-string-static-infos)
   #:existing
-  #:opaque
+  #:just-annot #:no-primitive
   #:parent #f readable-string
   #:fields ()
   #:namespace-fields
@@ -142,9 +141,6 @@
   ()
   #:methods
   ())
-
-(define-annotation-syntax String (identifier-annotation immutable-string? #,(get-string-static-infos)))
-(define-annotation-syntax ReadableString (identifier-annotation string? #,(get-readable-string-static-infos)))
 
 (define-values-for-syntax (get-string-ci-static-infos
                            get-readable-string-ci-static-infos)
@@ -202,8 +198,6 @@
 (define/arity (repr a)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (to_string a #:mode 'expr))
-
-(set-primitive-contract! 'string? "ReadableString")
 
 (define (check-readable-string who s)
   (unless (string? s)

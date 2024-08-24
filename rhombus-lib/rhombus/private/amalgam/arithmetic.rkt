@@ -6,7 +6,6 @@
          "repetition.rkt"
          "define-operator.rkt"
          "realm.rkt"
-         "rhombus-primitive.rkt"
          "compare-key.rkt"
          "static-info.rkt")
 
@@ -70,12 +69,6 @@
   (get-real-static-infos))
 (define-for-syntax (get-flonum-static-infos)
   (get-real-static-infos))
-
-(set-primitive-contract! 'number? "Number")
-(set-primitive-contract! 'real? "Real")
-(set-primitive-contract! 'integer? "Integral")
-(set-primitive-contract! 'exact-integer? "Int")
-(set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt")
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)

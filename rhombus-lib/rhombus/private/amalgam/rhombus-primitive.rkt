@@ -1,13 +1,16 @@
 #lang racket/base
 (provide set-primitive-contract!
          set-primitive-contract-combinator!
+         set-primitive-subcontract!
          get-primitive-contract
          set-primitive-who!
          get-primitive-who)
 
 (define primitive-contract-table (make-hash))
 
-(define primitive-contract-combinator-table (make-hasheq))
+(define primitive-contract-combinator-table (make-hash))
+
+(define primitive-subcontract-table (make-hash))
 
 (define primitive-who-table (make-hasheq))
 
@@ -16,6 +19,19 @@
 
 (define (set-primitive-contract-combinator! head handler)
   (hash-set! primitive-contract-combinator-table head handler))
+
+(define (set-primitive-subcontract! contracts/rkt contract/rkt)
+  (hash-set! primitive-subcontract-table contracts/rkt contract/rkt))
+
+(set-primitive-contract-combinator!
+ 'and/c
+ (lambda (form)
+   (cond
+     [(and (list? (cdr form))
+           (hash-ref primitive-subcontract-table (cdr form) #f))
+      => (lambda (contract/rkt)
+           (hash-ref primitive-contract-table contract/rkt #f))]
+     [else #f])))
 
 (define (get-primitive-contract contract/rkt)
   (cond

@@ -45,7 +45,7 @@
                                       (>= bytes>=?)
                                       (> bytes>?))))
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:namespace-fields
   ([make Bytes.make])
@@ -65,12 +65,10 @@
    to_sequence
    snapshot))
 
-(define-annotation-syntax Bytes (identifier-annotation bytes? #,(get-bytes-static-infos)))
+(set-primitive-subcontract! '(bytes? (not/c immutable?)) 'mutable-bytes?)
+(set-primitive-contract! 'mutable-bytes? "MutableBytes")
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
-
-(set-primitive-contract! 'bytes? "Bytes")
-(set-primitive-contract! '(and/c bytes? (not/c immutable?)) "MutableBytes")
 
 (define/method (Bytes.get b i)
   #:inline
