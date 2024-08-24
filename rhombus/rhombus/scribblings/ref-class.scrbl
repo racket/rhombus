@@ -179,7 +179,7 @@
  instance is created. Definitions are scoped to the block for
  potential use by class clauses, but a @rhombus(class) form is analogous
  to @rhombus(namespace) in that local definitions can be exported.
- exported names must be distinct from all non-private field, method, property, and dot-syntax
+ Exported names must be distinct from all non-private field, method, property, and dot-syntax
  names (which are automatically exported from the class in its role as a
  namespace). Since the definitions and expressions of a @rhombus(class)
  body must be processed to find @tech{class clauses} in the body, the
