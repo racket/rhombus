@@ -530,7 +530,9 @@
     (define-values (composite new-tail)
       (composite-binding-transformer #`(form-id (parens) . tail)
                                      #:rest-arg maybe-rest
-                                     (cons mode-desc (map shrubbery-syntax->string keys))
+                                     `(#:set
+                                       ,mode-desc
+                                       ,(map shrubbery-syntax->string keys))
                                      #'(lambda (v) #t) ; predicate built into set-matcher
                                      '()
                                      '()
@@ -546,12 +548,16 @@
        [composite::binding-form
         (binding-form
          #'set-infoer
-         #`(#,mode (key ...) #,rest-tmp composite.infoer-id composite.data))])
+         #`(#,mode
+            (key ...) #,rest-tmp
+            composite.infoer-id composite.data))])
      new-tail)))
 
 (define-syntax (set-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (mode keys rest-tmp composite-infoer-id composite-data))
+    [(_ static-infos (mode
+                      keys rest-tmp
+                      composite-infoer-id composite-data))
      #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
      #:with composite-info::binding-info #'composite-impl.info
      (binding-info #'composite-info.annotation-str
@@ -561,17 +567,24 @@
                    #'set-matcher
                    #'set-committer
                    #'set-binder
-                   #'(mode keys rest-tmp composite-info.matcher-id composite-info.committer-id composite-info.binder-id composite-info.data))]))
+                   #'(mode
+                      keys rest-tmp
+                      composite-info.matcher-id composite-info.committer-id composite-info.binder-id
+                      composite-info.data))]))
 
 (define-syntax (set-matcher stx)
   (syntax-parse stx
-    [(_ arg-id ([desc pred filter] keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
+    [(_ arg-id ([desc pred filter]
+                keys rest-tmp
+                composite-matcher-id composite-binder-id composite-committer-id
+                composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
+     (define rest? (and (syntax-e #'rest-tmp) #t))
      #`(IF (pred arg-id)
            (begin
              (define ht (set-ht arg-id))
-             #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
+             #,@(for/foldr ([forms (append (if rest?
                                                (list #`(define rest-tmp
                                                          (set (hash-remove*
                                                                (filter ht)
@@ -588,12 +601,18 @@
 
 (define-syntax (set-committer stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode
+                keys rest-tmp
+                composite-matcher-id composite-committer-id composite-binder-id
+                composite-data))
      #`(composite-committer-id 'set composite-data)]))
 
 (define-syntax (set-binder stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode
+                keys rest-tmp
+                composite-matcher-id composite-committer-id composite-binder-id
+                composite-data))
      #`(composite-binder-id 'set composite-data)]))
 
 (define-for-syntax set-annotation-make-predicate

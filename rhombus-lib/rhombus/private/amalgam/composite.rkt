@@ -38,11 +38,11 @@
                                                   #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
                                                   #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (syntax-parse tail
-    [(form-id (tag::parens a_g ...) . new-tail)
+    [(form-id (tag::parens a-g ...) . new-tail)
      #:do [(define stx (or stx-in
                            (quasisyntax/loc #'form-id
-                             (#,group-tag form-id (tag a_g ...)))))]
-     #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a_g ...)) stx)
+                             (#,group-tag form-id (tag a-g ...)))))]
+     #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a-g ...)) stx)
      #:with (a-parsed::binding-form ...) #'(a.parsed ...)
      ;; `rest-a` will have either 0 items or 1 item
      #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
@@ -60,13 +60,9 @@
       (binding-form
        #'composite-infoer
        #`(#,constructor-str
-          #,predicate
-          #,composite-static-infos
-          #,steppers
-          #,accessors
-          #,static-infoss
-          (a-parsed.infoer-id ... )
-          (a-parsed.data ...)
+          #,predicate #,composite-static-infos
+          #,steppers #,accessors #,static-infoss
+          (a-parsed.infoer-id ... ) (a-parsed.data ...)
           #,accessor->info? #,index-result-info? #,sequence-element-info?
           #,(and rest-arg
                  #`(#,rest-accessor
@@ -81,11 +77,12 @@
 
 (define-syntax (composite-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (constructor-str predicate (composite-static-info ...)
-                                      steppers accessors ((static-info ...) ...)
-                                      (infoer-id ...) (data ...)
-                                      accessor->info? index-result-info? sequence-element-info?
-                                      rest-data))
+    [(_ static-infos (constructor-str
+                      predicate (composite-static-info ...)
+                      steppers accessors ((static-info ...) ...)
+                      (infoer-id ...) (data ...)
+                      accessor->info? index-result-info? sequence-element-info?
+                      rest-data))
      #:with (arg-static-infos ...) (cond
                                      [(syntax-e #'accessor->info?)
                                       (for/list ([accessor (in-list (syntax->list #'accessors))])
@@ -428,44 +425,58 @@
 (define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str
                                          #:rest-repetition? rest-repetition?)
   (define c-str (syntax-e constructor-str))
+  (define kind (and (list? c-str) (syntax-e (car c-str))))
+  (define-values (mode-desc key-strs default?s)
+    (case kind
+      [(#:set) (values (syntax-e (cadr c-str))
+                       (syntax-e (caddr c-str))
+                       #f)]
+      [(#:map) (values (syntax-e (cadr c-str))
+                       (syntax-e (caddr c-str))
+                       (syntax-e (cadddr c-str)))]
+      [else (values #f #f #f)]))
   (annotation-string-from-pattern
    (string-append
-    (if (pair? c-str) (syntax-e (car c-str)) c-str)
-    (if (pair? c-str) "{" "(")
-    (if (and (pair? c-str)
-             (null? arg-annotation-strs))
-        ;; Set mode
-        (apply string-append
-               (for/list ([key-str (in-list (cdr c-str))]
-                          [i (in-naturals)])
-                 (string-append
-                  (if (zero? i) "" ", ")
-                  (syntax-e key-str))))
-        ;; Map mode
-        (apply string-append
-               (for/list ([a-str (in-list arg-annotation-strs)]
-                          [key-str (in-list (if (pair? c-str)
-                                                (cdr c-str)
-                                                arg-annotation-strs))]
-                          [i (in-naturals)])
-                 (string-append
-                  (if (zero? i) "" ", ")
-                  (if (pair? c-str)
-                      (string-append (syntax-e key-str) ": ")
-                      "")
-                  (annotation-string-to-pattern (syntax-e a-str))))))
+    (if kind mode-desc c-str)
+    (if kind "{" "(")
+    (apply string-append
+           (case kind
+             [(#:set)
+              (for/list ([key-str (in-list key-strs)]
+                         [i (in-naturals 0)])
+                (string-append
+                 (if (zero? i) "" ", ")
+                 (syntax-e key-str)))]
+             [(#:map)
+              (for/list ([key-str (in-list key-strs)]
+                         [a-str (in-list arg-annotation-strs)]
+                         [default? (in-list default?s)]
+                         [i (in-naturals 0)])
+                (string-append
+                 (if (zero? i) "" ", ")
+                 (syntax-e key-str) ": "
+                 (annotation-string-to-pattern (syntax-e a-str))
+                 (if (syntax-e default?) " = ...." "")))]
+             [else
+              (for/list ([a-str (in-list arg-annotation-strs)]
+                         [i (in-naturals 0)])
+                (string-append
+                 (if (zero? i) "" ", ")
+                 (annotation-string-to-pattern (syntax-e a-str))))]))
     (if rest-annotation-str
-        (string-append (if (and (null? arg-annotation-strs)
-                                (or (not (pair? c-str))
-                                    (null? (cdr c-str))))
-                           "" ", ")
-                       (annotation-string-to-pattern
-                        (if (eq? rest-repetition? 'pair)
-                            (annotation-string-convert-pair (syntax-e rest-annotation-str))
-                            (syntax-e rest-annotation-str)))
-                       (if rest-repetition? ", ..." ""))
+        (string-append
+         (if (and (null? arg-annotation-strs)
+                  (or (not kind)
+                      (null? key-strs)))
+             ""
+             ", ")
+         (annotation-string-to-pattern
+          (case rest-repetition?
+            [(pair) (annotation-string-convert-pair (syntax-e rest-annotation-str))]
+            [else (syntax-e rest-annotation-str)]))
+         (if rest-repetition? ", ..." ""))
         "")
-    (if (pair? c-str) "}" ")"))))
+    (if kind "}" ")"))))
 
 (define-for-syntax (uses->sequencers uses)
   (for/or ([use (in-list (syntax->list uses))])

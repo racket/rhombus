@@ -3,9 +3,10 @@
          (for-syntax racket/base
                      racket/syntax
                      syntax/parse/pre
+                     shrubbery/print
                      "srcloc.rkt"
                      "tag.rkt"
-                     shrubbery/print)
+                     "list-last.rkt")
          "treelist.rkt"
          "to-list.rkt"
          "provide.rkt"
@@ -32,6 +33,7 @@
          "setmap-parse.rkt"
          "parens.rkt"
          "op-literal.rkt"
+         (submod "equal.rkt" for-parse)
          (only-in "pair.rkt"
                   Pair)
          "hash-snapshot.rkt"
@@ -387,18 +389,19 @@
       [(form-id (_::braces . _) . tail)
        (parse-map-binding (syntax-e #'form-id) stx "braces" mode)]
       [(form-id (_::parens arg ...) . tail)
-       (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
-         (cond
-           [(null? args) (generate-map-binding (reverse keys) (reverse vals) #f #'tail mode)]
-           [else
-            (syntax-parse (car args)
-              #:datum-literals (group)
-              [(group (_::brackets key val))
-               (loop (cdr args) (cons #'key keys) (cons #'val vals))]
-              [_ (raise-syntax-error #f
-                                     "expected [<key-expr>, <value-binding>]"
-                                     stx
-                                     (car args))])]))])))
+       (define-values (keys vals defaults)
+         (for/lists (keys vals defaults)
+                    ([arg (in-list (syntax->list #'(arg ...)))])
+           (syntax-parse arg
+             #:datum-literals (group)
+             [(group (_::brackets key val))
+              (values #'key #'val #'#f)]
+             [_
+              (raise-syntax-error #f
+                                  "expected [<key-expr>, <val-bind>]"
+                                  stx
+                                  arg)])))
+       (generate-map-binding keys vals defaults #f #'tail mode)])))
 
 (define-binding-syntax Map
   (binding-transformer
@@ -813,28 +816,51 @@
   (#%function-arity -1)
   . #,(indirect-get-function-static-infos))
 
+(begin-for-syntax
+  (define-syntax-class :val-opt-bind
+    #:attributes (bind default)
+    #:datum-literals (group)
+    (pattern (group b ...+ eq::equal e ...+)
+             #:do [(check-multiple-equals #'g)]
+             #:cut
+             #:with bind #`(#,group-tag b ...)
+             #:with default #`(rhombus-expression (#,group-tag e ...)))
+    (pattern (group b ...+ (b-tag::block e ...))
+             #:cut
+             #:with bind #`(#,group-tag b ...)
+             #:with default #'(rhombus-body-at b-tag e ...))
+    (pattern (group b ...)
+             #:with bind #`(#,group-tag b ...)
+             #:with default #'#f)))
+
 (define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
   (syntax-parse stx
     #:datum-literals (group)
-    [(form-id (_ (group key-e ... (_::block (group val ...))) ...
+    [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...
                  (group key-b ... (_::block (group val-b ...)))
                  (group _::...-bind))
               . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
-                           #`(group Pair (parens (#,group-tag key-b ...) (#,group-tag val-b ...)))
+     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+                           (syntax->list #'(val.bind ...))
+                           (syntax->list #'(val.default ...))
+                           #`(#,group-tag Pair (parens (#,group-tag key-b ...) (#,group-tag val-b ...)))
                            #'tail
                            mode
                            #:rest-repetition? #t)]
-    [(form-id (_ (group key-e ... (_::block (group val ...))) ...
+    [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...
                  (group _::&-bind rst ...))
               . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
+     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+                           (syntax->list #'(val.bind ...))
+                           (syntax->list #'(val.default ...))
                            #`(#,group-tag rest-bind #,(get-map-static-infos)
                               (#,group-tag rst ...))
                            #'tail
                            mode)]
-    [(form-id (_ (group key-e ... (_::block (group val ...))) ...) . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
+    [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...) . tail)
+     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+                           (syntax->list #'(val.bind ...))
+                           (syntax->list #'(val.default ...))
                            #f
                            #'tail
                            mode)]
@@ -843,10 +869,11 @@
                          (format "bad key-value combination within ~a" opener+closer)
                          #'wrong)]))
 
-(define-for-syntax (generate-map-binding keys vals maybe-rest tail mode
+(define-for-syntax (generate-map-binding keys vals defaults maybe-rest tail mode
                                          #:rest-repetition? [rest-repetition? #f])
   (with-syntax ([(key ...) keys]
                 [(val ...) vals]
+                [(default ...) defaults]
                 [tail tail])
     (define tmp-ids (generate-temporaries #'(key ...)))
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
@@ -854,7 +881,10 @@
     (define-values (composite new-tail)
       (composite-binding-transformer #`(form-id (parens val ...) . tail)
                                      #:rest-arg maybe-rest
-                                     (cons mode-desc (map shrubbery-syntax->string keys))
+                                     `(#:map
+                                       ,mode-desc
+                                       ,(map shrubbery-syntax->string keys)
+                                       ,(map (lambda (stx) (and (syntax-e stx) #t)) defaults))
                                      #'(lambda (v) #t) ; predicate built into map-matcher
                                      (for/list ([tmp-id (in-list tmp-ids)])
                                        #`(lambda (v) #,tmp-id))
@@ -876,12 +906,16 @@
        [composite::binding-form
         (binding-form
          #'map-infoer
-         #`(#,mode (key ...) #,tmp-ids #,rest-tmp composite.infoer-id composite.data))])
+         #`(#,mode
+            (key ...) (default ...) #,tmp-ids #,rest-tmp
+            composite.infoer-id composite.data))])
      new-tail)))
 
 (define-syntax (map-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (mode keys tmp-ids rest-tmp composite-infoer-id composite-data))
+    [(_ static-infos (mode
+                      keys defaults tmp-ids rest-tmp
+                      composite-infoer-id composite-data))
      #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
      #:with composite-info::binding-info #'composite-impl.info
      (binding-info #'composite-info.annotation-str
@@ -891,44 +925,87 @@
                    #'map-matcher
                    #'map-committer
                    #'map-binder
-                   #'(mode keys tmp-ids rest-tmp
-                           composite-info.matcher-id composite-info.committer-id composite-info.binder-id
-                           composite-info.data))]))
+                   #'(mode
+                      keys defaults tmp-ids rest-tmp
+                      composite-info.matcher-id composite-info.committer-id composite-info.binder-id
+                      composite-info.data))]))
 
 (define-syntax (map-matcher stx)
   (syntax-parse stx
-    [(_ arg-id ([desc pred filter] keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data)
+    [(_ arg-id ([desc pred filter]
+                keys defaults tmp-ids rest-tmp
+                composite-matcher-id composite-committer-id composite-binder-id
+                composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
+     (define-values (keys-tmps val-tmps)
+       (for/lists (keys-tmps val-tmps)
+                  ([key-tmp (in-list key-tmps)])
+         (values (car (generate-temporaries '(keys-tmp)))
+                 (car (generate-temporaries '(val-tmp))))))
+     (define rest? (and (syntax-e #'rest-tmp) #t))
      #`(IF (pred arg-id)
            (begin
-             #,@(for/foldr ([forms (append (if (syntax-e #'rest-tmp)
+             #,@(for/foldr ([forms (append (if rest?
                                                (list #`(define rest-tmp
                                                          (hash-remove*
                                                           (filter arg-id)
-                                                          (list #,@key-tmps))))
+                                                          #,(if (null? keys-tmps)
+                                                                #''()
+                                                                (list-last keys-tmps)))))
                                                '())
                                            (list #'(composite-matcher-id 'map composite-data IF success failure)))])
                            ([key (in-list (syntax->list #'keys))]
+                            [default (in-list (syntax->list #'defaults))]
                             [key-tmp-id (in-list key-tmps)]
-                            [val-tmp-id (in-list (syntax->list #'tmp-ids))])
+                            [keys-tmp-id (in-list keys-tmps)]
+                            [prev-keys-tmp (in-list (cons #''() keys-tmps))]
+                            [val-tmp-id (in-list val-tmps)]
+                            [tmp-id (in-list (syntax->list #'tmp-ids))])
+                  (define (dont-accum)
+                    (if rest?
+                        (list prev-keys-tmp)
+                        '()))
+                  (define (do-accum)
+                    (if rest?
+                        (list #`(cons #,key-tmp-id #,prev-keys-tmp))
+                        '()))
+                  (define maybe-keys-tmp-id
+                    (if rest?
+                        (list keys-tmp-id)
+                        '()))
+                  (define-values (success? maybe-keys+val)
+                    (if (syntax-e default)
+                        (values #'#t
+                                #`(if (eq? #,val-tmp-id unsafe-undefined)
+                                      (values #,@(dont-accum) #,default)
+                                      (values #,@(do-accum) #,val-tmp-id)))
+                        (values #`(not (eq? #,val-tmp-id unsafe-undefined))
+                                #`(values #,@(do-accum) #,val-tmp-id))))
                   (list #`(define #,key-tmp-id (rhombus-expression #,key))
                         #`(define #,val-tmp-id (hash-ref arg-id #,key-tmp-id unsafe-undefined))
-                        #`(IF (not (eq? #,val-tmp-id unsafe-undefined))
-                              (begin #,@forms)
+                        #`(IF #,success?
+                              (begin
+                                (define-values (#,@maybe-keys-tmp-id #,tmp-id) #,maybe-keys+val)
+                                #,@forms)
                               failure))))
            failure)]))
 
 (define-syntax (map-committer stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode
+                keys defaults tmp-ids rest-tmp
+                composite-matcher-id composite-committer-id composite-binder-id
+                composite-data))
      #`(composite-committer-id 'map composite-data)]))
 
 (define-syntax (map-binder stx)
   (syntax-parse stx
-    [(_ arg-id (mode keys tmp-ids rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode
+                keys defaults tmp-ids rest-tmp
+                composite-matcher-id composite-committer-id composite-binder-id
+                composite-data))
      #`(composite-binder-id 'map composite-data)]))
-
 
 ;; macro to optimize to an inline functional update
 (define-syntax (Map.append/optimize stx)
