@@ -155,7 +155,7 @@
 
 (module configure-runtime racket/base
   (require rhombus/private/amalgam/runtime-config)
-  (install-runtime-config!))
+  (void (install-runtime-config!)))
 
 (module configure-expand racket/base
   (require rhombus/private/amalgam/expand-config)

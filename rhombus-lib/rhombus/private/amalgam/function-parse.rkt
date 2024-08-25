@@ -1357,7 +1357,7 @@
                            #:wrap-extra-rand wrap-extra-rand))
           term)))
 
-(set-primitive-who! 'application '|function call|)
+(void (set-primitive-who! 'application '|function call|))
 (define function-call-who '|function call|)
 
 (define (check-immutable-hash ht)

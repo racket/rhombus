@@ -177,13 +177,13 @@
 
 (define-annotation-syntax Function (identifier-annotation procedure? #,(get-function-static-infos)))
 
-(set-primitive-contract-combinator!
- 'procedure-arity-includes/c
- (lambda (form)
-   (and (pair? (cdr form))
-        (exact-nonnegative-integer? (cadr form))
-        (null? (cddr form))
-        (string-append "Function.of_arity(" (number->string (cadr form)) ")"))))
+(define (handle-procedure-arity-includes/c form)
+  (and (pair? (cdr form))
+       (exact-nonnegative-integer? (cadr form))
+       (null? (cddr form))
+       (string-append "Function.of_arity(" (number->string (cadr form)) ")")))
+
+(void (set-primitive-contract-combinator! 'procedure-arity-includes/c handle-procedure-arity-includes/c))
 (define-annotation-syntax of_arity
   (annotation-prefix-operator
    '((default . stronger))

@@ -23,15 +23,15 @@
 (define (set-primitive-subcontract! contracts/rkt contract/rkt)
   (hash-set! primitive-subcontract-table contracts/rkt contract/rkt))
 
-(set-primitive-contract-combinator!
- 'and/c
- (lambda (form)
-   (cond
-     [(and (list? (cdr form))
-           (hash-ref primitive-subcontract-table (cdr form) #f))
-      => (lambda (contract/rkt)
-           (hash-ref primitive-contract-table contract/rkt #f))]
-     [else #f])))
+(define (handle-and/c form)
+  (cond
+    [(and (list? (cdr form))
+          (hash-ref primitive-subcontract-table (cdr form) #f))
+     => (lambda (contract/rkt)
+          (hash-ref primitive-contract-table contract/rkt #f))]
+    [else #f]))
+
+(void (set-primitive-contract-combinator! 'and/c handle-and/c))
 
 (define (get-primitive-contract contract/rkt)
   (cond

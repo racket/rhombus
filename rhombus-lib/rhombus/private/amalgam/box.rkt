@@ -113,7 +113,7 @@
 (define (raise-reboxer-error what v annot-str)
   (raise-binding-failure 'Box (string-append what " value") v annot-str))
 
-(set-primitive-subcontract! '(box? (not/c immutable?)) 'mutable-box?)
-(set-primitive-contract! 'mutable-box? "MutableBox")
+(void (set-primitive-subcontract! '(box? (not/c immutable?)) 'mutable-box?))
+(void (set-primitive-contract! 'mutable-box? "MutableBox"))
 (define-annotation-syntax MutableBox (identifier-annotation mutable-box? #,(get-box-static-infos)))
 (define-annotation-syntax ImmutableBox (identifier-annotation immutable-box? #,(get-box-static-infos)))

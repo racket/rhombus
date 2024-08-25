@@ -65,8 +65,8 @@
    to_sequence
    snapshot))
 
-(set-primitive-subcontract! '(bytes? (not/c immutable?)) 'mutable-bytes?)
-(set-primitive-contract! 'mutable-bytes? "MutableBytes")
+(void (set-primitive-subcontract! '(bytes? (not/c immutable?)) 'mutable-bytes?))
+(void (set-primitive-contract! 'mutable-bytes? "MutableBytes"))
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
 

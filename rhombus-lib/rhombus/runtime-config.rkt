@@ -7,4 +7,4 @@
  (#%declare #:flatten-requires)
  (void))
 
-(install-runtime-config!)
+(void (install-runtime-config!))
