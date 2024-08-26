@@ -21,10 +21,10 @@ class Font(private _handle):
   constructor (~kind: kind :: Font.Kind = #'default,
                ~name: name :: maybe(String) = #false,
                ~size: size :: Real.in(0.0, 1024.0) = 12.0,
-               ~in_pixels: in_pixels :: Any = #false,
+               ~in_pixels: in_pixels :: Any.to_boolean = #false,
                ~style: style :: Font.Style = #'normal,
                ~weight: weight :: Font.Weight = #'normal,
-               ~has_underline: has_underline :: Any = #false,
+               ~has_underline: has_underline :: Any.to_boolean = #false,
                ~smoothing: smoothing :: Font.Smoothing = #'default,
                ~hinting: hinting :: Font.Hinting = #'aligned,
                ~features: features :: Map.of(Font.FeatureString, NonnegInt) = {}):

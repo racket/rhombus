@@ -141,7 +141,7 @@ namespace str:
 
   def_num f(n :: Real,
             ~precision: precision :: NonnegInt = 6,
-            ~keep_decimal: keep_decimal :: Any = #false,
+            ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = "."):
     real_to_string(n,
                    ~precision: precision,
@@ -151,7 +151,7 @@ namespace str:
 
   def_num e(n :: Real,
             ~precision: precision :: NonnegInt = 6,
-            ~keep_decimal: keep_decimal :: Any = #false,
+            ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = ".",
             ~exponent: exponent :: String = "e"):
     real_to_string(n,
@@ -163,7 +163,7 @@ namespace str:
 
   def_num g(n :: Real,
             ~precision: precision :: NonnegInt = 6,
-            ~keep_decimal: keep_decimal :: Any = #false,
+            ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = ".",
             ~exponent: exponent :: String = "e"):
     real_to_string(n,

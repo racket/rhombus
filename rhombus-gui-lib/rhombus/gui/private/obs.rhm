@@ -44,7 +44,7 @@ class Obs(private _handle):
 
   constructor (v,
                ~name: name :: String = anon_str,
-               ~is_derived = #false):
+               ~is_derived: is_derived :: Any.to_boolean = #false):
     super(easy.obs(v,
                    ~name: if name === anon_str
                           | #'anon

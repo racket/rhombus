@@ -164,7 +164,7 @@
        (syntax-parse (unpack-term s #f #f)
          #:datum-literals (block)
          [(block . _) #t]
-         [_ #false])
+         [_ #f])
        #t))
 
 (define-syntax literal
@@ -363,7 +363,7 @@
                                       (string->symbol istr))
                        istr))
 
-(define/arity (Syntax.make_temp_id [v #false] #:keep_name [keep-name? #f])
+(define/arity (Syntax.make_temp_id [v #f] #:keep_name [keep-name? #f])
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define id
     (cond
@@ -587,7 +587,7 @@
     [(stx prop val)
      ((make-do-syntax-property who extract-ctx) stx prop val)]
     [(stx prop val preserved?)
-     ((make-do-syntax-property who extract-ctx) stx prop val preserved?)]))
+     ((make-do-syntax-property who extract-ctx) stx prop val (and preserved? #t))]))
 
 (define/method Syntax.group_property
   #:static-infos ((#%call-result
@@ -600,7 +600,7 @@
     [(stx prop val)
      ((make-do-syntax-property who extract-group-ctx) stx prop val)]
     [(stx prop val preserved?)
-     ((make-do-syntax-property who extract-group-ctx) stx prop val preserved?)]))
+     ((make-do-syntax-property who extract-group-ctx) stx prop val (and preserved? #t))]))
 
 (define/method (Syntax.is_original v)
   (syntax-original? (extract-ctx who v #:false-ok? #f)))

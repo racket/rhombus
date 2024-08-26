@@ -979,7 +979,7 @@
 (define/method (Map.keys ht [try-sort? #f])
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-readable-map who ht)
-  (list->treelist (hash-keys ht try-sort?)))
+  (list->treelist (hash-keys ht (and try-sort? #t))))
 
 (define-sequence-syntax Map.to_sequence/optimize
   (lambda () #'Map.to_sequence)
