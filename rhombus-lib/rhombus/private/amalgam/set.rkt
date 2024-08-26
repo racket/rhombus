@@ -334,7 +334,7 @@
 (define (list->now-set l) (apply NowSet-build* l))
 (define (list->number-or-object-set l) (apply NumberOrObjectSet-build* l))
 
-(define (set->list s [try-sort? #f]) (hash-keys (set-ht s) try-sort?))
+(define (set->list s try-sort?) (hash-keys (set-ht s) try-sort?))
 
 (define empty-set (set #hashalw()))
 (define-static-info-syntax empty-set
@@ -1051,7 +1051,7 @@
 (define/method (Set.to_list s [try-sort? #f])
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-set who s)
-  (list->treelist (set->list s try-sort?)))
+  (list->treelist (set->list s (and try-sort? #t))))
 
 (define-sequence-syntax Set.to_sequence/optimize
   (lambda () #'Set.to_sequence)
