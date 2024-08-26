@@ -137,8 +137,16 @@
        [(eq? 'weaker dir) 'stronger]
        [else dir])]))
 
+(define (extract-context adj-context)
+  (define e (syntax-e adj-context))
+  (if (and (pair? e)
+           (eq? 'op (syntax-e (car e))))
+      (let ([e (cdr e)])
+        (car (if (syntax? e) (syntax-e e) e)))
+      adj-context))
+
 (define (lookup-prefix-implicit alone-name adj-context adj-form in-space operator-ref operator-kind form-kind)
-  (define op-stx (in-space (datum->syntax adj-context alone-name)))
+  (define op-stx (in-space (datum->syntax (extract-context adj-context) alone-name)))
   (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (raise-syntax-error #f
@@ -157,7 +165,7 @@
 
 (define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind
                                stop-on-unbound? lookup-space-description)
-  (define op-stx (in-space (datum->syntax adj-context adjacent-name)))
+  (define op-stx (in-space (datum->syntax (extract-context adj-context) adjacent-name)))
   (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (cond
