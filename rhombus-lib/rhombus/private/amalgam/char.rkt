@@ -1,7 +1,8 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse/pre
+                     "make-get-veneer-like-static-infos.rkt")
          "provide.rkt"
-         "name-root.rkt"
          "define-arity.rkt"
          "number.rkt"
          "call-result-key.rkt"
@@ -10,7 +11,6 @@
          (submod "literal.rkt" for-info)
          (submod "symbol.rkt" for-static-info)
          "realm.rkt"
-         "static-info.rkt"
          "class-primitive.rkt")
 
 (provide (for-spaces (rhombus/annot
@@ -35,7 +35,7 @@
                                       (>= char>=?)
                                       (> char>?))))
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:namespace-fields
   ([from_int Char.from_int])
@@ -63,16 +63,23 @@
    titlecase
    grapheme_step))
 
-(define-annotation-syntax Char (identifier-annotation char? #,(get-char-static-infos)))
+(define-for-syntax (convert-char-ci-compare-static-info static-info)
+  (syntax-parse static-info
+    #:datum-literals (#%compare)
+    [(#%compare . _) #'(#%compare ((< char-ci<?)
+                                   (<= char-ci<=?)
+                                   (= char-ci=?)
+                                   (!= char-ci!=?)
+                                   (>= char-ci>=?)
+                                   (> char-ci>?)))]
+    [_ static-info]))
+
+(define-for-syntax (get-char-ci-static-infos)
+  (make-get-veneer-like-static-infos get-char-static-infos
+                                     convert-char-ci-compare-static-info))
 
 (define-annotation-syntax CharCI
-  (identifier-annotation char? ((#%compare ((< char-ci<?)
-                                            (<= char-ci<=?)
-                                            (= char-ci=?)
-                                            (!= char-ci!=?)
-                                            (>= char-ci>=?)
-                                            (> char-ci>?))))
-                         #:static-only))
+  (identifier-annotation char? #,(get-char-ci-static-infos) #:static-only))
 
 (define/method (Char.to_int c)
   #:primitive (char->integer)

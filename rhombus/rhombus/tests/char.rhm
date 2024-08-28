@@ -52,6 +52,7 @@ check:
 block:
   use_static
   check Char.from_int(10).to_int() ~is 10
+  check (Char.from_int(10) :: CharCI).to_int() ~is 10
 
 check:
   ~eval

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "make-get-veneer-like-static-infos.rkt")
          (only-in racket/string string-contains?)
          racket/symbol
          racket/keyword
@@ -142,26 +143,29 @@
   #:methods
   ())
 
-(define-values-for-syntax (get-string-ci-static-infos
-                           get-readable-string-ci-static-infos)
-  (let ([convert
-         (lambda (get-sis)
-           (lambda ()
-             (for/list ([si (in-list (get-sis))])
-               (syntax-parse si
-                 #:datum-literals (#%compare)
-                 [(#%compare . _) #'(#%compare ((< string-ci<?)
-                                                (<= string-ci<=?)
-                                                (= string-ci=?)
-                                                (!= string-ci!=?)
-                                                (>= string-ci>=?)
-                                                (> string-ci>?)))]
-                 [_ si]))))])
-    (values (convert get-string-static-infos)
-            (convert get-readable-string-static-infos))))
+(define-for-syntax (convert-string-ci-compare-static-info static-info)
+  (syntax-parse static-info
+    #:datum-literals (#%compare)
+    [(#%compare . _) #'(#%compare ((< string-ci<?)
+                                   (<= string-ci<=?)
+                                   (= string-ci=?)
+                                   (!= string-ci!=?)
+                                   (>= string-ci>=?)
+                                   (> string-ci>?)))]
+    [_ static-info]))
 
-(define-annotation-syntax StringCI (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))
-(define-annotation-syntax ReadableStringCI (identifier-annotation string? #,(get-readable-string-ci-static-infos) #:static-only))
+(define-for-syntax (get-string-ci-static-infos)
+  (make-get-veneer-like-static-infos get-string-static-infos
+                                     convert-string-ci-compare-static-info))
+
+(define-for-syntax (get-readable-string-ci-static-infos)
+  (make-get-veneer-like-static-infos get-readable-string-static-infos
+                                     convert-string-ci-compare-static-info))
+
+(define-annotation-syntax StringCI
+  (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))
+(define-annotation-syntax ReadableStringCI
+  (identifier-annotation string? #,(get-readable-string-ci-static-infos) #:static-only))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)
