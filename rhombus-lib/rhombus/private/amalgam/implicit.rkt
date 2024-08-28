@@ -9,10 +9,11 @@
          "entry-point.rkt"
          "immediate-callee.rkt"
          "parse.rkt"
+         (submod "parse.rkt" normal-body)
          (submod "function-parse.rkt" for-call)
          (submod "indexable.rkt" for-ref)
          (submod "list.rkt" for-binding)
-         (submod "list.rkt" for-implicit)
+         (submod "list.rkt" normal-call)
          "setmap.rkt"
          "literal.rkt"
          "parens.rkt"
@@ -334,6 +335,14 @@
         (values (parse-setmap-expression #'braces #:repetition? #t)
                 #'tail)]))))
 
+(define-for-syntax (normal-call? tag)
+  (free-identifier=? (datum->syntax tag '#%call)
+                     (expr-quote #%call)))
+
+(define-for-syntax (normal-body? tag)
+  (free-identifier=? (datum->syntax tag '#%body)
+                     (expr-quote #%body)))
+
 (begin-for-syntax
-  (set-#%call-id! (quote-syntax #%call))
-  (set-#%body-id! (quote-syntax #%body)))
+  (install-normal-call?! normal-call?)
+  (install-normal-body?! normal-body?))

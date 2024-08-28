@@ -45,12 +45,15 @@
                      :prefix-op+binding+tail
                      :infix-op+binding+tail
 
-                     set-#%body-id!
                      enforest-expression-block
                      expression-relative-precedence
                      binding-relative-precedence
 
                      rhombus-local-expand))
+
+(module+ normal-body
+  (provide (for-syntax (rename-out [normal-body? indirect-normal-body?])
+                       install-normal-body?!)))
 
 (begin-for-syntax
   ;; Form at the top of a module:
@@ -280,10 +283,6 @@
     (syntax-parse (syntax-local-introduce stx)
       [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
 
-(define-for-syntax #%body-id #f)
-(define-for-syntax (set-#%body-id! id)
-  (set! #%body-id id))
-
 ;; If `e` is a block with a single group, and if the group is not a
 ;; definition, then parse the expression.  This requires the base
 ;; `#%body` binding; otherwise, go through the `#%body`.
@@ -291,8 +290,7 @@
   (syntax-parse e
     #:datum-literals (group)
     [(tag::block g)
-     #:when (and (free-identifier=? (datum->syntax #'tag '#%body)
-                                    #%body-id)
+     #:when (and (normal-body? #'tag)
                  (not (definition? #'g)))
      #:with g-e::expression #'g
      #'g-e.parsed]
@@ -308,3 +306,8 @@
     [(rhombus-expression . _)
      (rhombus-local-expand (enforest-rhombus-expression stx))]
     [_ stx]))
+
+(define-for-syntax normal-body? #f)
+
+(define-for-syntax (install-normal-body?! proc)
+  (set! normal-body? proc))

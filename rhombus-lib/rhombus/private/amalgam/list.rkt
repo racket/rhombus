@@ -63,9 +63,6 @@
            list-method-table
            mutable-treelist-method-table))
 
-(module+ for-implicit
-  (provide (for-syntax set-#%call-id!)))
-
 (module+ for-compound-repetition
   (provide (for-syntax get-list-static-infos
                        get-treelist-static-infos)))
@@ -77,7 +74,8 @@
            (for-syntax get-treelist-static-infos)))
 
 (module+ normal-call
-  (provide (for-syntax normal-call?)))
+  (provide (for-syntax (rename-out [normal-call? indirect-normal-call?])
+                       install-normal-call?!)))
 
 (define-primitive-class List treelist
   #:lift-declaration
@@ -1433,10 +1431,7 @@
                               "not a listable for splicing into a pair list"
                               "value" v)))
 
-(begin-for-syntax
-  (define #%call-id #f)
-  (define (set-#%call-id! id)
-    (set! #%call-id id))
-  (define (normal-call? tag)
-    (define id (datum->syntax tag '#%call))
-    (free-identifier=? #%call-id id)))
+(define-for-syntax normal-call? #f)
+
+(define-for-syntax (install-normal-call?! proc)
+  (set! normal-call? proc))
