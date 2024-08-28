@@ -52,7 +52,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:namespace-fields
   (of_arity
@@ -174,8 +174,6 @@
 
 (define-for-syntax (wrap-function-static-info expr)
   (wrap-static-info* expr (get-function-static-infos)))
-
-(define-annotation-syntax Function (identifier-annotation procedure? #,(get-function-static-infos)))
 
 (define (handle-procedure-arity-includes/c form)
   (and (pair? (cdr form))

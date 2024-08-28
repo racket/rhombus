@@ -24,7 +24,6 @@
          "printer-property.rkt"
          "print-desc.rkt"
          "class-primitive.rkt"
-         (submod "annotation.rkt" for-class)
          "binding.rkt"
          (submod "dot.rkt" for-dot-provider)
          "define-arity.rkt"
@@ -49,7 +48,7 @@
   #:no-constructor-static-info
   #:instance-static-info ()
   #:existing
-  #:opaque #:no-primitive
+  #:just-annot #:no-primitive
   #:fields ()
   #:namespace-fields
   ([from_to Range.from_to]
@@ -88,7 +87,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
-  #:opaque #:no-primitive
+  #:just-annot #:no-primitive
   #:parent #f range
   #:fields ()
   #:namespace-fields
@@ -104,7 +103,7 @@
   #:no-constructor-static-info
   #:instance-static-info #,(get-sequence-range-static-infos/sequence)
   #:existing
-  #:opaque #:no-primitive
+  #:just-annot #:no-primitive
   #:parent #f sequence-range
   #:fields ()
   #:namespace-fields
@@ -113,15 +112,6 @@
   ()
   #:methods
   ([to_list Range.to_list]))
-
-(define-annotation-syntax SequenceRange
-  (identifier-annotation sequence-range? #,(get-sequence-range-static-infos)))
-
-(define-annotation-syntax Range
-  (identifier-annotation range? #,(get-range-static-infos)))
-
-(define-annotation-syntax ListRange
-  (identifier-annotation list-range? #,(get-list-range-static-infos)))
 
 (define-for-syntax (range-assoc-table)
   `((,(expr-quote rhombus-a:+) . weaker)

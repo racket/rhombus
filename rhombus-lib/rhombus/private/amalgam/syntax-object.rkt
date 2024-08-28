@@ -52,7 +52,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:namespace-fields
   (literal
@@ -84,9 +84,6 @@
 (define-static-info-getter get-treelist-of-syntax-static-infos
   (#%index-result #,(get-syntax-static-infos))
   . #,(get-treelist-static-infos))
-
-(define-annotation-syntax Syntax
-  (identifier-annotation syntax? #,(get-syntax-static-infos)))
 
 (define-annotation-syntax Identifier
   (identifier-annotation is-identifier? #,(get-syntax-static-infos)))

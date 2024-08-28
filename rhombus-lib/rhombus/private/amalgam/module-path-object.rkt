@@ -10,7 +10,6 @@
          "print-desc.rkt"
          (submod "module-path.rkt" for-import-export)
          "expression.rkt"
-         (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "class-primitive.rkt"
          "define-arity.rkt"
@@ -39,7 +38,7 @@
 (define-primitive-class ModulePath module-path
   #:no-constructor-static-info
   #:existing
-  #:opaque
+  #:just-annot
   #:fields ()
   #:properties
   ()
@@ -104,9 +103,6 @@
                                       (car more)
                                       (loop (cdr more)))])))]))])]
        [else `(group (op ???) (group ,raw))])]))
-
-(define-annotation-syntax ModulePath
-  (identifier-annotation module-path? #,(get-module-path-static-infos)))
 
 (define-syntax ModulePath-form
   (expression-transformer

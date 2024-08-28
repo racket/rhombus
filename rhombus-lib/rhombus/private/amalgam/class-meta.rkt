@@ -34,16 +34,13 @@
 
 (define-primitive-class Info class-data
   #:new
-  #:opaque
+  #:just-annot
   #:fields
   ()
   #:properties
   ()
   #:methods
   ([lookup class_meta.Info.lookup]))
-
-(define-annotation-syntax Info
-  (identifier-annotation class-data? #,(get-class-data-static-infos)))
 
 (define/arity (class_meta.describe id)
   #:static-infos ((#%call-result #,(get-class-data-static-infos)))

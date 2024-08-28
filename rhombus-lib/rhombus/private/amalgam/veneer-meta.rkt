@@ -4,7 +4,6 @@
          enforest/syntax-local
          "define-arity.rkt"
          "class-primitive.rkt"
-         (submod "annotation.rkt" for-class)
          "name-root.rkt"
          "veneer-parse.rkt"
          (only-in "class-parse.rkt"
@@ -37,16 +36,13 @@
 
 (define-primitive-class Info veneer-data
   #:new
-  #:opaque
+  #:just-annot
   #:fields
   ()
   #:properties
   ()
   #:methods
   ([lookup veneer_meta.Info.lookup]))
-
-(define-annotation-syntax Info
-  (identifier-annotation veneer-data? #,(get-veneer-data-static-infos)))
 
 (define/arity (veneer_meta.describe id)
   #:static-infos ((#%call-result #,(get-veneer-data-static-infos)))
