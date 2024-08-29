@@ -53,7 +53,7 @@ namespace str:
       | max_width == 0: ""
       | n .= 0: zero_sign
       | n < 0 || n == -0.0: minus_sign
-      | ~else: plus_sign      
+      | ~else: plus_sign
     // attach sign to number if it's #'center sign alignment
     let (s :~ String, sign :~ String):
       if sign_align == #'center
@@ -79,16 +79,16 @@ namespace str:
           | #'center:
               let m = (min_width - len) div 2
               String.make(m, pad) ++ s ++ String.make(min_width - len - m, pad)
-          | ~else:                
+          | ~else:
               String.make(min_width - len, pad) ++ s
       | len > max_width:
           match clip_align
           | #'left:
               s.substring(0, max_width)
           | #'center:
-              let m = (len - max_width) div 2              
+              let m = (len - max_width) div 2
               s.substring(m, m + max_width)
-          | ~else:                
+          | ~else:
               s.substring(len - max_width, len)
       | ~else:
           s
@@ -101,7 +101,7 @@ namespace str:
     | ~else:
         s
 
-  decl.nestable_macro 'def_num $name($n :: $annot,                                                        
+  decl.nestable_macro 'def_num $name($n :: $annot,
                                      $xkw: $xarg :: $xres ...,
                                      ...):
                          $defn
@@ -112,13 +112,13 @@ namespace str:
       '(~width: width :: maybe(NonnegInt) = #false,
         ~min_width: min_width :: maybe(NonnegInt) = width,
         ~max_width: max_width :: maybe(NonnegInt) = width,
-        ~pad: pad :: Char = " "[0],
+        ~pad: pad :: Char = Char" ",
         ~align: align :: Align = #'left,
         ~clip_align: clip_align :: Align = align,
         ~minus_sign: minus_sign :: String  = "-",
         ~plus_sign: plus_sign :: String  = "",
         ~zero_sign: zero_sign :: String  = "",
-        ~sign_align: sign_align :: Align = #'center)'                                     
+        ~sign_align: sign_align :: Align = #'center)'
     'export:
        $name
      fun $name($n :: $annot,
@@ -134,7 +134,7 @@ namespace str:
                     $kw: $arg,
                     ...)'
 
-  decl.nestable_macro 'def_int $name $to_string':  
+  decl.nestable_macro 'def_int $name $to_string':
     'def_num $name(n :: Int):
        $to_string(math.abs(n))'
 
@@ -190,7 +190,7 @@ namespace str:
     cond
     | n == #inf || n == #neginf: "inf"
     | n == #nan: "nan"
-    | ~else:                       
+    | ~else:
         let n = math.abs(n)
         // get parts that preserves available precision, without keeping too much;
         // keeping only the needed precision is important for rounding correctly
@@ -237,7 +237,7 @@ namespace str:
               let frac:
                 if precision == 0
                 | ""
-                | String.make(precision - frac.length(), "0"[0]) ++ frac
+                | String.make(precision - frac.length(), Char"0") ++ frac
               values(to_string(mant), frac, 0)
           | ~else:
               let expo = real_exponent(n)
@@ -260,7 +260,7 @@ namespace str:
               values(mant,
                      if precision == 0
                      | ""
-                     | String.make(math.max(0, precision - frac.length()), "0"[0]) ++ frac,
+                     | String.make(math.max(0, precision - frac.length()), Char"0") ++ frac,
                      expo)
         let (mant :~ String, frac :~ String, expo :: Int):
           retry(n, precision, use_exponent)
@@ -299,7 +299,7 @@ namespace str:
         ~width: width :: maybe(NonnegInt) = #false,
         ~min_width: min_width :: maybe(NonnegInt) = width,
         ~max_width: max_width :: maybe(NonnegInt) = width,
-        ~pad: pad :: Char = " "[0],
+        ~pad: pad :: Char = Char" ",
         ~align: align :: Align = #'left,
         ~clip_align: clip_align :: Align = #'left) :~ String:
     build_number(#'s,

@@ -123,7 +123,7 @@ def tabs:
   fun accum_key(ev :: gui.KeyEvent, area):
     keyed.update(fun (s :: String):
                    match ev.code
-                   | #{#\backspace} || #{#\rubout}:
+                   | Char"\b" || Char"\x7F" /* ASCII delete */:
                        if s.length() == 0 | s | s.substring(0, s.length() - 1)
                    | c :: Char: s ++ to_string(c)
                    | ~else: s)

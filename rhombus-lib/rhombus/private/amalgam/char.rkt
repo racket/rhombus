@@ -1,8 +1,15 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "make-get-veneer-like-static-infos.rkt")
+                     shrubbery/print
+                     "srcloc.rkt"
+                     "make-get-veneer-like-static-infos.rkt"
+                     "extract-elem-from-literal.rkt")
          "provide.rkt"
+         "expression.rkt"
+         "binding.rkt"
+         "repetition.rkt"
+         "static-info.rkt"
          "define-arity.rkt"
          "number.rkt"
          "call-result-key.rkt"
@@ -11,9 +18,13 @@
          (submod "literal.rkt" for-info)
          (submod "symbol.rkt" for-static-info)
          "realm.rkt"
-         "class-primitive.rkt")
+         "class-primitive.rkt"
+         "literal.rkt")
 
-(provide (for-spaces (rhombus/annot
+(provide (for-spaces (#f
+                      rhombus/repet
+                      rhombus/bind
+                      rhombus/annot
                       rhombus/namespace)
                      Char)
          (for-space rhombus/annot
@@ -80,6 +91,47 @@
 
 (define-annotation-syntax CharCI
   (identifier-annotation char? #,(get-char-ci-static-infos) #:static-only))
+
+(define-syntax Char
+  (expression-transformer
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id str . new-tail)
+        (define char (extract-char-from-string #'form-id #'str))
+        (values (wrap-static-info*
+                 (relocate+reraw
+                  (respan (datum->syntax #f (list #'form-id #'str)))
+                  #`(quote #,char))
+                 (get-char-static-infos))
+                #'new-tail)]))))
+
+(define-repetition-syntax Char
+  (repetition-transformer
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id str . new-tail)
+        (define char (extract-char-from-string #'form-id #'str))
+        (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'str)))
+                                      '()
+                                      #`(quote #,char)
+                                      (get-char-static-infos)
+                                      0)
+                #'new-tail)]))))
+
+(define-binding-syntax Char
+  (binding-transformer
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id str . new-tail)
+        (define char (extract-char-from-string #'form-id #'str))
+        (values (binding-form #'literal-infoer
+                              #`([#,char #,(string-append "Char" (shrubbery-syntax->string #'str))]))
+                #'new-tail)]))))
+
+(define-for-syntax (extract-char-from-string form-id str-stx)
+  (extract-elem-from-literal form-id str-stx
+                             string? string-length string-ref
+                             "character" "string"))
 
 (define/method (Char.to_int c)
   #:primitive (char->integer)

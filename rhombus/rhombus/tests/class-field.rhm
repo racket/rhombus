@@ -5,16 +5,16 @@ block:
     fun enlist(v, b): [v, b]
     field more :~ List = enlist(s[1], b)
     field even_more = {more[0]}
-  check C("apple").more ~is ["p"[0], "a"[0]]
-  check C("banana").more ~is ["a"[0], "b"[0]]
-  check C("apple").even_more ~is {"p"[0]}
+  check C("apple").more ~is [Char"p", Char"a"]
+  check C("banana").more ~is [Char"a", Char"b"]
+  check C("apple").even_more ~is {Char"p"}
 
 block:
   class C(s :: String, private b = s[0]):
     fun enlist(v, b): [v, b]
     private field more = enlist(s[1], b)
     method get_more(): more
-  check C("apple").get_more() ~is ["p"[0], "a"[0]]
+  check C("apple").get_more() ~is [Char"p", Char"a"]
 
 block:
   class C(s :: String, b = s[0]):
@@ -22,8 +22,8 @@ block:
     constructor (s):
       super("1" ++ s)
   check C("apple").s ~is "1apple"
-  check C("apple").b ~is "1"[0]
-  check C("apple").more ~is "a"[0]
+  check C("apple").b ~is Char"1"
+  check C("apple").more ~is Char"a"
 
 check:
   class Posn(x, y):

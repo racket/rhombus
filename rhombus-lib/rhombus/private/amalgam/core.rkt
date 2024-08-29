@@ -79,6 +79,7 @@
         "string.rkt"
         "bytes.rkt"
         "char.rkt"
+        "byte.rkt"
         "symbol.rkt"
         "keyword.rkt"
         "dot.rkt"

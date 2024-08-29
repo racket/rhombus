@@ -4,9 +4,9 @@
 
 @title{Byte Strings}
 
-A @deftech{byte string} is a sequence of bytes (i.e., integers between 0
-and 255 inclusive). A byte string works with map-referencing @brackets
-to access a byte via @rhombus(#%index). A byte string also works with the
+A @deftech{byte string} is a sequence of @tech{bytes}. A byte string
+works with map-referencing @brackets to access a byte via
+@rhombus(#%index). A byte string also works with the
 @rhombus(++) operator to append bytes strings. A byte string can be used
 as @tech{sequence}, in which case it supplies its bytes in order.
 
@@ -63,7 +63,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
  byte is initialized to @rhombus(byte).
 
 @examples(
-  Bytes.make(5, 33)
+  Bytes.make(5, Byte#"!")
 )
 
 }
@@ -111,9 +111,9 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 @examples(
   def b = #"abc".copy()
-  b[0] := 104
+  b[0] := Byte#"h"
   b
-  b.set(1, 104)
+  b.set(1, Byte#"h")
   b
 )
 

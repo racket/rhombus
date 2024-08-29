@@ -138,7 +138,7 @@ Strings are @tech{comparable}, which means that generic operations like
  string contains @rhombus(c).
 
 @examples(
-  String.make(5, "x"[0])
+  String.make(5, Char"x")
 )
 
 }

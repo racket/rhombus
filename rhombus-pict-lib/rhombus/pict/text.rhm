@@ -180,8 +180,8 @@ fun flatten_para_content(who, decode, c) :~ List:
                                                         #{#:decode?}: decode,
                                                         str)), #'sep],
                              ...)
-        let ps = if s[s.length()-1] == " "[0] | ps | ps.drop_last(1)
-        let ps = if s[0] == " "[0] | List.cons(#'sep, ps) | ps
+        let ps = if s[s.length()-1] == Char" " | ps | ps.drop_last(1)
+        let ps = if s[0] == Char" " | List.cons(#'sep, ps) | ps
         ps
     | p :: Pict: [#'sep, p, #'sep]
     | []: []
