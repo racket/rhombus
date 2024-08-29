@@ -44,6 +44,7 @@
    #:render (lambda (kind str)
               (element (case kind
                          [(paren) paren-color]
+                         [(variable) variable-color]
                          [(meta plain datum) tt-style]
                          [(value) value-color]
                          [(result) result-color]
