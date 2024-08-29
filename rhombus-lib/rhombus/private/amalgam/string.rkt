@@ -208,19 +208,16 @@
     (raise-argument-error* who rhombus-realm "ReadableString" s)))
 
 (define/method (String.get s i)
-  #:inline
   #:primitive (string-ref)
   #:static-infos ((#%call-result #,(get-char-static-infos)))
   (string-ref s i))
 
 (define/method (String.length s)
-  #:inline
   #:primitive (string-length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (string-length s))
 
 (define/method (String.to_string s)
-  #:inline
   #:primitive (string->immutable-string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string s))
@@ -258,7 +255,6 @@
   (string->immutable-string (make-string n c)))
 
 (define/method String.substring
-  #:inline
   #:primitive (substring)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
@@ -266,13 +262,13 @@
     [(str start end) (string->immutable-string (substring str start end))]))
 
 (define/method String.append
-  #:inline
   #:primitive (string-append-immutable)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
     [() ""]
     [(s) (string->immutable-string s)]
-    [(str1 str2) (string-append-immutable str1 str2)]
+    [(s1 s2) (string-append-immutable s1 s2)]
+    [(s1 s2 s3) (string-append-immutable s1 s2 s3)]
     [strs (apply string-append-immutable strs)]))
 
 (define-syntax (define-upcase stx)
@@ -283,7 +279,6 @@
      #:with method-name (format-name "String.~a")
      #:with fn-name (format-name "string-~a")
      #'(define/method (method-name s)
-         #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,(get-string-static-infos)))
          (string->immutable-string (fn-name s)))]))
@@ -301,7 +296,6 @@
      #:with method-name (format-name "String.normalize_~a")
      #:with fn-name (format-name "string-normalize-~a")
      #'(define/method (method-name s)
-         #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,(get-string-static-infos)))
          (string->immutable-string (fn-name s)))]))
@@ -317,7 +311,6 @@
      #:with method-name (datum->syntax #'utf8 (string->symbol (format "String.~a_bytes" (syntax-e #'utf8))))
      #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "string->bytes/~a" (syntax-e #'utf-8))))
      #'(define/method method-name
-         #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,(indirect-get-bytes-static-infos)))
          (case-lambda
@@ -338,7 +331,6 @@
      #:with method-name (format-name "String.grapheme_~a")
      #:with fn-name (format-name "string-grapheme-~a")
      #'(define/method method-name
-         #:inline
          #:primitive (fn-name)
          (case-lambda
            [(str) (fn-name str)]
@@ -357,7 +349,6 @@
       [_ #f])))
 
 (define/method (String.to_sequence str)
-  #:inline
   #:primitive (in-string)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-string str))

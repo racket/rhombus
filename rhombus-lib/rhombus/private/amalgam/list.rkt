@@ -272,52 +272,43 @@
     (raise-argument-error* who rhombus-realm "MutableList" l)))
 
 (define/arity (List.cons a d)
-  #:inline
   #:primitive (treelist-cons)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-cons d a))
 
 (define/arity (PairList.cons a d)
-  #:inline
   #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who d)
   (cons a d))
 
 (define/method (List.add d a)
-  #:inline
   #:primitive (treelist-add)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-add d a))
 
 (define/method (List.insert d pos a)
-  #:inline
   #:primitive (treelist-insert)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-insert d pos a))
 
 (define/method (List.delete d pos)
-  #:inline
   #:primitive (treelist-delete)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-delete d pos))
 
 (define/arity (MutableList.cons a d)
-  #:inline
   #:primitive (mutable-treelist-cons!)
   (mutable-treelist-cons! d a))
 
 (define/method (MutableList.add d a)
-  #:inline
   #:primitive (mutable-treelist-add!)
   (mutable-treelist-add! d a))
 
 (define/method (MutableList.insert d pos a)
-  #:inline
   #:primitive (mutable-treelist-insert!)
   (mutable-treelist-insert! d pos a))
 
 (define/method (MutableList.delete d pos)
-  #:inline
   #:primitive (mutable-treelist-delete!)
   (mutable-treelist-delete! d pos))
 
@@ -346,12 +337,10 @@
   (treelist-rest l))
 
 (define/arity (PairList.first l)
-  #:inline
   (check-nonempty-list who l)
   (car l))
 
 (define/arity (PairList.last l)
-  #:inline
   (check-nonempty-list who l)
   (let loop ([l l])
     (if (null? (cdr l))
@@ -359,7 +348,6 @@
         (loop (cdr l)))))
 
 (define/arity (PairList.rest l)
-  #:inline
   #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-nonempty-list who l)
   (cdr l))
@@ -381,19 +369,16 @@
     i))
 
 (define/method (List.length l)
-  #:inline
   #:primitive (treelist-length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (treelist-length l))
 
 (define/method (PairList.length l)
-  #:inline
   #:primitive (length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (length l))
 
 (define/method (MutableList.length l)
-  #:inline
   #:primitive (mutable-treelist-length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (mutable-treelist-length l))
@@ -873,7 +858,6 @@
       [_ #f])))
 
 (define/method (PairList.to_sequence lst)
-  #:inline
   #:primitive (in-list)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-list lst))
@@ -887,24 +871,20 @@
       [_ #f])))
 
 (define/method (List.to_sequence lst)
-  #:inline
   #:primitive (in-treelist)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-treelist lst))
 
 (define/method (List.get l n)
-  #:inline
   #:primitive (treelist-ref)
   (treelist-ref l n))
 
 (define/method (List.set l n v)
-  #:inline
   #:primitive (treelist-set)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-set l n v))
 
 (define/method (List.copy lst)
-  #:inline
   #:primitive (treelist-copy)
   #:static-infos ((#%call-result #,(get-mutable-treelist-static-infos)))
   (treelist-copy lst))
@@ -918,23 +898,19 @@
       [_ #f])))
 
 (define/method (MutableList.to_sequence lst)
-  #:inline
   #:primitive (in-mutable-treelist)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-mutable-treelist lst))
 
 (define/method (MutableList.get l n)
-  #:inline
   #:primitive (mutable-treelist-ref)
   (mutable-treelist-ref l n))
 
 (define/method (MutableList.set l n v)
-  #:inline
   #:primitive (mutable-treelist-set!)
   (mutable-treelist-set! l n v))
 
 (define/method List.append
-  #:inline
   #:primitive (treelist-append)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (case-lambda
@@ -946,7 +922,6 @@
 
 ;; only check that the *last* argument is list here, since `append` checks the rest
 (define/method PairList.append
-  #:inline
   #:primitive (append)
   #:static-infos ((#%call-result #,(get-list-static-infos)))
   (case-lambda
@@ -969,37 +944,31 @@
      (apply append ls)]))
 
 (define/method (MutableList.append a b)
-  #:inline
   #:primitive (mutable-treelist-append!)
   (mutable-treelist-append! a b))
 
 ;; primitive doesn't check for listness
 (define/method (PairList.get l n)
-  #:inline
   #:primitive (list-ref)
   (check-list who l)
   (list-ref l n))
 
 (define/method (List.take l n)
-  #:inline
   #:primitive (treelist-take)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-take l n))
 
 (define/method (List.take_last l n)
-  #:inline
   #:primitive (treelist-take-right)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-take-right l n))
 
 (define/method (List.drop l n)
-  #:inline
   #:primitive (treelist-drop)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-drop l n))
 
 (define/method (List.drop_last l n)
-  #:inline
   #:primitive (treelist-drop-right)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-drop-right l n))
@@ -1060,22 +1029,18 @@
     a))
 
 (define/method (MutableList.take l n)
-  #:inline
   #:primitive (mutable-treelist-take!)
   (mutable-treelist-take! l n))
 
 (define/method (MutableList.take_last l n)
-  #:inline
   #:primitive (mutable-treelist-take-right!)
   (mutable-treelist-take-right! l n))
 
 (define/method (MutableList.drop l n)
-  #:inline
   #:primitive (mutable-treelist-drop!)
   (mutable-treelist-drop! l n))
 
 (define/method (MutableList.drop_last l n)
-  #:inline
   #:primitive (mutable-treelist-drop-right!)
   (mutable-treelist-drop-right! l n))
 

@@ -213,12 +213,10 @@
     [(_ accum v) #'(cons v accum)]))
 
 (define/method (Array.get v i)
-  #:inline
   #:primitive (vector-ref)
   (vector-ref v i))
 
 (define/method (Array.set v i x)
-  #:inline
   #:primitive (vector-set!)
   (vector-set! v i x))
 
@@ -227,7 +225,6 @@
     (raise-argument-error* who rhombus-realm "Array" v)))
 
 (define/method Array.append
-  #:inline
   #:primitive (vector-append)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (case-lambda
@@ -238,7 +235,6 @@
     [args (apply vector-append args)]))
 
 (define/arity Array.make
-  #:inline
   #:primitive (make-vector)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (case-lambda
@@ -246,7 +242,6 @@
     [(len val) (make-vector len val)]))
 
 (define/method (Array.length v)
-  #:inline
   #:primitive (vector-length)
   (vector-length v))
 
@@ -259,7 +254,6 @@
     [(v start end) (vector-copy v start end)]))
 
 (define/method Array.copy_from
-  #:inline
   #:primitive (vector-copy!)
   (case-lambda
     [(v dest-start src) (vector-copy! v dest-start src)]
@@ -316,7 +310,6 @@
       [_ #f])))
 
 (define/method (Array.to_sequence v)
-  #:inline
   #:primitive (in-vector)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-vector v))

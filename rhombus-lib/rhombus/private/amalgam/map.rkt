@@ -971,7 +971,6 @@
     (raise-argument-error* who rhombus-realm "ReadableMap" ht)))
 
 (define/method (Map.length ht)
-  #:inline
   #:primitive (hash-count)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (hash-count ht))
@@ -990,7 +989,6 @@
       [_ #f])))
 
 (define/method (Map.to_sequence ht)
-  #:inline
   #:primitive (in-hash)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-hash ht))
@@ -1001,7 +999,6 @@
   (list->treelist (hash-values ht)))
 
 (define/method Map.get
-  #:inline
   #:primitive (hash-ref)
   (case-lambda
     [(ht key) (hash-ref ht key)]
@@ -1075,17 +1072,14 @@
   (hash-snapshot ht))
 
 (define/method (Map.remove ht key)
-  #:inline
   #:primitive (hash-remove)
   #:static-infos ((#%call-result #,(get-map-static-infos)))
   (hash-remove ht key))
 
 (define/method (MutableMap.set ht key val)
-  #:inline
   #:primitive (hash-set!)
   (hash-set! ht key val))
 
 (define/method (MutableMap.delete ht key)
-  #:inline
   #:primitive (hash-remove!)
   (hash-remove! ht key))

@@ -35,11 +35,9 @@
   #:properties
   ()
   #:methods
-  (to_report_string
-   ))
+  (to_report_string))
 
 (define/method (Srcloc.to_report_string v)
-  #:inline
   #:primitive (srcloc->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (srcloc->string v)))

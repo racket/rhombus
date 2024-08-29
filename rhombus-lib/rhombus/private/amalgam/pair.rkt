@@ -41,17 +41,14 @@
   ())
 
 (define/arity #:name Pair (Pair.cons a d)
-  #:inline
   #:static-infos ((#%call-result #,(get-pair-static-infos)))
   (cons a d))
 
 (define/arity (Pair.first p)
-  #:inline
   #:primitive (car)
   (car p))
 
 (define/arity (Pair.rest p)
-  #:inline
   #:primitive (cdr)
   (cdr p))
 

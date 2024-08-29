@@ -72,7 +72,6 @@
 (define-infix #:who |bits.(?)| bitwise-bit-set?)
 
 (define/arity (bits.length n)
-  #:inline
   #:primitive (integer-length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (integer-length n))

@@ -63,13 +63,11 @@
                                  "String || Bytes || Path" c)]))
 
 (define/method (Path.bytes s)
-  #:inline
   #:primitive (path->bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
 
 (define/method (Path.string s)
-  #:inline
   #:primitive (path->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))

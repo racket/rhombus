@@ -71,17 +71,14 @@
 (define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
 
 (define/method (Bytes.get b i)
-  #:inline
   #:primitive (bytes-ref)
   (bytes-ref b i))
 
 (define/method (Bytes.set b i x)
-  #:inline
   #:primitive (bytes-set!)
   (bytes-set! b i x))
 
 (define/method Bytes.append
-  #:inline
   #:primitive (bytes-append)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
@@ -92,7 +89,6 @@
     [args (apply bytes-append args)]))
 
 (define/arity Bytes.make
-  #:inline
   #:primitive (make-bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
@@ -100,13 +96,11 @@
     [(len val) (make-bytes len val)]))
 
 (define/method (Bytes.length bstr)
-  #:inline
   #:primitive (bytes-length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (bytes-length bstr))
 
 (define/method Bytes.subbytes
-  #:inline
   #:primitive (subbytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
@@ -119,7 +113,6 @@
      #:with method-name (datum->syntax #'utf8 (string->symbol (format "Bytes.~a_string" (syntax-e #'utf8))))
      #:with fn-name (datum->syntax #'utf-8 (string->symbol (format "bytes->string/~a" (syntax-e #'utf-8))))
      #'(define/method method-name
-         #:inline
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,(indirect-get-string-static-infos)))
          (case-lambda
@@ -133,13 +126,11 @@
 (define-string locale locale)
 
 (define/method (Bytes.copy bstr)
-  #:inline
   #:primitive (bytes-copy)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes-copy bstr))
 
 (define/method Bytes.copy_from
-  #:inline
   #:primitive (bytes-copy!)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
@@ -156,13 +147,11 @@
       [_ #f])))
 
 (define/method (Bytes.to_sequence bstr)
-  #:inline
   #:primitive (in-bytes)
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-bytes bstr))
 
 (define/method (Bytes.snapshot bstr)
-  #:inline
   #:primitive (bytes->immutable-bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes bstr))

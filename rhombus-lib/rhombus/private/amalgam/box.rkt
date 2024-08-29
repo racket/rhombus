@@ -42,12 +42,10 @@
   ())
 
 (define/arity (Box v)
-  #:inline
   #:static-infos ((#%call-result #,(get-box-static-infos)))
   (box v))
 
 (define/arity Box.value
-  #:inline
   #:primitive (unbox set-box!)
   (case-lambda
     [(b) (unbox b)]

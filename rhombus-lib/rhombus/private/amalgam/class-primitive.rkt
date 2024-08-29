@@ -56,7 +56,6 @@
                               (string->symbol (format "~a-~a" (syntax-e #'name/rkt) (syntax-e #'_field)))))
                      (~parse Name.field-def
                              #'(define/arity (Name.field obj)
-                                 #:inline
                                  (~? (~@ #:static-infos ((#%call-result field-static-infos))))
                                  (name-field obj))))
                (~and [field Name.field (~optional field-static-infos)]

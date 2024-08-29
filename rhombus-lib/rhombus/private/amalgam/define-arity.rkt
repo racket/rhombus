@@ -31,32 +31,30 @@
   (syntax-parse stx
     [(self (~seq #:direct-id direct-id) . tail)
      (expand-define/arity #'(self . tail) (build-define/method/direct-id #'direct-id))]
-    [_ (expand-define/arity stx build-define/method)]))
+    [_
+     (expand-define/arity stx build-define/method)]))
 
 (define-for-syntax (expand-define/arity stx build)
   (syntax-parse stx
     [(~or* (~and (_ (~optional (~seq #:name name)) (id . args)
-                    (~optional (~and inline #:inline))
                     (~optional (~seq #:primitive (primitive-id ...)))
                     (~optional (~seq #:static-infos static-infos))
                     . body)
                  (~parse rhs #'(lambda args . body)))
            (_ (~optional (~seq #:name name)) id
-              (~optional (~and inline #:inline))
               (~optional (~seq #:primitive (primitive-id ...)))
               (~optional (~seq #:static-infos static-infos))
               rhs))
      #`(begin
          #,@(build #'id
                    (attribute name)
-                   (and (attribute inline) #t)
                    (if (attribute primitive-id)
                        (syntax->list #'(primitive-id ...))
                        '())
                    (attribute static-infos)
                    #'rhs))]))
 
-(define-for-syntax (build-define/arity id name inline? primitive-ids static-infos rhs [arity-mask #f])
+(define-for-syntax (build-define/arity id name primitive-ids static-infos rhs [arity-mask #f])
   (define name/id (or name id))
   (define rhs/who
     (with-syntax ([name-sym (syntax-e name/id)])
@@ -77,11 +75,8 @@
   (append
    (for/list ([primitive-id (in-list primitive-ids)])
      #`(void (set-primitive-who! '#,primitive-id '#,name/id)))
-   (list (let ([def #`(define #,id
-                        #,(if name (syntax-property rhs/who 'inferred-name name) rhs/who))])
-           (if inline?
-               (syntax-property def 'compiler-hint:cross-module-inline #t)
-               def))
+   (list #`(define #,id
+             #,(if name (syntax-property rhs/who 'inferred-name name) rhs/who))
          (with-syntax ([id id]
                        [(info ...) (or static-infos '())]
                        [arity-mask (or arity-mask (extract-arity-mask rhs))])
@@ -91,11 +86,11 @@
                . #,(get-function-static-infos))))))
 
 (define-for-syntax ((build-define/method/direct-id direct-id)
-                    id name inline? primitive-ids static-infos rhs)
-  (build-define/method id name inline? primitive-ids static-infos rhs
+                    id name primitive-ids static-infos rhs)
+  (build-define/method id name primitive-ids static-infos rhs
                        #:direct-id direct-id))
 
-(define-for-syntax (build-define/method id name inline? primitive-ids static-infos rhs
+(define-for-syntax (build-define/method id name primitive-ids static-infos rhs
                                         #:direct-id [direct-id id])
   (define (arithmetic-shift* a k)
     (if (exact-integer? a)
@@ -129,7 +124,7 @@
                ;; TODO what should we name the partially applied method?
                ;; This also applies to class methods in general
                #,(syntax-property method 'inferred-name (or name id))))
-         (build-define/arity id name inline? primitive-ids static-infos rhs arity-mask)))
+         (build-define/arity id name primitive-ids static-infos rhs arity-mask)))
 
 (define-for-syntax (make-apply rator obj rands)
   (define (extract-arg arg)

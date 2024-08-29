@@ -133,7 +133,6 @@
     (raise-argument-error* who rhombus-realm "Port.Output" op)))
 
 (define/arity Port.Input.open_bytes
-  #:inline
   #:primitive (open-input-bytes)
   #:static-infos ((#%call-result #,(get-input-port-static-infos)))
   (case-lambda
@@ -141,7 +140,6 @@
     [(bstr name) (open-input-bytes bstr name)]))
 
 (define/arity Port.Input.open_string
-  #:inline
   #:primitive (open-input-string)
   #:static-infos ((#%call-result #,(get-input-port-static-infos)))
   (case-lambda
@@ -149,7 +147,6 @@
     [(str name) (open-input-string str name)]))
 
 (define/arity Port.Output.open_bytes
-  #:inline
   #:primitive (open-output-bytes)
   #:static-infos ((#%call-result #,(get-output-string-port-static-infos)))
   (case-lambda
@@ -157,7 +154,6 @@
     [(name) (open-output-bytes name)]))
 
 (define/arity Port.Output.open_string
-  #:inline
   #:primitive (open-output-string)
   #:static-infos ((#%call-result #,(get-output-string-port-static-infos)))
   (case-lambda
@@ -170,38 +166,31 @@
     [else v]))
 
 (define/method (Port.Input.peek_byte port #:skip_bytes [skip 0])
-  #:inline
   #:primitive (peek-byte)
   (peek-byte port skip))
 
 (define/method (Port.Input.peek_bytes port amt #:skip_bytes [skip 0])
-  #:inline
   #:primitive (peek-bytes)
   (peek-bytes amt skip port))
 
 (define/method (Port.Input.peek_char port #:skip_bytes [skip 0])
-  #:inline
   #:primitive (peek-char)
   (peek-char port skip))
 
 (define/method (Port.Input.peek_string port amt #:skip_bytes [skip 0])
-  #:inline
   #:primitive (peek-bytes)
   (coerce-read-result
    (peek-string amt skip port)))
 
 (define/method (Port.Input.read_byte port)
-  #:inline
   #:primitive (read-byte)
   (read-byte port))
 
 (define/method (Port.Input.read_bytes port amt)
-  #:inline
   #:primitive (read-bytes)
   (read-bytes amt port))
 
 (define/method (Port.Input.read_char port)
-  #:inline
   #:primitive (read-char)
   (read-char port))
 
@@ -216,18 +205,15 @@
    (read-line port mode)))
 
 (define/method (Port.Input.read_string port amt)
-  #:inline
   #:primitive (read-string)
   (coerce-read-result (read-string amt port)))
 
 (define/method (Port.Output.get_bytes port)
-  #:inline
   #:primitive (get-output-bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (get-output-bytes port))
 
 (define/method (Port.Output.get_string port)
-  #:inline
   #:primitive (get-output-string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (get-output-string port)))
