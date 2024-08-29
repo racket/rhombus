@@ -141,20 +141,18 @@ check:
   String.contains("Hello", "ello") ~is #true
   String.contains("Hello", "howdy") ~is #false
 
-block:
-  import:
-    lib("racket/base.rkt").#{string-copy} as copy
-  check:
-    String.append() ~is ""
-    String.append(copy("this")) ~is "this"
-    String.append(copy("this"), copy(", that")) ~is "this, that"
-    String.append(copy("this"), " and ", copy("that")) ~is "this and that"
-    String.append(copy("this"), ", this", ", and ", copy("that")) ~is "this, this, and that"
-  check:
-    to_string("hello") ~is "hello"
-    to_string(copy("hello")) ~is "hello"
-    to_string("hello", ~mode: #'expr) ~is "\"hello\""
-    to_string(copy("hello"), ~mode: #'expr) ~is "String.copy(\"hello\")"
+check:
+  String.append() ~is ""
+  String.append("this".copy()) ~is "this"
+  String.append("this".copy(), ", that".copy()) ~is "this, that"
+  String.append("this".copy(), " and ", "that".copy()) ~is "this and that"
+  String.append("this".copy(), ", this", ", and ", "that".copy()) ~is "this, this, and that"
+
+check:
+  to_string("hello") ~is "hello"
+  to_string("hello".copy()) ~is "hello"
+  to_string("hello", ~mode: #'expr) ~is "\"hello\""
+  to_string("hello".copy(), ~mode: #'expr) ~is "String.copy(\"hello\")"
 
 check:
   ~eval

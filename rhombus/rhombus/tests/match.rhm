@@ -54,15 +54,13 @@ version_guard.at_least "8.11.1.8":
   // check `==` semantics applies as opposed to `is_now`
   // in other words, `case/equal-always` is really used
   check:
-    match Bytes.copy(#"byte string"):
+    match #"byte string".copy():
     | #"byte string": "matched"
     | ~else: "unmatched"
     ~is "unmatched"
 
   check:
-    import:
-      lib("racket/base.rkt").#{string-copy}
-    match #{string-copy}("string"):
+    match "string".copy():
     | "string": "matched"
     | ~else: "unmatched"
     ~is "unmatched"

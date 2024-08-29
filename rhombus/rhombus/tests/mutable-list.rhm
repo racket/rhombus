@@ -390,10 +390,9 @@ check:
   ~throws "appended element does not satisfy annotation"
 
 check:
-  import lib("racket/base.rkt")
   def orig = MutableList("apple")
   def a :: MutableList.later_of(ReadableString.to_string) = orig
-  a.append([base.#{string-copy}("banana")])
+  a.append(["banana".copy()])
   orig.snapshot()
   ~is ["apple", "banana"]
 

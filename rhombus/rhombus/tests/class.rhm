@@ -859,15 +859,14 @@ check:
   ~throws "field name already in superclass as dot syntax"
 
 block:
-  import lib("racket/base.rkt")
   class Posn(mutable x :: ReadableString.to_string):
     method assign(v): x := v
-  def p = Posn(base.#{string-copy}("apple"))
-  check: p.x ~is "apple"
-  p.x := base.#{string-copy}("ok")
-  check: p.x ~is "ok"
-  p.assign(base.#{string-copy}("still ok"))
-  check: p.x ~is "still ok"
+  def p = Posn("apple".copy())
+  check p.x ~is "apple"
+  p.x := "ok".copy()
+  check p.x ~is "ok"
+  p.assign("still ok".copy())
+  check p.x ~is "still ok"
 
 // make sure `_let` in a `class` body doesn't obscure
 // `internal binding

@@ -126,11 +126,7 @@ check:
 
   { 1: 2 }.copy() is_a MutableIndexable ~is #true
   { 1, 2 }.copy() is_a MutableIndexable ~is #true
-  (block:
-     import:
-       lib("racket/base.rkt").#{string-copy} as copy
-     copy("apple") is_a MutableIndexable
-   ) ~is #false
+  "apple".copy() is_a MutableIndexable ~is #false
   #"apple".copy() is_a MutableIndexable ~is #true
 
 check:
@@ -144,11 +140,7 @@ check:
     "expected: MutableIndexable",
     "\"apple\"",
   )
-  (block:
-     import:
-       lib("racket/base.rkt").#{string-copy} as copy
-     copy("apple") :~ MutableIndexable [0] := "b"[0]
-   ) ~throws values(
+  ("apple".copy() :~ MutableIndexable)[0] := "b"[0] ~throws values(
     "MutableIndexable.set: contract violation",
     "expected: MutableIndexable",
     "String.copy(\"apple\")",

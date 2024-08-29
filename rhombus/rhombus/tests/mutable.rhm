@@ -59,12 +59,11 @@ block:
     i ~is 11
 
 block:
-  import lib("racket/base.rkt")
   def mutable str :: ReadableString.to_string = "apple"
   check:
     str := 10 ~throws "value does not satisfy annotation"
     str ~is "apple"
-    str := base.#{string-copy}("banana") ~completes
+    str := "banana".copy() ~completes
     str ~is "banana"
 
 block:
