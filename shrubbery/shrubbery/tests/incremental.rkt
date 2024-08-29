@@ -4,7 +4,11 @@
          shrubbery/lex-comment
          "input.rkt")
 
-(define slow? #f)
+(define speed
+  (cond
+    [(getenv "PLT_PKG_BUILD_SERVICE") 'fast]
+    [#t 'medium]
+    [else 'slow]))
 
 (define (make-key pos status) (cons pos status))
 (define (key-pos k) (car k))
@@ -137,10 +141,13 @@
   (define N (sub1 (string-length input)))
   (define (sel-pos i) i)
   ;; try inserting or deleting then re-lexing
-  (for ([ins (in-list (if slow?
+  (for ([ins (in-list (if (eq? speed 'slow)
                           '("x" "1" "$" ")" "'" " ")
                           '("x")))])
-    (for ([i (in-range N)])
+    (for ([i (in-range N)]
+          #:when (if (eq? speed 'fast)
+                     (zero? (random 4))
+                     #t))
       (define pos (sel-pos i))
 
       ;; delte char
