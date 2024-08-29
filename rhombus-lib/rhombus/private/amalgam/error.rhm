@@ -154,14 +154,14 @@ fun reindent(s :~ String,
                          = 72 - (2 + label.length() + 1 + space.length())) :~ String:
   if (s.length() > max_len
         || (for any (c: s):
-              c == "\n"[0]))
+              c == Char"\n"))
   | "\n" ++ tab
       ++ (block:
             fun loop(i, start):
               cond
               | i == s.length():
                   s.substring(start, i)
-              | s[i] == "\n"[0]:
+              | s[i] == Char"\n":
                   s.substring(start, i) ++ "\n" ++ tab ++ loop(i+1, i+1)
               | ~else:
                   loop(i+1, start)

@@ -55,7 +55,7 @@ def (render_line,
                    rtt(str)
                ~render_whitespace:
                  fun (n):
-                   rtt(String.make(n, " "[0]))
+                   rtt(String.make(n, Char" "))
                ~render_line:
                  fun (elems):
                    fun flatten(p):
@@ -78,7 +78,7 @@ def (render_line,
                    if s
                    | let p = rtt(" ")
                      p.scale(s * n / m / p.width, 1)
-                   | tt(String.make(n, " "[0]))
+                   | tt(String.make(n, Char" "))
                ~is_rendered:
                  fun (v):
                    v is_a Pict)

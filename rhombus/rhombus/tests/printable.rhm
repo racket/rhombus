@@ -40,10 +40,10 @@ check:
   ~prints "1\n2\napple"
 
 check:
-  print([1, String.make(80, "a"[0]), 2], ~pretty: #true)
+  print([1, String.make(80, Char"a"), 2], ~pretty: #true)
   ~prints @str{[
                  1,
-                 "@(String.make(80, "a"[0]))",
+                 "@(String.make(80, Char"a"))",
                  2
                ]}
 

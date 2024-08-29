@@ -56,7 +56,7 @@ veneer InfiniteString(this :: ReadableString.to_string):
   converter
   implements Indexable
   override get(i):
-    if i >= this.length() | #{#\space} | this[i]
+    if i >= this.length() | Char" " | this[i]
   implements Appendable
   override append(other :: InfiniteString) :: InfiniteString:
     this
@@ -66,8 +66,8 @@ veneer InfiniteString(this :: ReadableString.to_string):
 check:
   InfiniteString("apple") ~is "apple"
   "apple" :: InfiniteString ~is "apple"
-  InfiniteString("apple")[1000] ~is #{#\space}
-  ("apple" :: InfiniteString)[1000] ~is #{#\space}
+  InfiniteString("apple")[1000] ~is Char" "
+  ("apple" :: InfiniteString)[1000] ~is Char" "
   InfiniteString("apple").m() ~is "m"
   InfiniteString.m("apple") ~is "m"
   ("apple" :: InfiniteString).m() ~is "m"

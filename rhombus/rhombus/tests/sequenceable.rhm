@@ -242,12 +242,12 @@ block:
     for List:
       each elem: Posn(1, 2) :: Sequence
       elem
-    ~is ["o"[0], "o"[0], "p"[0], "s"[0]]
+    ~is [Char"o", Char"o", Char"p", Char"s"]
   check:
     for List:
       each elem: Posn(1, 2).to_sequence()
       elem
-    ~is ["o"[0], "o"[0], "p"[0], "s"[0]]
+    ~is [Char"o", Char"o", Char"p", Char"s"]
   check:
     Posn(1, 2).to_sequence()
     ~is "oops"

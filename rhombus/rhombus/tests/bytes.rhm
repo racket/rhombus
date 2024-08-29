@@ -22,7 +22,7 @@ block:
 check:
   #"hello" :: Bytes ~is #"hello"
   Bytes.make(5) ~is_now #"\0\0\0\0\0"
-  Bytes.make(5, 104) ~is_now #"hhhhh"
+  Bytes.make(5, Byte#"h") ~is_now #"hhhhh"
 
 block:
   use_static
@@ -32,8 +32,8 @@ block:
     ~is 5
   check:
     #"hello".length() ~is 5
-    #"hello"[0] ~is 104
-    #"hello".get(0) ~is 104
+    #"hello"[0] ~is Byte#"h"
+    #"hello".get(0) ~is Byte#"h"
     #"hello" ++ #" " ++ #"world" ~is_now #"hello world"
     #"hello" ++ #" " ++ "world" ~throws values(
       "Bytes.append: contract violation",
@@ -64,12 +64,12 @@ block:
 
 check:
   dynamic(#"hello").length() ~is 5
-  dynamic(#"hello")[0] ~is 104
+  dynamic(#"hello")[0] ~is Byte#"h"
   dynamic(#"hello" ++ #" ") ++ #"world" ~is_now #"hello world"
   dynamic(#"hello" ++ #" ") ++ "world" ~throws "cannot append a byte string and other value"
   dynamic(#"hello").append(#" world") ~is_now #"hello world"
   dynamic(#"hello").append(#" world", #" and bye") ~is_now #"hello world and bye"
-  dynamic(#"hello").get(0) ~is 104
+  dynamic(#"hello").get(0) ~is Byte#"h"
   dynamic(#"hello").subbytes(1) ~is_now #"ello"
   dynamic(#"hello").subbytes(1, 4) ~is_now #"ell"
   dynamic(#"hello").copy() ~is_now #"hello"
@@ -86,13 +86,13 @@ check:
 block:
   use_static
   def bstr = #"hello".copy()
-  bstr[1] := 104
-  bstr.set(2, 104)
+  bstr[1] := Byte#"h"
+  bstr.set(2, Byte#"h")
   check bstr ~is_now #"hhhlo"
   block:
     use_dynamic
-    dynamic(bstr)[3] := 104
-    dynamic(bstr).set(4, 104)
+    dynamic(bstr)[3] := Byte#"h"
+    dynamic(bstr).set(4, Byte#"h")
     check bstr ~is_now #"hhhhh"
 
 check:
@@ -302,11 +302,11 @@ version_guard.at_least "8.14.0.7":
       "given: \"a\"",
     )
   check:
-    Bytes.make(5, "a"[0])
+    Bytes.make(5, Char"a")
     ~throws values(
       "Bytes.make: contract violation",
       "expected: Byte",
-      "given: #{#\\a}",
+      "given: Char\"a\"",
     )
   check:
     Bytes.make(5, -1)

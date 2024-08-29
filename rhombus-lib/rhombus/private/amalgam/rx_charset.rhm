@@ -123,60 +123,60 @@ rx_charset.macro '$left -- $right':
 
 rx_charset.macro 'alpha':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("a"[0], "z"[0])
-                            .union(Charset("A"[0], "Z"[0])),
+  rx_charset_meta.pack(Charset(Char"a", Char"z")
+                         .union(Charset(Char"A", Char"Z")),
                        stx)
 rx_charset.macro 'upper':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("A"[0], "Z"[0]), stx)
+  rx_charset_meta.pack(Charset(Char"A", Char"Z"), stx)
 
 rx_charset.macro 'lower':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("a"[0], "z"[0]), stx)
+  rx_charset_meta.pack(Charset(Char"a", Char"z"), stx)
 
 rx_charset.macro 'digit':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("0"[0], "9"[0]), stx)
+  rx_charset_meta.pack(Charset(Char"0", Char"9"), stx)
 
 rx_charset.macro 'xdigit':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("0"[0], "9"[0])
-                         .union(Charset("a"[0], "f"[0]))
-                         .union(Charset("A"[0], "F"[0])),
+  rx_charset_meta.pack(Charset(Char"0", Char"9")
+                         .union(Charset(Char"a", Char"f"))
+                         .union(Charset(Char"A", Char"F")),
                        stx)
 
 rx_charset.macro 'alnum':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("0"[0], "9"[0])
-                         .union(Charset("a"[0], "z"[0]))
-                         .union(Charset("A"[0], "Z"[0])),
+  rx_charset_meta.pack(Charset(Char"0", Char"9")
+                         .union(Charset(Char"a", Char"z"))
+                         .union(Charset(Char"A", Char"Z")),
                        stx)
 
 rx_charset.macro 'word':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("0"[0], "9"[0])
-                         .union(Charset("a"[0], "z"[0]))
-                         .union(Charset("A"[0], "Z"[0]))
-                         .union(Charset("_"[0])),
+  rx_charset_meta.pack(Charset(Char"0", Char"9")
+                         .union(Charset(Char"a", Char"z"))
+                         .union(Charset(Char"A", Char"Z"))
+                         .union(Charset(Char"_")),
                        stx)
 
 rx_charset.macro 'blank':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("\t"[0])
-                         .union(Charset(" "[0])),
+  rx_charset_meta.pack(Charset(Char"\t")
+                         .union(Charset(Char" ")),
                        stx)
 
 rx_charset.macro 'newline':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("\n"[0]), stx)
+  rx_charset_meta.pack(Charset(Char"\n"), stx)
 
 rx_charset.macro 'space':
   ~all_stx: stx
-  rx_charset_meta.pack(Charset("\t"[0])
-                         .union(Charset(" "[0]))
-                         .union(Charset("\n"[0]))
-                         .union(Charset("\r"[0]))
-                         .union(Charset("\f"[0])),
+  rx_charset_meta.pack(Charset(Char"\t")
+                         .union(Charset(Char" "))
+                         .union(Charset(Char"\n"))
+                         .union(Charset(Char"\r"))
+                         .union(Charset(Char"\f")),
                        stx)
 
 rx_charset.macro 'graph':
@@ -186,7 +186,7 @@ rx_charset.macro 'graph':
 rx_charset.macro 'print':
   ~all_stx: stx
   rx_charset_meta.pack(Charset(Char.is_graphic, ~only_ascii: #true)
-                         .union(Charset(" "[0]).union(Charset("\t"[0]))),
+                         .union(Charset(Char" ").union(Charset(Char"\t"))),
                        stx)
 
 rx_charset.macro 'cntrl':

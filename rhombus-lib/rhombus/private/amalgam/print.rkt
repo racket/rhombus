@@ -134,6 +134,14 @@
        ;; only print immutable (byte) strings as literals
        [(immutable? v) (write v op)]
        [else (other v mode op)])]
+    [(char? v)
+     (cond
+       [(display?)
+        (display v op)]
+       [else
+        (concat
+         (display "Char" op)
+         (write (string v) op))])]
     [(exact-integer? v)
      (write v op)]
     [(and (rational? v) (exact? v))
@@ -415,7 +423,7 @@
        [else
         (define rop (open-output-bytes))
         (display "#{" rop)
-        (unless (or (number? v) (char? v))
+        (unless (number? v)
           (display "'" rop))
         (racket-print (racket-print-redirect v) rop 1)
         (display "}" rop)

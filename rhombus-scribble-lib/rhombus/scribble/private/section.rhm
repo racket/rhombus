@@ -50,7 +50,7 @@ meta:
                 match prefix
                 | s :: String:
                     if delta > 0
-                    | s ++ String.make(delta, " "[0])
+                    | s ++ String.make(delta, Char" ")
                     | s.substring(0, s.length() + delta)
                 | Pair(a, PairList.empty):
                     Pair(loop(a), PairList.empty)

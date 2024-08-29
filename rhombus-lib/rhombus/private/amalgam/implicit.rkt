@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/print
                      "srcloc.rkt"
                      "pack.rkt")
          "expression.rkt"
@@ -112,7 +113,7 @@
        [(form-id datum . tail)
         (check-literal-term #'form-id #'datum)
         (values (binding-form #'literal-infoer
-                              #'(datum))
+                              #`([datum #,(shrubbery-syntax->string #'datum)]))
                 #'tail)]))))
 
 (define-repetition-syntax #%literal
@@ -137,7 +138,7 @@
             (null? d))
     (raise-syntax-error #f
                         "not an allowed literal term"
-                        form-id
+                        (respan (datum->syntax #f (list form-id d-stx)))
                         d-stx)))
 
 (define-syntax #%parens

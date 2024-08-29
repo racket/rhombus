@@ -26,28 +26,54 @@ block:
     Char.grapheme_step(ch, state) ~method
 
 check:
-  "h"[0] :: Char ~is #{#\h}
-  Char.to_int("h"[0]) ~is 104
-  Char.from_int(104) ~is "h"[0]
-  Char.utf8_length("λ"[0]) ~is 2
-  Char.is_alphabetic("λ"[0]) ~is #true
-  Char.is_lowercase("a"[0]) ~is #true
-  Char.is_uppercase("a"[0]) ~is #false
-  Char.is_titlecase("a"[0]) ~is #false
-  Char.is_numeric("a"[0]) ~is #false
-  Char.is_symbolic("+"[0]) ~is #true
-  Char.is_punctuation("!"[0]) ~is #true
-  Char.is_graphic("!"[0]) ~is #true
-  Char.is_blank("!"[0]) ~is #false
-  Char.is_whitespace("!"[0]) ~is #false
-  Char.is_extended_pictographic("!"[0]) ~is #false
-  Char.general_category("a"[0]) ~is #'ll
-  Char.grapheme_break_property("a"[0]) ~is #'Other
-  Char.upcase("a"[0]) ~is "A"[0]
-  Char.downcase("A"[0]) ~is "a"[0]
-  Char.foldcase("A"[0]) ~is "a"[0]
-  Char.titlecase("a"[0]) ~is "A"[0]
-  Char.grapheme_step("a"[0], 0) ~is values(#false, 1)
+  Char"h" :: Char ~is Char"h"
+  Char.from_int(104) ~is Char"h"
+
+block:
+  use_static
+  check:
+    Char"h".to_int() ~is 104
+    Char"λ".utf8_length() ~is 2
+    Char"λ".is_alphabetic() ~is #true
+    Char"a".is_lowercase() ~is #true
+    Char"a".is_uppercase() ~is #false
+    Char"a".is_titlecase() ~is #false
+    Char"a".is_numeric() ~is #false
+    Char"+".is_symbolic() ~is #true
+    Char"!".is_punctuation() ~is #true
+    Char"!".is_graphic() ~is #true
+    Char"!".is_blank() ~is #false
+    Char"!".is_whitespace() ~is #false
+    Char"!".is_extended_pictographic() ~is #false
+    Char"a".general_category() ~is #'ll
+    Char"a".grapheme_break_property() ~is #'Other
+    Char"a".upcase() ~is Char"A"
+    Char"A".downcase() ~is Char"a"
+    Char"A".foldcase() ~is Char"a"
+    Char"a".titlecase() ~is Char"A"
+    Char"a".grapheme_step(0) ~is values(#false, 1)
+
+check:
+  dynamic(Char"h").to_int() ~is 104
+  dynamic(Char"λ").utf8_length() ~is 2
+  dynamic(Char"λ").is_alphabetic() ~is #true
+  dynamic(Char"a").is_lowercase() ~is #true
+  dynamic(Char"a").is_uppercase() ~is #false
+  dynamic(Char"a").is_titlecase() ~is #false
+  dynamic(Char"a").is_numeric() ~is #false
+  dynamic(Char"+").is_symbolic() ~is #true
+  dynamic(Char"!").is_punctuation() ~is #true
+  dynamic(Char"!").is_graphic() ~is #true
+  dynamic(Char"!").is_blank() ~is #false
+  dynamic(Char"!").is_whitespace() ~is #false
+  dynamic(Char"!").is_extended_pictographic() ~is #false
+  dynamic(Char"a").general_category() ~is #'ll
+  dynamic(Char"a").grapheme_break_property() ~is #'Other
+  dynamic(Char"a").upcase() ~is Char"A"
+  dynamic(Char"A").downcase() ~is Char"a"
+  dynamic(Char"A").foldcase() ~is Char"a"
+  dynamic(Char"a").titlecase() ~is Char"A"
+  dynamic(Char"a").grapheme_step(0) ~is values(#false, 1)
 
 block:
   use_static
@@ -56,20 +82,20 @@ block:
 
 check:
   ~eval
-  "a"[0] :: CharCI
+  Char"a" :: CharCI
   ~throws "not allowed in a dynamic context"
 
 check:
   ~eval
-  def c :: CharCI = "a"[0]
+  def c :: CharCI = Char"a"
   ~throws "not allowed in a dynamic context"
 
 block:
   use_static
-  let a :: CharCI = "a"[0]
-  let A :: CharCI = "A"[0]
-  let b :: CharCI = "b"[0]
-  let B :: CharCI = "B"[0]
+  let a :: CharCI = Char"a"
+  let A :: CharCI = Char"A"
+  let b :: CharCI = Char"b"
+  let B :: CharCI = Char"B"
   check:
     a < B ~is #true
     b < A ~is #false
@@ -88,3 +114,50 @@ block:
     a compares_unequal a ~is #false
     a compares_unequal A ~is #false
     a compares_unequal B ~is #true
+
+block:
+  fun matcher(char):
+    match char
+    | Char"a" || Char"b" || Char"c": #true
+    | ~else: #false
+  check matcher(Char"a") ~is #true
+  check matcher(Char"b") ~is #true
+  check matcher(Char"c") ~is #true
+  check matcher(Char"z") ~is #false
+  check matcher(Byte#"a") ~is #false
+  check matcher(97) ~is #false
+
+check:
+  to_string(Char"a") ~is "a"
+  to_string(Char"λ") ~is "λ"
+  to_string(Char"\n") ~is "\n"
+
+check:
+  repr(Char"a") ~is "Char\"a\""
+  repr(Char"λ") ~is "Char\"λ\""
+  repr(Char"\n") ~is "Char\"\\n\""
+
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    '#%literal $(expr.to_source_string())'
+  check source Char"a" ~is "Char\"a\""
+  check source Char"λ" ~is "Char\"λ\""
+  check source Char"\n" ~is "Char\"\\n\""
+
+check:
+  ~eval
+  Char"too long"
+  ~throws values(
+    "expected a literal single-character string",
+    "Char\"too long\"",
+  )
+
+check:
+  ~eval
+  Char"a" matches Char"too long"
+  ~throws values(
+    "expected a literal single-character string",
+    "Char\"too long\"",
+  )

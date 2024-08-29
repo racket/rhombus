@@ -49,7 +49,6 @@
                     Exact
                     Inexact
                     Flonum
-                    Byte
                     Number
                     Void
                     False
@@ -819,7 +818,6 @@
 
 (void (set-primitive-contract! 'exact-integer? "Int"))
 (void (set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt"))
-(void (set-primitive-contract! 'byte? "Byte"))
 (void (set-primitive-contract! 'number? "Number"))
 (void (set-primitive-contract! 'integer? "Integral"))
 (void (set-primitive-contract! 'real? "Real"))
@@ -830,7 +828,6 @@
 (define-annotation-syntax PosInt (identifier-annotation exact-positive-integer? #,(get-int-static-infos)))
 (define-annotation-syntax NegInt (identifier-annotation exact-negative-integer? #,(get-int-static-infos)))
 (define-annotation-syntax NonnegInt (identifier-annotation exact-nonnegative-integer? #,(get-int-static-infos)))
-(define-annotation-syntax Byte (identifier-annotation byte? #,(get-int-static-infos)))
 (define-annotation-syntax Flonum (identifier-annotation flonum? #,(get-flonum-static-infos)))
 (define-annotation-syntax Number (identifier-annotation number? #,(get-number-static-infos)))
 (define-annotation-syntax Integral (identifier-annotation integer? #,(get-rational-static-infos)))
