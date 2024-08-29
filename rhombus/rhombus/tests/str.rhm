@@ -9,9 +9,9 @@ check:
   str.s("apple", ~width: 8) ~is "apple   "
   str.s("apple", ~width: 8, ~align: #'right) ~is "   apple"
   str.s("apple", ~width: 8, ~align: #'center) ~is " apple  "
-  str.s("apple", ~width: 8, ~pad: "#"[0]) ~is "apple###"
-  str.s("apple", ~width: 8, ~align: #'right, ~pad: "!"[0]) ~is "!!!apple"
-  str.s("apple", ~width: 8, ~align: #'center, ~pad: "_"[0]) ~is "_apple__"
+  str.s("apple", ~width: 8, ~pad: Char"#") ~is "apple###"
+  str.s("apple", ~width: 8, ~align: #'right, ~pad: Char"!") ~is "!!!apple"
+  str.s("apple", ~width: 8, ~align: #'center, ~pad: Char"_") ~is "_apple__"
 
   str.d(100) ~is "100"
   str.d(-100) ~is "-100"
@@ -26,7 +26,7 @@ check:
   str.d(-100, ~width: 8, ~sign_align: #'left, ~align: #'right) ~is "-    100"
   str.d(-100, ~width: 8, ~sign_align: #'left, ~align: #'center) ~is "-  100  "
   str.d(-100, ~width: 8, ~sign_align: #'right, ~align: #'center) ~is "  100  -"
-  str.d(-100, ~width: 8, ~sign_align: #'left, ~align: #'center, ~pad: "x"[0]) ~is "-xx100xx"
+  str.d(-100, ~width: 8, ~sign_align: #'left, ~align: #'center, ~pad: Char"x") ~is "-xx100xx"
   str.d(-10, ~max_width: 0, ~sign_align: #'left) ~is ""
   str.d(-123456, ~width: 4, ~align: #'right, ~sign_align: #'left) ~is "-456"
   str.d(-123456, ~width: 4, ~sign_align: #'right) ~is "123-"
@@ -36,14 +36,14 @@ check:
   str.d(-100, ~max_width: 3, ~align: #'right) ~is "100"
 
   str.d(100, ~min_width: 4, ~max_width: 3) ~throws "maximum width is less than minimum width"
-  
+
   str.f(100) ~is "100.000000"
   str.f(-100) ~is "-100.000000"
   str.f(#inf) ~is "inf"
   str.f(#neginf) ~is "-inf"
   str.f(#nan) ~is "nan"
   str.f(0) ~is "0.000000"
-  
+
   str.f(100, ~precision: 2) ~is "100.00"
   str.f(-100, ~precision: 2) ~is "-100.00"
   str.f(#inf, ~precision: 2) ~is "inf"

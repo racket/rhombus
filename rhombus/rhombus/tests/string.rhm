@@ -32,7 +32,7 @@ block:
 check:
   "hello" :: String ~is "hello"
   1 +& 2 ++ "3" ~is "123"
-  String.make(5, "h"[0]) ~is "hhhhh"
+  String.make(5, Char"h") ~is "hhhhh"
 
 block:
   use_static
@@ -42,8 +42,8 @@ block:
     ~is 5
   check:
     "hello".length() ~is 5
-    "hello"[0] ~is "h"[0]
-    "hello".get(0) ~is "h"[0]
+    "hello"[0] ~is Char"h"
+    "hello".get(0) ~is Char"h"
     "hello" ++ " " ++ "world" ~is "hello world"
     "hello" ++ " " ++ #"world" ~throws values(
       "String.append: contract violation",
@@ -85,8 +85,8 @@ block:
 
 check:
   dynamic("hello").length() ~is 5
-  dynamic("hello")[0] ~is "h"[0]
-  dynamic("hello").get(0) ~is "h"[0]
+  dynamic("hello")[0] ~is Char"h"
+  dynamic("hello").get(0) ~is Char"h"
   dynamic("hello" ++ " ") ++ "world" ~is "hello world"
   dynamic("hello" ++ " ") ++ #"world" ~throws "cannot append a string and other value"
   dynamic("hello").append(" world") ~is "hello world"
@@ -222,15 +222,15 @@ block:
   check:
     for List (x: str):
       x
-    ~is ["a"[0], "b"[0], "c"[0]]
+    ~is [Char"a", Char"b", Char"c"]
   check:
     for List (x: String.to_sequence(str)):
       x
-    ~is ["a"[0], "b"[0], "c"[0]]
+    ~is [Char"a", Char"b", Char"c"]
   check:
     for List (x: str.to_sequence()):
       x
-    ~is ["a"[0], "b"[0], "c"[0]]
+    ~is [Char"a", Char"b", Char"c"]
 
 version_guard.at_least "8.13.0.1":
   check:
@@ -332,14 +332,14 @@ check:
 
 version_guard.at_least "8.14.0.7":
   check:
-    String.make("oops", "a"[0])
+    String.make("oops", Char"a")
     ~throws values(
       "String.make: contract violation",
       "expected: NonnegInt",
       "given: \"oops\"",
     )
   check:
-    String.make(-1, "a"[0])
+    String.make(-1, Char"a")
     ~throws values(
       "String.make: contract violation",
       "expected: NonnegInt",
@@ -360,7 +360,7 @@ version_guard.at_least "8.14.0.7":
       "given: \"a\"",
     )
   check:
-    String.make(5, 97)
+    String.make(5, Byte#"a")
     ~throws values(
       "String.make: contract violation",
       "expected: Char",
@@ -376,4 +376,4 @@ block:
   check "a"[0] compares_unequal "b"[0] ~is #true
   check "a"[0] >= "b"[0] ~is #false
   check "a"[0] > "b"[0] ~is #false
-  check Char.from_int("a"[0].to_int()) ~is "a"[0]
+  check Char.from_int("a"[0].to_int()) ~is Char"a"

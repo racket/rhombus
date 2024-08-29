@@ -22,7 +22,7 @@ fun extract_flonum_parts(n :~ Flonum) :~ values(String, String, Int):
   cond
   | dot_or_exp == s.length():
       values(s, "", 0)
-  | s[dot_or_exp] == "."[0]:
+  | s[dot_or_exp] == Char".":
       let exp = next_non_digit(dot_or_exp + 1)
       cond
       | exp == s.length():
@@ -44,7 +44,7 @@ fun count_leading_zeros(s :~ String):
   fun loop(i):
     cond
     | i+1 == s.length(): i
-    | s[i] == "0"[0]: loop(i+1)
+    | s[i] == Char"0": loop(i+1)
     | ~else: i
   loop(0)
 
@@ -53,7 +53,7 @@ fun count_trailing_zeros(s :~ String):
   fun loop (i):
     cond
     | i == s.length(): i
-    | s[s.length() - i - 1] == "0"[0]: loop(i+1)
+    | s[s.length() - i - 1] == Char"0": loop(i+1)
     | ~else: i
   loop(0)
 
@@ -61,7 +61,7 @@ fun insert_decimal(s :~ String, expo, precision):
   let s:
     cond
     | s.length() <= -expo:
-        String.make((-expo - s.length()) + 1, "0"[0]) ++ s
+        String.make((-expo - s.length()) + 1, Char"0") ++ s
     | ~else:
         s
   fun trim(s :~ String):
@@ -73,10 +73,10 @@ fun insert_decimal(s :~ String, expo, precision):
       let mant = s.substring(0, m_len)
       let frac = s.substring(m_len, s.length())
       values(trim(mant),
-             (frac ++ String.make(math.max(0, precision - frac.length()), "0"[0])).substring(0, precision))
+             (frac ++ String.make(math.max(0, precision - frac.length()), Char"0")).substring(0, precision))
   | expo > 0:
-      values(trim(s ++ String.make(expo, "0"[0])),
-             String.make(precision, "0"[0]))
+      values(trim(s ++ String.make(expo, Char"0")),
+             String.make(precision, Char"0"))
 
 // determines `expo` so that `n` is between `10**expo` and `10**(expo+1)`;
 // assumes that `n` is nonnegative

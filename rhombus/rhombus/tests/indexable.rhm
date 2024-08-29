@@ -135,12 +135,12 @@ check:
     "expected: Indexable",
     "#'apple",
   )
-  ("apple" :~ MutableIndexable)[0] := "b"[0] ~throws values(
+  ("apple" :~ MutableIndexable)[0] := Char"b" ~throws values(
     "MutableIndexable.set: contract violation",
     "expected: MutableIndexable",
     "\"apple\"",
   )
-  ("apple".copy() :~ MutableIndexable)[0] := "b"[0] ~throws values(
+  ("apple".copy() :~ MutableIndexable)[0] := Char"b" ~throws values(
     "MutableIndexable.set: contract violation",
     "expected: MutableIndexable",
     "String.copy(\"apple\")",

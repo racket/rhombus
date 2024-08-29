@@ -1,6 +1,4 @@
-#lang rhombus
-
-use_static
+#lang rhombus/static
 
 check 1 < 2 ~is #true
 check 1 <= 2 ~is #true
@@ -16,29 +14,44 @@ check 10 compares_equal 10 ~is #true
 check 10 compares_unequal 10 ~is #false
 check 10 >= 2 ~is #true
 check 10 > 2 ~is #true
-  
+
 check 1/2 < 2 ~is #true
 check 1/2 <= 2 ~is #true
 check 1/2 compares_equal 2 ~is #false
 check 1/2 compares_unequal 2 ~is #true
 check 1/2 >= 2 ~is #false
 check 1/2 > 2 ~is #false
-  
-check "a"[0] < "b"[0] ~is #true
-check "a"[0] <= "b"[0] ~is #true
-check "a"[0] compares_equal "b"[0] ~is #false
-check "a"[0] compares_unequal "b"[0] ~is #true
-check "a"[0] >= "b"[0] ~is #false
-check "a"[0] >= "a"[0] ~is #true
-check "a"[0] > "b"[0] ~is #false
-check "a"[0] < "B"[0] ~is #false
-check "a"[0] <= "B"[0] ~is #false
-check "a"[0] <= "a"[0] ~is #true
-check "a"[0] compares_equal "a"[0] ~is #true
-check "a"[0] compares_unequal "a"[0] ~is #false
-check "a"[0] >= "B"[0] ~is #true
-check "a"[0] > "B"[0] ~is #true
-  
+
+check Char"a" < Char"b" ~is #true
+check Char"a" <= Char"b" ~is #true
+check Char"a" compares_equal Char"b" ~is #false
+check Char"a" compares_unequal Char"b" ~is #true
+check Char"a" >= Char"b" ~is #false
+check Char"a" >= Char"a" ~is #true
+check Char"a" > Char"b" ~is #false
+check Char"a" < Char"B" ~is #false
+check Char"a" <= Char"B" ~is #false
+check Char"a" <= Char"a" ~is #true
+check Char"a" compares_equal Char"a" ~is #true
+check Char"a" compares_unequal Char"a" ~is #false
+check Char"a" >= Char"B" ~is #true
+check Char"a" > Char"B" ~is #true
+
+check Byte#"a" < Byte#"b" ~is #true
+check Byte#"a" <= Byte#"b" ~is #true
+check Byte#"a" compares_equal Byte#"b" ~is #false
+check Byte#"a" compares_unequal Byte#"b" ~is #true
+check Byte#"a" >= Byte#"b" ~is #false
+check Byte#"a" >= Byte#"a" ~is #true
+check Byte#"a" > Byte#"b" ~is #false
+check Byte#"a" < Byte#"B" ~is #false
+check Byte#"a" <= Byte#"B" ~is #false
+check Byte#"a" <= Byte#"a" ~is #true
+check Byte#"a" compares_equal Byte#"a" ~is #true
+check Byte#"a" compares_unequal Byte#"a" ~is #false
+check Byte#"a" >= Byte#"B" ~is #true
+check Byte#"a" > Byte#"B" ~is #true
+
 check "a" < "b" ~is #true
 check "a" <= "b" ~is #true
 check "a" compares_equal "b" ~is #false
@@ -53,7 +66,7 @@ check "a" compares_equal "a" ~is #true
 check "a" compares_unequal "a" ~is #false
 check "a" >= "B" ~is #true
 check "a" > "B" ~is #true
-  
+
 check #"a" < #"b" ~is #true
 check #"a" <= #"b" ~is #true
 check #"a" compares_equal #"b" ~is #false
@@ -107,42 +120,48 @@ block:
 block:
   use_dynamic
   check dynamic(1) < dynamic(2) ~is #true
-  check dynamic(#{#\a}) < dynamic(#{#\b}) ~is #true
+  check dynamic(Char"a") < dynamic(Char"b") ~is #true
+  check dynamic(Byte#"a") < dynamic(Byte#"b") ~is #true
   check dynamic("a") < dynamic("b") ~is #true
   check dynamic(#"a") < dynamic(#"b") ~is #true
   check dynamic(#'a) < dynamic(#'b) ~is #true
   check dynamic(#'~a) < dynamic(#'~b) ~is #true
 
   check dynamic(1) <= dynamic(2) ~is #true
-  check dynamic(#{#\a}) <= dynamic(#{#\b}) ~is #true
+  check dynamic(Char"a") <= dynamic(Char"b") ~is #true
+  check dynamic(Byte#"a") <= dynamic(Byte#"b") ~is #true
   check dynamic("a") <= dynamic("b") ~is #true
   check dynamic(#"a") <= dynamic(#"b") ~is #true
   check dynamic(#'a) <= dynamic(#'b) ~is #true
   check dynamic(#'~a) <= dynamic(#'~b) ~is #true
 
   check dynamic(1) >= dynamic(2) ~is #false
-  check dynamic(#{#\a}) >= dynamic(#{#\b}) ~is #false
+  check dynamic(Char"a") >= dynamic(Char"b") ~is #false
+  check dynamic(Byte#"a") >= dynamic(Byte#"b") ~is #false
   check dynamic("a") >= dynamic("b") ~is #false
   check dynamic(#"a") >= dynamic(#"b") ~is #false
   check dynamic(#'a) >= dynamic(#'b) ~is #false
   check dynamic(#'~a) >= dynamic(#'~b) ~is #false
 
   check dynamic(1) > dynamic(2) ~is #false
-  check dynamic(#{#\a}) > dynamic(#{#\b}) ~is #false
+  check dynamic(Char"a") > dynamic(Char"b") ~is #false
+  check dynamic(Byte#"a") > dynamic(Byte#"b") ~is #false
   check dynamic("a") > dynamic("b") ~is #false
   check dynamic(#"a") > dynamic(#"b") ~is #false
   check dynamic(#'a) > dynamic(#'b) ~is #false
   check dynamic(#'~a) > dynamic(#'~b) ~is #false
 
   check dynamic(1) compares_equal dynamic(2) ~is #false
-  check dynamic(#{#\a}) compares_equal dynamic(#{#\b}) ~is #false
+  check dynamic(Char"a") compares_equal dynamic(Char"b") ~is #false
+  check dynamic(Byte#"a") compares_equal dynamic(Byte#"b") ~is #false
   check dynamic("a") compares_equal dynamic("b") ~is #false
   check dynamic(#"a") compares_equal dynamic(#"b") ~is #false
   check dynamic(#'a) compares_equal dynamic(#'b) ~is #false
   check dynamic(#'~a) compares_equal dynamic(#'~b) ~is #false
 
   check dynamic(1) compares_unequal dynamic(2) ~is #true
-  check dynamic(#{#\a}) compares_unequal dynamic(#{#\b}) ~is #true
+  check dynamic(Char"a") compares_unequal dynamic(Char"b") ~is #true
+  check dynamic(Byte#"a") compares_unequal dynamic(Byte#"b") ~is #true
   check dynamic("a") compares_unequal dynamic("b") ~is #true
   check dynamic(#"a") compares_unequal dynamic(#"b") ~is #true
   check dynamic(#'a) compares_unequal dynamic(#'b) ~is #true

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/print
                      "srcloc.rkt")
          "provide.rkt"
          "expression.rkt"
@@ -51,7 +52,7 @@
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (binding-form #'literal-infoer
-                              #'(q))
+                              #`([q #,(string-append "#'" (shrubbery-syntax->string #'q))]))
                 #'tail)]))))
 
 (define-for-syntax (check-quotable form-name q)

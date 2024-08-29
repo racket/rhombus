@@ -178,64 +178,64 @@ class Charset(private _ranges):
 module test:
   import "check.rhm" open
   check Charset().int_ranges() ~is []
-  check Charset("a"[0]).int_ranges() ~is [[97, 97]]
-  check Charset("a"[0], "f"[0]).int_ranges() ~is [[97, 102]]
-  check Charset("a"[0], Char.from_int(0x10FFFF)).int_ranges() ~is [[97, 0xD7FF], [0x10000, 0x10FFFF]]
+  check Charset(Char"a").int_ranges() ~is [[97, 97]]
+  check Charset(Char"a", Char"f").int_ranges() ~is [[97, 102]]
+  check Charset(Char"a", Char.from_int(0x10FFFF)).int_ranges() ~is [[97, 0xD7FF], [0x10000, 0x10FFFF]]
 
   check Charset().length() ~is 0
   check Charset().invert().length() ~is 0x110000 - (0x10000 - 0xD800)
-  check Charset("a"[0]).length() ~is 1
-  check Charset("a"[0], "f"[0]).length() ~is 6
-  check Charset("a"[0], "f"[0]).union(Charset("y"[0], "z"[0])).length() ~is 8
+  check Charset(Char"a").length() ~is 1
+  check Charset(Char"a", Char"f").length() ~is 6
+  check Charset(Char"a", Char"f").union(Charset(Char"y", Char"z")).length() ~is 8
 
-  check Charset("a"[0], "f"[0])
-    .union(Charset("h"[0], "i"[0]))
+  check Charset(Char"a", Char"f")
+    .union(Charset(Char"h", Char"i"))
     .int_ranges() ~is [[97, 102], [104, 105]]
-  check Charset("a"[0], "f"[0])
-    .union(Charset("g"[0], "i"[0]))
+  check Charset(Char"a", Char"f")
+    .union(Charset(Char"g", Char"i"))
     .int_ranges() ~is [[97, 105]]
-  check Charset("a"[0], "z"[0])
-    .union(Charset("g"[0], "i"[0]))
+  check Charset(Char"a", Char"z")
+    .union(Charset(Char"g", Char"i"))
     .int_ranges() ~is [[97, 122]]
-  check Charset("a"[0], "f"[0])
-    .union(Charset("g"[0], "g"[0]))
+  check Charset(Char"a", Char"f")
+    .union(Charset(Char"g", Char"g"))
     .int_ranges() ~is [[97, 103]]
-  check Charset("g"[0], "g"[0])
-    .union(Charset("a"[0], "f"[0]))
+  check Charset(Char"g", Char"g")
+    .union(Charset(Char"a", Char"f"))
     .int_ranges() ~is [[97, 103]]
-  check Charset("a"[0], "c"[0]).union(Charset("g"[0], "i"[0]))
-    .union(Charset("a"[0], "d"[0]))
+  check Charset(Char"a", Char"c").union(Charset(Char"g", Char"i"))
+    .union(Charset(Char"a", Char"d"))
     .int_ranges() ~is [[97, 100], [103, 105]]
-  check Charset("a"[0], "c"[0]).union(Charset("g"[0], "i"[0]))
-    .union(Charset("a"[0], "d"[0]).union(Charset("z"[0], "z"[0])))
+  check Charset(Char"a", Char"c").union(Charset(Char"g", Char"i"))
+    .union(Charset(Char"a", Char"d").union(Charset(Char"z", Char"z")))
     .int_ranges() ~is [[97, 100], [103, 105], [122, 122]]
-  check Charset("a"[0], "d"[0]).union(Charset("z"[0], "z"[0]))
-    .union(Charset("a"[0], "c"[0]).union(Charset("g"[0], "i"[0])))
+  check Charset(Char"a", Char"d").union(Charset(Char"z", Char"z"))
+    .union(Charset(Char"a", Char"c").union(Charset(Char"g", Char"i")))
     .int_ranges() ~is [[97, 100], [103, 105], [122, 122]]
 
-  check Charset("a"[0], "f"[0])
-    .intersect(Charset("h"[0], "i"[0]))
+  check Charset(Char"a", Char"f")
+    .intersect(Charset(Char"h", Char"i"))
     .int_ranges() ~is []
-  check Charset("a"[0], "z"[0])
-    .intersect(Charset("h"[0], "i"[0]))
+  check Charset(Char"a", Char"z")
+    .intersect(Charset(Char"h", Char"i"))
     .int_ranges() ~is [[104, 105]]
-  check Charset("a"[0], "z"[0])
-    .intersect(Charset("a"[0], "c"[0]).union(Charset("h"[0], "i"[0])))
+  check Charset(Char"a", Char"z")
+    .intersect(Charset(Char"a", Char"c").union(Charset(Char"h", Char"i")))
     .int_ranges() ~is [[97, 99], [104, 105]]
-  check Charset("a"[0], "c"[0]).union(Charset("h"[0], "i"[0]))
-    .intersect(Charset("a"[0], "z"[0]))
+  check Charset(Char"a", Char"c").union(Charset(Char"h", Char"i"))
+    .intersect(Charset(Char"a", Char"z"))
     .int_ranges() ~is [[97, 99], [104, 105]]
-  check Charset("b"[0], "z"[0])
-    .intersect(Charset("a"[0], "c"[0]).union(Charset("h"[0], "i"[0])))
+  check Charset(Char"b", Char"z")
+    .intersect(Charset(Char"a", Char"c").union(Charset(Char"h", Char"i")))
     .int_ranges() ~is [[98, 99], [104, 105]]
-  check Charset("a"[0], "c"[0]).union(Charset("h"[0], "i"[0]))
-    .intersect(Charset("b"[0], "z"[0]))
+  check Charset(Char"a", Char"c").union(Charset(Char"h", Char"i"))
+    .intersect(Charset(Char"b", Char"z"))
     .int_ranges() ~is [[98, 99], [104, 105]]
-  check Charset("a"[0], "z"[0])
-    .intersect(Charset("b"[0], "c"[0]).union(Charset("h"[0], "i"[0])))
+  check Charset(Char"a", Char"z")
+    .intersect(Charset(Char"b", Char"c").union(Charset(Char"h", Char"i")))
     .int_ranges() ~is [[98, 99], [104, 105]]
-  check Charset("b"[0], "c"[0]).union(Charset("h"[0], "i"[0]))
-    .intersect(Charset("a"[0], "z"[0]))
+  check Charset(Char"b", Char"c").union(Charset(Char"h", Char"i"))
+    .intersect(Charset(Char"a", Char"z"))
     .int_ranges() ~is [[98, 99], [104, 105]]
 
   check Charset()
@@ -245,25 +245,25 @@ module test:
     .invert()
     .invert()
     .int_ranges() ~is []
-  check Charset("a"[0], "f"[0])
+  check Charset(Char"a", Char"f")
     .invert()
     .int_ranges() ~is [[0, 96], [103, 0xD7FF], [0x10000, 0x10FFFF]]
-  check Charset(Char.from_int(0), "f"[0])
+  check Charset(Char.from_int(0), Char"f")
     .invert()
     .int_ranges() ~is [[103, 0xD7FF], [0x10000, 0x10FFFF]]
-  check Charset(Char.from_int(0), "f"[0])
-    .union(Charset("z"[0], Char.from_int(0x10FFFF)))
+  check Charset(Char.from_int(0), Char"f")
+    .union(Charset(Char"z", Char.from_int(0x10FFFF)))
     .invert()
     .int_ranges() ~is [[103, 121]]
-  check Charset(Char.from_int(0), "f"[0])
-    .union(Charset("z"[0], Char.from_int(0x10FFFF)))
+  check Charset(Char.from_int(0), Char"f")
+    .union(Charset(Char"z", Char.from_int(0x10FFFF)))
     .invert()
     .invert()
     .int_ranges() ~is  [[0, 102], [122, 0xD7FF], [0x10000, 0x10FFFF]]
 
-  check Charset("a"[0], "f"[0])
+  check Charset(Char"a", Char"f")
     .subtract(Charset())
     .int_ranges() ~is [[97, 102]]
-  check Charset("a"[0], "f"[0])
-    .subtract(Charset("c"[0], "z"[0]))
+  check Charset(Char"a", Char"f")
+    .subtract(Charset(Char"c", Char"z"))
     .int_ranges() ~is [[97, 98]]

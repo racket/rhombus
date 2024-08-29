@@ -44,6 +44,29 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
+  expr.macro 'Char $single_char_str'
+  repet.macro 'Char $single_char_str'
+  bind.macro 'Char $single_char_str'
+){
+
+ Produces or matches a character. The @rhombus(single_char_str)
+ literal @tech{string} must have exactly a single character, and that
+ character is produced or matched.
+
+@examples(
+  Char"a"
+  match Char"a"
+  | Char"a" || Char"b": "yes"
+  | ~else: "no"
+  ~error:
+    Char"too long"
+  ~error:
+    Char"a" matches Char"too long"
+)
+
+}
+
+@doc(
   fun Char.to_int(ch :: Char) :: NonnegInt
 ){
 
@@ -199,8 +222,8 @@ like @rhombus(<) and @rhombus(>) work on characters.
   ~hidden:
     use_static
   ~repl:
-    "a"[0] < "B"[0]
-    ("a"[0] :: CharCI) < ("B"[0] :: CharCI)
+    Char"a" < Char"B"
+    (Char"a" :: CharCI) < (Char"B" :: CharCI)
 )
 
 }

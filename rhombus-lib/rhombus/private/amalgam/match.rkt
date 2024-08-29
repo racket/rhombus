@@ -149,7 +149,8 @@
                               [rhs (in-list lit-rhss)])
                      (syntax-parse parsed
                        [b::binding-form
-                        #`[b.data (rhombus-body-expression #,rhs)]]))
+                        #:with ([datum _] ...) #'b.data
+                        #`[(datum ...) (rhombus-body-expression #,rhs)]]))
                 [else #,(fallback-k #'val rst-bs rst-parseds rst-rhss)])]
            [else
             (fallback-k #'val bs b-parseds rhss)]))))

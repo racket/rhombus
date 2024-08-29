@@ -38,7 +38,7 @@
             ~width: width :: maybe(NonnegInt) = #false,
             ~min_width: min_width :: maybe(NonnegInt) = width,
             ~max_width: max_width :: maybe(NonnegInt) = width,
-            ~pad: pad :: Char = " "[0],
+            ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align)
     :: String
@@ -71,7 +71,7 @@
 
 @examples(
   str.s("hello", ~width: 10)
-  str.s("hello", ~width: 10, ~pad: "_"[0], ~align: #'center)
+  str.s("hello", ~width: 10, ~pad: Char"_", ~align: #'center)
   str.s("hello", ~max_width: 2)
   str.s("hello", ~max_width: 2, ~clip_align: #'right)
 )
@@ -84,7 +84,7 @@
             ~width: width :: maybe(NonnegInt) = #false,
             ~min_width: min_width :: maybe(NonnegInt) = width,
             ~max_width: max_width :: maybe(NonnegInt) = width,
-            ~pad: pad :: Char = " "[0],
+            ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align,
             ~minus_sign: minus_sign :: String  = "-",
@@ -141,7 +141,7 @@
             ~width: width :: maybe(NonnegInt) = #false,
             ~min_width: min_width :: maybe(NonnegInt) = width,
             ~max_width: max_width :: maybe(NonnegInt) = width,
-            ~pad: pad :: Char = " "[0],
+            ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align,
             ~minus_sign: minus_sign :: String  = "-",
