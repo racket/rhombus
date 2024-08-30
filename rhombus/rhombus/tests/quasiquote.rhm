@@ -222,3 +222,9 @@ check:
   ~prints_like '1: 1 2
                 2: 1 2
                 3: 1 2'
+
+// regression check for an error message
+check:
+  match 'hi 1'
+  | 'hi $('$')': "ok"
+  ~throws "expected the operator `$`"

@@ -433,11 +433,7 @@
                       (values #`(#,(make-datum tag) . #,ps) idrs sidrs vars #t)))
                   #:make-describe-op
                   (lambda (e name)
-                    #`(~describe #:opaque
-                                 #,(format "the operator `~a`"
-                                           (or (syntax-raw-property name)
-                                               (syntax-e name)))
-                                 #,e))
+                    (describe-op-pattern e name))
                   #:improve-repetition-constraints
                   (lambda (ps gs)
                     ;; The first pattern in `ps` is followed by `...`.
@@ -522,10 +518,26 @@
                                  (build 'group)
                                  (build 'multi)
                                  (lambda (e)
-                                   (if (eq? (current-unquote-binding-kind) 'term)
-                                       #`((~datum #,e) () () ())
-                                       #'#f))))
+                                   (cond
+                                     [(eq? (current-unquote-binding-kind) 'term)
+                                      (define pat (syntax-parse e
+                                                    #:datum-literals (op)
+                                                    [((~and tag op) op-name)
+                                                     (describe-op-pattern (no-srcloc #`((~datum tag) (~datum op-name)))
+                                                                          #'op-name)]
+                                                    [_ #`(~datum #,e)]))
+                                      #`(#,pat () () ())]
+                                     [else
+                                      #'#f]))))
         (values r #'tail)]))))
+
+(begin-for-syntax
+  (define (describe-op-pattern e name)
+    #`(~describe #:opaque
+                 #,(format "the operator `~a`"
+                           (or (syntax-raw-property name)
+                               (syntax-e name)))
+                 #,e)))
 
 (define-unquote-binding-syntax _
   (unquote-binding-transformer
