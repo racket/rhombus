@@ -24,6 +24,9 @@ class RX(private _rkt_partial_rx,
   internal _RX
   constructor (): error("don't instantiate")
 
+  export:
+    from_handles
+
   private implements Printable
   private override describe(mode, recur) :: String:
     _str
@@ -144,6 +147,18 @@ class RX(private _rkt_partial_rx,
       | fun (m, & ms): check_filter(#'#{RX.replace_all}, m, insert(m, & ms))
       | base.#{regexp-replace-quote}(insert)
     freeze(base.#{regexp-replace*}(_rkt_partial_rx, input, insert, start_pos, end_pos, input_prefix))
+
+fun from_handles(rx,
+                 partial_rx,
+                 num_captures :: NonnegInt,
+                 vars :: Map.of(Symbol, NonnegInt),
+                 ~has_backref: has_backref :: Any.to_boolean = #false,
+                 ~source: source :: String = "rx'....'") :~ RX:
+  unless base.#{regexp?}(rx)
+  | error(#'#{RX.from_handles}, "not a primitive regular expression for whole-match mode")
+  unless base.#{regexp?}(partial_rx)
+  | error(#'#{RX.from_handles}, "not a primitive regular expression for partial-match mode")
+  _RX(partial_rx, rx, num_captures, vars, has_backref, source)
 
 fun freeze(elem):
   match elem

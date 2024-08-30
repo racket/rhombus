@@ -238,4 +238,37 @@
 
 }
 
+
+@doc(
+  property (regexp :: RX).handle
+  property (regexp :: RX).in_handle
+){
+
+ The @rhombus(RX.handle) and @rhombus(RX.in_handle) properties produce a
+ Racket-level regular expression object that corresponds to
+ @rhombus(RX.match) and @rhombus(RX.match_in), respectively.
+}
+
+@doc(
+  fun RX.from_handles(handle,
+                      in_handle,
+                      num_captures :: NonnegInt,
+                      vars :: Map.of(Symbol, NonnegInt),
+                      ~has_backref: has_backref = #false,
+                      ~source: source :: String = "rx '....'")
+    :: RX
+){
+
+ Constructs an @rhombus(RX, ~annot) object given Racket-level regular
+ expressions for whole-input and partial-input matching, the number of
+ capture groups in the pattern (which should be the same for both
+ handles), and a mapping from capture-group names, if any, to indices.
+ The optional @rhombus(has_backref) argument determines whether the
+ @rhombus(RX, ~annot) can be spliced into other @tech{regexp} patterns.
+ The optional @rhombus(source) string is the printed representation of the
+ pattern.
+
+}
+
+
 @close_eval(rx_eval)

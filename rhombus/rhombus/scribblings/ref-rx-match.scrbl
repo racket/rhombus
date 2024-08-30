@@ -61,4 +61,27 @@
 
 }
 
+
+@doc(
+  method (rx :: RXMatch).to_list() :: List
+){
+
+ Implements @rhombus(Listable.to_list), returning
+ @rhombus([RXMatch.whole(rx)] ++ RXMatch.captures(rx)).
+
+}
+
+
+@doc(
+  method (rx :: RXMatch).get(index)
+){
+
+ Implements @rhombus(get, ~datum) operation of @rhombus(Indexable). The
+ @rhombus(index) argument normally satisfies @rhombus(NonnegInt, ~annot)
+ or @rhombus(Symbol, ~annot), but in general it can be a
+ @rhombus(NonnegInt, ~annot) or any value that exists as a key in
+ @rhombus(RX.capture_names(rx)).
+
+}
+
 @close_eval(rx_eval)

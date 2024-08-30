@@ -95,6 +95,7 @@ block:
   check m[0] ~is "xy"
   check m[#'end] ~is "y"
   check m[1] ~is "y"
+  check m.get(1) ~is "y"
 
 check:
   M rx'"x"*' "xy" ~is #false
@@ -534,3 +535,20 @@ check:
   rx.macro 'x': '"a" !lookahead("a")'
   rx'x'.is_match("a")
   ~is #true
+
+block:
+  let p1 = rx'"a" ($b: "b") "c"'
+  let p2 = RX.from_handles(p1.handle,
+                           p1.in_handle,
+                           p1.num_captures,
+                           p1.capture_names)
+  let p3 = RX.from_handles(p1.in_handle,    // backwards
+                           p1.handle,       //
+                           p1.num_captures,
+                           { #'B: 1 })
+  check p2.match("abc") ~is RXMatch("abc", ["b"], { #'b: 1 })
+  check p2.match_in("xabc") ~is RXMatch("abc", ["b"], { #'b: 1 })
+  check p2.match("xabc") ~is #false
+  check p3.match("abc") ~is RXMatch("abc", ["b"], { #'B: 1 })
+  check p3.match_in("xabc") ~is #false
+  check p3.match("xabc") ~is RXMatch("abc", ["b"], { #'B: 1 })

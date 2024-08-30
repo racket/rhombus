@@ -288,6 +288,7 @@
                      #,(if (hash-ref seen seen-key #f)
                            #t
                            #'redef?)
+                     meta?
                      (quote-syntax #,def-id)
                      (quote-syntax #,extra-def-ids)
                      (quote-syntax #,str-id)
@@ -332,7 +333,7 @@
                                  [single? (in-list single?s)]
                                  [def-id-as-defs (in-list def-id-as-defss)]
                                  [space-names (in-list space-namess)])
-                        ;; uses `def-id-as-def` in a context that binds `redef?`:
+                        ;; uses `def-id-as-def` in a context that binds `redef?` and `meta?`:
                         (extract-typeset t form single? def-id-as-defs space-names)))
      (with-syntax ([(typeset ...) typesets]
                    [(kind-str ...) (map car kind-strss)]
@@ -430,11 +431,11 @@
    (lambda (use-stx)
      #`(parsed #:rhombus/expr (tt "...")))))
 
-(define (make-def-id redef? id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
+(define (make-def-id redef? meta? id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (cond
     [redef?
-     (racketidfont
+     ((if meta? racketvarfont racketidfont)
       (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
                        #:space space
                        #:suffix (if str-id-e
@@ -472,8 +473,8 @@
            'rhombus/namespace
            space))
      (define id-space (get-id-space space))
-     (define (make-content defn? [str str])
-       ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
+     (define (make-content defn? [str str] #:meta? [meta? meta?])
+       ((if (or meta? (eq? immed-space 'grammar)) racketvarfont racketidfont)
         (make-id-element id str defn? #:space id-space #:suffix str+space)))
      (define content (annote-exporting-library (make-content #t)))
      (for/fold ([content content]) ([id (in-list (cons id (syntax->list extra-ids)))]
@@ -485,7 +486,7 @@
        (cond
          [target-maker
           (define name (string->symbol str))
-          (define ref-content (make-content #f index-str))
+          (define ref-content (make-content #f index-str #:meta? #f))
           (target-maker content
                         (lambda (tag)
                           (if (or nonterm-sym
@@ -632,16 +633,18 @@
                  (from-property from)))
   (define substs
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
-      (define (subst name #:wrap? [wrap? #t] #:redef? [as-redef? #f])
+      (define (subst name #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
         (cond
           [wrap?
            (define id (if (identifier? name) name (cadr (syntax->list name))))
            #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
               (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
                (group (parsed #:rhombus/expr
-                              (let ([redef? #,as-redef?])
+                              (let ([redef? #,as-redef?]
+                                    [meta? #,meta?])
                                 #,def-id-as-def)))))]
-          [else #`(let ([redef? #,as-redef?])
+          [else #`(let ([redef? #,as-redef?]
+                        [meta? #,meta?])
                     #,def-id-as-def)]))
       subst))
   ((doc-transformer-extract-typeset t) stx

@@ -42,27 +42,38 @@
   )
 ){
 
- Combines a set of functions into a value suitabel for use with
+ Combines a set of functions into a value suitable for use with
  @rhombus(doc.bridge):
 
 @itemlist(
 
  @item{@rhombus(extract_desc): Takes a syntax object and returns a
   string or list of strings describing the documented binding or bindings.
-  If a list of strings is returned, all the other functions should produce
-  a list with the same number of values for the given syntax object. A
-  description string is shown in the definition box, such as
-  @rhombus("function") for function documentation.}
+  A description string is shown in the definition box, such as
+  @rhombus("function") for function documentation.
+
+  If a list of strings is returned, the @rhombus(extract_space) and
+  @rhombus(extract_defined) functions should produce a list with the same
+  number of values for the given syntax object. The
+  @rhombus(extract_metavariables) will receive a list of space lists, and
+  it will also receive a list of converter functions.}
 
  @item{@rhombus(extract_space): Takes a syntax object and returns a
-  space or lists of spaces. Each space is a keyword for a built-in space
-  (see @rhombus(rhombus)), a symbol, or @rhombus(#false). As a
-  convenience, the first returned space is passed back to the reminding
-  functions.}
+  space, a list of spaces, or a lists of space lists; the result must be a
+  list of space lists if @rhombus(extract_desc) returned a list. Each
+  space is a keyword for a built-in space (see @rhombus(rhombus)), a
+  symbol, or @rhombus(#false). A space list indicates a list of spaces
+  where the identifier is bound (e.g., the @rhombus(class) binds in the
+  @rhombus(~class) and @rhombus(~annot) spaces).
 
- @item{@rhombus(extract_defined): Takes a syntax object and a space
-  (produced by @rhombus(extract_space) and returns a defined name or list of
-  defined names. A defined name is either
+  As a convenience, the result is is passed back to the
+  @rhombus(extract_defined) and @rhombus(extract_metavariables) functions,
+  except that only the first list of spaces is passed back when
+  @rhombus(extract_space) returns a list of lists.}
+
+ @item{@rhombus(extract_defined): Takes a syntax object and a space or
+  space list (produced by @rhombus(extract_space)) and returns a defined
+  name or list of defined names. A defined name is either
 
   @itemlist(
 
@@ -79,16 +90,36 @@
   )}
 
  @item{@rhombus(extract_metavariables): Takes a syntax object, a space
-  (produced by @rhombus(extract_space), and a set of names to be typeset
-  as metavariables. The result is a new set of metavariables. Add to the
-  set using @rhombus(doc_meta.add_metavariable).}
+  or space list (produced by @rhombus(extract_space)), and a set of names
+  to be typeset as metavariables. The result must be a new set of
+  metavariables. Add to the set using
+  @rhombus(doc_meta.add_metavariable).}
 
- @item{@rhombus(extract_metavariables): Takes a syntax object, a space
-  (produced by @rhombus(extract_space), and a function that converts a
-  syntax object at the location of the defined name and produces a syntax
-  object for the typset replacement. The result should be a syntax object
-  to use as an expression that produces the typeset form, typically
-  produced via @rhombus(doc_meta.typeset_rhombusblock).}
+ @item{@rhombus(extract_typeset): Takes a syntax object, a space, space
+  list, or list of space lists (produced by @rhombus(extract_space)), and
+  a function or list of converter functions. Each converter function
+  converts a syntax object at the location of the defined name and
+  produces a syntax object for the typeset replacement. The result should
+  be a syntax object to use as an expression that produces the typeset
+  form, typically produced via @rhombus(doc_meta.typeset_rhombusblock).
+
+  Each convert function accepts optional arguments:
+
+  @itemlist(
+
+   @item{@rhombus(~as_wrap): a true value (the default) indicates that
+   the result should include an escape, so it's suitable for splicing
+   into a @rhombus(rhombusblock) form.}
+
+   @item{@rhombus(~as_redef): a true value (@emph{not} the default)
+   indicates that the result should should not be a hyperlink target,
+   because it's a secondary definition of the binding.}
+
+   @item{@rhombus(~as_meta): a true value (@emph{not} the default)
+   indicates that the result should be typeset as a metavariable (usually
+   italic) instead of a variable.}
+
+  )}
 
 )
 

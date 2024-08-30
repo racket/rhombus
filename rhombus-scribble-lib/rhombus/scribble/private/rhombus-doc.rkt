@@ -494,7 +494,7 @@
          #`(group as_class_clause
                   tag (a-tag
                        (b-tag (g-tag lhs dot #,@(subst #'name) . more))
-                       (b2-tag (g2-tag lhs2 dot2 #,@(subst #'name2 #:redef? #t) . more2)))))]
+                       (b2-tag (g2-tag lhs2 dot2 #,@(subst #'name2 #:as_redef #t) . more2)))))]
     [(group tag (~and lhs (parens (group _ (op ::) _))) (~and dot (op |.|)) name . more)
      (rb #:at stx
          #`(group as_class_clause
@@ -608,17 +608,39 @@
        (rb #:at stx
            #`(group tag #,@(subst #'id.name) e ...))])))
 
-(define-doc class
-  "class"
-  (lambda (stx)
-    '(rhombus/class rhombus/annot))
-  parens-extract-name
-  (lambda (stx space-name vars)
-    (class-body-extract-metavariables
-     stx
-     space-name
-     (parens-extract-metavariables stx space-name vars)))
-  head-extract-typeset)
+(define-for-syntax (class-extract-descs stx)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ ... (parens field ...) . _)
+     (cons "enumeration"
+           (for/list ([field (in-list (syntax->list #'(field ...)))])
+             "function"))]))
+
+(define-for-syntax (class-extract-space-names stx)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ ... (parens field ...) . _)
+     (cons '(rhombus/class rhombus/annot)
+           (for/list ([field (in-list (syntax->list #'(field ...)))])
+             (list #f)))]))
+
+(define-for-syntax (class-extract-names stx space-name)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group _ (~var id (identifier-target space-name)) (parens field ...) . _)
+     (cons
+      #'id.name
+      (for/list ([field (in-list (syntax->list #'(field ...)))])
+        (define (field-name->name sym)
+          (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
+            [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
+             #'sym.name]))
+        (syntax-parse field
+          #:datum-literals (group mutable)
+          [(group mutable id:identifier . _)
+           (field-name->name #'id)]
+          [(group id:identifier . _)
+           (field-name->name #'id)])))]))
 
 (define-for-syntax (class-body-extract-metavariables stx space-name vars)
   (syntax-parse stx
@@ -637,6 +659,36 @@
                (parens-extract-metavariables p space-name vars #:just-parens? #t))])]
          [_ vars]))]
     [_ vars]))
+
+(define-for-syntax (class-extract-typeset stx space-names substs)
+  (syntax-parse stx
+    #:datum-literals (group parens)
+    [(group tag (~var id (identifier-target (car space-names)))
+            ((~and p-tag parens) field ...)
+            e ...)
+     (rb #:at stx
+         #`(group tag #,@((car substs) #'id.name)
+                  (p-tag #,@(for/list ([field (in-list (syntax->list #'(field ...)))]
+                                       [subst (in-list (cdr substs))])
+                              (syntax-parse field
+                                #:datum-literals (group mutable)
+                                [((~and tag group) (~and mut mutable) id:identifier . r)
+                                 #`(tag mut #,@(subst #'id #:as_meta #t) . r)]
+                                [((~and tag group) id:identifier . r)
+                                 #`(tag #,@(subst #'id #:as_meta #t) . r)])))
+                  e ...))]))
+
+(define-doc class
+  class-extract-descs
+  (lambda (stx)
+    (class-extract-space-names stx))
+  class-extract-names
+  (lambda (stx space-name vars)
+    (class-body-extract-metavariables
+     stx
+     space-name
+     (parens-extract-metavariables stx space-name vars)))
+  class-extract-typeset)
 
 (define-doc interface
   "interface"
@@ -745,9 +797,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(group grammar id)
-        #`(paragraph plain #,(subst #'id #:wrap? #f))]
+        #`(paragraph plain #,(subst #'id #:as_wrap #f))]
        [(group grammar id (block g ...))
-        #`(typeset-grammar #,(subst #'id #:wrap? #f)
+        #`(typeset-grammar #,(subst #'id #:as_wrap #f)
                            #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
                                 (syntax-parse g
                                   #:datum-literals (group)

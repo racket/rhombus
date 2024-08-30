@@ -7,11 +7,11 @@ export:
 
 class RXMatch(whole, captures :: List, capture_names :: Map):
   implements Listable
-  private implements Indexable
+  implements Indexable
 
   override method to_list():
     [whole] ++ captures
-  private override method get(index):
+  override method get(index):
     match index
     | 0: whole
     | (index :: PosInt) when index <= captures.length():
@@ -22,4 +22,4 @@ class RXMatch(whole, captures :: List, capture_names :: Map):
         | captures[index - 1]
         | error(#'#{RX.get}, "no capture group by that name")
     | ~else:
-        error(#'#{RX.get}, "invalid match index")
+       error(#'#{RX.get}, "invalid match index")

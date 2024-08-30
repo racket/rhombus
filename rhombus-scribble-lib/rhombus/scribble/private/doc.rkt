@@ -28,10 +28,10 @@
   ;; since bouncing back is just a convenience for abstracting over
   ;; those other handlers.
   (property doc-transformer (extract-desc       ; stx -> (kind-str)*
-                             extract-space-sym  ; stx -> (space-sym-or-#f)*  ; only first result bounced back
-                             extract-defined    ; stx space-sym-or-#f -> (def-name)* ; see below
+                             extract-space-sym  ; stx -> (space-sym-or-#f[-list])*  ; only first result bounced back
+                             extract-defined    ; stx space-sym-or-#f[-list] -> (def-name)* ; see below
                              extract-metavariables ; stx space-sym-or-#f sym-set -> sym-set ; adds to given set
-                             extract-typeset))  ; stx (space-sym-of-#f)* (stx -> stx)* -> stx
+                             extract-typeset))  ; stx (space-sym-or-#f[-list])* (stx -> stx)* -> stx
   ;; A `def-name` as returned by `extract-defined` is one of
   ;;  - identifier                 ; normal reference in relevant space
   ;;  - (list root-id typeset-id)  ; `typeset-id` within namespace `root-id`
