@@ -10,6 +10,7 @@
          "print-desc.rkt"
          (submod "module-path.rkt" for-import-export)
          "expression.rkt"
+         "repetition.rkt"
          (submod "dot.rkt" for-dot-provider)
          "class-primitive.rkt"
          "define-arity.rkt"
@@ -25,7 +26,9 @@
                       rhombus/namespace
                       rhombus/statinfo)
                      ModulePath)
-         (rename-out [ModulePath-form ModulePath]))
+         (for-spaces (#f
+                      rhombus/repet)
+                     (rename-out [ModulePath-form ModulePath])))
 
 (module+ for-primitive
   (provide module-path
@@ -104,20 +107,35 @@
                                       (loop (cdr more)))])))]))])]
        [else `(group (op ???) (group ,raw))])]))
 
+(define-for-syntax (parse-module-path-form stx #:repet? [as-repet? #false])
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(_ (_::quotes mod-path::module-path) . tail)
+     ;; syntactic form with static parsing based on binding
+     (when as-repet?
+       (raise-syntax-error #f
+                           "static module path not supported in a repetition position"
+                           stx))
+     (values (wrap-static-info*
+              #`(module-path (quote #,(convert-symbol-module-path #'mod-path.parsed)))
+              (get-module-path-static-infos))
+             #'tail)]
+    [(_ . tail)
+     ;; dynamic parsing based on syntax-object literals
+     (values (if as-repet?
+                 (identifier-repetition-use #'ModulePath)
+                 #'ModulePath)
+             #'tail)]))
+
 (define-syntax ModulePath-form
   (expression-transformer
    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ (_::quotes mod-path::module-path) . tail)
-        ;; syntactic form with static parsing based on binding
-        (values (wrap-static-info*
-                 #`(module-path (quote #,(convert-symbol-module-path #'mod-path.parsed)))
-                 (get-module-path-static-infos))
-                #'tail)]
-       [(_ . tail)
-        ;; dynamic parsing based on syntax-object literals
-        (values #'ModulePath #'tail)]))))
+     (parse-module-path-form stx))))
+
+(define-repetition-syntax ModulePath-form
+  (repetition-transformer
+   (lambda (stx)
+     (parse-module-path-form stx #:repet? #t))))
 
 (define (module-path-s-exp who mp)
   (unless (module-path? mp)

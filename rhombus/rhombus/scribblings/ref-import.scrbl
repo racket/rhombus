@@ -441,6 +441,7 @@
 
   fun ModulePath(mod_stx :: Group) :: ModulePath
   expr.macro '«ModulePath '$module_path'»'
+  repet.macro 'ModulePath'
 
   fun ModulePath.s_exp(mp :: ModulePath) :: Any
 ){
@@ -448,7 +449,9 @@
  The @rhombus(ModulePath, ~annot) annotation recognizes values that
  represent module paths, and the @rhombus(ModulePath) function and
  expression form create such a value for a syntax-object
- @rhombus(mod_stx) or a quoted @rhombus(module_path).
+ @rhombus(mod_stx) or a quoted @rhombus(module_path). As a repetition,
+ @rhombus(ModulePath, ~repet) is the same as referring to the
+ @rhombus(ModulePath) function.
 
 @dispatch_table(
   "module path"

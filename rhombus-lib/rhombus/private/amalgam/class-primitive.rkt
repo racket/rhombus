@@ -220,7 +220,7 @@
          #,@(if (or transparent? translucent? just-binding?)
                 (list
                  #`(define-syntax Name
-                     (expression-transformer
+                     (expression-repeatable-transformer
                       (lambda (stx)
                         (syntax-parse stx
                           [(head . tail)

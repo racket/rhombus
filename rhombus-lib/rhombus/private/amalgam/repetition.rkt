@@ -5,6 +5,7 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
+                     enforest/syntax-local
                      "introducer.rkt"
                      "macro-result.rkt"
                      (for-syntax racket/base))
@@ -89,6 +90,13 @@
                           0))
 
   (define (identifier-repetition-use/maybe id)
+    (when (syntax-local-value* id (lambda (v)
+                                    (and (or (expression-prefix-operator-ref v)
+                                             (expression-infix-operator-ref v))
+                                         (not (expression-repeatable-prefix-operator? v)))))
+      (raise-syntax-error #f
+                          "expression form does not support use as a repetition"
+                          id))
     (make-repetition-info id
                           null
                           #`(rhombus-expression (group #,id))
@@ -119,7 +127,7 @@
                             (syntax-parse stx
                               [(self . _)
                                (raise-syntax-error #f
-                                                   "cannot use repetition binding as an expression"
+                                                   "cannot use expression binding as a repetition"
                                                    #'self)])))))
      (repetition-transformer
       (lambda (stx)

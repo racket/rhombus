@@ -25,6 +25,9 @@
 
            expression-transformer
 
+           expression-repeatable-prefix-operator?
+           expression-repeatable-transformer
+           
            make-identifier-expression
 
            check-expression-result
@@ -44,6 +47,13 @@
 
   (define (expression-transformer proc)
     (expression-prefix-operator '((default . stronger)) 'macro proc))
+
+  ;; shortcut for an expression binding that can be used by itself like
+  ;; an identifier in a repeition; this is a little bit of a cheat, so use
+  ;; it only for things that are rename-transformer-like
+  (struct expression-repeatable-prefix-operator expression-prefix-operator ())
+  (define (expression-repeatable-transformer proc)
+    (expression-repeatable-prefix-operator '((default . stronger)) 'macro proc))
 
   (define early-unbound? #f)
   (define (check-unbound-identifier-early!)

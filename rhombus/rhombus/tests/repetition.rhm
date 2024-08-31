@@ -191,9 +191,11 @@ block:
     ~is [[1, 3], [2, 3], [3, 3]]
   check:
     namespace M:
+      import:
+        rhombus/meta open
       export pi_ish
       def three = 3
-      macro 'pi_ish': 'three'
+      repet.macro 'pi_ish': 'three'
     [[i, M.pi_ish], ...]
     ~is [[1, 3], [2, 3], [3, 3]]
 
@@ -286,3 +288,10 @@ block:
   def [x, ...] = [[1, 2], [3, 4]]
   check [[0, & x], ...] ~is [[0, 1, 2], [0, 3, 4]]
   check [PairList[0, & x], ...] ~is [PairList[0, 1, 2], PairList[0, 3, 4]]
+
+// check that non-repeatable expression forms are explained as such
+check:
+  ~eval
+  def [x, ...] = [1, 2, 3]
+  [[if 1 | 2 | 3, x,] ...]
+  ~throws "cannot use expression binding as a repetition"

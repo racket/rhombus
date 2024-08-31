@@ -85,9 +85,9 @@
   (cond
     [no-repetition?
      (if (null? (syntax-e attributes))
-         (expression-transformer
+         (expression-repeatable-transformer
           id-handler)
-         (expression-transformer
+         (expression-repeatable-transformer
           (lambda (stx)
             (expr-handler stx
                           (lambda ()
