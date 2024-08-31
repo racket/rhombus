@@ -71,7 +71,7 @@ check:
 check:
   recur loop(x :: String = 10):
     x.length()
-  ~throws "value does not match annotation"
+  ~throws "value does not satisfy annotation"
 
 check:
   (recur loop(x :: String = "abs") :: String:
@@ -88,12 +88,12 @@ check:
 check:
   recur loop(x :: String = "abs") :: String:
     0
-  ~throws "result does not match annotation"
+  ~throws "result does not satisfy annotation"
 
 check:
   recur loop(x :: String = "abs") :: (String, Int):
     0
-  ~throws "result does not match annotation"
+  ~throws "result does not satisfy annotation"
 
 check:
   def mutable count = 0

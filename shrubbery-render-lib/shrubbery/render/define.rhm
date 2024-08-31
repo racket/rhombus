@@ -70,8 +70,8 @@ meta:
   fun escape_tail(stxs):
     match stxs
     | '#,($expr ...) $tail ...':
-        let escaped_id = current_escape_id()
-        'sequence_cons_syntax($escaped_id($expr ...), $(escape_tail('$tail ...')),
+        let Pair(escaped_id, self) = current_escape_id()
+        'sequence_cons_syntax($escaped_id(#' $self, $expr ...), $(escape_tail('$tail ...')),
                               Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
         let new_head = escape_term(head)
@@ -152,11 +152,11 @@ meta:
     | ~else:
         syntax_meta.error("invalid space", kw_stx)
 
-  fun escape_top(g, escape_id):
-    parameterize { current_escape_id: escape_id }:
+  fun escape_top(self, g, escape_id):
+    parameterize { current_escape_id: Pair(escape_id, self) }:
       escape_group(g)
-  fun escape_top_term(t, escape_id):
-    parameterize { current_escape_id: escape_id }:
+  fun escape_top_term(self, t, escape_id):
+    parameterize { current_escape_id: Pair(escape_id, self) }:
       escape_term(t)
 
 defn.macro 'macros ($rhombus,
@@ -169,41 +169,46 @@ defn.macro 'macros ($rhombus,
   '«
      expr.macro
      | '$rhombus ($('$')(forms :: Group))':
-         '$typeset_rhombus($('$')(escape_top(spacer.adjust_group(forms, #false, '#,'), '$escape'))) :~ $Result'
+         ~op_stx: self
+         '$typeset_rhombus($('$')(escape_top(self, spacer.adjust_group(forms, #false, '#,'), '$escape'))) :~ $Result'
      | '$rhombus ($('$')forms, ~at $('$')(name0 :: Name) $('$')(name :: Name) $('...'))':
+         ~op_stx: self
          let sp = [Symbol.from_string(String.append(to_string(name0),
                                                     to_string(name), $('...')))]
          '$typeset_rhombus(~space: #'$('$')sp,
-                           $('$')(escape_top(spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
+                           $('$')(escape_top(self, spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
      | '$rhombus ($('$')forms, $('$')(kw_stx :: Keyword))':
+         ~op_stx: self
          let kw = kw_stx.unwrap()
          match keyword_mode(kw_stx)
          | #'plain:
              '$typeset_rhombus(~space: #'$('$')kw_stx, $('$')(literal_group(forms))) :~ $Result'
          | #'spaced:
              let sp = #{full-space-names}(kw)
-             '$typeset_rhombus(~space: #'$('$')kw_stx, $('$')(escape_top(spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
+             '$typeset_rhombus(~space: #'$('$')kw_stx, $('$')(escape_top(self, spacer.adjust_group(forms, sp, '#,'), '$escape'))) :~ $Result'
 
      expr.macro '$rhombusblock_etc $('$')tail $('...')':
+       ~op_stx: self
        ~all_stx stx
-       '$('$')(rhombusblock_etc(stx, '$('$')tail $('...')', '$typeset_rhombusblock', '$escape')) :~ $Result'
+       '$('$')(rhombusblock_etc(self, stx, '$('$')tail $('...')', '$typeset_rhombusblock', '$escape')) :~ $Result'
 
      expr.macro '$rhombusblock ($('$')args)':
+       ~op_stx: self
        '$typeset_rhombusblock(
           ~indent_from_block: #false,
-          $('$')(escape_top_term(spacer.adjust_term(': $('$')args', #false, '#,'), '$escape'))
+          $('$')(escape_top_term(self, spacer.adjust_term(': $('$')args', #false, '#,'), '$escape'))
         ) :~ $Result'
   »'
 
 meta:
-  fun rhombusblock_etc(stx, '$tail ...', typeset_rhombusblock_stx, escape_id):
+  fun rhombusblock_etc(self, stx, '$tail ...', typeset_rhombusblock_stx, escape_id):
     fun finish([opt, ...], fin_tail):
       match fin_tail
       | ': $_': #void
       | ~else: syntax_meta.error("expected a block", stx)
       '$typeset_rhombusblock_stx(
          $opt, ...,
-         $(escape_top_term(spacer.adjust_term(fin_tail, #false, '#,'), escape_id))
+         $(escape_top_term(self, spacer.adjust_term(fin_tail, #false, '#,'), escape_id))
        )'
     fun check_options(options :~ List):
       for (opt: options):

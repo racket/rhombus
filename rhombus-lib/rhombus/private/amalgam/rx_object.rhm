@@ -4,6 +4,7 @@ import:
   "core-meta.rkt" open
   "maybe.rhm" open
   "recur.rhm" open
+  "error.rhm" open
   "rx_match.rhm" open
 
 export:
@@ -22,7 +23,7 @@ class RX(private _rkt_partial_rx,
          private _has_backref,
          private _str):
   internal _RX
-  constructor (): error("don't instantiate")
+  constructor (): error(~who: #'RX, "cannot instantiate directly")
 
   export:
     from_handles
@@ -119,13 +120,18 @@ class RX(private _rkt_partial_rx,
       freeze(elem)
 
   fun check_filter(who, in, out):
+    fun bad(kind):
+      error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "expected " ++ kind ++ "string result from replacing function",
+            error.val(~label: "result", out))
     cond
     | in is_a Bytes:
         unless out is_a Bytes
-        | error(who, "expected byte string result from replacing function")
+        | bad("byte ")
     | ~else:
         unless out is_a String
-        | error(who, "expected string result from replacing function")
+        | bad("")
     out
 
   method replace(input :: String || Bytes,
@@ -154,10 +160,15 @@ fun from_handles(rx,
                  vars :: Map.of(Symbol, NonnegInt),
                  ~has_backref: has_backref :: Any.to_boolean = #false,
                  ~source: source :: String = "rx'....'") :~ RX:
+  fun bad(rx, mode):
+    error(~who: #'#{RX.from_handles},
+          ~exn: Exn.Fail.Annot,
+          "not a primitive regular expression for " ++ mode ++ " mode",
+          error.val(rx))
   unless base.#{regexp?}(rx)
-  | error(#'#{RX.from_handles}, "not a primitive regular expression for whole-match mode")
+  | bad("whole-match")
   unless base.#{regexp?}(partial_rx)
-  | error(#'#{RX.from_handles}, "not a primitive regular expression for partial-match mode")
+  | bad("partial-match")
   _RX(partial_rx, rx, num_captures, vars, has_backref, source)
 
 fun freeze(elem):
@@ -166,18 +177,28 @@ fun freeze(elem):
   | bstr :: Bytes: bstr
   | ~else: #false
 
-fun splice_regexp(PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
+fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
   fun extract(a):
     match a
     | _ :: String: a
     | Pair(_, regexp :: _RX):
         when has_backref && (regexp._num_captures != 0)
-        | error("cannot splice RX that has capture groups into a pattern with backreferences")
+        | error(~who: who,
+                ~exn: Exn.Fail.Annot,
+                "cannot splice regexp that has capture groups into a pattern with backreferences",
+                error.val(~label: "rexgexp", regexp))
         when regexp._has_backref
-        | error("cannot splice RX backreferences into a larger pattern")
+        | error(~who: who,
+                ~exn: Exn.Fail.Annot,
+                "cannot splice regexp with backreferences into a larger pattern",
+                error.val(~label: "rexgexp", regexp))
         "(?:" ++ base.#{object-name}(regexp.in_handle) ++ ")"
     | Pair(src_str, val):
-        error("spliced value for " +& src_str +& " does not satisfy `RX`")
+        error(~who: who,
+              ~exn: Exn.Fail.Annot,
+              error.annot_msg("spliced value for " +& src_str),
+              error.annot("RX"),
+              error.val(~label: "spliced value", a))
   let str = String.append(extract(a), ...)
   let (num_captures, vars):
     recur loop(vars :~ Map = Map.by(===){}, as = as, var_seq = var_seq, di = 0):

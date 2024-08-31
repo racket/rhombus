@@ -28,7 +28,7 @@ expr.macro 'static_arity_check $(pattern:
                 )
               ...':
   fun make_error(_):
-    'error("static_arity.check", "should not get here")'
+    'error(~who: "static_arity.check", "should not get here")'
   fun extract_args(args):
     fun
     | make_less('($arg, ..., $_)'): '($(make_error(arg)), ...)'

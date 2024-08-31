@@ -75,7 +75,8 @@ fun flatten_string(who, c, font) :~ Pict:
   | p :: Pict: p
   | [c, ...]: pict.beside(~vert: #'topline, flatten_string(who, c, font), ...)
   | ~else:
-      error(who, "bad text content: " +& to_string(c, ~mode: #'expr))
+      // shouldn't get here
+      error(~who: who, "bad text content", error.val(c))
 
 fun t(~font: font :: draw.Font = current_font(),
       s :: TextContent, ...) :~ Pict:
@@ -195,7 +196,8 @@ fun flatten_para_content(who, decode, c) :~ List:
     | [c1, & c]:
         flatten(c1) ++ flatten(c)
     | ~else:
-        error(who, "bad paragraph content: " +& to_string(c, ~mode: #'expr))
+        // shouldn't get here
+        error(~who: who, "bad paragraph content", error.val(c))
 
 fun join_nonbreaking(l :: List):
   match l

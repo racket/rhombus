@@ -116,7 +116,7 @@ export:
   unicode
 
 meta:
-  fun rx_macro(stx :~ Syntax, pat, is_full):
+  fun rx_macro(self, stx :~ Syntax, pat, is_full):
     match pat
     | #false:
         let stx_str = to_string(stx)
@@ -132,7 +132,7 @@ meta:
         if rkt_rx is_a Syntax
         | let [vars_seq, ...]: describe_splice_vars([var, ...], vars)
           // generate run-time construction of a regexp
-          'splice_regexp($rkt_rx, [$vars_seq, ...], $has_backref, $stx_str)'
+          'splice_regexp(#' $self, $rkt_rx, [$vars_seq, ...], $has_backref, $stx_str)'
         | let rkt_full_rx:
             if is_full
             | compile('sequence(bof, $ast, eof)', vars, num_captures, stx)
@@ -142,19 +142,23 @@ meta:
 
 expr.macro
 | '«rx ''»':
+    ~op_stx: self
     ~all_stx: stx
-    rx_macro(stx, #false, #true)
+    rx_macro(self, stx, #false, #true)
 | '«rx '$(pat :: rx_meta.Parsed)'»':
+    ~op_stx: self
     ~all_stx: stx
-    rx_macro(stx, pat, #true)
+    rx_macro(self, stx, pat, #true)
 
 expr.macro
 | '«rx_in ''»':
+    ~op_stx: self
     ~all_stx: stx
-    rx_macro(stx, #false, #false)
+    rx_macro(self, stx, #false, #false)
 | '«rx_in '$(pat :: rx_meta.Parsed)'»':
+    ~op_stx: self
     ~all_stx: stx
-    rx_macro(stx, pat, #false)
+    rx_macro(self, stx, pat, #false)
 
 rx.macro'$left #%index $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
   ~weaker_than: #%parens #%juxtapose ++

@@ -1,0 +1,169 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  "maybe.rhm" open
+  lib("racket/base.rkt")
+
+use_static
+
+export:
+  error
+
+namespace error:
+  export:
+    Who
+
+    // constructs full message without raising it
+    message
+
+    // builders of main message test
+    annot_msg
+
+    Clause
+
+    // clause builders
+    text
+    val
+    vals
+    annot
+
+    // helper
+    reindent
+
+annot.macro 'Who':
+  'ReadableString || Symbol || Name'
+
+class Clause(msg :: String):
+  nonfinal
+
+// primary `error` function
+// (not backward-comptible with current `error` due to `~who` keyword argument)
+fun error(~srcloc: srcloc :: maybe(Srcloc) = #false,
+          ~who: who :: maybe(error.Who) = #false,
+          ~realm: realm :: Symbol = #'rhombus,
+          // make things like `~exn: Exn.Fail.User` easy; for more complex
+          // exception constructions, use `error.message`, instead, to build
+          // just the message text
+          ~exn: exn :: (Function.of_arity(2)
+                          // also gets srcloc list
+                          || Function.of_arity(3)
+                          // also gets clause list
+                          || Function.of_arity(4)) = Exn.Fail,
+          // intended to be a single short line
+          msg :: ReadableString,
+          // if non-empty, ";" is added to the end of `message`, and
+          // each `detail` is shown on its own line with a 1-space prefix
+          ~details: [detail :: ReadableString, ...] = [],
+          // intended to be constructed by `error.val`, `error.annot`,
+          // or `error.text`; each `clause` starts its own line with
+          // a 2-space prefix:
+          clause :: error.Clause,
+          ...):
+  let msg = message(~srcloc: srcloc,
+                    ~who: who,
+                    ~realm: realm,
+                    msg,
+                    ~detail: [detail, ...],
+                    clause, ...)
+  let marks = Continuation.Marks.current()
+  let e:
+    match exn
+    | exn :: Function.of_arity(4): exn(msg, marks, [srcloc], [clause, ...])
+    | exn :: Function.of_arity(3): exn(msg, marks, [srcloc])
+    | exn :: Function.of_arity(2): exn(msg, marks)
+  throw e
+
+// exported as `error.message`, same arguments as `error` except for `~exn`
+fun message(~srcloc: srcloc :: maybe(Srcloc) = #false,
+            ~who: who :: maybe(error.Who) = #false,
+            ~realm: realm :: Symbol = #'rhombus,
+            message :: ReadableString,
+            ~detail: [detail :: ReadableString, ...] = [],
+            clause :: error.Clause,
+            ...) :~ String:
+  (if srcloc | Srcloc.to_report_string(srcloc) ++ ": " | "")
+    ++ (base.#{error-message->adjusted-string}(
+          (who && who_to_sym(who)),
+          realm,
+          message
+            ++ (if [detail, ...].length() == 0 | "" | ";")
+            ++ String.append("\n " ++ detail, ...)
+            ++ String.append("\n  " ++ clause.msg, ...),
+          realm
+        ))
+
+fun
+| who_to_sym(s :: Symbol): s
+| who_to_sym(s :: ReadableString): Symbol.from_string(s)
+| who_to_sym(s :: Syntax): Symbol.from_string(s.to_source_string())
+
+fun annot_msg(what :: String = "value") :~ String:
+  what ++ " does not satisfy annotation"
+
+fun text(~label: label :: String,
+         v) :~ Clause:
+  Clause(
+    label ++ ": " ++ reindent(to_string(v), ~label: label)
+  )
+
+fun val(~label: label :: String = "value", v) :~ Clause:
+  Clause(
+    label ++ ":" ++ reindent(to_error_string(v),
+                             ~label: label)
+  )
+
+fun vals(~label: label :: String = "values", v, ...) :~ Clause:
+  match [v, ...]
+  | []:
+      Clause(
+        label ++ ": <none>"
+      )
+  | [v]:
+      Clause(
+        label ++ ":" ++ reindent(to_error_string(v),
+                                 ~label: label)
+      )
+  | [v, ...]:
+      Clause(
+        label ++ ":" ++ String.append(reindent(to_error_string(v), ~max_len: 0),
+                                      ...)
+      )
+
+fun annot(~label: label :: String = "annotation",
+          ~realm: realm :: Symbol = #'rhombus,
+          annotation) :~ Clause:
+  Clause(
+    label ++ ":" ++ reindent(base.#{error-contract->adjusted-string}(annotation, realm),
+                             ~label: label)
+  )
+
+fun to_error_string(v):
+  base.#{error-value->string-handler}()(v, base.#{error-print-width}())
+
+// exported as `error.reindent`, because it may be more generally useful
+fun reindent(s :~ String,
+             // added before `s` if it stays on 1 line
+             ~space: space :: String = " ",
+             // added before each line if multi-line
+             ~tab: tab :: String = "   ",
+             // used only for default `max_len`
+             ~label: label :: String = "",
+             // determines when a single-line `s` is moved
+             // to its own line to fit better
+             ~max_len: max_len :: NonnegInt
+                         = 72 - (2 + label.length() + 1 + space.length())) :~ String:
+  if (s.length() > max_len
+        || (for any (c: s):
+              c == "\n"[0]))
+  | "\n" ++ tab
+      ++ (block:
+            fun loop(i, start):
+              cond
+              | i == s.length():
+                  s.substring(start, i)
+              | s[i] == "\n"[0]:
+                  s.substring(start, i) ++ "\n" ++ tab ++ loop(i+1, i+1)
+              | ~else:
+                  loop(i+1, start)
+            loop(0, 0))
+  | space ++ s

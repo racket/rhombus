@@ -69,7 +69,10 @@ class Color(private _handle):
 
 fun from_handle(handle) :~ Color:
   unless handle rkt.is_a rkt.#{color%}
-  | error("Color.from_handle", "not a color handle: " +& handle)
+  | error(~who: "Color.from_handle",
+          ~exn: Exn.Fail.Annot,
+          "not a color handle",
+          error.val(handle))
   _Color(handle)
 
 fun

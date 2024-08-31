@@ -70,7 +70,9 @@ fun pin(content :: Pict,
         cond
         | !at_x:
             if find_mode == #'always
-            | error(#'#{balloon.pin}, "cannot find pict")
+            | error(~who: #'#{balloon.pin}, "cannot find pict",
+                    error.val(~label: "finder", at),
+                    error.val(~label: "within pict", p))
             | p
         | ~else:
             let fill_color = (color && as_color(color)) || Color(0, 0, 0, 0.0).handle

@@ -612,7 +612,7 @@
   (syntax-parse stx
     #:datum-literals (group block)
     [(group _ ... (parens field ...) . _)
-     (cons "enumeration"
+     (cons "class"
            (for/list ([field (in-list (syntax->list #'(field ...)))])
              "function"))]))
 

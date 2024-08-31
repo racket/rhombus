@@ -2,6 +2,7 @@
 import:
   "when_unless.rhm" open
   "recur.rhm" open
+  "error.rhm" open
   lib("racket/base.rkt")
 
 export:
@@ -18,7 +19,10 @@ class Charset(private _ranges):
       let start = start_c.to_int()
       let end = end_c.to_int()
       unless start <= end
-      | error(#'Charset, "bad range")
+      | error(~who: #'Charset,
+              "range end is before start",
+              error.val(~label: "start to_int", start),
+              error.val(~label: "end to_int", end))
       cond
       | start < 0xD800 && end >= 0x10000:
           super([[start, 0xD7FF], [0x10000, end]])
