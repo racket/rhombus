@@ -262,7 +262,12 @@ class Pict():
         cond
         | new != this:
             unless new is_a Pict
-            | error(#'rebuild, "pre-adjust function's result does not satisfy Pict")
+            | error(~who: #'rebuild,
+                    ~exn: Exn.Fail.Annot,
+                    error.annot_msg("pre-adjust function's result"),
+                    error.annot("Pict"),
+                    error.val(~label: "function", pre_adjuster),
+                    error.val(~label: "result", new))
             values(new, subst ++ { this: new })
         | ~else:
             let (new, subst :~ Map):
@@ -279,10 +284,14 @@ class Pict():
                       values(new_deps.add(new_dep), new_subst)
                   let new_config:
                     _config && (block:
-                                  let c = adjuster(_config)
+                                  let c = config_adjuster(_config)
                                   unless c is_a Map
-                                  | error(#'rebuild, "config-adjust function's result does not satisfy Map")
-                                  c)
+                                  | error(~who: #'rebuild,
+                                          ~exn: Exn.Fail.Annot,
+                                          error.annot_msg("config-adjust function's result"),
+                                          error.annot("Pict"),
+                                          error.val(~label: "function", config_adjuster),
+                                          error.val(~label: "result", c)))
                   let new:
                     if (all(new_dep === dep, ...)
                           && new_config == _config)
@@ -300,7 +309,12 @@ class Pict():
                     values (new, subst)
             let new = adjuster(new)
             unless new is_a Pict
-            | error(#'rebuild, "post-adjust function's result does not satisfy Pict")
+            | error(~who: #'rebuild,
+                    ~exn: Exn.Fail.Annot,
+                    error.annot_msg("post-adjust function's result"),
+                    error.annot("Pict"),
+                    error.val(~label: "function", adjuster),
+                    error.val(~label: "result", new))
             values(new, subst ++ { this: new })
 
 class StaticPict(private _handle,
@@ -370,7 +384,10 @@ class StaticPict(private _handle,
         if to_handle
         | static_pict(rkt.refocus(handle, to_handle), this, _instances,
                       ~dependencies: [this, to_p], retry)
-        | error(#'refocus, "pict for refocus not found")
+        | error(~who: #'refocus,
+                "pict not found",
+                error.val(~label: "pict", to_p),
+                error.val(~label: "within pict", this))
 
   override method
   | _pad(amt :: Real):
@@ -512,7 +529,7 @@ class NothingPict():
   override method launder(): this
   override method ghost(do_ghost = #true): this
   override method refocus(to_p :: Pict):
-    error(#'refocus, "cannot refocus nothing")
+    error(~who: #'refocus, "cannot refocus nothing")
 
   override method
   | _pad(amt :: Real): this
@@ -1226,7 +1243,10 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
       let (x, y) = find(p, q, epoch, n)
       if x
       | values(x, y)
-      | error(#'#{Find.in}, "cannot find pict")
+      | error(~who: #'#{Find.in},
+              "cannot find pict",
+              error.val(~label: "pict", q),
+              error.val(~label: "in pict", p))
 
   method
   | maybe_in(p :: Pict):
@@ -1243,11 +1263,17 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
           loop(c, start + delta)
     match t_find_or_dt
     | dt :: Int:
-        loop(p, dt) || error(#'#{Find.start_in}, "cannot find pict")
+        loop(p, dt) || error(~who: #'#{Find.start_in},
+                             "cannot find pict",
+                             error.val(~label: "pict", q),
+                             error.val(~label: "in pict", p))
     | ~else:
         let dt = t_find_or_dt(p)
         unless dt is_a Int
-        | error(#'#{Find.start_in}, "function did not produce an integer time box difference")
+        | error(#'#{Find.start_in},
+                ~exn: Exn.Fail.Annot,
+                "function did not produce an integer time box difference",
+                error.val(~label: "result", dt))
         dt
 
   method delay(dt :: Int) :~ Find:
@@ -1350,7 +1376,11 @@ fun animate(xy_proc :: Function.of_arity(2) || Function.of_arity(3),
             | (_ :: False, _ :: False):
                 values(#false, #false)
             | (arg, ...):
-                error(#'#{Find.animate}, "invalid result from animation procedure")
+                error(#'#{Find.animate},
+                      ~exn: Exn.Fail.Annot,
+                      "invalid result from animation function",
+                      error.val(~label: "function", xy_proc),
+                      error.val(~label: "result", arg, ...))
           ),
         t_proc,
         #true)
@@ -1508,7 +1538,10 @@ fun connect(~on: p :: Pict,
         | ~else:
             if find_mode == #'maybe
             | p
-            | error(#'connect, if from_x | "cannot find `~to` pict" | "cannot find `~from p ict")
+            | error(#'connect,
+                    if from_x | "cannot find `~to` pict" | "cannot find `~from pict",
+                    error.val(~label: "finder", if from_x | from | to),
+                    error.val(~label: "in pict", p))
     | ~else:
         convert(children, #'center, #'sustain,
                 fun (ps :~ List, dt, n): retry(ps[0], label && ps[1], from, to, 0, 0),
@@ -1577,7 +1610,10 @@ fun pin(q :: Pict,
           | [p :: _StaticPict, q :: _StaticPict]:
               let (at_x, at_y): at.maybe_in(p, dt, n)
               when !at_x && find_mode == #'always
-              | error(#'pin, "cannot find pict")
+              | error(#'pin,
+                      "cannot find pict",
+                      error.val(~label: "finder", at),
+                      error.val(~label: "in pict", p))
               let (dx, dy) = using.in(q, dt, n)
               if at_x
               | let new_handle:

@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   "core-meta.rkt" open
+  "error.rhm" open
   lib("racket/unsafe/undefined.rkt").#{unsafe-undefined}
 
 use_static
@@ -94,10 +95,11 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
   statinfo_meta.wrap(expr, r.static_info)
 
 fun no_match(who, ann_str, what):
-  error(who,
-        "value does not match annotation\n"
-          +& "  annotation: " +& ann_str +& "\n"
-          +& "  value: " +& what)
+  error(~who: who,
+        ~exn: Exn.Fail.Annot,
+        error.annot_msg(),
+        error.annot(ann_str),
+        error.val(what))
 
 meta:
   fun wrap_converter(expr, count, maybe_converter, annotation_string, name):
@@ -123,9 +125,10 @@ meta:
     | expr
 
 fun bad_result(who, ann_str):
-  error(who,
-        "result does not match annotation\n"
-          +& "  annotation: " +& ann_str)
+  error(~who: who,
+        ~exn: Exn.Fail.Annot,
+        error.annot_msg("result"),
+        error.annot(ann_str))
 
 annot.macro 'providing($unpacked_static_info)':
   annot_meta.pack_predicate('fun (x): #true',

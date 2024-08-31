@@ -63,7 +63,12 @@ fun animate(~children: children :: List.of(Pict) = [],
     fun (n, child_or_config, ...):
       let p = proc(bend(n), child_or_config, ...)
       unless p is_a StaticPict
-      | error(#'animate, "procedure result does not satisfy StaticPict")
+      | error(~who: #'animate,
+              ~exn: Exn.Fail.Annot,
+              error.annot_msg("procedure result"),
+              error.annot("StaticPict"),
+              error.val(~label: "procedure", proc),
+              error.val(~label: "result", p))
       p
   AnimPict(~children: children,
            proc,
@@ -75,7 +80,12 @@ fun rebuildable(~children: children :: List.of(Pict) = [],
                 proc :: Function.of_arity(children.length() + (if config | 1 | 0))) :~ Pict:
   let p = proc(& children ++ (if config | [config] | []))
   unless p is_a Pict
-  | error(#'rebuildable, "procedure result does not satisfy Pict")
+  | error(~who: #'rebuildable,
+          ~exn: Exn.Fail.Annot,
+          error.annot_msg("procedure result"),
+          error.annot("Pict"),
+          error.val(~label: "procedure", proc),
+          error.val(~label: "result", p))
   let rebuild:
     if config
     | fun ([child, ..., config]):

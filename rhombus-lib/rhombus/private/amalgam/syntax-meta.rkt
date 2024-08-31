@@ -1,6 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/unsafe/undefined
                      syntax/parse/pre
+                     enforest/name-parse
                      enforest/hier-name-parse
                      shrubbery/print
                      racket/phase+space
@@ -115,20 +117,53 @@
   (define/arity (syntax_meta.expanding_phase)
     (syntax-local-phase-level))
 
-  (define/arity syntax_meta.error
-    (case-lambda
-      [(form) (raise-syntax-error (name-of form) "bad syntax" (maybe-respan form))]
-      [(msg form) (raise-syntax-error (name-of form) msg (maybe-respan form))]
-      [(msg form detail)
-       (define details (map maybe-respan (if (treelist? detail)
-                                             (treelist->list detail)
-                                             (list detail))))
+  (define/arity (syntax_meta.error #:who [m-who #f]
+                                   form/msg
+                                   [form unsafe-undefined]
+                                   [detail unsafe-undefined])
+    (define who-in
+      (cond
+        [(or (not m-who) (symbol? m-who)) m-who]
+        [(string? m-who) (string->symbol m-who)]
+        [else
+         (syntax-parse m-who
+           #:datum-literals (group multi)
+           [_::name #t]
+           [(group _::dotted-operator-or-identifier-sequence) #t]
+           [(multi (group _::dotted-operator-or-identifier-sequence)) #t]
+           [_
+            (raise-argument-error who "error.Who" m-who)])
+         (string->symbol (shrubbery-syntax->string #:use-raw? #t m-who))]))
+    (cond
+      [(eq? form unsafe-undefined)
+       (define form form/msg)
+       (unless (syntax? form) (raise-argument-error who "Syntax" form))
+       (raise-syntax-error (or who-in (name-of form)) "bad syntax" (maybe-respan form))]
+      [(eq? detail unsafe-undefined)
+       (define msg form/msg)
+       (unless (string? msg) (raise-argument-error who "ReadableString" msg))
+       (unless (syntax? form) (raise-argument-error who "Syntax" form))
+       (raise-syntax-error (or who-in (name-of form)) msg (maybe-respan form))]
+      [else
+       (define msg form/msg)
+       (unless (string? msg) (raise-argument-error who "ReadableString" msg))
+       (define (bad-detail)
+         (raise-argument-error who "Syntax || List.of(Syntax)" detail))
+       (define details (map maybe-respan (cond
+                                           [(treelist? detail)
+                                            (define l (treelist->list detail))
+                                            (for ([i (in-list l)])
+                                              (unless (syntax? i) (bad-detail)))
+                                            l]
+                                           [(syntax? detail)
+                                            (list detail)]
+                                           [else (bad-detail)])))
        (if (pair? details)
-           (raise-syntax-error (name-of form) msg
+           (raise-syntax-error (or who-in (name-of form)) msg
                                (maybe-respan form)
                                (car details)
                                (cdr details))
-           (raise-syntax-error (name-of form) msg
+           (raise-syntax-error (or who-in (name-of form)) msg
                                (maybe-respan form)))]))
 
   (define (name-of stx)

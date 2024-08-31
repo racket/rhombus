@@ -3,6 +3,7 @@ import:
   "core-meta.rkt" open
   lib("racket/base.rkt")
   "str_help.rhm" open
+  "error.rhm" open
   "maybe.rhm" open
   "enum.rhm" open
 
@@ -42,7 +43,11 @@ namespace str:
                    ~zero_sign: zero_sign,
                    ~sign_align: sign_align):
     when min_width && max_width && max_width .< min_width
-    | error(who, "maximum width is less than minimum width")
+    | error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "maximum width is less than minimum width",
+            error.val(~label: "minimum", min_width),
+            error.val(~label: "maximum", max_width))
     let sign :~ String:
       cond
       | max_width == 0: ""

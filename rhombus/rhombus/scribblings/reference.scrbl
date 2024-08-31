@@ -30,6 +30,7 @@
 @include_section("ref-for.scrbl")
 @include_section("ref-recur.scrbl")
 @include_section("ref-parameter.scrbl")
+@include_section("ref-error.scrbl")
 @include_section("ref-exn.scrbl")
 @include_section("ref-control.scrbl")
 

@@ -106,7 +106,10 @@ fun flatten_slide_content(who, c) :~ List:
   | p :: Horiz: [p]
   | p :: Align: [p]
   | ~else:
-      error(who, "bad slide content: " +& to_string(c, ~mode: #'expr))
+      error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "bad slide content",
+            error.val(c))
 
 // generated in `align_content` for consumption by `next_to_anim`:
 class SetSep(pre_sep, post_sep)

@@ -62,7 +62,9 @@ fun parse(s):
   | '($e)':
       parse(e)
   | ~else:
-      error(#'parse, "invalid input: " +& s)
+      error(~who: #'parse,
+            "invalid input",
+            error.val(~label: "given", s))
 
 module test:
   check: parse('2')
@@ -105,7 +107,7 @@ fun interp(a, env):
           interp(body,
                  extend_env(bind(n, interp(arg, env)),
                             c_env))
-      | ~else: error(#'interp, "not a function")
+      | ~else: error(~who: #'interp, "not a function")
   | if0E(tst, thn, els):
       interp(if num_is_zero(interp(tst, env))
              | thn
@@ -168,13 +170,13 @@ fun num_op(op, l, r):
   | l is_a intV && r is_a intV:
       intV(op(intV.n(l), intV.n(r)))
   | ~else:
-      error(#'interp, "not a number")
+      error(~who: #'interp, "not a number")
 fun num_plus(l :: Value, r :: Value) :: Value:
   num_op(fun (a, b): a+b, l, r)
 fun num_is_zero(v :: Value) :: Boolean:
   match v
   | intV(n): n == 0
-  | ~else: error(#'interp, "not a number")
+  | ~else: error(~who: #'interp, "not a number")
 
 module test:
   check: num_plus(intV(1), intV(2))
@@ -189,7 +191,7 @@ fun lookup(n, env):
   // traditional recursion
   match env
   | []:
-      error(#'lookup, "free variable: " +& n)
+      error(~who: #'lookup, "free variable: " +& n)
   | List.cons(b, rst_env):
       cond
       | n == bind.name(b):

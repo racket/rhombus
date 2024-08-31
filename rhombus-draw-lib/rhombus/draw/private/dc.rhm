@@ -220,7 +220,10 @@ interface DC:
 
 fun from_handle(handle) :: DC:
   unless handle rkt.is_a rkt.#{dc<%>}
-  | error("DC.from_handle", "not a DC handle: " +& handle)
+  | error(~who: "DC.from_handle",
+          ~exn: Exn.Fail.Annot,
+          "not a DC handle",
+          error.val(handle))
   SomeDC(handle)
 
 class DCDump(pen, brush, font, clipping_region, transformation, dump)
@@ -240,7 +243,7 @@ class SomeDC(private _handle):
 
   override method restore():
     unless dump
-    | error("DC.restore", "no state saved")
+    | error(~who: "DC.restore", "no state saved")
     macro 'update $('. $field') ...':
       'block:
          def old_dump :~ DCDump = dump

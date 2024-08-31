@@ -1,7 +1,8 @@
 #lang racket/base
 (require "../bounce.rkt")
 
-(bounce "recur.rhm"
+(bounce "error.rhm"
+        "recur.rhm"
         "check.rhm"
         "maybe.rhm"
         "string.rhm"

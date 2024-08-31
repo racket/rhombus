@@ -9,18 +9,22 @@
 
 @doc(
   ~meta
-  fun syntax_meta.error(in_stx :: Syntax)
-    :: None
-  fun syntax_meta.error(message :: ReadableString,
+  fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
                         in_stx :: Syntax)
     :: None
-  fun syntax_meta.error(message :: ReadableString,
+  fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
+                        message :: ReadableString,
+                        in_stx :: Syntax)
+    :: None
+  fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
+                        message :: ReadableString,
                         in_stx :: Syntax,
                         at_stx :: Syntax || List.of(Syntax))
     :: None
 ){
 
  Throws a syntax-error message concerning @rhombus(in_stx). If
+ @rhombus(who) is @rhombus(#false), it is inferred from @rhombus(in_stx). If
  @rhombus(message) is not provided, the message is @rhombus("bad syntax").
  If @rhombus(at_stx) is provided, it should be something like an enclosed
  form of @rhombus(in_stx) to provide extra context. Alternatively,

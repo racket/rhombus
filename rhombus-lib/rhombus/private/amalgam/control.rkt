@@ -22,11 +22,7 @@
                       rhombus/namespace)
                      Continuation)
          try
-         throw
-         (for-spaces (#f
-                      rhombus/statinfo)
-                     (rename-out
-                      [rhombus-error error])))
+         throw)
 
 (define-name-root Continuation
   #:fields
@@ -61,40 +57,6 @@
 
 (define/arity (Continuation.Marks.current)
   (current-continuation-marks))
-
-(define/arity #:name error rhombus-error
-  (case-lambda
-    [(msg) (do-error who #f msg)]
-    [(who-in msg) (do-error who who-in msg)]))
-
-(define (do-error e-who who msg)
-  (define who-sym
-    (cond
-      [(not who) #f]
-      [(symbol? who) who]
-      [(string? who) (string->symbol who)]
-      [(identifier? who) (syntax-e who)]
-      [(and (syntax? who)
-            (syntax-parse who
-              #:datum-literals (op)
-              [(op id) (syntax-e #'id)]
-              [_ #f]))]
-      [else (raise-argument-error* e-who
-                                   rhombus-realm
-                                   "maybe(ReadableString || Symbol || Identifier || Operator)"
-                                   who)]))
-  (unless (string? msg)
-    (raise-argument-error* e-who rhombus-realm "ReadableString" msg))
-  (define adj (current-error-message-adjuster))
-  (define-values (adj-who who-realm)
-    (if who-sym
-        ((or (adj 'name) values) who-sym rhombus-realm)
-        (values #f rhombus-realm)))
-  (define-values (err-who error-who-realm adj-msg msg-realm)
-    ((or (adj 'message) values) adj-who who-realm msg rhombus-realm))
-  (if err-who
-      (error err-who "~a" adj-msg)
-      (error adj-msg)))
 
 (define-syntax try
   (expression-transformer

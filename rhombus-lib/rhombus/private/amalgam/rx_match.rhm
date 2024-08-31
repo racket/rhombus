@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   "when_unless.rhm" open
+  "error.rhm" open
 
 export:
   RXMatch
@@ -20,6 +21,11 @@ class RXMatch(whole, captures :: List, capture_names :: Map):
         let index = Map.get(capture_names, sym, #false)
         if index
         | captures[index - 1]
-        | error(#'#{RX.get}, "no capture group by that name")
+        | error(~who: #'#{RX.get},
+                "no capture group by given name",
+                error.val("name", index))
     | ~else:
-       error(#'#{RX.get}, "invalid match index")
+       error(~who: #'#{RX.get},
+             ~exn: Exn.Fail.Annot,
+             "invalid match index",
+             error.val("index", index))

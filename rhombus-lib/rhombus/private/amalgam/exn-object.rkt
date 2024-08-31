@@ -3,11 +3,14 @@
                      syntax/parse/pre)
          "provide.rkt"
          "class-primitive.rkt"
+         "call-result-key.rkt"
          "function-arity-key.rkt"
          "index-result-key.rkt"
+         "define-arity.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "syntax-object.rkt" for-quasiquote)
-         (submod "srcloc-object.rkt" for-static-info))
+         (submod "srcloc-object.rkt" for-static-info)
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -62,7 +65,8 @@
               Network
               OutOfMemory
               Unsupported
-              User))
+              User
+              [Annot Exn.Fail.Annot]))
 
 (define-exn Contract exn:fail:contract
   #:parent Fail exn:fail
@@ -72,6 +76,12 @@
               NonFixnumResult
               Continuation
               Variable))
+
+(define/arity (Exn.Fail.Annot message marks)
+  #:static-infos ((#%call-result #,(get-exn:fail:contract-static-infos)))
+  (unless (string? message) (raise-argument-error* who rhombus-realm "ReadableString" message))
+  (unless (continuation-mark-set? marks) (raise-argument-error* who rhombus-realm "Continuation.Marks" marks))
+  (exn:fail:contract message marks))
 
 (define-exn Arity exn:fail:contract:arity
   #:parent Contract exn:fail:contract

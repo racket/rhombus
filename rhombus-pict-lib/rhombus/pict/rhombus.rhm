@@ -34,7 +34,10 @@ Parameter.def current_rhombus_tt :: Function.of_arity(1):
 fun rtt(str_s) :~ Pict:
   let p = current_rhombus_tt()(str_s)
   unless p is_a Pict
-  | error("Rhombus code function returned a non-Pict: " +& p)
+  | error(error.annot_msg("Rhombus `tt` function result"),
+          ~exn: Exn.Fail.Annot,
+          error.annot("Pict"),
+          error.val(~label: "result", p))
   p
 
 def (render_line,
@@ -85,10 +88,13 @@ def (render_line,
                  fun (v):
                    v is_a Pict)
 
-fun to_pict(v):
+fun to_pict(who, v):
   if v is_a Pict
   | v
-  | error("escape produced a non-Pict: " +& v)
+  | error(~who: who,
+          ~exn: Exn.Fail.Annot,
+          error.annot_msg("escape result"),
+          error.val(~label: "result", v))
 
 define.macros (rhombus,
                rhombusblock,

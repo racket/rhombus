@@ -238,11 +238,11 @@ Metadata for a syntax object can include a source location and the raw
 
  @item{@rhombus(Name, ~annot) matches a syntax object that is an
   identifier, operator, or dotted multi-term group that fits the shape of
-  an @rhombus(op_or_id_name).}
+  an @nontermref(op_or_id_name).}
 
  @item{@rhombus(IdentifierName, ~annot) matches a syntax object that is an
   identifier or dotted multi-term group that fits the shape of
-  an @rhombus(id_name).}
+  an @nontermref(id_name).}
 
 
 )

@@ -18,7 +18,11 @@ fun index(words :: (String ||  List.of(String)),
     let norm_words = (if words is_a String | [words] | words)
     let norm_content = (if content is_a String | [content] | content)
     unless List.length(content) == List.length(words)
-    | error(#'index, "words and content mismatch")
+    | error(~who: #'index,
+            ~exn: Exn.Fail.Annot,
+            "word count and content count do no match",
+            error.val(~label: "word list", words),
+            error.val(~label: "content list", content))
     base.#{index*}(convert_list(words), convert_list(content), pre_content)
 
 fun as_index(pre_content :: PreContent) :: Element:

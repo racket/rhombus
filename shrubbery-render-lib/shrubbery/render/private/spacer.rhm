@@ -97,7 +97,8 @@ meta:
   fun adjust_group(g :: Group, context, esc :: Name) :~ Syntax:
      match adjust_sequence(g, context, esc)
      | '$(new_g :: Group)': new_g.relocate_group(g)
-     | '': error("group turned into empty sequence: " +& to_string(g, ~mode: #'expr))
+     | '': error("group turned into empty sequence",
+                 error.val(~label: "group", g))
 
   fun adjust_sequence(seq :: TermSequence, context :: Context, esc :: Name) :~ Syntax:
     fun loop(head, tail):
@@ -131,12 +132,15 @@ meta:
             try:
               proc(!implicit && set_space(id, relevant_context), tail, context, esc)
               ~catch x :: Exn.Fail:
-                error("error from " +& to_string(id, ~mode: #'expr) +& " spacer\n"
-                        +& "  message: " +& Exn.message(x))
+                error("error from spacer",
+                      error.val(~label: "spacer form", id),
+                      error.text(~label: "message", Exn.message(x)))
           match res
           | '$_ ...': res
           | ~else:
-              error(#false, "spacer " +& proc +& " returned wrong value " +& to_string(res, ~mode: #'expr))
+              error("spacer returned wrong value",
+                    error.val(~label: "spacer function", proc),
+                    error.val(~label: "result", res))
         | fail()
     | ~else:
         fail()

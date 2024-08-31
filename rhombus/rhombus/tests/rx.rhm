@@ -419,8 +419,8 @@ block:
   check ((rx'($d: any) $rx1'.match("dabc")) :~ RXMatch)[#'c] ~is "c"
   check ((rx'($d: any) $rx1'.match("dabc")) :~ RXMatch)[#'d] ~is "d"
   check M rx'$rxor $rxor' "ab" ~is ["ab"]
-  check rx'($x: $rx1) $x' ~throws "cannot splice RX that has capture groups"
-  check rx'$rxc' ~throws "cannot splice RX backreferences"
+  check rx'($x: $rx1) $x' ~throws "cannot splice regexp that has capture groups"
+  check rx'$rxc' ~throws "cannot splice regexp with backreferences"
 
 expr.macro 'check_throws $t ... $(msg :: String)':
   'check:

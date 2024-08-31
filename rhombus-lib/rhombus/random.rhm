@@ -30,7 +30,11 @@ class Random(private _handle):
           math.random(n)
   | random(start :: Int, end :: Int) :~ Number:
       unless start < end
-      | error(#'random, "start index is not less than end index")
+      | error(~who: #'random,
+              ~exn: Exn.Fail.Annot,
+              "start index is not less than end index",
+              error.val(~label: "start index", start),
+              error.val(~label: "end index", end))
       random(end - start) + start
 
   property

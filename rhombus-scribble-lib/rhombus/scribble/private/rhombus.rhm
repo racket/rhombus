@@ -9,10 +9,13 @@ export:
   rhombusblock
   rhombusblock_etc  
 
+fun escape(who, v):
+  elem(v)
+
 define.macros (rhombus,
                rhombusblock,
                rhombusblock_etc):
   ~render_line: #{typeset-rhombus}
   ~render_block: #{typeset-rhombusblock}
-  ~escape: elem
+  ~escape: escape
   ~result: Any

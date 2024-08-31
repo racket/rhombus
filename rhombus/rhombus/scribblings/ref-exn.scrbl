@@ -101,22 +101,6 @@
 
 }
 
-@doc(
-  fun error(message :: ReadableString)
-    :: None
-  fun error(
-    who :: maybe(ReadableString || Symbol || Identifier || Operator),
-    message :: ReadableString
-  ) :: None
-){
-
- Throws the @rhombus(Exn.Fail, ~class) exception with @rhombus(message) as the
- message and @rhombus(Continuation.Marks.current()) as the continuation
- marks. If @rhombus(who) is not @rhombus(#false), it is added to the
- beginning of the message, and a @litchar{: } separator is added in
- between.
-
-}
 
 @doc(
   class Exn(message :: ReadableString, marks :: Continuation.Marks)
@@ -178,5 +162,18 @@
 ){
 
  Primitive exceptions.
+
+}
+
+
+@doc(
+  fun Exn.Fail.Annot(message :: ReadableString,
+                     marks :: Continuation.Marks)
+    :: Exn.Fail.Contract
+){
+
+ A constructor alias for @rhombus(Exn.Fail.Contract, ~annot), since
+ annotation-satisfaction failures exceptions do not have additional
+ information beyond @rhombus(Exn.Fail.Contract, ~annot).
 
 }
