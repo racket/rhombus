@@ -26,7 +26,7 @@
       (out "expected" expected pretty-write)
       (out "parsed" parsed pretty-write)
       (error "parse failed"))
-    (define printed (shrubbery-syntax->string parsed-stx))
+    (define printed (shrubbery-syntax->string parsed-stx #:keep-prefix? #t #:keep-suffix? #t))
     (when check-print?
       (unless (equal? input printed)
         (out "expected" input display)
@@ -115,7 +115,7 @@
     (cond
       [(identifier? parsed-stx)
        (case (and head? (syntax-e parsed-stx))
-         [(group block alts quotes parens brackets braces op top)
+         [(group block alts quotes parens brackets braces op multi)
           (unless (syntax-property parsed-stx 'identifier-as-keyword)
             (error "not tagged as keyword-like identifier" parsed-stx))]
          [else
@@ -179,7 +179,7 @@
                            "  \t| 1.1\n"
                            "  \t| 1.2\n"
                            "| 2")
-       '(top
+       '(multi
          (group x (block (group apple banana) (group coconut)))
          (group y (block (group 1 (parens (group 2) (group 3)))))
          (group z (block (group A)

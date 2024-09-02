@@ -96,7 +96,7 @@
           #:indent (rhombus-expression indent-expr)
           (list
            (list t-form
-                 (adjust-top-srcloc (quote-syntax (top e-form))))
+                 (adjust-top-srcloc (quote-syntax (multi e-form))))
            ...)))]))
 
 (define (make-rhombus-eval [lang 'rhombus]
@@ -114,7 +114,7 @@
                                  '())
                                 '()))])
       (make-base-eval #:lang lang
-                      '(top))))
+                      '(multi))))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
   (call-in-sandbox-context eval (lambda () (error-print-source-location #f)))
   eval)
@@ -168,7 +168,7 @@
                                                             (list "example" expr)
                                                             (let ([loc (let ([l (syntax->list expr)])
                                                                          (and (pair? l)
-                                                                              (eq? 'top (syntax-e (car l)))
+                                                                              (eq? 'multi (syntax-e (car l)))
                                                                               (pair? (cdr l))
                                                                               (null? (cddr l))
                                                                               (syntax-srcloc (respan (cadr l)))))])
@@ -185,14 +185,14 @@
                               (define exprs (syntax->list (cadr (syntax->list expr))))
                               (define vals
                                 (call-with-values
-                                 (lambda () (eval (strip-context #`(top #,(car exprs)))))
+                                 (lambda () (eval (strip-context #`(multi #,(car exprs)))))
                                  list))
                               (define expects
                                 (call-with-discarded-output
                                  eval
                                  (lambda ()
                                    (call-with-values
-                                    (lambda () (eval (strip-context #`(top #,(cadr exprs)))))
+                                    (lambda () (eval (strip-context #`(multi #,(cadr exprs)))))
                                     list))))
                               (unless (equal-always? vals expects)
                                 (error "check failed"))

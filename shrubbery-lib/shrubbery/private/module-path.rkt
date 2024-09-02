@@ -6,8 +6,8 @@
 (provide parse-module-path-as-shrubbery)
 
 (define (parse-module-path-as-shrubbery t)
-  (syntax-case t (top)
-    [(top g)
+  (syntax-case t (multi)
+    [(multi g)
      (let ([g #'g])
        (or (syntax-case g (group parens)
              [(group s)

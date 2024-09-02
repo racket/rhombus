@@ -88,8 +88,8 @@
          insert-multi-front-group
          check-valid-group)
 
-(define multi-blank (syntax-property (syntax-raw-property (datum->syntax #f 'multi) "") 'from-pack #t #t))
-(define group-blank (syntax-property (syntax-raw-property (datum->syntax #f 'group) "") 'from-pack #t #t))
+(define multi-blank (syntax-raw-property (datum->syntax #f 'multi) null))
+(define group-blank (syntax-raw-property (datum->syntax #f 'group) null))
 
 (define (group-syntax? r)
   (and (syntax? r)

@@ -25,7 +25,7 @@ meta:
         Syntax.relocate_span('#false', [head, esc])
 
   fun group_context(g):
-    Syntax.relocate('#false', g)
+    Syntax.relocate_group('#false', g)
 
   fun literal_term(stxs):
     'Syntax.literal($stxs)'
@@ -64,8 +64,8 @@ meta:
   fun escape_group(g):
     let new_g = escape_tail(g)
     if is_literal_group(new_g)
-    | literal_group(Syntax.relocate(extract_literal(new_g), group_context(g)))
-    | 'Syntax.relocate($new_g, Syntax.literal($(group_context(g))))'
+    | literal_group(Syntax.relocate_group(extract_literal(new_g), group_context(g)))
+    | 'Syntax.relocate_group($new_g, Syntax.literal_group($(group_context(g))))'
 
   fun escape_tail(stxs):
     match stxs
@@ -105,7 +105,7 @@ meta:
     | ~else: literal_term(stxs)
   
 fun sequence_cons_syntax(a, d, context):
-  let a_r: Syntax.relocate(Syntax.make(a), context);
+  let a_r: Syntax.relocate(Syntax.make(a), context)
   match d
   | '$e ...': '$a_r $e ...'
 

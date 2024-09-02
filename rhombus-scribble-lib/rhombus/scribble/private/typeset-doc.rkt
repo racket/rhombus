@@ -638,7 +638,7 @@
           [wrap?
            (define id (if (identifier? name) name (cadr (syntax->list name))))
            #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
-              (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
+              (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
                (group (parsed #:rhombus/expr
                               (let ([redef? #,as-redef?]
                                     [meta? #,meta?])

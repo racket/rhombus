@@ -18,8 +18,11 @@ block:
     Syntax.is_original(stx) ~method
     Syntax.strip_scopes(stx) ~method
     Syntax.replace_scopes(stx, like_stx) ~method
+    // relocate and related are tested in "relocate.rhm"
     Syntax.relocate(stx, to) ~method
+    Syntax.relocate_group(stx, to) ~method
     Syntax.relocate_span(stx, like_stxes) ~method
+    Syntax.relocate_group_span(stx, like_stxes) ~method
     Syntax.property(stx, key, [val], [is_preserved]) ~method
     Syntax.group_property(stx, key, [val], [is_preserved]) ~method
     Syntax.to_source_string(stx) ~method
@@ -90,8 +93,7 @@ block:
 block:
   import:
     lib("shrubbery/parse.rkt")
-    lib("racket/base.rkt")
-  def orig_x = Syntax.unwrap(parse.#{parse-all}(base.#{open-input-string}("x")))[1]
+  def orig_x = parse.#{parse-all}(Port.Input.open_string("x"))
   check:
     Syntax.is_original(orig_x) ~is #true
     orig_x.is_original() ~is #true
@@ -184,8 +186,8 @@ check:
   use_static
   Syntax.unwrap_group('x y z')[1].unwrap()
   'x y z'.unwrap_group()[1].unwrap()
-  Syntax.srcloc('x').line
-  'x'.srcloc().line
+  (Syntax.srcloc('x') :~ Srcloc).line
+  ('x'.srcloc() :~ Srcloc).line
   ~completes
 
 block:

@@ -51,8 +51,8 @@
         #:with lang::module-path #'(group mp ...)
         #`((module name #,(module-path-convert-parsed #'lang.parsed)
              (#,(datum->syntax #'lang.parsed '#%module-begin)
-              (top body
-                   ...))))]
+              (multi body
+                     ...))))]
        [(_ (~optional (~and order (~or* #:late #:early))
                       #:defaults ([order #'#:early]))
            name:identifier
@@ -67,8 +67,8 @@
                               #'order))
         #`((module name #,(module-path-convert-parsed #'lang.parsed)
              (#,(datum->syntax #'lang.parsed '#%module-begin)
-              (top body
-                   ...))))]))))
+              (multi body
+                     ...))))]))))
 
 (define-for-syntax (check-splicing stx)
   (when (eq? 'top-level (syntax-local-context))
@@ -161,7 +161,7 @@
                     (list
                      '#%module-begin
                      (cons
-                      'top
+                      'multi
                       (map syntax-local-introduce (reverse (mod-rev-body (unbox stxs-box))))))))
                   stx))])
          ;; Add 'origin and copy properties for every original declaration

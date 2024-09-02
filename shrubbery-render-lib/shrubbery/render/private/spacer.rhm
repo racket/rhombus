@@ -38,14 +38,13 @@ meta:
     | '$(_ :: Term)':
         Syntax.property(stx, #'#{typeset-space-name}, context, #true)
     | '$(t :: Term) ...':
-        '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate(stx)
+        '$(Syntax.property(t, #'#{typeset-space-name}, context, #true)) ...'.relocate_group(stx)
 
   fun set_group_space(stx, context) :~ Syntax:
     match stx
     | '$(_ :: Term)':
-        // `set_space` won't relocate group
-        match set_space(stx, context)
-        | '$(g :: Group)': g.relocate(stx)
+        // `set_space` won't relocate the group layer around a single term
+        set_space(stx, context).relocate_group(stx)
     | ~else:
         set_space(stx, context)
 
@@ -97,7 +96,7 @@ meta:
 
   fun adjust_group(g :: Group, context, esc :: Name) :~ Syntax:
      match adjust_sequence(g, context, esc)
-     | '$(new_g :: Group)': new_g.relocate(g)
+     | '$(new_g :: Group)': new_g.relocate_group(g)
      | '': error("group turned into empty sequence: " +& to_string(g, ~mode: #'expr))
 
   fun adjust_sequence(seq :: TermSequence, context :: Context, esc :: Name) :~ Syntax:

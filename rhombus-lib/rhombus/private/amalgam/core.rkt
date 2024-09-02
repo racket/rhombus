@@ -177,9 +177,13 @@
 (define-for-syntax (do-rhombus-module-begin stx configure-runtime-body)
   (check-unbound-identifier-early!)
   (syntax-parse stx
-    [(_ (top . content))
-     (unless (eq? 'top (syntax-e #'top))
-       (raise-syntax-error #f "ill-formed body" stx))
+    [(_ body)
+     #:with content (syntax-parse #'body
+                      #:datum-literals (multi group)
+                      [(multi . content) #'content]
+                      [(group . _) (list #'body)]
+                      [else
+                       (raise-syntax-error #f "ill-formed body" stx)])
      #`(#%module-begin
         (#%declare #:realm rhombus
                    #:require=define)
@@ -195,11 +199,13 @@
 ;; splices content of any block as its own top-level group:
 (define-syntax (#%top-interaction stx)
   (syntax-parse stx
-    #:datum-literals (group block)
-    [(form-id . (top form ... (group (block inner-form ...)) . content))
-     #'(form-id . (top form ... inner-form ... . content))]
-    [(_ . (top . content))
-     #'(rhombus-top . content)]))
+    #:datum-literals (group block multi)
+    [(form-id . (multi form ... (group (block inner-form ...)) . content))
+     #'(form-id . (multi form ... inner-form ... . content))]
+    [(_ . (multi . content))
+     #'(rhombus-top . content)]
+    [(form-id . (~and g (group . _)))
+     #'(form_id . (multi g))]))
 
 (define-for-syntax (contigure-runtime-module-mode g)
   (define (rhombus-mod? mod-id)

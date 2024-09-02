@@ -27,7 +27,7 @@ running the module prints the S-expression form of the parsed shrubbery
  1+2
 }
 
-prints @racketresult['(top (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
+prints @racketresult['(multi (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
 
 @racketmod[#:file "demo.rkt"
  racket/base
@@ -39,8 +39,8 @@ prints @racketresult['(top (group 1 (op +) 2))]. But if @filepath{demo.rkt} cont
 
  (define-syntax (module-begin stx)
    (syntax-parse stx
-     #:datum-literals (top group op)
-     [(_ (top (group n1:number (op o) n2:number)))
+     #:datum-literals (multi group op)
+     [(_ (multi (group n1:number (op o) n2:number)))
       #'(#%module-begin (o 'n1 'n2))]))
  ]
 
@@ -89,14 +89,16 @@ resulting shrubbery is not empty, it is parsed in the same way that
  @racket[group], @racket[block], @racket[parens], or @racket[op]
  has the @racket['identifier-as-keyword] syntax property as @racket[#t].
 
- The default @racket['top] mode read @racket[in] until an end-of-file,
+ The default @racket['top] mode reads @racket[in] until an end-of-file,
  and it expects a sequence of groups that are indented consistently
- throughout (i.e., all starting at the same column). The @racket['text]
- mode is similar, but it starts in ``text'' mode, as if the entire input
- is inside curly braces of an @litchar["@"] form (see
- @secref["at-notation"]).
+ throughout (i.e., all starting at the same column). The result in
+ @racket['top] mode is always a @racket[multi] representation. The
+ @racket['text] mode is similar, but it starts in ``text'' mode, as if
+ the entire input is inside curly braces of an @litchar["@"] form (see
+ @secref["at-notation"]). The result of @racket['text] mode is always a
+ @racket[brackets] representation.
 
- The @racket['interactive] and @racket['line] modes are similar. They
+ The @racket['interactive] and @racket['line] modes are similar to @racket['top]. They
  are suitable for a read-eval-print loop or reading the continuation of a
  @racket[@#,hash-lang[] @#,racketmodname[shrubbery]] line, respectively.
  In both modes, reading stops when a newline is encountered, unless an
@@ -172,15 +174,15 @@ preorder traversal of the tree.
  property, which records original text after a term and before the next term. Such text
  is eligible for either the @racket['raw-suffix] property of one term or
  the @racket['raw-prefix] property of a following term;
- @racket['raw-suffix] will be preferred, but @racket['raw-prefix] must be
+ @racket['raw-suffix] is used when possible by @racket[parse-all], but @racket['raw-prefix] must be
  used for text (such as whitespace and comments) before a leading term in
  a group---although associated to the group, instead of the leading term.
- Similarly, text after the last term in a group will be associated using
- @racket['raw-prefix] on the group, instead of the last term in the
+ Similarly, text after the last term in a group will be associated by @racket[parse-all] using
+ @racket['raw-suffix] on the group, instead of the last term in the
  group.
 
  For example, the input @litchar{ 1 +  2 // done} will be parsed into the
- S-expression representation @racket['(top (group 1 (op +) 2))]. The
+ S-expression representation @racket['(multi (group 1 (op +) 2))]. The
  syntax object for @racket[group] will have a @racket['raw-prefix] value
  equivalent to @racket[" "] and a @racket['raw-suffix] value equivalent to
  @racket[" // done"], but possibily within a tree structure instead of a
@@ -194,31 +196,43 @@ preorder traversal of the tree.
 @deftogether[(
 @defproc*[([(syntax-raw-tail-property [stx syntax?]) any/c]
            [(syntax-raw-tail-property [stx syntax?] [val any/c]) syntax?])]
-@defproc*[([(syntax-raw-tail-suffix-property [stx syntax?]) any/c]
-           [(syntax-raw-tail-suffix-property [stx syntax?] [val any/c]) syntax?])]
 )]{
 
- Adjusts or inspects the @racket['raw-tail] and @racket['raw-tail-suffix]
- preserved properties, which are
+ Adjusts or inspects the @racket['raw-tail] preserved property, which is
  attached to an identifier like @racket[parens] that represents groups
  within an opener--closer pair. The @racket['raw-tail] property holds
  text for the closer, which belongs after the last contained group in the
- @racket[parens] identifier's sequence. The @racket['raw-tail-suffix]
- property is analogous to @racket['raw-suffix], but goes after the closer
- that is recorded as @racket['raw-tail].
+ @racket[parens] identifier's sequence and before
+ @racket['raw-suffix] (if present).
 
  For example, the input @litchar{(1 + 2) * 4 //done} will be parsed into
  the S-expression representation
- @racket['(top (group (parens (group 1 (op +) 2)) (op *) 4))]. The syntax
+ @racket['(multi (group (parens (group 1 (op +) 2)) (op *) 4))]. The syntax
  object for the outer @racket[group] will have a @racket['raw-suffix]
  value equivalent to @racket[" // done"]. The syntax object for
  @racket[parens] will have a @racket['raw] value equivalent to
  @racket["("], a @racket['raw-tail] value equivalent to @racket[")"], and
- a @racket['raw-tail-suffix] value equivalent to @racket[" "]. The inner
+ a @racket['raw-suffix] value equivalent to @racket[" "]. The inner
  @racket[group] syntax object will have no properties or ones with values
  that are equivalent to empty strings.
 
 }
+
+@deftogether[(
+@defproc*[([(syntax-raw-opaque-content-property [stx syntax?]) any/c]
+           [(syntax-raw-opaque-content-property [stx syntax?] [val any/c]) syntax?])]
+)]{
+
+ Adjusts or inspects the @racket['raw-opaque-content] preserved
+ property, which can be used on the identifier of a compound form like
+ @racket[group] or @racket[parens] to supercede raw information on the
+ form's content. Any @racket['raw-prefix], @racket['raw],
+ @racket['raw-tail], or @racket['raw-suffix] value on the compound form's
+ identifier still applies; only the content of the rest of the
+ representation's list is ignored.
+
+}
+
 
 @deftogether[(
 @defproc*[([(syntax-opaque-raw-property [stx syntax?]) any/c]
@@ -228,7 +242,9 @@ preorder traversal of the tree.
  Adjusts or inspects the @racket['opaque-raw] non-preserved property,
  which is like @racket['raw], but intended to be used in place of
  whatever raw-form information is reported for nested syntax object
- within @racket[stx].
+ within @racket[stx]. Unlike @racket['raw] and similar properties, this
+ one is associated with the S-expression list for a @racket[group],
+ @racket[parens], etc., form, and not with the leading tag identifier.
 
  The @racket['opaque-raw] property is useful in macro expansion to
  record a macro's input to its output---not only in source location, but
@@ -316,6 +332,7 @@ preorder traversal of the tree.
 @defproc[(shrubbery-syntax->string [s syntax?]
                                    [#:use-raw? use-raw? any/c #f]
                                    [#:max-length max-length (or/c #f exact-positive-integer?) #f]
+                                   [#:keep-prefix? keep-prefix? any/c #f]
                                    [#:keep-suffix? keep-suffix? any/c #f]
                                    [#:infer-starting-indentation? infer-starting-indentation? any/c #t]
                                    [#:register-stx-range register-stx-range
@@ -342,9 +359,9 @@ preorder traversal of the tree.
  string can take shortcuts once the first @racket[max-length] characters
  have been determined.
 
- When @racket[keep-suffix?] is true and raw-text mode is used to
- generate the result string, then @racket['raw-prefix],
- @racket['raw-suffix], and @racket['raw-tail-suffix] text on the
+ When @racket[keep-suffix?] are @racket[keep-suffix?] are true and raw-text mode is used to
+ generate the result string, then @racket['raw-prefix] and
+ @racket['raw-suffix] text on the
  immediate syntax object are included in the result. Otherwise, prefixes
  and suffixes are rendered only when they appear between @racket['raw]
  text.
@@ -363,5 +380,29 @@ preorder traversal of the tree.
  returns a true value, then printing assumes that the syntax object has
  alerady been rendered to the given output port (which is ultimately
  delivered to a string), and it is not printed in the default way.
+
+}
+
+
+@defproc[(shrubbery-syntax->raw [s syntax?]
+                                [#:use-raw? use-raw? any/c #f]
+                                [#:keep-prefix? keep-prefix? any/c #f]
+                                [#:keep-suffix? keep-suffix? any/c #f])
+         (values any? any? any?)]{
+
+ Similar to @racket[shrubbery-syntax->string] but delivers raw-text
+ encodings with the prefix, main, and suffix raw text as separate result
+ values. If @racket[keep-prefix?] or @racket[keep-suffix?] is
+ @racket[#f], the corresponding result is empty.
+            
+}
+
+
+@defproc[(combine-shrubbery-raw [a any/c] [b any/c]) any/c]{
+
+ Combines @racket[a] and @racket[b] with @racket[cons] if they are both
+ non-empty, returns the empty list if both are empty, and otherwise
+ returns the argument that is non-empty. In addition to normal raw-text
+ encodings, a @racket[#f] argument counts as empty.
 
 }

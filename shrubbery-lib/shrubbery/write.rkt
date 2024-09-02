@@ -81,7 +81,7 @@
                (display " »" op)
                #f)
              (void)])]
-         [(eq? 'top (car v))
+         [(eq? 'multi (car v))
           (cond
             [(symbol? op)
              (define last-i (- (length v) 2))

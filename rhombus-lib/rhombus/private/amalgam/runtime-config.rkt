@@ -3,6 +3,7 @@
                      syntax/parse/pre)
          racket/interaction-info
          shrubbery/print
+         shrubbery/property
          racket/lazy-require
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)

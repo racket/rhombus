@@ -376,7 +376,7 @@ INPUT
 
 (define input1 (apply string-append input1s))
 (define expected1
-  '(top
+  '(multi
     (group
      let
      (parens (group x (op =) 1) (group y (op =) 2))
@@ -1188,7 +1188,7 @@ INPUT
   )
 
 (define expected1a
-  '(top
+  '(multi
     (group
      define
      fib
@@ -1455,7 +1455,7 @@ INPUT
   )
 
 (define expected1b
-  '(top
+  '(multi
     (group a (block (group option)) (alts (block (group case 1)) (block (group case 2))))
     (group b (block (group option)) (alts (block (group case 1))))
     (group c (alts (block (group case 1)) (block (group case 2))))
@@ -1652,7 +1652,7 @@ INPUT
   )
 
 (define expected2
-  '(top
+  '(multi
     (group somthing else (block (group 8)))
     (group this is a very long linear group that spans multiple lines)
     (group
@@ -1905,7 +1905,7 @@ INPUT
   )
 
 (define expected3
-  '(top
+  '(multi
     (group (parens (group a) (group b)))
     (group (parens (group a) (group b)) (parens (group 0)))
     (group (brackets (group 7)))
@@ -2037,7 +2037,7 @@ INPUT
   )
 
 (define expected3b
-  '(top
+  '(multi
     (group x (block (group #(let f)) (group #:subst)))
     (group x (parens (group y) (group z)))))
 
@@ -2163,7 +2163,7 @@ INPUT
 )
 
 (define expected4
-  '(top
+  '(multi
     (group here (block (group sub)))
     (group block (block (group here)))
     (group block (block (group here)))
@@ -2238,7 +2238,7 @@ INPUT
 )
 
 (define expected5
-  '(top
+  '(multi
     (group 1)
     (group 1.0)
     (group 1.0)
@@ -2289,7 +2289,7 @@ INPUT
 )
 
 (define expected6
-  '(top
+  '(multi
     (group 1)
     (group 2)
     (group begin (block (group 1 (op +) 2)))
@@ -2317,7 +2317,7 @@ INPUT
   )
 
 (define expected7
-  '(top
+  '(multi
     (group (quotes (group apple)))
     (group (quotes (group apple (op +) banana)))
     (group (quotes (group apple) (group banana)))
@@ -2333,6 +2333,6 @@ INPUT
   "1 // comment\r\n2")
 
 (define expected8
-  '(top
+  '(multi
     (group 1)
     (group 2)))

@@ -4,7 +4,7 @@
          (rename-in "private/column.rkt"
                     [column+ lex:column+])
          "srcloc.rkt"
-         (submod "print.rkt" for-parse)
+         "print.rkt"
          "private/property.rkt"
          "private/at-space.rkt")
 
@@ -138,7 +138,7 @@
   (syntax-property (syntax-raw-property stx '()) 'identifier-as-keyword #t))
 
 (define group-tag (syntax-raw-identifier-property (datum->syntax #f 'group)))
-(define top-tag (syntax-raw-identifier-property (datum->syntax #f 'top)))
+(define top-tag (syntax-raw-identifier-property (datum->syntax #f 'multi)))
 (define parens-tag (syntax-raw-identifier-property (datum->syntax #f 'parens)))
 (define brackets-tag (syntax-raw-identifier-property (datum->syntax #f 'brackets)))
 (define alts-tag (syntax-raw-identifier-property (datum->syntax #f 'alts)))
@@ -455,7 +455,7 @@
                                                      [tail-commenting block-tail-commenting]
                                                      [raw (if commenting
                                                               (append block-tail-raw
-                                                                      (cons (syntax-to-raw (datum->syntax #f g))
+                                                                      (cons (syntax-to-raw (datum->syntax #f #`(group . #,g)))
                                                                             pre-raw))
                                                               block-tail-raw)])))
                  (values (if commenting
@@ -512,7 +512,7 @@
                                                   [tail-commenting group-tail-commenting]
                                                   [raw (if commenting
                                                            (append group-tail-raw
-                                                                   (cons (syntax-to-raw (datum->syntax #f g))
+                                                                   (cons (syntax-to-raw (datum->syntax #f #`(group . #,g)))
                                                                          pre-raw))
                                                            group-tail-raw)]
                                                   [sequence-mode (if (and (not commenting)
@@ -1041,7 +1041,7 @@
     (cond
       [(not (at-mode-initial? am))
        (cons (move-pre-raw rator
-                           (add-raw-to-prefix #f (syntax-to-raw rator) parens))
+                           (add-raw-to-prefix #f (list (syntax-to-raw rator)) parens))
              g)]
       [(pair? (at-mode-rev-prefix am))
        (append (reverse (cons rator (at-mode-rev-prefix am))) (cons parens g))]
@@ -1071,7 +1071,7 @@
                            (cddr g))]
                  ;; can these other cases happen?
                  [(not (at-mode-initial? am))
-                  (add-raw-to-prefix* #f (syntax-to-raw (car g))
+                  (add-raw-to-prefix* #f (list (syntax-to-raw (car g)))
                                       (cdr g))]
                  [(pair? (at-mode-rev-prefix am))
                   (append (at-mode-rev-prefix am) g)]
@@ -1114,7 +1114,7 @@
                                                         (cdr args)))))
                                               (cdr g)))
                           (move-pre-raw bracket
-                                        (add-raw-to-prefix* #f (syntax-to-raw bracket)
+                                        (add-raw-to-prefix* #f (list (syntax-raw-property bracket))
                                                             new-g))]))
                      (keep-stop-mode am)
                      (if (null? l) null (cdr l)) line delta)]))))]
@@ -1182,7 +1182,7 @@
                                   #:raw null)))
        (loop rest-l
              (cons (if comment?
-                       (list 'comment (cons (token-raw t) (syntax-to-raw g)))
+                       (list 'comment (cons (token-raw t) (syntax-to-raw #`(group . #,g))))
                        (cons group-tag g))
                    content))]
       [(comment)
@@ -1208,11 +1208,11 @@
         [else (loop (cdr gs))])))
   (values
    (move-pre-raw* at
-                  (add-raw-to-prefix* #f (syntax-to-raw at)
+                  (add-raw-to-prefix* #f (list (syntax-raw-property at))
                                       (append (cdadr gs)
                                               (if (null? rest)
                                                   rest
-                                                  (move-post-raw-to-prefix at rest)))))
+                                                  (move-post-raw-to-prefix* at rest)))))
    (if (null? rest)
        (append tail-raw (list (or (syntax-raw-tail-property at) '())))
        tail-raw)))
@@ -1589,7 +1589,7 @@
   (if (null? raw)
       top
       (datum->syntax* top
-                      (cons (syntax-raw-tail-property (car (syntax-e top)) (raw-tokens->raw raw))
+                      (cons (syntax-raw-suffix-property (car (syntax-e top)) (raw-tokens->raw raw))
                             (cdr (syntax-e top)))
                       top
                       top)))
@@ -1619,7 +1619,7 @@
 (define (move-post-raw-to-prefix from-stx to)
   (define post-raw (and (syntax? from-stx)
                         (raw-cons (or (syntax-raw-tail-property from-stx) null)
-                                  (or (syntax-raw-tail-suffix-property from-stx) null))))
+                                  (or (syntax-raw-suffix-property from-stx) null))))
   (cond
     [(and post-raw (not (null? post-raw)))
      (define a (datum->syntax* #f (car to)))
@@ -1627,6 +1627,12 @@
                                                    (or (syntax-raw-prefix-property a) '())))
            (cdr to))]
     [else to]))
+
+(define (move-post-raw-to-prefix* from-stx to)
+  (cond
+    [(syntax? (car to)) (move-post-raw-to-prefix from-stx to)]
+    [else (cons (move-post-raw-to-prefix* from-stx (car to))
+                (cdr to))]))
 
 (define (raw-tokens->raw pre-raw)
   (for/list ([raw-t (in-list (reverse pre-raw))])
@@ -1642,7 +1648,7 @@
                         stx)]
                [stx (if (null? tail-suffix-raw)
                         stx
-                        (syntax-raw-tail-suffix-property stx (raw-tokens->raw tail-suffix-raw)))])
+                        (syntax-raw-suffix-property stx (raw-tokens->raw tail-suffix-raw)))])
           stx)
         (cdr l)))
 
@@ -1659,10 +1665,7 @@
         (cdr l)))
 
 (define (raw-cons a b)
-  (cond
-    [(null? a) b]
-    [(null? b) a]
-    [else (cons a b)]))
+  (combine-shrubbery-raw a b))
 
 (define (syntax-property-copy dest src prop)
   (define v (prop src))
@@ -1689,6 +1692,137 @@
    src
    props))
 
+;; raw-prefix and raw-suffix information to move it to an
+;; enclosing group and to prefer suffix associations over
+;; prefix associations
+(define (normalize-group-raw s)
+  (define (at-property elem update)
+    (define e (syntax-e elem))
+    (cond
+      [(not (pair? e)) (if update
+                           (update elem #f)
+                           (values elem #f))]
+      [else
+       (case (syntax-e (car e))
+         [(group parens brackets braces quotes block alts)
+          (if update
+              (datum->syntax #f (cons (update (car e) #t)
+                                      (cdr e)))
+              (values (car e) #t))]
+         [(op)
+          (if update
+              (datum->syntax #f (list (car e)
+                                      (update (cadr e) #f)))
+              (values(cadr e) #f))]
+         [else
+          (if update
+              (update elem #f)
+              (values elem #f))])]))
+  (define elem-raw-suffix
+    (case-lambda
+      [(elem)
+       (define-values (s openclose?) (at-property elem #f))
+       (syntax-raw-suffix-property s)]
+      [(elem v)
+       (at-property elem
+                    (lambda (s openclose?)
+                      (syntax-raw-suffix-property s v)))]))
+  (define elem-raw-prefix
+    (case-lambda
+      [(elem)
+       (define-values (s openclose?) (at-property elem #f))
+       (syntax-raw-prefix-property s)]
+      [(elem v)
+       (at-property elem
+                    (lambda (s openclose?)
+                      (syntax-raw-prefix-property s v)))]))
+  (define (shift-prefix-to-suffix elems-in
+                                  #:extract-suffix? [extract-suffix? #f]
+                                  #:add-suffix [add-suffix #f])
+    ;; move element prefixes to preceding element suffixes,
+    ;; and extract trailing suffix
+    (define elems (for/list ([elem (in-list elems-in)])
+                    (normalize-group-raw elem)))
+    (cond
+      [(null? elems) (values null add-suffix)]
+      [else
+       (let loop ([elems elems])
+         (define elem (car elems))
+         (cond
+           [(null? (cdr elems))
+            (cond
+              [(not extract-suffix?)
+               (values (if add-suffix
+                           (list (elem-raw-suffix elem (raw-cons
+                                                        (elem-raw-suffix elem)
+                                                        add-suffix)))
+                           elems)
+                       #f)]
+              [(elem-raw-suffix elem)
+               => (lambda (suffix)
+                    (values (list (elem-raw-suffix elem #f))
+                            suffix))]
+              [else (values elems #f)])]
+           [(elem-raw-prefix (cadr elems))
+            => (lambda (prefix)
+                 (let ([elem (elem-raw-suffix elem
+                                              (raw-cons
+                                               (or (elem-raw-suffix elem) null)
+                                               prefix))])
+                   (define-values (new-elems suffix)
+                     (loop (cons (elem-raw-prefix (cadr elems) #f)
+                                 (cddr elems))))
+                   (values (cons elem new-elems)
+                           suffix)))]
+           [else
+            (define-values (new-elems suffix) (loop (cdr elems)))
+            (values (cons elem new-elems)
+                    suffix)]))]))
+  (cond
+    [(not (pair? (syntax-e s))) s]
+    [else
+     (define head (car (syntax-e s)))
+     (case (syntax-e head)
+       [(multi)
+        (define-values (gs suffix) (shift-prefix-to-suffix (cdr (syntax->list s))
+                                                           #:add-suffix (syntax-raw-suffix-property head)))
+        (datum->syntax #f (cons (syntax-raw-suffix-property head suffix)
+                                gs))]
+       [(group)
+        (define-values (elems suffix) (shift-prefix-to-suffix (cdr (syntax->list s))
+                                                              #:extract-suffix? #t))
+        (let* ([head (if suffix
+                         (syntax-raw-suffix-property head
+                                                     (raw-cons
+                                                      suffix
+                                                      (or (syntax-raw-suffix-property head) null)))
+                         head)]
+               ;; move initial element prefix to group prefix
+               [pre (and (pair? elems) (elem-raw-prefix (car elems)))]
+               [head (if pre
+                         (syntax-raw-prefix-property head
+                                                     (raw-cons
+                                                      (or (syntax-raw-prefix-property head) null)
+                                                      pre))
+                         head)]
+               [elems (if pre
+                          (cons (elem-raw-prefix (car elems) #f)
+                                (cdr elems))
+                          elems)])
+          (datum->syntax #f (cons head elems)))]
+       [(parens brackets braces quotes block alts)
+        ;; normalize inside, but cannot move leading prefix or trailing suffix
+        ;; to overall prefix or (tail) suffix --- except in the case of `block` or `alts`,
+        ;; but we choose to leave the suffix inside in those cases, too
+        (define-values (gs no-suffix) (shift-prefix-to-suffix (cdr (syntax->list s))))
+        (datum->syntax #f (cons head gs))]
+       [else s])]))
+
+(define (syntax-to-raw s)
+  (define-values (pfx raw sfx)
+    (shrubbery-syntax->raw s #:keep-suffix? #t))
+  (raw-cons raw sfx))
+
 ;; ----------------------------------------
 
 (define (parse-all in
@@ -1703,7 +1837,9 @@
   (define v (if (eq? mode 'text)
                 (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
                 (parse-top-groups l #:interactive? (memq mode '(interactive line)))))
-  v)
+  (if (syntax? v)
+      (normalize-group-raw v)
+      v))
 
 (module+ main
   (require racket/cmdline
@@ -1723,7 +1859,9 @@
         [(or show-raw? show-property?)
          (for ([s (in-list (syntax->list e))])
            (when show-raw?
-             (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s)))
+             (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s
+                                                              #:keep-prefix? #t
+                                                              #:keep-suffix? #t)))
            (when show-property?
              (show-properties s))
            (pretty-write (syntax->datum s)))]
@@ -1731,20 +1869,23 @@
          (pretty-write
           (syntax->datum e))])))
 
-  (define (show-properties s)
+  (define (show-properties s #:head? [head? #t] #:skip-suffix? [skip-suffix? #f])
     (cond
       [(pair? s)
        (define a (car s))
-       (show-properties a)
-       (show-properties (cdr s))
+       (show-properties a #:skip-suffix? head?)
+       (show-properties (cdr s) #:head? #f)
        (define tail (syntax-raw-tail-property a))
        (when tail
-         (printf " ~s... ~s\n" a tail))]
+         (printf " ~s... ~s\n" (syntax->datum a) tail))
+       (define tail-suffix (and head? (syntax-raw-suffix-property a)))
+       (when tail-suffix
+         (printf " ~s.... ~s\n" (syntax->datum a) tail-suffix))]
       [(null? s) (void)]
       [else
        (define prefix (syntax-raw-prefix-property s))
        (define raw (syntax-raw-property s))
-       (define suffix (syntax-raw-suffix-property s))
+       (define suffix (and (not skip-suffix?) (syntax-raw-suffix-property s)))
        (printf "~.s: ~a~s~a\n"
                (syntax->datum s)
                (if prefix

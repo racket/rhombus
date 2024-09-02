@@ -79,7 +79,7 @@
          (if parens?
              (syntax-raw-suffix-property p (cons
                                             (or (syntax-raw-suffix-property p) '())
-                                            (syntax-raw-tail-suffix-property ptag)))
+                                            (syntax-raw-suffix-property ptag)))
              p))
        (define (add-rest p) (and p (hash 'target p 'remains (cdr fields) 'space space-name 'raw raw)))
        (cond

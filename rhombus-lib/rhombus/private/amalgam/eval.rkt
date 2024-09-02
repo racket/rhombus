@@ -48,7 +48,7 @@
   (unless (syntax? e)
     (raise-argument-error* who rhombus-realm "Syntax" e))
   (if as_interaction
-      (eval `(#%top-interaction . ,#`(top #,@(unpack-multi e 'eval #f))))
+      (eval `(#%top-interaction . ,#`(multi #,@(unpack-multi e 'eval #f))))
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
 
 (define-static-info-syntaxes (current-namespace)

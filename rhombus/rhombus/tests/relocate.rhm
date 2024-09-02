@@ -1,0 +1,155 @@
+#lang rhombus/static
+
+def empty_raw = PairList[]
+
+block:
+  let x = 'x'
+  let plus = '+'
+  let '$_ $x_c $b' = '1 x /* x */ 2'
+  let '$_ $plus_c $b' = '1 + /* op */ 2'
+  check:
+    x_c.to_source_string(~keep_prefix: #true) ~is "x"
+    x_c.to_source_string(~keep_suffix: #true) ~is "x /* x */ "
+    plus_c.to_source_string(~keep_prefix: #true) ~is "+"
+    plus_c.to_source_string(~keep_suffix: #true) ~is "+ /* op */ "
+  fun check_reloc_term(t :: Term, ~is_container = #false):
+    // assumes `t` is not compound with content
+    check:
+      t.relocate(x).srcloc() ~is x.srcloc()
+      t.relocate(x).to_source_string() ~is "x"
+      t.relocate(x).source_properties() ~is values(empty_raw, "x", empty_raw, empty_raw)
+      t.relocate(x_c).to_source_string() ~is "x"
+      t.relocate(x_c).to_source_string(~keep_suffix: #true) ~is "x /* x */ "
+      t.relocate(plus).srcloc() ~is plus.srcloc()
+      t.relocate(plus).to_source_string() ~is "+"
+      t.relocate(plus).source_properties() ~is values(empty_raw, "+", empty_raw, empty_raw)
+      t.relocate(plus_c).to_source_string() ~is "+"
+      t.relocate(plus_c).to_source_string(~keep_suffix: #true) ~is "+ /* op */ "
+      t.relocate(plus_c).source_properties() ~is values(empty_raw,
+                                                        "+",
+                                                        empty_raw,
+                                                        // shape of this value is not really specified,
+                                                        // but the concatenation should stay the same
+                                                        PairList[" ", "/* op */", " "])
+      t.source_properties("!", "Z", #false, "?").to_source_string() ~is "Z"
+      t.source_properties("!", "Z", "/", "?").to_source_string() ~is "Z/"
+      t.source_properties("!", "Z", #false, "?").to_source_string(~keep_prefix: #true) ~is "!Z"
+      t.source_properties("!", "Z", #false, "?").to_source_string(~keep_suffix: #true) ~is "Z?"
+      t.source_properties("!", "Z", #false, "?").to_source_string(~keep_prefix: #true,
+                                                                  ~keep_suffix: #true) ~is "!Z?"
+      x.relocate(#false).to_source_string() ~is ""
+  check_reloc_term('z')
+  check_reloc_term('+')
+  check_reloc_term('()', ~is_container: #true)
+  check_reloc_term('{}', ~is_container: #true)
+
+  check '(1, 2, 3)'.relocate('{}').to_source_string() ~is "{1, 2, 3}"
+  check '(1, 2, 3)'.relocate('{5, 6}').to_source_string() ~is "{1, 2, 3}"
+  check '(weird convert, 3)'.relocate(': 5').to_source_string() ~is ":weird convert, 3"
+
+  check '| 1 | 2'.relocate('| 3').to_source_string() ~is "| 1 | 2"
+  check '| weird | convert'.relocate('()').to_source_string() ~is "(| weird | convert)"
+
+block:
+  let x = 'x y z'
+  let '$(x_c :: Group)' = '/* x */ y z /* done */'
+  let '($stars, $_)' = '( /* */ (1 2) /**/, _)'
+  check:
+    x.to_source_string() ~is "x y z"
+    x_c.to_source_string() ~is "y z"
+    x_c.to_source_string(~keep_prefix: #true) ~is "/* x */ y z"
+    x_c.to_source_string(~keep_suffix: #true) ~is "y z /* done */"
+    '($x_c)'.to_source_string() ~is "(/* x */ y z /* done */)"
+    x.relocate(#false) ~throws "maybe(Term)"    
+    x.relocate_group(#false).to_source_string() ~is ""
+    stars.to_source_string() ~is "(1 2)"
+    stars.to_source_string(~keep_prefix: #true,
+                           ~keep_suffix: #true) ~is " /* */ (1 2) /**/, "
+    '[a, $stars, z]'.to_source_string() ~is "[a,  /* */ (1 2) /**/, z]"
+    '[$stars, z]'.to_source_string() ~is "[ /* */ (1 2) /**/, z]"
+    '[a, $stars]'.to_source_string() ~is "[a,  /* */ (1 2) /**/, ]"
+    x.relocate_group(stars).to_source_string() ~is "x y z"
+    x.relocate_group(stars).to_source_string(~keep_prefix: #true,
+                                             ~keep_suffix: #true) ~is " /* */ x y z /**/, "
+    x.source_properties() ~throws "Term"
+    x.group_source_properties() ~is values(empty_raw, PairList[], empty_raw, empty_raw)
+    stars.group_source_properties() ~is values(PairList[" ", "/* */", " "], // shape not really specified
+                                               PairList[],
+                                               empty_raw,
+                                               PairList[PairList[" ", "/**/"], ",", " "])
+    x.relocate_group(stars).group_source_properties() ~is stars.group_source_properties()
+    x.group_source_properties("<<", "G", #false, ">>").to_source_string() ~is "G"
+    x.group_source_properties("<<", "G", "...", ">>").to_source_string() ~is "G..."
+    x.group_source_properties("<<", "G", #false, ">>").to_source_string(~keep_prefix: #true) ~is "<<G"
+    x.group_source_properties("<<", "G", "...", ">>").to_source_string(~keep_prefix: #true) ~is "<<G..."
+    x.group_source_properties("<<", "G", #false, ">>").to_source_string(~keep_suffix: #true) ~is "G>>"
+    x.group_source_properties("<<", "G", "...", ">>").to_source_string(~keep_suffix: #true) ~is "G...>>"
+
+block:
+  let one = '1'
+  let two = '2'
+  let x = 'x'.relocate_span([one, two])
+  check:
+    x.to_source_string() ~is "12"
+    (x.srcloc() :~ Srcloc).line ~is Srcloc.line(one.srcloc())
+    (x.srcloc() :~ Srcloc).column ~is Srcloc.column(one.srcloc())
+    (x.srcloc() :~ Srcloc).span ~is (Srcloc.position(two.srcloc())
+                                       - Srcloc.position(one.srcloc())
+                                       + Srcloc.span(two.srcloc()))
+
+block:
+  let '($one, $two)' = '(1 +  0, (2) * 1)'
+  let x = 'x'.relocate_span([one, two])
+  check:
+    x.to_source_string() ~is "1 +  0, (2) * 1"
+    (x.srcloc() :~ Srcloc).line ~is Srcloc.line(one.srcloc())
+    (x.srcloc() :~ Srcloc).column ~is Srcloc.column(one.srcloc())
+    (x.srcloc() :~ Srcloc).span ~is (Srcloc.position(two.srcloc())
+                                       - Srcloc.position(one.srcloc())
+                                       + Srcloc.span(two.srcloc()))
+    '[$one  ,  $two]'.to_source_string() ~is "[1 +  0, (2) * 1]"
+
+block:
+  let [a, b] = Syntax.relocate_split(['a', 'b'], 'hello')
+  check a.to_source_string() ~is ""
+  check b.to_source_string() ~is "hello"
+
+block:
+  let '($g)' = '( /* pre */ hel lo /* post */)'
+  check g.group_source_properties() ~is values(PairList[" ", "/* pre */", " "],
+                                               PairList[],
+                                               empty_raw,
+                                               PairList[" ", "/* post */"])
+  check 'x'.relocate_span([g]).to_source_string() ~is "hel lo"
+  check g.to_source_string() ~is "hel lo"
+  check g.to_source_string(~keep_prefix: #true, ~keep_suffix: #true) ~is " /* pre */ hel lo /* post */"
+  let [a, b] = Syntax.relocate_split(['a', 'b'], g)
+  check a.to_source_string() ~is ""
+  check a.to_source_string(~keep_prefix: #true) ~is " /* pre */ "
+  check b.to_source_string() ~is "hel lo"
+  check b.to_source_string(~keep_suffix: #true) ~is "hel lo /* post */"
+
+block:
+  let alts = '| a
+                /* comment */'
+  let '| $(blk :: Block)' = alts
+  let ': $(g :: Group)' = blk
+  let '$(t :: Term)' = g
+  check:
+    alts.source_properties() ~is values(empty_raw,
+                                        PairList[],
+                                        empty_raw,
+                                        empty_raw)
+    blk.source_properties() ~is values(empty_raw,
+                                       "|",
+                                       // FIXME: should be in the suffix:
+                                       PairList["\n", "                ", "/* comment */"],
+                                       empty_raw)
+    g.group_source_properties() ~is values(PairList[" "],
+                                           PairList[],
+                                           empty_raw,
+                                           empty_raw)
+    t.source_properties() ~is values(empty_raw,
+                                     "a",
+                                     empty_raw,
+                                     empty_raw)

@@ -35,9 +35,8 @@
   (raise-arguments-error who "delayed annoation is not yet completed"))
 
 (define-for-syntax (static-info-too-early who)
-  (raise-syntax-error #f
-                      "annotation static information needed before completed"
-                      'name))
+  (raise-syntax-error who
+                      "annotation static information needed before completed"))
 
 (define-defn-syntax delayed_declare
   (definition-transformer

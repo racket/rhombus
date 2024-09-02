@@ -391,8 +391,9 @@
      (define qs
        (cond
          [(and (pair? s) (eq? 'multi (car s)))
-          (cons (if (display?) 'top 'quotes)
-                (cdr s))]
+          (if (display?)
+              s
+              (cons 'quotes (cdr s)))]
          [(and (pair? s) (eq? 'group (car s)))
           (if (display?)
               s

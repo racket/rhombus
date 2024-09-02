@@ -68,7 +68,7 @@ module for_doc:
 // functions or explicitly.  This may seem excessive, but it's less
 // easier to mess up than `.relocate` on function-call site.  In
 // particular, remember that `spacer.adjust_sequence` doesn't
-// `.relocate`, so be cautious when groups are adjusted.
+// `.relocate_group`, so be cautious when groups are adjusted.
 
 meta:
   def body_spaces = [#'#{rhombus/defn}, #false]
@@ -148,12 +148,12 @@ meta:
     match arg
     | '$(kw :: Keyword) $(rhs :: Rhs)':
         let new_rhs = adjust_rhs(rhs, esc)
-        '$kw $new_rhs'.relocate(arg)
+        '$kw $new_rhs'.relocate_group(arg)
     | '$(kw :: Keyword): $(b :: Block)':
         match b
         | ': $(bind :: Group)':
             let new_b = ': $(adjust_bind(bind))'.relocate(b)
-            '$kw $new_b'.relocate(arg)
+            '$kw $new_b'.relocate_group(arg)
         | ~else: arg
     | '$(_ :: Keyword)': arg
     | ~else: adjust_bind(arg)
@@ -179,7 +179,7 @@ meta:
             match bind
             | ': $(_ :: Group)':
                 let new_bind = spacer.adjust_term(bind, #'~bind, esc)
-                '$kw $new_bind'.relocate(arg)
+                '$kw $new_bind'.relocate_group(arg)
             | ~else: arg
         | '$(_ :: Keyword)': arg
         | ~else: spacer.adjust_group(arg, #'~bind, esc)
@@ -194,7 +194,7 @@ meta:
             when find_name | find_name(name)
             let new_g:
               let new_case = adjust_fun_case(case, adjust_arg)
-              '$name $new_case'.relocate(g)
+              '$name $new_case'.relocate_group(g)
             ': $new_g'.relocate(b)
         | ~else: b
       match cases
@@ -219,7 +219,7 @@ meta:
               '$new_res_ann $new_cases'
           | ~else:
               fun adjust_bind(bind):
-                adjust_def(bind, esc).relocate(bind)
+                adjust_def(bind, esc).relocate_group(bind)
               fun adjust_arg(arg):
                 adjust_kw_opt_arg(arg, esc, adjust_bind)
               adjust_fun_case(tail, adjust_arg)
@@ -255,9 +255,9 @@ spacer.bridge doc(self, tail, context, esc):
         let new_clause = spacer.adjust_sequence(clause, #'~defn, esc)
         match new_clause
         | '$id $tail':
-            '$(spacer.set(id, #'~doc)) $tail'.relocate(clause)
+            '$(spacer.set(id, #'~doc)) $tail'.relocate_group(clause)
         | ~else:
-            new_clause.relocate(clause)
+            new_clause.relocate_group(clause)
       let new_args:
         '($(adjust_clause(clause)), ...)'.relocate(args)
       '$self $new_args $rest_tail'
@@ -311,7 +311,7 @@ meta:
             let seq = '$new_lbind $name $new_rbind'
             if head
             | let '($(g :: Group))' = head
-              '($(seq.relocate(g)))'.relocate(head)
+              '($(seq.relocate_group(g)))'.relocate(head)
             | seq
           let new_res_ann = if res_ann | adjust_res_ann(res_ann, esc) | ''
           let new_body = if body | adjust_body(body) | ''
@@ -320,7 +320,7 @@ meta:
     fun adjust_op_cases(cases):
       fun adjust_block(b):
         let ': $(case :: Group)' = b
-        let new_case = adjust_op_case(case).relocate(case)
+        let new_case = adjust_op_case(case).relocate_group(case)
         ': $new_case'.relocate(b)
       match cases
       | '| $(b :: Block) | ...' && '| $(_ :: Group) | ...':
@@ -389,7 +389,7 @@ module for_doc:
       | '$(a && '| $(b1 :: Block) | $(b2 :: Block)')':
           fun adjust_block(b):
             let ': $(lhs :: Group)' = b
-            let new_g = adjust_lhs_method(lhs, esc).relocate(lhs)
+            let new_g = adjust_lhs_method(lhs, esc).relocate_group(lhs)
             ': $new_g'.relocate(b)
           let new_b1 = adjust_block(b1)
           let new_b2 = adjust_block(b2)
@@ -431,7 +431,7 @@ spacer.bridge class(self, tail, context, esc):
         let new_priv = if priv | spacer.set(priv, #'~class_clause) | ''
         let new_mut = if mut | spacer.set(mut, #'~bind) | ''
         let new_fld = adjust_field(fld, esc)
-        '$new_priv $new_mut $new_fld'.relocate(spec)
+        '$new_priv $new_mut $new_fld'.relocate_group(spec)
     | ~else: spec
   fun adjust_arg(arg):
     match arg
@@ -439,11 +439,11 @@ spacer.bridge class(self, tail, context, esc):
         match b
         | ': $(spec :: Group)':
             let new_b = ': $(adjust_spec(spec))'.relocate(b)
-            '$kw $new_b'.relocate(arg)
+            '$kw $new_b'.relocate_group(arg)
         | ~else: arg
     | '$(kw :: Keyword) $(rhs :: Rhs)':
         let new_rhs = adjust_rhs(rhs, esc)
-        '$kw $new_rhs'.relocate(arg)
+        '$kw $new_rhs'.relocate_group(arg)
     | ~else: adjust_spec(arg)
   match tail
   | '$(name :: Name(esc)) $(args :: Args)
@@ -483,7 +483,7 @@ spacer.bridge veneer(self, tail, context, esc):
         let new_decl:
           let new_this = spacer.set(this, #'~expr)
           let new_ann = adjust_ann(ann, esc)
-          '$new_this $new_ann'.relocate(decl)
+          '$new_this $new_ann'.relocate_group(decl)
         '($new_decl)'.relocate(args)
     | ~else: args
   match tail
@@ -532,10 +532,10 @@ meta:
         match a
         | '| $(fld :: Group) | $(assign :: Group)':
             let new_b1:
-              let new_fld = adjust_field(fld, esc).relocate(fld)
+              let new_fld = adjust_field(fld, esc).relocate_group(fld)
               ': $new_fld'.relocate(b1)
             let new_b2:
-              let new_assign = adjust_assign(assign).relocate(assign)
+              let new_assign = adjust_assign(assign).relocate_group(assign)
               ': $new_assign'.relocate(b2)
             Syntax.make([#'alts, new_b1, new_b2]).relocate(a)
         | ~else: property
@@ -543,7 +543,7 @@ meta:
         match b
         | ': $(fld :: Group)':
             let new_b:
-              let new_fld = adjust_field(fld, esc).relocate(fld)
+              let new_fld = adjust_field(fld, esc).relocate_group(fld)
               ': $new_fld'.relocate(b)
             Syntax.make([#'alts, new_b]).relocate(a)
         | ~else: property
@@ -670,7 +670,7 @@ spacer.bridge match(self, tail, context, esc):
               let new_case:
                 let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
                 let new_body = spacer.adjust_term(body, body_spaces, esc)
-                '$new_bind $new_body'.relocate(case)
+                '$new_bind $new_body'.relocate_group(case)
               ': $new_case'.relocate(b)
           | ~else: b
         Syntax.make([#'alts, adjust_block(b), ...]).relocate(a)
@@ -727,8 +727,8 @@ spacer.bridge for(self, tail, context, esc):
         let new_gn = spacer.adjust_group(gn, body_spaces, esc)
         let new_into:
           let new_reduce = spacer.adjust_sequence(reduce, #'~reducer, esc)
-          '$kw $new_reduce'.relocate(into)
-        ': $new_g; ...; $new_gn; $new_into'.relocate(b)
+          '$kw $new_reduce'.relocate_group(into)
+        ': $new_g; ...; $new_gn; $new_into'.relocate_group(b)
       '$self $new_b'
   | '$reduce ... $(b && ': $g; ...; $gn')':
       let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
@@ -790,7 +790,7 @@ spacer.bridge converting(self, tail, context, esc):
           let new_p = spacer.adjust_term(p, #'~bind, esc)
           let new_ann = if ann | adjust_ann(ann, esc) | ''
           let new_b = spacer.adjust_term(b, body_spaces, esc)
-          '$new_tag $new_p $new_ann $new_b'.relocate(g)
+          '$new_tag $new_p $new_ann $new_b'.relocate_group(g)
         '($new_g)'.relocate(arg)
     | ~else: t
   '$self $(adjust_one(tail, context, esc, adjust))'
@@ -809,7 +809,7 @@ meta:
           let new_g:
             let new_pat = spacer.adjust_term(pat, #'~bind, esc)
             let new_body = if body | spacer.adjust_term(body, pattern_spaces, esc) | ''
-            '$new_pat $new_body'.relocate(g)
+            '$new_pat $new_body'.relocate_group(g)
           ': $new_g'.relocate(b)
       | ~else: b
     match pats
@@ -845,7 +845,7 @@ spacer.bridge syntax_class(self, tail, context, esc):
        | '$id ... $(rhs :: Rhs)'
        | '$id ...: $(rhs :: Block)'):
         let new_rhs = adjust_rhs(rhs, esc)
-        '$id ... $new_rhs'.relocate(bind)
+        '$id ... $new_rhs'.relocate_group(bind)
     | ~else: bind
   fun adjust_name(name):
     match name
@@ -889,7 +889,7 @@ meta:
           Syntax.make_group([new_inner]).relocate(g1)
         let new_g2:
           let new_dots = spacer.set(dots, #'~bind)
-          Syntax.make_group([new_dots]).relocate(g2)
+          Syntax.make_group([new_dots]).relocate_group(g2)
         '[$new_g1, $new_g2]'.relocate(outer)
     | ~else: repet
 
@@ -901,7 +901,7 @@ spacer.bridge fields(self, tail, context, esc):
     | '$(tag && 'kind') $tail':
         let new_g:
           let new_tag = spacer.set(tag, #'~syntax_class_clause)
-          '$new_tag $tail'.relocate(g)
+          '$new_tag $tail'.relocate_group(g)
         ': $new_g'.relocate(kind)
     | ~else: kind
   fun adjust_specs(specs) :~ Syntax:
@@ -919,7 +919,7 @@ spacer.bridge fields(self, tail, context, esc):
   | '$(b && ': $g; ...')':
       let new_b:
         fun adjust_group(g):
-          adjust_specs(g).relocate(g)
+          adjust_specs(g).relocate_group(g)
         ': $(adjust_group(g)); ...'.relocate(b)
       '$self $new_b'
   | ~else: '$self $(adjust_specs(tail))'
@@ -939,7 +939,7 @@ meta:
            | '$()': field rhs = #false)':
         let new_spec = adjust_name_repet(spec, esc)
         let new_rhs = if rhs | adjust_rhs(rhs, esc) | ''
-        '$new_spec $new_rhs'.relocate(fld)
+        '$new_spec $new_rhs'.relocate_group(fld)
     | ~else: fld
 
 spacer.bridge match_def(self, tail, context, esc):
@@ -994,7 +994,7 @@ meta:
                   match name
                   | '$(tag && 'syntax_class')': spacer.set(tag, #'~defn)
                   | ~else: #false
-                adjust_syntax_class(inner, esc, adjust_name).relocate(inner)
+                adjust_syntax_class(inner, esc, adjust_name).relocate_group(inner)
               '($new_inner)'.relocate(ref)
           | ~else: spacer.set(ref, #'~stxclass)
         let new_args:
@@ -1028,9 +1028,9 @@ spacer.bridge enum(self, tail, context, esc):
             for List (clause: [clause, ...]):
               match clause
               | '$(tag && '~is_a'): $(b :: Block)':
-                 '$tag $(spacer.adjust_term(b, #'~annot, esc))'.relocate(clause)
+                 '$tag $(spacer.adjust_term(b, #'~annot, esc))'.relocate_group(clause)
               | '$(tag && '~is_a') $seq':
-                 '$tag $(spacer.adjust_sequence(seq, #'~annot, esc))'.relocate(clause)
+                 '$tag $(spacer.adjust_sequence(seq, #'~annot, esc))'.relocate_group(clause)
               | ~else:
                   spacer.set_group(clause, #'~datum)
       let new_body = ': $new_clause; ...'.relocate(body)

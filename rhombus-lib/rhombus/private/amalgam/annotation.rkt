@@ -120,6 +120,8 @@
       [(~or* _::annotation-predicate-form _::annotation-binding-form) form]
       [_ (raise-bad-macro-result (proc-name proc) "annotation" form)]))
 
+  (define (shrubbery-tail->string tail) (shrubbery-syntax->string #`(group . #,tail)))
+
   (define-rhombus-enforest
     #:enforest enforest-annotation
     #:syntax-class :annotation
@@ -148,7 +150,7 @@
                               (syntax-e #'ca.converter))
                      (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
              #:with converter #'ca.converter
-             #:with annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
+             #:with annotation-str (datum->syntax #f (shrubbery-tail->string #'(ctc ...)))
              #:with static-infos #'ca.static-infos))
 
   (define-syntax-class (:annotation-converted check?)
@@ -308,7 +310,7 @@
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
            (annotation-binding-form
             (binding-form #'annotation-of-infoer
-                          #`[#,(shrubbery-syntax->string new-stx)
+                          #`[#,(shrubbery-tail->string new-stx)
                              #,predicate-stx #,binding-maker-id #,binding-maker-data
                              ([c.binding c.body] ...) #,static-infos result
                              #,kws])
@@ -328,7 +330,7 @@
                                          binding-maker-id binding-maker-data)
     (define-values (new-stx gs c-parseds tail)
       (parse-annotation-of/one stx sub-n kws))
-    (define annot-strs (map shrubbery-syntax->string gs))
+    (define annot-strs (map shrubbery-tail->string gs))
     (values
      (syntax-parse c-parseds
        [(c::annotation-predicate-form ...)
@@ -336,7 +338,7 @@
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
         (annotation-binding-form
          (binding-form #'annotation-of-infoer/chaperone
-                       #`[#,(shrubbery-syntax->string new-stx)
+                       #`[#,(shrubbery-tail->string new-stx)
                           (lambda (val-in)
                             (and (#,predicate-stx val-in)
                                  (#,(predicate-maker c-predicates annot-strs) val-in)))
@@ -354,7 +356,7 @@
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
         (annotation-binding-form
          (binding-form #'annotation-of-infoer
-                       #`[#,(shrubbery-syntax->string new-stx)
+                       #`[#,(shrubbery-tail->string new-stx)
                           #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
                           ([c.binding c.body] ...) #,static-infos result
                           #,kws])
@@ -443,7 +445,7 @@
          (build-annotated-expression #'op.name #'t
                                      checked? form #'t.parsed
                                      (lambda (tmp-id)
-                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-syntax->string
+                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-tail->string
                                                                                             (remove-tail #'t #'t.tail))))
                                      wrap-static-info*)
          #'t.tail)]))
@@ -502,7 +504,7 @@
            [c-parsed::annotation-predicate-form
             (binding-form
              #'annotation-predicate-infoer
-             #`(#,(shrubbery-syntax->string (remove-tail #'t #'t.tail))
+             #`(#,(shrubbery-tail->string (remove-tail #'t #'t.tail))
                 #,(and checked? #'c-parsed.predicate)
                 c-parsed.static-infos
                 left.infoer-id
@@ -512,7 +514,7 @@
                     (raise-unchecked-disallowed #'op.name #'t))]
             (binding-form
              #'annotation-binding-infoer
-             #`(#,(shrubbery-syntax->string (remove-tail #'t #'t.tail))
+             #`(#,(shrubbery-tail->string (remove-tail #'t #'t.tail))
                 c-parsed.binding
                 c-parsed.body
                 c-parsed.static-infos
