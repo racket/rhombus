@@ -24,6 +24,27 @@
        (raise-syntax-error #f "`who` is unknown" stx))
      #`(quote #,sym)]))
 
+(define-syntax (with-who stx)
+  (syntax-parse stx
+    [(_ who . body)
+     (define-values (wrapped-expr opaque-expr)
+       (syntax-local-expand-expression
+        #'(syntax-parameterize ([who-sym 'who])
+            . body)))
+     ;; HACK remove vacuous `let-values` wrappers from the
+     ;; fully-expanded expression
+     ;; We could've used `splicing-syntax-parameterize`, but using
+     ;; this instead accommodate for versions before
+     ;; racket/racket#4832, as well as avoid a dependency on
+     ;; `racket/splicing`.  Moreover, `splicing-syntax-parameterize`
+     ;; intercepts expansion in a way that doesn't cooperate well with
+     ;; how `define` optimizes functions with keyword arguments.
+     (let loop ([expr wrapped-expr])
+       (syntax-parse expr
+         #:literals (let-values)
+         [(let-values () expr) (loop #'expr)]
+         [_ expr]))]))
+
 (define-syntax (define/arity stx)
   (expand-define/arity stx build-define/arity))
 
@@ -57,21 +78,20 @@
 (define-for-syntax (build-define/arity id name primitive-ids static-infos rhs [arity-mask #f])
   (define name/id (or name id))
   (define rhs/who
-    (with-syntax ([name-sym (syntax-e name/id)])
-      (syntax-parse rhs
-        #:literals (lambda case-lambda)
-        [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
+    (syntax-parse rhs
+      #:literals (lambda case-lambda)
+      [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
+                ... . rst)
+         . body)
+       #`(lambda ((~@ (~? kw) (~? [id (with-who #,name/id expr)] id))
                   ... . rst)
-           . body)
-         #'(lambda ((~@ (~? kw) (~? [id (syntax-parameterize ([who-sym 'name-sym]) expr)] id))
-                    ... . rst)
-             (syntax-parameterize ([who-sym 'name-sym])
-               . body))]
-        [(case-lambda [args . body] ...)
-         #'(case-lambda
-             [args (syntax-parameterize ([who-sym 'name-sym])
-                     . body)]
-             ...)])))
+           (with-who #,name/id . body))]
+      [(case-lambda
+         [args . body]
+         ...)
+       #`(case-lambda
+           [args (with-who #,name/id . body)]
+           ...)]))
   (append
    (for/list ([primitive-id (in-list primitive-ids)])
      #`(void (set-primitive-who! '#,primitive-id '#,name/id)))
