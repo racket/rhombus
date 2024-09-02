@@ -218,8 +218,8 @@
   (string-length s))
 
 (define/method (String.to_string s)
-  #:primitive (string->immutable-string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (check-readable-string who s)
   (string->immutable-string s))
 
 (define/method (String.to_int s)
@@ -266,7 +266,7 @@
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
     [() ""]
-    [(s) (string->immutable-string s)]
+    [(s) (string-append-immutable s)]
     [(s1 s2) (string-append-immutable s1 s2)]
     [(s1 s2 s3) (string-append-immutable s1 s2 s3)]
     [strs (apply string-append-immutable strs)]))

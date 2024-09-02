@@ -269,3 +269,37 @@ version_guard.at_least "8.13.0.1":
       "expected: ReadableString",
       "given: #\"oops\"",
     )
+
+check:
+  String.snapshot(#"oops") ~throws values(
+    "String.snapshot: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+  String.to_string(#"oops") ~throws values(
+    "String.to_string: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+  (#"oops" :~ ReadableString).snapshot() ~throws values(
+    "String.snapshot: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+  (#"oops" :~ ReadableString).to_string() ~throws values(
+    "String.to_string: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+
+check:
+  String.append(#"oops") ~throws values(
+    "String.append: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+  (#"oops" :~ ReadableString).append() ~throws values(
+    "String.append: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )

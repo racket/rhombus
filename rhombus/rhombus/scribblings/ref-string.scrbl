@@ -62,7 +62,8 @@ Strings are @tech{comparable}, which means that generic operations like
  Racket strings as well as immutable Rhombus strings.
  The @rhombus(ReadableString.to_string, ~annot) @tech{converter annotation}
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
- a mutable Racket string to an immutable Rhombus string.
+ a mutable Racket string to an immutable Rhombus string, like
+ @rhombus(String.snapshot).
 
  Static information associated by @rhombus(String, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.
@@ -287,8 +288,10 @@ Strings are @tech{comparable}, which means that generic operations like
 ){
 
  The same as @rhombus(to_string), but constrained to a
- @rhombus(ReadableString, ~annot) argument. These functions exist for consistency with
- the @rhombus(ReadableString.to_string, ~annot) annotation.
+ @rhombus(ReadableString, ~annot) argument. In other words, they are
+ equivalent to @rhombus(String.snapshot). These functions exist for
+ consistency with the @rhombus(ReadableString.to_string, ~annot)
+ annotation.
 
 }
 
@@ -370,8 +373,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.snapshot(str :: ReadableString)
-    :: String
+  fun String.snapshot(str :: ReadableString) :: String
 ){
 
  Returns an immutable string as-is or copies a mutable string's content to

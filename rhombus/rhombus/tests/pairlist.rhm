@@ -420,3 +420,15 @@ check:
     "expected: NonemptyPairList",
     "given: \"oops\"",
   )
+
+check:
+  PairList.append("oops") ~throws values(
+    "PairList.append: contract violation",
+    "expected: PairList",
+    "given: \"oops\"",
+  )
+  ("oops" :~ PairList).append() ~throws values(
+    "PairList.append: contract violation",
+    "expected: PairList",
+    "given: \"oops\"",
+  )

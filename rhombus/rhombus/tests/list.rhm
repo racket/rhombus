@@ -477,3 +477,15 @@ check:
     "expected: NonemptyList",
     "given: \"oops\"",
   )
+
+check:
+  List.append("oops") ~throws values(
+    "List.append: contract violation",
+    "expected: List",
+    "given: \"oops\"",
+  )
+  ("oops" :~ List).append() ~throws values(
+    "List.append: contract violation",
+    "expected: List",
+    "given: \"oops\"",
+  )

@@ -1151,3 +1151,15 @@ check:
     "expected: MutableSet",
     "given: \"oops\"",
   )
+
+check:
+  Set.append("oops") ~throws values(
+    "Set.append: contract violation",
+    "expected: Set",
+    "given: \"oops\"",
+  )
+  ("oops" :~ Set).append() ~throws values(
+    "Set.append: contract violation",
+    "expected: Set",
+    "given: \"oops\"",
+  )

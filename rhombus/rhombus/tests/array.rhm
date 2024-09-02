@@ -346,3 +346,15 @@ check:
     "expected: MutableArray",
     "given: \"oops\"",
   )
+
+check:
+  Array.append("oops") ~throws values(
+    "Array.append: contract violation",
+    "expected: Array",
+    "given: \"oops\"",
+  )
+  ("oops" :~ Array).append() ~throws values(
+    "Array.append: contract violation",
+    "expected: Array",
+    "given: \"oops\"",
+  )

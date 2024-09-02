@@ -187,3 +187,15 @@ check:
     "expected: MutableBytes",
     "given: \"oops\"",
   )
+
+check:
+  Bytes.append("oops") ~throws values(
+    "Bytes.append: contract violation",
+    "expected: Bytes",
+    "given: \"oops\"",
+  )
+  ("oops" :~ Bytes).append() ~throws values(
+    "Bytes.append: contract violation",
+    "expected: Bytes",
+    "given: \"oops\"",
+  )

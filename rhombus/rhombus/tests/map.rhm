@@ -1080,3 +1080,15 @@ check:
     "expected: MutableMap",
     "given: \"oops\"",
   )
+
+check:
+  Map.append("oops") ~throws values(
+    "Map.append: contract violation",
+    "expected: Map",
+    "given: \"oops\"",
+  )
+  ("oops" :~ Map).append() ~throws values(
+    "Map.append: contract violation",
+    "expected: Map",
+    "given: \"oops\"",
+  )
