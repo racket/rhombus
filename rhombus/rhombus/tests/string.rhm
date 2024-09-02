@@ -6,27 +6,27 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     to_string(v)
-    String.length(str) ~method
-    String.get(str, i) ~method
-    String.contains(str, substr) ~method
-    String.to_string(str) ~method
+    String.length(str) ~method ReadableString
+    String.get(str, i) ~method ReadableString
+    String.contains(str, substr) ~method ReadableString
+    String.to_string(str) ~method ReadableString
     ReadableString.to_string(str) ~method
-    String.to_int(str) ~method
-    String.to_number(str) ~method
-    String.substring(str, start, [end]) ~method
-    String.append(str, ...) ~method
-    String.normalize_nfd(str) ~method
-    String.normalize_nfkd(str) ~method
-    String.normalize_nfc(str) ~method
-    String.normalize_nfkc(str) ~method
-    String.utf8_bytes(str, [err_b], [start], [end]) ~method
-    String.latin1_bytes(str, [err_b], [start], [end]) ~method
-    String.locale_bytes(str, [err_b], [start], [end]) ~method
-    String.grapheme_span(str, [start], [end]) ~method
-    String.grapheme_count(str, [start], [end]) ~method
-    String.to_sequence(str) ~method
-    String.copy(str) ~method
-    String.snapshot(str) ~method
+    String.to_int(str) ~method ReadableString
+    String.to_number(str) ~method ReadableString
+    String.substring(str, start, [end]) ~method ReadableString
+    String.append(str, ...) ~method ReadableString
+    String.normalize_nfd(str) ~method ReadableString
+    String.normalize_nfkd(str) ~method ReadableString
+    String.normalize_nfc(str) ~method ReadableString
+    String.normalize_nfkc(str) ~method ReadableString
+    String.utf8_bytes(str, [err_b], [start], [end]) ~method ReadableString
+    String.latin1_bytes(str, [err_b], [start], [end]) ~method ReadableString
+    String.locale_bytes(str, [err_b], [start], [end]) ~method ReadableString
+    String.grapheme_span(str, [start], [end]) ~method ReadableString
+    String.grapheme_count(str, [start], [end]) ~method ReadableString
+    String.to_sequence(str) ~method ReadableString
+    String.copy(str) ~method ReadableString
+    String.snapshot(str) ~method ReadableString
 
 check:
   "hello" :: String ~is "hello"

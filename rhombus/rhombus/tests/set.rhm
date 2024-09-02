@@ -7,19 +7,19 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Set(k, ...)
-    Set.length(st) ~method
-    Set.get(st, val) ~method
-    Set.has_element(st, val) ~method
-    Set.copy(st) ~method
-    Set.snapshot(st) ~method
+    Set.length(st) ~method ReadableSet
+    Set.get(st, val) ~method ReadableSet
+    Set.has_element(st, val) ~method ReadableSet
+    Set.copy(st) ~method ReadableSet
+    Set.snapshot(st) ~method ReadableSet
     Set.append(st0, st, ...) ~method
     Set.union(st0, st, ...) ~method
     Set.intersect(st0, st, ...) ~method
     Set.remove(st, v) ~method
     MutableSet.set(st, v, in) ~method
     MutableSet.delete(st, v) ~method
-    Set.to_list(st, [try_sort]) ~method
-    Set.to_sequence(st) ~method
+    Set.to_list(st, [try_sort]) ~method ReadableSet
+    Set.to_sequence(st) ~method ReadableSet
     Set.by(==)(p, ...)
     Set.by(===)(p, ...)
     Set.by(is_now)(p, ...)

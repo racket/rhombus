@@ -7,18 +7,18 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Map(p, ...)
-    Map.length(mp) ~method
-    Map.keys(mp, [try_sort]) ~method
-    Map.values(mp) ~method
-    Map.get(mp, k, [default])
-    Map.has_key(mp, k) ~method
-    Map.copy(mp) ~method
-    Map.snapshot(mp) ~method
+    Map.length(mp) ~method ReadableMap
+    Map.keys(mp, [try_sort]) ~method ReadableMap
+    Map.values(mp) ~method ReadableMap
+    Map.get(mp, k, [default])  ~method ReadableMap
+    Map.has_key(mp, k) ~method ReadableMap
+    Map.copy(mp) ~method ReadableMap
+    Map.snapshot(mp) ~method ReadableMap
     Map.append(mp0, mp, ...) ~method
     Map.remove(mp, k) ~method
     MutableMap.set(mp, k, val) ~method
     MutableMap.delete(mp, k) ~method
-    Map.to_sequence(mp) ~method
+    Map.to_sequence(mp) ~method ReadableMap
     Map.by(==)(p, ...)
     Map.by(===)(p, ...)
     Map.by(is_now)(p, ...)
