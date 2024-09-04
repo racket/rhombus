@@ -228,3 +228,48 @@ check:
   match 'hi 1'
   | 'hi $('$')': "ok"
   ~throws "expected the operator `$`"
+
+// ckeck group-sequence splicing
+block:
+  // tail
+  check:
+    match 'a 1 b 2 c 3 d 4'
+    | '$('$a $something_a $b $something_b') ...':
+        'block:
+           $('let $a = $something_a
+              let $b = $something_b')
+           ...'
+    ~matches 'block:
+                let a = 1
+                let b = 2
+                let c = 3
+                let d = 4'
+  // non-tail
+  check:
+    match 'a 1 b 2 c 3 d 4'
+    | '$('$a $something_a $b $something_b') ...':
+        'block:
+           $('let $a = $something_a
+              let $b = $something_b')
+           ...
+           done'
+    ~matches 'block:
+                let a = 1
+                let b = 2
+                let c = 3
+                let d = 4
+                done'
+  // non-tail, empty sequence after
+  check:
+    match 'a 1 b 2 c 3 d 4'
+    | '$('$a $something_a $b $something_b') ...':
+        'block:
+           $('let $a = $something_a
+              let $b = $something_b')
+           ...
+           $('')'
+    ~matches 'block:
+                let a = 1
+                let b = 2
+                let c = 3
+                let d = 4'

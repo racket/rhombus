@@ -482,7 +482,8 @@
 
 ;; similar to `unpack-multi-tail*`, but each leaf is a plain list of groups
 (define (unpack-multi-list-tail* qs r depth)
-  (unpack-group* qs r (add1 depth)))
+  (unpack* qs r depth (lambda (r name qs)
+                        (apply append (unpack-group-list* qs r 1)))))
 
 ;; normalize for multi-term pattern matching:
 (define (repack-as-multi r)
