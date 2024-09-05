@@ -56,7 +56,6 @@ Metadata for a syntax object can include a source location and the raw
   stx.unwrap_sequence()
   stx.unwrap_all()
   stx.srcloc()
-  stx.maybe_srcloc()
   stx.is_original()
   stx.strip_scopes()
   stx.replace_scopes(like_stx)
@@ -94,7 +93,7 @@ Metadata for a syntax object can include a source location and the raw
 )
 
  A @rhombus($) as a @rhombus(term,~var) unquotes (i.e., escapes) the expression
- afteward; the value of that expression replaces the @rhombus($) term and expression. The value
+ afterward; the value of that expression replaces the @rhombus($) term and expression. The value
  is normally a syntax object, but except for lists, other kinds of values are coerced
  to a syntax object. Nested @quotes forms are allowed around
  @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
@@ -107,7 +106,7 @@ Metadata for a syntax object can include a source location and the raw
 
  The result of the expression after @rhombus($) can be a list, in which
  case and the elements of the list are spliced as terms in place of the
- @rhombus($) term and expression witin the enclosing group. If the result
+ @rhombus($) term and expression within the enclosing group. If the result
  is a syntax object, it can be a single-term syntax object or a group
  syntax object; in the latter case, the group terms are spliced in place
  of the escape.
@@ -163,7 +162,7 @@ Metadata for a syntax object can include a source location and the raw
 ){
 
  Matches a syntax object consistent with @rhombus(term, ~var)s.
- Identifiers and operators are matched symbolically (unrelatd to
+ Identifiers and operators are matched symbolically (unrelated to
  binding), and other atomic terms are matched using @rhombus(==) on
  unwrapped syntax objects.
 
@@ -290,7 +289,7 @@ Metadata for a syntax object can include a source location and the raw
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
  unquoted binding pattern. Typically, the unquoted pattern has an
  @rhombus(id) that is not bound as a unquote binding
- oerator; the @rhombus(id) is then bound to the corresponding portion
+ operator; the @rhombus(id) is then bound to the corresponding portion
  of the syntax object that matches the @rhombus('', ~bind) form.
 
 @examples(
@@ -321,7 +320,7 @@ Metadata for a syntax object can include a source location and the raw
 
  Empty parentheses as an escape, @rhombus(#,(@rhombus($, ~bind))()),
  serve as a group pattern that is only useful as a group tail, where it
- matches an empty tail. This escape is primariy intended for use with
+ matches an empty tail. This escape is primarily intended for use with
  macro-definition forms like @rhombus(macro).
 
  An escape that contains a @(quotes)-quoted term matches the term as
@@ -396,7 +395,7 @@ Metadata for a syntax object can include a source location and the raw
 
  Unquote binding operators for use with @rhombus($, ~bind) that combine matches:
  @rhombus(&&, ~unquote_bind) matches whether its left- and right-hand
- bindings would both independetly match,
+ bindings would both independently match,
  @rhombus(||, ~unquote_bind) matches when either its left- and
  right-hand binding (or both) would match, and
  @rhombus(!, ~unquote_bind) matches when its binding would not match.
@@ -405,7 +404,7 @@ Metadata for a syntax object can include a source location and the raw
  while @rhombus(||, ~unquote_bind) and @rhombus(!, ~unquote_bind) bind none of them.
 
  Independent matching for @rhombus(&&, ~unquote_bind) means that in a
- term context, combinding a variable binding with a splicing multi-term
+ term context, combining a variable binding with a splicing multi-term
  binding will @emph{not} enable a multi-term splicing match for the
  variable; instead, the pattern will fail to match a multi-term splice.
 
@@ -485,7 +484,7 @@ Metadata for a syntax object can include a source location and the raw
  as directly bound pattern identifier. For each
  @rhombus(field_id #,(@rhombus(as, ~impo)) pattern_id)
  that is supplied, then @rhombus(pattern_id) is bound directly to
- the to the named field's value. Suppling just an
+ the to the named field's value. Supplying just an
  @rhombus(field_id) binds using the same identifier. Supplying
  @rhombus(open, ~impo) is a shorthand for listing every field to bind
  using its own name, and it cannot appear multiple times or be combined
@@ -593,7 +592,7 @@ Metadata for a syntax object can include a source location and the raw
  versus @litchar{,} to separate groups.
 
  Metadata, such as raw source text, is preserved for the
- @rhombus(term) sequence, but not any metadat that might be on the
+ @rhombus(term) sequence, but not any metadata that might be on the
  group as a whole when the @rhombus(term)s form a single group.
 
 @examples(
@@ -891,7 +890,7 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(to) when it is a @rhombus(Srcloc, ~annot). When @rhombus(to) is
  @rhombus(#false), then metadata is removed from @rhombus(stx).
 
- Syntax-object metedata exists at both term and group layers, and it
+ Syntax-object metadata exists at both term and group layers, and it
  exists separately at each layer for a group that contains a single term.
  The @rhombus(Syntax.relocate) method uses and adjusts term-level
  metadata, while @rhombus(Syntax.relocate_group) method uses and adjusts
@@ -1008,7 +1007,7 @@ Metadata for a syntax object can include a source location and the raw
  information on a syntax object. Source text is broken into four parts: a
  prefix (typically whitespace and comments), content (or content prefix
  for a contain such as a group or parenthesized syntax object), tail
- (i.e., content suffix, such as a closing parenthes), and suffix
+ (i.e., content suffix, such as a closing parentheses, and suffix
  (typically whitespace and comments).
 
  Source is text is represented as a tree built of
