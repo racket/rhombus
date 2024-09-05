@@ -93,6 +93,24 @@
 
 @doc(
   ~meta
+  fun syntax_meta.binding_symbol(
+    stx :: Name,
+    in_space :: SpaceMeta = expr_meta.space,
+    phase :: SyntaxPhase = syntax_meta.expanding_phase()
+  ) :: Symbol
+){
+
+ Returns a symbol that corresponds to the binding of @rhombus(stx) in
+ space @rhombus(in_space) and at phase @rhombus(phase). The result does
+ not uniquely identify a binding, but two names that refer to the same
+ binding will have the same symbol result.
+
+}
+
+
+
+@doc(
+  ~meta
   fun syntax_meta.flip_introduce(stx :: Syntax) :: Syntax
 ){
 

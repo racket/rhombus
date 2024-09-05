@@ -130,7 +130,16 @@
   ;; for expand-time configure or syntax errors in the REPL
   (error-syntax->string-handler
    (lambda (s len)
-     (define str (shrubbery-syntax->string s #:max-length len))
+     (define stx
+       (cond
+         [(and (syntax? s) (syntax-opaque-raw-property s)) s]
+         [else
+          (syntax-case* s (multi group op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
+            [(multi . _) s]
+            [(group . _) s]
+            [(_ ...) #`(group . #,s)]
+            [_ s])]))
+     (define str (shrubbery-syntax->string stx #:max-length len))
      (if (equal? str "")
          "[end of group]"
          str)))

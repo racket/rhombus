@@ -2,8 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
+                     enforest/hier-name-parse
                      shrubbery/property
-                     "tag.rkt")
+                     "tag.rkt"
+                     "name-path-op.rkt")
          "parse.rkt"
          "static-info.rkt"
          "repetition.rkt"
@@ -12,6 +14,8 @@
          "parens.rkt"
          "op-literal.rkt"
          "dotted-sequence-parse.rkt"
+         "name-root-space.rkt"
+         "name-root-ref.rkt"
          "key-comp.rkt")
 
 (provide (for-syntax parse-setmap-content
@@ -243,7 +247,8 @@
 (define-for-syntax (parse-key-comp stx k)
   (syntax-parse stx
     #:datum-literals (group)
-    [(form (~and args (_::parens (group . name::dotted-operator-or-identifier))) . tail)
+    [(form (~and args (_::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
+     #:with (~var name(:hier-name-seq in-name-root-space in-key-comp-space name-path-op name-root-ref)) #'name-seq
      (define mapper (syntax-local-value* (in-key-comp-space #'name.name) key-comp-ref))
      (unless mapper (raise-syntax-error #f "not bound to a map configuration" stx #'name))
      (define str (format "~a(~a)" (syntax-e #'form) (syntax-e #'name.name)))

@@ -26,7 +26,8 @@
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
          "context-stx.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         (submod "key-comp-macro.rkt" for-key-comp))
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -72,10 +73,11 @@
    unwrap_group
    unwrap_sequence
    unwrap_all
-   srcloc
-   is_original
    strip_scopes
    replace_scopes
+   name_to_symbol
+   srcloc
+   is_original
    relocate
    relocate_group
    relocate_span
@@ -405,14 +407,11 @@
          (maybe-list->treelist u))]))
 
 (define/method (Syntax.unwrap_op v)
-  (check-syntax who v)
-  (syntax-parse (unpack-term v who #f)
+  (syntax-parse (and (syntax? v)
+                     (unpack-term v who #f))
     #:datum-literals (op)
     [(op o) (syntax-e #'o)]
-    [_
-     (raise-arguments-error* who rhombus-realm
-                             "syntax object does not have just an operator"
-                             "syntax object" v)]))
+    [_ (raise-argument-error* who rhombus-realm "Operator" v)]))
 
 (define/method (Syntax.unwrap_group v)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
@@ -456,6 +455,27 @@
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (check-syntax who v)
   (replace-context (extract-ctx who ctx #:false-ok? #f) v))
+
+(define/method (Syntax.name_to_symbol v)
+  (syntax-parse (and (syntax? v)
+                     (unpack-group v who #f))
+    #:datum-literals (group op)
+    [(group (op o)) (syntax-e #'o)]
+    [(group x:identifier) (syntax-e #'x)]
+    [(group s::dotted-operator-or-identifier-sequence)
+     (string->symbol
+      (apply
+       string-append
+       (let loop ([s #'s])
+         (syntax-parse s
+           #:datum-literals (parens group op |.|)
+           [(head (op |.|) . tail)
+            (list* (symbol->immutable-string (syntax-e #'head))
+                   "."
+                   (loop #'tail))]
+           [((parens (group (op o)))) (list "(" (symbol->immutable-string (syntax-e #'o)) ")")]
+           [(x) (list (symbol->immutable-string (syntax-e #'x)))]))))]
+    [_ (raise-argument-error* who rhombus-realm "Name" v)]))
 
 (define (do-relocate who stx-in ctx-stx-in
                      extract-ctx annot)

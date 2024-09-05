@@ -8,7 +8,7 @@
 @(def dots_bind = @rhombus(..., ~bind))
 
 @title(~tag: "stxobj"){Syntax Objects}
-
+ap_op
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
  multi-group sequence with binding scopes and other metadata on
  individual terms, and metadata potentially on individual syntax objects. See
@@ -59,6 +59,7 @@ Metadata for a syntax object can include a source location and the raw
   stx.is_original()
   stx.strip_scopes()
   stx.replace_scopes(like_stx)
+  stx.name_to_symbol()
   stx.relocate(to)
   stx.relocate_group(to)
   stx.relocate_span(like_stxes)
@@ -761,7 +762,7 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  fun Syntax.unwrap_op(stx :: Syntax) :: Symbol
+  fun Syntax.unwrap_op(stx :: Operator) :: Symbol
 ){
 
  Unwraps a syntax object containing a single operator, returning the
@@ -874,6 +875,24 @@ Metadata for a syntax object can include a source location and the raw
  scopes of @rhombus(like_stx).
 
 }
+
+
+@doc(
+  fun Syntax.name_to_symbol(stx :: Name) :: Symbol
+){
+
+ Unwraps a syntax object containing a single @rhombus(Name, ~annot),
+ returning the operator's name as a symbol.
+
+@examples(
+  Syntax.name_to_symbol('apple')
+  Syntax.name_to_symbol('+')
+  Syntax.name_to_symbol('fruit.apple')
+  Syntax.name_to_symbol('fruit.(++)')
+)
+
+}
+
 
 @doc(
   fun Syntax.relocate(stx :: Term,

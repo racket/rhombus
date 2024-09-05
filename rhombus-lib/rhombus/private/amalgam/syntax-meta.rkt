@@ -35,6 +35,7 @@
     #:fields
     ([equal_binding syntax_meta.equal_binding]
      [equal_name_and_scopes syntax_meta.equal_name_and_scopes]
+     [binding_symbol syntax_meta.binding_symbol]
      [expanding_phase syntax_meta.expanding_phase]
      [error syntax_meta.error]
      [value syntax_meta.value]
@@ -85,6 +86,15 @@
          (for/and ([n1 (in-list l1)]
                    [n2 (in-list l2)])
            (bound-identifier=? n1 n2 phase))))
+
+  (define/arity syntax_meta.binding_symbol
+    (case-lambda
+      [(id)
+       (identifier-binding-symbol (extract-free-name who id expr-space-path))]
+      [(id sp)
+       (identifier-binding-symbol (extract-free-name who id sp))]
+      [(id sp phase)
+       (identifier-binding-symbol (extract-free-name who id sp)) phase]))
 
   (define (extract-name/sp who stx sp
                            #:build-dotted? [build-dotted? #f])

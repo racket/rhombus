@@ -14,6 +14,7 @@ block:
     Syntax.unwrap_group(stx) ~method
     Syntax.unwrap_sequence(stx) ~method
     Syntax.unwrap_all(stx) ~method
+    Syntax.name_to_symbol(stx) ~method
     Syntax.srcloc(stx) ~method
     Syntax.is_original(stx) ~method
     Syntax.strip_scopes(stx) ~method
@@ -34,6 +35,38 @@ block:
     syntax_meta.flip_introduce(stx)
     syntax_meta.is_static(stx)
     syntax_meta.expanding_phase()
+
+check:
+  'x'.unwrap() ~is #'x
+  '1'.unwrap() ~is 1
+  '+'.unwrap() ~prints_like ['op', '#{+}']
+  '+'.unwrap_op() ~is #'#{+}
+  'apple'.name_to_symbol() ~is #'apple
+  '+'.name_to_symbol() ~is #'#{+}
+  'fruit . apple'.name_to_symbol() ~is #'#{fruit.apple}
+  'fruit.(++)'.name_to_symbol() ~is #'#{|fruit.(++)|}
+
+block:
+  import rhombus/syntax_map open
+  check:
+    equal_name('x', 'x') ~is #true
+    equal_name('x', 'y') ~is #false
+    equal_name('+', '+') ~is #true
+    equal_name('+', '*') ~is #false
+    equal_name('+', '#{+}') ~is #false
+    equal_name('a.b.x', 'a.b.x') ~is #true
+    equal_name('a.b.x', 'a.b.y') ~is #false
+    equal_name('a.b.x', 'a.c.x') ~is #false
+    equal_name('a.b.(+)', 'a.b.(+)') ~is #true
+    equal_name('a.b.(+)', 'a.b.(*)') ~is #false
+    equal_name('a.b.(+)', 'a.c.(+)') ~is #false
+    equal_name('a.b.(+)', 'a.b.#{+}') ~is #false
+    Map.by(equal_name){ 'x': 1, 'X': 2 }['x'] ~is 1
+    Map.by(equal_name){ 'x': 1, 'X': 2 }['X'] ~is 2
+    Map.by(equal_name){ 'x': 1, 'X': 2 }['y'] ~throws "no value found for key"
+    Map.by(equal_name){ 'x': 1, '+': 2 }['+'] ~is 2
+    Map.by(equal_name){ 'a.x': 1, 'a.(+)': 2 }['a.x'] ~is 1
+    Map.by(equal_name){ 'a.x': 1, 'a.(+)': 2 }['a.(+)'] ~is 2
 
 check:
   Syntax.make(1) ~matches '1'
@@ -191,17 +224,19 @@ check:
   ~completes
 
 block:
-  import meta -1:
-    rhombus/meta.syntax_meta
-  check:
-    syntax_meta.error('here')
-    ~throws values("bad syntax", "in: here")
-  check:
-    syntax_meta.error("oops", 'here')
-    ~throws values("oops", "in: here")
-  check:
-    syntax_meta.error("oops", 'here: there', 'there')
-    ~throws values("oops", "in: here: there", "at: there")
-  check:
-    syntax_meta.error("oops", 'here: there', ['there', 'here'])
-    ~throws values("oops", "in: here: there", "at: there")
+  import:
+    meta -1: rhombus/meta open
+    lib("racket/base.rkt")
+  parameterize { base.#{error-print-source-location}: #true }:
+    check:
+      syntax_meta.error('here')
+      ~throws values("bad syntax", "in: here")
+    check:
+      syntax_meta.error("oops", 'here')
+      ~throws values("oops", "in: here")
+    check:
+      syntax_meta.error("oops", 'here: there', 'there')
+      ~throws values("oops", "in: here: there", "at: there")
+    check:
+      syntax_meta.error("oops", 'here: there', ['there', 'here'])
+      ~throws values("oops", "in: here: there", "at: there")

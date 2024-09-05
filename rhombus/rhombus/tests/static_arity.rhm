@@ -12,7 +12,7 @@ export:
 
 expr.macro 'static_arity_check $(pattern:
                                    kind ~sequence
-                                 | '~meta': field import = '"static_arity.rhm"!meta'
+                                 | '~meta': field import = 'lib("rhombus/tests/static_arity.rhm")!meta'
                                  | '~import $imp ...': field import = '$imp ...'
                                  | '': field import = #false):
               $(pattern:

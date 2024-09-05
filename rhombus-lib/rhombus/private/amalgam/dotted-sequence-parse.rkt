@@ -16,7 +16,7 @@
            build-syntax-definitions/maybe-extension
            identifier-extension-binding?))
 
-;; A dotted identifier as a bindig form does not go though `:dotted-identifier-sequence`.
+;; A dotted identifier as a binding form does not go though `:dotted-identifier-sequence`.
 ;; Instead, suitable binding information is created by `name-root-ref` via the
 ;; `binding-extension-combine` argument.
 
