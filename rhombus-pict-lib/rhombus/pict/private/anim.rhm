@@ -785,7 +785,7 @@ fun anim_pict_adjust(this :~ AnimPict,
                  ~rebuild:
                    rebuild)
 
-fun merge_epochs([p :~ _AnimPict, ...], dalign):
+fun merge_anim_epochs([p :~ _AnimPict, ...], dalign):
   let max_sustain = math.max(0, p.duration, ...)
   let [p :~ Pict, ...]:
     if dalign == #'sustain
@@ -805,6 +805,25 @@ fun merge_epochs([p :~ _AnimPict, ...], dalign):
     for List (i: min_epoch ..= max_epoch):
       math.max(p.epoch_extent(i), ...)
   values (ps, -min_epoch, max_duration_epoch + 1, all_epochs)
+
+fun merge_epochs([p :~ Pict, ...], dalign):
+  // get nothings out of the way, then put them back
+  let [something_p, ...]:
+    for List (p: [p, ...]):
+      skip_when p == nothing
+      p
+  let (something_ps :~ List, m_duration_start, m_duration, m_epoch_extents):
+    merge_anim_epochs([something_p, ...], dalign)
+  let ps:
+    recur loop(orig_ps = [p, ...], something_ps = something_ps):
+      match orig_ps
+      | []: []
+      | [p :: NothingPict, & orig_ps]:
+          [p, & loop(orig_ps, something_ps)]
+      | [_, & orig_ps]:
+          let [p, & something_ps] = something_ps
+          [p, & loop(orig_ps, something_ps)]
+  values(ps, m_duration_start, m_duration, m_epoch_extents)
 
 // Return a list of picts such that if any pict in `ps` is replaced,
 // then `rebuild` is called on the list, and each result replaces
@@ -902,7 +921,9 @@ fun make_sequential(ps :~ List.of(AnimPict),
     values(offset + p.duration - (if next_splice | 1 | 0),
            !next_splice)
   for values(offset = 0, splice = #false) (p: ps):
-    bump_extents(p, adjust_offset(p, offset, splice), extents)
+    if p == nothing
+    | values(offset, splice)
+    | bump_extents(p, adjust_offset(p, offset, splice), extents)
   let used_extents = MutableMap{}
   let (accum, starts_accum, t, _):
     for values(accum :~ List = [], starts_accum :~ List = [], offset = 0, splice = #false):          
@@ -956,7 +977,7 @@ fun make_concurrent(ps :~ List.of(AnimPict),
                     ~epoch: ealign,
                     ~duration: dalign) :~ values(List.of(AnimPict), Int):
   match ps
-  | []: values([], 1)
+  | [p :: NothingPict, ...]: values(ps, 1)
   | [p :~ AnimPict]: values([p], p.duration)
   | [p, ...]:
       let (ps :~ List, m_duration_start, m_duration, m_epoch_extents :~ List):

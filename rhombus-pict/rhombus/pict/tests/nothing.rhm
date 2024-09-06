@@ -1,0 +1,22 @@
+#lang rhombus
+import:
+  rhombus/pict open
+
+let something = circle(~size: 50)
+
+check:
+  rectangle(~around: nothing) ~is nothing
+  stack() ~is nothing
+  stack(nothing, nothing) ~is nothing
+  beside() ~is nothing
+  beside(nothing, nothing) ~is nothing
+
+check:
+  sequential(nothing) ~is [nothing]
+  sequential(something, nothing) ~matches [_, _ :: NothingPict]
+  sequential(nothing, something, nothing) ~matches [_ :: NothingPict, _, _ :: NothingPict]
+
+check:
+  concurrent(nothing) ~is [nothing]
+  concurrent(something, nothing) ~matches [_, _ :: NothingPict]
+  concurrent(nothing, something, nothing) ~matches [_ :: NothingPict, _, _ :: NothingPict]
