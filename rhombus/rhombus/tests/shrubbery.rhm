@@ -1,0 +1,33 @@
+#lang rhombus/static
+import:
+  rhombus/shrubbery
+
+fun read_string(s, ~mode: mode = #'top):
+  shrubbery.read(Port.Input.open_string(s),
+                 ~mode: mode)
+
+check:
+  read_string("") ~prints_like ''
+
+  read_string("x") ~prints_like 'x'  
+  read_string("x y") ~prints_like 'x y'
+
+  read_string("\nx") ~prints_like 'x'
+  read_string("\nx", ~mode: #'interactive) ~prints_like 'x'
+  read_string("\nx", ~mode: #'line) ~prints_like ''
+
+  read_string("// comment\nx") ~prints_like 'x'
+  read_string("// comment\nx", ~mode: #'interactive) ~prints_like 'x'
+  read_string("// comment\nx", ~mode: #'line) ~prints_like ''
+
+  read_string("x y:") ~throws "empty block not allowed"
+  read_string("x y:", ~mode: #'line) ~throws "empty block not allowed"
+  read_string("x y:\n\n  z") ~prints_like 'x y: z'
+  read_string("x y:\n\n  z", ~mode: #'interactive) ~throws "empty block not allowed"
+  read_string("x y:\n\n  z", ~mode: #'line) ~throws "empty block not allowed"
+
+  read_string("(x y:\n\n  z)") ~prints_like '(x y: z)'
+  read_string("(x y:\n\n  z)", ~mode: #'interactive) ~prints_like '(x y: z)'
+  read_string("(x y:\n\n  z)", ~mode: #'line) ~prints_like '(x y: z)'
+
+  read_string("x", ~mode: #'text) ~prints_like '["x"]'

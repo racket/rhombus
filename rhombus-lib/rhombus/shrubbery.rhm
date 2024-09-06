@@ -1,0 +1,20 @@
+#lang rhombus/static
+import:
+  lib("shrubbery/parse.rkt")
+
+export:
+  read
+  ReadMode
+
+enum ReadMode:
+  top
+  interactive
+  line
+  text
+
+fun read(in :: Port.Input,
+         ~mode: mode :: ReadMode = #'top,
+         ~start_column: start :: NonnegInt = 0):
+  parse.#{parse-all}(in,
+                     ~mode: mode,
+                     #{#:start-column}: start)

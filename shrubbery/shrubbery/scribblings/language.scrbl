@@ -63,7 +63,7 @@ resulting shrubbery is not empty, it is parsed in the same way that
 @defmodule[shrubbery/parse]
 
 @defproc[(parse-all [in input-port?]
-                    [#:source source any/c]
+                    [#:source source any/c (object-name in)]
                     [#:mode mode (or/c 'top 'interactive 'line 'text) 'top]
                     [#:start-column start-column exact-nonnegative-integer? 0])
          (or/c eof-object? syntax?)]{

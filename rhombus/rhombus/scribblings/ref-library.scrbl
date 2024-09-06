@@ -12,3 +12,4 @@
 @include_section("ref-unsafe.scrbl")
 @include_section("ref-doc.scrbl")
 @include_section("ref-stxobj-map.scrbl")
+@include_section("ref-shrubbery.scrbl")
