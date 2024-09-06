@@ -536,6 +536,18 @@ check:
   rx'x'.is_match("a")
   ~is #true
 
+check:
+  rx.macro 'ident($(pat :: rx_meta.Parsed))':
+    '$pat'
+  rx'ident("a")'.is_match("a")
+  ~is #true
+
+check:
+  rx.macro 'odd($(pat :: rx_meta.Parsed))':
+    '$pat ($pat ++ $pat)*'
+  rx'odd("a")'.is_match("aaa")
+  ~is #true
+
 block:
   let p1 = rx'"a" ($b: "b") "c"'
   let p2 = RX.from_handles(p1.handle,

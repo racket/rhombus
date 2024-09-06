@@ -9,6 +9,7 @@
          enforest/operator
          enforest/transformer
          enforest/proc-name
+         "srcloc.rkt"
          (for-template "enforest.rkt")
          "introducer.rkt"
          "space-provide.rkt"
@@ -109,7 +110,8 @@
                                       #`(make-check-syntax (quote name)
                                                            (quote #,parsed-tag)
                                                            #,(and pack-and-unpack?
-                                                                  #`(lambda (e env) (apply parse-group e env))))))
+                                                                  #`(lambda (e env)
+                                                                      (apply parse-group e env))))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
@@ -122,7 +124,8 @@
              (define/arity (#,pack-id stx)
                #:static-infos ((#%call-result (#,(quote-syntax unsyntax) (get-syntax-static-infos))))
                #,(with-syntax ([parsed-tag-kw parsed-tag])
-                   #`#`(parsed parsed-tag-kw #,(unpack-term stx '#,pack-id #f)))))
+                   #`(let ([t (unpack-term stx '#,pack-id #f)])
+                       (relocate+reraw t #`(parsed parsed-tag-kw #,t))))))
             (maybe-skip
              #,unpack-id
              (define/arity (#,unpack-id stx [fail-k #f])
@@ -136,7 +139,10 @@
                                           #f)]
                      [more-arity-mask (if class-arguments
                                           (arithmetic-shift 1 (+ 1 (length class-arguments)))
-                                          2)])
+                                          2)]
+                     [unpack-parsed*/tag (if (syntax-e unpack-id)
+                                             #`(unpack-parsed* '#,parsed-tag)
+                                             #'unpack-term*)])
          (cond
            [(syntax-e #'enforest?)
             #`(begin
@@ -172,17 +178,17 @@
                 (define-syntax _class-name (make-syntax-class #':base
                                                               #:kind 'group
                                                               #:arity base-arity-mask
-                                                              #:fields #'((parsed parsed parsed 0 unpack-term*))
+                                                              #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag))
                                                               #:root-swap '(parsed . group)))
                 (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
                                                                           #:kind 'group
-                                                                          #:fields #'((parsed parsed #f 0 unpack-term*)
+                                                                          #:fields #'((parsed parsed #f 0 unpack-parsed*/tag)
                                                                                       (tail #f tail tail unpack-tail-list*))
                                                                           #:root-swap '(parsed . group)
                                                                           #:arity more-arity-mask))
                 (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
                                                                          #:kind 'group
-                                                                         #:fields #'((parsed parsed #f 0 unpack-term*)
+                                                                         #:fields #'((parsed parsed #f 0 unpack-parsed*/tag)
                                                                                      (tail #f tail tail unpack-tail-list*))
                                                                          #:root-swap '(parsed . group)
                                                                          #:arity more-arity-mask))
@@ -316,7 +322,7 @@
         #:datum-literals (parsed)
         [(parsed tag e)
          #:when (eq? (syntax-e #'tag) parsed-tag)
-         form]
+         #'e]
         [_
          (cond
            [(unpack-tail form #f #f)
