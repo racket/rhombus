@@ -1,0 +1,10 @@
+#lang rhombus/static/and_meta
+import:
+  pict open
+
+check:
+  line(~line: "puple") ~is_a Pict
+  line(~line: Color(100, 100, 100)) ~is_a Pict
+
+  polygon([[1, 2]], ~line: "puple") ~is_a Pict
+  polygon([[1, 2]], ~line: Color(100, 100, 100)) ~is_a Pict

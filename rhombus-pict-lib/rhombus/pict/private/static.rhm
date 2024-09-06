@@ -827,7 +827,7 @@ fun make_dc_pict(draw_it, w, h, a, d, line, line_width, fill):
               match fill
               | #false: dc.brush := draw.Brush.none
               | #'inherit: dc.brush := draw.Brush(~color: dc.pen.color)
-              | ~else: dc.brush := draw.Brush(~color: fill)                    
+              | ~else: dc.brush := draw.Brush(~color: fill)
               match line
               | #'inherit:
                   when line_width != #'inherit
@@ -858,7 +858,7 @@ fun line(~dx: dx :: Real = 0,
                dx, dy)
   let cln:
     if color != #'inherit
-    | rkt.colorize(ln, color)
+    | rkt.colorize(ln, as_color(color))
     | ln
   static_pict(if width != #'inherit
               | rkt.linewidth(width, cln)

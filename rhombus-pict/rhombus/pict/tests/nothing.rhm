@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  rhombus/pict open
+  pict open
 
 let something = circle(~size: 50)
 
