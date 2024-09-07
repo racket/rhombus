@@ -8,16 +8,16 @@
 @(def dots_bind = @rhombus(..., ~bind))
 
 @title(~tag: "stxobj"){Syntax Objects}
-ap_op
+
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
- multi-group sequence with binding scopes and other metadata on
- individual terms, and metadata potentially on individual syntax objects. See
- @shrubref("top") for information on shrubbery notation, and specifically
- @shrubref("parsed-rep") for information on representing shrubbery terms as
- Rhombus values. The @rhombus(Syntax.make) function takes such a value
- and wraps it as a syntax object, so that it can accumulate binding
- scopes or hold other metadata, and functions like @rhombus(Syntax.unwrap)
- expose that structure.
+multi-group sequence with binding scopes and other metadata on
+individual terms, and metadata potentially on individual syntax objects. See
+@shrubref("top") for information on shrubbery notation, and specifically
+@shrubref("parsed-rep") for information on representing shrubbery terms as
+Rhombus values. The @rhombus(Syntax.make) function takes such a value
+and wraps it as a syntax object, so that it can accumulate binding
+scopes or hold other metadata, and functions like @rhombus(Syntax.unwrap)
+expose that structure.
 
 In addition to normal shrubbery structure, a syntax object can contain
 @deftech{parsed} terms, which are opaque. The meaning and internal
@@ -28,24 +28,24 @@ Racket expression. Pattern matching and functions like
 @rhombus(Syntax.unwrap) treat parsed terms as opaque.
 
 An quoted sequence of terms using @quotes is parsed as an
- implicit use of the @rhombus(#%quotes) form, which is normally
- bound to create a syntax object. For example, @rhombus('1.000')
- is a syntax object that wraps the number @rhombus(1.0).
+implicit use of the @rhombus(#%quotes) form, which is normally
+bound to create a syntax object. For example, @rhombus('1.000')
+is a syntax object that wraps the number @rhombus(1.0).
 
 Metadata for a syntax object can include a source location and the raw
- source text for a term, such as @rhombus("1.000") for a @rhombus(1.0)
- that was written originally as @litchar{1.000}. Raw-source metadata
- is used when printing a syntax error for a syntax object. Besides the
- main text of a term, metadata can include a prefix string and/or
- suffix string, which is used when printing a sequence of terms to
- reflect the original layout. A group syntax object internally starts
- with a @tt{group} tag that normally contains only prefix and suffix
- text, leaving the group elements to supply their own text forms.
- Finally, a syntax object can contain a tail string or and/or a tail
- suffix; those normally appear only on a tag at the start of a syntax
- object that represents a pair of parentheses, brackets, braces or
- quotes, where the tail string corresponds to the closer, and the tail
- suffix corresponds to text after the closer.
+source text for a term, such as @rhombus("1.000") for a @rhombus(1.0)
+that was written originally as @litchar{1.000}. Raw-source metadata
+is used when printing a syntax error for a syntax object. Besides the
+main text of a term, metadata can include a prefix string and/or
+suffix string, which is used when printing a sequence of terms to
+reflect the original layout. A group syntax object internally starts
+with a @tt{group} tag that normally contains only prefix and suffix
+text, leaving the group elements to supply their own text forms.
+Finally, a syntax object can contain a tail string or and/or a tail
+suffix; those normally appear only on a tag at the start of a syntax
+object that represents a pair of parentheses, brackets, braces or
+quotes, where the tail string corresponds to the closer, and the tail
+suffix corresponds to text after the closer.
 
 @dispatch_table(
   "syntax object"
@@ -1026,7 +1026,7 @@ Metadata for a syntax object can include a source location and the raw
  information on a syntax object. Source text is broken into four parts: a
  prefix (typically whitespace and comments), content (or content prefix
  for a contain such as a group or parenthesized syntax object), tail
- (i.e., content suffix, such as a closing parentheses, and suffix
+ (i.e., content suffix, such as a closing parenthesis), and suffix
  (typically whitespace and comments).
 
  Source is text is represented as a tree built of
