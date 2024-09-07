@@ -181,12 +181,68 @@ check:
   )
 
 check:
+  (#"hello" :~ Bytes)["oops"]
+  ~throws values(
+    "Bytes.get: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  (#"hello" :~ Bytes)[-1]
+  ~throws values(
+    "Bytes.get: contract violation",
+    "expected: NonnegInt",
+    "given: -1",
+  )
+
+check:
   ("oops" :~ MutableBytes)[0] := 0
   ~throws values(
     "Bytes.set: contract violation",
     "expected: MutableBytes",
     "given: \"oops\"",
   )
+
+check:
+  (#"hello" :~ MutableBytes)[0] := 0
+  ~throws values(
+    "Bytes.set: contract violation",
+    "expected: MutableBytes",
+    "given: #\"hello\"",
+  )
+
+check:
+  (#"hello".copy() :~ MutableBytes)["oops"] := 0
+  ~throws values(
+    "Bytes.set: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  (#"hello".copy() :~ MutableBytes)[-1] := 0
+  ~throws values(
+    "Bytes.set: contract violation",
+    "expected: NonnegInt",
+    "given: -1",
+  )
+
+version_guard.at_least "8.14.0.2":
+  check:
+    (#"hello".copy() :~ MutableBytes)[0] := "oops"
+    ~throws values(
+      "Bytes.set: contract violation",
+      "expected: Byte",
+      "given: \"oops\"",
+    )
+  check:
+    (#"hello".copy() :~ MutableBytes)[0] := -1
+    ~throws values(
+      "Bytes.set: contract violation",
+      "expected: Byte",
+      "given: -1",
+    )
 
 check:
   Bytes.append("oops") ~throws values(

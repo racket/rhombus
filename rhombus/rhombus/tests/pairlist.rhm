@@ -397,6 +397,22 @@ check:
     "given: \"oops\"",
   )
 
+version_guard.at_least "8.14.0.4":
+  check:
+    (PairList[1, 2, 3] :~ PairList)["oops"]
+    ~throws values(
+      "PairList.get: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    (PairList[1, 2, 3] :~ PairList)[-1]
+    ~throws values(
+      "PairList.get: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+
 check:
   ("oops" :~ PairList).first
   ~throws values(

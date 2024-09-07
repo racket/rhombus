@@ -454,6 +454,22 @@ check:
     "given: \"oops\"",
   )
 
+version_guard.at_least "8.14.0.2":
+  check:
+    ([1, 2, 3] :~ List)["oops"]
+    ~throws values(
+      "List.get: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    ([1, 2, 3] :~ List)[-1]
+    ~throws values(
+      "List.get: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+
 check:
   ("oops" :~ List).first
   ~throws values(

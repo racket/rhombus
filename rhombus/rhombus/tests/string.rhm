@@ -293,6 +293,30 @@ check:
   )
 
 check:
+  (#"oops" :~ ReadableString)[0]
+  ~throws values(
+    "String.get: contract violation",
+    "expected: ReadableString",
+    "given: #\"oops\"",
+  )
+
+check:
+  ("oops" :~ ReadableString)["oops"]
+  ~throws values(
+    "String.get: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  ("oops" :~ ReadableString)[-1]
+  ~throws values(
+    "String.get: contract violation",
+    "expected: NonnegInt",
+    "given: -1",
+  )
+
+check:
   String.append(#"oops") ~throws values(
     "String.append: contract violation",
     "expected: ReadableString",

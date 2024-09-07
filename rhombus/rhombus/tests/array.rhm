@@ -340,11 +340,52 @@ check:
   )
 
 check:
+  (Array(1, 2, 3) :~ Array)["oops"]
+  ~throws values(
+    "Array.get: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  (Array(1, 2, 3) :~ Array)[-1]
+  ~throws values(
+    "Array.get: contract violation",
+    "expected: NonnegInt",
+    "given: -1",
+  )
+
+check:
   ("oops" :~ MutableArray)[0] := 0
   ~throws values(
     "Array.set: contract violation",
     "expected: MutableArray",
     "given: \"oops\"",
+  )
+
+// TODO print immutable arrays differently
+check:
+  (Array(1, 2, 3).snapshot() :~ MutableArray)[0] := 0
+  ~throws values(
+    "Array.set: contract violation",
+    "expected: MutableArray",
+    "given: Array(1, 2, 3)",
+  )
+
+check:
+  (Array(1, 2, 3) :~ MutableArray)["oops"] := 0
+  ~throws values(
+    "Array.set: contract violation",
+    "expected: NonnegInt",
+    "given: \"oops\"",
+  )
+
+check:
+  (Array(1, 2, 3) :~ MutableArray)[-1] := 0
+  ~throws values(
+    "Array.set: contract violation",
+    "expected: NonnegInt",
+    "given: -1",
   )
 
 check:

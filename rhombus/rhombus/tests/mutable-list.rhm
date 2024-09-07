@@ -414,10 +414,42 @@ check:
     "given: \"oops\"",
   )
 
+version_guard.at_least "8.14.0.2":
+  check:
+    (MutableList[1, 2, 3] :~ MutableList)["oops"]
+    ~throws values(
+      "MutableList.get: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    (MutableList[1, 2, 3] :~ MutableList)[-1]
+    ~throws values(
+      "MutableList.get: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+
 check:
-  ("oops" :~ MutableList)[0] := 1
+  ("oops" :~ MutableList)[0] := 0
   ~throws values(
     "MutableList.set: contract violation",
     "expected: MutableList",
     "given: \"oops\"",
   )
+
+version_guard.at_least "8.14.0.2":
+  check:
+    (MutableList[1, 2, 3] :~ MutableList)["oops"] := 0
+    ~throws values(
+      "MutableList.set: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    (MutableList[1, 2, 3] :~ MutableList)[-1] := 0
+    ~throws values(
+      "MutableList.set: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
