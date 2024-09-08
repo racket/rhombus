@@ -11,6 +11,7 @@ A @deftech{path} value represents a filesystem path.
   "path"
   Path
   path.bytes()
+  path.extend(part, ...)
   path.parts()
   path.string()
 )
@@ -77,6 +78,46 @@ Paths are @tech{comparable}, which means that generic operations like
 
 }
 
+@doc(
+  fun Path.extend(path :: Path,
+                  part :: PathString | #'up | #'same, ...) :: Path
+){
+
+  Creates a path given a base path and any number of sub-path
+  extensions. See also @rhombus(++).  If @rhombus(path) is an absolute path,
+  the result is an absolute path, otherwise the result is a relative path.
+
+  The @rhombus(path) and each @rhombus(part) must be either a relative
+  path, the symbol @rhombus(#'up) (indicating the relative parent
+  directory), or the symbol @rhombus(#'same) (indicating the
+  relative current directory).  For Windows paths, if @rhombus(path) is a
+  drive specification (with or without a trailing slash) the first
+  @rhombus(part) can be an absolute (driveless) path. For all platforms,
+  the last @rhombus(part) can be a filename.
+
+  The @rhombus(path) and @rhombus(part) arguments can be paths for
+  any platform. The platform for the resulting path is inferred from the
+  @rhombus(path) and @rhombus(part) arguments, where string arguments imply
+  a path for the current platform. If different arguments are for
+  different platforms, the @rhombus(Exn.Fail.Contract, ~class) exception
+  is thrown.  If no argument implies a platform (i.e., all are @rhombus(#'up)
+  or @rhombus(#'same)), the generated path is for the current platform.
+
+  Each @rhombus(part) and @rhombus(path) can optionally end in a directory
+  separator. If the last @rhombus(part) ends in a separator, it is
+  included in the resulting path.
+
+  The @rhombus(build-path) procedure builds a path @italic{without}
+  checking the validity of the path or accessing the filesystem.
+
+@examples(
+  def p = Path("/home/rhombus")
+  Path.extend(p, "shape.txt")
+  p.extend("shape.txt")
+  p ++ "shape.txt"
+)
+
+}
 @doc(
   fun Path.parts(path :: Path) :: List.of(Path || #'up || #'same)
 ){
