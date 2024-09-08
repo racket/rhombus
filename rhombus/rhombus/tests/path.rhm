@@ -75,3 +75,9 @@ block:
   check p2.parts() ~is [Path("C:"), Path("windows")]
   def p3 = Path("../a/b/./c")
   check p3.parts() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
+
+block:
+  check Path("/").extend("etc", Path("passwd")) ~is Path("/etc/passwd")
+  check Path.extend("C:", "win32", "sys") ~is Path("C:/win32/sys")
+  check Path("/") ++ Path("etc") ++ "passwd" ~is Path("/etc/passwd")
+  check Path("..") ++ "a" ++ "b" ++ #'same ++ "c" ~is Path("../a/b/./c")

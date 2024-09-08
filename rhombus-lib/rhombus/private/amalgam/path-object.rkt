@@ -5,6 +5,7 @@
          "annotation-failure.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
+         "append-key.rkt"
          "compare-key.rkt"
          "index-result-key.rkt"
          "static-info.rkt"
@@ -42,7 +43,8 @@
 (define-primitive-class Path path
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%compare ((< path<?)
+  #:instance-static-info ((#%append Path.extend)
+                          (#%compare ((< path<?)
                                       (<= path<=?)
                                       (> path>?)
                                       (>= path>=?)
@@ -56,6 +58,7 @@
   ()
   #:methods
   (bytes
+   extend
    parts
    string))
 
@@ -71,6 +74,11 @@
   #:primitive (path->bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
+
+(define/method (Path.extend p . ss)
+  #:primitive (build-path)
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (apply build-path p ss))
 
 (define/method (Path.parts p)
   #:primitive (explode-path)

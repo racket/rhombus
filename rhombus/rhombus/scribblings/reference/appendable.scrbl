@@ -29,6 +29,7 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
   operator ((v1 :: ReadableString) ++ (v2 :: ReadableString))
     :: String
   operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: MutableBytes
+  operator ((v1 :: Path) ++ (v2 :: PathString)) :: Path
   operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any
 ){
 
