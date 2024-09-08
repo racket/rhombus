@@ -67,3 +67,11 @@ block:
   check p1 compares_equal p2 ~is #true
   version_guard.at_least "8.13.0.1":
     check p1 == p2 ~is #true
+
+block:
+  def p1 = Path("/etc/passwd")
+  check p1.parts() ~is [Path("/"), Path("etc"), Path("passwd")]
+  def p2 = Path("C:/windows")
+  check p2.parts() ~is [Path("C:"), Path("windows")]
+  def p3 = Path("../a/b/./c")
+  check p3.parts() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]

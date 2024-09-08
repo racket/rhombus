@@ -6,9 +6,12 @@
          "call-result-key.rkt"
          "define-arity.rkt"
          "compare-key.rkt"
+         "index-result-key.rkt"
+         "static-info.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "string.rkt" static-infos)
-         (submod "bytes.rkt" static-infos))
+         (submod "bytes.rkt" static-infos)
+         (submod "list.rkt" for-listable)
+         (submod "string.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -53,8 +56,8 @@
   ()
   #:methods
   (bytes
-   string
-   ))
+   parts
+   string))
 
 (define/arity #:name Path (path c)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
@@ -68,6 +71,11 @@
   #:primitive (path->bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
+
+(define/method (Path.parts p)
+  #:primitive (explode-path)
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (to-treelist #f (explode-path p)))
 
 (define/method (Path.string s)
   #:primitive (path->string)
