@@ -81,3 +81,13 @@ block:
   check Path.extend("C:", "win32", "sys") ~is Path("C:/win32/sys")
   check Path("/") ++ Path("etc") ++ "passwd" ~is Path("/etc/passwd")
   check Path("..") ++ "a" ++ "b" ++ #'same ++ "c" ~is Path("../a/b/./c")
+
+block:
+  def p1 = Path("/etc")
+  def p2 = Path("etc")
+  check Path.is_absolute(p1) ~is #true
+  check Path.is_absolute("/etc") ~is #true
+  check p1.is_absolute() ~is #true
+  check Path.is_absolute(p2) ~is #false
+  check Path.is_absolute("etc") ~is #false
+  check p2.is_absolute() ~is #false

@@ -59,6 +59,7 @@
   #:methods
   (bytes
    extend
+   is_absolute
    parts
    string))
 
@@ -79,6 +80,10 @@
   #:primitive (build-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (apply build-path p ss))
+
+(define/method (Path.is_absolute p)
+  #:primitive (absolute-path?)
+  (absolute-path? p))
 
 (define/method (Path.parts p)
   #:primitive (explode-path)
