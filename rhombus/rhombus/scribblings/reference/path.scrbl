@@ -12,6 +12,7 @@ A @deftech{path} value represents a filesystem path.
   Path
   path.bytes()
   path.extend(part, ...)
+  path.is_absolute()
   path.parts()
   path.string()
 )
@@ -118,6 +119,13 @@ Paths are @tech{comparable}, which means that generic operations like
 )
 
 }
+
+@doc(fun Path.is_absolute(path :: Path)){
+
+ Returns @rhombus(#true) if @rhombus(path) is an absolute path, @rhombus(#false)
+ otherwise.  This procedure does not access the filesystem.
+}
+
 @doc(
   fun Path.parts(path :: Path) :: List.of(Path || #'up || #'same)
 ){
