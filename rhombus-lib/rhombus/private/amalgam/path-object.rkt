@@ -64,7 +64,8 @@
    extend
    is_absolute
    parts
-   string))
+   string
+   to_complete_path))
 
 (define/arity #:name Path (path c)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
@@ -102,5 +103,10 @@
   #:primitive (path->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))
+
+(define/method (Path.to_complete_path p #:relative_to [base-path (current-directory)])
+  #:primitive (path->complete-path)
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (path->complete-path p base-path))
 
 (define-annotation-syntax PathString (identifier-annotation path-string? ()))

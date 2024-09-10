@@ -11,9 +11,23 @@ export:
 namespace PathString:
   export:
     to_path
+    to_complete_path
 
   fun to_path(p :: PathString) :~ Path:
     Path(p)
 
+  fun
+  | to_complete_path(p :: PathString):
+      Path.to_complete_path(p)
+  | to_complete_path(p :: PathString, ~relative_to: base_path :: PathString):
+      Path.to_complete_path(p, ~relative_to: base_path)
+
   annot.macro 'to_path':
     'converting(fun (p :: PathString) :~ Path: to_path(p))'
+
+  annot.macro
+  | 'to_complete_path(~relative_to: $base_path)':
+      'converting(fun (p :: PathString) :~ Path:
+                    to_complete_path(p, ~relative_to: $base_path))'
+  | 'to_complete_path':
+      'converting(fun (p :: PathString) :~ Path: to_complete_path(p))'
