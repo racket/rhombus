@@ -8,12 +8,12 @@ export:
   at_least
 
 meta fun make_at_least(vers, then, else):
-  if utils.#{version<?}(base.version(), vers.unwrap())
+  if !utils.#{version<?}(base.version(), vers.unwrap())
   | then
   | else
 
 defn.macro
 | 'at_least $vers: $body':
-    make_at_least(vers, '', body)
+    make_at_least(vers, body, '')
 | 'at_least $vers | $then | $else':
     make_at_least(vers, then, else)
