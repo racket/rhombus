@@ -886,7 +886,7 @@ meta:
            && '[$(g1 && inner), $(g2 && '$(dots :: Term)')]')':
         let new_g1:
           let new_inner = adjust_name_repet(inner, esc)
-          Syntax.make_group([new_inner]).relocate(g1)
+          Syntax.make_group([new_inner]).relocate_group(g1)
         let new_g2:
           let new_dots = spacer.set(dots, #'~bind)
           Syntax.make_group([new_dots]).relocate_group(g2)
