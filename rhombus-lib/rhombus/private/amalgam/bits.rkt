@@ -1,7 +1,5 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         (only-in racket/base
-                  [bitwise-bit-set? racket:bitwise-bit-set?])
          "name-root.rkt"
          "define-operator.rkt"
          "realm.rkt"
@@ -62,13 +60,6 @@
 (define-infix |bits.(>>)| arithmetic-shift-right
   #:static-infos #,(get-int-static-infos))
 
-;; TEMP do our own error reporting to accommodate for racket/racket#5009
-(define (bitwise-bit-set? n m)
-  (define who '|bits.(?)|)
-  (unless (exact-nonnegative-integer? m)
-    (check-int who n)
-    (raise-argument-error* who rhombus-realm "NonnegInt" m))
-  (racket:bitwise-bit-set? n m))
 (define-infix #:who |bits.(?)| bitwise-bit-set?)
 
 (define/arity (bits.length n)
@@ -76,18 +67,7 @@
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (integer-length n))
 
-;; TEMP ibid
 (define/arity (bits.field n start end)
   #:primitive (bitwise-bit-field)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
-  (unless (and (exact-nonnegative-integer? start)
-               (exact-nonnegative-integer? end)
-               (start . <= . end))
-    (check-int who n)
-    (check-nonneg-int who start)
-    (check-nonneg-int who end)
-    (raise-arguments-error* who rhombus-realm
-                            "starting index must be less than or equal to ending index"
-                            "starting index" (unquoted-printing-string (number->string start))
-                            "ending index" (unquoted-printing-string (number->string end))))
   (bitwise-bit-field n start end))
