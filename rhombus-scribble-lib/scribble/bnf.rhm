@@ -1,0 +1,81 @@
+#lang rhombus/and_meta
+import:
+  rhombus/scribble:
+    expose:
+      Element
+      FlowBlock
+  lib("scribble/bnf.rkt") as rkt
+
+export:
+  BNFEntry
+  grammar
+  nt
+  seq
+  alt
+  seq_lines
+  group
+  opt
+  star
+  plus
+  range
+  etc
+
+annot.macro 'Content': 'scribble.Content.to_s_exp'
+annot.macro 'PreContent': 'scribble.PreContent.to_s_exp'
+annot.macro 'BNFEntry': 'scribble.FlowBlock || Content'
+
+fun grammar([nt :: BNFEntry, [prod0 :: BNFEntry,
+                              prod :: BNFEntry,
+                              ...]],
+            ...)
+  :~ FlowBlock:
+    ~doc
+    rkt.#{BNF}(PairList[nt, prod0, prod, ...],
+               ...)
+
+fun nt(c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.nonterm(c)
+
+fun seq(e :: Element, ...)
+  :~ Element || Any.of(""):
+    ~doc
+    rkt.#{BNF-seq}(e, ...)
+
+fun alt(e :: Element, ...)
+  :~ Element:
+    ~doc
+    rkt.#{BNF-alt}(e, ...)
+
+fun seq_lines(line :: Content, ...)
+  :~ FlowBlock:
+    ~doc
+    rkt.#{BNF-seq}(PairList[line], ...)
+
+fun group(c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.#{BNF-group}(c)
+
+fun opt(c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.#{optional}(c)
+
+fun star(c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.#{kleenestar}(c)
+
+fun plus(c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.#{kleeneplus}(c)
+
+fun range(m, n, c :: PreContent)
+  :~ Element:
+    ~doc
+    rkt.#{kleenerange}(m, n, c)
+
+def etc: rkt.#{BNF-etc}

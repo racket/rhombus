@@ -15,3 +15,4 @@ renders it to a format such as HTML or PDF.
 @include_section("overview.scrbl")
 @include_section("base.scrbl")
 @include_section("manual.scrbl")
+@include_section("library.scrbl")
