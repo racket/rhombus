@@ -2,7 +2,7 @@
 
 @title{Rhombus}
 
-Rhombus is an experimental, general-purpose programming language with
+Rhombus! is an experimental, general-purpose programming language with
 conventional expression syntax that is built on
 @hyperlink("https://racket-lang.org"){Racket} and that is
 macro-extensible in the same way as Racket.

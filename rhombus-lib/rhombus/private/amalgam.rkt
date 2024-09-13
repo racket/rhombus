@@ -4,7 +4,7 @@
 ;; Disable amalgam demodularization with the following keyword,
 ;; which may be useful during development to avoid having to
 ;; compile everything four times
-#:no-demod
+#; #:no-demod
 
 #:include (#:dir "amalgam"
            ;; Although Rhombus is implemented with these libraries,
