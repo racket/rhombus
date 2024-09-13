@@ -627,9 +627,10 @@
                    #:datum-literals (op)
                    [(op from) #'from]
                    [_ from-in]))
-    (to-property (datum->syntax to
-                                to
-                                from)
+    (to-property (syntax-raw-property (datum->syntax to
+                                                     (syntax-e to)
+                                                     from)
+                                      '())
                  (from-property from)))
   (define substs
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
@@ -637,12 +638,17 @@
         (cond
           [wrap?
            (define id (if (identifier? name) name (cadr (syntax->list name))))
-           #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
-              (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
-               (group (parsed #:rhombus/expr
-                              (let ([redef? #,as-redef?]
-                                    [meta? #,meta?])
-                                #,def-id-as-def)))))]
+           (datum->syntax
+            #f
+            (list
+             (list 'op (relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
+             (list
+              (relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
+              ;; span is taken from `parens` above, so more nested srclocs don't matter
+              #`(group (parsed #:rhombus/expr
+                               (let ([redef? #,as-redef?]
+                                     [meta? #,meta?])
+                                 #,def-id-as-def))))))]
           [else #`(let ([redef? #,as-redef?]
                         [meta? #,meta?])
                     #,def-id-as-def)]))

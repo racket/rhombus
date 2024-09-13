@@ -153,3 +153,15 @@ block:
                                      "a",
                                      empty_raw,
                                      empty_raw)
+
+block:
+  fun gen(inside):
+    let stx = '($inside)'
+    let stx2 = 'more' // test relies on character offset of `stx2` versus `stx`!
+    values (stx, stx2)
+  let inside = 'long_variable_name' // later than template for `stx` in an attempt to confuse span
+  let (stx :~ Syntax, stx2 :~ Syntax) = gen(inside)
+  check Srcloc.span(inside.srcloc()) ~is 18
+  check Srcloc.span(stx.srcloc()) ~is 9
+  check Srcloc.span('x'.relocate_span([stx]).srcloc()) ~is 9
+  check Srcloc.span('x'.relocate_span([stx, stx2]).srcloc()) ~is 31

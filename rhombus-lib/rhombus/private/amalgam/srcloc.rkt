@@ -255,12 +255,16 @@
                            (null? (cddr l)))
                       (cadr l)
                       a)]
-                 [(group multi)
+                 [(group multi alts)
                   (if (null? (cdr l))
                       stx
                       (from-list stx (cdr l)))]
                  [else
-                  (from-list stx l)]))]
+                  (if (syntax-raw-property a)
+                      ;; use srcloc on head
+                      a
+                      ;; infer srcloc
+                      (from-list stx l))]))]
          [else stx])]))
 
   (if (null? stxes)
