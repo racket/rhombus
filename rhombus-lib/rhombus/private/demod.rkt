@@ -16,7 +16,7 @@
 
 (define-syntax (module-begin stx)
   (meta-if-version-at-least
-   "8.13.0.8"
+   "8.14.0.3"
    (begin
      ;; Since we expand to a module that no longer has this module as an import,
      ;; we need to register it explicitly for cm:
@@ -30,7 +30,7 @@
                                         read-syntax/strip-module))])))
 
 (meta-if-version-at-least
- "8.13.0.8"
+ "8.14.0.3"
  (begin)
  (define-for-syntax (read-syntax/strip-module src in)
    (define v (with-module-reading-parameterization
