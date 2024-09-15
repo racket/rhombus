@@ -11,6 +11,7 @@
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          (submod "bytes.rkt" static-infos)
+         (submod "function.rkt" for-info)
          (submod "list.rkt" for-listable)
          (submod "string.rkt" static-infos))
 
@@ -54,6 +55,8 @@
   #:translucent
   #:fields
   ([bytes Path.bytes #,(get-bytes-static-infos)])
+  #:namespace-fields
+  ([current_directory current-directory])
   #:properties
   ()
   #:methods
@@ -70,6 +73,11 @@
     [(bytes? c) (bytes->path c)]
     [(string? c) (string->path c)]
     [else (raise-annotation-failure who c "String || Bytes || Path")]))
+
+(define-static-info-syntax current-directory
+  (#%function-arity 3)
+  (#%call-result #,(get-path-static-infos))
+  . #,(get-function-static-infos))
 
 (define/method (Path.bytes s)
   #:primitive (path->bytes)
