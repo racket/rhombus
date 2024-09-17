@@ -30,7 +30,9 @@
                                  t
                                  t)
                   t))
-  (syntax-raw-prefix-property t/s (syntax-raw-prefix-property pre)))
+  (let* ([t/s (syntax-raw-prefix-property t/s (syntax-raw-prefix-property pre))]
+         [t/s (syntax-raw-inner-prefix-property t/s (syntax-raw-inner-prefix-property pre))])
+    t/s))
 
 ;; returns #f or (hash 'taget target 'remains rest 'space space-name 'raw default-raw)
 (define-for-syntax (resolve-name-ref space-names root fields

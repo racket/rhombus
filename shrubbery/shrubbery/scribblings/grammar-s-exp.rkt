@@ -18,7 +18,8 @@
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
              @racket[(braces @#,nonterm{group} ...)]
-             @racket[(quotes @#,nonterm{group} ...)])
+             @racket[(quotes @#,nonterm{group} ...)]
+             @racket[(parsed @#,nonterm{any} @#,nonterm{any})])
        (list @nonterm{block}
              @racket[(block @#,nonterm{group} ...)])
        (list @nonterm{alts}

@@ -2,6 +2,8 @@
 
 (provide syntax-raw-property
          syntax-raw-prefix-property
+         syntax-raw-inner-prefix-property
+         syntax-raw-inner-suffix-property
          syntax-raw-suffix-property
          syntax-raw-tail-property
          syntax-opaque-raw-property
@@ -17,6 +19,20 @@
   (case-lambda
     [(stx) (syntax-property stx 'raw-prefix)]
     [(stx val) (syntax-property stx 'raw-prefix val #t)]))
+
+;; Just after a prefix, but sticks to a term instead of an
+;; enclosing group, and counts as part of an enclosing group's
+;; non-prefix content
+(define syntax-raw-inner-prefix-property
+  (case-lambda
+    [(stx) (syntax-property stx 'raw-inner-prefix)]
+    [(stx val) (syntax-property stx 'raw-inner-prefix val #t)]))
+
+;; Just before a prefix, sticks to a term, etc.
+(define syntax-raw-inner-suffix-property
+  (case-lambda
+    [(stx) (syntax-property stx 'raw-inner-suffix)]
+    [(stx val) (syntax-property stx 'raw-inner-suffix val #t)]))
 
 ;; When attached to the head of a container encodings, applies
 ;; after the "tail"

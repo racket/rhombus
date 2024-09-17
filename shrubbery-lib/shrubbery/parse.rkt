@@ -1578,8 +1578,7 @@
      (define stx+pre-raw
        (if (null? pre-raw)
            stx+raw
-           (syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
-                                                         (or (syntax-raw-prefix-property stx) '())))))
+           (add-raw-token-prefix stx+raw pre-raw (syntax-raw-prefix-property stx))))
      (if (null? suffix-raw)
          stx+pre-raw
          (syntax-raw-suffix-property stx+pre-raw (raw-cons (or (syntax-raw-suffix-property stx) '())
@@ -1597,18 +1596,43 @@
 (define (add-pre-raw stx pre-raw)
   (if (null? pre-raw)
       stx
-      (syntax-raw-prefix-property stx (raw-tokens->raw pre-raw))))
+      (add-raw-token-prefix stx pre-raw '())))
+
+(define (maybe-raw p) (and (not (null? p)) p))
+
+;; if `pre-raw` contains a 'at token, then it's the boundary between a
+;; normal prefix and inner prefix
+(define (add-raw-token-prefix stx pre-raw post-prefix)
+  (define-values (new-prefix inner-prefix) (raw-tokens->raw/prefix pre-raw))
+  (cond
+    [(null? inner-prefix)
+     (syntax-raw-prefix-property stx (maybe-raw (raw-cons new-prefix post-prefix)))]
+    [else
+     (let ([stx (syntax-raw-prefix-property stx (maybe-raw new-prefix))])
+       (syntax-raw-inner-prefix-property stx (maybe-raw (raw-cons inner-prefix post-prefix))))]))
 
 (define (move-pre-raw from-stx to)
-  (define pre-raw (and (syntax? from-stx)
-                       (syntax-raw-prefix-property from-stx)))
   (cond
-    [pre-raw
-     (define a (car to))
-     (cons (syntax-raw-prefix-property a (raw-cons pre-raw
-                                                   (or (syntax-raw-prefix-property a) '())))
-           (cdr to))]
-    [else to]))
+    [(not (syntax? from-stx)) to]
+    [else
+     (define pre-raw (syntax-raw-prefix-property from-stx))
+     (define inner-pre-raw (syntax-raw-inner-prefix-property from-stx))
+     (cond
+       [(or pre-raw inner-pre-raw)
+        (define a (car to))
+        (cons (let* ([a (if inner-pre-raw
+                            (syntax-raw-inner-prefix-property a (raw-cons (raw-cons
+                                                                           inner-pre-raw
+                                                                           (syntax-raw-prefix-property a))
+                                                                          (syntax-raw-inner-prefix-property a)))
+                            a)]
+                     [a (syntax-raw-prefix-property a (maybe-raw
+                                                       (raw-cons pre-raw
+                                                                 (and (not inner-pre-raw)
+                                                                      (syntax-raw-prefix-property a)))))])
+                a)
+              (cdr to))]
+       [else to])]))
 
 (define (move-pre-raw* from-stx to)
   (cond
@@ -1639,6 +1663,25 @@
     (if (token? raw-t)
         (token-raw raw-t)
         raw-t)))
+
+;; splits on an 'at token
+(define (raw-tokens->raw/prefix pre-raw)
+  (let loop ([pre-raw pre-raw] [accum null])
+    (cond
+      [(null? pre-raw) (values accum null)]
+      [else
+       (define raw-t (car pre-raw))
+       (cond
+         [(and (token? raw-t)
+               (eq? 'at (token-name raw-t)))
+          (values (raw-tokens->raw (cdr pre-raw))
+                  (cons (token-raw raw-t) accum))]
+         [else
+          (loop (cdr pre-raw)
+                (cons (if (token? raw-t)
+                          (token-raw raw-t)
+                          raw-t)
+                      accum))])])))
 
 (define (add-raw-to-prefix t pre-raw l #:tail [post-raw #f] #:tail-suffix [tail-suffix-raw null])
   (cons (let* ([stx (record-raw (car l) t pre-raw null)]
@@ -1883,9 +1926,13 @@
          (printf " ~s.... ~s\n" (syntax->datum a) tail-suffix))]
       [(null? s) (void)]
       [else
-       (define prefix (syntax-raw-prefix-property s))
+       (define (raw-consx a b) (and (or a b) (raw-cons a b)))
+       (define prefix (raw-consx (syntax-raw-prefix-property s)
+                                 (syntax-raw-inner-prefix-property s)))
        (define raw (syntax-raw-property s))
-       (define suffix (and (not skip-suffix?) (syntax-raw-suffix-property s)))
+       (define suffix (and (not skip-suffix?)
+                           (raw-consx (syntax-raw-suffix-property s)
+                                      (syntax-raw-inner-suffix-property s))))
        (printf "~.s: ~a~s~a\n"
                (syntax->datum s)
                (if prefix

@@ -165,3 +165,16 @@ block:
   check Srcloc.span(stx.srcloc()) ~is 9
   check Srcloc.span('x'.relocate_span([stx]).srcloc()) ~is 9
   check Srcloc.span('x'.relocate_span([stx, stx2]).srcloc()) ~is 31
+
+block:
+  let x = '@x'
+  check x.to_source_string() ~is "@x"
+  check x.to_source_string(~as_inner: #false) ~is "x"
+  check x.source_properties() ~is values(PairList["@"],
+                                         "x",
+                                         empty_raw,
+                                         empty_raw)
+  check '?'.relocate_span([x]).source_properties() ~is values(empty_raw,
+                                                              Pair(PairList["@"], "x"),
+                                                              empty_raw,
+                                                              empty_raw)

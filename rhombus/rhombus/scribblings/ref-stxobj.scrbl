@@ -999,12 +999,23 @@ suffix corresponds to text after the closer.
 }
 
 @doc(
-  fun Syntax.to_source_string(stx :: Syntax) :: String
+  fun Syntax.to_source_string(stx :: Syntax,
+                              ~keep_prefix: keep_prefix = #false,
+                              ~keep_suffix: keep_suffix = #false,
+                              ~as_inner: as_inner = #true)
+    :: String
 ){
 
  Converts to a string with content similar to @rhombus(print) of
  @rhombus(stx) in @rhombus(#'text) mode, but using source text as available through
  @rhombus(#'raw) and related properties attached to @rhombus(stx).
+
+ A raw-text prefix or suffix is preserved in the result only when
+ @rhombus(keep_prefix) or @rhombus(keep_suffix) is true, respectively. If
+ @rhombus(as_inner) is true, then an ``inner'' prefix or suffix is
+ preserved independent of @rhombus(keep_prefix) or @rhombus(keep_suffix);
+ typically, an inner prefix corresponds to @litchar("@") to start
+ at-expression notation before a term.
 
 }
 

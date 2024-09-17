@@ -134,6 +134,8 @@
                             raw)]
                 [else (syntax-opaque-raw-property stx raw)])]
          [stx (syntax-raw-prefix-property stx (if (null? pfx) #f pfx))]
+         [stx (syntax-raw-inner-prefix-property stx #f)]
+         [stx (syntax-raw-inner-suffix-property stx #f)]
          [stx (syntax-raw-suffix-property stx (if (null? sfx) #f sfx))])
     stx))
 
@@ -146,25 +148,27 @@
 
 (define (extract-raw stx)
   (define l (find-shrubberies stx))
+  (define (extract s)
+    (shrubbery-syntax->raw s #:use-raw? #t #:keep-prefix? #t #:keep-suffix? #t #:inner? #t))
   (cond
     [(null? l)
      (values #f '() #f)]
     [(null? (cdr l))
      (define s (car l))
-     (shrubbery-syntax->raw s #:use-raw? #t #:keep-prefix? #t #:keep-suffix? #t)]
+     (extract s)]
     [else
      (define (raw-cons a b) (combine-shrubbery-raw a b))
-     (define-values (prefix raw suffix) (shrubbery-syntax->raw (car l) #:use-raw? #t #:keep-prefix? #t #:keep-suffix? #t))
+     (define-values (prefix raw suffix) (extract (car l)))
      (let loop ([l (cdr l)] [accum (raw-cons raw suffix)])
        (cond
          [(null? (cdr l))
           (define s (car l))
-          (define-values (pfx raw sfx) (shrubbery-syntax->raw s #:use-raw? #t #:keep-prefix? #t #:keep-suffix? #t))
+          (define-values (pfx raw sfx) (extract s))
           (values prefix
                   (raw-cons accum (raw-cons pfx raw))
                   sfx)]
          [else
-          (define-values (pfx raw sfx) (shrubbery-syntax->raw (car l) #:use-raw? #t #:keep-prefix? #t #:keep-suffix? #t))
+          (define-values (pfx raw sfx) (extract (car l)))
           (loop (cdr l) (raw-cons accum (raw-cons (raw-cons pfx raw) sfx)))]))]))
 
 ;; If the tail is empty, give it a source location

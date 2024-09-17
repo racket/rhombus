@@ -15,6 +15,7 @@
                                   #:max-length [max-length #f]
                                   #:keep-prefix? [keep-prefix? #f]
                                   #:keep-suffix? [keep-suffix? #f]
+                                  #:inner? [inner? #f]
                                   #:infer-starting-indentation? [infer-starting-indentation? #t]
                                   #:register-stx-range [register-stx-range void]
                                   #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
@@ -28,6 +29,7 @@
                         #:max-length max-length
                         #:keep-prefix? keep-prefix?
                         #:keep-suffix? keep-suffix?
+                        #:inner? inner?
                         #:register-stx-range register-stx-range
                         #:render-stx-hook render-stx-hook)
      (define orig-str (get-output-string o))
@@ -54,13 +56,15 @@
 (define (shrubbery-syntax->raw s
                                #:use-raw? [use-raw? #f]
                                #:keep-prefix? [keep-prefix? #f]
-                               #:keep-suffix? [keep-suffix? #f])
+                               #:keep-suffix? [keep-suffix? #f]
+                               #:inner? [inner? #f])
   (cond
     [(or use-raw?
          (and (syntax? s) (all-raw-available? s)))
      (extract/print-raw s
                         #:keep-prefix? keep-prefix?
-                        #:keep-suffix? keep-suffix?)]
+                        #:keep-suffix? keep-suffix?
+                        #:inner? inner?)]
     [else
      (values #f
              (shrubbery-syntax->string s)
@@ -95,10 +99,12 @@
                            #:max-length [max-length #f]
                            #:keep-prefix? keep-prefix?
                            #:keep-suffix? keep-suffix?
+                           #:inner? inner?
                            #:register-stx-range [register-stx-range #f]
                            #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
   (define (raw-cons a b) (combine-shrubbery-raw a b))
-  (let loop ([g g] [use-prefix? keep-prefix?] [keep-suffix? keep-suffix?])
+  (define (raw-list* a b c) (combine-shrubbery-raw (combine-shrubbery-raw a b) c))
+  (let loop ([g g] [use-prefix? keep-prefix?] [keep-suffix? keep-suffix?] [inner? inner?])
     (define (get-start)
       (cond
         [(and register-stx-range
@@ -144,9 +150,9 @@
         (cond
           [(null? l) (values #f #f #f)]
           [(null? (cdr l))
-           (loop (car l) use-prefix? keep-suffix?)]
+           (loop (car l) use-prefix? keep-suffix? #t)]
           [else
-           (define-values (pfx raw sfx) (loop (car l) use-prefix? #t))
+           (define-values (pfx raw sfx) (loop (car l) use-prefix? #t #t))
            (define-values (rest-pfx res-raw rest-sfx) (e-loop (cdr l) #t keep-suffix?))
            (values pfx
                    (raw-cons (raw-cons raw sfx)
@@ -154,15 +160,30 @@
                    rest-sfx)])))
 
     (define (container a l bracketed? use-prefix? keep-suffix?)
-      (define init-prefix (out (and use-prefix? (syntax-raw-prefix-property a))))
+      (define init-prefix (out (and use-prefix?
+                                    (raw-cons
+                                     (syntax-raw-prefix-property a)
+                                     (and (not inner?)
+                                          (syntax-raw-inner-prefix-property a))))))
+
+      (define inner-prefix (out (and inner?
+                                     (syntax-raw-inner-prefix-property a))))
 
       (define-values (start-pos replaced?) (get-start))
-      (define init-raw (out (and (not replaced?)
-                                 (syntax-raw-property a))))
+      (define init-raw (raw-cons
+                        inner-prefix
+                        (out (and (not replaced?)
+                                  (syntax-raw-property a)))))
+
       (define end-raw (syntax-raw-tail-property a))
+      (define inner-suffix (and inner?
+                                (syntax-raw-inner-suffix-property a)))
 
       (define end-suffix (and keep-suffix?
-                              (syntax-raw-suffix-property a)))
+                              (raw-cons
+                               (and (not inner?)
+                                    (syntax-raw-inner-suffix-property a))
+                               (syntax-raw-suffix-property a))))
 
       (define-values (prefix raw suffix)
         (cond
@@ -170,8 +191,10 @@
           [(syntax-raw-opaque-content-property a)
            => (lambda (raw)
                 (values init-prefix
-                        (raw-cons (raw-cons init-raw (out raw))
-                                  (out end-raw))
+                        (raw-list* init-raw
+                                   (out raw)
+                                   (raw-cons (out end-raw)
+                                             (out inner-suffix)))
                         end-suffix))]
           [else
            (define-values (pfx raw sfx) (sequence l
@@ -180,10 +203,12 @@
            (if bracketed?
                (values init-prefix
                        (raw-cons init-raw (raw-cons (raw-cons pfx raw)
-                                                    (raw-cons sfx (out end-raw))))
+                                                    (raw-list* sfx
+                                                               (out end-raw)
+                                                               (out inner-suffix))))
                        end-suffix)
                (values (raw-cons init-prefix pfx)
-                       (raw-cons init-raw (raw-cons raw (out end-raw)))
+                       (raw-list* init-raw raw (raw-cons (out end-raw) (out inner-suffix)))
                        (raw-cons sfx end-suffix)))]))
 
       (register start-pos)
@@ -198,10 +223,21 @@
       [(syntax-opaque-raw-property g)
        => (lambda (raw-in)
             (define prefix (out (and keep-prefix?
-                                     (syntax-raw-prefix-property g))))
-            (define raw (out/register raw-in))
+                                     (raw-cons
+                                      (syntax-raw-prefix-property g)
+                                      (and (not inner?)
+                                           (syntax-raw-inner-prefix-property g))))))
+            (define raw (raw-list*
+                         (and inner?
+                              (out (syntax-raw-inner-prefix-property g)))
+                         (out/register raw-in)
+                         (and inner?
+                              (out (syntax-raw-inner-suffix-property g)))))
             (define suffix (out (and keep-suffix?
-                                     (syntax-raw-suffix-property g))))
+                                     (raw-cons
+                                      (and (not inner?)
+                                           (syntax-raw-inner-suffix-property g))
+                                      (syntax-raw-suffix-property g)))))
             (values prefix raw suffix))]
       [(pair? (syntax-e g))
        (define l (syntax->list g))
@@ -214,7 +250,7 @@
              (container a (cdr l) #f use-prefix? keep-suffix?)]
             [(op)
              (if (and (pair? (cdr l)) (null? (cddr l)))
-                 (loop (cadr l) use-prefix? keep-suffix?)
+                 (loop (cadr l) use-prefix? keep-suffix? inner?)
                  (s-exp g))]
             [(parens brackets braces quotes block alts)
              (container a (cdr l) #t use-prefix? keep-suffix?)]
@@ -222,7 +258,7 @@
              (cond
                [(and (= 3 (length l))
                      (syntax-opaque-raw-property (caddr l)))
-                (loop (caddr l) use-prefix? keep-suffix?)]
+                (loop (caddr l) use-prefix? keep-suffix? inner?)]
                [else
                 (s-exp g)])]
             [else (s-exp g)])])]

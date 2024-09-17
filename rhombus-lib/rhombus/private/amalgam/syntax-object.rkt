@@ -597,18 +597,30 @@
   (define-values (ctx container?) (extract-ctx 'get-source-properties stx #:report-container? #t))
   (if container?
       (values
-       (or (syntax-raw-prefix-property ctx) null)
+       (or (combine-shrubbery-raw
+            (syntax-raw-prefix-property ctx)
+            (syntax-raw-inner-prefix-property ctx))
+           null)
        (or (combine-shrubbery-raw
             (syntax-raw-property ctx)
             (syntax-raw-opaque-content-property ctx))
            null)
        (or (syntax-raw-tail-property ctx) null)
-       (or (syntax-raw-suffix-property ctx) null))
+       (or (combine-shrubbery-raw
+            (syntax-raw-inner-suffix-property ctx)
+            (syntax-raw-suffix-property ctx))
+           null))
       (values
-       (or (syntax-raw-prefix-property ctx) null)
+       (or (combine-shrubbery-raw
+            (syntax-raw-prefix-property ctx)
+            (syntax-raw-inner-prefix-property ctx))
+           null)
        (or (syntax-raw-property ctx) null)
        null
-       (or (syntax-raw-suffix-property ctx) null))))
+       (or (combine-shrubbery-raw
+            (syntax-raw-inner-suffix-property ctx)
+            (syntax-raw-suffix-property ctx))
+           null))))
 
 (define (set-source-properties stx extract-ctx prefix raw tail suffix)
   (extract-ctx
@@ -616,6 +628,8 @@
    #:update
    (lambda (stx container?)
      (let* ([stx (syntax-raw-prefix-property stx (if (null? prefix) #f prefix))]
+            [stx (syntax-raw-inner-prefix-property stx #f)]
+            [stx (syntax-raw-inner-suffix-property stx #f)]
             [stx (syntax-raw-suffix-property stx (if (null? suffix) #f suffix))]
             [stx (syntax-raw-tail-property stx (if (null? tail) #f tail))])
        (if container?
@@ -656,6 +670,8 @@
          (let* ([stx (syntax->datum stx (syntax-e stx) #f stx)]
                 [stx (syntax-raw-property stx '())]
                 [stx (syntax-raw-prefix-property stx #f)]
+                [stx (syntax-raw-inner-prefix-property stx #f)]
+                [stx (syntax-raw-inner-suffix-property stx #f)]
                 [stx (syntax-raw-suffix-property stx #f)])
            (if container?
                (syntax-raw-opaque-content-property stx '())
@@ -701,6 +717,10 @@
                                      (syntax-e stx)
                                      loc
                                      stx)]
+                 [stx (syntax-raw-inner-prefix-property
+                       stx
+                       (and prefix?
+                            (syntax-raw-inner-prefix-property ctx)))]
                  [stx (syntax-raw-prefix-property
                        stx
                        (and prefix?
@@ -717,7 +737,11 @@
                       [stx (syntax-raw-suffix-property
                             stx
                             (and suffix?
-                                 (syntax-raw-suffix-property ctx)))])
+                                 (syntax-raw-suffix-property ctx)))]
+                      [stx (syntax-raw-inner-suffix-property
+                            stx
+                            (and suffix?
+                                 (syntax-raw-inner-suffix-property ctx)))])
                  stx)]
               [else
                (let* ([stx (syntax-raw-property
@@ -728,7 +752,11 @@
                       [stx (syntax-raw-suffix-property
                             stx
                             (and suffix?
-                                 (syntax-raw-suffix-property ctx)))])
+                                 (syntax-raw-suffix-property ctx)))]
+                      [stx (syntax-raw-inner-suffix-property
+                            stx
+                            (and suffix?
+                                 (syntax-raw-inner-suffix-property ctx)))])
                  stx)])))))
      (list->treelist
       (cons (relocate-one (car stxes)
@@ -752,13 +780,17 @@
 
 (define/method (Syntax.to_source_string stx
                                         #:keep_prefix [keep-prefix? #f]
-                                        #:keep_suffix [keep-suffix? #f])
+                                        #:keep_suffix [keep-suffix? #f]
+                                        #:as_inner [inner? #t])
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (check-syntax who stx)
-  (string->immutable-string (shrubbery-syntax->string stx
+  (string->immutable-string (shrubbery-syntax->string (or (and (not inner?)
+                                                               (unpack-term/maybe stx))
+                                                          stx)
                                                       #:use-raw? #t
                                                       #:keep-prefix? keep-prefix?
-                                                      #:keep-suffix? keep-suffix?)))
+                                                      #:keep-suffix? keep-suffix?
+                                                      #:inner? inner?)))
 
 (define/method (Syntax.srcloc stx)
   (check-syntax who stx)
