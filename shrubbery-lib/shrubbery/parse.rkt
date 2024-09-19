@@ -1262,7 +1262,7 @@
 ;;   accumulated reversed raw whitespace
 (define (next-of l last-line delta raw count?)
   (cond
-    [(null? l) (values null (or last-line 0) delta raw)]
+    [(null? l) (values null (or last-line 0) (or delta 0) raw)]
     [else
      (define t (car l))
      (case (token-name t)
@@ -1271,7 +1271,7 @@
        [(continue-operator)
         (define line (token-line t))
         ;; a continue operator not followed only by whitespace and
-        ;; comments is just treated as whitespace
+        ;; comments is an error
         (define-values (next-l next-raw)
           (let loop ([l (cdr l)] [raw (cons t raw)])
             (cond
@@ -1283,17 +1283,23 @@
           [(and (pair? next-l)
                 (or (not count?)
                     (eqv? line (token-line (car next-l)))))
-           ;; like whitespace:
+           (when count?
+             (fail t "line-continuing '\\' is followed by a another token on the same line"))
+           ;; if error escape or counting is disabled, threat like whitespace:
            (next-of next-l last-line delta next-raw count?)]
           [else
-           (define accum-delta? (or (not count?) (not last-line) (eqv? line last-line)))
+           (define continues? (or (not count?) (not last-line) (eqv? line last-line)))
            (next-of next-l
-                    ;; whitespace-only lines don't count, so next continues
-                    ;; on the same line by definition:
-                    #f
-                    (cont-delta (column+ (column+ 1
+                    (if continues?
+                        ;; whitespace-only lines don't count, so next continues
+                        ;; on the same line by definition:
+                        #f
+                        last-line)
+                    (cont-delta 0
+                                #;
+                                (column+ (column+ 1
                                                   (token-column t))
-                                         (if accum-delta?
+                                         (if continues?
                                              (cont-delta-column delta)
                                              0))
                                 (add1 (cont-delta-line-span delta)))

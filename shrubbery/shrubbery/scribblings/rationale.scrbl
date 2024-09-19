@@ -66,19 +66,9 @@ they can be freely added without intefering with grouping. The
 @litchar{\} continuation operator is somewhat unusual in that it skips
 blank and comment lines to continue, as opposed to requiring @litchar{\}
 on every continuing line; that, too, allows extra blank and comment
-lines to be added, even amid continuing lines.
-
-The interaction of indentation and @litchar{\} differs slightly from
-Python, which does not count the space for @litchar{\} itself or any
-leading whitespace on a continuing line toward indentation. Counting the
-leading whitespace on a continuing line has the advantage that it can
-reach an arbitrary amount of identation within a constrained textual
-width. Counting the @litchar{\} itself is consistent with ignoring
-@litchar{\} when it appears within a line, so grouping stays the same
-whether there's a newline or the continue line immediately after
-@litchar{\}. The whitespace role of @litchar{\} also means that spaces
-can be turned into @litchar{\} to ``harden'' code for transfer via media
-(such as email) that might mangle consecutive spaces.
+lines to be added, even amid continuing lines, although at the risk that a
+@litchar{\}'s reach will extend further than intended past blank
+lines.
 
 Using @litchar{~} for keywords has a precedent in OCaml. Reserving
 @litchar{~} for keywords exclusively would use up a character that

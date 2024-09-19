@@ -6,7 +6,6 @@
          get-token-range
          line-start
          line-orig-start
-         line-delta
          col-of
          only-whitespace-between?
          get-block-column
@@ -73,31 +72,8 @@
           (loop c-start c-start)]
          [else start])])))
 
-(define (line-delta t start #:unless-empty? [unless-empty? #f])
-  (let loop ([pos start])
-    (cond
-      [(eqv? pos 0) 0]
-      [else
-       (case (classify-position t (sub1 pos))
-         [(whitespace comment)
-          (define-values (s e) (get-token-range t (sub1 pos)))
-          (loop s)]
-         [(continue-operator)
-          ;; since we've only skipped comments and whitespace, this
-          ;; continue operator applies
-          (define-values (s e) (get-token-range t (sub1 pos)))
-          (define c-start (line-start t s))
-          (define more-delta (line-delta t c-start #:unless-empty? unless-empty?))
-          (and more-delta
-               (if unless-empty?
-                   (not (only-whitespace-between? t c-start s #:or-ws-like? #t))
-                   #t)
-               (+ (- e c-start) more-delta))]
-         [else 0])])))
-
-;; skip back over whitespace and comments to find `\`
-(define (col-of pos start delta)
-  (+ (- pos start) delta))
+(define (col-of pos start)
+  (- pos start))
 
 (define (only-whitespace-between? t s-pos e-pos
                                   #:or-ws-like? [or-ws-like? #f])
@@ -137,21 +113,18 @@
           (cond
             [(not r)
              (define start (line-start t pos))
-             (define delta (line-delta t start))
-             (loop (sub1 s) (col-of s start delta) at-start)]
+             (loop (sub1 s) (col-of s start) at-start)]
             [(zero? r) (list 0)]
             [else
              (define start (line-start t r))
-             (define delta (line-delta t start))
-             (loop (sub1 r) (col-of r start delta) start)])]
+             (loop (sub1 r) (col-of r start) start)])]
          [(block-operator bar-operator comma-operator semicolon-operator) candidate]
          [else
           (cond
             [(zero? s) 0]
             [else
              (define start (line-start t pos))
-             (define delta (line-delta t start))
-             (loop (sub1 s) (col-of s start delta) start)])])])))
+             (loop (sub1 s) (col-of s start) start)])])])))
 
 (define (block-not-disallowed-empty? t init-pos init-at-start)
   (or (zero? init-pos)
@@ -173,8 +146,8 @@
            ;; and also not disallowed empty
            (define pos-start (line-start t s))
            (and (pos-start . < . at-start)
-                (= (col-of init-pos init-at-start (line-delta t init-at-start))
-                   (col-of pos pos-start (line-delta t pos-start)))
+                (= (col-of init-pos init-at-start)
+                   (col-of pos pos-start))
                 (block-not-disallowed-empty? t pos pos-start))]
           [else
            (not (= (line-start t s) at-start))]))))
@@ -212,8 +185,7 @@
     [(block-operator bar-operator)
      (define-values (next-s next-e) (skip-whitespace t e 1))
      (define start (line-start t next-s))
-     (define delta (line-delta t start))
-     (skip-to-shallower t e (col-of next-s start delta)
+     (skip-to-shallower t e (col-of next-s start)
                         #:bar-stop-line (and (eq? category 'bar-operator)
                                              start))]
     [(comma-operator) (if stop-at-comma? s e)]
@@ -236,8 +208,7 @@
          [(separator) s]
          [else
           (define start (line-start t s))
-          (define delta (line-delta t start))
-          (define new-col (col-of s start delta))
+          (define new-col (col-of s start))
           (cond
             [(new-col . < . col) (or last-e s)]
             [(and (eq? category 'bar-operator)
@@ -312,7 +283,7 @@
 ;; return the start of the block or parens containing the group containg `pos`
 (define (start-of-enclosing-block t pos)
   (define start (line-start t pos))
-  (define col (col-of pos start (line-delta t start)))
+  (define col (col-of pos start))
   (cond
     [(zero? col)
      ;; use column 0 as a proxy for being in a top-level block; we
@@ -339,7 +310,7 @@
             [(bar-operator)
              ;; needs to be outdented relative to initial `pos`
              (define s-start (line-start t pos))
-             (define s-col (col-of pos s-start (line-delta t s-start)))
+             (define s-col (col-of pos s-start))
              (cond
                [(s-col . < . col) last-pos]
                [else (loop s last-pos)])]

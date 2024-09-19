@@ -1509,16 +1509,18 @@ this is | one: a \
 
 this is \
   the first group
-this \ is \ the \ second \ group
+\
+this is the second group
 
-this is a group \  with (a,
-                         nested,
-                         list)
+this is a group with (a, \
+                      nested \
+                      ,
+                      list)
 
 this is a group \
   with (a,
-                         nested,
-                         list)
+        nested,
+        list)
 
 this is a group \
  with (a,
@@ -1541,12 +1543,28 @@ hello | a | c\
 
 this: \
       is more
-             foo
+      foo
 
 foo
 | more \
 | again:
-             sub
+   sub
+
+hello:
+  one two \
+  three:
+    more
+  four
+
+hello:
+  one two \
+three:
+    more
+four
+
+a \ /* multi
+       line */
+ b
 
 a
 |
@@ -1673,6 +1691,10 @@ INPUT
     (group
      foo
      (alts (block (group more)) (block (group again (block (group sub))))))
+    (group hello (block (group one two three (block (group more))) (group four)))
+    (group hello (block (group one two three (block (group more)))))
+    (group four)
+    (group a b)
     (group a (alts (block (group b (alts (block (group x)))) (group d))))
     (group something (op +))
     (group more stuff)

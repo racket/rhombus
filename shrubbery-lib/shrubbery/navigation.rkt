@@ -67,10 +67,10 @@
 ;; if `pos` is at the first bar
 (define (start-of-alts t pos)
   (define at-start (line-start t pos))
-  (define col (col-of pos at-start (line-delta t at-start)))
+  (define col (col-of pos at-start))
   (define (outdented? s)
     (define start (line-start t s))
-    (define s-col (col-of s start (line-delta t s)))
+    (define s-col (col-of s start))
     (s-col . <= . col))
   (define (select last-bar last-block last-pos s)
     (or last-bar (and last-pos last-block) last-pos s))
@@ -113,7 +113,7 @@
                [(opener)
                 (select last-bar last-block last-pos s)]
                [(bar-operator)
-                (define s-col (col-of s s-start (line-delta t s-start)))
+                (define s-col (col-of s s-start))
                 (cond
                   [(eqv? bar-start s-start)
                    ;; same line, so earlier bar the in same block
