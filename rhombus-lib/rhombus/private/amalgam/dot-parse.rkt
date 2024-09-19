@@ -1,13 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "statically-str.rkt"
                      "srcloc.rkt")
          "parens.rkt"
          (submod "assign.rkt" for-assign)
          (only-in "repetition.rkt"
                   identifier-repetition-use)
-         "call-result-key.rkt"
          "op-literal.rkt"
          "function-arity.rkt")
 
@@ -21,37 +19,41 @@
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
         [((~and args (p-tag::parens g ...)) . new-tail)
-         (define-values (n kws rsts? kwrsts?)
-           (let loop ([gs (syntax->list #'(g ...))] [n 0] [kws null] [rsts? #f] [kwrsts? #f])
-             (cond
-               [(null? gs) (values n kws rsts? kwrsts?)]
-               [else
-                (syntax-parse (car gs)
-                  #:datum-literals (group op)
-                  [(group kw:keyword . _)
-                   (loop (cdr gs) n (cons #'kw kws) rsts? kwrsts?)]
-                  [(group _::&-expr . _)
-                   (loop (cdr gs) n kws #t kwrsts?)]
-                  [(group _::~&-expr . _)
-                   (loop (cdr gs) n kws rsts? #t)]
-                  [_
-                   (loop (cdr gs) (add1 n) kws rsts? kwrsts?)])])))
-         (cond
-           [(check-arity #f #f mask n kws rsts? kwrsts? #f)
-            (success-k (n-k #'(p-tag g ...)
-                            (lambda (e)
+         (define (success-call/static)
+           (success-k (n-k #'(p-tag g ...)
+                           (lambda (e)
+                             (relocate+reraw
+                              (respan (datum->syntax #f (list lhs dot field-stx #'args)))
+                              e)))
+                      #'new-tail))
+         (define (success-call/dynamic)
+           (success-k (no-k (lambda (e)
                               (relocate+reraw
-                               (respan (datum->syntax #f (list lhs dot field-stx #'args)))
+                               (respan (datum->syntax #f (list lhs dot field-stx)))
                                e)))
-                       #'new-tail)]
+                      tail))
+         (define-values (n kws rsts? kwrsts?)
+           (for/fold ([n 0] [kws null] [rsts? #f] [kwrsts? #f])
+                     ([g (in-list (syntax->list #'(g ...)))])
+             (syntax-parse g
+               #:datum-literals (group op)
+               [(group kw:keyword . _)
+                (values n (cons #'kw kws) rsts? kwrsts?)]
+               [(group _::&-expr . _)
+                (values n kws #t kwrsts?)]
+               [(group _::~&-expr . _)
+                (values n kws rsts? #t)]
+               [_
+                (values (add1 n) kws rsts? kwrsts?)])))
+         (cond
+           [more-static?
+            (check-arity field-stx #f mask n kws rsts? kwrsts? 'method)
+            (success-call/static)]
+           ;; dynamic
+           [(check-arity #f #f mask n kws rsts? kwrsts? #f)
+            (success-call/static)]
            [else
-            (if more-static?
-                (bad (string-append "wrong number of arguments in method call" statically-str))
-                (success-k (no-k (lambda (e)
-                                   (relocate+reraw
-                                    (respan (datum->syntax #f (list lhs dot field-stx)))
-                                    e)))
-                           tail))])]
+            (success-call/dynamic)])]
         [_
          (if more-static?
              (bad "expected parentheses afterward")

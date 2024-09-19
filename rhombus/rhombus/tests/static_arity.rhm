@@ -73,10 +73,7 @@ expr.macro 'static_arity_check $(pattern:
              #%literal $("wrong number of arguments in " ++ kind ++ " call"),
              "static",
            )'
-      // FIXME "keyword argument not recognized" in method calls
-      '$(match kind
-         | "method": ''
-         | ~else: make_kw(just))
+      '$(make_kw(just))
        $(if less | make_pos(less) | '')
        $(if more | make_pos(more) | '')'
     'block:
