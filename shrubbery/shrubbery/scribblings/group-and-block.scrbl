@@ -593,10 +593,17 @@ inside:« fruit » more
 
 As a last resort, @litchar{\} can be used at the end of a line (optionally
 followed by whitespace and coments on the line) to continue the next
-line as it if were one line continuing with the next line. The itself
-@litchar{\} does not appear in the parsed form. A @litchar{\} that is not at the end of a
-line (followed by whitespace and coments) is treated the same as
-whitespace.
+line as it if were one line continuing with the next line. The
+@litchar{\} itself does not appear in the parsed form. Within the same line,
+a @litchar{\} can be followed only by whitespace and comments in line-sensitive
+mode (i.e., outside @guillemets that form a line-insensitive group).
+
+A continuing @litchar{\} does not affect the assignment of columns to
+positions on a subsequent line; that is, column counting starts again
+at 0 following a newline after @litchar{\}. The beginning of the group
+still determines the group's indentation, even if the continuing line
+starts less indented. When no terms precede a @litchar{\} within a
+group, the @litchar{\} is effectively whitespace.
 
 Lines containing only whitespace and (non-term) comments do not count
 as ``the next line'' even for @litchar{\} continuations, so any number of
@@ -605,28 +612,24 @@ it continues.
 
 @rhombusblock(
   this is \
-    the first group
-  this \ is \ the \ second \ group
+  the first group
+  \
+  this is the second group
 
   this is a group \
-    with (a,
-                             nested,
-                             list)
+  with:
+    a
+    nested
+    block
 
   this is a group \
-   with (a,
-                  \
-         nested,
-                  \
-         list)
+  with (a,
+        nested,
+        list)
 
-  this is a group \
-   with (a,
-                  \
-         /* this a comment on `nested`: */
-         nested,
-                  \
-         list)
+  this is \
+  /* comment */
+  the last group
 )
 
 @section(~tag: "group-comment"){Group Comments with @litchar{#//}}

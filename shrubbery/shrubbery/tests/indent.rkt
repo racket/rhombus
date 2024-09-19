@@ -203,11 +203,11 @@
           ^green,}
 
  @e{this is a \
-      !ong linear group}
+    ^ong linear group}
 
  @e{this is a \
       very long linear group \
-      !hat spans multiple lines}
+    ^hat spans multiple lines}
 
  @e{this is | one: a \
                     long result
@@ -216,14 +216,14 @@
  @e{this is | one: a \
                     long result
             | two \
-                !lso long}
+    ^         ^lso long}
 
  @e{this is a group \  with (a,
                              ^nested}
 
  @e{this is a group \
       with (a,
-                             ^nested}
+            ^nested}
 
  @e{this is a group \
      with (a,
@@ -231,8 +231,8 @@
            ^nested}
 
  @e{hello | a | c\
-     :
-                     ^d}
+      :
+        ^d}
 
  @e{nonsense:
       hello | there 4.5

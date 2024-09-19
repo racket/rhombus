@@ -82,13 +82,19 @@
      (define init from-pos)
      (define gs (list (make-group col #:close? (not bar?))))
      (define inserts
-       (let loop ([pos init] [prev-end init] [init? #t] [state (make-parse-state gs)] [inserts (if bar?
-                                                                                                   null
-                                                                                                   (list (cons init 'enter)))])
+       (let loop ([pos init]
+                  [prev-end init]
+                  [init? #t]
+                  [state (make-parse-state gs)]
+                  [continued? #f]
+                  [inserts (if bar?
+                               null
+                               (list (cons init 'enter)))])
          (define (close-one)
            (loop pos prev-end #f
                  (struct-copy parse-state state
                               [gs (cdr (parse-state-gs state))])
+                 #f
                  (if (group-close? (car (parse-state-gs state)))
                      (cons (cons prev-end 'close) inserts)
                      inserts)))
@@ -101,39 +107,47 @@
             (define-values (s e) (send t get-token-range pos))
             (define category (classify-position t pos))
             (case category
-              [(whitespace comment continue-operator)
+              [(whitespace comment)
                (when (and (eq? category 'comment)
                           (pair? (parse-state-gs state))
                           (group-in-at? (car (parse-state-gs state))))
                  ;; line comment => don't adjust next line's indentation
                  (hash-set! skip-adjust-lines (add1 (send t position-paragraph s)) #t))
-               (loop e prev-end init? state inserts)]
+               (loop e prev-end init? state continued? inserts)]
+              [(continue-operator)
+               (define continues? (= (line-start t s) (line-start t prev-end)))
+               (if continues?
+                   (loop e e init? state #t inserts)
+                   (loop e prev-end init? state #f inserts))]
               [(group-comment)
                (define next-pos (skip-whitespace2 t e end))
-               (loop next-pos prev-end #t state (if (and (not init?)
-                                                         (pair? (parse-state-gs state))
-                                                         (group-add-semi? (car (parse-state-gs state)))
-                                                         (not (eq? 'bar-operator (classify-position t next-pos))))
-                                                    (cons (cons prev-end 'semi) inserts)
-                                                    inserts))]
+               (loop next-pos prev-end #t state #f
+                     (if (and (not init?)
+                              (pair? (parse-state-gs state))
+                              (group-add-semi? (car (parse-state-gs state)))
+                              (not (eq? 'bar-operator (classify-position t next-pos))))
+                         (cons (cons prev-end 'semi) inserts)
+                         inserts))]
               [(closer at-closer)
                (cond
                  [(pair? (parse-state-gs state))
                   (close-one)]
                  [else (loop e e #f
-                             (or (parse-state-prev state) state)
+                             (or (parse-state-prev state)
+                                 state)
+                             #f
                              inserts)])]
               [(comma-operator)
                (cond
                  [(and (pair? (parse-state-gs state))
                        (or (not (parse-state-prev state))
-                           (pair? (cdr (parse-state-gs state)))))
+                           (pair? (parse-state-gs state))))
                   (close-one)]
                  [else
-                  (loop e e #f state inserts)])]
+                  (loop e e #f state #f inserts)])]
               [else
                (define line (line-start t s))
-               (define col (+ (- s line) (line-delta t line)))
+               (define col (- s line))
                (define g (and (pair? (parse-state-gs state))
                               (car (parse-state-gs state))))
                (define g-col (and (not (parse-state-skip? state))
@@ -149,9 +163,9 @@
                    [(block-operator bar-operator)
                     (define next-pos (skip-whitespace2 t e end #:same-line? #t))
                     (define (close-immediately next-pos)
-                      (loop next-pos e #f state (list* (cons e 'close)
-                                                       (cons e 'open)
-                                                       inserts)))
+                      (loop next-pos e #f state #f (list* (cons e 'close)
+                                                          (cons e 'open)
+                                                          inserts)))
                     (cond
                       [(next-pos . >= . end)
                        (close-immediately next-pos)]
@@ -160,7 +174,7 @@
                        (cond
                          [(armor-opener? t next-pos)
                           ;; assume already armored
-                          (loop next-pos e #f state inserts)]
+                          (loop next-pos e #f state #f inserts)]
                          [else
                           (define init-pos (skip-whitespace2 t next-pos end #:and-own-line-group-comment next-pos))
                           (cond
@@ -169,10 +183,10 @@
                             [else
                              (define (start-group)
                                (define line (line-start t init-pos))
-                               (define init-col (+ (- init-pos line) (line-delta t line)))
+                               (define init-col (- init-pos line))
                                (cond
                                  [(and (pair? (parse-state-gs state))
-                                       (init-col . <= . (group-col g)))
+                                       (init-col . <= . g-col))
                                   (close-immediately init-pos)]
                                  [else
                                   (define new-g (make-group init-col
@@ -181,7 +195,7 @@
                                   (define new-state (struct-copy parse-state state
                                                                  [gs (cons new-g
                                                                            (parse-state-gs state))]))
-                                  (loop init-pos e #t new-state (cons (cons e 'open) inserts))]))
+                                  (loop init-pos e #t new-state #f (cons (cons e 'open) inserts))]))
                              (define category (classify-position t init-pos))
                              (case category
                                [(closer comma-operator bar-operator)
@@ -202,8 +216,7 @@
                     (define next-pos (skip-whitespace2 t e end))
                     (define line (line-start t next-pos))
                     (loop next-pos e #t
-                          (make-parse-state (list (make-group (+ (- next-pos line)
-                                                                 (line-delta t line))
+                          (make-parse-state (list (make-group (- next-pos line)
                                                               #:add-semi? (equal? (send t get-text s (add1 s)) "'")
                                                               #:add-comma? (equal? (send t get-text s (add1 s)) "(")
                                                               #:close? #f
@@ -211,17 +224,21 @@
                                             #:skip? (or (eq? use-category 'at-opener)
                                                         (armor-opener? t s))
                                             #:prev state)
+                          #f
                           inserts)]
                    [else
-                    (loop e e #f state inserts)]))
+                    (loop e e #f state #f inserts)]))
                (cond
                  [(and g-col
-                       (col . < . g-col))
+                       (col . < . g-col)
+                       (not continued?))
                   (loop pos prev-end #f
                         (struct-copy parse-state state
                                      [gs (cdr (parse-state-gs state))])
+                        #f
                         (cons (cons prev-end 'close) inserts))]
                  [(and (not init?)
+                       (not continued?)
                        g-col
                        (= col g-col)
                        (or (group-add-semi? (car (parse-state-gs state)))
@@ -234,6 +251,7 @@
                     [else
                      (loop pos prev-end #t
                            state
+                           #f
                            ;; ok to add redundant `;` so we preserve it when unarmoring,
                            ;; but don't add a redundant comma
                            (if (not (equal? "," (send t get-text (sub1 prev-end) prev-end)))
@@ -264,7 +282,7 @@
                       [(comma) "/*,*/,"] ;; `/*,*/` marks a comma that should be removed by unarmor
                       [else "??"]))
         (define line (line-start t pos))
-        (define col (+ (- pos line) (line-delta t line)))
+        (define col (- pos line))
         (send t insert str pos)
         ;; For each later line, potentially add indentation
         ;; FIXME: this is easy, but slow
@@ -448,10 +466,7 @@
     [else
      (define category (classify-position t pos))
      (case category
-       [(continue-operator)
-        (define-values (s e) (send t get-token-range pos))
-        (skip-whitespace2 t e end #:same-line? same-line? #:and-own-line-group-comment and-own-line-group-comment)]
-       [(whitespace comment)
+       [(whitespace comment continue-operator)
         (define-values (s e) (send t get-token-range pos))
         (cond
           [(or (not same-line?)

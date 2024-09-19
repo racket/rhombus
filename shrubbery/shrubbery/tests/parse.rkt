@@ -270,3 +270,7 @@
 (check-fail " 1\n \t2" #rx"wrong indentation")
 (check-fail "\ta\n\t| 1\n | 2" #rx"mixed tabs")
 (check-fail "\"x\ty\": 1\n       2" #rx"mixed tabs")
+
+(check-fail "1 \\ 2" #rx"line-continuing '\\\\' is followed by a another token")
+(check-fail "1 \\ /* ok */ 2" #rx"line-continuing '\\\\' is followed by a another token")
+(check-fail "1 \\ \n 2 \\ 3" #rx"line-continuing '\\\\' is followed by a another token")
