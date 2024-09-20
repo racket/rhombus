@@ -1,21 +1,21 @@
 #lang rhombus/scribble/manual
+@(import:
+    "common.rhm" open)
 
 @title{Rhombus}
 
-Rhombus is an experimental, general-purpose programming language with
-conventional expression syntax that is built on
+Rhombus is a general-purpose programming language with conventional
+expression syntax that is built on
 @hyperlink("https://racket-lang.org"){Racket} and that is
 macro-extensible in the same way as Racket.
 
+This document is a general guide to Rhombus. For complete specification,
+see @docref(ref_doc).
+
 @table_of_contents()
 
-@include_section("overview.scrbl")
-@include_section("datatype.scrbl")
-@include_section("macro.scrbl")
-@include_section("class-overview.scrbl")
-@include_section("static-overview.scrbl")
-@include_section("reference.scrbl")
-@include_section("ref-meta-lib.scrbl")
-@include_section("ref-static-lib.scrbl")
-@include_section("ref-library.scrbl")
-@include_section("naming-convention.scrbl")
+@include_section("guide/overview.scrbl")
+@include_section("guide/datatype.scrbl")
+@include_section("guide/macro.scrbl")
+@include_section("guide/class-overview.scrbl")
+@include_section("guide/static-overview.scrbl")
