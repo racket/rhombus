@@ -35,6 +35,7 @@ export:
   more_args
   shrubref
   shrublink
+  shrub_doc
   guide_doc
   ref_doc
 

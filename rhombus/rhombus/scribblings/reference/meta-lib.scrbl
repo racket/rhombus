@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~style: #'toc){Meta and Macros}
+@title(~style: #'toc, ~tag: "meta_and_macros"){Meta and Macros}
 
 @docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!#{core-meta},
            rhombus/meta)
@@ -46,3 +46,5 @@ alternative to starting with @rhombuslangname(rhombus) and importing
 @include_section("macro-more.scrbl")
 @include_section("stxobj-meta.scrbl")
 @include_section("syntax-parameter.scrbl")
+@include_section("stxobj-map.scrbl")
+@include_section("doc.scrbl")

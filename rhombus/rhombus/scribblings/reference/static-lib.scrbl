@@ -7,6 +7,17 @@
      rhombus/static open:
        only: #%dynamism)
 
+@(
+  namespace dynamic:
+    import:
+      meta_label:
+        rhombus:
+          expose: #%dynamism
+    export:
+      dynamism
+    def dynamism = @rhombus(#%dynamism)
+)
+
 @title(~tag: "static-lib"){Static by Default}
 
 @docmodule(~lang, rhombus/static)
@@ -26,8 +37,8 @@ and @rhombuslangname(rhombus/and_meta), respectively, except that
   expr.macro '#%dynamism'
 ){
 
- Initially indicates dynamic mode, but intended to be redefined by
- @rhombus(use_static) or @rhombus(use_dynamic). See @rhombus(use_static)
- for more information.
+ Initially indicates static mode, as opposed to @(dynamic.dynamism) from
+ @rhombuslangname(rhombus). See also @rhombus(use_static) and
+ @rhombus(use_dynamic).
 
 }

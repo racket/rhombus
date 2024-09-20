@@ -6,7 +6,7 @@
       rhombus/measure open
       rhombus/runtime open)
 
-@title(~style: #'toc){Measure}
+@title(~style: #'toc, ~tag: "measure"){Measuring Time and Space}
 
 @docmodule(rhombus/measure)
 

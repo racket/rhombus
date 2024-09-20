@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@title{General Forms}
+@title{Metavariables}
 
 @doc(
   ~nonterminal_key: block

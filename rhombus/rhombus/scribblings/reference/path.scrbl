@@ -84,3 +84,7 @@ Paths are @tech{comparable}, which means that generic operations like
 )
 
 }
+
+@// ------------------------------------------------------------
+
+@include_section("runtime-path.scrbl")
