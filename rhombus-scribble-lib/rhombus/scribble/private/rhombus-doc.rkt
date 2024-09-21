@@ -78,19 +78,42 @@
     (pattern (~seq _:identifier))
     (pattern (~seq (~seq _:identifier (op |.|)) ... _:identifier)))
 
+  (define (resolved->typeset resolved raw)
+    (define root (hash-ref resolved 'root #f))
+    (cond
+      [root (datum->syntax #f
+                           (let ([ht (hash 'root root
+                                           'target (hash-ref resolved 'target))])
+                             (if raw
+                                 (hash-set ht 'raw (hash-ref resolved 'raw))
+                                 ht)))]
+      [else
+       (define target (hash-ref resolved 'target))
+       (define target-raw (syntax-raw-property target))
+       (define raw-prefix (hash-ref resolved 'raw-prefix #f))
+       (cond
+         [(and target-raw
+               raw-prefix
+               ((string-length target-raw) . > . (string-length raw-prefix))
+               (string=? raw-prefix (substring target-raw 0 (string-length raw-prefix))))
+          (datum->syntax
+           #f
+           (hash 'target (syntax-raw-property target
+                                              (substring target-raw (string-length raw-prefix)))
+                 'raw_prefix raw-prefix))]
+         [else
+          target])]))
+  
   (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
     #:attributes (name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
              #:do [(define resolved (resolve-name-ref (list space-name)
-                                                      (in-name-root-space #'root)
+                                                      #'root
                                                       (syntax->list #'(field ...))
                                                       #:raw raw))]
              #:when resolved
-             #:with name (datum->syntax #f
-                                        (if raw
-                                            (list #'root (hash-ref resolved 'target) (hash-ref resolved 'raw))
-                                            (list #'root (hash-ref resolved 'target)))))
+             #:with name (resolved->typeset resolved raw))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
     #:attributes (name)
@@ -101,7 +124,7 @@
                                                       (syntax->list #'(field ... opname))
                                                       #:parens #'ptag))]
              #:when resolved
-             #:with name (datum->syntax #f (list #'root (hash-ref resolved 'target))))
+             #:with name (resolved->typeset resolved #f))
     (pattern (~seq (op name:identifier)))
     (pattern (~seq (~var || (identifier-target space-name))))))
 
@@ -439,13 +462,13 @@
   (unless resolved
     (raise-syntax-error #f "no label binding" root name))
   (define target (hash-ref resolved 'target))
-  (datum->syntax #f (list root
+  (datum->syntax #f (hash 'root root
                           ;; 'raw property used to typeset object
-                          (datum->syntax target (syntax-e target) name name)
+                          'target (datum->syntax target (syntax-e target) name name)
                           ;; string for key, index, and search:
-                          (format "~a.~a"
-                                  (syntax-e root)
-                                  (syntax-e name)))))
+                          'raw (format "~a.~a"
+                                       (syntax-e root)
+                                       (syntax-e name)))))
 
 (define-for-syntax (method-extract-name stx space-name #:property? [property? #f])
   (syntax-parse stx

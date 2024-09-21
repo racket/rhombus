@@ -155,7 +155,7 @@
 (define-for-syntax name-root-ref (make-name-root-ref))
 (define-for-syntax name-root-ref/maybe (make-name-root-ref #:quiet-fail? #t))
 
-(define-for-syntax (portal-syntax->lookup portal-stx make)
+(define-for-syntax (portal-syntax->lookup portal-stx make [phase 'default])
   (syntax-parse portal-stx
     #:datum-literals (import nspace)
     [([import _ _ _] pre-ctx-s ctx-s)
@@ -171,7 +171,10 @@
                                           name))
                 (define pre-id (datum->syntax pre-ctx (syntax-e name)))
                 (cond
-                  [(identifier-distinct-binding* (in-space id) (in-space pre-id))
+                  [(identifier-distinct-binding* (in-space id) (in-space pre-id)
+                                                 (if (eq? phase 'default)
+                                                     (syntax-local-phase-level)
+                                                     phase))
                    id]
                   [who-stx
                    (raise-syntax-error #f

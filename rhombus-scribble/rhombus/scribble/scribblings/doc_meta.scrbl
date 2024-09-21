@@ -77,15 +77,34 @@
 
   @itemlist(
 
-   @item{an identifier that is defined;},
+   @item{an identifier that is defined (which is equivalent to a map
+   from @rhombus(#'target) to the identifier);},
 
-   @item{a list containing two identifiers, where the first identifier
-   corresponds to a namespace and the second is the defined name within
-   that namespace; or}
+   @item{a map where the following keys are recognized:
 
-   @item{a list containing two identifiers and a string, which is like
-   the previous two cases, but the string is typeset literally instead of
-   having the typeset form derived from the second identifier.}
+   @itemlist(
+
+    @item{@rhombus(#'target) (required): An identifier that is defined.
+    More precisely, this identifier's binding in the label meta phase is the
+    defined binding.}
+
+    @item{@rhombus(#'root): An identifier that corresponds to a
+    namespace, where the @rhombus(#'target) is defined within the namespace.
+    If this key is not present or it is mapped to @rhombus(#false), then no
+    namespace prefix is shown.}
+
+    @item{@rhombus(#'raw): A string to use for showing the defined name.
+    If this key is not present, the raw text of the @rhombus(#'target)
+    identifier is used.}
+
+    @item{@rhombus(#'raw_prefix): A string that should prefix the
+    defined name, but it is not part of the defined name for searching, and
+    the prefix is rendered in a way to indicate that it's providing context
+    instead of naming a module export. This prefix is intended to be a
+    module prefix for exports that are meant to be used in dotted form,
+    instead of through an @rhombus(open, ~impo)ed module import.}
+
+   )}
 
   )}
 

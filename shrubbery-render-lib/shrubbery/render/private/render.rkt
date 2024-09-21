@@ -512,28 +512,24 @@
      (define use-space-names (id-space-name (car elems) space-names
                                             #:as-list? #t))
      (define resolved (resolve-name-ref use-space-names
-                                                 (if (pair? (cdr elems))
-                                                     (add-space (car elems)
-                                                                'rhombus/namespace)
-                                                     (car elems))
-                                                 dotted-elems
-                                                 #:parens ptag))
+                                        (car elems)
+                                        dotted-elems
+                                        #:parens ptag))
      (define target (and resolved (hash-ref resolved 'target)))
      (cond
        [target
         (define skip (add1 (* 2 (- (length dotted-elems) (length (hash-ref resolved 'remains))))))
         (define id (car elems))
         (define space-name (hash-ref resolved 'space))
+        (define root (hash-ref resolved 'root))
         (cons (datum->syntax target
-                             (let ([render-space-name (if (pair? (cdr elems))
-                                                          'rhombus/namespace
-                                                          space-name)])
-                               (render-in-space
-                                'rhombus/namespace
-                                (shrubbery-syntax->string target)
-                                (add-space id render-space-name)
-                                #:suffix target
-                                #:suffix-space space-name))
+                             (render-in-space
+                              (if root 'rhombus/namespace space-name)
+                              (shrubbery-syntax->string target)
+                              (or (and root (add-space root 'rhombus/namespace))
+                                  (add-space target space-name))
+                              #:suffix (and root target)
+                              #:suffix-space (and root space-name))
                              target
                              target)
               (list-tail elems skip))]

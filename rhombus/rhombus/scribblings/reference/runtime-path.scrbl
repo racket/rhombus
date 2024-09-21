@@ -4,14 +4,14 @@
       except: def
     "nonterminal.rhm" open
     meta_label:
-      rhombus/runtime_path open)
+      rhombus/runtime_path)
 
 @title(~style: #'toc){Runtime Paths}
 
 @docmodule(rhombus/runtime_path)
 
 @doc(
-  defn.macro 'def $id:
+  defn.macro 'runtime_path.def $id:
                 $body
                 ...'
 ){

@@ -54,7 +54,7 @@
   has multiple sentences, separate then with @litchar{;} and stay in
   lowercase mode.}
 
-  @item{Normally, @rhombus(Exn.Fail.Annot) should be used for
+  @item{Normally, @rhombus(Exn.Fail.Annot, ~annot) should be used for
   @rhombus(exn) (in place of @rhombus(Exn.Fail, ~annot)) if the exception
   represents an error that could have been prevented (without a race
   condition) by a preceding check.}

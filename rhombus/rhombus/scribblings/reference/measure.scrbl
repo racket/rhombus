@@ -3,15 +3,15 @@
     "common.rhm" open
     "nonterminal.rhm".body
     meta_label:
-      rhombus/measure open
-      rhombus/runtime open)
+      rhombus/measure
+      rhombus/runtime)
 
 @title(~style: #'toc, ~tag: "measure"){Measuring Time and Space}
 
 @docmodule(rhombus/measure)
 
 @doc(
-  expr.macro 'time:
+  expr.macro 'measure.time:
                 $option; ...
                 $body
                 ...'
@@ -39,7 +39,7 @@
 }
 
 @doc(
-  expr.macro 'memory:
+  expr.macro 'measure.memory:
                 $body
                 ...'
 ){
@@ -60,9 +60,9 @@
 
 @doc(
   ~nonterminal:
-    option: time
+    option: measure.time
 
-  expr.macro 'time_and_memory:
+  expr.macro 'measure.time_and_memory:
                 $option; ...
                 $body
                 ...'
