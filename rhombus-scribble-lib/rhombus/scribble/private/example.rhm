@@ -2,6 +2,9 @@
 
 import:
   "typeset-example.rkt" open
+  meta:
+    lib("racket/base.rkt")
+    lib("version/utils.rkt")
 
 export:
   examples
@@ -39,6 +42,12 @@ expr.macro 'examples($form, ...)':
             [[tag, [g, ...]], & split(rest)]
         | ['$('~error' || '~check' || '~fake'): $_', & _] :
             [['~repl', forms]]
+        | ['~version_and_later $vers: $form; ...', & rest]:
+            unless utils.#{valid-version?}(vers.unwrap())
+            | syntax_meta.error("exected a version string", stx, vers)
+            if utils.#{version<?}(base.version(), vers.unwrap())
+            | split(rest)
+            | split([form, ...] ++ rest)
         | ['$(kw :: Keyword) $_ ...', & _]:
             syntax_meta.error("misplaced or unrecognized keyword",
                               stx, kw)

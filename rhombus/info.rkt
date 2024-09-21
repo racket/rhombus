@@ -25,7 +25,7 @@
     "shrubbery"
     "shrubbery-lib"
     "testing-util-lib"
-    "base"
+    ["base" #:version "8.12"]
     "rhombus-scribble-lib"))
 
 (define pkg-desc "Rhombus base language")

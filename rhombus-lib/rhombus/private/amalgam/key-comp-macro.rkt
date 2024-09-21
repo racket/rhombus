@@ -19,10 +19,11 @@
   (provide (for-syntax build-key-comp)))
 
 (meta-if-version-at-least
- "8.13.0.2" ;; fix version when implemented; see also ../test/{map,set}.rhm
+ "8.13.0.2"
  (require (only-in '#%unsafe unsafe-impersonate-hash))
- (define (unsafe-impersonate-hash . _)
-   (error "`key_comp.def` requires a newer version of Racket")))
+ (define (unsafe-impersonate-hash x ht . _)
+   ;; does not work right, but lets things compile
+   ht))
 
 (define+provide-space key_comp rhombus/key_comp
   #:fields

@@ -29,6 +29,9 @@
     ~hidden:
       $repl
       ...
+    ~version_at_least $version_string:
+      $chunk
+      ...
 
   grammar repl:
     $form
@@ -71,6 +74,10 @@
 
   @item{@rhombus(~hidden): Neither the form to evaluate nor its output
   and result are show. Forms are evaluated only for their side effects.}
+
+  @item{@rhombus(~version_at_least): Splices the contained
+  @rhombus(chunks) as long as the rutime system version is at least
+  @rhombus(version_string), omits the @rhombus(chunk)s otherwise.}
 
 )
 

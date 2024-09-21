@@ -28,9 +28,10 @@
     equal_name('apple', 'apple')
     equal_name('fruit.apple', 'apple')
     equal_name('fruit.apple', 'fruit.apple')
-  ~repl:    
-    def snacks = Map.by(equal_name){ 'apple': 1 }
-    snacks['apple']
+  ~version_and_later "8.13.0.2":
+    ~repl:
+      def snacks = Map.by(equal_name){ 'apple': 1 }
+      snacks['apple']
 )
 
 }
