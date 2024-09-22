@@ -152,7 +152,7 @@
              #t]
             [else #f])]))
      (define-values (new-stack-for-end new-stack)
-       ;; `new-stack-for-end` is for detecting whether the current commend should end
+       ;; `new-stack-for-end` is for detecting whether the current comment should end
        (case (and (token? tok) (token-name tok))
          [(opener at-opener s-exp)
           (values stack (cons (token-e tok) stack))]
@@ -180,7 +180,7 @@
        [(lex-nested-status? new-inner-status)
         (finish-plain pending new-stack new-stack-for-end)]
        [else
-        ;; Whitespace and comments doesn't affect the commenting state,
+        ;; Whitespace and comments don't affect the commenting state,
         ;; but we need to heuristcially choose whether to count as comment
         ;; as itself faded or not
         (case (token-name tok)

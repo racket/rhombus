@@ -412,13 +412,23 @@
        [else
         (counter line column status)])]))
 
+;; "nested" status means that results are not necessairly tokens,
+;; because some other lexer (such as the S-expression lexer) is active
 (define (lex-nested-status? status)
-  (let ([status (if (counter? status)
-                    (counter-status status)
-                    status)])
-    (if (pending-backup-mode? status)
-        (lex-nested-status? (pending-backup-mode-status status))
-        (not (or (not status) (symbol? status) (in-quotes? status))))))
+  (cond
+    [(counter? status)
+     (lex-nested-status? (counter-status status))]
+    [(pending-backup-mode? status)
+     (lex-nested-status? (pending-backup-mode-status status))]
+    [(in-at? status)
+     (lex-nested-status? (in-at-shrubbery-status status))]
+    [(in-escaped? status)
+     (lex-nested-status? (in-escaped-shrubbery-status status))]
+    [(or (not status)
+         (symbol? status)
+         (in-quotes? status))
+     #f]
+    [else #t]))
 
 (define (lex-dont-stop-status? status)
   ;; anything involving a peek has a pending backup
