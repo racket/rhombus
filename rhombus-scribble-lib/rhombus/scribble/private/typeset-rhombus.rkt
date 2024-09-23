@@ -28,13 +28,15 @@
 
 (define tt-style (style 'tt null))
 
+(struct target-style (prefix-len))
+
 (define (element-shape e e-len e-style)
   (values (content-width e)
           (or e-style
               (let loop ([e e])
                 (cond
                   [(pair? e) (loop (car e))]
-                  [(defining-element? e) 'target]
+                  [(defining-element? e) (target-style (defining-element-prefix-len e))]
                   [(element? e) (loop (element-content e))]
                   [else #f])))))
 
@@ -70,10 +72,22 @@
    #:render_whitespace (lambda (n)
                          (element hspace-style (make-string n #\space)))
    #:render_indentation (lambda (n orig-n orig-size style)
-                          (if (eq? style 'target)
-                              (element 'tt (element value-def-color
-                                             (for/list ([i (in-range n)]) 'nbsp)))
-                              (element hspace-style (make-string n #\space))))
+                          (cond
+                            [(target-style? style)
+                             (let* ([pre (min (max (- (target-style-prefix-len style)
+                                                      (- orig-n n))
+                                                   0)
+                                              n)]
+                                    [post (- n pre)])
+                               (define bold-spaces
+                                 (element 'tt (element value-def-color
+                                                       (for/list ([i (in-range post)]) 'nbsp))))
+                               (if (= pre 0)
+                                   bold-spaces
+                                   (list (element hspace-style (make-string pre #\space))
+                                         bold-spaces)))]
+                            [else
+                             (element hspace-style (make-string n #\space))]))
    #:render_one_line (lambda (elems) elems)
    #:render_line (lambda (elems)
                    (paragraph plain elems))

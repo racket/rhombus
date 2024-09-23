@@ -13,7 +13,7 @@
 
 (define-for-syntax (append-consecutive-syntax-objects datum pre t)
   (define pre-loc (syntax-srcloc pre))
-  (define t-loc (syntax-srcloc pre))
+  (define t-loc (syntax-srcloc t))
   (define t/s (if (and pre-loc
                        t-loc
                        (equal? (srcloc-source pre-loc)
@@ -96,20 +96,21 @@
                                             (or (syntax-raw-suffix-property p) '())
                                             (syntax-raw-suffix-property ptag)))
              p))
-       (define (add-rest p) (and p (hash 'target p
-                                         'remains (cdr fields)
-                                         'space space-name
-                                         'root (or ns-root
-                                                   (and (not is-import?)
-                                                        root))
-                                         'raw raw
-                                         'raw-prefix raw-prefix)))
+       (define (add-rest p)
+         (and p (hash 'target p
+                      'remains (cdr fields)
+                      'space space-name
+                      'root (or ns-root
+                                (and (not is-import?)
+                                     root))
+                      'raw raw
+                      'raw-prefix raw-prefix)))
        (cond
          [dest
           (define loc-stx
             (append-consecutive-syntax-objects
              'loc-stx
-             (append-consecutive-syntax-objects 'loc-stx root #'dot)
+             root
              field))
           (define named-dest
             (transfer-parens-suffix
@@ -125,7 +126,7 @@
                                  (datum->syntax id (syntax-e id)
                                                 (append-consecutive-syntax-objects
                                                  'loc-stx
-                                                 (append-consecutive-syntax-objects 'loc-stx root #'dot)
+                                                 root
                                                  field))
                                  (or given-raw raw)))])
                  (or (loop named-id (cdr fields) raw)

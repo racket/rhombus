@@ -6,4 +6,4 @@
 
 (provide (struct-out defining-element))
 
-(struct defining-element element())
+(struct defining-element element (prefix-len))

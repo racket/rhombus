@@ -290,6 +290,9 @@
                                     null)))
               (define seen-key (cons (cons (syntax-e def-id) sym-path)
                                      space-name))
+              (define raw-prefix-str
+                (and (not (eq? immed-space-name 'grammar))
+                     (hash-ref def-ht 'raw_prefix #f)))
               (define make-typeset-id
                 (lambda (kind-rev-strs)
                   #`(make-def-id
@@ -299,8 +302,7 @@
                      meta?
                      (quote-syntax #,def-id)
                      (quote-syntax #,extra-def-ids)
-                     (quote #,(and (not (eq? immed-space-name 'grammar))
-                                   (hash-ref def-ht 'raw_prefix #f)))
+                     (quote #,raw-prefix-str)
                      (quote-syntax #,str-id)
                      (quote #,index-str)
                      (quote #,(combine-kind-strs (reverse kind-rev-strs)))
@@ -315,7 +317,10 @@
                          (lambda (kind-rev-strs)
                            #`(defining-element
                                #f
-                               #,(make-typeset-id kind-rev-strs))))
+                               #,(make-typeset-id kind-rev-strs)
+                               #,(if raw-prefix-str
+                                     (string-length (syntax-e raw-prefix-str))
+                                     0))))
                      rev-mk-as-defs)
                (cons seen-key rev-keys)
                (hash-set seen seen-key (cons kind-str (hash-ref seen seen-key '()))))]))))
