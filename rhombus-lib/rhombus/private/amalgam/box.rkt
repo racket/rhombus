@@ -9,7 +9,8 @@
          "composite.rkt"
          "mutability.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -39,7 +40,8 @@
           (lambda (e)
             (syntax-local-static-info e #'unbox))])
   #:methods
-  ())
+  (copy
+   snapshot))
 
 (define/arity (Box v)
   #:static-infos ((#%call-result #,(get-box-static-infos)))
@@ -115,3 +117,19 @@
 (void (set-primitive-contract! 'mutable-box? "MutableBox"))
 (define-annotation-syntax MutableBox (identifier-annotation mutable-box? #,(get-box-static-infos)))
 (define-annotation-syntax ImmutableBox (identifier-annotation immutable-box? #,(get-box-static-infos)))
+
+(define (check-box who bx)
+  (unless (box? bx)
+    (raise-argument-error* who rhombus-realm "Box" bx)))
+
+(define/method (Box.copy bx)
+  #:static-infos ((#%call-result #,(get-box-static-infos)))
+  (check-box who bx)
+  (box (unbox bx)))
+
+(define/method (Box.snapshot bx)
+  #:static-infos ((#%call-result #,(get-box-static-infos)))
+  (check-box who bx)
+  (if (immutable-box? bx)
+      bx
+      (box-immutable (unbox bx))))
