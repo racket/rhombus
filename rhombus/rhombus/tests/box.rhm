@@ -5,6 +5,8 @@ block:
   static_arity.check:
     Box(v)
     Box.value(bx, [val])
+    Box.copy(bx) ~method
+    Box.snapshot(bx) ~method
 
 check:
   Box(1) ~is_now Box(1)
@@ -15,6 +17,36 @@ check:
   Box(1) is_a ImmutableBox ~is #false
   10 is_a MutableBox ~is #false
   10 is_a ImmutableBox ~is #false
+
+block:
+  use_static
+  let bx = Box(10)
+  let bx_snapshot = bx.snapshot()
+  let bx_copy = bx.copy()
+  check:
+    bx ~is_a MutableBox
+    bx.value ~is 10
+    bx_snapshot ~is_a ImmutableBox
+    bx_snapshot.value ~is 10
+    bx_copy ~is_a MutableBox
+    bx_copy.value ~is 10
+    bx_copy === bx ~is #false
+    bx_snapshot === bx ~is #false
+
+block:
+  use_static
+  let bx = Box(10).snapshot()
+  let bx_snapshot = bx.snapshot()
+  let bx_copy = bx.copy()
+  check:
+    bx ~is_a ImmutableBox
+    bx.value ~is 10
+    bx_snapshot ~is_a ImmutableBox
+    bx_snapshot.value ~is 10
+    bx_copy ~is_a MutableBox
+    bx_copy.value ~is 10
+    bx_copy === bx ~is #false
+    bx_snapshot === bx ~is #true
 
 check:
   use_static
@@ -147,4 +179,13 @@ check:
     "Box.value: contract violation",
     "expected: MutableBox",
     "given: \"oops\"",
+  )
+
+// TODO print immutable boxes differently
+check:
+  (Box(1).snapshot() :~ MutableBox).value := 0
+  ~throws values(
+    "Box.value: contract violation",
+    "expected: MutableBox",
+    "given: Box(1)",
   )
