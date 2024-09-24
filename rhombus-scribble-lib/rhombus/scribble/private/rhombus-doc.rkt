@@ -80,30 +80,30 @@
 
   (define (resolved->typeset resolved raw)
     (define root (hash-ref resolved 'root #f))
-    (cond
-      [root (datum->syntax #f
-                           (let ([ht (hash 'root root
-                                           'target (hash-ref resolved 'target))])
-                             (if raw
-                                 (hash-set ht 'raw (hash-ref resolved 'raw))
-                                 ht)))]
-      [else
-       (define target (hash-ref resolved 'target))
-       (define target-raw (syntax-raw-property target))
-       (define raw-prefix (hash-ref resolved 'raw-prefix #f))
-       (cond
-         [(and target-raw
-               raw-prefix
-               ((string-length target-raw) . > . (string-length raw-prefix))
-               (string=? raw-prefix (substring target-raw 0 (string-length raw-prefix))))
-          (datum->syntax
-           #f
-           (hash 'target (syntax-raw-property target
-                                              (substring target-raw (string-length raw-prefix)))
-                 'raw_prefix raw-prefix))]
-         [else
-          target])]))
-  
+    (define target (hash-ref resolved 'target))
+    (define def-ht
+      (cond
+        [root (let* ([ht (hash 'root root
+                               'target target)]
+                     [ht (if raw
+                             (hash-set ht 'raw (hash-ref resolved 'raw))
+                             ht)])
+                ht)]
+        [else target]))
+    (define target-raw (syntax-raw-property target))
+    (define raw-prefix (hash-ref resolved 'raw-prefix #f))
+    (datum->syntax
+     #f
+     (cond
+       [raw-prefix
+        (let* ([ht (if (identifier? def-ht)
+                       (hash 'target def-ht)
+                       def-ht)]
+               [ht (hash-set ht 'raw_prefix raw-prefix)])
+          ht)]
+       [else
+        def-ht])))
+
   (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
     #:attributes (name)
     #:datum-literals (|.| op)
@@ -457,40 +457,51 @@
   parens-extract-metavariables
   head-extract-typeset)
 
-(define-for-syntax (build-dotted root name)
-  (define resolved (resolve-name-ref (list #f) root (list name)))
+(define-for-syntax (build-dotted root #:prefix [names #'()] name)
+  (define resolved (resolve-name-ref (list #f) root (append (syntax->list names) (list name))))
   (unless resolved
     (raise-syntax-error #f "no label binding" root name))
   (define target (hash-ref resolved 'target))
-  (datum->syntax #f (hash 'root root
+  (define r-root (hash-ref resolved 'root))
+  (datum->syntax #f (hash 'root r-root
                           ;; 'raw property used to typeset object
                           'target (datum->syntax target (syntax-e target) name name)
                           ;; string for key, index, and search:
                           'raw (format "~a.~a"
-                                       (syntax-e root)
+                                       (syntax-e r-root)
                                        (syntax-e name)))))
+
+(begin-for-syntax
+  (define-splicing-syntax-class :dotted-class
+    #:attributes (head tail)
+    #:datum-literals (op |.|)
+    (pattern (~seq head:identifier)
+             #:with tail #'())
+    (pattern (~seq head:identifier (~seq (op |.|) tail-elem:identifier) ...)
+             #:with tail #'(tail-elem ...))))
+     
 
 (define-for-syntax (method-extract-name stx space-name #:property? [property? #f])
   (syntax-parse stx
     #:datum-literals (group parens alts block :: |.| op)
     [(~and (~fail #:unless property?)
-           (group _ (alts (block (group (parens (group _ (op ::) class)) (op |.|) name . _)) . _)))
-     (build-dotted #'class #'name)]
-    [(group _ (parens (group _ (op ::) class)) (op |.|) name . _)
-     (build-dotted #'class #'name)]))
+           (group _ (alts (block (group (parens (group _ (op ::) class::dotted-class)) (op |.|) name . _)) . _)))
+     (build-dotted #'class.head #:prefix #'class.tail #'name)]
+    [(group _ (parens (group _ (op ::) class::dotted-class)) (op |.|) name . _)
+     (build-dotted #'class.head #:prefix #'class.tail #'name)]))
 
 (define-for-syntax (method-extract-metavariables stx space-name vars #:property? [property? #f])
   (syntax-parse stx
     #:datum-literals (group parens alts block :: |.| op)
     [(~and (~fail #:unless property?)
-           (group _ (alts (block (group (parens (group self (op ::) _)) (op |.|) . _)) . more)))
+           (group _ (alts (block (group (parens (group self (op ::) . _)) (op |.|) . _)) . more)))
      (define vars+self (add-metavariable vars #'self #f))
      (syntax-parse #'more
        #:datum-literals (group parens block :: |.| := op)
-       [((block (group (parens (group _ (op ::) _)) (op |.|) _ (op :=) . rhs)) . _)
+       [((block (group (parens (group _ (op ::) . _)) (op |.|) _ (op :=) . rhs)) . _)
         (extract-binding-metavariables #'(group . rhs) vars+self)]
        [_ vars+self])]
-    [(group _ (parens (group self (op ::) _)) (op |.|) name . more)
+    [(group _ (parens (group self (op ::) . _)) (op |.|) name . more)
      (define vars+self (add-metavariable vars #'self #f))
      (syntax-parse #'more
        #:datum-literals (parens)
@@ -505,12 +516,12 @@
            (group tag ((~and a-tag alts)
                        ((~and b-tag block)
                         ((~and g-tag group)
-                         (~and lhs (parens (group _ (op ::) _)))
+                         (~and lhs (parens (group _ (op ::) . _)))
                          (~and dot (op |.|))
                          name . more))
                        ((~and b2-tag block)
                         ((~and g2-tag group)
-                         (~and lhs2 (parens (group _ (op ::) _)))
+                         (~and lhs2 (parens (group _ (op ::) . _)))
                          (~and dot2 (op |.|))
                          name2 . more2)))))
      (rb #:at stx
@@ -518,7 +529,7 @@
                   tag (a-tag
                        (b-tag (g-tag lhs dot #,@(subst #'name) . more))
                        (b2-tag (g2-tag lhs2 dot2 #,@(subst #'name2 #:as_redef #t) . more2)))))]
-    [(group tag (~and lhs (parens (group _ (op ::) _))) (~and dot (op |.|)) name . more)
+    [(group tag (~and lhs (parens (group _ (op ::) . _))) (~and dot (op |.|)) name . more)
      (rb #:at stx
          #`(group as_class_clause
                   tag lhs dot #,@(subst #'name) . more))]))
@@ -546,17 +557,17 @@
   (lambda (stx space-name)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group _ (parens (group _ (op ::) class)) (op |.|) name . _)
-       (build-dotted #'class #'name)]))
+      [(group _ (parens (group _ (op ::) class::dotted-class)) (op |.|) name . _)
+       (build-dotted #'class.head #:prefix #'class.tail #'name)]))
   (lambda (stx space-name vars)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group _ (parens (group _ (op ::) _)) (op |.|) _ . more)
+      [(group _ (parens (group _ (op ::) . _)) (op |.|) _ . more)
        (extract-pattern-metavariables #'(group . more) vars)]))
   (lambda (stx space-name subst)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group tag (~and lhs (parens (group _ (op ::) _))) (~and dot (op |.|)) name . more)
+      [(group tag (~and lhs (parens (group _ (op ::) . _))) (~and dot (op |.|)) name . more)
        (rb #:at stx
            #:pattern? #t
            #`(group as_class_clause
@@ -633,7 +644,7 @@
 
 (define-for-syntax (class-extract-descs stx)
   (syntax-parse stx
-    #:datum-literals (group block)
+    #:datum-literals (group block parens)
     [(group _ ... (parens field ...) . _)
      (cons "class"
            (for/list ([field (in-list (syntax->list #'(field ...)))])
@@ -641,7 +652,7 @@
 
 (define-for-syntax (class-extract-space-names stx)
   (syntax-parse stx
-    #:datum-literals (group block)
+    #:datum-literals (group block parens)
     [(group _ ... (parens field ...) . _)
      (cons '(rhombus/class rhombus/annot)
            (for/list ([field (in-list (syntax->list #'(field ...)))])
@@ -649,7 +660,7 @@
 
 (define-for-syntax (class-extract-names stx space-name)
   (syntax-parse stx
-    #:datum-literals (group block)
+    #:datum-literals (group block parens)
     [(group _ (~var id (identifier-target space-name)) (parens field ...) . _)
      (cons
       #'id.name
@@ -668,7 +679,7 @@
 (define-for-syntax (class-body-extract-metavariables stx space-name vars)
   (syntax-parse stx
     #:datum-literals (block parens)
-    [(group _ _ (parens . _) (block g ...))
+    [(group _ _ ... (parens . _) (block g ...))
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (syntax-parse g
          #:datum-literals (constructor)

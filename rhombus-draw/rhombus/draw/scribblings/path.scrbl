@@ -1,15 +1,11 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open:
-      except: Path
-    meta_label:
-      rhombus/draw:
-        expose: Path)
+    "common.rhm" open)
 
 @title{Path}
 
 @doc(
-  class Path()
+  class draw.Path()
 ){
 
  Creates a drawing path.
@@ -17,9 +13,9 @@
 }
 
 @doc(
-  method (path :: Path).close() :: Void
-  method (path :: Path).is_open() :: Boolean
-  method (path :: Path).reset() :: Void
+  method (path :: draw.Path).close() :: Void
+  method (path :: draw.Path).is_open() :: Boolean
+  method (path :: draw.Path).reset() :: Void
 ){
 
  Closes an open path, if any, check whether the path is currently open,
@@ -28,13 +24,13 @@
 }
 
 @doc(
-  method (path :: Path).move_to(pt :: PointLike)
+  method (path :: draw.Path).move_to(pt :: draw.PointLike)
     :: Void
-  method (path :: Path).line_to(pt :: PointLike)
+  method (path :: draw.Path).line_to(pt :: draw.PointLike)
     :: Void
-  method (path :: Path).curve_to(pt1 :: PointLike,
-                                 pt2 :: PointLike,
-                                 pt3 :: PointLike)
+  method (path :: draw.Path).curve_to(pt1 :: draw.PointLike,
+                                      pt2 :: draw.PointLike,
+                                      pt3 :: draw.PointLike)
     :: Void
 ){
 
@@ -45,34 +41,35 @@
 
 
 @doc(
-  method (path :: Path).polygon([pt :: PointLike, ...],
-                                ~dpt: dpt :: PointLike = Point.zero,
-                                ~dx: dx :: Real = 0,
-                                ~dy: dy :: Real = 0)
+  method (path :: draw.Path).polygon(
+    [pt :: draw.PointLike, ...],
+    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0
+  ) :: Void
+  method (path :: draw.Path).rectangle(r :: draw.RectLike)
     :: Void
-  method (path :: Path).rectangle(r :: RectLike)
+  method (path :: draw.Path).rounded_rectangle(r :: draw.RectLike,
+                                               radius :: Real = -0.25)
     :: Void
-  method (path :: Path).rounded_rectangle(r :: RectLike,
-                                          radius :: Real = -0.25)
+  method (path :: draw.Path).ellipse(r :: draw.RectLike)
     :: Void
-  method (path :: Path).ellipse(r :: RectLike)
-    :: Void
-  method (path :: Path).arc(r :: RectLike,
-                            start :: Real, end :: Real,
-                            ~clockwise: clockwise :: Any = #false)
+  method (path :: draw.Path).arc(r :: draw.RectLike,
+                                 start :: Real, end :: Real,
+                                 ~clockwise: clockwise :: Any = #false)
     :: Void
 ){
 
  Adds to the path. If the path is currently open, it is first closed,
- except in the case of @rhombus(Path.arc).
+ except in the case of @rhombus(draw.Path.arc).
 
 }
 
 @doc(
-  method (path :: Path).scale(s :: Real) :: Void
-  method (path :: Path).scale(sx :: Real, sy :: Real) :: Void
-  method (path :: Path).rotate(radians :: Real) :: Void
-  method (path :: Path).translate(dx :: Real, dy :: Real) :: Void
+  method (path :: draw.Path).scale(s :: Real) :: Void
+  method (path :: draw.Path).scale(sx :: Real, sy :: Real) :: Void
+  method (path :: draw.Path).rotate(radians :: Real) :: Void
+  method (path :: draw.Path).translate(dx :: Real, dy :: Real) :: Void
 ){
 
  Adjusts a path to scale, rotate, or translate every point defining the
@@ -81,7 +78,7 @@
 }
 
 @doc(
-  method (path :: Path).append(other_path :: Path) :: Void
+  method (path :: draw.Path).append(other_path :: draw.Path) :: Void
 ){
 
  Adds @rhombus(other_path) to the end of @rhombus(path).
@@ -89,7 +86,7 @@
 }
 
 @doc(
-  method (path :: Path).bounding_box() :: Rect
+  method (path :: draw.Path).bounding_box() :: Rect
 ){
 
  Returns a rectangle that bounds all of the points describing

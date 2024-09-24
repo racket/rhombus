@@ -5,14 +5,14 @@
 @title{Pen}
 
 @doc(
-  class Pen():
+  class draw.Pen():
     constructor (
-      ~color: color :: (String || Color) = "Black",
+      ~color: color :: (String || draw.Color) = "Black",
       ~width: width :: Real.in(0, 255) = 1,
-      ~style: style :: Pen.Style = #'solid,
-      ~cap: cap :: Pen.Cap = #'round,
-      ~join: join :: Pen.Join = #'round,
-      ~stipple: stipple :: maybe(Bitmap) = #false,
+      ~style: style :: draw.Pen.Style = #'solid,
+      ~cap: cap :: draw.Pen.Cap = #'round,
+      ~join: join :: draw.Pen.Join = #'round,
+      ~stipple: stipple :: maybe(draw.Bitmap) = #false,
     )
 ){
 
@@ -25,12 +25,12 @@
 }
 
 @doc(
-  property (pen :: Pen).color :: Color
-  property (pen :: Pen).width :: Real.in(0, 255)
-  property (pen :: Pen).style :: Pen.Style
-  property (pen :: Pen).cap :: Pen.Cap
-  property (pen :: Pen).join :: Pen.Join
-  property (pen :: Pen).stipple :: maybe(Bitmap)
+  property (pen :: draw.Pen).color :: draw.Color
+  property (pen :: draw.Pen).width :: Real.in(0, 255)
+  property (pen :: draw.Pen).style :: draw.Pen.Style
+  property (pen :: draw.Pen).cap :: draw.Pen.Cap
+  property (pen :: draw.Pen).join :: draw.Pen.Join
+  property (pen :: draw.Pen).stipple :: maybe(draw.Bitmap)
 ){
 
  Properties to access pen components.
@@ -38,7 +38,7 @@
 }
 
 @doc(
-  enum Pen.Style:
+  enum draw.Pen.Style:
     transparent
     solid
     xor
@@ -58,7 +58,7 @@
 }
 
 @doc(
-  enum Pen.Cap:
+  enum draw.Pen.Cap:
     round
     projecting
     butt
@@ -69,7 +69,7 @@
 }
 
 @doc(
-  enum Pen.Join:
+  enum draw.Pen.Join:
     round
     bevel
     miter
@@ -81,7 +81,7 @@
 
 
 @doc(
-  def Pen.none :: Pen
+  def draw.Pen.none :: draw.Pen
 ){
 
  A pen with style @rhombus(#'transparent).

@@ -3,7 +3,8 @@
     meta_label:
       rhombus:
         expose:
-          fun)
+          fun
+      rhombus/draw)
 
 @docmodule(rhombus)
 
@@ -21,5 +22,21 @@
 ){
 
  Description.
+
+}
+
+@section{Draw}
+
+@docmodule(rhombus/draw)
+
+@doc(
+  property (dc :: draw.DC).handle :: Any
+  fun draw.DC.from_handle(hand :: Any) :: draw.DC
+  enum draw.DC.Fill:
+    even_odd
+    winding
+){
+
+ Draw description.
 
 }
