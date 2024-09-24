@@ -18,7 +18,7 @@
 
 @doc(
   property (dc :: draw.DC).handle :: Any
-  fun draw.DC.from_handle(hand :: Any) :: draw.DC
+  fun draw.DC.from_handle(hand :: Any) :: DC
 ){
 
  The @rhombus(DC.handle) property returns a Racket object that
@@ -31,7 +31,7 @@
 @doc(
   property (dc :: draw.DC).width :: NonnegReal
   property (dc :: draw.DC).height :: NonnegReal
-  property (dc :: draw.DC).size :: draw.Size
+  property (dc :: draw.DC).size :: Size
 ){
 
  The size of the drawing area: width, height, or both.
@@ -48,20 +48,20 @@
 
 @doc(
   property
-  | (dc :: draw.DC).pen :: draw.Pen
-  | (dc :: draw.DC).pen := (p :: draw.Pen)
+  | (dc :: draw.DC).pen :: Pen
+  | (dc :: draw.DC).pen := (p :: Pen)
   property
-  | (dc :: draw.DC).brush :: draw.Brush
-  | (dc :: draw.DC).brush := (b :: draw.Brush)
+  | (dc :: draw.DC).brush :: Brush
+  | (dc :: draw.DC).brush := (b :: Brush)
   property
-  | (dc :: draw.DC).font :: draw.Font
-  | (dc :: draw.DC).font := (f :: draw.Font)
+  | (dc :: draw.DC).font :: Font
+  | (dc :: draw.DC).font := (f :: Font)
   property
-  | (dc :: draw.DC).clipping_region :: maybe(draw.Region)
-  | (dc :: draw.DC).clipping_region := (rgn :: maybe(draw.Region))
+  | (dc :: draw.DC).clipping_region :: maybe(Region)
+  | (dc :: draw.DC).clipping_region := (rgn :: maybe(Region))
   property
-  | (dc :: draw.DC).transformation :: draw.DC.Transformation
-  | (dc :: draw.DC).transformation := (rgn :: draw.DC.Transformation)
+  | (dc :: draw.DC).transformation :: DC.Transformation
+  | (dc :: draw.DC).transformation := (rgn :: DC.Transformation)
 ){
 
  Properties to get or set the drawing context's configuration.
@@ -71,16 +71,16 @@
 @doc(
   method (dc :: draw.DC).scale(s :: Real) :: Void
   method (dc :: draw.DC).scale(sx :: Real, sy :: Real) :: Void
-  method (dc :: draw.DC).translate(dpt :: draw.PointLike) :: Void
+  method (dc :: draw.DC).translate(dpt :: PointLike) :: Void
   method (dc :: draw.DC).translate(dx :: Real, dy :: Real) :: Void
   method (dc :: draw.DC).rotate(radians :: Real) :: Void
-  method (dc :: draw.DC).transform(t :: draw.DC.Transformation) :: Void
+  method (dc :: draw.DC).transform(t :: DC.Transformation) :: Void
 ){
 
  Applies a (further) transformation to the drawing context's conversion
  from drawing coordinates to deivice coordinates. In other words, these
  methods change the result that is returned by the
- @rhombus(draw.DC.transformation) property, and they affect drawing accodingly.
+ @rhombus(DC.transformation) property, and they affect drawing accodingly.
 
 }
 
@@ -94,10 +94,10 @@
 
  Saves and restores the draw context's configuration.
 
- The @rhombus(draw.DC.save) method pushes the current drawing state (pen,
+ The @rhombus(DC.save) method pushes the current drawing state (pen,
  brush, clipping region, and transformation) onto an internal stack, and
- @rhombus(draw.DC.restore) pops the stack and restores the popped drawing
- state. The @rhombus(draw.DC.save_and_restore) form wraps a @rhombus(body)
+ @rhombus(DC.restore) pops the stack and restores the popped drawing
+ state. The @rhombus(DC.save_and_restore) form wraps a @rhombus(body)
  sequence to save the drawing state on entry to the sequence and restore
  it on exit, returning the value(s) produced by the @rhombus(body)
  sequence; entry and exit cover continuation jumps, like @rhombus(try).
@@ -105,39 +105,39 @@
 }
 
 @doc(
-  method (dc :: draw.DC).point(pt :: draw.PointLike)
+  method (dc :: draw.DC).point(pt :: PointLike)
     :: Void
-  method (dc :: draw.DC).line(pt1 :: draw.PointLike,
-                              pt2 :: draw.PointLike)
+  method (dc :: draw.DC).line(pt1 :: PointLike,
+                              pt2 :: PointLike)
     :: Void
   method (dc :: draw.DC).lines(
-    [pt :: draw.PointLike, ...],
-    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    [pt :: PointLike, ...],
+    ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0
   ) :: Void
   method (dc :: draw.DC).polygon(
     [pt :: PointLike, ...],
-    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
-    ~fill: fill :: draw.DC.Fill = #'even_odd
+    ~fill: fill :: DC.Fill = #'even_odd
   ) :: Void
-  method (dc :: draw.DC).rectangle(r :: draw.RectLike)
+  method (dc :: draw.DC).rectangle(r :: RectLike)
     :: Void
-  method (dc :: draw.DC).rounded_rectangle(r :: draw.RectLike,
+  method (dc :: draw.DC).rounded_rectangle(r :: RectLike,
                                            radius :: Real = -0.25)
     :: Void
-  method (dc :: draw.DC).ellipse(r :: draw.RectLike)
+  method (dc :: draw.DC).ellipse(r :: RectLike)
     :: Void
-  method (dc :: draw.DC).arc(r :: draw.RectLike,
+  method (dc :: draw.DC).arc(r :: RectLike,
                              start :: Real, end :: Real)
     :: Void
   method (dc :: draw.DC).path(p :: draw.Path,
-                              ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+                              ~dpt: dpt :: PointLike = Point.zero,
                               ~dx: dx :: Real = 0,
                               ~dy: dy :: Real = 0,
-                              ~fill: fill :: draw.DC.Fill = #'odd_even)
+                              ~fill: fill :: DC.Fill = #'odd_even)
     :: Void
 ){
 
@@ -153,10 +153,10 @@
 @doc(
   method (dc:: draw.DC).text(
     str :: String,
-    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
-    ~combine: combine :: draw.DC.TextCombine = #'kern,
+    ~combine: combine :: DC.TextCombine = #'kern,
     ~angle: angle :: Real = 0.0
   ) :: Void
 ){
@@ -167,15 +167,15 @@
 
 @doc(
   method (dc :: draw.DC).bitmap(
-    bm :: draw.Bitmap,
-    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    bm :: Bitmap,
+    ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
-    ~source: source :: draw.RectLike:
-               draw.Rect(draw.Point.zero, draw.Bitmap.size(bm)),
-    ~style: style :: draw.DC.BitmapOverlay = #'solid,
-    ~color: color :: draw.Color = draw.Color("black"),
-    ~mask: mask :: maybe(draw.Bitmap) = #false,
+    ~source: source :: RectLike:
+               Rect(Point.zero, Bitmap.size(bm)),
+    ~style: style :: DC.BitmapOverlay = #'solid,
+    ~color: color :: Color = Color("black"),
+    ~mask: mask :: maybe(Bitmap) = #false,
   ) :: Void
 ){
 
@@ -185,8 +185,8 @@
 }
 
 @doc(
-  method (dc :: draw.DC).copy(source :: draw.RectLike,
-                              dest :: draw.PointLike)
+  method (dc :: draw.DC).copy(source :: RectLike,
+                              dest :: PointLike)
     :: Void
 ){
 

@@ -3,9 +3,13 @@
 import:
   meta_label:
     rhombus open
+    rhombus/draw open:
+      except:
+        Path
     rhombus/draw
 
 export:
   meta_label:
     all_from(rhombus)
+    all_from(rhombus/draw)
     draw

@@ -24,13 +24,13 @@
 }
 
 @doc(
-  method (path :: draw.Path).move_to(pt :: draw.PointLike)
+  method (path :: draw.Path).move_to(pt :: PointLike)
     :: Void
-  method (path :: draw.Path).line_to(pt :: draw.PointLike)
+  method (path :: draw.Path).line_to(pt :: PointLike)
     :: Void
-  method (path :: draw.Path).curve_to(pt1 :: draw.PointLike,
-                                      pt2 :: draw.PointLike,
-                                      pt3 :: draw.PointLike)
+  method (path :: draw.Path).curve_to(pt1 :: PointLike,
+                                      pt2 :: PointLike,
+                                      pt3 :: PointLike)
     :: Void
 ){
 
@@ -42,19 +42,19 @@
 
 @doc(
   method (path :: draw.Path).polygon(
-    [pt :: draw.PointLike, ...],
-    ~dpt: dpt :: draw.PointLike = draw.Point.zero,
+    [pt :: PointLike, ...],
+    ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0
   ) :: Void
-  method (path :: draw.Path).rectangle(r :: draw.RectLike)
+  method (path :: draw.Path).rectangle(r :: RectLike)
     :: Void
-  method (path :: draw.Path).rounded_rectangle(r :: draw.RectLike,
+  method (path :: draw.Path).rounded_rectangle(r :: RectLike,
                                                radius :: Real = -0.25)
     :: Void
-  method (path :: draw.Path).ellipse(r :: draw.RectLike)
+  method (path :: draw.Path).ellipse(r :: RectLike)
     :: Void
-  method (path :: draw.Path).arc(r :: draw.RectLike,
+  method (path :: draw.Path).arc(r :: RectLike,
                                  start :: Real, end :: Real,
                                  ~clockwise: clockwise :: Any = #false)
     :: Void

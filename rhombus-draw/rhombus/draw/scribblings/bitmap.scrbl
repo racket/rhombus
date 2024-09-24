@@ -20,7 +20,7 @@
 @doc(
   property (bm :: draw.Bitmap).width :: PosInt
   property (bm :: draw.Bitmap).height :: PosInt
-  property (bm :: draw.Bitmap).size :: draw.Size
+  property (bm :: draw.Bitmap).size :: Size
   property (bm :: draw.Bitmap).backing_scale :: Real.above(0.0)
   property (bm :: draw.Bitmap).depth :: NonnegInt
   property (bm :: draw.Bitmap).has_color :: Boolean
@@ -28,14 +28,14 @@
   property (bm :: draw.Bitmap).is_ok :: Boolean
 ){
 
- Properties to access bitmap components. The @rhombus(draw.Bitmap.size)
- property combines the @rhombus(draw.Bitmap.width) and @rhombus(draw.Bitmap.height)
+ Properties to access bitmap components. The @rhombus(Bitmap.size)
+ property combines the @rhombus(Bitmap.width) and @rhombus(Bitmap.height)
  properties.
 
 }
 
 @doc(
-  method (bm :: draw.Bitmap).make_dc() :: draw.DC
+  method (bm :: draw.Bitmap).make_dc() :: DC
 ){
 
  Creates a drawing context that writes to the bitmap.
@@ -84,7 +84,7 @@
 }
 
 @doc(
-  fun draw.Bitmap.from_file(path :: String || Path) :: draw.Bitmap
+  fun draw.Bitmap.from_file(path :: String || Path) :: Bitmap
 ){
 
   Reads a bitmap from @rhombus(path).

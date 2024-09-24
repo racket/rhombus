@@ -7,17 +7,17 @@
 @doc(
   class draw.Font():
     constructor (
-      ~kind: kind :: draw.Font.Kind = #'default,
+      ~kind: kind :: Font.Kind = #'default,
       ~name: name :: maybe(String) = #false,
       ~size: size :: Real.in(0.0, 1024.0) = 12.0,
       ~in_pixels: in_pixels :: Any = #false,
-      ~style: style :: draw.Font.Style = #'normal,
-      ~weight: weight :: draw.Font.Weight = #'normal,
+      ~style: style :: Font.Style = #'normal,
+      ~weight: weight :: Font.Weight = #'normal,
       ~has_underline: has_underline :: Any = #false,
-      ~smoothing: smoothing :: draw.Font.Smoothing = #'default,
-      ~hinting: hinting :: draw.Font.Hinting = #'aligned,
+      ~smoothing: smoothing :: Font.Smoothing = #'default,
+      ~hinting: hinting :: Font.Hinting = #'aligned,
       ~features:
-        features :: Map.of(draw.Font.FeatureString, NonnegInt) = {},
+        features :: Map.of(Font.FeatureString, NonnegInt) = {},
     )
 ){
 
@@ -32,17 +32,17 @@
 }
 
 @doc(
-  property (font :: draw.Font).kind :: draw.Font.Kind
+  property (font :: draw.Font).kind :: Font.Kind
   property (font :: draw.Font).name :: maybe(String)
   property (font :: draw.Font).size :: Real.in(0.0, 1024.0)
   property (font :: draw.Font).in_pixels :: Boolean
-  property (font :: draw.Font).style :: draw.Font.Style
-  property (font :: draw.Font).weight :: draw.Font.Weight
+  property (font :: draw.Font).style :: Font.Style
+  property (font :: draw.Font).weight :: Font.Weight
   property (font :: draw.Font).has_underline :: Boolean
-  property (font :: draw.Font).smoothing :: draw.Font.Smoothing
-  property (font :: draw.Font).hinting :: draw.Font.Hinting
+  property (font :: draw.Font).smoothing :: Font.Smoothing
+  property (font :: draw.Font).hinting :: Font.Hinting
   property (font :: draw.Font).features
-    :: Map.of(draw.Font.FeatureString, NonnegInt)
+    :: Map.of(Font.FeatureString, NonnegInt)
 ){
 
  Propeties to access font components.

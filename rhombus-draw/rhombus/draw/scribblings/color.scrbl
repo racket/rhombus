@@ -39,7 +39,7 @@
 }
 
 @doc(
-  method (col :: draw.Color).scale(factor :: NonnegReal) :: draw.Color
+  method (col :: draw.Color).scale(factor :: NonnegReal) :: Color
 ){
 
  Scales a color, making it brighter or darker. If @rhombus(factor) is
@@ -52,7 +52,7 @@
 }
 
 @doc(
-  method (col :: draw.Color).blend(other :: draw.Color) :: draw.Color
+  method (col :: draw.Color).blend(other :: Color) :: Color
 ){
 
  Blends two colors to produce a new one. Each red, green, and blue
@@ -64,13 +64,13 @@
 
 @doc(
   property (col :: draw.Color).handle :: Any
-  fun draw.Color.from_handle(hand :: Any) :: draw.Color
+  fun draw.Color.from_handle(hand :: Any) :: Color
 ){
 
- The @rhombus(draw.Color.handle) property returns a Racket object that
+ The @rhombus(Color.handle) property returns a Racket object that
  corresponds to the drawing context for use directly with
- @racketmodname(racket/draw). The @rhombus(draw.Color.from_handle) function
- creates a @rhombus(draw.Color, ~class) from such a Racket object.
+ @racketmodname(racket/draw). The @rhombus(Color.from_handle) function
+ creates a @rhombus(Color, ~class) from such a Racket object.
 
 }
 
