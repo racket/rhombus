@@ -79,7 +79,7 @@ def (render_line,
                           // is the same
                           intern(p.width / len))
                ~render_indentation:
-                 fun (n, m, s, style):
+                 fun (n, off, m, s, style):
                    if s
                    | let p = rtt(" ")
                      p.scale(s * n / m / p.width, 1)

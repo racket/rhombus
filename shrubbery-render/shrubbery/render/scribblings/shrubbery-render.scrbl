@@ -21,7 +21,7 @@ documentation or slide presentations.
   fun make(~render: render :: Function.of_arity(2),
            ~render_in_space: render_in_space :: Function.of_arity(3),
            ~render_whitespace: render_whitespace :: Function.of_arity(1),
-           ~render_indentation: render_indentation :: Function.of_arity(4),
+           ~render_indentation: render_indentation :: Function.of_arity(5),
            ~render_line: render_line :: Function.of_arity(1),
            ~render_one_line: render_one_line :: Function.of_arity(1),
            ~render_lines: render_lines :: Function.of_arity(1),

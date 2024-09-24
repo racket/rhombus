@@ -286,10 +286,11 @@
                          [(or (eq? style 'whitespace)
                               (and m (> (caar m) sp-start)))
                           (define len (- (if m (caar m) (string-length show-str)) sp-start))
-                          (define-values (ws-len orig-len orig-size ws-style) (line-shape-apply line-shape len))
-                          (define e (indentation-whitespace ws-len orig-len orig-size ws-style))
+                          (define-values (ws-len ws-offset orig-len orig-size ws-style) (line-shape-apply line-shape len))
+                          (define e (indentation-whitespace ws-len ws-offset orig-len orig-size ws-style))
                           (let-values ([(es line-shape)
-                                        (shape-loop (+ sp-start ws-len) (line-shape-step line-shape e ws-len ws-style element-shape))])
+                                        (shape-loop (+ sp-start ws-len)
+                                                    (line-shape-step line-shape e ws-len ws-style element-shape))])
                             (values (cons e es) line-shape))]
                          [else
                           (define rest-str (string->immutable-string

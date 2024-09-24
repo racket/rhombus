@@ -83,10 +83,11 @@
 (define (line-shape-apply ls len)
   (define pl (line-shape-prev-line ls))
   (cond
-    [(null? pl) (values len len #f #f)]
+    [(null? pl) (values len 0 len #f #f)]
     [else
      (define es (car pl))
      (values (min (elem-shape-len es) len)
+             (- (elem-shape-orig-len es) (elem-shape-len es))
              (elem-shape-orig-len es)
              (elem-shape-size es)
              (elem-shape-style es))]))

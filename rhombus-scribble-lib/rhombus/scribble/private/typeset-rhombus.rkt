@@ -71,11 +71,11 @@
                                                        space-name))))
    #:render_whitespace (lambda (n)
                          (element hspace-style (make-string n #\space)))
-   #:render_indentation (lambda (n orig-n orig-size style)
+   #:render_indentation (lambda (n offset-in-orig orig-n orig-size style)
                           (cond
                             [(target-style? style)
                              (let* ([pre (min (max (- (target-style-prefix-len style)
-                                                      (- orig-n n))
+                                                      offset-in-orig)
                                                    0)
                                               n)]
                                     [post (- n pre)])
