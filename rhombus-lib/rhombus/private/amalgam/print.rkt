@@ -288,11 +288,14 @@
         (print e))
       (pretty-text "]"))]
     [(mutable-treelist? v)
-     (pretty-listlike
-      (pretty-text "MutableList[")
-      (for/list ([e (in-mutable-treelist v)])
-        (print e))
-      (pretty-text "]"))]
+     (fresh-ref
+      v
+      (lambda ()
+        (pretty-listlike
+         (pretty-text "MutableList[")
+         (for/list ([e (in-mutable-treelist v)])
+           (print e))
+         (pretty-text "]"))))]
     [(list? v)
      (pretty-listlike
       (pretty-text "PairList[")

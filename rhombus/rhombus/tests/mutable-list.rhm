@@ -293,6 +293,12 @@ check:
   to_string(MutableList[]) ~is "MutableList[]"
   to_string(MutableList[1, 2, 3]) ~is "MutableList[1, 2, 3]"
 
+check:
+  def l = MutableList[1, 2, 3]
+  l[0] := l
+  to_string(l)
+  ~is "#0=MutableList[#0#, 2, 3]"
+
 block:
   let [x, ...] = [1, 2, 3]
   check:
