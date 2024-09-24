@@ -363,13 +363,12 @@ check:
     "given: \"oops\"",
   )
 
-// TODO print immutable arrays differently
 check:
   (Array(1, 2, 3).snapshot() :~ MutableArray)[0] := 0
   ~throws values(
     "Array.set: contract violation",
     "expected: MutableArray",
-    "given: Array(1, 2, 3)",
+    "given: Array.snapshot(Array(1, 2, 3))",
   )
 
 check:

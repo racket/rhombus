@@ -181,11 +181,10 @@ check:
     "given: \"oops\"",
   )
 
-// TODO print immutable boxes differently
 check:
   (Box(1).snapshot() :~ MutableBox).value := 0
   ~throws values(
     "Box.value: contract violation",
     "expected: MutableBox",
-    "given: Box(1)",
+    "given: Box.snapshot(Box(1))",
   )
