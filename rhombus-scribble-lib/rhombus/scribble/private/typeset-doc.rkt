@@ -490,10 +490,10 @@
            'rhombus/namespace
            space))
      (define id-space (get-id-space space))
-     (define (make-content defn? [str str] #:meta? [meta? meta?])
+     (define (make-content defn? [str str] #:meta? [meta? meta?] #:can-prefix? [can-prefix? #t])
        (define c ((if (or meta? (eq? immed-space 'grammar)) racketvarfont racketidfont)
                   (make-id-element id str defn? #:space id-space #:suffix str+space)))
-       (if prefix-str
+       (if (and can-prefix? prefix-str)
            (list (racketidfont prefix-str) c)
            c))
      (define content (annote-exporting-library (make-content #t)))
@@ -507,6 +507,7 @@
          [target-maker
           (define name (string->symbol str))
           (define ref-content (make-content #f index-str #:meta? #f))
+          (define ref-content/no-prefix (make-content #f index-str #:meta? #f #:can-prefix? #f))
           (target-maker content
                         (lambda (tag)
                           (if (or nonterm-sym
@@ -527,7 +528,7 @@
                                 (with-exporting-libraries
                                   (lambda (libs) (thing-index-desc name libs))))
                                tag
-                               ref-content))))]
+                               ref-content/no-prefix))))]
          [else content]))]))
 
 (define-for-syntax (nonterm-id-transformer id sym nt-def-ht nt-space-name)
