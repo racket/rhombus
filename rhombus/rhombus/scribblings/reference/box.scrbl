@@ -132,6 +132,16 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
  Creates a mutable box whose initial content matches @rhombus(bx).
 
+@examples(
+  ~repl:
+    def b = Box(1)
+    b.copy()
+  ~repl:
+    def b = Box(1).snapshot()
+    b.copy()
+    b.copy() is_now b
+)
+
 }
 
 
@@ -141,5 +151,16 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
  Returns an immutable box whose content matches @rhombus(bx). If
  @rhombus(bx) is immutable, then it is the result.
+
+@examples(
+  ~repl:
+    def b = Box(1)
+    b.snapshot()
+    b.snapshot() is_now b
+  ~repl:
+    def b = Box(1).snapshot()
+    b.snapshot()
+    b.snapshot() === b
+)
 
 }

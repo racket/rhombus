@@ -155,8 +155,14 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
   fun Bytes.copy(bstr :: Bytes) :: MutableBytes
 ){
 
- Returns a frash mutable byte string with the same initial content as
+ Returns a fresh mutable byte string with the same initial content as
  @rhombus(bstr).
+
+@examples(
+  def b = #"apple"
+  b.copy()
+  b.copy() is_now b
+)
 
 }
 
@@ -177,15 +183,21 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
-  fun Bytes.snapshot(str :: Bytes)
-    :: ImmutableBytes
+  fun Bytes.snapshot(str :: Bytes) :: ImmutableBytes
 ){
 
  Returns an immutable byte string as-is or copies a mutable byte
  string's content to an immutable byte string.
 
 @examples(
-  #"apple".copy().snapshot()
+  ~repl:
+    def b = #"apple"
+    b.snapshot()
+    b.snapshot() === b
+  ~repl:
+    def b = #"apple".copy()
+    b.snapshot()
+    b.snapshot() is_now b
 )
 
 }

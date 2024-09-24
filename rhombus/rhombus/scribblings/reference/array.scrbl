@@ -265,9 +265,15 @@ contents, even if one is mutable and the other is immutable.
  @rhombus(end) (exclusive).
 
 @examples(
-  Array("a", "b", "c").copy()
-  Array("a", "b", "c").copy(1)
-  Array("a", "b", "c").copy(1, 2)
+  ~repl:
+    def a = Array("a", "b", "c")
+    a.copy()
+    a.copy(1)
+    a.copy(1, 2)
+  ~repl:
+    def a = Array("a", "b", "c").snapshot()
+    a.copy()
+    a.copy() is_now a
 )
 
 }
@@ -289,15 +295,21 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.snapshot(arr :: Array)
-    :: ImmutableArray
+  fun Array.snapshot(arr :: Array) :: ImmutableArray
 ){
 
  Returns an immutable array as-is or copies a mutable array's content to
  an immutable array.
 
 @examples(
-  Array("a", "b", "c").snapshot()
+  ~repl:
+    def a = Array("a", "b", "c")
+    a.snapshot()
+    a.snapshot() is_now a
+  ~repl:
+    def a = Array("a", "b", "c").snapshot()
+    a.snapshot()
+    a.snapshot() === a
 )
 
 }
