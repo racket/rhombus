@@ -615,8 +615,16 @@ in an unspecified order.
 
  Creates a mutable map whose initial content matches @rhombus(mp).
 
-}
+@examples(
+  ~repl:
+    def m = {"a": 1, "b": 2}
+    m.copy()
+  ~repl:
+    def m = MutableMap{"a": 1, "b": 2}
+    m.copy()
+)
 
+}
 
 
 @doc(
@@ -625,6 +633,16 @@ in an unspecified order.
 
  Returns an immutable map whose content matches @rhombus(mp). If
  @rhombus(mp) is immutable, then it is the result.
+
+@examples(
+  ~repl:
+    def m = {"a": 1, "b": 2}
+    m.snapshot()
+    m.snapshot() === m
+  ~repl:
+    def m = MutableMap{"a": 1, "b": 2}
+    m.snapshot()
+)
 
 }
 

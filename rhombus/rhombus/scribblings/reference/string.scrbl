@@ -8,7 +8,7 @@ A @deftech{string} is a sequence of Unicode @tech{characters}. A string
 works with map-referencing @brackets to access a character via
 @rhombus(#%index). A string also works with the @rhombus(++) operator to
 append strings, but a @rhombus(+&) can be used to append strings with
-the static guaratee that the result is a string. A string can be used as
+the static guarantee that the result is a string. A string can be used as
 @tech{sequence}, in which case it supplies its characters in order.
 
 Although Racket supports mutable strings, the @rhombus(String, ~annot)
@@ -367,7 +367,9 @@ Strings are @tech{comparable}, which means that generic operations like
  Creates a mutable copy of @rhombus(str).
 
 @examples(
-  "apple".copy()
+  def s = "apple"
+  s.copy()
+  s.copy() is_now s
 )
 
 }
@@ -380,7 +382,14 @@ Strings are @tech{comparable}, which means that generic operations like
  an immutable string.
 
 @examples(
-  "apple".copy().snapshot()
+  ~repl:
+    def s = "apple"
+    s.snapshot()
+    s.snapshot() === s
+  ~repl:
+    def s = "apple".copy()
+    s.snapshot()
+    s.snapshot() is_now s
 )
 
 }

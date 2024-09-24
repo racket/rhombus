@@ -461,6 +461,15 @@ it supplies its elements in an unspecified order.
 
  Creates a mutable set whose initial content matches @rhombus(st).
 
+@examples(
+  ~repl:
+    def s = {"a", "b"}
+    s.copy()
+  ~repl:
+    def s = MutableSet{"a", "b"}
+    s.copy()
+)
+
 }
 
 
@@ -470,6 +479,16 @@ it supplies its elements in an unspecified order.
 
  Returns an immutable set whose content matches @rhombus(st). If
  @rhombus(st) is immutable, then it is the result.
+
+@examples(
+  ~repl:
+    def s = {"a", "b"}
+    s.snapshot()
+    s.snapshot() === s
+  ~repl:
+    def s = MutableSet{"a", "b"}
+    s.snapshot()
+)
 
 }
 
