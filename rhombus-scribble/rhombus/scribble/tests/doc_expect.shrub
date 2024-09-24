@@ -1,445 +1,354 @@
-[
-  #'html,
-  [#'head],
-  [
-    #'body,
-    [#'div, [[#'class, "tocset"]]],
-    [
-      #'div,
-      [[#'class, "maincolumn"]],
-      [
-        #'div,
-        [[#'class, "main"]],
-        [#'div, [[#'class, "versionbox"]]],
-        [
-          #'p,
-          [
-            #'table,
-            [
-              #'tr,
-              [
-                #'td,
-                [#'span, [[#'class, "hspace"]], #'nbsp],
-                [
-                  #'span,
-                  [[#'class, "stt"]],
-                  [#'span, [[#'class, "RktSym"]], "import"]
-                ],
-                [#'span, [[#'class, "stt"]], ": "],
-                [
-                  #'a,
-                  [[#'class, "RktModLink"]],
-                  [#'span, [[#'class, "stt"]], "rhombus"]
-                ]
-              ],
-              [
-                #'td,
-                [
-                  #'span,
-                  [[#'class, "RpackageSpec"]],
-                  [#'span, [[#'class, "Smaller"]], #'nbsp, "package:"],
-                  " ",
-                  [#'a, [], [#'span, [[#'class, "stt"]], "rhombus-lib"]]
-                ]
-              ]
-            ]
-          ]
-        ],
-        [
-          #'p,
-          [
-            #'div,
-            [[#'class, "SIntrapara"]],
-            [
-              #'table,
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'div,
-                    [[#'class, "RBackgroundLabel SIEHidden"]],
-                    [
-                      #'div,
-                      [[#'class, "RBackgroundLabelInner"]],
-                      [#'p, "definition"]
-                    ]
-                  ]
-                ]
-              ],
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'table,
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [#'a, []],
-                          [
-                            #'span,
-                            [],
-                            [#'span, [[#'class, "RktSym"]], "rhombus."],
-                            [
-                              #'span,
-                              [[#'class, "RktSym"]],
-                              [#'a, [[#'class, "RktValDef RktValLink"]], "fun"]
-                            ]
-                          ],
-                          [#'span, [[#'class, "stt"]], ":"]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [#'span, [[#'class, "hspace"]], #'nbsp, #'nbsp],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [#'span, [[#'class, "RktValDef RktValLink"]]]
-                          ],
-                          [#'span, [[#'class, "RktVar"]], "apple"]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [#'span, [[#'class, "hspace"]], #'nbsp, #'nbsp],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [#'span, [[#'class, "RktValDef RktValLink"]]]
-                          ],
-                          [#'span, [[#'class, "RktVar"]], "banana"]
-                        ]
-                      ]
-                    ]
-                  ]
-                ]
-              ],
-              [#'tr, [#'td, [#'p, [#'span, [[#'class, "hspace"]], #'nbsp]]]],
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'div,
-                    [[#'class, "RBackgroundLabel SIEHidden"]],
-                    [
-                      #'div,
-                      [[#'class, "RBackgroundLabelInner"]],
-                      [#'p, "definition"]
-                    ]
-                  ]
-                ]
-              ],
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'table,
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "RktSym"]],
-                            [#'a, [[#'class, "RktValDef RktValLink"]], "fun"]
-                          ],
-                          [#'span, [[#'class, "stt"]], ":"]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [
-                              #'span,
-                              [[#'class, "RktValDef RktValLink"]],
-                              #'nbsp,
-                              #'nbsp
-                            ]
-                          ],
-                          [#'span, [[#'class, "RktVar"]], "apple"]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [
-                              #'span,
-                              [[#'class, "RktValDef RktValLink"]],
-                              #'nbsp,
-                              #'nbsp
-                            ]
-                          ],
-                          [#'span, [[#'class, "RktVar"]], "banana"]
-                        ]
-                      ]
-                    ]
-                  ]
-                ]
-              ],
-              [#'tr, [#'td, [#'p, [#'span, [[#'class, "hspace"]], #'nbsp]]]],
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'div,
-                    [[#'class, "RBackgroundLabel SIEHidden"]],
-                    [
-                      #'div,
-                      [[#'class, "RBackgroundLabelInner"]],
-                      [#'p, "function"]
-                    ]
-                  ]
-                ]
-              ],
-              [
-                #'tr,
-                [
-                  #'td,
-                  [
-                    #'table,
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [#'a, [[#'class, "RktValLink"]], "fun"]
-                          ],
-                          [#'span, [[#'class, "hspace"]], #'nbsp],
-                          [#'a, []],
-                          [
-                            #'span,
-                            [],
-                            [#'span, [[#'class, "RktSym"]], "rhombus."],
-                            [
-                              #'span,
-                              [[#'class, "RktSym"]],
-                              [
-                                #'a,
-                                [[#'class, "RktValDef RktValLink"]],
-                                "to_string"
-                              ]
-                            ]
-                          ],
-                          [#'span, [[#'class, "RktPn"]], "("],
-                          [#'span, [[#'class, "RktVar"]], "a"],
-                          [#'span, [[#'class, "stt"]], ","]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [
-                              #'span,
-                              [[#'class, "RktValDef RktValLink"]],
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp
-                            ]
-                          ],
-                          [#'span, [[#'class, "hspace"]], #'nbsp],
-                          [#'span, [[#'class, "RktVar"]], "b"],
-                          [#'span, [[#'class, "stt"]], ","]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [
-                              #'span,
-                              [[#'class, "RktValDef RktValLink"]],
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp
-                            ]
-                          ],
-                          [#'span, [[#'class, "hspace"]], #'nbsp],
-                          [#'span, [[#'class, "RktVar"]], "c"],
-                          [#'span, [[#'class, "stt"]], ":"],
-                          [#'span, [[#'class, "hspace"]], #'nbsp],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [#'span, [[#'class, "RktSym"]], "fun"]
-                          ],
-                          [#'span, [[#'class, "hspace"]], #'nbsp],
-                          [#'span, [[#'class, "RktPn"]], "("],
-                          [#'span, [[#'class, "stt"]], "x"],
-                          [#'span, [[#'class, "RktPn"]], ")"],
-                          [#'span, [[#'class, "stt"]], ":"]
-                        ]
-                      ]
-                    ],
-                    [
-                      #'tr,
-                      [
-                        #'td,
-                        [
-                          #'p,
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "stt"]],
-                            [
-                              #'span,
-                              [[#'class, "RktValDef RktValLink"]],
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp,
-                              #'nbsp
-                            ]
-                          ],
-                          [
-                            #'span,
-                            [[#'class, "hspace"]],
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp,
-                            #'nbsp
-                          ],
-                          [#'span, [[#'class, "stt"]], "x"],
-                          [#'span, [[#'class, "RktPn"]], ")"]
-                        ]
-                      ]
-                    ]
-                  ]
-                ]
-              ]
-            ]
-          ],
-          [#'div, [[#'class, "SIntrapara"]], "Description."]
-        ]
-      ]
-    ],
-    [#'div, [], #'nbsp]
-  ]
-]
+;«
+  html:«
+    head:«»;
+    body:«
+      div:« {class:« "tocset" »} »;
+      div:«
+        {class:« "maincolumn" »};
+        div:«
+          {class:« "main" »};
+          div:« {class:« "versionbox" »} »;
+          p:«
+            table:«
+              tr:«
+                td:«
+                  span:« {class:« "hspace" »}; nbsp »;
+                  span:«
+                    {class:« "stt" »};
+                    span:« {class:« "RktSym" »}; "import" »
+                  »;
+                  span:« {class:« "stt" »}; ": " »;
+                  a:«
+                    {class:« "RktModLink" »};
+                    span:« {class:« "stt" »}; "rhombus" »
+                  »
+                »;
+                td:«
+                  span:«
+                    {class:« "RpackageSpec" »};
+                    span:« {class:« "Smaller" »}; nbsp; "package:" »;
+                    " ";
+                    a:« {}; span:« {class:« "stt" »}; "rhombus-lib" » »
+                  »
+                »
+              »
+            »
+          »;
+          p:«
+            div:«
+              {class:« "SIntrapara" »};
+              table:«
+                tr:«
+                  td:«
+                    div:«
+                      {class:« "RBackgroundLabel SIEHidden" »};
+                      div:«
+                        {class:« "RBackgroundLabelInner" »};
+                        p:« "definition" »
+                      »
+                    »
+                  »
+                »;
+                tr:«
+                  td:«
+                    table:«
+                      tr:«
+                        td:«
+                          p:«
+                            a:« {} »;
+                            span:«
+                              {};
+                              span:« {class:« "RktSym" »}; "rhombus." »;
+                              span:«
+                                {class:« "RktSym" »};
+                                a:« {class:« "RktValDef RktValLink" »}; "fun" »
+                              »
+                            »;
+                            span:« {class:« "stt" »}; ":" »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:« {class:« "hspace" »}; nbsp; nbsp »;
+                            span:«
+                              {class:« "stt" »};
+                              span:« {class:« "RktValDef RktValLink" »} »
+                            »;
+                            span:« {class:« "RktVar" »}; "apple" »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:« {class:« "hspace" »}; nbsp; nbsp »;
+                            span:«
+                              {class:« "stt" »};
+                              span:« {class:« "RktValDef RktValLink" »} »
+                            »;
+                            span:« {class:« "RktVar" »}; "banana" »
+                          »
+                        »
+                      »
+                    »
+                  »
+                »;
+                tr:« td:« p:« span:« {class:« "hspace" »}; nbsp » » » »;
+                tr:«
+                  td:«
+                    div:«
+                      {class:« "RBackgroundLabel SIEHidden" »};
+                      div:«
+                        {class:« "RBackgroundLabelInner" »};
+                        p:« "definition" »
+                      »
+                    »
+                  »
+                »;
+                tr:«
+                  td:«
+                    table:«
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "RktSym" »};
+                              a:« {class:« "RktValDef RktValLink" »}; "fun" »
+                            »;
+                            span:« {class:« "stt" »}; ":" »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "stt" »};
+                              span:«
+                                {class:« "RktValDef RktValLink" »};
+                                nbsp;
+                                nbsp
+                              »
+                            »;
+                            span:« {class:« "RktVar" »}; "apple" »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "stt" »};
+                              span:«
+                                {class:« "RktValDef RktValLink" »};
+                                nbsp;
+                                nbsp
+                              »
+                            »;
+                            span:« {class:« "RktVar" »}; "banana" »
+                          »
+                        »
+                      »
+                    »
+                  »
+                »;
+                tr:« td:« p:« span:« {class:« "hspace" »}; nbsp » » » »;
+                tr:«
+                  td:«
+                    div:«
+                      {class:« "RBackgroundLabel SIEHidden" »};
+                      div:«
+                        {class:« "RBackgroundLabelInner" »};
+                        p:« "function" »
+                      »
+                    »
+                  »
+                »;
+                tr:«
+                  td:«
+                    table:«
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "stt" »};
+                              a:« {class:« "RktValLink" »}; "fun" »
+                            »;
+                            span:« {class:« "hspace" »}; nbsp »;
+                            a:« {} »;
+                            span:«
+                              {};
+                              span:« {class:« "RktSym" »}; "rhombus." »;
+                              span:«
+                                {class:« "RktSym" »};
+                                a:«
+                                  {class:« "RktValDef RktValLink" »};
+                                  "to_string"
+                                »
+                              »
+                            »;
+                            span:« {class:« "RktPn" »}; "(" »;
+                            span:« {class:« "RktVar" »}; "a" »;
+                            span:« {class:« "stt" »}; "," »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "stt" »};
+                              span:«
+                                {class:« "RktValDef RktValLink" »};
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp
+                              »
+                            »;
+                            span:« {class:« "hspace" »}; nbsp »;
+                            span:« {class:« "RktVar" »}; "b" »;
+                            span:« {class:« "stt" »}; "," »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "stt" »};
+                              span:«
+                                {class:« "RktValDef RktValLink" »};
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp
+                              »
+                            »;
+                            span:« {class:« "hspace" »}; nbsp »;
+                            span:« {class:« "RktVar" »}; "c" »;
+                            span:« {class:« "stt" »}; ":" »;
+                            span:« {class:« "hspace" »}; nbsp »;
+                            span:«
+                              {class:« "stt" »};
+                              span:« {class:« "RktSym" »}; "fun" »
+                            »;
+                            span:« {class:« "hspace" »}; nbsp »;
+                            span:« {class:« "RktPn" »}; "(" »;
+                            span:« {class:« "stt" »}; "x" »;
+                            span:« {class:« "RktPn" »}; ")" »;
+                            span:« {class:« "stt" »}; ":" »
+                          »
+                        »
+                      »;
+                      tr:«
+                        td:«
+                          p:«
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:«
+                              {class:« "stt" »};
+                              span:«
+                                {class:« "RktValDef RktValLink" »};
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp;
+                                nbsp
+                              »
+                            »;
+                            span:«
+                              {class:« "hspace" »};
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp;
+                              nbsp
+                            »;
+                            span:« {class:« "stt" »}; "x" »;
+                            span:« {class:« "RktPn" »}; ")" »
+                          »
+                        »
+                      »
+                    »
+                  »
+                »
+              »
+            »;
+            div:« {class:« "SIntrapara" »}; "Description." »
+          »
+        »
+      »;
+      div:« {}; nbsp »
+    »
+  »
+»

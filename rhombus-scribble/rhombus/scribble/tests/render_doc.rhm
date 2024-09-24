@@ -34,15 +34,19 @@ def skip_attr = { "tocset", "versionbox" }
 
 fun filter(html):  
   fun filter_body([body, ...]):
-    for List (body: [body, ...]):
-      let new = filter(body)
-      skip_when: !new
-      new
+    Syntax.make_sequence(
+      for List (body: [body, ...]):
+        let new = filter(body)
+        skip_when: !new
+        new
+    )
   fun filter_attrs(PairList[PairList[key, val], ...]):
-    for List (key: [key, ...],
-              val: [val, ...]):
-      keep_when: key == #'class
-      [key, to_string(val)]
+    let [[key, val], ...]:
+      for List (key: [key, ...],
+                val: [val, ...]):
+        keep_when: key == #'class
+        [key, val]
+    '{ $key: $val, ... }'
   fun has_skip_attr(PairList[PairList[key, val], ...]):
     any(key == #'class && skip_attr[to_string(val)], ...)
   match html
@@ -50,31 +54,31 @@ fun filter(html):
       cond
       | keep_with_attrs[key]:
           if has_skip_attr(attrs)
-          | [key, filter_attrs(attrs)]
-          | [key, filter_attrs(attrs), & filter_body([body, ...])]
+          | '$key:
+               $(filter_attrs(attrs))'
+          | '$key:
+               $(filter_attrs(attrs))
+               $(filter_body([body, ...]))'
       | keeps[key]:
-          [key, & filter_body([body, ...])]
+          '$key:
+             $(filter_body([body, ...]))'
       | ~else:
-          [key]
-  | s :: ReadableString:
-      to_string(s)
+          '$key:«»'
   | ~else:
-      html
+      '$html'
 
 fun read(expect):
   let o = base.#{open-input-file}(expect)
-  // need something better than `eval` here
-  parameterize { Evaluator.current: Evaluator.make_rhombus() }:
-    eval(shrubbery.read(o))
+  shrubbery.read(o)
 
 check:
   filter(html)
-  ~is read(doc_expect)
+  ~prints_like read(doc_expect)
 
 fun rewrite():
   def o = base.#{open-output-file}(doc_expect,
                                    ~exists: #'truncate)
-  show(~out: o, filter(html), ~pretty: #true)
+  print(~out: o, filter(html), ~pretty: #true)
   o.flush()
 
 #//
