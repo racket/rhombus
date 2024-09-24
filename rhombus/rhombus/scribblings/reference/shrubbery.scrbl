@@ -3,18 +3,18 @@
     "common.rhm" open
     "nonterminal.rhm" open
     meta_label:
-      rhombus/shrubbery open)
+      rhombus/shrubbery)
 
 @title(~tag: "Shrubbery"){Shrubbery Input}
 
 @docmodule(rhombus/shrubbery)
 
 @doc(
-  fun read(in :: Port.Input,
-           ~mode: mode :: ReadMode = #'top,
-           ~start_column: start_column :: Int = 0)
+  fun shrubbery.read(in :: Port.Input,
+                     ~mode: mode :: shrubbery.ReadMode = #'top,
+                     ~start_column: start_column :: Int = 0)
     :: Syntax || Port.eof
-  enum ReadMode:
+  enum shrubbery.ReadMode:
     top
     interactive
     line
