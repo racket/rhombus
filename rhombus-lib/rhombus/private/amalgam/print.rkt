@@ -270,7 +270,6 @@
          (pretty-text ")"))))]
     ;; (byte) strings at this point are mutable
     ;; refer to `maybe-print-immediate`
-    ;; TODO think of a better printed form
     [(or (and (string? v) "String.copy(")
          (and (bytes? v) "Bytes.copy("))
      => (lambda (pre)
@@ -305,30 +304,34 @@
     [(pair? v)
      (pretty-listlike
       (pretty-text "Pair(")
-      (list
-       (print (car v))
-       (print (cdr v)))
+      (list (print (car v))
+            (print (cdr v)))
       (pretty-text ")"))]
     [(vector? v)
-     (fresh-ref
-      #:when (mutable-vector? v)
-      v
-      (lambda ()
-        (pretty-listlike
-         (pretty-text "Array(")
-         (for/list ([e (in-vector v)])
-           (print e))
-         (pretty-text ")"))))]
+     (define (print-mutable-array)
+       (pretty-listlike
+        (pretty-text "Array(")
+        (for/list ([e (in-vector v)])
+          (print e))
+        (pretty-text ")")))
+     (if (mutable-vector? v)
+         (fresh-ref v print-mutable-array)
+         (pretty-listlike
+          (pretty-text "Array.snapshot(")
+          (list (print-mutable-array))
+          (pretty-text ")")))]
     [(box? v)
-     (fresh-ref
-      #:when (mutable-box? v)
-      v
-      (lambda ()
-        (pretty-listlike
-         (pretty-text "Box(")
-         (list
-          (print (unbox v)))
-         (pretty-text ")"))))]
+     (define (print-mutable-box)
+       (pretty-listlike
+        (pretty-text "Box(")
+        (list (print (unbox v)))
+        (pretty-text ")")))
+     (if (mutable-box? v)
+         (fresh-ref v print-mutable-box)
+         (pretty-listlike
+          (pretty-text "Box.snapshot(")
+          (list (print-mutable-box))
+          (pretty-text ")")))]
     [(hash? v)
      (fresh-ref
       #:when (mutable-hash? v)
