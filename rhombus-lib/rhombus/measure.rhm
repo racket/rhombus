@@ -3,7 +3,7 @@ import:
   lib("racket/base.rkt"):
     expose:
       time as rkt_time
-  rhombus/runtime
+  rhombus/memory
 
 export:
   time
@@ -15,7 +15,7 @@ expr.macro
     let [tag, _, ...] = b.unwrap()
     let body = Syntax.make([tag, body, ...])
     'block:
-       base.#{collect-garbage}()
+       memory.gc()
        $(expr_meta.pack_s_exp(['rkt_time', expr_meta.pack_expr('block $body')]))'
 | 'time: $(body :: Block)':
     expr_meta.pack_s_exp(['rkt_time', expr_meta.pack_expr('block $body')])
@@ -24,12 +24,12 @@ expr.macro 'memory: $(body :: Block)':
   'call_with_memory_use(fun () $body)'
 
 fun call_with_memory_use(proc):
-  let before = runtime.cumulative_memory_use()
+  let before = memory.cumulative_use()
   let (after, results):
     call_with_values(proc,
                      fun
-                     | (x): values(runtime.cumulative_memory_use(), [x])
-                     | (& xs): values(runtime.cumulative_memory_use(), xs))
+                     | (x): values(memory.cumulative_use(), [x])
+                     | (& xs): values(memory.cumulative_use(), xs))
   println("allocated: " +& (after - before))
   values(& results)
 

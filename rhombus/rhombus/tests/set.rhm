@@ -1,7 +1,7 @@
 #lang rhombus
 import:
   "version_guard.rhm"
-  rhombus/runtime
+  rhombus/memory
 
 block:
   import "static_arity.rhm"
@@ -655,7 +655,7 @@ block:
                                                                     WeakMutableSet.by($key_comp){ 3 }]
        // make sure the set is weak:
        boson := #false
-       runtime.gc()
+       memory.gc()
        check m5.length() ~is 0'
   check_set_by ==
   check_set_by ===
