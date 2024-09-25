@@ -4,7 +4,7 @@
     "nonterminal.rhm".body
     meta_label:
       rhombus/measure
-      rhombus/runtime)
+      rhombus/memory)
 
 @title(~style: #'toc, ~tag: "measure"){Measuring Time and Space}
 
@@ -24,7 +24,7 @@
  prints to the current output port the amount of time elapsed during the
  evaluation of @rhombus(body) sequence.
 
- If the @rhombus(~gc) option is specified, then @rhombus(runtime.gc) is
+ If the @rhombus(~gc) option is specified, then @rhombus(memory.gc) is
  called before the @rhombus(body) sequence, and time required for the
  garbage collection is not counted as part of the reported time.
 

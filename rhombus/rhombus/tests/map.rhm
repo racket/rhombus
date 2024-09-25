@@ -1,7 +1,7 @@
 #lang rhombus
 import:
   "version_guard.rhm"
-  rhombus/runtime
+  rhombus/memory
 
 block:
   import "static_arity.rhm"
@@ -1052,7 +1052,7 @@ block:
        m5[boson] := boson
        check m5[boson] ~is boson
        boson := #false
-       runtime.gc()
+       memory.gc()
        check m5.length() ~is 0'
   check_map_by ==
   check_map_by ===
