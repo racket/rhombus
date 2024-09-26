@@ -5,7 +5,7 @@
 @title{Bitmap}
 
 @doc(
-  class Bitmap():
+  class draw.Bitmap():
     constructor (
       width :: PosInt,
       height :: PosInt,
@@ -18,14 +18,14 @@
 }
 
 @doc(
-  property (bm :: Bitmap).width :: PosInt
-  property (bm :: Bitmap).height :: PosInt
-  property (bm :: Bitmap).size :: Size
-  property (bm :: Bitmap).backing_scale :: Real.above(0.0)
-  property (bm :: Bitmap).depth :: NonnegInt
-  property (bm :: Bitmap).has_color :: Boolean
-  property (bm :: Bitmap).has_alpha :: Boolean
-  property (bm :: Bitmap).is_ok :: Boolean
+  property (bm :: draw.Bitmap).width :: PosInt
+  property (bm :: draw.Bitmap).height :: PosInt
+  property (bm :: draw.Bitmap).size :: Size
+  property (bm :: draw.Bitmap).backing_scale :: Real.above(0.0)
+  property (bm :: draw.Bitmap).depth :: NonnegInt
+  property (bm :: draw.Bitmap).has_color :: Boolean
+  property (bm :: draw.Bitmap).has_alpha :: Boolean
+  property (bm :: draw.Bitmap).is_ok :: Boolean
 ){
 
  Properties to access bitmap components. The @rhombus(Bitmap.size)
@@ -35,7 +35,7 @@
 }
 
 @doc(
-  method (bm :: Bitmap).make_dc() :: DC
+  method (bm :: draw.Bitmap).make_dc() :: DC
 ){
 
  Creates a drawing context that writes to the bitmap.
@@ -43,7 +43,7 @@
 }
 
 @doc(
-  method (bm :: Bitmap).argb_pixels(
+  method (bm :: draw.Bitmap).argb_pixels(
     ~x: x :: NonnegInt = 0,
     ~y: y :: NonnegInt = 0,
     ~width: width :: NonnegInt = width,
@@ -57,7 +57,7 @@
 }
 
 @doc(
-  method (bm :: Bitmap).set_argb_pixels(
+  method (bm :: draw.Bitmap).set_argb_pixels(
     src :: Bytes,
     ~x: x :: NonnegInt = 0,
     ~y: y :: NonnegInt = 0,
@@ -71,7 +71,7 @@
 }
 
 @doc(
-  method (bm :: Bitmap).write(
+  method (bm :: draw.Bitmap).write(
     dest :: Path,
     ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
     ~quality: quality :: Int.in(0, 100) = 75,
@@ -84,7 +84,7 @@
 }
 
 @doc(
-  fun Bitmap.from_file(path :: String || Path) :: Bitmap
+  fun draw.Bitmap.from_file(path :: String || Path) :: Bitmap
 ){
 
   Reads a bitmap from @rhombus(path).

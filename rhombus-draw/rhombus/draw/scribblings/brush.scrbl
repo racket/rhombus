@@ -5,12 +5,12 @@
 @title{Brush}
 
 @doc(
-  class Brush():
+  class draw.Brush():
     constructor (
       ~color: color :: (String || Color) = "Black",
       ~style: style :: Brush.Style = #'solid,
       ~stipple: stipple :: maybe(Bitmap) = #false,
-      ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false,
+      ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false
     )
 ){
 
@@ -23,10 +23,10 @@
 }
 
 @doc(
-  property (brush :: Brush).color :: Color
-  property (brush :: Brush).style :: Brush.Style
-  property (brush :: Brush).stipple :: maybe(Bitmap)
-  property (brush :: Brush).gradient
+  property (brush :: draw.Brush).color :: Color
+  property (brush :: draw.Brush).style :: Brush.Style
+  property (brush :: draw.Brush).stipple :: maybe(Bitmap)
+  property (brush :: draw.Brush).gradient
     :: maybe(LinearGradient || RadialGradient)
 ){
 
@@ -35,7 +35,7 @@
 }
 
 @doc(
-  enum Brush.Style:
+  enum draw.Brush.Style:
     transparent
     solid
     opaque
@@ -56,7 +56,7 @@
 
 
 @doc(
-  def Brush.none :: Brush
+  def draw.Brush.none :: Brush
 ){
 
  A brush with style @rhombus(#'transparent).
@@ -64,7 +64,7 @@
 }
 
 @doc(
-  class LinearGradient():
+  class draw.LinearGradient():
     constructor (pt1 :: PointLike,
                  pt2 :: PointLike,
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
@@ -79,7 +79,7 @@
 }
 
 @doc(
-  class RadialGradient():
+  class draw.RadialGradient():
     constructor ([[pt1 :: PointLike], r1 :: Real],
                  [[pt2 :: PointLike], r2 :: Real],
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])

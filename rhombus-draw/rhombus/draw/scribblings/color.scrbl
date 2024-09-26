@@ -2,19 +2,18 @@
 @(import:
     "common.rhm" open
     meta_label:
-      lib("racket/draw.rkt"):
-        expose:
+      lib("racket/draw.rkt") open:
+        only:
           #{color-database<%>})
 
 @title{Color}
 
 @doc(
-  class Color():
+  class draw.Color():
     constructor
     | (name :: String)
     | (red :: Byte, green :: Byte, blue :: Byte)
-    | (red :: Byte, green :: Byte, blue :: Byte,
-       alpha :: Real.in(0.0, 1.0))
+    | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0))
 ){
 
  When @rhombus(name) is given, it must be one of the predefined names
@@ -29,10 +28,10 @@
 }
 
 @doc(
-  property (col :: Color).red :: Byte
-  property (col :: Color).green :: Byte
-  property (col :: Color).blue :: Byte
-  property (col :: Color).alpha :: Real.in(0, 1)
+  property (col :: draw.Color).red :: Byte
+  property (col :: draw.Color).green :: Byte
+  property (col :: draw.Color).blue :: Byte
+  property (col :: draw.Color).alpha :: Real.in(0, 1)
 ){
 
  Properties to access color components.
@@ -40,7 +39,7 @@
 }
 
 @doc(
-  method (col :: Color).scale(factor :: NonnegReal) :: Color
+  method (col :: draw.Color).scale(factor :: NonnegReal) :: Color
 ){
 
  Scales a color, making it brighter or darker. If @rhombus(factor) is
@@ -53,7 +52,7 @@
 }
 
 @doc(
-  method (col :: Color).blend(other :: Color) :: Color
+  method (col :: draw.Color).blend(other :: Color) :: Color
 ){
 
  Blends two colors to produce a new one. Each red, green, and blue
@@ -64,8 +63,8 @@
 }
 
 @doc(
-  property (col :: Color).handle :: Any
-  fun Color.from_handle(hand :: Any) :: Color
+  property (col :: draw.Color).handle :: Any
+  fun draw.Color.from_handle(hand :: Any) :: Color
 ){
 
  The @rhombus(Color.handle) property returns a Racket object that

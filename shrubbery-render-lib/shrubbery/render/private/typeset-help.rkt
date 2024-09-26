@@ -39,7 +39,7 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (let loop ([root root] [ns-root #f] [fields fields] [root-raw #f])
+  (let loop ([root root] [ns-root #f] [fields fields] [root-raw #f] [ns-raw-prefix #f])
     (cond
       [(null? fields) #f]
       [else
@@ -86,7 +86,9 @@
                                       (syntax-raw-property root)
                                       (syntax-e root))))
        (define raw (format "~a~a~a~a"
-                           raw-prefix
+                           (if is-import?
+                               ""
+                               raw-prefix)
                            (if parens? "(" "")
                            (syntax-e field)
                            (if parens? ")" "")))
@@ -104,7 +106,9 @@
                                 (and (not is-import?)
                                      root))
                       'raw raw
-                      'raw-prefix raw-prefix)))
+                      'raw-prefix (and (not given-raw)
+                                       (or ns-raw-prefix
+                                           (and is-import? raw-prefix))))))
        (cond
          [dest
           (define loc-stx
@@ -116,7 +120,8 @@
             (transfer-parens-suffix
              (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
                                   (or given-raw raw))))
-          (or (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields) raw)
+          (or (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
+                    raw (or (and is-import? raw-prefix) ns-raw-prefix))
               (add-rest named-dest))]
          [else
           (define id ((make-intro space-name) (datum->syntax root (string->symbol raw))))
@@ -128,6 +133,7 @@
                                                  'loc-stx
                                                  root
                                                  field))
-                                 (or given-raw raw)))])
+                                 (or given-raw raw)
+                                 (or (and is-import? raw-prefix) ns-raw-prefix)))])
                  (or (loop named-id (cdr fields) raw)
                      (add-rest named-id))))])])))

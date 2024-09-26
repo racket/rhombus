@@ -1,15 +1,12 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open:
-      except: Path
-    meta_label:
-      rhombus/draw:
-        expose: Path)
+      except: Path)
 
 @title{Drawing Context}
 
 @doc(
-  interface DC
+  interface draw.DC
 ){
 
  Represents a @deftech{drawing context} that renders to some destination,
@@ -20,8 +17,8 @@
 }
 
 @doc(
-  property (dc :: DC).handle :: Any
-  fun DC.from_handle(hand :: Any) :: DC
+  property (dc :: draw.DC).handle :: Any
+  fun draw.DC.from_handle(hand :: Any) :: DC
 ){
 
  The @rhombus(DC.handle) property returns a Racket object that
@@ -32,9 +29,9 @@
 }
 
 @doc(
-  property (dc :: DC).width :: NonnegReal
-  property (dc :: DC).height :: NonnegReal
-  property (dc :: DC).size :: Size
+  property (dc :: draw.DC).width :: NonnegReal
+  property (dc :: draw.DC).height :: NonnegReal
+  property (dc :: draw.DC).size :: Size
 ){
 
  The size of the drawing area: width, height, or both.
@@ -42,7 +39,7 @@
 }
 
 @doc(
-  method (dc :: DC).clear() :: Void
+  method (dc :: draw.DC).clear() :: Void
 ){
 
  Resets the output to an empty state.
@@ -51,20 +48,20 @@
 
 @doc(
   property
-  | (dc :: DC).pen :: Pen
-  | (dc :: DC).pen := (p :: Pen)
+  | (dc :: draw.DC).pen :: Pen
+  | (dc :: draw.DC).pen := (p :: Pen)
   property
-  | (dc :: DC).brush :: Brush
-  | (dc :: DC).brush := (b :: Brush)
+  | (dc :: draw.DC).brush :: Brush
+  | (dc :: draw.DC).brush := (b :: Brush)
   property
-  | (dc :: DC).font :: Font
-  | (dc :: DC).font := (f :: Font)
+  | (dc :: draw.DC).font :: Font
+  | (dc :: draw.DC).font := (f :: Font)
   property
-  | (dc :: DC).clipping_region :: maybe(Region)
-  | (dc :: DC).clipping_region := (rgn :: maybe(Region))
+  | (dc :: draw.DC).clipping_region :: maybe(Region)
+  | (dc :: draw.DC).clipping_region := (rgn :: maybe(Region))
   property
-  | (dc :: DC).transformation :: DC.Transformation
-  | (dc :: DC).transformation := (rgn :: DC.Transformation)
+  | (dc :: draw.DC).transformation :: DC.Transformation
+  | (dc :: draw.DC).transformation := (rgn :: DC.Transformation)
 ){
 
  Properties to get or set the drawing context's configuration.
@@ -72,12 +69,12 @@
 }
 
 @doc(
-  method (dc :: DC).scale(s :: Real) :: Void
-  method (dc :: DC).scale(sx :: Real, sy :: Real) :: Void
-  method (dc :: DC).translate(dpt :: PointLike) :: Void
-  method (dc :: DC).translate(dx :: Real, dy :: Real) :: Void
-  method (dc :: DC).rotate(radians :: Real) :: Void
-  method (dc :: DC).transform(t :: DC.Transformation) :: Void
+  method (dc :: draw.DC).scale(s :: Real) :: Void
+  method (dc :: draw.DC).scale(sx :: Real, sy :: Real) :: Void
+  method (dc :: draw.DC).translate(dpt :: PointLike) :: Void
+  method (dc :: draw.DC).translate(dx :: Real, dy :: Real) :: Void
+  method (dc :: draw.DC).rotate(radians :: Real) :: Void
+  method (dc :: draw.DC).transform(t :: DC.Transformation) :: Void
 ){
 
  Applies a (further) transformation to the drawing context's conversion
@@ -88,9 +85,9 @@
 }
 
 @doc(
-  method (dc :: DC).save() :: Void
-  method (dc :: DC).restore() :: Void
-  dot (dc :: DC).save_and_restore:
+  method (dc :: draw.DC).save() :: Void
+  method (dc :: draw.DC).restore() :: Void
+  dot (dc :: draw.DC).save_and_restore:
     $body
     ...
 ){
@@ -108,36 +105,39 @@
 }
 
 @doc(
-  method (dc :: DC).point(pt :: PointLike)
+  method (dc :: draw.DC).point(pt :: PointLike)
     :: Void
-  method (dc :: DC).line(pt1 :: PointLike, pt2 :: PointLike)
+  method (dc :: draw.DC).line(pt1 :: PointLike,
+                              pt2 :: PointLike)
     :: Void
-  method (dc :: DC).lines([pt :: PointLike, ...],
-                          ~dpt: dpt :: PointLike = Point.zero,
-                          ~dx: dx :: Real = 0,
-                          ~dy: dy :: Real = 0)
+  method (dc :: draw.DC).lines(
+    [pt :: PointLike, ...],
+    ~dpt: dpt :: PointLike = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0
+  ) :: Void
+  method (dc :: draw.DC).polygon(
+    [pt :: PointLike, ...],
+    ~dpt: dpt :: PointLike = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0,
+    ~fill: fill :: DC.Fill = #'even_odd
+  ) :: Void
+  method (dc :: draw.DC).rectangle(r :: RectLike)
     :: Void
-  method (dc :: DC).polygon([pt :: PointLike, ...],
-                            ~dpt: dpt :: PointLike = Point.zero,
-                            ~dx: dx :: Real = 0,
-                            ~dy: dy :: Real = 0,
-                            ~fill: fill :: DC.Fill = #'even_odd)
+  method (dc :: draw.DC).rounded_rectangle(r :: RectLike,
+                                           radius :: Real = -0.25)
     :: Void
-  method (dc :: DC).rectangle(r :: RectLike)
+  method (dc :: draw.DC).ellipse(r :: RectLike)
     :: Void
-  method (dc :: DC).rounded_rectangle(r :: RectLike,
-                                      radius :: Real = -0.25)
+  method (dc :: draw.DC).arc(r :: RectLike,
+                             start :: Real, end :: Real)
     :: Void
-  method (dc :: DC).ellipse(r :: RectLike)
-    :: Void
-  method (dc :: DC).arc(r :: RectLike,
-                        start :: Real, end :: Real)
-    :: Void
-  method (dc :: DC).path(p :: Path,
-                         ~dpt: dpt :: PointLike = Point.zero,
-                         ~dx: dx :: Real = 0,
-                         ~dy: dy :: Real = 0,
-                         ~fill: fill :: DC.Fill = #'odd_even)
+  method (dc :: draw.DC).path(p :: draw.Path,
+                              ~dpt: dpt :: PointLike = Point.zero,
+                              ~dx: dx :: Real = 0,
+                              ~dy: dy :: Real = 0,
+                              ~fill: fill :: DC.Fill = #'odd_even)
     :: Void
 ){
 
@@ -151,13 +151,14 @@
 }
 
 @doc(
-  method (dc:: DC).text(str :: String,
-                        ~dpt: dpt :: PointLike = Point.zero,
-                        ~dx: dx :: Real = 0,
-                        ~dy: dy :: Real = 0,
-                        ~combine: combine :: DC.TextCombine = #'kern,
-                        ~angle: angle :: Real = 0.0)
-    :: Void
+  method (dc:: draw.DC).text(
+    str :: String,
+    ~dpt: dpt :: PointLike = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0,
+    ~combine: combine :: DC.TextCombine = #'kern,
+    ~angle: angle :: Real = 0.0
+  ) :: Void
 ){
 
  Draws text into a drawing context using the current font.
@@ -165,12 +166,13 @@
 }
 
 @doc(
-  method (dc :: DC).bitmap(
+  method (dc :: draw.DC).bitmap(
     bm :: Bitmap,
     ~dpt: dpt :: PointLike = Point.zero,
     ~dx: dx :: Real = 0,
     ~dy: dy :: Real = 0,
-    ~source: source :: RectLike = Rect(Point.zero, Bitmap.size(bm)),
+    ~source: source :: RectLike:
+               Rect(Point.zero, Bitmap.size(bm)),
     ~style: style :: DC.BitmapOverlay = #'solid,
     ~color: color :: Color = Color("black"),
     ~mask: mask :: maybe(Bitmap) = #false,
@@ -183,8 +185,8 @@
 }
 
 @doc(
-  method (dc :: DC).copy(source :: RectLike,
-                         dest :: PointLike)
+  method (dc :: draw.DC).copy(source :: RectLike,
+                              dest :: PointLike)
     :: Void
 ){
 
@@ -194,7 +196,7 @@
 }
 
 @doc(
-  method (dc :: DC).font_metrics_key() :: Any
+  method (dc :: draw.DC).font_metrics_key() :: Any
 ){
 
  Returns a value that changes when the selected font is changed to one
@@ -203,7 +205,7 @@
 }
 
 @doc(
-  enum DC.BitmapOverlay:
+  enum draw.DC.BitmapOverlay:
     solid
     opaque
     xor
@@ -214,7 +216,7 @@
 }
 
 @doc(
-  enum DC.TextCombine:
+  enum draw.DC.TextCombine:
     kern
     grapheme
     char
@@ -226,7 +228,7 @@
 
 
 @doc(
-  enum DC.Fill:
+  enum draw.DC.Fill:
     even_odd
     winding
 ){
@@ -237,7 +239,7 @@
 
 
 @doc(
-  annot.macro 'DC.Transformation'
+  annot.macro 'draw.DC.Transformation'
 ){
 
  Satisfied by an array of six @rhombus(Real, ~annot)s:

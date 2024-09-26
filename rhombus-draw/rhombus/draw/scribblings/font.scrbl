@@ -5,7 +5,7 @@
 @title{Font}
 
 @doc(
-  class Font():
+  class draw.Font():
     constructor (
       ~kind: kind :: Font.Kind = #'default,
       ~name: name :: maybe(String) = #false,
@@ -32,16 +32,16 @@
 }
 
 @doc(
-  property (font :: Font).kind :: Font.Kind
-  property (font :: Font).name :: maybe(String)
-  property (font :: Font).size :: Real.in(0.0, 1024.0)
-  property (font :: Font).in_pixels :: Boolean
-  property (font :: Font).style :: Font.Style
-  property (font :: Font).weight :: Font.Weight
-  property (font :: Font).has_underline :: Boolean
-  property (font :: Font).smoothing :: Font.Smoothing
-  property (font :: Font).hinting :: Font.Hinting
-  property (font :: Font).features
+  property (font :: draw.Font).kind :: Font.Kind
+  property (font :: draw.Font).name :: maybe(String)
+  property (font :: draw.Font).size :: Real.in(0.0, 1024.0)
+  property (font :: draw.Font).in_pixels :: Boolean
+  property (font :: draw.Font).style :: Font.Style
+  property (font :: draw.Font).weight :: Font.Weight
+  property (font :: draw.Font).has_underline :: Boolean
+  property (font :: draw.Font).smoothing :: Font.Smoothing
+  property (font :: draw.Font).hinting :: Font.Hinting
+  property (font :: draw.Font).features
     :: Map.of(Font.FeatureString, NonnegInt)
 ){
 
@@ -50,7 +50,18 @@
 }
 
 @doc(
-  enum Font.Kind:
+  annot.macro 'draw.Font.FeatureString'
+){
+
+ Satisfied by a 4-character string containing only @litchar{ } (i.e., a
+ space), @litchar{!}, or characters with @rhombus(Char.to_int) values
+ between that of @litchar{#} and @litchar{~}, inclusive.
+
+}
+  
+
+@doc(
+  enum draw.Font.Kind:
     default
     decorative
     roman
@@ -66,7 +77,7 @@
 }
 
 @doc(
-  enum Font.Style:
+  enum draw.Font.Style:
     normal
     slant
     italic
@@ -77,7 +88,7 @@
 }
 
 @doc(
-  enum Font.Weight:
+  enum draw.Font.Weight:
     ~is_a Int.in(100, 1000 ~inclusive)
     thin
     ultralight
@@ -114,7 +125,7 @@
 }
 
 @doc(
-  enum Font.Smoothing:
+  enum draw.Font.Smoothing:
     default
     partly_smoothed
     smoothed
@@ -126,7 +137,7 @@
 }
 
 @doc(
-  enum Font.Hinting:
+  enum draw.Font.Hinting:
     aligned
     unaligned
 ){

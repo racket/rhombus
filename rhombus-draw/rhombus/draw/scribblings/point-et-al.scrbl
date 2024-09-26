@@ -3,8 +3,8 @@
   import:
     "common.rhm" open
     meta_label:
-      lib("racket/draw.rkt"):
-        expose:
+      lib("racket/draw.rkt") open:
+        only:
           #{color-database<%>}
 )
 
@@ -18,11 +18,11 @@
 @title(~tag: "point-et-al"){Point, Size, and Rectangle}
 
 @doc(
-  class Point(x :: Real, y :: Real)
-  annot.macro 'PointLike'
-  annot.macro 'PointLike.to_point'
-  fun PointLike.to_point(pt :: PointLike) :: Point
-  def Point.zero :: Point = Point(0, 0)
+  class draw.Point(x :: Real, y :: Real)
+  annot.macro 'draw.PointLike'
+  annot.macro 'draw.PointLike.to_point'
+  fun draw.PointLike.to_point(pt :: PointLike) :: Point
+  def draw.Point.zero :: Point = Point(0, 0)
 ){
 
  The @rhombus(Point, ~class) class represents a point in two dimensions.
@@ -61,11 +61,11 @@
 
 
 @doc(
-  class Size(width :: NonnegReal, height :: NonnegReal)
-  annot.macro 'SizeLike'
-  annot.macro 'SizeLike.to_size'
-  fun SizeLike.to_size(sz :: SizeLike) :: Size
-  def Size.zero :: Size = Size(0, 0)
+  class draw.Size(width :: NonnegReal, height :: NonnegReal)
+  annot.macro 'draw.SizeLike'
+  annot.macro 'draw.SizeLike.to_size'
+  fun draw.SizeLike.to_size(sz :: SizeLike) :: Size
+  def draw.Size.zero :: Size = Size(0, 0)
 ){
 
  The @rhombus(Size, ~class) class represents a size in two dimensions.
@@ -96,25 +96,25 @@
 
 
 @doc(
-  class Rect(x :: Real, y :: Real,
-             width :: NonnegReal, height :: NonnegReal):
+  class draw.Rect(x :: Real, y :: Real,
+                  width :: NonnegReal, height :: NonnegReal):
     constructor
     | (x :: Real, y :: Real,
        width :: NonnegReal, height :: NonnegReal)
     | (point :: PointLike, size :: SizeLike)
-  property (r :: Rect).point :: Point
-  property (r :: Rect).size :: Size
-  annot.macro 'RectLike'
-  annot.macro 'RectLike.to_rect'
-  fun RectLike.to_rect(sz :: RectLike) :: Rect
-  def Rect.zero :: Rect = Rect(0, 0, 0, 0)
+  property (r :: draw.Rect).point :: Point
+  property (r :: draw.Rect).size :: Size
+  annot.macro 'draw.RectLike'
+  annot.macro 'draw.RectLike.to_rect'
+  fun draw.RectLike.to_rect(sz :: RectLike) :: Rect
+  def draw.Rect.zero :: Rect = Rect(0, 0, 0, 0)
 ){
 
- The @rhombus(Rect) class represents a rectagular region, where
+ The @rhombus(Rect, ~class) class represents a rectagular region, where
  @rhombus(x) and @rhombus(y) correspond to the top-left of the rectangle.
  The @rhombus(Rect.point) property produces @rhombus(x) and @rhombus(y)
- in a @rhombus(Point), while @rhombus(Rect.size) property produces
- @rhombus(width) and @rhombus(height) in a @rhombus(Size).
+ in a @rhombus(Point, ~class), while @rhombus(Rect.size) property produces
+ @rhombus(width) and @rhombus(height) in a @rhombus(Size, ~class).
 
  Methods that expect a rectangle typically accept a value satisfying
  @rhombus(RectLike, ~annot), which is any of the following:
