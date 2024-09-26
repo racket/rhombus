@@ -112,8 +112,9 @@
 
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc
-   `(seq ,@(for/list ([pd (in-list pds)])
-             (print-description-unwrap who pd)))))
+   (pretty-concat-list
+    (for/list ([pd (in-list pds)])
+      (print-description-unwrap who pd)))))
 
 (define/arity (PrintDesc.newline)
   (PrintDesc (pretty-newline)))
