@@ -97,13 +97,13 @@ and it is not managed by a lock.
     ~error:
       MutableList(1, "b", 3) :: MutableList.now_of(Number)
   ~defn:
-    def a :: MutableList.later_of(Number) = MutableList(1, "b", 3)
+    def l :: MutableList.later_of(Number) = MutableList(1, "b", 3)
   ~repl:
-    a[0]
+    l[0]
     ~error:
-      a[1]
+      l[1]
     ~error:
-      a[2] := "c"
+      l[2] := "c"
 )
 
 }
@@ -138,12 +138,12 @@ and it is not managed by a lock.
  @rhombus(expr_or_splice), but with repetitions in place of expressions.
 
 @examples(
-  def mlst = MutableList(1, 2, 3)
-  mlst
-  mlst[0]
-  mlst[0] := 10
-  mlst
-  MutableList.snapshot(mlst)
+  def l = MutableList(1, 2, 3)
+  l
+  l[0]
+  l[0] := 10
+  l
+  MutableList.snapshot(l)
 )
 
 }
@@ -160,9 +160,9 @@ and it is not managed by a lock.
  Insertion takes @math{O(log N)} time.
 
 @examples(
-  def mlst = MutableList["a", "b", "c"]
-  MutableList.insert(mlst, 1, "x")
-  mlst
+  def l = MutableList["a", "b", "c"]
+  MutableList.insert(l, 1, "x")
+  l
 )
 
 }
@@ -176,13 +176,13 @@ and it is not managed by a lock.
  the end, equivalent to @rhombus(mlst.insert(mlst.length(), elem)).
 
 @examples(
-  def mlst = MutableList[2, 3]
-  MutableList.add(mlst, 1)
-  mlst
-  mlst.add(0)
-  mlst
-  mlst.insert(mlst.length(), 10)
-  mlst
+  def l = MutableList[2, 3]
+  MutableList.add(l, 1)
+  l
+  l.add(0)
+  l
+  l.insert(l.length(), 10)
+  l
 )
 
 }
@@ -196,9 +196,9 @@ and it is not managed by a lock.
  equivalent to @rhombus(mlst.insert(0, elem)).
 
 @examples(
-  def mlst = MutableList[2, 3]
-  MutableList.cons(1, mlst)
-  mlst
+  def l = MutableList[2, 3]
+  MutableList.cons(1, l)
+  l
 )
 
 }
@@ -232,11 +232,11 @@ and it is not managed by a lock.
  @math{O(log N)} time.
 
 @examples(
-  def mlst = MutableList["a", "b", "c"]
-  mlst.set(1, "beta")
-  mlst
-  mlst[2] := "gamma"
-  mlst
+  def l = MutableList["a", "b", "c"]
+  l.set(1, "beta")
+  l
+  l[2] := "gamma"
+  l
 )
 
 }
@@ -252,9 +252,9 @@ and it is not managed by a lock.
  @rhombus(mlst). Deletion takes @math{O(log N)} time.
 
 @examples(
-  def mlst = MutableList["a", "b", "c"]
-  MutableList.delete(mlst, 1)
-  mlst
+  def l = MutableList["a", "b", "c"]
+  MutableList.delete(l, 1)
+  l
 )
 
 }
@@ -286,9 +286,9 @@ and it is not managed by a lock.
  list one at a time.
 
 @examples(
-  def mlst = MutableList[1, 4, 8]
-  MutableList.reverse(mlst)
-  mlst
+  def l = MutableList[1, 4, 8]
+  MutableList.reverse(l)
+  l
 )
 
 }
@@ -304,10 +304,10 @@ and it is not managed by a lock.
  Appending @math{N} elements takes @math{O(N)} time.
 
 @examples(
-  def mlst = MutableList[1, 2, 3]
-  MutableList.append(mlst, [4, 5])
-  MutableList.append(mlst, MutableList[6])
-  mlst
+  def l = MutableList[1, 2, 3]
+  MutableList.append(l, [4, 5])
+  MutableList.append(l, MutableList[6])
+  l
 )
 
 }
@@ -330,13 +330,13 @@ and it is not managed by a lock.
  elements one at a time.
 
 @examples(
-  def mlst = MutableList[1, 2, 3, 4, 5]
-  mlst.take(3)
-  mlst
-  mlst.take_last(2)
-  mlst
+  def l = MutableList[1, 2, 3, 4, 5]
+  l.take(3)
+  l
+  l.take_last(2)
+  l
   ~error:
-    mlst.take(10)
+    l.take(10)
 )
 
 }
@@ -359,13 +359,13 @@ and it is not managed by a lock.
  elements one at a time.
 
 @examples(
-  def mlst = MutableList[1, 2, 3, 4, 5]
-  mlst.drop(2)
-  mlst
-  mlst.drop_last(1)
-  mlst
+  def l = MutableList[1, 2, 3, 4, 5]
+  l.drop(2)
+  l
+  l.drop_last(1)
+  l
   ~error:
-    mlst.drop(10)
+    l.drop(10)
 )
 
 }
@@ -381,9 +381,9 @@ and it is not managed by a lock.
  @rhombus(mlst.drop(n)) followed by @rhombus(mlst.take(m-n)).
 
 @examples(
-  def mlst = MutableList[1, 2, 3, 4, 5]
-  mlst.sublist(1, 3)
-  mlst
+  def l = MutableList[1, 2, 3, 4, 5]
+  l.sublist(1, 3)
+  l
 )
 
 
@@ -436,8 +436,8 @@ and it is not managed by a lock.
  @rhombus(v) (if any).  Searching the list takes @math{O(N)} time.
 
 @examples(
-  def mlst = MutableList[1, 2, 3, 2]
-  mlst.remove(2)
+  def l = MutableList[1, 2, 3, 2]
+  l.remove(2)
 )
 
 }
@@ -456,10 +456,10 @@ and it is not managed by a lock.
  items instead of returning a new list.
 
 @examples(
-  def mlst = MutableList[1, 2, 3]
-  MutableList.map(mlst, (_ + 1))
-  mlst
-  mlst.for_each(println)
+  def l = MutableList[1, 2, 3]
+  MutableList.map(l, (_ + 1))
+  l
+  l.for_each(println)
 )
 
 }
@@ -476,11 +476,11 @@ and it is not managed by a lock.
  time.
 
 @examples(
-  def mlst = MutableList[1, 3, 2]
-  MutableList.sort(mlst)
-  mlst
-  MutableList.sort(mlst, (_ > _))
-  mlst
+  def l = MutableList[1, 3, 2]
+  MutableList.sort(l)
+  l
+  MutableList.sort(l, (_ > _))
+  l
 )
 
 }

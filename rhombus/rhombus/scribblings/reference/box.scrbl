@@ -67,12 +67,12 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
     ~error:
       Box("a") :: Box.now_of(Number)
   ~defn:
-    def a :: Box.later_of(Number) = Box("b")
+    def b :: Box.later_of(Number) = Box("b")
   ~repl:
     ~error:
-      a.value
+      b.value
     ~error:
-      a.value := "c"
+      b.value := "c"
 )
 
 }
