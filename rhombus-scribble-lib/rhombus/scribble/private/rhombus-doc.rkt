@@ -461,15 +461,19 @@
   (define resolved (resolve-name-ref (list #f) root (append (syntax->list names) (list name))))
   (unless resolved
     (raise-syntax-error #f "no label binding" root name))
-  (define target (hash-ref resolved 'target))
+  (define raw-target (hash-ref resolved 'target))
+  (define target (datum->syntax raw-target (syntax-e raw-target) name name))
   (define r-root (hash-ref resolved 'root))
-  (datum->syntax #f (hash 'root r-root
-                          ;; 'raw property used to typeset object
-                          'target (datum->syntax target (syntax-e target) name name)
-                          ;; string for key, index, and search:
-                          'raw (format "~a.~a"
-                                       (syntax-e r-root)
-                                       (syntax-e name)))))
+  (cond
+    [r-root
+     (datum->syntax #f (hash 'root r-root
+                             ;; 'raw property used to typeset object
+                             'target target
+                             ;; string for key, index, and search:
+                             'raw (format "~a.~a"
+                                          (syntax-e r-root)
+                                          (syntax-e name))))]
+    [else target]))
 
 (begin-for-syntax
   (define-splicing-syntax-class :dotted-class

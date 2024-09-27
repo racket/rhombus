@@ -109,6 +109,9 @@
                       'raw-prefix (and (not given-raw)
                                        (or ns-raw-prefix
                                            (and is-import? raw-prefix))))))
+       (define (next named-dest)
+         (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
+               raw (or (and is-import? raw-prefix) ns-raw-prefix)))
        (cond
          [dest
           (define loc-stx
@@ -120,8 +123,7 @@
             (transfer-parens-suffix
              (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
                                   (or given-raw raw))))
-          (or (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
-                    raw (or (and is-import? raw-prefix) ns-raw-prefix))
+          (or (next named-dest)
               (add-rest named-dest))]
          [else
           (define id ((make-intro space-name) (datum->syntax root (string->symbol raw))))
@@ -133,7 +135,6 @@
                                                  'loc-stx
                                                  root
                                                  field))
-                                 (or given-raw raw)
-                                 (or (and is-import? raw-prefix) ns-raw-prefix)))])
-                 (or (loop named-id (cdr fields) raw)
+                                 (or given-raw raw)))])
+                 (or (next named-id)
                      (add-rest named-id))))])])))
