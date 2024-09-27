@@ -506,8 +506,9 @@
        (cond
          [target-maker
           (define name (string->symbol str))
-          (define ref-content (make-content #f index-str #:meta? #f))
-          (define ref-content/no-prefix (make-content #f index-str #:meta? #f #:can-prefix? #f))
+          (define content-as-defn? #t)
+          (define ref-content (make-content content-as-defn? index-str #:meta? #f))
+          (define ref-content/no-prefix (make-content content-as-defn? index-str #:meta? #f #:can-prefix? #f))
           (target-maker content
                         (lambda (tag)
                           (if (or nonterm-sym
