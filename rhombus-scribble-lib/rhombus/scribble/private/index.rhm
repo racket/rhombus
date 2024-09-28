@@ -3,15 +3,30 @@
 import:
   "util.rhm" open
   lib("scribble/base.rkt")
+  "desc-extras.rkt".#{desc-extras/c}
+  "maybe_drop_extras.rhm" open
 
 export:
   index
   as_index
   section_index
   index_section
+  ExtrasMap
+
+module for_extras:
+  export:
+    ExtrasMap
+    convert_extras
+
+annot.macro 'ExtrasMap':
+  let '$(map_annot :: annot_meta.Parsed)' = 'Map.of(Symbol, Any)'
+  let (_, map_statinfo) = annot_meta.unpack_predicate(map_annot)
+  annot_meta.pack_predicate('is_extras_map',
+                            map_statinfo)
 
 fun index(words :: (String ||  List.of(String)),
           ~content: content :: (String ||  List.of(String)) = words,
+          ~extras: extras :: ExtrasMap = {},
           pre_content :: PreContent)
   :: Element:
     ~doc
@@ -23,17 +38,31 @@ fun index(words :: (String ||  List.of(String)),
             "word count and content count do no match",
             error.val(~label: "word list", words),
             error.val(~label: "content list", content))
-    base.#{index*}(convert_list(words), convert_list(content), pre_content)
+    maybe_drop_extras:
+      base.#{index*}(convert_list(words), convert_list(content), pre_content,
+                     ~extras: convert_extras(extras))
 
-fun as_index(pre_content :: PreContent) :: Element:
+fun as_index(pre_content :: PreContent,
+             ~extras: extras :: ExtrasMap = {}) :: Element:
   ~doc
-  base.#{as-index}(pre_content)
+  maybe_drop_extras:
+    base.#{as-index}(pre_content,
+                     ~extras: convert_extras(extras))
 
-fun section_index(word :: String, ...):
+fun section_index(~extras: extras :: ExtrasMap = {},
+                  word :: String, ...):
   ~doc
-  base.#{section-index}(word, ...)
+  maybe_drop_extras:
+    base.#{section-index}(word, ...,
+                          ~extras: convert_extras(extras))
 
 fun index_section(~tag : tag :: (False || String) = "doc-index")
   :: Part:
     ~doc
     base.#{index-section}(~tag: tag)
+
+fun is_extras_map(v):
+  #{desc-extras/c}(v)
+
+fun convert_extras(m :~ Map):
+  m

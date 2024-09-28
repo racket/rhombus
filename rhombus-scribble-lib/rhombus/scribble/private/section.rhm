@@ -3,6 +3,10 @@
 import:
   "util.rhm" open
   lib("scribble/base.rkt")
+  lib("version/utils.rkt")
+  lib("racket/base.rkt").version
+  "index.rhm"!for_extras open
+  "maybe_drop_extras.rhm" open
 
 export:
   title
@@ -16,17 +20,17 @@ fun title(~tag: tag :: maybe(TagSuffix) = #false,
           ~style: style :: maybe(StyleLike) = #false,
           ~version: vers :: maybe(String) = #false,
           ~date: date :: maybe(String) = #false,
+          ~index_extras: index_extras :: ExtrasMap = {},
           pre_content :: PreContent):
   ~doc
-  base.title(~tag: convert_list(tag),
-             #{#:tag-prefix}:
-               match tag_prefix
-               | mp :: ModulePath: mp.s_exp()
-               | ~else: tag_prefix,
-             ~style: convert_list(style),
-             ~version: vers,
-             ~date: date,
-             pre_content)
+  maybe_drop_extras:
+    base.title(~tag: convert_list(tag),
+               #{#:tag-prefix}: pack_tag_prefix(tag_prefix),
+               ~style: convert_list(style),
+               ~version: vers,
+               ~date: date,
+               #{#:index-extras}: convert_extras(index_extras),
+               pre_content)
 
 meta:
   // Fairly extreme measures to make a `fun`-generating macro's
@@ -66,22 +70,33 @@ defn.macro 'def_section $section: $rkt_section':
     'fun $section(~tag: tag :: maybe(TagSuffix) = #false,
                   ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
                   ~style: style :: maybe(StyleLike) = #false,
+                  ~index_extras: index_extras :: ExtrasMap = {},
                   pre_content :: PreContent)
        :~ PartDecl:
          ~doc
-         base . $rkt_section(~tag: convert_list(tag),
-                             #{#:tag-prefix}:
-                               match tag_prefix
-                               | mp :: ModulePath: mp.s_exp()
-                               | ~else: tag_prefix,
-                             ~style: convert_list(style),
-                             pre_content)'
+         maybe_drop_extras:
+           base . $rkt_section(~tag: convert_list(tag),
+                               #{#:tag-prefix}: pack_tag_prefix(tag_prefix),
+                               ~style: convert_list(style),
+                               #{#:index-extras}: convert_extras(index_extras),
+                               pre_content)'
   )
 
 def_section section: section
 def_section subsection: subsection
 def_section subsubsection: subsubsection
 def_section subsubsub_section: #{subsubsub*section}
+
+fun pack_tag_prefix(tag_prefix):
+  if utils.#{version<?}(version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
+  | tag_prefix
+  | let t = { #'#{default-language-family}: PairList["Rhombus"] }
+    if tag_prefix
+    | t ++ { #'#{tag-prefix}:
+               match tag_prefix
+               | mp :: ModulePath: mp.s_exp()
+               | ~else: tag_prefix }
+    | t
 
 fun author(c :: Content,
            ~email: email :: maybe(String),

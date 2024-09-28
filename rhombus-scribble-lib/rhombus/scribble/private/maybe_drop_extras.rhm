@@ -1,0 +1,15 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    lib("racket/base.rkt")
+    lib("version/utils.rkt")
+
+export:
+  maybe_drop_extras
+
+expr.macro 'maybe_drop_extras: $body':
+  if utils.#{version<?}(base.version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
+  | match body
+    | '$f ...($pre, ..., $('~extras' || '#{#:index-extras}'): $arg, $post, ...)':
+        '$f ...($pre, ..., $post, ...)'
+  | body

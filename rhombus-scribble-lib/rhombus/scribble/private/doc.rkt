@@ -12,6 +12,7 @@
 
             doc-transformer-extract-desc
             doc-transformer-extract-space-sym
+            doc-transformer-extract-sort-order
             doc-transformer-extract-defined
             doc-transformer-extract-metavariables
             doc-transformer-extract-typeset)))
@@ -28,7 +29,8 @@
   ;; since bouncing back is just a convenience for abstracting over
   ;; those other handlers.
   (property doc-transformer (extract-desc       ; stx -> (kind-str)*
-                             extract-space-sym  ; stx -> (space-sym-or-#f[-list])*  ; only first result bounced back
+                             extract-space-sym  ; stx -> (space-sym-or-#f[-list])*  ; only first result bounced back, usually
+                             extract-sort-order ; stx (space-sym-or-#f-list)* -> (int)*
                              extract-defined    ; stx space-sym-or-#f[-list] -> (def-name)* ; see below
                              extract-metavariables ; stx space-sym-or-#f sym-set -> sym-set ; adds to given set
                              extract-typeset))  ; stx (space-sym-or-#f[-list])* (stx -> stx)* -> stx
@@ -39,12 +41,14 @@
 
   (define (make-doc-transformer #:extract-desc extract-desc 
                                 #:extract-space-sym extract-space-sym
+                                #:extract-sort-order [extract-sort-order (lambda (stx spcs) (map (lambda (spc) 100) spcs))]
                                 #:extract-name extract-name
                                 #:extract-metavariables [extract-metavariables
                                                          (lambda (stx space-name vars) vars)]
                                 #:extract-typeset extract-typeset)
     (doc-transformer extract-desc
                      extract-space-sym
+                     extract-sort-order
                      extract-name
                      extract-metavariables
                      extract-typeset))

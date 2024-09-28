@@ -68,9 +68,44 @@
                                                                (boolean? (syntax-e #'space-sym)))
                                                            #'(lambda (stx) 'space-sym)
                                                            #'space-sym)
+                                 #:extract-sort-order space-to-sort-order
                                  #:extract-name extract-name
                                  #:extract-metavariables extract-metavariables
                                  #:extract-typeset extract-typeset)))]))
+
+(define-for-syntax (space-to-sort-order stx spcs)
+  (for/list ([spc/s (in-list spcs)])
+    (define spc (if (list? spc/s)
+                    (car spc/s)
+                    spc/s))
+    (case spc
+      [(rhombus/class) 0]
+      [(#f) 1]
+      [(rhombus/defn) 2]
+      [(rhombus/decl) 3]
+      [(rhombus/annot)4]
+      [(rhombus/bind) 5]
+      [(rhombus/unquote_bind) 6]
+      [(rhombus/repet) 7]
+      [(rhombus/reducer) 8]
+      [(rhombus/stxclass) 9]
+      [(rhombus/space) 10]
+      [(rhombus/impo) 11]
+      [(rhombus/expo) 12]
+      [(rhombus/modpath) 13]
+      [(rhombus/entry_point) 14]
+      [(rhombus/immediate_callee) 15]
+      [(rhombus/for_clause) 16]
+      [(rhombus/class_clause) 17]
+      [(rhombus/interface_clause) 18]
+      [(rhombus/veneer_clause) 19]
+      [(rhombus/syntax_class_clause) 20]
+      [(rhombus/pattern_clause) 21]
+      [(rhombus/space_clause) 22]
+      [(rhombus/space_meta_clause) 23]
+      [(rhombus/key_comp) 24]
+      [(rhombus/doc) 25]
+      [else 100])))
 
 (begin-for-syntax
   (define-splicing-syntax-class :doc-form

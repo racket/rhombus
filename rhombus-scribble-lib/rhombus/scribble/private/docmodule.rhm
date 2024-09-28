@@ -2,8 +2,8 @@
 import:
   lib("scribble/manual.rkt"):
     expose:
-      defmodule
       racketmodlink
+      defmodule
   "rhombus.rhm" open
   meta_label:
     rhombus:
