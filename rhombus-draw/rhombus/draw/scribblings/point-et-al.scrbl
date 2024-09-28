@@ -17,6 +17,8 @@
 
 @title(~tag: "point-et-al"){Point, Size, and Rectangle}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   class draw.Point(x :: Real, y :: Real)
   annot.macro 'draw.PointLike'

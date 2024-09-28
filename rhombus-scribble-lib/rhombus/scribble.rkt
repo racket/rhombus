@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     version/utils)
          rhombus/all-spaces-out
          rhombus/private/parse
          (prefix-in doc: scribble/doclang2)
@@ -65,7 +66,7 @@
   (syntax-parse stx
     #:datum-literals (brackets)
     [(_ (brackets g ...))
-     #:with (g-unwrapped ...) (for/list ([g (in-list (syntax->list #'(g ...)))])
+     #:with (g-unwrapped ...) (for/list ([g (in-list (version-prune (syntax->list #'(g ...))))])
                                 (syntax-parse g
                                   #:datum-literals (group parens)
                                   [(group (parens sub-g)) #'sub-g]
@@ -97,3 +98,18 @@
            #`(begin
                #,@(reverse accum)
                top))])))
+
+(define-for-syntax (version-prune gs)
+  (let loop ([gs gs])
+    (cond
+      [(null? gs) null]
+      [else
+       (syntax-parse (car gs)
+         #:datum-literals (group parens)
+         [(group (parens (group #:version_at_least vers:string)))
+          (cond
+            [(version<? (version) (syntax-e #'vers))
+             null]
+            [else
+             (loop (cdr gs))])]
+         [_ (cons (car gs) (loop (cdr gs)))])])))

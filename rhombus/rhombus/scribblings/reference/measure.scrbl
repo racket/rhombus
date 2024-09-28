@@ -10,6 +10,8 @@
 
 @docmodule(rhombus/measure)
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   expr.macro 'measure.time:
                 $option; ...

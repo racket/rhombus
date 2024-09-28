@@ -8,6 +8,8 @@
 
 @title{Region}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   class draw.Region():
     constructor (dc :: maybe(DC) = #false)

@@ -4,6 +4,8 @@
 
 @title{Bitmap}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   class draw.Bitmap():
     constructor (

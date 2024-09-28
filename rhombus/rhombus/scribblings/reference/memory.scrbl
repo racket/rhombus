@@ -9,6 +9,8 @@
 @docmodule(~use_sources: lib("rhombus/memory.rhm"),
            rhombus/memory)
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   fun memory.gc() :: Void
   fun memory.minor_gc() :: Void

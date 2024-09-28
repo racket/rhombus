@@ -10,6 +10,8 @@
 
 @docmodule(rhombus/runtime_path)
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
   defn.macro 'runtime_path.def $id:
                 $body
