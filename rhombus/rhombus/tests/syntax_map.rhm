@@ -1,0 +1,69 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/syntax_map open
+  "version_guard.rhm"
+
+check:
+  equal_name('apple', 'apple') ~is #true
+  equal_name('fruit.apple', 'apple') ~is #false
+  equal_name('fruit.apple', 'fruit.apple') ~is #true
+
+check:
+  namespace fruit
+  let one_fruit_apple:
+    let fruit.apple = "one"
+    'fruit.apple'
+  let another_fruit_apple:
+    let fruit.apple = "another"
+    'fruit.apple'
+  equal_name(one_fruit_apple, another_fruit_apple)
+  ~is #true
+
+version_guard.at_least "8.13.0.2":
+  check:
+    namespace fruit
+    let one_fruit_apple:
+      let fruit.apple = "one"
+      'fruit.apple'
+    let another_fruit_apple:
+      let fruit.apple = "another"
+      'fruit.apple'
+    let snacks = Map.by(equal_name){
+      one_fruit_apple: 1
+    } ++ {
+      another_fruit_apple: 2
+    }
+    snacks[one_fruit_apple] + snacks[another_fruit_apple]
+    ~is 4
+
+version_guard.at_least "8.13.0.2":
+  check:
+    let apple = 1
+    namespace fruit:
+      export:
+        apple
+    expr.macro 'do':
+      let snacks = Map.by(equal_binding){
+        'apple': 1
+      } ++ {
+        'fruit.apple': 2
+      }
+      '#%literal $(snacks['apple'] + snacks['fruit.apple'])'
+    do
+    ~is 4
+
+version_guard.at_least "8.13.0.2":
+  check:
+    let apple = 1
+    namespace fruit:
+      export:
+        apple
+    expr.macro 'do':
+      let snacks = Map.by(equal_name_and_scopes){
+        'apple': 1
+      } ++ {
+        'fruit.apple': 2
+      }
+      '#%literal $(snacks['apple'] + snacks['fruit.apple'])'
+    do
+    ~is 3

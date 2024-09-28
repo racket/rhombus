@@ -1,4 +1,7 @@
 #lang rhombus/static/and_meta
+import:
+  meta:
+    rhombus/meta.key_comp
 
 export:
   equal_name
@@ -20,16 +23,12 @@ key_comp.def 'equal_name':
                 equal_name
 
 meta:
-  import:
-    rhombus/meta open
-    lib("racket/base.rkt")
-
   key_comp.def 'equal_binding':
     ~equals: fun (a, b, recur):
                syntax_meta.equal_binding(a, b)
     ~hash_code: block:
                   fun equal_binding(a :: Name, recur):
-                    syntax_meta.binding_symbol(a)
+                    recur(syntax_meta.binding_symbol(a))
                   equal_binding
 
   key_comp.def 'equal_name_and_scopes':
