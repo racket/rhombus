@@ -1,0 +1,44 @@
+#lang rhombus/static/and_meta
+import:
+  "dotting.rhm"
+
+export:
+  Transformation
+  LayeredTransformation:
+    only_space annot
+
+module private:
+  export:
+    _LayeredTransformation
+
+class Transformation(xx :: Real, yx :: Real,
+                     xy :: Real, yy :: Real,
+                     x0 :: Real, y0 :: Real):
+
+  method translate(dx :: Real, dy :: Real) :~ Transformation:
+    Transformation(xx, yx, xy, yy, x0+dx, y0+dy)
+
+  method scale(sx :: Real, sy :: Real) :~ Transformation:
+    Transformation(sx*xx, sy*yx, sx*xy, sy*yy, sx*x0, sy*y0)
+
+  method rotate(a :: Real) :~ Transformation:
+    let c = math.cos(a)
+    let s = math.sin(a)
+    Transformation(c*xx + (-s)*yx,
+                   s*xx + c*yx,
+                   c*xy + (-s)*yy,
+                   c*yy + s*xy,
+                   c*x0 + (-s)*y0,
+                   c*y0 + s*x0)
+
+  method transform(t :: Transformation):
+    Transformation(xx*t.xx + yx*t.xy,
+                   yx*t.yy + xx*t.yx,
+                   xy*t.xx + yy*t.xy,
+                   yy*t.yy + xy*t.yx,
+                   x0*t.xx + y0*t.xy + t.x0,
+                   y0*t.yy + x0*t.yx + t.y0)
+
+class LayeredTransformation(private hand):
+  internal _LayeredTransformation
+  constructor (): error("cannot instantiate")

@@ -1,0 +1,34 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "size.rhm":
+    expose:
+      Size
+      SizeLike
+  "dc.rhm".DC
+  "dc.rhm"!internal.SomeDC
+  "pageddc.rhm":
+    expose:
+      PagedDC
+      PaperSize
+
+export:
+  PSDC
+
+class PSDC():
+  extends SomeDC
+  implements PagedDC
+
+  constructor (size :: PaperSize,
+               ~output: output :: Path || Port.Output,
+               ~as_eps: as_eps = #true):
+    let size = (size != #'paper) && (size :: SizeLike.to_size)
+    let hand = rkt.make_object(rkt.#{post-script-dc%},
+                               #false, // never interactive
+                               #false, // no GUI parent
+                               !size, // use paper bbox if given `size` is #'paper
+                               as_eps,
+                               size && Size.width(size),
+                               size && Size.height(size),
+                               output)
+    super(hand)()

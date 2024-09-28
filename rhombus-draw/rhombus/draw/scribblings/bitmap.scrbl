@@ -9,8 +9,7 @@
 @doc(
   class draw.Bitmap():
     constructor (
-      width :: PosInt,
-      height :: PosInt,
+      size :: SizeLike,
       ~backing_scale: backing_space :: Real.above(0.0) = 1,
       ~has_color: has_color :: Any = #true,
       ~has_alpha: has_alpha :: Any = #true,

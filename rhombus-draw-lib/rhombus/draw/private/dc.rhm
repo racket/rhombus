@@ -23,6 +23,8 @@ import:
       symbol_map_annot
       symbol_set_annot
   "bitmap-interface.rhm".Bitmap
+  "transformation.rhm" open
+  "transformation.rhm"!private open
 
 export:
   DC
@@ -191,17 +193,26 @@ interface DC:
 
   property
   | transformation :: Transformation:
-      let Array(a, x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
-      a
-  | transformation := a :: Transformation:
-      let Array(old_a, x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
-      rkt.send handle.#{set-transformation}(Array(a, x, y, sx, sy, rot))
+      let Array([xx, yx, xy, yy, x0, y0], x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
+      let t = Transformation(xx, yx, xy, yy, x0, y0)
+      if x .= 0 && y .= 0 && sx .= 1 && sy .= 1 && rot >= 0
+      | t
+      | t.translate(x, y).scale(sx, sy).rotate(rot)
+  | transformation := t :: Transformation:
+      rkt.send handle.#{set-transformation}(Array([t.xx, t.yx, t.yx, t.yy, t.x0, t.y0], 0, 0, 1, 1, 0))
+
+  property
+  | layered_transformation :: LayeredTransformation:
+      _LayeredTransformation(rkt.send handle.#{get-transformation}())
+  | layered_transformation := a :: LayeredTransformation:
+      rkt.send handle.#{set-transformation}(_LayeredTransformation.hand(a))
 
   export:
     BitmapOverlay
     TextCombine
     Fill
     Transformation
+    LayeredTransformation
 
   symbol_set_annot BitmapOverlay:
     { solid, opaque, xor }
@@ -213,11 +224,6 @@ interface DC:
     { odd_even: #{odd-even},
       winding: winding }
 
-  annot.macro 'Transformation':
-    'matching(Array(_ :: Real, _ :: Real,
-                    _ :: Real, _ :: Real,
-                    _ :: Real, _ :: Real))'
-
 fun from_handle(handle) :: DC:
   unless handle rkt.is_a rkt.#{dc<%>}
   | error(~who: "DC.from_handle",
@@ -226,7 +232,7 @@ fun from_handle(handle) :: DC:
           error.val(handle))
   SomeDC(handle)
 
-class DCDump(pen, brush, font, clipping_region, transformation, dump)
+class DCDump(pen, brush, font, clipping_region, layered_transformation, dump)
 
 class SomeDC(private _handle):
   nonfinal
@@ -239,7 +245,7 @@ class SomeDC(private _handle):
   private field dump = #false
 
   override method save():
-    dump := DCDump(pen, brush, font, clipping_region, transformation, dump)
+    dump := DCDump(pen, brush, font, clipping_region, layered_transformation, dump)
 
   override method restore():
     unless dump
@@ -254,7 +260,7 @@ class SomeDC(private _handle):
       .brush
       .font
       .clipping_region
-      .transformation
+      .layered_transformation
       .dump
 
   private implements Printable

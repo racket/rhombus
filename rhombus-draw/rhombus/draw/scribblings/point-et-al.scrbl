@@ -153,3 +153,55 @@
  @rhombus(PointLike.to_point), and @rhombus(Point.zero).
 
 }
+
+@doc(
+  class draw.Transformation(xx :: Real, yx :: Real,
+                            xy :: Real, yy :: Real,
+                            x0 :: Real, y0 :: Real)
+  method (t :: Transformation).translate(dx :: Real, dy :: Real)
+    :: Transformation
+  method (t :: Transformation).scale(sx :: Real, sy :: Real)
+    :: Transformation
+  method (t :: Transformation).rotate(a :: Real)
+    :: Transformation
+  method (t :: Transformation).transform(by_t :: Transformation)
+    :: Transformation
+){
+
+ A @rhombus(Transformation, ~class) object represents a transformation
+ matrix:
+
+@itemlist(
+
+  @item{@rhombus(xx, ~var): a scale from the logical @rhombus(x, ~var) to the device @rhombus(x, ~var)}
+
+  @item{@rhombus(yx, ~var): a scale from the logical @rhombus(y, ~var) added to the device @rhombus(x, ~var)}
+
+  @item{@rhombus(xy, ~var): a scale from the logical @rhombus(x, ~var) added to the device @rhombus(y, ~var)}
+
+  @item{@rhombus(yy, ~var): a scale from the logical @rhombus(y, ~var) to the device @rhombus(y, ~var)}
+
+  @item{@rhombus(x0, ~var): an additional amount added to the device @rhombus(x, ~var)}
+
+  @item{@rhombus(y0, ~var): an additional amount added to the device @rhombus(y, ~var)}
+
+)
+
+ The @rhombus(Transformation.translate), @rhombus(Transformation.scale),
+ @rhombus(Transformation.rotate), and @rhombus(Transformation.transform)
+ methods produce a new @rhombus(Transformation, ~class) object that
+ represents the starting transformation followed by an additional one.
+
+}
+
+
+@doc(
+  annot.macro 'draw.LayeredTransformation'
+){
+
+ A @rhombus(LayeredTransformation, ~annot) represents the internal
+ transformation state of a @rhombus(DC, ~annot) object. It is useful only
+ as a result or new value for the @rhombus(DC.layered_transformation)
+ property.
+
+}

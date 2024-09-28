@@ -19,6 +19,9 @@ export:
   draw.#{linear-gradient%}
   draw.#{radial-gradient%}
   draw.#{dc<%>}
+  draw.#{svg-dc%}
+  draw.#{pdf-dc%}
+  draw.#{post-script-dc%}
   send
   is_a
   draw.#{read-bitmap}

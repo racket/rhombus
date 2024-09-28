@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "type.rhm".SizeLike
+  "dc.rhm".DC
+  "dc.rhm"!internal.SomeDC
+  "pageddc.rhm".PagedDC
+
+export:
+  SVGDC
+
+class SVGDC():
+  extends SomeDC
+  implements PagedDC
+
+  constructor (size :: SizeLike,
+               ~output: output :: Path || Port.Output):
+    let hand = rkt.make_object(rkt.#{svg-dc%},
+                               size.width,
+                               size.height,
+                               output)
+    super(hand)()

@@ -1,0 +1,33 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "size.rhm".SizeLike
+  "dc-interface.rhm".DC
+
+export:
+  PagedDC
+  PaperSize
+
+interface PagedDC:
+  extends: DC
+
+  method start_doc(message :: String = "Printing"):
+    rkt.send handle.#{start-doc}(message)
+  method end_doc():
+    rkt.send handle.#{end-doc}()
+
+  method start_page():
+    rkt.send handle.#{start-page}()
+  method end_page():
+    rkt.send handle.#{end-page}()
+
+  method start(message :: String = "Drawing"):
+    start_doc(message)
+    start_page()
+  method end():
+    end_page()
+    end_doc()
+
+enum PaperSize:
+  ~is_a SizeLike
+  paper

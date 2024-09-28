@@ -1,7 +1,10 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
-  "type.rhm".Size
+  "type.rhm":
+    expose:
+      Size
+      SizeLike
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
@@ -28,14 +31,13 @@ class Bitmap():
   internal _Bitmap
   extends intf.Bitmap
 
-  constructor (width :: PosInt,
-               height :: PosInt,
+  constructor (size :: SizeLike,
                ~backing_scale: backing_space :: Real.above(0.0) = 1,
                ~has_color = #true,
                ~has_alpha = #true):
     _Bitmap(rkt.make_object(rkt.#{bitmap%},
-                            width,
-                            height,
+                            size.width,
+                            size.height,
                             !has_color,
                             has_alpha,
                             backing_space))()

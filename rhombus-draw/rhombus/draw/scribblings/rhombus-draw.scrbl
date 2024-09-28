@@ -7,7 +7,7 @@
 
 @table_of_contents()
 
-@include_section("dc.scrbl")
+@include_section("dcs.scrbl")
 @include_section("color.scrbl")
 @include_section("pen.scrbl")
 @include_section("brush.scrbl")

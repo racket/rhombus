@@ -1,9 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open:
-      except: Path)
+    "common.rhm" open)
 
-@title{Drawing Context}
+@title{Generic Drawing Context}
 
 @(~version_at_least "8.14.0.4")
 
@@ -62,11 +61,22 @@
   | (dc :: draw.DC).clipping_region :: maybe(Region)
   | (dc :: draw.DC).clipping_region := (rgn :: maybe(Region))
   property
-  | (dc :: draw.DC).transformation :: DC.Transformation
-  | (dc :: draw.DC).transformation := (rgn :: DC.Transformation)
+  | (dc :: draw.DC).transformation :: Transformation
+  | (dc :: draw.DC).transformation := (t :: Transformation)
+  property
+  | (dc :: draw.DC).layered_transformation :: LayeredTransformation
+  | (dc :: draw.DC).layered_transformation := (lt :: LayeredTransformation)
 ){
 
  Properties to get or set the drawing context's configuration.
+
+ Beware that getting and setting @rhombus(DC.transformation) does not
+ save and restore precisely the same internal transformation state of
+ @rhombus(dc). For cases where that is needed,
+ @rhombus(DC.layered_transformation) produces and consumes an opaque
+ value representing the internal state The @rhombus(DC.save) and
+ @rhombus(DC.restore) methods use @rhombus(DC.layered_transformation),
+ for example.
 
 }
 
@@ -76,7 +86,7 @@
   method (dc :: draw.DC).translate(dpt :: PointLike) :: Void
   method (dc :: draw.DC).translate(dx :: Real, dy :: Real) :: Void
   method (dc :: draw.DC).rotate(radians :: Real) :: Void
-  method (dc :: draw.DC).transform(t :: DC.Transformation) :: Void
+  method (dc :: draw.DC).transform(t :: Transformation) :: Void
 ){
 
  Applies a (further) transformation to the drawing context's conversion
@@ -236,30 +246,5 @@
 ){
 
  Polygon fill modes.
-
-}
-
-
-@doc(
-  annot.macro 'draw.DC.Transformation'
-){
-
- Satisfied by an array of six @rhombus(Real, ~annot)s:
-
-@itemlist(
-
-  @item{@rhombus(xx, ~var): a scale from the logical @rhombus(x, ~var) to the device @rhombus(x, ~var)}
-
-  @item{@rhombus(yx, ~var): a scale from the logical @rhombus(y, ~var) added to the device @rhombus(x, ~var)}
-
-  @item{@rhombus(xy, ~var): a scale from the logical @rhombus(x, ~var) added to the device @rhombus(y, ~var)}
-
-  @item{@rhombus(yy, ~var): a scale from the logical @rhombus(y, ~var) to the device @rhombus(y, ~var)}
-
-  @item{@rhombus(x0, ~var): an additional amount added to the device @rhombus(x, ~var)}
-
-  @item{@rhombus(y0, ~var): an additional amount added to the device @rhombus(y, ~var)}
-
-)
 
 }
