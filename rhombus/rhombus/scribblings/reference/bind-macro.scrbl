@@ -104,7 +104,7 @@
 ){
 
  Defines @rhombus(id) as the infoer ``continuation'' of a
- binding macro's implementation. The inforer is invoked with ``upward''
+ binding macro's implementation. The infoer is invoked with ``upward''
  static information provided by the context of a use of the binding form,
  plus the same data syntax object that was supplied as part of the
  argument to @rhombus(bind_meta.pack). The transformer's result is
@@ -148,7 +148,7 @@
     #,(@rhombus(data, ~var)))'
    )
 
- The @rhombus(ann_string, ~var) term is for error repoting when a value
+ The @rhombus(ann_string, ~var) term is for error reporting when a value
  fails to match the binding. It describes the binder's match requires in
  the form of an annotation.
 
@@ -429,7 +429,7 @@
   annotation is declared or if it is unchecked, otherwise it is a syntax
   object for a function expression; the resulting function expects
   @rhombus(count) plus two arguments: each original result followed by a
-  success procedure of @rhombus(count) arguments and a failure procedure
+  success function of @rhombus(count) arguments and a failure function
   of zero arguments.}
 
   @item{The @rhombus(static_info) field holds static information for the

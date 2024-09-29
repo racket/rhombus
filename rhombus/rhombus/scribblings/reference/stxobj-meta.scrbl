@@ -46,10 +46,10 @@
 
  Returns the compile-time value of @rhombus(name), if available, in the
  space specified by @rhombus(in_space). If no compile-time value is
- available, then @rhombus(fail) is called if it is a procedure of 0
+ available, then @rhombus(fail) is called if it is a function of 0
  arguments, otherwise @rhombus(fail) is returned.
 
- The default @rhombus(fail) is a procedure that throws an exception.
+ The default @rhombus(fail) is a function that throws an exception.
 
 }
 

@@ -88,13 +88,13 @@
 
 
 @doc(
-  fun Find.animate(xy_proc :: Function.of_arity(3),
-                   ~time_box: t_proc :: Function.of_arity(1) = fun(p): 0)
+  fun Find.animate(xy_func :: Function.of_arity(3),
+                   ~time_box: t_func :: Function.of_arity(1) = fun(p): 0)
     :: Find
 ){
 
- Creates a @tech{finder} that uses @rhombus(xy_proc) for
- @rhombus(Find.in) and @rhombus(t_proc) for @rhombus(Find.start_in).
+ Creates a @tech{finder} that uses @rhombus(xy_func) for
+ @rhombus(Find.in) and @rhombus(t_func) for @rhombus(Find.start_in).
 
 }
 

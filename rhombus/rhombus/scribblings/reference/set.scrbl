@@ -93,7 +93,7 @@ it supplies its elements in an unspecified order.
 
  The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
  annotation variants match only sets that use the hash and equality
- procedures specified by @rhombus(key_comp).
+ functions specified by @rhombus(key_comp).
 
  Static information associated by @rhombus(Set, ~annot), etc., makes
  an expression acceptable to @rhombus(for) in static mode.

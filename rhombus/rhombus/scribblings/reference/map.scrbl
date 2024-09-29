@@ -98,7 +98,7 @@ in an unspecified order.
 
  The @rhombus(Map.by, ~annot), @rhombus(MutableMap.by, ~annot), and
  @rhombus(WeakMutableMap.by, ~annot) annotation variants match only maps
- that use the hash and equality procedures specified by
+ that use the hash and equality functions specified by
  @rhombus(key_comp).
 
  Static information associated by @rhombus(Map, ~annot), etc., makes an

@@ -168,7 +168,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
  toward the next grapheme cluster (by the rules of Unicode grapheme
  clustering).
 
- The @rhombus(Char.grapheme_step) procedure will produce a result for any
+ The @rhombus(Char.grapheme_step) function will produce a result for any
  fixnum @rhombus(state), but the meaning of a non-@rhombus(0)
  @rhombus(state) is specified only in that providing such a state
  produced by @rhombus(Char.grapheme_step) in another call to

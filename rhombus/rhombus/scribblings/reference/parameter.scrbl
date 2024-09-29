@@ -8,7 +8,7 @@
 A @deftech{context parameter} is a way of communicating a value from one
 evaluation context to another one that is nested dynamically, but not
 necessarily lexically. In other words, a context parameter is similar to
-a dyanmic binding or operating-system environment variable---but a
+a dynamic binding or operating-system environment variable---but a
 context parameter is a value, not a variable. Create a context parameter
 using @rhombus(Parameter.make), get a context parameter's value by
 calling the parameter as a function of zero arguments, and set a context
@@ -62,7 +62,7 @@ parameter's value using @rhombus(parameterize).
  @tech{context parameter} whose initial value is produced by
  @rhombus(expr) or a @rhombus(body) sequence. If an annotation is provided
  using @rhombus(::, ~bind), then the annotation's predicate or conversion
- is used for a filter argument like the @rhombus(guard) procedure for
+ is used for a filter argument like the @rhombus(guard) function for
  @rhombus(Parameter.make). If an annotation is provided with either
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), static information from
  the annotation is associated with the result of calling @rhombus(id_name).

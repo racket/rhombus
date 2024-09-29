@@ -185,19 +185,19 @@
 
 @doc(
   ~nonterminal:
-    union_proc_expr: block expr
-    intersect_proc_expr: block expr
+    union_func_expr: block expr
+    intersect_func_expr: block expr
 
   defn.macro '«statinfo.key $id:
                  $clause
                  ...»'
   grammar clause:
-    ~union: union_proc_expr
-    ~intersect: intersect_proc_expr
+    ~union: union_func_expr
+    ~intersect: intersect_func_expr
 ){
 
  Binds @rhombus(id) for use as a static info key identifier. Both
- @rhombus(union_proc_expr) and @rhombus(intersect_proc_expr) are
+ @rhombus(union_func_expr) and @rhombus(intersect_func_expr) are
  required, and they should each produce a function that accepts two
  syntax objects as values for static information keyed by @rhombus('id').
  The union operation is used, for example, on static information from

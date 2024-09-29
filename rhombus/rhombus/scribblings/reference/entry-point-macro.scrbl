@@ -58,7 +58,7 @@
   before the @rhombus(#'function) mode.}
 
  @item{@rhombus(#'function): gets a function to implement the entry
-  point. The result can be another entry point, or it can be a procedure
+  point. The result can be another entry point, or it can be a function
   implementation that is packed via @rhombus(entry_point_meta.pack). In
   the latter case, the function should be potentially adjusted with extra
   leading arguments and a wrapper for the body, where the adjustments are

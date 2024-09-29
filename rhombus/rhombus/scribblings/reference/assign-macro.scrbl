@@ -76,7 +76,7 @@
   and}
 
  @item{an identifier that reflects the target's name, which is useful
-  for inferring a name for certain kinds of values (such as procedures)
+  for inferring a name for certain kinds of values (such as functions)
   for the right-hand side.}
 
 )
@@ -115,8 +115,8 @@
  starts with an assignment operator and continues as the operator expects
  (typically with a right-hand expression). The syntax-class arguments
  @rhombus(ref), @rhombus(set), and @rhombus(name) must be an expression to
- produce an accessor procedure of arguments, an expression to produce a
- mutator procedure of one argument, and an identifier to use as the
+ produce an accessor function of zero arguments, an expression to produce a
+ mutator function of one argument, and an identifier to use as the
  inferred name (if needed) for the right-hand value.
 
  The value of a binding using @rhombus(assign_meta.AssignParsed, ~stxclass)

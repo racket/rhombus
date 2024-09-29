@@ -254,7 +254,7 @@ driver and macro-definitions forms.
   proceeds as if after the argument of the operator, which means that
   parsing can stop with a tail sequence remaining. The parsed ``argument''
   is is the matched result, the consumed terms are in a
-  @rhombus(group, ~datum) field, and the remainaing tail is a
+  @rhombus(group, ~datum) field, and the remaining tail is a
   @rhombus(tail, ~datum) field.}
 
  @item{@rhombus(parse_infix_more_syntax_class, ~space_meta_clause):
@@ -266,7 +266,7 @@ driver and macro-definitions forms.
 
  @item{@rhombus(parse_checker, ~space_meta_clause): supplies a
   compile-time function that is applied to two arguments: the result of
-  any macro defined for the space, and a procedure implementing the macro
+  any macro defined for the space, and a function implementing the macro
   transformer (which is useful for reporting errors or recursively
   expanding); the result is a syntax object, typically the one that was
   given, but possibly adjusted. The default checker recursively expands
@@ -281,11 +281,11 @@ driver and macro-definitions forms.
 
  @item{@rhombus(parsed_unpacker, ~space_meta_clause): declares an
   identifier to be bound to a function that takes a syntax term and
-  optionally either @rhombus(#false) or a procedure of one argument. If
+  optionally either @rhombus(#false) or a function of one argument. If
   the first argument is a parsed term, the declared unpacker acts as the
   inverse of the function declared with
   @rhombus(parsed_packer, ~space_meta_clause). For any other value, if a
-  second argument is provided as a procedure, then the procedure is called
+  second argument is provided as a function, then the function is called
   and the first argument is passed along; otherwise, an error is reported.}
 
  @item{@rhombus(identifier_parser, ~space_meta_clause): supplies a

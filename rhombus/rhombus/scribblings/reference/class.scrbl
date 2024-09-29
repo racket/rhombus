@@ -277,8 +277,8 @@
  @rhombus(dot, ~class_clause), and
  @rhombus(static_info, ~class_clause) for more information on those forms.
 
- When a method procedure is accessed from a class (as a namespace) via
- @rhombus(.), the procedure expects an extra by-position argument that
+ When a method function is accessed from a class (as a namespace) via
+ @rhombus(.), the function expects an extra by-position argument that
  must be an instance of the class, and the extra argument is supplied before
  all other arguments. A field accessor from a class (as a
  namespace) via @rhombus(.) similarly takes an instance of the class,
@@ -411,7 +411,7 @@ or protectedly using
  internal-name annotation. As long as a method or property belongs to only
  to privately implemented interfaces, it can be overridden with
  @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(override, ~class_clause))),
- otherwise it is overidden normally. Methods of a protectedly implemented interface
+ otherwise it is overridden normally. Methods of a protectedly implemented interface
  are treated as protected in the implementing class, even when the
  methods are declared as non-protected in the interfaces. If a class declares
  the implementation of a interface both normally and privately or protectedly, then the
@@ -535,7 +535,7 @@ or protectedly using
  @rhombus(final, ~class_clause) with an immediate declaration is the same
  as @rhombus(final, ~class_clause) followed by
  @rhombus(method, ~class_clause). Including
- @rhombus(override, ~class_clause) means that the method or proerty must be defined
+ @rhombus(override, ~class_clause) means that the method or property must be defined
  in the superclass or a superinterface, while it must not be defined in
  the superclass or a superinterface if @rhombus(override, ~class_clause)
  is not used.
@@ -657,7 +657,7 @@ or protectedly using
  method, or property shadows the field, method, or property.
 
  In an interface, a @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause), or
- @rhombus(property, ~interface_clause) declation can be just an identifier, or
+ @rhombus(property, ~interface_clause) declaration can be just an identifier, or
  it can omit a body block. In that case, @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause),
  or @rhombus(property, ~interface_clause) is treated as if
  @rhombus(abstract, ~interface_clause) is added before. If arguments are declared for
@@ -714,7 +714,7 @@ or protectedly using
  @rhombus(internal, ~class_clause). When referenced via the
  @rhombus(.) operator, only static references are allowed
  through the enclosing class's annotation (not a subclass annotation) or
- through an @rhombus(internal, ~class_clause) identfier's annotation.
+ through an @rhombus(internal, ~class_clause) identifier's annotation.
 
 }
 
@@ -783,7 +783,7 @@ or protectedly using
  A method or property can be both @rhombus(abstract, ~class_clause) and
  @rhombus(override, ~class_clause). In that case, if the overridden method or property
  is not abstract, then the method or property becomes abstract and most be overridden
- in a subclass before instantiation. Even if the overidden method or property is
+ in a subclass before instantiation. Even if the overridden method or property is
  already abstract, an @rhombus(abstract, ~class_clause)
  @rhombus(override, ~class_clause) can be useful to impose an additional
  result annotation.
@@ -1021,7 +1021,7 @@ or protectedly using
  When a @tech{class clause} is @rhombus(prefab, ~class_clause), then the
  representation of an instance depends only on the class name, the number
  of fields in the class, and the mutability of each field. When two
- @rhombus(class) desclarations have @rhombus(prefab, ~class_clause), the
+ @rhombus(class) declarations have @rhombus(prefab, ~class_clause), the
  same field count, and the same mutability of each field, then instances
  from one @rhombus(class) declaration count as instances of the other
  @rhombus(class) declaration, even if they have different annotations on
@@ -1082,7 +1082,7 @@ or protectedly using
  that would be represented by a default constructor, independent of
  whether the field is optional or would be supplied with a keyword. The
  fields are checked dynamically, unless @rhombus(with) is static (see
- @rhombus(use_static)), in which case the set of fields must syntacticaly
+ @rhombus(use_static)), in which case the set of fields must syntactically
  match the ones expected for the class indicated by static information.
 
  An object is updated by calling its class's @deftech{reconstructor}. A
@@ -1223,7 +1223,7 @@ or protectedly using
  produced by @rhombus(body). Implementing an interface with
  @rhombus(implements, ~class_clause), meanwhile, corresponds to writing
  @rhombus(primitive_property, ~class_clause) for each primitive property
- inthe interface and its superinterfaces, which means that those
+ in the interface and its superinterfaces, which means that those
  properties cannot be immediately overridden with
  @rhombus(primitive_property, ~class_clause).
 
