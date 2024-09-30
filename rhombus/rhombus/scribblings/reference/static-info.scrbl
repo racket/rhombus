@@ -192,8 +192,8 @@
                  $clause
                  ...»'
   grammar clause:
-    ~union: union_func_expr
-    ~intersect: intersect_func_expr
+    ~union: $union_func_expr
+    ~intersect: $intersect_func_expr
 ){
 
  Binds @rhombus(id) for use as a static info key identifier. Both

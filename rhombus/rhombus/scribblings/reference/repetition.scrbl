@@ -34,7 +34,7 @@ repetition of a particular depth, typically based on how many
 @(dots_expr)s appear after the repetition context. In the above example,
 @rhombus(x) is bound as a repetition of depth 1, and it is used in a
 context of depth 1, since there is one @dots_expr after @rhombus(x+1) to
-form the list. Using multiple @dots in a bininding context typically
+form the list. Using multiple @dots in a binding context typically
 binds at a greater depth, as in this example that binds and uses
 @rhombus(z) at depth 2:
 
@@ -144,8 +144,8 @@ positions.
   ~nonterminal:
     list_expr: block expr
     list_bind: def bind ~defn
-  expr.macro '& list_expr'
-  bind.macro '& list_bind'
+  expr.macro '& $list_expr'
+  bind.macro '& $list_bind'
 ){
 
  The @rhombus(&) expression operator and binding operator can only be
@@ -168,8 +168,8 @@ positions.
   ~nonterminal:
     map_expr: block expr
     map_bind: def bind ~defn
-  expr.macro '~& map_expr'
-  bind.macro '~& map_bind'
+  expr.macro '~& $map_expr'
+  bind.macro '~& $map_bind'
 ){
 
  The @rhombus(~&) expression operator and binding operator can only be
