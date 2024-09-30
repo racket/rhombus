@@ -38,6 +38,13 @@ normally bound to implement function calls.
  @rhombus(keyword)s that are listed. Each @rhombus(keyword) must be
  distinct.
 
+@margin_note_block{Due to the current limitation in the function arity
+ protocol, a function must require an exact set of keywords across all
+ arities, even though Rhombus multi-case @rhombus(fun)s allow
+ non-uniform keyword arguments in different cases. In a Rhombus
+ multi-case @rhombus(fun), the required set of keywords is the
+ ``intersection'' of required keywords in all cases.}
+
 @examples(
   math.cos is_a Function
   math.cos is_a Function.of_arity(1)
