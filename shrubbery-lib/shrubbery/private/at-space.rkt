@@ -15,7 +15,10 @@
         (let-values ([(content comments) (convert-content content group-tag)])
           (values (append start1 start2)
                   content
-                  (append (reverse comments) end1 end2)))))))
+                  (append (map to-syntax (reverse comments)) end1 end2)))))))
+
+(define (to-syntax str)
+  (syntax-raw-property (datum->syntax #f str) str))
 
 (define rx:whitespace #px"^\\s*$")
 
@@ -137,7 +140,9 @@
                                         a))
                    rest-trimmed)))
        (if (eqv? add-back-n 0)
-           trimmed
+           (if drop-trimmed-s?
+               (add-as-prefix a trimmed)
+               trimmed)
            (cons (list 'content
                        (let ([stx (datum->syntax a
                                                  (make-string add-back-n #\space)
@@ -183,3 +188,15 @@
                                              (or (syntax-raw-prefix-property stx) '())))
            (cdr c))]))
 
+
+(define (add-as-prefix n trimmed)
+  (define prefix (syntax-raw-property n))
+  (cond
+    [(and (pair? trimmed)
+          (eq? (caar trimmed) 'comment))
+     (cons (list 'comment
+                 (string-append prefix
+                                (cadar trimmed)))
+           (cdr trimmed))]
+    [else
+     (cons (list 'comment prefix) trimmed)]))

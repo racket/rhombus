@@ -1886,6 +1886,35 @@ then @{8}
   5 @// line comment
   6}
 
+@{7
+  @// don't consume next line
+
+  8}
+
+@{7
+   @// don't consume next line
+
+  8}
+
+@{7
+  @// do consume leading space
+    8}
+
+@{7 @// do consume leading space
+    8}
+
+@{9
+  @10
+  @// comment
+
+  }
+
+@doc{
+
+ space char starts next line
+ 
+}
+
 @itemlist(@item{x
                 y},
           @item{z
@@ -1983,6 +2012,26 @@ INPUT
     (group
      (parens
       (group (brackets (group "4 ") (group "\n") (group "5 ") (group "6")))))
+    (group
+     (parens
+      (group (brackets (group "7") (group "\n") (group "\n") (group "8")))))
+    (group
+     (parens
+      (group (brackets (group "7") (group "\n") (group " ") (group "\n") (group "8")))))
+    (group
+     (parens
+      (group (brackets (group "7") (group "\n") (group "8")))))
+    (group
+     (parens
+      (group (brackets (group "7 ") (group "8")))))
+    (group
+     (parens
+      (group (brackets (group "9") (group "\n") (group 10) (group "\n")))))
+    (group
+     doc
+     (parens
+      (group
+       (brackets (group " ") (group "space char starts next line") (group "\n")))))
     (group
      itemlist
      (parens
