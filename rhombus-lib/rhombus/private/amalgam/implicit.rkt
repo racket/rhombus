@@ -22,7 +22,8 @@
          "is-static.rkt"
          "operator-compare.rkt"
          (only-in "op-literal.rkt"
-                  :_-expr))
+                  :_-expr)
+         "arrow-annotation.rkt")
 
 (provide (for-space #f
                     #%body

@@ -27,18 +27,13 @@ Parameter.def current_identifier_color :: Color || String = "black"
 Parameter.def current_comment_color :: Color || String = "chocolate"
 Parameter.def current_result_color :: Color || String = "darkblue"
 
-Parameter.def current_rhombus_tt :: Function.of_arity(1):
+Parameter.def current_rhombus_tt :: Function.all_of(~name: "current_rhombus_tt function",
+                                                    String -> Pict):
   fun (str_s):
     boldly: tt(str_s)
 
 fun rtt(str_s) :~ Pict:
-  let p = current_rhombus_tt()(str_s)
-  unless p is_a Pict
-  | error(error.annot_msg("Rhombus `tt` function result"),
-          ~exn: Exn.Fail.Annot,
-          error.annot("Pict"),
-          error.val(~label: "result", p))
-  p
+  current_rhombus_tt()(str_s)
 
 def (render_line,
      render_block):

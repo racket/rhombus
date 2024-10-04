@@ -193,11 +193,11 @@ defn.macro 'def_radial:
       $body
   '
 
-fun evenly_spaced(i, n):
+fun evenly_spaced(i :: Int, n :: PosInt):
   2 * math.pi * i / n
 
 fun jitter_spaced(jitter):
-  fun (i, n):
+  fun (i :: Int, n :: PosInt):
     let a = evenly_spaced(i, n)
     let delta = 2 * math.pi / n
     a + 0.25 * math.sin(jitter * (if i == n | 0 | a)) * delta
@@ -206,7 +206,7 @@ def_radial:
   radial(~points: n :: PosInt = 6,
          ~width: width :: Real = 64,
          ~height: height :: Real = width,
-         ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+         ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
          ~inner_radius: d :: Real = 0.5,
          ~outer_radius: od :: Real = 1,
          ~inner_pause: inner_pause :: Real = 0,
@@ -222,7 +222,7 @@ def_radial:
   flower_radial(~petals: n :: PosInt = 6,
                 ~width: width :: Real = 64,
                 ~height: height :: Real = width,
-                ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+                ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
                 ~inner_radius: d :: Real = 0.5,
                 ~outer_radius: od :: Real = 1,
                 ~inner_pause: inner_pause :: Real = 0,
@@ -238,7 +238,7 @@ def_radial:
   cloud_radial(~bumps: n :: PosInt = 6,
                ~width: width :: Real = 64,
                ~height: height :: Real = width / 2,
-               ~angle_at: point_angle :: Function.of_arity(2) = jitter_spaced(0.3),
+               ~angle_at: point_angle :: (Int, PosInt) -> Real = jitter_spaced(0.3),
                ~inner_radius: d :: Real = 0.8,
                ~outer_radius: od :: Real = 1,
                ~inner_pause: inner_pause :: Real = 0,
@@ -254,7 +254,7 @@ def_radial:
   flash_radial(~points: n :: PosInt = 10,
                ~width: width :: Real = 64,
                ~height: height :: Real = width / 2,
-               ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+               ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
                ~inner_radius: d :: Real = 0.75,
                ~outer_radius: od :: Real = 1,
                ~inner_pause: inner_pause :: Real = 0,
@@ -280,7 +280,7 @@ def_radial:
   star_radial(~points: n :: PosInt = 5,
               ~width: width :: Real = 64,
               ~height: height :: Real = width,
-              ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+              ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
               ~inner_radius: d :: Real = star_inner(n),
               ~outer_radius: od :: Real = 1,
               ~inner_pause: inner_pause :: Real = 0,
@@ -296,7 +296,7 @@ def_radial:
   sun_radial(~rays: n :: PosInt = 10,
              ~width: width :: Real = 64,
              ~height: height :: Real = width,
-             ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+             ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
              ~inner_radius: d :: Real = 0.6,
              ~outer_radius: od :: Real = 1,
              ~inner_pause: inner_pause :: Real = 0.5,
@@ -312,7 +312,7 @@ def_radial:
   gear_radial(~arms: n :: PosInt = 5,
               ~width: width :: Real = 64,
               ~height: height :: Real = width,
-              ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+              ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
               ~inner_radius: d :: Real = 0.7,
               ~outer_radius: od :: Real = 1,
               ~inner_pause: inner_pause :: Real = 0.5,
@@ -333,7 +333,7 @@ def_radial:
   circle_radial(~sides: n :: PosInt = 5,
                 ~width: width :: Real = 64,
                 ~height: height :: Real = width,
-                ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+                ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
                 ~inner_radius: d :: Real = 1,
                 ~outer_radius: od :: Real = 1,
                 ~inner_pause: inner_pause :: Real = 0,
@@ -349,7 +349,7 @@ def_radial:
   regular_polygon_radial(~sides: n :: PosInt = 5,
                          ~width: width :: Real = 64,
                          ~height: height :: Real = 64,
-                         ~angle_at: point_angle :: Function.of_arity(2) = evenly_spaced,
+                         ~angle_at: point_angle :: (Int, PosInt) -> Real = evenly_spaced,
                          ~inner_radius: d :: Real = math.cos(math.pi/n),
                          ~outer_radius: od :: Real = 1,
                          ~inner_pause: inner_pause :: Real = 0,

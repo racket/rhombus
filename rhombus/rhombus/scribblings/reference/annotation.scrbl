@@ -119,6 +119,7 @@
 
 
 @doc(
+  bind.macro '$bind described_as ($term ...)'
   bind.macro '$bind described_as $term ...'
 ){
 
@@ -126,7 +127,8 @@
  that triggers an error message (as opposed to moving on to a different
  binding pattern), the message describes the expected annotation as
  @rhombus(term ...). The @rhombus(term ...) sequence is not parsed, so it
- can be any sequence of terms.
+ can be any sequence of terms, but the first @rhombus(term) can be parenthesized
+ only if the @rhombus(term ...) sequence is parenthesized.
 
 @examples(
   ~error:

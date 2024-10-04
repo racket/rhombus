@@ -58,7 +58,7 @@
     ~width: width :: Real = 64,
     ~height: height :: Real = width,
     ~rotate: rotate :: Real = 0,
-    ~angle_at: angle_at :: Function.of_arity(2) = evenly_spaced,
+    ~angle_at: angle_at :: (Int, PosInt) -> Real = evenly_spaced,
     ~inner_radius: inner :: Real = 0.5,
     ~outer_radius: outer :: Real = 1,
     ~inner_pause: inner_pause :: Real = 0,
@@ -164,7 +164,7 @@
     ~width: width :: Real = 64,
     ~height: height :: Real = width,
     ~rotate: rotate :: Real = 0,
-    ~angle_at: angle_at :: Function.of_arity(2) = evenly_spaced,
+    ~angle_at: angle_at :: (Int, PosInt) -> Real = evenly_spaced,
     ~inner_radius: inner :: Real = 0.5,
     ~outer_radius: outer :: Real = 1,
     ~inner_pause: inner_pause :: Real = 0,
@@ -325,8 +325,8 @@
 }
 
 @doc(
-  fun evenly_spaced(i :: Int, out_of_n :: Int) :: Real
-  fun jitter_spaced(jitter :: Real) :: Function.of_arity(2)
+  fun evenly_spaced(i :: Int, out_of_n :: PosInt) :: Real
+  fun jitter_spaced(jitter :: Real) :: (Int, PosInt) -> Real
 ){
 
  Functions useful for @rhombus(~angle_at) arguments to

@@ -88,6 +88,9 @@ Here are all of the implicit forms:
 }
 
 @doc(
+  ~nonterminal:
+    arg: -> ~annot
+    results: -> ~annot
   ~also_meta
   expr.macro '#%parens ($expr)'
   bind.macro '#%parens ($bind)'
@@ -97,6 +100,7 @@ Here are all of the implicit forms:
   expr.macro '#%parens ($term ... _ $term ...)'
   entry_point.macro '#%parens ($term ... _ $term ...)'
   immediate_callee.macro '#%parens ($term ... _ $term ...)'
+  annot.macro '#%parens ($arg, ...) #,(@rhombus(->, ~annot)) $results'
 ){
 
  Produces the same value as @rhombus(expr), same binding as
@@ -111,6 +115,12 @@ Here are all of the implicit forms:
  The @tech{entry point} and @tech{immediate callee} bindings allow
  parentheses to be used around such forms, and they allow the function
  shorthand to cooperate in those positions.
+
+ The @rhombus(#%parens, ~annot) annotation form cooperates with
+ @rhombus(->, ~annot) to enable multiple argument annotations in
+ parentheses. A @rhombus(->, ~annot) annotation is assumed whenever the
+ parenthesized term for @rhombus(#%parens, ~annot) is followed by
+ @rhombus(->, ~annot).
 
 @examples(
   (1+2)

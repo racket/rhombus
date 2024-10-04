@@ -54,22 +54,18 @@ namespace bend:
 
 enum SequentialJoin:  step splice
 
+annot.macro 'named($name, $ann)':
+  match ann
+  | '$arrow && $arity ...':
+      '($arity ... && Function.all_of(~name: $name, $arrow))'.relocate_span([ann])
+
 fun animate(~children: children :: List.of(Pict) = [],
-            proc :: Function.of_arity(1 + children.length()),
-            ~bend: bend :: Function.of_arity(1) = rkt.#{fast-middle},
+            proc :: named("animate function",
+                          ((~any) -> StaticPict)
+                            && Function.of_arity(1 + children.length())),
+            ~bend: bend :: Real.in(0, 1) -> Real.in(0, 1) = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
             ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
-  let proc:
-    fun (n, child_or_config, ...):
-      let p = proc(bend(n), child_or_config, ...)
-      unless p is_a StaticPict
-      | error(~who: #'animate,
-              ~exn: Exn.Fail.Annot,
-              error.annot_msg("procedure result"),
-              error.annot("StaticPict"),
-              error.val(~label: "procedure", proc),
-              error.val(~label: "result", p))
-      p
   AnimPict(~children: children,
            proc,
            ~extent: extent,
@@ -77,15 +73,10 @@ fun animate(~children: children :: List.of(Pict) = [],
 
 fun rebuildable(~children: children :: List.of(Pict) = [],
                 ~config: config :: maybe(Map) = #false,
-                proc :: Function.of_arity(children.length() + (if config | 1 | 0))) :~ Pict:
+                proc :: named("rebuildable function",
+                              ((~any) -> Pict)
+                                && Function.of_arity(children.length() + (if config | 1 | 0)))) :~ Pict:
   let p = proc(& children ++ (if config | [config] | []))
-  unless p is_a Pict
-  | error(~who: #'rebuildable,
-          ~exn: Exn.Fail.Annot,
-          error.annot_msg("procedure result"),
-          error.annot("Pict"),
-          error.val(~label: "procedure", proc),
-          error.val(~label: "result", p))
   let rebuild:
     if config
     | fun ([child, ..., config]):

@@ -177,6 +177,10 @@
          what val
          (append extra
                  (list "annotation" (unquoted-printing-string
-                                     (error-contract->adjusted-string
-                                      annotation-str
-                                      rhombus-realm))))))
+                                     (regexp-replace*
+                                      #rx"\n"
+                                      (error-contract->adjusted-string
+                                       annotation-str
+                                       rhombus-realm)
+                                      ;; number of spaces here depends on "annotation:"
+                                      "\n              "))))))

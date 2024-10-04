@@ -223,11 +223,11 @@ class Pict():
                                 [p],
                                 0 /* extent */))
 
-  method rebuild(~pre: pre_adjuster :: Function.of_arity(1)
+  method rebuild(~pre: pre_adjuster :: Function.of_arity(1) described_as Pict -> Pict
                          = fun (p): p,
-                 ~post: adjuster :: Function.of_arity(1)
+                 ~post: adjuster :: Function.of_arity(1) described_as Pict -> Pict
                           = fun (p): p,
-                 ~config: config_adjuster :: Function.of_arity(1)
+                 ~config: config_adjuster :: Function.of_arity(1) described_as Map -> Map
                             = fun (config): config) :~ Pict:
     let (p, _) = _replace(pre_adjuster,
                           adjuster,
@@ -495,10 +495,12 @@ fun set_convert(proc):
   do_convert := proc
 
 fun animate_map(p :~ List.of(Pict),
-                ~combine: combine :: Function.of_arity(3),
+                ~combine: combine :: Function.of_arity(3) described_as (List.of(Pict), Int, Real.in(0, 1)) -> Pict,
                 ~duration: duration :: DurationAlignment = #'sustain,
                 ~epoch: epoch :: EpochAlignment = #'center,
-                ~non_sustain_combine: non_sustain_combine :: Function.of_arity(3) = combine) :~ Pict:
+                ~non_sustain_combine: non_sustain_combine
+                                        :: Function.of_arity(3) described_as (List.of(Pict), Int, Real.in(0, 1)) -> Pict
+                                        = combine) :~ Pict:
   do_convert(p, epoch, duration, combine, non_sustain_combine, #false, #false)
 
 // used by `sequential` and `concurrent`
@@ -1175,7 +1177,7 @@ fun polygon([pt :: draw.PointLike.to_point, ...],
 fun bitmap(path :: Path || String) :~ Pict:
   static_pict(rkt.bitmap(path), [], empty_instances)
 
-fun dc(draw :: Function.of_arity(3),
+fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
        ~width: width :: Real,
        ~height: height :: Real,
        ~ascent: ascent :: Real = height,
@@ -1387,7 +1389,7 @@ fun animate(xy_proc :: Function.of_arity(2) || Function.of_arity(3),
 
 fun interpolate(from :: Find,
                 to :: Find,
-                ~bend: bend :: Function.of_arity(1) = rkt.#{fast-middle}) :: Find:
+                ~bend: bend :: Real.in(0, 1) -> Real.in(0, 1) = rkt.#{fast-middle}) :: Find:
   _Find(#false,
         fun (p, q, epoch, n):
           let i_n:

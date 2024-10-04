@@ -33,7 +33,9 @@
          (submod "define-arity.rkt" for-info)
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         (submod "module.rkt" for-module+))
+         (submod "module.rkt" for-module+)
+         (submod "arrow-annotation.rkt" for-arrow-annot)
+         (only-in "name-root-ref.rkt" replace-head-dotted-name))
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -61,6 +63,7 @@
   #:fields ()
   #:namespace-fields
   (of_arity
+   all_of
    [pass Function.pass/optimize])
   #:properties
   ()
@@ -192,8 +195,8 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse stx
-       [(_ (_::parens g ...+) . tail)
+     (syntax-parse (replace-head-dotted-name stx)
+       [(form-id (~and args (_::parens g ...+)) . tail)
         (with-syntax ([(kw ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
                                            #:do [(define kw
                                                    (syntax-parse g
@@ -225,18 +228,27 @@
                                                                               ()
                                                                               (kw ...))))]
                                                        [_ #'()])])
-            (values (annotation-predicate-form
-                     #'(let ([n (rhombus-expression g)]
-                             ...)
-                         (check-nonneg-int 'Function.of_arity n)
-                         ...
-                         (lambda (v)
-                           (and (procedure? v)
-                                (procedure-arity-includes? v n kw-ok?)
-                                ...
-                                kw-check)))
-                     #`(function-arity-static ... . #,(get-function-static-infos)))
+            (values (relocate+reraw
+                     (datum->syntax #f (list #'form-id #'args))
+                     (annotation-predicate-form
+                      #'(let ([n (rhombus-expression g)]
+                              ...)
+                          (check-nonneg-int 'Function.of_arity n)
+                          ...
+                          (lambda (v)
+                            (and (procedure? v)
+                                 (procedure-arity-includes? v n kw-ok?)
+                                 ...
+                                 kw-check)))
+                      #`(function-arity-static ... . #,(get-function-static-infos))))
                     #'tail)))]))))
+
+(define-annotation-syntax all_of
+  (annotation-prefix-operator
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-arrow-all-of (replace-head-dotted-name stx)))))
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)

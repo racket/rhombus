@@ -57,7 +57,6 @@
 
                     matching
                     satisfying
-                    #%parens
                     #%literal)
          (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -100,6 +99,10 @@
            define-annotation-constructor
 
            raise-annotation-failure))
+
+(module+ for-arrow
+  (provide (for-space rhombus/annot
+                      ::)))
 
 (begin-for-syntax
   ;; see also "annotation-operator.rkt"
@@ -232,9 +235,10 @@
        (when static-only? (check-static stx))
        (define-values (predicate-stx static-infos) (get))
        (define packed (annotation-predicate-form predicate-stx static-infos))
-       (values packed (syntax-parse stx
-                        [(_ . tail) #'tail]
-                        [_ 'does-not-happen])))))
+       (syntax-parse stx
+         [(self . tail)
+          (values (relocate+reraw #'self packed) #'tail)]
+         [_ 'does-not-happen]))))
 
   (define-syntax (identifier-binding-annotation stx)
     (syntax-case stx ()
@@ -251,9 +255,10 @@
        (when static-only? (check-static stx))
        (define-values (binding-stx body-stx static-infos) (get))
        (define packed (annotation-binding-form binding-stx body-stx static-infos))
-       (values packed (syntax-parse stx
-                        [(_ . tail) #'tail]
-                        [_ 'does-not-happen])))))
+       (syntax-parse stx
+         [(self . tail)
+          (values (relocate+reraw #'self packed) #'tail)]
+         [_ 'does-not-happen]))))
 
   (define (check-static stx)
     (unless (is-static-context/tail? stx)
@@ -276,6 +281,7 @@
                (for/list ([g (in-list gs)])
                  (syntax-parse g
                    [c::annotation #'c.parsed]))
+               (datum->syntax #f (list #'form-id #'subs))
                #'tail)]))
 
   (define (parse-annotation-of stx predicate-stx static-infos
@@ -284,7 +290,7 @@
                                predicate-maker info-maker
                                ;; binding-maker-id can be #f or an error string if a converter is not supported
                                binding-maker-id binding-maker-data)
-    (define-values (new-stx gs c-parseds tail)
+    (define-values (new-stx gs c-parseds loc tail)
       (parse-annotation-of/one stx sub-n kws))
     (values
      (cond
@@ -293,11 +299,13 @@
                [(c::annotation-predicate-form ...)
                 (define c-predicates (syntax->list #'(c.predicate ...)))
                 (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-                (annotation-predicate-form #`(lambda (v)
-                                               (and (#,predicate-stx v)
-                                                    #,(predicate-maker #'v c-predicates)))
-                                           #`(#,@(info-maker c-static-infoss)
-                                              . #,static-infos))]
+                (relocate+reraw
+                 loc
+                 (annotation-predicate-form #`(lambda (v)
+                                                (and (#,predicate-stx v)
+                                                     #,(predicate-maker #'v c-predicates)))
+                                            #`(#,@(info-maker c-static-infoss)
+                                               . #,static-infos)))]
                [_ #f]))]
        [else
         (unless (identifier? binding-maker-id)
@@ -308,15 +316,17 @@
         (syntax-parse c-parseds
           [(c::annotation-binding-form ...)
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-           (annotation-binding-form
-            (binding-form #'annotation-of-infoer
-                          #`[#,(shrubbery-tail->string new-stx)
-                             #,predicate-stx #,binding-maker-id #,binding-maker-data
-                             ([c.binding c.body] ...) #,static-infos result
-                             #,kws])
-            #'result
-            #`(#,@(info-maker c-static-infoss)
-               . #,static-infos))])])
+           (relocate+reraw
+            loc
+            (annotation-binding-form
+             (binding-form #'annotation-of-infoer
+                           #`[#,(shrubbery-tail->string new-stx)
+                              #,predicate-stx #,binding-maker-id #,binding-maker-data
+                              ([c.binding c.body] ...) #,static-infos result
+                              #,kws])
+             #'result
+             #`(#,@(info-maker c-static-infoss)
+                . #,static-infos)))])])
      tail))
 
   ;; This one is for converters that produce chaperones/impersonators.
@@ -328,7 +338,7 @@
                                          sub-n kws
                                          predicate-maker info-maker
                                          binding-maker-id binding-maker-data)
-    (define-values (new-stx gs c-parseds tail)
+    (define-values (new-stx gs c-parseds loc tail)
       (parse-annotation-of/one stx sub-n kws))
     (define annot-strs (map shrubbery-tail->string gs))
     (values
@@ -336,17 +346,19 @@
        [(c::annotation-predicate-form ...)
         (define c-predicates (syntax->list #'(c.predicate ...)))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-        (annotation-binding-form
-         (binding-form #'annotation-of-infoer/chaperone
-                       #`[#,(shrubbery-tail->string new-stx)
-                          (lambda (val-in)
-                            (and (#,predicate-stx val-in)
-                                 (#,(predicate-maker c-predicates annot-strs) val-in)))
-                          #,static-infos
-                          result])
-         #'result
-         #`(#,@(info-maker c-static-infoss)
-            . #,static-infos))]
+        (relocate+reraw
+         loc
+         (annotation-binding-form
+          (binding-form #'annotation-of-infoer/chaperone
+                        #`[#,(shrubbery-tail->string new-stx)
+                           (lambda (val-in)
+                             (and (#,predicate-stx val-in)
+                                  (#,(predicate-maker c-predicates annot-strs) val-in)))
+                           #,static-infos
+                           result])
+          #'result
+          #`(#,@(info-maker c-static-infoss)
+             . #,static-infos)))]
        [(c::annotation-binding-form ...)
         (unless (identifier? binding-maker-id)
           (raise-syntax-error #f
@@ -354,15 +366,17 @@
                                   "argument converter annotations are not supported")
                               new-stx))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-        (annotation-binding-form
-         (binding-form #'annotation-of-infoer
-                       #`[#,(shrubbery-tail->string new-stx)
-                          #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
-                          ([c.binding c.body] ...) #,static-infos result
-                          #,kws])
-         #'result
-         #`(#,@(info-maker c-static-infoss)
-            . #,static-infos))])
+        (relocate+reraw
+         loc
+         (annotation-binding-form
+          (binding-form #'annotation-of-infoer
+                        #`[#,(shrubbery-tail->string new-stx)
+                           #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
+                           ([c.binding c.body] ...) #,static-infos result
+                           #,kws])
+          #'result
+          #`(#,@(info-maker c-static-infoss)
+             . #,static-infos)))])
      tail))
 
   (define (annotation-constructor predicate-stx get-static-infos
@@ -375,9 +389,11 @@
        'macro
        (lambda (stx)
          (syntax-parse stx
-           [(_ . tail)
-            (values (annotation-predicate-form predicate-stx
-                                               (get-static-infos))
+           [(form-id . tail)
+            (values (relocate+reraw
+                     #'form-id
+                     (annotation-predicate-form predicate-stx
+                                                (get-static-infos)))
                     #'tail)]))))
     (values
      ;; root
@@ -391,21 +407,7 @@
                              predicate-stx (get-static-infos)
                              sub-n kws
                              predicate-maker info-maker
-                             binding-maker-id binding-maker-data)))))
-
-  (define (remove-tail t tail)
-    (define l (syntax->list t))
-    (define tail-l (syntax->list tail))
-    (define len (length l))
-    (define tail-len (length tail-l))
-    (if (len . > . tail-len)
-        (datum->syntax
-         #f
-         (let loop ([len len] [l l])
-           (if (len . > . tail-len)
-               (cons (car l) (loop (sub1 len) (cdr l)))
-               null)))
-        t)))
+                             binding-maker-id binding-maker-data))))))
 
 (define-syntax (define-annotation-constructor stx)
   (syntax-parse stx
@@ -445,8 +447,7 @@
          (build-annotated-expression #'op.name #'t
                                      checked? form #'t.parsed
                                      (lambda (tmp-id)
-                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-tail->string
-                                                                                            (remove-tail #'t #'t.tail))))
+                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
                                      wrap-static-info*)
          #'t.tail)]))
    'none))
@@ -504,7 +505,7 @@
            [c-parsed::annotation-predicate-form
             (binding-form
              #'annotation-predicate-infoer
-             #`(#,(shrubbery-tail->string (remove-tail #'t #'t.tail))
+             #`(#,(shrubbery-syntax->string #'t.parsed)
                 #,(and checked? #'c-parsed.predicate)
                 c-parsed.static-infos
                 left.infoer-id
@@ -514,7 +515,7 @@
                     (raise-unchecked-disallowed #'op.name #'t))]
             (binding-form
              #'annotation-binding-infoer
-             #`(#,(shrubbery-tail->string (remove-tail #'t #'t.tail))
+             #`(#,(shrubbery-syntax->string #'t.parsed)
                 c-parsed.binding
                 c-parsed.body
                 c-parsed.static-infos
@@ -604,6 +605,7 @@
      #:with arg-info::binding-info #'arg-impl.info
      #:with left-impl::binding-impl #'(left-infoer-id body-static-infos left-data)
      #:with left::binding-info #'left-impl.info
+     #:with converted-id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'left.name-id)))
      (define (build-binding-info matcher-id committer-id)
        (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
                      #'left.name-id
@@ -613,7 +615,7 @@
                      committer-id
                      #'bind-via-converted
                      #'([left.matcher-id left.committer-id left.binder-id left.data]
-                        converted
+                        converted-id
                         [arg-info.matcher-id arg-info.committer-id arg-info.binder-id arg-info.data
                                              arg-info.bind-infos body])))
      (cond
@@ -775,7 +777,13 @@
                    #'arg
                    all-static-infos
                    #`((arg (0) . #,all-static-infos))
-                   #'predicate-binding-matcher
+                   (syntax-parse #'predicate
+                     [(lam (_) #t) ;; matches `Any` and maybe more
+                      #:when (or (free-identifier=? #'lam #'lambda)
+                                 (free-identifier=? #'lam #'#%plain-lambda))
+                      #'always-succeed]
+                     [else
+                      #'predicate-binding-matcher])
                    #'predicate-binding-committer
                    #'predicate-binding-binder
                    #`[arg predicate])]))
@@ -885,19 +893,21 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(_ (_::parens arg::binding) . tail)
+       [(form-id (~and args (_::parens arg::binding)) . tail)
         #:with arg-parsed::binding-form #'arg.parsed
         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
         #:with arg-info::binding-info #'arg-impl.info
         (values
-         (annotation-predicate-form
-          #`(lambda (val-in)
-              (arg-info.matcher-id val-in
-                                   arg-info.data
-                                   if/blocked
-                                   #t
-                                   #f))
-          #'arg-info.static-infos)
+         (relocate+reraw
+          (datum->syntax #f (list #'form-id #'args))
+          (annotation-predicate-form
+           #`(lambda (val-in)
+               (arg-info.matcher-id val-in
+                                    arg-info.data
+                                    if/blocked
+                                    #t
+                                    #f))
+           #'arg-info.static-infos))
          #'tail)]))))
 
 (define-annotation-syntax satisfying
@@ -906,40 +916,27 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(_ (_::parens pred-g) . tail)
+       [(form-id (~and args (_::parens pred-g)) . tail)
         (values
-         (annotation-predicate-form
-          ;; use `((lambda ....) ....)` to avoid inferred name
-          #'((lambda (pred)
-               (unless (and (procedure? pred)
-                            (procedure-arity-includes? pred 1))
-                 (raise-predicate-error 'satisfying pred))
-               (lambda (v)
-                 (and (pred v) #t)))
-             (rhombus-expression pred-g))
-          #'())
+         (relocate+reraw
+          (datum->syntax #f (list #'form-id #'args))
+          (annotation-predicate-form
+           ;; use `((lambda ....) ....)` to avoid inferred name
+           #'((lambda (pred)
+                (unless (and (procedure? pred)
+                             (procedure-arity-includes? pred 1))
+                  (raise-predicate-error 'satisfying pred))
+                (lambda (v)
+                  (and (pred v) #t)))
+              (rhombus-expression pred-g))
+           #'()))
          #'tail)]))))
 
 (define (raise-predicate-error who val)
   (raise-argument-error* who rhombus-realm
                          "Function.of_arity(1)" val))
 
-(define-annotation-syntax #%parens
-  (annotation-prefix-operator
-   '((default . stronger))
-   'macro
-   (lambda (stxes)
-     (syntax-parse stxes
-       [(_ (~and head (_::parens . args)) . tail)
-        (let ([args (syntax->list #'args)])
-          (cond
-            [(null? args)
-             (raise-syntax-error #f "empty annotation" #'head)]
-            [(pair? (cdr args))
-             (raise-syntax-error #f "too many annotations" #'head)]
-            [else
-             (syntax-parse (car args)
-               [c::annotation (values #'c.parsed #'tail)])]))]))))
+;; `#%parens` is defined in "arrow-annotation.rkt"
 
 (define-annotation-syntax #%literal
   (annotation-prefix-operator
@@ -947,6 +944,10 @@
    'macro
    (lambda (stxes)
      (syntax-parse stxes
+       [(_ kw:keyword . tail)
+        (raise-syntax-error #f
+                            "misplaced keyword as an annotation"
+                            #'kw)]
        [(_ . tail)
         (raise-syntax-error #f
                             "literal not allowed as an annotation"

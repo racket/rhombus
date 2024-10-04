@@ -310,9 +310,26 @@
   (cond
     [(syntax? s)
      (or (syntax-column s)
-         (let ([e (syntax-e s)])
-           (and (pair? e)
-                (extract-starting-column (car e))))
+         (let loop ([s s])
+           (let ([l (syntax->list s)])
+             (and l
+                  (case (syntax-e (car l))
+                    [(multi)
+                     (and (pair? (cdr l))
+                          (loop (cadr l)))]
+                    [(group)
+                     (and (pair? (cdr l))
+                          (loop (cadr l)))]
+                    [(op)
+                     (and (pair? (cdr l))
+                          (null? (cddr l))
+                          (loop (cadr l)))]
+                    [(parens brackets braces quotes block alts)
+                     (extract-starting-column (car l))]
+                    [(parsed)
+                     (and (= 3 (length l))
+                          (extract-starting-column (caddr l)))]
+                    [else #f]))))
          0)]
     [else 0]))
 

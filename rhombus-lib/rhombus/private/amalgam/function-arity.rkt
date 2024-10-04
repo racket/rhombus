@@ -82,9 +82,9 @@
 
 (define-for-syntax (combine-arity-summaries as combine)
   (cond
-    [(null? as) #f]
+    [(null? as) 0]
     [(null? (cdr as)) (car as)]
-    [else
+    [(andmap values as)
      (define (normalize a)
        (if (pair? a)
            (list (car a) (list->hash (cadr a)) (and (caddr a) (list->hash (caddr a))))
@@ -97,7 +97,8 @@
      (if (and (null? required-kws)
               (null? allowed-kws))
          (car norm-a)
-         (list (car norm-a) required-kws allowed-kws))]))
+         (list (car norm-a) required-kws allowed-kws))]
+    [else #f]))
 
 (define-for-syntax (union-arity-summaries as)
   (combine-arity-summaries
@@ -129,12 +130,13 @@
     (cond
       [(null? kws)
        (and
-        (if (zero? (bitwise-and (if rsts
-                                    (if (zero? n)
-                                        -1
-                                        (bitwise-not (sub1 (arithmetic-shift 1 (sub1 n)))))
-                                    (arithmetic-shift 1 n))
-                                (if (pair? a) (car a) a)))
+        (if (and a
+                 (zero? (bitwise-and (if rsts
+                                         (if (zero? n)
+                                             -1
+                                             (bitwise-not (sub1 (arithmetic-shift 1 (sub1 n)))))
+                                         (arithmetic-shift 1 n))
+                                     (if (pair? a) (car a) a))))
             (and kind
                  (raise-syntax-error #f
                                      (case kind

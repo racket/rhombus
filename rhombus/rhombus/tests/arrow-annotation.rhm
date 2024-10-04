@@ -1,0 +1,706 @@
+#lang rhombus
+
+// Basic `->` annotations
+
+check: (fun (x): #false) :: Int -> Int
+       ~completes
+
+check: (fun (x): #false) :: (Int) -> Int
+       ~completes
+
+check: (fun (x): x) :: (Int, Int) -> Int
+       ~throws error.annot_msg()
+
+check: ((fun (x): #false) :: Int -> Int)(10)
+       ~throws error.annot_msg("result")
+
+check: ((fun (x): #false) :: Int -> Int)("no")
+       ~throws error.annot_msg("argument")
+
+check: (fun (x, y, ...): x) :: Int -> Int
+       ~completes
+
+check: ((fun (x, y, ...): x) :: Int -> Int)(1, 2)
+       ~throws "arity mismatch"
+
+check: (fun (x): #false) :: Int -> Int -> Int
+       ~completes
+
+check: ((fun (x): #false) :: Int -> Int -> Int)(0)
+       ~throws values(error.annot_msg("result"),
+                      "Int -> Int")
+
+check: ((fun (x): fun (y): #false) :: Int -> Int -> Int)(0)
+       ~completes
+
+check: ((fun (x): fun (y): #false) :: Int -> Int -> Int)(0)("no")
+       ~throws error.annot_msg("argument")
+
+check: ((fun (x): fun (y): #false) :: Int -> Int -> Int)(0)(1)
+       ~throws error.annot_msg("result")
+
+check: ((fun (f): f(0)) :: (Int -> Int) -> Int)(fun (v): v)
+       ~is 0
+
+check: ((fun (f): f(0)) :: (Int -> Int) -> Int)(fun (v): "oops")
+       ~throws error.annot_msg("result")
+
+check: ((fun (f): f(0)) :: (String -> Int) -> Int)(fun (v): 5)
+       ~throws error.annot_msg("argument")
+
+check:
+  use_static
+  fun f(x) :: Any -> List:
+    fun (y): [x, y]
+  f(1)(2)[0]
+  ~is 1
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x): x) :: Int -> Int
+  f(1, 2)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x): fun (y): x) :: Int -> (Int -> Int)
+  f(1)(2, 3)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+// Multiple result values
+
+check: (fun (x): #false) :: Int -> (Int, Int)
+       ~completes
+
+check: ((fun (x): values(x, x)) :: Int -> (Int, Int))(1)
+       ~is values(1, 1)
+
+check: ((fun (x): values(x, x)) :: Int -> values(Int, Int))(1)
+       ~is values(1, 1)
+
+check: ((fun (x): values("no", x)) :: Int -> (Int, Int))(1)
+       ~throws error.annot_msg("result")
+
+check:
+  use_static
+  let g :: Int -> (Int, Int -> Int) = (fun (x): values(x, fun (y): y + x))
+  let (v, f) = g(1)
+  f("no")
+  ~throws error.annot_msg("argument")
+
+check:
+  ~eval
+  use_static
+  def g :: Int -> (Int, Int -> Int) = (fun (x): values(x, fun (y): y + x))
+  def (v, f) = g(1)
+  f("no", 2)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+// Optional arguments
+
+check: (fun (x): x) :: (Int = _) -> Int
+       ~throws error.annot_msg()
+
+check: (fun (x = 0): x) :: (Int = _) -> Int
+       ~completes
+
+check: ((fun (x = 0): x) :: (Int = _) -> Int)()
+       ~is 0
+
+check: ((fun (x = 0): x) :: (Int = _) -> Int)(1)
+       ~is 1
+
+check: ((fun (y = 0, x = 0): [x, y]) :: (Int, Int = _) -> List)(1)
+       ~is [0, 1]
+
+check: ((fun (x = 0): x) :: (Int = _) -> Int)("no")
+       ~throws error.annot_msg("argument")
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x, y = 0): x) :: (Int, Int = _) -> Int
+  f(1, 2, 3)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+check:
+  ~eval
+  1 :: (Int, Int = _, Int) -> Int
+  ~throws "non-optional argument follows an optional by-position argument"
+
+// Rest arguments
+
+check: (fun (x, y, ...): #false) :: Int -> Int
+       ~completes
+
+check: (fun (x, y, ...): #false) :: (Int, Int, ...) -> Int
+       ~completes
+
+check: (fun (x, y, ...): #false) :: (Int, & List) -> Int
+       ~completes
+
+check: (fun (x, y, ...): #false) :: (& List) -> Int
+       ~throws values(error.annot_msg(),
+                      "(& List) -> Int")
+
+check: ((fun (x, y, ...): math.sum(x, y, ...)) :: (Int, & List.of(Int)) -> Int)(1, 2, 3)
+       ~is 6
+
+check: ((fun (x, y = -3, z, ...): math.sum(x, y, z, ...)) :: (Int, & List.of(Int)) -> Int)(1, 2, 3)
+       ~is 6
+
+check: ((fun (x, y = -3, z, ...): math.sum(x, y, z, ...)) :: (Int, & List.of(Int)) -> Int)(1)
+       ~is -2
+
+check: ((fun (x, y = -3, z, ...): math.sum(x, y, z, ...)) :: (Int, & List.of(Int)) -> Int)()
+       ~throws "arity mismatch"
+
+check: ((fun (x, y, ...): math.sum(x, y, ...)) :: (Int, Int, ...) -> Int)(1, "no", 3)
+       ~throws error.annot_msg("argument")
+
+check: ((fun (x, y, ...): math.sum(x, y, ...)) :: (Int, & List.of(Int)) -> Int)(1, "no", 3)
+       ~throws error.annot_msg("rest-argument list")
+
+check: ((fun (x, y, ...): math.sum(x, y, ...)) :: (Int, & List.of(Int)) -> Int)("no", 2, 3)
+       ~throws error.annot_msg("argument")
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x, y, ...): x) :: (Int, Int, ...) -> Int
+  f()
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+check:
+  ~eval
+  1 :: (Int, ..., Int) -> Int
+  ~throws "non-rest argument not allowed after rest argument"
+
+check:
+  ~eval
+  1 :: (& List, Int) -> Int
+  ~throws "non-rest argument not allowed after rest argument"
+
+check:
+  ~eval
+  1 :: (Int, ..., Int, ...) -> Int
+  ~throws "second rest argument not allowed"
+
+check:
+  ~eval
+  1 :: (Int, ..., & List) -> Int
+  ~throws "second rest argument not allowed"
+
+check:
+  ~eval
+  1 :: (& List, Int, ...) -> Int
+  ~throws "second rest argument not allowed"
+
+// Keyword arguments
+
+check: (fun (x, ~y: y): #false) :: (Int, ~y: Int) -> Int
+       ~completes
+
+check: (fun (x, ~y: y = 10): #false) :: (Int, ~y: Int) -> Int
+       ~completes
+
+check: (fun (x, ~y: y): #false) :: (Int, ~y: Int = _) -> Int
+       ~throws error.annot_msg()
+
+check: ((fun (x, ~y: y = 10): [x, y]) :: (Int, ~y: Int) -> List)(1)
+       ~throws "required keyword argument not supplied"
+
+check: ((fun (x, ~y: y = 10): [x, y]) :: (Int, ~y: Int) -> List)(1, ~y: 2)
+       ~is [1, 2]
+
+check: ((fun (x, ~y: y = 10): [x, y]) :: (Int, ~y: Int = _) -> List)(1)
+       ~is [1, 10]
+
+check: ((fun (x, ~y: y = 10): [x, y]) :: (Int, ~y: Int = _) -> List)(1, ~y: 2)
+       ~is [1, 2]
+
+check: ((fun (x, ~y: y = math.abs): y) :: (Int, ~y: Int -> Int = _) -> Any)(1, ~y: fun (x): x)(-10)
+       ~is -10
+
+check: ((fun (x, ~y: y = math.abs): y) :: (Int, ~y: Int -> Int = _) -> Any)(1, ~y: fun (x): x)("no")
+       ~throws error.annot_msg("argument")
+
+check: ((fun (x, ~y: y = 10, ~z: z): [x, y, z]) :: (Int, ~y: Int = _, ~z: Int) -> List)(1, ~y: 2, ~z: 3)
+       ~is [1, 2, 3]
+
+check: ((fun (x, ~y: y, z, ...): [x, y, z, ...]) :: (Int, ~y: Int, & List.of(Int)) -> List)(1, 3, 4, ~y: 2)
+       ~is [1, 2, 3, 4]
+
+check: ((fun (x, ~y: y, & zs): [x, y, & zs]) :: (Int, ~y: Int, & List.of(Int)) -> List)(1, 3, 4, ~y: 2)
+       ~is [1, 2, 3, 4]
+
+check: ((fun (x, ~y: y = 10, z, ...): [x, y, z, ...]) :: (Int, ~y: Int = _, & List.of(Int)) -> List)(1, 3, 4, ~y: 2)
+       ~is [1, 2, 3, 4]
+
+check: ((fun (x, ~y: y = 10, & zs): [x, y, & zs]) :: (Int, ~y: Int = _, & List.of(Int)) -> List)(1, 3, 4, ~y: 2)
+       ~is [1, 2, 3, 4]
+
+check: ((fun (x, ~y: y = 10, z, ...): [x, y, z, ...]) :: (Int, ~y: Int = _, & List.of(Int)) -> List)(1, 3, 4)
+       ~is [1, 10, 3, 4]
+
+check: ((fun (x, ~y: y = 10, & zs): [x, y, & zs]) :: (Int, ~y: Int = _, & List.of(Int)) -> List)(1, 3, 4)
+       ~is [1, 10, 3, 4]
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x, ~y: y): x) :: (Int, ~y: Int) -> Int
+  f(1, 2)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x, ~y: y): x) :: (Int, ~y: Int) -> Int
+  f(1)
+  ~throws values("missing keyword argument",
+                 "~y")
+
+check:
+  ~eval
+  use_static
+  def f = dynamic(fun (x, ~y: y): x) :: (Int, ~y: Int) -> Int
+  f(1, ~y: 2)
+  ~is 1
+
+// Keyword rest arguments
+
+check: ((fun (x, ~& kws): kws) :: (Int, ~& Map) -> Map)(1, ~y: 2)
+       ~is { #'~y: 2 }
+
+check: (fun (x): #false) :: (Int, ~& Map) -> Map
+       ~throws error.annot_msg()
+
+check: (fun (x, ~y: y): #false) :: (Int, ~& Map) -> Map
+       ~throws error.annot_msg()
+
+check: (fun (x, ~y: y = 10): #false) :: (Int, ~& Map) -> Map
+       ~throws error.annot_msg()
+
+check: ((fun (x, ~y: y = 10, ~& kws): kws) :: (Int, ~& Map) -> Map)(1, ~y: 2)
+       ~completes
+
+check: ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int) -> Map)(1, ~y: 2)
+       ~is {}
+
+check: ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int, ~& Map) -> Map)(1, ~y: 2, ~z: 3)
+       ~is { #'~z: 3 }
+
+check: ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int, ~& Map.of(Keyword, Int -> Int)) -> Map)(1, ~y: 2, ~z: 3)
+       ~throws error.annot_msg("keyword rest-argument map")
+
+check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3)
+       ~is [{ #'~z: 3 }]
+
+check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3, 4, 5)
+       ~is [{ #'~z: 3 }, 4, 5]
+
+check:
+  use_static
+  let f = (fun (x, ~y: y, ~& kws, z, ...): [[z, ...], kws]) :: (Int, ~y: Int, ~& Map, Int, ...) -> matching([[_, ...], _ :: Map])
+  f(1, ~y: 2, ~z: 3, 4, 5, 6)
+  ~is [[4, 5, 6], { #'~z: 3 }]
+
+check:
+  use_static
+  let f = ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int, ~& Map.of(Keyword, Int -> Int)) -> Map)
+  f(1, ~y: 2, ~z: fun (x): x)[#'~z](10)
+  ~is 10
+
+check:
+  use_static
+  let f = ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int, ~& Map.of(Keyword, Int -> Int)) -> Map)
+  f(1, ~y: 2, ~z: fun (x): x)[#'~z]("no")
+  ~throws error.annot_msg("argument")
+
+check:
+  ~eval
+  1 :: (~& Map, ~& Map) -> Int
+  ~throws "second keyword-rest argument not allowed"
+
+check:
+  ~eval
+  1 :: (~& Map, Int) -> Int
+  ~throws "non-rest argument not allowed after rest argument"
+
+// Dependent annotations
+
+block:
+  let f :: (x :: Any, satisfying(fun (y): y == x)) -> List:
+    fun (x, y): [x, y]
+  check f(1, 1) ~is [1, 1]
+  check f("a", "a") ~is ["a", "a"]
+  check f(1, "a") ~throws error.annot_msg("argument")
+
+block:
+  let f :: (arg :: Any) -> satisfying(if arg is_a String
+                                      | fun (x): x is_a Int
+                                      | fun (x): x is_a String):
+    fun (x):
+      cond
+      | x == 0: #'symbol
+      | x == "": #'empty
+      | x is_a Int:
+          "int"
+      | ~else:
+          100
+  check f("x") ~is 100
+  check f(1) ~is "int"
+  check f(0) ~throws error.annot_msg("result")
+  check f("") ~throws error.annot_msg("result")
+
+block:
+  let f :: (x :: Any, ~y: satisfying(fun (y): y == x)) -> List:
+    fun (x, ~y: y): [x, y]
+  check f(1, ~y: 1) ~is [1, 1]
+  check f("a", ~y: "a") ~is ["a", "a"]
+  check f(1, ~y: "a") ~throws error.annot_msg("argument")
+
+block:
+  let f :: (~x: x :: Any, satisfying(fun (y): y == x)) -> List:
+    fun (~x: x, y): [x, y]
+  check f(~x: 1, 1) ~is [1, 1]
+  check f(~x: "a", "a") ~is ["a", "a"]
+  check f(~x: 1, "a") ~throws error.annot_msg("argument")
+
+block:
+  use_static
+  let f :: (x :: List, ~y: satisfying(fun (y): y == x.length())) -> List:
+    fun (x, ~y: y): [x, y]
+  check f(["a"], ~y: 1) ~is [["a"], 1]
+  check f([], ~y: 1) ~throws error.annot_msg("argument")
+
+block:
+  use_static
+  let f :: (~x: x :: List, satisfying(fun (y): y == x.length())) -> List:
+    fun (~x: x, y): [x, y]
+  check f(~x: ["a"], 1) ~is [["a"], 1]
+  check f(~x: [], 1) ~throws error.annot_msg("argument")
+
+block:
+  use_static
+  let f :: (& tail :: List, ~& satisfying(fun (m :: Map): m[#'~count] == tail.length())) -> Any:
+    fun (x, ..., ~& kws): "ok"
+  check f(1, 2, 3, ~count: 3) ~is "ok"
+  check f(1, 2, ~count: 3) ~throws error.annot_msg("keyword rest-argument map")
+
+block:
+  use_static
+  let f :: (~& m :: Map, & satisfying(fun (tail :: List): m[#'~count] == tail.length())) -> Any:
+    fun (x, ..., ~& kws): "ok"
+  check f(1, 2, 3, ~count: 3) ~is "ok"
+  check f(1, 2, ~count: 3) ~throws error.annot_msg("rest-argument list")
+
+check:
+  ~eval
+  1 :: (Int, x :: Int = _, y :: Int) -> Int
+  ~throws "non-optional argument follows an optional by-position argument"
+
+block:
+  let f :: (Int, Int) -> (a :: Int, satisfying(fun (b): b == a)):
+    fun (x, y):
+      values(x, y)
+  check f(1, 1) ~is values(1, 1)
+  check f(1, 2) ~throws error.annot_msg("result")
+
+// Rest results
+
+block:
+  let f :: (Int) -> (Int, ...):
+    fun (x):
+      match x
+      | 1: 1
+      | 2: values(2, 2)
+      | 3: values(2, "x")
+      | ~else:  values(3, 3, 3, 3)
+  check f(1) ~is values(1)
+  check f(2) ~is values(2, 2)
+  check f(3) ~throws error.annot_msg("result")
+  check f(4) ~is values(3, 3, 3, 3)
+
+block:
+  let f :: (Int) -> (Int, & List.of(Int)):
+    fun (x):
+      match x
+      | 1: 1
+      | 2: values(2, 2)
+      | 3: values(2, "x")
+      | ~else:  values(3, 3, 3, 3)
+  check f(1) ~is values(1)
+  check f(2) ~is values(2, 2)
+  check f(3) ~throws error.annot_msg("rest-result list")
+  check f(4) ~is values(3, 3, 3, 3)
+
+// `~any` arguments and results
+block:
+  use_static
+  let f :: (~any) -> ~any:
+    fun (x, y): values(x, y)
+  let kf :: (~any) -> ~any:
+    fun (x, y, ~z: z): values(x, y, z)
+  let okf :: (~any) -> ~any:
+    fun (x, y, ~z: z = 0): values(x, y, z)
+  let xf :: (~any) -> ~any:
+    fun (x, y, & z): values(x, y, z)
+  let xkf :: (~any) -> ~any:
+    fun (x, y, & z, ~& kz): values(x, y, z, kz)
+  check f(1, 2) ~is values(1, 2)
+  check kf(1, 2, ~z: 3) ~is values(1, 2, 3)
+  check okf(1, 2) ~is values(1, 2, 0)
+  check okf(1, 2, ~z: 3) ~is values(1, 2, 3)
+  check xf(1, 2, 4, 5) ~is values(1, 2, [4, 5])
+  check xkf(1, 2, 4, 5, ~z: 3) ~is values(1, 2, [4, 5], { #'~z: 3 })
+  check f ~is_a Function.of_arity(2)
+  check (f is_a Function.of_arity(1)) ~is #false
+  check (f is_a Function.of_arity(3)) ~is #false
+  check (f is_a Function.of_arity(~z)) ~is #false
+  check kf ~is_a Function.of_arity(2, ~z)
+  check (kf is_a Function.of_arity(1, ~z)) ~is #false
+  check (kf is_a Function.of_arity(3, ~z)) ~is #false
+  check (kf is_a Function.of_arity(~z)) ~is #true
+  check (kf is_a Function.of_arity(~y)) ~is #false
+  check okf ~is_a Function.of_arity(2, ~z)
+  check (okf is_a Function.of_arity(1, ~z)) ~is #false
+  check (okf is_a Function.of_arity(3, ~z)) ~is #false
+  check (okf is_a Function.of_arity(~z)) ~is #true
+  check (okf is_a Function.of_arity(~y)) ~is #false
+  check xf ~is_a Function.of_arity(2)
+  check xf ~is_a Function.of_arity(30)
+  check (xf is_a Function.of_arity(~z)) ~is #false
+  check xkf ~is_a Function.of_arity(2, ~z)
+  check xkf ~is_a Function.of_arity(3, ~z, ~y)
+  check xkf ~is_a Function.of_arity(30)
+
+block:
+  // Check that `~any` or `values(Any, ...)` produces a tail call
+  let f:
+    fun ():
+      Continuation.call_with_immediate_mark(#'mark, fun (x): x)
+  let f_tail :: () -> (Any, ...) = f
+  let f_nontail :: () -> Any = f
+  let f_also_tail :: () -> (& Any) = f
+  let f_still_tail :: () -> ~any = f
+  let f_also_still_tail :: (~any) -> ~any = f
+  check (Continuation.with_mark #'mark = "yes": f()) ~is "yes"
+  check (Continuation.with_mark #'mark = "yes": f_tail()) ~is "yes"
+  check (Continuation.with_mark #'mark = "yes": f_nontail()) ~is #false
+  check (Continuation.with_mark #'mark = "yes": f_also_tail()) ~is "yes"
+  check (Continuation.with_mark #'mark = "yes": f_still_tail()) ~is "yes"
+  check (Continuation.with_mark #'mark = "yes": f_also_still_tail()) ~is "yes"
+
+// Case annotations
+
+block:
+  let f :: Function.all_of(): math.sum
+  check f() ~throws "arity mismatch"
+  check f(1, 2, 3) ~throws "arity mismatch"
+
+check:
+  ~eval
+  use_static
+  def f :: Function.all_of(): math.sum
+  f()
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+block:
+  let f :: Function.all_of(Int -> Int,
+                           (Int, Int) -> List):
+    fun
+    | (x):
+        if x == 0 | "zer" | x + 1
+    | (x, y):
+        if x ==y | x | [x, y]
+  check f(1) ~is 2
+  check f(1, 2) ~is [1, 2]
+  check f("x") ~throws error.annot_msg("argument")
+  check f(0) ~throws error.annot_msg("result")
+  check f(0, 0) ~throws error.annot_msg("result")
+  check f() ~throws "arity mismatch"
+  check f(1, 2, 3) ~throws "arity mismatch"
+  check f(~x: 1) ~throws "does not accept keyword arguments"
+
+check:
+  ~eval
+  use_static
+  block:
+    let f :: Function.all_of(Int -> Int,
+                             (Int, Int) -> List):
+      #false
+    f()
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+check:
+  ~eval
+  use_static
+  block:
+    let f :: Function.all_of(Int -> Int,
+                             (Int, Int) -> List):
+      #false
+    f(1, 2, 3)
+  ~throws values("wrong number of arguments",
+                 "(based on static information)")
+
+block:
+  let f :: Function.all_of(Int -> Int,
+                           String -> String,
+                           Boolean -> Boolean):
+    fun (x): if x | x | "no"
+  check f(1) ~is 1
+  check f("two") ~is "two"
+  check f(#true) ~is #true
+  check f([]) ~throws "no matching case"
+  check f(#false) ~throws error.annot_msg("result")
+
+block:
+  let f :: Function.all_of((Int, Real, ...) -> Real,
+                           (Real) -> Real):
+    math.sum
+  check f(1) ~is 1
+  check f(1, 2.0) ~is 3.0
+  check f(1.0) ~is 1.0
+  check f("a") ~throws "no matching case"
+
+block:
+  // distinct arities
+  let f :: Function.all_of((Real) -> Real,
+                           (Int, Real, Real, ...) -> Int):
+    math.sum
+  check f(1.0) ~is 1.0
+  check f(1, 2) ~is 3
+  check f(1.0, 2) ~throws error.annot_msg("argument")
+  check f(1, 2.0) ~throws error.annot_msg("result")
+
+block:
+  // overlapping arities
+  let f :: Function.all_of((Real) -> Real,
+                           (Int, Real, ...) -> Int):
+    math.sum
+  check f(1.0) ~is 1.0
+  check f(1, 2) ~is 3
+  check f(1.0, 2) ~throws "no matching case"
+  check f(1, 2.0) ~throws error.annot_msg("result")
+
+block:
+  let f :: Function.all_of((Int, Real = _, ~x: Any) -> Real,
+                           (Real, ~x: Any) -> Real):
+    fun (~x: x, n, ...):
+      math.sum(n, ...)
+  check f(1, ~x: #false) ~is 1
+  check f(1, 2.0, ~x: #false) ~is 3.0
+  check f(1.0, ~x: #false) ~is 1.0
+
+block:
+  let f :: Function.all_of((Int, Real = _) -> Real,
+                           (Real, ~x: Any) -> Real):
+    fun (~x: x = 0, n, ...):
+      math.sum(n, ...)
+  check f(1, ~x: #false) ~is 1
+  check f(1, 2.0) ~is 3.0
+  check f(1.0, ~x: #false) ~is 1.0
+  check f(1, 2.0, ~x: #false) ~throws "no matching case for arguments"
+
+block:
+  let f :: Function.all_of((Int, Real = _) -> Real,
+                           (Real, ~& Map) -> Real):
+    fun (~& kws, n, ...):
+      math.sum(n, ...)
+  check f(1, ~x: #false) ~is 1
+  check f(1, 2.0) ~is 3.0
+  check f(1.0, ~x: #false) ~is 1.0
+  check f(1, 2.0, ~x: #false) ~throws "no matching case for arguments"
+
+block:
+  use_static
+  let f :: Function.all_of((Int, ~x: Int) -> Map,
+                           (String, String, ~y: String) -> Map):
+    fun (a, b = #false, ~& kws):
+      kws ++ { #'~val: a, #'~opt: b }
+  check f(1, ~x: 2) ~is { #'~x: 2, #'~val: 1, #'~opt: #false }
+  check f("a", "b", ~y: "b") ~is { #'~y: "b", #'~val: "a", #'~opt: "b" }
+  check f("a", ~x: 2) ~throws "no matching case"
+  check f(1, ~y: "b") ~throws "no matching case"
+  // note that static mode can't rule this out, due to the way
+  // that multi-case keyword information is represented
+  check f(#false, ~x: 2, ~y: "b") ~throws "no matching case"
+
+block:
+  use_static
+  let f :: Function.all_of((Int, ~x: Int) -> Map,
+                           (String, ~y: String) -> Map):
+    fun (a, ~& kws):
+      kws ++ { #'~val: a }
+  check f(1, ~x: 2) ~is { #'~val: 1, #'~x: 2 }
+  check f("a", ~y: "b") ~is { #'~val: "a", #'~y: "b" }
+  check f("a", ~x: 2) ~throws "no matching case"
+  check f(1, ~y: "b") ~throws "no matching case"
+  // note that static mode can't rule this out, due to the way
+  // that multi-case keyword information is represented
+  check f(#false, ~x: 2, ~y: "b") ~throws "no matching case"
+
+check:
+  ~eval
+  use_static
+  def f :: Function.all_of((Int, ~x: Int) -> Map,
+                           (String, ~y: String) -> Map):
+    fun (a, ~& kws):
+      kws ++ { #'~val: a }
+  f(1, ~z: 2)
+  ~throws values("keyword argument not recognized",
+                 "(based on static information)")
+
+block:
+  let f :: Function.all_of((x :: Any) -> satisfying(fun (y): y == x),
+                           (x :: Any, y :: satisfying(fun (y): y == x)) -> List):
+    fun | (x):
+            if x | x | #true
+        | (x, y):
+            [x, y]
+  check f(1) ~is 1
+  check f(1, 1) ~is [1, 1]
+  check f(1, 2) ~throws error.annot_msg("argument")
+  check f(#false) ~throws error.annot_msg("result")
+
+block:
+  use_static
+  def f :: Function.all_of(() -> List,
+                           Int -> Map):
+    fun | (): [0]
+        | (v): { #'val: v }
+  check f()[0] ~is 0
+  check f(1)[#'val] ~is 1
+
+block:
+  use_static
+  def f :: Function.all_of((~x: Any) -> List,
+                           (~y: Any) -> Map):
+    fun | (~x: x): [x]
+        | (~y: y): { #'val: y }
+  check f(~x: 10)[0] ~is 10
+  check f(~y: 11)[#'val] ~is 11
+
+block:
+  use_static
+  def f :: Function.all_of(Real -> Int,
+                           (~any) -> ~any):
+    fun | (x): x
+        | (x, y): values(x, y)
+  check f(1) ~is 1
+  check f("a") ~is "a"
+  check f(1.0) ~throws error.annot_msg("result")
+  check f(1, 2) ~is values(1, 2)
+  check f(1, 2, 3) ~throws "arity mismatch"

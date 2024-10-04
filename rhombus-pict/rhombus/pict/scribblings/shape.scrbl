@@ -236,7 +236,7 @@
 }
 
 @doc(
-  fun dc(draw :: Function.of_arity(3),
+  fun dc(draw :: (draw.DC, Real, Real) -> ~any,
          ~width: width :: Real,
          ~height: height :: Real,
          ~ascent: ascent :: Real = height,
@@ -244,7 +244,7 @@
 ){
 
  Creates a @tech{pict} with an arbitrary drawing context. The
- @rhombus(draw) function receives a s @rhombus(draw.DC), an x-offset, and
+ @rhombus(draw) function receives a @rhombus(draw.DC), an x-offset, and
  a y-offset.
 
 @examples(
@@ -263,9 +263,11 @@
 @doc(
   fun animate(
     ~children: children :: List.of(Pict) = [],
-    proc :: Function.of_arity(1 + children.length()),
+    proc :: (((~any) -> StaticPict)
+               && Function.of_arity(1 + children.length())),
     ~extent: extent :: NonnegReal = 0.5,
-    ~bend: bender = bend.fast_middle,
+    ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
+             = bend.fast_middle,
     ~sustain_edge: sustain_edge :: TimeOrder = #'before
   ) :: Pict
 ){
@@ -322,8 +324,9 @@
 @doc(
   fun rebuildable(~children: children :: List.of(Pict) = [],
                   ~config: config :: maybe(Map) = #false,
-                  proc :: Function.of_arity(children.length()
-                                              + (if config | 1 | 0)))
+                  proc :: (((~any) -> Pict)
+                             && Function.of_arity(children.length()
+                                                    + (if config | 1 | 0))))
     :: Pict
 ){
 

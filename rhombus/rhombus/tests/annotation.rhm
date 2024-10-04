@@ -77,7 +77,8 @@ block:
   import:
     rhombus/meta open
   annot.macro 'one_to_two':
-    'converting(fun ([x]): [x, x])'
+    ~all_stx: self
+    '(converting(fun ([x]): [x, x]))'.relocate_span([self])
   check:
     def List(_, _) :: one_to_two = [1]
     ~completes

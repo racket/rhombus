@@ -245,17 +245,19 @@
       [else (cons (car args) (loop (cdr args) (cdr argss)))])))
 
 (define-for-syntax (parse-key-comp stx k)
-  (syntax-parse stx
+  (syntax-parse (replace-head-dotted-name stx)
     #:datum-literals (group)
-    [(form (~and args (_::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
+    [(form (~and args (p-tag::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
      #:with (~var name(:hier-name-seq in-name-root-space in-key-comp-space name-path-op name-root-ref)) #'name-seq
      (define mapper (syntax-local-value* (in-key-comp-space #'name.name) key-comp-ref))
      (unless mapper (raise-syntax-error #f "not bound to a map configuration" stx #'name))
      (define str (format "~a(~a)" (syntax-e #'form) (syntax-e #'name.name)))
-     (define new-form (syntax-raw-property
-                       (datum->syntax #'form
-                                      (string->symbol str)
-                                      #'form
-                                      #'form)
-                       str))
+     (define new-form (syntax-raw-suffix-property
+                       (syntax-raw-property
+                        (datum->syntax #'form
+                                       (string->symbol str)
+                                       #'form
+                                       #'form)
+                        str)
+                       (syntax-raw-suffix-property #'p-tag)))
      (k #`(#,new-form . tail) (list #'args) str mapper)]))
