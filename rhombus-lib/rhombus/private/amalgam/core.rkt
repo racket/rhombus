@@ -141,6 +141,7 @@
         "boolean-annotation.rkt"
         "boolean-reducer.rkt"
         "boolean-repet.rkt"
+        "arrow-annotation.rkt"
         "equatable.rkt"
         "sequenceable.rkt"
         "eval.rkt"

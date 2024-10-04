@@ -25,7 +25,8 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "../version-case.rkt"
-         (submod "list.rkt" for-compound-repetition))
+         (submod "list.rkt" for-compound-repetition)
+         (only-in "name-root-ref.rkt" replace-head-dotted-name))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -116,16 +117,18 @@
    `((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse stx
-       [(_ (_::parens len-g) . tail)
+     (syntax-parse (replace-head-dotted-name stx)
+       [(form-id (~and args (_::parens len-g)) . tail)
         (values
-         (annotation-predicate-form
-          #'(let ([n (rhombus-expression len-g)])
-              (check-nonneg-int 'Array.of_length n)
-              (lambda (v)
-                (and (vector? v)
-                     (= (vector-length v) n))))
-          (get-array-static-infos))
+         (relocate+reraw
+          (datum->syntax #f (list #'form-id #'args))
+          (annotation-predicate-form
+           #'(let ([n (rhombus-expression len-g)])
+               (check-nonneg-int 'Array.of_length n)
+               (lambda (v)
+                 (and (vector? v)
+                      (= (vector-length v) n))))
+           (get-array-static-infos)))
          #'tail)]))))
 
 (define (check-nonneg-int who v)

@@ -31,14 +31,15 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (_::parens
-                  (~or* (group _::fun-id
-                               (_::parens (~and bind-g (group _ ...)))
-                               op::annotate-op result-ann ...
-                               (tag::block body ...))
-                        (group _::fun-id
-                               (_::parens (~and bind-g (group _ ...)))
-                               (tag::block body ...))))
+       [(form-id (~and args
+                       (_::parens
+                        (~or* (group _::fun-id
+                                     (_::parens (~and bind-g (group _ ...)))
+                                     op::annotate-op result-ann ...
+                                     (tag::block body ...))
+                              (group _::fun-id
+                                     (_::parens (~and bind-g (group _ ...)))
+                                     (tag::block body ...)))))
                  . tail)
         (define bind-parsed (syntax-parse #'bind-g [bind::binding #'bind.parsed]))
         (define plain-body #'(rhombus-body-at tag body ...))
@@ -61,5 +62,7 @@
             [else
              (values plain-body #'())]))
         (values
-         (annotation-binding-form bind-parsed wrapped-body static-infos)
+         (relocate+reraw
+          (datum->syntax #f (list #'form-id #'args))
+          (annotation-binding-form bind-parsed wrapped-body static-infos))
          #'tail)]))))
