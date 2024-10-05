@@ -327,3 +327,14 @@ check:
     "expected: ReadableString",
     "given: #\"oops\"",
   )
+
+// checks static infos for elements
+block:
+  use_static
+  check "a"[0] < "b"[0] ~is #true
+  check "a"[0] <= "b"[0] ~is #true
+  check "a"[0] compares_equal "b"[0] ~is #false
+  check "a"[0] compares_unequal "b"[0] ~is #true
+  check "a"[0] >= "b"[0] ~is #false
+  check "a"[0] > "b"[0] ~is #false
+  check Char.from_int("a"[0].to_int()) ~is "a"[0]

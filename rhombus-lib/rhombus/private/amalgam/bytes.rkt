@@ -6,6 +6,7 @@
          "define-arity.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
+         "index-result-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
@@ -35,6 +36,7 @@
   #:lift-declaration
   #:no-constructor-static-info
   #:instance-static-info ((#%index-get Bytes.get)
+                          (#%index-result #,(get-int-static-infos))
                           (#%index-set Bytes.set)
                           (#%append Bytes.append)
                           (#%sequence-constructor Bytes.to_sequence/optimize)

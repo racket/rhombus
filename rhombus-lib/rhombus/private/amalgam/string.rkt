@@ -54,7 +54,7 @@
 
 (define-static-info-getter get-any-string-static-infos
   (#%index-get String.get)
-  (#%index-result #,(get-char-static-infos)) ;; needed by `for` sequence, for example
+  (#%index-result #,(get-char-static-infos))
   (#%append String.append)
   (#%sequence-constructor String.to_sequence/optimize)
   (#%compare ((< string<?)
