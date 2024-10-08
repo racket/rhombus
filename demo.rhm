@@ -310,7 +310,7 @@ block:
   // this works because `y` happens to have two elements:
   f(y, ...)
 
-// function defintions, too
+// function definitions, too
 fun
 | slow_add(): 0
 | slow_add(x, y, ...): x + slow_add(y, ...)
@@ -371,7 +371,7 @@ block:
   md2(Chromosomes(100, 200, 314))
 
 // `:~` is similar to `::`, but it declares static information without a
-// cooresponding run-time check, so a failure may happen later if the claimed
+// corresponding run-time check, so a failure may happen later if the claimed
 // information is incorrect
 
 fun md3(p :~ Posn):
@@ -469,7 +469,7 @@ s.area()
 //  '1)'
 //  'x:'
 
-// single quotes also work as a pattern form to match a sintax object,
+// single quotes also work as a pattern form to match a syntax object,
 // where `$` escapes to bind a match
 match '1 + 2'
 | '$x + $y': [x, y]
