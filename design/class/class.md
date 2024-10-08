@@ -636,7 +636,7 @@ Although an abstract method can be written with arguments and
 annotations, only the result annotation has any effect and is
 propagated to overrides. More generally, there's no support for
 checking that a method override takes arguments consistent with the
-overriden declaration. It's not clear how argument checking would
+overridden declaration. It's not clear how argument checking would
 work. Result checking, meanwhile, justifies static information about
 the result of a method.
 

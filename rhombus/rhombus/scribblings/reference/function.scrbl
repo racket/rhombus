@@ -520,7 +520,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  Applies @rhombus(f) to each element of each @rhombus(args) (including @rhombus(args0)), iterating
  through the @rhombus(args) lists together, so @rhombus(f) must take as
  many arguments as the number of given @rhombus(args) lists. For
- @rhombus(Function.map), the result is a list constaining the result of
+ @rhombus(Function.map), the result is a list containing the result of
  each call to @rhombus(f) in order. For @rhombus(Function.for_each), the
  result is @rhombus(#void), and the result of each call to @rhombus(f) is
  ignored.

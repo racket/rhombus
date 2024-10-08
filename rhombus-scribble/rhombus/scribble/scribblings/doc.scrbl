@@ -217,7 +217,7 @@
  Because nonterminal names tend to be short and easily confused with
  other uses, however, nonterminal names bound with @rhombus(nonterminal)
  are not recognized by @rhombus(rhombus). Instead, @rhombus(nontermref)
- must be used to explcitly refer to the nonterminal (with a link to its
+ must be used to explicitly refer to the nonterminal (with a link to its
  definition).
 
 }

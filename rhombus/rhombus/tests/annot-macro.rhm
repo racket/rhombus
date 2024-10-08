@@ -45,7 +45,7 @@ block:
   annot.delayed_declare Forward
   check:
     10 :: Forward
-    ~throws "delayed annoation is not yet completed"
+    ~throws "delayed annotation is not yet completed"
   annot.delayed_complete Forward: Int
   check:
     10 :: Forward
@@ -59,7 +59,7 @@ block:
     fun f(v): v :: Forward
   check:
     f.f(10)
-    ~throws "delayed annoation is not yet completed"
+    ~throws "delayed annotation is not yet completed"
   annot.delayed_complete f.Forward: Int
   check:
     f.f(10)

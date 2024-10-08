@@ -63,7 +63,7 @@ written with @litchar{:} instead of @rhombus(=), like this:
 
 By convention, however, @rhombus(=) is used for single expressions, while
 @litchar{:} is useful for multi-line definitions and blocks. A @rhombus(=) is
-interchangable for @litchar{:} only in certain forms, like
+interchangeable for @litchar{:} only in certain forms, like
 @rhombus(def).
 
 A Rhombus module can export definitions to other modules using

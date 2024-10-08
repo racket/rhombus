@@ -9,7 +9,7 @@ The Rhombus parsing algorithm is similar to figure 1 of
 
 @itemlist(
 
- @item{When the inital term is an identifier followed by a name-path
+ @item{When the initial term is an identifier followed by a name-path
   operator and @tt{lookup} produces a name root for the identifier, the
   name-root transformer is applied. Its result, a new term and tail, are
   used for the new state, without changing the current operator (if any).}

@@ -13,7 +13,7 @@ they are equal by @rhombus(==) only when they are equal by
 @rhombus(===). The @rhombus(#') operator can produce a symbol value.
 
 Symbols are @tech{comparable}, which means that generic operations like
-@rhombus(<) and @rhombus(>) work on symbols. Comparsion of two symbols
+@rhombus(<) and @rhombus(>) work on symbols. Comparison of two symbols
 is the same as comparing the string forms of the symbols.
 
 @doc(

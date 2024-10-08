@@ -118,7 +118,7 @@
  Typically, the @rhombus(inner_bind)s include the the @rhombus(each_id)s
  supplied to the match for @rhombus(pattern), so they can be referenced
  in @rhombus(loop_body). However, the @rhombus(each_id)s are not the same
- as the identifiers used in the triggerring @rhombus(each, ~for_clause)
+ as the identifiers used in the triggering @rhombus(each, ~for_clause)
  form. Static information for identifier bounds by
  @rhombus(each, ~for_clause) comes from
  @rhombus(statinfo_meta.index_result_key) static information for the

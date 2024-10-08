@@ -45,7 +45,7 @@
 
 )
 
- The @rhombus(PointLike.to_point, ~annot) annotation is satified by any
+ The @rhombus(PointLike.to_point, ~annot) annotation is satisfied by any
  value that satisfis @rhombus(PointLike, ~annot), and the value is
  converted to an equivalent @rhombus(Point, ~class) object if it is not one
  already.

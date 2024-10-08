@@ -20,7 +20,7 @@ for assignment.
     buckets
 )
 
-@rhombus(Array) is also an annotation and a binding contructor,
+@rhombus(Array) is also an annotation and a binding constructor,
 analogous to @rhombus(List), and @rhombus(Array.now_of, ~annot)
 and @rhombus(Array.later_of, ~annot) are annotation
 constructors. The @rhombus(Array, ~bind) binding form does not support

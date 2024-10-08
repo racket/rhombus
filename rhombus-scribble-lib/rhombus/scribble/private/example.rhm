@@ -44,7 +44,7 @@ expr.macro 'examples($form, ...)':
             [['~repl', forms]]
         | ['~version_and_later $vers: $form; ...', & rest]:
             unless utils.#{valid-version?}(vers.unwrap())
-            | syntax_meta.error("exected a version string", stx, vers)
+            | syntax_meta.error("expected a version string", stx, vers)
             if utils.#{version<?}(base.version(), vers.unwrap())
             | split(rest)
             | split([form, ...] ++ rest)

@@ -86,7 +86,7 @@
 
  The annotations are checked in other. Either or both of
  @rhombus(left_annot) and @rhombus(right_annot) can be a @tech(~doc: guide_doc){converter
-  annotation}, in which case the conversion result of the first satisified
+  annotation}, in which case the conversion result of the first satisfied
  annotation is used.
 
 @examples(

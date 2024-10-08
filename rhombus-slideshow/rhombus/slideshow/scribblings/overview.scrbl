@@ -192,7 +192,7 @@ would look better left-aligned instead of centered. The
 @rhombus(slide.align) function takes slide content to be spliced into an
 enclosing sequence, but it adjusts every pict to be stacked in the
 content so that it has the same width, left-aligning the widened picts
-by default (but a @rhombus(~horiz) argument can specify a differnt
+by default (but a @rhombus(~horiz) argument can specify a different
 alignment).
 
 @show(

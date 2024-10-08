@@ -16,7 +16,7 @@ not capitalized, unless it also corresponds to a constructor or type.
 Namespace `.` versus Expression `.`
 -----------------------------------
 
-The `.` in `List.length` is a differnt kind of `.` than the one in
+The `.` in `List.length` is a different kind of `.` than the one in
 `[1, 2, 3].length`. In the latter case, the `.` is an expression
 operator, and `.` as an expression operator resolves a field name
 statically if possible, but falls back to dynamic resolution. As a
@@ -62,8 +62,8 @@ imports just the `List` binding from the `rhombus` module, and
 the enclosing context without any of the other bindings of `rhombus`.
 Furthermore, the last component of a dotted reference can be a
 non-namespace identifier, as in `import: rhombus.List.of`, which
-imports only `List.of` into the encosing context. An imported
-identifer that is not a namespace or module cannot be unpacked with
+imports only `List.of` into the enclosing context. An imported
+identifier that is not a namespace or module cannot be unpacked with
 `open`. Overall, there are really three kinds of binding that are
 folded into `import`: from a module, from a namespace, or just one
 binding.
@@ -169,7 +169,7 @@ combine the extensions, as long as the extensions do not conflict.
 Mutual Dependencies
 -------------------
 
-A namespace can accomodate certain forms of mutual dependency. For
+A namespace can accommodate certain forms of mutual dependency. For
 example, this works:
 
 ```
@@ -281,7 +281,7 @@ it's possible for a name to be bound to different namespaces in
 different spaces, or to be bound to a namespace in one space and a
 non-namespace in a different space. For the most part, being able to
 bind in multiple spaces is helpful, but this possibility could create
-unhelpful binding effects when programmers misue space-specific
+unhelpful binding effects when programmers misuse space-specific
 binding capabilities.
 
 Rationale

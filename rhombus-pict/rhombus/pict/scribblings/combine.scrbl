@@ -289,14 +289,14 @@
  @rhombus(Pict.sustain) is used. Note that the default for
  @rhombus(duration_align) is @rhombus(#'pad), but when
  @rhombus(concurrent) is called by functions like @rhombus(beside), the
- defult is @rhombus(#'sustain).
+ default is @rhombus(#'sustain).
 
  The @rhombus(epoch_align) argument determines how animations are
  positioned within an extent when extents are made larger to synchronize
  with concurrent, non-@rhombus(0) extents.
 
  Any @rhombus(nothing) among the @rhombus(pict)s is preserved in the
- output list, but it does not otherwise particiapte in making the other
+ output list, but it does not otherwise participate in making the other
  @rhombus(pict)s concurrent.
 
 }
@@ -320,7 +320,7 @@
  @rhombus(duration_align) argument is passed along in that case.
 
  Any @rhombus(nothing) among the @rhombus(pict)s is preserved in the
- output list, but it does not otherwise particiapte in making the other
+ output list, but it does not otherwise participate in making the other
  @rhombus(pict)s sequential.
 
 }

@@ -11,8 +11,8 @@ is similar to @rhombus(class),
 but without fields. A @rhombus(class) form can declare that the class
 implements an interface through an @rhombus(implements, ~class_clause)
 clause. When a class implements an interface, then instances of the
-class satify the interface annotation, similar to the way that a
-subclass instances satifies the superclass annotation. A class can have
+class satisfy the interface annotation, similar to the way that a
+subclass instances satisfies the superclass annotation. A class can have
 at most one superclass. but it can implement any number of interfaces.
 An interface is never final, so @rhombus(nonfinal, ~class_clause) is
 not needed in an interface.

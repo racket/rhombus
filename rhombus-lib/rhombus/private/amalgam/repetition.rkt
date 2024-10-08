@@ -254,7 +254,7 @@
 ;; Optimize `for/list` over `in-list`, etc. We do this while
 ;; constructing the form, instead of using a `for/list` variant
 ;; that recognizes clauses, so that other shortcuts can apply,
-;; especially for syntax objects. Note that we cannot earily optimize
+;; especially for syntax objects. Note that we cannot easily optimize
 ;; maps and sets this way, since the predicate associated with the
 ;; map or set might be different than the constructed one.
 (define-for-syntax (build-for for-form clauses body)

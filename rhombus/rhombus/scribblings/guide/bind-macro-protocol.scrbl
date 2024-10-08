@@ -129,7 +129,7 @@ the following parts:
    inferred name.}
 
  @item{``Upward'' static information associated with the overall value for a
-   successful match with the binding. This infomation is used by the
+   successful match with the binding. This information is used by the
    @rhombus(matching) annotation operator, for example, as well as propagated
    outward by binding forms that correspond to composite data types.
    The information is independent of static information for individual
@@ -226,7 +226,7 @@ which matches only things that are fruits according to @rhombus(is_fruit):
 
 The @rhombus(fruit) binding form assumes (without directly checking)
 that its argument is an identifier, and its infoer discards static
-information. Binding forms normally need to accomodate other, nested
+information. Binding forms normally need to accommodate other, nested
 binding forms, instead. A @rhombus(bind.macro) transformer with
 can receive already-parsed sub-bindings as
 arguments, and the infoer function can use @rhombus(bind_meta.get_info) on

@@ -57,7 +57,7 @@
  @item{A @rhombus(slide.next) creates two picts: one with everything
   before the @rhombus(slide.next), and one with everything after. The two
   picts are then made sequential with @rhombus(sequential) before
-  combining them with @rhombus(stack). The @rhombus(sequential) fnction is
+  combining them with @rhombus(stack). The @rhombus(sequential) function is
   used with its default duration mode, so it sustains the first pict. The
   first pict is also marked as @rhombus(nonarchival) for its pre-sustained
   duration. Note that @rhombus(slide.next) might be used in the part
@@ -68,7 +68,7 @@
   combines a snapshot of the pict from after @rhombus(slide.sync) for
   all but the last epoch of the pict before @rhombus(slide.sync), and it
   shifts the time box of the pict after @rhombus(slide.sync) by one less
-  (so that the last epoch of the pict beofre and the first epoch of the
+  (so that the last epoch of the pict before and the first epoch of the
   pict after are the same).}
 
  @item{A value produced by @rhombus(slide.alts) creates one pict for
@@ -115,7 +115,7 @@
  Like @rhombus(slide), except that the result is a pict (potentially with
  a multi-epoch duration) instead of registering a slide.
 
- If @rhombus(full) is true, then the resulting pict reperesents a slide
+ If @rhombus(full) is true, then the resulting pict represents a slide
  including its title as combined via @rhombus(current_assembler).
  Otherwise, @rhombus(current_assembler) is not used, and the resulting
  pict is just the result of combining the @rhombus(content) values.
@@ -156,7 +156,7 @@
 
  A context parameter for a function used to combine a slide title, layout mode,
  and content pict. The title can be a pict or @rhombus(#false), and the
- layout mode is a value that satifies @rhombus(SlideLayout, ~annot).
+ layout mode is a value that satisfies @rhombus(SlideLayout, ~annot).
 
  The default slide assembler vertically combines a title with the pict
  content using @rhombus(slide.gap) space for the @rhombus(#'tall) layout
@@ -201,7 +201,7 @@
   fun nonarchival(pict ::Pict, epoch :: Int) :: Pict
 ){
 
- Returns a pict that is like @rhombus(pict), but with metatadata that
+ Returns a pict that is like @rhombus(pict), but with metadata that
  indicates that the pict should be skipped in some epochs in condensed
  mode, which might be used when printing to PDF form. Metadata is
  installed via @rhombus(Pict.epoch_set_metadata) using the key
@@ -245,7 +245,7 @@
 
  Functions that report whether slides are being collected to be printed
  (e.g,. to PDF) instead of shown interactively, and whether slides are
- being collected in ``condensed'' mode (which is normaly enabled when
+ being collected in ``condensed'' mode (which is normally enabled when
  printing, but also can be enabled separately).
 
 }

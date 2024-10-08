@@ -275,8 +275,8 @@
              [else
               (define def-ht (if (eq? immed-space-name 'grammar)
                                    ;; use key of a grammar non-terminal
-                                   nt-def-ht
-                                   immed-def-ht))
+                                 nt-def-ht
+                                 immed-def-ht))
               (define introducer (if (eq? immed-space-name 'grammar)
                                      nt-introducer
                                      immed-introducer))

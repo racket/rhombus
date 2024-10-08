@@ -53,7 +53,7 @@ combination, in turn, naturally leads to allowing an empty-block
 making a @litchar{:} before @litchar{|} optional. Normalizing to drop
 the empty block in that case, instead of preserving it before the
 sequence of alternatives, makes shrubbery notation feel more consistent
-without burdening consumers of shrubbery forms to explicitly accomodate
+without burdening consumers of shrubbery forms to explicitly accommodate
 an empty block.
 
 Explicit block grouping via @litchar{«} and @litchar{»} is expected to

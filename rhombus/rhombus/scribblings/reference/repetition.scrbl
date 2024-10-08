@@ -52,7 +52,7 @@ due to the @rhombus(z) binding.
 
 When a repetition is followed by multiple @rhombus(...)s in a row, as
 opposed to nested @rhombus(...)s, then the repetitions that would be
-accessed by nesting are flattend into a single repetition. This
+accessed by nesting are flattened into a single repetition. This
 flattening has the effect of appending sequences.
 
 @examples(

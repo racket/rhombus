@@ -132,7 +132,7 @@ Some additional @litchar("@") rules:
 
  @item{The form @bseq(@litchar("@(«"), @italic{command}, @elem{...}, @litchar{»})
        splices as-is with no arguments, even if the subsequent text has
-       the shape of parenthesed @italic{arg}s or braced @italic{text}.},
+       the shape of parenthesized @italic{arg}s or braced @italic{text}.},
 
  @item{The @litchar("@//") comment form works both in normal shrubbery
        mode and as a comment escape within text.}

@@ -33,7 +33,7 @@ creates a repetition of depth 1 by using @rhombus(...) after
 
 When a repetition is followed by multiple @rhombus(...)s in a row, as
 opposed to nested @rhombus(...)s, then the repetitions that would be
-accessed by nesting are flattend into a single repetition. This
+accessed by nesting are flattened into a single repetition. This
 flattening has the effect of appending sequences.
 
 @examples(
@@ -43,7 +43,7 @@ flattening has the effect of appending sequences.
 
 Some other expression-like forms serve as repetition forms when they are
 used in a repetition position. For example, an operator that is defined
-by @rhombus(operator) forms a reptition when it has repetition
+by @rhombus(operator) forms a repetition when it has repetition
 arguments, so a negation term @rhombus(-x) creates a repetition of depth
 1 when @rhombus(x) is a repetition of depth 1:
 

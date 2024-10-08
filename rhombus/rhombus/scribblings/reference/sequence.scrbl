@@ -67,8 +67,8 @@ internal state, and the state can even be specific to a particular
 
  @item{@rhombus(pos_to_element): A function that takes the current
   position and returns a value (or multiple values) for the element at
-  that position. This function wil be called once per element in an
-  iteration, and only if iteration has not been stoppped by a
+  that position. This function will be called once per element in an
+  iteration, and only if iteration has not been stopped by a
   @rhombus(#false) return from one of the continue functions.}
 
  @item{@rhombus(continue_at_val): An optional function that takes the

@@ -63,7 +63,7 @@ and annotation expansion:
 
 When a class has a superclass, the @rhombus(super) constructor function
 is curried for customizing a subclass constructor. The name bound by
-@rhombus(internal, ~class_clause) can be used as a constuctor, and it is
+@rhombus(internal, ~class_clause) can be used as a constructor, and it is
 curried in the same way as @rhombus(super)---but don't use a internal
 name instead of @rhombus(super), because @rhombus(super) adapts to
 subclass construction, while an internal name always constructs an

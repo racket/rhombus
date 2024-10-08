@@ -255,7 +255,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @examples(
   String.to_int("-42")
   String.to_int("42.0")
-  String.to_int("fourty-two")
+  String.to_int("forty-two")
   "100".to_int()
 )
 
@@ -273,7 +273,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @examples(
   String.to_number("-42")
   String.to_number("42.0")
-  String.to_number("fourty-two")
+  String.to_number("forty-two")
   "3/4".to_number()
 )
 

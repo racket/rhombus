@@ -63,7 +63,7 @@
 
  If @rhombus(rounded) is a non-negative number, it is used as the radius
  of an arc to use for the rectangle's corners. If @rhombus(rounded) is a
- negative number, it is negated and multipled by the rectangle's width
+ negative number, it is negated and multiplied by the rectangle's width
  and height to get a radius (in each direction) for the rounded corner.
 
  When the @rhombus(refocus_on) argument is a pict, then

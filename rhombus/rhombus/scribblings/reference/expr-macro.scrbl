@@ -108,7 +108,7 @@
  The @rhombus(expr_meta.AfterPrefixParsed, ~stxclass) and
  @rhombus(expr_meta.AfterInfixParsed, ~stxclass) syntax classes expect an operator
  name that is bound as a prefix or infix operator, respectively. Parsing
- procedes as if immediately after the given operator---stopping when an
+ precedes as if immediately after the given operator---stopping when an
  infix operator of weaker precencence is encountered, for example. The
  result is in pattern variable's value plus a @rhombus(tail) field
  that contains the remaining unparsed input.
@@ -118,7 +118,7 @@
   ~defn:
     :
       // an infix `no_fail` that works without a right-hand side
-      // expression, and that has weak precendence
+      // expression, and that has weak precedence
       expr.macro no_fail:
         ~weaker_than: ~other
       | '$left no_fail $()':

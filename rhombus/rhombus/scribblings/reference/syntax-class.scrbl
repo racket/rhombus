@@ -88,7 +88,7 @@
  @rhombus(fields, ~syntax_class_clause) for more information.
  A @rhombus(root_swap, ~syntax_class_clause) class moves
  the value of one of the would-be fields to the root while moving the root
- to a fresh feild; see @rhombus(root_swap, ~syntax_class_clause) for more information.
+ to a fresh field; see @rhombus(root_swap, ~syntax_class_clause) for more information.
 
  The @rhombus(pattern_case) alternatives are the main content
  of a syntax class.
@@ -127,9 +127,9 @@
 )
 
  Every pattern variable in the initial @rhombus(syntax_pattern) of a
- @rhombus(pattern_case) as well as evey variable in every
- @rhombus(match_def, ~pattern_clause) is a candiate field name, as
- long as it is also a candiate in all other @rhombus(syntax_pattern)s
+ @rhombus(pattern_case) as well as every variable in every
+ @rhombus(match_def, ~pattern_clause) is a candidate field name, as
+ long as it is also a candidate in all other @rhombus(syntax_pattern)s
  within the syntax class. In addition, names declared with
  @rhombus(field, ~pattern_clause) are also candidates. A field must have
  the same repetition depth across all pattern cases, unless it is
@@ -360,7 +360,7 @@
  The result of the right-hand @rhombus(body) sequence or @rhombus(expr)
  is not required to be a syntax object or have syntax objects in nested
  lists. If the field is referenced so that it's value is included in a
- syntax template, a non-sytax value is converted to syntax at that point.
+ syntax template, a non-syntax value is converted to syntax at that point.
  Otherwise, the field can be used directly to access non-syntax values.
 
  See also @rhombus(syntax_class).

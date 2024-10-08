@@ -309,7 +309,7 @@ output. Moreover, an @deftech{input string port} or an
 ){
 
  The same as @rhombus(print), @rhombus(println), @rhombus(show), and
- @rhombus(showln), but with an output provided as a required intiial
+ @rhombus(showln), but with an output provided as a required initial
  argument instead of an optional @rhombus(~out) keyword argument.
 
 }

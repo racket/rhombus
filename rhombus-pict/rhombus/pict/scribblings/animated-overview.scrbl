@@ -171,7 +171,7 @@ any transitions on the way out of the epoch.
 Suppose that we have a pict whose duration is @rhombus(3) epochs and the
 epochs have extents @rhombus(0.5), @rhombus(1.0), and @rhombus(0.5)
 seconds, respectively. If we stretch that pict's conceptual timeline to
-match real time, then it might look something like this, dependeing on
+match real time, then it might look something like this, depending on
 how fast the presenter advances each slide:
 
 @centered(stretched_timeline)

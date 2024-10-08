@@ -61,7 +61,7 @@
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
  use, where each group can be either a another @rhombus(class) clause, an
- expression, a defintion, or an export.
+ expression, a definition, or an export.
 
  In addition to @rhombus(~op_stx) and @rhombus(~all_stx) options like @rhombus(defn.macro),
  the optional @rhombus(~info) body form binds an @rhombus(id) to
@@ -204,7 +204,7 @@
 ){
 
  A value satisfying @rhombus(class_meta.Info, ~annot) can be obtained
- from @rhombus(class_meta.describe) or recieved by a class-clause macro
+ from @rhombus(class_meta.describe) or received by a class-clause macro
  through an @rhombus(~info) declaration. Similarly, a value satisfying
  @rhombus(interface_meta.Info, ~annot) or
  @rhombus(veneer_meta.Info, ~annot) can be obtained by
@@ -241,7 +241,7 @@
  @rhombus(key) symbol. The currently recognized keys are described below,
  but more may be added in the future.
 
- When receieved within a class-, interface-, or veneer-clause macro, the
+ When received within a class-, interface-, or veneer-clause macro, the
  information reported for a key covers only class, interface, or veneer clauses
  before the macro use, so a use of the same key in the same class but in
  a later clause may report different information. Furthermore, the
@@ -258,7 +258,7 @@
  class or interface name is used, then information about private fields
  and methods is omitted from queries; using an internal name for a class
  or interface includes information about private fields and methods. A
- class- or inteface-clause macro, which directly receives only partial
+ class- or interface-clause macro, which directly receives only partial
  information, can expand to a use of an expression macro that uses
  @rhombus(class_meta.describe) or @rhombus(interface_meta.describe) to
  get more information based on a retained or newly declared internal
@@ -327,10 +327,10 @@
   @rhombus(#'public) or @rhombus(#'private).}
 
  @item{@rhombus(#'method_arities): A list of arity representations in
-  parallel to a @rhombus(#'methods_names) list. An arity represenation can
+  parallel to a @rhombus(#'methods_names) list. An arity representation can
   be an integer, in which case each bit set in the integer represents a
   number of arguments accepted by the method, and no keyword argument are
-  accepted. An arity represenation can be a list, in which case the first
+  accepted. An arity representation can be a list, in which case the first
   element is an integer (like an integer by itself), the second element is
   a list of required keywords for arguments, and the last element is either
   a list of allowed keywords or @rhombus(#false) if all keywords are

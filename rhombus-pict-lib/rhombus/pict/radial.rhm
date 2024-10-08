@@ -62,12 +62,12 @@ class Radial(~points,
   
 fun radial_path(Radial(~points: n,
                        ~width: width,
-                       ~height: height,                       
+                       ~height: height,
                        ~angle_at: point_angle,
                        ~inner_radius: inner_radius,
                        ~outer_radius: outer_radius,
                        ~inner_pause: inner_pause,
-                       ~outer_pause: outer_pause,       
+                       ~outer_pause: outer_pause,
                        ~flat_inner_edge: flat_inner_edge,
                        ~flat_outer_edge: flat_outer_edge,
                        ~outer_pull: outer_pull,
@@ -76,7 +76,7 @@ fun radial_path(Radial(~points: n,
   let p = draw.Path()
   let pi = math.pi
   
-  // gets the point at mag@s in polar form, but then moves it orthognal
+  // gets the point at mag@s in polar form, but then moves it orthogonal
   // to that vector by a `pinwheel` fraction
   fun arm(s, mag, pinwheel):
     cond
@@ -362,7 +362,7 @@ def_radial:
   regular_polygon(make, r): make([r])
 
 fun arrow_path(~length: length :: Real = 64,
-               ~breadth: breadth :: Real = length,          
+               ~breadth: breadth :: Real = length,
                ~tail: tail :: Real = 0.5,
                ~head: head :: Real = (if tail .= 0 | 1 | 0.5),
                ~indent: indent = (if tail .= 0 | 0.3 | 0),

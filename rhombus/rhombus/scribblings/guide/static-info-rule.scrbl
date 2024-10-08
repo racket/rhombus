@@ -23,7 +23,7 @@ Here's a summary of the static-information behavior of classes:
    expression using the annotation into a dot provider. A class name
    followed by @rhombus(.of) has the same effect; in addition, it associates
    any information implied by the argument annotations as static
-   information for fields accessed from the binding or exression
+   information for fields accessed from the binding or expression
    through a dot. For example, assuming a
    @rhombus(class Rect(top_left, side)) declaration,
    @rhombus(r :: Rect.of(Posn, Int), ~bind) causes
@@ -74,9 +74,9 @@ More rules about static information in general:
    information. For example, since @rhombus(Line.p1) has result information
    that describes a dot provider, @rhombus(Line.p1(e)) is a dot provider.}
 
-  @item{When a @rhombus(fun) defintition form includes a result annotation, then the
+  @item{When a @rhombus(fun) definition form includes a result annotation, then the
    annotation's information is associated to the defined function name
-   as call-result information. For example, if a function defintion
+   as call-result information. For example, if a function definition
    starts @rhombus(fun flip(x) :: Posn), then @rhombus(Posn) static information is
    associated to @rhombus(flip) as result information, so @rhombus(flip(x)) is a dot
    provider. The same applies to a @rhombus(def) form that behaves like a

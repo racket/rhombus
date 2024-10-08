@@ -47,7 +47,7 @@
      #:with (lhs-bind-info ...) #'lhs.bind-infos
      (binding-info (annotation-string-and (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
-                   #'rhs.static-infos ; presuambly includes `lhs.static-infos` as passed to `rhs-i.infoer-id`
+                   #'rhs.static-infos ; presumably includes `lhs.static-infos` as passed to `rhs-i.infoer-id`
                    #'((right-val (0) . rhs-static-infos))
                    #'and-matcher
                    #'and-committer

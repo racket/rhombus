@@ -82,7 +82,7 @@ have two classes that need to refer to each other.
 
 The problem here is that the annotation facet of @rhombus(class) is
 bundled together with the method-declaration facet of @rhombus(class), so
-they canot be ordered differently. To enable mutual references, use the
+they cannot be ordered differently. To enable mutual references, use the
 @rhombus(class.together) form to combine the definitions.
 
 @examples(

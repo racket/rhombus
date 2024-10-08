@@ -41,7 +41,7 @@
 ;;    location, although the shrubbery reader will associate a
 ;;    spanning source location to surrounding parentheses
 ;;
-;; "Respan" on a shrubbery reprsentation means to give a syntax object
+;; "Respan" on a shrubbery representation means to give a syntax object
 ;; (i.e., the immediate wrapper) a source location that corresponds to
 ;; the content. That may involve moving out a `parens`, etc., tag or
 ;; walking through a `group` content to create a source location that
@@ -54,7 +54,7 @@
 ;; wrapping parentheses.
 ;;
 ;; "Respan" is also used on S-expressions that are not shrubbery
-;; reprsentations, because we don't always know what kind of
+;; representations, because we don't always know what kind of
 ;; S-expression we have when an syntax error is being formatted. In
 ;; that case, shrubbery forms are extracted based on good guesses
 ;; about which things are shrubbery forms, and then respan is applied
@@ -81,7 +81,7 @@
 ;; opaque raw property means that raw-text information of nested
 ;; syntax objects is ignored. Note that opaque-raw information is
 ;; *not* preserved by default, unlike raw information. The target of a
-;; reraw operation should be a Racket expression or an invidual term,
+;; reraw operation should be a Racket expression or an individual term,
 ;; so there's a clear place to attach and so the information does not
 ;; get lost.
 ;;
@@ -279,7 +279,7 @@
 ;; subexpressions as needed. Rerawed non-shrubbery terms are treated
 ;; as shrubbery terms, since the intent is to pick up the recorded raw
 ;; text. To avoid confusing a `group` shrubbery container and a `group`
-;; shrubbery identifer, we check `syntax-raw-property`; this is not
+;; shrubbery identifier, we check `syntax-raw-property`; this is not
 ;; perfect, but it should only misinterpret an identifier in a term
 ;; sequence, and not go wrong with intact shrubbery forms.
 (provide find-shrubberies)

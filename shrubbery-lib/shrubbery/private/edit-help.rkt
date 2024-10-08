@@ -280,7 +280,7 @@
               (loop s s at-start need-opener?)
               (finish last-pos need-opener?))])])))
 
-;; return the start of the block or parens containing the group containg `pos`
+;; return the start of the block or parens containing the group containing `pos`
 (define (start-of-enclosing-block t pos)
   (define start (line-start t pos))
   (define col (col-of pos start))

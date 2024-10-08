@@ -17,7 +17,7 @@ scope. That's why
     def p = Posn(1, 2)
     p.x
 
-unambigously accesses the `x` field of the posn `p`, and does not
+unambiguously accesses the `x` field of the posn `p`, and does not
 access the `x` field of the namespace `p`. Similarly,
 
   def [x, ...] = [1, 2, 3]

@@ -60,7 +60,7 @@
  The @rhombus(sprout) argument applies only when @rhombus(spike) is
  @rhombus(#'n), @rhombus(#'s), @rhombus(#'e), or @rhombus(#'w). In that
  case, @rhombus(sprout) determines a position along the corresponding
- endge of the balloon as a fraction of the edge running left-to-right or
+ edge of the balloon as a fraction of the edge running left-to-right or
  top-to-bottom.
 
  The @rhombus(duration) argument is used in a way analogous to

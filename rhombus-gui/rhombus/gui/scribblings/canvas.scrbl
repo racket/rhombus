@@ -36,7 +36,7 @@
  @tech{observable} and its value changes.
 
  When a mouse or key event is received by a rendered canvas, the
- @rhombus(mouse) or @rhombus(key) funciton is called with a
+ @rhombus(mouse) or @rhombus(key) function is called with a
  @rhombus(MouseEvent, ~class) or @rhombus(KeyEvent, ~class),
  respectively, and a @rhombus(CanvasContext, ~class).
 

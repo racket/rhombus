@@ -16,7 +16,7 @@
 ){
 
  The same as the @rhombus(nestable_body) sequence, but shifted to one phase
- greater. Defintions inside a @rhombus(meta) block can be
+ greater. Definitions inside a @rhombus(meta) block can be
  referenced in macro implementations, for example.
 
  Alternatively, @rhombus(meta) can have a single @rhombus(nestable_body) in a

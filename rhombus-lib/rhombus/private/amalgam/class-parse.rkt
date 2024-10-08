@@ -75,7 +75,7 @@
    fields                ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
    all-fields            ; #f or (list a-field ...), includes private and protected fields; see below for a-field
    inherited-field-count ; number of fields that are inherited
-   constructor-makers    ; (list constructor-maker ... maybe-default-constuctor-desc)
+   constructor-makers    ; (list constructor-maker ... maybe-default-constructor-desc)
    custom-constructor?
    custom-binding?
    custom-annotation?

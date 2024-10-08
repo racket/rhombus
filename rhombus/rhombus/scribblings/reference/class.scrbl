@@ -165,7 +165,7 @@
  argument with a default, then all by-position arguments of the subclass
  must have a default. A @rhombus(default_expr) or @rhombus(default_body) can refer to earlier field
  names in the same @rhombus(class) to produce a default value. If a
- @rhombus(priviate) @rhombus(field_spec) lacks a @rhombus(=) and
+ @rhombus(private) @rhombus(field_spec) lacks a @rhombus(=) and
  default-value expression, then a custom constructor must be declared
  with @rhombus(constructor, ~class_clause).
 
@@ -981,7 +981,7 @@ or protectedly using
 
 
 @doc(
-  interface_clause.macro 'expression: $expresssion_decl'
+  interface_clause.macro 'expression: $expression_decl'
   interface_clause.macro 'annotation: $annotation_point'
 ){
 

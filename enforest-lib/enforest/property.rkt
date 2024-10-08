@@ -6,7 +6,7 @@
 ;; The `property` form is useful for defining a new structure-type
 ;; property for operators or transformers that apply to a specific
 ;; context. Besides a property `prop:name`, it defines a convenience
-;; function `name` that creates an instance of a strcuture type that
+;; function `name` that creates an instance of a structure type that
 ;; implements the property and is a subtype of an indicated
 ;; `base-name`.
 

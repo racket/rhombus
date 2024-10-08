@@ -88,7 +88,7 @@
 
  @item{@rhombus(modifier: import_clause; ...) is the same as the
    sequence of @rhombus(import_clause)s with @rhombus(modifier) add to the
-   @emph{end} of each @rhombus(import_clause). This form is especialy handy
+   @emph{end} of each @rhombus(import_clause). This form is especially handy
    when @rhombus(modifier) is @rhombus(meta).}
 
 )
@@ -289,11 +289,11 @@
  Modifies an @rhombus(import) clause so that no prefix (normally based on the
  module name) is bound, and all imports are implicitly exposed. Contrast with
  @rhombus(as ~none, ~impo), which also binds no prefix, but binds only
- names that are speficially exposed.
+ names that are specifically exposed.
 
  If @rhombus(~scope_like id) is specified, then the name part of
  @rhombus(id) does not matter, but its scopes are used for the exposed
- bindings. Otherwise, the scopes for each exposed binding is defived from
+ bindings. Otherwise, the scopes for each exposed binding is derived from
  the module or namespace specification that this @rhombus(open, ~impo)
  form modifies.
 
@@ -467,7 +467,7 @@
  The @rhombus(ModulePath) expression form (which has immediate quotes
  instead of a parenthesized argument expression) statically checks that
  @rhombus(module_path) is well-formed, while the @rhombus(ModulePath)
- funciton can check only when it is called. In both cases, however, the
+ function can check only when it is called. In both cases, however, the
  generated module path is relative to the top-level environment, not the
  enclosing context.
 

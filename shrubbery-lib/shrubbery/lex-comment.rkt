@@ -78,7 +78,7 @@
                  (continue-running)
                  ;; comment token's column doesn't matter
                  (finish (pending-new-column #:so-far 'running-bar) new-stack))]
-            [(comma-operator semicolor-operator closer)
+            [(comma-operator semicolon-operator closer)
              ;; comment token is bad, so stop
              (finish #f (pending-comment-stack pending))]
             [else

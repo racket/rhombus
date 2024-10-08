@@ -54,7 +54,7 @@
 ){
 
  In syntax descriptions, @rhombus(repet) stands for any
- @tech{repetition} form. Identifiers (especailly ones bound as
+ @tech{repetition} form. Identifiers (especially ones bound as
  repetitions), function calls, and arithmetic are some examples of
  repetition forms, but @rhombuslangname(rhombus) provides many more.
 
@@ -116,7 +116,7 @@
 ){
 
  In syntax descriptions, @rhombus(body) is always used with ellipses
- afterward, meaning that definitions and expressons can be interleaved.
+ afterward, meaning that definitions and expressions can be interleaved.
  In some cases, the expanded form of the @rhombus(body) equence must ends
  with an expression to provide a result value.
 
@@ -254,7 +254,7 @@
 ){
 
  In syntax descriptions, @rhombus(key_comp) stands for any operator or
- identifier that is defined as an equality and hashing configration for a
+ identifier that is defined as an equality and hashing configuration for a
  map's keys.
 
  The map configurations exported by @rhombuslangname(rhombus) are

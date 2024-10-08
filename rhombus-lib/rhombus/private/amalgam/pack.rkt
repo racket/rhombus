@@ -17,7 +17,7 @@
 ;; could be represented for most purposes as #'(multi (group x)) or just #'x.
 
 ;; "Pack" means going form the internal Racket-side representation to
-;; the Rhombus repesentation, such as when sending syntax to a
+;; the Rhombus representation, such as when sending syntax to a
 ;; Rhombus-implemented macro, and "unpack" means going back.
 
 ;; "Tail" below refers to the argument to a macro for the rest of the
@@ -220,7 +220,7 @@
 ;; this function makes sure the list is valid as a group
 ;; (i.e., has no 'block or 'alts in non-tail position), although
 ;; that check may be redundant with an enclosing check when
-;; used in the missle of a template
+;; used in the missile of a template
 (define (unpack-term-list r who at-stx)
   (cond
     [(syntax? r)
@@ -419,7 +419,7 @@
 (define (unpack-element* qs r depth)
   (unpack* qs r depth (lambda (r name qs) r)))
 
-;; like `pack-elment*`, but assumming the right shape already
+;; like `pack-element*`, but assuming the right shape already
 (define (pack-nothing* r depth) r)
 
 ;; `stx` comes from Racket, so it should be in `parsed`

@@ -47,7 +47,7 @@ simplification, however, came at some cost:
 
   * Templates could not straightforwardly handle mixtures of binding
     depth nested under the same number of ellipses (matching the
-    deepest binding). This generalization has proven occassionally
+    deepest binding). This generalization has proven occasionally
     useful in Scheme and Racket's `syntax` templates.
 
   * Exposing the representation of a `match` sequence interfered with
@@ -85,7 +85,7 @@ val [$head_n, $tail_n, ...]: [1, 2, 3]
 [tail_n, ...] // => [2, 3]
 ```
 
-Using `tail_n` above not in a repetion content would be a syntax
+Using `tail_n` above not in a repetition content would be a syntax
 error. Here's another example, this time with ellipses in a function
 argument list and function call:
 
@@ -141,7 +141,7 @@ Repetition forms, repetition binders, and repetition positions from
 
  * A syntax pattern recognizes nested ellipses and `$` escapes to
    create repetition bindings that expansion to depths N as determined
-   by nesting. (As of the current implemenation, more work is needed
+   by nesting. (As of the current implementation, more work is needed
    to handle the case when a pattern identifier is annotated with a
    syntax class and a `.` attribute reference is under ellipses.)
 
@@ -149,7 +149,7 @@ Repetition forms, repetition binders, and repetition positions from
    create repetition positions that expect a repetition at depth N as
    determined by nesting. (Currently, each repetition under a given
    `...` must be at the same depth. The difference between the nesting
-   depth N and repetions's depth could be used to get behavior more
+   depth N and repetitions's depth could be used to get behavior more
    like Scheme when a repetition is used under more ellipses than its
    depth.)
 
@@ -238,7 +238,7 @@ explicit about literal versus repeated parts is better; see also
 Steele (2017), and along those lines, maybe code-quoting notation
 like `'y+$x'` would be a good approach. (If the difference between
 literal and repeated parts is made explicit, it's not clear that the
-concept of repetition positions is needed, since the explcit form
+concept of repetition positions is needed, since the explicit form
 turns into some variant of `map` either way.)
 
 Other Discussion
@@ -247,7 +247,7 @@ Other Discussion
 Some prefer `fun (x ...): body` to `fun (x, ...): body`, omitting a
 comma before the `...`, on the grounds that the comma looks strange
 and `...` belongs in the group that it modifies. Putting the `...` in
-a separate gruop (i.e., after a comma) is consistent with syntax
+a separate group (i.e., after a comma) is consistent with syntax
 pattern matching, however, where `($x ...)` and `($x, ...)` are
 distinct and meaningful patterns.
 

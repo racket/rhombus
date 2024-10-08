@@ -35,7 +35,7 @@
          [t/s (syntax-raw-inner-prefix-property t/s (syntax-raw-inner-prefix-property pre))])
     t/s))
 
-;; returns #f or (hash 'taget target 'remains rest 'space space-name 'raw default-raw 'raw-prefix prefix-part-of-raw)
+;; returns #f or (hash 'target target 'remains rest 'space space-name 'raw default-raw 'raw-prefix prefix-part-of-raw)
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])

@@ -220,7 +220,7 @@
 ){
 
  Initiates the expansion of the binding form represented by
- @rhombus(bind_stx) in a context that supplies thet ``upward'' static
+ @rhombus(bind_stx) in a context that supplies the ``upward'' static
  information represented by @rhombus(static_info).
 
  Static information is represented by a syntax object that has the

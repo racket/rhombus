@@ -79,7 +79,7 @@ interface customizes the way that instances of a class print.
   annot.macro 'PrintDesc'
 ){
 
- Satisified by a @tech{string}, @tech{byte string}, or opaque result
+ Satisfied by a @tech{string}, @tech{byte string}, or opaque result
  returned by functions like @rhombus(PrintDesc.concat).
 
  A string or byte string prints as its content. Other
@@ -163,7 +163,7 @@ interface customizes the way that instances of a class print.
 
  @item{@rhombus(PrintDesc.or) offers two printign alternatives. Either
   @rhombus(pd1) or @rhombus(pd2) will be printed, depending on choices
-  made by a pretty-printer configuration and as constrainted by
+  made by a pretty-printer configuration and as constrained by
   @rhombus(PrintDesc.flat) constraints.
 
   @examples(

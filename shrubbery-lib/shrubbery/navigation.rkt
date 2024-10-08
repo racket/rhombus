@@ -78,7 +78,7 @@
              [last-bar #f] ; candidate bar (to move just before) most recently found (right line or column)
              [col col] ; column of most recently found `last-bar`
              [last-block #f] ; candidate `:`, only counts if `last-pos` is set for outdented
-             [last-pos #f] ; candiate start of an outdented block
+             [last-pos #f] ; candidate start of an outdented block
              [bar-start at-start] ; line for current block (to detect same-line candidates)
              [at-start at-start]) ; line for candidate block start (to detect when moved too early)
     (cond

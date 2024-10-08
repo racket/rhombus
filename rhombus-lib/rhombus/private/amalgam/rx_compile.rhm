@@ -219,7 +219,7 @@ meta:
 
     let elem = infer_element(ast, #'any)
     when elem == #'mix
-    | syntax_meta.error("pattern constaints an inconsistent mixture of character and byte elements",
+    | syntax_meta.error("pattern constraints an inconsistent mixture of character and byte elements",
                         stx)
 
     check_count(ast, { 0: #false })

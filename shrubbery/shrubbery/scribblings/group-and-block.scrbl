@@ -498,7 +498,7 @@ The following five groups are the same:
 Using @guillemets can ``armor'' a shrubbery for transport from one
 context to another where its line breaks or indentation might get
 mangled. For example, an editor might offer an operation to armor a
-range of text in perparation for moving or copying the text, and then
+range of text in preparation for moving or copying the text, and then
 it can be properly indentend in its destination before unmarmoring.
 Along similar lines, when writing code as data to be read back later,
 it's easy for a printer to insert explicit @guillemets.
@@ -592,7 +592,7 @@ inside:« fruit » more
 @section(~tag: "continuing-backslash"){Continuing a Line with @litchar{\}}
 
 As a last resort, @litchar{\} can be used at the end of a line (optionally
-followed by whitespace and coments on the line) to continue the next
+followed by whitespace and comments on the line) to continue the next
 line as it if were one line continuing with the next line. The
 @litchar{\} itself does not appear in the parsed form. Within the same line,
 a @litchar{\} can be followed only by whitespace and comments in line-sensitive

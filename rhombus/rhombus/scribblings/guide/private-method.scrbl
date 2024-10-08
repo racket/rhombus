@@ -78,7 +78,7 @@ Private fields are visible only within methods of the same class when
 accessed directly or through the class's annotation, within a
 constructor through the class's annotation, or through an
 @rhombus(internal, ~class_clause) name's static annotation. For example,
-declaring an internal name @rhombus(_Car) makes a priviate @rhombus(gas)
+declaring an internal name @rhombus(_Car) makes a private @rhombus(gas)
 field accessible outside the class's implementation:
 
 @examples(

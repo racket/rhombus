@@ -73,8 +73,8 @@
    )'
  )
 
- The @rhombus(source_form, ~var) group is used for error repoting to
- show the repetition, such as when the repeition is used at the wrong
+ The @rhombus(source_form, ~var) group is used for error reporting to
+ show the repetition, such as when the repetition is used at the wrong
  depth.
 
  The @rhombus(name_id, ~var) term is for error reporting and reflection
@@ -83,7 +83,7 @@
 
  The @rhombus(list_expr, ~var) expression produces a @rhombus(List, ~annot) that contains
  the elements of the repetition. Lists must be nested according to the
- repeition's depth: a list of elements for depth 1, a list of element
+ repetition's depth: a list of elements for depth 1, a list of element
  lists for depth 2, and so on.
 
  The @rhombus(depth, ~var) integer specifies the depth of the
@@ -93,8 +93,8 @@
  repetition at the wrong depth in terms of the original form's depth.
 
  The @rhombus(static_key, ~var)--@rhombus(static_value, ~var) pairs
- describe ``upward'' static information for inidvidual elements of the
- repeition. This information is automatically packed via
+ describe ``upward'' static information for individual elements of the
+ repetition. This information is automatically packed via
  @rhombus(statinfo_meta.pack).
 
 }
@@ -105,7 +105,7 @@
 ){
 
  The inverse of @rhombus(repet_meta.pack_list), which is useful for unpacking
- information about the expansion of nested repetation forms.
+ information about the expansion of nested repetition forms.
 
 @examples(
   ~eval: macro_eval

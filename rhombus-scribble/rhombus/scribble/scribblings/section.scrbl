@@ -34,7 +34,7 @@
 ){
 
  Makes the document at @rhombus(module_path) a section of the enclosing
- document, where the @rhombus(module_path) seciton hierarchy is
+ document, where the @rhombus(module_path) section hierarchy is
  effectively shifted to more nested my one layer. That is,
  @rhombus(title) within @rhombus(module_path) corresponds to a
  @rhombus(section) written in the document where

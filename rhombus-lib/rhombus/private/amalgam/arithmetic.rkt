@@ -51,7 +51,7 @@
 
 (define-static-info-getter get-number-static-infos
   ;; comparison actually requires real numbers, but we want to
-  ;; propagate a comparsion operation from things like `+`, and
+  ;; propagate a comparison operation from things like `+`, and
   ;; so it's simplest (and good enough in practice) to overapproximate
   ;; by pointing all numbers to `>`, etc.
   (#%compare ((< <)

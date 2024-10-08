@@ -118,7 +118,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
  The @rhombus(Real.at_least, ~annot), @rhombus(Real.above, ~annot),
  @rhombus(Real.below, ~annot), and @rhombus(Real.at_most, ~annot)
- annotations furher constrain the number to be equal to or greater than,
+ annotations further constrain the number to be equal to or greater than,
  greater than, less then, or equal to or less than the given number,
  respectively.
 
@@ -259,7 +259,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   operator ((x :: Real) .<= (y :: Real)) :: Boolean
 ){
 
- The usual comparsion operators on real numbers prefixed with @litchar{.} to
+ The usual comparison operators on real numbers prefixed with @litchar{.} to
  distinsguish them from generic operations like @rhombus(<) on
  @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=),
  which work on all numbers.

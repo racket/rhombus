@@ -47,10 +47,10 @@
  y-offset that would be returned otherwise. The @rhombus(dt) offset is
  add to a time-box difference that would be returned otherwise.
 
- The @rhombus(dhoriz) and @rhombus(dvert) arguments are multipled by the
+ The @rhombus(dhoriz) and @rhombus(dvert) arguments are multiplied by the
  height and width, respectively, of the pict as located within another
  pict (which can be different than @rhombus(pict)'s immediate dimensions
- due to scaling). The multipled values are then added to an x-offset and
+ due to scaling). The multiplied values are then added to an x-offset and
  y-offset that would be returned otherwise, in addition to @rhombus(dx)
  and @rhombus(dy).
 
@@ -113,7 +113,7 @@
 
  If @rhombus(pict) is an animated picture, then the search corresponds
  to finding within @rhombus(Pict.snapshot(pict, epoch, n)). When a finder for an
- animated pict is provdied to a function like @rhombus(pin), however,
+ animated pict is provided to a function like @rhombus(pin), however,
  @rhombus(pin) will produce an animated pict where the finder is used
  separately for each snapshot generated from the combined animated pict.
 

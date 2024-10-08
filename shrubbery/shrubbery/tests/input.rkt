@@ -34,7 +34,7 @@
          input8
          expected8)
 
-;; input1 is split into parts to accomodate O(n^2) tests
+;; input1 is split into parts to accommodate O(n^2) tests
 (define input1s
   (list
 #<<INPUT
@@ -76,7 +76,7 @@ define fib:
     | else: fib(n-1) + fib(n-2)
 
 // Ok to add `:` before `|`. This parses the
-// same as the prevous example, but this is not the standard
+// same as the previous example, but this is not the standard
 // style (which is to omit unnecessary colons).
 define fib:
   lambda (n):
@@ -205,7 +205,7 @@ INPUT
 ;; ----------------------------------------
 
 #<<INPUT
-// Another possibile approach to syntax for `struct`:
+// Another possible approach to syntax for `struct`:
 struct posn:
   fields:
     x mutable
@@ -1492,7 +1492,7 @@ INPUT
 // A set of examples to see what happens with various forms,
 // where many of them seem nonsensical
 
-somthing else: 8
+something else: 8
 
 this is a \
   very long linear group \
@@ -1671,7 +1671,7 @@ INPUT
 
 (define expected2
   '(multi
-    (group somthing else (block (group 8)))
+    (group something else (block (group 8)))
     (group this is a very long linear group that spans multiple lines)
     (group
      this

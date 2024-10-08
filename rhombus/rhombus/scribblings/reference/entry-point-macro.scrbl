@@ -82,7 +82,7 @@
  expansion.
 
  When the rule of expansion in @rhombus(#'function) mode is packed via
- @rhombus(entry_point_meta.pack), the generated function shuld accept
+ @rhombus(entry_point_meta.pack), the generated function should accept
  extra initial by-position arguments as listed in
  @rhombus(entry_point_meta.Adjustment.prefix_arguments(adj_id)), and each
  result body (where the function may have multiple bodies in multiple
