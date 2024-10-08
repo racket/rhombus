@@ -220,7 +220,7 @@
 ;; this function makes sure the list is valid as a group
 ;; (i.e., has no 'block or 'alts in non-tail position), although
 ;; that check may be redundant with an enclosing check when
-;; used in the missile of a template
+;; used in the middle of a template
 (define (unpack-term-list r who at-stx)
   (cond
     [(syntax? r)
