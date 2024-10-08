@@ -14,7 +14,7 @@ cover in a complete design:
  * A way to specialize the constructor beyond the built-in keyword and
    optional-argument support. The approach to constructors should be
    different than in Racket's `class`, where constructor-argument
-   handling and the inialization sequence is intermingled with the
+   handling and the initialization sequence is intermingled with the
    rest of a class body, not to mention being disconnected from
    Racket's more modern approach to keyword arguments.
 
@@ -112,7 +112,7 @@ default, which is that the class is final.
 
 An `implements` clauses specifies one or more interfaces. Interfaces
 tend to have abstract methods that must be implemented by a (sub)class
-before the (sub)class can be instantiated. The combinatio `private
+before the (sub)class can be instantiated. The combination `private
 implements` implements an interface privately, which can communicate
 to the creator of an interface in combination with `internal`, but
 does not necessarily expose the implemented methods. For example,
@@ -197,7 +197,7 @@ class/interface clause or a definition or expression. Potential
 ambiguity is resolved by ordering parse attempts: each form in the
 block is first tried as a class/interface clause, then as a
 definition, and finally as an expression (analogous to the way that
-definitions and then experessions are tried in a Rhombus module or
+definitions and then expressions are tried in a Rhombus module or
 body blocks generally). Class-clause macros and interface-clause
 macros are defined separately, but an identifier can be bound in both
 spaces (as well as the expression space, and so on).
@@ -238,7 +238,7 @@ shadows the field or method.
 Method and fields names must all be distinct, both within a class and
 taking into account superclass and superinterface public fields and
 methods. A private field or method name is not visible outside of a
-class or interface, except whe using an `internal` name, so it is not
+class or interface, except when using an `internal` name, so it is not
 required to be distinct from subclass or subinterface fields and
 methods. Method names inherited from multiple implemented interfaces
 must all be implemented the same way, either abstract, implemented in
@@ -256,14 +256,14 @@ are overridden with `private override` (and no other use of `private`
 combined with `override` makes sense). If an interface is declared to
 be implemented both privately and normally (perhaps as a
 superinterface of a normally implemented interface), the interface is
-implemented normally. Indvidual method names of a privately
+implemented normally. Individual method names of a privately
 implemented interface may overlap with methods of a normally
 implemented interface, in which case those methods are public.
 
 The `constructor` clause must either have an anonymous-function shape
 like `fun` (but with `constructor` in place of `fun`) or be followed
-by a blocking continaing an immediate function as an `entry_point`.
-Similarly, `binding` and `anotation` can have a pattern-rule shape or
+by a blocking containing an immediate function as an `entry_point`.
+Similarly, `binding` and `annotation` can have a pattern-rule shape or
 expect a meta-time `entry_point`; the `rule` form serves an
 `entry_point` for simple pattern-matching macro transformations. (When
 `constructor` is specified, then typically `binding` and `annotation`
@@ -627,16 +627,16 @@ might not include the superclass is `extends` is later in the body.
 
 It would be nice to support implementing different interfaces that use
 the same name for a method without forcing the method implementations
-to be the same. That goal seems to fundamentaly conflict with dynamic
+to be the same. That goal seems to fundamentally conflict with dynamic
 `.`; it might make sense to compromise on dynamic `.`, or it might be
-better to just live with a prohibiton against same-named method in
+better to just live with a prohibition against same-named method in
 superinterfaces.
 
 Although an abstract method can be written with arguments and
 annotations, only the result annotation has any effect and is
 propagated to overrides. More generally, there's no support for
 checking that a method override takes arguments consistent with the
-overidden declaration. It's not clear how argument checking would
+overriden declaration. It's not clear how argument checking would
 work. Result checking, meanwhile, justifies static information about
 the result of a method.
 
@@ -651,7 +651,7 @@ class Posn(x, y):
 Posn.get_origin()
 ```
 
-However, neither `origin` nor `get_orign` (with a `Posn` result
+However, neither `origin` nor `get_origin` (with a `Posn` result
 annotation) works when written as follows:
 
 ```
