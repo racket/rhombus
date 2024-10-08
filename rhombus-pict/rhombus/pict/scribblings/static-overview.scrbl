@@ -14,7 +14,7 @@
 @title(~tag: "static-pict"){Static Picts}
 
 A @deftech{static pict} is a pict like one from Racket's
-@racketmodname(pict) libary. It has a width, height, and a rendering as
+@racketmodname(pict) library. It has a width, height, and a rendering as
 an image. A pict does not have a particular location on the page or
 screen. Instead, different picts are combined relative to each other to
 form a larger pict, and then the overall pict can be included in a
@@ -91,14 +91,14 @@ it did before the addition:
 
 @examples(
   ~eval: pict_eval
-  fun antenna(p):    
+  fun antenna(p):
     let ap = stack(circle(~size: 4), line(~dy: 6, ~line_width: 2), p)
     // negative cancels circle+line contribution to bounding box:
     ap.pad(~top: -10)
   beside(antenna(rect), circ)
 )
 
-This kind of adjustment---shifting a compount pict's bounding box so
+This kind of adjustment---shifting a compound pict's bounding box so
 that it surrounds just one of the components---is so common that there's
 a shorthand operation to do it, @rhombus(Pict.refocus). Like all
 bounding-box operations, refocusing adjusts the resulting pict's descent
@@ -108,7 +108,7 @@ within a composite pict, as we explain a little further below.)
 @examples(
   ~eval: pict_eval
   ~repl:
-    fun antenna(p):    
+    fun antenna(p):
       let ap = stack(circle(~size: 4), line(~dy: 6, ~line_width: 2), p)
       ap.refocus(p)
     beside(antenna(rect), circ)

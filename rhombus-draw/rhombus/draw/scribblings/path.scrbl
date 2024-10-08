@@ -36,8 +36,8 @@
     :: Void
 ){
 
- Sets a starting poin for an open path, or extends an open path with a
- stright line or Bezier curve.
+ Sets a starting point for an open path, or extends an open path with a
+ straight line or Bezier curve.
 
 }
 

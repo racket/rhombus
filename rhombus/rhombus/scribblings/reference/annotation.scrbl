@@ -9,7 +9,7 @@
   expr.macro '$expr :: $annot'
 ){
 
- Checks that the value of @rhombus(expr) satisifies
+ Checks that the value of @rhombus(expr) satisfies
  @rhombus(annot), and returns the value if so.
 
 @examples(

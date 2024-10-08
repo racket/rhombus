@@ -1237,7 +1237,7 @@
      (define tag (syntax-e a))
      (cond
        [(or (eq? tag 'group) (eq? tag 'alts))
-        ;; compute span, given that group and alts cannot be emty
+        ;; compute span, given that group and alts cannot be empty
         (datum->syntax* #f
                         (cons a new-l)
                         (srcloc-spanning (syntax-srcloc (car new-l))

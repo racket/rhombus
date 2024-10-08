@@ -150,7 +150,7 @@
                      #t))
       (define pos (sel-pos i))
 
-      ;; delte char
+      ;; delete char
       (define new-input- (string-append (substring input 0 pos)
                                         (substring input (+ pos 1))))
       (define-values (memo- all-)

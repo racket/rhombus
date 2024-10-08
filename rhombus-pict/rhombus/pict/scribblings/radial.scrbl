@@ -110,7 +110,7 @@
  The points extend from a base of radius @rhombus(inner) to an edge at
  radius @rhombus(outer). By default, the connection from a point at the
  inner radius to a point at outer radius uses up half the radial space
- allocated to the point. If @rhombus(inner_pause) is creater than
+ allocated to the point. If @rhombus(inner_pause) is greater than
  @rhombus(0), it represents a fraction of half the space between points
  that stays at the inner radius before extending out. Similarly,
  @rhombus(outer_pause) is a fraction allocated to staying at the out
@@ -136,7 +136,7 @@
  the inner and outer points of the figure, and so the resulting pict may
  have bounds smaller than @rhombus(width) and @rhombus(height). The
  @rhombus(#'stretch) mode is similar to @rhombus(#'shrink), but the pict
- is scaled and stretched to ensure that its bounding box has dimentions
+ is scaled and stretched to ensure that its bounding box has dimensions
  @rhombus(width) and @rhombus(height).
 
 @examples(
@@ -285,7 +285,7 @@
   ) :: Path
 ){
 
- The @rhombus(arrow) and @rhombus(arrow_path) functons are not in the
+ The @rhombus(arrow) and @rhombus(arrow_path) functions are not in the
  same category as other @rhombusmodname(pict/radial) functions, but they
  are related. The @rhombus(arrow) function produces a pict that draws as
  an arrow, and @rhombus(arrow_path) takes mostly the same arguments to
@@ -304,7 +304,7 @@
  diamond-shaped head if @rhombus(indent) is negative.
 
  The arrow is rotated by @rhombus(rotate) radians. With a zero rotation,
- the arrow poitns to the right (i.e., toward a greater x-offset). The
+ the arrow points to the right (i.e., toward a greater x-offset). The
  arrow is rotated around its center.
 
  The @rhombus(bound) argument determines the bounding bod of the arrow
@@ -313,7 +313,7 @@
  likely to extend outside that box. The @rhombus(#'shrink) mode shrinks
  or extends the bounding box as needed to cover all of the corners of the
  arrow. The @rhombus(#'line) mode for @rhombus(bound) creates a bounding
- box that coveres just the tip of the arrow and the center of the ending
+ box that covers just the tip of the arrow and the center of the ending
  edge of the tail.
 
 @examples(

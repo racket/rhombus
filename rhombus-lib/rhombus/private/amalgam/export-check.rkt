@@ -6,7 +6,7 @@
 (provide (for-syntax register-field-check
                      register-provide-check))
 
-;; Resgisters a check that an identifie is defined; this check
+;; Registers a check that an identifie is defined; this check
 ;; needs to be deferred until all definitions in the module have
 ;; been discovered
 (define-for-syntax (register-field-check stx)
@@ -53,7 +53,7 @@
 
 ;; The job of this checker is to povide a better error message in the
 ;; case that an identifer is defined via `let`. So, we don't have to check
-;; antyhing invconvenient, such as a restriction to a particular space
+;; anything invconvenient, such as a restriction to a particular space
 (define-syntax (check-export-provide stx)
   (syntax-parse stx
     [(_ base-ctx forward-ctx . exs)

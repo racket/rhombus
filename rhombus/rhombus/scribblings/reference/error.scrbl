@@ -182,7 +182,7 @@
   fun error.annot_msg(what :: String = "value")
 ){
 
- Constructs the text of a ``does not satify annotation'' error, using
+ Constructs the text of a ``does not satisfy annotation'' error, using
  @rhombus(what) as the noun in the message.
 
 }

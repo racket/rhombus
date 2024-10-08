@@ -355,6 +355,6 @@
        [(_ state . bodys)
         (expand-forwarding-sequence-continue #`[state bodys expand-context] local-introduce expr-k done-k)])]))
 
-;; sentinels for `expand-fowarding-sequence`
+;; sentinels for `expand-forwarding-sequence`
 (define-syntax expanded #f)
 (define-syntax expanded-accum #f)

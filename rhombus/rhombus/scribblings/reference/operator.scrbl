@@ -82,7 +82,7 @@
  case its arguments must be repetitions. The depth of the resulting
  repetition is the maximum of the argument repetition depths.
 
- When multple cases are provided via @vbar, an operator can be defined
+ When multiple cases are provided via @vbar, an operator can be defined
  as both prefix and infix or prefix and postfix (but not infix and
  postfix). The prefix cases and infix/postfix cases can be mixed in any
  order, but when the operator is used as a prefix or infix/postfix
@@ -94,7 +94,7 @@
  precedence and, in the case of an infix operator, an associativity for
  the operator. Each @rhombus(option) keyword can appear at most once. In
  a precedence specification, @rhombus(~other) stands for any operator not
- otherwise mentioned. When multiple cases are povided using an immediate @vbar, then
+ otherwise mentioned. When multiple cases are provided using an immediate @vbar, then
  only the first prefix case and the first infix/postfix case can supply
  options; alternatively, when the operator name (maybe with a result annotation)
  is written before @vbar, options that apply to all cases can be supplied in

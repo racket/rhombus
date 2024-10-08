@@ -141,7 +141,7 @@ by using @rhombus(statinfo_meta.wrap):
     or_zero(#false).magnitude
 )
 
-A similar effect could be acheived by expanding to
+A similar effect could be achieved by expanding to
 @rhombus('($p || Posn(0,0)) :: Vector'), but for better or worse, this
 implementation of @rhombus(or_zero) omits an extra predicate on the
 result of the expression, and instead claims that it will always work as

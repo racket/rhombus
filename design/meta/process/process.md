@@ -6,7 +6,7 @@ This document describes the design process used to streamline innovation in the 
 Motivation
 ----------
 
-Innovation in the Rhombus project occurs through communication in many different channels -- realtime as well as asychronous, persistent as well as ephemeral. Ideally, discussion is posted at [the Rhombus repository](https://github.com/racket/rhombus-prototype) (as described in the [README](https://github.com/racket/rhombus-prototype/blob/master/README.md)), but requiring all discussion to be there is not a realistic goal. Even if all discussion were centralized, making potential contributors hunt through channels and reconstruct discussion threads to understand a design creates a substantial obstacle to contribution.
+Innovation in the Rhombus project occurs through communication in many different channels -- realtime as well as asynchronous, persistent as well as ephemeral. Ideally, discussion is posted at [the Rhombus repository](https://github.com/racket/rhombus-prototype) (as described in the [README](https://github.com/racket/rhombus-prototype/blob/master/README.md)), but requiring all discussion to be there is not a realistic goal. Even if all discussion were centralized, making potential contributors hunt through channels and reconstruct discussion threads to understand a design creates a substantial obstacle to contribution.
 
 Summary
 -------

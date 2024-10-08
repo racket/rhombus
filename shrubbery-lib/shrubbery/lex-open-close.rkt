@@ -8,9 +8,9 @@
          lex/open-close-dont-stop-status?)
 
 ;; This lexer adds a layer to `lex/comment/status`, so it reports
-;; comment ranges as well as inivisible parentheses.
+;; comment ranges as well as invisible parentheses.
 
-;; To report invisible parentheses, we immitate "parse.rkt"
+;; To report invisible parentheses, we imitate "parse.rkt"
 ;; just enough to determine where groups and group sequences
 ;; start and end. The current parse state is represented as
 ;; an explicit stack, which has the benefit that it's easy to

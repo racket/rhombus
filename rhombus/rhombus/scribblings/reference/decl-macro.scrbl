@@ -47,7 +47,7 @@
 ){
 
  Like @rhombus(defn.macro), but for forms that can also be used in
- namespaces that are witin a module or interactive position --- the same
+ namespaces that are within a module or interactive position --- the same
  places where @rhombus(export) is allowed, for example.
 
 }

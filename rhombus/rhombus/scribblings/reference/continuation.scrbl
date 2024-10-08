@@ -48,9 +48,9 @@
  @rhombus(Continuation.prompt) does not cath exceptions. Instead, it
  determines a handler that is used to receive any values delivered to the
  prompt via @rhombus(Continuation.escape). The handler is call with the
- continuation of the @rhombus(Continuation.prompt) form. Since mutiple
+ continuation of the @rhombus(Continuation.prompt) form. Since multiple
  values can be delivered by an escape, the @rhombus(~catch) construction
- can accept mutiple values or dispatch on the number of values received.
+ can accept multiple values or dispatch on the number of values received.
  The default prompt handler expects a single thunk, and calls the thunk
  under a prompt with the same tag as the handler's prompt.
 
@@ -156,7 +156,7 @@
 
  Sets the current frame's continuation mark for the result of
  @rhombus(key_expr) to the result of @rhombus(val_expr) and evaluates the
- @rhombus(body) sequence in tail postion.
+ @rhombus(body) sequence in tail position.
 
 }
 

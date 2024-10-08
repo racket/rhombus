@@ -64,7 +64,7 @@
     [(stx) (syntax-property stx 'raw-opaque-content)]
     [(stx val) (syntax-property stx 'raw-opaque-content val #t)]))
 
-;; For associating a srcloc to a compount tag like `group`, which
+;; For associating a srcloc to a compound tag like `group`, which
 ;; otherwise gets a derived srcloc based on its content
 (define syntax-raw-srcloc-property
   (case-lambda

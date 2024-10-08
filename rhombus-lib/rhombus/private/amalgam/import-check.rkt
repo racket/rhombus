@@ -3,7 +3,7 @@
          racket/phase+space)
 
 ;; `check-require-bindings` is used to check for duplicate imports, but
-;; specificaly ones that are duplicate with respect to `let`
+;; specifically ones that are duplicate with respect to `let`
 
 (provide check-require-bindings)
 

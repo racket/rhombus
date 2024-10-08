@@ -413,7 +413,7 @@
        [else
         (counter line column status)])]))
 
-;; "nested" status means that results are not necessairly tokens,
+;; "nested" status means that results are not necessarily tokens,
 ;; because some other lexer (such as the S-expression lexer) is active
 (define (lex-nested-status? status)
   (cond

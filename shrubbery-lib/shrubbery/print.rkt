@@ -8,7 +8,7 @@
          shrubbery-syntax->raw
          combine-shrubbery-raw)
 
-;; Expects `s` to be a shrubbery syntax object, but accomodates any value
+;; Expects `s` to be a shrubbery syntax object, but accommodates any value
 ;; by falling back to S-expression printing
 (define (shrubbery-syntax->string s
                                   #:use-raw? [use-raw? #f]

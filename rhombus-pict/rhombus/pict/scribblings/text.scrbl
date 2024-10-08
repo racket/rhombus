@@ -140,7 +140,7 @@ paragraph typesetting.
 ){
 
  Like @rhombus(stack), but using @rhombus(current_line_sep()) as the
- separation amount and with a default horiztonal alignment of
+ separation amount and with a default horizontal alignment of
  @rhombus(#'left).
 
 }

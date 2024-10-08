@@ -6,7 +6,7 @@
          "private/delta-text.rkt")
 
 ;; Conventions:
-;;   pos = arbitary position
+;;   pos = arbitrary position
 ;;   s, e = range positions
 ;;   start = start of a line
 ;;   col, candidate, limit = column
@@ -225,7 +225,7 @@
      (indent-like-enclosing-group t start current-tab
                                   #:leftmost? #t)]))
 
-;; Gets list of candiates with further-right candidates first starting
+;; Gets list of candidates with further-right candidates first starting
 ;; search with the token that contains `pos` (inclusive on the left
 ;; edge of the token, starts before the line that we want to indent).
 ;; The search works going backwards to find enclosing groups.

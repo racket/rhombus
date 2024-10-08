@@ -76,7 +76,7 @@
  the layer is exhausted.
 
  A @rhombus(keep_when, ~for_clause) or @rhombus(skip_when, ~for_clause) clause short-circuits one
- iteration of the @rhombus(for) body, skipping remining expressions
+ iteration of the @rhombus(for) body, skipping remaining expressions
  (including nested iterations) when the subsequent @rhombus(expr)
  produces @rhombus(#false) for @rhombus(keep_when, ~for_clause) or a true value for
  @rhombus(skip_when, ~for_clause). A @rhombus(break_when, ~for_clause) clause short-circuits the current

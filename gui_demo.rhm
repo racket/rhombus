@@ -35,7 +35,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
                               [[0.5, draw.Color("white")],
                                [1, draw.Color("darkblue")]])
 
-    // draw a gradient backround
+    // draw a gradient background
     dc.pen := draw.Pen.none
     dc.brush := draw.Brush(~gradient: background)
     dc.rectangle([0, 0, w, h])

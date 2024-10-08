@@ -92,7 +92,7 @@
  Applies a (further) transformation to the drawing context's conversion
  from drawing coordinates to deivice coordinates. In other words, these
  methods change the result that is returned by the
- @rhombus(DC.transformation) property, and they affect drawing accodingly.
+ @rhombus(DC.transformation) property, and they affect drawing accordingly.
 
 }
 

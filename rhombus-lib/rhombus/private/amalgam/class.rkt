@@ -61,7 +61,7 @@
      #:with orig-stx stxes
      (define body #'(options.form ...))
      (define intro (make-syntax-introducer #t))
-     ;; The shape of `finish-data` is recognzied in `class-annotation+finish`
+     ;; The shape of `finish-data` is recognized in `class-annotation+finish`
      ;; and "class-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
                                       name name-extends tail-name

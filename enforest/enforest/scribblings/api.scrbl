@@ -19,7 +19,7 @@
  Returns an implementation of @racket[prop:name-root] with a function
  that results in the structure instance itself.
 
- The transformer procedure @racket[proc] takes an introducer funciton
+ The transformer procedure @racket[proc] takes an introducer function
  and a syntax list of terms and returns two values: a new head
  identifier or operator, and a syntax list of remaining terms. The
  introducer function corresponds to the space that is otherwise used
@@ -251,7 +251,7 @@
 
  The @racket[name-path-op] symbol (defaulting to @racket['|.|]) is an
  operator name that is (symbolically) recognized after a name-root
- identifier for hierarhical name references.
+ identifier for hierarchical name references.
 
  The @racket[name-root-ref] function (defaulting to
  @name-root-ref/default) takes a compile-time value and extracts an

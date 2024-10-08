@@ -43,7 +43,7 @@ loops.
  function where only keyword arguments are optional. The default value
  for a keyword argument in a recursive call, meanwhile, is whatever was
  supplied for the enclosing call, with the effect that keyword arguments
- are automatically propogated in a recursive call.
+ are automatically propagated in a recursive call.
 
  Beware that when @rhombus(maybe_res_annot) specifies a result
  annotation using @rhombus(::, ~bind), the annotation is checked on every

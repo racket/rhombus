@@ -78,7 +78,7 @@
   operator ((v1 :: Any) != (v2 :: Any)) :: Boolean
 ){
 
- Equvalent to @rhombus(!(v1 == v2)).
+ Equivalent to @rhombus(!(v1 == v2)).
 
 @examples(
   "apple" != "apple"

@@ -22,7 +22,7 @@ by an evaluator, for example.
  evaluator (as determined by @rhombus(Evaluator.current)), that can be
  different that evaluating non-interaction top-level forms.
 
- A suitable evalutor must have been created and installed as the value
+ A suitable evaluator must have been created and installed as the value
  of the @rhombus(Evaluator.current) context parameter, since the default
  evaluator is empty.
 

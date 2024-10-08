@@ -516,7 +516,7 @@
                                     null)
                              #,e)))
        ;; Define `wrap-rator` and `wrap-obj-e` instead of just `rator`
-       ;; and `obj-e` so that we can push the relavant operators into
+       ;; and `obj-e` so that we can push the relevant operators into
        ;; the body of a `for` that is generated for a repetition.
        ;; In the case that a method is extracted from a vtable, we
        ;; need to have a single `form1` result bound to use in both

@@ -206,7 +206,7 @@ reconstructed text:
   property.}
 
  @item{@indexed-racket['opaque-raw] (use
-  @racket[syntax-opaque-raw-property]): raw text that supercedes
+  @racket[syntax-opaque-raw-property]): raw text that supersedes
   @racket['raw] and @racket['raw-opaque-content]. Furthermore, this
   property is recognized when present on the S-expression ``parentheses''
   of a compound form or an @racket[op] form, in which case properties on

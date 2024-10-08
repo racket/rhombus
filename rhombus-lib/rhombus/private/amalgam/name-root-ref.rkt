@@ -13,7 +13,7 @@
          ;; imports suitably limited
          "name-root-space.rkt")
 
-;; convert a hierachical layer implemented as portal syntax to a name-root
+;; convert a hierarchical layer implemented as portal syntax to a name-root
 
 (provide (for-syntax name-root-ref
                      name-root-ref/maybe

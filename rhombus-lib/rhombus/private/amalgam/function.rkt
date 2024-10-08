@@ -365,7 +365,7 @@
            the-name (list #'main-ret.static-infos) arity
            (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                               proc)))]
-        ;; single-alterative case
+        ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
                   ret::ret-annotation
@@ -468,7 +468,7 @@
                   (wrap-static-info proc #'#%function-arity arity)
                   proc))
              #'())]
-    ;; single-alterative case
+    ;; single-alternative case
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
               (~and rhs (_::block body ...)))
      (define args (syntax->list #'(arg ...)))

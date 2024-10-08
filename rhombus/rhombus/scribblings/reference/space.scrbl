@@ -249,7 +249,7 @@ driver and macro-definitions forms.
  @item{@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause):
   declares an identifier to be bound as a @rhombus(~group) syntax class
   that takes one argument and has with @rhombus(group, ~datum) and
-  @rhombus(tail, ~datum) fields. The argument is a syntax object containg
+  @rhombus(tail, ~datum) fields. The argument is a syntax object containing
   a prefix operator or identifier that is bound for the space. Parsing
   proceeds as if after the argument of the operator, which means that
   parsing can stop with a tail sequence remaining. The parsed ``argument''

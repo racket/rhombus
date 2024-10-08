@@ -32,7 +32,7 @@
   (define (delayed-annotation-ref v) (and (delayed-annotation? v) v)))
 
 (define (too-early who)
-  (raise-arguments-error who "delayed annoation is not yet completed"))
+  (raise-arguments-error who "delayed annotation is not yet completed"))
 
 (define-for-syntax (static-info-too-early who)
   (raise-syntax-error who

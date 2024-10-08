@@ -157,7 +157,7 @@
            ;; continue when some expr+defns are ready:
            (lambda (exprs+defns state)
              #`(#:do (#,@exprs+defns)
-                ;; `for-clause-forwaring-step` will  use
+                ;; `for-clause-forwarding-step` will use
                 ;; `expand-forwarding-sequence-continue`
                 ;; and eventually get back to `for-clause-step` mode:
                 #:splice (for-clause-forwarding-step

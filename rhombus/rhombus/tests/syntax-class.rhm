@@ -536,7 +536,7 @@ check:
   | '$(f :: Foo)': [f.y, ...]
   ~is [1, #'~q, 3]
 
-// a field used both as a non-syntax and a sytax field
+// a field used both as a non-syntax and a syntax field
 block:
   syntax_class Foo
   | '$x':

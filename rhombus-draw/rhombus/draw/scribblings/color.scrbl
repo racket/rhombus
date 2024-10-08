@@ -58,7 +58,7 @@
 ){
 
  Blends two colors to produce a new one. Each red, green, and blue
- component contibutes to the corresponding blended component by its
+ component contributes to the corresponding blended component by its
  weighted average, where each color's alpha is is weight. The result
  color's alpha is the average of the two color's alphas.
 

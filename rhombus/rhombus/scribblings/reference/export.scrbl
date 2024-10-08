@@ -129,7 +129,7 @@
 ){
 
  Exports all identifiers defined within the enclosing module or
- namespace that could be referened by a @rhombus(names) form using the
+ namespace that could be referenced by a @rhombus(names) form using the
  same scopes as @rhombus(id) or (when no @rhombus(id) is provided) the
  @rhombus(all_defined, ~expo) identifier itself. Supplying
  @rhombus(~scope_like id) is particularly useful in the case of a

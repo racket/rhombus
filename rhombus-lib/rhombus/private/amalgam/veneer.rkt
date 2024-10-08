@@ -48,7 +48,7 @@
          #:with orig-stx stxes
          (define body #'(options.form ...))
          (define intro (make-syntax-introducer #t))
-         ;; The shape of `finish-data` is recognzied in `veneer-annotation+finish`
+         ;; The shape of `finish-data` is recognized in `veneer-annotation+finish`
          ;; and "veneer-meta.rkt"
          (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
                                           name name-extends tail-name

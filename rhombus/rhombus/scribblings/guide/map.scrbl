@@ -101,7 +101,7 @@ for keys and one for values:
     locale("alice", neighborhood)
 )
 
-Note that @rhombus(buckets[0]) above statically resolves to the use of
+Note that @rhombus(neighborhood[who]) above statically resolves to the use of
 map lookup, instead of going through a generic lookup at run time.
 
 The @rhombus(MutableMap) constructor works similarly to the @rhombus(Map)

@@ -12,7 +12,7 @@
            #:collect "enforest"
            #:collect "pretty-expressive"
            ;; We wouldn't want to duplicate the shrubbery parser but
-           ;; that's used ony lazily (i.e., dynamically) required
+           ;; that's used only lazily (i.e., dynamically) required
            ;; within the amalgam; it's ok to inline small shrubbery
            ;; utilities:
            #:collect "shrubbery"

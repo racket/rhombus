@@ -22,7 +22,7 @@
  (#%declare #:flatten-requires)
  (void))
 
-;; TEMP accomodate Racket versions before `syntax/parse/report-config`
+;; TEMP accommodate Racket versions before `syntax/parse/report-config`
 (meta-if-version-at-least
  "8.9.0.5"
  (require (only-in syntax/parse/report-config

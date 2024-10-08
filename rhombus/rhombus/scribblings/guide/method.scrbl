@@ -41,7 +41,7 @@ Methods are inherited in a subclass. Use the
 @rhombus(override, ~class_clause) modifier to override a method;
 attempting to replace a method with just @rhombus(method, ~class_clause)
 will report an error. To call the superclass implementation for a method
-that is overidden (usually in the overriding implementation), use
+that is overridden (usually in the overriding implementation), use
 @rhombus(super) plus the @rhombus(.) operator and the method name.
 
 @examples(
@@ -115,8 +115,8 @@ results a satisfying result.
       Square(0).area()
 )
 
-This enforcement of result contracts applies to overridding in general,
-not just overiding to implement an abstract method. When an overriding
+This enforcement of result contracts applies to overriding in general,
+not just overriding to implement an abstract method. When an overriding
 method has its own result annotation, then both the overriding
 annotation and the inhereited annotation(s) apply to the method and any
 further overrides.

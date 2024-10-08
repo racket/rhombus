@@ -34,7 +34,7 @@
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
  use, where each group can be either a another @rhombus(for) clause, an
- expression, or a defintion.
+ expression, or a definition.
 
 @examples(
   ~eval: macro_eval

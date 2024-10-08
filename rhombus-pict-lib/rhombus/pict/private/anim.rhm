@@ -827,7 +827,7 @@ fun merge_epochs([p :~ Pict, ...], dalign):
 
 // Return a list of picts such that if any pict in `ps` is replaced,
 // then `rebuild` is called on the list, and each result replaces
-// the corresponding reuslt here. (If we made each individual pict
+// the corresponding result here. (If we made each individual pict
 // depend on `ps`, then replacement would be quadratic time, at least.)
 fun rebuildable_list(ps :~ List, orig_ps, rebuild):
   fun make_container(ps, orig_ps):

@@ -229,7 +229,7 @@ check:
   | 'hi $('$')': "ok"
   ~throws "expected the operator `$`"
 
-// ckeck group-sequence splicing
+// check group-sequence splicing
 block:
   // tail
   check:

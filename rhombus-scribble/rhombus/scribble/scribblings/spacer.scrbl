@@ -109,6 +109,6 @@ link names in documentation.
  Similar to @rhombus(set), but recursively finds and applies spacers
  within @rhombus(stx) according to the given @rhombus(context), passing
  along @rhombus(esc) to nested spacers so that they can avoid traversing
- espace sequences.
+ escape sequences.
 
 }

@@ -85,7 +85,7 @@
  @rhombus(op), it cannot be @rhombus($), but the form
  @rhombus($('$')) can be used to define @rhombus($). A
  @rhombus(defined_name) cannot be @rhombus(()) for a @rhombus(macro)
- defintition. The @rhombus(defined_name) is bound in the
+ definition. The @rhombus(defined_name) is bound in the
  @rhombus(expr, ~space) @tech{space}.
 
  As an expression or @tech{entry point}, @rhombus(macro) is a shorthand
@@ -96,7 +96,7 @@
  imported.
 
  For a macro defined with @rhombus(macro), @rhombus(macro_pattern) is
- matched to a sequence witin a group. Within the @quotes of each
+ matched to a sequence within a group. Within the @quotes of each
  @rhombus(macro_pattern), either the first term is a
  @rhombus(defined_name) to be defined as a prefix macro, or the first
  term is a single @rhombus($, ~bind) escape followed by a

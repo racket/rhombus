@@ -30,7 +30,7 @@
 ;;   support for non-transformer operators as a convenience and as a
 ;;   way to understand the implementation.
 ;;
-;; * When the inital term is an identifier followed by a name-path
+;; * When the initial term is an identifier followed by a name-path
 ;;   operator and the `lookup` analog produces a name root for the
 ;;   identifier, the name-root transformer is applied. Its result, a
 ;;   new term and tail, are used for the new state, without changing

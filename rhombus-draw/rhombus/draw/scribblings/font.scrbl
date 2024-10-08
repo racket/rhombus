@@ -47,7 +47,7 @@
     :: Map.of(Font.FeatureString, NonnegInt)
 ){
 
- Propeties to access font components.
+ Properties to access font components.
 
 }
 

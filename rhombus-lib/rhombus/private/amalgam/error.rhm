@@ -37,7 +37,7 @@ class Clause(msg :: String):
   nonfinal
 
 // primary `error` function
-// (not backward-comptible with current `error` due to `~who` keyword argument)
+// (not backward-compatible with current `error` due to `~who` keyword argument)
 fun error(~srcloc: srcloc :: maybe(Srcloc) = #false,
           ~who: who :: maybe(error.Who) = #false,
           ~realm: realm :: Symbol = #'rhombus,
