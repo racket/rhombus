@@ -113,6 +113,14 @@ output. Moreover, an @deftech{input string port} or an
 }
 
 @doc(
+  fun Port.Input.open_file(file :: PathString) :: Port.Input
+){
+
+ Creates an @tech{input port} that reads from the @tech{path} @rhombus(file).
+
+}
+
+@doc(
   fun Port.Input.open_string(str :: ReadableString,
                              name :: Symbol = #'string)
     :: Port.Input.String
@@ -315,6 +323,51 @@ output. Moreover, an @deftech{input string port} or an
 }
 
 @doc(
+  fun Port.Output.open_file(path :: PathString,
+                            ~exists: exists_flag
+                                       :: Port.Output.ExistsFlag = #'error)
+    :: Port.Output
+){
+
+ Creates an @tech{output port} that writes to the @tech{path} @rhombus(file).
+ The @rhombus(exists_flag) argument specifies how to handle/require
+ files that already exist:
+
+ @itemlist(
+
+  @item{@rhombus(#'error) --- throws @rhombus(Exn.Fail.Filesystem.Exists)
+        if the file exists.}
+
+  @item{@rhombus(#'replace) --- remove the old file, if it
+        exists, and write a new one.}
+
+  @item{@rhombus(#'truncate) --- remove all old data, if the file
+        exists.}
+
+  @item{@rhombus(#'must_truncate) --- remove all old data in an
+        existing file; if the file does not exist, the
+        @rhombus(Exn.Fail.Filesystem) exception is thrown.}
+
+  @item{@rhombus(#'truncate_replace) --- try @rhombus(#'truncate);
+        if it fails (perhaps due to file permissions), try
+        @rhombus(#'replace).}
+
+  @item{@rhombus(#'update) --- open an existing file without
+        truncating it; if the file does not exist, the
+        @rhombus(Exn.Fail.Filesystem) exception is thrown.}
+
+  @item{@rhombus(#'can_update) --- open an existing file without
+        truncating it, or create the file if it does not exist.}
+
+  @item{@rhombus(#'append) --- append to the end of the file,
+        whether it already exists or not; on Windows,
+        @rhombus(#'append) is equivalent to @rhombus(#'update), except that
+        the file is not required to exist, and the file position is
+        immediately set to the end of the file after opening it.}
+
+)}
+
+@doc(
   fun Port.Output.open_bytes(name :: Symbol = #'string)
     :: Port.Output.String
   fun Port.Output.open_string(name :: Symbol = #'string)
@@ -355,5 +408,21 @@ output. Moreover, an @deftech{input string port} or an
 ){
 
  Flushes the content of @rhombus(out)'s buffer.
+
+}
+
+@doc(
+  enum Port.Output.ExistsFlag:
+    error
+    append
+    update
+    can_update
+    replace
+    truncate
+    must_truncate
+    truncate_replace
+){
+
+  Flags for handling existing files when opening @tech{output ports}.
 
 }
