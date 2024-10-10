@@ -182,6 +182,82 @@ block:
     dynamic(PairList[1, 2, 3]).append(PairList[4, 5])
     ~is PairList[1, 2, 3, 4, 5]
 
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    PairList[x, ...]
+    ~is PairList[1, 2, 3]
+  check:
+    PairList[x, ..., 0]
+    ~is PairList[1, 2, 3, 0]
+  check:
+    PairList[0, x, ...]
+    ~is PairList[0, 1, 2, 3]
+  check:
+    PairList[& [10, 11], & PairList[12, 13], x, ..., 0]
+    ~is PairList[10, 11, 12, 13, 1, 2, 3, 0]
+  check:
+    PairList[PairList[x], ...]
+    ~is PairList[PairList[1], PairList[2], PairList[3]]
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    PairList[PairList[z, ...], ...]
+    ~is PairList[PairList[1, 2, 3], PairList[4, 5]]
+
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    PairList(x, ...)
+    ~is PairList[1, 2, 3]
+  check:
+    PairList(x, ..., 0)
+    ~is PairList[1, 2, 3, 0]
+  check:
+    PairList(0, x, ...)
+    ~is PairList[0, 1, 2, 3]
+  check:
+    PairList(& List(10, 11), & PairList(12, 13), x, ..., 0)
+    ~is PairList[10, 11, 12, 13, 1, 2, 3, 0]
+  check:
+    PairList(PairList(x), ...)
+    ~is PairList[PairList[1], PairList[2], PairList[3]]
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    PairList(PairList(z, ...), ...)
+    ~is PairList[PairList[1, 2, 3], PairList[4, 5]]
+
+check:
+  def PairList[0] = PairList[0]
+  ~completes
+
+check:
+  def PairList[0, _, ...] = PairList[0, 1, 2]
+  ~completes
+
+check:
+  def PairList[0, x, ...] = PairList[0, 1, 2]
+  [x, ...]
+  ~is [1, 2]
+
+check:
+  def PairList[0, & rst] = PairList[0, 1, 2]
+  rst
+  ~is PairList[1, 2]
+
+check:
+  def PairList[0, 1, 2, _, ...] = PairList[0, 1, 2]
+  ~completes
+
+check:
+  def PairList[0, 1, 2, x, ...] = PairList[0, 1, 2]
+  [x, ...]
+  ~is []
+
+check:
+  def PairList[0, 1, 2, & rst] = PairList[0, 1, 2]
+  rst
+  ~is PairList[]
+
 check:
   match PairList[]
   | PairList.empty: "empty"

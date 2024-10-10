@@ -209,6 +209,96 @@ block:
     dynamic([1, 2, 3]).append([4, 5])
     ~is [1, 2, 3, 4, 5]
 
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    [x, ...]
+    ~is [1, 2, 3]
+  check:
+    [x, ..., 0]
+    ~is [1, 2, 3, 0]
+  check:
+    [0, x, ...]
+    ~is [0, 1, 2, 3]
+  check:
+    [& PairList[10, 11], & [12, 13], x, ..., 0]
+    ~is [10, 11, 12, 13, 1, 2, 3, 0]
+  check:
+    [[x], ...]
+    ~is [[1], [2], [3]]
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [[z, ...], ...]
+    ~is [[1, 2, 3], [4, 5]]
+
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    List(x, ...)
+    ~is [1, 2, 3]
+  check:
+    List(x, ..., 0)
+    ~is [1, 2, 3, 0]
+  check:
+    List(0, x, ...)
+    ~is [0, 1, 2, 3]
+  check:
+    List(& PairList(10, 11), & List(12, 13), x, ..., 0)
+    ~is [10, 11, 12, 13, 1, 2, 3, 0]
+  check:
+    List(List(x), ...)
+    ~is [[1], [2], [3]]
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    List(List(z, ...), ...)
+    ~is [[1, 2, 3], [4, 5]]
+
+check:
+  def [0] = [0]
+  ~completes
+
+check:
+  def [0, _, ...] = [0, 1, 2]
+  ~completes
+
+check:
+  def [0, x, ...] = [0, 1, 2]
+  [x, ...]
+  ~is [1, 2]
+
+check:
+  def [0, & rst] = [0, 1, 2]
+  rst
+  ~is [1, 2]
+
+check:
+  def [0, _, ..., 2] = [0, 1, 2]
+  ~completes
+
+check:
+  def [0, x, ..., 2] = [0, 1, 2]
+  [x, ...]
+  ~is [1]
+
+check:
+  def [0, & rst, 2] = [0, 1, 2]
+  rst
+  ~is [1]
+
+check:
+  def [0, 1, 2, _, ...] = [0, 1, 2]
+  ~completes
+
+check:
+  def [0, 1, 2, x, ...] = [0, 1, 2]
+  [x, ...]
+  ~is []
+
+check:
+  def [0, 1, 2, & rst] = [0, 1, 2]
+  rst
+  ~is []
+
 check:
   match []
   | List.empty: "empty"

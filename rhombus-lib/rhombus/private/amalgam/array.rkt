@@ -74,10 +74,10 @@
    to_sequence))
 
 (define-syntax Array
-  (expression-transformer
+  (expression-repeatable-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id . tail) (values (relocate+reraw #'form-id #'vector) #'tail)]))))
+       [(form-id . tail) (values (relocate-id #'form-id #'vector) #'tail)]))))
 
 (define-annotation-constructor (Array now_of)
   () #'vector? #,(get-array-static-infos)

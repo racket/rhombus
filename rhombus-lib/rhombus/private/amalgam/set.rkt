@@ -440,7 +440,7 @@
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use set-build*-id)
-                                  (relocate+reraw #'form-id set-build*-id))
+                                  (relocate-id #'form-id set-build*-id))
                         #'tail)]))
 
 (define-syntax Set
@@ -758,7 +758,7 @@
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use mutable-set-build-id)
-                                  (relocate+reraw #'form-id mutable-set-build-id))
+                                  (relocate-id #'form-id mutable-set-build-id))
                               #'tail)]))
 
 (define-annotation-syntax WeakMutableSet (identifier-annotation weak-mutable-set? #,(get-mutable-set-static-infos)))

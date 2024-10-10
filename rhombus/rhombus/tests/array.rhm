@@ -148,13 +148,56 @@ block:
        dynamic(s).copy_from(2, Array(0, 9, 10, 11), 1, 3)
        s) ~is_now Array(4, 5, 9, 10, 8)
 
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    Array(x, ...)
+    ~is_now Array(1, 2, 3)
+  check:
+    Array(x, ..., 0)
+    ~is_now Array(1, 2, 3, 0)
+  check:
+    Array(0, x, ...)
+    ~is_now Array(0, 1, 2, 3)
+  check:
+    Array(& Array(10, 11), & [12, 13], x, ..., 0)
+    ~is_now Array(10, 11, 12, 13, 1, 2, 3, 0)
+  check:
+    [Array(x), ...]
+    ~is_now [Array(1), Array(2), Array(3)]
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [Array(z, ...), ...]
+    ~is_now [Array(1, 2, 3), Array(4, 5)]
+
+check:
+  def Array(0) = Array(0)
+  ~completes
+
+check:
+  def Array(0, _, ...) = Array(0, 1, 2)
+  ~completes
+
+check:
+  def Array(0, x, ...) = Array(0, 1, 2)
+  [x, ...]
+  ~is [1, 2]
+
+check:
+  def Array(0, 1, 2, _, ...) = Array(0, 1, 2)
+  ~completes
+
+check:
+  def Array(0, 1, 2, x, ...) = Array(0, 1, 2)
+  [x, ...]
+  ~is []
+
 check:
   Array.append() ~is_now Array()
   Array.append(Array(1)) ~is_now Array(1)
   Array.append(Array(1), Array(2)) ~is_now Array(1, 2)
   Array.append(Array(1), Array(2), Array(3)) ~is_now Array(1, 2, 3)
   Array.append(Array(1), Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
-
 
 check:
   10 :: Array

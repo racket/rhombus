@@ -361,9 +361,9 @@
                             #:repetition? repetition?
                             #:rep-for-form rep-for-form))
              #'tail)]
-    [(form-id . tail) (values (cond
-                                [repetition? (identifier-repetition-use map-pair-build-id)]
-                                [else (relocate+reraw #'form-id map-pair-build-id)])
+    [(form-id . tail) (values (if repetition?
+                                  (identifier-repetition-use map-pair-build-id)
+                                  (relocate-id #'form-id map-pair-build-id))
                               #'tail)]))
 
 (define-syntax Map
@@ -738,7 +738,7 @@
              #'tail)]
     [(form-id . tail) (values (if repetition?
                                   (identifier-repetition-use mutable-map-build-id)
-                                  (relocate+reraw #'form-id mutable-map-build-id))
+                                  (relocate-id #'form-id mutable-map-build-id))
                               #'tail)]))
 
 (define-syntax MutableMap

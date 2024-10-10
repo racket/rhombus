@@ -257,6 +257,22 @@ block:
     [{z: #true, ...}, ...]
     ~is [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
 
+block:
+  def [x, ...] = [1, 2, 3]
+  check:
+    Map([x, x], ..., [#true, 0])
+    ~is {1: 1, 2: 2, 3: 3, #true: 0}
+  check:
+    Map([#true, 0], [x, x], ...)
+    ~is {1: 1, 2: 2, 3: 3, #true: 0}
+  check:
+    Map([#true, 0], & [[7, 7]], [x, x], ...)
+    ~is {1: 1, 2: 2, 3: 3, 7: 7, #true: 0}
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [Map([z, #true], ...), ...]
+    ~is [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
+
 check:
   def {"x": x, "y": y = 2} = {"x": 1}
   [x, y]

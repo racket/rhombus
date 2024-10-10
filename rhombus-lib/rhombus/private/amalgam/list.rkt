@@ -426,8 +426,11 @@
                          #:rep-solo-for-form rep-solo-for-form
                          #:repetition? repetition?
                          #:span-form-name? #t)]
-      [(_ . tail)
-       (values proc-stx #'tail)])))
+      [(form-id . tail)
+       (values (if repetition?
+                   (identifier-repetition-use proc-stx)
+                   (relocate-id #'form-id proc-stx))
+               #'tail)])))
 
 (define-for-syntax (make-treelist-rest-selector args-n post-args-n)
   (if (= 0 args-n)
