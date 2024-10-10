@@ -331,8 +331,8 @@
                                         #'())
                                       #:static-infos (get-array-static-infos)
                                       #:index-result-info? #t
-                                      #:rest-accessor (and rest-arg
-                                                           #`(lambda (v) (vector-suffix->list v #,len)))
+                                      #:rest-accessor (and rest-arg #`(lambda (v) (vector-drop v #,len)))
+                                      #:rest-to-repetition #'in-vector
                                       #:rest-repetition? (and rest-arg #t)))
      (syntax-parse stx
        [(form-id (tag::parens arg ... rest-arg (group _::...-bind)) . tail)
@@ -349,7 +349,3 @@
                          (and (vector? v)
                               (= (vector-length v) #,len))))
         (build args len pred #f #'form-id #'tail)]))))
-
-(define (vector-suffix->list v start)
-  (for/list ([i (in-range start (vector-length v))])
-    (vector-ref v i)))

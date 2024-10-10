@@ -297,9 +297,6 @@
   (for/hasheqv ([key+val (in-list key+vals)])
     (values (car key+val) (cdr key+val))))
 
-(define (hash-pairs ht)
-  (for/list ([p (in-immutable-hash-pairs ht)]) p))
-
 (define empty-map #hashalw())
 (define-static-info-syntax empty-map
   #:getter get-map-static-infos)
@@ -893,14 +890,9 @@
                                      #:static-infos (get-map-static-infos)
                                      #:index-result-info? #t
                                      #:sequence-element-info? #t
-                                     #:rest-accessor
-                                     (and maybe-rest
-                                          (if rest-repetition?
-                                              #`(lambda (v) (hash-pairs #,rest-tmp))
-                                              #`(lambda (v) #,rest-tmp)))
-                                     #:rest-to-repetition #'in-list
-                                     #:rest-repetition? (and rest-repetition?
-                                                             'pair)))
+                                     #:rest-accessor (and maybe-rest #`(lambda (v) #,rest-tmp))
+                                     #:rest-to-repetition #'in-immutable-hash-pairs
+                                     #:rest-repetition? (and rest-repetition? 'pair)))
     (values
      (syntax-parse composite
        [composite::binding-form

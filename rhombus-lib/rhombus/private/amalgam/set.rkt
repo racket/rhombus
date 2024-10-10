@@ -538,10 +538,11 @@
                                      '()
                                      #:static-infos (get-set-static-infos)
                                      #:sequence-element-info? #t
-                                     #:rest-accessor
-                                     (and maybe-rest
-                                          #`(lambda (v) #,rest-tmp))
-                                     #:rest-to-repetition #'Set.to_sequence/optimize
+                                     #:rest-accessor (and maybe-rest
+                                                          (if rest-repetition?
+                                                              #`(lambda (v) (set-ht #,rest-tmp))
+                                                              #`(lambda (v) #,rest-tmp)))
+                                     #:rest-to-repetition #'in-immutable-hash-keys
                                      #:rest-repetition? rest-repetition?))
     (values
      (syntax-parse composite

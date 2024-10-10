@@ -15,10 +15,6 @@
          "if-blocked.rkt"
          "parens.rkt")
 
-;; `make-composite-binding-transformer` is mostly generic with respect
-;; to a composite datatype, but the `rest` support is currently
-;; hardwired to lists.
-
 (provide (for-syntax composite-binding-transformer))
 
 (define-for-syntax (composite-binding-transformer tail
