@@ -31,9 +31,6 @@
                       rhombus/repet
                       rhombus/unquote_bind)
                      #%quotes)
-         (for-spaces (#f
-                      rhombus/bind)
-                     syntax_term)
          (for-space rhombus/unquote_bind
                     _))
 
@@ -937,26 +934,6 @@
                                                               #`(quote-syntax #,e)
                                                               (get-syntax-static-infos)
                                                               0))))))
-
-(define-syntax syntax_term
-  (expression-prefix-operator
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ (_::parens (group term)) . tail)
-        (values (convert-template #'term) #'tail)]))))
-
-(define-binding-syntax syntax_term
-  (binding-prefix-operator
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ (_::parens (group term)) . tail)
-        (values (convert-pattern/generate-match #'term) #'tail)]))))
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
