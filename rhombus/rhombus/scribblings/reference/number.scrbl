@@ -191,11 +191,36 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Byte'
 ){
 
- Matches integers in the range @rhombus(0) ro @rhombus(255) (inclusive).
+ Matches bytes. A @deftech{byte} is an integer in the range
+ @rhombus(0) to @rhombus(255) (inclusive).
 
 @examples(
   5 is_a Byte
   256 is_a Byte
+  Byte#"a" is_a Byte
+)
+
+}
+
+@doc(
+  expr.macro 'Byte $single_byte_bstr'
+  repet.macro 'Byte $single_byte_bstr'
+  bind.macro 'Byte $single_byte_bstr'
+){
+
+ Produces or matches a byte. The @rhombus(single_byte_bstr)
+ literal @tech{byte string} must have exactly a single byte, and that
+ byte is produced or matched.
+
+@examples(
+  Byte#"a"
+  match Byte#"a"
+  | Byte#"a" || Byte#"b": "yes"
+  | ~else: "no"
+  ~error:
+    Byte#"too long"
+  ~error:
+    Byte#"a" matches Byte#"too long"
 )
 
 }
@@ -239,7 +264,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 ){
 
  Integer division (truncating), remainder, and modulo operations. These
- operators have stronger pecedence than @rhombus(+) and @rhombus(-) but
+ operators have stronger precedence than @rhombus(+) and @rhombus(-) but
  no precedence relationship to @rhombus(*), @rhombus(/), or @rhombus(**).
 
 @examples(
@@ -260,7 +285,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 ){
 
  The usual comparison operators on real numbers prefixed with @litchar{.} to
- distinsguish them from generic operations like @rhombus(<) on
+ distinguish them from generic operations like @rhombus(<) on
  @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=),
  which work on all numbers.
 
@@ -477,7 +502,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   def math.pi :: Flonum
 ){
 
- An appromation of @italic{π}, the ratio of a circle's circumference to its diameter.
+ An approximation of @italic{π}, the ratio of a circle's circumference to its diameter.
 
 @examples(
   math.pi

@@ -390,11 +390,11 @@ meta:
     | [[s, e]] when s == e:
         // single character
         cond
-        | s == "^"[0].to_int(): "\\^"
-        | s == "-"[0].to_int(): "\\-"
-        | s == "["[0].to_int(): "\\["
-        | s == "]"[0].to_int(): "\\]"
-        | s == "\\"[0].to_int(): "\\\\"
+        | s == Char"^".to_int(): "\\^"
+        | s == Char"-".to_int(): "\\-"
+        | s == Char"[".to_int(): "\\["
+        | s == Char"]".to_int(): "\\]"
+        | s == Char"\\".to_int(): "\\\\"
         | ~else: "[" +& Char.from_int(s) +& "]"
     | [[45, 45], [94, 94]]:
         // avoid generating `[^-]`:
@@ -406,19 +406,19 @@ meta:
               let one = Charset(ch)
               loop(cs.subtract(one))
             cond
-            | cs.has_edge("-"[0]):
+            | cs.has_edge(Char"-"):
                 // put `-` farthest at end
-                without_one("-"[0]) ++ "-"
-            | cs.has_edge("^"[0]):
+                without_one(Char"-") ++ "-"
+            | cs.has_edge(Char"^"):
                 // put `^` farthest at end, except maybe before `-`;
                 // there must be other things to go before `^` if we
                 // arrived at this case
-                without_one("^"[0]) ++ "^"
-            | cs.has_edge("]"[0]):
+                without_one(Char"^") ++ "^"
+            | cs.has_edge(Char"]"):
                 // put `[` at beginning
-                "[" ++ without_one("]"[0])
-            | cs.has_edge("\\"[0]):
-                "\\\\" ++ without_one("\\"[0])
+                "[" ++ without_one(Char"]")
+            | cs.has_edge(Char"\\"):
+                "\\\\" ++ without_one(Char"\\")
             | ~else:
                 // Note: we won't create a `[:` combination, because `:`
                 // is earlier in ASCII than `[`

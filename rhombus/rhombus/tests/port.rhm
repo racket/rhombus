@@ -32,16 +32,16 @@ block:
   let p = Port.Input.open_string("abλcdefμ")
   check p is_a Port.Input ~is #true
   check p is_a Port.Input.String ~is #true
-  check p.peek_byte() ~is "a"[0].to_int()
-  check p.peek_byte(~skip_bytes: 1) ~is "b"[0].to_int()
-  check p.read_byte() ~is "a"[0].to_int()
-  check p.peek_byte(~skip_bytes: 3) ~is "c"[0].to_int()
-  check p.peek_char() ~is "b"[0]
-  check p.peek_char(~skip_bytes: 1) ~is "λ"[0]
-  check p.peek_char(~skip_bytes: 3) ~is "c"[0]
-  check p.read_char() ~is "b"[0]
-  check p.read_char() ~is "λ"[0]
-  check p.peek_char() ~is "c"[0]
+  check p.peek_byte() ~is Char"a".to_int()
+  check p.peek_byte(~skip_bytes: 1) ~is Char"b".to_int()
+  check p.read_byte() ~is Char"a".to_int()
+  check p.peek_byte(~skip_bytes: 3) ~is Char"c".to_int()
+  check p.peek_char() ~is Char"b"
+  check p.peek_char(~skip_bytes: 1) ~is Char"λ"
+  check p.peek_char(~skip_bytes: 3) ~is Char"c"
+  check p.read_char() ~is Char"b"
+  check p.read_char() ~is Char"λ"
+  check p.peek_char() ~is Char"c"
   check p.read_bytes(2) ~is_now #"cd".copy()
   check p.read_string(3) ~is "efμ"
 

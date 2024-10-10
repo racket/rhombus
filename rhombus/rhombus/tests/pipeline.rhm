@@ -42,17 +42,17 @@ check:
 check:
   use_static
   "apple" |> (_[0])
-  ~is "a"[0]
+  ~is Char"a"
 
 check:
   use_static
   "apple" |> (fun (x): x[0])
-  ~is "a"[0]
+  ~is Char"a"
 
 check:
   use_static
   "apple" |> (fun | (x): x[0])
-  ~is "a"[0]
+  ~is Char"a"
 
 check:
   use_static

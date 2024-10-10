@@ -20,36 +20,33 @@
 
 (define-syntax (literal-infoer stx)
   (syntax-parse stx
-    [(_ up-static-infos (~and datums (datum0 datum ...)))
+    [(_ up-static-infos (~and data ([datum0 str0] [datum str] ...)))
      (binding-info (annotation-string-from-pattern
                     (apply string-append
-                           (literal->string #'datum0)
-                           (for/list ([datum (in-list (syntax->list #'(datum ...)))])
-                             (string-append " || " (literal->string datum)))))
+                           (syntax-e #'str0)
+                           (for/list ([str (in-list (syntax->list #'(str ...)))])
+                             (string-append " || " (syntax-e str)))))
                    #'literal
                    (static-infos-union
                     (or (for/fold ([si (literal-static-infos #'datum0)])
                                   ([datum (in-list (syntax->list #'(datum ...)))])
-                          (and si (static-infos-intersect si (literal-static-infos datum))))
+                          #:break (not si)
+                          (cond
+                            [(literal-static-infos datum)
+                             => (lambda (more-si)
+                                  (static-infos-intersect si more-si))]
+                            [else #f]))
                         #'())
                     #'up-static-infos)
                    #'()
                    #'literal-matcher
                    #'literal-commit-nothing
                    #'literal-bind-nothing
-                   #'datums)]))
-
-(define-for-syntax (literal->string d-stx)
-  (define d (syntax-e d-stx))
-  (define str (shrubbery-syntax->string d-stx))
-  (if (or (symbol? d)
-          (keyword? d))
-      (string-append "#'" str)
-      str))
+                   #'data)]))
 
 (define-syntax (literal-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (datum ...) IF success fail)
+    [(_ arg-id ([datum _] ...) IF success fail)
      #'(IF (or (equal-always? arg-id (quote datum))
                ...)
            success
@@ -57,12 +54,12 @@
 
 (define-syntax (literal-commit-nothing stx)
   (syntax-parse stx
-    [(_ arg-id datums)
+    [(_ arg-id data)
      #'(begin)]))
 
 (define-syntax (literal-bind-nothing stx)
   (syntax-parse stx
-    [(_ arg-id datums)
+    [(_ arg-id data)
      #'(begin)]))
 
 (define-for-syntax get-string-static-infos #f)

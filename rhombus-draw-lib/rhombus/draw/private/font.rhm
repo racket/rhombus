@@ -83,7 +83,7 @@ class Font(private _handle):
     ~is_a Int.in(100, 1000)
     { thin, ultralight, light, semilight, book, normal,
       medium, semibold, bold, ultrabold, heavy, ultraheavy }
-    
+
   symbol_map_annot Smoothing convert_smoothing unconvert_smoothing:
     { default: default,
       partly_smoothed: #{partly-smoothed},
@@ -99,11 +99,9 @@ class Font(private _handle):
 
   fun
   | is_feature_string(v :: String):
-      fun ok(c):
-         c == " "[0]
-           || c == "!"[0]
-           || (Char.to_int(c) >= Char.to_int("#"[0])
-                 && Char.to_int(c) <= Char.to_int("~"[0]))
+      fun ok(c :~ Char):
+         c matches (Char" " || Char"!")
+           || (c >= Char"#" && c <= Char"~")
       v.length() == 4 && ok(v[0]) && ok(v[1]) && ok(v[2]) && ok(v[3])
   | is_feature_string(_):
       #false

@@ -1,0 +1,49 @@
+#lang rhombus/static
+
+check:
+  Byte#"h" ~is 104
+  Byte#"h" ~is_a Byte
+  Byte#"h" ~is_a NonnegInt
+
+block:
+  fun matcher(byte):
+    match byte
+    | Byte#"a" || Byte#"b" || Byte#"c": #true
+    | ~else: #false
+  check matcher(Byte#"a") ~is #true
+  check matcher(Byte#"b") ~is #true
+  check matcher(Byte#"c") ~is #true
+  check matcher(Byte#"z") ~is #false
+  check matcher(97) ~is #true
+  check matcher(98) ~is #true
+  check matcher(99) ~is #true
+  check matcher(122) ~is #false
+  check matcher(Char"a") ~is #false
+
+check:
+  repr(Byte#"a") ~is "97"
+  repr(Byte#"\n") ~is "10"
+
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    '#%literal $(expr.to_source_string())'
+  check source Byte#"a" ~is "Byte#\"a\""
+  check source Byte#"\n" ~is "Byte#\"\\n\""
+
+check:
+  ~eval
+  Byte#"too long"
+  ~throws values(
+    "expected a literal single-byte byte string",
+    "Byte#\"too long\"",
+  )
+
+check:
+  ~eval
+  Byte#"a" matches Byte#"too long"
+  ~throws values(
+    "expected a literal single-byte byte string",
+    "Byte#\"too long\"",
+  )
