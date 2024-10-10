@@ -504,9 +504,11 @@
                                                map-annotation-make-predicate
                                                map-annotation-make-static-info
                                                #'map-build-convert #`(#,(key-comp-empty-stx mapper)))]
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-map?-id mapper)
-                                                             (get-map-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-map?-id mapper)
+                                                              (get-map-static-infos)))
                                   #'tail)]))))))
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
@@ -660,9 +662,11 @@
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-mutable-map?-id mapper)
-                                                             (get-mutable-map-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-mutable-map?-id mapper)
+                                                              (get-mutable-map-static-infos)))
                                   #'tail)]))))))
 
 (define MutableMap-build
@@ -690,9 +694,11 @@
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-weak-mutable-map?-id mapper)
-                                                             (get-weak-mutable-map-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-weak-mutable-map?-id mapper)
+                                                              (get-weak-mutable-map-static-infos)))
                                   #'tail)]))))))
 
 (define WeakMutableMap-build

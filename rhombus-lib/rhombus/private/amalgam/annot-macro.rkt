@@ -14,7 +14,8 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "values-key.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "srcloc.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -78,11 +79,11 @@
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #:rhombus/annot #,stx))
 
-(define-for-syntax (parse-annotation-macro-result form proc)
+(define-for-syntax (parse-annotation-macro-result form proc #:srcloc [loc (maybe-respan form)])
   (unless (syntax? form)
     (raise-bad-macro-result (proc-name proc) "annotation" form))
   (syntax-parse (unpack-group form proc #f)
-    [c::annotation #'c.parsed]))
+    [c::annotation (relocate+reraw loc #'c.parsed)]))
 
 (define-for-syntax (make-annotation-infix-operator prec protocol proc assc)
   (annotation-infix-operator
@@ -100,7 +101,8 @@
                                    proc))
        (lambda (form1 form2 stx)
          (parse-annotation-macro-result (proc (wrap-parsed form1) (wrap-parsed form2) stx)
-                                        proc)))
+                                        proc
+                                        #:srcloc (datum->syntax #f (list form1 stx form2)))))
    assc))
 
 (define-for-syntax (make-annotation-prefix-operator prec protocol proc)
@@ -119,7 +121,8 @@
                                    proc))
        (lambda (form stx)
          (parse-annotation-macro-result (proc (wrap-parsed form) stx)
-                                        proc)))))
+                                        proc
+                                        #:srcloc (datum->syntax #f (list stx form)))))))
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)

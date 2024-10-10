@@ -234,17 +234,18 @@
     [_ #f]))
 
 (define-for-syntax (relocate-field root-id field-id new-field-id)
+  (define name (string->symbol
+                (format "~a.~a"
+                        (or (syntax-property root-id 'syntax-error-name)
+                            (syntax-e root-id))
+                        (syntax-e field-id))))
   (syntax-property
    (syntax-property (datum->syntax new-field-id
                                    (syntax-e new-field-id)
                                    (span-srcloc root-id field-id)
                                    field-id)
                     'rhombus-dotted-name
-                    (string->symbol
-                     (format "~a.~a"
-                             (or (syntax-property root-id 'syntax-error-name)
-                                 (syntax-e root-id))
-                             (syntax-e field-id))))
+                    name)
    'disappeared-use
    (let ([root (syntax-local-introduce (in-name-root-space root-id))])
      (if (syntax-original? (syntax-local-introduce field-id))

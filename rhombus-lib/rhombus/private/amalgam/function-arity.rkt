@@ -82,7 +82,7 @@
 
 (define-for-syntax (combine-arity-summaries as combine)
   (cond
-    [(null? as) #f]
+    [(null? as) 0]
     [(null? (cdr as)) (car as)]
     [else
      (define (normalize a)

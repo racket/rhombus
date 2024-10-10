@@ -686,9 +686,11 @@
                                                set-annotation-make-predicate
                                                set-annotation-make-static-info
                                                #'set-build-convert #`(#,(key-comp-empty-stx mapper)))]
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-set?-id mapper)
-                                                             (get-set-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-set?-id mapper)
+                                                              (get-set-static-infos)))
                                   #'tail)]))))))
 
 (define-syntax (set-build-convert arg-id build-convert-stxs kws data)
@@ -836,9 +838,11 @@
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-mutable-set?-id mapper)
-                                                             (get-mutable-set-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-mutable-set?-id mapper)
+                                                              (get-mutable-set-static-infos)))
                                   #'tail)]))))))
 
 (define-annotation-syntax WeakMutableSet.by
@@ -849,9 +853,11 @@
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
-                         [(_ . tail)
-                          (values (annotation-predicate-form (key-comp-weak-mutable-set?-id mapper)
-                                                             (get-mutable-set-static-infos))
+                         [(form-id . tail)
+                          (values (relocate+reraw
+                                   #'form-id
+                                   (annotation-predicate-form (key-comp-weak-mutable-set?-id mapper)
+                                                              (get-mutable-set-static-infos)))
                                   #'tail)]))))))
 
 (define-syntax MutableSet
