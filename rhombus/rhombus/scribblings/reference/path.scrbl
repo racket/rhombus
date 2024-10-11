@@ -14,7 +14,9 @@ A @deftech{path} value represents a filesystem path.
   path.extend(part, ...)
   path.is_absolute()
   path.parts()
+  path.read_with(proc)
   path.string()
+  path.write_with(proc, ...)
 )
 
 Paths are @tech{comparable}, which means that generic operations like
@@ -140,6 +142,29 @@ Paths are @tech{comparable}, which means that generic operations like
   Path.parts(p)
   p.parts()
 )
+
+}
+
+@doc(
+  fun Path.read_with(path :: Path, read_proc :: Function.of_arity(1))
+){
+
+ Opens @rhombus(path) for reading and calls @rhombus(read_proc) with the
+ @tech{input port}.  The result of @rhombus(read_proc) is the result of
+ @rhombus(Path.read_with).
+
+}
+
+@doc(
+  fun Path.write_with(path :: Path,
+                      proc :: Function.of_arity(1),
+                      ~exists: exists_flag
+                                 :: Port.Output.ExistsFlag = #'error)
+){
+
+ Opens @rhombus(path) for writing and calls @rhombus(write_proc) with the
+ @tech{output port}.  The result of @rhombus(write_proc) is the result of
+ @rhombus(Path.write_with).
 
 }
 
