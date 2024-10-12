@@ -52,6 +52,12 @@
          (for-space rhombus/immediate_callee
                     #%parens))
 
+(module+ normal-call
+  (provide (for-syntax normal-call?)))
+
+(module+ normal-literal
+  (provide (for-syntax normal-literal?)))
+
 (define-syntax #%body
   (expression-transformer
    (lambda (stxes)
@@ -342,6 +348,10 @@
 (define-for-syntax (normal-body? tag)
   (free-identifier=? (datum->syntax tag '#%body)
                      (expr-quote #%body)))
+
+(define-for-syntax (normal-literal? lit)
+  (free-identifier=? (datum->syntax lit '#%literal)
+                     (expr-quote #%literal)))
 
 (begin-for-syntax
   (install-normal-call?! normal-call?)

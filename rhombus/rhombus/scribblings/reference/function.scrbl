@@ -539,6 +539,28 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
  Accepts any arguments and returns @rhombus(#void).
 
+ In a call @rhombus(Function.pass(#,(@rhombus(arg, ~var)), ...)), if
+ every @rhombus(arg, ~var) is either a simple expression or
+ repetition, and if the implicit @rhombus(#%call, ~datum) form is the
+ default @rhombus(#%call), no intermediate @tech{lists} are
+ produced. This makes @rhombus(Function.pass) suitable for
+ ``side-effecting'' repetitions, as an alternative to @rhombus(for).
+
+@examples(
+  Function.pass()
+  Function.pass(
+    "a",
+    ~weird: "call",
+    & ["these", "are", "ignored"],
+    ~& {#'~and: "thrown"},
+    "away",
+  )
+  block:
+    let [[x, ...], ...] = [[1, 2, 3], [4, 5]]
+    // a good alternative to `for`
+    Function.pass(println(x), ..., ...)
+)
+
 }
 
 

@@ -170,7 +170,7 @@
      (repetition-as-nested-lists (consume-repetition rep-parsed for-form #'()) (sub1 depth) for-form)]
     [else
      (render-repetition/direct rep-parsed depth 'checked for-form)]))
-         
+
 (define-for-syntax (repetition-as-list/unchecked rep-parsed depth)
   (render-repetition/direct rep-parsed depth 'unchecked #'for/list))
 
@@ -199,7 +199,9 @@
           (build-for for-form
                      (insert-clause-separators (syntax->list #'rep-info.for-clausess))
                      #'rep-info.body))
-        (wrap-static-info seq-expr #'#%index-result infos)])]))
+        (if (null? (syntax-e infos))
+            seq-expr
+            (wrap-static-info seq-expr #'#%index-result infos))])]))
 
 (define-for-syntax (flatten-repetition rep-parsed count
                                        #:pack-element [pack-element values]

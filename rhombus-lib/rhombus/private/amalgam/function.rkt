@@ -5,15 +5,20 @@
                      shrubbery/property
                      "consistent.rkt"
                      "entry-point-adjustment.rkt"
-                     "dotted-sequence.rkt")
+                     "dotted-sequence.rkt"
+                     "srcloc.rkt")
          racket/keyword
          "treelist.rkt"
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
-         (only-in "implicit.rkt" #%literal)
+         (submod "implicit.rkt" normal-call)
+         (submod "implicit.rkt" normal-literal)
          "parens.rkt"
+         "op-literal.rkt"
+         (submod "ellipsis.rkt" for-parse)
          "expression.rkt"
+         "repetition.rkt"
          "definition.rkt"
          "entry-point.rkt"
          "immediate-callee.rkt"
@@ -56,7 +61,7 @@
   #:fields ()
   #:namespace-fields
   (of_arity
-   pass)
+   [pass Function.pass/optimize])
   #:properties
   ()
   #:methods
@@ -215,7 +220,7 @@
                         [(function-arity-static ...) (syntax-parse #'(g ...)
                                                        #:datum-literals (group)
                                                        [((group n:exact-nonnegative-integer))
-                                                        #:when (free-identifier=? #'#%literal (datum->syntax #'n '#%literal))
+                                                        #:when (normal-literal? #'n)
                                                         #`((#%function-arity (#,(arithmetic-shift 1 (syntax-e #'n))
                                                                               ()
                                                                               (kw ...))))]
@@ -549,11 +554,71 @@
       defns)]
     [else defns]))
 
-(define pass
+(define-syntax Function.pass/optimize
+  (expression-transformer
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id (~and p (tag::parens arg-g ...)) . new-tail)
+        #:when (and (normal-call? #'tag)
+                    (for/and ([arg-g (in-list (syntax->list #'(arg-g ...)))])
+                      (syntax-parse arg-g
+                        #:datum-literals (group)
+                        [(group _::&-expr . _) #f]
+                        [(group _::~&-expr . _) #f]
+                        [(group _:keyword (~optional (_::block . _))) #f]
+                        [(group . _) #t])))
+        (define es
+          (let loop ([gs-stx #'(arg-g ...)])
+            (syntax-parse gs-stx
+              #:datum-literals (group)
+              [() '()]
+              [(rep-arg (group _::...-expr) . gs)
+               (define-values (new-gs extras) (consume-extra-ellipses #'gs))
+               (define e (syntax-parse #'rep-arg
+                           [rep::repetition
+                            (render-repetition #'for/single-valued #'rep.parsed
+                                               #:depth (add1 extras))]))
+               (cons e (loop new-gs))]
+              [(g . gs)
+               (define e (syntax-parse #'g
+                           [e::expression #'e.parsed]))
+               (cons e (loop #'gs))])))
+        (values
+         (relocate+reraw
+          (respan (datum->syntax #f (list #'form-id #'p)))
+          #`(void #,@es))
+         #'new-tail)]
+       [(form-id . new-tail)
+        (values
+         (relocate-id #'form-id #'Function.pass)
+         #'new-tail)]))))
+
+(define-syntax (for/single-valued stx)
+  (syntax-parse stx
+    [(_ clauses body)
+     #'(for clauses (void body))]))
+
+(define-repetition-syntax Function.pass/optimize
+  (repetition-transformer
+   (lambda (tail)
+     (syntax-parse tail
+       [(form-id . new-tail)
+        (values
+         (identifier-repetition-use #'Function.pass)
+         #'new-tail)]))))
+
+(define Function.pass
   (make-keyword-procedure
-   (let ([pass (lambda (kws kw-args . args)
-                 (void))])
-     pass)))
+   (let ([kw-proc (lambda (kws kw-args . args)
+                    (void))])
+     kw-proc)
+   (let ([Function.pass (lambda args
+                          (void))])
+     Function.pass)))
+
+(define-static-info-syntax Function.pass
+  (#%function-arity (-1 () #f))
+  . #,(get-function-static-infos))
 
 (begin-for-syntax
   (install-get-function-static-infos! get-function-static-infos))
