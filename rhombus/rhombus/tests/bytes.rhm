@@ -21,6 +21,8 @@ block:
 
 check:
   #"hello" :: Bytes ~is #"hello"
+  Bytes.make(5) ~is_now #"\0\0\0\0\0"
+  Bytes.make(5, 104) ~is_now #"hhhhh"
 
 block:
   use_static
@@ -255,6 +257,71 @@ check:
     "expected: Bytes",
     "given: \"oops\"",
   )
+
+version_guard.at_least "8.14.0.7":
+  check:
+    Bytes.make("oops")
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    Bytes.make(-1)
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+  check:
+    Bytes.make("oops", 0)
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    Bytes.make(-1, 0)
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+  check:
+    Bytes.make(5, "oops")
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: Byte",
+      "given: \"oops\"",
+    )
+  check:
+    Bytes.make(5, "a")
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: Byte",
+      "given: \"a\"",
+    )
+  check:
+    Bytes.make(5, "a"[0])
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: Byte",
+      "given: #{#\\a}",
+    )
+  check:
+    Bytes.make(5, -1)
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: Byte",
+      "given: -1",
+    )
+  check:
+    Bytes.make(5, 256)
+    ~throws values(
+      "Bytes.make: contract violation",
+      "expected: Byte",
+      "given: 256",
+    )
 
 // checks static infos for elements
 block:

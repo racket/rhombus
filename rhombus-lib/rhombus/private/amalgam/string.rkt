@@ -82,7 +82,6 @@
    [contains String.contains]
    [append String.append]
    [substring String.substring]
-   [make String.make]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
@@ -249,7 +248,7 @@
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string s))
 
-(define/method (String.make n c)
+(define/arity (String.make n c)
   #:primitive (make-string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (make-string n c)))

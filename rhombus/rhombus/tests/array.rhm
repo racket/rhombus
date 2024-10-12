@@ -23,6 +23,11 @@ block:
     Array.to_sequence(arr) ~method
 
 check:
+  Array(1, 2, 3) :: Array ~is_now Array(1, 2, 3)
+  Array.make(5) ~is_now Array(0, 0, 0, 0, 0)
+  Array.make(5, "yes") ~is_now Array("yes", "yes", "yes", "yes", "yes")
+
+check:
   Array.length(Array(1, 2, 3))
   ~is 3
 
@@ -441,3 +446,33 @@ check:
     "expected: Array",
     "given: \"oops\"",
   )
+
+version_guard.at_least "8.14.0.7":
+  check:
+    Array.make("oops")
+    ~throws values(
+      "Array.make: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    Array.make(-1)
+    ~throws values(
+      "Array.make: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
+  check:
+    Array.make("oops", 0)
+    ~throws values(
+      "Array.make: contract violation",
+      "expected: NonnegInt",
+      "given: \"oops\"",
+    )
+  check:
+    Array.make(-1, 0)
+    ~throws values(
+      "Array.make: contract violation",
+      "expected: NonnegInt",
+      "given: -1",
+    )
