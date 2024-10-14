@@ -172,13 +172,13 @@
 
 @itemlist(
 
-  @item{@rhombus(~repeat (#,(@rhombus(sequencer, ~var)), ...))
+  @item{@rhombus(~repet (#,(@rhombus(sequencer, ~var)), ...))
   indicates that the variable can be used as repetition at a depth
   corresponding to the number of @rhombus(sequencer, ~var)s, and also
   as an expression if the number @rhombus(sequencer, ~var)s is zero;
   and}
 
-  @item{@rhombus(~no_stx) indicates that the variable's is not
+  @item{@rhombus(~no_let) indicates that the variable's is not
   compatible with @rhombus(let), because it needs to be bound early (such
   as through @rhombus(when, ~bind)).}
 
@@ -189,7 +189,7 @@
  the ``continuation'' of the binder's expansion to generate a matching
  expression and a definition sequence.
 
- The @rhombus(data, ~var) term is propoagated to the use of
+ The @rhombus(data, ~var) term is propagated to the use of
  @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var), providing a communication
  channel from an infoer to a matcher and binder.
@@ -246,7 +246,7 @@
 ){
 
  Takes the initialized binding-form expansion produced by
- @rhombus(bind_meta.get_info) and restports whether the binding is
+ @rhombus(bind_meta.get_info) and reports whether the binding is
  immediate in the same sense as just a variable: the binding always
  matches, and no work is required to convert or unpack the matched value.
 
@@ -328,7 +328,7 @@
  @rhombus(id_pattern) holds the value that was matched by a matcher. If
  the matcher included any additional bindings around the success branch,
  then those bindings are in the environment of the definitions generated
- by this binder, and any intermediate definitions from the commiitter are
+ by this binder, and any intermediate definitions from the committer are
  also in the environment. The term matched to @rhombus(data_pattern) is whatever
  data the infoer included at the end of its result.
 
