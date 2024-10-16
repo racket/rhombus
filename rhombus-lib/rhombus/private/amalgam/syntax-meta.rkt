@@ -148,12 +148,12 @@
       [(eq? form unsafe-undefined)
        (define form form/msg)
        (unless (syntax? form) (raise-argument-error who "Syntax" form))
-       (raise-syntax-error (or who-in (name-of form)) "bad syntax" (maybe-respan form))]
+       (raise-syntax-error who-in "bad syntax" (maybe-respan form))]
       [(eq? detail unsafe-undefined)
        (define msg form/msg)
        (unless (string? msg) (raise-argument-error who "ReadableString" msg))
        (unless (syntax? form) (raise-argument-error who "Syntax" form))
-       (raise-syntax-error (or who-in (name-of form)) msg (maybe-respan form))]
+       (raise-syntax-error who-in msg (maybe-respan form))]
       [else
        (define msg form/msg)
        (unless (string? msg) (raise-argument-error who "ReadableString" msg))
@@ -169,22 +169,12 @@
                                             (list detail)]
                                            [else (bad-detail)])))
        (if (pair? details)
-           (raise-syntax-error (or who-in (name-of form)) msg
+           (raise-syntax-error who-in msg
                                (maybe-respan form)
                                (car details)
                                (cdr details))
-           (raise-syntax-error (or who-in (name-of form)) msg
+           (raise-syntax-error who-in msg
                                (maybe-respan form)))]))
-
-  (define (name-of stx)
-    (syntax-parse stx
-      #:datum-literals (multi group)
-      [who:identifier (string->symbol (shrubbery-syntax->string #'who))]
-      [(group who:identifier . _) (name-of #'who)]
-      [(group . _) '?]
-      [(multi (group who:identifier . _) . _) (name-of #'who)]
-      [(multi . _) '?]
-      [_ #f]))
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

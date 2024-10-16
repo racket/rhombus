@@ -165,7 +165,7 @@
       ;; `:definition`, etc., doesn't carry over
       [(_ top decl-ok? (data ...) e::definition-sequence . tail)
        (define-values (parsed new-tail)
-         (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
+         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail))
        #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
       [(_ top decl-ok? (data ...) form . forms)
        (define (nestable-parsed)
@@ -242,7 +242,7 @@
        #`(begin e . tail)]
       [(_ e::definition-sequence . tail)
        (define-values (parsed new-tail)
-         (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
+         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail))
        #`(begin
            (begin . #,parsed)
            (rhombus-body-sequence . #,new-tail))]

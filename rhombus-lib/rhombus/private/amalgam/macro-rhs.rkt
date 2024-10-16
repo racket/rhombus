@@ -480,9 +480,9 @@
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id all-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list (if (syntax-e all-id) #'all #'#f)) (list #'())
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'#f) (list #'())
                                     make-transformer-id #'() (list)
-                                    #:tail-ids (list #'extra-tail)
+                                    #:tail-ids (list #'orig-head #'extra-tail)
                                     #:wrap-for-tail
                                     (lambda (body)
                                       (define-values (pattern idrs sidrs vars can-be-empty?)
@@ -490,10 +490,11 @@
                                       (with-syntax ([((p-id id-ref) ...) idrs]
                                                     [(((s-id ...) sid-ref) ...) sidrs])
                                         #`(syntax-parse extra-tail
+                                            #:context (insert-multi-front-head-group orig-head extra-tail)
                                             #:disable-colon-notation
                                             [#,pattern
                                              #,@(if (syntax-e all-id)
-                                                    #`((define #,all-id (make-all-sequence (cons (unpack-group all #f #f)
+                                                    #`((define #,all-id (make-all-sequence (cons orig-head
                                                                                                  (unpack-multi extra-tail #f #f))))
                                                        (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
                                                     '())

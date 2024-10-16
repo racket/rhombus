@@ -54,10 +54,10 @@
 
 (define-for-syntax (make-definition-sequence-transformer proc)
   (definition-sequence-transformer
-   (lambda (stx tail)
+   (lambda (stx orig-head tail)
      (define-values (defns new-tail)
        (syntax-parse stx
-         [(head . h-tail) (proc (pack-tail #'h-tail) (pack-multi tail) #'head)]))
+         [(head . h-tail) (proc (pack-tail #'h-tail) orig-head (pack-multi tail) #'head)]))
      (values (unpack-definitions defns proc)
              (unpack-multi new-tail proc #f)))))
 

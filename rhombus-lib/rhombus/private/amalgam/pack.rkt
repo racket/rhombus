@@ -86,6 +86,7 @@
          repack-as-multi
 
          insert-multi-front-group
+         insert-multi-front-head-group
          check-valid-group)
 
 (define multi-blank (syntax-raw-property (datum->syntax #f 'multi) null))
@@ -500,7 +501,9 @@
 
 ;; insert `term` at the front of the first group, and strip away
 ;; `multi` and `group` wrappers for a splicing match; this improves
-;; error reporting when a match fails
+;; error reporting when a match fails; the `error-syntax->name-handler`
+;; parameter also solves this problem, and we should instead rely on
+;; the parameter when it becomes reliably available
 (define (insert-multi-front-group term r)
   (cond
     [(group-syntax? r) (cons term
@@ -512,6 +515,15 @@
                                  (insert-multi-front-group term (stx-car r))
                                  (error "unexpected multi-group sequence for macro match"))))]
     [else (list term r)]))
+
+(define (insert-multi-front-head-group head r)
+  (cond
+    [(multi-syntax? r) (datum->syntax
+                        #f
+                        (cons (stx-car r)
+                              (cons head
+                                    (stx-cdr r))))]
+    [else (error "unexpected multi-group sequence")]))
 
 (define (->name v)
   (cond

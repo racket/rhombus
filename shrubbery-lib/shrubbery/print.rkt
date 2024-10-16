@@ -309,8 +309,8 @@
 (define (extract-starting-column s)
   (cond
     [(syntax? s)
-     (or (syntax-column s)
-         (let loop ([s s])
+     (let loop ([s s])
+       (or (syntax-column s)
            (let ([l (syntax->list s)])
              (and l
                   (case (syntax-e (car l))
@@ -329,8 +329,8 @@
                     [(parsed)
                      (and (= 3 (length l))
                           (extract-starting-column (caddr l)))]
-                    [else #f]))))
-         0)]
+                    [else #f])))
+           0))]
     [else 0]))
 
 (define (file-location-position p)

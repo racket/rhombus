@@ -30,6 +30,11 @@
  (require (only-in racket/base
                    [void current-report-configuration])))
 
+(meta-if-version-at-least
+ "8.15.0.2"
+ (void)
+ (define error-syntax->name-handler (make-parameter (lambda (stx) #f))))
+
 (define-syntax (define-install!+params stx)
   (syntax-parse stx
     #:literals (void)
@@ -143,6 +148,21 @@
      (if (equal? str "")
          "[end of group]"
          str)))
+
+  (error-syntax->name-handler
+   (lambda (s)
+     (let name-of ([s s])
+       (if (identifier? s)
+           (syntax-e s)
+           (syntax-case* s (multi group op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
+             [(group who . _) (name-of #'who)]
+             [(multi (group who . _) . _) (name-of #'who)]
+             [(op n) (name-of #'n)]
+             [(head . _)
+              ;; mainly intended to handle the not-a-shrubbery case:
+              (and (identifier? #'head)
+                   (syntax-e #'head))]
+             [_ #f])))))
 
   (current-report-configuration
    (hasheq 'literal-to-what (lambda (v)
