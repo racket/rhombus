@@ -155,7 +155,10 @@
        [(display?)
         (display v op)]
        [else
-        (write v op)])]
+        (concat
+         (display "Path(" op)
+         (write (path->string v) op)
+         (display ")" op))])]
     [(and (procedure? v)
           (not (printer-ref v #f)))
      (define name (object-name v))

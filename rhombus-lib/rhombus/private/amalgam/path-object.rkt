@@ -5,15 +5,23 @@
          "realm.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
+         "append-key.rkt"
          "compare-key.rkt"
-         (submod "string.rkt" static-infos)
-         (submod "bytes.rkt" static-infos))
+         "index-result-key.rkt"
+         "static-info.rkt"
+         (submod "annotation.rkt" for-class)
+         (submod "bytes.rkt" static-infos)
+         (submod "function.rkt" for-info)
+         (submod "list.rkt" for-listable)
+         (submod "string.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
                       #f
                       rhombus/bind
                       rhombus/annot)
-                     Path))
+                     Path)
+         (for-space rhombus/annot
+                    PathString))
 
 (module+ for-builtin
   (provide path-method-table))
@@ -36,7 +44,8 @@
 (define-primitive-class Path path
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%compare ((< path<?)
+  #:instance-static-info ((#%append Path.extend)
+                          (#%compare ((< path<?)
                                       (<= path<=?)
                                       (> path>?)
                                       (>= path>=?)
@@ -46,12 +55,19 @@
   #:translucent
   #:fields
   ([bytes Path.bytes #,(get-bytes-static-infos)])
+  #:namespace-fields
+  ([current_directory current-directory])
   #:properties
   ()
   #:methods
   (bytes
+   extend
+   is_absolute
+   parts
+   read_with
    string
-   ))
+   to_complete_path
+   write_with))
 
 (define/arity #:name Path (path c)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
@@ -62,12 +78,46 @@
     [else (raise-argument-error* who rhombus-realm
                                  "String || Bytes || Path" c)]))
 
+(define-static-info-syntax current-directory
+  (#%function-arity 3)
+  (#%call-result #,(get-path-static-infos))
+  . #,(get-function-static-infos))
+
 (define/method (Path.bytes s)
   #:primitive (path->bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
 
+(define/method (Path.extend p . ss)
+  #:primitive (build-path)
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (apply build-path p ss))
+
+(define/method (Path.is_absolute p)
+  #:primitive (absolute-path?)
+  (absolute-path? p))
+
+(define/method (Path.parts p)
+  #:primitive (explode-path)
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (to-treelist #f (explode-path p)))
+
+(define/method (Path.read_with p f)
+  #:primitive (call-with-input-file)
+  (call-with-input-file p f))
+
 (define/method (Path.string s)
   #:primitive (path->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))
+
+(define/method (Path.to_complete_path p #:relative_to [base-path (current-directory)])
+  #:primitive (path->complete-path)
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (path->complete-path p base-path))
+
+(define/method (Path.write_with p f #:exists [exists 'error])
+  #:primitive (call-with-output-file)
+  (call-with-output-file p f #:exists exists))
+
+(define-annotation-syntax PathString (identifier-annotation path-string? ()))

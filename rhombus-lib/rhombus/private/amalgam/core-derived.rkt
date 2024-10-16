@@ -6,6 +6,7 @@
         "check.rhm"
         "maybe.rhm"
         "string.rhm"
+        "path-object.rhm"
         "when_unless.rhm"
         "where.rhm"
         "described_as.rhm"
