@@ -73,11 +73,11 @@
 
 (define (check-proc who proc)
   (unless (procedure? proc)
-    (raise-argument-error* who rhombus-realm "Function" proc)))
+    (raise-annotation-failure who proc "Function")))
 
 (define (check-list who l)
   (unless (treelist? l)
-    (raise-argument-error* who rhombus-realm "List" l)))
+    (raise-annotation-failure who l "List")))
 
 (define (check-proc-arity who fn n)
   (define (make-msg why)
@@ -252,7 +252,7 @@
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
-    (raise-argument-error* who rhombus-realm "NonnegInt" v)))
+    (raise-annotation-failure who v "NonnegInt")))
 
 (define (accepts-keywords? proc kws)
   (define-values (req allow) (procedure-keywords proc))

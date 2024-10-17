@@ -5,7 +5,7 @@
          "expression.rkt"
          "repetition.rkt"
          "define-operator.rkt"
-         "realm.rkt"
+         "annotation-failure.rkt"
          "compare-key.rkt"
          "static-info.rkt")
 
@@ -155,7 +155,7 @@
 (define (number!=? a b)
   (define (check n)
     (unless (number? n)
-      (raise-argument-error* '.!= rhombus-realm "Number" n)))
+      (raise-annotation-failure '.!= n "Number")))
   (check a)
   (check b)
   (not (= a b)))

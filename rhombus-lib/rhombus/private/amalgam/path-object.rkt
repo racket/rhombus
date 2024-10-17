@@ -2,7 +2,7 @@
 (require (for-syntax racket/base)
          "provide.rkt"
          "class-primitive.rkt"
-         "realm.rkt"
+         "annotation-failure.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
          "compare-key.rkt"
@@ -59,8 +59,7 @@
     [(path? c) c]
     [(bytes? c) (bytes->path c)]
     [(string? c) (string->path c)]
-    [else (raise-argument-error* who rhombus-realm
-                                 "String || Bytes || Path" c)]))
+    [else (raise-annotation-failure who c "String || Bytes || Path")]))
 
 (define/method (Path.bytes s)
   #:primitive (path->bytes)

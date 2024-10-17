@@ -23,7 +23,7 @@
          "dotted-sequence.rkt"
          (for-template (submod "syntax-meta.rkt" for-unquote)
                        "space.rkt")
-         "realm.rkt")
+         "annotation-failure.rkt")
 
 ;; see also "unquote-binding-primitive.rkt"; this one has only forms
 ;; that need meta-time bindings in expansion, so we don't want a
@@ -59,4 +59,4 @@
                                              (cond
                                                [(space-name? space-path) space-path]
                                                [else
-                                                (raise-argument-error* who rhombus-realm "SpaceMeta" space-path)]))))
+                                                (raise-annotation-failure who space-path "SpaceMeta")]))))

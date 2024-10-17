@@ -13,6 +13,7 @@
                      "srcloc.rkt"
                      "static-info.rkt"
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -125,7 +126,7 @@
 
 (define-for-syntax (convert-static-info-key who val)
   (unless (static-info-key? val)
-    (raise-argument-error* 'statinfo.key rhombus-realm "static info key" val))
+    (raise-annotation-failure 'statinfo.key val "static info key"))
   val)
 
 (define-for-syntax (pack who stx)
@@ -133,19 +134,19 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (unpack-identifier who id-in)
   (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id-in))
+    (raise-annotation-failure who id-in "Identifier"))
   id)
 
 (define-for-syntax (make-key #:union union #:intersect intersect)
   (define (check-proc union)
     (unless (and (procedure? union)
                  (procedure-arity-includes? union 2))
-      (raise-argument-error* 'statinfo.key rhombus-realm "Function.of_arity(2)" union)))
+      (raise-annotation-failure 'statinfo.key union "Function.of_arity(2)")))
   (check-proc union)
   (check-proc intersect)
   (static-info-key union intersect))
@@ -209,9 +210,9 @@
                         (= 2 (treelist-length r))
                         (exact-integer? (treelist-ref r 0))
                         (syntax? (treelist-ref r 1)))))
-      (raise-argument-error* who rhombus-realm
-                             "matching([[_ :: Int, _ :: Syntax], ...])"
-                             infos))
+      (raise-annotation-failure who
+                                infos
+                                "matching([[_ :: Int, _ :: Syntax], ...])"))
     (cond
       [(and (= 1 (treelist-length infos))
             (eqv? -1 (treelist-ref (treelist-ref infos 0) 0)))

@@ -261,15 +261,15 @@
 
 (define (check-treelist who l)
   (unless (treelist? l)
-    (raise-argument-error* who rhombus-realm "List" l)))
+    (raise-annotation-failure who l "List")))
 
 (define (check-list who l)
   (unless (list? l)
-    (raise-argument-error* who rhombus-realm "PairList" l)))
+    (raise-annotation-failure who l "PairList")))
 
 (define (check-mutable-treelist who l)
   (unless (mutable-treelist? l)
-    (raise-argument-error* who rhombus-realm "MutableList" l)))
+    (raise-annotation-failure who l "MutableList")))
 
 (define/arity (List.cons a d)
   #:primitive (treelist-cons)
@@ -314,11 +314,11 @@
 
 (define (check-nonempty-list who l)
   (unless (nonempty-list? l)
-    (raise-argument-error* who rhombus-realm "NonemptyPairList" l)))
+    (raise-annotation-failure who l "NonemptyPairList")))
 
 (define (check-nonempty-treelist who l)
   (unless (nonempty-treelist? l)
-    (raise-argument-error* who rhombus-realm "NonemptyList" l)))
+    (raise-annotation-failure who l "NonemptyList")))
 
 (define/arity (List.first l)
   #:primitive (treelist-first)
@@ -351,7 +351,7 @@
 
 (define (check-nonneg-int who n)
   (unless (exact-nonnegative-integer? n)
-    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
+    (raise-annotation-failure who n "NonnegInt")))
 
 (define/arity (List.iota n)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
@@ -776,11 +776,11 @@
 (define (check-function-of-arity n who proc)
   (unless (and (procedure? proc)
                (procedure-arity-includes? proc n))
-    (raise-argument-error* who rhombus-realm
-                           (string-append "Function.of_arity("
-                                          (number->string n)
-                                          ")")
-                           proc)))
+    (raise-annotation-failure who
+                              proc
+                              (string-append "Function.of_arity("
+                                             (number->string n)
+                                             ")"))))
 
 (define/method (List.map lst proc)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
@@ -932,14 +932,14 @@
     [(a b)
      (unless (list? b)
        (check-list who a)
-       (raise-argument-error* who rhombus-realm "PairList" b))
+       (raise-annotation-failure who b "PairList"))
      (append a b)]
     [ls
      (let ([ln (list-last ls)])
        (unless (list? ln)
          (for ([l (in-list ls)])
            (check-list who l))
-         (raise-argument-error* who rhombus-realm "PairList" ln)))
+         (raise-annotation-failure who ln "PairList")))
      (apply append ls)]))
 
 (define/method (MutableList.append a b)

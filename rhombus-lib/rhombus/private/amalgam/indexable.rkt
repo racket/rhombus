@@ -19,7 +19,6 @@
          (submod "set.rkt" for-index)
          "repetition.rkt"
          "compound-repetition.rkt"
-         "realm.rkt"
          "index-property.rkt"
          "mutability.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
@@ -216,7 +215,7 @@
     [else
      (define ref (indexable-ref indexable #f))
      (unless ref
-       (raise-argument-error* indexable-get-who rhombus-realm "Indexable" indexable))
+       (raise-annotation-failure indexable-get-who indexable "Indexable"))
      (ref indexable index)]))
 
 (define (indexable-set! indexable index val)
@@ -229,5 +228,5 @@
     [else
      (define set (setable-ref indexable #f))
      (unless set
-       (raise-argument-error* indexable-set!-who rhombus-realm "MutableIndexable" indexable))
+       (raise-annotation-failure indexable-set!-who indexable "MutableIndexable"))
      (set indexable index val)]))

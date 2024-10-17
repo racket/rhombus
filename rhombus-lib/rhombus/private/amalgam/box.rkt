@@ -120,7 +120,7 @@
 
 (define (check-box who bx)
   (unless (box? bx)
-    (raise-argument-error* who rhombus-realm "Box" bx)))
+    (raise-annotation-failure who bx "Box")))
 
 (define/method (Box.copy bx)
   #:static-infos ((#%call-result #,(get-box-static-infos)))

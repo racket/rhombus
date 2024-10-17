@@ -10,7 +10,7 @@
          (submod "list.rkt" for-compound-repetition)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info)
-         "realm.rkt")
+         "annotation-failure.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -79,8 +79,8 @@
 
 (define/arity (Exn.Fail.Annot message marks)
   #:static-infos ((#%call-result #,(get-exn:fail:contract-static-infos)))
-  (unless (string? message) (raise-argument-error* who rhombus-realm "ReadableString" message))
-  (unless (continuation-mark-set? marks) (raise-argument-error* who rhombus-realm "Continuation.Marks" marks))
+  (unless (string? message) (raise-annotation-failure who message "ReadableString"))
+  (unless (continuation-mark-set? marks) (raise-annotation-failure who marks "Continuation.Marks"))
   (exn:fail:contract message marks))
 
 (define-exn Arity exn:fail:contract:arity

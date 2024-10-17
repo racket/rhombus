@@ -9,6 +9,7 @@
                      "entry-point-adjustment-meta.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (submod "symbol.rkt" for-static-info)
@@ -75,7 +76,7 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
   (define/arity (entry_point_meta.pack stx)

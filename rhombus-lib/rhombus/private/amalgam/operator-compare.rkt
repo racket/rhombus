@@ -5,7 +5,7 @@
                      enforest/operator
                      enforest/hier-name-parse
                      "pack.rkt"
-                     "realm.rkt"
+                     "annotation-failure.rkt"
                      "name-path-op.rkt"
                      "dotted-sequence.rkt")
          "name-root-space.rkt"
@@ -48,11 +48,11 @@
                      [else
                       (datum->syntax #f 'none)])]
                   [_ #f]))])
-        (raise-argument-error* who rhombus-realm "Name" stx)))
+        (raise-annotation-failure who stx "Name")))
 
   (define (check-mode who mode)
     (unless (or (eq? mode 'prefix) (eq? mode 'infix))
-      (raise-argument-error* who rhombus-realm "matching(#'prefix || #'infix)" mode)))
+      (raise-annotation-failure who mode "matching(#'prefix || #'infix)")))
   
   (define (get-relative-precedence who left-mode left-stx right-stx
                                    space-sym relative-precedence)
@@ -69,7 +69,7 @@
     (check-mode who left-mode)
     (define left-id (extract-name who left-stx space-sym))
     (define g (or (unpack-tail tail #f #f)
-                  (raise-argument-error* who rhombus-realm "Sequence" tail)))
+                  (raise-annotation-failure who tail "Sequence")))
     (define in-space (if space-sym
                          (make-interned-syntax-introducer space-sym)
                          (lambda (x) x)))

@@ -168,23 +168,23 @@ check:
 check:
   ("oops" :~ Box).value
   ~throws values(
-    "Box.value: contract violation",
-    "expected: Box",
-    "given: \"oops\"",
+    "Box.value: " ++ error.annot_msg(),
+    error.annot("Box").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ MutableBox).value := 0
   ~throws values(
-    "Box.value: contract violation",
-    "expected: MutableBox",
-    "given: \"oops\"",
+    "Box.value: " ++ error.annot_msg(),
+    error.annot("MutableBox").msg,
+    error.val("oops").msg,
   )
 
 check:
   (Box(1).snapshot() :~ MutableBox).value := 0
   ~throws values(
-    "Box.value: contract violation",
-    "expected: MutableBox",
-    "given: Box.snapshot(Box(1))",
+    "Box.value: " ++ error.annot_msg(),
+    error.annot("MutableBox").msg,
+    error.val(Box.snapshot(Box(1))).msg,
   )

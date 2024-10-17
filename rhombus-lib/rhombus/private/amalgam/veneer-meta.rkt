@@ -15,6 +15,7 @@
                    method-shape-extract))
          "call-result-key.rkt"
          "realm.rkt"
+         "annotation-failure.rkt"
          "pack.rkt")
 
 (provide (for-space rhombus/namespace
@@ -60,9 +61,9 @@
 
 (define (lookup who info key)
   (unless (veneer-data? info)
-    (raise-argument-error* who rhombus-realm "veneer_meta.Info" info))
+    (raise-annotation-failure who info "veneer_meta.Info"))
   (unless (symbol? key)
-    (raise-argument-error* who rhombus-realm "Symbol" key))
+    (raise-annotation-failure who key "Symbol"))
   (case key
     [(name)
      (cond
@@ -97,7 +98,7 @@
 (define (unpack-identifier who id-in)
   (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm "Identifier" id-in))
+    (raise-annotation-failure who id-in "Identifier"))
   id)
 
 (define (describe who id-in)

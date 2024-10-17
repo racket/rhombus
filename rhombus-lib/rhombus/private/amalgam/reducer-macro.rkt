@@ -6,11 +6,11 @@
                      "pack.rkt"
                      "tail-returner.rkt"
                      "macro-result.rkt"
-                     "realm.rkt"
                      "static-info-pack.rkt"
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -108,12 +108,12 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (unpack-identifier who id-in [annot-str "Identifier"])
   (define id (unpack-term/maybe id-in))
   (unless (identifier? id)
-    (raise-argument-error* who rhombus-realm annot-str id-in))
+    (raise-annotation-failure who id-in annot-str))
   id)
 
 (define-for-syntax (unpack-maybe-identifier who maybe-id-in)

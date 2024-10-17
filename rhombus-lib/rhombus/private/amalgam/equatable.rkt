@@ -5,7 +5,7 @@
          racket/hash-code
          "provide.rkt"
          "name-root.rkt"
-         "realm.rkt"
+         "annotation-failure.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
          "call-result-key.rkt"
@@ -87,7 +87,7 @@
 
 (define (check-int who i)
   (unless (exact-integer? i)
-    (raise-argument-error* who rhombus-realm "Int" i)))
+    (raise-annotation-failure who i "Int")))
 
 (define/arity hash_code_combine
   (case-lambda

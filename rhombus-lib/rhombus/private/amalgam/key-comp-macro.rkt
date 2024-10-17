@@ -10,7 +10,7 @@
          "to-list.rkt"
          (submod "map.rkt" for-key-comp-macro)
          (submod "set.rkt" for-key-comp-macro)
-         "realm.rkt"
+         "annotation-failure.rkt"
          "parse.rkt"
          "key-comp-property.rkt"
          "../version-case.rkt")
@@ -164,9 +164,9 @@
 
 (define (hash-procedures #:equals equals #:hash_code hash_code)
   (unless (and (procedure? equals) (procedure-arity-includes? equals 3))
-    (raise-argument-error* 'key_comp.def rhombus-realm "Function.of_arity(3)" equals))
+    (raise-annotation-failure 'key_comp.def equals "Function.of_arity(3)"))
   (unless (and (procedure? hash_code) (procedure-arity-includes? hash_code 2))
-    (raise-argument-error* 'key_comp.def rhombus-realm "Function.of_arity(2)" hash_code))
+    (raise-annotation-failure 'key_comp.def hash_code "Function.of_arity(2)"))
   (values equals hash_code))
 
 (define (x-map-set-build elems ht)

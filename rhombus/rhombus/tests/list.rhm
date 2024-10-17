@@ -40,9 +40,9 @@ check:
 check:
   List.length({1, 2, 3})
   ~throws values(
-    "List.length: contract violation",
-    "expected: List",
-    "given: {1, 2, 3}",
+    "List.length: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val({1, 2, 3}).msg,
   )
 
 check:
@@ -73,16 +73,16 @@ block:
   check:
     [1, 2, 3] ++ PairList[4, 5]
     ~throws values(
-      "List.append: contract violation",
-      "expected: List",
-      "given: PairList[4, 5]",
+      "List.append: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val(PairList[4, 5]).msg,
     )
   check:
     [1, 2, 3] ++ "oops"
     ~throws values(
-      "List.append: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.append: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
   check:
     [1, 2, 3].append([4, 5])
@@ -329,9 +329,9 @@ check:
   [1, 2].append([3]) ~is [1, 2, 3]
   [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
   [1, 2].append(3) ~throws values(
-    "List.append: contract violation",
-    "expected: List",
-    "given: 3"
+    "List.append: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val(3).msg
   )
 
 check:
@@ -434,40 +434,40 @@ version_guard.at_least "8.13.0.1":
   check:
     List.to_sequence("oops")
     ~throws values(
-      "List.to_sequence: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.to_sequence: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ List).to_sequence()
     ~throws values(
-      "List.to_sequence: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.to_sequence: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ List):
       x
     ~throws values(
-      "List.to_sequence: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.to_sequence: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: List.to_sequence("oops")):
       x
     ~throws values(
-      "List.to_sequence: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.to_sequence: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ List).to_sequence()):
       x
     ~throws values(
-      "List.to_sequence: contract violation",
-      "expected: List",
-      "given: \"oops\"",
+      "List.to_sequence: " ++ error.annot_msg(),
+      error.annot("List").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -531,67 +531,67 @@ check:
 check:
   [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
   [List.repet("oops"), ...] ~throws values(
-    "List.repet: contract violation",
-    "expected: List",
-    "given: \"oops\"",
+    "List.repet: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ List)[0]
   ~throws values(
-    "List.get: contract violation",
-    "expected: List",
-    "given: \"oops\"",
+    "List.get: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.2":
   check:
     ([1, 2, 3] :~ List)["oops"]
     ~throws values(
-      "List.get: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "List.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     ([1, 2, 3] :~ List)[-1]
     ~throws values(
-      "List.get: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "List.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
 
 check:
   ("oops" :~ List).first
   ~throws values(
-    "List.first: contract violation",
-    "expected: NonemptyList",
-    "given: \"oops\"",
+    "List.first: " ++ error.annot_msg(),
+    error.annot("NonemptyList").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ List).last
   ~throws values(
-    "List.last: contract violation",
-    "expected: NonemptyList",
-    "given: \"oops\"",
+    "List.last: " ++ error.annot_msg(),
+    error.annot("NonemptyList").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ List).rest
   ~throws values(
-    "List.rest: contract violation",
-    "expected: NonemptyList",
-    "given: \"oops\"",
+    "List.rest: " ++ error.annot_msg(),
+    error.annot("NonemptyList").msg,
+    error.val("oops").msg,
   )
 
 check:
   List.append("oops") ~throws values(
-    "List.append: contract violation",
-    "expected: List",
-    "given: \"oops\"",
+    "List.append: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ List).append() ~throws values(
-    "List.append: contract violation",
-    "expected: List",
-    "given: \"oops\"",
+    "List.append: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
   )

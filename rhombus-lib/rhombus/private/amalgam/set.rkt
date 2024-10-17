@@ -263,7 +263,7 @@
 
 (define (check-readable-set who s)
   (unless (set? s)
-    (raise-argument-error* who rhombus-realm "ReadableSet" s)))
+    (raise-annotation-failure who s "ReadableSet")))
 
 (define/method (Set.length s)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
@@ -972,7 +972,7 @@
 
 (define (check-set who s)
   (unless (immutable-set? s)
-    (raise-argument-error* who rhombus-realm "Set" s)))
+    (raise-annotation-failure who s "Set")))
 
 (define (set-append/hash a b)
   (let-values ([(a b)
@@ -1059,7 +1059,7 @@
 
 (define (check-mutable-set who s)
   (unless (mutable-set? s)
-    (raise-argument-error* who rhombus-realm "MutableSet" s)))
+    (raise-annotation-failure who s "MutableSet")))
 
 (define (set-set! s v in?)
   (if in?

@@ -11,7 +11,6 @@
          "binding.rkt"
          "entry-point.rkt"
          "parse.rkt"
-         "realm.rkt"
          "define-arity.rkt"
          (submod "annotation.rkt" for-class)
          (submod "function-parse.rkt" for-build)
@@ -265,26 +264,23 @@
       [(not name-in) #f]
       [(symbol? name-in) name-in]
       [(string? name-in) (string->symbol name-in)]
-      [else (raise-argument-error* who
-                                   rhombus-realm
-                                   "maybe(ReadableString || Symbol)"
-                                   name-in)]))
+      [else (raise-annotation-failure who
+                                      name-in
+                                      "maybe(ReadableString || Symbol)")]))
   (if name
       (make-continuation-prompt-tag name)
       (make-continuation-prompt-tag)))
 
 (define/arity (Continuation.call_in k proc)
   (unless (continuation? k)
-    (raise-argument-error* who
-                           rhombus-realm
-                           "Continuation"
-                           k))
+    (raise-annotation-failure who
+                              k
+                              "Continuation"))
   (unless (and (procedure? proc)
                (procedure-arity-includes? proc 0))
-    (raise-argument-error* who
-                           rhombus-realm
-                           "Function.of_arity(0)"
-                           proc))
+    (raise-annotation-failure who
+                              proc
+                              "Function.of_arity(0)"))
   (call-in-continuation k proc))
 
 (define-for-syntax (build-try-handler b-parseds rhss)

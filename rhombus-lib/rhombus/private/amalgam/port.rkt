@@ -126,11 +126,11 @@
 
 (define (check-input-port who ip)
   (unless (input-port? ip)
-    (raise-argument-error* who rhombus-realm "Port.Input" ip)))
+    (raise-annotation-failure who ip "Port.Input")))
 
 (define (check-output-port who op)
   (unless (output-port? op)
-    (raise-argument-error* who rhombus-realm "Port.Output" op)))
+    (raise-annotation-failure who op "Port.Output")))
 
 (define/arity Port.Input.open_bytes
   #:primitive (open-input-bytes)
@@ -200,7 +200,7 @@
   (define mode (->ReadLineMode mode-in))
   (unless mode
     (check-input-port who port)
-    (raise-argument-error* who rhombus-realm "Port.Input.ReadLineMode" mode-in))
+    (raise-annotation-failure who mode-in "Port.Input.ReadLineMode"))
   (coerce-read-result
    (read-line port mode)))
 

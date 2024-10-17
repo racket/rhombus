@@ -9,7 +9,7 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
-                     "realm.rkt"
+                     "annotation-failure.rkt"
                      "tail-returner.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (submod "symbol.rkt" for-static-info)
@@ -46,18 +46,16 @@
     (pattern (~var callee (:immediate-callee (to-list 'immediate_callee_meta.Parsed static-infoss)
                                              (case op-mode
                                                [(infix prefix) op-mode]
-                                               [else (raise-argument-error* 'immediate_callee_meta.Parsed
-                                                                            rhombus-realm
-                                                                            "matching(#'prefix || #'infix)"
-                                                                            op-mode)])
+                                               [else (raise-annotation-failure 'immediate_callee_meta.Parsed
+                                                                               op-mode
+                                                                               "matching(#'prefix || #'infix)")])
                                              (or (and (syntax? op-stx)
                                                       (syntax-parse op-stx
                                                         [op::name #'op.name]
                                                         [_ #f]))
-                                                 (raise-argument-error* 'immediate_callee_meta.Parsed
-                                                                        rhombus-realm
-                                                                        "Name"
-                                                                        op-stx))))
+                                                 (raise-annotation-failure 'immediate_callee_meta.Parsed
+                                                                           op-stx
+                                                                           "Name"))))
              #:with (parsed . tail) #'callee.parsed))
 
   (define-syntax-class-syntax Parsed

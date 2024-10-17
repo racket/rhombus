@@ -46,9 +46,9 @@ block:
     "hello".get(0) ~is Char"h"
     "hello" ++ " " ++ "world" ~is "hello world"
     "hello" ++ " " ++ #"world" ~throws values(
-      "String.append: contract violation",
-      "expected: ReadableString",
-      "given: #\"world\"",
+      "String.append: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"world").msg,
     )
     "hello".append(" world") ~is "hello world"
     "hello".append(" world", " and bye") ~is "hello world and bye"
@@ -236,135 +236,135 @@ version_guard.at_least "8.13.0.1":
   check:
     String.to_sequence(#"oops")
     ~throws values(
-      "String.to_sequence: contract violation",
-      "expected: ReadableString",
-      "given: #\"oops\"",
+      "String.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"oops").msg,
     )
   check:
     (#"oops" :~ ReadableString).to_sequence()
     ~throws values(
-      "String.to_sequence: contract violation",
-      "expected: ReadableString",
-      "given: #\"oops\"",
+      "String.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"oops").msg,
     )
   check:
     for List (x: #"oops" :~ ReadableString):
       x
     ~throws values(
-      "String.to_sequence: contract violation",
-      "expected: ReadableString",
-      "given: #\"oops\"",
+      "String.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"oops").msg,
     )
   check:
     for List (x: String.to_sequence(#"oops")):
       x
     ~throws values(
-      "String.to_sequence: contract violation",
-      "expected: ReadableString",
-      "given: #\"oops\"",
+      "String.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"oops").msg,
     )
   check:
     for List (x: (#"oops" :~ ReadableString).to_sequence()):
       x
     ~throws values(
-      "String.to_sequence: contract violation",
-      "expected: ReadableString",
-      "given: #\"oops\"",
+      "String.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(#"oops").msg,
     )
 
 check:
   String.snapshot(#"oops") ~throws values(
-    "String.snapshot: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.snapshot: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
   String.to_string(#"oops") ~throws values(
-    "String.to_string: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.to_string: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
   (#"oops" :~ ReadableString).snapshot() ~throws values(
-    "String.snapshot: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.snapshot: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
   (#"oops" :~ ReadableString).to_string() ~throws values(
-    "String.to_string: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.to_string: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
 
 check:
   (#"oops" :~ ReadableString)[0]
   ~throws values(
-    "String.get: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.get: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
 
 check:
   ("oops" :~ ReadableString)["oops"]
   ~throws values(
-    "String.get: contract violation",
-    "expected: NonnegInt",
-    "given: \"oops\"",
+    "String.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ ReadableString)[-1]
   ~throws values(
-    "String.get: contract violation",
-    "expected: NonnegInt",
-    "given: -1",
+    "String.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val(-1).msg,
   )
 
 check:
   String.append(#"oops") ~throws values(
-    "String.append: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.append: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
   (#"oops" :~ ReadableString).append() ~throws values(
-    "String.append: contract violation",
-    "expected: ReadableString",
-    "given: #\"oops\"",
+    "String.append: " ++ error.annot_msg(),
+    error.annot("ReadableString").msg,
+    error.val(#"oops").msg,
   )
 
 version_guard.at_least "8.14.0.7":
   check:
     String.make("oops", Char"a")
     ~throws values(
-      "String.make: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "String.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     String.make(-1, Char"a")
     ~throws values(
-      "String.make: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "String.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
   check:
     String.make(5, "oops")
     ~throws values(
-      "String.make: contract violation",
-      "expected: Char",
-      "given: \"oops\"",
+      "String.make: " ++ error.annot_msg(),
+      error.annot("Char").msg,
+      error.val("oops").msg,
     )
   check:
     String.make(5, "a")
     ~throws values(
-      "String.make: contract violation",
-      "expected: Char",
-      "given: \"a\"",
+      "String.make: " ++ error.annot_msg(),
+      error.annot("Char").msg,
+      error.val("a").msg,
     )
   check:
     String.make(5, Byte#"a")
     ~throws values(
-      "String.make: contract violation",
-      "expected: Char",
-      "given: 97",
+      "String.make: " ++ error.annot_msg(),
+      error.annot("Char").msg,
+      error.val(97).msg,
     )
 
 // checks static infos for elements

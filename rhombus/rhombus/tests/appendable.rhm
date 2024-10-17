@@ -82,15 +82,15 @@ check:
 check:
   (MutableMap{ 1: 2 } :~ Appendable)
     ++ MutableMap{ 3: 4 } ~throws values(
-    "Appendable.append: contract violation",
-    "expected: Appendable",
-    "MutableMap{1: 2}",
+      "Appendable.append: " ++ error.annot_msg(),
+      error.annot("Appendable").msg,
+      error.val(MutableMap{ 1: 2 }).msg,
   )
   (MutableSet{ 1, 2 } :~ Appendable)
-    ++ MutableSet{ 3, 4 } ~throws values(
-    "Appendable.append: contract violation",
-    "expected: Appendable",
-    "MutableSet{1, 2}",
+    ++ MutableSet{ 3, 4 } ~throws values(      
+      "Appendable.append: " ++ error.annot_msg(),
+      error.annot("Appendable").msg,
+      error.val(MutableSet{1, 2}).msg,
   )
 
 block:

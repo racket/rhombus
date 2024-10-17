@@ -16,7 +16,6 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "number.rkt"
-         "realm.rkt"
          "static-info.rkt")
 
 (provide (for-spaces (rhombus/annot
@@ -161,17 +160,17 @@
 (define (bytes!=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes=? a b))
-      (raise-argument-error* '!= rhombus-realm "Bytes" (if (bytes? a) b a))))
+      (raise-annotation-failure '!= (if (bytes? a) b a) "Bytes")))
 
 (define (bytes<=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes>? a b))
-      (raise-argument-error* '<= rhombus-realm "Bytes" (if (bytes? a) b a))))
+      (raise-annotation-failure '<= (if (bytes? a) b a) "Bytes")))
 
 (define (bytes>=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes<? a b))
-      (raise-argument-error* '>= rhombus-realm "Bytes" (if (bytes? a) b a))))
+      (raise-annotation-failure '>= (if (bytes? a) b a) "Bytes")))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'bytes get-bytes-static-infos))

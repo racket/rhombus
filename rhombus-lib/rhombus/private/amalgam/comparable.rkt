@@ -359,7 +359,7 @@
     (define (method-op v1 v2)
       (define vt1 (Comparable-ref v1 #f))
       (unless vt1
-        (raise-argument-error* compare-who/method rhombus-realm "Comparable" v1))
+        (raise-annotation-failure compare-who/method v1 "Comparable"))
       (define app1 (vector-ref vt1 vtable-index))
       (define vt2 (Comparable-ref v2 #f))
       (unless (and vt2

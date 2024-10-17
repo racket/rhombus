@@ -7,7 +7,6 @@
          "printer-property.rkt"
          "name-root.rkt"
          (submod "annotation.rkt" for-class)
-         "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
          (submod "function.rkt" for-info)
@@ -100,15 +99,15 @@
     [(string? pd) (pretty-text pd)]
     [(bytes? pd) (pretty-text pd)]
     [else (and who
-               (raise-argument-error* who rhombus-realm "PrintDesc" pd))]))
+               (raise-annotation-failure who pd "PrintDesc"))]))
 
 (define (check-int who n)
   (unless (exact-integer? n)
-    (raise-argument-error* who rhombus-realm "Int" n)))
+    (raise-annotation-failure who n "Int")))
 
 (define (check-nonneg-int who n)
   (unless (exact-nonnegative-integer? n)
-    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
+    (raise-annotation-failure who n "NonnegInt")))
 
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc
@@ -140,9 +139,7 @@
 (define/arity (PrintDesc.list pre elems post)
   (define pre-pd (print-description-unwrap who pre))
   (define (bad-elems)
-    (raise-argument-error* who rhombus-realm
-                           "Listable.to_list && List.of(PrintDesc)"
-                           elems))
+    (raise-annotation-failure who elems "Listable.to_list && List.of(PrintDesc)"))
   (define elem-pds (cond
                      [(to-list #f elems)
                       => (lambda (elems)
@@ -172,7 +169,7 @@
   (define alt (print-description-unwrap who alt-pd))
   (define mode (->SpecialMode mode-in))
   (unless mode
-    (raise-argument-error* who rhombus-realm "PrintDesc.SpecialMode" mode-in))
+    (raise-annotation-failure who mode-in "PrintDesc.SpecialMode"))
   (check-nonneg-int who len)
   (PrintDesc (pretty-special v len mode alt)))
 

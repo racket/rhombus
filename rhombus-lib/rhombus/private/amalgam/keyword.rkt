@@ -7,7 +7,6 @@
          "call-result-key.rkt"
          "compare-key.rkt"
          (submod "annotation.rkt" for-class)
-         "realm.rkt"
          "static-info.rkt")
 
 (provide (for-spaces (rhombus/annot
@@ -43,7 +42,7 @@
 
 (define (check-keywords who a b)
   (unless (and (keyword? a) (keyword? b))
-    (raise-argument-error* who rhombus-realm "Keyword" (if (keyword? a) b a))))
+    (raise-annotation-failure who (if (keyword? a) b a) "Keyword")))
 
 (define (keyword<=? a b)
   (check-keywords '<= a b)

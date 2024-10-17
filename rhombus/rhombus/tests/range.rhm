@@ -382,38 +382,38 @@ block:
     | #'~left:
         'check:
            "oops" $op $throws values(
-             #%literal $(to_string(op) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $(to_string(op) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            Range . $variant("oops") $throws values(
-             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $("Range." ++ to_string(variant) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )'
     | #'~right:
         'check:
            $op "oops" $throws values(
-             #%literal $(to_string(op) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $(to_string(op) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            Range . $variant("oops") $throws values(
-             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $("Range." ++ to_string(variant) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )'
     | #'~both:
         'check:
            "oops" $op 5 $throws values(
-             #%literal $(to_string(op) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $(to_string(op) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            0 $op "oops" $throws values(
-             #%literal $(to_string(op) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $(to_string(op) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            5 $op 0 $throws values(
              #%literal $(to_string(op) ++ ": starting point must be less than or equal to ending point"),
@@ -421,14 +421,14 @@ block:
              "ending point: 0",
            )
            Range . $variant("oops", 5) $throws values(
-             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $("Range." ++ to_string(variant) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            Range . $variant(0, "oops") $throws values(
-             #%literal $("Range." ++ to_string(variant) ++ ": contract violation"),
-             "expected: Int",
-             "given: \"oops\"",
+             #%literal $("Range." ++ to_string(variant) ++ ": " ++ error.annot_msg()),
+             error.annot("Int").msg,
+             error.val("oops").msg,
            )
            Range . $variant(5, 0) $throws values(
              #%literal $("Range." ++ to_string(variant) ++ ": starting point must be less than or equal to ending point"),
@@ -700,86 +700,86 @@ block:
   check:
     Range.to_sequence("oops")
     ~throws values(
-      "Range.to_sequence: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.to_sequence: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ SequenceRange).to_sequence()
     ~throws values(
-      "Range.to_sequence: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.to_sequence: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     Range.step_by("oops", 2)
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ SequenceRange).step_by(2)
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ SequenceRange):
       x
     ~throws values(
-      "Range.to_sequence: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.to_sequence: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: Range.to_sequence("oops")):
       x
     ~throws values(
-      "Range.to_sequence: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.to_sequence: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ SequenceRange).to_sequence()):
       x
     ~throws values(
-      "Range.to_sequence: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.to_sequence: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: Range.step_by("oops", 2)):
       x
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ SequenceRange).step_by(2)):
       x
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: SequenceRange",
-      "given: \"oops\"",
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("SequenceRange").msg,
+      error.val("oops").msg,
     )
 
 block:
   check:
     Range.to_list("oops")
     ~throws values(
-      "Range.to_list: contract violation",
-      "expected: ListRange",
-      "given: \"oops\"",
+      "Range.to_list: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ ListRange).to_list()
     ~throws values(
-      "Range.to_list: contract violation",
-      "expected: ListRange",
-      "given: \"oops\"",
+      "Range.to_list: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
     )
 
 // errors in optimized cases
@@ -788,17 +788,17 @@ block:
     for List (i: "oops"..5):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: 0.."oops"):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: 5..0):
@@ -812,17 +812,17 @@ block:
     for List (i: "oops"..=5):
       i
     ~throws values(
-      "..=: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..=: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: 0..="oops"):
       i
     ~throws values(
-      "..=: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..=: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: 5..=0):
@@ -836,9 +836,9 @@ block:
     for List (i: "oops"..):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
 
 block:
@@ -846,17 +846,17 @@ block:
     for List (i: ("oops"..5).step_by(2)):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: (0.."oops").step_by(2)):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: (5..0).step_by(2)):
@@ -870,25 +870,25 @@ block:
     for List (i: (0..5).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: PosInt",
-      "given: \"oops\""
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg
     )
   check:
     for List (i: ("oops"..=5).step_by(2)):
       i
     ~throws values(
-      "..=: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..=: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: (0..="oops").step_by(2)):
       i
     ~throws values(
-      "..=: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..=: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: (5..=0).step_by(2)):
@@ -902,25 +902,25 @@ block:
     for List (i: (0..=5).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: PosInt",
-      "given: \"oops\""
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg
     )
   check:
     for List (i: ("oops"..).step_by(2)):
       i
     ~throws values(
-      "..: contract violation",
-      "expected: Int",
-      "given: \"oops\"",
+      "..: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("oops").msg,
     )
   check:
     for List (i: (0..).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: contract violation",
-      "expected: PosInt",
-      "given: \"oops\""
+      "Range.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg
     )
 
 // non-unsafe for non-fixnums

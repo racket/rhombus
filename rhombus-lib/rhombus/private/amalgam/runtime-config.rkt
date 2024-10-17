@@ -108,6 +108,13 @@
               [(racket/primitive)
                (define (rhombus s) (values s 'rhombus/primitive))
                (cond
+                 [(regexp-match-positions #rx"^contract violation\n  expected: (.*)\n  given: (.*)" msg)
+                  => (lambda (m)
+                       (define expected (cadr m))
+                       (define value (caddr m))
+                       (rhombus (string-append "value does not satisfy annotation\n"
+                                               "  annotation: " (substring msg (car expected) (cdr expected)) "\n"
+                                               "  value: " (substring msg (car value) (cdr value)))))]
                  [(regexp-match-positions #rx"^not a procedure;\n expected a procedure that can be applied to arguments" msg)
                   => (lambda (m)
                        (rhombus (string-append "not a function" (substring msg (cdar m)))))]

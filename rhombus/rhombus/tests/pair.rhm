@@ -28,33 +28,33 @@ check:
 check:
   Pair.first(1)
   ~throws values(
-    "Pair.first: contract violation",
-    "expected: Pair",
-    "given: 1",
+    "Pair.first: " ++ error.annot_msg(),
+    error.annot("Pair").msg,
+    error.val(1).msg,
   )
 
 check:
   (1 :~ Pair).first
   ~throws values(
-    "Pair.first: contract violation",
-    "expected: Pair",
-    "given: 1",
+    "Pair.first: " ++ error.annot_msg(),
+    error.annot("Pair").msg,
+    error.val(1).msg,
   )
 
 check:
   Pair.rest(2)
   ~throws values(
-    "Pair.rest: contract violation",
-    "expected: Pair",
-    "given: 2",
+    "Pair.rest: " ++ error.annot_msg(),
+    error.annot("Pair").msg,
+    error.val(2).msg,
   )
 
 check:
   (2 :~ Pair).rest
   ~throws values(
-    "Pair.rest: contract violation",
-    "expected: Pair",
-    "given: 2",
+    "Pair.rest: " ++ error.annot_msg(),
+    error.annot("Pair").msg,
+    error.val(2).msg,
   )
 
 check:

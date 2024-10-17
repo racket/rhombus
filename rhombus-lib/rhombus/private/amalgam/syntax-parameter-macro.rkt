@@ -9,6 +9,7 @@
                      "name-root.rkt"
                      "define-arity.rkt"
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "pack.rkt")
          "provide.rkt"
          "definition.rkt"
@@ -73,7 +74,7 @@
     (define id (or (unpack-term id-in #f #f)
                    id-in))
     (unless (identifier? id)
-      (raise-argument-error* who rhombus-realm "Identifier" id))
+      (raise-annotation-failure who id "Identifier"))
     (define p (syntax-local-value* (in-syntax-parameter-space id) syntax-parameter-ref))
     (unless p
       (raise-arguments-error* who rhombus-realm

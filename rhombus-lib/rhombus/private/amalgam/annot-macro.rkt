@@ -10,6 +10,7 @@
                      "tail-returner.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -126,7 +127,7 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (annotation-kind stx who)
   (check-syntax who stx)
@@ -203,7 +204,7 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (define group (unpack-group stx #f #f))
     (unless group
-      (raise-argument-error* who rhombus-realm "Group" stx))
+      (raise-annotation-failure who stx "Group"))
     (syntax-parse group
       [a::annotation
        #:with ab::annotation-binding-form #'a.parsed

@@ -2,7 +2,7 @@
 (require "treelist.rkt"
          "to-list.rkt"
          "dot-property.rkt"
-         "realm.rkt")
+         "annotation-failure.rkt")
 
 (provide (struct-out entry-point-adjustment)
          no-adjustments)
@@ -22,9 +22,9 @@
             (define who 'entry_point_meta.Adjustment)
             (define args (to-treelist #f args-in))
             (unless (and args (for/and ([e (in-treelist args)]) (identifier? e)))
-              (raise-argument-error* who rhombus-realm "Listable.to_list && List.of(Identifier)" args-in))
+              (raise-annotation-failure who args-in "Listable.to_list && List.of(Identifier)"))
             (unless (and (procedure? wrap) (procedure-arity-includes? wrap 2))
-              (raise-argument-error* who rhombus-realm "Function.of_arity(2)" wrap))
+              (raise-annotation-failure who wrap "Function.of_arity(2)"))
             (values args wrap (and is-method? #t))))
 
 (define no-adjustments

@@ -526,7 +526,7 @@
 
 (define (check-primitive-property who v)
   (unless (struct-type-property? v)
-    (raise-argument-error* who rhombus-realm "PrimitiveProperty" v))
+    (raise-annotation-failure who v "PrimitiveProperty"))
   v)
 
 (define-class-clause-syntax primitive_property

@@ -1,5 +1,5 @@
 #lang racket/base
-(require "realm.rkt"
+(require "annotation-failure.rkt"
          (prefix-in pe: pretty-expressive)
          (prefix-in sp: shrubbery/private/simple-pretty))
 
@@ -42,7 +42,7 @@
   (make-parameter 80
                   (lambda (v)
                     (unless (exact-nonnegative-integer? v)
-                      (raise-argument-error* 'Printable.current_page_width rhombus-realm "NonnegInt" v))
+                      (raise-annotation-failure 'Printable.current_page_width v "NonnegInt"))
                     v)
                   'Printable.current_page_width))
 

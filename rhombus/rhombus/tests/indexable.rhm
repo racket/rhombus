@@ -131,17 +131,17 @@ check:
 
 check:
   (#'apple :~ Indexable)[0] ~throws values(
-    "Indexable.get: contract violation",
-    "expected: Indexable",
+    "Indexable.get: " ++ error.annot_msg(),
+    error.annot("Indexable").msg,
     "#'apple",
   )
   ("apple" :~ MutableIndexable)[0] := Char"b" ~throws values(
-    "MutableIndexable.set: contract violation",
-    "expected: MutableIndexable",
+    "MutableIndexable.set: " ++ error.annot_msg(),
+    error.annot("MutableIndexable").msg,
     "\"apple\"",
   )
   ("apple".copy() :~ MutableIndexable)[0] := Char"b" ~throws values(
-    "MutableIndexable.set: contract violation",
-    "expected: MutableIndexable",
+    "MutableIndexable.set: " ++ error.annot_msg(),
+    error.annot("MutableIndexable").msg,
     "String.copy(\"apple\")",
   )

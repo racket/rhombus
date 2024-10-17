@@ -19,6 +19,7 @@
          "treelist.rkt"
          (submod "list.rkt" for-listable)
          "realm.rkt"
+         "annotation-failure.rkt"
          "number.rkt"
          "provide.rkt"
          "printer-property.rkt"
@@ -310,11 +311,11 @@
 
 (define (check-int who i)
   (unless (exact-integer? i)
-    (raise-argument-error* who rhombus-realm "Int" i)))
+    (raise-annotation-failure who i "Int")))
 
 (define (check-pos-int who i)
   (unless (exact-positive-integer? i)
-    (raise-argument-error* who rhombus-realm "PosInt" i)))
+    (raise-annotation-failure who i "PosInt")))
 
 (define (check-start-end who start end)
   (unless (start . <= . end)
@@ -492,15 +493,15 @@
 
 (define (check-range who r)
   (unless (range? r)
-    (raise-argument-error* who rhombus-realm "Range" r)))
+    (raise-annotation-failure who r "Range")))
 
 (define (check-sequence-range who r)
   (unless (sequence-range? r)
-    (raise-argument-error* who rhombus-realm "SequenceRange" r)))
+    (raise-annotation-failure who r "SequenceRange")))
 
 (define (check-list-range who r)
   (unless (list-range? r)
-    (raise-argument-error* who rhombus-realm "ListRange" r)))
+    (raise-annotation-failure who r "ListRange")))
 
 (define/method (Range.start r)
   #:static-infos ((#%call-result #,(get-int-static-infos)))

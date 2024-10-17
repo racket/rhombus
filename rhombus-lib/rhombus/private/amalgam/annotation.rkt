@@ -22,12 +22,12 @@
          "dotted-sequence-parse.rkt"
          "static-info.rkt"
          "parse.rkt"
-         "realm.rkt"
          "parens.rkt"
          "if-blocked.rkt"
          "number.rkt"
          "is-static.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "annotation-failure.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -881,9 +881,6 @@
 (define (raise-::-annotation-failure who val ctc)
   (raise-annotation-failure who val ctc))
 
-(define (raise-annotation-failure who val ctc)
-  (raise-binding-failure who "value" val ctc))
-
 (define-annotation-syntax matching
   (annotation-prefix-operator
    '((default . stronger))
@@ -930,8 +927,7 @@
          #'tail)]))))
 
 (define (raise-predicate-error who val)
-  (raise-argument-error* who rhombus-realm
-                         "Function.of_arity(1)" val))
+  (raise-annotation-failure who val "Function.of_arity(1)"))
 
 ;; `#%parens` is defined in "arrow-annotation.rkt"
 
@@ -960,7 +956,7 @@
         (values (annotation-predicate-form
                  #`(let ([n (rhombus-expression n-g)])
                      (unless (real? n)
-                       (raise-argument-error* '#,id rhombus-realm "Real" n))
+                       (raise-annotation-failure '#,id n "Real"))
                      (lambda (v)
                        (and (real? v)
                             (#,comp-stx v n))))
@@ -998,9 +994,9 @@
                  #`(let ([lo-v (rhombus-expression lo.g)]
                          [hi-v (rhombus-expression hi.g)])
                      (unless (#,pred-stx lo-v)
-                       (raise-argument-error* 'form-id rhombus-realm '#,annot-str lo-v))
+                       (raise-annotation-failure 'form-id lo-v '#,annot-str))
                      (unless (#,pred-stx hi-v)
-                       (raise-argument-error* 'form-id rhombus-realm '#,annot-str hi-v))
+                       (raise-annotation-failure 'form-id hi-v '#,annot-str))
                      (lambda (v)
                        (and (#,pred-stx v)
                             (lo.comp lo-v v)
