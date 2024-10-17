@@ -2,10 +2,10 @@
 (require (for-syntax racket/base)
          "name-root.rkt"
          "define-operator.rkt"
-         "realm.rkt"
          "define-arity.rkt"
          (submod "arithmetic.rkt" static-infos)
-         "call-result-key.rkt")
+         "call-result-key.rkt"
+         "annotation-failure.rkt")
 
 (provide (for-space rhombus/namespace
                     bits))
@@ -37,11 +37,11 @@
 
 (define (check-int who n)
   (unless (exact-integer? n)
-    (raise-argument-error* who rhombus-realm "Int" n)))
+    (raise-annotation-failure who n "Int")))
 
 (define (check-nonneg-int who n)
   (unless (exact-nonnegative-integer? n)
-    (raise-argument-error* who rhombus-realm "NonnegInt" n)))
+    (raise-annotation-failure who n "NonnegInt")))
 
 (define (arithmetic-shift-left a b)
   (define who '|bits.(<<)|)

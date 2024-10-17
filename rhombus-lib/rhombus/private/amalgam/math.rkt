@@ -4,6 +4,7 @@
          "name-root.rkt"
          "static-info.rkt"
          "realm.rkt"
+         "annotation-failure.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "function-arity-key.rkt"
@@ -76,11 +77,11 @@
 
 (define (check-posint who n)
   (unless (exact-positive-integer? n)
-    (raise-argument-error* who rhombus-realm "PosInt" n)))
+    (raise-annotation-failure who n "PosInt")))
 
 (define (check-int who n)
   (unless (exact-integer? n)
-    (raise-argument-error* who rhombus-realm "Int" n)))
+    (raise-annotation-failure who n "Int")))
 
 (define/arity #:name random rhombus-random
   #:static-infos ((#%call-result #,(get-number-static-infos)))
@@ -123,15 +124,15 @@
            (case-lambda
              [() (0-value op)]
              [(a)
-              (unless (ok? a) (raise-argument-error* who rhombus-realm ok-str a))
+              (unless (ok? a) (raise-annotation-failure who a ok-str))
               (op a)]
              [(a b)
-              (unless (ok? a) (raise-argument-error* who rhombus-realm ok-str a))
-              (unless (ok? b) (raise-argument-error* who rhombus-realm ok-str b))
+              (unless (ok? a) (raise-annotation-failure who a ok-str))
+              (unless (ok? b) (raise-annotation-failure who b ok-str))
               (op a b)]
              [ns
               (for ([a (in-list ns)])
-                (unless (ok? a) (raise-argument-error* who rhombus-realm ok-str a)))
+                (unless (ok? a) (raise-annotation-failure who a ok-str)))
               (apply op ns)]))
          ...)]))
 

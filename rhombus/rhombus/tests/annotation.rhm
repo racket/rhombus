@@ -48,11 +48,11 @@ block:
 
 check:
   #false is_a satisfying("not a function")
-  ~throws values("contract violation", "expected: Function.of_arity(1)")
+  ~throws values(error.annot_msg(), error.annot("Function.of_arity(1)").msg)
 
 check:
   #false is_a satisfying(fun (): #false)
-  ~throws values("contract violation", "expected: Function.of_arity(1)")
+  ~throws values(error.annot_msg(), error.annot("Function.of_arity(1)").msg)
 
 
 block:

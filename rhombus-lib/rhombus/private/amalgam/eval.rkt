@@ -8,7 +8,6 @@
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
-         "realm.rkt"
          (submod "module-path-object.rkt" for-primitive)
          (submod "function.rkt" for-info))
 
@@ -46,7 +45,7 @@
 (define/arity #:name eval (rhombus-eval e
                                         #:as_interaction [as_interaction #f])
   (unless (syntax? e)
-    (raise-argument-error* who rhombus-realm "Syntax" e))
+    (raise-annotation-failure who e "Syntax"))
   (if as_interaction
       (eval `(#%top-interaction . ,#`(multi #,@(unpack-multi e 'eval #f))))
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
@@ -57,5 +56,5 @@
 
 (define/arity (import mod-path)
   (unless (module-path? mod-path)
-    (raise-argument-error* who rhombus-realm "ModulePath" mod-path))
+    (raise-annotation-failure who mod-path "ModulePath"))
   (namespace-require (module-path-raw mod-path)))

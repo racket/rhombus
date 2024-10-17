@@ -148,7 +148,7 @@ check:
 
 check:
   [1, "oops"] is_a matching((_ :: List) :: converting(fun ([x, ...]): [x+1, ...]))
-  ~throws "+: contract violation"
+  ~throws "+: " ++ error.annot_msg()
 
 check:
   ~eval

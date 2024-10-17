@@ -11,7 +11,7 @@
          "printer-property.rkt"
          "define-arity.rkt"
          "mutability.rkt"
-         "realm.rkt"
+         "annotation-failure.rkt"
          "print-desc.rkt"
          "key-comp-property.rkt"
          "enum.rkt")
@@ -59,7 +59,7 @@
 
 (define (check-output-port who op)
   (unless (output-port? op)
-    (raise-argument-error* who rhombus-realm "Port.Output" op)))
+    (raise-annotation-failure who op "Port.Output")))
 
 (define-simple-symbol-enum PrintMode
   text
@@ -67,7 +67,7 @@
 
 (define (check-mode who mode)
   (unless (PrintMode? mode)
-    (raise-argument-error* who rhombus-realm "PrintMode" mode)))
+    (raise-annotation-failure who mode "PrintMode")))
 
 (define (do-print* who vs op mode pretty?)
   (check-output-port who op)

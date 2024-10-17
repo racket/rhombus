@@ -271,9 +271,9 @@ check:
   class NotComparable()
   (NotComparable() :~ Comparable) < NotComparable()
   ~throws values(
-    "Comparable.compare_to: contract violation",
-    "expected: Comparable",
-    "given: NotComparable()",
+    "Comparable.compare_to: " ++ error.annot_msg(),
+    error.annot("Comparable").msg,
+    error.text(~label: "value", "NotComparable()").msg,
   )
 
 block:

@@ -6,7 +6,6 @@
          (submod "annotation.rkt" for-class)
          "compare-key.rkt"
          "call-result-key.rkt"
-         "realm.rkt"
          "static-info.rkt")
 
 (provide (for-spaces (rhombus/annot
@@ -53,7 +52,7 @@
 
 (define (check-symbols who a b)
   (unless (and (symbol? a) (symbol? b))
-    (raise-argument-error* who rhombus-realm "Symbol" (if (symbol? a) b a))))
+    (raise-annotation-failure who (if (symbol? a) b a) "Symbol")))
 
 (define (symbol<=? a b)
   (check-symbols '<= a b)

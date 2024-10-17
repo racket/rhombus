@@ -103,7 +103,7 @@ fun annot_msg(what :: String = "value") :~ String:
 fun text(~label: label :: String,
          v) :~ Clause:
   Clause(
-    label ++ ": " ++ reindent(to_string(v), ~label: label)
+    label ++ ":" ++ reindent(to_string(v), ~label: label)
   )
 
 fun val(~label: label :: String = "value", v) :~ Clause:

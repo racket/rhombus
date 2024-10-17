@@ -18,6 +18,7 @@
                      "tail-returner.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -103,7 +104,7 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
   (define/arity (bind_meta.unpack stx)

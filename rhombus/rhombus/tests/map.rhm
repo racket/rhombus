@@ -35,9 +35,9 @@ check:
 check:
   Map.length({1, 2, 3})
   ~throws values(
-    "Map.length: contract violation",
-    "expected: ReadableMap",
-    "given: {1, 2, 3}",
+    "Map.length: " ++ error.annot_msg(),
+    error.annot("ReadableMap").msg,
+    error.val({1, 2, 3}).msg,
   )
 
 block:
@@ -54,14 +54,14 @@ block:
     ({"a": 1, "b": 2} ++ {"a": 3})["a"] ~is 3
     ({"a": 1, "b": 2} ++ {"a": 3, "b": 4})["a"] ~is 3
     {"a": 1, "b": 2} ++ "oops" ~throws values(
-      "Map.append: contract violation",
-      "expected: Map",
-      "given: \"oops\"",
+      "Map.append: " ++ error.annot_msg(),
+      error.annot("Map").msg,
+      error.val("oops").msg,
     )
     {"a": 1, "b": 2} ++ MutableMap{"a": 3} ~throws values(
-      "Map.append: contract violation",
-      "expected: Map",
-      "given: MutableMap{\"a\": 3}",
+      "Map.append: " ++ error.annot_msg(),
+      error.annot("Map").msg,
+      error.val(MutableMap{"a": 3}).msg,
     )
     {"a": 1, "b": 2}.append()["a"] ~is 1
     {"a": 1, "b": 2}.append({"a": 2})["a"] ~is 2
@@ -119,57 +119,57 @@ block:
   check:
     Map([1, "1", "oops"])
     ~throws values(
-      "Map: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "Map: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "[1, \"1\", \"oops\"]",
     )
   check:
     Map(PairList[1, "1", "oops"])
     ~throws values(
-      "Map: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "Map: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     Map(Array(1, "1", "oops"))
     ~throws values(
-      "Map: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "Map: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "Array(1, \"1\", \"oops\")",
     )
   check:
     Map(Broken())
     ~throws values(
-      "Map: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "Map: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "Broken()",
     )
   check:
     MutableMap([1, "1", "oops"])
     ~throws values(
-      "MutableMap: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "MutableMap: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(PairList[1, "1", "oops"])
     ~throws values(
-      "MutableMap: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "MutableMap: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(Array(1, "1", "oops"))
     ~throws values(
-      "MutableMap: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "MutableMap: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "Array(1, \"1\", \"oops\")",
     )
   check:
     MutableMap(Broken())
     ~throws values(
-      "MutableMap: contract violation",
-      "expected: Listable.to_list && matching([_, _])",
+      "MutableMap: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && matching([_, _])").msg,
       "Broken()",
     )
 
@@ -803,40 +803,40 @@ version_guard.at_least "8.13.0.1":
   check:
     Map.to_sequence("oops")
     ~throws values(
-      "Map.to_sequence: contract violation",
-      "expected: ReadableMap",
-      "given: \"oops\"",
+      "Map.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableMap").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ Map).to_sequence()
     ~throws values(
-      "Map.to_sequence: contract violation",
-      "expected: ReadableMap",
-      "given: \"oops\"",
+      "Map.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableMap").msg,
+      error.val("oops").msg,
     )
   check:
     for Map ((k, v): "oops" :~ Map):
       values(k, v)
     ~throws values(
-      "Map.to_sequence: contract violation",
-      "expected: ReadableMap",
-      "given: \"oops\"",
+      "Map.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableMap").msg,
+      error.val("oops").msg,
     )
   check:
     for Map ((k, v): Map.to_sequence("oops")):
       values(k, v)
     ~throws values(
-      "Map.to_sequence: contract violation",
-      "expected: ReadableMap",
-      "given: \"oops\"",
+      "Map.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableMap").msg,
+      error.val("oops").msg,
     )
   check:
     for Map ((k, v): ("oops" :~ Map).to_sequence()):
       values(k, v)
     ~throws values(
-      "Map.to_sequence: contract violation",
-      "expected: ReadableMap",
-      "given: \"oops\"",
+      "Map.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableMap").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -1414,27 +1414,27 @@ block:
 check:
   ("oops" :~ Map)[0]
   ~throws values(
-    "Map.get: contract violation",
-    "expected: ReadableMap",
-    "given: \"oops\"",
+    "Map.get: " ++ error.annot_msg(),
+    error.annot("ReadableMap").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ MutableMap)[0] := 0
   ~throws values(
-    "MutableMap.set: contract violation",
-    "expected: MutableMap",
-    "given: \"oops\"",
+    "MutableMap.set: " ++ error.annot_msg(),
+    error.annot("MutableMap").msg,
+    error.val("oops").msg,
   )
 
 check:
   Map.append("oops") ~throws values(
-    "Map.append: contract violation",
-    "expected: Map",
-    "given: \"oops\"",
+    "Map.append: " ++ error.annot_msg(),
+    error.annot("Map").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ Map).append() ~throws values(
-    "Map.append: contract violation",
-    "expected: Map",
-    "given: \"oops\"",
+    "Map.append: " ++ error.annot_msg(),
+    error.annot("Map").msg,
+    error.val("oops").msg,
   )

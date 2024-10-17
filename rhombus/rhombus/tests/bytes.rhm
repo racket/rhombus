@@ -36,9 +36,9 @@ block:
     #"hello".get(0) ~is Byte#"h"
     #"hello" ++ #" " ++ #"world" ~is_now #"hello world"
     #"hello" ++ #" " ++ "world" ~throws values(
-      "Bytes.append: contract violation",
-      "expected: Bytes",
-      "given: \"world\"",
+      "Bytes.append: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("world").msg,
     )
     #"hello".append(#" world") ~is_now #"hello world"
     #"hello".append(#" world", #" and bye") ~is_now #"hello world and bye"
@@ -138,189 +138,189 @@ version_guard.at_least "8.13.0.1":
   check:
     Bytes.to_sequence("oops")
     ~throws values(
-      "Bytes.to_sequence: contract violation",
-      "expected: Bytes",
-      "given: \"oops\"",
+      "Bytes.to_sequence: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ Bytes).to_sequence()
     ~throws values(
-      "Bytes.to_sequence: contract violation",
-      "expected: Bytes",
-      "given: \"oops\"",
+      "Bytes.to_sequence: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ Bytes):
       x
     ~throws values(
-      "Bytes.to_sequence: contract violation",
-      "expected: Bytes",
-      "given: \"oops\"",
+      "Bytes.to_sequence: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: Bytes.to_sequence("oops")):
       x
     ~throws values(
-      "Bytes.to_sequence: contract violation",
-      "expected: Bytes",
-      "given: \"oops\"",
+      "Bytes.to_sequence: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ Bytes).to_sequence()):
       x
     ~throws values(
-      "Bytes.to_sequence: contract violation",
-      "expected: Bytes",
-      "given: \"oops\"",
+      "Bytes.to_sequence: " ++ error.annot_msg(),
+      error.annot("Bytes").msg,
+      error.val("oops").msg,
     )
 
 check:
   ("oops" :~ Bytes)[0]
   ~throws values(
-    "Bytes.get: contract violation",
-    "expected: Bytes",
-    "given: \"oops\"",
+    "Bytes.get: " ++ error.annot_msg(),
+    error.annot("Bytes").msg,
+    error.val("oops").msg,
   )
 
 check:
   (#"hello" :~ Bytes)["oops"]
   ~throws values(
-    "Bytes.get: contract violation",
-    "expected: NonnegInt",
-    "given: \"oops\"",
+    "Bytes.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
   )
 
 check:
   (#"hello" :~ Bytes)[-1]
   ~throws values(
-    "Bytes.get: contract violation",
-    "expected: NonnegInt",
-    "given: -1",
+    "Bytes.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val(-1).msg,
   )
 
 check:
   ("oops" :~ MutableBytes)[0] := 0
   ~throws values(
-    "Bytes.set: contract violation",
-    "expected: MutableBytes",
-    "given: \"oops\"",
+    "Bytes.set: " ++ error.annot_msg(),
+    error.annot("MutableBytes").msg,
+    error.val("oops").msg,
   )
 
 check:
   (#"hello" :~ MutableBytes)[0] := 0
   ~throws values(
-    "Bytes.set: contract violation",
-    "expected: MutableBytes",
-    "given: #\"hello\"",
+    "Bytes.set: " ++ error.annot_msg(),
+    error.annot("MutableBytes").msg,
+    error.val(#"hello").msg,
   )
 
 check:
   (#"hello".copy() :~ MutableBytes)["oops"] := 0
   ~throws values(
-    "Bytes.set: contract violation",
-    "expected: NonnegInt",
-    "given: \"oops\"",
+    "Bytes.set: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
   )
 
 check:
   (#"hello".copy() :~ MutableBytes)[-1] := 0
   ~throws values(
-    "Bytes.set: contract violation",
-    "expected: NonnegInt",
-    "given: -1",
+    "Bytes.set: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val(-1).msg,
   )
 
 version_guard.at_least "8.14.0.2":
   check:
     (#"hello".copy() :~ MutableBytes)[0] := "oops"
     ~throws values(
-      "Bytes.set: contract violation",
-      "expected: Byte",
-      "given: \"oops\"",
+      "Bytes.set: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val("oops").msg,
     )
   check:
     (#"hello".copy() :~ MutableBytes)[0] := -1
     ~throws values(
-      "Bytes.set: contract violation",
-      "expected: Byte",
-      "given: -1",
+      "Bytes.set: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val(-1).msg,
     )
 
 check:
   Bytes.append("oops") ~throws values(
-    "Bytes.append: contract violation",
-    "expected: Bytes",
-    "given: \"oops\"",
+    "Bytes.append: " ++ error.annot_msg(),
+    error.annot("Bytes").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ Bytes).append() ~throws values(
-    "Bytes.append: contract violation",
-    "expected: Bytes",
-    "given: \"oops\"",
+    "Bytes.append: " ++ error.annot_msg(),
+    error.annot("Bytes").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.7":
   check:
     Bytes.make("oops")
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     Bytes.make(-1)
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
   check:
     Bytes.make("oops", 0)
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     Bytes.make(-1, 0)
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
   check:
     Bytes.make(5, "oops")
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: Byte",
-      "given: \"oops\"",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val("oops").msg,
     )
   check:
     Bytes.make(5, "a")
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: Byte",
-      "given: \"a\"",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val("a").msg,
     )
   check:
     Bytes.make(5, Char"a")
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: Byte",
-      "given: Char\"a\"",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val(Char"a").msg,
     )
   check:
     Bytes.make(5, -1)
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: Byte",
-      "given: -1",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val(-1).msg,
     )
   check:
     Bytes.make(5, 256)
     ~throws values(
-      "Bytes.make: contract violation",
-      "expected: Byte",
-      "given: 256",
+      "Bytes.make: " ++ error.annot_msg(),
+      error.annot("Byte").msg,
+      error.val(256).msg,
     )
 
 // checks static infos for elements

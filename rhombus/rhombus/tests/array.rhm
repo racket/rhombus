@@ -38,17 +38,17 @@ check:
 check:
   Array.length([1, 2, 3])
   ~throws values(
-    "Array.length: contract violation",
-    "expected: Array",
-    "given: [1, 2, 3]",
+    "Array.length: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val([1, 2, 3]).msg,
   )
 
 check:
   ([1, 2, 3] :~ Array).length()
   ~throws values(
-    "Array.length: contract violation",
-    "expected: Array",
-    "given: [1, 2, 3]",
+    "Array.length: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val([1, 2, 3]).msg,
   )
 
 block:
@@ -72,9 +72,9 @@ block:
   check:
     Array(1, 2, 3) ++ "oops"
     ~throws values(
-      "Array.append: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.append: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
   check:
     Array(1, 2, 3).append(Array(4, 5, 6), Array(7, 8, 9))
@@ -332,41 +332,41 @@ version_guard.at_least "8.13.0.1":
   check:
     Array.to_sequence("oops")
     ~throws values(
-      "Array.to_sequence: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.to_sequence: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ Array).to_sequence()
     ~throws values(
-      "Array.to_sequence: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.to_sequence: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ Array):
       x
     ~throws values(
-      "Array.to_sequence: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.to_sequence: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
 
   check:
     for List (x: Array.to_sequence("oops")):
       x
     ~throws values(
-      "Array.to_sequence: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.to_sequence: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ Array).to_sequence()):
       x
     ~throws values(
-      "Array.to_sequence: contract violation",
-      "expected: Array",
-      "given: \"oops\"",
+      "Array.to_sequence: " ++ error.annot_msg(),
+      error.annot("Array").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -382,97 +382,97 @@ check:
 check:
   ("oops" :~ Array)[0]
   ~throws values(
-    "Array.get: contract violation",
-    "expected: Array",
-    "given: \"oops\"",
+    "Array.get: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
   )
 
 check:
   (Array(1, 2, 3) :~ Array)["oops"]
   ~throws values(
-    "Array.get: contract violation",
-    "expected: NonnegInt",
-    "given: \"oops\"",
+    "Array.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
   )
 
 check:
   (Array(1, 2, 3) :~ Array)[-1]
   ~throws values(
-    "Array.get: contract violation",
-    "expected: NonnegInt",
-    "given: -1",
+    "Array.get: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val(-1).msg,
   )
 
 check:
   ("oops" :~ MutableArray)[0] := 0
   ~throws values(
-    "Array.set: contract violation",
-    "expected: MutableArray",
-    "given: \"oops\"",
+    "Array.set: " ++ error.annot_msg(),
+    error.annot("MutableArray").msg,
+    error.val("oops").msg,
   )
 
 check:
   (Array(1, 2, 3).snapshot() :~ MutableArray)[0] := 0
   ~throws values(
-    "Array.set: contract violation",
-    "expected: MutableArray",
-    "given: Array.snapshot(Array(1, 2, 3))",
+    "Array.set: " ++ error.annot_msg(),
+    error.annot("MutableArray").msg,
+    error.val(Array.snapshot(Array(1, 2, 3))).msg,
   )
 
 check:
   (Array(1, 2, 3) :~ MutableArray)["oops"] := 0
   ~throws values(
-    "Array.set: contract violation",
-    "expected: NonnegInt",
-    "given: \"oops\"",
+    "Array.set: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
   )
 
 check:
   (Array(1, 2, 3) :~ MutableArray)[-1] := 0
   ~throws values(
-    "Array.set: contract violation",
-    "expected: NonnegInt",
-    "given: -1",
+    "Array.set: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val(-1).msg,
   )
 
 check:
   Array.append("oops") ~throws values(
-    "Array.append: contract violation",
-    "expected: Array",
-    "given: \"oops\"",
+    "Array.append: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ Array).append() ~throws values(
-    "Array.append: contract violation",
-    "expected: Array",
-    "given: \"oops\"",
+    "Array.append: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.7":
   check:
     Array.make("oops")
     ~throws values(
-      "Array.make: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "Array.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     Array.make(-1)
     ~throws values(
-      "Array.make: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "Array.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
   check:
     Array.make("oops", 0)
     ~throws values(
-      "Array.make: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "Array.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     Array.make(-1, 0)
     ~throws values(
-      "Array.make: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "Array.make: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )

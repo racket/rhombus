@@ -12,7 +12,8 @@
                      "macro-result.rkt")
          "realm.rkt"
          "dotted-sequence-parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "binding-failure.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -169,18 +170,3 @@
     [(_ name:id rhs)
      (quasisyntax/loc stx
        (define-syntax #,(in-binding-space #'name) rhs))]))
-
-(define (raise-binding-failure who what val annotation-str . extra)
-  (apply raise-arguments-error*
-         who rhombus-realm
-         (string-append what " does not satisfy annotation")
-         what val
-         (append extra
-                 (list "annotation" (unquoted-printing-string
-                                     (regexp-replace*
-                                      #rx"\n"
-                                      (error-contract->adjusted-string
-                                       annotation-str
-                                       rhombus-realm)
-                                      ;; number of spaces here depends on "annotation:"
-                                      "\n              "))))))

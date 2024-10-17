@@ -32,9 +32,9 @@ check:
 check:
   Set.length([1, 2, 3])
   ~throws values(
-    "Set.length: contract violation",
-    "expected: ReadableSet",
-    "given: [1, 2, 3]",
+    "Set.length: " ++ error.annot_msg(),
+    error.annot("ReadableSet").msg,
+    error.val([1, 2, 3]).msg,
   )
 
 block:
@@ -55,14 +55,14 @@ block:
     {1, 2, 3} ++ {4, 5} ~is {1, 2, 3, 4, 5}
     {1, 2, 3}.append({4, 5}) ~is {1, 2, 3, 4, 5}
     {1, 2, 3} ++ "oops" ~throws values(
-      "Set.append: contract violation",
-      "expected: Set",
-      "given: \"oops\"",
+      "Set.append: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val("oops").msg,
     )
     {1, 2, 3} ++ MutableSet{4, 5} ~throws values(
-      "Set.append: contract violation",
-      "expected: Set",
-      "given: MutableSet{4, 5}",
+      "Set.append: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val(MutableSet{4, 5}).msg,
     )
   check:
     Set("a", "b").length()
@@ -304,23 +304,23 @@ block:
   check:
     Set.append(MutableSet{1, 2, 3}, {4}, {5, 6})
     ~throws values(
-      "Set.append: contract violation",
-      "expected: Set",
-      "given: MutableSet{1, 2, 3}",
+      "Set.append: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val(MutableSet{1, 2, 3}).msg,
     )
   check:
     Set.intersect(MutableSet{1, 3}, {2, 3}, {3, 4})
     ~throws values(
-      "Set.intersect: contract violation",
-      "expected: Set",
-      "given: MutableSet{1, 3}",
+      "Set.intersect: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val(MutableSet{1, 3}).msg,
     )
   check:
     Set.union(MutableSet{1, 3}, {2, 3}, {3, 4})
     ~throws values(
-      "Set.union: contract violation",
-      "expected: Set",
-      "given: MutableSet{1, 3}",
+      "Set.union: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val(MutableSet{1, 3}).msg,
     )
 
 block:
@@ -426,40 +426,40 @@ version_guard.at_least "8.13.0.1":
   check:
     Set.to_sequence("oops")
     ~throws values(
-      "Set.to_sequence: contract violation",
-      "expected: ReadableSet",
-      "given: \"oops\"",
+      "Set.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableSet").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ Set).to_sequence()
     ~throws values(
-      "Set.to_sequence: contract violation",
-      "expected: ReadableSet",
-      "given: \"oops\"",
+      "Set.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableSet").msg,
+      error.val("oops").msg,
     )
   check:
     for Set (x: "oops" :~ Set):
       x
     ~throws values(
-      "Set.to_sequence: contract violation",
-      "expected: ReadableSet",
-      "given: \"oops\"",
+      "Set.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableSet").msg,
+      error.val("oops").msg,
     )
   check:
     for Set (x: Set.to_sequence("oops")):
       x
     ~throws values(
-      "Set.to_sequence: contract violation",
-      "expected: ReadableSet",
-      "given: \"oops\"",
+      "Set.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableSet").msg,
+      error.val("oops").msg,
     )
   check:
     for Set (x: ("oops" :~ Set).to_sequence()):
       x
     ~throws values(
-      "Set.to_sequence: contract violation",
-      "expected: ReadableSet",
-      "given: \"oops\"",
+      "Set.to_sequence: " ++ error.annot_msg(),
+      error.annot("ReadableSet").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -1161,27 +1161,27 @@ block:
 check:
   ("oops" :~ Set)[0]
   ~throws values(
-    "Set.get: contract violation",
-    "expected: ReadableSet",
-    "given: \"oops\"",
+    "Set.get: " ++ error.annot_msg(),
+    error.annot("ReadableSet").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ MutableSet)[0] := 0
   ~throws values(
-    "MutableSet.set: contract violation",
-    "expected: MutableSet",
-    "given: \"oops\"",
+    "MutableSet.set: " ++ error.annot_msg(),
+    error.annot("MutableSet").msg,
+    error.val("oops").msg,
   )
 
 check:
   Set.append("oops") ~throws values(
-    "Set.append: contract violation",
-    "expected: Set",
-    "given: \"oops\"",
+    "Set.append: " ++ error.annot_msg(),
+    error.annot("Set").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ Set).append() ~throws values(
-    "Set.append: contract violation",
-    "expected: Set",
-    "given: \"oops\"",
+    "Set.append: " ++ error.annot_msg(),
+    error.annot("Set").msg,
+    error.val("oops").msg,
   )

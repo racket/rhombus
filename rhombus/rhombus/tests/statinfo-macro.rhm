@@ -88,7 +88,7 @@ block:
     statinfo_meta.wrap(c, statinfo_meta.intersect(statinfo_meta.gather(a), statinfo_meta.gather(b)))
   check (both ([]) ([]): [1])[0] ~is 1
   check (either ([]) ([]): [1])[0] ~is 1
-  check (both ([]) ([]): "")[0] ~throws "expected: List"
+  check (both ([]) ([]): "")[0] ~throws error.annot("List").msg
 
 check:
   ~eval

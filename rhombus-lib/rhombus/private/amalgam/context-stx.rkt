@@ -1,7 +1,7 @@
 #lang racket/base
 (require syntax/parse/pre
          "pack.rkt"
-         "realm.rkt")
+         "annotation-failure.rkt")
 
 (provide extract-ctx
          extract-group-ctx)
@@ -17,7 +17,7 @@
        (let ([t (and (syntax? ctx-stx)
                      (unpack-term ctx-stx #f #f))])
          (unless t
-           (raise-argument-error* who rhombus-realm (or annot (if false-ok? "maybe(Term)" "Term")) ctx-stx))
+           (raise-annotation-failure who ctx-stx (or annot (if false-ok? "maybe(Term)" "Term"))))
          (define (result v container?)
            (if report-container?
                (values v container?)
@@ -57,7 +57,7 @@
        (let ([t (and (syntax? ctx-stx)
                      (unpack-group ctx-stx #f #f))])
          (unless t
-           (raise-argument-error* who rhombus-realm (or annot (if false-ok? "maybe(Group)" "Group")) ctx-stx))
+           (raise-annotation-failure who ctx-stx (or annot (if false-ok? "maybe(Group)" "Group"))))
          (syntax-parse t
            #:datum-literals (group)
            [((~and tag group) . tail)

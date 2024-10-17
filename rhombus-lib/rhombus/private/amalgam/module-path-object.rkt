@@ -17,6 +17,7 @@
          "static-info.rkt"
          "call-result-key.rkt"
          "realm.rkt"
+         "annotation-failure.rkt"
          "module-path-parse.rkt"
          "parens.rkt"
          "pack.rkt"
@@ -139,13 +140,13 @@
 
 (define (module-path-s-exp who mp)
   (unless (module-path? mp)
-    (raise-argument-error* who rhombus-realm "ModulePath" mp))
+    (raise-annotation-failure who mp "ModulePath"))
   (module-path-raw mp))
 
 (define/arity (ModulePath stx)
   #:static-infos ((#%call-result #,(get-module-path-static-infos)))
   (define g (and (syntax? stx) (unpack-group stx #f #f)))
-  (unless g (raise-argument-error* who rhombus-realm "Group" stx))
+  (unless g (raise-annotation-failure who stx "Group"))
   (define (bad)
     (raise-arguments-error* who rhombus-realm "syntax object does not contain a valid module path"
                             "syntax object" stx))

@@ -35,9 +35,9 @@ check:
 check:
   PairList.length({1, 2, 3})
   ~throws values(
-    "PairList.length: contract violation",
-    "expected: PairList",
-    "given: {1, 2, 3}",
+    "PairList.length: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val({1, 2, 3}).msg,
   )
 
 check:
@@ -65,16 +65,16 @@ block:
   check:
     PairList[1, 2, 3] ++ [4, 5]
     ~throws values(
-      "PairList.append: contract violation",
-      "expected: PairList",
-      "given: [4, 5]",
+      "PairList.append: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val([4, 5]).msg,
     )
   check:
     PairList[1, 2, 3] ++ "oops"
     ~throws values(
-      "PairList.append: contract violation",
-      "expected: PairList",
-      "given: \"oops\""
+      "PairList.append: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg
     )
   check:
     PairList[1, 2, 3].append(PairList[4, 5])
@@ -288,9 +288,9 @@ check:
   PairList[1, 2].append(PairList[3]) ~is PairList[1, 2, 3]
   PairList[1, 2].append(PairList[3], PairList[4, 5]) ~is PairList[1, 2, 3, 4, 5]
   PairList[1, 2].append(3) ~throws values(
-    "PairList.append: contract violation",
-    "expected: PairList",
-    "given: 3",
+    "PairList.append: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val(3).msg,
   )
 
 check:
@@ -402,40 +402,40 @@ version_guard.at_least "8.13.0.1":
   check:
     PairList.to_sequence("oops")
     ~throws values(
-      "PairList.to_sequence: contract violation",
-      "expected: PairList",
-      "given: \"oops\"",
+      "PairList.to_sequence: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ PairList).to_sequence()
     ~throws values(
-      "PairList.to_sequence: contract violation",
-      "expected: PairList",
-      "given: \"oops\"",
+      "PairList.to_sequence: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ PairList):
       x
     ~throws values(
-      "PairList.to_sequence: contract violation",
-      "expected: PairList",
-      "given: \"oops\"",
+      "PairList.to_sequence: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: PairList.to_sequence("oops")):
       x
     ~throws values(
-      "PairList.to_sequence: contract violation",
-      "expected: PairList",
-      "given: \"oops\"",
+      "PairList.to_sequence: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ PairList).to_sequence()):
       x
     ~throws values(
-      "PairList.to_sequence: contract violation",
-      "expected: PairList",
-      "given: \"oops\"",
+      "PairList.to_sequence: " ++ error.annot_msg(),
+      error.annot("PairList").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -460,67 +460,67 @@ check:
 check:
   PairList[PairList.repet(PairList[1, 2, 3]), ...] ~is PairList[1, 2, 3]
   PairList[PairList.repet("oops"), ...] ~throws values(
-    "PairList.repet: contract violation",
-    "expected: PairList",
-    "given: \"oops\"",
+    "PairList.repet: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ PairList)[0]
   ~throws values(
-    "PairList.get: contract violation",
-    "expected: PairList",
-    "given: \"oops\"",
+    "PairList.get: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.4":
   check:
     (PairList[1, 2, 3] :~ PairList)["oops"]
     ~throws values(
-      "PairList.get: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "PairList.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     (PairList[1, 2, 3] :~ PairList)[-1]
     ~throws values(
-      "PairList.get: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "PairList.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
 
 check:
   ("oops" :~ PairList).first
   ~throws values(
-    "PairList.first: contract violation",
-    "expected: NonemptyPairList",
-    "given: \"oops\"",
+    "PairList.first: " ++ error.annot_msg(),
+    error.annot("NonemptyPairList").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ PairList).last
   ~throws values(
-    "PairList.last: contract violation",
-    "expected: NonemptyPairList",
-    "given: \"oops\"",
+    "PairList.last: " ++ error.annot_msg(),
+    error.annot("NonemptyPairList").msg,
+    error.val("oops").msg,
   )
 
 check:
   ("oops" :~ PairList).rest
   ~throws values(
-    "PairList.rest: contract violation",
-    "expected: NonemptyPairList",
-    "given: \"oops\"",
+    "PairList.rest: " ++ error.annot_msg(),
+    error.annot("NonemptyPairList").msg,
+    error.val("oops").msg,
   )
 
 check:
   PairList.append("oops") ~throws values(
-    "PairList.append: contract violation",
-    "expected: PairList",
-    "given: \"oops\"",
+    "PairList.append: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
   )
   ("oops" :~ PairList).append() ~throws values(
-    "PairList.append: contract violation",
-    "expected: PairList",
-    "given: \"oops\"",
+    "PairList.append: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
   )

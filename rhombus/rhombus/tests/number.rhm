@@ -47,8 +47,8 @@ check:
   2 is_a Int.in(1, 2 ~inclusive) ~is #true
   2 is_a Int.in(1, 2 ~exclusive) ~is #false
 
-  1 is_a Int.in("oops", 2) ~throws values("contract violation", "Int", "\"oops\"")
-  1 is_a Int.in(1, "oops") ~throws values("contract violation", "Int", "\"oops\"")
+  1 is_a Int.in("oops", 2) ~throws values(error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(1, "oops") ~throws values(error.annot_msg(), "Int", "\"oops\"")
 
 check:
   1 is_a NonnegReal ~is #true
@@ -90,12 +90,12 @@ check:
 
   "0.9" is_a Real.in(0, 1) ~is #false
 
-  1 is_a Real.above("oops") ~throws values("contract violation", "Real", "\"oops\"")
-  1 is_a Real.at_least("oops") ~throws values("contract violation", "Real", "\"oops\"")
-  1 is_a Real.below("oops") ~throws values("contract violation", "Real", "\"oops\"")
-  1 is_a Real.at_most("oops") ~throws values("contract violation", "Real", "\"oops\"")
-  1 is_a Real.in("oops", 2) ~throws values("contract violation", "Real", "\"oops\"")
-  1 is_a Real.in(1, "oops") ~throws values("contract violation", "Real", "\"oops\"")
+  1 is_a Real.above("oops") ~throws values(error.annot_msg(), "Real", "\"oops\"")
+  1 is_a Real.at_least("oops") ~throws values(error.annot_msg(), "Real", "\"oops\"")
+  1 is_a Real.below("oops") ~throws values(error.annot_msg(), "Real", "\"oops\"")
+  1 is_a Real.at_most("oops") ~throws values(error.annot_msg(), "Real", "\"oops\"")
+  1 is_a Real.in("oops", 2) ~throws values(error.annot_msg(), "Real", "\"oops\"")
+  1 is_a Real.in(1, "oops") ~throws values(error.annot_msg(), "Real", "\"oops\"")
 
   to_string(1/2) ~is "1/2"
   to_string(1/2, ~mode: #'expr) ~is "1/2"
@@ -105,153 +105,153 @@ check:
 // error reporting
 check:
   "oops" + 2 ~throws values(
-    "+: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "+: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 + "oops" ~throws values(
-    "+: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "+: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   "oops" - 2 ~throws values(
-    "-: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "-: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 - "oops" ~throws values(
-    "-: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "-: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   - "oops" ~throws values(
-    "-: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "-: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   "oops" * 2 ~throws values(
-    "*: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "*: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 * "oops" ~throws values(
-    "*: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "*: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   "oops" / 2 ~throws values(
-    "/: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "/: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 / "oops" ~throws values(
-    "/: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "/: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   "oops" ** 2 ~throws values(
-    "**: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "**: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 ** "oops" ~throws values(
-    "**: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    "**: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
 
 check:
   "oops" div 2 ~throws values(
-    "div: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "div: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
   1 div "oops" ~throws values(
-    "div: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "div: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
   "oops" rem 2 ~throws values(
-    "rem: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "rem: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
   1 rem "oops" ~throws values(
-    "rem: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "rem: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
   "oops" mod 2 ~throws values(
-    "mod: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "mod: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
   1 mod "oops" ~throws values(
-    "mod: contract violation",
-    "expected: Integral",
-    "given: \"oops\"",
+    "mod: " ++ error.annot_msg(),
+    error.annot("Integral").msg,
+    error.val("oops").msg,
   )
 
 check:
   "oops" .> 2 ~throws values(
-    ".>: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".>: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   1 .> "oops" ~throws values(
-    ".>: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".>: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   "oops" .>= 2 ~throws values(
-    ".>=: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".>=: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   1 .>= "oops" ~throws values(
-    ".>=: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".>=: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   "oops" .< 2 ~throws values(
-    ".<: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".<: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   1 .< "oops" ~throws values(
-    ".<: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".<: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   "oops" .<= 2 ~throws values(
-    ".<=: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".<=: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
   1 .<= "oops" ~throws values(
-    ".<=: contract violation",
-    "expected: Real",
-    "given: \"oops\"",
+    ".<=: " ++ error.annot_msg(),
+    error.annot("Real").msg,
+    error.val("oops").msg,
   )
 
 check:
   "oops" .= 2 ~throws values(
-    ".=: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    ".=: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 .= "oops" ~throws values(
-    ".=: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    ".=: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   "oops" .!= 2 ~throws values(
-    ".!=: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    ".!=: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )
   1 .!= "oops" ~throws values(
-    ".!=: contract violation",
-    "expected: Number",
-    "given: \"oops\"",
+    ".!=: " ++ error.annot_msg(),
+    error.annot("Number").msg,
+    error.val("oops").msg,
   )

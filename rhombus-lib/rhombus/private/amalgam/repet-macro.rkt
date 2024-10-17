@@ -10,6 +10,7 @@
                      "name-root.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -111,7 +112,7 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
   (define/arity (repet_meta.pack_list stx)

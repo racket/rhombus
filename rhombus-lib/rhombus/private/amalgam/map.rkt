@@ -278,7 +278,7 @@
       [else
        (define lst (to-list #f arg))
        (unless (and (pair? lst) (pair? (cdr lst)) (null? (cddr lst)))
-         (raise-argument-error* who rhombus-realm "Listable.to_list && matching([_, _])" arg))
+         (raise-annotation-failure who arg "Listable.to_list && matching([_, _])"))
        (hash-set ht (car lst) (cadr lst))])))
 
 (define (list->map key+vals)
@@ -1043,7 +1043,7 @@
 
 (define (check-readable-map who ht)
   (unless (hash? ht)
-    (raise-argument-error* who rhombus-realm "ReadableMap" ht)))
+    (raise-annotation-failure who ht "ReadableMap")))
 
 (define/method (Map.length ht)
   #:primitive (hash-count)
@@ -1081,7 +1081,7 @@
 
 (define (check-map who ht)
   (unless (immutable-hash? ht)
-    (raise-argument-error* who rhombus-realm "Map" ht)))
+    (raise-annotation-failure who ht "Map")))
 
 (define (hash-append a b)
   (let-values ([(a b)

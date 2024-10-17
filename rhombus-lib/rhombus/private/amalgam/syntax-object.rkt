@@ -322,7 +322,7 @@
 
 (define (check-symbol who v)
   (unless (symbol? v)
-    (raise-argument-error* who rhombus-realm "Symbol" v)))
+    (raise-annotation-failure who v "Symbol")))
 
 (define/arity (Syntax.make_op v [ctx-stx #f])
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -332,7 +332,7 @@
 (define (to-nonempty-list who v-in)
   (define l (to-list #f v-in))
   (unless (pair? l)
-    (raise-argument-error* who rhombus-realm "Listable.to_list && NonemptyList" v-in))
+    (raise-annotation-failure who v-in "Listable.to_list && NonemptyList"))
   l)
 
 (define/arity (Syntax.make_group v-in [ctx-stx #f])
@@ -357,7 +357,7 @@
 
 (define (check-readable-string who s)
   (unless (string? s)
-    (raise-argument-error* who rhombus-realm "ReadableString" s)))
+    (raise-annotation-failure who s "ReadableString")))
 
 (define/arity (Syntax.make_id str [ctx #f])
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -390,7 +390,7 @@
 
 (define (check-syntax who v)
   (unless (syntax? v)
-    (raise-argument-error* who rhombus-realm "Syntax" v)))
+    (raise-annotation-failure who v "Syntax")))
 
 (define/method (Syntax.unwrap v)
   (check-syntax who v)
@@ -411,7 +411,7 @@
                      (unpack-term v who #f))
     #:datum-literals (op)
     [(op o) (syntax-e #'o)]
-    [_ (raise-argument-error* who rhombus-realm "Operator" v)]))
+    [_ (raise-annotation-failure who v "Operator")]))
 
 (define/method (Syntax.unwrap_group v)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
@@ -475,7 +475,7 @@
                    (loop #'tail))]
            [((parens (group (op o)))) (list "(" (symbol->immutable-string (syntax-e #'o)) ")")]
            [(x) (list (symbol->immutable-string (syntax-e #'x)))]))))]
-    [_ (raise-argument-error* who rhombus-realm "Name" v)]))
+    [_ (raise-annotation-failure who v "Name")]))
 
 (define (do-relocate who stx-in ctx-stx-in
                      extract-ctx annot)
@@ -571,11 +571,11 @@
   (case-lambda
     [(stx-in)
      (define stx (unpack-term/maybe stx-in))
-     (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
+     (unless stx (raise-annotation-failure who stx-in "Term"))
      (get-source-properties stx extract-ctx)]
     [(stx-in prefix raw tail suffix)
      (define stx (unpack-term/maybe stx-in))
-     (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
+     (unless stx (raise-annotation-failure who stx-in "Term"))
      (set-source-properties stx extract-ctx prefix raw tail suffix)]))
 
 (define/method Syntax.group_source_properties
@@ -586,11 +586,11 @@
   (case-lambda
     [(stx-in)
      (define stx (unpack-group stx-in #f #f))
-     (unless stx (raise-argument-error* who rhombus-realm "Group" stx-in))
+     (unless stx (raise-annotation-failure who stx-in "Group"))
      (get-source-properties stx extract-group-ctx)]
     [(stx-in prefix raw tail suffix)
      (define stx (unpack-group stx-in #f #f))
-     (unless stx (raise-argument-error* who rhombus-realm "Group" stx-in))
+     (unless stx (raise-annotation-failure who stx-in "Group"))
      (set-source-properties stx extract-group-ctx prefix raw tail suffix)]))
 
 (define (get-source-properties stx extract-ctx)
@@ -642,21 +642,19 @@
 (define/method (Syntax.relocate_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define stx (unpack-term/maybe stx-in))
-  (unless stx (raise-argument-error* who rhombus-realm "Term" stx-in))
+  (unless stx (raise-annotation-failure who stx-in "Term"))
   (relocate-span who stx ctx-stxes-in))
 
 (define/method (Syntax.relocate_group_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define stx (unpack-group stx-in #f #f))
-  (unless stx (raise-argument-error* who rhombus-realm "Group" stx-in))
+  (unless stx (raise-annotation-failure who stx-in "Group"))
   (relocate-span who stx ctx-stxes-in))
 
 (define (to-list-of-stx who v-in)
   (define stxs (to-list #f v-in))
   (unless (and stxs (andmap syntax? stxs))
-    (raise-argument-error* who rhombus-realm
-                           "Listable.to_list && List.of(Syntax)"
-                           v-in))
+    (raise-annotation-failure who v-in "Listable.to_list && List.of(Syntax)"))
   stxs)
 
 (define (relocate-span who stx ctx-stxes-in)
@@ -686,16 +684,14 @@
                                '(oops)))])
     (define term-stx (unpack-term/maybe stx))
     (unless term-stx
-      (raise-argument-error* who rhombus-realm
-                             "Listable.to_list && NonemptyList.of(Term)"
-                             v-in))
+      (raise-annotation-failure who v-in "Listable.to_list && NonemptyList.of(Term)"))
     term-stx))
 
 (define/arity (Syntax.relocate_split stxes-in ctx-stx)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (define stxes (to-list-of-term-stx who stxes-in))
   (unless (syntax? ctx-stx)
-    (raise-argument-error* who rhombus-realm "Syntax" ctx-stx))
+    (raise-annotation-failure who ctx-stx "Syntax"))
   (cond
     [(null? (cdr stxes))
      ;; copying from 1 to 1

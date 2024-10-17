@@ -13,7 +13,6 @@
          (only-in (submod "print.rkt" for-string)
                   [display rhombus:display]
                   [print rhombus:print])
-         "realm.rkt"
          "call-result-key.rkt"
          "index-key.rkt"
          "index-result-key.rkt"
@@ -196,7 +195,7 @@
     [(expr)
      (print-to-string a rhombus:print)]
     [else
-     (raise-argument-error* who rhombus-realm "PrintMode" mode)]))
+     (raise-annotation-failure who mode "PrintMode")]))
 
 (define/arity (repr a)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
@@ -204,7 +203,7 @@
 
 (define (check-readable-string who s)
   (unless (string? s)
-    (raise-argument-error* who rhombus-realm "ReadableString" s)))
+    (raise-annotation-failure who s "ReadableString")))
 
 (define/method (String.get s i)
   #:primitive (string-ref)
@@ -355,12 +354,12 @@
 (define (string!=? a b)
   (if (and (string? a) (string? b))
       (not (string=? a b))
-      (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
+      (raise-annotation-failure '!= (if (string? a) b a) "String")))
 
 (define (string-ci!=? a b)
   (if (and (string? a) (string? b))
       (not (string-ci=? a b))
-      (raise-argument-error* '!= rhombus-realm "String" (if (string? a) b a))))
+      (raise-annotation-failure '!= (if (string? a) b a) "String")))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'string get-string-static-infos))

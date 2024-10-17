@@ -20,7 +20,6 @@
          "reducer.rkt"
          "parens.rkt"
          "parse.rkt"
-         "realm.rkt"
          "mutability.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
@@ -133,7 +132,7 @@
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
-    (raise-argument-error* who rhombus-realm "NonnegInt" v)))
+    (raise-annotation-failure who v "NonnegInt")))
 
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
   (with-syntax ([[(annot-str . _) _] data])
@@ -225,7 +224,7 @@
 
 (define (check-array who v)
   (unless (vector? v)
-    (raise-argument-error* who rhombus-realm "Array" v)))
+    (raise-annotation-failure who v "Array")))
 
 (define/method Array.append
   #:primitive (vector-append)

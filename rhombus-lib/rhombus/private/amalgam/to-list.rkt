@@ -1,7 +1,7 @@
 #lang racket/base
 (require "treelist.rkt"
          "mutable-treelist.rkt"
-         "realm.rkt")
+         "annotation-failure.rkt")
 
 (provide prop:Listable Listable? Listable-ref
 
@@ -42,7 +42,7 @@
   (cond
     [(not methods)
      (and who
-          (raise-argument-error* who rhombus-realm "Listable" v))]
+          (raise-annotation-failure who v "Listable"))]
     [else
      (define lst ((vector-ref methods 0) v))
      ;; guarded by method result

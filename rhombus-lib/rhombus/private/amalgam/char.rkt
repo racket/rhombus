@@ -17,7 +17,6 @@
          (submod "annotation.rkt" for-class)
          (submod "literal.rkt" for-info)
          (submod "symbol.rkt" for-static-info)
-         "realm.rkt"
          "class-primitive.rkt"
          "literal.rkt")
 
@@ -228,12 +227,12 @@
 (define (char!=? a b)
   (if (and (char? a) (char? b))
       (not (char=? a b))
-      (raise-argument-error* '!= rhombus-realm "Char" (if (char? a) b a))))
+      (raise-annotation-failure '!= (if (char? a) b a) "Char")))
 
 (define (char-ci!=? a b)
   (if (and (char? a) (char? b))
       (not (char-ci=? a b))
-      (raise-argument-error* '!= rhombus-realm "Char" (if (char? a) b a))))
+      (raise-annotation-failure '!= (if (char? a) b a) "Char")))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'char get-char-static-infos))

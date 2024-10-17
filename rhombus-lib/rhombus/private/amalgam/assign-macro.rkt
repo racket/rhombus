@@ -9,7 +9,7 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "macro-result.rkt"
-                     "realm.rkt"
+                     "annotation-failure.rkt"
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
@@ -99,7 +99,7 @@
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
-    (raise-argument-error* who rhombus-realm "Syntax" s)))
+    (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
   (define/arity (assign_meta.unpack_left stx)
@@ -135,9 +135,9 @@
                       #`(rhombus-expression #,(unpack-group set 'assign_meta.AssignParsed #f))
                       (if (identifier? rhs-name)
                           rhs-name
-                          (raise-argument-error 'assign_meta.AssignParsed
-                                                "Identifier"
-                                                rhs-name))
+                          (raise-annotation-failure 'assign_meta.AssignParsed
+                                                    rhs-name
+                                                    "Identifier"))
                       #'assign.tail))]
              #:with parsed assign-expr
              #:with tail tail))

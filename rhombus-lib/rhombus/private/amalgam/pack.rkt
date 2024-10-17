@@ -5,6 +5,7 @@
          "treelist.rkt"
          "to-list.rkt"
          "realm.rkt"
+         "annotation-failure.rkt"
          "srcloc.rkt")
 
 ;; We represent Rhombus syntax objects as a syntax object with one of
@@ -355,7 +356,7 @@
        (for/list ([r (in-list r)])
          (unpack* r (sub1 depth)))]
       [else
-       (raise-argument-error* (syntax-e qs) rhombus-realm "Listable" r)])))
+       (raise-annotation-failure (syntax-e qs) r "Listable")])))
 
 (define (pack-term* stx depth)
   (pack* stx depth pack-term))

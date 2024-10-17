@@ -39,17 +39,17 @@ check:
 check:
   MutableList.length([1, 2, 3])
   ~throws values(
-    "MutableList.length: contract violation",
-    "expected: MutableList",
-    "given: [1, 2, 3]",
+    "MutableList.length: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val([1, 2, 3]).msg,
   )
 
 check:
   ([1, 2, 3] :~ MutableList).length()
   ~throws values(
-    "MutableList.length: contract violation",
-    "expected: MutableList",
-    "given: [1, 2, 3]",
+    "MutableList.length: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val([1, 2, 3]).msg,
   )
 
 block:
@@ -253,40 +253,40 @@ version_guard.at_least "8.13.0.1":
   check:
     MutableList.to_sequence("oops")
     ~throws values(
-      who ++ "contract violation",
-      "expected: MutableList",
-      "given: \"oops\"",
+      who ++ error.annot_msg(),
+      error.annot("MutableList").msg,
+      error.val("oops").msg,
     )
   check:
     ("oops" :~ MutableList).to_sequence()
     ~throws values(
-      who ++ "contract violation",
-      "expected: MutableList",
-      "given: \"oops\"",
+      who ++ error.annot_msg(),
+      error.annot("MutableList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: "oops" :~ MutableList):
       x
     ~throws values(
-      who ++ "contract violation",
-      "expected: MutableList",
-      "given: \"oops\"",
+      who ++ error.annot_msg(),
+      error.annot("MutableList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: MutableList.to_sequence("oops")):
       x
     ~throws values(
-      who ++ "contract violation",
-      "expected: MutableList",
-      "given: \"oops\"",
+      who ++ error.annot_msg(),
+      error.annot("MutableList").msg,
+      error.val("oops").msg,
     )
   check:
     for List (x: ("oops" :~ MutableList).to_sequence()):
       x
     ~throws values(
-      who ++ "contract violation",
-      "expected: MutableList",
-      "given: \"oops\"",
+      who ++ error.annot_msg(),
+      error.annot("MutableList").msg,
+      error.val("oops").msg,
     )
 
 check:
@@ -415,47 +415,47 @@ check:
 check:
   ("oops" :~ MutableList)[0]
   ~throws values(
-    "MutableList.get: contract violation",
-    "expected: MutableList",
-    "given: \"oops\"",
+    "MutableList.get: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.2":
   check:
     (MutableList[1, 2, 3] :~ MutableList)["oops"]
     ~throws values(
-      "MutableList.get: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "MutableList.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     (MutableList[1, 2, 3] :~ MutableList)[-1]
     ~throws values(
-      "MutableList.get: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "MutableList.get: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )
 
 check:
   ("oops" :~ MutableList)[0] := 0
   ~throws values(
-    "MutableList.set: contract violation",
-    "expected: MutableList",
-    "given: \"oops\"",
+    "MutableList.set: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val("oops").msg,
   )
 
 version_guard.at_least "8.14.0.2":
   check:
     (MutableList[1, 2, 3] :~ MutableList)["oops"] := 0
     ~throws values(
-      "MutableList.set: contract violation",
-      "expected: NonnegInt",
-      "given: \"oops\"",
+      "MutableList.set: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val("oops").msg,
     )
   check:
     (MutableList[1, 2, 3] :~ MutableList)[-1] := 0
     ~throws values(
-      "MutableList.set: contract violation",
-      "expected: NonnegInt",
-      "given: -1",
+      "MutableList.set: " ++ error.annot_msg(),
+      error.annot("NonnegInt").msg,
+      error.val(-1).msg,
     )

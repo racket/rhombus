@@ -6,10 +6,9 @@
                      enforest/hier-name-parse
                      shrubbery/print
                      racket/phase+space
-                     "realm.rkt"
+                     "annotation-failure.rkt"
                      "pack.rkt"
                      "dotted-sequence.rkt"
-                     "realm.rkt"
                      "define-arity.rkt"
                      "call-result-key.rkt"
                      "name-root.rkt"
@@ -81,7 +80,7 @@
     (define l1 (extract-name-components who id1))
     (define l2 (extract-name-components who id2))
     (unless (phase? phase)
-      (raise-argument-error* who rhombus-realm "SyntaxPhase" phase))
+      (raise-annotation-failure who phase "SyntaxPhase"))
     (and (= (length l1) (length l2))
          (for/and ([n1 (in-list l1)]
                    [n2 (in-list l2)])
@@ -98,7 +97,7 @@
 
   (define (extract-name/sp who stx sp
                            #:build-dotted? [build-dotted? #f])
-    (unless (space-name? sp) (raise-argument-error* who rhombus-realm "SpaceMeta" sp))
+    (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
     (extract-name who stx (space-name-symbol sp)
                   #:build-dotted? build-dotted?))
 
@@ -122,7 +121,7 @@
                        [(null? (cdr l)) l]
                        [else (cons (car l) (loop (cddr l)))]))]
                   [_ #f]))])
-        (raise-argument-error* who rhombus-realm "Name" stx)))
+        (raise-annotation-failure who stx "Name")))
 
   (define/arity (syntax_meta.expanding_phase)
     (syntax-local-phase-level))
@@ -142,23 +141,23 @@
            [(group _::dotted-operator-or-identifier-sequence) #t]
            [(multi (group _::dotted-operator-or-identifier-sequence)) #t]
            [_
-            (raise-argument-error who "error.Who" m-who)])
+            (raise-annotation-failure who m-who "error.Who")])
          (string->symbol (shrubbery-syntax->string #:use-raw? #t m-who))]))
     (cond
       [(eq? form unsafe-undefined)
        (define form form/msg)
-       (unless (syntax? form) (raise-argument-error who "Syntax" form))
+       (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
        (raise-syntax-error who-in "bad syntax" (maybe-respan form))]
       [(eq? detail unsafe-undefined)
        (define msg form/msg)
-       (unless (string? msg) (raise-argument-error who "ReadableString" msg))
-       (unless (syntax? form) (raise-argument-error who "Syntax" form))
+       (unless (string? msg) (raise-annotation-failure who msg "ReadableString"))
+       (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
        (raise-syntax-error who-in msg (maybe-respan form))]
       [else
        (define msg form/msg)
-       (unless (string? msg) (raise-argument-error who "ReadableString" msg))
+       (unless (string? msg) (raise-annotation-failure who msg "ReadableString"))
        (define (bad-detail)
-         (raise-argument-error who "Syntax || List.of(Syntax)" detail))
+         (raise-annotation-failure who detail "Syntax || List.of(Syntax)"))
        (define details (map maybe-respan (cond
                                            [(treelist? detail)
                                             (define l (treelist->list detail))
@@ -191,9 +190,7 @@
                  [_ #f])]
         [else #f]))
     (unless id
-      (raise-argument-error* who rhombus-realm
-                             "Identifier || Operator"
-                             id/op-in))
+      (raise-annotation-failure who id/op-in "Identifier || Operator"))
     id)
 
   (define/arity (syntax_meta.is_static id/op-in)

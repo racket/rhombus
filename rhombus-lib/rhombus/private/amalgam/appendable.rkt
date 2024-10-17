@@ -215,7 +215,7 @@
     [else
      (define app1 (appendable-ref v1 #f))
      (unless app1
-       (raise-argument-error* append-who/method rhombus-realm "Appendable" v1))
+       (raise-annotation-failure append-who/method v1 "Appendable"))
      (define app2 (appendable-ref v2 #f))
      (unless (and app2 (same-append? app1 app2))
        (raise-mismatch "appendable object" v1 v2
