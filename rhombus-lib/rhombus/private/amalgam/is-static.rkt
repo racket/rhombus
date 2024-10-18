@@ -1,5 +1,7 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse/pre
+                     enforest/name-parse)
          "expression.rkt")
 
 (provide (for-syntax
@@ -23,4 +25,8 @@
                      (expr-quote #%static)))
 
 (define-for-syntax (is-static-context/tail? tail)
-  (is-static-context? (car (syntax-e tail))))
+  (syntax-parse tail
+    [(n::name . _)
+     (is-static-context? #'n.name)]
+    [_
+     (error 'is-static-context/tail? "tail doesn't start with a name: ~s" tail)]))

@@ -588,7 +588,7 @@ suffix corresponds to text after the closer.
  all treated as literal terms to be quoted.
 
  There's no difference in result between using @quotes or
- @rhombus(()) after @rhombus(literal_syntax)---only a difference in
+ @rhombus(()) after @rhombus(Syntax.literal)---only a difference in
  notation used to describe the syntax object, such as using @litchar{;}
  versus @litchar{,} to separate groups.
 

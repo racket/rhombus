@@ -418,7 +418,7 @@ class StaticPict(private _handle,
       static_pict(_raw_scale(_handle, h_amt, v_amt), this, _instances, METHOD(scale, h_amt, v_amt))
 
   override method rotate(radians :: Real) :~ Pict:
-    static_pict(rkt.rotate(_handle, radians), this, _instances, METHOD(rotate))
+    static_pict(rkt.rotate(_handle, radians), this, _instances, METHOD(rotate, radians))
 
   override method shear(horiz :: Real, vert :: Real) :~ Pict:
     static_pict(rkt.shear(_handle, horiz, vert), this, _instances, METHOD(shear, horiz, vert))

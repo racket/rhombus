@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "pack.rkt")
+                     "pack.rkt"
+                     "srcloc.rkt")
          syntax/parse/pre
          syntax/strip-context
          racket/symbol
@@ -171,6 +172,13 @@
          [_ #f])
        #t))
 
+(define-for-syntax (add-span-and-syntax-static-info orig-stx e)
+  (syntax-parse orig-stx
+    [(form-id arg . _)
+     (relocate+reraw
+      (datum->syntax #f (list #'form-id #'arg))
+      (wrap-static-info* e (get-syntax-static-infos)))]))
+
 (define-syntax literal
   (expression-transformer
    (lambda (stx)
@@ -178,9 +186,9 @@
        #:datum-literals (group)
        [(_ ((~or* _::parens _::quotes) (group term)) . tail)
         ;; Note: discarding group properties in this case
-        (values #'(quote-syntax term) #'tail)]
+        (values (add-span-and-syntax-static-info stx #'(quote-syntax term)) #'tail)]
        [(_ (~and ((~or* _::parens _::quotes) . _) gs) . tail)
-        (values #`(quote-syntax #,(pack-tagged-multi #'gs)) #'tail)]))))
+        (values (add-span-and-syntax-static-info stx #`(quote-syntax #,(pack-tagged-multi #'gs))) #'tail)]))))
 
 (define-syntax literal_group
   (expression-transformer
@@ -188,9 +196,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(_ ((~or* _::parens _::quotes)) . tail)
-        (values #`(quote-syntax #,(pack-multi '())) #'tail)]
+        (values (add-span-and-syntax-static-info stx #`(quote-syntax #,(pack-multi '()))) #'tail)]
        [(_ ((~or* _::parens _::quotes) g) . tail)
-        (values #'(quote-syntax g) #'tail)]))))
+        (values (add-span-and-syntax-static-info stx #'(quote-syntax g)) #'tail)]))))
 
 ;; ----------------------------------------
 

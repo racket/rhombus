@@ -1,0 +1,102 @@
+#lang rhombus
+
+// Dot
+
+check:
+  ~eval
+  import rhombus/meta open
+  use_static
+  expr.macro '$a x $b ...':
+    // static dot:
+    '$a . $b ...'
+  block:
+    use_dynamic
+    10 x a
+  ~throws values("no such field or method",
+                 "based on static information")
+
+check:
+  import rhombus/meta open
+  expr.macro '$a x $b ...':
+    // dynamic dot:
+    '$a . $b ...'
+  block:
+    use_static
+    10 x a
+  ~throws values("no such field or method",
+                 "in value: 10")
+
+// Append
+
+check:
+  ~eval
+  import rhombus/meta open
+  use_static
+  expr.macro '$a x $b':
+    // static:
+    '$a ++ $b'
+  block:
+    use_dynamic
+    1 x 2
+  ~throws values("specialization not known",
+                 "based on static information")
+
+check:
+  import rhombus/meta open
+  expr.macro '$a x $b':
+    // dynamic:
+    '$a ++ $b'
+  block:
+    use_static
+    1 x 2
+  ~throws "value does not satisfy annotation"
+
+// Call
+
+check:
+  ~eval
+  import rhombus/meta open
+  use_static
+  expr.macro '$a x $b':
+    // static:
+    '$a($b)'
+  block:
+    use_dynamic
+    (fun (x, y): x) x 2
+  ~throws values("wrong number of arguments in function call",
+                 "based on static information")
+
+check:
+  import rhombus/meta open
+  expr.macro '$a x $b':
+    // dynamic:
+    '$a($b)'
+  block:
+    use_static
+    (fun (x, y): x) x 2
+  ~throws "arity mismatch"
+
+// Index
+
+check:
+  ~eval
+  import rhombus/meta open
+  use_static
+  expr.macro '$a x $b':
+    // static:
+    '$a[$b]'
+  block:
+    use_dynamic
+    1 x 2
+  ~throws values("specialization not known",
+                 "based on static information")
+
+check:
+  import rhombus/meta open
+  expr.macro '$a x $b':
+    // dynamic:
+    '$a[$b]'
+  block:
+    use_static
+    1 x 2
+  ~throws "value does not satisfy annotation"

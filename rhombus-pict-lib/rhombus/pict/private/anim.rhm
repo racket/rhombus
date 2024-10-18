@@ -256,6 +256,9 @@ class TransitionPictEpoch(zero :~ PictEpoch,
   override metadata():
     zero.metadata()
 
+expr.macro 'AMETHOD($name, $arg, ...)':
+  'fun (this :~ _AnimPict): this . $name($arg, ...)'
+
 class AnimPict(_epochs :~ List.of(PictEpoch),
                _epoch_extents :~ List.of(Real), // parallel to `_epochs`
                _duration_start :~ Int,  // index into `_epoch` for time box start
@@ -327,7 +330,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                          ~duration:
                            _duration + 1,
                          ~rebuild:
-                           METHOD(maybe_sustain, max_epoch))
+                           AMETHOD(maybe_sustain, max_epoch))
         p.maybe_sustain(max_epoch)
     | ~else: this
 
@@ -360,7 +363,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                      ~duration_start:
                        -min_epoch,
                      ~rebuild:
-                       METHOD(reify_epochs, min_epoch, max_epoch))
+                       AMETHOD(reify_epochs, min_epoch, max_epoch))
 
   constructor
   | (p :~ Pict):
@@ -682,7 +685,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                      ~epoch_extents:
                        _epoch_extents.set(index, extent),
                      ~rebuild:
-                       METHOD(epoch_set_extent))
+                       METHOD(epoch_set_extent, i, extent))
     | reify_epochs(i, i).epoch_set_extent(i, extent)
 
   override method metadata(): _metadata
@@ -691,7 +694,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                    ~metadata:
                      metadata,
                    ~rebuild:
-                      METHOD(epoch_set_metadata, metadata))
+                      METHOD(set_metadata, metadata))
 
   override method epoch_metadata(epoch :: Int):
     match get_epoch(epoch)
