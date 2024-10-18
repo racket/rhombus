@@ -59,3 +59,35 @@ block:
     check p == q ~is #false
     check p != Path("/") ~is #false
     check p != q ~is #true
+
+block:
+  def s = "/etc"
+  def p1 = Path("/etc")
+  def p2 = (s :: PathString.to_path)
+  check p1 compares_equal p2 ~is #true
+  version_guard.at_least "8.13.0.1":
+    check p1 == p2 ~is #true
+
+block:
+  def p1 = Path("/etc/passwd")
+  check p1.parts() ~is [Path("/"), Path("etc"), Path("passwd")]
+  def p2 = Path("C:/windows")
+  check p2.parts() ~is [Path("C:"), Path("windows")]
+  def p3 = Path("../a/b/./c")
+  check p3.parts() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
+
+block:
+  check Path("/").extend("etc", Path("passwd")) ~is Path("/etc/passwd")
+  check Path.extend("C:", "win32", "sys") ~is Path("C:/win32/sys")
+  check Path("/") ++ Path("etc") ++ "passwd" ~is Path("/etc/passwd")
+  check Path("..") ++ "a" ++ "b" ++ #'same ++ "c" ~is Path("../a/b/./c")
+
+block:
+  def p1 = Path("/etc")
+  def p2 = Path("etc")
+  check Path.is_absolute(p1) ~is #true
+  check Path.is_absolute("/etc") ~is #true
+  check p1.is_absolute() ~is #true
+  check Path.is_absolute(p2) ~is #false
+  check Path.is_absolute("etc") ~is #false
+  check p2.is_absolute() ~is #false
