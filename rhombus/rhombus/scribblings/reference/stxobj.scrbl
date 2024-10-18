@@ -593,8 +593,7 @@ suffix corresponds to text after the closer.
  versus @litchar{,} to separate groups.
 
  Metadata, such as raw source text, is preserved for the
- @rhombus(term) sequence, but not any metadata that might be on the
- group as a whole when the @rhombus(term)s form a single group.
+ @rhombus(term) sequence.
 
 @examples(
   Syntax.literal 'x'
@@ -606,25 +605,24 @@ suffix corresponds to text after the closer.
 }
 
 @doc(
+  expr.macro '«Syntax.literal_term '$term'»'
+  expr.macro 'Syntax.literal_term ($term)'
   expr.macro '«Syntax.literal_group '$term ...'»'
   expr.macro 'Syntax.literal_group ($term ...)'
 ){
 
- Similar to a plain @quotes form that has multiple terms in one
- group, but like @rhombus(Syntax.literal) in that there are no
- escapes. Unlike @rhombus(Syntax.literal), the @rhombus(term)s must
- form a single group, and the result is always a group syntax object.
-
- Metadata, such as raw source text, is preserved for the
- @rhombus(term) sequence, but not any metadata that might be on the
- group as a whole when the @rhombus(term)s form a single group.
+ Like @rhombus(Syntax.literal), but specialized to a single term or
+ single group, which may be useful to statically ensure that the result
+ is a term or group syntax object. No metadata is preserved for the group
+ containing the term in the case of @rhombus(Syntax.literal_term), which
+ can be a small but useful savings in some contexts.
 
 }
 
 @doc(
   fun Syntax.make(term :: Any,
                   ctx_stx :: maybe(Term) = #false)
-    :: Syntax
+    :: Term
 ){
 
  Converts an ``unwrapped'' representation of a shrubbery @emph{term}
@@ -650,7 +648,7 @@ suffix corresponds to text after the closer.
 @doc(
   fun Syntax.make_group(terms :: Listable.to_list && NonemptyList,
                         ctx_stx :: maybe(Term) = #false)
-    :: Syntax
+    :: Group
 ){
 
  Converts a nonempty list of terms, each convertible by @rhombus(Syntax.make),
@@ -798,7 +796,7 @@ suffix corresponds to text after the closer.
 
 @doc(
   fun Syntax.unwrap_sequence(stx :: Syntax)
-    :: List.of(Syntax)
+    :: List.of(Group)
 ){
 
  Unwraps a multi-group syntax object by one layer. The result is a
@@ -897,10 +895,10 @@ suffix corresponds to text after the closer.
 @doc(
   fun Syntax.relocate(stx :: Term,
                       to :: maybe(Term || Srcloc))
-    :: Syntax
+    :: Term
   fun Syntax.relocate_group(stx :: Group,
                             to :: maybe(Group || Srcloc))
-    :: Syntax
+    :: Group
 ){
 
  Returns a syntax object like @rhombus(stx), except that the metadata of
@@ -934,11 +932,11 @@ suffix corresponds to text after the closer.
   fun Syntax.relocate_span(
     stx :: Term,
     like_stxes :: Listable.to_list && List.of(Syntax)
-  ) :: Syntax
+  ) :: Term
   fun Syntax.relocate_group_span(
     stx :: Group,
     like_stxes :: Listable.to_list && List.of(Syntax)
-  ) :: Syntax
+  ) :: Group
 ){
 
  Similar to @rhombus(Syntax.relocate) an

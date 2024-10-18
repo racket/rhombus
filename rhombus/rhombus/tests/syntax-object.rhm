@@ -47,6 +47,27 @@ check:
   'fruit.(++)'.name_to_symbol() ~is #'#{|fruit.(++)|}
 
 block:
+  def op = Syntax.make_op(#'#{$})
+  check Syntax.literal'$' ~prints_like op
+  check Syntax.literal_term'$' ~prints_like op
+  check Syntax.literal'$ $' ~prints_like Syntax.make_group([op, op])
+  check Syntax.literal'$ $; $' ~prints_like Syntax.make_sequence([Syntax.make_group([op, op]),
+                                                                  Syntax.make_group([op])])
+  check Syntax.literal_group'$ $' ~prints_like Syntax.make_group([op, op])
+  check:
+    ~eval
+    Syntax.literal_term'1 2'
+    ~throws "unexpected term"
+  check:
+    ~eval
+    Syntax.literal_group''
+    ~throws "expected more terms"
+  check:
+    ~eval
+    Syntax.literal_group'1; 2'
+    ~throws "unexpected term"
+
+block:
   import rhombus/syntax_map open
   check:
     equal_name('x', 'x') ~is #true

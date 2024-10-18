@@ -58,6 +58,7 @@
   #:fields ()
   #:namespace-fields
   (literal
+   literal_term
    literal_group
    [make Syntax.make]
    [make_op Syntax.make_op]
@@ -184,19 +185,22 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ ((~or* _::parens _::quotes) (group term)) . tail)
-        ;; Note: discarding group properties in this case
-        (values (add-span-and-syntax-static-info stx #'(quote-syntax term)) #'tail)]
        [(_ (~and ((~or* _::parens _::quotes) . _) gs) . tail)
         (values (add-span-and-syntax-static-info stx #`(quote-syntax #,(pack-tagged-multi #'gs))) #'tail)]))))
+
+(define-syntax literal_term
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ ((~or* _::parens _::quotes) (group term)) . tail)
+        (values (add-span-and-syntax-static-info stx #'(quote-syntax term)) #'tail)]))))
 
 (define-syntax literal_group
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ ((~or* _::parens _::quotes)) . tail)
-        (values (add-span-and-syntax-static-info stx #`(quote-syntax #,(pack-multi '()))) #'tail)]
        [(_ ((~or* _::parens _::quotes) g) . tail)
         (values (add-span-and-syntax-static-info stx #'(quote-syntax g)) #'tail)]))))
 
