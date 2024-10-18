@@ -46,6 +46,7 @@
   ([String Port.Input.String]
    [current current-input-port]
    [open_bytes Port.Input.open_bytes]
+   [open_file Port.Input.open_file]
    [open_string Port.Input.open_string])
   #:properties ()
   #:methods
@@ -69,6 +70,7 @@
    [current current-output-port]
    [current_error current-error-port]
    [open_bytes Port.Output.open_bytes]
+   [open_file Port.Output.open_file]
    [open_string Port.Output.open_string]
    [get_bytes Port.Output.get_bytes]
    [get_string Port.Output.get_string]
