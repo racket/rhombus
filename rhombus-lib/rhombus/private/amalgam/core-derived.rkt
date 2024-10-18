@@ -14,4 +14,5 @@
         "class_together.rhm"
         "enum.rhm"
         "pipeline.rhm"
-        "str.rhm")
+        "str.rhm"
+        "closeable.rhm")
