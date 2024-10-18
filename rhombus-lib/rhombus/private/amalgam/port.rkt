@@ -50,7 +50,8 @@
    [open_string Port.Input.open_string])
   #:properties ()
   #:methods
-  ([peek_byte Port.Input.peek_byte]
+  ([close Port.Input.close]
+   [peek_byte Port.Input.peek_byte]
    [peek_bytes Port.Input.peek_bytes]
    [peek_char Port.Input.peek_char]
    [peek_string Port.Input.peek_string]
@@ -77,7 +78,8 @@
    ExistsFlag)
   #:properties ()
   #:methods
-  ([flush Port.Output.flush]
+  ([close Port.Output.close]
+   [flush Port.Output.flush]
    [print Port.Output.print]
    [println Port.Output.println]
    [show Port.Output.show]
@@ -188,6 +190,10 @@
     [(string? v) (string->immutable-string v)]
     [else v]))
 
+(define/method (Port.Input.close port)
+  #:primitive (close-input-port)
+  (close-input-port port))
+
 (define/method (Port.Input.peek_byte port #:skip_bytes [skip 0])
   #:primitive (peek-byte)
   (peek-byte port skip))
@@ -230,6 +236,10 @@
 (define/method (Port.Input.read_string port amt)
   #:primitive (read-string)
   (coerce-read-result (read-string amt port)))
+
+(define/method (Port.Output.close port)
+  #:primitive (close-output-port)
+  (close-output-port port))
 
 (define/method (Port.Output.get_bytes port)
   #:primitive (get-output-bytes)
