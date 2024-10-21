@@ -117,8 +117,8 @@
   (define-syntax-class :kw-opt-binding
     #:attributes (kw parsed default)
     #:datum-literals (group)
-    (pattern (~and g
-                   (group kw:keyword (_::block (group a ...+ eq::equal e ...+))))
+    (pattern (group kw:keyword (_::block (~and g
+                                               (group a ...+ eq::equal e ...+))))
              #:do [(check-multiple-equals #'g)]
              #:cut
              #:with default #`(#,group-tag e ...)
@@ -164,8 +164,8 @@
   (define-syntax-class :kw-opt-arity-arg
     #:attributes (kw default)
     #:datum-literals (group)
-    (pattern (~and g
-                   (group kw:keyword (_::block (group _ ...+ _::equal _ ...+))))
+    (pattern (group kw:keyword (_::block (~and g
+                                               (group _ ...+ _::equal _ ...+))))
              #:do [(check-multiple-equals #'g)]
              #:with default #'#t)
     (pattern (group kw:keyword (_::block (group _ ...+ (b-tag::block . _))))

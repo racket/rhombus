@@ -823,13 +823,12 @@
   (define-syntax-class :val-opt-bind
     #:attributes (bind default)
     #:datum-literals (group)
-    (pattern (group b ...+ eq::equal e ...+)
+    (pattern (~and g
+                   (group b ...+ eq::equal e ...+))
              #:do [(check-multiple-equals #'g)]
-             #:cut
              #:with bind #`(#,group-tag b ...)
              #:with default #`(rhombus-expression (#,group-tag e ...)))
     (pattern (group b ...+ (b-tag::block e ...))
-             #:cut
              #:with bind #`(#,group-tag b ...)
              #:with default #'(rhombus-body-at b-tag e ...))
     (pattern (group b ...)

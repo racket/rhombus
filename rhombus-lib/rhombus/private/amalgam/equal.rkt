@@ -41,4 +41,5 @@
                          stx
                          #'eq
                          (syntax->list #'(more ...)))]
-    [_ (void)]))
+    [(_ _ ... _::equal _ ...)
+     (void)]))
