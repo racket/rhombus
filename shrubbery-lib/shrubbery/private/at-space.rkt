@@ -32,6 +32,7 @@
     [(and (pair? lst)
           (eq? 'content (caar lst))
           (pair? (cdr lst))
+          (not (equal? (syntax-e (cadar lst)) "\n"))
           (let ([prev (cadr lst)])
             (and (eq? 'content (car prev))
                  (equal? "\n" (syntax-e (cadr prev)))))
@@ -79,9 +80,10 @@
                   [else
                    (define a (cadar next))
                    (define s (syntax-e a))
+                   (define len (- (string-length s) n))
                    (cons (list 'content
                                (datum->syntax a
-                                              (substring s 0 (- (string-length s) n))
+                                              (substring s 0 len)
                                               a
                                               a))
                          (loop (cdr next)))])]
@@ -105,8 +107,13 @@
             (eq? 'content (caar lst)))
        (define stx (cadar lst))
        (define s (syntax-e stx))
-       (define n (+ (leading-space-count s) (or (syntax-column stx) 0)))
-       (loop (cdr lst) (min n (or min-col n)) #f)]
+       (cond
+         [(equal? s "")
+          ;; removing trailing whitespace made the line blank
+          (loop (cdr lst) min-col saw-nl?)]
+         [else
+          (define n (+ (leading-space-count s) (or (syntax-column stx) 0)))
+          (loop (cdr lst) (min n (or min-col n)) #f)])]
       [else
        (loop (cdr lst) (or min-col 0) #f)])))
 

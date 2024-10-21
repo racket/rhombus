@@ -2031,7 +2031,7 @@ INPUT
      doc
      (parens
       (group
-       (brackets (group " ") (group "space char starts next line") (group "\n")))))
+       (brackets (group "\n") (group "space char starts next line") (group "\n")))))
     (group
      itemlist
      (parens
