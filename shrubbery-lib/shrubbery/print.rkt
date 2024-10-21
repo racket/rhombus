@@ -16,7 +16,7 @@
                                   #:keep-prefix? [keep-prefix? #f]
                                   #:keep-suffix? [keep-suffix? #f]
                                   #:inner? [inner? #f]
-                                  #:infer-starting-indentation? [infer-starting-indentation? #t]
+                                  #:infer-starting-indentation? [infer-starting-indentation? (not keep-prefix?)]
                                   #:register-stx-range [register-stx-range void]
                                   #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
   (cond

@@ -431,7 +431,7 @@ short-term mixtures of shrubbery forms and S-expressions.
                                    [#:keep-prefix? keep-prefix? any/c #f]
                                    [#:keep-suffix? keep-suffix? any/c #f]
                                    [#:inner? inner? any/c #f]
-                                   [#:infer-starting-indentation? infer-starting-indentation? any/c #t]
+                                   [#:infer-starting-indentation? infer-starting-indentation? any/c (not keep-prefix?)]
                                    [#:register-stx-range register-stx-range
                                                          (syntax?
                                                           exact-nonnegative-integer?
