@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -100,15 +102,16 @@ block:
     check:
       syntax_meta.error("wrong form")
       ~throws "wrong form"
-    check:
-      syntax_meta.error('garbage + 2')
-      ~throws values("garbage: ",  "bad syntax", "garbage + 2")
-    check:
-      syntax_meta.error("all wrong", 'garbage + 2')
-      ~throws values("garbage: ", "all wrong", "garbage + 2")
-    check:
-      syntax_meta.error("all wrong", 'garbage + 2', 'extra1')
-      ~throws values("garbage: ", "all wrong", "garbage + 2", "extra1")
+    version_guard.at_least "8.15.0.2":
+      check:
+        syntax_meta.error('garbage + 2')
+        ~throws values("garbage: ",  "bad syntax", "garbage + 2")
+      check:
+        syntax_meta.error("all wrong", 'garbage + 2')
+        ~throws values("garbage: ", "all wrong", "garbage + 2")
+      check:
+        syntax_meta.error("all wrong", 'garbage + 2', 'extra1')
+        ~throws values("garbage: ", "all wrong", "garbage + 2", "extra1")
     check:
       syntax_meta.error(~who: "my_form", 'garbage + 2')
       ~throws values("my_form: ", "bad syntax", "garbage + 2")
