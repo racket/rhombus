@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -161,3 +163,40 @@ check:
     "expected a literal single-character string",
     "Char\"too long\"",
   )
+
+version_guard.at_least "8.14.0.7":
+  block:
+    let annot = @str{Int.in(@repr(0x0), @repr(0x10FFFF)) && !Int.in(@repr(0xD800), @repr(0xDFFF))}
+    check:
+      Char.from_int(0x0) ~is Char"\0"
+      Char.from_int(0x10FFFF) ~is Char"\U10FFFF"
+      Char.from_int("oops") ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val("oops").msg,
+      )
+      Char.from_int(0.0) ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val(0.0).msg,
+      )
+      Char.from_int(-0x1) ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val(-0x1).msg,
+      )
+      Char.from_int(0x110000) ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val(0x110000).msg,
+      )
+      Char.from_int(0xD800) ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val(0xD800).msg,
+      )
+      Char.from_int(0xDFFF) ~throws values(
+        "Char.from_int: " ++ error.annot_msg(),
+        error.annot(annot).msg,
+        error.val(0xDFFF).msg,
+      )

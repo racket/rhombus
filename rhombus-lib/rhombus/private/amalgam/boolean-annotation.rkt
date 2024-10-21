@@ -6,7 +6,8 @@
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-space rhombus/annot
                     &&
@@ -16,6 +17,16 @@
 ;; ----------------------------------------
 ;; &&
 
+(define (handle-and/c form)
+  (and (pair? (cdr form))
+       (list? (cdr form))
+       (or (get-primitive-subcontract (cdr form))
+           (apply string-append
+                  (get-primitive-contract (cadr form))
+                  (for/list ([contract/rkt (in-list (cddr form))])
+                    (string-append " && " (get-primitive-contract contract/rkt)))))))
+
+(void (set-primitive-contract-combinator! 'and/c handle-and/c))
 (define-annotation-syntax &&
   (annotation-infix-operator
    (lambda () `((,(annot-quote \|\|) . stronger)))
@@ -172,6 +183,12 @@
 ;; ----------------------------------------
 ;; !
 
+(define (handle-not/c form)
+  (and (pair? (cdr form))
+       (null? (cddr form))
+       (string-append "!" (get-primitive-contract (cadr form)))))
+
+(void (set-primitive-contract-combinator! 'not/c handle-not/c))
 (define-annotation-syntax !
   (annotation-prefix-operator
    (lambda () `((,(annot-quote &&) . stronger)
