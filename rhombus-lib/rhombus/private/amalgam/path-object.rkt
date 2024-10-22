@@ -65,10 +65,8 @@
    extend
    is_absolute
    parts
-   read_with
    string
    to_complete_path
-   write_with
    only
    add_suffix))
 
@@ -113,10 +111,6 @@
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (path-add-suffix p sfx))
 
-(define/method (Path.read_with p f)
-  #:primitive (call-with-input-file)
-  (call-with-input-file p f))
-
 (define/method (Path.string s)
   #:primitive (path->string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
@@ -126,9 +120,5 @@
   #:primitive (path->complete-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (path->complete-path p base-path))
-
-(define/method (Path.write_with p f #:exists [exists 'error])
-  #:primitive (call-with-output-file)
-  (call-with-output-file p f #:exists exists))
 
 (define-annotation-syntax PathString (identifier-annotation path-string? ()))
