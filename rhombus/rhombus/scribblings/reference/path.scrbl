@@ -184,6 +184,19 @@ Paths are @tech{comparable}, which means that generic operations like
 
 }
 
+@doc(
+  fun Path.only(path :: PathString) :: Path
+){
+
+ Returns @rhombus(path) without its final path element in the case
+ that @rhombus(path) is not syntactically a directory; if
+ @rhombus(path) has only a single, non-directory path element, #f is
+ returned. If @rhombus(path) is syntactically a directory, then
+ @rhombus(path) is returned unchanged (but as a path, if it was a
+ string).
+
+}
+
 @// ------------------------------------------------------------
 
 @include_section("runtime-path.scrbl")

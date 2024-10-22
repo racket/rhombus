@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base)
+	 racket/path
          "provide.rkt"
          "class-primitive.rkt"
          "annotation-failure.rkt"
@@ -67,7 +68,8 @@
    read_with
    string
    to_complete_path
-   write_with))
+   write_with
+   only))
 
 (define/arity #:name Path (path c)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
@@ -100,6 +102,10 @@
   #:primitive (explode-path)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (to-treelist #f (explode-path p)))
+
+(define/method (Path.only p)
+  #:primitive (path-only)
+  (path-only p))
 
 (define/method (Path.read_with p f)
   #:primitive (call-with-input-file)
