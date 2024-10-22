@@ -69,7 +69,8 @@
    string
    to_complete_path
    write_with
-   only))
+   only
+   add_suffix))
 
 (define/arity #:name Path (path c)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
@@ -106,6 +107,11 @@
 (define/method (Path.only p)
   #:primitive (path-only)
   (path-only p))
+
+(define/method (Path.add_suffix p sfx)
+  #:primitive (path-add-suffix)
+  #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (path-add-suffix p sfx))
 
 (define/method (Path.read_with p f)
   #:primitive (call-with-input-file)
