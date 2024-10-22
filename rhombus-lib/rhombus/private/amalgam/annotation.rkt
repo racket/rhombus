@@ -442,11 +442,12 @@
    (lambda (form tail)
      (syntax-parse tail
        [(op::name . (~var t (:annotation-seq #'::)))
+        (define op-name (string->symbol (shrubbery-syntax->string #'op.name)))
         (values
          (build-annotated-expression #'op.name #'t
                                      checked? form #'t.parsed
                                      (lambda (tmp-id)
-                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
+                                       #`(raise-::-annotation-failure '#,op-name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
                                      wrap-static-info*)
          #'t.tail)]))
    'none))

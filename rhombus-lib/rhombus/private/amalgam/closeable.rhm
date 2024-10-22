@@ -8,30 +8,33 @@ export:
   Closeable
 
 namespace Closeable:
-  export rename cdef as def
+  export:
+    close
+    rename cdef as def  
+
+  fun close(v :: Closeable):
+    v.close()
 
   defn.sequence_macro 'cdef $(bind :: Identifier) = $(rhs :: expr_meta.Parsed)
                        $body
                        ...':
+    ~op_stx: self
     def rhs_statinfo = statinfo_meta.gather(rhs)
-    def resource = Syntax.make_temp_id()
+    def resource = Syntax.make_temp_id("resource")
     def resource_with_statinfo = statinfo_meta.wrap(resource, rhs_statinfo)
-    def close_stmt:
-      '$(if syntax_meta.is_static(bind) | 'use_static' | 'use_dynamic')
-       $(resource_with_statinfo) . $('close'.relocate(rhs))()'
     values(
       '
         block:
           def mutable $resource = #false
           try:
             ~initially:
-              $resource := ($rhs :: Closeable)
+              $resource := ($rhs $('::'.relocate(self)) Closeable)
             block:
               let $bind = $resource_with_statinfo
               #void
               $body
               ...
             ~finally:
-              $close_stmt
+              ($resource :~ Closeable).close()
       ',
       '')

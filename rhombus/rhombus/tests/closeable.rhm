@@ -1,0 +1,65 @@
+#lang rhombus
+
+check:
+  "x" is_a Closeable ~is #false
+  Port.Input.open_string("x") is_a Closeable ~is #true
+  Port.Output.open_string() is_a Closeable ~is #true
+
+check:
+  ~eval
+  class Thing():
+    implements Closeable
+  ~throws "final class cannot have abstract methods"
+
+check:
+  ~eval
+  interface Closeable2:
+    method close(): #void
+  class Thing():
+    implements:
+      Closeable
+      Closeable2
+  ~throws "method supplied by multiple superinterfaces and not overridden"
+
+check:
+  ~eval
+  use_static
+  class Thing():
+    implements Closeable
+    override close(x = 1): #void
+  (Thing() :: Closeable).close(1)
+  ~throws values("wrong number of arguments in method call",
+                 "based on static information")
+
+block:
+  use_static
+  class Thing():
+    implements Closeable
+    override method close(): println("bye")
+
+  check: Thing() ~is_a Closeable
+
+  check:
+    (Thing() :: Closeable).close()
+    ~prints "bye\n"
+
+  check:
+    Thing().close()
+    ~prints "bye\n"
+
+  check:
+    Closeable.def c = Thing()
+    println("go")
+    ~prints "go\nbye\n"
+
+  check:
+    Closeable.def c = Thing()
+    c.close()
+    println("go")
+    ~prints "bye\ngo\nbye\n"
+
+check:
+  Closeable.def c = 5
+  #void
+  ~throws values(error.annot_msg(),
+                 error.annot("Closeable").msg)
