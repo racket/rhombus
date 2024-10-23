@@ -57,13 +57,14 @@
   #:fields
   ([bytes Path.bytes #,(get-bytes-static-infos)])
   #:namespace-fields
-  ([current_directory current-directory])
+  ([Absolute Path.Absolute]
+   [Relative Path.Relative]
+   [current_directory current-directory])
   #:properties
   ()
   #:methods
   (bytes
    extend
-   is_absolute
    parts
    string
    to_complete_path
@@ -77,6 +78,20 @@
     [(bytes? c) (bytes->path c)]
     [(string? c) (string->path c)]
     [else (raise-annotation-failure who c "String || Bytes || Path")]))
+
+(define (path-is-absolute? v)
+  (and (path? v)
+       (absolute-path? v)))
+
+(define (path-is-relative? v)
+  (and (path? v)
+       (not (absolute-path? v))))
+
+(define-annotation-syntax Path.Absolute
+  (identifier-annotation path-is-absolute? #,(get-path-static-infos)))
+
+(define-annotation-syntax Path.Relative
+  (identifier-annotation path-is-relative? #,(get-path-static-infos)))
 
 (define-static-info-syntax current-directory
   (#%function-arity 3)
@@ -92,10 +107,6 @@
   #:primitive (build-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (apply build-path p ss))
-
-(define/method (Path.is_absolute p)
-  #:primitive (absolute-path?)
-  (absolute-path? p))
 
 (define/method (Path.parts p)
   #:primitive (explode-path)

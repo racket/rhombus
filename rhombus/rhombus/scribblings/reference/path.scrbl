@@ -12,7 +12,6 @@ A @deftech{path} value represents a filesystem path.
   Path
   path.bytes()
   path.extend(part, ...)
-  path.is_absolute()
   path.parts()
   path.string()
 )
@@ -24,6 +23,8 @@ Paths are @tech{comparable}, which means that generic operations like
   annot.macro 'Path'
   annot.macro 'PathString'
   annot.macro 'PathString.to_path'
+  annot.macro 'Path.Absolute'
+  annot.macro 'Path.Relative'
 ){
 
  Matches a path value.  The @rhombus(PathString, ~annot) annotation allows
@@ -32,6 +33,11 @@ Paths are @tech{comparable}, which means that generic operations like
  @tech(~doc: guide_doc){converter annotation} allows
  @rhombus(PathString, ~annot) values, but converts
  @rhombus(ReadableString, ~annot) values to @rhombus(Path) values.
+
+ The @rhombus(Path.Absolute, ~annot) annotation only matches
+ @rhombus(Path, ~annot)s that begin with the root directory of the filesystem
+ or drive.  The @rhombus(Path.Relative, ~annot) annotation only matches
+ @rhombus(Path, ~annot)s that are relative to some base directory.
 }
 
 @doc(
@@ -118,12 +124,6 @@ Paths are @tech{comparable}, which means that generic operations like
   p ++ "shape.txt"
 )
 
-}
-
-@doc(fun Path.is_absolute(path :: Path)){
-
- Returns @rhombus(#true) if @rhombus(path) is an absolute path, @rhombus(#false)
- otherwise.  This procedure does not access the filesystem.
 }
 
 @doc(

@@ -85,9 +85,9 @@ block:
 block:
   def p1 = Path("/etc")
   def p2 = Path("etc")
-  check Path.is_absolute(p1) ~is #true
-  check Path.is_absolute("/etc") ~is #true
-  check p1.is_absolute() ~is #true
-  check Path.is_absolute(p2) ~is #false
-  check Path.is_absolute("etc") ~is #false
-  check p2.is_absolute() ~is #false
+  check "/etc" is_a Path.Absolute ~is #false
+  check "etc" is_a Path.Relative ~is #false
+  check p1 is_a Path.Absolute ~is #true
+  check p1 is_a Path.Relative ~is #false
+  check p2 is_a Path.Absolute ~is #false
+  check p2 is_a Path.Relative ~is #true
