@@ -159,6 +159,7 @@
 (check 6 input6 expected6)
 (check 7 input7 expected7)
 (check 8 input8 expected8)
+(check 9 input9 expected9)
 
 (check 'mix (string-append "x:\n"
                            "  apple\tbanana\n"

@@ -55,7 +55,7 @@
          lex-dont-stop-status?)
 
 (define-lex-abbrevs
-  
+
   ;; For case insensitivity
   [e (char-set "eE")]
 
@@ -73,7 +73,7 @@
   ;; does not constrain to avoid surrogates:
   [unicode  (:or (:: "u" (:** 1 4 digit16))
                  (:: "U" (:** 1 6 digit16)))]
-  
+
   [str (:: "\"" (:* string-element ) "\"")]
 
   [string-element (:or (:~ "\"" "\\" "\n" "\r")
@@ -97,14 +97,14 @@
                       (:: "\\" (:** 1 3 digit8))
                       (:: "\\x" (:** 1 2 digit16)))]
 
-  [bad-str (:: (:? "#") "\"" 
+  [bad-str (:: (:? "#") "\""
                (:* (:~ "\"" "\\" #\newline #\return)
                    (:: "\\" (:- any-char #\newline #\return)))
                (:? "\\" "\""))]
 
   [boolean (:or "#true" "#false")]
   [void-const "#void"]
-                      
+
   [special-number (:: "#"
                       (:or "inf"
                            "neginf"
@@ -121,12 +121,12 @@
 
   [exponent-marker e]
   [sign (char-set "+-")]
-  
+
   [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline #\return)
                                          (:: #\\ (:or (:: #\return #\newline)
                                                       #\newline
                                                       #\return))))]
-  
+
   [plain-identifier (:: (:or alphabetic "_" emoji)
                         (:* (:or alphabetic numeric "_" emoji)))]
   [identifier (:: (:or "#%" "")
@@ -146,7 +146,7 @@
 
   [keyword (:: "~" plain-identifier)]
   [bad-keyword (:: "~")]
-  
+
   ;; disallows a number that starts +, -, or "."
   [number/continuing (:or decimal-number/continuing
                           hex-number
@@ -157,7 +157,7 @@
                    hex-number
                    octal-number
                    binary-number))]
-  
+
   [uinteger (:: (:* digit_) digit)]
   [uinteger16 (:: (:* digit16_) digit16)]
   [uinteger8 (:: (:* digit8_) digit8)]
@@ -275,7 +275,7 @@
                                            '())))])
     (define-values (end-line end-col end-offset) (port-next-location input-port))
     (values (make-token name comment start-pos (position end-offset end-line end-col))
-            'comment #f 
+            'comment #f
             (position-offset start-pos)
             end-offset
             0
@@ -1038,7 +1038,7 @@
 (define (next-location-as-pos in)
   (define-values (line col pos) (port-next-location in))
   (position pos line col))
-  
+
 (define (extend-error lexeme start end in)
   (define next (peek-char-or-special in))
   (if (or (memq next
@@ -1055,28 +1055,41 @@
    [(:+ whitespace) (values lexeme end-pos)]))
 
 (define (parse-number s)
-  (if (and ((string-length s) . > . 2)
-           (eqv? #\0 (string-ref s 0)))
-      (case (string-ref s 1)
-        [(#\x) (string->number (regexp-replace* #rx"_" (substring s 2) "") 16)]
-        [(#\o) (string->number (regexp-replace* #rx"_" (substring s 2) "") 8)]
-        [(#\b) (string->number (regexp-replace* #rx"_" (substring s 2) "") 2)]
-        [else
-          (string->number (regexp-replace* #rx"_" s ""))])
-      (string->number (regexp-replace* #rx"_" s ""))))
+  (define (do-parse-sign [idx 0])
+    (case (string-ref s idx)
+      [(#\+) (do-parse-radix (add1 idx) #f)]
+      [(#\-) (do-parse-radix (add1 idx) #t)]
+      [else (do-parse-radix)]))
+  (define (do-parse-radix [idx 0] [negate? #f])
+    (define (add2 n)
+      (+ n 2))
+    (case (string-ref s idx)
+      [(#\0) (case (string-ref s (add1 idx))
+               [(#\x) (do-parse-number (add2 idx) negate? 16)]
+               [(#\o) (do-parse-number (add2 idx) negate? 8)]
+               [(#\b) (do-parse-number (add2 idx) negate? 2)]
+               [else (do-parse-number)])]
+      [else (do-parse-number)]))
+  (define (do-parse-number [idx 0] [negate? #f] [radix 10])
+    (let* ([s (if (eqv? idx 0)
+                  s
+                  (substring s idx))]
+           [s (regexp-replace* #rx"_" s "")]
+           [num (or (string->number s radix)
+                    (error "invalid lexeme"))]
+           [num (if negate? (- num) num)])
+      num))
+  (define len (string-length s))
+  (cond
+    [(len . > . 3) (do-parse-sign)]
+    [(eqv? len 3) (do-parse-radix)]
+    [else (do-parse-number)]))
 
 (define (parse-string s)
   (read (open-input-string s)))
 
 (define (parse-byte-string s)
   (read (open-input-string s)))
-
-(define (parse-char s)
-  (define str
-    (read (open-input-string (string-append "\""
-                                            (substring s 1 (sub1 (string-length s)))
-                                            "\""))))
-  (string-ref str 0))
 
 ;; argument string matches `number`; check whether adding "." to the end could make sense
 (define (decimal-integer? s)

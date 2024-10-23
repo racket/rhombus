@@ -187,7 +187,8 @@ but the table below describes the shape of @litchar("@") forms.
                        boptional(@nonterm{sign}),
                        @nonterm{nonneg}), ""],
     empty_line,
-    [no_lex, @nonterm{hexinteger}, bis, bseq(@litchar{0x},
+    [no_lex, @nonterm{hexinteger}, bis, bseq(boptional(@nonterm{sign}),
+                                             @litchar{0x},
                                              @nonterm{hex},
                                              kleenestar(@nonterm{ushex})), ""],
     empty_line,
@@ -200,7 +201,8 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
 
 
-    [no_lex, @nonterm{octalinteger}, bis, bseq(@litchar{0o},
+    [no_lex, @nonterm{octalinteger}, bis, bseq(boptional(@nonterm{sign}),
+                                               @litchar{0o},
                                                @nonterm{octal},
                                                kleenestar(@nonterm{usoctal})), ""],
     empty_line,
@@ -210,7 +212,8 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, bseq(@litchar{_}, @nonterm{octal}), ""],
     empty_line,
 
-    [no_lex, @nonterm{binaryinteger}, bis, bseq(@litchar{0b},
+    [no_lex, @nonterm{binaryinteger}, bis, bseq(boptional(@nonterm{sign}),
+                                                @litchar{0b},
                                                 @nonterm{bit},
                                                 kleenestar(@nonterm{usbit})), ""],
     empty_line,
@@ -222,7 +225,7 @@ but the table below describes the shape of @litchar("@") forms.
 
     [no_lex, @nonterm{fraction}, bis, bseq(@nonterm{integer}, @litchar{/}, @nonterm{nonneg}), @elem{@nonterm{nonneg} @notecol{not 0}}],
     empty_line,
-    
+
     [is_lex, @nonterm{boolean}, bis, @litchar{#true}, ""],
     ["", "", bor, @litchar{#false}, ""],
     empty_line,
@@ -285,6 +288,6 @@ but the table below describes the shape of @litchar("@") forms.
     [no_lex, @nonterm{atclose}, bis, @litchar("}"), ""],
     ["", "", bor, bseq(@litchar("}"), kleenestar(@nonterm{asciisym}), @litchar{|}),
      @notecol{flips opener chars}],
-    
+
   ]
 )
