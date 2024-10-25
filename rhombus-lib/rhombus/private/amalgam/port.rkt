@@ -173,10 +173,13 @@
     [() (open-output-bytes)]
     [(name) (open-output-bytes name)]))
 
-(define/arity (Port.Output.open_file path #:exists [exists 'error])
+(define/arity (Port.Output.open_file path #:exists [exists-in 'error])
   #:primitive (open-output-file)
   #:static-infos ((#%call-result #,(get-output-port-static-infos)))
-  (open-output-file path #:exists (->ExistsFlag exists)))
+  (define exists (->ExistsFlag exists-in))
+  (unless exists
+    (raise-annotation-failure who exists-in "Port.Output.ExistsFlag"))
+  (open-output-file path #:exists exists))
 
 (define/arity Port.Output.open_string
   #:primitive (open-output-string)
