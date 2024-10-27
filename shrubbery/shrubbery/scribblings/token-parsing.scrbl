@@ -48,9 +48,10 @@ with a @litchar{+-} operator), unless the operator contains only
 and @litchar{...} are allowed). Also, a multi-character operator
 cannot end in @litchar{:}, since that creates an ambiguity with an
 operator just before a block, except that a sequence containing only
-@litchar{:} is allowed. A multi-character operator cannot
-end with @litchar{/} or contain @litchar{//} or @litchar{/*}, because
-that can create ambiguities with comments.
+@litchar{:} is allowed. A multi-character operator can
+end with @litchar{/} only when followed by a character other than
+@litchar{/} or @litchar{*}, and an operator cannot contain @litchar{//} or @litchar{/*};
+those constraints avoid ambiguities with comments.
 
 Implicit in the grammar is the usual convention of choosing the largest
 possible match at the start of a stream. Not reflected in the grammar is
@@ -134,7 +135,8 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, @elem{@italic{one of} @litchar{:} @litchar{|}}, ""],
     empty_line,
     [no_lex, @nonterm{tailopchar}, bis, @elem{@italic{anything in} @nonterm{opchar} @italic{except}
-                                              @litchar{+}, @litchar{-}, @litchar{.}, @litchar{:}, @litchar{/}}, ""],
+                                              @litchar{+}, @litchar{-}, @litchar{.}, @litchar{:}},
+     @elem{@notecol{not} @litchar{/} @notecol{followed by} @litchar{/} @notecol{or} @litchar{*}}],
     empty_line,
     [no_lex, @nonterm{hashopchar}, bis, @elem{@italic{one of} @litchar{'}, @litchar{,}, @litchar{;},
                                               @litchar{:}, @litchar{|}}, ""],

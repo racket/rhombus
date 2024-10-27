@@ -2308,6 +2308,10 @@ INPUT
 1 -+ 2
 1 + +2
 1 ++ 2
+
+1 +/ 2
+1 +// 2
+1 +/! 2
 INPUT
 )
 
@@ -2336,7 +2340,10 @@ INPUT
     (group 1 (op +) (op -) 2)
     (group 1 (op -) (op +) 2)
     (group 1 (op +) 2)
-    (group 1 (op ++) 2)))
+    (group 1 (op ++) 2)
+    (group 1 (op +/) 2)
+    (group 1 (op +))
+    (group 1 (op +/!) 2)))
 
 (define input6
 #<<INPUT

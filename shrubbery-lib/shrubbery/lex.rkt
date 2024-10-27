@@ -584,11 +584,7 @@
            [denom-lexeme
             (define n (/ (parse-number lexeme) (parse-number denom-lexeme)))
             (define fraction-lexeme (string-append lexeme "/" denom-lexeme))
-            (define fraction-end-pos
-              (struct-copy position end-pos
-                           [offset (+ (position-offset end-pos) 1 (string-length denom-lexeme))]
-                           [col (let ([c (position-col end-pos)])
-                                  (and c (+ c 1 (string-length denom-lexeme))))]))
+            (define fraction-end-pos (pos+ end-pos (+ 1 (string-length denom-lexeme))))
             (ret 'literal n #:raw fraction-lexeme 'constant #f start-pos fraction-end-pos 'continuing)]
            [else
             (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing
@@ -633,10 +629,19 @@
    [identifier
     (ret 'identifier (string->symbol lexeme) #:raw lexeme 'symbol #f start-pos end-pos 'continuing)]
    [operator
-    (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial
-         ;; needed if the next character is `:` for a block or similar, since another character
-         ;; after that could turn `:` into part of the operator:
-         #:pending-backup 1)]
+    ;; alow a `/` not followed by `/` or `*` to be part of an operator
+    (let ()
+      (define (make lexeme end-pos)
+        (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial
+             ;; needed if the next character is `:` for a block or similar, since another character
+             ;; after that could turn `:` into part of the operator, or similar for ending with `/`
+             #:pending-backup 1))
+      (cond
+        [(and (eqv? #\/ (peek-char-or-special input-port))
+              (not (memq (peek-char-or-special input-port 1) '(#\/ #\*))))
+         (read-char input-port)
+         (make (string-append lexeme "/") (pos+ end-pos 1))]
+        [else (make lexeme end-pos)]))]
    [keyword
     (let ([kw (string->keyword (substring lexeme 1))])
       (ret 'identifier kw #:raw lexeme 'hash-colon-keyword #f start-pos end-pos 'continuing))]
@@ -1123,6 +1128,12 @@
                   (string-length lexeme))]
    [any-char #f]))
 
+(define (pos+ end-pos delta)
+  (struct-copy position end-pos
+               [offset (+ (position-offset end-pos) delta)]
+               [col (let ([c (position-col end-pos)])
+                      (and c (+ c delta)))]))
+
 (define (peek-multi-char-operator? input-port)
   (call-with-peeking-port
    input-port
@@ -1139,10 +1150,7 @@
        [else
         (read-char input-port)
         (define new-lexeme (string-append lexeme "."))
-        (define new-end-pos (struct-copy position end-pos
-                                         [offset (add1 (position-offset end-pos))]
-                                         [col (let ([c (position-col end-pos)])
-                                                (and c (add1 c)))]))
+        (define new-end-pos (pos+ end-pos 1))
         (values #t new-lexeme new-end-pos 1)])]
     [else (values #f lexeme end-pos 0)]))
 
