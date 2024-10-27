@@ -48,18 +48,18 @@ block:
     ~prints "bye\n"
 
   check:
-    Closeable.def c = Thing()
+    Closeable.let c = Thing()
     println("go")
     ~prints "go\nbye\n"
 
   check:
-    Closeable.def c = Thing()
+    Closeable.let c = Thing()
     c.close()
     println("go")
     ~prints "bye\ngo\nbye\n"
 
 check:
-  Closeable.def c = 5
+  Closeable.let c = 5
   #void
   ~throws values(error.annot_msg(),
                  error.annot("Closeable").msg)

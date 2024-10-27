@@ -10,12 +10,12 @@ export:
 namespace Closeable:
   export:
     close
-    rename cdef as def  
+    rename clet as let
 
   fun close(v :: Closeable):
     v.close()
 
-  defn.sequence_macro 'cdef $(bind :: Identifier) = $(rhs :: expr_meta.Parsed)
+  defn.sequence_macro 'clet $(bind :: Identifier) = $(rhs :: expr_meta.Parsed)
                        $body
                        ...':
     ~op_stx: self
@@ -31,7 +31,6 @@ namespace Closeable:
               $resource := ($rhs $('::'.relocate(self)) Closeable)
             block:
               let $bind = $resource_with_statinfo
-              #void
               $body
               ...
             ~finally:
