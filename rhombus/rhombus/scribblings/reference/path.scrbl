@@ -93,12 +93,17 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.extend(path :: Path,
-                  part :: PathString | #'up | #'same, ...) :: Path
+  fun Path.extend(path :: PathString,
+                  part :: PathString
+                    || matching(#'up)
+                    || matching(#'same), ...) :: Path
+  operator ((base :: PathString) +/ (part :: PathString
+                                       || matching(#'up)
+                                       || matching(#'same))) :: Path
 ){
 
   Creates a path given a base path and any number of sub-path
-  extensions. See also @rhombus(++).  If @rhombus(path) is an absolute path,
+  extensions. If @rhombus(path) is an absolute path,
   the result is an absolute path, otherwise the result is a relative path.
 
   The @rhombus(path) and each @rhombus(part) must be either a relative
@@ -121,14 +126,14 @@ Paths are @tech{comparable}, which means that generic operations like
   separator. If the last @rhombus(part) ends in a separator, it is
   included in the resulting path.
 
-  The @rhombus(build-path) procedure builds a path @italic{without}
+  The @rhombus(Path.extend) procedure builds a path @italic{without}
   checking the validity of the path or accessing the filesystem.
 
 @examples(
   def p = Path("/home/rhombus")
   Path.extend(p, "shape.txt")
   p.extend("shape.txt")
-  p ++ "shape.txt"
+  p +/ "shape.txt"
 )
 
 }

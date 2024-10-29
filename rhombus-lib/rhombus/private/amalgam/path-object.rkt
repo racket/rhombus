@@ -6,7 +6,6 @@
          "annotation-failure.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
-         "append-key.rkt"
          "compare-key.rkt"
          "index-result-key.rkt"
          "static-info.rkt"
@@ -45,8 +44,7 @@
 (define-primitive-class Path path
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%append Path.extend)
-                          (#%compare ((< path<?)
+  #:instance-static-info ((#%compare ((< path<?)
                                       (<= path<=?)
                                       (> path>?)
                                       (>= path>=?)

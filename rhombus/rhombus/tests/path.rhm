@@ -79,8 +79,10 @@ block:
 block:
   check Path("/").extend("etc", Path("passwd")) ~is Path("/etc/passwd")
   check Path.extend("C:", "win32", "sys") ~is Path("C:/win32/sys")
-  check Path("/") ++ Path("etc") ++ "passwd" ~is Path("/etc/passwd")
-  check Path("..") ++ "a" ++ "b" ++ #'same ++ "c" ~is Path("../a/b/./c")
+  check Path("/") +/ Path("etc") +/ "passwd" ~is Path("/etc/passwd")
+  check Path("..") +/ "a" +/ "b" +/ #'same +/ "c" ~is Path("../a/b/./c")
+  check "/" +/ "App" ++ "lications" +/ "Racket v10.04" \
+  ~is Path ("/Applications/Racket v10.04")
 
 block:
   def p1 = Path("/etc")
