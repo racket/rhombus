@@ -67,7 +67,7 @@
    extend
    parts
    string
-   to_complete_path
+   to_absolute_path
    only
    add_suffix))
 
@@ -127,7 +127,7 @@
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (path->string s)))
 
-(define/method (Path.to_complete_path p #:relative_to [base-path (current-directory)])
+(define/method (Path.to_absolute_path p #:relative_to [base-path (current-directory)])
   #:primitive (path->complete-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (path->complete-path p base-path))

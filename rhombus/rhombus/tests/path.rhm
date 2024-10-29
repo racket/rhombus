@@ -91,3 +91,15 @@ block:
   check p1 is_a Path.Relative ~is #false
   check p2 is_a Path.Absolute ~is #false
   check p2 is_a Path.Relative ~is #true
+
+block:
+  def p1 = Path("shadow")
+  check p1.to_absolute_path() ~is Path.current_directory().extend("shadow")
+  check p1.to_absolute_path(~relative_to: "/etc") ~is Path("/etc/shadow")
+
+  def p2 :: PathString.to_absolute_path(~relative_to: "/etc") = "shadow"
+  check p2 ~is Path("/etc/shadow")
+  check p2.to_absolute_path() ~is Path("/etc/shadow")
+
+  def p3 = Path.to_absolute_path("shadow", ~relative_to: "/etc")
+  check p3 ~is Path("/etc/shadow")

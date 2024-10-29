@@ -14,6 +14,7 @@ A @deftech{path} value represents a filesystem path.
   path.extend(part, ...)
   path.parts()
   path.string()
+  path.to_absolute_path(...)
 )
 
 Paths are @tech{comparable}, which means that generic operations like
@@ -22,6 +23,8 @@ Paths are @tech{comparable}, which means that generic operations like
 @doc(
   annot.macro 'Path'
   annot.macro 'PathString'
+  annot.macro 'PathString.to_absolute_path'
+  annot.macro 'PathString.to_absolute_path(~relative_to: base :: PathString)'
   annot.macro 'PathString.to_path'
   annot.macro 'Path.Absolute'
   annot.macro 'Path.Relative'
@@ -32,7 +35,11 @@ Paths are @tech{comparable}, which means that generic operations like
  The @rhombus(PathString.to_path, ~annot)
  @tech(~doc: guide_doc){converter annotation} allows
  @rhombus(PathString, ~annot) values, but converts
- @rhombus(ReadableString, ~annot) values to @rhombus(Path) values.
+ @rhombus(ReadableString, ~annot) values to @rhombus(Path) values.  Similarly
+ @rhombus(PathString.to_absolute_path, ~annot) is a converter annotation that
+ converts a @rhombus(PathString, ~annot) into an absolute path relative to
+ @rhombus(Path.current_directory()) or to the specified @rhombus(base)
+ directory.
 
  The @rhombus(Path.Absolute, ~annot) annotation only matches
  @rhombus(Path, ~annot)s that begin with the root directory of the filesystem
@@ -170,6 +177,20 @@ Paths are @tech{comparable}, which means that generic operations like
  @rhombus(path) is returned unchanged (but as a path, if it was a
  string).
 
+}
+
+@doc(
+  fun Path.to_absolute_path(path :: PathString,
+                            ~relative_to: base
+                                          :: PathString
+                                            = Path.current_directory())
+    :: Path
+){
+ Returns @rhombus(path) as an absolute path. If @rhombus(path) is already an
+ absolute path, it is returned as the result. Otherwise, @rhombus(path) is
+ resolved with respect to the absolute path @rhombus(base). If @rhombus(base) is
+ not an absolute path, the @rhombus(Exn.Fail.Contract, ~class) exception is
+ thrown.
 }
 
 @// ------------------------------------------------------------
