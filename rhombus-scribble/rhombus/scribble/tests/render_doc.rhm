@@ -78,7 +78,7 @@ check:
 fun rewrite():
   def o = base.#{open-output-file}(doc_expect,
                                    ~exists: #'truncate)
-  print(~out: o, filter(html), ~pretty: #true)
+  println(~out: o, filter(html), ~pretty: #true)
   o.flush()
 
 #//

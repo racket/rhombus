@@ -354,8 +354,9 @@ short-term mixtures of shrubbery forms and S-expressions.
 @defproc[(write-shrubbery [v any/c]
                           [port output-port? (current-output-port)]
                           [#:pretty? pretty? any/c #f]
-                          [#:multi-line? multi-line? any/c #f]
-                          [#:armor? armor? any/c #f])
+                          [#:width width (or/c exact-nonnegative-integer?) #f]
+                          [#:armor? armor? any/c #f]
+                          [#:prefer-multiline? prefer-multiline? any/c #f])
          void?]{
 
  Prints @racket[v], which must be a valid S-expression representation of
@@ -365,15 +366,18 @@ short-term mixtures of shrubbery forms and S-expressions.
  are not used.
 
  The default mode with @racket[pretty?] as @racket[#false] prints in a
- simple and relatively fast way (compared to @racket[pretty-shrubbery]).
- Even with @racket[pretty?] as a true value, the output is a single line
- unless @racket[multi-line?] is a true value, while @racket[multi-line?]
- produces newlines eagerly. Use @racket[pretty-shrubbery] to gain more
+ simple and relatively fast way (compared to
+ @racket[pretty-shrubbery]). When @racket[pretty?] is a true value,
+ single-line output is preferred if @racket[width] is @racket[#false],
+ otherwise it is preferred only when the line fits with @racket[width]
+ columns. Use @racket[pretty-shrubbery] to gain more
  control over line choices when printing.
 
  If @racket[pretty?] is @racket[#false] or @racket[armor?] is a true
  value, then the printed form is @seclink["guillemet"]{line- and
-  column-insensitive}.
+  column-insensitive}. If @racket[pretty?] is a true value, @racket[armor?]
+ is @racket[#f], and @racket[prefer-multiline?] is a true value, then
+ line breaks are used instead of @litchar{«} and @litchar{»}.
 
  Note that @racket[write-shrubbery] expects an S-expression, not a
  syntax object, so it cannot use @seclink["raw-text"]{raw text properties}.
@@ -382,12 +386,15 @@ short-term mixtures of shrubbery forms and S-expressions.
 }
 
 @defproc[(pretty-shrubbery [v any/c]
-                           [#:armor? armor? any/c #f])
+                           [#:armor? armor? any/c #f]
+                           [#:prefer-multiline? prefer-multiline? any/c #f])
          any/c]{
 
  Produces a description of how to print @racket[v] with newlines and
  indentation. The printed form is @seclink["guillemet"]{line- and
-  column-insensitive} if @racket[armor?] is a true value.
+  column-insensitive} if @racket[armor?] is a true value. If @racket[armor?]
+ is @racket[#f] and @racket[prefer-multiline?] is a true value, then
+ line breaks are used instead of @litchar{«} and @litchar{»}.
 
  The description is an S-expression DAG (directed acyclic graph) that
  represents pretty-printing instructions and alternatives:
@@ -410,7 +417,8 @@ short-term mixtures of shrubbery forms and S-expressions.
 
  @item{@racket[`(or ,_doc ,_doc)]: print either @racket[_doc]; always
    taking the first @racket[_doc] in an @racket['or] will produce
-   single-line output, while always taking the second @racket[_doc] will
+   single-line output if @racket[prefer-multiline?] is @racket[#f],
+   while always taking the second @racket[_doc] will
    print a maximal number of lines.}
 
 ]

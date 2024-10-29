@@ -1,0 +1,32 @@
+#lang rhombus/static
+
+check:
+  // default uses simple rules that can add unneecssary `«»`s
+  print('1; 2') ~prints "1; 2"
+  print('(1, 2: x; y, 3)') ~prints "(1, 2:« x; y », 3)"
+  print('a | b
+             | c
+           | d') ~prints "a|« b|« c » » |« d »"
+  print(':«»') ~prints ":«»"
+  print('|«»') ~prints "|«»"
+
+parameterize { Printable.current_pretty: #true}:
+  // Pretty mode avoids `«»`s if possible
+  check:
+    print('f(1)') ~prints "f (1)"
+    print('1; 2') ~prints "1\n2"
+    print('(1, 2, 3)') ~prints "(1, 2, 3)"
+    print('(1, 2: x, 3)') ~prints "(1, 2: x, 3)"
+    print('(1, 2: x; y, 3)') ~prints "(1,\n 2:\n   x\n   y,\n 3)"
+    print('if 1 | 2 3 | 4') ~prints "if 1\n| 2 3\n| 4"
+    print('(| 2 3 | 4)') ~prints "(| 2 3\n | 4)"
+    print('| 2 3 | 4') ~prints "| 2 3\n| 4"
+    print('x | 2 3 | 4') ~prints "x\n| 2 3\n| 4"
+    print('('a')') ~prints "('a')"
+    print('«'«'a'»'»') ~prints "'«'a'»'"
+    print('«'1 2; 3'»') ~prints "'1 2\n 3'"
+    print('«'1: 3'»') ~prints "'1: 3'"
+    print('«'1: 3; 4'»') ~prints "'1:\n   3\n   4'"
+    print('one line:«option; also» | case 1 | case 2') ~prints "one line:\n  option\n  also\n| case 1\n| case 2"
+    print('empty:«»') ~prints "empty:«»"
+    print('|«»') ~prints "|«»"

@@ -36,7 +36,7 @@
       (define (add-newlines bstr)
         (define in (open-input-bytes bstr))
         (define out (open-output-bytes))
-        (unless (eq? mode 'pretty-multi)
+        (unless (memq mode '(pretty-multi pretty-prefer-multi pretty-prefer-multi2))
           (display ";«" out))
         (for ([tok (in-list (lex-all in error))])
           (define loc (token-srcloc tok))
@@ -44,7 +44,7 @@
           (define raw (subbytes bstr pos (+ pos (srcloc-span loc))))
           (display raw out)
           (newline out))
-        (unless (eq? mode 'pretty-multi)
+        (unless (memq mode '(pretty-multi pretty-prefer-multi pretty-prefer-multi2))
           (display "»" out))
         (get-output-bytes out))
       (define new-in
@@ -63,6 +63,10 @@
              (write-shrubbery parsed o #:pretty? #t #:width 0)]
             [(eq? mode 'pretty-multi-armored)
              (write-shrubbery parsed o #:pretty? #t #:width 0 #:armor? #t)]
+            [(eq? mode 'pretty-prefer-multi)
+             (write-shrubbery parsed o #:pretty? #t #:prefer-multiline? #t)]
+            [(eq? mode 'pretty-prefer-multi2)
+             (write-shrubbery parsed o #:pretty? #t #:width 0 #:prefer-multiline? #t)]
             [else
              (write-shrubbery parsed o)])
           (let ([bstr (get-output-bytes o)])
@@ -94,7 +98,9 @@
     (check-reparse 'pretty-one #:add-newlines? #t)
     (check-reparse 'pretty-multi)
     (check-reparse 'pretty-multi-armored)
-    (check-reparse 'pretty-multi-armored #:add-newlines? #t)))
+    (check-reparse 'pretty-multi-armored #:add-newlines? #t)
+    (check-reparse 'pretty-prefer-multi)
+    (check-reparse 'pretty-prefer-multi2)))
 
 (define (check-fail input rx)
   (let ([in (open-input-string input)])

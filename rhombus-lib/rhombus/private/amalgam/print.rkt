@@ -415,7 +415,10 @@
          [else (if (display?)
                    s
                    (list 'quotes (list 'group s)))]))
-     (pretty-shrubbery qs #:armor? #t)]
+     (define pretty? (current-print-as-pretty))
+     (pretty-shrubbery qs
+                       #:armor? (not pretty?)
+                       #:prefer-multiline? pretty?)]
     [else
      (cond
        [(display?)
