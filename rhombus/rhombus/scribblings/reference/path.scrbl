@@ -78,6 +78,12 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
+  Parameter.def Path.current_directory :: Path
+){
+  A @tech{context parameter} for the current directory.
+}
+
+@doc(
   fun Path.bytes(path :: Path) :: Bytes
 ){
 
