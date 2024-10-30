@@ -883,11 +883,17 @@
                                            [(_ a . _) #'a]))
                           "")]
                 [(option ...) options])
-    #'(rhombus-expression (group rhombusblock_etc option ... (t-block t-form)))))
+    (with-syntax ([body (syntax-parse form
+                          #:datum-literals (multi group)
+                          [(group . _) #'(t-block t-form)]
+                          [(multi g g2 ...) #'(t-block g g2 ...)])])
+      #'(rhombus-expression (group rhombusblock_etc option ... body)))))
 
 (define-for-syntax (drop-pattern-escapes g)
   (syntax-parse g
-    #:datum-literals (group)
+    #:datum-literals (group multi)
+    [((~and m multi) g ...)
+     #`(m ,@(map drop-pattern-escapes (syntax->list #'(g ...))))]
     [((~and g group) t ...)
      (define new-ts
        (let loop ([ts (syntax->list #'(t ...))])

@@ -1,0 +1,40 @@
+#lang rhombus/private/amalgam/core
+
+import:
+  "core-meta.rkt" open
+
+use_static
+
+export:
+  PathString
+  +/
+
+namespace PathString:
+  export:
+    to_path
+    to_absolute_path
+
+  fun to_path(p :: PathString) :~ Path:
+    Path(p)
+
+  fun
+  | to_absolute_path(p :: PathString):
+      Path.to_absolute_path(p)
+  | to_absolute_path(p :: PathString, ~relative_to: base_path :: PathString):
+      Path.to_absolute_path(p, ~relative_to: base_path)
+
+  annot.macro 'to_path':
+    'converting(fun (p :: PathString) :~ Path: to_path(p))'
+
+  annot.macro
+  | 'to_absolute_path(~relative_to: $base_path)':
+      'converting(fun (p :: PathString) :~ Path:
+                    to_absolute_path(p, ~relative_to: $base_path))'
+  | 'to_absolute_path':
+      'converting(fun (p :: PathString) :~ Path: to_absolute_path(p))'
+
+operator ((l_path :: PathString)
+            +/ (r_path :: PathString || matching(#'up) || matching(#'same)))
+  :~ Path:
+    ~weaker_than ++
+    Path.add(l_path, r_path)

@@ -59,3 +59,49 @@ block:
     check p == q ~is #false
     check p != Path("/") ~is #false
     check p != q ~is #true
+
+block:
+  def s = "/etc"
+  def p1 = Path("/etc")
+  def p2 = (s :: PathString.to_path)
+  check p1 compares_equal p2 ~is #true
+  version_guard.at_least "8.13.0.1":
+    check p1 == p2 ~is #true
+
+block:
+  def p1 = Path("/etc/passwd")
+  check p1.split() ~is [Path("/"), Path("etc"), Path("passwd")]
+  def p2 = Path("C:/windows")
+  check p2.split() ~is [Path("C:"), Path("windows")]
+  def p3 = Path("../a/b/./c")
+  check p3.split() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
+
+block:
+  check Path("/").add("etc", Path("passwd")) ~is Path("/etc/passwd")
+  check Path.add("C:", "win32", "sys") ~is Path("C:/win32/sys")
+  check Path("/") +/ Path("etc") +/ "passwd" ~is Path("/etc/passwd")
+  check Path("..") +/ "a" +/ "b" +/ #'same +/ "c" ~is Path("../a/b/./c")
+  check "/" +/ "App" ++ "lications" +/ "Racket v10.04" \
+  ~is Path ("/Applications/Racket v10.04")
+
+block:
+  def p1 = Path("/etc")
+  def p2 = Path("etc")
+  check "/etc" is_a Path.Absolute ~is #false
+  check "etc" is_a Path.Relative ~is #false
+  check p1 is_a Path.Absolute ~is #true
+  check p1 is_a Path.Relative ~is #false
+  check p2 is_a Path.Absolute ~is #false
+  check p2 is_a Path.Relative ~is #true
+
+block:
+  def p1 = Path("shadow")
+  check p1.to_absolute_path() ~is Path.current_directory().add("shadow")
+  check p1.to_absolute_path(~relative_to: "/etc") ~is Path("/etc/shadow")
+
+  def p2 :: PathString.to_absolute_path(~relative_to: "/etc") = "shadow"
+  check p2 ~is Path("/etc/shadow")
+  check p2.to_absolute_path() ~is Path("/etc/shadow")
+
+  def p3 = Path.to_absolute_path("shadow", ~relative_to: "/etc")
+  check p3 ~is Path("/etc/shadow")

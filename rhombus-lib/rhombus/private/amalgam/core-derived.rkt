@@ -6,6 +6,7 @@
         "check.rhm"
         "maybe.rhm"
         "string.rhm"
+        "path-object.rhm"
         "when_unless.rhm"
         "where.rhm"
         "described_as.rhm"
@@ -13,4 +14,5 @@
         "class_together.rhm"
         "enum.rhm"
         "pipeline.rhm"
-        "str.rhm")
+        "str.rhm"
+        "closeable.rhm")

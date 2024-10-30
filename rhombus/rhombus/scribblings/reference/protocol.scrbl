@@ -12,3 +12,4 @@
 @include_section("appendable.scrbl")
 @include_section("comparable.scrbl")
 @include_section("printable.scrbl")
+@include_section("closeable.scrbl")

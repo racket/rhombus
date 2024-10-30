@@ -127,6 +127,31 @@
 }
 
 @doc(
+  expr.macro 'Continuation.barrier:
+                $body
+                ...'
+){
+
+ Like @rhombus(block), but disallowing a continuation capture during the
+ @rhombus(body) that extends to the context of the
+ @rhombus(Continuation.barrier) form.
+
+@examples(
+  ~error:
+    Continuation.barrier:
+      Continuation.capture k:
+        "done"
+  Continuation.barrier:
+    Continuation.prompt:
+      Continuation.capture k:
+        k
+)
+
+}
+
+
+
+@doc(
   annot.macro 'Continuation.Marks'
 ){
 

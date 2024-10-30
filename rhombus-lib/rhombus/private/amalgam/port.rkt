@@ -46,10 +46,12 @@
   ([String Port.Input.String]
    [current current-input-port]
    [open_bytes Port.Input.open_bytes]
+   [open_file Port.Input.open_file]
    [open_string Port.Input.open_string])
   #:properties ()
   #:methods
-  ([peek_byte Port.Input.peek_byte]
+  ([close Port.Input.close]
+   [peek_byte Port.Input.peek_byte]
    [peek_bytes Port.Input.peek_bytes]
    [peek_char Port.Input.peek_char]
    [peek_string Port.Input.peek_string]
@@ -69,12 +71,15 @@
    [current current-output-port]
    [current_error current-error-port]
    [open_bytes Port.Output.open_bytes]
+   [open_file Port.Output.open_file]
    [open_string Port.Output.open_string]
    [get_bytes Port.Output.get_bytes]
-   [get_string Port.Output.get_string])
+   [get_string Port.Output.get_string]
+   ExistsFlag)
   #:properties ()
   #:methods
-  ([flush Port.Output.flush]
+  ([close Port.Output.close]
+   [flush Port.Output.flush]
    [print Port.Output.print]
    [println Port.Output.println]
    [show Port.Output.show]
@@ -124,6 +129,16 @@
   any
   [any_one any-one])
 
+(define-simple-symbol-enum ExistsFlag
+  error
+  replace
+  truncate
+  [must_truncate must-truncate]
+  [truncate_replace truncate/replace]
+  update
+  [can_update can-update]
+  append)
+
 (define (check-input-port who ip)
   (unless (input-port? ip)
     (raise-annotation-failure who ip "Port.Input")))
@@ -139,6 +154,11 @@
     [(bstr) (open-input-bytes bstr)]
     [(bstr name) (open-input-bytes bstr name)]))
 
+(define/arity (Port.Input.open_file path)
+  #:primitive (open-input-file)
+  #:static-infos ((#%call-result #,(get-input-port-static-infos)))
+  (open-input-file path))
+
 (define/arity Port.Input.open_string
   #:primitive (open-input-string)
   #:static-infos ((#%call-result #,(get-input-port-static-infos)))
@@ -153,6 +173,14 @@
     [() (open-output-bytes)]
     [(name) (open-output-bytes name)]))
 
+(define/arity (Port.Output.open_file path #:exists [exists-in 'error])
+  #:primitive (open-output-file)
+  #:static-infos ((#%call-result #,(get-output-port-static-infos)))
+  (define exists (->ExistsFlag exists-in))
+  (unless exists
+    (raise-annotation-failure who exists-in "Port.Output.ExistsFlag"))
+  (open-output-file path #:exists exists))
+
 (define/arity Port.Output.open_string
   #:primitive (open-output-string)
   #:static-infos ((#%call-result #,(get-output-string-port-static-infos)))
@@ -164,6 +192,10 @@
   (cond
     [(string? v) (string->immutable-string v)]
     [else v]))
+
+(define/method (Port.Input.close port)
+  #:primitive (close-input-port)
+  (close-input-port port))
 
 (define/method (Port.Input.peek_byte port #:skip_bytes [skip 0])
   #:primitive (peek-byte)
@@ -207,6 +239,10 @@
 (define/method (Port.Input.read_string port amt)
   #:primitive (read-string)
   (coerce-read-result (read-string amt port)))
+
+(define/method (Port.Output.close port)
+  #:primitive (close-output-port)
+  (close-output-port port))
 
 (define/method (Port.Output.get_bytes port)
   #:primitive (get-output-bytes)
