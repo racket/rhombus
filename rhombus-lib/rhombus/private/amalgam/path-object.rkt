@@ -66,7 +66,7 @@
    parts
    string
    to_absolute_path
-   only
+   directory_only
    add_suffix))
 
 (define/arity #:name Path (path c)
@@ -111,7 +111,7 @@
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (to-treelist #f (explode-path p)))
 
-(define/method (Path.only p)
+(define/method (Path.directory_only p)
   #:primitive (path-only)
   (path-only p))
 

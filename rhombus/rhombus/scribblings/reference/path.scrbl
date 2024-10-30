@@ -172,7 +172,7 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.only(path :: PathString) :: Path
+  fun Path.directory_only(path :: PathString) :: Path
 ){
 
  Returns @rhombus(path) without its final path element in the case
