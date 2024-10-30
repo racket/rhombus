@@ -145,7 +145,7 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.split(path :: Path) :: List.of(Path || #'up || #'same)
+  fun Path.split(path :: PathString) :: List.of(Path || #'up || #'same)
 ){
 
   Returns a list of path elements that constitute @rhombus(path).
