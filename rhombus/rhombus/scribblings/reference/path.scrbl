@@ -12,7 +12,7 @@ A @deftech{path} value represents a filesystem path.
   Path
   path.bytes()
   path.add(part, ...)
-  path.parts()
+  path.split()
   path.string()
   path.to_absolute_path(...)
 )
@@ -139,18 +139,18 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.parts(path :: Path) :: List.of(Path || #'up || #'same)
+  fun Path.split(path :: Path) :: List.of(Path || #'up || #'same)
 ){
 
   Returns a list of path elements that constitute @rhombus(path).
 
-  The @rhombus(Path.parts) function computes its result in time
+  The @rhombus(Path.split) function computes its result in time
   proportional to the length of @rhombus(path).
 
 @examples(
   def p = Path("/home/rhombus/shape.txt")
-  Path.parts(p)
-  p.parts()
+  Path.split(p)
+  p.split()
 )
 
 }

@@ -63,7 +63,7 @@
   #:methods
   (bytes
    add
-   parts
+   split
    string
    to_absolute_path
    directory_only
@@ -106,7 +106,7 @@
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (apply build-path p ss))
 
-(define/method (Path.parts p)
+(define/method (Path.split p)
   #:primitive (explode-path)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (to-treelist #f (explode-path p)))

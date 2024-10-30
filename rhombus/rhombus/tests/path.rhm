@@ -70,11 +70,11 @@ block:
 
 block:
   def p1 = Path("/etc/passwd")
-  check p1.parts() ~is [Path("/"), Path("etc"), Path("passwd")]
+  check p1.split() ~is [Path("/"), Path("etc"), Path("passwd")]
   def p2 = Path("C:/windows")
-  check p2.parts() ~is [Path("C:"), Path("windows")]
+  check p2.split() ~is [Path("C:"), Path("windows")]
   def p3 = Path("../a/b/./c")
-  check p3.parts() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
+  check p3.split() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
 
 block:
   check Path("/").add("etc", Path("passwd")) ~is Path("/etc/passwd")
