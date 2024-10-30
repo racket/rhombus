@@ -11,7 +11,7 @@ A @deftech{path} value represents a filesystem path.
   "path"
   Path
   path.bytes()
-  path.extend(part, ...)
+  path.add(part, ...)
   path.parts()
   path.string()
   path.to_absolute_path(...)
@@ -93,10 +93,10 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.extend(path :: PathString,
-                  part :: PathString
-                    || matching(#'up)
-                    || matching(#'same), ...) :: Path
+  fun Path.add(path :: PathString,
+               part :: PathString
+                 || matching(#'up)
+                 || matching(#'same), ...) :: Path
   operator ((base :: PathString) +/ (part :: PathString
                                        || matching(#'up)
                                        || matching(#'same))) :: Path
@@ -126,13 +126,13 @@ Paths are @tech{comparable}, which means that generic operations like
   separator. If the last @rhombus(part) ends in a separator, it is
   included in the resulting path.
 
-  The @rhombus(Path.extend) procedure builds a path @italic{without}
+  The @rhombus(Path.add) procedure builds a path @italic{without}
   checking the validity of the path or accessing the filesystem.
 
 @examples(
   def p = Path("/home/rhombus")
-  Path.extend(p, "shape.txt")
-  p.extend("shape.txt")
+  Path.add(p, "shape.txt")
+  p.add("shape.txt")
   p +/ "shape.txt"
 )
 

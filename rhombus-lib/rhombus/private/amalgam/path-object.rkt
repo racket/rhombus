@@ -62,7 +62,7 @@
   ()
   #:methods
   (bytes
-   extend
+   add
    parts
    string
    to_absolute_path
@@ -101,7 +101,7 @@
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes (path->bytes s)))
 
-(define/method (Path.extend p . ss)
+(define/method (Path.add p . ss)
   #:primitive (build-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
   (apply build-path p ss))

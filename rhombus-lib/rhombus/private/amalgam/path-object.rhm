@@ -37,4 +37,4 @@ operator ((l_path :: PathString)
             +/ (r_path :: PathString || matching(#'up) || matching(#'same)))
   :~ Path:
     ~weaker_than ++
-    Path.extend(l_path, r_path)
+    Path.add(l_path, r_path)
