@@ -15,7 +15,8 @@
          (submod "annotation.rkt" for-class)
          (submod "function-parse.rkt" for-build)
          (submod "equal.rkt" for-parse)
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -31,6 +32,7 @@
    [current_marks Continuation.Marks.current]
    capture
    prompt
+   barrier
    [escape Continuation.escape]
    ;; TEMP see `PromptTag`
    [default_prompt_tag Continuation.PromptTag.default]
@@ -160,6 +162,8 @@
                    (rhombus-expression (#,group-tag tag-expr ...)))
                 #'())]))))
 
+(set-primitive-who! 'call-with-composable-continuation 'Continuation.capture)
+
 (define-syntax prompt
   (expression-transformer
    (lambda (stx)
@@ -248,6 +252,15 @@
                         (if handler
                             (list handler)
                             null)))
+                #'())]))))
+
+(define-syntax barrier
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (tag::block g ...))
+        (values #`(call-with-continuation-barrier
+                   (lambda () (rhombus-body-at tag g ...)))
                 #'())]))))
 
 (define/arity (Continuation.escape

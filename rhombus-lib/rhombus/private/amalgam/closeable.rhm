@@ -14,8 +14,10 @@ namespace Closeable:
 
   fun close(v :: Closeable):
     v.close()
+    #void
 
-  defn.sequence_macro 'clet $(bind :: Identifier) = $(rhs :: expr_meta.Parsed)
+  defn.sequence_macro 'clet $bind ... = $(rhs :: expr_meta.Parsed)
+                       $body0
                        $body
                        ...':
     ~op_stx: self
@@ -29,10 +31,12 @@ namespace Closeable:
           try:
             ~initially:
               $resource := ($rhs $('::'.relocate(self)) Closeable)
-            block:
-              let $bind = $resource_with_statinfo
-              $body
-              ...
+            Continuation.barrier:
+              let $bind ... = $resource_with_statinfo
+              block:
+                $body0
+                $body
+                ...
             ~finally:
               ($resource :~ Closeable).close()
       ',

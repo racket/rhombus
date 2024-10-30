@@ -221,7 +221,7 @@
 (define-for-syntax (identifier-macro-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group op quotes)
-    [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
+    [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _) . _)) #'id.name]
     [(group _::doc-form (quotes (~var id (identifier-target space-name)))) #'id.name]))
 
 (define-for-syntax (operator-macro-extract-name stx space-name)
@@ -242,8 +242,10 @@
 (define-for-syntax (identifier-macro-extract-metavariables stx space-name vars)
   (syntax-parse stx
     #:datum-literals (group op quotes)
-    [(group _::doc-form (quotes (group (~var _ (identifier-target space-name)) t ...)))
-     (extract-pattern-metavariables #'(group t ...) vars)]
+    [(group _::doc-form (quotes (group (~var _ (identifier-target space-name)) t ...)
+                                (group t2 ...)
+                                ...))
+     (extract-pattern-metavariables #'(group t ... t2 ... ...) vars)]
     [(group _::doc-form (quotes (~var _ (identifier-target space-name))))
      vars]))
 
@@ -276,10 +278,13 @@
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
+    [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...)) g2 ...))
      (rb #:at #'g
          #:pattern? #t
-         #`(group #,@(subst #'id.name) e ...))]
+         #`(multi
+            (group #,@(subst #'id.name) e ...)
+            g2
+            ...))]
     [(group _::doc-form (quotes (~var id (identifier-target space-name))))
      #`(paragraph plain #,(subst #'id.name))]))
 
@@ -325,6 +330,13 @@
   identifier-macro-extract-typeset)
 
 (define-doc defn.macro defn
+  "definition"
+  rhombus/defn
+  identifier-macro-extract-name
+  identifier-macro-extract-metavariables
+  identifier-macro-extract-typeset)
+
+(define-doc defn.sequence_macro defn
   "definition"
   rhombus/defn
   identifier-macro-extract-name
