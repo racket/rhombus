@@ -161,9 +161,8 @@
   (make-serialize-info
    (lambda (s) (vector (set-ht s)))
    (cons 'deserialize-set
-         (module-path-index-join '(submod "." deserialize)
-                                 (variable-reference->module-path-index
-                                  (#%variable-reference))))
+         (module-path-index-join '(submod rhombus/private/amalgam deserialize-set)
+                                 #f))
    #f
    (or (current-load-relative-directory)
        (current-directory))))

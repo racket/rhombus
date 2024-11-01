@@ -1,14 +1,19 @@
 #lang rhombus
 import:
   rhombus/serialize open
+  "version_guard.rhm"
 
 block:
-  let v = [1, "b", #'c, #"d", Array(5, 5).snapshot(), PairList[6, 6, 6, 6], { 7: 8 }, { 9 }, #void]
+  version_guard.at_least "8.15.0.3"
+  | let sixes = [6, 6, 6, 6]
+  | let sixes = PairList[6, 6, 6, 6]
+  let v = PairList[1, "b", #'c, #"d", Array(5, 5).snapshot(), sixes, { 7: 8 }, { 9 }, #void]
   check deserialize(serialize(v)) ~is v
 
-block:
-  let v = [Array(1, 2, 3), Box(4), MutableList[5, 6, 7]]
-  check deserialize(serialize(v)) ~is_now v
+version_guard.at_least "8.15.0.3":
+  block:
+    let v = PairList[Array(1, 2, 3), Box(4), MutableList[5, 6, 7]]
+    check deserialize(serialize(v)) ~is_now v
 
 class Oroboros(x, y, z)
 check Oroboros(1, 2, 3) is_a Serializable ~is #false
@@ -19,7 +24,7 @@ block:
   let v = Train(1, 2)
   check v ~is_a Serializable
   check deserialize(serialize(v)) ~is v
-  check deserialize(serialize([v, v])) ~is [v, v]
+  check deserialize(serialize(PairList[v, v])) ~is PairList[v, v]
   check Train(0, Oroboros(1, 2, 3)) ~is_a Serializable
   check serialize(Train(0, Oroboros(1, 2, 3))) ~throws "erializable" // missing "S" accomodates older Racket
 

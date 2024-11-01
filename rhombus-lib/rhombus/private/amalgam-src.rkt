@@ -110,3 +110,6 @@
 
 (module+ deserializer
   (bounce (submod "amalgam/serializable.rkt" deserializer)))
+
+(module+ deserialize-set
+  (bounce (submod "amalgam/set.rkt" deserialize)))
