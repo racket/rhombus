@@ -14,6 +14,5 @@
 @include_section("symbol.scrbl")
 @include_section("bytes.scrbl")
 @include_section("box.scrbl")
-@include_section("path.scrbl")
 @include_section("srcloc.scrbl")
 @include_section("void.scrbl")
