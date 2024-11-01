@@ -1,0 +1,265 @@
+#lang rhombus
+import:
+  rhombus/serialize open
+
+block:
+  let v = [1, "b", #'c, #"d", Array(5, 5).snapshot(), PairList[6, 6, 6, 6], { 7: 8 }, { 9 }, #void]
+  check deserialize(serialize(v)) ~is v
+
+block:
+  let v = [Array(1, 2, 3), Box(4), MutableList[5, 6, 7]]
+  check deserialize(serialize(v)) ~is_now v
+
+class Oroboros(x, y, z)
+check Oroboros(1, 2, 3) is_a Serializable ~is #false
+
+class Train(engine, caboose):
+  serializable
+block:
+  let v = Train(1, 2)
+  check v ~is_a Serializable
+  check deserialize(serialize(v)) ~is v
+  check deserialize(serialize([v, v])) ~is [v, v]
+  check Train(0, Oroboros(1, 2, 3)) ~is_a Serializable
+  check serialize(Train(0, Oroboros(1, 2, 3))) ~throws "erializable" // missing "S" accomodates older Racket
+
+check:
+  ~eval
+  block:
+    class Train(engine, caboose):
+      serializable
+    "no"
+  ~throws "serialization not supported for nested class declaration"
+
+class Episode():
+  serializable
+block:
+  let v = Episode()
+  check v ~is_a Serializable
+  check deserialize(serialize(v)) ~is v
+
+class Oats(grains :: Int):
+  serializable:
+    ~serialize:
+      fun ():
+        match this.grains
+        | 0: "wrong"
+        | -1: Array("negative")
+        | ~else: Array(this.grains+1)
+block:
+  check deserialize(serialize(Oats(10))) ~is Oats(11)
+  check serialize(Oats(0)) ~throws values(error.annot_msg("result"),
+                                          error.val(~label: "result", "wrong").msg)
+  check serialize(Oats(-1)) ~completes
+  check deserialize(serialize(Oats(-1))) ~throws values(error.annot_msg(),
+                                                        error.val("negative").msg)
+
+class Video(name):
+  serializable:
+    ~serialize:
+      fun (): Array(name, " saved")
+    ~deserialize:
+      fun (n, sfx): Video(n +& sfx +& " loaded")
+block:
+  check deserialize(serialize(Video("topic"))) ~is Video("topic saved loaded")
+
+check:
+  ~eval
+  class Podcast(name, private likes):
+    constructor (name): super(name, 0)
+    serializable
+  ~throws "custom serialization required for a class with private fields"
+
+check:
+  ~eval
+  class Podcast(name, private likes):
+    constructor (name): super(name, 0)
+    serializable:
+      ~serialize: fun (): "no"
+  ~throws "custom deserialization required for a class with private fields"
+
+check:
+  ~eval
+  class Podcast(name, private likes):
+    constructor (name): super(name, 0)
+    serializable:
+      ~deserialize: fun (): "no"
+  ~throws "custom serialization required for a class with private fields"
+
+class Podcast(name, private mutable likes):
+  internal _Podcast
+  constructor (name): super(name, 0)
+  serializable:
+    ~serialize: fun (): Array(name, likes)
+    ~deserialize: fun (n, l): _Podcast(n, l)
+  method listen(): likes := likes + 1
+  method popularity(): likes
+
+block:
+  let v = Podcast("quadrilaterals")
+  v.listen()
+  check v.popularity() ~is 1
+  let v2 = deserialize(serialize(v))
+  check v2.name ~is v.name
+  check v2.popularity() ~is 1
+  v.listen()
+  check v.popularity() ~is 2
+  check v2.popularity() ~is 1
+
+class DieselTrain(engine, caboose):
+  nonfinal
+class FrieghtTrain(cars):
+  extends DieselTrain
+  serializable
+block:
+  let v = FrieghtTrain(0, 1, 100)
+  check deserialize(serialize(v)) ~is v
+
+def mutable start_hp = 0
+class SteamTrain(engine, caboose, private hp):
+  nonfinal
+  constructor (e, c): super(e, c, start_hp)
+  method horsepower(): hp
+class PassengerTrain(capacity):
+  extends SteamTrain
+  serializable
+block:
+  let v = PassengerTrain(0, 1, 100)
+  check deserialize(serialize(v)) ~is v
+  start_hp := 1
+  let v2 = deserialize(serialize(v))
+  check v2 ~prints_like v
+  check v2 == v ~is #false
+  check v.horsepower() ~is 0
+  check v2.horsepower() ~is 1
+
+class TVShow(~name: name, ~episode: episode = 1):
+  serializable
+block:
+  let v = TVShow(~name: "Lost", ~episode: 5)
+  let v2 = TVShow(~name: "Spongebob Squarepants")
+  check deserialize(serialize(v)) ~is v
+  check deserialize(serialize(v2)) ~is v2
+
+class CableTVShow(~name: name, ~episode: episode = 1):
+  nonfinal
+class MTVShow(genre):
+  extends CableTVShow
+  serializable
+block:
+  let v = MTVShow(~name: "90s", "grunge")
+  check deserialize(serialize(v)) ~is v
+
+class Crosswire(a, b):
+  constructor (b, a): super(a, b)
+  // default deserializer assumes that constructor accepts fields in order
+  serializable
+check deserialize(serialize(Crosswire(1, 2))) ~is Crosswire(2, 1)
+
+class Offense(mutable desc, mutable time):
+  serializable:
+    ~deserialize: fun (d, t): Offense(d, t)
+    ~deserialize_shell: fun (): Offense(0, 0)
+    ~deserialize_fill: fun (o :~ Offense, copy :~ Offense):
+                         o.desc := copy.desc
+                         o.time := copy.time
+block:
+  let v = Offense("burglary", 10)
+  check deserialize(serialize(v)) ~is_now v
+  v.desc := v
+  check deserialize(serialize(v)) ~is_now v
+
+check:
+  ~eval
+  class Offense(mutable desc, mutable time):
+    serializable:
+      ~deserialize_shell: fun (): 0
+      ~deserialize_fill: fun (o, copy): 0
+  ~throws "need custom deserialize to go with deserialize shell"
+
+check:
+  ~eval
+  class Offense(mutable desc, mutable time):
+    serializable:
+      ~deserialize: fun (d, t): 0
+      ~deserialize_shell: fun (): 0
+  ~throws "need deserialize fill to go with deserialize shell"
+
+check:
+  ~eval
+  class Offense(mutable desc, mutable time):
+    serializable:
+      ~deserialize: fun (d, t): 0
+      ~deserialize_fill: fun (o, copy): 0
+  ~throws "need deserialize shell to go with deserialize fill"
+
+module deserialize_Point_0 ~lang rhombus:
+  import rhombus/serialize open
+  deserializer: ~deserialize: fun (): 0
+
+def e0 = Evaluator.make_rhombus()
+def bstr0:
+  parameterize { Evaluator.current: e0 }:
+    eval('module posn ~lang rhombus:
+            export Posn
+            class Posn(x, y):
+              serializable')
+    eval('import self!posn')
+    eval('import rhombus/serialize open')
+    eval('serialize(posn.Posn(3, 4))')
+
+def e1 = Evaluator.make_rhombus()
+parameterize { Evaluator.current: e1 }:
+  eval('module posn ~lang rhombus:
+          export Posn
+          class Posn(x, y, z):
+            serializable:
+              ~version: 1
+          module deserialize_Posn_0:
+            import rhombus/serialize open
+            deserializer:
+              ~deserialize: fun (a, b): Posn(a, b, 0)')
+  eval('import rhombus/serialize open')
+  let p0 = eval('fun (bstr): deserialize(bstr)')(bstr0)
+  eval('import self!posn')
+  check eval('posn.Posn(3, 4, 0)') ~is p0
+  check eval('deserialize(serialize(posn.Posn(3, 4, 0)))') ~is p0
+
+def me0 = Evaluator.make_rhombus()
+def mbstr0:
+  parameterize { Evaluator.current: me0 }:
+    eval('module posn ~lang rhombus:
+            export Posn
+            class Posn(mutable x, mutable y):
+              serializable:
+                ~deserialize: fun(x, y): Posn(x, y)
+                ~deserialize_shell: fun (): Posn(#false, #false)
+                ~deserialize_fill: fun (v :: Posn, copy :: Posn):
+                                     v.x := copy.x
+                                     v.y := copy.y')
+    eval('import self!posn')
+    eval('import rhombus/serialize open')
+    eval('serialize(block:
+                      let p = posn.Posn(3, 4)
+                      p.x := p
+                      p)')
+
+def me1 = Evaluator.make_rhombus()
+parameterize { Evaluator.current: me1 }:
+  eval('module posn ~lang rhombus:
+          export Posn
+          class Posn(mutable x, mutable y, mutable z)
+          module deserialize_Posn_0:
+            import rhombus/serialize open
+            deserializer:
+              ~deserialize: fun (a, b): Posn(a, b, 0)
+              ~deserialize_shell: fun (): Posn(#false, #false, 0)
+              ~deserialize_fill: fun (v :: Posn, copy :: Posn):
+                                   v.x := copy.x
+                                   v.y := copy.y')
+  eval('import rhombus/serialize open')
+  let p0 = eval('fun (bstr): deserialize(bstr)')(mbstr0)
+  eval('import self!posn')
+  eval('def p0 = posn.Posn(3, 4, 0)')
+  eval('p0.x := p0')
+  check eval('p0') ~is_now p0

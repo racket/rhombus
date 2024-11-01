@@ -261,9 +261,9 @@
                (build-methods #:veneer-vtable method-vtable
                               method-results
                               added-methods method-mindex method-names method-private method-private-inherit
-                              #f #f #f
+                              #f #f #f #f
                               private-interfaces protected-interfaces
-                              #'(name #f #|<- not `name-instance`|# name?/checked name-convert #f
+                              #'(name #f #|<- not `name-instance`|# name?/checked name-convert #f #f
                                       prop-methods-ref
                                       representation-static-infos ;; instead of `indirect-static-infos`
                                       []
@@ -274,7 +274,8 @@
                                       []
                                       []
                                       [super-name* ... interface-name ...]
-                                      []))
+                                      []
+                                      #f))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
                                          method-mindex method-vtable method-results final?

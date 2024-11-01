@@ -846,11 +846,11 @@
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private method-private-inherit
-                                  reconstructor-rhs reconstructor-stx-params in-final?
+                                  reconstructor-rhs reconstructor-stx-params serializer-stx-params in-final?
                                   private-interfaces protected-interfaces
                                   names
                                   #:veneer-vtable [veneer-vtable #f])
-  (with-syntax ([(name name-instance name? name-convert reconstructor-name
+  (with-syntax ([(name name-instance name? name-convert reconstructor-name serializer-name
                        methods-ref
                        indirect-static-infos
                        [field-name ...]
@@ -866,7 +866,8 @@
                          super-protected-constructor-arg)
                         ...]
                        [super-name ...]
-                       [(recon-field-accessor recon-field-rhs) ...])
+                       [(recon-field-accessor recon-field-rhs) ...]
+                       serializable)
                  names])
     (with-syntax ([(field-name ...) (for/list ([id/l (in-list (syntax->list #'(field-name ...)))])
                                       (if (identifier? id/l)
@@ -930,6 +931,9 @@
                          #,@(if (and (syntax-e #'reconstructor-name)
                                      (not (eq? reconstructor-rhs 'default)))
                                 (list #'reconstructor-name)
+                                null)
+                         #,@(if (syntax-e #'serializer-name)
+                                (list #'serializer-name)
                                 null)
                          #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
                                        [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
@@ -997,6 +1001,18 @@
                                       ()
                                       reconstructor))
                      null)
+              #,@(if (syntax-e #'serializer-name)
+                     (list
+                      (syntax-parse #'serializable
+                        [(_ _ serializer-rhs . _)
+                         #`(method-block (block serializer-rhs) #,serializer-stx-params
+                                         name name-instance #f #f
+                                         #f serializer
+                                         new-private-tables
+                                         indirect-static-infos
+                                         ()
+                                         serializer)]))
+                     null)
               #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
                             [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
                             #:when (syntax-e rhs))
@@ -1019,6 +1035,8 @@
         kind)
      (define result-desc
        (cond
+         [(eq? (syntax-e #'kind) 'serializer)
+          (method-result #'vector? #t 1 "Array" #'() 1)]
          [(not (syntax-e #'result-id)) #f]
          [else (syntax-local-method-result #'result-id)]))
      (with-continuation-mark

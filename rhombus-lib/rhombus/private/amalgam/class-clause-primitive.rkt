@@ -33,7 +33,8 @@
                     immutable
                     constructor
                     reconstructor
-                    reconstructor_fields)
+                    reconstructor_fields
+                    serializable)
          (for-spaces (rhombus/class_clause
                       rhombus/veneer_clause)
                      implements)
@@ -350,6 +351,40 @@
                               form-id
                               (name ...)
                               ((group fun (parens) rhs) ...)))]))))
+
+(define-class-clause-syntax serializable
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id) (wrap-class-clause
+                   #`(#:serializable form-id 0 #f #f #f #f))]
+       [(form-id (_::block (~alt
+                            (~optional (~or (group #:version (_::block (group version)))
+                                            (group #:version version))
+                                       #:defaults ([version #'0]))
+                            (~optional (group #:serialize (~and (_::block . _) s-rhs))
+                                       #:defaults ([s-rhs #'#f]))
+                            (~optional (group #:deserialize (~and (_::block . _) d-rhs))
+                                       #:defaults ([d-rhs #'#f]))
+                            (~optional (group (~and ds #:deserialize_shell) (~and (_::block . _) ds-rhs))
+                                       #:defaults ([ds-rhs #'#f]
+                                                   [ds #'#f]))
+                            (~optional (group (~and df #:deserialize_fill) (~and (_::block . _) df-rhs))
+                                       #:defaults ([df-rhs #'#f]
+                                                   [df #'#f])))
+                           ...))
+        (unless (exact-nonnegative-integer? (syntax-e #'version))
+          (raise-syntax-error #f "need an exact nonnegative integer for version" stx #'version))
+        (when (syntax-e #'ds)
+          (when (not (syntax-e #'d-rhs))
+            (raise-syntax-error #f "need custom deserialize to go with deserialize shell" stx #'ds))
+          (when (not (syntax-e #'df))
+            (raise-syntax-error #f "need deserialize fill to go with deserialize shell" stx #'ds)))
+        (when (and (syntax-e #'df) (not (syntax-e #'ds)))
+          (raise-syntax-error #f "need deserialize shell to go with deserialize fill" stx #'df))
+        (wrap-class-clause
+         #`(#:serializable form-id version s-rhs d-rhs ds-rhs df-rhs))]))))
 
 (define-for-syntax (parse-final stx data)
   (syntax-parse stx

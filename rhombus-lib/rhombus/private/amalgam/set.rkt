@@ -5,6 +5,7 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      shrubbery/print)
+         racket/private/serialize-structs
          "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
@@ -155,7 +156,26 @@
           (hash-code (set-ht self))))
   #:property prop:sequence
   (lambda (s)
-    (Set.to_sequence s)))
+    (Set.to_sequence s))
+  #:property prop:serializable
+  (make-serialize-info
+   (lambda (s) (vector (set-ht s)))
+   (cons 'deserialize-set
+         (module-path-index-join '(submod "." deserialize)
+                                 (variable-reference->module-path-index
+                                  (#%variable-reference))))
+   #f
+   (or (current-load-relative-directory)
+       (current-directory))))
+
+(module+ deserialize
+  (provide deserialize-set)
+  (define deserialize-set
+    (make-deserialize-info (lambda (ht) (if (hash? ht)
+                                            (set ht)
+                                            (error 'set "invalid deserialization")))
+                           (lambda () (error "should not get here; cycles not supported"))))
+  (module declare-preserve-for-embedding racket/kernel))
 
 (define-static-info-getter get-any-set-static-infos
   (#%index-get Set.get)

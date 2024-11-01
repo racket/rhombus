@@ -7,6 +7,7 @@
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
                      "interface-parse.rkt")
+         racket/private/serialize-structs
          "provide.rkt"
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -33,7 +34,8 @@
          "class-able.rkt"
          "index-property.rkt"
          "append-property.rkt"
-         "reconstructor.rkt")
+         "reconstructor.rkt"
+         "serializable.rkt")
 
 (provide this
          super
@@ -460,6 +462,13 @@
          (able-method-status 'compare super interfaces method-mindex method-vtable method-private
                              #:name 'compare_to))
 
+       (define serializable (hash-ref options 'serializable #f))
+       (when serializable
+         (check-serializable serializable
+                             #'orig-stx
+                             prefab? has-private-fields?))
+       (define serializer-stx-params (hash-ref options 'serializer-stx-params #f))
+
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
 
@@ -555,6 +564,18 @@
                                                    (car parent-dot-providers)))]
                        [reconstructor-name (and reconstructor-rhs
                                                 (temporary "~a-reconstructor"))]
+                       [(serializer-name deserializer-name deserialize-submodule-name)
+                        (syntax-parse serializable
+                          [#f (list #f #f #f)]
+                          [(_ version s-rhs d-rhs _ _) (list (and (syntax-e #'s-rhs)
+                                                                  (temporary "~a-serializer"))
+                                                             (and (syntax-e #'d-rhs)
+                                                                  (temporary "~a-deserializer"))
+                                                             (datum->syntax
+                                                              #'name
+                                                              (string->symbol (format "deserialize_~s_~s"
+                                                                                      (syntax-e #'name)
+                                                                                      (syntax-e #'version)))))])]
                        [(recon-field-name ...) recon-field-names]
                        [(recon-field-arg ...) recon-field-args]
                        [(recon-field-acc ...) recon-field-accs]
@@ -572,15 +593,16 @@
                                                  (for/list ([a-field (in-list (class-desc-all-fields super))]
                                                             #:when (protect? a-field))
                                                    (protect-v a-field))
-                                                 null)])
+                                                 null)]
+                       [serializable serializable])
            (define defns
              (reorder-for-top-level
               (append
                (build-methods method-results
                               added-methods method-mindex method-names method-private method-private-inherit
-                              reconstructor-rhs reconstructor-stx-params final?
+                              reconstructor-rhs reconstructor-stx-params serializer-stx-params final?
                               private-interfaces protected-interfaces
-                              #'(name name-instance name? #f reconstructor-name
+                              #'(name name-instance name? #f reconstructor-name serializer-name
                                       prop-methods-ref
                                       indirect-static-infos
                                       [(field-name) ... super-field-name ...]
@@ -597,7 +619,8 @@
                                       super-protected-flds
                                       [super-name* ... interface-name ...]
                                       [(recon-field-acc recon-field-rhs)
-                                       ...]))
+                                       ...]
+                                      serializable))
                (build-class-reconstructor super final?
                                           reconstructor-rhs method-private
                                           #'(name name? constructor-name name-instance
@@ -621,7 +644,7 @@
                                    here-appendable? here-comparable?
                                    primitive-properties
                                    #'(name class:name make-all-name name? name-ref prefab-guard-name
-                                           reconstructor-name
+                                           reconstructor-name serializer-name deserialize-submodule-name
                                            [public-field-name ...]
                                            [public-name-field ...]
                                            [public-maybe-set-name-field! ...]
@@ -634,8 +657,9 @@
                                            [super-field-name ...]
                                            [super-name-field ...]
                                            [dot-id ...]
-                                           ((recon-field-name recon-field-acc)
-                                            ...)))
+                                           [(recon-field-name recon-field-acc)
+                                            ...]
+                                           serializable))
                (build-added-field-arg-definitions added-fields
                                                   constructor-fields
                                                   constructor-static-infoss)
@@ -764,7 +788,13 @@
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
                                      #'compare-statinfo-indirect comparable?
-                                     #'super-call-statinfo-indirect))))
+                                     #'super-call-statinfo-indirect)
+               (build-deserialize-submodule serializer-stx-params
+                                            (append super-keywords constructor-public-keywords)
+                                            #'(deserialize-submodule-name
+                                               serializable
+                                               deserializer-name
+                                               constructor-name)))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -777,7 +807,7 @@
                                        primitive-properties
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
-                       reconstructor-name
+                       reconstructor-name serializer-name deserialize-submodule-name
                        [public-field-name ...]
                        [public-name-field ...]
                        [public-maybe-set-name-field! ...]
@@ -790,7 +820,8 @@
                        [super-field-name ...]
                        [super-name-field ...]
                        [dot-id ...]
-                       [(recon-field-name recon-field-acc) ...])
+                       [(recon-field-name recon-field-acc) ...]
+                       serializable)
                  names]
                 [(mutable-field ...) (for/list ([field (in-list fields)]
                                                 [mutable (in-list mutables)]
@@ -942,7 +973,23 @@
                                                                #`(cons #,(interface-desc-prop:id intf)
                                                                        (vector #,@(build-interface-vtable intf
                                                                                                           method-mindex method-vtable method-names
-                                                                                                          method-private))))))
+                                                                                                          method-private))))
+                                                          #,@(syntax-parse #'serializable
+                                                               [(form-id vers s-rhs d-rhs ds-rhs df-rhs)
+                                                                (define top? (eq? 'top-level (syntax-local-context)))
+                                                                (list #`(cons prop:serializable
+                                                                              (make-class-serialize-info
+                                                                               #,(if (syntax-e #'serializer-name)
+                                                                                     #'serializer-name
+                                                                                     #'(default-serializer [super-name-field ... public-name-field ...]))
+                                                                               #,(if top?
+                                                                                     #'(quote-syntax deserialize-submodule-name)
+                                                                                     #'(quote deserialize-submodule-name))
+                                                                               #,(if top?
+                                                                                     #'#f
+                                                                                     #'(#%variable-reference))
+                                                                               #,(and (syntax-e #'ds-rhs) #t))))]
+                                                               [_ null])))
                                             #,(if prefab? (quote-syntax 'prefab) #f)
                                             #f
                                             '(immutable-field-index ...)

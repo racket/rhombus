@@ -19,6 +19,12 @@
                                   #:infer-starting-indentation? [infer-starting-indentation? (not keep-prefix?)]
                                   #:register-stx-range [register-stx-range void]
                                   #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
+  (define (truncate str)
+    (if (and max-length
+             ((string-length str) . > . max-length))
+        (string-append (substring str 0 (max 0 (- max-length 3)))
+                       "...")
+        str))
   (cond
     [(or use-raw?
          (and (syntax? s) (all-raw-available? s)))
@@ -41,17 +47,12 @@
                                       orig-str
                                       "\n")
                      orig-str))
-     (if (and max-length
-              ((string-length str) . > . max-length))
-         (string-append (substring str 0 (max 0 (- max-length 3)))
-                        "...")
-         str)]
+     (truncate str)]
     [else
      (define v (if (syntax? s) (syntax->datum s) s))
-     (if max-length
-         (parameterize ([error-print-width max-length])
-           (format "~.s" v))
-         (format "~s" v))]))
+     (define o (open-output-string))
+     (write-shrubbery v o)
+     (truncate (get-output-string o))]))
 
 (define (shrubbery-syntax->raw s
                                #:use-raw? [use-raw? #f]

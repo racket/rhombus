@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/serialize.rkt") as rkt
+  lib("racket/fasl.rkt")
+  lib("rhombus/private/amalgam.rkt")!deserializer.deserializer
+
+export:
+  Serializable
+  serialize
+  deserialize
+  deserializer
+
+annot.macro 'Serializable':
+  annot_meta.pack_predicate('rkt.#{serializable?}',
+                            '()')
+
+fun serialize(v,
+              ~out: o :: maybe(Port.Output) = #false):
+  fasl.#{s-exp->fasl}(rkt.serialize(v), o)
+
+fun deserialize(in :: Bytes || Port.Input):
+  rkt.deserialize(fasl.#{fasl->s-exp}(in))

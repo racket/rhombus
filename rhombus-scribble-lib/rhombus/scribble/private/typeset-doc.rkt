@@ -883,7 +883,7 @@
                                            [(_ a . _) #'a]))
                           "")]
                 [(option ...) options])
-    (with-syntax ([body (syntax-parse form
+    (with-syntax ([body (syntax-parse #'t-form
                           #:datum-literals (multi group)
                           [(group . _) #'(t-block t-form)]
                           [(multi g g2 ...) #'(t-block g g2 ...)])])
@@ -893,7 +893,7 @@
   (syntax-parse g
     #:datum-literals (group multi)
     [((~and m multi) g ...)
-     #`(m ,@(map drop-pattern-escapes (syntax->list #'(g ...))))]
+     #`(m #,@(map drop-pattern-escapes (syntax->list #'(g ...))))]
     [((~and g group) t ...)
      (define new-ts
        (let loop ([ts (syntax->list #'(t ...))])

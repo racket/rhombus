@@ -107,3 +107,6 @@
 
 (module+ rx
   (bounce "amalgam/rx.rhm"))
+
+(module+ deserializer
+  (bounce (submod "amalgam/serializable.rkt" deserializer)))

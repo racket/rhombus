@@ -81,11 +81,12 @@
     #,(@rhombus(static_info, ~class_clause)) $static_info_decl
     #,(@rhombus(opaque, ~class_clause))
     #,(@rhombus(prefab, ~class_clause))
+    #,(@rhombus(serializable, ~class_clause)) $seriablizable_decl
     #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
     $other_class_clause
 ){
 
- Binds @rhombus(id_name) as a class name in several @tech{spaces}:
+ Binds @rhombus(id_name) as a @deftech{class} name in several @tech{spaces}:
 
 @itemlist(
 

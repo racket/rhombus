@@ -9,7 +9,8 @@
          (only-in "syntax-parameter.rkt"
                   syntax-parameters-key)
          (only-in "function-arity.rkt"
-                  shift-arity))
+                  shift-arity)
+         "extract-rhs.rkt")
 
 (provide (for-syntax extract-internal-ids
                      make-expose
@@ -35,13 +36,6 @@
   (values internal-id
           (expose internal-id)
           (map expose extra-internal-ids)))
-
-(define-for-syntax (extract-rhs b)
-  (syntax-parse b
-    [(_::block g) #'g]
-    [_ (raise-syntax-error #f
-                           "expected a single entry point in block body"
-                           b)]))
 
 (define-for-syntax (parse-annotation-options orig-stx forms stx-paramss)
   (syntax-parse forms
@@ -201,6 +195,19 @@
                (hash-set options 'primitive-properties
                          (cons (cons #'prop-id #'val-id)
                                (hash-ref options 'primitive-properties null)))]
+              [(#:serializable form-id version-n serialize-rhs deserialize-rhs deserialize-shell-rhs deserialize-fill-rhs)
+               (when (hash-has-key? options 'converter?)
+                 (raise-syntax-error #f "multiple serialization clauses" orig-stx #'form-id))
+               (hash-set (hash-set options 'serializable #`(form-id version-n
+                                                                    #,(and (syntax-e #'serialize-rhs)
+                                                                           (extract-rhs #'serialize-rhs))
+                                                                    #,(and (syntax-e #'deserialize-rhs)
+                                                                           (extract-rhs #'deserialize-rhs))
+                                                                    #,(and (syntax-e #'deserialize-shell-rhs)
+                                                                           (extract-rhs #'deserialize-shell-rhs))
+                                                                    #,(and (syntax-e #'deserialize-fill-rhs)
+                                                                           (extract-rhs #'deserialize-fill-rhs))))
+                         'serializer-stx-params (car stx-paramss))]
               [_
                (parse-method-clause orig-stx options clause (car stx-paramss))]))
           (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))

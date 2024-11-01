@@ -13,3 +13,4 @@
 @include_section("comparable.scrbl")
 @include_section("printable.scrbl")
 @include_section("closeable.scrbl")
+@include_section("serializable.scrbl")
