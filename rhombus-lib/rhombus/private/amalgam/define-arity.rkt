@@ -4,7 +4,8 @@
                      syntax/parse/pre)
          "static-info.rkt"
          "function-arity-key.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "error-adjust.rkt")
 
 (provide who
          define/arity
@@ -59,11 +60,13 @@
   (syntax-parse stx
     [(~or* (~and (_ (~optional (~seq #:name name)) (id . args)
                     (~optional (~seq #:primitive (primitive-id ...)))
+                    (~optional (~seq #:local-primitive (local-primitive-id ...)))
                     (~optional (~seq #:static-infos static-infos))
                     . body)
                  (~parse rhs #'(lambda args . body)))
            (_ (~optional (~seq #:name name)) id
               (~optional (~seq #:primitive (primitive-id ...)))
+              (~optional (~seq #:local-primitive (local-primitive-id ...)))
               (~optional (~seq #:static-infos static-infos))
               rhs))
      #`(begin
@@ -72,26 +75,34 @@
                    (if (attribute primitive-id)
                        (syntax->list #'(primitive-id ...))
                        '())
+                   (if (attribute local-primitive-id)
+                       (syntax->list #'(local-primitive-id ...))
+                       '())
                    (attribute static-infos)
                    #'rhs))]))
 
-(define-for-syntax (build-define/arity id name primitive-ids static-infos rhs [arity-mask #f])
+(define-for-syntax (build-define/arity id name primitive-ids local-primitive-ids static-infos rhs [arity-mask #f])
   (define name/id (or name id))
   (define rhs/who
-    (syntax-parse rhs
-      #:literals (lambda case-lambda)
-      [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
-                ... . rst)
-         . body)
-       #`(lambda ((~@ (~? kw) (~? [id (with-who #,name/id expr)] id))
+    (with-syntax ([(local-primitive ...) local-primitive-ids]
+                  [name/id name/id])
+      (syntax-parse rhs
+        #:literals (lambda case-lambda)
+        [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
                   ... . rst)
-           (with-who #,name/id . body))]
-      [(case-lambda
-         [args . body]
-         ...)
-       #`(case-lambda
-           [args (with-who #,name/id . body)]
-           ...)]))
+           . body)
+         #`(lambda ((~@ (~? kw) (~? [id (with-who name/id expr)] id))
+                    ... . rst)
+             (with-error-adjust-primitive ([local-primitive name/id] ...)
+               (with-who name/id . body)))]
+        [(case-lambda
+           [args . body]
+           ...)
+         #`(case-lambda
+             [args
+              (with-error-adjust-primitive ([local-primitive name/id] ...)
+                (with-who name/id . body))]
+             ...)])))
   (append
    (for/list ([primitive-id (in-list primitive-ids)])
      #`(void (set-primitive-who! '#,primitive-id '#,name/id)))
@@ -106,11 +117,11 @@
                . #,(get-function-static-infos))))))
 
 (define-for-syntax ((build-define/method/direct-id direct-id)
-                    id name primitive-ids static-infos rhs)
-  (build-define/method id name primitive-ids static-infos rhs
+                    id name primitive-ids local-primitive-ids static-infos rhs)
+  (build-define/method id name primitive-ids local-primitive-ids static-infos rhs
                        #:direct-id direct-id))
 
-(define-for-syntax (build-define/method id name primitive-ids static-infos rhs
+(define-for-syntax (build-define/method id name primitive-ids local-primitive-ids static-infos rhs
                                         #:direct-id [direct-id id])
   (define (arithmetic-shift* a k)
     (if (exact-integer? a)
@@ -144,7 +155,7 @@
                ;; TODO what should we name the partially applied method?
                ;; This also applies to class methods in general
                #,(syntax-property method 'inferred-name (or name id))))
-         (build-define/arity id name primitive-ids static-infos rhs arity-mask)))
+         (build-define/arity id name primitive-ids local-primitive-ids static-infos rhs arity-mask)))
 
 (define-for-syntax (make-apply rator obj rands)
   (define (extract-arg arg)

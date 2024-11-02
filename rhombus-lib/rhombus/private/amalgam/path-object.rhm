@@ -20,7 +20,7 @@ namespace PathString:
   fun
   | to_absolute_path(p :: PathString):
       Path.to_absolute_path(p)
-  | to_absolute_path(p :: PathString, ~relative_to: base_path :: PathString):
+  | to_absolute_path(p :: PathString, ~relative_to: base_path):
       Path.to_absolute_path(p, ~relative_to: base_path)
 
   annot.macro 'to_path':
@@ -33,8 +33,8 @@ namespace PathString:
   | 'to_absolute_path':
       'converting(fun (p :: PathString) :~ Path: to_absolute_path(p))'
 
-operator ((l_path :: PathString)
-            +/ (r_path :: PathString || matching(#'up) || matching(#'same)))
+operator ((l_path :: PathString || CrossPath || Path.Dot)
+            +/ (r_path :: PathString || CrossPath || Path.Dot))
   :~ Path:
     ~weaker_than ++
     Path.add(l_path, r_path)

@@ -150,14 +150,25 @@
      (display (if v "#true" "#false") op)]
     [(void? v)
      (display "#void" op)]
-    [(path? v)
+    [(path-for-some-system? v)
      (cond
        [(display?)
         (display v op)]
        [else
         (concat
-         (display "Path(" op)
-         (write (path->string v) op)
+         (cond
+           [(path? v)
+            (concat
+             (display "Path(" op)
+             (write (path->string v) op))]
+           [(eq? (path-convention-type v) 'unix)
+            (concat
+             (display "CrossPath.Unix(" op)
+             (write (path->bytes v) op))]
+           [else
+            (concat
+             (display "CrossPath.Windows(" op)
+             (write (path->bytes v) op))])
          (display ")" op))])]
     [(and (procedure? v)
           (not (printer-ref v #f)))

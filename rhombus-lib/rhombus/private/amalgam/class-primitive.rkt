@@ -90,6 +90,22 @@
                                    (string->symbol (format "~a/dispatch" (syntax-e #'name-method-proc))))
                                 nary))))
          ...)
+        (~optional (~seq #:dot-methods
+                         ((~and [dot-method name-dot-method-proc]
+                                (~parse dot-method-proc
+                                        (datum->syntax
+                                         #'dot-method
+                                         (string->symbol (format "~a/method" (syntax-e #'name-dot-method-proc)))))
+                                (~parse dot-method-dispatch
+                                        #`(#,(datum->syntax
+                                              #'dot-method
+                                              (string->symbol (format "~a/dispatch" (syntax-e #'name-dot-method-proc))))
+                                           nary)))
+                          ...))
+                   #:defaults ([(dot-method 1) null]
+                               [(name-dot-method-proc 1) null]
+                               [(dot-method-proc 1) null]
+                               [(dot-method-dispatch 1) null]))
         )
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))
@@ -155,6 +171,8 @@
                         (hasheq (~@ 'prop prop-proc)
                                 ...
                                 (~@ 'method method-proc)
+                                ...
+                                (~@ 'dot-method dot-method-proc)
                                 ...)
                         #hasheq())
                  #,@(if (null? (syntax-e mutator-pairs))
@@ -168,6 +186,8 @@
                               (~@ 'prop prop-proc)
                               ...
                               (~@ 'method method-proc)
+                              ...
+                              (~@ 'dot-method dot-method-proc)
                               ...))
                  #,@(if (null? (syntax-e mutator-pairs))
                         '()
@@ -316,6 +336,8 @@
                                      (build-mutator-call (quote-syntax prop-mutator) e rhs reloc))))])]
                ...
                [(method) method-dispatch]
+               ...
+               [(dot-method) dot-method-dispatch]
                ...
                [else (~? (parent-dot-dispatch field-sym field-proc ary nary repetition? fail-k)
                          (fail-k))])))
