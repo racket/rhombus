@@ -397,11 +397,11 @@ Paths are @tech{comparable}, which means that generic operations like
  @rhombus(Path) object if it is a string).
 
  If @rhombus(more_than_same) is @rhombus(#true), then if @rhombus(path)
- and @rhombus(rel_to_path) are syntacticaly equivalent, then
+ and @rhombus(rel_to_path) are syntactically equivalent, then
  @rhombus(path) is returned unchanged.
 
  If @rhombus(normal) is @rhombus(#true), then on Windows, path elements
- are normalized for comparsion. Otherwise, path elements are considered
+ are normalized for comparison. Otherwise, path elements are considered
  equivalent only when they have the same case.
 
  If @rhombus(path) and @rhombus(rel_to_path) use different path
