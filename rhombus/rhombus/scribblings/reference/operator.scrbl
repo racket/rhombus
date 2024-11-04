@@ -88,7 +88,7 @@
  order, but when the operator is used as a prefix or infix/postfix
  operator, cases are tried in the relative order that they are written.
  Similar to the @rhombus(fun) form the operator name and a result
- annotation can be written before the @vbar cases to appply for all cases.
+ annotation can be written before the @vbar cases to apply for all cases.
 
  At the start of an operator body, @rhombus(option)s can declare
  precedence and, in the case of an infix operator, an associativity for
@@ -99,7 +99,7 @@
  options; alternatively, when the operator name (maybe with a result annotation)
  is written before @vbar, options that apply to all cases can be supplied in
  a block before the cases. Options can appear both before the cases and in
- individual clauses, as long as all precedence and all associatvity
+ individual clauses, as long as all precedence and all associativity
  options are in one or the other.
 
 @examples(

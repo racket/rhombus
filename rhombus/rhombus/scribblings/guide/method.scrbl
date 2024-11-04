@@ -7,7 +7,7 @@
 @title(~tag: "methods"){Methods}
 
 A @rhombus(method, ~class_clause) clause adds a method to a class or
-interface. Withn a class, the method can refer to fieds directly, or it
+interface. Within a class, the method can refer to fields directly, or it
 can use @rhombus(this), which refers to the object whose method is
 called.
 
@@ -118,7 +118,7 @@ results a satisfying result.
 This enforcement of result contracts applies to overriding in general,
 not just overriding to implement an abstract method. When an overriding
 method has its own result annotation, then both the overriding
-annotation and the inhereited annotation(s) apply to the method and any
+annotation and the inherited annotation(s) apply to the method and any
 further overrides.
 
 

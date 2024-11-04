@@ -81,7 +81,7 @@
     #,(@rhombus(static_info, ~class_clause)) $static_info_decl
     #,(@rhombus(opaque, ~class_clause))
     #,(@rhombus(prefab, ~class_clause))
-    #,(@rhombus(serializable, ~class_clause)) $seriablizable_decl
+    #,(@rhombus(serializable, ~class_clause)) $serializable_decl
     #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
     $other_class_clause
 ){
@@ -995,7 +995,7 @@ or protectedly using
  @rhombus(expression, ~interface_clause) clause can make an interface
  identifier behave like a constructor, perhaps instantiating some default
  class. There is no @rhombus(binding, ~class_clause) for interfaces,
- because @rhombus(interface) does not otherwise define an interfeace name
+ because @rhombus(interface) does not otherwise define an interface name
  for binding, and so @rhombus(bind.macro) can be
  used alongside @rhombus(interface) with the same interface name.
 

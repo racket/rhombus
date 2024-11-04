@@ -72,7 +72,7 @@ contents, even if one is mutable and the other is immutable.
  @rhombus(annot) is checked against a value that would be returned by
  accessing an element of the array or a value to be installed into the
  array. (A different view of the array might change an element to one that
- does not astisfy @rhombus(annot).) Static information from
+ does not satisfy @rhombus(annot).) Static information from
  @rhombus(annot) is propagated to accesses of the array. Note that a
  converter @rhombus(annot) is applied for each access or update.
 

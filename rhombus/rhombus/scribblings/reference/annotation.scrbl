@@ -45,7 +45,7 @@
 ){
 
  The @rhombus(Any, ~annot) annotation matches any value. An
- @rhombus(Any.of, ~annot) annotaton matches any value that is equal (in
+ @rhombus(Any.of, ~annot) annotation matches any value that is equal (in
  the sense of @rhombus(==)) to one of the @rhombus(expr) results. The
  @rhombus(Any.to_boolean, ~annot) annotation matches any value and
  converts non-@rhombus(#false) value to @rhombus(#true).

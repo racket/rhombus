@@ -58,8 +58,8 @@ returns void in that case). Note that @rhombus(~else) is a keyword, and
 not an identifier. If it were an identifier, then @rhombus(else) might
 get bound in some context to @rhombus(#false), which would be confusing.
 As another special case, @rhombus(_) is allowed in place of
-@rhombus(else); although it is possible to bind @rhombus(_), it takes a
-specifical effort because @rhombus(_) is a binding operator.
+@rhombus(else); although it is possible to bind @rhombus(_), it takes
+special effort because @rhombus(_) is a binding operator.
 
 Although @rhombus(cond) is better than @rhombus(if) for @rhombus(fib),
 the @rhombus(match) form is even better. The @rhombus(match) form

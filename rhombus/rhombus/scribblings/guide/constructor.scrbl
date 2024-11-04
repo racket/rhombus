@@ -23,7 +23,7 @@ printed with their keywords, too.
 
 The keyword for a field does not have to match the name of the field as
 it is referenced by the @rhombus(.) operator. Typically, the names are
-the same, and keyword fields support the same shothand as in function
+the same, and keyword fields support the same shorthand as in function
 definitions where a keyword by itself implicitly supplies the
 corresponding identifier.
 

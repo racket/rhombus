@@ -456,7 +456,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  @rhombus(DocSpec, ~annot) value to record the function's arguments and
  result annotation (if any). If a @rhombus(maybe_res_annot) is present
  with @rhombus(:~, ~bind), it is converted to @rhombus(::, ~bind) in the
- recorded function shape. Tools such as Rhombus Scribble can implort
+ recorded function shape. Tools such as Rhombus Scribble can import
  the submodule to extract the recorded information.
 
  See also @rhombus(_) for information about function shorthands using
@@ -609,7 +609,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     fun (x, y): [x, y]
   both("apple", "banana")
   ~error:
-    both("apple", "aadvark")
+    both("apple", "aardvark")
 )
 
  An @rhombus(arg) written with @rhombus(&) or @rhombus(~&) stands for

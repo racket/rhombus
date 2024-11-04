@@ -113,7 +113,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
  The @rhombus(Real, ~annot) annotation matches real numbers (as opposed
  to imaginary numbers like the result of @rhombus(math.sqrt(-1))). The
  @rhombus(PosReal, ~annot), @rhombus(NegReal, ~annot), and
- @rhombus(NonnegReal, ~annot) annotatiosn match positive, negative, and
+ @rhombus(NonnegReal, ~annot) annotations match positive, negative, and
  non-negative real numbers, respectively.
 
  The @rhombus(Real.at_least, ~annot), @rhombus(Real.above, ~annot),

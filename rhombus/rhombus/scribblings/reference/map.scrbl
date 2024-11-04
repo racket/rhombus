@@ -28,7 +28,7 @@ it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
 @dispatch_table(
-  "readbale map (immutable or mutable)"
+  "readable map (immutable or mutable)"
   Map
   mp.length()
   mp.keys(try_sort, ...)

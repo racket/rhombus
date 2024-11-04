@@ -81,7 +81,7 @@ and it is not managed by a lock.
  mutable list, but one where @rhombus(annot) is checked against a value
  that would be returned by accessing an element of the mutable list or a
  value to be installed into the mutable list. (A different view of the
- mutable list might change an element to one that does not astisfy
+ mutable list might change an element to one that does not satisfy
  @rhombus(annot).) Static information from @rhombus(annot) is propagated
  to accesses of the mutable list. Note that a converter @rhombus(annot) is
  applied for each access or update.
@@ -398,7 +398,7 @@ and it is not managed by a lock.
 
  Returns @rhombus(#true) if @rhombus(mlst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
- equality. Searching the list takes @math{O(N)} time (multiplified by the
+ equality. Searching the list takes @math{O(N)} time (multiplied by the
  cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(

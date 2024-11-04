@@ -161,7 +161,7 @@ interface customizes the way that instances of a class print.
       ))
   )}
 
- @item{@rhombus(PrintDesc.or) offers two printign alternatives. Either
+ @item{@rhombus(PrintDesc.or) offers two printing alternatives. Either
   @rhombus(pd1) or @rhombus(pd2) will be printed, depending on choices
   made by a pretty-printer configuration and as constrained by
   @rhombus(PrintDesc.flat) constraints.

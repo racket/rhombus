@@ -112,7 +112,7 @@
  form as a syntax object. When the resulting annotation is applied to a
  value, it uses the binding to determine whether the value satisfies the
  predicate, and if so (and if the converted result is needed), the
- body expression is evaluated to obstain the converted value.
+ body expression is evaluated to obtain the converted value.
  It also associates the static information in @rhombus(statinfo_stx) with
  the converted value. The given @rhombus(statinfo_stx) is in unpacked
  form (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
