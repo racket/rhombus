@@ -109,7 +109,7 @@
  @rhombus(expr_meta.AfterInfixParsed, ~stxclass) syntax classes expect an operator
  name that is bound as a prefix or infix operator, respectively. Parsing
  precedes as if immediately after the given operator---stopping when an
- infix operator of weaker precencence is encountered, for example. The
+ infix operator of weaker precedence is encountered, for example. The
  result is in pattern variable's value plus a @rhombus(tail) field
  that contains the remaining unparsed input.
 

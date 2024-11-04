@@ -30,8 +30,8 @@ Extra fields can be added to a class with @rhombus(field, ~class_clause)
 clauses. These fields are not represented the class's constructor, and
 so a @rhombus(field, ~class_clause) has an expression to provide the
 field's initial value. A field added with @rhombus(field, ~class_clause)
-is always mutatble, and @rhombus(:=) can be used to assign to the field.
-An immutable field can be added in the same way with 
+is always mutable, and @rhombus(:=) can be used to assign to the field.
+An immutable field can be added in the same way with
 or @rhombus(immutable field, ~class_clause) or, equivalently,
 just @rhombus(immutable, ~class_clause).
 
@@ -55,7 +55,7 @@ in a field, but is still accessed and assigned with field-like notation.
 A @deftech{property} is like a field in that it is accessed without
 method-call parentheses, and it can also support assignment via
 @rhombus(:=). A property is different from a field, however, in that
-access and assignment can trigger arbitrary method-like comptation, and
+access and assignment can trigger arbitrary method-like computation, and
 a property implementation can be overridden in a subclass.
 
 A read-only @rhombus(property, ~class_clause) is written similar to a

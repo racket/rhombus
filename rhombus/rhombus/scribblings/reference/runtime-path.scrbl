@@ -22,7 +22,7 @@
  file name produced by the @rhombus(body) sequence as interpreted
  relative to the source module.
 
- An unutual property of @rhombus(runtime_path.def) is that the
+ An unusual property of @rhombus(runtime_path.def) is that the
  @rhombus(body) sequence is used in both a run-time context and a
  @rhombus(meta) context, so it must be valid for both. The meta
  interpretation is used for tasks like creating a standalone executable

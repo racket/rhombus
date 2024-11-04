@@ -14,7 +14,7 @@ macro-expansion contexts instead of evaluation contexts. While a context
 parameter communicates to a more nested evaluation context, even if that
 context is not lexically nested, a syntax parameter communicates to a
 more nested expansion position, where nested expression may have been
-macro-introduced instead of being lexiecally nested in the original
+macro-introduced instead of being lexically nested in the original
 source. For example, @rhombus(this) is implemented through a syntax
 parameter that allows its meaning to be adapted to an enclosing method,
 even when a use of @rhombus(this) is macro-introduced in the method

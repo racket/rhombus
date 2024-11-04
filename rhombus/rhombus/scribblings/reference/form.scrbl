@@ -117,7 +117,7 @@
 
  In syntax descriptions, @rhombus(body) is always used with ellipses
  afterward, meaning that definitions and expressions can be interleaved.
- In some cases, the expanded form of the @rhombus(body) equence must ends
+ In some cases, the expanded form of the @rhombus(body) sequence must ends
  with an expression to provide a result value.
 
  Unless noted otherwise, a @rhombus(body) sequence implicitly uses

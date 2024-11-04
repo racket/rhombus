@@ -38,7 +38,7 @@
  @rhombus(~finally) clause when leaving the @rhombus(try) body (whether
  normally or by a continuation jump, including exception throws).
 
- If an excepotion is thrown during the the @rhombus(body) sequence, the
+ If an exception is thrown during the the @rhombus(body) sequence, the
  control escapes to the context of the @rhombus(try) @rhombus(body)
  sequence (i.e., ``inside'' the @rhombus(~initially) and
  @rhombus(~finally) guards) and the @rhombus(~catch) cases are tried in

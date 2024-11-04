@@ -45,7 +45,7 @@
 
  The @rhombus(~catch) clauses is superficially similar to
  @rhombus(~catch) in @rhombus(try), but @rhombus(~catch) in
- @rhombus(Continuation.prompt) does not cath exceptions. Instead, it
+ @rhombus(Continuation.prompt) does not catch exceptions. Instead, it
  determines a handler that is used to receive any values delivered to the
  prompt via @rhombus(Continuation.escape). The handler is call with the
  continuation of the @rhombus(Continuation.prompt) form. Since multiple

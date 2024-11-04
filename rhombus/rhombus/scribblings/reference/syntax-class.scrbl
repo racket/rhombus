@@ -68,8 +68,8 @@
  a @rhombus(description, ~syntax_class_clause). When
  @rhombus(error_mode, ~syntax_class_clause) is declared as
  @rhombus(~opaque), then parsing error messages will not refer to the
- interior details of the pattern cases; insteda, messages will use the
- decsription string.
+ interior details of the pattern cases; instead, messages will use the
+ description string.
 
  An optional @rhombus(kind, ~syntax_class_clause) declaration indicates
  the context within a
@@ -354,7 +354,7 @@
 
  Similar to @rhombus(def), but restricted to defining a plain identifier
  or a simple list repetition within a @rhombus(syntax_class) pattern
- case, and adds a field (or, at least, a cadndidate field) to the pattern
+ case, and adds a field (or, at least, a candidate field) to the pattern
  case.
 
  The result of the right-hand @rhombus(body) sequence or @rhombus(expr)

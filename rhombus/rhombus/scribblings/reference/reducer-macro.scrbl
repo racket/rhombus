@@ -231,7 +231,7 @@
   macro use is the overall accumulated result (e.g., the result of the
   @rhombus(for) form using the packed reducer).}
 
- @item{The @rhombus(accum_id, ~var)s correpond to the state of the
+ @item{The @rhombus(accum_id, ~var)s correspond to the state of the
   reducer as it receives a stream of input values. As internal state,
   these identifiers generally should not be directly visible to clients of
   the reducer. The @rhombus(accum_expr, ~var)s determine the initial

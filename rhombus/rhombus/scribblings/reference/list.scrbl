@@ -499,7 +499,7 @@ it supplies its elements in order.
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
- equality. Searching the list takes @math{O(N)} time (multiplified by the
+ equality. Searching the list takes @math{O(N)} time (multiplied by the
  cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(

@@ -112,7 +112,7 @@ internal state, and the state can even be specific to a particular
 
  This same initial position and functions are used for every
  @tech{instantiation} of the result sequence. To distinguish different
- instantiations, use @rhombus(Sequence.instiantiate).
+ instantiations, use @rhombus(Sequence.instantiate).
 
 @examples(
   ~defn:

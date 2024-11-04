@@ -135,7 +135,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
  @item{punctuation: Unicode general category @UCat{Pc}, @UCat{Pd},
   @UCat{Ps}, @UCat{Pe}, @UCat{Pi}, @UCat{Pf}, or @UCat{Po}}
 
- @item{graphic: alphabetic, numeric, symbolic, punctionation, or Unicode
+ @item{graphic: alphabetic, numeric, symbolic, punctuation, or Unicode
   general category is @UCat{Ll}, @UCat{Lm}, @UCat{Lo}, @UCat{Lt},
   @UCat{Lu}, @UCat{Nd}, @UCat{Nl}, @UCat{No}, @UCat{Mn}, @UCat{Mc}, or
   @UCat{Me}}

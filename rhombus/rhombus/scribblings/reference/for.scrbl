@@ -65,7 +65,7 @@
  can has multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
  @rhombus(bind) can be a @rhombus(values, ~bind) pattern or just a
- prenthesized sequence of bindings to receive a matching number of
+ parenthesized sequence of bindings to receive a matching number of
  element values.
 
  An @rhombus(each, ~for_clause) followed immediately by a sequence binding is
@@ -83,7 +83,7 @@
  iteration and all would-be remaining iterations of the @rhombus(for)
  form when its @rhombus(expr) produces a true value. A @rhombus(final_when, ~for_clause)
  clause is similar to @rhombus(keep_when, ~for_clause), but it allows one iteration to
- complete before skipping the reminaing iterations.
+ complete before skipping the remaining iterations.
 
  New @rhombus(for) clause forms can be defined as macros that
  (eventually) expand to the core forms that are recognized by

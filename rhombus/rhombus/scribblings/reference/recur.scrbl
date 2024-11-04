@@ -10,7 +10,7 @@
 
 Rhombus functions defined with @rhombus(fun) can be recursive, of
 course, but the @rhombus(recur) form offers a shorthand for the case
-that a recurive function would be used just once and is better written
+that a recursive function would be used just once and is better written
 inline. Iteration with @rhombus(for) is also a kind of recursion, but
 @rhombus(recur) supports non-tail recursion, instead of only iterative
 loops.
@@ -28,7 +28,7 @@ loops.
  Similar to defining @rhombus(id) as a function and immediately calling
  it, where @rhombus(id) is bound only within the @rhombus(body) block for
  recursive calls. The intent is to implement a recursive calculation ``in
- place,'' instead of defining a recurive function and then calling
+ place,'' instead of defining a recursive function and then calling
  it---including cases where the recursion is not in tail position or
  where @rhombus(for) is not a good fit for some other reason.
 

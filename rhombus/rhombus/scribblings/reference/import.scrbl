@@ -171,7 +171,7 @@
  @item{@rhombus(parent, ~impo): refers to the parent of the enclosing
   submodule, sometimes combined with @rhombus(!, ~impo) to refer to a
   sibling submodule or with additional @rhombus(!, ~impo)s to reach an
-  ancestor of the enclsoing submodule.}
+  ancestor of the enclosing submodule.}
 
 )
 
@@ -247,11 +247,11 @@
 
  The form @rhombus(self!, ~impo)@rhombus(id) refers to
  @tech{submodule} named @rhombus(id) of the enclosing module. Additional
- uses of @rhombus(!, ~impo) refer to more deepely nested submodules
+ uses of @rhombus(!, ~impo) refer to more deeply nested submodules
  within that one.
 
  In an interactive context, such as a read-eval-print loop (REPL),
- @rhombus(self!, ~impo)@rhombus(id) refers to a module declaraed interactively
+ @rhombus(self!, ~impo)@rhombus(id) refers to a module declared interactively
  with name @rhombus(id).
 
  The form @rhombus(parent, ~impo) refers to the parent of an enclosing
@@ -385,7 +385,7 @@
  be at phase @rhombus(0) are imported, and they are imported instead to
  the label phase.
 
- This modifier is valid only for module fies that refer to modules,
+ This modifier is valid only for module files that refer to modules,
  as opposed to @rhombus(namespace) bindings, and it is not currently
  supported for module paths that use the @rhombus(., ~impo) operator
 
@@ -461,7 +461,7 @@
 
  The format of a @rhombus(module_path) or the content of
  @rhombus(mod_stx) is the same as for @rhombus(import, ~defn), except
- that @rhombus(., ~impo) is supoprted only at the very beginning of a
+ that @rhombus(., ~impo) is supported only at the very beginning of a
  module path in @rhombus(ModulePath).
 
  The @rhombus(ModulePath) expression form (which has immediate quotes

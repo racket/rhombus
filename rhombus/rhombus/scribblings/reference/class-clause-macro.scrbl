@@ -264,7 +264,7 @@
  get more information based on a retained or newly declared internal
  name.
 
- Reocgnized keys for classes:
+ Recognized keys for classes:
 
 @itemlist(
 
@@ -350,7 +350,7 @@
 
  @item{@rhombus(#'property_arities): A list of arity representations in
   parallel to a @rhombus(#'property_names) list. An arity representation
-  is @rhombus(1) if the property does not support assignent, @rhombus(3)
+  is @rhombus(1) if the property does not support assignment, @rhombus(3)
   if it does support assignment, or @rhombus(#false) if the property's
   support for assignments is unknown.}
 
@@ -368,7 +368,7 @@
 
 )
 
- Reocgnized keys for interfaces:
+ Recognized keys for interfaces:
 
 @itemlist(
 
@@ -399,7 +399,7 @@
 
 )
 
- Reocgnized keys for veneers:
+ Recognized keys for veneers:
 
 @itemlist(
 
