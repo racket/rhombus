@@ -136,7 +136,7 @@
   )
 ){
 
- Represents an adjustment to an entry point to poentially specify a name
+ Represents an adjustment to an entry point to potentially specify a name
  (to be used for run-time reporting), to add extra arguments, and to wrap
  the generated function's body. The @rhombus(wrap_body) function
  expects an arity encoding (see @rhombus(entry_point.macro)) and a syntax
