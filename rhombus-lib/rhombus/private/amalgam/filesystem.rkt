@@ -5,6 +5,10 @@
          "define-arity.rkt"
          "annotation-failure.rkt"
          "call-result-key.rkt"
+         "index-result-key.rkt"
+         "static-info.rkt"
+         "treelist.rkt"
+         (submod "list.rkt" for-compound-repetition)
          (submod "path-object.rkt" for-static-info))
 
 (provide (for-space rhombus/namespace
@@ -18,7 +22,8 @@
    [expand_user_path filesystem.expand_user_path]
    [file_exists filesystem.file_exists]
    [directory_exists filesystem.directory_exists]
-   [link_exists filesystem.link_exists]))
+   [link_exists filesystem.link_exists]
+   [list_directory filesystem.list_directory]))
 
 (define/arity (filesystem.simplify_path p)
   #:local-primitive (simplify-path)
@@ -53,3 +58,13 @@
 (define/arity (filesystem.link_exists p)
   #:primitive (link-exists?)
   (link-exists? p))
+
+(define-static-info-getter get-treelist-of-paths
+  (#%index-result #,(get-path-static-infos))
+  . #,(get-treelist-static-infos))
+
+(define/arity (filesystem.list_directory [p (current-directory)]
+                                         #:build_path [build? #f])
+  #:primitive (directory-list)
+  #:static-infos ((#%call-result #,(get-treelist-of-paths)))
+  (list->treelist (directory-list p #:build? build?)))
