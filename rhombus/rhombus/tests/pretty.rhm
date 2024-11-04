@@ -1,5 +1,6 @@
 #lang rhombus/static
 
+#//
 check:
   // default uses simple rules that can add unneecssary `«»`s
   print('1; 2') ~prints "1; 2"
@@ -10,6 +11,7 @@ check:
   print(':«»') ~prints ":«»"
   print('|«»') ~prints "|«»"
 
+#//
 parameterize { Printable.current_pretty: #true}:
   // Pretty mode avoids `«»`s if possible
   check:

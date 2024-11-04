@@ -7,7 +7,6 @@ use_static
 
 export:
   PathString
-  +/
 
 namespace PathString:
   export:
@@ -32,9 +31,3 @@ namespace PathString:
                     to_absolute_path(p, ~relative_to: $base_path))'
   | 'to_absolute_path':
       'converting(fun (p :: PathString) :~ Path: to_absolute_path(p))'
-
-operator ((l_path :: PathString)
-            +/ (r_path :: PathString || matching(#'up) || matching(#'same)))
-  :~ Path:
-    ~weaker_than ++
-    Path.add(l_path, r_path)

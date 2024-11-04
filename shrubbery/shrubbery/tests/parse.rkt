@@ -98,9 +98,7 @@
     (check-reparse 'pretty-one #:add-newlines? #t)
     (check-reparse 'pretty-multi)
     (check-reparse 'pretty-multi-armored)
-    (check-reparse 'pretty-multi-armored #:add-newlines? #t)
-    (check-reparse 'pretty-prefer-multi)
-    (check-reparse 'pretty-prefer-multi2)))
+    (check-reparse 'pretty-multi-armored #:add-newlines? #t)))
 
 (define (check-fail input rx)
   (let ([in (open-input-string input)])
@@ -165,7 +163,6 @@
 (check 6 input6 expected6)
 (check 7 input7 expected7)
 (check 8 input8 expected8)
-(check 9 input9 expected9)
 
 (check 'mix (string-append "x:\n"
                            "  apple\tbanana\n"

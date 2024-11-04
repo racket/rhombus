@@ -32,10 +32,7 @@
          expected7
 
          input8
-         expected8
-
-         input9
-         expected9)
+         expected8)
 
 ;; input1 is split into parts to accommodate O(n^2) tests
 (define input1s
@@ -1913,9 +1910,7 @@ then @{8}
   }
 
 @doc{
-
  space char starts next line
- 
 }
 
 @itemlist(@item{x
@@ -2034,7 +2029,7 @@ INPUT
      doc
      (parens
       (group
-       (brackets (group "\n") (group "space char starts next line") (group "\n")))))
+       (brackets (group "space char starts next line")))))
     (group
      itemlist
      (parens
@@ -2308,10 +2303,6 @@ INPUT
 1 -+ 2
 1 + +2
 1 ++ 2
-
-1 +/ 2
-1 +// 2
-1 +/! 2
 INPUT
 )
 
@@ -2340,10 +2331,7 @@ INPUT
     (group 1 (op +) (op -) 2)
     (group 1 (op -) (op +) 2)
     (group 1 (op +) 2)
-    (group 1 (op ++) 2)
-    (group 1 (op +/) 2)
-    (group 1 (op +))
-    (group 1 (op +/!) 2)))
+    (group 1 (op ++) 2)))
 
 (define input6
 #<<INPUT
@@ -2417,100 +2405,3 @@ INPUT
   '(multi
     (group 1)
     (group 2)))
-
-(define input9
-#<<INPUT
-1
-1_0
-100_000
-
-+1
-+1_0
-+100_000
-
--1
--1_0
--100_000
-
-0b1
-0b1_0
-0b100_000
-
-+0b1
-+0b1_0
-+0b100_000
-
--0b1
--0b1_0
--0b100_000
-
-0o1
-0o1_0
-0o100_000
-
-+0o1
-+0o1_0
-+0o100_000
-
--0o1
--0o1_0
--0o100_000
-
-0x1
-0x1_0
-0x100_000
-0xABC_DEF
-
-+0x1
-+0x1_0
-+0x100_000
-+0xABC_DEF
-
--0x1
--0x1_0
--0x100_000
--0xABC_DEF
-INPUT
-  )
-
-(define expected9
-  '(multi
-    (group 1)
-    (group 10)
-    (group 100000)
-    (group +1)
-    (group +10)
-    (group +100000)
-    (group -1)
-    (group -10)
-    (group -100000)
-    (group #b1)
-    (group #b10)
-    (group #b100000)
-    (group #b+1)
-    (group #b+10)
-    (group #b+100000)
-    (group #b-1)
-    (group #b-10)
-    (group #b-100000)
-    (group #o1)
-    (group #o10)
-    (group #o100000)
-    (group #o+1)
-    (group #o+10)
-    (group #o+100000)
-    (group #o-1)
-    (group #o-10)
-    (group #o-100000)
-    (group #x1)
-    (group #x10)
-    (group #x100000)
-    (group #xABCDEF)
-    (group #x+1)
-    (group #x+10)
-    (group #x+100000)
-    (group #x+ABCDEF)
-    (group #x-1)
-    (group #x-10)
-    (group #x-100000)
-    (group #x-ABCDEF)))

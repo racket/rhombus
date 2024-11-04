@@ -103,9 +103,6 @@ Paths are @tech{comparable}, which means that generic operations like
                part :: PathString
                  || matching(#'up)
                  || matching(#'same), ...) :: Path
-  operator ((base :: PathString) +/ (part :: PathString
-                                       || matching(#'up)
-                                       || matching(#'same))) :: Path
 ){
 
   Creates a path given a base path and any number of sub-path
@@ -139,7 +136,6 @@ Paths are @tech{comparable}, which means that generic operations like
   def p = Path("/home/rhombus")
   Path.add(p, "shape.txt")
   p.add("shape.txt")
-  p +/ "shape.txt"
 )
 
 }
