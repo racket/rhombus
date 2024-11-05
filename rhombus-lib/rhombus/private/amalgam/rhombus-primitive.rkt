@@ -4,6 +4,7 @@
          set-primitive-subcontract!
          set-primitive-who!
          get-primitive-contract
+         get-or-format-primitive-contract
          get-primitive-subcontract
          get-primitive-who
          primitive-who-table-key)
@@ -39,6 +40,18 @@
      => (lambda (handler)
           (handler contract/rkt))]
     [else #f]))
+
+(define (get-or-format-primitive-contract ctc)
+  (or (get-primitive-contract ctc)
+      (cond
+        [(not ctc) "False"]
+        [(and (pair? ctc)
+              (eq? 'quote (car ctc))
+              (= 2 (length ctc)))
+         (format "matching(~a)"
+                 ((error-value->string-handler) (cadr ctc) (error-print-width)))]
+        [else
+         ((error-value->string-handler) ctc (error-print-width))])))
 
 (define (get-primitive-subcontract contracts/rkt)
   (cond
