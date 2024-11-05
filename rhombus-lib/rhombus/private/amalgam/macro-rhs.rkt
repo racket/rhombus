@@ -27,7 +27,8 @@
          (submod "syntax-object.rkt" for-quasiquote)
          "realm.rkt"
          "wrap-expression.rkt"
-         "simple-pattern.rkt")
+         "simple-pattern.rkt"
+         "srcloc.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -42,6 +43,14 @@
   (define (maybe-cons id ids) (if (syntax-e id) (cons id ids) ids)))
 (define (make-all l) (pack-tail l))
 (define (make-all-sequence l) (pack-multi-tail l))
+
+(define (maybe-relocate-span in out)
+  (if (or (not (syntax? out))
+          (syntax-relocated-property out))
+      out
+      (syntax-relocated-property
+       (relocate+reraw (unpack-tail in #f #f) out)
+       #t)))
 
 (define-unquote-binding-syntax _Term
   (unquote-binding-transformer
@@ -58,9 +67,10 @@
 ;; finish parsing one case (possibly the only case) in a macro definition,
 ;; now that we're in the right phase for the right-hand side of the definition
 (define-for-syntax (parse-one-macro-definition pre-parsed adjustments case-shape)
-  (define-values (who kind)
+  (define-values (who kind parsed-right?)
     (syntax-parse pre-parsed
-      [(_ name _ _ kind . _) (values #'name (syntax-e #'kind))]))
+      [(_ name _ _ kind _ _ _ _ parsed-right-id . _)
+       (values #'name (syntax-e #'kind) (and (syntax-e #'parsed-right-id) #t))]))
   (define (macro-clause self-id all-id left-ids tail-pattern-in rhs)
     (define-values (tail-pattern implicit-tail?)
       (syntax-parse tail-pattern-in
@@ -76,11 +86,19 @@
          ;; note that this enables returning two values from the macro, instead
          ;; of just one
          (values tail-pattern-in #f)]
-        [_ (values (if (syntax-e all-id)
+        [_ (values (if (or (syntax-e all-id)
+                           (not parsed-right?))
                        #`((op $) (parens (group #%quotes (quotes (group #,@tail-pattern-in))
                                                 && #%parens (parens (group all_tail uq:: Sequence)))))
                        tail-pattern-in)
                    #t)]))
+    (define all*-id (if (syntax-e all-id)
+                        all-id
+                        (and implicit-tail? (not parsed-right?) #'all-for-relocate)))
+    (define (add-maybe-relocate-span e)
+      (if (and implicit-tail? (not parsed-right?))
+          #`(maybe-relocate-span #,all*-id #,e)
+          e))
     (syntax-parse tail-pattern
       [(dots::...-bind . _) (raise-syntax-error #f
                                                 "misplaced repetition"
@@ -102,14 +120,14 @@
       (define body
         (cond
           [(eq? kind 'rule)
-           (let ([ids (maybe-cons all-id
+           (let ([ids (maybe-cons (or all*-id all-id)
                                   (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...)))))])
              (if implicit-tail?
-                 #`(values #,(convert-rule-template rhs ids)
+                 #`(values #,(add-maybe-relocate-span (convert-rule-template rhs ids))
                            (tail-rule-template tail))
                  (convert-rule-template rhs ids)))]
           [implicit-tail?
-           #`(values (single-valued '#,who (lambda () (rhombus-body-expression #,rhs)))
+           #`(values #,(add-maybe-relocate-span #`(single-valued '#,who (lambda () (rhombus-body-expression #,rhs))))
                      (tail-rule-template tail))]
           [else
            #`(rhombus-body-expression #,rhs)]))
@@ -119,12 +137,12 @@
            (define-static-info-syntax left-id #:getter get-syntax-static-infos)
            ...
            (let-syntaxes ([(sid ...) sid-ref] ...)
-             #,@(if (syntax-e all-id)
-                    #`((define #,all-id
+             #,@(if all*-id
+                    #`((define #,all*-id
                          #,(if implicit-tail?
                                #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
                                #`(make-all (list* left-id ... self tail))))
-                       (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
+                       (define-static-info-syntax #,all*-id #:getter get-syntax-static-infos))
                     '())
              #,body))]))
   (define (convert-rule-template block ids)
@@ -225,16 +243,25 @@
                 (cond
                   [(eq? case-shape 'cond)
                    ;; shortcut for a simple identifier macro; `self` and `tail` are bound
+                   (define all*-id (if (syntax-e #'all-id)
+                                       #'all-id
+                                       (or (and (null? (syntax-e #'tail-pattern))
+                                                #'all-for-relocate)
+                                           #'#f)))
                    #`[#t
                       (let ([self-id self])
                         (define-static-info-syntax self-id #:getter get-syntax-static-infos)
-                        #,@(maybe-bind-all #'all-id #'self-id #'make-all #'tail-pattern #'tail)
+                        #,@(maybe-bind-all all*-id #'self-id #'make-all #'tail-pattern #'tail)
                         #,@(maybe-bind-tail #'tail-pattern #'tail)
                         #,(maybe-return-tail
-                           (if (eq? kind 'rule)
-                               (convert-rule-template #'(tag rhs ...)
-                                                      (maybe-cons #'all-id (list #'self-id)))
-                               #`(rhombus-body-expression (tag rhs ...)))
+                           (let ([body (if (eq? kind 'rule)
+                                           (convert-rule-template #'(tag rhs ...)
+                                                                  (maybe-cons #'all-id (list #'self-id)))
+                                           #`(rhombus-body-expression (tag rhs ...)))])
+                             (if (and (syntax-e all*-id)
+                                      (null? (syntax-e #'tail-pattern)))
+                                 #`(maybe-relocate-span #,all*-id #,body)
+                                 body))
                            #'tail-pattern
                            #'tail))]]
                   [else

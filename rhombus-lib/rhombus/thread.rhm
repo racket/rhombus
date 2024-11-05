@@ -1,0 +1,66 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  thread
+  Thread
+  Semaphore
+
+expr.macro 'thread:
+              $body':
+  'Thread(fun (): $body)'
+
+namespace ~open:
+  export: Thread
+  class Thread(hand):
+    opaque
+    internal _Thread
+    constructor (thunk :: Function.of_arity(0)):
+      super(rkt.thread(thunk))
+    property handle: hand
+    method wait():
+      rkt.#{thread-wait}(hand)
+    method break(kind :: Thread.Break = #'interrupt):
+      rkt.#{break-thread}(hand, match kind
+                                | #'interrupt: #false
+                                | #'hang_up: #'#{hang-up}
+                                | #'terminate: #'terminate)
+
+    export:
+      from_handle
+      Break
+
+  fun from_handle(hand) :: Thread:
+    unless rkt.#{thread?}(hand)
+    | error(~who: #'#{Thread.from_handle}, "not a thread handle",
+            error.val(hand))
+    _Thread(hand)
+
+  enum Break:
+    interrupt
+    hang_up
+    terminate
+
+namespace ~open:
+  export: Semaphore
+  class Semaphore(hand):
+    opaque
+    internal _Semaphore
+    constructor (init :: NonnegInt = 0):
+      super(rkt.#{make-semaphore}(init))
+    property handle: hand
+    method post():
+      rkt.#{semaphore-post}(hand)
+    method wait():
+      rkt.#{semaphore-wait}(hand)
+    method poll():
+      rkt.#{semaphore-try-wait?}(hand)
+
+    export:
+      from_handle
+
+  fun from_handle(hand) :: Semaphore:
+    unless rkt.#{semaphore?}(hand)
+    | error(~who: #'#{Semaphore.from_handle}, "not a thread handle")
+    _Semaphore(hand)

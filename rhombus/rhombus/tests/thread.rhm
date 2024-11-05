@@ -1,0 +1,55 @@
+#lang rhombus/static
+import:
+  rhombus/thread open
+
+block:
+  let s = Semaphore(0)
+  check s.post() ~is #void
+  check s.wait() ~is #void
+  check s.poll() ~is #false
+  check s.post() ~is #void
+  check s.poll() ~is #true
+  check Semaphore.from_handle(s.handle).post() ~is #void
+  check s.poll() ~is #true
+
+block:
+  let mutable v = 0
+  let th = (thread:
+              v := 1)
+  check th.wait() ~is #void
+  check Thread.from_handle(th.handle).wait() ~is #void
+  check v ~is 1
+
+block:
+  let mutable v = 0
+  let s = Semaphore(0)
+  let th = (thread:
+              try:
+                s.post()
+                recur loop ():
+                  loop()
+                ~catch _:
+                  v := 1)
+  s.wait()
+  th.break()
+  th.wait()
+  check v ~is 1
+
+block:
+  fun get_exn(mode):
+    let mutable v = 0
+    let s = Semaphore(0)
+    let s2 = Semaphore(0)
+    let th = (thread:
+                try:
+                  s.post()
+                  s2.wait()
+                  ~catch x:
+                    v := x)
+    s.wait()
+    th.break(mode)
+    th.wait()
+    v
+  check get_exn(#'interrupt) ~is_a Exn.Break
+  check get_exn(#'hang_up) ~is_a Exn.Break.HangUp
+  check get_exn(#'terminate) ~is_a Exn.Break.Terminate

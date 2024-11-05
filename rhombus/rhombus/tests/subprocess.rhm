@@ -1,0 +1,32 @@
+#lang rhombus
+import:
+  rhombus/subprocess
+  rhombus/system
+
+when system.type() != #'windows
+| def ls_exe:
+    Closeable.let sp = subprocess.run_shell("which ls", ~out: #'pipe, ~in: #'pipe)
+    sp.out.read_line()
+  check ls_exe ~is_a PathString
+
+  block:
+    Closeable.let sp = subprocess.run(ls_exe, "-d", ".", ~out: #'pipe, ~in: #'pipe)
+    check sp.out.read_line() ~is "."
+    check sp.out.read_line() ~is Port.eof
+
+    check sp.err ~throws "pipe not available"
+
+  def cat_exe:
+    Closeable.let sp = subprocess.run_shell("which cat", ~out: #'pipe, ~in: #'pipe)
+    sp.out.read_line()
+  check cat_exe ~is_a PathString
+
+  block:
+    let out = Port.Output.open_string()
+    parameterize { Port.Input.current: Port.Input.open_string("hello"),
+                   Port.Output.current: out }:
+      Closeable.let cat1 = subprocess.run(cat_exe, ~out: #'pipe)
+      Closeable.let cat2 = subprocess.run(cat_exe, ~in: cat1.out)
+      cat1.wait()
+      cat2.wait()
+    check out.get_string() ~is "hello"

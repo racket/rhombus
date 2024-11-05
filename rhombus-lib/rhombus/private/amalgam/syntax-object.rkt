@@ -84,6 +84,7 @@
    relocate_group
    relocate_span
    relocate_group_span
+   relocate_ephemeral_span
    property
    group_property
    source_properties
@@ -493,7 +494,7 @@
                      extract-ctx annot)
   (extract-ctx
    who stx-in
-   #:update (lambda (stx container?)
+   #:update (lambda (stx container-mode)
               (define ctx-stx (cond
                                 [(srcloc? ctx-stx-in)
                                  ctx-stx-in]
@@ -507,12 +508,12 @@
                 [(syntax? ctx-stx)
                  (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx)]
                 [(srcloc? ctx-stx)
-                 (if container?
+                 (if (eq? container-mode 'container)
                      (syntax-raw-srcloc-property stx ctx-stx)
                      (datum->syntax stx (syntax-e stx) ctx-stx stx))]
                 [else
                  (let ([stx (syntax-raw-property (datum->syntax stx (syntax-e stx)) null)])
-                   (if container?
+                   (if (eq? container-mode 'container)
                        (syntax-raw-srcloc-property
                         (syntax-raw-opaque-content-property stx null)
                         #f)
@@ -541,12 +542,12 @@
     [(stx prop val)
      (extract-ctx who stx
                   #:false-ok? #f
-                  #:update (lambda (t container?)
+                  #:update (lambda (t container-mode)
                              (syntax-property t prop val)))]
     [(stx prop val preserved?)
      (extract-ctx who stx
                   #:false-ok? #f
-                  #:update (lambda (t container?)
+                  #:update (lambda (t container-mode)
                              (syntax-property t prop val preserved?)))]))
 
 (define/method Syntax.property
@@ -606,8 +607,8 @@
      (set-source-properties stx extract-group-ctx prefix raw tail suffix)]))
 
 (define (get-source-properties stx extract-ctx)
-  (define-values (ctx container?) (extract-ctx 'get-source-properties stx #:report-container? #t))
-  (if container?
+  (define-values (ctx container-mode) (extract-ctx 'get-source-properties stx #:report-container? #t))
+  (if (eq? container-mode 'container)
       (values
        (or (combine-shrubbery-raw
             (syntax-raw-prefix-property ctx)
@@ -627,7 +628,10 @@
             (syntax-raw-prefix-property ctx)
             (syntax-raw-inner-prefix-property ctx))
            null)
-       (or (syntax-raw-property ctx) null)
+       (or (if (eq? container-mode 's-exp)
+               (syntax-opaque-raw-property ctx)
+               (syntax-raw-property ctx))
+           null)
        null
        (or (combine-shrubbery-raw
             (syntax-raw-inner-suffix-property ctx)
@@ -638,16 +642,20 @@
   (extract-ctx
    'get-source-properties stx
    #:update
-   (lambda (stx container?)
+   (lambda (stx container-mode)
      (let* ([stx (syntax-raw-prefix-property stx (if (null? prefix) #f prefix))]
             [stx (syntax-raw-inner-prefix-property stx #f)]
             [stx (syntax-raw-inner-suffix-property stx #f)]
             [stx (syntax-raw-suffix-property stx (if (null? suffix) #f suffix))]
             [stx (syntax-raw-tail-property stx (if (null? tail) #f tail))])
-       (if container?
-           (let* ([stx (syntax-raw-property stx '())])
-             (syntax-raw-opaque-content-property stx (or raw null)))
-           (syntax-raw-property stx (or raw null)))))))
+       (case container-mode
+         [(container)
+          (let* ([stx (syntax-raw-property stx '())])
+            (syntax-raw-opaque-content-property stx (or raw null)))]
+         [(s-exp)
+          (syntax-opaque-raw-property stx (or raw null))]
+         [else
+          (syntax-raw-property stx (or raw null))])))))
   
 ;; also reraws, but in a mode that attaches raw test as permanent text,
 ;; instead of just ephmeral on the wrapper syntax object
@@ -655,13 +663,19 @@
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define stx (unpack-term/maybe stx-in))
   (unless stx (raise-annotation-failure who stx-in "Term"))
-  (relocate-span who stx ctx-stxes-in))
+  (relocate-span who stx ctx-stxes-in extract-ctx))
 
 (define/method (Syntax.relocate_group_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (define stx (unpack-group stx-in #f #f))
   (unless stx (raise-annotation-failure who stx-in "Group"))
-  (relocate-span who stx ctx-stxes-in))
+  (relocate-span who stx ctx-stxes-in extract-group-ctx))
+
+(define/method (Syntax.relocate_ephemeral_span stx-in ctx-stxes-in)
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+  (unless (syntax? stx-in) (raise-annotation-failure who stx-in "Syntax"))
+  (relocate-span who stx-in ctx-stxes-in (lambda (who stx #:update update)
+                                           (update stx 's-exp))))
 
 (define (to-list-of-stx who v-in)
   (define stxs (to-list #f v-in))
@@ -669,25 +683,35 @@
     (raise-annotation-failure who v-in "Listable.to_list && List.of(Syntax)"))
   stxs)
 
-(define (relocate-span who stx ctx-stxes-in)
+(define (relocate-span who stx ctx-stxes-in extract-ctx)
   (define ctx-stxes (to-list-of-stx who ctx-stxes-in))
-  (extract-ctx
-   who stx
-   #:update
-   (lambda (stx container?)
-     (if (null? ctx-stxes)
-         ;; empty sequence: set everything to blank
-         (let* ([stx (syntax->datum stx (syntax-e stx) #f stx)]
-                [stx (syntax-raw-property stx '())]
-                [stx (syntax-raw-prefix-property stx #f)]
-                [stx (syntax-raw-inner-prefix-property stx #f)]
-                [stx (syntax-raw-inner-suffix-property stx #f)]
-                [stx (syntax-raw-suffix-property stx #f)])
-           (if container?
-               (syntax-raw-opaque-content-property stx '())
-               stx))
-         (relocate+reraw (datum->syntax #f ctx-stxes) stx
-                         #:keep-mode (if container? 'content 'term))))))
+  (define new-stx
+    (extract-ctx
+     who stx
+     #:update
+     (lambda (stx container-mode)
+       (define new-stx
+         (if (null? ctx-stxes)
+             ;; empty sequence: set everything to blank
+             (let* ([stx (datum->syntax stx (syntax-e stx) #f stx)]
+                    [stx (syntax-raw-property stx '())]
+                    [stx (syntax-raw-prefix-property stx #f)]
+                    [stx (syntax-raw-inner-prefix-property stx #f)]
+                    [stx (syntax-raw-inner-suffix-property stx #f)]
+                    [stx (syntax-raw-suffix-property stx #f)])
+               (case container-mode
+                 [(container)
+                  (syntax-raw-opaque-content-property stx '())]
+                 [(s-expr)
+                  (syntax-opaque-raw-property stx '())]
+                 [else stx]))
+             (relocate+reraw (datum->syntax #f ctx-stxes) stx
+                             #:keep-mode (case container-mode
+                                           [(container) 'content]
+                                           [(s-exp) #f]
+                                           [else 'term]))))
+       (syntax-relocated-property new-stx #t))))
+  (syntax-relocated-property new-stx #t))
 
 (define (to-list-of-term-stx who v-in)
   (define stxs (to-list #f v-in))
@@ -720,7 +744,7 @@
        (extract-ctx
         who stx
         #:update
-        (lambda (stx container?)
+        (lambda (stx container-mode)
           (let* ([stx (datum->syntax stx
                                      (syntax-e stx)
                                      loc
@@ -734,7 +758,7 @@
                        (and prefix?
                             (syntax-raw-prefix-property ctx)))])
             (cond
-              [container?
+              [(eq? container-mode 'container)
                (let* ([stx (syntax-raw-property stx "")]
                       [stx (syntax-raw-opaque-content-property
                             stx
@@ -752,7 +776,7 @@
                                  (syntax-raw-inner-suffix-property ctx)))])
                  stx)]
               [else
-               (let* ([stx (syntax-raw-property
+               (let* ([stx ((if (eq? container-mode 's-exp) syntax-opaque-raw-property syntax-raw-property)
                             stx
                             (if suffix?
                                 (syntax-raw-property ctx)

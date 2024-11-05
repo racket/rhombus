@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  type
+  os
+  arch
+  host
+  target_machine
+  version
+  TargetMachineSymbol
+
+fun type() :~ Symbol:
+  rkt.#{system-type}()
+
+fun os() :~ Symbol:
+  rkt.#{system-type}(#'#{os*})
+
+fun arch() :~ Symbol:
+  rkt.#{system-type}(#'#{arch})
+
+fun host() :~ String:
+  String.snapshot(rkt.#{system-type}(#'#{machine}))
+
+annot.macro 'TargetMachineSymbol':
+  ~op_stx: self
+  let '$(sym :: annot_meta.Parsed)' = 'Symbol'
+  let (_, si) = annot_meta.unpack_predicate(sym)
+  annot_meta.pack_predicate('fun (x): rkt.#{symbol?}(x) && rkt.#{compile-target-machine?}(x)', si).relocate_span([self])
+
+fun target_machine() :~ TargetMachineSymbol:
+  rkt.#{system-type}(#'#{target-machine}) || #'racket
+
+fun version() :~ String:
+  String.snapshot(rkt.#{version}())

@@ -433,6 +433,17 @@
      (pretty-shrubbery qs
                        #:armor? (not pretty?)
                        #:prefer-multiline? pretty?)]
+    [(or (input-port? v)
+         (output-port? v))
+     (pretty-listlike
+      (pretty-text (if (input-port? v)
+                       "Port.Input("
+                       "Port.output("))
+      (let ([n (object-name v)])
+        (if n
+            (list (print n))
+            null))
+      (pretty-text ")"))]
     [else
      (cond
        [(display?)
