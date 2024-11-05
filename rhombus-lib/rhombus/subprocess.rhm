@@ -5,6 +5,7 @@ import:
   lib("racket/base.rkt") as rkt
   "private/shell.rkt" as rkt_shell
   lib("racket/private/streams.rkt") as rkt_stream
+  "private/amalgam/rename-parameter.rkt" as rkt_rename
 
 export:
   run
@@ -16,18 +17,12 @@ export:
   current_subprocess_custodian_mode
 
 def current_subprocess_group_new:
-  rkt.#{make-derived-parameter}(rkt.#{subprocess-group-enabled},
-                                values,
-                                values,
-                                #'current_subprocess_group_enabled,
-                                #'rhombus)
+  rkt_rename.#{rename-parameter}(rkt.#{subprocess-group-enabled},
+                                 #'current_subprocess_group_enabled)
 
 def current_subprocess_custodian_mode:
-  rkt.#{make-derived-parameter}(rkt.#{current-subprocess-custodian-mode},
-                                values,
-                                values,
-                                #'current_subprocess_custodian_mode,
-                                #'rhombus)
+  rkt_rename.#{rename-parameter}(rkt.#{current-subprocess-custodian-mode},
+                                 #'current_subprocess_custodian_mode)
 
 fun current_group():
   if current_subprocess_group_new()
