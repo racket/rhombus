@@ -76,6 +76,8 @@
   #:properties
   ()
   #:methods
+  ()
+  #:dot-methods
   ([length String.length]
    [get String.get]
    [contains String.contains]

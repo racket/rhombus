@@ -10,6 +10,8 @@
 (define-syntax (define-simple-symbol-enum stx)
   (syntax-parse stx
     [(_ name:id
+        (~or (~seq #:extra [extra-field ...])
+             (~seq))
         (~or* [val:id rkt-val:id]
               val:id)
         ...)
@@ -39,4 +41,7 @@
 
          (define-name-root name
            #:fields
-           ([val val-name] ...)))]))
+           ([val val-name]
+            ...
+            (~? (~@ extra-field
+                    ...)))))]))

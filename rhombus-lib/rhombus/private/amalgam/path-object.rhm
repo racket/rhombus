@@ -19,7 +19,7 @@ namespace PathString:
   fun
   | to_absolute_path(p :: PathString):
       Path.to_absolute_path(p)
-  | to_absolute_path(p :: PathString, ~relative_to: base_path :: PathString):
+  | to_absolute_path(p :: PathString, ~relative_to: base_path):
       Path.to_absolute_path(p, ~relative_to: base_path)
 
   annot.macro 'to_path':

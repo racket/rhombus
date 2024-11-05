@@ -1,0 +1,58 @@
+#lang rhombus/static/and_meta
+import:
+  "path.rhm" open
+  rhombus/runtime_path
+
+runtime_path.def path_rhm: "path.rhm"
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    filesystem.simplify_path(p)
+    filesystem.normalize_path(p)
+    filesystem.resolve_path(p)
+    filesystem.expand_user_path(p)
+    filesystem.file_exists(p)
+    filesystem.directory_exists(p)
+    filesystem.link_exists(p)
+
+block:
+  // assuming "x" in the current directory is not a link!
+  check filesystem.simplify_path(Path("x")) ~is Path("x")
+  check filesystem.simplify_path("x") ~is Path("x")
+  check filesystem.simplify_path(Path("x")).string() ~is "x"
+  check_annot filesystem.simplify_path(cross_p)
+
+block:
+  // assuming "x" in the current directory is not a link!
+  check filesystem.normalize_path(Path("x")) ~is Path("x").to_absolute_path()
+  check filesystem.normalize_path("x") ~is Path("x").to_absolute_path()
+  check filesystem.normalize_path(Path("x")).string() ~is Path("x").to_absolute_path().string()
+  check_annot filesystem.normalize_path(cross_p)
+
+block:
+  // assuming "x" in the current directory is not a link!
+  check filesystem.resolve_path(Path("x")) ~is Path("x")
+  check filesystem.resolve_path("x") ~is Path("x")
+  check filesystem.resolve_path(Path("x")).string() ~is "x"
+  check_annot filesystem.resolve_path(cross_p)
+
+block:
+  // assuming "x" in the current directory is not a link!
+  check filesystem.expand_user_path(Path("x")) ~is_a Path
+  check filesystem.expand_user_path("x") ~is_a Path
+  check filesystem.expand_user_path(Path("x")).string() ~is_a String
+  when CrossPath.Convention.current() == #'unix
+  | check filesystem.expand_user_path(Path("~no_such_user")) ~throws "bad username"
+    check filesystem.expand_user_path(Path("~no_such_user")).string() ~throws "bad username"
+  check_annot filesystem.expand_user_path(#'same)
+  check_annot filesystem.expand_user_path(cross_p)
+
+block:
+  check filesystem.file_exists(Path(path_rhm)) ~is #true
+  check filesystem.directory_exists(Path(path_rhm)) ~is #false
+  check filesystem.directory_exists(Path(path_rhm).to_absolute_path().parent()) ~is #true
+  check filesystem.link_exists(Path(path_rhm)) ~is #false
+  check_annot filesystem.file_exists(cross_p)
+  check_annot filesystem.directory_exists(cross_p)
+  check_annot filesystem.link_exists(cross_p)

@@ -149,7 +149,8 @@
         "printable.rkt"
         "callable.rkt"
         "path-object.rkt"
-        "srcloc-object.rkt")
+        "srcloc-object.rkt"
+        "filesystem.rkt")
 
 (module reader racket/base
   (require (submod rhombus/private/core reader))

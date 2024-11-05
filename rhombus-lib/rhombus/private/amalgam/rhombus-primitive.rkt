@@ -5,7 +5,8 @@
          set-primitive-who!
          get-primitive-contract
          get-primitive-subcontract
-         get-primitive-who)
+         get-primitive-who
+         primitive-who-table-key)
 
 (define primitive-contract-table (make-hash))
 
@@ -14,6 +15,8 @@
 (define primitive-subcontract-table (make-hash))
 
 (define primitive-who-table (make-hasheq))
+
+(define primitive-who-table-key (gensym 'who-table))
 
 (define (set-primitive-contract! contract/rkt contract/rhm)
   (hash-set! primitive-contract-table contract/rkt contract/rhm))
@@ -29,11 +32,13 @@
 
 (define (get-primitive-contract contract/rkt)
   (cond
+    [(hash-ref primitive-contract-table contract/rkt #f)
+     => (lambda (contract/rhm) contract/rhm)]
     [(and (pair? contract/rkt)
           (hash-ref primitive-contract-combinator-table (car contract/rkt) #f))
      => (lambda (handler)
           (handler contract/rkt))]
-    [else (hash-ref primitive-contract-table contract/rkt #f)]))
+    [else #f]))
 
 (define (get-primitive-subcontract contracts/rkt)
   (cond
@@ -43,4 +48,5 @@
     [else #f]))
 
 (define (get-primitive-who who/rkt)
-  (hash-ref primitive-who-table who/rkt #f))
+  (or (hash-ref (continuation-mark-set-first #f primitive-who-table-key #hasheq()) who/rkt #f)
+      (hash-ref primitive-who-table who/rkt #f)))

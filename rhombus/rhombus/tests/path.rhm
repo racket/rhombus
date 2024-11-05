@@ -1,28 +1,73 @@
-#lang rhombus
+#lang rhombus/static/and_meta
 
 import:
   "version_guard.rhm"
+
+export:
+  check_annot
+  cross_p
 
 block:
   import "static_arity.rhm"
   static_arity.check:
     Path(s)
+    Path.name(p) ~method
+    Path.parent(p) ~method
     Path.bytes(p) ~method
     Path.string(p) ~method
+    Path.convention(p) ~method
+    Path.add(p, arg, ...) ~method
+    Path.split(p) ~method
+    Path.to_absolute_path(p) ~method
+    Path.to_directory_path(p) ~method
+    Path.directory_only(p) ~method
+    Path.suffix(p) ~method
+    Path.add_suffix(p, sfx) ~method
+    Path.replace_suffix(p, sfx) ~method
+    Path.cleanse(p) ~method
+    Path.normal_case(p) ~method
+    Path.simplify(p) ~method
+    Path.as_relative_to(p, wrt) ~method
 
-check:
-  use_static
-  def p = Path("x")
-  [p.bytes(), p.string()]
-  ~is [#"x", "x"]
+expr.macro
+| 'check_annot $c($args) . $m $tail ...':
+    ~op_stx: self
+    '$('check'.relocate(self)) $c($args) . $m $tail ... ~throws values(#' $c +& "." +& #' $m, error.annot_msg())'
+| 'check_annot $who $tail ...':
+    ~op_stx: self
+    '$('check'.relocate(self)) $who $tail ... ~throws values(to_string(#' $who), error.annot_msg())'
 
-check:
-  def p = dynamic(Path("x"))
-  [p.bytes(), p.string()]
-  ~is [#"x", "x"]
+def (cross_p :~ CrossPath, cross_abs_p :~ CrossPath, root_p :~ Path):
+  match CrossPath.Convention.current()
+  | #'unix: values(CrossPath(#"x", #'windows),
+                   CrossPath(#"C:/d", #'windows),
+                   Path("/"))
+  | ~else: values(CrossPath(#"x", #'unix),
+                  CrossPath(#"/d", #'unix),
+                  Path("C:/"))
 
 block:
-  use_static
+  def p = Path("x")
+  check [p.bytes(), p.string()] ~is [#"x", "x"]
+  check p.string().length() ~is 1
+  check p.bytes().length() ~is 1
+  check [cross_p.bytes(), cross_p.string()] ~is [#"x", "x"]
+  check_annot Path.bytes(0)
+  check_annot Path.string(0)
+
+block:
+  use_dynamic
+  def p = dynamic(Path("x"))
+  check [p.bytes(), p.string()] ~is [#"x", "x"]
+  check p.string().length() ~is 1
+  check p.bytes().length() ~is 1
+
+block:
+  check Path("x").convention() ~is CrossPath.Convention.current()
+  check CrossPath(#"x", #'unix).convention() ~is #'unix
+  check CrossPath(#"x", #'windows).convention() ~is #'windows
+
+block:
   def p = Path("/")
   def q = Path("/etc")
   check p < q ~is #true
@@ -42,6 +87,7 @@ block:
     check p != q ~is #true
 
 block:
+  use_dynamic
   def p = dynamic(Path("/"))
   def q = dynamic(Path("/etc"))
   check p < q ~is #true
@@ -69,31 +115,77 @@ block:
     check p1 == p2 ~is #true
 
 block:
+  def p1 = Path("/etc")
+  def p2 = Path("etc")
+  check "/etc" is_a Path.Absolute ~is #false
+  check "etc" is_a Path.Relative ~is #false
+  check "etc" is_a Path.DriveRelative ~is #false
+  check "/etc" is_a Path.DriveRelative ~is CrossPath.Convention.current() == #'windows
+  check p1 is_a Path.Absolute ~is #true
+  check p1 is_a Path.Relative ~is #false
+  check p2 is_a Path.Absolute ~is #false
+  check p2 is_a Path.Relative ~is #true
+  check p1 is_a Path.Directory ~is #false
+  check p2 is_a Path.Directory ~is #false
+  check Path(#'up) is_a Path.Directory ~is #true
+  check Path(#'same) is_a Path.Directory ~is #true
+  check Path("x/") is_a Path.Directory ~is #true
+  check CrossPath(#"x", #'unix) is_a CrossPath.Unix ~is #true
+  check CrossPath(#"x", #'windows) is_a CrossPath.Unix ~is #false
+  check CrossPath(#"x", #'windows) is_a CrossPath.Windows ~is #true
+  check CrossPath.Unix(#"x") ~is CrossPath(#"x", #'unix)
+  check CrossPath.Windows(#"x") ~is CrossPath(#"x", #'windows)
+  check CrossPath.Unix(#'up) ~is CrossPath(#'up, #'unix)
+  check CrossPath.Windows(#'up) ~is CrossPath(#'up, #'windows)
+  check CrossPath.Unix(#'same) ~is CrossPath(#'same, #'unix)
+  check CrossPath.Windows(#'same) ~is CrossPath(#'same, #'windows)
+
+block:
+  check Path("x").name() ~is Path("x")
+  check Path("x").parent() ~is #'relative
+  check Path("x/y").name() ~is Path("y")
+  check Path("x/y").parent() ~is Path("x/")
+  check Path("x/y/z").name() ~is Path("z")
+  check Path("x/y/z").parent() ~is Path("x/y/")
+  check Path.name("x/y") ~is Path("y")
+  check Path.parent("x/y") ~is Path("x/")
+  check Path.name(Path("x").add(#'same)) ~is #'same  
+  check Path(root_p).parent() ~is #false
+
+block:
+  check Path("/").add("etc", Path("passwd")) ~is Path("/etc/passwd")
+  check Path.add("C:", "win32", "sys") ~is Path("C:/win32/sys")
+  check Path.add("x", "y") ~is Path("x").add("y")
+  check Path.add("x", "y").string() ~is Path("x").add("y").string()
+  check Path.add(#'same, "y") ~is Path(#'same).add("y")
+  check_annot Path.add(0, "y")
+  check_annot Path.add("y", 0)
+  check_annot Path("x").add(0)
+  check Path.add("x", "/y") ~throws values("Path.add",
+                                           "absolute path cannot be added to a path")
+
+block:
   def p1 = Path("/etc/passwd")
   check p1.split() ~is [Path("/"), Path("etc"), Path("passwd")]
   def p2 = Path("C:/windows")
   check p2.split() ~is [Path("C:"), Path("windows")]
   def p3 = Path("../a/b/./c")
   check p3.split() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
+  check Path.split("x/y") ~is [Path("x"), Path("y")]
+  check Path.split("x/y").length() ~is 2
+  check cross_p.split() ~is [cross_p]
+  check_annot Path.split(0)
 
 block:
-  check Path("/").add("etc", Path("passwd")) ~is Path("/etc/passwd")
-  check Path.add("C:", "win32", "sys") ~is Path("C:/win32/sys")
-
-block:
-  def p1 = Path("/etc")
-  def p2 = Path("etc")
-  check "/etc" is_a Path.Absolute ~is #false
-  check "etc" is_a Path.Relative ~is #false
-  check p1 is_a Path.Absolute ~is #true
-  check p1 is_a Path.Relative ~is #false
-  check p2 is_a Path.Absolute ~is #false
-  check p2 is_a Path.Relative ~is #true
-
-block:
+  check root_p.to_absolute_path() ~is root_p
   def p1 = Path("shadow")
   check p1.to_absolute_path() ~is Path.current_directory().add("shadow")
   check p1.to_absolute_path(~relative_to: "/etc") ~is Path("/etc/shadow")
+  check p1.to_absolute_path(~relative_to: "/etc").string() ~is "/etc/shadow"
+  check Path.to_absolute_path(cross_p) ~throws values("Path.to_absolute_path",
+                                                      "incompatible with convention")
+  check Path.to_absolute_path(cross_p, ~relative_to: cross_abs_p) ~is_a CrossPath
+  check_annot Path.to_absolute_path(0)
 
   def p2 :: PathString.to_absolute_path(~relative_to: "/etc") = "shadow"
   check p2 ~is Path("/etc/shadow")
@@ -101,3 +193,75 @@ block:
 
   def p3 = Path.to_absolute_path("shadow", ~relative_to: "/etc")
   check p3 ~is Path("/etc/shadow")
+
+block:
+  check Path("x").suffix() ~is #false
+  check Path("x.y").suffix() ~is #".y"
+  check Path("x/y.zzzzz").suffix() ~is #".zzzzz"
+  check Path.suffix("x/y.z") ~is #".z"
+  check cross_p.suffix() ~is #false
+  check_annot Path.suffix(0)
+
+block:
+  check Path("x").add_suffix(".z") ~is Path("x.z")
+  check Path("x").add_suffix("z") ~is Path("xz")
+  check Path("x").add_suffix(".z").string() ~is "x.z"
+  check Path("x/y").add_suffix(".z") ~is Path("x/y.z")
+  check Path("x/y.w").add_suffix(".z") ~is Path("x/y_w.z")
+  check Path("x/y.w").add_suffix(".z", ~sep: "=") ~is Path("x/y=w.z")
+  check Path.add_suffix("x/y", ".z") ~is Path("x/y.z")
+  check Path.add_suffix(cross_p, ".z") ~is_a CrossPath
+  check_annot Path("x").add_suffix(#'oops)
+  version_guard.at_least "8.15.0.3":
+    check Path(#'same).add_suffix(".z") ~throws values("Path.add_suffix",
+                                                       "cannot add an extension")
+
+block:
+  check Path("x").replace_suffix(".z") ~is Path("x.z")
+  check Path("x").replace_suffix("z") ~is Path("xz")
+  check Path("x.q").replace_suffix("z") ~is Path("xz")
+  check Path("x").replace_suffix(".z").string() ~is "x.z"
+  check Path("x/y.q").replace_suffix(".z") ~is Path("x/y.z")
+  check Path.replace_suffix("x/y", ".z") ~is Path("x/y.z")
+  check Path.replace_suffix(cross_p, ".z") ~is_a CrossPath
+  check_annot Path("x").replace_suffix(#'oops)
+  version_guard.at_least "8.15.0.3":
+    check Path(#'same).replace_suffix(".z") ~throws values("Path.replace_suffix",
+                                                           "cannot add an extension")
+
+block:
+  check Path("x///y").cleanse() ~is Path("x/y")
+  check Path("x").cleanse() ~is Path("x")
+  check Path("x").cleanse().string() ~is "x"
+  check Path.cleanse("x///y") ~is Path("x/y")
+  check Path.cleanse("x").string() ~is "x"
+  check_annot Path.cleanse(0)
+
+block:
+  check Path("x/y").normal_case() ~is Path("x/y")
+  check Path("x/y").normal_case().string() ~is "x/y"
+  check: Path("X/Y").normal_case()
+         ~is Path(match CrossPath.Convention.current()
+                  | #'windows: "x/y"
+                  | ~else: "X/Y")
+  check_annot Path.normal_case(0)
+
+block:
+  check Path("x").add(#'same, #'same, "y").simplify() ~is Path("x").add("y")
+  check Path("x").simplify().string() ~is "x"
+  check_annot Path.simplify(0)
+
+block:
+  check Path("x/y").as_relative_to("x") ~is Path("y")
+  check Path("x").simplify().string() ~is "x"
+  check Path("x").as_relative_to("x/y") ~is Path(#'up)
+  check Path("x").as_relative_to("x") ~is Path("x")
+  check Path("x").as_relative_to("x", ~more_than_same: #false) ~is Path(#'same)
+  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y")) ~is Path(#'up).add("x")  
+  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y"), ~more_than_root: #true) ~is root_p.add("x")  
+  check Path("X/Y").as_relative_to("x/z") ~is Path(match CrossPath.Convention.current()
+                                                   | #'windows: "Y"
+                                                   | ~else: "X/Y")
+  check Path("X/Y").as_relative_to("x/z", ~normal_case: #false) ~is Path("X/Y")
+  check_annot Path.as_relative_to(0, "x")
+  check_annot Path.as_relative_to("x", 0)
