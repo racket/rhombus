@@ -16,7 +16,8 @@
          respan
          maybe-respan
          with-syntax-error-respan
-         shift-origin)
+         shift-origin
+         syntax-relocated-property)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
 ;; objects:
@@ -263,6 +264,10 @@
                   (if (null? (cdr l))
                       stx
                       (from-list stx (cdr l)))]
+                 [(parsed)
+                  (if (= 3 (length l))
+                      (caddr l)
+                      stx)]
                  [else
                   (if (syntax-raw-property a)
                       ;; use srcloc on head
@@ -300,7 +305,7 @@
      => (lambda (l)
           (define head (car l))
           (case (syntax-e head)
-            [(parens brackets braces quotes block alts op group multi)
+            [(parens brackets braces quotes block alts op group multi parsed)
              (define r (syntax-raw-property head))
              (if (not (and r (equal? r (symbol->immutable-string (syntax-e head)))))
                  (list stx)
@@ -332,3 +337,8 @@
         (let ([o2 (syntax-property stx 'origin)])
           (syntax-property stx 'origin (if o2 (cons o o2) o)))
         stx)))
+
+(define syntax-relocated-property
+  (case-lambda
+    [(stx) (syntax-property stx 'relocated)]
+    [(stx on) (syntax-property stx 'relocated on)]))

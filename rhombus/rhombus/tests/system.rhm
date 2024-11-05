@@ -1,0 +1,17 @@
+#lang rhombus
+import:
+  rhombus/system
+
+check system.version() ~is_a String
+
+check system.type() ~is_a Any.of(#'unix, #'windows, #'macosx)
+
+check system.os() ~is_a Symbol
+
+check system.arch() ~is_a Symbol
+
+check system.host() ~is_a String
+
+check system.target_machine() ~is_a system.TargetMachineSymbol
+check #false is_a system.TargetMachineSymbol ~is #false
+check #'cek is_a system.TargetMachineSymbol ~is #false

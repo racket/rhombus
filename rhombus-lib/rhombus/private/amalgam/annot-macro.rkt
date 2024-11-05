@@ -78,7 +78,7 @@
     #:property prop:annotation-infix-operator (lambda (self) (annotation-prefix+infix-operator-infix self))))
 
 (define-for-syntax (wrap-parsed stx)
-  #`(parsed #:rhombus/annot #,stx))
+  (no-srcloc #`(parsed #:rhombus/annot #,stx)))
 
 (define-for-syntax (parse-annotation-macro-result form proc #:srcloc [loc (maybe-respan form)])
   (unless (syntax? form)
@@ -147,10 +147,10 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who predicate)
     (check-syntax who static-infos)
-    #`(parsed #:rhombus/annot
-              #,(annotation-predicate-form
-                 (wrap-expression predicate)
-                 (pack-static-infos who (unpack-term static-infos who #f)))))
+    (no-srcloc #`(parsed #:rhombus/annot
+                         #,(annotation-predicate-form
+                            (wrap-expression predicate)
+                            (pack-static-infos who (unpack-term static-infos who #f))))))
 
   (define/arity (annot_meta.unpack_predicate stx)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
@@ -159,7 +159,7 @@
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
       [(parsed #:rhombus/annot a::annotation-predicate-form)
-       (values #'(parsed #:rhombus/expr a.predicate)
+       (values (no-srcloc #'(parsed #:rhombus/expr a.predicate))
                (unpack-static-infos who #'a.static-infos))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed predicate annotation"
@@ -176,11 +176,12 @@
     (syntax-parse binding
       #:datum-literals (parsed)
       [(parsed #:rhombus/bind _::binding-form)
-       #`(parsed #:rhombus/annot
-                 #,(annotation-binding-form
-                    binding
-                    (wrap-expression body)
-                    (pack-static-infos who (unpack-term static-infos who #f))))]
+       (no-srcloc
+        #`(parsed #:rhombus/annot
+                  #,(annotation-binding-form
+                     binding
+                     (wrap-expression body)
+                     (pack-static-infos who (unpack-term static-infos who #f)))))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed binding form"
                                  "syntax object" binding)]))
@@ -193,8 +194,8 @@
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
       [(parsed #:rhombus/annot a::annotation-binding-form)
-       (values #'(parsed #:rhombus/bind a.binding)
-               #'(parsed #:rhombus/expr a.body)
+       (values (no-srcloc #'(parsed #:rhombus/bind a.binding))
+               (no-srcloc #'(parsed #:rhombus/expr a.body))
                (unpack-static-infos who #'a.static-infos))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed converter annotation"

@@ -37,6 +37,7 @@ For a general overview of the language, see @docref(guide_doc).
 @include_section("format.scrbl")
 @include_section("io.scrbl")
 @include_section("os.scrbl")
+@include_section("concurrency.scrbl")
 @include_section("runtime.scrbl")
 
 @include_section("meta-lib.scrbl")

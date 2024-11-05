@@ -432,6 +432,17 @@
      (define pretty? (current-print-as-pretty))
      (pretty-shrubbery qs
                        #:armor? (not pretty?))]
+    [(or (input-port? v)
+         (output-port? v))
+     (pretty-listlike
+      (pretty-text (if (input-port? v)
+                       "Port.Input("
+                       "Port.output("))
+      (let ([n (object-name v)])
+        (if n
+            (list (print n))
+            null))
+      (pretty-text ")"))]
     [else
      (cond
        [(display?)

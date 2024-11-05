@@ -225,7 +225,6 @@ Paths are @tech{comparable}, which means that generic operations like
   def p = Path("/home/rhombus")
   Path.add(p, "shape.txt")
   p.add("shape.txt")
-  p +/ "shape.txt"
 )
 
 }

@@ -13,6 +13,7 @@
          "realm.rkt"
          "enum.rkt"
          (submod "print.rkt" for-port)
+         "rename-parameter.rkt"
          "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/annot
@@ -44,7 +45,7 @@
   #:fields ()
   #:namespace-fields
   ([String Port.Input.String]
-   [current current-input-port]
+   [current Port.Input.current]
    [open_bytes Port.Input.open_bytes]
    [open_file Port.Input.open_file]
    [open_string Port.Input.open_string])
@@ -68,8 +69,8 @@
   #:fields ()
   #:namespace-fields
   ([String Port.Output.String]
-   [current current-output-port]
-   [current_error current-error-port]
+   [current Port.Output.current]
+   [current_error Port.Output.current_error]
    [open_bytes Port.Output.open_bytes]
    [open_file Port.Output.open_file]
    [open_string Port.Output.open_string]
@@ -110,12 +111,19 @@
   ([get_bytes Port.Output.get_bytes]
    [get_string Port.Output.get_string]))
 
-(define-static-info-syntax current-input-port
+(define Port.Input.current (rename-parameter current-input-port 'Port.Input.current))
+(set-primitive-who! 'current-input-port 'Port.Input.current)
+(define Port.Output.current (rename-parameter current-output-port 'Port.Output.current))
+(set-primitive-who! 'current-output-port 'Port.Output.current)
+(define Port.Output.current_error (rename-parameter current-error-port 'Port.Output.current_error))
+(set-primitive-who! 'current-error-port 'Port.Output.current_error)
+
+(define-static-info-syntax Port.Input.current
   (#%function-arity 3)
   (#%call-result #,(get-input-port-static-infos))
   . #,(get-function-static-infos))
 
-(define-static-info-syntaxes (current-output-port current-error-port)
+(define-static-info-syntaxes (Port.Output.current Port.Output.current_error)
   (#%function-arity 3)
   (#%call-result #,(get-output-port-static-infos))
   . #,(get-function-static-infos))

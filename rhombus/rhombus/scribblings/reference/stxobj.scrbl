@@ -937,13 +937,28 @@ suffix corresponds to text after the closer.
     stx :: Group,
     like_stxes :: Listable.to_list && List.of(Syntax)
   ) :: Group
+  fun Syntax.relocate_ephemeral_span(
+    stx :: Syntax,
+    like_stxes :: Listable.to_list && List.of(Syntax),
+  ) :: Syntax
 ){
 
- Similar to @rhombus(Syntax.relocate) an
+ Similar to @rhombus(Syntax.relocate) and
  @rhombus(Syntax.relocate_group), but the metadata of syntax objects in
  @rhombus(like_stxes) is merged to replace the metadata of @rhombus(stx).
  Merging combines raw source text in sequence, and it combines compatible
  source locations to describe a region containing all of the locations.
+
+ The @rhombus(Syntax.relocate_ephemeral_span) function accepts any
+ syntax object, which can be a term, group, or multi-group sequence. It
+ attaches metadata to the syntax object in way that may get lost if the
+ syntax object is deconstructed or adjusted in any way. This mode is
+ intended for communicating source information from a macro expansion in
+ the case that it cannot be inferred automatically.
+
+ All three functions add an immediate, ephemeral @rhombus(#'relocated)
+ syntax property to the result syntax object, which overrides any default
+ automatic relocation, such as by @rhombus(expr.macro, ~defn).
 
 }
 
