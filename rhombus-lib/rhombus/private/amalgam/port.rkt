@@ -96,7 +96,7 @@
   (and (output-port? v)
        (string-port? v)))
 
-(void (set-primitive-subcontract! '(output-port? string-port?) 'output-string-port?))
+(void (set-primitive-contract! '(and/c output-port? string-port?) "Port.Output.String"))
 (define-primitive-class Port.Output.String output-string-port
   #:lift-declaration
   #:existing

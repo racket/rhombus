@@ -153,7 +153,7 @@
    'Array (string-append what " element") v annot-str
    "position" (unquoted-printing-string (number->string idx))))
 
-(void (set-primitive-subcontract! '(vector? (not/c immutable?)) 'mutable-vector?))
+(void (set-primitive-contract! '(and/c vector? (not/c immutable?)) "MutableArray"))
 (void (set-primitive-contract! 'mutable-vector? "MutableArray"))
 (define-annotation-syntax MutableArray (identifier-annotation mutable-vector? #,(get-array-static-infos)))
 (define-annotation-syntax ImmutableArray (identifier-annotation immutable-vector? #,(get-array-static-infos)))
