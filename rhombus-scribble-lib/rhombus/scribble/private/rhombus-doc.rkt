@@ -278,11 +278,11 @@
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
-    [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...)) g2 ...))
+    [(group _::doc-form (quotes (~and g ((~and g-tag group) (~var id (identifier-target space-name)) e ...)) g2 ...))
      (rb #:at #'g
          #:pattern? #t
          #`(multi
-            (group #,@(subst #'id.name) e ...)
+            (g-tag #,@(subst #'id.name) e ...)
             g2
             ...))]
     [(group _::doc-form (quotes (~var id (identifier-target space-name))))
