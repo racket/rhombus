@@ -3,10 +3,6 @@
 import:
   "version_guard.rhm"
 
-export:
-  check_annot
-  cross_p
-
 block:
   import "static_arity.rhm"
   static_arity.check:
@@ -29,22 +25,30 @@ block:
     Path.simplify(p) ~method
     Path.as_relative_to(p, wrt) ~method
 
-expr.macro
-| 'check_annot $c($args) . $m $tail ...':
-    ~op_stx: self
-    '$('check'.relocate(self)) $c($args) . $m $tail ... ~throws values(#' $c +& "." +& #' $m, error.annot_msg())'
-| 'check_annot $who $tail ...':
-    ~op_stx: self
-    '$('check'.relocate(self)) $who $tail ... ~throws values(to_string(#' $who), error.annot_msg())'
+module path_help ~lang rhombus/and_meta:
+  export:
+   check_annot
+   cross_p
+   cross_abs_p
+   root_p
 
-def (cross_p :~ CrossPath, cross_abs_p :~ CrossPath, root_p :~ Path):
-  match CrossPath.Convention.current()
-  | #'unix: values(CrossPath(#"x", #'windows),
-                   CrossPath(#"C:/d", #'windows),
-                   Path("/"))
-  | ~else: values(CrossPath(#"x", #'unix),
-                  CrossPath(#"/d", #'unix),
-                  Path("C:/"))
+  expr.macro
+  | 'check_annot $c($args) . $m $tail ...':
+      ~op_stx: self
+      '$('check'.relocate(self)) $c($args) . $m $tail ... ~throws values(#' $c +& "." +& #' $m, error.annot_msg())'
+  | 'check_annot $who $tail ...':
+      ~op_stx: self
+      '$('check'.relocate(self)) $who $tail ... ~throws values(to_string(#' $who), error.annot_msg())'
+
+  def (cross_p :~ CrossPath, cross_abs_p :~ CrossPath, root_p :~ Path):
+    match CrossPath.Convention.current()
+    | #'unix: values(CrossPath(#"x", #'windows),
+                     CrossPath(#"C:/d", #'windows),
+                     Path("/"))
+    | ~else: values(CrossPath(#"x", #'unix),
+                    CrossPath(#"/d", #'unix),
+                    Path("C:/"))
+import: self!path_help open
 
 block:
   def p = Path("x")
@@ -200,7 +204,8 @@ block:
   check Path("x/y.zzzzz").suffix() ~is #".zzzzz"
   check Path.suffix("x/y.z") ~is #".z"
   check cross_p.suffix() ~is #false
-  check_annot Path.suffix(0)
+  version_guard.at_least "8.15.0.3":
+    check_annot Path.suffix(0)
 
 block:
   check Path("x").add_suffix(".z") ~is Path("x.z")
@@ -211,8 +216,8 @@ block:
   check Path("x/y.w").add_suffix(".z", ~sep: "=") ~is Path("x/y=w.z")
   check Path.add_suffix("x/y", ".z") ~is Path("x/y.z")
   check Path.add_suffix(cross_p, ".z") ~is_a CrossPath
-  check_annot Path("x").add_suffix(#'oops)
   version_guard.at_least "8.15.0.3":
+    check_annot Path("x").add_suffix(#'oops)
     check Path(#'same).add_suffix(".z") ~throws values("Path.add_suffix",
                                                        "cannot add an extension")
 
@@ -224,8 +229,8 @@ block:
   check Path("x/y.q").replace_suffix(".z") ~is Path("x/y.z")
   check Path.replace_suffix("x/y", ".z") ~is Path("x/y.z")
   check Path.replace_suffix(cross_p, ".z") ~is_a CrossPath
-  check_annot Path("x").replace_suffix(#'oops)
   version_guard.at_least "8.15.0.3":
+    check_annot Path("x").replace_suffix(#'oops)
     check Path(#'same).replace_suffix(".z") ~throws values("Path.replace_suffix",
                                                            "cannot add an extension")
 
@@ -244,7 +249,8 @@ block:
          ~is Path(match CrossPath.Convention.current()
                   | #'windows: "x/y"
                   | ~else: "X/Y")
-  check_annot Path.normal_case(0)
+  version_guard.at_least "8.15.0.3":
+    check_annot Path.normal_case(0)
 
 block:
   check Path("x").add(#'same, #'same, "y").simplify() ~is Path("x").add("y")

@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  "path.rhm" open
+  "path.rhm"!path_help open
   rhombus/runtime_path
 
 runtime_path.def path_rhm: "path.rhm"
