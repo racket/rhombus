@@ -162,7 +162,7 @@
    [snapshot Map.snapshot]
    [to_sequence Map.to_sequence]))
 
-(void (set-primitive-subcontract! '(hash? immutable?) 'immutable-hash?))
+(void (set-primitive-contract! '(and/c hash? immutable?) "Map"))
 (define-primitive-class Map map immutable-hash
   #:lift-declaration
   #:no-constructor-static-info
@@ -191,7 +191,7 @@
   (append
    remove))
 
-(void (set-primitive-subcontract! '(hash? (not/c immutable?)) 'mutable-hash?))
+(void (set-primitive-contract! '(and/c hash? (not/c immutable?)) "MutableMap"))
 (define-primitive-class MutableMap mutable-map mutable-hash
   #:lift-declaration
   #:no-constructor-static-info

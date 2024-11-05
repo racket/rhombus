@@ -17,18 +17,9 @@
 ;; ----------------------------------------
 ;; &&
 
-(define (handle-combine/c sep-op-sep form)
-  (and (pair? (cdr form))
-       (list? (cdr form))
-       (or (get-primitive-subcontract (cdr form))
-           (apply string-append
-                  (get-or-format-primitive-contract (cadr form))
-                  (for/list ([contract/rkt (in-list (cddr form))])
-                    (string-append sep-op-sep (get-or-format-primitive-contract contract/rkt)))))))
-
-(define (handle-and/c form) (handle-combine/c " && " form))
-
-(void (set-primitive-contract-combinator! 'and/c handle-and/c))
+(void (set-primitive-contract-combinator! 'and/c
+                                          (lambda (form)
+                                            (get-combined-primitive-contract " && " form))))
 (define-annotation-syntax &&
   (annotation-infix-operator
    (lambda () `((,(annot-quote \|\|) . stronger)))
@@ -102,9 +93,9 @@
 ;; ----------------------------------------
 ;; ||
 
-(define (handle-or/c form) (handle-combine/c " || " form))
-
-(void (set-primitive-contract-combinator! 'or/c handle-or/c))
+(void (set-primitive-contract-combinator! 'or/c
+                                          (lambda (form)
+                                            (get-combined-primitive-contract " || " form))))
 (define-annotation-syntax \|\|
   (annotation-infix-operator
    null
