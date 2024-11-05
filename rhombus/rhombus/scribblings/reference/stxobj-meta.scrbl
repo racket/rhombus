@@ -130,7 +130,7 @@
  introduction may also be helpful when a syntax object from the
  macro's input is preserved through side channels, so that the added
  scope is canceled, or in unusual cases when checking for the
- originaless of a term with @rhombus(Syntax.is_original).
+ originalness of a term with @rhombus(Syntax.is_original).
 
 }
 

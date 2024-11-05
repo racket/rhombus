@@ -478,7 +478,7 @@ multiplying like the expression @rhombus(*) operator.
  @rhombus(word_boundary, ~at rhombus/rx) pattern matches between an
  alphanumeric ASCII character (@litchar{a}-@litchar{z},
  @litchar{A}-@litchar{Z}, or @litchar{0}-@litchar{9}) or @litchar{_} and
- another character that is not alphanemeric or @litchar{_}. The
+ another character that is not alphanumeric or @litchar{_}. The
  @rhombus(word_continue, ~at rhombus/rx) pattern matches positions that
  do not match @rhombus(word_boundary, ~at rhombus/rx).
 
@@ -562,7 +562,7 @@ multiplying like the expression @rhombus(*) operator.
 
  Adjusts the treatment of literal strings and ranges in @rhombus(pat) to
  match case-sensitive (the default) or case-insensitive. In
- case-insensitive mode, chacters are folded individually (as opposed for
+ case-insensitive mode, characters are folded individually (as opposed for
  folding a string sequence, which can change its length).
 
 @examples(

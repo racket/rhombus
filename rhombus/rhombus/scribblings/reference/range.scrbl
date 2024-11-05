@@ -46,7 +46,7 @@ when the ending point is not @rhombus(#inf), the range is
   annot.macro 'ListRange'
 ){
 
- The @rhombus(Range, ~annot) annotaiton matches any range.
+ The @rhombus(Range, ~annot) annotation matches any range.
 
  The @rhombus(SequenceRange, ~annot) annotation matches a range that
  can be used as a @tech{sequence}, for which

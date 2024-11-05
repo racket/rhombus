@@ -18,7 +18,7 @@ underlying binding or annotation form. But instead of having a
 @rhombus(super) that is mapped to the underlying forms, binding and
 annotation customization rely on an @rhombus(internal, ~class_clause)
 clause to give a name to the more primitive form, and then that name can
-be used in an excample.
+be used in an example.
 
 For example, suppose we customize the constructor for a
 @rhombus(Sandwich) class to accept any number of arguments, instead of
@@ -31,7 +31,7 @@ that @rhombus(Sandwich(top, bottom), ~bind) would match instead of
 @rhombus(Sandwich.of(String), ~annot) would be preferable to
 @rhombus(Sandwich.of(List.of(String)), ~annot), which requires adding an
 @rhombus(of, ~datum) annotation form that is exported from
-@rhombus(Sandwhich) as a namespace.
+@rhombus(Sandwich) as a namespace.
 
 The customization shown below defines @rhombus(_Sandwich) with
 @rhombus(internal, ~class_clause) so that it can be used in the binding

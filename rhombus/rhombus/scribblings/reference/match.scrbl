@@ -156,7 +156,7 @@
  @rhombus(#%parens) conversion, but the conversion applies only for a
  @rhombus(_) that appears by itself in the group for function-call
  argument. Moreover, result information is gathered from the inner
- function and propagted to the outer function.
+ function and propagated to the outer function.
 
 @examples(
   ~repl:
