@@ -1,7 +1,6 @@
 #lang rhombus/static/and_meta
 import:
   rhombus/thread open
-  rhombus/system
   lib("racket/base.rkt") as rkt
   "private/shell.rkt" as rkt_shell
   lib("racket/private/streams.rkt") as rkt_stream

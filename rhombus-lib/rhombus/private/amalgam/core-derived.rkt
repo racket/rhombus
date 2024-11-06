@@ -15,4 +15,5 @@
         "enum.rhm"
         "pipeline.rhm"
         "str.rhm"
-        "closeable.rhm")
+        "closeable.rhm"
+        "system.rhm")

@@ -1,14 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open
-    meta_label:
-      rhombus/system)
+    "common.rhm" open)
 
 @title(~tag: "system"){System Information}
-
-@docmodule(rhombus/system)
-
-@(~version_at_least "8.14.0.4")
 
 @doc(
   fun system.version() :: String
@@ -17,10 +11,7 @@
  Reports the host Racket version.
 
 @examples(
-  ~hidden:
-    import rhombus/system
-  ~repl:
-    system.version()
+  system.version()
 )
 
 }
