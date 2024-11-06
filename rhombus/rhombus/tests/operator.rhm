@@ -329,3 +329,128 @@ check:
   #false?#false
   #true?#true
   ~prints "prefix: false\nmain\nprefix: true\nmain\ninfix: false\nmain\ninfix: true\nmain\n"
+
+// name and who
+
+block:
+  operator ((a :: Int) ?):
+    ~who who
+    ~name ques
+    who
+  check 10 ? ~is #'ques
+  check "no" ? ~throws values("ques:")
+
+block:
+  operator ((a :: Int) ?):
+    ~who: who
+    ~name: ques
+    who
+  check 10 ? ~is #'ques
+  check "no" ? ~throws values("ques:")
+
+block:
+  operator ((a :: Int) ? b):
+    ~who: who
+    ~name: ques
+    who
+  check 10 ? 0 ~is #'ques
+  check "no" ? 0 ~throws values("ques:")
+
+block:
+  operator (? (a :: Int)):
+    ~who: who
+    ~name: ques
+    who
+  check ? 10 ~is #'ques
+  check ? "no" ~throws values("ques:")
+
+block:
+  operator
+  | ((a :: Int) ?):
+      ~who: who
+      ~name: ques
+      who
+  check 10 ? ~is #'ques
+  check "no" ? ~throws values("ques:")
+
+block:
+  operator
+  | ((a :: Int) ? b):
+      ~who: who
+      ~name: ques
+      who
+  check 10 ? 0 ~is #'ques
+  check "no" ? 0 ~throws values("ques:")
+
+block:
+  operator
+  | (? (a :: Int)):
+      ~who: who
+      ~name: ques
+      who
+  check ? 10 ~is #'ques
+  check ? "no" ~throws values("ques:")
+
+block:
+  operator ?:
+    ~name: ques
+    ~who: who
+  | (? (a :: Int)):
+      who
+  | ((a :: Int) ? b):
+      who
+  check ? 10 ~is #'ques
+  check 10 ? 2 ~is #'ques
+  check "no" ? 0 ~throws values("ques:")
+  check ? "no" ~throws values("ques:")
+
+
+block:
+  operator ?:
+    ~who: who
+  | (? (a :: Int)):
+      ~name: ques
+      who
+  | ((a :: Int) ? b):
+      who
+  check ? 10 ~is #'ques
+  check 10 ? 2 ~is #'ques
+  check "no" ? 0 ~throws values("ques:")
+  check ? "no" ~throws values("ques:")
+
+block:
+  operator ?:
+    ~who: who
+  | (? (a :: Int)):
+      ~name: ques
+      who
+  | ((a :: Int) ?):
+      who
+  check ? 10 ~is #'ques
+  check 10 ? ~is #'ques
+  check "no" ? ~throws values("ques:")
+  check ? "no" ~throws values("ques:")
+
+check:
+  ~eval
+  operator ?:
+    ~who: who
+  | (? (a :: Int)):
+      ~name: ques
+      who
+  | ((a :: Int) ?):
+      ~name: ques
+      who
+  ~throws "name option not allowed after first operator case"
+
+check:
+  ~eval
+  operator ?:
+    ~name: ques
+    ~who: who
+  | (? (a :: Int)):
+      ~name: ques
+      who
+  | ((a :: Int) ?):
+      who
+  ~throws "name option not allowed in operator case"

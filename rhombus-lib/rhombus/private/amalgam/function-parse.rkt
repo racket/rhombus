@@ -40,6 +40,7 @@
          (submod "list.rkt" for-compound-repetition)
          (submod "map.rkt" for-info)
          (submod "define-arity.rkt" for-info)
+         (submod "symbol.rkt" for-static-info)
          "if-blocked.rkt"
          "realm.rkt"
          "mutability.rkt"
@@ -431,7 +432,7 @@
       arg))
 
   (define (build-function adjustments argument-static-infoss
-                          function-name
+                          function-name outer-who inner-who
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
                           kwrest-arg kwrest-parsed
@@ -491,18 +492,22 @@
            arity
            #`(parsed
               #:rhombus/expr
-              (nested-bindings
-               #,function-name
-               #f ; try-next
-               argument-binding-failure
-               (tmp-id arg-info arg arg-default)
-               ...
-               maybe-match-rest ...
-               maybe-match-kwrest ...
-               (begin
-                 #,(add-annotation-check
-                    function-name converter annot-str
-                    #`(rhombus-body-expression #,rhs))))))))
+              #,(add-who
+                 outer-who function-name
+                 #`(nested-bindings
+                    #,function-name
+                    #f ; try-next
+                    argument-binding-failure
+                    (tmp-id arg-info arg arg-default)
+                    ...
+                    maybe-match-rest ...
+                    maybe-match-kwrest ...
+                    (begin
+                      #,(add-annotation-check
+                         function-name converter annot-str
+                         (add-who
+                          inner-who function-name
+                          #`(rhombus-body-expression #,rhs))))))))))
        (define (adjust-args args)
          (append (treelist->list (entry-point-adjustment-prefix-arguments adjustments))
                  args))
@@ -528,7 +533,7 @@
         shifted-arity)]))
 
   (define (build-case-function adjustments argument-static-infoss
-                               function-name
+                               function-name outer-whos inner-whos
                                main-converter main-annot-str
                                kwss-stx argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
@@ -570,7 +575,9 @@
          #:arity #,shifted-arity
          #,@(for/list ([n (in-list ns)]
                        [fcs (in-list fcss)]
-                       [aritys (in-list arityss)])
+                       [aritys (in-list arityss)]
+                       [inner-who (in-list inner-whos)]
+                       [outer-who (in-list outer-whos)])
               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
                                                         (cons 'try-next
                                                               (fcase-pos fcase-args (find-matching-case n fcs))))]
@@ -651,39 +658,43 @@
                           ;; of expansion errors.
                           #`((lambda (try-next)
                                #,(wrap-adapted-arguments
-                                  #`(nested-bindings
-                                     #,function-name
-                                     try-next
-                                     argument-binding-failure
-                                     (this-arg-id arg-info arg #f)
-                                     ...
-                                     maybe-match-rest ...
-                                     maybe-match-kwrest ...
-                                     (begin
-                                       (arg-info.committer-id this-arg-id arg-info.data)
-                                       ...
-                                       maybe-commit-rest ...
-                                       maybe-commit-kwrest ...
-                                       (arg-info.binder-id this-arg-id arg-info.data)
-                                       ...
-                                       maybe-bind-rest ...
-                                       maybe-bind-kwrest ...
-                                       (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                                       ... ...
-                                       maybe-static-info-rest
-                                       ...
-                                       maybe-static-info-kwrest
-                                       ...
-                                       #,(wrap-expression
-                                          ((entry-point-adjustment-wrap-body adjustments)
-                                           arity
-                                           #`(parsed
-                                              #:rhombus/expr
-                                              #,(add-annotation-check
-                                                 function-name main-converter main-annot-str
-                                                 (add-annotation-check
-                                                  function-name (fcase-converter fc) (fcase-annot-str fc)
-                                                  #`(rhombus-body-expression #,(fcase-rhs fc)))))))))))
+                                  (add-who
+                                   outer-who function-name
+                                   #`(nested-bindings
+                                      #,function-name
+                                      try-next
+                                      argument-binding-failure
+                                      (this-arg-id arg-info arg #f)
+                                      ...
+                                      maybe-match-rest ...
+                                      maybe-match-kwrest ...
+                                      (begin
+                                        (arg-info.committer-id this-arg-id arg-info.data)
+                                        ...
+                                        maybe-commit-rest ...
+                                        maybe-commit-kwrest ...
+                                        (arg-info.binder-id this-arg-id arg-info.data)
+                                        ...
+                                        maybe-bind-rest ...
+                                        maybe-bind-kwrest ...
+                                        (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                        ... ...
+                                        maybe-static-info-rest
+                                        ...
+                                        maybe-static-info-kwrest
+                                        ...
+                                        #,(wrap-expression
+                                           ((entry-point-adjustment-wrap-body adjustments)
+                                            arity
+                                            #`(parsed
+                                               #:rhombus/expr
+                                               #,(add-annotation-check
+                                                  function-name main-converter main-annot-str
+                                                  (add-annotation-check
+                                                   function-name (fcase-converter fc) (fcase-annot-str fc)
+                                                   (add-who
+                                                    inner-who function-name
+                                                    #`(rhombus-body-expression #,(fcase-rhs fc)))))))))))))
                              (lambda () #,next))]))]))))
      shifted-arity))
 
@@ -852,7 +863,16 @@
   (define (extract-added-static-infos argument-static-infoss n)
     (if (= n (length argument-static-infoss))
         argument-static-infoss
-        (for/list ([i (in-range n)]) #'()))))
+        (for/list ([i (in-range n)]) #'())))
+
+  (define (add-who who function-name e)
+    (cond
+      [(not who) e]
+      [else #`(let ()
+                (define #,who '#,function-name)
+                (define-static-info-syntax #,who #,@(get-symbol-static-infos))
+                (let ()
+                  #,e))])))
 
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))

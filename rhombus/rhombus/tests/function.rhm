@@ -361,3 +361,82 @@ block:
       "expected: 1",
       "received: 2",
     )
+
+
+// name and who
+
+block:
+  fun f(who :: Int):
+    ~name eff
+    ~who who // shadows argument
+    who
+  check f(0) ~is #'eff
+  check f("no") ~throws "eff:"
+
+
+block:
+  fun f(a :: Int):
+    ~name: eff
+    ~who: who
+    who
+  check f(0) ~is #'eff
+  check f("no") ~throws "eff:"
+
+block:
+  fun f:
+    ~name: eff
+    ~who: who
+  | f(a :: Any.of(who)):
+      who
+  check f(#'eff) ~is #'eff
+  check f("no") ~throws "eff:"
+
+block:
+  fun f:
+    ~name: eff
+    ~who: who
+  | f(a :: Int):
+      who
+  | f(a :: Int, b):
+      [b, who]
+  | f(a, b, who):
+      who // not shadowed by `~who`
+  | f(a, b, c, who):
+      ~who: who
+      who // shadowed by inner `~who`
+  check f(0) ~is #'eff
+  check f(0, 7) ~is [7, #'eff]
+  check f(0, 1, 2) ~is 2
+  check f(0, 1, 2, 3) ~is #'eff
+  check f("no") ~throws "eff:"
+  check f("no", 7) ~throws "eff:"
+
+block:
+  def f:
+    fun (who :: Int):
+      ~name eff
+      ~who who
+      who
+  check f(0) ~is #'eff
+  check f("no") ~throws "eff:"
+
+block:
+  def f:
+    fun:
+      ~name: eff
+      ~who: who
+    | (a :: Int):
+        who
+    | (a :: Int, b):
+        [b, who]
+    | (a, b, who):
+        who // not shadowed by `~who`
+    | (a, b, c, who):
+        ~who: who
+        who // shadowed by inner `~who`
+  check f(0) ~is #'eff
+  check f(0, 7) ~is [7, #'eff]
+  check f(0, 1, 2) ~is 2
+  check f(0, 1, 2, 3) ~is #'eff
+  check f("no") ~throws "eff:"
+  check f("no", 7) ~throws "eff:"

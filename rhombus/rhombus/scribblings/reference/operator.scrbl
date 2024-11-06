@@ -48,6 +48,10 @@
     ~same_on_right_as: $other ...; ...
     ~associativity $assoc
     ~associativity: $assoc
+    ~name $op_or_id_name
+    ~name: $op_or_id_name
+    ~who $id
+    ~who: $id
 
   grammar other:
     $id
@@ -91,16 +95,17 @@
  annotation can be written before the @vbar cases to apply for all cases.
 
  At the start of an operator body, @rhombus(option)s can declare
- precedence and, in the case of an infix operator, an associativity for
- the operator. Each @rhombus(option) keyword can appear at most once. In
+ precedence, associativity (in the case of an infix operator), and/or
+ naming options. Each @rhombus(option) keyword can appear at most once. In
  a precedence specification, @rhombus(~other) stands for any operator not
- otherwise mentioned. When multiple cases are provided using an immediate @vbar, then
+ otherwise mentioned. The @rhombus(~name) and @rhombus(~who) options are
+ as in @rhombus(fun, ~defn). When multiple cases are provided using an immediate @vbar, then
  only the first prefix case and the first infix/postfix case can supply
  options; alternatively, when the operator name (maybe with a result annotation)
  is written before @vbar, options that apply to all cases can be supplied in
  a block before the cases. Options can appear both before the cases and in
- individual clauses, as long as all precedence and all associativity
- options are in one or the other.
+ individual clauses, as long as all options of a particular kind are in one
+ or the other.
 
 @examples(
   ~defn:
