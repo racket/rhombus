@@ -588,9 +588,31 @@
                                          #`(list '#,def-space-sym '#,(or sym id-sym)))))))))
 
 (define-for-syntax (make-meta-id-transformer id)
+  #;
   (typeset-meta:make_Transformer
    (lambda (use-stx)
-     #`(parsed #:rhombus/expr (racketvarfont '#,(symbol->immutable-string (syntax-e id)))))))
+     #`(parsed #:rhombus/expr (racketvarfont '#,(symbol->immutable-string (syntax-e id))))))
+  (typeset-meta:make_Replacer
+   (lambda (use-stx)
+     (define term
+       (syntax-parse use-stx
+         #:datum-literals (multi group)
+         [(multi (group term)) #'term]
+         [(group term) #'term]
+         [_ use-stx]))
+     (define (datum-space? id)
+       ;; done override datum or value spacing
+       (memq (syntax-property id 'typeset-space-name) '(datum value result)))
+     (syntax-parse term
+       #:datum-literals (op)
+       [((~and tag op) id)
+        (if (datum-space? #'id)
+            term
+            #`(op #,(syntax-property #'id 'typeset-space-name 'var #t)))]
+       [else
+        (if (datum-space? term)
+            term
+            (syntax-property term 'typeset-space-name 'var #t))]))))
 
 (define-for-syntax (nt-key-expand nt-key-g)
   (define-values (root fields space-names)

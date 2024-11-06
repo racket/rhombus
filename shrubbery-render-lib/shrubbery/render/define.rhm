@@ -110,6 +110,8 @@ meta:
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
                                 Syntax.literal_term($(head_context(stxs))))'
+        | typeset_meta.Replacer(proc):
+            literal_term(proc(id))
         | ~else: literal_term(stxs)
     | ~else: literal_term(stxs)
   

@@ -709,11 +709,15 @@ meta:
 
 spacer.bridge #'(self, tail, context, esc):
   ~in: ~expr ~bind
-  fun adjust(t):
-    match t
-    | '$((_ :: Identifier) || (_ :: Keyword))': spacer.set(t, #'~value)
-    | ~else: t
-  '$self $(adjust_one(tail, context, esc, adjust))'
+  match tail
+  | '$(e :: Escape(esc)) $tail ...':
+      '$self $e $(spacer.adjust_sequence('$tail ...', context, esc))'
+  | ~else:
+      fun adjust(t):
+        match t
+        | '$((_ :: Identifier) || (_ :: Keyword))': spacer.set(t, #'~value)
+        | ~else: t
+      '$self $(adjust_one(tail, context, esc, adjust))'
 
 meta:
   def for_spaces = [#'#{rhombus/for_clause}, & body_spaces]
