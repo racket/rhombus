@@ -75,13 +75,19 @@
         ;; build `(define-syntax name ....)`, but supporting `name-extends`
         (cond
           [expression-macro-rhs
-           (list
-            (build-syntax-definition/maybe-extension
-             #f #'name #'name-extends
-             (wrap-class-transformer #'name #'tail-name
-                                     (intro expression-macro-rhs)
-                                     #'make-expression-prefix-operator
-                                     "class")))]
+           (cond
+             [(eq? '#:none (syntax-e expression-macro-rhs))
+              null]
+             [else
+              (list
+               (build-syntax-definition/maybe-extension
+                #f #'name #'name-extends
+                (if (eq? '#:error (syntax-e expression-macro-rhs))
+                    #'no-constructor-transformer
+                    (wrap-class-transformer #'name #'tail-name
+                                            (intro expression-macro-rhs)
+                                            #'make-expression-prefix-operator
+                                            "class"))))])]
           [veneer?
            (cons
             #`(define constructor-name
@@ -205,16 +211,23 @@
                   [(dot-intf-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))])
       (append
        method-defns
+       (cond
+         [(and expression-macro-rhs
+               (eq? '#:none (syntax-e expression-macro-rhs)))
+          null]
+         [else
+          (list
+           (build-syntax-definition/maybe-extension
+            #f #'name #'name-extends
+            (cond
+              [(and expression-macro-rhs
+                    (not (eq? '#:error (syntax-e expression-macro-rhs))))
+               (wrap-class-transformer #'name #'tail-name
+                                       ((make-syntax-introducer) expression-macro-rhs)
+                                       #'make-expression-prefix-operator
+                                       "interface")]
+              [else #'no-constructor-transformer])))])
        (list
-        (build-syntax-definition/maybe-extension
-         #f #'name #'name-extends
-         (cond
-           [expression-macro-rhs
-            (wrap-class-transformer #'name #'tail-name
-                                    ((make-syntax-introducer) expression-macro-rhs)
-                                    #'make-expression-prefix-operator
-                                    "interface")]
-           [else #'no-constructor-transformer]))
         #`(define-name-root name
             #:extends name-extends
             #:fields ([method-name method-id]

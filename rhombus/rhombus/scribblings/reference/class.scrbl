@@ -86,11 +86,13 @@
     $other_class_clause
 ){
 
- Binds @rhombus(id_name) as a @deftech{class} name in several @tech{spaces}:
+ Binds @rhombus(id_name) as a @deftech{class} name in several
+ @tech{spaces} (except as suppressed with @rhombus(class_clause)s such as
+ @rhombus(expression ~none, ~class_clause)):
 
 @itemlist(
 
- @item{in the @top_rhombus(expr, ~space) space,
+ @item{In the @top_rhombus(expr, ~space) space, @rhombus(id_name)
   a constructor function or form, which by default is a function that
   takes as many arguments
   as the supplied non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) @rhombus(field_spec)s
@@ -853,28 +855,38 @@ or protectedly using
   class_clause.macro 'constructor
                       | $maybe_name $case_maybe_kw
                       | ...'
+  class_clause.macro 'constructor $disable_form'
   class_clause.macro 'expression: $entry_point'
   class_clause.macro '«expression '$id $pattern ...': '$template ...'»'
   class_clause.macro '«expression
                        | '$id $pattern ...': '$template ...'
                        | ...»'
+  class_clause.macro 'expression $disable_form'
   class_clause.macro 'binding: $entry_point'
   class_clause.macro '«binding '$id $pattern ...': '$template ...'»'
   class_clause.macro '«binding
                        | '$id $pattern ...': '$template ...'
                        | ...»'
+  class_clause.macro 'binding $disable_form'
   class_clause.macro 'annotation: $entry_point'
   class_clause.macro '«annotation '$id $pattern ...': '$template ...'»',
   class_clause.macro '«annotation
                        | '$id $pattern ...': '$template ...'
                        | ...»'
+  class_clause.macro 'annotation $disable_form'
 
   grammar maybe_name:
     $id
     #,("ϵ")
+
+  grammar disable_form:
+    ~error
+    : ~error
+    ~none
+    : ~none
 ){
 
- These @tech{class clauses} are recognized by @rhombus(class) to replace
+ These @tech{class clauses} are recognized by @rhombus(class) to replace or suppress
  the default constructor, expression form, binding form, or annotation form. For
  @rhombus(constructor, ~class_clause), the second two forms are shorthand
  for using a @rhombus(fun) @tech{entry point}. For each of
@@ -887,6 +899,17 @@ or protectedly using
  is not present, in addition to the class name being bound as a default annotation,
  an @rhombus(of, ~datum) annotation constructor is exported as a field
  of the class.
+
+ When a @rhombus(constructor, ~class_clause),
+ @rhombus(expression, ~class_clause), @rhombus(binding, ~class_clause),
+ or @rhombus(annotation, ~class_clause) clause has a
+ @rhombus(disable_form) containing @rhombus(~error), then the binding of
+ the class name in the corresponding space reports an error for any use.
+ When a @rhombus(disable_form) constains @rhombus(~none), then the class
+ name is not bound in the corresponding space by the enclosing
+ @rhombus(class) form. The @rhombus(constructor, ~class_clause) and
+ @rhombus(expression, ~class_clause) forms are equivalent when used with a
+ @rhombus(disable_form).
 
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form with an empty @rhombus(maybe_name), then a use of new class's

@@ -129,7 +129,10 @@
                                             (car (generate-temporaries '(make-converted-internal)))))
 
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
-       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
+       (define expression-macro-rhs (or (hash-ref options 'expression-rhs #f)
+                                        (let ([c (hash-ref options 'constructor-rhs #f)])
+                                          (and (constructor-as-expression? c)
+                                               c))))
 
        (define prefab? (hash-ref options 'prefab? #f))
        (define final? (hash-ref options 'final? (not prefab?)))
@@ -291,7 +294,7 @@
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
        (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
-       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
+       (define given-expression-macro-rhs (hash-ref options 'expression-rhs #f))
        (define binding-rhs (hash-ref options 'binding-rhs #f))
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define-values (internal-id exposed-internal-id extra-exposed-internal-ids)
@@ -342,7 +345,7 @@
                                       #'name given-constructor-rhs
                                       (and given-constructor-name
                                            (expose given-constructor-name))
-                                      expression-macro-rhs)
+                                      given-expression-macro-rhs)
 
        (define has-defaults? (or (pair? added-fields)
                                  (any-stx? constructor-defaults)
@@ -387,11 +390,16 @@
                                 field)))))
 
        (define constructor-rhs
-         (or given-constructor-rhs
+         (or (and (not (constructor-as-expression? given-constructor-rhs))
+                  given-constructor-rhs)
              (and (or has-private-constructor-fields?
                       (and super
                            (class-desc-constructor-makers super)))
                   'synthesize)))
+       (define expression-macro-rhs
+         (or given-expression-macro-rhs
+             (and (constructor-as-expression? given-constructor-rhs)
+                  given-constructor-rhs)))
 
        (define dots (hash-ref options 'dots '()))
        (define dot-provider-rhss (map cdr dots))
@@ -729,7 +737,8 @@
                                                  base-stx scope-stx))
                (build-class-static-infos exposed-internal-id
                                          super
-                                         given-constructor-rhs
+                                         (and (not (constructor-as-expression?  given-constructor-rhs))
+                                              given-constructor-rhs)
                                          (append super-keywords constructor-public-keywords)
                                          (append super-defaults constructor-public-defaults)
                                          (append super-keywords constructor-private-keywords)

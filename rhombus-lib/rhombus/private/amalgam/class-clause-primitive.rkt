@@ -298,6 +298,14 @@
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
+       [(_ #:none)
+        (wrap-class-clause #`(#:constructor #f #:none))]
+       [(_ (_::block (group #:none)))
+        (wrap-class-clause #`(#:constructor #f #:none))]
+       [(_ #:error)
+        (wrap-class-clause #`(#:constructor #f #:error))]
+       [(_ (_::block (group #:error)))
+        (wrap-class-clause #`(#:constructor #f #:error))]
        [(_ id:identifier (~and args (_::parens . _)) ret ...
            (~and rhs (_::block . _)))
         (wrap-class-clause #`(#:constructor id (block (group fun args ret ... rhs))))]

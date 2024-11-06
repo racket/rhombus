@@ -34,7 +34,7 @@ class Subprocess(hand, output, input, error_output, desc, is_new):
   opaque
   internal _Subprocess
   implements Closeable
-  constructor (): error("cannot instantiate")
+  expression: ~error
   private implements Printable
   private override method describe(mode, recur):
     PrintDesc.concat("Subprocess(", repr(to_string(desc)), ")")

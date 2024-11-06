@@ -39,6 +39,8 @@
          check-field-defaults
          check-exports-distinct
 
+         constructor-as-expression?
+
          extract-super-constructor-fields
          extract-super-internal-constructor-fields
 
@@ -364,6 +366,10 @@
       (raise-syntax-error #f
                           "exported name conflicts with dot-syntax name"
                           ex))))
+
+(define (constructor-as-expression? given-constructor-rhs)
+  (and given-constructor-rhs
+       (memq (syntax-e given-constructor-rhs) '(#:none #:error))))
 
 (define (field-to-field+keyword+default f arg)
   (values (field-desc-name f)

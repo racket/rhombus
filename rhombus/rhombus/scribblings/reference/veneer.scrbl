@@ -269,11 +269,14 @@
 
 
 @doc(
+  ~nonterminal:
+    disable_form: constructor ~class_clause
   veneer_clause.macro 'expression: $entry_point'
   veneer_clause.macro '«expression '$id $pattern ...': '$template ...'»'
   veneer_clause.macro '«expression
                         | '$id $pattern ...': '$template ...'
                         | ...»'
+  veneer_clause.macro 'expression $disable_form'
 ){
 
  A @tech{veneer clauses} as recognized by @rhombus(veneer) to replace

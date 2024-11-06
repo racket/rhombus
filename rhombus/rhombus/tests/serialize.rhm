@@ -268,3 +268,9 @@ parameterize { Evaluator.current: me1 }:
   eval('def p0 = posn.Posn(3, 4, 0)')
   eval('p0.x := p0')
   check eval('p0') ~is_now p0
+
+class Ghost(x):
+  internal _Ghost
+  expression ~none
+  serializable
+check deserialize(serialize(_Ghost(1))) ~is _Ghost(1)

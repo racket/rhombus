@@ -145,8 +145,8 @@
           [_ (and unwrapped? e)])))
     (if unwrapped-e
         ;; we need to track origin here to transfer any potential
-        ;; information added by enforestation
-        (syntax-track-origin unwrapped-e e #'begin)
+        ;; information added by enforestation, but don't merge raw
+        (reraw e (syntax-track-origin unwrapped-e e #'begin))
         e))
 
   ;; use on sub-expressions when constructing a parsed primitive form

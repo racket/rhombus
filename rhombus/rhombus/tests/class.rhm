@@ -989,3 +989,65 @@ block:
     method m():
       this.p
   check C().m() ~is 10
+
+block:
+  def Ghost = "not defined later"
+  class Ghost(x):
+    internal _Ghost
+    constructor ~none
+  check _Ghost(1) ~is_a Ghost
+  check Ghost ~is "not defined later"
+
+block:
+  def Ghost = "not defined later"
+  class Ghost(x):
+    internal _Ghost
+    expression ~none
+  check _Ghost(1) ~is_a Ghost
+  check Ghost ~is "not defined later"
+
+block:
+  import rhombus/meta open
+  class Ghost(x):
+    binding ~none
+  bind.macro 'Ghost($x)': '$x'
+  def Ghost(x) = 0
+  check x ~is 0
+
+block:
+  import rhombus/meta open
+  class Ghost(x):
+    internal _Ghost
+    annotation ~none
+  annot.macro 'Ghost': 'Int'
+  check 0 is_a Ghost ~is #true
+  check Ghost(1) is_a Ghost ~is #false
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~error
+  Stubborn(0)
+  ~raises "cannot be used as an expression"
+
+check:
+  ~eval
+  class Stubborn(x):
+    expression ~error
+  Stubborn(0)
+  ~raises "cannot be used as an expression"
+
+check:
+  ~eval
+  class Stubborn(x):
+    binding ~error
+  def Stubborn = 10
+  #void
+  ~raises "cannot be used as a binding pattern"
+
+check:
+  ~eval
+  class Stubborn(x):
+    annotation ~error
+  10 :: Stubborn
+  ~raises "cannot be used as an annotation"
