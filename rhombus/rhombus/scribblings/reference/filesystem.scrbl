@@ -76,7 +76,8 @@
 @doc(
   fun filesystem.list_directory(path :: PathString
                                   = Path.current_directory(),
-                                ~extend_path: extend = #false) :: List.of(Path)
+                                ~extend_path: extend = #false)
+    :: List.of(Path)
 ){
 
   Returns a list of all files and directories in the directory specified
