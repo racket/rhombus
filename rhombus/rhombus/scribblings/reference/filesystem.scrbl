@@ -72,3 +72,16 @@
  directory cannot be found.
 
 }
+
+@doc(
+  fun filesystem.list_directory(path :: PathString
+                                  = Path.current_directory(),
+                                ~extend_path: extend = #false)
+    :: List.of(Path)
+){
+
+  Returns a list of all files and directories in the directory specified
+  by @rhombus(path).  If @rhombus(extend) is @rhombus(#true) the resulting
+  paths are extended from @rhombus(path).
+
+}
