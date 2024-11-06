@@ -58,10 +58,16 @@
          null)
      (cond
        [binding-rhs
-        (list
-         (build-syntax-definition/maybe-extension
-          'rhombus/bind #'name #'name-extends
-          (wrap-class-transformer #'name #'tail-name (intro binding-rhs) #'make-binding-prefix-operator "class")))]
+        (cond
+          [(eq? '#:none (syntax-e binding-rhs))
+           null]
+          [else
+           (list
+            (build-syntax-definition/maybe-extension
+             'rhombus/bind #'name #'name-extends
+             (if (eq? '#:error (syntax-e binding-rhs))
+                 #'no-binding-transformer
+                 (wrap-class-transformer #'name #'tail-name (intro binding-rhs) #'make-binding-prefix-operator "class"))))])]
        [else
         (list
          (build-syntax-definition/maybe-extension
@@ -70,3 +76,8 @@
                                     #'constructor-public-name-fields
                                     #'constructor-public-field-static-infoss
                                     #'public-field-keywords)))]))))
+
+(define-for-syntax no-binding-transformer
+  (binding-transformer
+   (lambda (stx)
+     (raise-syntax-error #f "cannot be used as a binding pattern" stx))))

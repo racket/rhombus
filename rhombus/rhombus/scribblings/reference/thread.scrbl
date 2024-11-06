@@ -15,7 +15,7 @@
 ){
 
  The @rhombus(Thread, ~class) class represents a concurrent thread of
- evaluation. The @rhombus(Thread, ~class) constructor accepts a function
+ evaluation. The @rhombus(Thread) constructor accepts a function
  to call in a newly created thread. A @rhombus(thread: body; ...) form is
  equivalent to @rhombus(Thread(fun (): body; ...)).
 
@@ -37,11 +37,11 @@
     terminate
 ){
 
- Asynchronously raises an @rhombus(Exn.Break, ~annot) exception in
+ Asynchronously raises an @rhombus(Exn.Break) exception in
  @rhombus(th), assuming that it has not yet terminated. If @rhombus(kind)
  is @rhombus(#'hang_up) or @rhombus(#'terminate), then the exception is
- more specifically @rhombus(Exn.Break.HangUp, ~annot) or
- @rhombus(Exn.Break.Termminate, ~annot), respectively.
+ more specifically @rhombus(Exn.Break.HangUp) or
+ @rhombus(Exn.Break.Termminate), respectively.
 
 }
 

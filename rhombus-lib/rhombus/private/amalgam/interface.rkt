@@ -27,7 +27,8 @@
          (only-meta-in 1
                        "class-method.rkt")
          (only-in "class-annotation.rkt"
-                  build-extra-internal-id-aliases)
+                  build-extra-internal-id-aliases
+                  no-annotation-transformer)
          "class-dot.rkt"
          (only-in "class-method.rkt"
                   raise-not-an-instance)
@@ -346,18 +347,27 @@
                 (identifier-annotation internal-name?
                                        ((#%dot-provider dot-providers))))))
          null)
-     (list
-      (build-syntax-definition/maybe-extension
-       'rhombus/annot #'name #'name-extends
-       (if annotation-rhs
-           (wrap-class-transformer #'name #'tail-name
-                                   ((make-syntax-introducer) annotation-rhs)
-                                   #'make-annotation-prefix-operator
-                                   "interface")
-           (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
-             #`(identifier-annotation name?
-                                      ((#%dot-provider dot-providers)
-                                       . indirect-static-infos)))))))))
+     (cond
+       [(and annotation-rhs
+             (eq? '#:none (syntax-e annotation-rhs)))
+        null]
+       [else
+        (list
+         (build-syntax-definition/maybe-extension
+          'rhombus/annot #'name #'name-extends
+          (cond
+            [annotation-rhs
+             (if (eq? '#:error (syntax-e annotation-rhs))
+                 #'no-annotation-transformer
+                 (wrap-class-transformer #'name #'tail-name
+                                         ((make-syntax-introducer) annotation-rhs)
+                                         #'make-annotation-prefix-operator
+                                         "interface"))]
+            [else
+             (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
+               #`(identifier-annotation name?
+                                        ((#%dot-provider dot-providers)
+                                         . indirect-static-infos)))])))]))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private

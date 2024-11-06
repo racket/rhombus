@@ -277,3 +277,16 @@ block:
       'check_options($_)',
       #true,
     )
+
+block:
+  def Ghost = "not defined later"
+  veneer Ghost(this :: Int):
+    expression ~none
+  check Ghost ~is "not defined later"
+
+check:
+  ~eval
+  veneer Stubborn(this :: Any):
+    expression ~error
+  Stubborn(0)
+  ~raises "cannot be used as an expression"

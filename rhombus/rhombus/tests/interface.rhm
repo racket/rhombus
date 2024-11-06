@@ -642,3 +642,36 @@ check:
   ~is [1,
        "ok"]
 
+block:
+  def Ghost = "not defined later"
+  interface Ghost:
+    expression ~none
+  check Ghost ~is "not defined later"
+
+block:
+  import rhombus/meta open
+  interface Ghost:
+    annotation ~none
+  annot.macro 'Ghost': 'Int'
+  check 0 is_a Ghost ~is #true
+
+check:
+  ~eval
+  interface Stubborn:
+    expression ~error
+  Stubborn(0)
+  ~raises "cannot be used as an expression"
+
+check:
+  ~eval
+  interface Stubborn
+  Stubborn(0)
+  ~raises "cannot be used as an expression"
+
+check:
+  ~eval
+  interface Stubborn:
+    annotation ~error
+  10 :: Stubborn
+  #void
+  ~raises "cannot be used as an annotation"

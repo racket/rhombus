@@ -93,7 +93,6 @@
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
 
-       (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
 
        (define intro (make-syntax-introducer))
@@ -182,7 +181,6 @@
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
-       (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
        (define converter? (or (hash-ref options 'converter? #f)
                               (and super

@@ -11,7 +11,8 @@
 
 (provide (for-syntax build-class-annotation-form
                      build-guard-expr
-                     build-extra-internal-id-aliases)
+                     build-extra-internal-id-aliases
+                     no-annotation-transformer)
          compose-annotation-check)
 
 (define-for-syntax (build-class-annotation-form super annotation-rhs
@@ -82,14 +83,20 @@
          null)
      (cond
        [annotation-rhs
-        (list
-         ;; build `(define-annotation-syntax name ....)`:
-         (build-syntax-definition/maybe-extension
-          'rhombus/annot #'name #'name-extends
-          (wrap-class-transformer #'name #'tail-name
-                                  (intro annotation-rhs)
-                                  #'make-annotation-prefix-operator
-                                  "class")))]
+        (cond
+          [(eq? '#:none (syntax-e annotation-rhs))
+           null]
+          [else
+           (list
+            ;; build `(define-annotation-syntax name ....)`:
+            (build-syntax-definition/maybe-extension
+             'rhombus/annot #'name #'name-extends
+             (if (eq? '#:error (syntax-e annotation-rhs))
+                 #'no-annotation-transformer
+                 (wrap-class-transformer #'name #'tail-name
+                                         (intro annotation-rhs)
+                                         #'make-annotation-prefix-operator
+                                         "class"))))])]
        [else
         (make-ann-defs #'name #'name-of #f
                        #'constructor-public-name-fields #'public-field-keywords
@@ -173,7 +180,13 @@
   (for/list ([extra (in-list extra-internals)])
     #`(define-syntax #,extra (make-rename-transformer (quote-syntax #,internal)))))
 
-      
+(define-for-syntax no-annotation-transformer
+  (annotation-prefix-operator
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (raise-syntax-error #f "cannot be used as an annotation" stx))))
+
 (define-for-syntax not-supported-due-to-internal-reasons
   (string-append "converter annotations are not supported for fields;\n"
                  " internally, the class may be non-final, have a mutable field, or\n"

@@ -71,8 +71,7 @@
                (define dest (and lookup (lookup #f "identifier" field intro)))
                (and dest
                     (or (not space-name)
-                        (identifier-distinct-binding (intro dest) dest #f)
-                        (identifier-distinct-binding (in-name-root-space dest) dest #f))
+                        (identifier-distinct-binding (intro dest) dest #f))
                     (cons dest space-name)))
              (and lookup
                   (pair? (cdr fields))

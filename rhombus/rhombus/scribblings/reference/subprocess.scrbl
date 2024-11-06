@@ -11,6 +11,7 @@
 @doc(
   class Subprocess():
     implements Closeable
+    expression: ~error
 ){
 
  Represents a subprocess created with functions like @rhombus(run)

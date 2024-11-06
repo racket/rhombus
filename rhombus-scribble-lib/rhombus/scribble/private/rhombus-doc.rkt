@@ -709,8 +709,26 @@
 (define-for-syntax (class-extract-space-names stx)
   (syntax-parse stx
     #:datum-literals (group block parens)
-    [(group _ ... (parens field ...) . _)
-     (cons '(rhombus/class rhombus/annot)
+    [(group _ ... (parens field ...) . tail)
+     (define (unless-none name space-names)
+       (syntax-parse #'tail
+         #:datum-literals (block)
+         [((block g ...))
+          (if (for/or ([g (in-list (syntax->list #'(g ...)))])
+                (define id
+                  (syntax-parse g
+                    #:datum-literals (group block)
+                    [(group id #:none) #'id]
+                    [(group id (block (group #:none))) #'id]
+                    [_ #'#f]))
+                (eq? (syntax-e id) name))
+              null
+              space-names)]
+         [_ space-names]))
+     (cons (append (unless-none 'expression '(#f))
+                   (unless-none 'annotation '(rhombus/annot))
+                   (unless-none 'binding '(rhombus/bind))
+                   '(rhombus/class))
            (for/list ([field (in-list (syntax->list #'(field ...)))])
              (list #f)))]))
 

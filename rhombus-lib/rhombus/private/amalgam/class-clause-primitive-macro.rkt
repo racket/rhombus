@@ -16,10 +16,12 @@
 (provide (for-space rhombus/class_clause
                     binding)
          (for-spaces (rhombus/class_clause
+                      rhombus/interface_clause)
+                     annotation)
+         (for-spaces (rhombus/class_clause
                       rhombus/interface_clause
                       rhombus/veneer_clause)
-                     expression
-                     annotation))
+                     expression))
 
 ;; see also "class-clause-primitive-meta-macro.rkt", which provides
 ;; forms that are exported only by `rhombus/meta`, because they
@@ -49,6 +51,14 @@
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
+       [(form-name #:none)
+        (wrap-class-clause #`(#,key #:none))]
+       [(form-name (_::block (group #:none)))
+        (wrap-class-clause #`(#,key #:none))]
+       [(form-name #:error)
+        (wrap-class-clause #`(#,key #:error))]
+       [(form-name (_::block (group #:error)))
+        (wrap-class-clause #`(#,key #:error))]
        [(form-name (~and (_::quotes . _)
                          pattern)
                    (~and (_::block . _)
@@ -72,10 +82,6 @@
 (define-interface-clause-syntax annotation
   (make-macro-clause-transformer '#:annotation
                                  #:clause-transformer interface-clause-transformer))
-
-(define-veneer-clause-syntax annotation
-  (make-macro-clause-transformer '#:annotation
-                                 #:clause-transformer veneer-clause-transformer))
 
 (define-class-clause-syntax expression
   (make-macro-clause-transformer '#:expression))
