@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@title{Classes and Interfaces}
+@title(~tag: "class"){Classes}
 
 @doc(
   ~literal: :: extends binding field
@@ -12,8 +12,8 @@
     default_body: block body
     method_impl: method ~class_clause
     property_impl: method ~class_clause
-    method_decl: method ~class_clause
-    property_decl: method ~class_clause
+    method_decl: abstract ~class_clause
+    property_decl: abstract ~class_clause
     field_impl: field ~class_clause
 
   defn.macro 'class $id_name($field_spec, ...)'
@@ -337,103 +337,6 @@
 }
 
 @doc(
-  ~literal: :: extends binding field
-  ~nonterminal:
-    method_impl: method ~class_clause
-    property_impl: method ~class_clause
-    method_decl: method ~class_clause
-    property_decl: method ~class_clause
-
-  defn.macro 'interface $id_name'
-  defn.macro 'interface $id_name:
-                $interface_clause_or_body_or_export
-                ...'
-
-  grammar interface_clause_or_body_or_export:
-    $interface_clause
-    $body
-    $export
-
-  grammar interface_clause:
-    #,(@rhombus(method, ~interface_clause)) $method_impl
-    #,(@rhombus(override, ~interface_clause)) $method_impl
-    #,(@rhombus(final, ~interface_clause)) $method_impl
-    #,(@rhombus(private, ~interface_clause)) $method_impl
-    #,(@rhombus(protected, ~interface_clause)) $method_impl
-    #,(@rhombus(abstract, ~interface_clause)) $method_decl
-    #,(@rhombus(property, ~interface_clause)) $property_impl
-    #,(@rhombus(extends, ~interface_clause)) $extends_decl
-    #,(@rhombus(internal, ~interface_clause)) $internal_decl
-    #,(@rhombus(expression, ~interface_clause)) $expression_decl
-    #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
-    #,(@rhombus(dot, ~interface_clause)) $dot_decl
-    #,(@rhombus(static_info, ~interface_clause)) $static_info_decl
-    #,(@rhombus(primitive_property, ~interface_clause)) $primitive_property_decl
-    $other_interface_clause
-
-){
-
- Similar to @rhombus(class) for defining classes, but defines an
- interface, which has no fields but can have multiple superinterfaces. A
- @rhombus(method, ~interface_clause),
- @rhombus(property, ~interface_clause), or @rhombus(override, ~interface_clause)
- clause is allowed to have just a
- name or omit the body, in which case @rhombus(abstract, ~interface_clause)
- implicitly prefixes the declaration.
-
- The body of an @rhombus(interface) form has @deftech{interface clauses}
- that are similar to @tech{class clauses}, but declared separately and
- sometimes with different syntax. For example,
- @rhombus(extends, ~interface_clause) as an interface clause supports multiple
- superinterface names instead of just one, and
- @rhombus(extends, ~interface_clause) can appear multiple times in an
- @rhombus(interface) body.
-
- Interfaces cannot be instantiated. They are implemented by classes via
- the @rhombus(implements, ~class_clause) form. When a class implements an
- interface (not privately or protectedly), it has all methods and properties of the interface, and its
- instances satisfy the interface as an annotation.
-
- Typically, an interface declares methods and properties with
- @rhombus(abstract, ~interface_clause) to be implemented by classes that
- implement the interface. However, an interface can define method and property
- implementations; those implementations are inherited by classes that implement the
- interface or any subinterface that extends the interface. An interface can
- also have private helper methods and properties, but they are useful only when an
- interface also has implemented public or protected methods or properties that refer to them.
-
- When a class implements an interface privately using
- @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)))
-or protectedly using
- or @rhombus(#,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
- its instances do not satisfy the interface as an annotation. If the
- privately or protectedly implemented interface has an internal name declared with
- @rhombus(internal, ~interface_clause), however, instances satisfy the
- internal name as an annotation. Methods and properties of a privately or protectedly implemented
- instance can be accessed only with static @rhombus(.) via the
- internal-name annotation. As long as a method or property belongs to only
- to privately implemented interfaces, it can be overridden with
- @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(override, ~class_clause))),
- otherwise it is overridden normally. Methods of a protectedly implemented interface
- are treated as protected in the implementing class, even when the
- methods are declared as non-protected in the interfaces. If a class declares
- the implementation of a interface both normally and privately or protectedly, then the
- interface is implemented normally; if an interface is declared as implemented both privately
- and protectedly, then it is protectedly implemented.
- Abstract private methods and properties must be
- implemented immediately in the class that privately implements the
- associated interface.
-
- When a class or interface extends or implements multiple interfaces
- that provide a method or property with the same name, the method or property implementation must
- be the same for all interfaces. That is, the method or property must be
- abstract, the implementation must reside in a shared superinterface
- of the interfaces, or the method or property must be overridden in the implementing
- class. Overriding applies to same-named methods or properties of all interfaces.
-
-}
-
-@doc(
   ~literal: :: class interface
   defn.macro 'class.together:
                 $class_or_interface
@@ -471,15 +374,10 @@ or protectedly using
 @doc(
   class_clause.macro 'extends $id_name'
   class_clause.macro 'extends: $id_name'
-  interface_clause.macro 'extends $id_name'
-  interface_clause.macro 'extends: $id_name ...; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that is a subclass of the one named by @rhombus(id_name), and an
- @tech{interface clause} recognized by @rhombus(interface) to define an
- interface that is a subinterface of the ones named by the
- @rhombus(id_name)s.
+ that is a subclass of the one named by @rhombus(id_name).
 
 }
 
@@ -518,20 +416,10 @@ or protectedly using
   class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) $method_impl'
   class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'final #,(@rhombus(protected, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
-  interface_clause.macro 'final $method_impl'
-  interface_clause.macro 'final #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(property, ~interface_clause)) $property_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
-  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $method_impl'
 ){
 
- The @rhombus(final, ~class_clause) form as a @tech{class clause} or
- @tech{interface clause} is followed by a method or property declaration.
+ The @rhombus(final, ~class_clause) form as a @tech{class clause}
+ is followed by a method or property declaration.
  In that case, the method or property is final, even
  if the enclosing class is not (and an interface is never final). A final
  method or property cannot be overridden in subclaseses or subinterfaces. Using
@@ -542,6 +430,7 @@ or protectedly using
  in the superclass or a superinterface, while it must not be defined in
  the superclass or a superinterface if @rhombus(override, ~class_clause)
  is not used.
+
 }
 
 @doc(
@@ -576,16 +465,6 @@ or protectedly using
   class_clause.macro 'override $method_impl'
   class_clause.macro 'override #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
-  interface_clause.macro 'method $method_decl'
-  interface_clause.macro 'method $method_impl'
-  interface_clause.macro 'property $property_decl'
-  interface_clause.macro 'property $property_impl'
-  interface_clause.macro 'override $method_impl'
-  interface_clause.macro 'override $method_decl'
-  interface_clause.macro 'override #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'override #,(@rhombus(method, ~interface_clause)) $method_decl'
-  interface_clause.macro 'override #,(@rhombus(property, ~interface_clause)) $property_impl'
-  interface_clause.macro 'override #,(@rhombus(property, ~interface_clause)) $property_decl'
 
   grammar method_impl:
     $id $maybe_res_annot: $entry_point
@@ -593,25 +472,15 @@ or protectedly using
     Z| $id $case_maybe_kw
      | ...
 
-  grammar method_decl:
-    $id $maybe_res_annot
-    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
-    Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
-     | ...
-
   grammar property_impl:
     $id $maybe_res_annot: $body; ...
     Z| $id $maybe_res_annot: $body; ...
     Z| $id $maybe_res_annot: $body; ...
      | $id := $binding: $body; ...
-
-  grammar property_decl:
-    $id $maybe_res_annot
-    Z| $id $maybe_res_annot
 ){
 
- These @tech{class clauses} and @tech{interface clauses} are recognized
- by @rhombus(class) and @rhombus(interface) to declare methods and properties, along
+ These @tech{class clauses} aare recognized
+ by @rhombus(class) to declare methods and properties, along
  with the method and property forms of @rhombus(final, ~class_clause),
  @rhombus(private, ~class_clause), and @rhombus(protected, ~class_clause). The combination
  @rhombus(override, ~class_clause) followed by
@@ -659,19 +528,6 @@ or protectedly using
  call of the method). An argument that has the same name as a field,
  method, or property shadows the field, method, or property.
 
- In an interface, a @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause), or
- @rhombus(property, ~interface_clause) declaration can be just an identifier, or
- it can omit a body block. In that case, @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause),
- or @rhombus(property, ~interface_clause) is treated as if
- @rhombus(abstract, ~interface_clause) is added before. If arguments are declared for
- an abstract method, they determine the method's expectations
- for static argument-count checking (see @rhombus(use_static)), but they
- do not impose constraints on overriding implementations.
- When a @rhombus(property_decl) uses the single-case @litchar{|} form,
- it declares the property as not supporting assignment; that declaration
- is not enforced on implementations of the property, but it affects
- static resolution of a property assignment.
-
 }
 
 @doc(
@@ -691,19 +547,13 @@ or protectedly using
   class_clause.macro 'private #,(@rhombus(override, ~class_clause)) $method_impl'
   class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
-  interface_clause.macro 'private $method_impl'
-  interface_clause.macro 'private #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(property, ~interface_clause)) $property_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
  A @tech{class clause} that declares interfaces that are privately
  implemented (see @rhombus(interface)), a @tech{class clause} that
- declares a private field, or a @tech{class clause} or @tech{interface
-  clause} that declares a private method or property. See @rhombus(class),
- @rhombus(interface), and @rhombus(method, ~class_clause) for more
+ declares a private field, or a @tech{class clause}
+ that declares a private method or property. See @rhombus(class)
+ and @rhombus(method, ~class_clause) for more
  information on field, method, and property declarations. A
  @rhombus(private, ~class_clause) without
  @rhombus(implements, ~class_clause), @rhombus(field, ~class_clause), @rhombus(immutable, ~class_clause),
@@ -735,14 +585,10 @@ or protectedly using
   class_clause.macro 'protected $method_impl'
   class_clause.macro 'protected #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'protected #,(@rhombus(property, ~class_clause)) $property_impl'
-  interface_clause.macro 'protected $method_impl'
-  interface_clause.macro 'protected #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'protected #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
  Like @rhombus(private, ~class_clause), but protected fields, methods,
- and properties, can be referenced within subclasses, subinterfaces, and
- subveneers, and they can be overridden when not
+ and properties, can be referenced within subclasses, and they can be overridden when not
  @rhombus(final, ~class_clause). An overriding declaration does not use
  @rhombus(protected, ~class_clause) again.
 
@@ -750,8 +596,11 @@ or protectedly using
 
 @doc(
   ~nonterminal:
-    method_decl: method ~class_clause
-    property_decl: method ~class_clause
+    maybe_res_annot: fun ~defn
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
+    bind_maybe_kw_opt: fun ~defn
+    rest: fun ~defn
 
   class_clause.macro 'abstract $method_decl'
   class_clause.macro 'abstract #,(@rhombus(method, ~class_clause)) $method_decl'
@@ -761,20 +610,21 @@ or protectedly using
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
-  interface_clause.macro 'abstract $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(method, ~interface_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(property, ~interface_clause)) $property_decl'
-  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
-  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
+
+  grammar method_decl:
+    $id $maybe_res_annot
+    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+    Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+     | ...
+
+  grammar property_decl:
+    $id $maybe_res_annot
+    Z| $id $maybe_res_annot
+
 ){
 
- A @tech{class clause} or @tech{interface clause} that declares a method
- or property without an implementation. See @rhombus(method, ~interface_clause) for the
- shape of @rhombus(method_decl), and see @rhombus(property, ~interface_clause) for the
- shape of @rhombus(property_decl).
+ A @tech{class clause} that declares a method
+ or property without an implementation.
 
  When a class has an abstract method or property,
  either declared directly or inherited, the underlying constructor for the class
@@ -824,14 +674,12 @@ or protectedly using
 @doc(
   class_clause.macro 'internal $id'
   class_clause.macro 'internal: $id'
-  interface_clause.macro 'internal $id'
-  interface_clause.macro 'internal: $id'
 ){
 
- A @tech{class clause} or @tech{interface clause} recognized by
+ A @tech{class clause} recognized by
  @rhombus(class) and @rhombus(interface) to bind @rhombus(id) to
- the class or interface's representation. See @rhombus(class),
- @rhombus(interface), and @rhombus(constructor, ~class_clause) for more
+ the class's representation. See @rhombus(class)
+ and @rhombus(constructor, ~class_clause) for more
  information.
 
  When used as a @tech{namespace}, @rhombus(id) can access the
@@ -1000,27 +848,6 @@ or protectedly using
  Typically, an @rhombus(of, ~datum) annotation is also defined and
  exported from the class's namespace to go along with the customization
  of the class name as an annotation.
-
-}
-
-
-@doc(
-  interface_clause.macro 'expression: $expression_decl'
-  interface_clause.macro 'annotation: $annotation_point'
-){
-
- These @tech{interface clause} forms have the same syntax and analogous
- meaning as the @rhombus(expression, ~class_clause) and
- @rhombus(annotation, ~class_clause) @tech{class clauses}.
-
- There is no @rhombus(constructor, ~class_clause) for interfaces, since
- interfaces cannot be instantiated directly, but an
- @rhombus(expression, ~interface_clause) clause can make an interface
- identifier behave like a constructor, perhaps instantiating some default
- class. There is no @rhombus(binding, ~class_clause) for interfaces,
- because @rhombus(interface) does not otherwise define an interface name
- for binding, and so @rhombus(bind.macro) can be
- used alongside @rhombus(interface) with the same interface name.
 
 }
 
@@ -1231,15 +1058,12 @@ or protectedly using
 
 @doc(
   class_clause.macro 'primitive_property $expr: $body; ...'
-  interface_clause.macro 'primitive_property $expr: $body; ...'
 ){
 
- A @tech{class clause} or @tech{interface clause} that bridges Rhombus
- and Racket protocols. When used as a class clause, the enclosing class
+ A @tech{class clause} that bridges Rhombus
+ and Racket protocols. The enclosing class
  implements the primitive, Racket-level property produced by
- @rhombus(expr) with the value produced by @rhombus(body). When used as
- an interface clause, any class that implements the interface will
- implement the primitive property with the @rhombus(body) value.
+ @rhombus(expr) with the value produced by @rhombus(body).
 
  If the class is not @tech{final}, then any subclass of the class by
  default implements the property with the same value, but it can specify
