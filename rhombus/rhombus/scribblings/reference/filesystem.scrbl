@@ -74,13 +74,13 @@
 }
 
 @doc(
-  fun filesystem.list_directory(path :: PathString = Path.current_directory(),
-                                ~build_path: build = #false) :: List.of(Path)
+  fun filesystem.list_directory(path :: PathString
+                                  = Path.current_directory(),
+                                ~extend_path: extend = #false) :: List.of(Path)
 ){
 
   Returns a list of all files and directories in the directory specified
-  by @rhombus(path).  If @rhombus(build) is @rhombus(#false) the resulting
-  paths are all @rhombus(Path.Element)s; otherwise, the results are combined
-  with @rhombus(path) to create @rhombus(Path.Absolute)s.
+  by @rhombus(path).  If @rhombus(extend) is @rhombus(#true) the resulting
+  paths are extended from @rhombus(path).
 
 }

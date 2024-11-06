@@ -64,7 +64,7 @@
   . #,(get-treelist-static-infos))
 
 (define/arity (filesystem.list_directory [p (current-directory)]
-                                         #:build_path [build? #f])
+                                         #:extend_path [extend? #f])
   #:primitive (directory-list)
   #:static-infos ((#%call-result #,(get-treelist-of-paths)))
-  (list->treelist (directory-list p #:build? build?)))
+  (list->treelist (directory-list p #:build? extend?)))
