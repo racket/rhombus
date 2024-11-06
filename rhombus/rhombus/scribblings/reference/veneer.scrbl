@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@title{Veneers}
+@title(~tag: "veneer"){Veneers}
 
 @doc(
   ~literal: :: extends binding
