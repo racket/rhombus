@@ -35,14 +35,14 @@
 @doc(
   fun rectangle(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: AutoReal = #'#,(@rhombus(auto, ~value)),
-    ~height: height :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~width: width :: AutoReal = #'auto,
+    ~height: height :: AutoReal = #'auto,
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~rounded: rounded :: maybe(Rounded) = #false,              
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
+    ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -68,8 +68,8 @@
 
  When the @rhombus(refocus_on) argument is a pict, then
  @rhombus(Pict.refocus) is used on the resulting pict with
- @rhombus(refocus_on) as the second argument. If @rhombus(refocus) is
- @rhombus(#'#,(@rhombus(around, ~value))) and @rhombus(around) is not @rhombus(#false), then the
+ @rhombus(refocus_on) as the second argument. If @rhombus(refocus_on) is
+ @rhombus(#'around) and @rhombus(around) is not @rhombus(#false), then the
  pict is refocused on @rhombus(around), and then padded if necessary to
  make the width and height match @rhombus(width) and @rhombus(height).
 
@@ -94,13 +94,13 @@
 @doc(
   fun square(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~size: size :: AutoReal = #'auto,
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~rounded: rounded :: maybe(Rounded) = #false,              
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
+    ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -119,8 +119,8 @@
 @doc(
   fun ellipse(
     ~around: around :: maybe(Pict) = #false,
-    ~width: width :: AutoReal = #'#,(@rhombus(auto, ~value)),
-    ~height: height :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~width: width :: AutoReal = #'auto,
+    ~height: height :: AutoReal = #'auto,
     ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
@@ -128,7 +128,7 @@
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
+    ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
@@ -148,7 +148,7 @@
 @doc(
   fun circle(
     ~around: around :: maybe(Pict) = #false,
-    ~size: size :: AutoReal = #'#,(@rhombus(auto, ~value)),
+    ~size: size :: AutoReal = #'auto,
     ~arc: arc :: maybe(ArcDirection) = #false,
     ~start: start :: Real = 0,
     ~end: end :: Real = 2 * math.pi,
@@ -156,7 +156,7 @@
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~order: order :: OverlayOrder = #'back,
-    ~refocus: refocus_on :: maybe(Refocus) = #'#,(@rhombus(around, ~value)),
+    ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
   ) :: Pict
