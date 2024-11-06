@@ -1,6 +1,4 @@
 #lang rhombus
-import:
-  rhombus/system
 
 check system.version() ~is_a String
 

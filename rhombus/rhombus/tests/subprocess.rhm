@@ -1,7 +1,6 @@
 #lang rhombus
 import:
   rhombus/subprocess
-  rhombus/system
 
 when system.type() != #'windows
 | def ls_exe:
