@@ -10,7 +10,7 @@
 
 Rhombus functions defined with @rhombus(fun) can be recursive, of
 course, but the @rhombus(recur) form offers a shorthand for the case
-that a recursive function would be used just once and is better written
+that a recursive function is used just once and is better written
 inline. Iteration with @rhombus(for) is also a kind of recursion, but
 @rhombus(recur) supports non-tail recursion, instead of only iterative
 loops.
@@ -43,7 +43,9 @@ loops.
  function where only keyword arguments are optional. The default value
  for a keyword argument in a recursive call, meanwhile, is whatever was
  supplied for the enclosing call, with the effect that keyword arguments
- are automatically propagated in a recursive call.
+ are automatically propagated in a recursive call. That treatment of keyword
+ arguments is different from a @rhombus(fun, ~defn)-defined function that
+ calls itself.
 
  Beware that when @rhombus(maybe_res_annot) specifies a result
  annotation using @rhombus(::, ~bind), the annotation is checked on every
