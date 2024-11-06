@@ -182,35 +182,48 @@ normally bound to implement function calls.
                 $body
                 ...'
   defn.macro 'fun $id_name $case_maybe_kw_opt:
-                $maybe_doc
+                $option; ...
                 $body
                 ...'
   defn.macro 'fun
               | $id_name $case_maybe_kw:
+                  $who_option; ...
                   $body
                   ...
               | ...'
   defn.macro 'fun $id_name $maybe_res_annot
               | $id_name $case_maybe_kw:
+                  $who_option; ...
                   $body
                   ...
               | ...'
   defn.macro 'fun $id_name $maybe_res_annot:
-                $maybe_doc
+                $option; ...
               | $id_name $case_maybe_kw:
+                  $who_option; ...
                   $body
                   ...
               | ...'
 
   expr.macro 'fun ($bind, ...):
+                $name_option; ...
                 $body
                 ...'
   expr.macro 'fun $case_maybe_kw_opt:
+                $name_option; ...
                 $body
                 ...'
 
   expr.macro 'fun $maybe_res_annot
               | $case_maybe_kw:
+                  $who_option; ...
+                  $body
+                  ...
+              | ...'
+  expr.macro 'fun $maybe_res_annot:
+                $name_option; ...
+              | $case_maybe_kw:
+                  $who_option; ...
                   $body
                   ...
               | ...'
@@ -221,12 +234,21 @@ normally bound to implement function calls.
   grammar case_maybe_kw:
     ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot
 
-  grammar maybe_doc:
+  grammar option:
     ~doc
     ~doc:
       $desc_body
       ...
-    #,(epsilon)
+    name_option
+
+  grammar name_option:
+    ~name $op_or_id_name
+    ~name: $op_or_id_name
+    who_option
+
+  grammar who_option:
+    ~who $id
+    ~who: $id
 
   grammar bind_maybe_kw_opt:
     $bind
@@ -449,7 +471,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
       things_to_say("Nachos")
 )
 
- When @rhombus(~doc) is present and @rhombus(fun) is used in a
+ When @rhombus(~doc) is present as an @rhombus(option) and @rhombus(fun) is used in a
  declaration context, then a @rhombus(doc, ~datum) submodule splice is
  generated with @rhombusmodname(rhombus/doc) as the submodule's language.
  In the submodule, @rhombus(id_name) is defined as a
@@ -459,6 +481,41 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  recorded function shape. Tools such as Rhombus Scribble can import
  the submodule to extract the recorded information.
 
+ When @rhombus(~name) is present as an @rhombus(option) or
+ @rhombus(name_option), the given @rhombus(op_or_id_name) is used for
+ reporting annotaton failures on arguments and results, and it is also
+ used when printing the function. Otherwise, @rhombus(id_name) is used.
+ Supplying @rhombus(~name) does not change the name that is bound, which
+ is always the initial @rhombus(id_name).
+
+ When @rhombus(~who) is present as an @rhombus(option),
+ @rhombus(name_option), or @rhombus(who_option), the given @rhombus(id)
+ is bound to a symbol form of the function name---that is, to the symbol
+ form of the defined @rhombus(id_name) or the @rhombus(op_or_id_name)
+ provided with @rhombus(~name). A @rhombus(~who) binding is particularly
+ useful as a symbol that can be provided to @rhombus(error). The
+ @rhombus(id) for @rhombus(~who) is bound after the declaration, which
+ means that it is either outside multiple cases (and potentially shadowed
+ by arguments in those cases) or inside of a single case (where it
+ potentially shadows argument bindings).
+
+@examples(
+  ~defn:
+    fun trivial(x :: Int):
+      ~name: easy
+      ~who: who
+      if x == 0
+      | error(~who: who, "zero")
+      | x
+  ~repl:
+    trivial(1)
+    trivial
+    ~error:
+      trivial("one")
+    ~error:
+      trivial(0)
+)
+
  See also @rhombus(_) for information about function shorthands using
  @rhombus(_). For example, @rhombus((_ div _)) is a shorthand for
  @rhombus(fun (x, y): x div y).
@@ -467,31 +524,14 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  ~nonterminal:
-    case_maybe_kw_opt: fun ~defn
-    case_maybe_kw: fun ~defn
-    maybe_res_annot: fun ~defn
+  entry_point.macro 'fun $args_and_body'
 
-  entry_point.macro 'fun ($bind, ...):
-                       $body
-                       ...'
-  entry_point.macro 'fun $case_maybe_kw_opt'
-  entry_point.macro 'fun $maybe_res_annot
-                     | $case_maybe_kw
-                     | ...'
-
-  immediate_callee.macro 'fun ($bind, ...):
-                            $body
-                            ...'
-  immediate_callee.macro 'fun $case_maybe_kw_opt'
-  immediate_callee.macro 'fun $maybe_res_annot
-                          | $case_maybe_kw
-                          | ...'
+  immediate_callee.macro 'fun $args_and_body'
 ){
 
  The @tech{entry point} and @tech{immediate callee} forms of
- @rhombus(fun, ~entry_point) are the same as the expression form of
- @rhombus(fun).
+ @rhombus(fun, ~entry_point) have the same syntax and behavior as the
+ expression form of @rhombus(fun).
 
  A binding as an @deftech{entry point} allows a form to work and cooperate
  with contexts such as @rhombus(constructor, ~class_clause) that

@@ -46,6 +46,23 @@
     (pattern name:identifier)
     (pattern (~and name #:other)))
 
+  (define-splicing-syntax-class :reflect-name
+    #:attributes (name)
+    #:datum-literals (group)
+    (pattern (_::block (group . n::dotted-operator-or-identifier))
+             #:with name #'n.name)
+    (pattern s::dotted-operator-or-identifier-sequence
+             #:with n::dotted-operator-or-identifier #'s
+             #:with name #'n.name))
+
+  (define-syntax-class :who
+    #:attributes (name)
+    #:datum-literals (group)
+    (pattern (_::block (group n::name))
+             #:with name #'n.name)
+    (pattern n::name
+             #:with name #'n.name))
+
   (define-syntax-class (:keyword-matching kws)
     (pattern kw:keyword
              #:when (memq (syntax-e #'kw) kws)))
@@ -119,6 +136,15 @@
                               (syntax->list #'(same-on-left.name ...))
                               (syntax->list #'(same-on-right.name ...))))
 
+  (define-syntax-class-mixin who-options
+    #:datum-literals (op group)
+    (~alt (~optional (~and (group #:name ~! reflect-name-seq::reflect-name)
+                           (~parse reflect-name #'reflect-name-seq.name))
+                     #:defaults ([reflect-name #'#f]))
+          (~optional (~and (group #:who ~! who-seq::who)
+                           (~parse who #'who-seq.name))
+                     #:defaults ([who #'#f]))))
+
   (define-syntax-class-mixin self-options
     #:datum-literals (group)
     (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
@@ -136,7 +162,8 @@
                        _))))
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
-    operator-options)
+    operator-options
+    who-options)
 
   (define-composed-splicing-syntax-class (:self-operator-options space-sym extra-kws)
     self-options
@@ -165,7 +192,8 @@
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
     operator-options
-    infix-operator-options)
+    infix-operator-options
+    who-options)
 
   (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym extra-kws)
     operator-options
@@ -178,7 +206,8 @@
 
   (define-composed-splicing-syntax-class (:all-operator-options space-sym)
     operator-options
-    infix-operator-options)
+    infix-operator-options
+    who-options)
 
   (define-composed-splicing-syntax-class (:macro-all-operator-options space-sym extra-kws)
     operator-options

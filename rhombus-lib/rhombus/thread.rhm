@@ -32,8 +32,9 @@ namespace ~open:
       Break
 
   fun from_handle(hand) :: Thread:
+    ~who: who
     unless rkt.#{thread?}(hand)
-    | error(~who: #'#{Thread.from_handle}, "not a thread handle",
+    | error(~who: who, "not a thread handle",
             error.val(hand))
     _Thread(hand)
 
@@ -61,6 +62,7 @@ namespace ~open:
       from_handle
 
   fun from_handle(hand) :: Semaphore:
+    ~who: who
     unless rkt.#{semaphore?}(hand)
-    | error(~who: #'#{Semaphore.from_handle}, "not a thread handle")
+    | error(~who: who, "not a semaphore handle")
     _Semaphore(hand)
