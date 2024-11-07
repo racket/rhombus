@@ -201,7 +201,7 @@
 
        (define exs (parse-exports #'(combine-out . exports)
                                   (make-expose #'scope-stx #'base-stx)))
-       (check-exports-distinct stxes exs '() method-mindex dots)
+       (define replaced-ht (check-exports-distinct stxes exs '() method-mindex dots))
 
        (define internal-name (let ([id #'maybe-internal-name])
                                (and (syntax-e id) id)))
@@ -276,7 +276,7 @@
                (build-interface-property internal-internal-name
                                          #'(name prop:name name? name-ref name-ref-or-error
                                                  prop:internal-name internal-name? internal-name-ref))
-               (build-interface-dot-handling method-mindex method-vtable method-results
+               (build-interface-dot-handling method-mindex method-vtable method-results replaced-ht
                                              internal-name
                                              expression-macro-rhs dot-provider-rhss parent-dot-providers
                                              #'(name name-extends tail-name

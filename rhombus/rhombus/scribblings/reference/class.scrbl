@@ -114,7 +114,7 @@
   class where the fields match the corresponding patterns;},
 
  @item{in the @rhombus(namespace, ~space) space,
-  a @tech{namespace} to access exported bindings as well as a
+  a @tech{namespace} to access exported bindings as well as (if not replaced by an export) a
   function
   @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
@@ -182,9 +182,9 @@
  instance is created. Definitions are scoped to the block for
  potential use by class clauses, but a @rhombus(class) form is analogous
  to @rhombus(namespace) in that local definitions can be exported.
- Exported names must be distinct from all non-private field, method, property, and dot-syntax
- names (which are automatically exported from the class in its role as a
- namespace). Since the definitions and expressions of a @rhombus(class)
+ Exported names can replace non-private field, method, and property
+ names, which are otherwise exported automatically, but exported names
+ must be distinct from dot-syntax names. Since the definitions and expressions of a @rhombus(class)
  body must be processed to find @tech{class clauses} in the body, the
  class is not available for use until after the definitions and
  expressions, as if the definitions and expressions appeared before the
@@ -208,7 +208,7 @@
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form,
- @rhombus(abstract, ~class_clause) form, @rhombus(property, ~class_clause) form,m
+ @rhombus(abstract, ~class_clause) form, @rhombus(property, ~class_clause) form,
  or method- or property-shaped
  @rhombus(final, ~class_clause), @rhombus(private, ~class_clause), or @rhombus(protected, ~class_clause) form,
  then the clause declares a method or property for the class. These clauses can
@@ -458,6 +458,8 @@
     case_maybe_kw_opt: fun ~defn
     case_maybe_kw: fun ~defn
     bind_maybe_kw_opt: fun ~defn
+    name_option: fun ~defn
+    who_option: fun ~defn
     rest: fun ~defn
 
   class_clause.macro 'method $method_impl'
@@ -467,16 +469,35 @@
   class_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
 
   grammar method_impl:
-    $id $maybe_res_annot: $entry_point
-    $id $case_maybe_kw_opt
-    Z| $id $case_maybe_kw
+    $id $maybe_res_annot:
+      $entry_point
+    $id $case_maybe_kw_opt:
+      $name_option; ...
+      $body
+      ...
+    Z| $id $case_maybe_kw:
+         $name_option; ...
+         $body
+         ...
      | ...
 
   grammar property_impl:
-    $id $maybe_res_annot: $body; ...
-    Z| $id $maybe_res_annot: $body; ...
-    Z| $id $maybe_res_annot: $body; ...
-     | $id := $binding: $body; ...
+    $id $maybe_res_annot:
+      $who_option; ...
+      $body
+        ...
+    Z| $id $maybe_res_annot:
+         $who_option; ...
+         $body
+         ...
+    Z| $id $maybe_res_annot:
+         $who_option; ...
+         $body
+         ...
+     | $id := $binding:
+         $who_option; ...
+         $body
+         ...
 ){
 
  These @tech{class clauses} aare recognized

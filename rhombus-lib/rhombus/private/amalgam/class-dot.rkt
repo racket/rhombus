@@ -41,7 +41,7 @@
                      add-super-dot-providers)
          no-dynamic-dot-syntax)
 
-(define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
+(define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results replaced-ht final?
                                              has-private? method-private method-private-inherit
                                              exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
@@ -53,9 +53,9 @@
                        name? name-convert constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
                        indirect-static-infos dot-providers
-                       [public-field-name ...] [private-field-name ...] [field-name ...]
+                       [all-public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
-                       [public-name-field/mutate ...]
+                       [all-public-name-field/mutate ...]
                        [dot-id ...]
                        [private-field-desc ...]
                        [ex ...]
@@ -63,8 +63,10 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results #'name-ref #'name? final? #f))
-    (with-syntax ([(method-name ...) method-names]
+      (method-static-entries method-mindex method-vtable method-results replaced-ht #'name-ref #'name? final? #f))
+    (with-syntax ([((public-field-name public-name-field/mutate) ...)
+                   (filter-replaced replaced-ht #'(all-public-field-name ...) #'(all-public-name-field/mutate ...))]
+                  [(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
                   [(dot-rhs-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))]
@@ -188,7 +190,7 @@
                                                                   ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results replaced-ht
                                                  internal-name
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
@@ -203,7 +205,7 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results #'static-name-ref #'name? #f #t))
+      (method-static-entries method-mindex method-vtable method-results replaced-ht #'static-name-ref #'name? #f #t))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
@@ -280,10 +282,11 @@
                  #`(quote-syntax #,name)))))
       null))
 
-(define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id name?-id
+(define-for-syntax (method-static-entries method-mindex method-vtable method-results replaced-ht name-ref-id name?-id
                                           final? via-interface?)
   (for/fold ([names '()] [ids '()] [defns '()])
-            ([(name mix) (in-hash method-mindex)])
+            ([(name mix) (in-hash method-mindex)]
+             #:unless (hash-ref replaced-ht name #f))
     (cond
       [(and (not (mindex-final? mix))
             (not final?))
@@ -323,6 +326,12 @@
        (values (cons name names)
                (cons (vector-ref method-vtable (mindex-index mix)) ids)
                defns)])))
+
+(define-for-syntax (filter-replaced replaced-ht names proc-ids)
+  (for/list ([name (in-list (syntax->list names))]
+             [proc-id (in-list (syntax->list proc-ids))]
+             #:unless (hash-ref replaced-ht (syntax-e name) #f))
+    (list name proc-id)))
 
 (define (make-method-accessor name ref idx)
   (procedure-rename

@@ -217,8 +217,8 @@
        (check-consistent-unimmplemented stxes final? abstract-name #'name)
 
        (define exs (parse-exports #'(combine-out . exports) expose))
-       (check-exports-distinct stxes exs null method-mindex dots)
-
+       (define replaced-ht (check-exports-distinct stxes exs null method-mindex dots))
+<
        (define has-private?
          ((hash-count method-private) . > . 0))
 
@@ -276,7 +276,7 @@
                                       #f))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
-                                         method-mindex method-vtable method-results final?
+                                         method-mindex method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          #f #f
                                          expression-macro-rhs intro #f
