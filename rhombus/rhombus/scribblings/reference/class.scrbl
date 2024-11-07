@@ -500,7 +500,11 @@
          ...
 ){
 
- These @tech{class clauses} aare recognized
+ @margin_note_block{The @rhombus(method, ~class_clause) form is used in
+  documentation with a different shape than in implementation. See
+  @secref("doc_method") for more information.}
+
+ These @tech{class clauses} are recognized
  by @rhombus(class) to declare methods and properties, along
  with the method and property forms of @rhombus(final, ~class_clause),
  @rhombus(private, ~class_clause), and @rhombus(protected, ~class_clause). The combination

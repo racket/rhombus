@@ -21,36 +21,6 @@ element by position---in @math{O(log N)} time---via
 to append lists. A list can be used as @tech{sequence}, in which case
 it supplies its elements in order.
 
-@dispatch_table(
-  "list"
-  List
-  lst.length()
-  lst.get(n)
-  lst.set(n, v)
-  lst.first,
-  lst.last,
-  lst.rest,
-  lst.insert(n, v)
-  lst.add(v)
-  lst.delete(n)
-  lst.reverse()
-  lst.append(lst2, ...)
-  lst.take(n)
-  lst.take_last(n)
-  lst.drop(n)
-  lst.drop_last(n)
-  lst.sublist(n, m)
-  lst.has_element(v, eqls, ...)
-  lst.find(pred)
-  lst.remove(v)
-  lst.map(func)
-  lst.for_each(func)
-  lst.sort(arg, ...)
-  lst.copy()
-  lst.to_list()
-  lst.to_sequence()
-)
-
 @doc(
   annot.macro 'List'
   annot.macro 'List.of($annot)'
@@ -186,7 +156,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.insert(lst :: List, n :: NonnegInt, elem :: Any) :: List
+  method (lst :: List).insert(n :: NonnegInt, elem :: Any) :: List
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added before
@@ -202,7 +172,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.add(lst :: List, elem :: Any) :: List
+  method (lst :: List).add(elem :: Any) :: List
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to
@@ -265,7 +235,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.get(lst :: List, n :: NonnegInt) :: Any
+  method (lst :: List).get(n :: NonnegInt) :: Any
 ){
 
  Equivalent to @rhombus(lst[n]) (with the default implicit
@@ -282,7 +252,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.first(lst :: NonemptyList) :: Any
+  method List.first(lst :: NonemptyList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
@@ -297,7 +267,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.last(lst :: NonemptyList) :: Any
+  method List.last(lst :: NonemptyList) :: Any
 ){
 
  Returns the last element of @rhombus(lst).
@@ -312,7 +282,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.rest(lst :: NonemptyList) :: List
+  method List.rest(lst :: NonemptyList) :: List
 ){
 
  Returns a list like @rhombus(lst), but without its first element.
@@ -327,7 +297,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.delete(lst :: List, n :: NonnegInt) :: List
+  method (lst :: List).delete(n :: NonnegInt) :: List
 ){
 
  Creates a list like @rhombus(lst), but without the @rhombus(n)th
@@ -341,7 +311,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.set(lst :: List, n :: NonnegInt, v :: Any) :: List
+  method (lst :: List).set(n :: NonnegInt, v :: Any) :: List
 ){
 
  Returns a list like @rhombus(lst), but with the @rhombus(n)th element
@@ -358,35 +328,13 @@ it supplies its elements in order.
 }
 
 @doc(
-  ~nonterminal:
-    list_expr: block expr
-  repet.macro 'List.repet($list_expr)'
-){
-
- Creates a repetition from a list. This is a shorthand for using
- @rhombus(..., ~bind) with a @rhombus(List, ~bind) binding.
-
-@examples(
-  def lst = [1, 2, 3]
-  block:
-    let [x, ...] = lst
-    [x+1, ...]
-  [List.repet(lst) + 1, ...]
-)
-
-}
-
-
-@doc(
-  fun List.length(lst :: List) :: NonnegInt
+  method (lst :: List).length() :: NonnegInt
 ){
 
  Returns the number of items in @rhombus(lst).
  The length is produced in @math{O(1)} time.
 
 @examples(
-  List.length([1, 4, 8])
-  List.length([])
   [1, 4, 8].length()
   [].length()
 )
@@ -395,7 +343,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.reverse(lst :: List) :: List
+  method (lst :: List).reverse() :: List
 ){
 
  Returns a list with the same items as @rhombus(lst), but in reversed
@@ -404,7 +352,6 @@ it supplies its elements in order.
  list one at a time.
 
 @examples(
-  List.reverse([1, 4, 8])
   [1, 4, 8].reverse()
 )
 
@@ -412,6 +359,7 @@ it supplies its elements in order.
 
 
 @doc(
+  method (lst :: List).append(lst :: List, ...) :: List
   fun List.append(lst :: List, ...) :: List
 ){
 
@@ -420,16 +368,17 @@ it supplies its elements in order.
  adding each element one at a time from one list to the other.
 
 @examples(
-  List.append([1, 2, 3], [4, 5], [6])
   [1, 2, 3].append([4, 5], [6])
+  List.append([1, 2, 3], [4, 5], [6])
+  List.append()
 )
 
 }
 
 
 @doc(
-  fun List.take(lst :: List, n :: NonnegInt) :: List
-  fun List.take_last(lst :: List, n :: NonnegInt) :: List
+  method (lst :: List).take(n :: NonnegInt) :: List
+  method (lst :: List).take_last(n :: NonnegInt) :: List
 ){
 
  Returns a list like @rhombus(lst), but with only the first @rhombus(n)
@@ -452,8 +401,8 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.drop(lst :: List, n :: NonnegInt) :: List
-  fun List.drop_last(lst :: List, n :: NonnegInt) :: List
+  method (lst :: List).drop(n :: NonnegInt) :: List
+  method (lst :: List).drop_last(n :: NonnegInt) :: List
 ){
 
  Returns a list like @rhombus(lst), but without the first @rhombus(n)
@@ -475,7 +424,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.sublist(lst :: List, n :: NonnegInt, m :: NonnegInt) :: List
+  method (lst :: List).sublist(n :: NonnegInt, m :: NonnegInt) :: List
 ){
 
  Returns a sublist of @rhombus(lst) containing elements from index
@@ -492,8 +441,8 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.has_element(lst :: List, v :: Any,
-                       eqls :: Function.of_arity(2) = (_ == _))
+  method (lst :: List).has_element(v :: Any,
+                                   eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -511,7 +460,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.find(lst :: List, pred :: Function.of_arity(1)) :: Any
+  method (lst :: List).find(pred :: Function.of_arity(1)) :: Any
 ){
 
  Returns the first element of @rhombus(lst) for which @rhombus(pred)
@@ -528,7 +477,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.remove(lst :: List, v :: Any) :: List
+  method (lst :: List).remove(v :: Any) :: List
 ){
 
  Returns a list like @rhombus(lst), but with the first element equal to
@@ -541,9 +490,9 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.map(lst :: List, f :: Function.of_arity(1))
+  method (lst :: List).map(f :: Function.of_arity(1))
     :: List,
-  fun List.for_each(lst :: List, f :: Function.of_arity(1))
+  method (lst :: List).for_each(f :: Function.of_arity(1))
     :: Void,
 ){
 
@@ -560,8 +509,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.sort(lst :: List,
-                is_less :: Function.of_arity(2) = (_ < _))
+  method (lst :: List).sort(is_less :: Function.of_arity(2) = (_ < _))
     :: List,
 ){
 
@@ -592,7 +540,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.copy(lst :: List) :: MutableList
+  method (lst :: List).copy() :: MutableList
 ){
 
  Equivalent to @rhombus(MutableList(& lst)), creates a new @tech{mutable
@@ -606,7 +554,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.to_list(lst :: List) :: List
+  method (lst :: List).to_list() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning @rhombus(lst) unchanged.
@@ -615,10 +563,30 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.to_sequence(lst :: List) :: Sequence
+  method (lst :: List).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(lst)'s elements in order.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    list_expr: block expr
+  repet.macro 'List.repet($list_expr)'
+){
+
+ Creates a repetition from a list. This is a shorthand for using
+ @rhombus(..., ~bind) with a @rhombus(List, ~bind) binding.
+
+@examples(
+  def lst = [1, 2, 3]
+  block:
+    let [x, ...] = lst
+    [x+1, ...]
+  [List.repet(lst) + 1, ...]
+)
 
 }

@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "notation"){Notation and Conventions}
+@title(~tag: "notation", ~style: #'toc){Notation and Conventions}
 
 @local_table_of_contents()
 
@@ -12,5 +12,5 @@ Rhombus is defined in terms of shrubbery notation as described at
 @docref(shrub_doc).
 
 @include_section("form.scrbl")
-
+@include_section("entry_form.scrbl")
 @include_section("naming-convention.scrbl")

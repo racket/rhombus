@@ -74,8 +74,8 @@
    [open_bytes Port.Output.open_bytes]
    [open_file Port.Output.open_file]
    [open_string Port.Output.open_string]
-   [get_bytes Port.Output.get_bytes]
-   [get_string Port.Output.get_string]
+   [get_bytes Port.Output.String.get_bytes]    ;; temporary: to be removed
+   [get_string Port.Output.String.get_string]  ;; temporary: to be removed
    ExistsFlag)
   #:properties ()
   #:methods
@@ -108,8 +108,8 @@
   (#:no-methods)
   #:properties ()
   #:methods
-  ([get_bytes Port.Output.get_bytes]
-   [get_string Port.Output.get_string]))
+  ([get_bytes Port.Output.String.get_bytes]
+   [get_string Port.Output.String.get_string]))
 
 (define Port.Input.current (rename-parameter current-input-port 'Port.Input.current))
 (set-primitive-who! 'current-input-port 'Port.Input.current)
@@ -252,12 +252,12 @@
   #:primitive (close-output-port)
   (close-output-port port))
 
-(define/method (Port.Output.get_bytes port)
+(define/method (Port.Output.String.get_bytes port)
   #:primitive (get-output-bytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (get-output-bytes port))
 
-(define/method (Port.Output.get_string port)
+(define/method (Port.Output.String.get_string port)
   #:primitive (get-output-string)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (get-output-string port)))

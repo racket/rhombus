@@ -8,16 +8,9 @@
 
 @title(~tag: "ref-function"){Functions}
 
-A function is normaly written with the @rhombus(fun, ~defn) definition
+A @deftech{function} is normally written with the @rhombus(fun, ~defn) definition
 form or @rhombus(fun) expression form, but see also
 @rhombus(Callable, ~class).
-
-@dispatch_table(
-  "function"
-  Function
-  f.map(args, ...)
-  f.for_each(args, ...)
-)
 
 @doc(
   ~nonterminal:
@@ -429,12 +422,10 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  fun Function.map(f :: Function,
-                   args0 :: List, args :: List, ...)
-    :: List,
-  fun Function.for_each(f :: Function,
-                        args0 :: List, args :: List, ...)
-    :: Void,
+  method (f :: Function).map(args0 :: List, args :: List, ...)
+    :: List
+  method (f :: Function).for_each(args0 :: List, args :: List, ...)
+    :: Void
 ){
 
  Applies @rhombus(f) to each element of each @rhombus(args) (including @rhombus(args0)), iterating

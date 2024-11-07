@@ -42,7 +42,12 @@
                   racketidfont
                   tt
                   smaller)
-         (submod scribble/racket id-element)
+         (submod scribble/racket
+                 id-element)
+         (only-in scribble/racket
+                  symbol-color
+                  value-def-color
+                  variable-color)
          (only-in scribble/core
                   table
                   paragraph
@@ -207,9 +212,9 @@
                                 (define def-names (if single?
                                                       (list def-name/s)
                                                       def-name/s))
-                                (cons (for/list  ([def-name (in-list def-names)]
-                                                  [space-name (in-list space-names)]
-                                                  [introducer (in-list introducers)])
+                                (cons (for/list ([def-name (in-list def-names)]
+                                                 [space-name (in-list space-names)]
+                                                 [introducer (in-list introducers)])
                                         (cond
                                           [def-name
                                             (unless (or (identifier? def-name)
@@ -238,9 +243,14 @@
      (define def-htss (map car def-hts+single?s))
      (define single?s (map cdr def-hts+single?s))
      (define-values (nt-def-ht nt-space-name nt-introducer)
-       (if (attribute nt-key-g)
-           (nt-key-expand #'nt-key-g)
-           (values (caar def-htss) (caar space-namess) (caar introducerss))))
+       (cond
+         [(attribute nt-key-g)
+          (nt-key-expand #'nt-key-g)]
+         [(or (null? (car def-htss))
+              (not (caar def-htss)))
+          (values #f #f values)]
+         [else
+          (values (caar def-htss) (caar space-namess) (caar introducerss))]))
      (define def-id-as-defss
        (for/fold ([rev-mk-as-defss '()] [rev-keyss '()] [seen #hash()]
                                         #:result (let ([key-rev-strsss (for/list ([rev-keys (in-list (reverse rev-keyss))])
@@ -268,15 +278,17 @@
                     [kind-str (in-list kind-strs)]
                     [sort-order (in-list sort-orders)])
            (cond
-             [(not immed-def-ht)
+             [(or (not immed-def-ht)
+                  (and (eq? immed-space-name 'grammar)
+                       (not nt-def-ht)))
               (values (cons (lambda (l) #f) rev-mk-as-defs)
                       (cons #f rev-keys)
                       seen)]
              [else
               (define def-ht (if (eq? immed-space-name 'grammar)
-                                   ;; use key of a grammar non-terminal
-                                   nt-def-ht
-                                   immed-def-ht))
+                                 ;; use key of a grammar non-terminal
+                                 nt-def-ht
+                                 immed-def-ht))
               (define introducer (if (eq? immed-space-name 'grammar)
                                      nt-introducer
                                      immed-introducer))
@@ -556,18 +568,29 @@
                                ref-content/no-prefix))))]
          [else content]))]))
 
+(define (as-bold stx)
+  (element symbol-color (element value-def-color (shrubbery-syntax->string stx))))
+
+(define (as-italic str)
+  (element symbol-color (element variable-color str)))
+
 (define-for-syntax (nonterm-id-transformer id sym nt-def-ht nt-space-name)
-  (define root (hash-ref nt-def-ht 'root #f)) 
-  #`(make-nonterm-id-transformer
-     (quote #,id)
-     (quote #,sym)
-     (quote-syntax #,(if root
-                         root
-                         (hash-ref nt-def-ht 'target)))
-     (quote #,(if root
-                  (target-id-key-symbol (hash-ref nt-def-ht 'target))
-                  #f))
-     (quote #,nt-space-name)))
+  (cond
+    [(not nt-def-ht)
+     #`(make-local-nonterm-id-transformer
+        (quote #,id))]
+    [else
+     (define root (hash-ref nt-def-ht 'root #f)) 
+     #`(make-nonterm-id-transformer
+        (quote #,id)
+        (quote #,sym)
+        (quote-syntax #,(if root
+                            root
+                            (hash-ref nt-def-ht 'target)))
+        (quote #,(if root
+                     (target-id-key-symbol (hash-ref nt-def-ht 'target))
+                     #f))
+        (quote #,nt-space-name))]))
 
 (define-for-syntax (make-nonterm-id-transformer id-sym sym def-id def-sub def-space-sym)
   (typeset-meta:make_Transformer
@@ -586,6 +609,13 @@
                           #:suffix #,(if def-sub
                                          #`(list '#,def-sub '#,def-space-sym '#,(or sym id-sym))
                                          #`(list '#,def-space-sym '#,(or sym id-sym)))))))))
+
+(define-for-syntax (make-local-nonterm-id-transformer id-sym)
+  (typeset-meta:make_Transformer
+   (lambda (stx)
+     #`(parsed
+        #:rhombus/expr
+        (racketvarfont '#,(symbol->immutable-string id-sym))))))
 
 (define-for-syntax (make-meta-id-transformer id)
   #;
@@ -709,9 +739,19 @@
   (define substs
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
       (define (subst name #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
+        (define id (if (identifier? name) name (hash-ref (syntax-e name) 'target)))
+        (define exp
+          (cond
+            [(not def-id-as-def)
+             (if (equal? space-names '(grammar))
+                 #`(as-italic '#,(symbol->string (syntax-e id)))
+                 #`(as-bold (quote-syntax #,id)))]
+            [else
+             #`(let ([redef? #,as-redef?]
+                     [meta? #,meta?])
+                 #,def-id-as-def)]))
         (cond
           [wrap?
-           (define id (if (identifier? name) name (hash-ref (syntax-e name) 'target)))
            (datum->syntax
             #f
             (list
@@ -720,12 +760,8 @@
               (relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
               ;; span is taken from `parens` above, so more nested srclocs don't matter
               #`(group (parsed #:rhombus/expr
-                               (let ([redef? #,as-redef?]
-                                     [meta? #,meta?])
-                                 #,def-id-as-def))))))]
-          [else #`(let ([redef? #,as-redef?]
-                        [meta? #,meta?])
-                    #,def-id-as-def)]))
+                               #,exp)))))]
+          [else exp]))
       subst))
   ((doc-transformer-extract-typeset t) stx
                                        (if single? (car space-names) space-names)

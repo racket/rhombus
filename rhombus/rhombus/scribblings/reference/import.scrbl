@@ -443,7 +443,7 @@
   expr.macro '«ModulePath '$module_path'»'
   repet.macro 'ModulePath'
 
-  fun ModulePath.s_exp(mp :: ModulePath) :: Any
+  method (mp :: ModulePath).s_exp() :: Any
 ){
 
  The @rhombus(ModulePath, ~annot) annotation recognizes values that
@@ -452,12 +452,6 @@
  @rhombus(mod_stx) or a quoted @rhombus(module_path). As a repetition,
  @rhombus(ModulePath, ~repet) is the same as referring to the
  @rhombus(ModulePath) function.
-
-@dispatch_table(
-  "module path"
-  ModulePath
-  mp.s_exp()
-)
 
  The format of a @rhombus(module_path) or the content of
  @rhombus(mod_stx) is the same as for @rhombus(import, ~defn), except

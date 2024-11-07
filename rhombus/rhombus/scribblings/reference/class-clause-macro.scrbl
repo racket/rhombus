@@ -185,20 +185,17 @@
 @doc(
   ~meta
   annot.macro 'class_meta.Info'
-  fun class_meta.Info.lookup(
-    info :: class_meta.Info,
+  method (info :: class_meta.Info).lookup(
     key :: Symbol
   ) :: Any
 
   annot.macro 'interface_meta.Info'
-  fun interface_meta.Info.lookup(
-    info :: interface_meta.Info,
+  method (info :: interface_meta.Info).lookup(
     key :: Symbol
   ) :: Any
 
   annot.macro 'veneer_meta.Info'
-  fun veneer_meta.Info.lookup(
-    info :: veneer_meta.Info,
+  method (info :: veneer_meta.Info).lookup(
     key :: Symbol
   ) :: Any
 ){
@@ -216,24 +213,6 @@
  @rhombus(class_meta.Info, ~annot) or
  @rhombus(interface_meta.Info, ~annot), which indicates the context where
  the macro is used.
-
-@dispatch_table(
-  "class information"
-  class_meta.Info
-  info.lookup(key)
-)
-
-@dispatch_table(
-  "interface information"
-  interface_meta.Info
-  info.lookup(key)
-)
-
-@dispatch_table(
-  "veneer information"
-  veneer_meta.Info
-  info.lookup(key)
-)
 
  The @rhombus(class_meta.Info.lookup),
  @rhombus(interface_meta.Info.lookup),

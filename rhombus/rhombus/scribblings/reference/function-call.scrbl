@@ -9,8 +9,7 @@
 
 An expression followed by a parenthesized sequence of expressions is
 parsed as an implicit use of the @rhombus(#%call) form, which is
-normally bound to implement function calls. See also
-@rhombus(Callable, ~class).
+normally bound to implement @tech{function} calls.
 
 @doc(
   ~nonterminal:

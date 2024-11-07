@@ -2,9 +2,13 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property
+                     shrubbery/print
+                     rhombus/private/enforest
+                     rhombus/private/name-path-op
                      racket/list)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
+         (submod "doc.rkt" for-class)
          (lib "shrubbery/render/private/typeset-help.rkt")
          rhombus/private/name-root
          (submod "rhombus-spacer.rhm" for_doc) ; for spacer bindings
@@ -21,7 +25,8 @@
 (provide (for-space rhombus/namespace
                     space_meta_clause)
          (for-space rhombus/doc
-                    grammar))
+                    grammar
+                    non_target))
 
 (module+ for_doc_transformer
   (provide
@@ -544,7 +549,9 @@
            (group _ (alts (block (group (parens (group _ (op ::) class::dotted-class)) (op |.|) name . _)) . _)))
      (build-dotted #'class.head #:prefix #'class.tail #'name)]
     [(group _ (parens (group _ (op ::) class::dotted-class)) (op |.|) name . _)
-     (build-dotted #'class.head #:prefix #'class.tail #'name)]))
+     (build-dotted #'class.head #:prefix #'class.tail #'name)]
+    ;; allow plain-function form, useful when a default export is replaced
+    [_ (parens-extract-name stx space-name)]))
 
 (define-for-syntax (method-extract-metavariables stx space-name vars #:property? [property? #f])
   (syntax-parse stx
@@ -563,9 +570,20 @@
        #:datum-literals (parens)
        [((~and p (parens . _)) . _)
         (parens-extract-metavariables #'p space-name vars+self #:just-parens? #t)]
-       [_ vars+self])]))
+       [_ vars+self])]
+    ;; allow plain-function form
+    [_ (parens-extract-metavariables stx space-name vars)]))
 
 (define-for-syntax (method-extract-typeset stx space-name subst #:property? [property? #f])
+  (define (def-class stx)
+    (syntax-parse stx
+      [(parens (group id colons . cs))
+       #`(parens (group id colons #,@(for/list ([c (in-list (syntax->list #'cs))])
+                                       (syntax-parse c
+                                         #:datum-literals (op)
+                                         [(op c)
+                                          #`(op #,(syntax-property #'c 'typeset-define #t #t))]
+                                         [_ (syntax-property c 'typeset-define #t #t)]))))]))
   (syntax-parse stx
     #:datum-literals (group parens alts block :: |.| op)
     [(~and (~fail #:unless property?)
@@ -583,12 +601,16 @@
      (rb #:at stx
          #`(group as_class_clause
                   tag (a-tag
-                       (b-tag (g-tag lhs dot #,@(subst #'name) . more))
-                       (b2-tag (g2-tag lhs2 dot2 #,@(subst #'name2 #:as_redef #t) . more2)))))]
+                       (b-tag (g-tag #,(def-class #'lhs) dot #,@(subst #'name) . more))
+                       (b2-tag (g2-tag #,(def-class #'lhs2) dot2 #,@(subst #'name2 #:as_redef #t) . more2)))))]
     [(group tag (~and lhs (parens (group _ (op ::) . _))) (~and dot (op |.|)) name . more)
      (rb #:at stx
          #`(group as_class_clause
-                  tag lhs dot #,@(subst #'name) . more))]))
+                  tag #,(def-class #'lhs) dot #,@(subst #'name) . more))]
+    ;; allow plain-function form
+    [(group tag (~var id (identifier-target space-name)) e ...)
+     (rb #:at stx
+         #`(group as_class_clause tag #,@(subst #'id.name) e ...))]))
 
 (define-doc method
   "method"
@@ -916,6 +938,40 @@
                                        #:at g
                                        #:pattern? #t
                                        #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))]))))
+
+(define-doc-syntax non_target
+  (let ()
+    (define (trim stx)
+      (syntax-parse stx
+        #:datum-literals (group block)
+        [(group _ (block g)) #'g]))
+    (define (bounce stx sel)
+      (syntax-parse stx
+        #:datum-literals (group block)
+        [(group _ (block (group . (~var name (:hier-name-seq in-name-root-space in-doc-space name-path-op name-root-ref)))))
+         (define v (syntax-local-value (in-doc-space #'name.name) (lambda () #f)))
+         (unless (doc-transformer? v)
+           (raise-syntax-error #f "cannot find doc transformer" stx))
+         (sel v)]))
+    (make-doc-transformer
+     #:extract-desc
+     (lambda (stx)
+       ((bounce stx doc-transformer-extract-desc) (trim stx)))
+     #:extract-space-sym
+     (lambda (stx)
+       ((bounce stx doc-transformer-extract-space-sym) (trim stx)))
+     #:extract-name
+     (lambda (stx space-name)
+       (define defs ((bounce stx doc-transformer-extract-defined) (trim stx) space-name))
+       (if (list? defs)
+           (map (lambda (def) #f) defs)
+           #f))
+     #:extract-metavariables
+     (lambda (stx space-name vars)
+       ((bounce stx doc-transformer-extract-metavariables) (trim stx) space-name vars))
+     #:extract-typeset
+     (lambda (stx space-name subst)
+       ((bounce stx doc-transformer-extract-typeset) (trim stx) space-name subst)))))
 
 (define (typeset-grammar id . prods)
   (define (p c) (paragraph plain c))

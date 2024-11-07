@@ -5,6 +5,10 @@
 
 @title{Metavariables}
 
+Throughout the documentation, certain metavariable names are used in
+syntax descriptions to standard for common syntactic categories, such as
+identifiers, expressions, or binding patterns.
+
 @doc(
   ~nonterminal_key: block
   grammar id
