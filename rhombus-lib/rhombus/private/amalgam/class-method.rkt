@@ -31,6 +31,7 @@
          (submod "function-parse.rkt" for-call)
          "is-static.rkt"
          "realm.rkt"
+         "name-prefix.rkt"
          "wrap-expression.rkt"
          (only-in "syntax-parameter.rkt"
                   with-syntax-parameters
@@ -850,7 +851,7 @@
                                   private-interfaces protected-interfaces
                                   names
                                   #:veneer-vtable [veneer-vtable #f])
-  (with-syntax ([(name name-instance name? name-convert reconstructor-name serializer-name
+  (with-syntax ([(name reflect-name name-instance name? name-convert reconstructor-name serializer-name
                        methods-ref
                        indirect-static-infos
                        [field-name ...]
@@ -983,7 +984,7 @@
                             #:when (not (eq? 'abstract (added-method-body added))))
                    (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
-                                                                    name name-instance name? name-convert
+                                                                    reflect-name name name-instance name? name-convert
                                                                     #,(and r (car r)) #,(added-method-id added)
                                                                     new-private-tables
                                                                     indirect-static-infos
@@ -994,7 +995,7 @@
                           (not (eq? reconstructor-rhs 'default)))
                      (list
                       #`(method-block (block #,reconstructor-rhs) #,reconstructor-stx-params
-                                      name name-instance #f #f
+                                      reflect-name name name-instance #f #f
                                       #f reconstructor
                                       new-private-tables
                                       indirect-static-infos
@@ -1006,7 +1007,7 @@
                       (syntax-parse #'serializable
                         [(_ _ serializer-rhs . _)
                          #`(method-block (block serializer-rhs) #,serializer-stx-params
-                                         name name-instance #f #f
+                                         reflect-name name name-instance #f #f
                                          #f serializer
                                          new-private-tables
                                          indirect-static-infos
@@ -1017,7 +1018,7 @@
                             [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
                             #:when (syntax-e rhs))
                    #`(method-block (block #,rhs) #f ;; FIXME
-                                   name name-instance #f #f
+                                   reflect-name name name-instance #f #f
                                    #f acc
                                    new-private-tables
                                    indirect-static-infos
@@ -1027,12 +1028,13 @@
 (define-syntax (method-block stx)
   (syntax-parse stx
     [(_ (_::block expr) stx-params
-        name name-instance name? name-convert
+        reflect-name name name-instance name? name-convert
         result-id method-name
         private-tables-id
         indirect-static-infos
         super-names
         kind)
+     #:with prefixed-method-name (add-name-prefix #'reflect-name #'method-name)
      (define result-desc
        (cond
          [(eq? (syntax-e #'kind) 'serializer)
@@ -1043,6 +1045,7 @@
       syntax-parameters-key #'stx-params
       (syntax-parse #'expr
         [(~var e (:entry-point (entry-point-adjustment
+                                (syntax-e #'prefixed-method-name)
                                 (list #'this-obj)
                                 (lambda (arity stx)
                                   #`(parsed
@@ -1052,11 +1055,11 @@
                                            ;; The wrapped check might be redundant, depending on how the method was called
                                            (cond
                                              [(syntax-e #'name-convert)
-                                              #`(let ([this-obj (name-convert this-obj 'method-name)])
+                                              #`(let ([this-obj (name-convert this-obj 'prefixed-method-name)])
                                                   #,body)]
                                              [(syntax-e #'name?)
                                               #`(begin
-                                                  (unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
+                                                  (unless (name? this-obj) (raise-not-an-instance 'prefixed-method-name this-obj))
                                                   #,body)]
                                              [else
                                               body]))
@@ -1078,7 +1081,7 @@
                                                           (method-result-handler-expr result-desc))
                                                      => (lambda (proc)
                                                           (wrap-annotation-check
-                                                           #'method-name body
+                                                           #'prefixed-method-name body
                                                            (method-result-count result-desc)
                                                            (method-result-annot-str result-desc)
                                                            (lambda (vs raise)

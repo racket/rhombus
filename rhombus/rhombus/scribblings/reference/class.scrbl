@@ -18,6 +18,7 @@
 
   defn.macro 'class $id_name($field_spec, ...)'
   defn.macro 'class $id_name($field_spec, ...):
+                $option; ...
                 $class_clause_or_body_or_export
                 ...'
 
@@ -84,6 +85,10 @@
     #,(@rhombus(serializable, ~class_clause)) $serializable_decl
     #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
     $other_class_clause
+
+  grammar option:
+    ~name $id_name
+    ~name: $id_name
 ){
 
  Binds @rhombus(id_name) as a @deftech{class} name in several
@@ -305,6 +310,11 @@
  to be distinct from subclass field, method, and property names. When a method or property is
  overridden via @rhombus(override, ~class_clause), the original and
  overriding versions must be both methods or both properties.
+
+ A @rhombus(~name) form as an @rhombus(option) is analogous to
+ @rhombus(~name) within a @rhombus(fun, ~defn) definition. It specifies a
+ name used for run-time reporting, such as from a constructor or as the
+ prefix on errors from methods.
 
  See @secref(~doc: guide_doc, "static-info-rules") for information about static
  information associated with classes.

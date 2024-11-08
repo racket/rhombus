@@ -85,7 +85,7 @@
 
 (define-for-syntax (make-static-info-macro-macro in-space convert-id)
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (_::quotes (group name::name)) (body-tag::block body ...))
@@ -97,7 +97,7 @@
 
 (define-defn-syntax key
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ name::name (body-tag::block

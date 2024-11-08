@@ -227,7 +227,7 @@ check:
    dynamic(p).m0 +& "",
    dynamic(p).m0()]
   ~is [1,
-       "#<function:m0>",
+       "#<function:Posn.m0>",
        [2, 1]]
 
 check:

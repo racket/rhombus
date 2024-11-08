@@ -1,0 +1,51 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt") as rkt
+  lib("racket/path.rkt") as rkt_path
+  "error-adjust.rkt" as rkt_error
+
+export:
+  filesystem
+
+namespace filesystem:
+  export:
+    simplify_path
+    normalize_path
+    resolve_path
+    expand_user_path
+    file_exists
+    directory_exists
+    link_exists
+    list_directory
+
+  fun simplify_path(p :: PathString) :: Path:
+    rkt.#{simplify-path}(p, #true)
+
+  fun normalize_path(p :: PathString) :: Path:
+    // potential error from `simplify-path` as called by `simple-form-path`
+    ~who: who
+    rkt_error.#{call-with-local-error-adjust}(
+      #'#{simple-form-path},
+      who,
+      fun ():
+        rkt_path.#{simple-form-path}(p)
+    )
+
+  fun resolve_path(p :: PathString) :: Path:
+    rkt.#{resolve-path}(p)
+
+  fun expand_user_path(p :: PathString) :: Path:
+    rkt.#{expand-user-path}(p)
+
+  fun file_exists(p :: PathString):
+    rkt.#{file-exists?}(p)
+
+  fun directory_exists(p :: PathString):
+    rkt.#{directory-exists?}(p)
+
+  fun link_exists(p :: PathString):
+    rkt.#{link-exists?}(p)
+
+  fun list_directory(p :: PathString = Path.current_directory()) :~ List.of(Path):
+    List(& rkt.#{directory-list}(p))

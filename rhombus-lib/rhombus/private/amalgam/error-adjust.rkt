@@ -3,7 +3,8 @@
                      syntax/parse/pre)
          "rhombus-primitive.rkt")
 
-(provide with-error-adjust-primitive)
+(provide with-error-adjust-primitive
+         call-with-local-error-adjust)
 
 (define-syntax (with-error-adjust-primitive stx)
   (syntax-parse stx
@@ -18,3 +19,8 @@
              (let ()
                body
                ...)))]))
+
+(define (call-with-local-error-adjust from to thunk)
+  (with-continuation-mark
+      primitive-who-table-key (hasheq from to)
+      (thunk)))

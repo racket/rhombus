@@ -240,7 +240,7 @@
 
 (define-defn-syntax import
   (definition-transformer
-   (lambda (stx)
+   (lambda (stx name-prefix)
      (syntax-parse stx
        [(_ (_::block r ...))
         #`((rhombus-import #,stx () r ...))]

@@ -24,10 +24,11 @@
              #`(begin p ... (class-body-step (data (new-accum ... . accum)) . rest))]
             [(form ...)
              #`(class-body-step (data accum) form ... . rest)])]
-         [(_ data+accum form . rest)
+         [(_ (~and data+accum ([orig-stx base-stx scope-stx reflect-name . _] . _)) form . rest)
           #`(rhombus-top-step
              class-body-step
              #f
+             reflect-name
              (data+accum)
              form . rest)]
          [(_ data+accum) #'(begin)])))))

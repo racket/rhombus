@@ -2,7 +2,9 @@
 (require syntax/parse/pre
          "introducer.rkt"
          (for-template racket/unsafe/undefined
-                       "parens.rkt"))
+                       "parens.rkt"
+                       "name-prefix.rkt")
+         "dotted-sequence.rkt")
 
 (provide in-class-desc-space
 
@@ -30,6 +32,7 @@
          any-stx?
 
          :options-block
+         class-reflect-name
 
          check-duplicate-field-names
          check-fields-methods-dots-distinct
@@ -192,9 +195,30 @@
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 
 (define-splicing-syntax-class :options-block
+  #:attributes ([form 1] name)
+  #:datum-literals (group)
   (pattern (~seq)
-           #:with (form ...) '())
-  (pattern (~seq (_::block form ...))))
+           #:with (form ...) '()
+           #:with name #'#f)
+  (pattern (~seq (_::block
+                  (~and g (group #:name . _))
+                  form
+                  ...))
+           #:cut
+           #:with name (syntax-parse #'g
+                         [(_ _ (_::block
+                                (group n::dotted-identifier-sequence)))
+                          (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
+                         [(_ _ n::dotted-identifier-sequence)
+                          (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
+                         [_
+                          (raise-syntax-error #f "invalid name form" #'g)]))
+  (pattern (~seq (_::block form ...))
+           #:with name #'#f))
+
+(define (class-reflect-name name name-prefix bind-name)
+   (or (and (syntax-e name) name)
+       (add-name-prefix name-prefix bind-name)))
 
 (define (check-duplicate-field-names stxes ids super interface-dotss)
   (define super-ids (if super

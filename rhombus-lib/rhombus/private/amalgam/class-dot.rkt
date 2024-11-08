@@ -32,7 +32,8 @@
          "class-transformer.rkt"
          "class-dot-transformer.rkt"
          "is-static.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "name-prefix.rkt")
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
@@ -49,7 +50,7 @@
                                              dot-provider-rhss parent-dot-providers
                                              names
                                              #:veneer? [veneer? #f])
-  (with-syntax ([(name name-extends tail-name
+  (with-syntax ([(name reflect-name name-extends tail-name
                        name? name-convert constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
                        indirect-static-infos dot-providers
@@ -63,7 +64,7 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results replaced-ht #'name-ref #'name? final? #f))
+      (method-static-entries method-mindex method-vtable method-results replaced-ht #'name-ref #'name? final? #f #'reflect-name))
     (with-syntax ([((public-field-name public-name-field/mutate) ...)
                    (filter-replaced replaced-ht #'(all-public-field-name ...) #'(all-public-name-field/mutate ...))]
                   [(method-name ...) method-names]
@@ -195,7 +196,7 @@
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
                                                  names)
-  (with-syntax ([(name name-extends tail-name
+  (with-syntax ([(name reflect-name name-extends tail-name
                        name? name-instance name-ref static-name-ref
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
@@ -205,7 +206,7 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results replaced-ht #'static-name-ref #'name? #f #t))
+      (method-static-entries method-mindex method-vtable method-results replaced-ht #'static-name-ref #'name? #f #t #'reflect-name))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
@@ -283,7 +284,7 @@
       null))
 
 (define-for-syntax (method-static-entries method-mindex method-vtable method-results replaced-ht name-ref-id name?-id
-                                          final? via-interface?)
+                                          final? via-interface? reflect-name)
   (for/fold ([names '()] [ids '()] [defns '()])
             ([(name mix) (in-hash method-mindex)]
              #:unless (hash-ref replaced-ht name #f))
@@ -292,12 +293,13 @@
             (not final?))
        (define proc-id (car (generate-temporaries (list name))))
        (define stx-id (car (generate-temporaries (list name))))
+       (define prefixed-name (add-name-prefix reflect-name (datum->syntax #f name)))
        (values (cons name names)
                (cons stx-id ids)
                (list* #`(define #,proc-id
-                          (make-method-accessor '#,name #,name-ref-id #,(mindex-index mix)))
+                          (make-method-accessor '#,prefixed-name #,name-ref-id #,(mindex-index mix)))
                       #`(define-syntax #,stx-id
-                          (make-method-accessor-transformer '#,name
+                          (make-method-accessor-transformer '#,prefixed-name
                                                             (quote-syntax #,name-ref-id)
                                                             #,(mindex-index mix)
                                                             (quote-syntax #,proc-id)
@@ -314,11 +316,12 @@
         via-interface?)
        (define proc-id (vector-ref method-vtable (mindex-index mix)))
        (define stx-id (car (generate-temporaries (list name))))
+       (define prefixed-name (add-name-prefix reflect-name (datum->syntax #f name)))
        (values (cons name names)
                (cons stx-id ids)
                (list*
                 #`(define-syntax #,stx-id
-                    (make-method-checked-static-transformer '#,name
+                    (make-method-checked-static-transformer '#,prefixed-name
                                                             (quote-syntax #,name?-id)
                                                             (quote-syntax #,proc-id)))
                 defns))]
@@ -373,7 +376,7 @@
        [(_ . tail)
         (values proc-id #'tail)]))))
 
-(define-for-syntax (make-method-checked-static-transformer name name?-id proc-id)
+(define-for-syntax (make-method-checked-static-transformer reflect-name name?-id proc-id)
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -384,10 +387,10 @@
         (define-values (call new-tail to-anon-function?)
           (parse-function-call proc-id (list obj-id) #'(#,obj-id (tag arg ...))
                                #:static? (is-static-context? #'tag)
-                               #:rator-stx (datum->syntax #f name #'rator-id)))
+                               #:rator-stx (datum->syntax #f reflect-name #'rator-id)))
         (values (wrap-static-info*
                  #`(let ([#,obj-id (rhombus-expression self)])
-                     (unless (#,name?-id #,obj-id) (raise-not-an-instance '#,name #,obj-id))
+                     (unless (#,name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id))
                      #,(unwrap-static-infos call))
                  (extract-static-infos call))
                 #'tail)]
@@ -395,9 +398,9 @@
         #:when (is-static-context? #'tag)
         (raise-syntax-error #f
                             (string-append "wrong number of arguments in function call" statically-str)
-                            (datum->syntax #f name #'head))]
+                            (datum->syntax #f reflect-name #'head))]
        [(_ . tail)
-        (values #`(wrap-object-check #,proc-id '#,name #,name?-id)
+        (values #`(wrap-object-check #,proc-id '#,reflect-name #,name?-id)
                 #'tail)]))))
 
 (define (wrap-object-check proc name name?)

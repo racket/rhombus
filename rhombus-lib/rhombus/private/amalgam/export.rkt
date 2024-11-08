@@ -164,7 +164,7 @@
 
 (define-decl-syntax export
   (nestable-declaration-transformer
-   (lambda (stx)
+   (lambda (stx name-prefix)
      (syntax-parse stx
        [(_ (_::block e::modified-export ...))
         #`((provide e.parsed ...))]

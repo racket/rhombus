@@ -118,14 +118,16 @@
 @doc(
   ~meta
   class entry_point_meta.Adjustment(
+    name :: maybe(Symbol),
     prefix_arguments :: Listable.to_list && List.of(Identifier),
     wrap_body :: Function.of_arity(2),
     is_method :: Boolean
   )
 ){
 
- Represents an adjustment to an entry point to add extra arguments and
- wrap the generated function's body. The @rhombus(wrap_body) function
+ Represents an adjustment to an entry point to poentially specify a name
+ (to be used for run-time reporting), to add extra arguments, and to wrap
+ the generated function's body. The @rhombus(wrap_body) function
  expects an arity encoding (see @rhombus(entry_point.macro)) and a syntax
  object, and it produces a syntax object. The @rhombus(is_method) field
  indicates whether the existence of a leading argument should be hidden

@@ -216,3 +216,43 @@ check:
       N.x
   10 :: Q.x
   ~throws "identifier not provided by Q"
+
+block:
+  namespace ns:
+    export f Posn Pointy
+    fun f(x :: Int):
+      x
+    class Posn(x, y):
+      nonfinal
+      method d():
+        ~name alt_d // does not apply to `Posn.d`, since non-final
+        x + y
+      final method h():
+        ~name alt_h
+        x + y
+    interface Pointy:
+      abstract method q()
+  check print(ns.f) ~prints "#<function:ns.f>"
+  check ns.f("x") ~throws values("ns.f:", error.annot_msg("argument"))
+  check ns.f(1, 2, 3) ~throws values("ns.f:", "arity")
+  check print(ns.Posn) ~prints "#<function:ns.Posn>"
+  check print(ns.Posn.d) ~prints "#<function:ns.Posn.d>"
+  check print(ns.Posn.h) ~prints "#<function:alt_h>"
+  check print(ns.Pointy.q) ~prints "#<function:ns.Pointy.q>"
+
+block:
+  namespace ns:
+    export sub
+    namespace sub:
+      export f g
+      fun f(x :: Int):
+        x
+      fun g(x :: Int):
+        ~name gee
+        x
+  check print(ns.sub.f) ~prints "#<function:ns.sub.f>"
+  check ns.sub.f("x") ~throws values("ns.sub.f:", error.annot_msg("argument"))
+  check ns.sub.f(1, 2, 3) ~throws values("ns.sub.f:", "arity")
+  check print(ns.sub.g) ~prints "#<function:gee>"
+  check ns.sub.g("x") ~throws values("gee:", error.annot_msg("argument"))
+  check ns.sub.g(1, 2, 3) ~throws values("gee:", "arity")

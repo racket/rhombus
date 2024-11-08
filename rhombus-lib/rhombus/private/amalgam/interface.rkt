@@ -6,6 +6,7 @@
                      "expose.rkt"
                      (only-in "class-parse.rkt"
                               :options-block
+                              class-reflect-name
                               in-class-desc-space
                               objects-desc-dot-provider
                               check-exports-distinct
@@ -33,17 +34,18 @@
          (only-in "class-method.rkt"
                   raise-not-an-instance)
          (submod "namespace.rkt" for-exports)
-         "class-able.rkt")
+         "class-able.rkt"
+         "name-prefix.rkt")
 
 (provide (for-space rhombus/defn
                     interface))
 
 (define-defn-syntax interface
   (definition-transformer
-    (lambda (stxes)
-      (parse-interface stxes))))
+    (lambda (stxes name-prefix)
+      (parse-interface stxes name-prefix))))
 
-(define-for-syntax (parse-interface stxes)
+(define-for-syntax (parse-interface stxes name-prefix)
   (syntax-parse stxes
     #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence options::options-block)
@@ -52,12 +54,13 @@
      #:with name-extends #'full-name.extends
      #:with tail-name #'full-name.tail-name
      #:with orig-stx stxes
+     #:with reflect-name (class-reflect-name #'options.name name-prefix #'name)
      (define body #'(options.form ...))
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognized in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      name name-extends tail-name]
+                                      reflect-name name name-extends tail-name]
                             ;; data accumulated from parsed clauses:
                             ()))
      #`(#,(cond
@@ -77,7 +80,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     name name-extends tail-name]
+                     reflect-name name name-extends tail-name]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
           exports
@@ -152,7 +155,7 @@
                                                      indirect-static-infos))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
               (interface-finish [orig-stx base-stx scope-stx
-                                          name name-extends tail-name
+                                          reflect-name name name-extends tail-name
                                           name? name-instance
                                           #,internal-name internal-name? internal-name-instance
                                           #,internal-internal-name
@@ -167,7 +170,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    name name-extends tail-name
+                    reflect-name name name-extends tail-name
                     name? name-instance
                     maybe-internal-name internal-name? internal-name-instance
                     internal-internal-name-id
@@ -260,7 +263,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f #f
                               #hasheq() #hasheq()
-                              #'(name name-instance internal-name? #f #f #f
+                              #'(name reflect-name name-instance internal-name? #f #f #f
                                       internal-name-ref
                                       ()
                                       []
@@ -279,7 +282,7 @@
                (build-interface-dot-handling method-mindex method-vtable method-results replaced-ht
                                              internal-name
                                              expression-macro-rhs dot-provider-rhss parent-dot-providers
-                                             #'(name name-extends tail-name
+                                             #'(name reflect-name name-extends tail-name
                                                      name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]

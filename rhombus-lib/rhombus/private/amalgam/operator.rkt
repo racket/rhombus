@@ -416,7 +416,7 @@
 ;; like `(arg some.op) :: Annot` will proceed as an "infix" case.
 (define-defn-syntax rhombus-operator
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         [(_ p::prefix-case)
          (generate-prefix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)

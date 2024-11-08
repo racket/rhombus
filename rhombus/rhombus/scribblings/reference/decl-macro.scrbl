@@ -25,6 +25,9 @@
  A compile-time value that identifies the same space as
  @rhombus(decl, ~space). See also @rhombus(SpaceMeta, ~annot).
 
+ Unlike @rhombus(defn.macro), the @rhombus(~name_prefix) option is not
+ supported, because a declaration cannot be nested in a namespace.
+
 }
 
 

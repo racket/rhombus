@@ -31,7 +31,7 @@
 
 (define-defn-syntax def
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (_::quotes (group name::name))

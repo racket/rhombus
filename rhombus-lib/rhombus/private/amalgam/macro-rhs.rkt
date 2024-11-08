@@ -505,9 +505,15 @@
               null))))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id all-id
+                                                              extra-binds-stx
                                                               make-transformer-id
+                                                              extra-get-static-infoss-stx
+                                                              extra-shapes
                                                               gs-stx)
-  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'#f) (list #'())
+  (define in-extra-ids (generate-temporaries extra-binds-stx))
+  (define-values (extra-patterns wrap-extra)
+    (build-extra-patterns in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes))
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'#f) (list extra-binds-stx)
                                     make-transformer-id #'() (list)
                                     #:tail-ids (list #'orig-head #'extra-tail)
                                     #:wrap-for-tail
@@ -520,14 +526,17 @@
                                             #:context (insert-multi-front-head-group orig-head extra-tail)
                                             #:disable-colon-notation
                                             [#,pattern
+                                             #,@extra-patterns
+                                             #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes)
                                              #,@(if (syntax-e all-id)
                                                     #`((define #,all-id (make-all-sequence (cons orig-head
                                                                                                  (unpack-multi extra-tail #f #f))))
                                                        (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
                                                     '())
-                                             (let ([p-id id-ref] ...)
-                                               (let-syntaxes ([(s-id ...) sid-ref] ...)
-                                                 #,body))])))))
+                                             #,(wrap-extra
+                                                #`(let ([p-id id-ref] ...)
+                                                    (let-syntaxes ([(s-id ...) sid-ref] ...)
+                                                      #,body)))])))))
 
 (define-for-syntax (select-transformer-case-shape pre-parseds extra-bindss)
   (cond

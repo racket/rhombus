@@ -52,14 +52,14 @@
 (define (class-expand-data-internal-info-name data)
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
-        name
+        reflect-name
         . _)
-     #'name]))
+     #'reflect-name]))
 
 (define (class-expand-data-internal-info-fields data)
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
-        name name-extends tail-name
+        reflect-name name name-extends tail-name
         constructor-field-names
         constructor-field-keywords
         constructor-field-defaults

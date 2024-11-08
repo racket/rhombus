@@ -36,7 +36,7 @@
                              #:check-context [check-context void]
                              #:check-bind-uses [check-bind-uses void])
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (check-context stx)
       (syntax-parse stx
         #:datum-literals (group)

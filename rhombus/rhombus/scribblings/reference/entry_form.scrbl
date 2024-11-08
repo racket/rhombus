@@ -77,7 +77,7 @@ sequences, not values. So, @rhombus(0), @rhombus(0 + 1), and
 @rhombus(0 + 1 + 1) fit the grammar for @rhombus(peano_num, ~var), but
 @rhombus(2) does not.
 
-@section(~tag: "doc_methods"){Documenting Methods}
+@section(~tag: "doc_method"){Documenting Methods}
 
 When a binding is documented with @rhombus(method, ~class_clause), it
 corresponds to a function that is reachable both through a dotted name

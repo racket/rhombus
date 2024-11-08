@@ -147,7 +147,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_string()
   ~throws values(
-    "Port.Output.get_string: " ++ error.annot_msg(),
+    "Port.Output.String.get_string: " ++ error.annot_msg(),
     error.annot("Port.Output.String").msg,
     error.val("oops").msg,
   )
@@ -155,7 +155,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_bytes()
   ~throws values(
-    "Port.Output.get_bytes: " ++ error.annot_msg(),
+    "Port.Output.String.get_bytes: " ++ error.annot_msg(),
     error.annot("Port.Output.String").msg,
     error.val("oops").msg,
   )

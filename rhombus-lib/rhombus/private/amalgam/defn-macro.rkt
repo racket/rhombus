@@ -30,13 +30,14 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/defn
+  #:extra ([#:name_prefix get-empty-static-infos value])
   #'make-definition-transformer)
 
 (define-for-syntax (make-definition-transformer proc)
   (definition-transformer
-   (lambda (stx)
+   (lambda (stx name-prefix)
      (define defns (syntax-parse stx
-                     [(head . tail) (proc (pack-tail #'tail) #'head)]))
+                     [(head . tail) (proc (pack-tail #'tail) #'head name-prefix)]))
      (unpack-definitions defns proc))))
 
 (define-for-syntax (unpack-definitions form proc)
@@ -50,14 +51,15 @@
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro
   rhombus/defn
+  #:extra ([#:name_prefix get-empty-static-infos value])
   #'make-definition-sequence-transformer)
 
 (define-for-syntax (make-definition-sequence-transformer proc)
   (definition-sequence-transformer
-   (lambda (stx orig-head tail)
+   (lambda (stx orig-head tail name-prefix)
      (define-values (defns new-tail)
        (syntax-parse stx
-         [(head . h-tail) (proc (pack-tail #'h-tail) orig-head (pack-multi tail) #'head)]))
+         [(head . h-tail) (proc (pack-tail #'h-tail) orig-head (pack-multi tail) #'head name-prefix)]))
      (values (unpack-definitions defns proc)
              (unpack-multi new-tail proc #f)))))
 
