@@ -69,3 +69,18 @@
  target machine.
 
 }
+
+@doc(
+  fun system.path(which :: Symbol) :: Path
+){
+
+ Returns a system-specific path categorized by @rhombus(which):
+
+@itemlist(
+
+ @item{@rhombus(#'temp_dir): a path to a directory for storing temporary
+  files.}
+
+)
+
+}

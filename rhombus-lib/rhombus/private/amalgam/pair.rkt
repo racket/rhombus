@@ -21,6 +21,9 @@
 (module+ for-builtin
   (provide pair-method-table))
 
+(module+ for-static-info
+  (provide (for-syntax get-pair-static-infos)))
+
 (define-primitive-class Pair pair
   #:lift-declaration
   #:no-constructor-static-info

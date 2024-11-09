@@ -8,6 +8,7 @@
          "index-result-key.rkt"
          "define-arity.rkt"
          (submod "list.rkt" for-compound-repetition)
+         (submod "pair.rkt" for-static-info)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info)
          "annotation-failure.rkt")
@@ -162,7 +163,7 @@
 
 (define-exn Errno exn:fail:filesystem:errno
   #:parent Filesystem exn:fail:filesystem
-  #:fields ([(errno)])
+  #:fields ([(errno) #,(get-pair-static-infos)])
   #:children ())
 
 (define-exn fs_MissingModule exn:fail:filesystem:missing-module

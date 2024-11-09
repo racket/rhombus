@@ -40,7 +40,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.open_file(file :: PathString) :: Port.Input
+  fun Port.Input.open_file(file :: PathString,
+                           ~mode: mode :: Port.Mode = #'binary)
+    :: Port.Input
 ){
 
  Creates an @tech{input port} that reads from the @tech{path} @rhombus(file).
