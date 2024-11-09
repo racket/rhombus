@@ -24,8 +24,7 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "../version-case.rkt"
-         (submod "list.rkt" for-compound-repetition)
-         (only-in "name-root-ref.rkt" replace-head-dotted-name))
+         (submod "list.rkt" for-compound-repetition))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -116,7 +115,7 @@
    `((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse (replace-head-dotted-name stx)
+     (syntax-parse stx
        [(form-id (~and args (_::parens len-g)) . tail)
         (values
          (relocate+reraw

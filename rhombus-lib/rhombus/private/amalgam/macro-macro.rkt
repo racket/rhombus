@@ -437,7 +437,7 @@
   (define kind protocol)
   (definition-transformer
     (lambda (stx name-prefix)
-      (syntax-parse (replace-head-dotted-name stx)
+      (syntax-parse stx
         #:datum-literals (group)
         [(form-id (alts-tag::alts (_::block (group q::operator-syntax-quote
                                                    (~and rhs (_::block body ...))))

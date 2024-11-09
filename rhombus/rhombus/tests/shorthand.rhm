@@ -46,4 +46,4 @@ block:
     '#%literal $(expr.to_source_string())'
   check source (_ ++ _) ~is "(_ ++ _)"
   check source [1, 2, 3].map(_) ~is "[1, 2, 3].map(_)"
-  check source List.map([1, 2, 3], _) ~is "map([1, 2, 3], _)"
+  check source List.map([1, 2, 3], _) ~is "List.map([1, 2, 3], _)"

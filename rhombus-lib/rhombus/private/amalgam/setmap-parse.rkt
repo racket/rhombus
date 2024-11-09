@@ -245,7 +245,7 @@
       [else (cons (car args) (loop (cdr args) (cdr argss)))])))
 
 (define-for-syntax (parse-key-comp stx k)
-  (syntax-parse (replace-head-dotted-name stx)
+  (syntax-parse stx
     #:datum-literals (group)
     [(form (~and args (p-tag::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
      #:with (~var name(:hier-name-seq in-name-root-space in-key-comp-space name-path-op name-root-ref)) #'name-seq

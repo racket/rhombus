@@ -36,7 +36,6 @@
          "rhombus-primitive.rkt"
          (submod "module.rkt" for-module+)
          (submod "arrow-annotation.rkt" for-arrow-annot)
-         (only-in "name-root-ref.rkt" replace-head-dotted-name)
          "name-prefix.rkt")
 
 (provide (for-spaces (#f
@@ -197,7 +196,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse (replace-head-dotted-name stx)
+     (syntax-parse stx
        [(form-id (~and args (_::parens g ...+)) . tail)
         (with-syntax ([(kw ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
                                            #:do [(define kw
@@ -250,7 +249,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (parse-arrow-all-of (replace-head-dotted-name stx)))))
+     (parse-arrow-all-of stx))))
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)

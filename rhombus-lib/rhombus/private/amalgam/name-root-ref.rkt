@@ -6,6 +6,7 @@
                      enforest/syntax-local
                      enforest/transformer
                      shrubbery/property
+                     shrubbery/print
                      "srcloc.rkt"
                      "id-binding.rkt")
          ;; to support `Syntax.same_binding` and `Syntax.meta_value`, this
@@ -18,7 +19,6 @@
 (provide (for-syntax name-root-ref
                      name-root-ref/maybe
                      make-name-root-ref
-                     replace-head-dotted-name
                      import-root-ref
                      extensible-name-root
                      portal-syntax->lookup
@@ -234,18 +234,18 @@
     [_ #f]))
 
 (define-for-syntax (relocate-field root-id field-id new-field-id)
-  (define name (string->symbol
-                (format "~a.~a"
-                        (or (syntax-property root-id 'syntax-error-name)
-                            (syntax-e root-id))
-                        (syntax-e field-id))))
+  (define name
+    (datum-intern-literal
+     (format "~a.~a"
+             (shrubbery-syntax->string root-id)
+             (shrubbery-syntax->string field-id))))
   (syntax-property
-   (syntax-property (datum->syntax new-field-id
-                                   (syntax-e new-field-id)
-                                   (span-srcloc root-id field-id)
-                                   field-id)
-                    'rhombus-dotted-name
-                    name)
+   (syntax-raw-property
+    (datum->syntax new-field-id
+                   (syntax-e new-field-id)
+                   (span-srcloc root-id field-id)
+                   field-id)
+    name)
    'disappeared-use
    (let ([root (syntax-local-introduce (in-name-root-space root-id))])
      (if (syntax-original? (syntax-local-introduce field-id))
@@ -281,19 +281,6 @@
                                                                                         (in-space id 'remove))
                                                           (identifier-binding* id))))
                                  (cons id space-sym))))))
-
-(define-for-syntax (replace-head-dotted-name stx)
-  (define head (car (syntax-e stx)))
-  (define name (syntax-property head 'rhombus-dotted-name))
-  (cond
-    [name
-     (datum->syntax stx
-                    (cons (syntax-raw-property (datum->syntax head name head head)
-                                               (symbol->immutable-string name))
-                          (cdr (syntax-e stx)))
-                    stx
-                    stx)]
-    [else stx]))
 
 ;; Gets information on a name ref that can be used with `import`
 (define-for-syntax (import-root-ref v)
