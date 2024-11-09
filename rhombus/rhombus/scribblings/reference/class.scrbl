@@ -105,11 +105,11 @@
 
  @item{in the @top_rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
-  and by default an annotation constructor @rhombus(id_name.of) or
-  @rhombus(id_name.now_of), which
+  and by default an annotation constructor @rhombus(id_name#,(@rhombus(.of, ~datum))) or
+  @rhombus(id_name#,(@rhombus(.now_of, ~datum))), which
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) @rhombus(field_spec)s in
-  parentheses; the name is @rhombus(id_name.of) if all such
+  parentheses; the name is @rhombus(id_name#,(@rhombus(.of, ~datum))) if all such
   @rhombus(field_spec)s are for immutable fields;},
 
  @item{in the @rhombus(bind, ~space) space,
@@ -121,13 +121,13 @@
  @item{in the @rhombus(namespace, ~space) space,
   a @tech{namespace} to access exported bindings as well as (if not replaced by an export) a
   function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(method, ~var))),
   a function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(property, ~var))),
   a syntactic form
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(dot, ~var))),
   and a field accessor
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(field,~var))) for each
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(field, ~var))) for each
   non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, dot syntax, and field in the class
   (including inherited methods, properties, dot syntax, and fields), respectively; and}
 
@@ -788,7 +788,7 @@
  or @rhombus(annotation, ~class_clause) clause has a
  @rhombus(disable_form) containing @rhombus(~error), then the binding of
  the class name in the corresponding space reports an error for any use.
- When a @rhombus(disable_form) constains @rhombus(~none), then the class
+ When a @rhombus(disable_form) contains @rhombus(~none), then the class
  name is not bound in the corresponding space by the enclosing
  @rhombus(class) form. The @rhombus(constructor, ~class_clause) and
  @rhombus(expression, ~class_clause) forms are equivalent when used with a
@@ -846,7 +846,7 @@
  meta-time expression. This macro replaces the default meaning of the
  @rhombus(id_name) as a reference to the constructor. When
  @rhombus(expression, ~class_clause), then the default
- @rhombus(id_name.of) annotation constructor accepts only
+ @rhombus(id_name#,(@rhombus(.of, ~datum))) annotation constructor accepts only
  @tech(~doc: guide_doc){predicate annotations}.
 
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
@@ -1047,7 +1047,7 @@
  the class has fields, and it should expect them in the declared order.
  If the class has a @rhombus(reconstructor_fields, ~class_clause)
  declaration, the reconstructor should instead expect those fields in addition to
- the ones that the superclass (if any) expects for its reconstuctor.
+ the ones that the superclass (if any) expects for its reconstructor.
 
  A reconstructor should not expect keyword arguments; all fields are
  supplied by-position. If the class has a superclass, then any fields

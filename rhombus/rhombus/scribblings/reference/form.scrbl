@@ -203,11 +203,11 @@ identifiers, expressions, or binding patterns.
 
   grammar id_name:
     $id
-    $id_name . $id
+    $id_name #,(@rhombus(., ~datum)) $id
 
   grammar op_name:
     $op
-    $id_name . ($op)
+    $id_name #,(@rhombus(., ~datum)) ($op)
 
   grammar op_or_id_name:
     $op_name

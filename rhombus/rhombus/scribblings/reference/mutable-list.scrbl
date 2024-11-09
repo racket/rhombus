@@ -36,7 +36,8 @@ and it is not managed by a lock.
   annot.macro 'MutableList.later_of($annot)'
 ){
 
- Matches any mutable list in the form without @rhombus(now_of) or @rhombus(later_of).
+ Matches any mutable list in the form without @rhombus(now_of, ~datum)
+ or @rhombus(later_of, ~datum).
 
  The @rhombus(MutableList.now_of, ~annot) form constructs a
  @tech(~doc: guide_doc){predicate annotation} that matches a mutable list whose elements
