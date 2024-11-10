@@ -166,7 +166,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   bind.macro 'PairList[$bind, ..., $rest]'
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
-    & $pair_list_bind
+    #,(@rhombus(&, ~bind)) $pair_list_bind
   grammar ellipsis:
     #,(dots)
 ){
@@ -176,7 +176,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
  rest of the pair list.
 
- When @rhombus(& pair_list_bind) is used, the rest of the list must match
+ When @rhombus(#,(@rhombus(&, ~bind)) pair_list_bind) is used, the rest of the list must match
  the @rhombus(pair_list_bind). Static information associated by
  @rhombus(PairList) is propagated to @rhombus(pair_list_bind).
 
@@ -184,7 +184,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  conversion on a matching value (e.g., @rhombus(repet_bind) is an
  identifier), then the corresponding elements of a matching value are not
  traversed, which means that matching can be constant-time. Using this
- repetition for the tail a new list similarly avoids traversing the
+ repetition for the tail of a new list similarly avoids traversing the
  elements.
 
  @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")

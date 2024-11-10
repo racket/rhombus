@@ -135,7 +135,7 @@ it supplies its elements in an unspecified order.
   bind.macro 'Set.by($key_comp)($expr, ...)'
   bind.macro 'Set.by($key_comp)($expr, ..., $rest)'
   grammar rest:
-    & $set_bind
+    #,(@rhombus(&, ~bind)) $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -143,7 +143,7 @@ it supplies its elements in an unspecified order.
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.
  The matched set may have additional values.
- If @rhombus(& set_bind) is supplied, the rest of the set excluding
+ If @rhombus(#,(@rhombus(&, ~bind)) set_bind) is supplied, the rest of the set excluding
  the values of the given @rhombus(expr)s must match the @rhombus(set_bind).
  Static information associated by @rhombus(Set) is propagated to @rhombus(set_bind).
  If @rhombus(rest_bind) followed by @dots is
@@ -156,7 +156,7 @@ it supplies its elements in an unspecified order.
 
  The @rhombus(Set, ~bind) binding forms match only immutable sets, while
  @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
- For @rhombus(ReadableSet, ~bind), the @rhombus(& set_bind) will match
+ For @rhombus(ReadableSet, ~bind), the @rhombus(#,(@rhombus(&, ~bind)) set_bind) will match
  a snapshot (in the sense of @rhombus(Set.snapshot)) of the rest of the set.
  The @rhombus(Set.by, ~bind) binding forms match only immutable sets
  constructed using @rhombus(key_comp).

@@ -90,7 +90,7 @@ it supplies its elements in order.
   bind.macro 'List[$bind, ..., $rest, $bind, ...]'
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
-    & $list_bind
+    #,(@rhombus(&, ~bind)) $list_bind
   grammar ellipsis:
     #,(dots)
 ){
@@ -102,7 +102,7 @@ it supplies its elements in order.
  can include a @rhombus(rest) in the middle of a @rhombus(bind)
  sequence, and not just after @rhombus(bind)s.
 
- When @rhombus(& list_bind) is used, the remainder of the list must match
+ When @rhombus(#,(@rhombus(&, ~bind)) list_bind) is used, the remainder of the list must match
  the @rhombus(list_bind). Static information associated by
  @rhombus(List) is propagated to @rhombus(list_bind).
 
@@ -110,8 +110,7 @@ it supplies its elements in order.
  conversion on a matching value (e.g., @rhombus(repet_bind) is an
  identifier), then the corresponding elements of a matching value are not
  traversed, which means that matching can be constant-time. Using this
- repetition for the tail a new list similarly avoids traversing the
- elements.
+ repetition in a new list similarly avoids traversing the elements.
 
  @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")
 

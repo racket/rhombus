@@ -159,7 +159,7 @@ in an unspecified order.
     $key_repet: $val_repet #,(@litchar{,}) $ellipsis
     #,(@rhombus(&)) $map_expr
   grammar ellipsis:
-    #,(dots),
+    #,(dots_expr)
   fun Map([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: Map
   expr.macro 'Map.by($key_comp){$key_val_or_splice, ...}'
@@ -205,12 +205,12 @@ in an unspecified order.
     $key_expr: $val_bind: $default_body; ...
     $key_expr: $val_bind
   grammar map_rest:
-    & $map_bind
+    #,(@rhombus(&, ~bind)) $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   bind.macro '#%braces {$expr, ...}'
   bind.macro '#%braces {$expr, ..., $set_rest}'
   grammar set_rest:
-    & $set_bind
+    #,(@rhombus(&, ~bind)) $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -259,7 +259,7 @@ in an unspecified order.
     $key_expr: $val_bind: $default_body; ...
     $key_expr: $val_bind
   grammar rest:
-    & $map_bind
+    #,(@rhombus(&, ~bind)) $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -272,7 +272,7 @@ in an unspecified order.
  key is optional, and the @rhombus(default_expr) or
  @rhombus(default_body) is used to produce a ``default'' value to
  further match in case the key is missing in the matched map.
- If @rhombus(& map_bind) is supplied, the rest of the map excluding
+ If @rhombus(#,(@rhombus(&, ~bind)) map_bind) is supplied, the rest of the map excluding
  the given @rhombus(key_expr)s must match the @rhombus(map_bind).
  Static information associated by @rhombus(Map) is propagated to @rhombus(map_bind).
  If @rhombus(rest_key_bind: rest_val_bind) followed by @dots is
@@ -286,7 +286,7 @@ in an unspecified order.
 
  The @rhombus(Map, ~bind) binding forms match only immutable maps, while
  @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
- For @rhombus(ReadableMap, ~bind), the @rhombus(& map_bind) will match
+ For @rhombus(ReadableMap, ~bind), the @rhombus(#,(@rhombus(&, ~bind)) map_bind) will match
  a snapshot (in the sense of @rhombus(Map.snapshot)) of the rest of the map.
  The @rhombus(Map.by, ~bind) binding forms match only immutable maps
  constructed using @rhombus(key_comp).

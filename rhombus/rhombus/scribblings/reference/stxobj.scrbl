@@ -4,8 +4,8 @@
     "nonterminal.rhm" open
     "macro.rhm")
 
-@(def dots = @rhombus(...))
-@(def dots_bind = @rhombus(..., ~bind))
+@(def dots = @rhombus(..., ~bind))
+@(def dots_expr = @rhombus(...))
 
 @title(~tag: "stxobj"){Syntax Objects}
 
@@ -101,7 +101,7 @@ suffix corresponds to text after the closer.
   'x; $('1; 2 3; 4'); z'
 )
 
- A @dots as a @rhombus(term, ~var) must follow a
+ A @dots_expr as a @rhombus(term, ~var) must follow a
  @rhombus(term, ~var) that includes at least one escape, and each of those
  escapes must contain a @tech{repetition} instead of an expression. The
  preceding term is replaced as many times as the repetition supplies
@@ -114,10 +114,10 @@ suffix corresponds to text after the closer.
   '0 $['+', x] ...'
 )
 
- Multiple escapes can appear in the term before @dots, in which the
+ Multiple escapes can appear in the term before @dots_expr, in which the
  repetitions are drawn in parallel (assuming that they are at the same
- repetition depth), repetition @dots can be nested around escapes,
- consecutive @dots splice deeper repetitions, and
+ repetition depth), repetition @dots_expr can be nested around escapes,
+ consecutive @dots_expr splice deeper repetitions, and
  so on, following the normal rules of @tech{repetitions}.
 
  Quotes work as a repetition to construct multiple syntax objects within
@@ -146,15 +146,15 @@ suffix corresponds to text after the closer.
  A @rhombus($, ~bind) within @rhombus(term)
  escapes to a subsequent unquoted binding that is matched against the corresponding
  portion of a candidate syntax object.
- A @dots_bind in @rhombus(term, ~var) following a subpattern matches any number
+ A @dots in @rhombus(term, ~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
  are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
- @dots_bind can appear before the end of a sequence, and
- multiple @dots_bind can be used in the same group; when matching
- is ambiguous, matching prefers earlier @dots_bind repetitions to
+ @dots can appear before the end of a sequence, and
+ multiple @dots can be used in the same group; when matching
+ is ambiguous, matching prefers earlier @dots repetitions to
  later ones.
 
- A @rhombus($, ~bind) or @dots_bind as the only @rhombus(term) matches
+ A @rhombus($, ~bind) or @dots as the only @rhombus(term) matches
  each of those literally. To match @rhombus($, ~datum) or
  @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
  use @rhombus($, ~bind) to escape to a nested pattern, such as
@@ -559,7 +559,7 @@ suffix corresponds to text after the closer.
 ){
 
  Similar to a plain @quotes form, but @rhombus($) escapes or
- @dots repetitions are not
+ @dots_expr repetitions are not
  recognized in the @rhombus(term)s, so that the @rhombus(term)s are
  all treated as literal terms to be quoted.
 
