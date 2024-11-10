@@ -6,7 +6,6 @@
 @title(~tag: "class"){Classes}
 
 @doc(
-  ~literal: :: extends binding field
   ~nonterminal:
     default_expr: block expr
     default_body: block body
@@ -347,7 +346,6 @@
 }
 
 @doc(
-  ~literal: :: class interface
   defn.macro 'class.together:
                 $class_or_interface
                 ...'

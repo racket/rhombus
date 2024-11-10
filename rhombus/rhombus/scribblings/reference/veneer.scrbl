@@ -6,7 +6,6 @@
 @title(~tag: "veneer"){Veneers}
 
 @doc(
-  ~literal: :: extends binding
   ~nonterminal:
     method_impl: method ~class_clause
     property_impl: method ~class_clause

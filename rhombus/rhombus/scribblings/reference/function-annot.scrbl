@@ -51,7 +51,6 @@
     annot: ::
     list_annot: :: annot
     map_annot: :: annot
-  ~literal: = _ :: values
   annot.macro '$args -> $results'
   grammar args:
     $annot
