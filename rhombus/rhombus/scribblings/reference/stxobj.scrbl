@@ -69,7 +69,7 @@ suffix corresponds to text after the closer.
    3 + 4'
 )
 
- A @rhombus($) as a @rhombus(term,~var) unquotes (i.e., escapes) the expression
+ A @rhombus($) as a @rhombus(term, ~var) unquotes (i.e., escapes) the expression
  afterward; the value of that expression replaces the @rhombus($) term and expression. The value
  is normally a syntax object, but except for lists, other kinds of values are coerced
  to a syntax object. Nested @quotes forms are allowed around
@@ -101,8 +101,8 @@ suffix corresponds to text after the closer.
   'x; $('1; 2 3; 4'); z'
 )
 
- A @dots as a @rhombus(term,~var) must follow a
- @rhombus(term,~var) that includes at least one escape, and each of those
+ A @dots as a @rhombus(term, ~var) must follow a
+ @rhombus(term, ~var) that includes at least one escape, and each of those
  escapes must contain a @tech{repetition} instead of an expression. The
  preceding term is replaced as many times as the repetition supplies
  values, where each value is inserted or spliced into the enclosing sequence.
@@ -146,7 +146,7 @@ suffix corresponds to text after the closer.
  A @rhombus($, ~bind) within @rhombus(term)
  escapes to a subsequent unquoted binding that is matched against the corresponding
  portion of a candidate syntax object.
- A @dots_bind in @rhombus(term,~var) following a subpattern matches any number
+ A @dots_bind in @rhombus(term, ~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
  are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
  @dots_bind can appear before the end of a sequence, and

@@ -83,7 +83,7 @@
    @rhombus(import_item: modifier; modifier; ...) where the initial
    @rhombus(modifier) does not accept a block argument. This form is
    especially handy when the initial @rhombus(modifier) is @rhombus(open)
-   or @rhombus(as #,(@rhombus(id,~var))) and additional modifiers
+   or @rhombus(as #,(@rhombus(id, ~var))) and additional modifiers
    are needed.},
 
  @item{@rhombus(modifier: import_clause; ...) is the same as the
@@ -150,7 +150,7 @@
   @rhombus(id), which might be predefined like @rhombus(List), or
   might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
- @item{@rhombus(module_path#,(@rhombus(.,~impo))id): a shorthand for importing only
+ @item{@rhombus(module_path#,(@rhombus(., ~impo))id): a shorthand for importing only
   @rhombus(id) from @rhombus(module_path) path and then importing
   with @rhombus(.id). The last @rhombus(id) in a dotted
   sequence is allowed to be an export that is not a namespace, in which
@@ -161,7 +161,7 @@
   a single dot is used and @rhombus(module_path) does not refer to a
   namespace.}
 
- @item{@rhombus(module_path#,(@rhombus(.,~impo))(op)): the same
+ @item{@rhombus(module_path#,(@rhombus(., ~impo))(op)): the same
   shorthand, but for operators.}
 
  @item{@rhombus(self, ~impo): refers to the enclosing module itself,

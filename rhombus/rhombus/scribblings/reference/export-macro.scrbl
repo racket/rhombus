@@ -106,7 +106,7 @@
 ){
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass),
- @rhombus(expr_meta.AfterPrefixParsed, ~stxclass), , and
+ @rhombus(expr_meta.AfterPrefixParsed, ~stxclass), and
  @rhombus(expr_meta.AfterInfixParsed, ~stxclass), but for exports.
 
 }
