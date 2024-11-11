@@ -2,6 +2,7 @@
 import:
   "path.rhm"!path_help open
   rhombus/runtime_path
+  "version_guard.rhm"
 
 runtime_path.def path_rhm: "path.rhm"
 
@@ -204,26 +205,27 @@ block:
   check filesystem.size(link) ~is filesystem.size(x)
   check filesystem.size(link2) ~throws "filesystem.size:"
 
-  check filesystem.modify_seconds(tmp) ~is_a Int
-  check filesystem.modify_seconds(x) ~is_a Int
-  when !windows
-  | check filesystem.modify_seconds(link) ~is filesystem.modify_seconds(x)
-    check filesystem.modify_seconds(dlink) ~is filesystem.modify_seconds(d)
-  check filesystem.modify_seconds(link2) ~throws "filesystem.modify_seconds:"
-  check filesystem.modify_seconds(nonesuch) ~throws "filesystem.modify_seconds:"
-  check filesystem.modify_seconds(link, ~must_exist: #false) ~is !windows && filesystem.modify_seconds(x)
-  check filesystem.modify_seconds(link2, ~must_exist: #false) ~is #false
-  check filesystem.modify_seconds(nonesuch, ~must_exist: #false) ~is #false
-  let now = current_seconds()
-  check filesystem.modify_seconds(x) .<= now ~is #true
-  check filesystem.modify_seconds(x, ~set_to: now) ~is #void
-  check filesystem.modify_seconds(x) ~is now
-  check filesystem.modify_seconds(x, ~set_to: now-100) ~is #void
-  check filesystem.modify_seconds(x) ~is now-100
-  when !windows
-  | check filesystem.modify_seconds(link, ~set_to: now) ~is #void
-    check filesystem.modify_seconds(link) ~is now
+  version_guard.at_least "8.15.0.4":
+    check filesystem.modify_seconds(tmp) ~is_a Int
+    check filesystem.modify_seconds(x) ~is_a Int
+    when !windows
+    | check filesystem.modify_seconds(link) ~is filesystem.modify_seconds(x)
+      check filesystem.modify_seconds(dlink) ~is filesystem.modify_seconds(d)
+    check filesystem.modify_seconds(link2) ~throws "filesystem.modify_seconds:"
+    check filesystem.modify_seconds(nonesuch) ~throws "filesystem.modify_seconds:"
+    check filesystem.modify_seconds(link, ~must_exist: #false) ~is !windows && filesystem.modify_seconds(x)
+    check filesystem.modify_seconds(link2, ~must_exist: #false) ~is #false
+    check filesystem.modify_seconds(nonesuch, ~must_exist: #false) ~is #false
+    let now = current_seconds()
+    check filesystem.modify_seconds(x) .<= now ~is #true
+    check filesystem.modify_seconds(x, ~set_to: now) ~is #void
     check filesystem.modify_seconds(x) ~is now
+    check filesystem.modify_seconds(x, ~set_to: now-100) ~is #void
+    check filesystem.modify_seconds(x) ~is now-100
+    when !windows
+    | check filesystem.modify_seconds(link, ~set_to: now) ~is #void
+      check filesystem.modify_seconds(link) ~is now
+      check filesystem.modify_seconds(x) ~is now
 
   check filesystem.permissions(tmp) ~is { #'read, #'write, #'execute }
   check filesystem.permissions(x) ~is { #'read, #'write }
@@ -277,7 +279,7 @@ block:
   check filesystem.write_string(x, "hello world", ~exists: #'truncate) ~is #void
   check filesystem.read_string(x) ~is "hello world"
 
-  block:
+  version_guard.at_least "8.15.0.4":
     let tmp2 = filesystem.make_temporary(~as: #'directory)
 
     let ex = tmp2.add("ex")
