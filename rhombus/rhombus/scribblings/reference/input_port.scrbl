@@ -8,20 +8,6 @@ An @deftech{input port} is a @tech{port} specifically for input.
 Moreover, an @deftech{input string port} reads from a @tech{byte
  string}.
 
-@dispatch_table(
-  "input port"
-  Port.Input
-  in.peek_byte(arg, ...)
-  in.peek_bytes(arg, ...)
-  in.peek_char(arg, ...)
-  in.peek_string(arg, ...)
-  in.read_byte()
-  in.read_bytes(arg, ...)
-  in.read_char()
-  in.read_line(arg, ...)
-  in.read_string(arg)
-)
-
 @doc(
   annot.macro 'Port.Input'
   annot.macro 'Port.Input.String'
@@ -54,7 +40,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.open_file(file :: PathString) :: Port.Input
+  fun Port.Input.open_file(file :: PathString,
+                           ~mode: mode :: Port.Mode = #'binary)
+    :: Port.Input
 ){
 
  Creates an @tech{input port} that reads from the @tech{path} @rhombus(file).
@@ -74,9 +62,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.peek_byte(in :: Port.Input,
-                           ~skip_bytes: skip :: NonnegInt = 0)
-    :: Byte || Port.EOF
+  method (in :: Port.Input).peek_byte(
+    ~skip_bytes: skip :: NonnegInt = 0
+  ):: Byte || Port.EOF
 ){
 
  Like @rhombus(Port.Input.read_byte), but peeks instead of reading, and skips
@@ -85,10 +73,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.peek_bytes(in :: Port.Input,
-                            amount :: NonnegInt,
-                            ~skip_bytes: skip :: NonnegInt = 0)
-    :: Bytes || Port.EOF
+  method (in :: Port.Input).peek_bytes(
+    amount :: NonnegInt,
+    ~skip_bytes: skip :: NonnegInt = 0
+  ) :: Bytes || Port.EOF
 ){
 
  Like @rhombus(Port.Input.read_bytes), but peeks instead of reading, and skips
@@ -97,9 +85,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.peek_char(in :: Port.Input,
-                           ~skip_bytes: skip :: NonnegInt = 0)
-    :: Char || Port.EOF
+  method (in :: Port.Input).peek_char(
+    ~skip_bytes: skip :: NonnegInt = 0
+  ) :: Char || Port.EOF
 ){
 
  Like @rhombus(Port.Input.read_char), but peeks instead of reading, and skips
@@ -108,10 +96,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.peek_string(in :: Port.Input,
-                             amount :: NonnegInt,
-                             ~skip_bytes: skip :: NonnegInt = 0)
-    :: String || Port.EOF
+  method (in :: Port.Input).peek_string(
+    amount :: NonnegInt,
+    ~skip_bytes: skip :: NonnegInt = 0
+  ) :: String || Port.EOF
 ){
 
  Like @rhombus(Port.Input.read_string), but peeks instead of reading, and skips
@@ -120,7 +108,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.read_byte(in :: Port.Input)
+  method (in :: Port.Input).read_byte()
     :: Byte || Port.EOF
 ){
 
@@ -130,8 +118,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.read_bytes(in :: Port.Input,
-                            amount :: NonnegInt)
+  method (in :: Port.Input).read_bytes(amount :: NonnegInt)
     :: Bytes || Port.EOF
 ){
 
@@ -146,7 +133,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.read_char(in :: Port.Input)
+  method (in :: Port.Input).read_char()
     :: Char || Port.EOF
 ){
 
@@ -158,9 +145,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.read_line(in :: Port.Input,
-                           ~mode: mode :: Port.ReadLineMode = #'any)
-    :: String || Port.EOF
+  method (in :: Port.Input).read_line(
+    ~mode: mode :: Port.ReadLineMode = #'any
+  ) :: String || Port.EOF
 ){
 
  Returns a string containing the next line of characters from @rhombus(in).
@@ -205,8 +192,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  fun Port.Input.read_string(in :: Port.Input,
-                             amount :: NonnegInt)
+  method (in :: Port.Input).read_string(amount :: NonnegInt)
     :: String || Port.EOF
 ){
 

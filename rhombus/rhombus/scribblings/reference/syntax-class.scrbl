@@ -98,7 +98,7 @@
  @rhombus($(#,(@rhombus(id, ~var)) :: #,(@rhombus(name, ~var)))),
  it matches a syntax object that matches any of the
  @rhombus(pattern_case)s in the definition of
- @rhombus(stx_class_id ,~var), where the @rhombus(pattern_case)s are tried
+ @rhombus(stx_class_id, ~var), where the @rhombus(pattern_case)s are tried
  first to last. A pattern variable that is included in all of the
  @rhombus(pattern_case)s is a field of the syntax class, which is
  accessed from a binding @rhombus(id, ~var) using dot notation. For

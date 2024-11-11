@@ -27,33 +27,6 @@ immutable map). These uses of square brackets are implemented by
 it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
-@dispatch_table(
-  "readable map (immutable or mutable)"
-  Map
-  mp.length()
-  mp.keys(try_sort, ...)
-  mp.values()
-  mp.get(k)
-  mp.has_key(k)
-  mp.copy()
-  mp.snapshot()
-  mp.to_sequence()
-)
-
-@dispatch_table(
-  "map (immutable only)"
-  Map
-  mp.append(mp2, ...)
-  mp.remove(k)
-)
-
-@dispatch_table(
-  "mutable map"
-  MutableMap
-  mp.set(k, v)
-  mp.delete(k)
-)
-
 @doc(
   ~nonterminal:
     val_annot: :: annot
@@ -186,7 +159,7 @@ in an unspecified order.
     $key_repet: $val_repet #,(@litchar{,}) $ellipsis
     #,(@rhombus(&)) $map_expr
   grammar ellipsis:
-    #,(dots),
+    #,(dots_expr)
   fun Map([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: Map
   expr.macro 'Map.by($key_comp){$key_val_or_splice, ...}'
@@ -232,12 +205,12 @@ in an unspecified order.
     $key_expr: $val_bind: $default_body; ...
     $key_expr: $val_bind
   grammar map_rest:
-    & $map_bind
+    #,(@rhombus(&, ~bind)) $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   bind.macro '#%braces {$expr, ...}'
   bind.macro '#%braces {$expr, ..., $set_rest}'
   grammar set_rest:
-    & $set_bind
+    #,(@rhombus(&, ~bind)) $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -286,7 +259,7 @@ in an unspecified order.
     $key_expr: $val_bind: $default_body; ...
     $key_expr: $val_bind
   grammar rest:
-    & $map_bind
+    #,(@rhombus(&, ~bind)) $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -299,7 +272,7 @@ in an unspecified order.
  key is optional, and the @rhombus(default_expr) or
  @rhombus(default_body) is used to produce a ``default'' value to
  further match in case the key is missing in the matched map.
- If @rhombus(& map_bind) is supplied, the rest of the map excluding
+ If @rhombus(#,(@rhombus(&, ~bind)) map_bind) is supplied, the rest of the map excluding
  the given @rhombus(key_expr)s must match the @rhombus(map_bind).
  Static information associated by @rhombus(Map) is propagated to @rhombus(map_bind).
  If @rhombus(rest_key_bind: rest_val_bind) followed by @dots is
@@ -313,7 +286,7 @@ in an unspecified order.
 
  The @rhombus(Map, ~bind) binding forms match only immutable maps, while
  @rhombus(ReadableMap, ~bind) forms match both immutable and mutable maps.
- For @rhombus(ReadableMap, ~bind), the @rhombus(& map_bind) will match
+ For @rhombus(ReadableMap, ~bind), the @rhombus(#,(@rhombus(&, ~bind)) map_bind) will match
  a snapshot (in the sense of @rhombus(Map.snapshot)) of the rest of the map.
  The @rhombus(Map.by, ~bind) binding forms match only immutable maps
  constructed using @rhombus(key_comp).
@@ -441,7 +414,7 @@ in an unspecified order.
 }
 
 @doc(
-  fun Map.length(mp :: ReadableMap) :: Int
+  method Map.length(mp :: ReadableMap) :: Int
 ){
 
  Returns the number of key--value mappings in @rhombus(mp).
@@ -457,17 +430,17 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.append(mp0 :: Map, mp :: Map, ...) :: Map
+  method (mp :: Map).append(another_mp :: Map, ...) :: Map
 ){
 
- Functionally appends @rhombus(mp)s (including @rhombus(mp0)), like the @rhombus(++) operator
- (but without the special optimization). When a key has a value in
- multiple given @rhombus(mp)s, the rightmost value is used.
+ Functionally appends @rhombus(mp) and @rhombus(another_mp)s, like the @rhombus(++) operator
+ (but without the special optimization for adding a single key). When a key has a value in
+ multiple given maps, the rightmost value is used.
 
- When @rhombus(mp)s use different @tech{map configurations}, that of
- @rhombus(mp0) is respected. Conceptually, in the binary case, each
- key--value mapping from the right @rhombus(mp) is added to the left
- @rhombus(mp).
+ Even when @rhombus(another_mp) uses a different @tech{map
+  configuration} than @rhombus(mp), the configuration of @rhombus(mp) is
+ preserved for the result. Conceptually, in the binary case, each
+ key--value mapping from the right map is added to the left map.
 
 @examples(
   {1: "a", 2: "b"}.append({1: "c"}, {1: "d"})
@@ -485,8 +458,8 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(mp :: ReadableMap,
-               try_sort :: Any = #false)
+  method Map.keys(mp :: ReadableMap,
+                  try_sort :: Any = #false)
     :: List
 ){
 
@@ -502,7 +475,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.values(mp :: ReadableMap) :: List
+  method Map.values(mp :: ReadableMap) :: List
 ){
 
  Returns the values of @rhombus(mp) in a list.
@@ -515,10 +488,10 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.get(mp :: ReadableMap,
-              key :: Any,
-              default :: Any:
-                fun (): throw Exn.Fail.Contract(....))
+  method Map.get(mp :: ReadableMap,
+                 key :: Any,
+                 default :: Any:
+                   fun (): throw Exn.Fail.Contract(....))
     :: Any
 ){
 
@@ -542,7 +515,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.remove(mp :: Map, key :: Any) :: Map
+  method (mp :: Map).remove(key :: Any) :: Map
 ){
 
  Returns a map like @rhombus(mp), but without a mapping for
@@ -557,8 +530,7 @@ in an unspecified order.
 
 
 @doc(
-  fun MutableMap.set(mp :: MutableMap,
-                     key :: Any, val :: Any)
+  method (mp :: MutableMap).set(key :: Any, val :: Any)
     :: Void
 ){
 
@@ -578,7 +550,7 @@ in an unspecified order.
 
 
 @doc(
-  fun MutableMap.delete(mp :: MutableMap, key :: Any) :: Void
+  method (mp :: MutableMap).delete(key :: Any) :: Void
 ){
 
  Changes @rhombus(mp) to remove a mapping for @rhombus(key), if any.
@@ -595,7 +567,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.has_key(mp :: ReadableMap, key :: Any) :: Boolean
+  method Map.has_key(mp :: ReadableMap, key :: Any) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
@@ -610,7 +582,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.copy(mp :: ReadableMap) :: MutableMap
+  method Map.copy(mp :: ReadableMap) :: MutableMap
 ){
 
  Creates a mutable map whose initial content matches @rhombus(mp).
@@ -628,7 +600,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.snapshot(mp :: ReadableMap) :: Map
+  method Map.snapshot(mp :: ReadableMap) :: Map
 ){
 
  Returns an immutable map whose content matches @rhombus(mp). If
@@ -648,7 +620,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.to_sequence(mp :: ReadableMap) :: Sequence
+  method Map.to_sequence(mp :: ReadableMap) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

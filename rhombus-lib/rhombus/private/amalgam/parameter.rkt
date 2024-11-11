@@ -39,7 +39,7 @@
 
 (define-syntax Parameter.def
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)

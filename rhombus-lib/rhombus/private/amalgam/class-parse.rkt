@@ -2,7 +2,9 @@
 (require syntax/parse/pre
          "introducer.rkt"
          (for-template racket/unsafe/undefined
-                       "parens.rkt"))
+                       "parens.rkt"
+                       "name-prefix.rkt")
+         "dotted-sequence.rkt")
 
 (provide in-class-desc-space
 
@@ -30,6 +32,7 @@
          any-stx?
 
          :options-block
+         class-reflect-name
 
          check-duplicate-field-names
          check-fields-methods-dots-distinct
@@ -192,9 +195,30 @@
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 
 (define-splicing-syntax-class :options-block
+  #:attributes ([form 1] name)
+  #:datum-literals (group)
   (pattern (~seq)
-           #:with (form ...) '())
-  (pattern (~seq (_::block form ...))))
+           #:with (form ...) '()
+           #:with name #'#f)
+  (pattern (~seq (_::block
+                  (~and g (group #:name . _))
+                  form
+                  ...))
+           #:cut
+           #:with name (syntax-parse #'g
+                         [(_ _ (_::block
+                                (group n::dotted-identifier-sequence)))
+                          (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
+                         [(_ _ n::dotted-identifier-sequence)
+                          (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
+                         [_
+                          (raise-syntax-error #f "invalid name form" #'g)]))
+  (pattern (~seq (_::block form ...))
+           #:with name #'#f))
+
+(define (class-reflect-name name name-prefix bind-name)
+   (or (and (syntax-e name) name)
+       (add-name-prefix name-prefix bind-name)))
 
 (define (check-duplicate-field-names stxes ids super interface-dotss)
   (define super-ids (if super
@@ -341,31 +365,44 @@
                                                f)]
       [else #f])))
 
+;; Returns a table of method/field names that should not be added to a
+;; namespace, because they are replaced by explciit exports
 (define (check-exports-distinct stxes exports-stx fields method-mindex dots)
   (define dots-ht (for/hasheq ([dot (in-list dots)])
                     (values (syntax-e (car dot)) (car dot))))
   (define exports (for/list ([ex (in-list exports-stx)])
                     (syntax-parse ex
-                      [(id ext-id) #'ext-id]
+                      [(ext-id id) #'ext-id]
                       [_ ex])))
   (define ht (for/hasheq ([field (in-list fields)])
                (values (syntax-e field) #t)))
-  (for ([ex (in-list exports)])
+  (for/fold ([replaced-ht #hasheq()]) ([ex (in-list exports)])
     (define name (syntax-e ex))
-    (when (hash-ref ht name #f)
-      (raise-syntax-error #f
-                          "exported name conflicts with field name"
-                          ex))
-    (let ([mix (hash-ref method-mindex name #f)])
-      (when mix
-        (raise-syntax-error #f
-                            (format "exported name conflicts with ~a name"
-                                    (if (mindex-property? mix) "property" "method"))
-                            ex)))
+    (define field-replaced-ht
+      (cond
+        [(hash-ref ht name #f)
+         #;
+         (raise-syntax-error #f
+                             "exported name conflicts with field name"
+                             ex)
+         (hash-set replaced-ht name #t)]
+        [else replaced-ht]))
+    (define new-replaced-ht
+      (let ([mix (hash-ref method-mindex name #f)])
+        (cond
+          [mix
+           #;
+           (raise-syntax-error #f
+                               (format "exported name conflicts with ~a name"
+                                       (if (mindex-property? mix) "property" "method"))
+                               ex)
+           (hash-set field-replaced-ht name #t)]
+          [else field-replaced-ht])))
     (when (hash-ref ht dots-ht #f)
       (raise-syntax-error #f
                           "exported name conflicts with dot-syntax name"
-                          ex))))
+                          ex))
+    new-replaced-ht))
 
 (define (constructor-as-expression? given-constructor-rhs)
   (and given-constructor-rhs

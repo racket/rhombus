@@ -1051,3 +1051,15 @@ check:
     annotation ~error
   10 :: Stubborn
   ~raises "cannot be used as an annotation"
+
+block:
+  class Posn(x, mutable y):
+    ~name Loc
+    final method m(): 0
+    method n(): 0
+  check print(Posn) ~prints "#<function:Loc>"
+  check print(Posn.x) ~prints "#<function:Loc.x>"
+  check print(Posn.y) ~prints "#<function:Loc.y>"
+  check print(Posn.m) ~prints "#<function:Loc.m>"
+  check print(Posn.n) ~prints "#<function:Loc.n>"
+  check Posn.x(0) ~throws "Loc.x"

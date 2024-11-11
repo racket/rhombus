@@ -1,0 +1,442 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt") as rkt
+  lib("racket/path.rkt") as rkt_path
+  "error-adjust.rkt" as rkt_error
+  "error.rhm" open
+  "maybe.rhm" open
+  "closeable.rhm" open
+  "path-object.rhm" open
+  "rename-parameter.rkt".#{rename-parameter}
+
+use_static
+
+export:
+  filesystem
+
+namespace filesystem:
+  export:
+    simplify_path
+    normalize_path
+    resolve_path
+    expand_user_path
+    file_exists
+    directory_exists
+    link_exists
+    type
+    files
+    roots
+    names:
+      rename
+    delete
+    make_directory
+    current_force_delete_permissions
+    make_temporary
+    make_link
+    copy
+    size
+    modify_seconds
+    permissions
+    identity
+    stat
+    read_bytes
+    read_string
+    read_lines
+    read_bytes_lines
+    write_bytes
+    write_string
+
+  fun simplify_path(p :: PathString) :: Path:
+    rkt.#{simplify-path}(p, #true)
+
+  fun normalize_path(p :: PathString) :: Path:
+    // potential error from `simplify-path` as called by `simple-form-path`
+    ~who: who
+    rkt_error.local_error_adjust { #'#{simple-form-path}: who }:
+      rkt_path.#{simple-form-path}(p)
+
+  fun resolve_path(p :: PathString) :: Path:
+    rkt.#{resolve-path}(p)
+
+  fun expand_user_path(p :: PathString) :: Path:
+    rkt.#{expand-user-path}(p)
+
+  fun file_exists(p :: PathString):
+    rkt.#{file-exists?}(p)
+
+  fun directory_exists(p :: PathString):
+    rkt.#{directory-exists?}(p)
+
+  fun link_exists(p :: PathString):
+    rkt.#{link-exists?}(p)
+
+  fun type(p :: PathString,
+           ~must_exist = #false):
+    ~who: who
+    match (rkt_error.local_error_adjust { #'#{file-or-directory-type}: who }:
+             rkt.#{file-or-directory-type}(p, must_exist))
+    | #'#{directory-link}: #'directory_link
+    | s: s
+
+  // internal helper
+  fun file_type(who, p):
+    // should report errors as `who`, but it turns out that no error is possible
+    rkt.#{file-or-directory-type}(p, #false)
+
+  fun files(start_p :: PathString = Path.current_directory(),
+            ~recur = #false,
+            ~follow_links = #false,
+            ~keep: keep :: Path -> Any = fun (x): #true,
+            ~skip: skip :: Path -> Any = fun (x): #false,
+            ~add_path = #false) :~ List.of(Path):
+    ~who: who
+    fun files_here(accum :~ List, p, onto_path):
+      let files :~ PairList:
+        rkt_error.local_error_adjust { #'#{directory-list}: who }:
+          rkt.#{directory-list}(p, #{#:build?}: !onto_path && add_path)
+      for values (accum :~ List = accum) (file: files):
+        let file = (if onto_path | Path.add(onto_path, file) | file)
+        keep_when keep(file)
+        skip_when skip(file)
+        let new_accum = accum.add(file)
+        if recur
+        | let file_p:
+            if add_path | file | Path.add(start_p, file)
+          if (if follow_links
+              | directory_exists(file_p)
+              | type(file_p) == #'directory)
+          | files_here(new_accum, file_p, file)
+          | new_accum
+        | new_accum
+    files_here([], start_p, #false)
+
+  fun roots() :~ List.of(Path.Absolute):
+    ~who: who
+    rkt_error.local_error_adjust { #'#{filesystem-root-list}: who }:
+      List(& rkt.#{filesystem-root-list}())
+
+  fun rename(p :: PathString,
+             to_p :: PathString,
+             ~exists_ok = #false):
+    ~who: who
+    rkt_error.local_error_adjust { #'#{rename-file-or-directory}: who }:
+      rkt.#{rename-file-or-directory}(p, to_p, exists_ok)
+
+  fun delete(p :: PathString,
+             ~as: mode :: matching(#'any || #'file || #'directory) = #'any,
+             ~recur = #false,
+             ~must_exist = #true):
+    ~who: who
+    fun delete(p):
+      fun delete_file():
+        cond
+        | (rkt.#{system-type}() == #'windows) && rkt.#{file-exists?}(p):
+            let tmp = make_temporary()
+            let moved:
+              try:
+                rkt.#{rename-file-or-directory}(p, tmp, #true)
+                #true
+                ~catch (x :: Exn.Fail.Filesystem):
+                  #false
+            rkt_error.local_error_adjust { #'#{delete-file}: who }:
+              unless moved
+              | rkt.#{delete-file}(p)
+              rkt.#{delete-file}(tmp)
+        | ~else:
+            rkt_error.local_error_adjust { #'#{delete-file}: who }:
+              rkt.#{delete-file}(p)
+      cond
+      | (recur && mode != #'file) || mode == #'any:
+          match file_type(who, p)
+          | #'file || #'link:
+              delete_file()
+          | #'directory:
+              when recur
+              | let files :~ PairList:
+                  rkt_error.local_error_adjust { #'#{directory-list}: who }:
+                    rkt.#{directory-list}(p, #{#:build?}: #true)
+                for (f: files):
+                  delete(f)
+              rkt_error.local_error_adjust { #'#{delete-directory}: who }:
+                rkt.#{delete-directory}(p)
+          | #'#{directory-link}: // Windows only
+              rkt.#{delete-directory}(p)
+          | ~else:
+              when must_exist
+              | not_a_path_error(who, p)
+      | mode == #'file:
+          when must_exist || file_type(who, p)
+          | delete_file()
+      | mode == #'directory:
+          when must_exist || file_type(who, p)
+          | rkt_error.local_error_adjust { #'#{delete-directory}: who }:
+              rkt.#{delete-directory}(p)
+    delete(p)
+
+  fun make_directory(p :: PathString,
+                     ~parents = #false,
+                     ~permissions: permissions :: Int.in(0, 65535) = 0o777):
+    ~who: who
+    fun make_one(p):
+      rkt_error.local_error_adjust { #'#{make-directory}: who }:
+        rkt.#{make-directory}(p, permissions)
+    if parents
+    | let [root, next, ...] = Path.split(p)
+      fun maybe_make_one(p):
+        unless type(p)
+        | make_one(p)
+      maybe_make_one(
+        for values(p :~ Path = root) (next: [next, ...]):
+          maybe_make_one(p)
+          p.add(next)
+      )
+    | make_one(p)
+
+  def current_force_delete_permissions:
+    #{rename-parameter}(rkt.#{current-force-delete-permissions},
+                        #'#{filesystem.current_force_delete_permissions})
+
+  fun make_temporary(
+    ~in:
+      dir :: PathString = rkt.#{find-system-path}(#'#{temp-dir}),
+    ~as:
+      copy_from :: PathString || matching(#'file) || matching(#'directory) = #'file,
+    ~make_name:
+      make_name :: Function.all_of(String -> Path.Relative,
+                                   ~name: #'#{|make_name for make_temporary|})
+        = fun (s): Path("tmp" +& s),
+    ~permissions:
+      permissions :: maybe(Int.in(0, 65535)) = #false,
+    ~replace_permissions = #false
+  ) :~ Path:
+    ~who: who
+    fun make(s = rkt.#{current-seconds}(),
+             ms = math.exact(math.truncate(rkt.#{current-inexact-milliseconds}())),
+             tries = 0):
+      let tmp: Path.add(dir, make_name(s +& ms))
+      try:
+        match copy_from
+        | #'directory:
+            rkt_error.local_error_adjust { #'#{make-directory}: who }:
+              rkt.#{make-directory}(tmp, permissions || 0o777)
+        | #'file:
+            rkt_error.local_error_adjust { #'#{open-output-file}: who }:
+              Port.Output.close(rkt.#{open-output-file}(tmp,
+                                                        ~permissions: permissions || 0o666,
+                                                        #{#:replace-permissions?}: replace_permissions))
+        | ~else:
+            rkt_error.local_error_adjust { #'#{copy-file}: who }:
+              rkt.#{copy-file}(copy_from,
+                               tmp,
+                               ~permissions: permissions,
+                               #{#:replace-permissions?}: replace_permissions)
+        tmp
+        ~catch (exn :: (Exn.Fail.Filesystem.Exists
+                          || satisfying(fun
+                                        | (exn :: Exn.Fail.Filesystem.Errno):
+                                            exn.errno.first == #'windows
+                                              && exn.errno.rest == 5
+                                              && tries < 32
+                                        | (_): #false))):
+          make(s + math.random(10), ms + math.random(10), tries + 1)
+    make()
+
+  fun make_link(to_path :: PathString,
+                path :: PathString):
+    ~who: who
+    rkt_error.local_error_adjust { #'#{make-file-or-directory-link}: who }:
+      rkt.#{make-file-or-directory-link}(to_path,
+                                         path)
+
+  fun copy(src_path :: PathString,
+           dest_path :: PathString,
+           ~recur = #false,
+           ~exists_ok = #false,
+           ~permissions: permissions :: maybe(Int.in(0, 65535)) = #false,
+           ~replace_permissions = #true,
+           ~keep_modify_seconds = #false,
+           ~follow_links = #true):
+    ~who: who
+    fun copy_file(src_path, dest_path):
+      rkt_error.local_error_adjust { #'#{copy-file}: who }:
+        rkt.#{copy-file}(src_path,
+                         dest_path,
+                         #{#:exists-ok?}: exists_ok,
+                         ~permissions: permissions,
+                         #{#:replace-permissions?}: replace_permissions)
+      when keep_modify_seconds
+      | rkt_error.local_error_adjust { #'#{file-or-directory-modify-seconds}: who }:
+          rkt.#{file-or-directory-modify-seconds}(
+            src_path,
+            rkt.#{file-or-directory-modify-seconds}(dest_path)
+          )
+    fun copy_link(src_path, dest_path):
+      let link:
+        rkt_error.local_error_adjust { #'#{resolve-path}: who }:
+          rkt.#{resolve-path}(src_path)
+      rkt_error.local_error_adjust { #'#{make-file-or-directory-link}: who }:
+        rkt.#{make-file-or-directory-link}(link, dest_path)
+    cond
+    | !recur:
+        if !follow_links && rkt.#{link-exists?}(src_path)
+        | copy_link(src_path, dest_path)
+        | copy_file(src_path, dest_path)
+    | ~else:
+        fun recur(src_path, dest_path):
+          fun copy_dir():
+            fun get_perms(): // get `src_path` permissions only as needed
+              permissions || (rkt_error.local_error_adjust { #'#{make-directory}: who }:
+                                rkt.#{file-or-directory-permissions}(src_path, #'bits))
+            fun maybe_replace_perms(permissions):
+              when replace_permissions
+              | rkt_error.local_error_adjust { #'#{file-or-directory-permissions}: who }:
+                  rkt.#{file-or-directory-permissions}(dest_path, permissions)
+            cond
+            | !exists_ok || !rkt.#{directory-exists?}(dest_path):
+                let permissions = get_perms()
+                rkt_error.local_error_adjust { #'#{make-directory}: who }:
+                  rkt.#{make-directory}(dest_path, permissions)
+                maybe_replace_perms(permissions)
+            | ~else:
+                maybe_replace_perms(get_perms())
+            let files :~ PairList:
+              rkt_error.local_error_adjust { #'#{directory-list}: who }:
+                rkt.#{directory-list}(src_path)
+            for (file: files):
+              recur(Path.add(src_path, file), Path.add(dest_path, file))
+          match file_type(who, src_path)
+          | #'file: copy_file(src_path, dest_path)
+          | #'link:
+              cond
+              | !follow_links:
+                  copy_link(src_path, dest_path)
+              | rkt.#{directory-exists?}(src_path):
+                  copy_dir()
+              | ~else:
+                  copy_file(src_path, dest_path)
+          | #'#{directory-link}:
+              if !follow_links
+              | copy_link(src_path, dest_path)
+              | copy_dir()
+          | #'directory:
+              copy_dir()
+          | ~else:
+              not_a_path_error(who, src_path)
+        recur(src_path, dest_path)
+
+  fun size(path :: PathString) :: NonnegInt:
+    ~who: who
+    rkt_error.local_error_adjust { #'#{file-size}: who }:
+      rkt.#{file-size}(path)
+
+  fun modify_seconds(path :: PathString,
+                     ~set_to: change_to :: maybe(Int) = #false,
+                     ~must_exist = #true):
+    ~who: who
+    rkt_error.local_error_adjust { #'#{file-or-directory-modify-seconds}: who }:
+      if must_exist
+      | rkt.#{file-or-directory-modify-seconds}(path, change_to)
+      | rkt.#{file-or-directory-modify-seconds}(path, change_to,
+                                                if change_to
+                                                | fun (): #void
+                                                | fun (): #false)
+
+  fun permissions(path :: PathString,
+                  ~bits = #false,
+                  ~set_to: change_to :: maybe(Int.in(0, 65535)) = #false):
+    ~who: who
+    rkt_error.local_error_adjust { #'#{file-or-directory-permissions}: who }:
+      cond
+      | change_to:
+          rkt.#{file-or-directory-permissions}(path, change_to)
+      | bits:
+          rkt.#{file-or-directory-permissions}(path, #'bits)
+      | ~else:
+          Set(& rkt.#{file-or-directory-permissions}(path, #false))
+
+  fun identity(path :: PathString,
+               ~follow_links = #true) :: PosInt:
+    ~who: who
+    rkt_error.local_error_adjust { #'#{file-or-directory-identity}: who }:
+      rkt.#{file-or-directory-identity}(path, !follow_links)
+
+  fun stat(path :: PathString,
+           ~follow_links = #true) :~ Map:
+    ~who: who
+    rkt_error.local_error_adjust { #'#{file-or-directory-stat}: who }:
+      rkt.#{file-or-directory-stat}(path, !follow_links)
+
+  fun content(who, path, mode, get, append):
+    let size:
+      try:
+        rkt.#{file-size}(path)
+        ~catch _: 0
+    Closeable.let in = (rkt_error.local_error_adjust { #'#{open-input-file}: who }:
+                          rkt.#{open-input-file}(path, ~mode: mode))
+    let s = get(in, size)
+    // There's a good chance that `file-size' gets all the data:
+    match get(in, size+1)
+    | Port.eof: s
+    | more:
+        fun get_all(accum :~ List):
+          match get(in, 4096)
+          | Port.eof: append(& accum)
+          | more: get_all(accum.add(more))
+        get_all([s, more])
+
+  fun read_string(path :: PathString,
+                  ~mode: mode :: Port.Mode = #'binary) :~ String:
+    ~who: who
+    content(who, path, mode, Port.Input.read_string, String.append)
+
+  fun read_bytes(path :: PathString,
+                 ~mode: mode :: Port.Mode = #'binary) :~ Bytes:
+    ~who: who
+    content(who, path, mode, Port.Input.read_bytes, Bytes.append)
+
+  fun content_lines(who, path, mode, read_line):
+    Closeable.let in = (rkt_error.local_error_adjust { #'#{open-input-file}: who }:
+                          rkt.#{open-input-file}(path))
+    fun read(accum :~ List):
+      match read_line(in, ~mode: mode)
+      | Port.eof: accum
+      | more: read(accum.add(more))
+    read([])
+
+  fun read_lines(path :: PathString,
+                 ~mode: mode :: Port.ReadLineMode = #'any) :: List.of(String):
+    ~who: who
+    content_lines(who, path, mode, Port.Input.read_line)
+
+  fun read_bytes_lines(path :: PathString,
+                       ~mode: mode :: Port.ReadLineMode = #'any) :: List.of(Bytes):
+    ~who: who
+    content_lines(who, path, mode, Port.Input.read_bytes_line)
+
+  fun write_content(who, path, mode, exists, s, write):
+    Closeable.let out = (rkt_error.local_error_adjust { #'#{open-output-file}: who }:
+                           rkt.#{open-output-file}(path, ~mode: mode, ~exists: exists))
+    write(out, s)
+
+  fun write_string(path :: PathString,
+                   str :: String,
+                   ~exists: exists :: Port.Output.ExistsMode = #'error,
+                   ~mode: mode :: Port.Mode = #'binary):
+    ~who: who
+    write_content(who, path, mode, exists, str, Port.Output.write_string)
+
+  fun write_bytes(path :: PathString,
+                  bstr :: Bytes,
+                  ~exists: exists :: Port.Output.ExistsMode = #'error,
+                  ~mode: mode :: Port.Mode = #'binary):
+    ~who: who
+    write_content(who, path, mode, exists, bstr, Port.Output.write_bytes)
+
+  fun not_a_path_error(who, p):
+    throw Exn.Fail.Filesystem(error.message(
+                                            ~who: who,
+                                            "encountered path that is neither file nor directory",
+                                            error.val(~label: "path", p)
+                              ),
+                              Continuation.Marks.current())

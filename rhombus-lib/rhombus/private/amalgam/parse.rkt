@@ -70,7 +70,7 @@
 
   ;; Form at the top of a module or in a `nested` block:
   (define-rhombus-transform
-    #:syntax-class :nestable-declaration
+    #:syntax-class (:nestable-declaration name-prefix)
     #:predicate nestable-declaration?
     #:desc "nestable declaration"
     #:parsed-tag #:rhombus/decl/nestable
@@ -82,7 +82,7 @@
 
   ;; Form in a definition context:
   (define-rhombus-transform
-    #:syntax-class :definition
+    #:syntax-class (:definition name-prefix)
     #:predicate definition?
     #:desc "definition"
     #:parsed-tag #:rhombus/defn
@@ -145,33 +145,34 @@
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
   (syntax-parse stx
-    [(_ . rest) #'(rhombus-top-step rhombus-top #t () . rest)]))
+    [(_ . rest) #'(rhombus-top-step rhombus-top #t #f () . rest)]))
 
 ;; For a nested context
 (define-syntax (rhombus-nested stx)
   (syntax-parse stx
-    [(_ . rest) #'(rhombus-top-step rhombus-nested #f () . rest)]))
+    [(_ prefix . rest) #'(rhombus-top-step rhombus-nested #f prefix (prefix) . rest)]))
 
 ;; Trampoline variant where `top` for return is provided first
 (define-syntax (rhombus-top-step stx)
   (with-syntax-error-respan
     (syntax-parse stx
       #:datum-literals (group parsed)
-      [(_ top decl-ok? data) #`(begin)]
-      [(_ top decl-ok? (data ...) (group (parsed #:rhombus/decl decl)) . forms)
+      [(_ top decl-ok? prefix data) #`(begin)]
+      [(_ top decl-ok? prefix (data ...) (group (parsed #:rhombus/decl decl)) . forms)
        #`(begin decl (top data ... . forms))]
       ;; note that we may perform hierarchical name resolution
       ;; up to four times, since resolution in `:declaration`,
       ;; `:definition`, etc., doesn't carry over
-      [(_ top decl-ok? (data ...) e::definition-sequence . tail)
+      [(_ top decl-ok? prefix (data ...) e::definition-sequence . tail)
        (define-values (parsed new-tail)
-         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail))
+         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail (and (syntax-e #'prefix) #'prefix)))
        #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
-      [(_ top decl-ok? (data ...) form . forms)
+      [(_ top decl-ok? prefix (data ...) form . forms)
+       (define d-prefix (and (syntax-e #'prefix) #'prefix))
        (define (nestable-parsed)
          (syntax-parse #'form
-           [e::nestable-declaration #'(begin . e.parsed)]
-           [e::definition #'(begin . e.parsed)]
+           [(~var e (:nestable-declaration d-prefix)) #'(begin . e.parsed)]
+           [(~var e (:definition d-prefix)) #'(begin . e.parsed)]
            [_ #`(#%expression (rhombus-expression form))]))
        (define parsed
          (if (syntax-e #'decl-ok?)
@@ -190,7 +191,7 @@
       #:datum-literals (group parsed)
       [(_) #'(begin)]
       [(_ (group (parsed #:rhombus/defn defn))) #'defn]
-      [(_ e::definition) #'(begin . e.parsed)]
+      [(_ (~var e (:definition #f))) #'(begin . e.parsed)]
       [(_ form) #'(#%expression (rhombus-expression form))])))
 
 ;; For an expression context, interleaves expansion and enforestation:
@@ -242,11 +243,11 @@
        #`(begin e . tail)]
       [(_ e::definition-sequence . tail)
        (define-values (parsed new-tail)
-         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail))
+         (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail #f))
        #`(begin
            (begin . #,parsed)
            (rhombus-body-sequence . #,new-tail))]
-      [(_ e::definition . tail)
+      [(_ (~var e (:definition #f)) . tail)
        #`(begin
            (begin . e.parsed)
            (rhombus-body-sequence . tail))]

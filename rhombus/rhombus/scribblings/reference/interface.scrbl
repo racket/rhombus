@@ -6,7 +6,6 @@
 @title(~tag: "interface"){Interfaces}
 
 @doc(
-  ~literal: :: extends binding field
   ~nonterminal:
     method_impl: method ~class_clause
     property_impl: method ~class_clause

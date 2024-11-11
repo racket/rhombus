@@ -30,40 +30,14 @@ other operations will sometimes negate one of the modifications.
 Concurrent modification is thus somewhat unpredictable but still safe,
 and it is not managed by a lock.
 
-@dispatch_table(
-  "mutable list"
-  MutableList
-  mlst.length()
-  mlst.get(n)
-  mlst.set(n, v)
-  mlst.insert(n, v)
-  mlst.add(v)
-  mlst.delete(n)
-  mlst.reverse()
-  mlst.append(lst2)
-  mlst.take(n)
-  mlst.take_last(n)
-  mlst.drop(n)
-  mlst.drop_last(n)
-  mlst.sublist(n, m)
-  mlst.has_element(v, eqls, ...)
-  mlst.find(pred)
-  mlst.remove(v)
-  mlst.map(func)
-  mlst.for_each(func)
-  mlst.sort(arg, ...)
-  mlst.snapshot()
-  mlst.to_list()
-  mlst.to_sequence()
-)
-
 @doc(
   annot.macro 'MutableList'
   annot.macro 'MutableList.now_of($annot)'
   annot.macro 'MutableList.later_of($annot)'
 ){
 
- Matches any mutable list in the form without @rhombus(now_of) or @rhombus(later_of).
+ Matches any mutable list in the form without @rhombus(now_of, ~datum)
+ or @rhombus(later_of, ~datum).
 
  The @rhombus(MutableList.now_of, ~annot) form constructs a
  @tech(~doc: guide_doc){predicate annotation} that matches a mutable list whose elements
@@ -149,8 +123,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.insert(mlst :: MutableList,
-                         n :: NonnegInt, elem :: Any)
+  method (mlst :: MutableList).insert(n :: NonnegInt, elem :: Any)
     :: Void
 ){
 
@@ -169,7 +142,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.add(mlst :: MutableList, elem :: Any) :: Void
+  method (mlst :: MutableList).add(elem :: Any) :: Void
 ){
 
  Modifies @rhombus(mlst) to add @rhombus(elem) to
@@ -204,7 +177,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.get(mlst :: MutableList, n :: NonnegInt) :: Any
+  method (mlst :: MutableList).get(n :: NonnegInt) :: Any
 ){
 
  Equivalent to @rhombus(mlst[n]) (with the default implicit
@@ -220,8 +193,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.set(mlst :: MutableList,
-                      n :: NonnegInt, v :: Any)
+  method (mlst :: MutableList).set(n :: NonnegInt, v :: Any)
     :: Void
 ){
 
@@ -243,7 +215,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.delete(mlst :: MutableList, n :: NonnegInt)
+  method (mlst :: MutableList).delete(n :: NonnegInt)
     :: Void
 ){
 
@@ -260,15 +232,13 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.length(mlst :: MutableList) :: NonnegInt
+  method (mlst :: MutableList).length() :: NonnegInt
 ){
 
  Returns the number of items in @rhombus(mlst).
  The length is produced in @math{O(1)} time.
 
 @examples(
-  MutableList.length(MutableList[1, 4, 8])
-  MutableList.length(MutableList[])
   MutableList[1, 4, 8].length()
   MutableList[].length()
 )
@@ -277,7 +247,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.reverse(mlst :: MutableList) :: Void
+  method (mlst :: MutableList).reverse() :: Void
 ){
 
  Modifies @rhombus(mlst) to have the same elements but in reversed
@@ -287,7 +257,7 @@ and it is not managed by a lock.
 
 @examples(
   def l = MutableList[1, 4, 8]
-  MutableList.reverse(l)
+  l.reverse()
   l
 )
 
@@ -295,8 +265,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.append(mlst :: MutableList,
-                         lst :: List || MutableList)
+  method (mlst :: MutableList).append(lst :: List || MutableList)
     :: Void
 ){
 
@@ -314,9 +283,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.take(mlst :: MutableList, n :: NonnegInt)
+  method (mlst :: MutableList).take(n :: NonnegInt)
     :: Void
-  fun MutableList.take_last(mlst :: MutableList, n :: NonnegInt)
+  method (mlst :: MutableList).take_last(n :: NonnegInt)
     :: Void
 ){
 
@@ -343,9 +312,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.drop(mlst :: MutableList, n :: NonnegInt)
+  method (mlst :: MutableList).drop(n :: NonnegInt)
     :: Void
-  fun MutableList.drop_last(mlst :: MutableList, n :: NonnegInt)
+  method (mlst :: MutableList).drop_last(n :: NonnegInt)
     :: Void
 ){
 
@@ -371,8 +340,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.sublist(mlst :: MutableList,
-                          n :: NonnegInt, m :: NonnegInt)
+  method (mlst :: MutableList).sublist(n :: NonnegInt, m :: NonnegInt)
     :: Void
 ){
 
@@ -391,8 +359,8 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.has_element(mlst :: MutableList, v :: Any,
-                              eqls :: Function.of_arity(2) = (_ == _))
+  method (mlst :: MutableList).has_element(v :: Any,
+                                           eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -410,8 +378,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.find(mlst :: MutableList,
-                       pred :: Function.of_arity(1))
+  method (mlst :: MutableList).find(pred :: Function.of_arity(1))
     :: Any
 ){
 
@@ -429,7 +396,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.remove(mlst :: MutableList, v :: Any) :: Void
+  method (mlst :: MutableList).remove(v :: Any) :: Void
 ){
 
  Modifies @rhombus(mlst) to remove the first element equal to
@@ -443,11 +410,9 @@ and it is not managed by a lock.
 }
 
 @doc(
-  fun MutableList.map(mlst :: MutableList,
-                      f :: Function.of_arity(1))
+  method (mlst :: MutableList).map(f :: Function.of_arity(1))
     :: Void,
-  fun MutableList.for_each(mlst :: MutableList,
-                           f :: Function.of_arity(1))
+  method (mlst :: MutableList).for_each(f :: Function.of_arity(1))
     :: Void,
 ){
 
@@ -466,8 +431,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.sort(mlst :: MutableList,
-                       is_less :: Function.of_arity(2) = (_ < _))
+  method (mlst :: MutableList).sort(is_less :: Function.of_arity(2) = (_ < _))
     :: Void,
 ){
 
@@ -487,8 +451,8 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.to_list(mlst :: MutableList) :: List
-  fun MutableList.snapshot(mlst :: MutableList) :: List
+  method (mlst :: MutableList).to_list() :: List
+  method (mlst :: MutableList).snapshot() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a list containing
@@ -498,7 +462,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  fun MutableList.to_sequence(mlst :: MutableList) :: Sequence
+  method (mlst :: MutableList).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

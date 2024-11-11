@@ -3,7 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@(def dots_expr = @rhombus(...))
+@(def dots = @rhombus(..., ~bind))
 
 @title(~tag: "function-annot"){Function Annotations}
 
@@ -51,7 +51,6 @@
     annot: ::
     list_annot: :: annot
     map_annot: :: annot
-  ~literal: = _ :: values
   annot.macro '$args -> $results'
   grammar args:
     $annot
@@ -60,7 +59,7 @@
   grammar results:
     $annot
     ($result, ..., $rest_result, ...)
-    #,(@rhombus(values, ~annot)) ($result, ..., $rest_result, ...)
+    #,(@rhombus(values, ~annot))($result, ..., $rest_result, ...)
     ~any
     (~any)
   grammar arg:
@@ -69,29 +68,29 @@
     rest_arg
   grammar plain_arg:
     $annot
-    $annot = _
+    $annot = #,(@rhombus(_, ~bind))
     $keyword: $annot
-    $keyword: $annot = _
+    $keyword: $annot = #,(@rhombus(_, ~bind))
   grammar named_arg:
-    $id :: $annot
-    $id :: $annot = _
-    $keyword: $id :: $annot
-    $keyword: $id :: $annot = _
+    $id #,(@rhombus(::, ~bind)) $annot
+    $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
+    $keyword: $id #,(@rhombus(::, ~bind)) $annot
+    $keyword: $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
   grammar rest_arg:
     $annot #,(@litchar{,}) $ellipsis
-    & $list_annot
-    ~& $map_annot
-    & $id :: $list_annot
-    ~& $id :: $map_annot
+    #,(@rhombus(&, ~bind)) $list_annot
+    #,(@rhombus(~&, ~bind)) $map_annot
+    #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
+    #,(@rhombus(~&, ~bind)) $id #,(@rhombus(::, ~bind)) $map_annot
   grammar result:
     $annot
-    $id :: $annot
+    $id #,(@rhombus(::, ~bind)) $annot
   grammar rest_result:
     $annot #,(@litchar{,}) $ellipsis
-    & $list_annot
-    & $id :: $list_annot
+    #,(@rhombus(&, ~bind)) $list_annot
+    #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
   grammar ellipsis:
-    #,(dots_expr)
+    #,(dots)
 ){
 
  A @tech(~doc: guide_doc){converter annotation} that is immediately satisfied by a
@@ -116,10 +115,10 @@
 )
 
  An @rhombus(arg) that starts with a @rhombus(keyword) represents a
- keyword argument. An @rhombus(arg) that ends @rhombus(= _) is an
+ keyword argument. An @rhombus(arg) that ends @rhombus(= #,(@rhombus(_, ~bind))) is an
  optional argument; the default value is not specified, and it is left up
  to the called function; along the same lines, the @rhombus(annot) before
- @rhombus(= _) is not applied to the argument default.
+ @rhombus(= #,(@rhombus(_, ~bind))) is not applied to the argument default.
 
 @examples(
   ~repl:
@@ -136,7 +135,7 @@
     g2(1, 2)
 )
 
- When an @rhombus(arg) has an @rhombus(id) and @rhombus(::), the
+ When an @rhombus(arg) has an @rhombus(id) and @rhombus(::, ~bind), the
  argument is named for use in later argument annotations, including
  result annotations. As in @rhombus(fun), each name refers to the
  argument after any conversion implied by its annotation.
@@ -149,13 +148,13 @@
     both("apple", "aardvark")
 )
 
- An @rhombus(arg) written with @rhombus(&) or @rhombus(~&) stands for
+ An @rhombus(arg) written with @rhombus(&, ~bind) or @rhombus(~&, ~bind) stands for
  any number of by-position and by-keyword arguments, respectively.
- By-position arguments for @rhombus(&) are gathered into a list, and
- by-keyword arguments for @rhombus(~&) are gathered into a map whose keys
+ By-position arguments for @rhombus(&, ~bind) are gathered into a list, and
+ by-keyword arguments for @rhombus(~&, ~bind) are gathered into a map whose keys
  are keywords. Alternatively, extra by-position arguments can be covered
- by an @rhombus(annot) followed by @dots_expr. Arguments gathers with
- @rhombus(&) or @rhombus(~&) can be named for later reference.
+ by an @rhombus(annot) followed by @dots. Arguments gathers with
+ @rhombus(&, ~bind) or @rhombus(~&, ~bind) can be named for later reference.
 
 @examples(
   ~repl:
@@ -172,7 +171,7 @@
 
  If @rhombus(args) is @rhombus((~any)), then no constraint is placed on
  the function arguments. Note that @rhombus((~any)) is different than
- @rhombus((Any, ...)) or @rhombus((& Any)), which require that the
+ @rhombus((Any, ...), ~annot) or @rhombus((#,(@rhombus(&, ~bind)) Any), ~annot), which require that the
  function accept any number of arguments. The arity of the converted
  function is the same as the original function.
 
@@ -193,7 +192,7 @@
  annotation implies a check that the converted function produces a single
  result when it is called. In the special case that the result annotation
  sequence is @rhombus(~any), @rhombus((~any)), or equivalent
- to @rhombus((Any, ...), ~annot) or @rhombus((& Any), ~annot),
+ to @rhombus((Any, ...), ~annot) or @rhombus((#,(@rhombus(&, ~bind)) Any), ~annot),
  then a call to the original function converted by the @rhombus(->, ~annot)
  annotation is a tail call with respect to the converting wrapper.
 
@@ -212,7 +211,7 @@
  parentheses.
 
  See also @rhombus(Function.all_of, ~annot), which can be used not only
- to join multiple @rhombus(->), but to provide a name that the converted
+ to join multiple @rhombus(->, ~annot), but to provide a name that the converted
  function uses for reporting failed annotation checks.
 
 }

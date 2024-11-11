@@ -272,6 +272,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                _same_rep_children :~ List,
                _metadata :~ Map,
                _rebuild :~ Function.of_arity(1)):
+  ~name Pict
   extends Pict
   internal _AnimPict
 

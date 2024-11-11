@@ -19,7 +19,8 @@
   #:existing
   #:transparent #:no-primitive
   #:fields
-  ([(prefix_arguments prefix-arguments) ((#%index-result #,(get-syntax-static-infos))
+  ([(name name)]
+   [(prefix_arguments prefix-arguments) ((#%index-result #,(get-syntax-static-infos))
                                          . #,(get-treelist-static-infos))]
    [(wrap_body wrap-body) ((#%function-arity 4))]
    [(is_method method?)])

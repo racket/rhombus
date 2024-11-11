@@ -19,25 +19,6 @@ Racket or @rhombus(Array.snapshot). The @rhombus(Array, ~annot) annotation is sa
 mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 @rhombus(ImmutableArray, ~annot) require one or the other.
 
-@dispatch_table(
-  "array",
-  Array
-  arr.length()
-  arr.get(n)
-  arr.set(n, v)
-  arr.append(arr2, ...)
-  arr.copy(arg, ...)
-  arr.copy_from(arg, ...)
-  arr.snapshot()
-  arr.take(n)
-  arr.take_last(n)
-  arr.drop(n)
-  arr.drop_last(n)
-  arr.set_in_copy(i, v)
-  arr.to_list()
-  arr.to_sequence()
-)
-
 Two arrays are equal by @rhombus(is_now) as long as they have equal
 contents, even if one is mutable and the other is immutable.
 
@@ -190,7 +171,7 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.length(arr :: Array) :: Int
+  method (arr :: Array).length() :: Int
 ){
 
  Returns the length of @rhombus(arr).
@@ -203,7 +184,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  fun Array.get(arr :: Array, n :: NonnegInt) :: Any
+  method (arr :: Array).get(n :: NonnegInt) :: Any
 ){
 
  Equivalent to @rhombus(arr[n]) (with the default implicit
@@ -219,8 +200,9 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  fun Array.set(arr :: MutableArray,
-                n :: NonnegInt, val :: Any)
+  method Array.set(arr :: MutableArray,
+                   n :: NonnegInt,
+                   val :: Any)
     :: Void
 ){
 
@@ -240,6 +222,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
+  method (arr :: Array).append(arr :: Array, ...) :: MutableArray
   fun Array.append(arr :: Array, ...) :: MutableArray
 ){
 
@@ -248,15 +231,15 @@ contents, even if one is mutable and the other is immutable.
 
 @examples(
   Array(1, 2, 3).append(Array(4, 5, 6), Array(7, 8, 9))
+  Array.append()
 )
 
 }
 
 
 @doc(
-  fun Array.copy(arr :: Array,
-                 start :: NonnegInt = 0,
-                 end :: NonnegInt = Array.length(arr))
+  method (arr :: Array).copy(start :: NonnegInt = 0,
+                             end :: NonnegInt = Array.length(arr))
     :: MutableArray
 ){
 
@@ -295,7 +278,7 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.snapshot(arr :: Array) :: ImmutableArray
+  method (arr :: Array).snapshot() :: ImmutableArray
 ){
 
  Returns an immutable array as-is or copies a mutable array's content to
@@ -315,13 +298,13 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.take(arr :: Array, n :: NonnegInt)
+  method (arr :: Array).take(n :: NonnegInt)
     :: MutableArray
-  fun Array.take_last(arr :: Array, n :: NonnegInt)
+  method (arr :: Array).take_last(n :: NonnegInt)
     :: MutableArray
-  fun Array.drop(arr :: Array, n :: NonnegInt)
+  method (arr :: Array).drop(n :: NonnegInt)
     :: MutableArray
-  fun Array.drop_last(arr :: Array, n :: NonnegInt)
+  method (arr :: Array).drop_last(n :: NonnegInt)
     :: MutableArray
 ){
 
@@ -339,8 +322,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  fun Array.set_in_copy(arr :: Array,
-                        n :: NonnegInt, val :: Any)
+  method (arr :: Array).set_in_copy(n :: NonnegInt, val :: Any)
     :: MutableArray
 ){
 
@@ -355,7 +337,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  fun Array.to_list(arr :: Array) :: List
+  method (arr :: Array).to_list() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
@@ -365,7 +347,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  fun Array.to_sequence(arr :: Array) :: Sequence
+  method (arr :: Array).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

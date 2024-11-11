@@ -23,10 +23,24 @@ block:
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
+    Port.Output.write_bytes(out, b, [start], [end])
+    Port.Output.write_string(out, s, [start], [end])
     Port.Output.print(v, ...) ~method
     Port.Output.println(v, ...) ~method
     Port.Output.show(v, ...) ~method
     Port.Output.showln(v, ...) ~method
+
+block:
+  check Port.eof ~is_a Port.EOF
+  check:
+    match Port.eof
+    | Port.eof: "ok"
+    ~is "ok"
+  check:
+    match #'eof
+    | Port.eof: "ok"
+    | ~else: "no"
+    ~is "no"
 
 block:
   let p = Port.Input.open_string("abλcdefμ")
@@ -101,6 +115,28 @@ block:
   p.showln("w")
   check p.get_string() ~is "xy\n\"z\"\"w\"\n"
 
+block:
+  let p = Port.Output.open_bytes()
+  p.write_bytes(#"apple")
+  check p.get_bytes() ~is_now #"apple"
+  p.write_bytes(#"apple", 3)
+  check p.get_bytes() ~is_now #"applele"
+  p.write_bytes(#"apple", 1, 4)
+  check p.get_bytes() ~is_now #"appleleppl"
+
+block:
+  let p = Port.Output.open_bytes()
+  p.write_string("apple")
+  check p.get_bytes() ~is_now #"apple"
+  p.write_string("apple", 3)
+  check p.get_bytes() ~is_now #"applele"
+  p.write_string("apple", 1, 4)
+  check p.get_bytes() ~is_now #"appleleppl"
+  p.write_string("λ")
+  check p.get_bytes() ~is_now #"appleleppl\316\273"
+  p.write_string("λλλλ", 1, 3)
+  check p.get_bytes() ~is_now #"appleleppl\316\273\316\273\316\273"
+
 // make sure `current` functions have static info
 block:
   let p = Port.Input.open_string("a")
@@ -147,7 +183,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_string()
   ~throws values(
-    "Port.Output.get_string: " ++ error.annot_msg(),
+    "Port.Output.String.get_string: " ++ error.annot_msg(),
     error.annot("Port.Output.String").msg,
     error.val("oops").msg,
   )
@@ -155,7 +191,7 @@ check:
 check:
   ("oops" :~ Port.Output.String).get_bytes()
   ~throws values(
-    "Port.Output.get_bytes: " ++ error.annot_msg(),
+    "Port.Output.String.get_bytes: " ++ error.annot_msg(),
     error.annot("Port.Output.String").msg,
     error.val("oops").msg,
   )

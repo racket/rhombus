@@ -13,37 +13,6 @@ value. A @deftech{pair list} is a @tech{listable} value that is
 constructed with pairs and the empty pair list; every non-empty pair
 list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
-@dispatch_table(
-  "pair"
-  Pair
-  pr.first
-  pr.rest
-)
-
-@dispatch_table(
-  "pair list"
-  PairList
-  lst.length()
-  lst.get(n)
-  lst.first,
-  lst.last,
-  lst.rest,
-  lst.reverse()
-  lst.append(lst2, ...)
-  lst.take(n)
-  lst.take_last(n)
-  lst.drop(n)
-  lst.drop_last(n)
-  lst.has_element(v, eqls, ...)
-  lst.find(pred)
-  lst.remove(v)
-  lst.map(func)
-  lst.for_each(func)
-  lst.sort(arg, ...)
-  lst.to_list()
-  lst.to_sequence()
-)
-
 @doc(
   ~nonterminal:
     fst_annot: :: annot
@@ -118,8 +87,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  fun Pair.first(pr :: Pair)
-  fun Pair.rest(pr :: Pair)
+  method (pr :: Pair).first()
+  method (pr :: Pair).rest()
 ){
 
  Returns the first or second component of @rhombus(pr).
@@ -197,7 +166,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   bind.macro 'PairList[$bind, ..., $rest]'
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
-    & $pair_list_bind
+    #,(@rhombus(&, ~bind)) $pair_list_bind
   grammar ellipsis:
     #,(dots)
 ){
@@ -207,7 +176,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
  rest of the pair list.
 
- When @rhombus(& pair_list_bind) is used, the rest of the list must match
+ When @rhombus(#,(@rhombus(&, ~bind)) pair_list_bind) is used, the rest of the list must match
  the @rhombus(pair_list_bind). Static information associated by
  @rhombus(PairList) is propagated to @rhombus(pair_list_bind).
 
@@ -215,7 +184,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  conversion on a matching value (e.g., @rhombus(repet_bind) is an
  identifier), then the corresponding elements of a matching value are not
  traversed, which means that matching can be constant-time. Using this
- repetition for the tail a new list similarly avoids traversing the
+ repetition for the tail of a new list similarly avoids traversing the
  elements.
 
  @see_implicit(@rhombus(#%brackets, ~bind), @brackets, "binding")
@@ -304,7 +273,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.get(lst :: PairList, n :: NonnegInt) :: Any
+  method (lst :: PairList).get(n :: NonnegInt) :: Any
 ){
 
  Equivalent to @rhombus(lst[n]) (with the default implicit
@@ -321,7 +290,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.first(lst :: NonemptyPairList) :: Any
+  method PairList.first(lst :: NonemptyPairList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
@@ -335,7 +304,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  fun PairList.last(lst :: NonemptyPairList) :: Any
+  method PairList.last(lst :: NonemptyPairList) :: Any
 ){
 
  Returns the last element of @rhombus(lst).
@@ -349,7 +318,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  fun PairList.rest(lst :: NonemptyPairList) :: PairList
+  method PairList.rest(lst :: NonemptyPairList) :: PairList
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but without its first element.
@@ -365,27 +334,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  ~nonterminal:
-    pair_list_expr: block expr
-  repet.macro 'PairList.repet($list_expr)'
-){
-
- Creates a repetition from a @tech{pair list}. This is a shorthand for using
- @rhombus(..., ~bind) with a @rhombus(PairList, ~bind) binding.
-
-@examples(
-  def lst = PairList[1, 2, 3]
-  block:
-    let PairList[x, ...] = lst
-    PairList[x+1, ...]
-  [PairList.repet(lst) + 1, ...]
-)
-
-}
-
-
-@doc(
-  fun PairList.length(lst :: PairList) :: NonnegInt
+  method (lst :: PairList).length() :: NonnegInt
 ){
 
  Returns the number of items in @rhombus(lst).
@@ -402,7 +351,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.reverse(lst :: PairList) :: PairList
+  method (lst :: PairList).reverse() :: PairList
 ){
 
  Returns a @tech{pair list} with the same items as @rhombus(lst), but in reversed
@@ -417,6 +366,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
+  method (lst :: PairList).append(lst :: PairList, ...) :: PairList
   fun PairList.append(lst :: PairList, ...) :: PairList
 ){
 
@@ -424,16 +374,17 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  Appending takes @math{O(N)} time.
 
 @examples(
-  PairList.append(PairList[1, 2, 3], PairList[4, 5], PairList[6])
   PairList[1, 2, 3].append(PairList[4, 5], PairList[6])
+  PairList.append(PairList[1, 2, 3], PairList[4, 5], PairList[6])
+  PairList.append()
 )
 
 }
 
 
 @doc(
-  fun PairList.take(lst :: PairList, n :: NonnegInt) :: PairList
-  fun PairList.take_last(lst :: PairList, n :: NonnegInt) :: PairList
+  method (lst :: PairList).take(n :: NonnegInt) :: PairList
+  method (lst :: PairList).take_last(n :: NonnegInt) :: PairList
 ){
 
  Like @rhombus(List.take) and @rhombus(List.take_last), but for
@@ -452,8 +403,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.drop(lst :: PairList, n :: NonnegInt) :: PairList
-  fun PairList.drop_last(lst :: PairList, n :: NonnegInt) :: PairList
+  method (lst :: PairList).drop(n :: NonnegInt) :: PairList
+  method (lst :: PairList).drop_last(n :: NonnegInt) :: PairList
 ){
 
  Like @rhombus(List.drop) and @rhombus(List.drop_last), but for
@@ -472,8 +423,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.has_element(lst :: PairList, v :: Any,
-                           eqls :: Function.of_arity(2) = (_ == _))
+  method (lst :: PairList).has_element(v :: Any,
+                                       eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -491,7 +442,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.find(lst :: PairList, pred :: Function.of_arity(1)) :: Any
+  method (lst :: PairList).find(pred :: Function.of_arity(1)) :: Any
 ){
 
  Returns the first element of @rhombus(lst) for which @rhombus(pred)
@@ -508,7 +459,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.remove(lst :: PairList, v :: Any) :: PairList
+  method (lst :: PairList).remove(v :: Any) :: PairList
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but with the first element equal to
@@ -521,10 +472,10 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  fun PairList.map(lst :: PairList, f :: Function.of_arity(1))
-    :: PairList,
-  fun PairList.for_each(lst :: PairList, f :: Function.of_arity(1))
-    :: Void,
+  method (lst :: PairList).map(f :: Function.of_arity(1))
+    :: PairList
+  method (lst :: PairList).for_each(f :: Function.of_arity(1))
+    :: Void
 ){
 
  Like @rhombus(Function.map) and @rhombus(Function.for_each), but with a
@@ -540,9 +491,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.sort(lst :: PairList,
-                    is_less :: Function.of_arity(2) = (_ < _))
-    :: PairList,
+  method (lst :: PairList).sort(is_less :: Function.of_arity(2) = (_ < _))
+    :: PairList
 ){
 
  Sorts @rhombus(lst) using @rhombus(is_less) to compare elements.
@@ -572,7 +522,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.to_list(lst :: PairList) :: List
+  method (lst :: PairList).to_list() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
@@ -583,10 +533,30 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  fun PairList.to_sequence(lst :: PairList) :: Sequence
+  method (lst :: PairList).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(lst)'s elements in order.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    pair_list_expr: block expr
+  repet.macro 'PairList.repet($list_expr)'
+){
+
+ Creates a repetition from a @tech{pair list}. This is a shorthand for using
+ @rhombus(..., ~bind) with a @rhombus(PairList, ~bind) binding.
+
+@examples(
+  def lst = PairList[1, 2, 3]
+  block:
+    let PairList[x, ...] = lst
+    PairList[x+1, ...]
+  [PairList.repet(lst) + 1, ...]
+)
 
 }

@@ -19,13 +19,6 @@ immutable box. The @rhombus(Box, ~annot) annotation is satisfied by both
 mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 @rhombus(ImmutableBox, ~annot) require one or the other.
 
-@dispatch_table(
-  "box"
-  Box
-  bx.copy()
-  bx.snapshot()
-)
-
 @doc(
   annot.macro 'Box'
   annot.macro 'Box.now_of($annot)'
@@ -110,8 +103,8 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
 
 @doc(
-  fun Box.value(bx :: Box) :: Any
-  fun Box.value(bx :: MutableBox, val :: Any) :: Void
+  property (bx :: Box).value
+  property Box.value(bx :: MutableBox, val :: Any) :: Void
 ){
 
  Accesses or updates the value field of @rhombus(bx).
@@ -127,7 +120,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
 
 @doc(
-  fun Box.copy(bx :: Box) :: MutableBox
+  method (bx :: Box).copy() :: MutableBox
 ){
 
  Creates a mutable box whose initial content matches @rhombus(bx).
@@ -146,7 +139,7 @@ mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 
 
 @doc(
-  fun Box.snapshot(bx :: Box) :: ImmutableBox
+  method (bx :: Box).snapshot() :: ImmutableBox
 ){
 
  Returns an immutable box whose content matches @rhombus(bx). If

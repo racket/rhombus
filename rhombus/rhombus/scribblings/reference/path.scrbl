@@ -10,27 +10,6 @@ operating system. A @tech{cross-platform path} is a generalization of a
 path, and most path operations also accept cross-platform paths, but
 they produce specifically paths when given paths.
 
-@dispatch_table(
-  "path or cross-platform path"
-  Path
-  path.bytes()
-  path.string()
-  path.add(part, ...)
-  path.split()
-  path.name()
-  path.parent()
-  path.directory_only(...)
-  path.to_directory_path(...)
-  path.to_absolute_path(...)
-  path.suffix(...)
-  path.replace_suffix(...)
-  path.add_suffix(...)
-  path.cleanse(...)
-  path.simplify(...)
-  path.normal_case(...)
-  path.as_relative_to(...)
-)
-
 Paths are @tech{comparable}, which means that generic operations like
 @rhombus(<) and @rhombus(>) work on paths.
 
@@ -139,7 +118,7 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.bytes(path :: CrossPath) :: Bytes
+  method Path.bytes(path :: CrossPath) :: Bytes
 ){
 
  Converts a path to a byte-string form, which does not lose any
@@ -154,7 +133,7 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.string(path :: CrossPath) :: String
+  method Path.string(path :: CrossPath) :: String
 ){
 
  Converts a path to a human-readable form, but the conversion may lose
@@ -171,7 +150,7 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.convention(path :: CrossPath) :: CrossPath.Convention
+  method Path.convention(path :: CrossPath) :: CrossPath.Convention
 ){
 
  Reports the convention of a path. For a @rhombus(path) that satisfies
@@ -187,9 +166,9 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.add(path :: PathString || CrossPath || Path.Dot,
-               part :: PathString || CrossPath || Path.Dot,
-               ...)
+  method Path.add(path :: PathString || CrossPath || Path.Dot,
+                  part :: PathString || CrossPath || Path.Dot,
+                  ...)
     :: Path.like(path)
 ){
 
@@ -231,7 +210,7 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.split(path :: PathString || CrossPath)
+  method Path.split(path :: PathString || CrossPath)
     :: List.of((CrossPath.Element && Path.like(path)) || Path.Dot)
 ){
 
@@ -253,14 +232,14 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.name(path :: PathString || CrossPath)
+  method Path.name(path :: PathString || CrossPath)
     :: (CrossPath.Element && Path.like(path)) || Path.Dot
-  fun Path.parent(path :: PathString || CrossPath)
+  method Path.parent(path :: PathString || CrossPath)
     :: ((CrossPath.Directory && Path.like(path))
           || matching(#'relative) || False)
-  fun Path.directory_only(path :: PathString || CrossPath)
+  method Path.directory_only(path :: PathString || CrossPath)
     :: CrossPath.Directory && Path.like(path)
-  fun Path.to_directory_path(path :: PathString || CrossPath)
+  method Path.to_directory_path(path :: PathString || CrossPath)
     :: CrossPath.Directory && Path.like(path)
 ){
 
@@ -291,7 +270,7 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.to_absolute_path(
+  method Path.to_absolute_path(
     path :: PathString || CrossPath,
     ~relative_to: base :: ((PathString.to_path && Path.Absolute)
                              || CrossPath.Absolute)
@@ -318,12 +297,12 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.suffix(path :: PathString || CrossPath) :: maybe(Bytes)
-  fun Path.replace_suffix(
+  method Path.suffix(path :: PathString || CrossPath) :: maybe(Bytes)
+  method Path.replace_suffix(
     path :: PathString || CrossPath,
     suffix :: Bytes || ReadableString
   ) :: Path.like(path)
-  fun Path.add_suffix(
+  method Path.add_suffix(
     path :: PathString || CrossPath,
     suffix :: Bytes || ReadableString,
     ~sep: sep :: Bytes || ReadableString = "_"
@@ -355,11 +334,11 @@ Paths are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun Path.cleanse(path :: PathString || CrossPath)
+  method Path.cleanse(path :: PathString || CrossPath)
     :: Path.like(path)
-  fun Path.simplify(path :: PathString || CrossPath)
+  method Path.simplify(path :: PathString || CrossPath)
     :: Path.like(path)
-  fun Path.normal_case(path :: PathString || CrossPath)
+  method Path.normal_case(path :: PathString || CrossPath)
     :: Path.like(path)
 ){
 
@@ -386,7 +365,7 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun Path.as_relative_to(
+  method Path.as_relative_to(
     path :: PathString || CrossPath,
     rel_to_path :: PathString || CrossPath,
     ~more_than_root: more_than_root = #false,

@@ -15,23 +15,6 @@ immutable. The @rhombus(Bytes, ~annot) annotation is satisfied by both
 mutable and immutable byte strings, while @rhombus(MutableBytes, ~annot)
 and @rhombus(ImmutableBytes, ~annot) require one or the other.
 
-@dispatch_table(
-  "byte string"
-  Bytes
-  bstr.length()
-  bstr.get(n)
-  bstr.set(n, byte)
-  bstr.append(bstr2, ...)
-  bstr.subbytes(arg, ...)
-  bstr.copy()
-  bstr.copy_from(arg, ...)
-  bstr.snapshot()
-  bstr.utf8_string(arg, ...)
-  bstr.latin1_string(arg, ...)
-  bstr.locale_string(arg, ...)
-  bstr.to_sequence()
-)
-
 Two byte strings are equal by @rhombus(is_now) as long as they have
 equal contents, even if one is mutable and the other is immutable.
 
@@ -70,21 +53,21 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  fun Bytes.length(bstr :: Bytes) :: NonnegInt
+  method (bstr :: Bytes).length() :: NonnegInt
 ){
 
  Returns the number of bytes in @rhombus(bstr).
 
 @examples(
-  Bytes.length(#"hello")
   #"hello".length()
+  Bytes.length(#"hello")
 )
 
 }
 
 
 @doc(
-  fun Bytes.get(bstr :: Bytes, n :: NonnegInt) :: Byte
+  method (bstr :: Bytes).get(n :: NonnegInt) :: Byte
 ){
 
  Equivalent to @rhombus(bstr[n]) (with the default implicit
@@ -100,8 +83,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  fun Bytes.set(bstr :: MutableBytes,
-                n :: NonnegInt, byte :: Byte)
+  method (bstr :: Bytes).set(n :: NonnegInt, byte :: Byte)
     :: Void
 ){
 
@@ -121,6 +103,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
+  method (bstr :: Bytes).append(bstr :: Bytes, ...) :: MutableBytes
   fun Bytes.append(bstr :: Bytes, ...) :: MutableBytes
 ){
 
@@ -135,9 +118,8 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  fun Bytes.subbytes(bstr :: Bytes,
-                     start :: NonnegInt,
-                     end :: NonnegInt = Bytes.length(bstr))
+  method (bstr :: Bytes).subbytes(start :: NonnegInt,
+                                  end :: NonnegInt = Bytes.length(bstr))
     :: MutableBytes
 ){
 
@@ -145,14 +127,14 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
  to @rhombus(end) (exclusive).
 
 @examples(
-  Bytes.subbytes(#"hello", 2, 4)
-  Bytes.subbytes(#"hello", 2)
+  #"hello".subbytes(2, 4)
+  #"hello".subbytes(2)
 )
 
 }
 
 @doc(
-  fun Bytes.copy(bstr :: Bytes) :: MutableBytes
+  method (bstr :: Bytes).copy(bstr :: Bytes) :: MutableBytes
 ){
 
  Returns a fresh mutable byte string with the same initial content as
@@ -183,7 +165,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
-  fun Bytes.snapshot(str :: Bytes) :: ImmutableBytes
+  method (bstr :: Bytes).snapshot(str :: Bytes) :: ImmutableBytes
 ){
 
  Returns an immutable byte string as-is or copies a mutable byte
@@ -203,21 +185,21 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
-  fun Bytes.utf8_string(bstr :: Bytes,
-                        err_char :: maybe(Char) = #false,
-                        start :: NonnegInt = 0,
-                        end :: NonnegInt = Bytes.length(bstr))
-    :: String
-  fun Bytes.latin1_string(bstr :: Bytes,
-                          err_char :: maybe(Char) = #false,
-                          start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr))
-    :: String
-  fun Bytes.locale_string(bstr :: Bytes,
-                          err_char :: maybe(Char) = #false,
-                          start :: NonnegInt = 0,
-                          end :: NonnegInt = Bytes.length(bstr))
-    :: String
+  method (bstr :: Bytes).utf8_string(
+    err_char :: maybe(Char) = #false,
+    start :: NonnegInt = 0,
+    end :: NonnegInt = Bytes.length(bstr)
+  ) :: String
+  method (bstr :: Bytes).latin1_string(
+    err_char :: maybe(Char) = #false,
+    start :: NonnegInt = 0,
+    end :: NonnegInt = Bytes.length(bstr)
+  ) :: String
+  method (bstr :: Bytes).locale_string(
+    err_char :: maybe(Char) = #false,
+    start :: NonnegInt = 0,
+    end :: NonnegInt = Bytes.length(bstr)
+  ) :: String
 ){
 
  Converts a byte string to a string, decoding as UTF-8, Latin-1, or the
@@ -232,7 +214,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
-  fun Bytes.to_sequence(bstr :: Bytes) :: Sequence
+  method (bstr :: Bytes).to_sequence(bstr :: Bytes) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

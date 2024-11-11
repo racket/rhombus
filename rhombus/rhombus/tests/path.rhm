@@ -36,9 +36,10 @@ module path_help ~lang rhombus/and_meta:
   | 'check_annot $c($args) . $m $tail ...':
       ~op_stx: self
       '$('check'.relocate(self)) $c($args) . $m $tail ... ~throws values(#' $c +& "." +& #' $m, error.annot_msg())'
-  | 'check_annot $who $tail ...':
+  | 'check_annot $(who :: Name) $tail ...':
       ~op_stx: self
-      '$('check'.relocate(self)) $who $tail ... ~throws values(to_string(#' $who), error.annot_msg())'
+      let who_sym = Symbol.from_string(who.to_source_string())
+      '$('check'.relocate(self)) $who $tail ... ~throws values(to_string(#' $who_sym), error.annot_msg(""))'
 
   def (cross_p :~ CrossPath, cross_abs_p :~ CrossPath, root_p :~ Path):
     match CrossPath.Convention.current()

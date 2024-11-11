@@ -6,7 +6,6 @@
 @title(~tag: "veneer"){Veneers}
 
 @doc(
-  ~literal: :: extends binding
   ~nonterminal:
     method_impl: method ~class_clause
     property_impl: method ~class_clause
@@ -77,11 +76,11 @@
  @item{in the @rhombus(namespace, ~space) space,
   a @tech{namespace} to access exported bindings as well as a
   function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(method, ~var))),
   a function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(property, ~var))),
   and a syntactic form
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))) for each
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(dot, ~var))) for each
   non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, and dot syntax in the veneer
   (including inherited methods, properties, and dot syntax), respectively; and}
 
@@ -96,7 +95,7 @@
  called. In the case of a method or property, the check applies when
  using @rhombus(.) after an expression that has the veneer's static
  information or when using a function like
- @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))). An
+ @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(method, ~var))). An
  @rhombus(annot) can be a @tech(~doc: guide_doc){converter annotation} only if the
  @rhombus(converter, ~veneer_clause) veneer clause is specified, in which
  case the veneer is also a converter annotation.

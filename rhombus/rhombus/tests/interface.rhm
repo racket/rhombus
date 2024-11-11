@@ -675,3 +675,11 @@ check:
   10 :: Stubborn
   #void
   ~raises "cannot be used as an annotation"
+
+block:
+  interface Pointy:
+    ~name Dotty
+    final method m(): 0
+    abstract method n()
+  check print(Pointy.m) ~prints "#<function:Dotty.m>"
+  check print(Pointy.n) ~prints "#<function:Dotty.n>"

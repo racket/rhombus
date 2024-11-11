@@ -62,7 +62,7 @@
                               #:suffix [suffix-target #f]
                               #:suffix-space [suffix-space-name #f])
                        (element tt-style
-                         (make-id-element id str #f
+                         (make-id-element id str (syntax-property id 'typeset-define)
                                           #:space space-name
                                           #:unlinked-ok? #t
                                           #:suffix (if suffix-target

@@ -19,7 +19,7 @@
   (define-values (use_dynamic use_static)
     (let ([mk (lambda (more-static?)
                 (definition-transformer
-                  (lambda (stx)
+                  (lambda (stx name-prefix)
                     (syntax-parse stx
                       [(form-id)
                        #`(#,@(build-definitions #'form-id (if more-static? #'#%static #'#%dynamic)))]))))])

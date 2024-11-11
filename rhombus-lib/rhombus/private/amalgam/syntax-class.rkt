@@ -76,7 +76,7 @@
 (define-defn-syntax syntax_class
   (definition+syntax-class-parser
     (definition-transformer
-      (lambda (stx)
+      (lambda (stx name-prefix)
         (parse-syntax-class stx)))
     (syntax-class-parser
      (lambda (who stx expected-kind name tail)
@@ -93,7 +93,7 @@
 
 (define-syntax together
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (_::block (group op::syntax-class-id . rest)) ...)

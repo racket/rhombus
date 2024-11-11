@@ -17,25 +17,25 @@ check:
   Pointable.zero()
   ~is 0
 
-check:
-  ~eval
+block:
   class Posn(x, y):
     def x = 10
     export: x
-  ~throws "conflicts with field name"
+  check Posn(1, 2).x ~is 1
+  check Posn.x ~is 10
 
-check:
-  ~eval
+block:
   class Posn(x, y):
-    method dist(): x+y
-    def dist = 10
-    export: dist
-  ~throws "conflicts with method name"
+    def ex = 10
+    method m(): x
+    export: rename: ex as x
+  check Posn(1, 2).x ~is 1
+  check Posn.x ~is 10
+  check Posn(1, 2).m() ~is 1
 
-check:
-  ~eval
+block:
   interface Pointable:
     method zero(): 0
     def zero = 0
     export: zero
-  ~throws "conflicts with method name"
+  check Pointable.zero ~is 0

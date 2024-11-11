@@ -17,35 +17,6 @@ generate immutable strings. Some operations allow mutable strings as
 input, and @rhombus(ReadableString, ~annot) recognizes both mutable and
 immutable strings.
 
-@dispatch_table(
-  "string"
-  String
-  str.append(str2, ...)
-  str.length()
-  str.get(n)
-  str.substring(arg, ...)
-  str.contains(substr)
-  str.utf8_bytes(arg, ...)
-  str.latin1_bytes(arg, ...)
-  str.locale_bytes(arg, ...)
-  str.to_int()
-  str.to_number()
-  str.to_string()
-  str.upcase(arg)
-  str.downcase(arg)
-  str.foldcase(arg)
-  str.titlecase(arg)
-  str.normalize_nfd()
-  str.normalize_nfkd()
-  str.normalize_nfc()
-  str.normalize_nfkc()
-  str.grapheme_span(arg, ...)
-  str.grapheme_count(arg, ...)
-  str.to_sequence()
-  str.copy()
-  str.snapshot()
-)
-
 Two strings are equal by @rhombus(is_now) as long as they have equal
 contents, even if one is mutable and the other is immutable.
 
@@ -117,7 +88,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.append(str :: ReadableString, ...) :: String
+  method String.append(str :: ReadableString, ...) :: String
 ){
 
  Appends all @rhombus(str)s to create a new string.
@@ -145,7 +116,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.length(str :: ReadableString) :: NonnegInt
+  method String.length(str :: ReadableString) :: NonnegInt
 ){
 
  Returns the number of characters in @rhombus(str).
@@ -159,8 +130,8 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.contains(str :: ReadableString,
-                      substr :: ReadableString)
+  method String.contains(str :: ReadableString,
+                         substr :: ReadableString)
     :: Boolean
 ){
 
@@ -178,7 +149,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.get(str :: ReadableString, n :: NonnegInt) :: Char
+  method String.get(str :: ReadableString, n :: NonnegInt) :: Char
 ){
 
  Equivalent to @rhombus(str[n]) (with the default implicit
@@ -193,9 +164,9 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.substring(str :: ReadableString,
-                       start :: NonnegInt,
-                       end :: NonnegInt = String.length(str))
+  method String.substring(str :: ReadableString,
+                          start :: NonnegInt,
+                          end :: NonnegInt = String.length(str))
     :: String
 ){
 
@@ -211,20 +182,20 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.utf8_bytes(str :: ReadableString,
-                        err_byte :: maybe(Byte) = #false,
-                        start :: NonnegInt = 0,
-                        end :: NonnegInt = String.length(str))
+  method String.utf8_bytes(str :: ReadableString,
+                           err_byte :: maybe(Byte) = #false,
+                           start :: NonnegInt = 0,
+                           end :: NonnegInt = String.length(str))
     :: Bytes
-  fun String.latin1_bytes(str :: ReadableString,
-                          err_byte :: maybe(Byte) = #false,
-                          start :: NonnegInt = 0,
-                          end :: NonnegInt = String.length(str))
+  method String.latin1_bytes(str :: ReadableString,
+                             err_byte :: maybe(Byte) = #false,
+                             start :: NonnegInt = 0,
+                             end :: NonnegInt = String.length(str))
     :: Bytes
-  fun String.locale_bytes(str :: ReadableString,
-                          err_byte :: maybe(Byte) = #false,
-                          start :: NonnegInt = 0,
-                          end :: NonnegInt = String.length(str))
+  method String.locale_bytes(str :: ReadableString,
+                             err_byte :: maybe(Byte) = #false,
+                             start :: NonnegInt = 0,
+                             end :: NonnegInt = String.length(str))
     :: Bytes
 ){
 
@@ -245,7 +216,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.to_int(str :: ReadableString) :: maybe(Int)
+  method String.to_int(str :: ReadableString) :: maybe(Int)
 ){
 
  Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
@@ -263,7 +234,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.to_number(str :: ReadableString) :: maybe(Number)
+  method String.to_number(str :: ReadableString) :: maybe(Number)
 ){
 
  Parses @rhombus(str) as a number, returning @rhombus(#false) if the
@@ -281,15 +252,16 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.to_string(str :: ReadableString)
+  method String.to_string(str :: ReadableString)
     :: String
   fun ReadableString.to_string(str :: ReadableString)
     :: String
 ){
 
  The same as @rhombus(to_string), but constrained to a
- @rhombus(ReadableString, ~annot) argument. In other words, they are
- equivalent to @rhombus(String.snapshot). These functions exist for
+ @rhombus(ReadableString, ~annot) argument. In other words, these
+ equivalent to @rhombus(String.snapshot). The
+ @rhombus(ReadableString.to_string, ~annot) function exists for
  consistency with the @rhombus(ReadableString.to_string, ~annot)
  annotation.
 
@@ -297,10 +269,10 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  fun String.upcase(str :: ReadableString) :: String
-  fun String.downcase(str :: ReadableString) :: String
-  fun String.foldcase(str :: ReadableString) :: String
-  fun String.titlecase(str :: ReadableString) :: String
+  method String.upcase(str :: ReadableString) :: String
+  method String.downcase(str :: ReadableString) :: String
+  method String.foldcase(str :: ReadableString) :: String
+  method String.titlecase(str :: ReadableString) :: String
 ){
 
  Case-conversion functions.
@@ -308,10 +280,10 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.normalize_nfd(str :: ReadableString) :: String
-  fun String.normalize_nfkd(str :: ReadableString) :: String
-  fun String.normalize_nfc(str :: ReadableString) :: String
-  fun String.normalize_nfkc(str :: ReadableString) :: String
+  method String.normalize_nfd(str :: ReadableString) :: String
+  method String.normalize_nfkd(str :: ReadableString) :: String
+  method String.normalize_nfc(str :: ReadableString) :: String
+  method String.normalize_nfkc(str :: ReadableString) :: String
 ){
 
  Unicode normalization functions.
@@ -319,9 +291,9 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.grapheme_span(str :: ReadableString,
-                           start :: NonnegInt = 0,
-                           end :: NonnegInt = String.length(str))
+  method String.grapheme_span(str :: ReadableString,
+                              start :: NonnegInt = 0,
+                              end :: NonnegInt = String.length(str))
     :: NonnegInt
 ){
 
@@ -337,9 +309,9 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.grapheme_count(str :: ReadableString,
-                            start :: NonnegInt = 0,
-                            end :: NonnegInt = String.length(str))
+  method String.grapheme_count(str :: ReadableString,
+                               start :: NonnegInt = 0,
+                               end :: NonnegInt = String.length(str))
     :: NonnegInt
 ){
 
@@ -352,7 +324,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.to_sequence(str :: ReadableString) :: Sequence
+  method String.to_sequence(str :: ReadableString) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -361,7 +333,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.copy(str :: ReadableString) :: ReadableString
+  method String.copy(str :: ReadableString) :: ReadableString
 ){
 
  Creates a mutable copy of @rhombus(str).
@@ -375,7 +347,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.snapshot(str :: ReadableString) :: String
+  method String.snapshot(str :: ReadableString) :: String
 ){
 
  Returns an immutable string as-is or copies a mutable string's content to

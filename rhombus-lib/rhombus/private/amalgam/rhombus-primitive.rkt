@@ -59,5 +59,9 @@
            (string-append sep-op-sep (get-or-format-primitive-contract contract/rkt)))))
 
 (define (get-primitive-who who/rkt)
-  (or (hash-ref (continuation-mark-set-first #f primitive-who-table-key #hasheq()) who/rkt #f)
+  (or (let ([t (continuation-mark-set-first #f primitive-who-table-key #hasheq())])
+        (cond
+          [(not t) #t]
+          [(pair? t) (and (eq? (car t) who/rkt) (cdr t))]
+          [else (hash-ref t who/rkt #f)]))
       (hash-ref primitive-who-table who/rkt #f)))

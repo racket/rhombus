@@ -2,6 +2,7 @@
 import:
   "core-meta.rkt" open
   lib("racket/base.rkt") as rkt
+  "error.rhm" open
 
 export:
   system
@@ -14,6 +15,7 @@ namespace system:
     host
     target_machine
     version
+    path
     TargetMachineSymbol
 
   fun type() :~ Symbol:
@@ -39,3 +41,12 @@ namespace system:
 
   fun version() :~ String:
     String.snapshot(rkt.#{version}())
+
+  fun path(which :: Symbol):
+    ~who: who
+    match which
+    | #'temp_dir: rkt.#{find-system-path}(#'#{temp-dir})
+    | ~else:
+        error(~who: who,
+              "unrecognized symbol",
+              error.val(~label: "symbol", which))

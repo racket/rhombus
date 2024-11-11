@@ -10,6 +10,7 @@
   (provide (for-syntax
             in-doc-space
 
+            doc-transformer?
             doc-transformer-extract-desc
             doc-transformer-extract-space-sym
             doc-transformer-extract-sort-order

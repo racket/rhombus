@@ -5,6 +5,10 @@
 
 @title{Metavariables}
 
+Throughout the documentation, certain metavariable names are used in
+syntax descriptions to standard for common syntactic categories, such as
+identifiers, expressions, or binding patterns.
+
 @doc(
   ~nonterminal_key: block
   grammar id
@@ -199,11 +203,11 @@
 
   grammar id_name:
     $id
-    $id_name . $id
+    $id_name #,(@rhombus(., ~datum)) $id
 
   grammar op_name:
     $op
-    $id_name . ($op)
+    $id_name #,(@rhombus(., ~datum)) ($op)
 
   grammar op_or_id_name:
     $op_name

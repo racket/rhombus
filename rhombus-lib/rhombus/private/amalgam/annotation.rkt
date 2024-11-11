@@ -235,8 +235,7 @@
        (define-values (predicate-stx static-infos) (get))
        (define packed (annotation-predicate-form predicate-stx static-infos))
        (syntax-parse stx
-         [(self . tail)
-          (values (relocate+reraw #'self packed) #'tail)]
+         [(self . tail) (values (relocate+reraw #'self packed) #'tail)]
          [_ 'does-not-happen]))))
 
   (define-syntax (identifier-binding-annotation stx)
@@ -402,7 +401,7 @@
       '((default . stronger))
       'macro
       (lambda (stx)
-        (parse-annotation-of (replace-head-dotted-name stx)
+        (parse-annotation-of stx
                              predicate-stx (get-static-infos)
                              sub-n kws
                              predicate-maker info-maker

@@ -17,9 +17,8 @@
        [(form-id . tail)
         (raise-syntax-error #f
                             (string-append "not allowed as an expression;\n"
-                                           " only allowed as binding pattern, 'else' substitute,"
-                                           " or anonymous-function\n"
-                                           " argument (and use isn't an allowed position to create a function)")
+                                           " only allowed as binding pattern or anonymous-function argument,\n"
+                                           " and use isn't an allowed position to create a function")
                             #'form-id)]))))
 
 (define-binding-syntax rhombus-_

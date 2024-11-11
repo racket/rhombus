@@ -36,7 +36,7 @@
          "rhombus-primitive.rkt"
          (submod "module.rkt" for-module+)
          (submod "arrow-annotation.rkt" for-arrow-annot)
-         (only-in "name-root-ref.rkt" replace-head-dotted-name))
+         "name-prefix.rkt")
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -196,7 +196,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse (replace-head-dotted-name stx)
+     (syntax-parse stx
        [(form-id (~and args (_::parens g ...+)) . tail)
         (with-syntax ([(kw ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
                                            #:do [(define kw
@@ -249,7 +249,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (parse-arrow-all-of (replace-head-dotted-name stx)))))
+     (parse-arrow-all-of stx))))
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
@@ -270,8 +270,10 @@
        (kw-subset kws req)))
 
 (begin-for-syntax
-  (define (get-local-name who)
-    (or (syntax-local-name) who))
+  (define (get-local-name who adjustments)
+    (or (entry-point-adjustment-name adjustments)
+        (syntax-local-name)
+        who))
 
   ;; check positional constraint on optional arguments
   ;; optional by-position arguments must follow required ones
@@ -312,7 +314,7 @@
 
 (define-defn-syntax fun
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         ;; immediate alts case
@@ -334,7 +336,7 @@
          (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
-                                the-name whos (map (lambda (x) #f) whos)
+                                (add-name-prefix name-prefix the-name) whos (map (lambda (x) #f) whos)
                                 #f #f
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
@@ -379,7 +381,7 @@
          (define inner-whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute inner-who-clause)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
-                                (or reflect-name the-name) whos inner-whos
+                                (or reflect-name (add-name-prefix name-prefix the-name)) whos inner-whos
                                 (attribute main-ret.converter) (attribute main-ret.annot-str)
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
@@ -396,8 +398,7 @@
           (attribute doc-kw) stx
           (maybe-add-function-result-definition
            the-name (list #'main-ret.static-infos) arity
-           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
-                                              (maybe-add-name proc reflect-name))))]
+           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...))) proc)))]
         ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
@@ -417,7 +418,7 @@
          (define reflect-name (extract-name (attribute reflect-name-clause) stx))
          (define-values (proc arity)
            (build-function no-adjustments '()
-                           (or reflect-name #'name.name) #f (extract-who (attribute who-clause) stx)
+                           (or reflect-name (add-name-prefix name-prefix #'name.name)) #f (extract-who (attribute who-clause) stx)
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
@@ -434,8 +435,7 @@
           (attribute doc-kw) stx
           (maybe-add-function-result-definition
            #'name.name (list #'ret.static-infos) arity
-           (build-definitions/maybe-extension #f #'name.name #'name.extends
-                                              (maybe-add-name proc reflect-name))))]
+           (build-definitions/maybe-extension #f #'name.name #'name.extends proc)))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or* (~seq (_::parens _ ...) _ ...)
                   (~seq (~optional (_::block . _))
@@ -504,7 +504,7 @@
      (define reflect-name (extract-name (attribute reflect-name-clause) stx))
      (define-values (proc arity)
        (build-case-function adjustments argument-static-infos
-                            (or reflect-name (get-local-name #'form-id)) outer-whos whos
+                            (or reflect-name (get-local-name #'form-id adjustments)) outer-whos whos
                             (attribute main-ret.converter) (attribute main-ret.annot-str)
                             #'((arg.kw ...) ...)
                             #'((arg ...) ...) #'((arg.parsed ...) ...)
@@ -533,7 +533,7 @@
      (define reflect-name (extract-name (attribute reflect-name-clause) stx))
      (define-values (fun arity)
        (build-function adjustments argument-static-infos
-                       (or reflect-name (get-local-name #'form-id)) #f (extract-who (attribute who-clause) stx)
+                       (or reflect-name (get-local-name #'form-id adjustments)) #f (extract-who (attribute who-clause) stx)
                        #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                        #'rest.arg #'rest.parsed
                        #'rest.kwarg #'rest.kwparsed
@@ -557,14 +557,11 @@
     [else
      (syntax-parse reflect-name-stx
        #:datum-literals (group)
-       [(group _ (_::block (group . n::dotted-operator-or-identifier)))
-        #'n.name]
-       [(group _ . n::dotted-operator-or-identifier)
-        #'n.name]
+       [(group _ (_::block (group n::dotted-operator-or-identifier-sequence)))
+        (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
+       [(group _ n::dotted-operator-or-identifier-sequence)
+        (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
        [_ (raise-syntax-error #f "expected a name" stx reflect-name-stx)])]))
-
-(define-for-syntax (maybe-add-name stx name)
-  (syntax-property stx 'inferred-name name))
 
 (define-for-syntax (extract-who who-stx stx)
   (cond

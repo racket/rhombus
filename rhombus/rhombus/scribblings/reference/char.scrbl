@@ -11,30 +11,6 @@ A @deftech{character} is Unicode code point.
 Characters are @tech{comparable}, which means that generic operations
 like @rhombus(<) and @rhombus(>) work on characters.
 
-@dispatch_table(
-  "character"
-  Char
-  ch.to_int()
-  ch.upcase()
-  ch.downcase()
-  ch.foldcase()
-  ch.titlecase()
-  ch.is_alphabetic()
-  ch.is_lowercase()
-  ch.is_uppercase()
-  ch.is_titlecase()
-  ch.is_numeric()
-  ch.is_symbolic()
-  ch.is_punctuation()
-  ch.is_graphic()
-  ch.is_whitespace()
-  ch.is_blank()
-  ch.is_extended_pictographic()
-  ch.general_category()
-  ch.grapheme_break_property()
-  ch.grapheme_step(state)
-)
-
 @doc(
   annot.macro 'Char'
 ){
@@ -67,7 +43,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  fun Char.to_int(ch :: Char) :: NonnegInt
+  method (ch :: Char).to_int() :: NonnegInt
 ){
 
  Returns the Unicode value of a character.
@@ -88,10 +64,10 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  fun Char.upcase(ch :: Char) :: Char
-  fun Char.downcase(ch :: Char) :: Char
-  fun Char.foldcase(ch :: Char) :: Char
-  fun Char.titlecase(ch :: Char) :: Char
+  method (ch :: Char).upcase() :: Char
+  method (ch :: Char).downcase() :: Char
+  method (ch :: Char).foldcase() :: Char
+  method (ch :: Char).titlecase() :: Char
 ){
 
  Unicode case conversions.
@@ -99,19 +75,19 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  fun Char.is_alphabetic(ch :: Char) :: Boolean
-  fun Char.is_lowercase(ch :: Char) :: Boolean
-  fun Char.is_uppercase(ch :: Char) :: Boolean
-  fun Char.is_titlecase(ch :: Char) :: Boolean
-  fun Char.is_numeric(ch :: Char) :: Boolean
-  fun Char.is_symbolic(ch :: Char) :: Boolean
-  fun Char.is_punctuation(ch :: Char) :: Boolean
-  fun Char.is_graphic(ch :: Char) :: Boolean
-  fun Char.is_whitespace(ch :: Char) :: Boolean
-  fun Char.is_blank(ch :: Char) :: Boolean
-  fun Char.is_extended_pictographic(ch :: Char) :: Boolean
-  fun Char.general_category(ch :: Char) :: Symbol
-  fun Char.grapheme_break_property(ch :: Char) :: Symbol
+  method (ch :: Char).is_alphabetic() :: Boolean
+  method (ch :: Char).is_lowercase() :: Boolean
+  method (ch :: Char).is_uppercase() :: Boolean
+  method (ch :: Char).is_titlecase() :: Boolean
+  method (ch :: Char).is_numeric() :: Boolean
+  method (ch :: Char).is_symbolic() :: Boolean
+  method (ch :: Char).is_punctuation() :: Boolean
+  method (ch :: Char).is_graphic() :: Boolean
+  method (ch :: Char).is_whitespace() :: Boolean
+  method (ch :: Char).is_blank() :: Boolean
+  method (ch :: Char).is_extended_pictographic() :: Boolean
+  method (ch :: Char).general_category() :: Symbol
+  method (ch :: Char).grapheme_break_property() :: Symbol
 ){
 
  Character Unicode classifications:
@@ -172,7 +148,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  fun Char.grapheme_step(ch :: Char, state :: Int)
+  method (ch :: Char).grapheme_step(state :: Int)
     :: (Boolean, Int)
 ){
 

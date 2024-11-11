@@ -25,34 +25,6 @@ immutable set.) These uses of @brackets are implemented by
 @rhombus(#%index). A set can be used as @tech{sequence}, in which case
 it supplies its elements in an unspecified order.
 
-@dispatch_table(
-  "readable set (immutable or mutable)"
-  Set
-  st.length()
-  st.get(v)
-  st.has_element(v)
-  st.to_list(try_sort, ...)
-  st.copy()
-  st.snapshot()
-  st.to_sequence()
-)
-
-@dispatch_table(
-  "set (immutable only)"
-  Set
-  st.append(st2, ...)
-  st.union(st2, ...)
-  st.intersect(st2, ...)
-  st.remove(v)
-)
-
-@dispatch_table(
-  "mutable set"
-  MutableSet
-  st.set(v, in)
-  st.delete(v)
-)
-
 @doc(
   annot.macro 'Set'
   annot.macro 'Set.of($annot)'
@@ -163,7 +135,7 @@ it supplies its elements in an unspecified order.
   bind.macro 'Set.by($key_comp)($expr, ...)'
   bind.macro 'Set.by($key_comp)($expr, ..., $rest)'
   grammar rest:
-    & $set_bind
+    #,(@rhombus(&, ~bind)) $set_bind
     $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
@@ -171,7 +143,7 @@ it supplies its elements in an unspecified order.
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.
  The matched set may have additional values.
- If @rhombus(& set_bind) is supplied, the rest of the set excluding
+ If @rhombus(#,(@rhombus(&, ~bind)) set_bind) is supplied, the rest of the set excluding
  the values of the given @rhombus(expr)s must match the @rhombus(set_bind).
  Static information associated by @rhombus(Set) is propagated to @rhombus(set_bind).
  If @rhombus(rest_bind) followed by @dots is
@@ -184,7 +156,7 @@ it supplies its elements in an unspecified order.
 
  The @rhombus(Set, ~bind) binding forms match only immutable sets, while
  @rhombus(ReadableSet, ~bind) forms match both immutable and mutable sets.
- For @rhombus(ReadableSet, ~bind), the @rhombus(& set_bind) will match
+ For @rhombus(ReadableSet, ~bind), the @rhombus(#,(@rhombus(&, ~bind)) set_bind) will match
  a snapshot (in the sense of @rhombus(Set.snapshot)) of the rest of the set.
  The @rhombus(Set.by, ~bind) binding forms match only immutable sets
  constructed using @rhombus(key_comp).
@@ -297,7 +269,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.length(st :: ReadableSet) :: Int
+  method Set.length(st :: ReadableSet) :: Int
 ){
 
  Returns the number of values in @rhombus(st).
@@ -313,8 +285,8 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.get(st :: ReadableSet, val :: Any) :: Boolean
-  fun Set.has_element(st :: ReadableSet, val :: Any) :: Boolean
+  method Set.get(st :: ReadableSet, val :: Any) :: Boolean
+  method Set.has_element(st :: ReadableSet, val :: Any) :: Boolean
 ){
 
  Equivalent to @rhombus(st[val]) (with the default implicit
@@ -331,17 +303,17 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.append(st0 :: Set, st :: Set, ...) :: Set
-  fun Set.union(st0 :: Set, st :: Set, ...) :: Set
+  method (st :: Set).append(another_st :: Set, ...) :: Set
+  method (st :: Set).union(another_st :: Set, ...) :: Set
 ){
 
- Functionally appends @rhombus(st)s (including @rhombus(st0)), like the @rhombus(++) operator
- (but without the special optimization).
+ Functionally appends @rhombus(st) and @rhombus(another_st)s, like the @rhombus(++) operator
+ (but without the special optimization for adding a single element).
 
- When @rhombus(st)s use different @tech{map configurations}, that of
- @rhombus(st0) is respected. Conceptually, in the binary case, each
- element from the right @rhombus(st) is added to the left
- @rhombus(st).
+ Even when @rhombus(another_st) uses a different @tech{map
+  configuration} than @rhombus(st), the map configuration of @rhombus(st)
+ is preserved in the result set. Conceptually, in the binary case, each
+ element from the right set is added to the left set.
 
 @examples(
   {1, 2, 3}.append({2, 3}, {3, 4})
@@ -363,15 +335,14 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.intersect(st0 :: Set, st :: Set, ...) :: Set
+  method (st :: Set).intersect(another_st :: Set, ...) :: Set
 ){
 
- Returns the intersection of @rhombus(st)s (including @rhombus(st0)).
+ Returns the intersection of @rhombus(st) and @rhombus(another_st)s.
 
- When @rhombus(st)s use different @tech{map configurations}, that of
- @rhombus(st0) is respected. Conceptually, in the binary case, each
- element present in both @rhombus(st)s is kept in a @rhombus(st) that
- uses the same @tech{map configuration} as the left @rhombus(st).
+ Even when some @rhombus(another_st) uses a different @tech{map
+  configuration} than @rhombus(st), the map configuration of @rhombus(st)
+ is preserved in the result set.
 
 @examples(
   {1, 2, 3}.intersect({2, 3}, {3, 4})
@@ -384,7 +355,7 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  fun Set.remove(st :: Set, val :: Any) :: Set
+  method (st :: Set).remove(val :: Any) :: Set
 ){
 
  Returns a set like @rhombus(st) but without @rhombus(val), if it is
@@ -399,8 +370,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.set(st :: MutableSet,
-                     val :: Any, in :: Any)
+  method (st :: MutableSet).set(val :: Any, in :: Any)
     :: Void
 ){
 
@@ -421,7 +391,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun MutableSet.delete(st :: MutableSet, val :: Any)
+  method (st :: MutableSet).delete(val :: Any)
     :: Void
 ){
 
@@ -437,8 +407,8 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.to_list(st :: ReadableSet,
-                  try_sort :: Any = #false)
+  method Set.to_list(st :: ReadableSet,
+                     try_sort :: Any = #false)
     :: List
 ){
 
@@ -456,7 +426,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.copy(st :: ReadableSet) :: MutableSet
+  method Set.copy(st :: ReadableSet) :: MutableSet
 ){
 
  Creates a mutable set whose initial content matches @rhombus(st).
@@ -474,7 +444,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.snapshot(st :: ReadableSet) :: Set
+  method Set.snapshot(st :: ReadableSet) :: Set
 ){
 
  Returns an immutable set whose content matches @rhombus(st). If
@@ -494,7 +464,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.to_sequence(st :: ReadableSet) :: Sequence
+  method Set.to_sequence(st :: ReadableSet) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

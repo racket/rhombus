@@ -18,6 +18,7 @@
          "rhombus-primitive.rkt"
          "parens.rkt"
          "parse.rkt"
+         "rename-parameter.rkt"
          (submod "annotation.rkt" for-class)
          (submod "bytes.rkt" static-infos)
          (submod "function.rkt" for-info)
@@ -99,7 +100,8 @@
    [Directory Path.Directory]
    [Dot Path.Dot]
    [like Path.like]
-   [current_directory current-directory])
+   [current_directory Path.current_directory]
+   [current_directory_for_user Path.current_directory_for_user])
   #:properties
   ()
   #:methods
@@ -274,7 +276,9 @@
   (unless (this-system-path-element? p) (raise-annotation-failure who p "Path.Element"))
   (bytes->immutable-bytes (path-element->bytes p)))
 
-(define-static-info-syntax current-directory
+(define Path.current_directory (rename-parameter current-directory 'Path.current_directory))
+(define Path.current_directory_for_user (rename-parameter current-directory-for-user 'Path.current_directory_for_user))
+(define-static-info-syntaxes (Path.current_directory Path.current_directory_for_user)
   (#%function-arity 3)
   (#%call-result #,(get-path-static-infos))
   . #,(get-function-static-infos))

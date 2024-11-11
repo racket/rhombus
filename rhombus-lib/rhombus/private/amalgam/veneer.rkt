@@ -29,14 +29,15 @@
          "parens.rkt"
          (submod "namespace.rkt" for-exports)
          "class-able.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "name-prefix.rkt")
 
 (provide (for-spaces (rhombus/defn)
                      veneer))
 
 (define-defn-syntax veneer
   (definition-transformer
-    (lambda (stxes)
+    (lambda (stxes name-prefix)
       (syntax-parse stxes
         #:datum-literals (group block)
         [(_ name-seq::dotted-identifier-sequence (tag::parens (group (~literal this) ann-op::annotate-op ann-term ...+))
@@ -46,12 +47,13 @@
          #:with name-extends #'full-name.extends
          #:with tail-name #'full-name.tail-name
          #:with orig-stx stxes
+         #:with reflect-name (class-reflect-name #'options.name name-prefix #'name)
          (define body #'(options.form ...))
          (define intro (make-syntax-introducer #t))
          ;; The shape of `finish-data` is recognized in `veneer-annotation+finish`
          ;; and "veneer-meta.rkt"
          (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                          name name-extends tail-name
+                                          reflect-name name name-extends tail-name
                                           #,(attribute ann-op.check?) ann-op.name (ann-term ...)]
                                 ;; data accumulated from parsed clauses:
                                 ()))
@@ -74,7 +76,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     name name-extends tail-name
+                     reflect-name name name-extends tail-name
                      check? ann-op-name ann-terms]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
@@ -142,7 +144,7 @@
                                                   name-instance indirect-static-infos))
               (veneer-finish
                [orig-stx base-stx scope-stx
-                         name name-extends tail-name
+                         reflect-name name name-extends tail-name
                          name? name-convert check?
                          name-instance
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
@@ -158,7 +160,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    name name-extends tail-name
+                    reflect-name name name-extends tail-name
                     name? name-convert check?
                     name-instance
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
@@ -217,8 +219,8 @@
        (check-consistent-unimmplemented stxes final? abstract-name #'name)
 
        (define exs (parse-exports #'(combine-out . exports) expose))
-       (check-exports-distinct stxes exs null method-mindex dots)
-
+       (define replaced-ht (check-exports-distinct stxes exs null method-mindex dots))
+<
        (define has-private?
          ((hash-count method-private) . > . 0))
 
@@ -261,7 +263,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f #f
                               private-interfaces protected-interfaces
-                              #'(name #f #|<- not `name-instance`|# name?/checked name-convert #f #f
+                              #'(name reflect-name #f #|<- not `name-instance`|# name?/checked name-convert #f #f
                                       prop-methods-ref
                                       representation-static-infos ;; instead of `indirect-static-infos`
                                       []
@@ -276,14 +278,14 @@
                                       #f))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
-                                         method-mindex method-vtable method-results final?
+                                         method-mindex method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          #f #f
                                          expression-macro-rhs intro #f
                                          #f
                                          #f
                                          dot-provider-rhss parent-dot-providers
-                                         #`(name name-extends tail-name
+                                         #`(name reflect-name name-extends tail-name
                                                  name?/checked name-convert
                                                  constructor-name name-instance name-ref name-of
                                                  #f #f dot-provider-name

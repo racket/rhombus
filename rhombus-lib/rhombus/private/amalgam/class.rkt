@@ -35,7 +35,8 @@
          "index-property.rkt"
          "append-property.rkt"
          "reconstructor.rkt"
-         "serializable.rkt")
+         "serializable.rkt"
+         "name-prefix.rkt")
 
 (provide this
          super
@@ -48,10 +49,10 @@
 
 (define-defn-syntax class
   (definition-transformer
-    (lambda (stxes)
-      (parse-class stxes))))
+    (lambda (stxes name-prefix)
+      (parse-class stxes name-prefix))))
 
-(define-for-syntax (parse-class stxes)
+(define-for-syntax (parse-class stxes name-prefix)
   (syntax-parse stxes
     #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
@@ -61,12 +62,13 @@
      #:with name-extends #'full-name.extends
      #:with tail-name #'full-name.tail-name
      #:with orig-stx stxes
+     #:with reflect-name (class-reflect-name #'options.name name-prefix #'name)
      (define body #'(options.form ...))
      (define intro (make-syntax-introducer #t))
      ;; The shape of `finish-data` is recognized in `class-annotation+finish`
      ;; and "class-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      name name-extends tail-name
+                                      reflect-name name name-extends tail-name
                                       (field.name ...)
                                       (field.keyword ...)
                                       (field.default ...)
@@ -94,7 +96,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     name name-extends tail-name
+                     reflect-name name name-extends tail-name
                      constructor-field-names
                      constructor-field-keywords
                      constructor-field-defaults
@@ -235,7 +237,7 @@
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
-                         name name-extends tail-name
+                         reflect-name name name-extends tail-name
                          name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
@@ -257,7 +259,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    name name-extends tail-name
+                    reflect-name name name-extends tail-name
                     name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
@@ -426,7 +428,7 @@
        (check-consistent-unimmplemented stxes final? abstract-name #'name)
 
        (define exs (parse-exports #'(combine-out . exports) expose))
-       (check-exports-distinct stxes exs fields method-mindex dots)
+       (define replaced-ht (check-exports-distinct stxes exs fields method-mindex dots))
 
        (define reconstructor-rhs
          (or (hash-ref options 'reconstructor-rhs #f)
@@ -532,7 +534,7 @@
                                                  (temporary "~a-ctr"))
                                              #'make-name)]
                        [constructor-visible-name (or given-constructor-name
-                                                     #'name)]
+                                                     #'reflect-name)]
                        [constructor-maker-name (and (or (not final?)
                                                         super)
                                                     (or constructor-rhs
@@ -610,7 +612,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               reconstructor-rhs reconstructor-stx-params serializer-stx-params final?
                               private-interfaces protected-interfaces
-                              #'(name name-instance name? #f reconstructor-name serializer-name
+                              #'(name reflect-name name-instance name? #f reconstructor-name serializer-name
                                       prop-methods-ref
                                       indirect-static-infos
                                       [(field-name) ... super-field-name ...]
@@ -651,7 +653,7 @@
                                    has-extra-fields? here-callable? here-indexable? here-setable?
                                    here-appendable? here-comparable?
                                    primitive-properties
-                                   #'(name class:name make-all-name name? name-ref prefab-guard-name
+                                   #'(name reflect-name class:name make-all-name name? name-ref prefab-guard-name
                                            reconstructor-name serializer-name deserialize-submodule-name
                                            [public-field-name ...]
                                            [public-name-field ...]
@@ -707,7 +709,7 @@
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                ;; includes defining the namespace and constructor name:
-               (build-class-dot-handling method-mindex method-vtable method-results final?
+               (build-class-dot-handling method-mindex method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
@@ -719,7 +721,7 @@
                                              #'now_of
                                              #'of)
                                          dot-provider-rhss parent-dot-providers
-                                         #'(name name-extends tail-name
+                                         #'(name reflect-name name-extends tail-name
                                                  name? #f constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance dot-provider-name
                                                  indirect-static-infos dot-providers
@@ -815,7 +817,7 @@
                                        here-appendable? here-comparable?
                                        primitive-properties
                                        names)
-  (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
+  (with-syntax ([(name reflect-name class:name make-all-name name? name-ref prefab-guard-name
                        reconstructor-name serializer-name deserialize-submodule-name
                        [public-field-name ...]
                        [public-name-field ...]
@@ -847,6 +849,15 @@
                                                       [i (in-naturals)]
                                                       #:when (syntax-e mutable))
                                              i)])
+    (define replace-name-with-reflect-name
+      (if (eq? (syntax-e #'reflect-name) (syntax-e #'name))
+          (lambda (id) id)
+          (let ([remove-len (string-length (symbol->immutable-string (syntax-e #'name)))]
+                [new-prefix (symbol->immutable-string (syntax-e #'reflect-name))])
+            (lambda (id)
+              (define str (symbol->immutable-string (syntax-e id)))
+              (datum->syntax #f (string->symbol (string-append new-prefix
+                                                               (substring str remove-len))))))))
     (with-syntax ([((mutable-field-converter mutable-field-annotation-str) ...)
                    (for/list ([converter (in-list (syntax->list #'(field-converter ...)))]
                               [ann-str (in-list (syntax->list #'(field-annotation-str ...)))]
@@ -876,7 +887,10 @@
                   [primitive-make-name (if (syntax-e #'prefab-guard-name)
                                            ((make-syntax-introducer)
                                             (datum->syntax #f (string->symbol (format "make-prefab-~a" (syntax-e #'name)))))
-                                           #'make-all-name)])
+                                           #'make-all-name)]
+                  [(reflect-name-field ...) (map replace-name-with-reflect-name (syntax->list #'(name-field ...)))]
+                  [(reflect-set-name-field! ...) (map replace-name-with-reflect-name (syntax->list #'(set-name-field! ...)))]
+                  [(reflect-public-name-field ...) (map replace-name-with-reflect-name (syntax->list #'(public-name-field ...)))])
       (define all-interfaces
         (close-interfaces-over-superinterfaces
          (if abstract-name
@@ -906,7 +920,7 @@
        (list
         #`(define-values (class:name primitive-make-name name? name-field ... set-name-field! ...)
             (let-values ([(class:name name name? name-ref name-set!)
-                          (make-struct-type 'name
+                          (make-struct-type 'reflect-name
                                             #,(and super (class-desc-class:id super))
                                             #,(length fields) 0 #f
                                             #,(if prefab?
@@ -1003,12 +1017,12 @@
                                             #f
                                             '(immutable-field-index ...)
                                             #f
-                                            'name)])
+                                            'reflect-name)])
               (values class:name name name?
-                      (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
+                      (make-struct-field-accessor name-ref field-index 'reflect-name-field 'reflect-name 'rhombus)
                       ...
                       (compose-annotation-check
-                       (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
+                       (make-struct-field-mutator name-set! mutable-field-index 'reflect-set-name-field! 'reflect-name 'rhombus)
                        mutable-field
                        mutable-field-converter
                        mutable-field-annotation-str)
@@ -1019,11 +1033,11 @@
                 (raise-not-an-instance 'name v))))
        (for/list ([def (in-list (syntax->list
                                  #'((define public-name-field/mutate
-                                      (let ([public-name-field
+                                      (let ([reflect-public-name-field
                                              (case-lambda
                                                [(v) (public-name-field v)]
                                                [(v val) (public-maybe-set-name-field! v val)])])
-                                        public-name-field))
+                                        reflect-public-name-field))
                                     ...)))]
                   #:when (syntax-parse def
                            [(_ n (_ ([n2 . _]) . _)) (not (free-identifier=? #'n #'n2))]

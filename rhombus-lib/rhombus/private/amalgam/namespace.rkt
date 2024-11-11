@@ -13,7 +13,8 @@
          "name-root.rkt"
          "name-root-ref.rkt"
          "parens.rkt"
-         "export-check.rkt")
+         "export-check.rkt"
+         "name-prefix.rkt")
 
 (provide (for-space rhombus/defn
                     namespace))
@@ -24,7 +25,7 @@
 
 (define-defn-syntax namespace
   (definition-transformer
-   (lambda (stx)
+    (lambda (stx name-prefix)
      (syntax-parse stx
        [(form-id #:open
                  (_::block form ...))
@@ -32,7 +33,7 @@
         #`((rhombus-nested-forwarding-sequence
             (open-exports plain #,(intro #'scoped))
             #,(intro
-               #`(rhombus-nested form ...))))]
+               #`(rhombus-nested #,name-prefix form ...))))]
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
@@ -41,10 +42,11 @@
                  (_::block form ...))
         #:with name::dotted-identifier #'name-seq
         (define intro syntax-local-introduce)
+        (define prefix (add-name-prefix name-prefix #'name.name))
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
             #,(intro
-               #`(rhombus-nested form ...))))]))))
+               #`(rhombus-nested #,prefix form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx

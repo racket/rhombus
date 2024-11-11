@@ -8,16 +8,9 @@
 
 @title(~tag: "ref-function"){Functions}
 
-A function is normaly written with the @rhombus(fun, ~defn) definition
+A @deftech{function} is normally written with the @rhombus(fun, ~defn) definition
 form or @rhombus(fun) expression form, but see also
 @rhombus(Callable, ~class).
-
-@dispatch_table(
-  "function"
-  Function
-  f.map(args, ...)
-  f.for_each(args, ...)
-)
 
 @doc(
   ~nonterminal:
@@ -105,8 +98,8 @@ form or @rhombus(fun) expression form, but see also
 
   grammar rest:
     $repet_bind #,(@litchar{,}) $ellipsis
-    & $list_bind
-    ~& $map_bind
+    #,(@rhombus(&, ~bind)) $list_bind
+    #,(@rhombus(~&, ~bind)) $map_bind
 
   grammar ellipsis:
     #,(dots)
@@ -209,28 +202,28 @@ form or @rhombus(fun) expression form, but see also
     is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(rest) sequence contains @rhombus(& list_bind) or
+When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
 @rhombus(repet_bind #,(@litchar{,}) #,(dots)), then the
 function or function alternative accepts any number of additional
 by-position arguments.
-For @rhombus(& list_bind), the additional arguments are collected
+For @rhombus(#,(@rhombus(&, ~bind)) list_bind), the additional arguments are collected
 into a list value, and that list value is bound to the
 @rhombus(list_bind). Static information associated by @rhombus(List)
 is propagated to @rhombus(list_bind).
 For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
 variable in @rhombus(repet_bind) is bound to a repetition that
 repeats access to that piece of each additional argument.
-Only one by-position rest binding, @rhombus(& list_bind) or
-@rhombus(repet_bind #,(@litchar{,}) #,(dots_expr)), can appear
+Only one by-position rest binding, @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
+@rhombus(repet_bind #,(@litchar{,}) #,(dots)), can appear
 in a @rhombus(rest) sequence.
 
-When a @rhombus(rest) sequence contains @rhombus(~& map_bind), then
+When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(~&, ~bind)) map_bind), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
 values are collected into an immutable map value to be bound to
 @rhombus(map_bind). Static information associated by @rhombus(Map) is
 propagated to @rhombus(map_bind).
-Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
+Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(rest) sequence.
 
 @examples(
   ~defn:
@@ -301,7 +294,7 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
  When @rhombus(~name) is present as an @rhombus(option) or
  @rhombus(name_option), the given @rhombus(op_or_id_name) is used for
- reporting annotaton failures on arguments and results, and it is also
+ reporting annotation failures on arguments and results, and it is also
  used when printing the function. Otherwise, @rhombus(id_name) is used.
  Supplying @rhombus(~name) does not change the name that is bound, which
  is always the initial @rhombus(id_name).
@@ -429,12 +422,10 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  fun Function.map(f :: Function,
-                   args0 :: List, args :: List, ...)
-    :: List,
-  fun Function.for_each(f :: Function,
-                        args0 :: List, args :: List, ...)
-    :: Void,
+  method (f :: Function).map(args0 :: List, args :: List, ...)
+    :: List
+  method (f :: Function).for_each(args0 :: List, args :: List, ...)
+    :: Void
 ){
 
  Applies @rhombus(f) to each element of each @rhombus(args) (including @rhombus(args0)), iterating

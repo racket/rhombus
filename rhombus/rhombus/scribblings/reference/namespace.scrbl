@@ -28,10 +28,11 @@ over interpreting the namespace identifier instead in the context's
 space. For example, if @rhombus(p) is bound as a variable whose value
 has an @rhombus(x) field, and if @rhombus(p) is also bound to a
 namespace that exports a @rhombus(x) in the expression space, then
-@rhombus(p.x) in an expression position refers to the export from the
+@rhombus(p#,(@rhombus(.x, ~datum))) in an expression position refers to the export from the
 @rhombus(p) namespace and not the @rhombus(x) field of the @rhombus(p)
-object. If the namespace @rhombus(p) exports only @rhombus(x) bindings
-in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
+object (in other words, the @litchar{.} is not considered as the @rhombus(.) operator).
+If the namespace @rhombus(p) exports only @rhombus(x) bindings
+in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), then
 @rhombus(p.x) refers to the @rhombus(x) field of the @rhombus(p) object.
 
 @doc(
@@ -51,7 +52,7 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
  outside the body, and @rhombus(export) declarations are allowed and
  determine exports for the @rhombus(id_name) immediately after
  @rhombus(namespace). An exported @rhombus(name, ~var) can be reached using
- @rhombus(id_name#,(rhombus(.))#,(rhombus(name, ~var))). The name
+ @rhombus(id_name#,(rhombus(., ~datum))#,(rhombus(name, ~var))). The name
  @rhombus(id_name) also works with @rhombus(import). The @rhombus(id)
  at the end of @rhombus(id_name) is bound in the @rhombus(namespace, ~space)
  @tech{space}.
@@ -68,7 +69,8 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
   ~defn:
     namespace geometry:
       export:
-        pi tau
+        pi
+        tau
       def pi = 3.14
       def tau = 6.28
   ~repl:

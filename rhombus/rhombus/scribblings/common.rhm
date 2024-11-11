@@ -4,7 +4,6 @@ import:
   rhombus/meta open
   rhombus/scribble/manual
   rhombus/scribble as scribble
-  "dispatch_table.rhm" open
   meta_label:
     rhombus open
     rhombus/meta open
@@ -15,7 +14,6 @@ export:
   meta_label:
     all_from(rhombus)
     all_from(rhombus/meta)
-  all_from("dispatch_table.rhm")
   see_implicit
   provided_note
   provided_interface_only

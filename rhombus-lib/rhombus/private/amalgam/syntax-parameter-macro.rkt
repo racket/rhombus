@@ -44,7 +44,7 @@
 
 (define-defn-syntax bridge
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id name-seq::dotted-identifier-sequence
@@ -57,7 +57,7 @@
 
 (define-syntax relet
   (definition-transformer
-   (lambda (stx)
+   (lambda (stx name-prefix)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id name-seq::dotted-identifier-sequence

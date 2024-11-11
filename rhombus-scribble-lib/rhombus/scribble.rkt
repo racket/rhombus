@@ -100,7 +100,7 @@
        (loop #'(t . rest)
              (cons #'str accum))]
       [(_ . rest)
-       (define top #`(rhombus-top-step scribble-rhombus-top #t () . rest))
+       (define top #`(rhombus-top-step scribble-rhombus-top #t #f () . rest))
        (if (null? accum)
            top
            #`(begin

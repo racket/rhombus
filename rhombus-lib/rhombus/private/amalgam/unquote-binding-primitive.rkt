@@ -4,6 +4,7 @@
                      enforest/name-parse
                      enforest/hier-name-parse
                      enforest/syntax-local
+                     shrubbery/print
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
@@ -158,8 +159,8 @@
         #:do [(define parser (syntax-local-value* (in-defn-space #'sc-hier.name) syntax-class-parser-ref))]
         #:when parser
         (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
-        (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)
-                                                           (syntax-e #'sc-hier.name))
+        (define rsc ((syntax-class-parser-proc parser) (string->symbol
+                                                        (shrubbery-syntax->string #'sc-hier.name))
                                                        #'sc
                                                        (current-unquote-binding-kind)
                                                        match-id

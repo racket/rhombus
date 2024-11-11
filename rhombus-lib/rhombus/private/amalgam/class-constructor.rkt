@@ -309,6 +309,7 @@
      #'(with-syntax-parameters stx-params e)]
     [(_ name predicate-id (_::block g) stx-params)
      (define adjustments (entry-point-adjustment
+                          (syntax-e #'name)
                           '()
                           (lambda (arity body)
                             #`(parsed

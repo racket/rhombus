@@ -5,6 +5,12 @@ import:
 
 runtime_path.def path_rhm: "path.rhm"
 
+def windows: system.type() == #'windows
+
+fun current_seconds():
+  import lib("racket/base.rkt")
+  base.#{current-seconds}()
+
 block:
   import "static_arity.rhm"
   static_arity.check:
@@ -56,3 +62,301 @@ block:
   check_annot filesystem.file_exists(cross_p)
   check_annot filesystem.directory_exists(cross_p)
   check_annot filesystem.link_exists(cross_p)
+
+block:
+  let tmp = filesystem.make_temporary(~as: #'directory)
+  check tmp.parent() ~is system.path(#'temp_dir)
+  check filesystem.directory_exists(tmp) ~is #true
+
+  let x = tmp.add("x")
+  block:
+    Closeable.let f = Port.Output.open_file(x)
+    f.write_bytes(#"hello world")
+  check filesystem.file_exists(x) ~is #true
+
+  let d = tmp.add("d")
+  check filesystem.make_directory(d) ~is #void
+  check filesystem.directory_exists(d) ~is #true
+
+  let y = d.add("y")
+  fun make_y():
+    Port.Output.open_file(y).close()
+  make_y()
+  check filesystem.file_exists(y) ~is #true
+
+  let nonesuch = tmp.add("nonesuch")
+
+  let link = !windows && tmp.add("link")
+  let link2 = !windows && tmp.add("link2")
+  let dlink = !windows && tmp.add("dlink")
+  fun make_link2():
+    filesystem.make_link("nonesuch", link2)
+  unless windows
+  | filesystem.make_link("x", link)
+    make_link2()
+    filesystem.make_link("d", dlink)
+
+  check filesystem.link_exists(tmp) ~is #false
+  check filesystem.link_exists(x) ~is #false
+  check filesystem.link_exists(d) ~is #false
+  unless windows
+  | check filesystem.link_exists(link) ~is #true
+    check filesystem.link_exists(link2) ~is #true
+    check filesystem.file_exists(link) ~is #true
+    check filesystem.directory_exists(link) ~is #false
+    check filesystem.file_exists(link2) ~is #false
+    check filesystem.directory_exists(link2) ~is #false
+    check filesystem.file_exists(dlink) ~is #false
+    check filesystem.directory_exists(dlink) ~is #true
+
+  check filesystem.type(x) ~is #'file
+  check filesystem.type(tmp) ~is #'directory
+  check filesystem.type(d) ~is #'directory
+  check filesystem.type(link) ~is !windows && #'link
+  check filesystem.type(link2) ~is !windows && #'link
+  check filesystem.type(dlink) ~is !windows && #'link
+
+  check filesystem.files(d) ~is [Path("y")]
+  check filesystem.files(d, ~recur: #true) ~is [Path("y")]
+  check filesystem.files(x) ~throws "filesystem.files:"
+  check filesystem.files(nonesuch) ~throws "filesystem.files:"
+
+  let all_files = (["d", Path("d").add("y")] ++ (if windows | [] | ["dlink", "link", "link2"]) ++ ["x"]).map(Path)
+  let all_immediate_files = all_files.remove(Path("d").add("y"))
+  check filesystem.files(tmp) ~is all_immediate_files
+  check filesystem.files(tmp, ~add_path: #true) ~is all_immediate_files.map(Path.add(tmp, _))
+  check filesystem.files(tmp, ~recur: #true) ~is all_files
+  check filesystem.files(tmp, ~recur: #true, ~add_path: #true) ~is all_files.map(Path.add(tmp, _))
+  check:
+    filesystem.files(tmp, ~recur: #true, ~follow_links: #true)
+    ~is List.append(& for List(f: all_files):
+                      if f == Path("dlink")
+                      | [Path("dlink"), Path("dlink").add("y")]
+                      | [f])
+  check:
+    filesystem.files(tmp, ~skip: fun (x): x == Path("d"))
+    ~is all_immediate_files.remove(Path("d"))
+  check:
+    filesystem.files(tmp, ~keep: fun (x): x != Path("d"))
+    ~is all_immediate_files.remove(Path("d"))
+  check:
+    filesystem.files(tmp, ~skip: fun (x): x == Path("x"))
+    ~is all_immediate_files.remove(Path("x"))
+  check:
+    filesystem.files(tmp, ~keep: fun (x): x != Path("x"))
+    ~is all_immediate_files.remove(Path("x"))
+  check:
+    filesystem.files(tmp, ~recur: #true, ~skip: fun (x): x == Path("d"))
+    ~is all_immediate_files.remove(Path("d"))
+  check:
+    filesystem.files(tmp,
+                     ~keep: fun (x): x != Path("d"),
+                     ~skip: fun (x): x == Path("x"))
+    ~is all_immediate_files.remove(Path("d")).remove(Path("x"))
+  check:
+    filesystem.files(tmp,
+                     ~keep: fun (x): x == Path("d"),
+                     ~skip: fun (x): x != Path("x"))
+    ~is []
+  check:
+    filesystem.files(tmp,
+                     ~keep: fun (x): x == Path("d"),
+                     ~skip: fun (x): x != Path("d"))
+    ~is [Path("d")]
+
+  check filesystem.roots() ~is_a List
+  when !windows
+  | check filesystem.roots() ~is [Path("/")]
+
+  check filesystem.rename(x, tmp.add("x_new")) ~is #void
+  check filesystem.files(tmp) ~is (for List (f: all_immediate_files):
+                                     if f == Path("x")
+                                     | Path("x_new")
+                                     | f)
+  check filesystem.rename(tmp.add("x_new"), x) ~is #void
+  check filesystem.rename(x, y) ~throws "filesystem.rename"
+  check filesystem.rename(x, y, ~exists_ok: #true) ~is #void
+  check filesystem.files(tmp) ~is all_immediate_files.remove(Path("x"))
+  check filesystem.rename(y, x) ~is #void
+  make_y()
+
+  check filesystem.delete(y) ~is #void
+  check filesystem.files(tmp) ~is all_immediate_files.remove(Path("y"))
+  check filesystem.delete(d, ~as: #'file) ~throws "filesystem.delete:"
+  check filesystem.delete(d, ~as: #'file, ~must_exist: #false) ~throws "filesystem.delete:"
+  check filesystem.delete(d) ~is #void
+  filesystem.make_directory(d)
+  make_y()
+  check filesystem.delete(y, ~as: #'directory) ~throws "filesystem.delete:"
+  check filesystem.delete(y, ~as: #'directory, ~must_exist: #false) ~throws "filesystem.delete:"
+  check filesystem.delete(d) ~throws "filesystem.delete:"
+  check filesystem.delete(d, ~recur: #true) ~is #void
+  check filesystem.type(y) ~is #false
+  check filesystem.type(d) ~is #false
+  check filesystem.delete(d, ~must_exist: #false) ~is #void
+  check filesystem.delete(d) ~throws "filesystem.delete:"
+  filesystem.make_directory(d)
+  make_y()
+
+  check filesystem.size(tmp) ~throws "filesystem.size:"
+  check filesystem.size(x) ~is 11
+  check filesystem.size(d) ~throws "filesystem.size:"
+  check filesystem.size(link) ~is filesystem.size(x)
+  check filesystem.size(link2) ~throws "filesystem.size:"
+
+  check filesystem.modify_seconds(tmp) ~is_a Int
+  check filesystem.modify_seconds(x) ~is_a Int
+  when !windows
+  | check filesystem.modify_seconds(link) ~is filesystem.modify_seconds(x)
+    check filesystem.modify_seconds(dlink) ~is filesystem.modify_seconds(d)
+  check filesystem.modify_seconds(link2) ~throws "filesystem.modify_seconds:"
+  check filesystem.modify_seconds(nonesuch) ~throws "filesystem.modify_seconds:"
+  check filesystem.modify_seconds(link, ~must_exist: #false) ~is !windows && filesystem.modify_seconds(x)
+  check filesystem.modify_seconds(link2, ~must_exist: #false) ~is #false
+  check filesystem.modify_seconds(nonesuch, ~must_exist: #false) ~is #false
+  let now = current_seconds()
+  check filesystem.modify_seconds(x) .<= now ~is #true
+  check filesystem.modify_seconds(x, ~set_to: now) ~is #void
+  check filesystem.modify_seconds(x) ~is now
+  check filesystem.modify_seconds(x, ~set_to: now-100) ~is #void
+  check filesystem.modify_seconds(x) ~is now-100
+  when !windows
+  | check filesystem.modify_seconds(link, ~set_to: now) ~is #void
+    check filesystem.modify_seconds(link) ~is now
+    check filesystem.modify_seconds(x) ~is now
+
+  check filesystem.permissions(tmp) ~is { #'read, #'write, #'execute }
+  check filesystem.permissions(x) ~is { #'read, #'write }
+  check filesystem.permissions(d) ~is { #'read, #'write, #'execute }
+  when !windows
+  | check filesystem.permissions(link) ~is { #'read, #'write }
+  check filesystem.permissions(x, ~set_to: 0o444) ~is #void
+  check filesystem.permissions(x) ~is { #'read }
+  check filesystem.permissions(x, ~bits: #true) bits.and 0o777 ~is 0o444
+  check filesystem.permissions(x, ~set_to: 0o666) ~is #void
+  check filesystem.permissions(x) ~is { #'read, #'write }
+
+  check filesystem.identity(tmp) ~is_a PosInt
+  check filesystem.identity(x) ~is_a PosInt
+  check filesystem.identity(d) ~is_a PosInt
+  check filesystem.identity(tmp, ~follow_links: #true) ~is filesystem.identity(tmp)
+  check filesystem.identity(x, ~follow_links: #true) ~is filesystem.identity(x)
+  check filesystem.identity(x) == filesystem.identity(tmp) ~is #false
+  check filesystem.identity(d) == filesystem.identity(tmp) ~is #false
+  unless windows
+  | check filesystem.identity(x) == filesystem.identity(link) ~is #true
+    check filesystem.identity(x) == filesystem.identity(link, ~follow_links: #false) ~is #false
+
+  check filesystem.stat(tmp) ~is_a Map
+  check filesystem.stat(x) ~is_a Map
+  check filesystem.stat(x, ~follow_links: #false) ~is filesystem.stat(x)
+  unless windows
+  | check filesystem.stat(link) ~is filesystem.stat(x)
+    check filesystem.stat(link, ~follow_links: #false) == filesystem.stat(x) ~is #false
+  check filesystem.stat(nonesuch) ~throws "filesystem.stat:"
+
+  check filesystem.read_bytes(x) ~is_now #"hello world"
+  check filesystem.read_string(x) ~is "hello world"
+  check filesystem.read_bytes_lines(x) ~is_now [#"hello world"]
+  check filesystem.read_lines(x) ~is ["hello world"]
+  block:
+    let inode = filesystem.identity(x)
+    block:
+      Closeable.let f = Port.Output.open_file(x, ~exists: #'truncate)
+      for (i: 0..4096):
+        println("hello world", ~out: f)
+    check filesystem.identity(x) ~is inode
+  check filesystem.size(x) ~is 12*4096
+  check filesystem.read_bytes(x) ~is_now Bytes.append(& for List (i: 0..4096): #"hello world\n")
+  check filesystem.read_string(x) ~is String.append(& for List (i: 0..4096): "hello world\n")
+  check filesystem.read_bytes_lines(x) ~is_now for List (i: 0..4096): #"hello world"
+  check filesystem.read_lines(x) ~is for List (i: 0..4096): "hello world"
+
+  check filesystem.write_bytes(x, #"hello world") ~throws "filesystem.write_bytes:"
+  check filesystem.write_bytes(x, #"hello world", ~exists: #'truncate) ~is #void
+  check filesystem.write_string(x, "hello world", ~exists: #'truncate) ~is #void
+  check filesystem.read_string(x) ~is "hello world"
+
+  block:
+    let tmp2 = filesystem.make_temporary(~as: #'directory)
+
+    let ex = tmp2.add("ex")
+    check filesystem.copy(x, ex) ~is #void
+    check filesystem.file_exists(ex) ~is #true
+    check filesystem.size(ex) ~is filesystem.size(x)
+    check filesystem.copy(y, ex) ~throws "filesystem.copy:"
+    check filesystem.copy(y, ex, ~exists_ok: #true) ~is #void
+    check filesystem.size(ex) ~is filesystem.size(y)
+    check filesystem.permissions(ex) ~is filesystem.permissions(y)
+    filesystem.delete(ex)
+    check filesystem.copy(x, ex, ~permissions: 0o444) ~is #void
+    check filesystem.permissions(ex) ~is { #'read }
+    filesystem.delete(ex)
+    check filesystem.copy(x, ex, ~permissions: 0o777, ~replace_permissions: #true) ~is #void
+    check filesystem.permissions(ex, ~bits: #true) ~is 0o777
+    check filesystem.copy(x, ex, ~exists_ok: #true) ~is #void
+    check filesystem.permissions(ex) ~is filesystem.permissions(x)
+    check filesystem.copy(x, ex, ~exists_ok: #true, ~keep_modify_seconds: #true) ~is #void
+    check filesystem.modify_seconds(ex) ~is filesystem.modify_seconds(x)
+
+    let sub = tmp2.add("sub")
+    check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false) ~is #void
+    check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true)
+    filesystem.delete(sub, ~recur: #true)
+
+    unless windows
+    | check filesystem.copy(tmp, sub, ~recur: #true) ~throws values("filesystem.copy:", "link2")
+      filesystem.delete(sub, ~recur: #true)
+      filesystem.delete(link2)
+    check filesystem.copy(tmp, sub, ~recur: #true) ~is #void
+    check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true, ~follow_links: #true)
+    unless windows
+    | make_link2()
+    filesystem.delete(sub, ~recur: #true)
+
+    check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false, ~keep_modify_seconds: #true) ~is #void
+    for (f: filesystem.files(sub, ~recur: #true)):
+      check filesystem.type(sub.add(f)) ~is filesystem.type(tmp.add(f))
+      when filesystem.file_exists(sub.add(f)) || filesystem.directory_exists(sub.add(f))
+      | check filesystem.permissions(sub.add(f)) ~is filesystem.permissions(tmp.add(f))
+      when filesystem.file_exists(sub.add(f))
+      | check filesystem.modify_seconds(sub.add(f)) ~is filesystem.modify_seconds(tmp.add(f))
+    filesystem.delete(sub, ~recur: #true)
+
+    filesystem.delete(tmp2, ~recur: #true)
+
+  block:
+    let tmp3 = filesystem.make_temporary(~in: tmp, ~as: x)
+    check filesystem.file_exists(tmp3) ~is #true
+    check filesystem.size(tmp3) ~is filesystem.size(x)
+    let mutable tries = 0
+    let tmp4 = filesystem.make_temporary(~in: tmp,
+                                         ~make_name:
+                                           fun (s :: String):
+                                             tries := tries + 1
+                                             if tries == 1
+                                             | tmp3.name()
+                                             | Path("mytmp_" ++ s))
+    check tmp4 != tmp3 ~is #true
+    check tries ~is 2
+    let tmp5 = filesystem.make_temporary(~in: tmp, ~permissions: 0o444)
+    check filesystem.permissions(tmp5) ~is { #'read }
+    let tmp6 = filesystem.make_temporary(~in: tmp, ~permissions: 0o777, ~replace_permissions: #true)
+    check filesystem.permissions(tmp6) ~is { #'read, #'write, #'execute }
+
+  filesystem.delete(tmp, ~recur: #true)
+  check filesystem.directory_exists(tmp) ~is #false
+  check filesystem.file_exists(x) ~is #false
+  check filesystem.directory_exists(d) ~is #false
+  check filesystem.link_exists(tmp) ~is #false
+  check filesystem.link_exists(d) ~is #false
+  check filesystem.link_exists(x) ~is #false
+  check filesystem.link_exists(link) ~is #false
+  check filesystem.link_exists(link2) ~is #false
+
+  check filesystem.type(tmp) ~is #false
+  check filesystem.type(x) ~is #false
+  check filesystem.type(d) ~is #false
+  check filesystem.type(tmp, ~must_exist: #true) ~throws "filesystem.type:"
+  check filesystem.type(x, ~must_exist: #true) ~throws "filesystem.type:"
+  check filesystem.type(d, ~must_exist: #true) ~throws "filesystem.type:"

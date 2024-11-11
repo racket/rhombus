@@ -1,0 +1,8 @@
+#lang rhombus
+
+export:
+  Fish
+
+class Fish():
+  method swim(): #false
+  method escape(): #false

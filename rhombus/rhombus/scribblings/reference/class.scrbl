@@ -6,7 +6,6 @@
 @title(~tag: "class"){Classes}
 
 @doc(
-  ~literal: :: extends binding field
   ~nonterminal:
     default_expr: block expr
     default_body: block body
@@ -18,6 +17,7 @@
 
   defn.macro 'class $id_name($field_spec, ...)'
   defn.macro 'class $id_name($field_spec, ...):
+                $option; ...
                 $class_clause_or_body_or_export
                 ...'
 
@@ -84,6 +84,10 @@
     #,(@rhombus(serializable, ~class_clause)) $serializable_decl
     #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
     $other_class_clause
+
+  grammar option:
+    ~name $id_name
+    ~name: $id_name
 ){
 
  Binds @rhombus(id_name) as a @deftech{class} name in several
@@ -100,11 +104,11 @@
 
  @item{in the @top_rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
-  and by default an annotation constructor @rhombus(id_name.of) or
-  @rhombus(id_name.now_of), which
+  and by default an annotation constructor @rhombus(id_name#,(@rhombus(.of, ~datum))) or
+  @rhombus(id_name#,(@rhombus(.now_of, ~datum))), which
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) @rhombus(field_spec)s in
-  parentheses; the name is @rhombus(id_name.of) if all such
+  parentheses; the name is @rhombus(id_name#,(@rhombus(.of, ~datum))) if all such
   @rhombus(field_spec)s are for immutable fields;},
 
  @item{in the @rhombus(bind, ~space) space,
@@ -114,15 +118,15 @@
   class where the fields match the corresponding patterns;},
 
  @item{in the @rhombus(namespace, ~space) space,
-  a @tech{namespace} to access exported bindings as well as a
+  a @tech{namespace} to access exported bindings as well as (if not replaced by an export) a
   function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(method,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(method, ~var))),
   a function
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(property,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(property, ~var))),
   a syntactic form
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(dot,~var))),
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(dot, ~var))),
   and a field accessor
-  @rhombus(id_name#,(rhombus(.))#,(@rhombus(field,~var))) for each
+  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(field, ~var))) for each
   non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, dot syntax, and field in the class
   (including inherited methods, properties, dot syntax, and fields), respectively; and}
 
@@ -182,9 +186,9 @@
  instance is created. Definitions are scoped to the block for
  potential use by class clauses, but a @rhombus(class) form is analogous
  to @rhombus(namespace) in that local definitions can be exported.
- Exported names must be distinct from all non-private field, method, property, and dot-syntax
- names (which are automatically exported from the class in its role as a
- namespace). Since the definitions and expressions of a @rhombus(class)
+ Exported names can replace non-private field, method, and property
+ names, which are otherwise exported automatically, but exported names
+ must be distinct from dot-syntax names. Since the definitions and expressions of a @rhombus(class)
  body must be processed to find @tech{class clauses} in the body, the
  class is not available for use until after the definitions and
  expressions, as if the definitions and expressions appeared before the
@@ -208,7 +212,7 @@
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form,
- @rhombus(abstract, ~class_clause) form, @rhombus(property, ~class_clause) form,m
+ @rhombus(abstract, ~class_clause) form, @rhombus(property, ~class_clause) form,
  or method- or property-shaped
  @rhombus(final, ~class_clause), @rhombus(private, ~class_clause), or @rhombus(protected, ~class_clause) form,
  then the clause declares a method or property for the class. These clauses can
@@ -306,6 +310,11 @@
  overridden via @rhombus(override, ~class_clause), the original and
  overriding versions must be both methods or both properties.
 
+ A @rhombus(~name) form as an @rhombus(option) is analogous to
+ @rhombus(~name) within a @rhombus(fun, ~defn) definition. It specifies a
+ name used for run-time reporting, such as from a constructor or as the
+ prefix on errors from methods.
+
  See @secref(~doc: guide_doc, "static-info-rules") for information about static
  information associated with classes.
 
@@ -337,7 +346,6 @@
 }
 
 @doc(
-  ~literal: :: class interface
   defn.macro 'class.together:
                 $class_or_interface
                 ...'
@@ -458,6 +466,8 @@
     case_maybe_kw_opt: fun ~defn
     case_maybe_kw: fun ~defn
     bind_maybe_kw_opt: fun ~defn
+    name_option: fun ~defn
+    who_option: fun ~defn
     rest: fun ~defn
 
   class_clause.macro 'method $method_impl'
@@ -467,19 +477,42 @@
   class_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
 
   grammar method_impl:
-    $id $maybe_res_annot: $entry_point
-    $id $case_maybe_kw_opt
-    Z| $id $case_maybe_kw
+    $id $maybe_res_annot:
+      $entry_point
+    $id $case_maybe_kw_opt:
+      $name_option; ...
+      $body
+      ...
+    Z| $id $case_maybe_kw:
+         $name_option; ...
+         $body
+         ...
      | ...
 
   grammar property_impl:
-    $id $maybe_res_annot: $body; ...
-    Z| $id $maybe_res_annot: $body; ...
-    Z| $id $maybe_res_annot: $body; ...
-     | $id := $binding: $body; ...
+    $id $maybe_res_annot:
+      $who_option; ...
+      $body
+        ...
+    Z| $id $maybe_res_annot:
+         $who_option; ...
+         $body
+         ...
+    Z| $id $maybe_res_annot:
+         $who_option; ...
+         $body
+         ...
+     | $id := $binding:
+         $who_option; ...
+         $body
+         ...
 ){
 
- These @tech{class clauses} aare recognized
+ @margin_note_block{The @rhombus(method, ~class_clause) form is used in
+  documentation with a different shape than in implementation. See
+  @secref("doc_method") for more information.}
+
+ These @tech{class clauses} are recognized
  by @rhombus(class) to declare methods and properties, along
  with the method and property forms of @rhombus(final, ~class_clause),
  @rhombus(private, ~class_clause), and @rhombus(protected, ~class_clause). The combination
@@ -753,7 +786,7 @@
  or @rhombus(annotation, ~class_clause) clause has a
  @rhombus(disable_form) containing @rhombus(~error), then the binding of
  the class name in the corresponding space reports an error for any use.
- When a @rhombus(disable_form) constains @rhombus(~none), then the class
+ When a @rhombus(disable_form) contains @rhombus(~none), then the class
  name is not bound in the corresponding space by the enclosing
  @rhombus(class) form. The @rhombus(constructor, ~class_clause) and
  @rhombus(expression, ~class_clause) forms are equivalent when used with a
@@ -811,7 +844,7 @@
  meta-time expression. This macro replaces the default meaning of the
  @rhombus(id_name) as a reference to the constructor. When
  @rhombus(expression, ~class_clause), then the default
- @rhombus(id_name.of) annotation constructor accepts only
+ @rhombus(id_name#,(@rhombus(.of, ~datum))) annotation constructor accepts only
  @tech(~doc: guide_doc){predicate annotations}.
 
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
@@ -1012,7 +1045,7 @@
  the class has fields, and it should expect them in the declared order.
  If the class has a @rhombus(reconstructor_fields, ~class_clause)
  declaration, the reconstructor should instead expect those fields in addition to
- the ones that the superclass (if any) expects for its reconstuctor.
+ the ones that the superclass (if any) expects for its reconstructor.
 
  A reconstructor should not expect keyword arguments; all fields are
  supplied by-position. If the class has a superclass, then any fields

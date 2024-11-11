@@ -11,35 +11,6 @@ included, the range can be used as a @tech{sequence}; in addition,
 when the ending point is not @rhombus(#inf), the range is
 @tech{listable}.
 
-@dispatch_table(
-  "range"
-  Range
-  rge.start()
-  rge.end()
-  rge.includes_start()
-  rge.includes_end()
-  rge.has_element(int)
-  rge.encloses(rge2, ...)
-  rge.is_connected(rge2)
-  rge.overlaps(rge2)
-  rge.span(rge2, ...)
-  rge.gap(rge2)
-  rge.intersect(rge2, ...)
-)
-
-@dispatch_table(
-  "range (sequenceable)"
-  Range
-  rge.to_sequence()
-  rge.step_by(step)
-)
-
-@dispatch_table(
-  "range (listable)"
-  Range
-  rge.to_list()
-)
-
 @doc(
   annot.macro 'Range'
   annot.macro 'SequenceRange'
@@ -281,8 +252,8 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
-  fun Range.start(rge :: Range) :: Int || matching(#neginf)
-  fun Range.end(rge :: Range) :: Int || matching(#inf)
+  method (rge :: Range).start() :: Int || matching(#neginf)
+  method (rge :: Range).end() :: Int || matching(#inf)
 ){
 
  Returns the starting point and ending point of @rhombus(rge),
@@ -293,8 +264,8 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
-  fun Range.includes_start(rge :: Range) :: Boolean
-  fun Range.includes_end(rge :: Range) :: Boolean
+  method (rge :: Range).includes_start() :: Boolean
+  method (rge :: Range).includes_end() :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(rge) includes the starting point
@@ -306,7 +277,7 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
-  fun Range.has_element(rge :: Range, int :: Int) :: Boolean
+  method (rge :: Range).has_element(int :: Int) :: Boolean
 ){
 
  Checks whether @rhombus(rge) has @rhombus(int) in the range that it
@@ -322,10 +293,11 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
+  method (rge :: Range).encloses(another_rge :: Range, ...) :: Boolean
   fun Range.encloses(rge :: Range, ...) :: Boolean
 ){
 
- Checks whether @rhombus(rge)s are in enclosing order. A range
+ Checks whether the given ranges are in enclosing order. A range
  @rhombus(rge, ~var) encloses another range @rhombus(rge2, ~var) when
  @rhombus(rge, ~var) has every integer in @rhombus(rge2, ~var). Every
  range encloses itself, and empty ranges never enclose non-empty
@@ -343,7 +315,7 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
-  fun Range.is_connected(rge :: Range, rge2 :: Range) :: Boolean
+  method (rge :: Range).is_connected(rge2 :: Range) :: Boolean
 ){
 
  Checks whether @rhombus(rge) is connected with @rhombus(rge2), that
@@ -359,7 +331,7 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
-  fun Range.overlaps(rge :: Range, rge2 :: Range) :: Boolean
+  method (rge :: Range).overlaps(rge2 :: Range) :: Boolean
 ){
 
  Checks whether @rhombus(rge) overlaps with @rhombus(rge2), that is,
@@ -376,11 +348,11 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
-  fun Range.span(rge0 :: Range, rge :: Range, ...) :: Range
+  method (rge :: Range).span(another_rge :: Range, ...) :: Range
 ){
 
- Returns the smallest range that encloses all @rhombus(rge)s
- (including @rhombus(rge0)).
+ Returns the smallest range that encloses @rhombus(rgs) and all
+ @rhombus(rge)s.
 
 @examples(
   (2..=5).span()
@@ -392,7 +364,7 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
-  fun Range.gap(rge :: Range, rge2 :: Range) :: maybe(Range)
+  method (rge :: Range).gap(rge2 :: Range) :: maybe(Range)
 ){
 
  Returns the largest range that lies between @rhombus(rge) and
@@ -409,10 +381,12 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
+  method (rge :: Range).intersect(another_rge :: Range, ...)
+    :: maybe(Range)
   fun Range.intersect(rge :: Range, ...) :: maybe(Range)
 ){
 
- Returns the intersection of all @rhombus(rge)s, or @rhombus(#false)
+ Returns the intersection of the given ranges, or @rhombus(#false)
  if no such range exists. The intersection of a range
  @rhombus(rge, ~var) and another range @rhombus(rge2, ~var) is the
  largest range that is enclosed by both @rhombus(rge, ~var) and
@@ -432,7 +406,7 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
-  fun Range.to_list(rge :: ListRange) :: List
+  method Range.to_list(rge :: ListRange) :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list} of
@@ -442,7 +416,7 @@ when the ending point is not @rhombus(#inf), the range is
 
 
 @doc(
-  fun Range.to_sequence(rge :: SequenceRange) :: Sequence
+  method Range.to_sequence(rge :: SequenceRange) :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -452,7 +426,7 @@ when the ending point is not @rhombus(#inf), the range is
 }
 
 @doc(
-  fun Range.step_by(rge :: SequenceRange, step :: PosInt)
+  method Range.step_by(rge :: SequenceRange, step :: PosInt)
     :: Sequence
 ){
 

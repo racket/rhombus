@@ -511,6 +511,7 @@ class ContainerPict(private ps :~ List.of(Pict)):
     super(children, rebuild)(ps)
 
 class NothingPict():
+  ~name Pict
   extends StaticPict
   constructor (): super()()
 

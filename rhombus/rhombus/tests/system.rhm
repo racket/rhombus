@@ -13,3 +13,5 @@ check system.host() ~is_a String
 check system.target_machine() ~is_a system.TargetMachineSymbol
 check #false is_a system.TargetMachineSymbol ~is #false
 check #'cek is_a system.TargetMachineSymbol ~is #false
+
+check system.path(#'temp_dir) ~is_a Path

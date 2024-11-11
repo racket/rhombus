@@ -24,8 +24,22 @@ output; it is possible for an object to be both an input and output port.
 
 @doc(
  def Port.eof :: Port.EOF
+ bind.macro 'Port.eof'
 ){
 
- A value (distinct from all other values) that represents an end-of-file.
+ The @rhombus(Port.eof) value represents an end-of-file (distinct from
+ all other values), and the @rhombus(Port.eof) binding match matches that
+ value.
+
+}
+
+@doc(
+ enum Port.Mode:
+   binary
+   text
+){
+
+ Modes for reading and writing files that determine how newlines are
+ read and written.
 
 }

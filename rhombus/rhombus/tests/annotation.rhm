@@ -131,3 +131,15 @@ check:
   "x" :: Any.of(#true, #false) ~throws "does not satisfy"
   "x" :: Any.to_boolean ~is #true
   "x" :: None ~throws "does not satisfy"
+
+block:
+  namespace ns:
+    export:
+      Int
+      Array
+      Posn
+    class Posn(x, y)
+  check "a" :: ns.Int ~throws "ns.Int"
+  check "a" :: ns.Array ~throws "ns.Array"
+  check "a" :: ns.Array.of_length(10) ~throws "ns.Array.of_length(10)"
+  check "a" :: ns.Posn ~throws "ns.Posn"

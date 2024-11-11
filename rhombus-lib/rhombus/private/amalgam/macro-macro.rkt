@@ -436,8 +436,8 @@
                                                                  extra-shapes)
   (define kind protocol)
   (definition-transformer
-    (lambda (stx)
-      (syntax-parse (replace-head-dotted-name stx)
+    (lambda (stx name-prefix)
+      (syntax-parse stx
         #:datum-literals (group)
         [(form-id (alts-tag::alts (_::block (group q::operator-syntax-quote
                                                    (~and rhs (_::block body ...))))
@@ -572,7 +572,7 @@
                                                                           extra-kws
                                                                           extra-shapes)
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (parse-identifier-syntax-transformer
        stx
        compiletime-id extra-kws extra-shapes
@@ -619,6 +619,74 @@
                                                                                    (syntax->list #'(opt ...)))))]))
 
 (begin-for-syntax
+  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime
+                      make-transformer-id extra-get-static-infoss-stx extra-shapes
+                      report-keywords)
+    (lambda (stx)
+      (syntax-parse stx
+        [(_ pre-parseds self-ids all-ids extra-argument-binds)
+         (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
+                                           (syntax->list #'self-ids)
+                                           (syntax->list #'all-ids)
+                                           (syntax->list #'extra-argument-binds)
+                                           make-transformer-id
+                                           extra-get-static-infoss-stx
+                                           extra-shapes
+                                           #:report-keywords report-keywords)]))))
+
+(define-syntax (define-identifier-syntax-definition-sequence-transformer stx)
+  (syntax-parse stx
+    #:literals (syntax)
+    [(_ id space
+        (~optional (~seq #:extra ([extra-kw extra-get-static-infos extra-shape] ...))
+                   #:defaults ([(extra-kw 1) '()]
+                               [(extra-get-static-infos 1) '()]
+                               [(extra-shape 1) '()]))
+        #'make-transformer-id)
+     #`(begin
+         (define-defn-syntax id
+           (make-identifier-syntax-definition-sequence-transformer-runtime 'space
+                                                                           #'compiletime-id
+                                                                           '(extra-kw ...)
+                                                                           '(extra-shape ...)))
+         (begin-for-syntax
+           (define-syntax compiletime-id
+             (make-identifier-syntax-definition-sequence-transformer-compiletime
+              #'make-transformer-id #'(extra-get-static-infos ...) '(extra-shape ...)))))]))
+
+(define-for-syntax (make-identifier-syntax-definition-sequence-transformer-runtime space-sym
+                                                                                   compiletime-id
+                                                                                   extra-kws
+                                                                                   extra-shapes)
+  (definition-transformer
+    (lambda (stx name-prefix)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id q::identifier-sequence-syntax-quote
+                 (~and rhs (tag::block
+                            (~var opt (:sequence-transformer-options space-sym))
+                            body ...)))
+        (define p (parse-transformer-definition #'q.g #'(tag body ...)))
+        (define name (pre-parsed-name p))
+        (build-syntax-definitions/maybe-extension
+         (list space-sym) name (pre-parsed-extends p)
+         #`(let ([#,name (#,compiletime-id #,p q.gs opt.self-id opt.all-id #,(extract-extra-binds stx extra-kws extra-shapes #'opt #f))])
+             #,name))]))))
+
+(begin-for-syntax
+  (define-for-syntax (make-identifier-syntax-definition-sequence-transformer-compiletime
+                      make-transformer-id extra-get-static-infoss-stx extra-shapes)
+    (lambda (stx)
+      (syntax-parse stx
+        [(_ pre-parsed gs self-id all-id extra-argument-binds)
+         (parse-transformer-definition-sequence-rhs #'pre-parsed #'self-id #'all-id
+                                                    #'extra-argument-binds
+                                                    make-transformer-id
+                                                    extra-get-static-infoss-stx
+                                                    extra-shapes
+                                                    #'gs)]))))
+
+(begin-for-syntax
   (define (extract-extra-binds stx extra-kws extra-shapes opts main-kws)
     (define-values (kws-stx binds-stx)
       (for/lists (kws-stx binds-stx) ([opt (in-list (syntax->list opts))]
@@ -656,58 +724,3 @@
                  (hash-set ht (syntax-e kw-stx) bind)))
     (for/list ([kw (in-list extra-kws)])
       (hash-ref ht kw #f))))
-
-(begin-for-syntax
-  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime
-                      make-transformer-id extra-get-static-infoss-stx extra-shapes
-                      report-keywords)
-    (lambda (stx)
-      (syntax-parse stx
-        [(_ pre-parseds self-ids all-ids extra-argument-binds)
-         (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
-                                           (syntax->list #'self-ids)
-                                           (syntax->list #'all-ids)
-                                           (syntax->list #'extra-argument-binds)
-                                           make-transformer-id
-                                           extra-get-static-infoss-stx
-                                           extra-shapes
-                                           #:report-keywords report-keywords)]))))
-
-(define-syntax (define-identifier-syntax-definition-sequence-transformer stx)
-  (syntax-parse stx
-    #:literals (syntax)
-    [(_ id space
-        #'make-transformer-id)
-     #`(begin
-         (define-defn-syntax id
-           (make-identifier-syntax-definition-sequence-transformer-runtime 'space
-                                                                           #'compiletime-id))
-         (begin-for-syntax
-           (define-syntax compiletime-id
-             (make-identifier-syntax-definition-sequence-transformer-compiletime #'make-transformer-id))))]))
-
-(define-for-syntax (make-identifier-syntax-definition-sequence-transformer-runtime space-sym
-                                                                                   compiletime-id)
-  (definition-transformer
-    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-id q::identifier-sequence-syntax-quote
-                 (~and rhs (tag::block
-                            (~var opt (:sequence-transformer-options space-sym))
-                            body ...)))
-        (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-        (define name (pre-parsed-name p))
-        (build-syntax-definitions/maybe-extension
-         (list space-sym) name (pre-parsed-extends p)
-         #`(let ([#,name (#,compiletime-id #,p q.gs opt.self-id opt.all-id)])
-             #,name))]))))
-
-(begin-for-syntax
-  (define-for-syntax (make-identifier-syntax-definition-sequence-transformer-compiletime make-transformer-id)
-    (lambda (stx)
-      (syntax-parse stx
-        [(_ pre-parsed gs self-id all-id)
-         (parse-transformer-definition-sequence-rhs #'pre-parsed #'self-id #'all-id
-                                                    make-transformer-id
-                                                    #'gs)]))))

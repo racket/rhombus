@@ -55,9 +55,9 @@
 (define (veneer-expand-data-internal-info-name data)
   (syntax-parse (veneer-expand-data-stx data)
     [(_ base-stx scope-stx
-        name
+        reflect-name
         . _)
-     #'name]))
+     #'reflect-name]))
 
 (define (lookup who info key)
   (unless (veneer-data? info)

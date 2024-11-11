@@ -169,7 +169,7 @@ serializing and deserializing values.
  @rhombus(deserialize, ~datum) in the enclosing module.
 
  The enclosing submodule normally should have a name of the form
- @List(@rhombus(deserialize_, ~datum), @rhombus(Name, ~var), @rhombus(_,~datum), @rhombus(version, ~var))
+ @List(@rhombus(deserialize_, ~datum), @rhombus(Name, ~var), @rhombus(_, ~datum), @rhombus(version, ~var))
  where @rhombus(Name, ~var) is the name of a serializable class declared
  in the submodule's parent, and @rhombus(version, ~var) is the class's
  old version.

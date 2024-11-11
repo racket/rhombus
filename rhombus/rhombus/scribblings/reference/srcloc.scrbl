@@ -4,17 +4,6 @@
 
 @title{Source Locations}
 
-@dispatch_table(
-  "source location"
-  Srcloc
-  srcloc.source
-  srcloc.line
-  srcloc.column
-  srcloc.position
-  srcloc.span
-  srcloc.to_report_string
-)
-
 @doc(
   annot.macro 'Srcloc'
 ){
@@ -54,11 +43,11 @@
 }
 
 @doc(
-  fun Srcloc.source(srcloc :: Srcloc) :: Any
-  fun Srcloc.line(srcloc :: Srcloc) :: maybe(PosInt)
-  fun Srcloc.column(srcloc :: Srcloc) :: maybe(NonnegInt)
-  fun Srcloc.position(srcloc :: Srcloc) :: maybe(PosInt)
-  fun Srcloc.span(srcloc :: Srcloc) :: maybe(NonnegInt)
+  method (srcloc :: Srcloc).source() :: Any
+  method (srcloc :: Srcloc).line() :: maybe(PosInt)
+  method (srcloc :: Srcloc).column() :: maybe(NonnegInt)
+  method (srcloc :: Srcloc).position() :: maybe(PosInt)
+  method (srcloc :: Srcloc).span() :: maybe(NonnegInt)
 ){
 
  Extracts a component of a source location.
@@ -67,7 +56,7 @@
 
 
 @doc(
-  fun Srcloc.to_report_string(srcloc :: Srcloc) :: String
+  method (srcloc :: Srcloc).to_report_string() :: String
 ){
 
  Converts a source location into a human-readable string suitable for

@@ -7,23 +7,6 @@
 An @deftech{output port} is a @tech{port} specifically for output, and
 an @deftech{output string port} writes to a @tech{byte string}.
 
-@dispatch_table(
-  "output port"
-  Port.Output
-  out.flush()
-  out.print(arg, ...)
-  out.println(arg, ...)
-  out.show(arg, ...)
-  out.showln(arg, ...)
-)
-
-@dispatch_table(
-  "output string port"
-  Port.Output
-  out.get_bytes()
-  out.get_string()
-)
-
 @doc(
   annot.macro 'Port.Output'
   annot.macro 'Port.Output.String'
@@ -54,21 +37,17 @@ an @deftech{output string port} writes to a @tech{byte string}.
 }
 
 @doc(
-  fun Port.Output.print(out :: Port.Output,
-                        v :: Any, ...,
-                        ~mode: mode :: PrintMode = #'text)
+  method (out :: Port.Output).print(v :: Any, ...,
+                                    ~mode: mode :: PrintMode = #'text)
     :: Void
-  fun Port.Output.println(out :: Port.Output,
-                          v :: Any, ...,
-                          ~mode: mode :: PrintMode = #'text)
+  method (out :: Port.Output).println(v :: Any, ...,
+                                      ~mode: mode :: PrintMode = #'text)
     :: Void
-  fun Port.Output.show(out :: Port.Output,
-                       v :: Any, ...,
-                       ~mode: mode :: PrintMode = #'text)
+  method (out :: Port.Output).show(v :: Any, ...,
+                                   ~mode: mode :: PrintMode = #'text)
     :: Void
-  fun Port.Output.showln(out :: Port.Output,
-                         v :: Any, ...,
-                         ~mode: mode :: PrintMode = #'text)
+  method (out :: Port.Output).showln(v :: Any, ...,
+                                     ~mode: mode :: PrintMode = #'text)
     :: Void
 ){
 
@@ -79,10 +58,13 @@ an @deftech{output string port} writes to a @tech{byte string}.
 }
 
 @doc(
-  fun Port.Output.open_file(path :: PathString,
-                            ~exists: exists_flag
-                                       :: Port.Output.ExistsFlag = #'error)
-    :: Port.Output
+  fun Port.Output.open_file(
+    path :: PathString,
+    ~exists: exists_flag :: Port.Output.ExistsMode = #'error,
+    ~mode: mode :: Port.Mode = #'binary,
+    ~permissions: permissions :: Int.in(0, 65535) = 0o666,
+    ~replace_permissions: replace_permissions = #false
+  ) :: Port.Output
 ){
 
  Creates an @tech{output port} that writes to the @tech{path} @rhombus(file).
@@ -141,25 +123,25 @@ an @deftech{output string port} writes to a @tech{byte string}.
 }
 
 @doc(
-  fun Port.Output.get_bytes(out :: Port.Output.String)
+  method (out :: Port.Output.String).get_bytes()
     :: Bytes
-  fun Port.Output.get_string(out :: Port.Output.String)
+  method (out :: Port.Output.String).get_string()
     :: String
 ){
 
- @rhombus(Port.Output.get_bytes) returns the bytes accumulated in the
+ @rhombus(Port.Output.String.get_bytes) returns the bytes accumulated in the
  @tech{output string port} @rhombus(out) so far in a freshly allocated
  @tech{byte string} (including any bytes written after the port's
  current position, if any).
 
- @rhombus(Port.Output.get_string) is like
- @rhombus(Port.Output.get_bytes), but returns a string converted from
+ @rhombus(Port.Output.String.get_string) is like
+ @rhombus(Port.Output.String.get_bytes), but returns a string converted from
  the byte string instead.
 
 }
 
 @doc(
-  fun Port.Output.flush(out :: Port.Output = Port.Output.current())
+  method Port.Output.flush(out :: Port.Output = Port.Output.current())
     :: Void
 ){
 
@@ -168,7 +150,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 }
 
 @doc(
-  enum Port.Output.ExistsFlag:
+  enum Port.Output.ExistsMode:
     error
     append
     update

@@ -19,7 +19,7 @@
   (pi
    abs
    min max
-   floor ceiling round
+   floor ceiling round truncate
    sqrt
    log exp expt
    cos sin tan
@@ -41,7 +41,7 @@
 (define pi (atan 0 -1))
 
 (define-static-info-syntaxes (abs
-                              floor ceiling round
+                              floor ceiling round truncate
                               sqrt
                               exp
                               cos sin tan

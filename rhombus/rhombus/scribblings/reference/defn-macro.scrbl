@@ -58,6 +58,8 @@
     ~op_stx $id
     ~all_stx: $id
     ~all_stx $id
+    ~name_prefix: $id
+    ~name_prefix $id
 ){
 
  Defines @rhombus(defined_name) as a macro
@@ -76,7 +78,11 @@
  @rhombus(defn.macro) binds). The @rhombus(~all_stx) option binds an
  identifier to the input that is matched by the
  @rhombus(prefix_macro_pattern), which includes the identifier or
- operator that @rhombus(~op_stx) would capture.
+ operator that @rhombus(~op_stx) would capture. The @rhombus(~name_prefix)
+ option binds an identifier to a symbol or @rhombus(#false) for a name
+ prefix created by an enclosing namespace; this prefix should not be used
+ for the binding, but it should be used for run-time reports, such as as
+ naming the origin of a run-time error.
 
  Using @vbar alternatives, a single definition can have any number of
  @rhombus(pattern)s, which are tried in order. The @rhombus(defined_name)

@@ -40,7 +40,7 @@
 
 (define-defn-syntax delayed_declare
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         [(_ name:id)
          #`((begin
@@ -68,7 +68,7 @@
 
 (define-defn-syntax delayed_complete
   (definition-transformer
-    (lambda (stx)
+    (lambda (stx name-prefix)
       (syntax-parse stx
         [(_ name-seq::dotted-identifier-sequence (_::block g))
          #:with (~var name (:hier-name-seq in-name-root-space in-annotation-space name-path-op name-root-ref)) #'name-seq
