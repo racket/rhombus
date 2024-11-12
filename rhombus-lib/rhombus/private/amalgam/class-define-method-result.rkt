@@ -21,7 +21,7 @@
 (define-syntax (define-method-result stx)
   (syntax-parse stx
     [(_ id (ret::ret-annotation) (super-result-id ...)
-        maybe-final-id convert-ok? checked-append? checked-compare? kind arity
+        maybe-id convert-ok? checked-append? checked-compare? kind arity
         maybe-call-statinfo-id
         maybe-ref-statinfo-id+id
         maybe-set-statinfo-id+id
@@ -174,7 +174,7 @@
                                        (quote-syntax #,all-static-infos)
                                        (quote arity))))))
                 null)
-         #,@(gen #'maybe-final-id)
+         #,@(gen #'maybe-id)
          #,@(gen #'maybe-call-statinfo-id #t)
          #,@(gen-bounce #'maybe-ref-statinfo-id+id #'#%index-get #'#%index-result)
          #,@(gen-bounce #'maybe-set-statinfo-id+id #'#%index-set #f)

@@ -17,21 +17,21 @@
 (begin-for-syntax
   (provide (property-out entry-point-transformer)
            :entry-point
-           :entry-point-arity
-           check-entry-point-arity-result)
+           :entry-point-shape
+           check-entry-point-shape-result)
 
-  (property entry-point-transformer transformer (arity-extract))
+  (property entry-point-transformer transformer (shape-extract))
 
   (define (check-entry-point-result form proc adjustments)
     (unless (syntax? form)
       (raise-bad-macro-result (proc-name proc) "entry point" form))
     form)
 
-  (define (check-entry-point-arity-result form-in proc)
+  (define (check-entry-point-shape-result form-in proc)
     (define (bad)
       (raise-bad-macro-result (proc-name proc)
                               #:syntax-for? #f
-                              "entry point arity" form-in))
+                              "entry point shape" form-in))
     (define (arity-list? v)
       (and (pair? v)
            (pair? (cdr v))
@@ -42,7 +42,7 @@
                    (andmap keyword? v))
         (bad))
       v)
-    (define form
+    (define (arity-form form-in)
       (cond
         [(or (not form-in)
              (exact-integer? form-in))
@@ -60,6 +60,16 @@
              [(not allowed-kws-in) allowed-kws-in]
              [else (check-keyword-list (to-list #f allowed-kws-in))]))
          (list mask required-kws allowed-kws)]))
+    (define form
+      (if (hash? form-in)
+          (for/hash ([(k v) (in-hash form-in)])
+            (case k
+              [(arity) (values k (arity-form v))]
+              [(name)
+               (unless (symbol? v) (bad))
+               (values k v)]
+              [else (bad)]))
+          (bad)))
     (datum->syntax #f form))
 
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))
@@ -73,14 +83,14 @@
     #:check-result check-entry-point-result)
 
   (define-rhombus-transform
-    #:syntax-class :entry-point-arity
+    #:syntax-class :entry-point-shape
     #:desc "entry-point form"
     #:parsed-tag #:rhombus/entry_point
     #:in-space in-entry-point-space
     #:transformer-ref (lambda (v)
                         (define t (entry-point-transformer-ref v))
-                        (and t (transformer (entry-point-transformer-arity-extract t))))
-    #:check-result check-entry-point-arity-result))
+                        (and t (transformer (entry-point-transformer-shape-extract t))))
+    #:check-result check-entry-point-shape-result))
 
 (define-syntax (define-entry-point-syntax stx)
   (syntax-parse stx

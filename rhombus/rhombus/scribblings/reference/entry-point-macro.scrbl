@@ -50,12 +50,23 @@
 
 @itemlist(
 
- @item{@rhombus(#'arity): gets an encoding of the arity that the
-  generated function will have, not counting any extra arguments that
-  might be added through an adjustment. The encoding for an arity is
-  explained below. The @rhombus(adj_id) specified by @rhombus(~adjustment)
-  is bound to @rhombus(#false). This mode of expansion is sometimes used
-  before the @rhombus(#'function) mode.}
+ @item{@rhombus(#'shape): gets an encoding of information about the
+  to-be-generated function as a @tech{map}. The @rhombus(adj_id) specified
+  by @rhombus(~adjustment) is bound to @rhombus(#false). This mode of
+  expansion is sometimes used before the @rhombus(#'function) mode.
+
+  The map can have any or all of the following keys:
+
+  @itemlist(
+
+   @item{@rhombus(#'arity): The arity of the generated function, not
+   counting any extra arguments that might be added through an adjustment.
+   The encoding for an arity is explained below.}
+
+   @item{@rhombus(#'name): A symbol for the function's name for error
+   reporting and other run-time purposes.}
+
+ )}
 
  @item{@rhombus(#'function): gets a function to implement the entry
   point. The result can be another entry point, or it can be a function
@@ -99,8 +110,8 @@
       ~mode mode
       ~adjustment adj
       match mode
-      | #'arity:
-          [2, [], []]
+      | #'shape:
+          { #'arity: [2, [], []] }
       | #'function:
           let [arg, ...] = adj.prefix_arguments
           entry_point_meta.pack(
@@ -139,8 +150,8 @@
   ~meta
   fun entry_point_meta.pack(stx :: Syntax) :: Syntax
   fun entry_point_meta.unpack(stx :: Syntax) :: Syntax
-  fun entry_point_meta.pack_arity(arity :: False || Int || List) :: Syntax
-  fun entry_point_meta.unpack_arity(stx :: Syntax) :: False || Int || List
+  fun entry_point_meta.pack_shape(shape :: Map) :: Syntax
+  fun entry_point_meta.unpack_shape(stx :: Syntax) :: Map
 ){
 
  The @rhombus(entry_point_meta.pack) function packs an expression for a
@@ -150,12 +161,12 @@
  @rhombus(entry_point_meta.unpack) function is the inverse of
  @rhombus(entry_point_meta.pack).
 
- The @rhombus(entry_point_meta.pack_arity) and
- @rhombus(entry_point_meta.unpack_arity) functions similarly handle
- encodings of entry-point arity results. An entry point macro should
+ The @rhombus(entry_point_meta.pack_shape) and
+ @rhombus(entry_point_meta.unpack_shape) functions similarly handle
+ encodings of entry-point shape results. An entry point macro should
  @emph{not} explicitly pack its result with
- @rhombus(entry_point_meta.pack_arity), but these functions can be useful
- when using the @rhombus(entry_point_meta.Arity, ~stxclass) syntax class.
+ @rhombus(entry_point_meta.pack_shape), but these functions can be useful
+ when using the @rhombus(entry_point_meta.Shape, ~stxclass) syntax class.
 
 }
 
@@ -165,7 +176,7 @@
     kind: ~group
     fields:
       group
-  syntax_class entry_point_meta.Arity:
+  syntax_class entry_point_meta.Shape:
     kind: ~group
     fields:
       group
@@ -173,8 +184,8 @@
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), but for entry
  points to run in either @rhombus(#'function) mode with
- @rhombus(entry_point_meta.Parsed, ~stxclass) or @rhombus(#'arity) mode via
- @rhombus(entry_point_meta.Arity, ~stxclass).
+ @rhombus(entry_point_meta.Parsed, ~stxclass) or @rhombus(#'shape) mode via
+ @rhombus(entry_point_meta.Shape, ~stxclass).
 
 }
 

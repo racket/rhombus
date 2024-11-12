@@ -8,6 +8,7 @@
                      "veneer-parse.rkt"
                      "class-method-result.rkt"
                      "statically-str.rkt")
+         racket/unsafe/undefined
          "class-method.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt"
@@ -33,7 +34,9 @@
          "class-dot-transformer.rkt"
          "is-static.rkt"
          "realm.rkt"
-         "name-prefix.rkt")
+         "name-prefix.rkt"
+         "static-info.rkt"
+         "indirect-static-info-key.rkt")
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
@@ -288,47 +291,47 @@
   (for/fold ([names '()] [ids '()] [defns '()])
             ([(name mix) (in-hash method-mindex)]
              #:unless (hash-ref replaced-ht name #f))
-    (cond
-      [(and (not (mindex-final? mix))
-            (not final?))
-       (define proc-id (car (generate-temporaries (list name))))
-       (define stx-id (car (generate-temporaries (list name))))
-       (define prefixed-name (add-name-prefix reflect-name (datum->syntax #f name)))
-       (values (cons name names)
-               (cons stx-id ids)
-               (list* #`(define #,proc-id
-                          (make-method-accessor '#,prefixed-name #,name-ref-id #,(mindex-index mix)))
-                      #`(define-syntax #,stx-id
-                          (make-method-accessor-transformer '#,prefixed-name
-                                                            (quote-syntax #,name-ref-id)
-                                                            #,(mindex-index mix)
-                                                            (quote-syntax #,proc-id)
-                                                            #,(let ([ids (hash-ref method-results name #f)])
-                                                                (and ids
-                                                                     #`(quote-syntax #,(car ids))))))
-                      defns))]
-      [(or
-        ;; if the method is inherited, we need to check whether
-        ;; a provided instance is the subclass, not a superclass
-        (mindex-inherited? mix)
-        ;; if the method is in an interface, then even if it's final,
-        ;; we need to check using `name-ref-id`, because...
-        via-interface?)
-       (define proc-id (vector-ref method-vtable (mindex-index mix)))
-       (define stx-id (car (generate-temporaries (list name))))
-       (define prefixed-name (add-name-prefix reflect-name (datum->syntax #f name)))
-       (values (cons name names)
-               (cons stx-id ids)
-               (list*
-                #`(define-syntax #,stx-id
-                    (make-method-checked-static-transformer '#,prefixed-name
-                                                            (quote-syntax #,name?-id)
-                                                            (quote-syntax #,proc-id)))
-                defns))]
-      [else
-       (values (cons name names)
-               (cons (vector-ref method-vtable (mindex-index mix)) ids)
-               defns)])))
+    (define prefixed-name (add-name-prefix reflect-name (datum->syntax #f name)))
+    (define final-method? (or (mindex-final? mix)
+                              final?))
+    (define make-rator
+      (cond
+        [(not final-method?)
+         (define idx (mindex-index mix))
+         (lambda (obj-id)
+           #`(method-ref #,name-ref-id #,obj-id #,idx))]
+        [else
+         (lambda (obj-id) (vector-ref method-vtable (mindex-index mix)))]))
+    (define proc-id (car (generate-temporaries (list name))))
+    (define new-defns
+      (append
+       (list
+        #`(define #,proc-id #,(gen-wrapper-at-arity (mindex-arity mix) make-rator prefixed-name
+                                                    (and (or (mindex-inherited? mix)
+                                                             (not final-method?)
+                                                             via-interface?)
+                                                         name?-id)
+                                                    (datum->syntax
+                                                     #f
+                                                     (or (mindex-reflect-name mix)
+                                                         prefixed-name)))))
+       (let ([si-id
+              ;; piggy-back on method implement's static info, but if there is
+              ;; no implementation (because it's abstract), then the method-result
+              ;; name will also be used for static info
+              (let ([id (vector-ref method-vtable (mindex-index mix))])
+                (if (eq? id '#:abstract)
+                    (let ([ids (hash-ref method-results name #f)])
+                      (and ids (car ids)))
+                    id))])
+         (if si-id
+             (list
+              #`(define-static-info-syntax #,proc-id (#%indirect-static-info #,si-id)))
+             null))
+       defns))
+    (values (cons name names)
+            (cons proc-id ids)
+            new-defns)))
 
 (define-for-syntax (filter-replaced replaced-ht names proc-ids)
   (for/list ([name (in-list (syntax->list names))]
@@ -336,91 +339,72 @@
              #:unless (hash-ref replaced-ht (syntax-e name) #f))
     (list name proc-id)))
 
-(define (make-method-accessor name ref idx)
-  (procedure-rename
-   (make-keyword-procedure
-    (lambda (kws kw-args obj . args)
-      (keyword-apply (method-ref ref obj idx) kws kw-args obj args))
-    (lambda (obj . args)
-      (apply (method-ref ref obj idx) obj args)))
-   name))
-
-(define-for-syntax (make-method-accessor-transformer name name-ref-id idx proc-id ret-info-id)
-  (expression-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (op)
-       [(rator-id (~and args (tag::parens self arg ...)) . tail)
-        #:when (not (syntax-parse #'self [(_ kw:keyword . _) #t] [_ #f]))
-        (define obj-id #'this)
-        (define rator #`(method-ref #,name-ref-id #,obj-id #,idx))
-        (define r (and ret-info-id
-                       (syntax-local-method-result ret-info-id)))
-        (define-values (call new-tail to-anon-function?)
-          (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))
-                               #:static? (is-static-context? #'tag)
-                               #:rator-stx (datum->syntax #f name #'rator-id)
-                               #:rator-arity (and r (method-result-arity r))
-                               #:can-anon-function? #t))
-        (values (let ([call #`(let ([#,obj-id (rhombus-expression self)])
-                                #,call)])
-                  (if (and r (not to-anon-function?))
-                      (wrap-static-info* call (method-result-static-infos r))
-                      call))
-                #'tail)]
-       [(head (tag::parens) . _)
-        #:when (is-static-context? #'tag)
-        (raise-syntax-error #f
-                            (string-append "wrong number of arguments in function call" statically-str)
-                            (datum->syntax #f name #'head))]
-       [(_ . tail)
-        (values proc-id #'tail)]))))
-
-(define-for-syntax (make-method-checked-static-transformer reflect-name name?-id proc-id)
-  (expression-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (op)
-       [(rator-id (~and args (tag::parens self arg ...)) . tail)
-        #:when (not (syntax-parse #'self [(_ kw:keyword . _) #t] [_ #f]))
-        (define obj-id #'this)
-        (define-values (call new-tail to-anon-function?)
-          (parse-function-call proc-id (list obj-id) #'(#,obj-id (tag arg ...))
-                               #:static? (is-static-context? #'tag)
-                               #:rator-stx (datum->syntax #f reflect-name #'rator-id)))
-        (values (wrap-static-info*
-                 #`(let ([#,obj-id (rhombus-expression self)])
-                     (unless (#,name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id))
-                     #,(unwrap-static-infos call))
-                 (extract-static-infos call))
-                #'tail)]
-       [(head (tag::parens) . _)
-        #:when (is-static-context? #'tag)
-        (raise-syntax-error #f
-                            (string-append "wrong number of arguments in function call" statically-str)
-                            (datum->syntax #f reflect-name #'head))]
-       [(_ . tail)
-        (values #`(wrap-object-check #,proc-id '#,reflect-name #,name?-id)
-                #'tail)]))))
-
-(define (wrap-object-check proc name name?)
-  (define-values (req-kws allowed-kws) (procedure-keywords proc))
+(define-for-syntax (gen-wrapper-at-arity a make-rator new-proc-id maybe-name?-id reflect-name)
+  (define mask (cond
+                 [(not a) -2]
+                 [(integer? a) a]
+                 [else (car a)]))
+  (define allowed-kws (and a (if (integer? a) null (caddr a))))
+  (define (n-args n) (for/list ([i (in-range n)])
+                       (string->symbol (format "arg~a" i))))
+  (define (check obj-id)
+    (if maybe-name?-id
+        #`(unless (#,maybe-name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id))
+        #'(void)))
   (cond
     [(null? allowed-kws)
-     (procedure-reduce-arity-mask (lambda (obj . args)
-                                    (unless (name? obj) (raise-not-an-instance name obj))
-                                    (apply proc obj args))
-                                  (procedure-arity-mask proc)
-                                  name)]
+     (define proc #`(case-lambda
+                      #,@(let loop ([mask mask] [n 0])
+                           (cond
+                             [(= mask 0) '()]
+                             [(= mask (bitwise-not (sub1 (arithmetic-shift 1 n))))
+                              ;; accept n or more
+                              (define args (n-args n))
+                              #`([(#,@args . rest)
+                                  #,(check (car args))
+                                  (apply #,(make-rator (car args)) #,@args rest)])]
+                             [(not (zero? (bitwise-and mask (arithmetic-shift 1 n))))
+                              (define args (n-args n))
+                              (cons #`[#,args
+                                       #,(check (car args))
+                                       (#,(make-rator (car args)) . #,args)]
+                                    (loop (- mask (arithmetic-shift 1 n)) (add1 n)))]
+                             [else
+                              (loop mask (add1 n))]))))
+     (syntax-property proc 'inferred-name (syntax-e reflect-name))]
+    [(or (not allowed-kws)
+         ;; implemented with multiple keyword cases?
+         (not (zero? (bitwise-and mask (sub1 (arithmetic-shift 1 (sub1 (integer-length mask))))))))
+     #`(procedure-reduce-keyword-arity-mask (make-keyword-procedure
+                                             (lambda (kws kw-args obj . args)
+                                               #,(check #'obj)
+                                               (keyword-apply #,(make-rator #'obj) kws kw-args obj args)))
+                                            #,mask
+                                            '#,(if a (cadr a) '())
+                                            '#,allowed-kws
+                                            '#,reflect-name)]
     [else
-     (procedure-reduce-keyword-arity-mask (make-keyword-procedure
-                                           (lambda (kws kw-args obj . args)
-                                             (unless (name? obj) (raise-not-an-instance name obj))
-                                             (keyword-apply proc kws kw-args obj args)))
-                                          (procedure-arity-mask proc)
-                                          req-kws
-                                          allowed-kws
-                                          name)]))
+     (define args (n-args (- (integer-length mask) (if (negative? mask) 0 1))))
+     (define reqd-kw (for/hash ([kw (in-list (cadr a))])
+                       (values kw #t)))
+     (define kw-formal-args (apply append
+                                   (for/list ([kw (in-list allowed-kws)]
+                                              [i (in-naturals)])
+                                     (define arg (string->symbol (format "kw~a" i)))
+                                     (list kw (if (hash-ref reqd-kw kw #f)
+                                                  arg
+                                                  (list arg #'unsafe-undefined))))))
+     (define kw-args (for/list ([kw/arg (in-list kw-formal-args)])
+                       (if (pair? kw/arg) (car kw/arg) kw/arg)))
+     (define proc (if (negative? mask)
+                      #`(lambda (#,@args #,@kw-formal-args . rest)
+                          #,(check (car args))
+                          (apply #,@(make-rator (car args)) #,@args #,@kw-args rest))
+                      #`(lambda (#,@args #,@kw-formal-args)
+                          #,(check (car args))
+                          (#,(make-rator (car args)) #,@args #,@kw-args))))
+     (syntax-property proc 'inferred-name (syntax-e reflect-name))]))
+
 (define-for-syntax (check-static stx)
   (unless (is-static-context/tail? stx)
     (raise-syntax-error #f

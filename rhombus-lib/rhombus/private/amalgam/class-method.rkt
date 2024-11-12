@@ -137,7 +137,7 @@
                           (mindex-index (car old-val))
                           (hash-count ht)))
             (values shape
-                    (cons (mindex i final? protected? property? arity #t) shape)
+                    (cons (mindex i final? protected? property? arity #t #f) shape)
                     i
                     old-val
                     final?
@@ -273,8 +273,9 @@
                  (values (if (or final?
                                  (not (equal? (added-method-arity added) (mindex-arity mix))))
                              (let ([property? (eq? (added-method-kind added) 'property)]
-                                   [arity (added-method-arity added)])
-                               (hash-set ht (syntax-e id) (cons (mindex idx final? protected? property? arity #f) id)))
+                                   [arity (added-method-arity added)]
+                                   [reflect-name (added-method-reflect-name added)])
+                               (hash-set ht (syntax-e id) (cons (mindex idx final? protected? property? arity #f reflect-name) id)))
                              ht)
                          (hash-set vtable-ht idx (added-method-rhs-id added))
                          priv-ht
@@ -316,7 +317,8 @@
                                             (eq? (added-method-exposure added) 'protected)
                                             (eq? (added-method-kind added) 'property)
                                             (added-method-arity added)
-                                            #f)
+                                            #f
+                                            (added-method-reflect-name added))
                                     id))
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
@@ -421,15 +423,15 @@
       #`(define-method-result #,(added-method-result-id added)
           #,(added-method-maybe-ret added)
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
-          ;; When calls do not go through vtable, also add static info
-          ;; as #%call-result to binding; non-vtable calls include final methods
-          ;; and `super` calls to non-final methods... which is all methods,
-          ;; since non-final methods are potentially targets of `super` calls
+          ;; Also add static info as #%call-result to binding; use the method-result id
+          ;; to hold this information if there's implementation name to attach it to
           #,(or (let ([id/property (hash-ref method-private (syntax-e (added-method-id added)) #f)])
                   (if (pair? id/property) (car id/property) id/property))
-                (and (not (eq? (added-method-body added) 'abstract))
-                     (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
-                       (vector-ref method-vtable (mindex-index mix)))))
+                (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
+                  (define id (vector-ref method-vtable (mindex-index mix)))
+                  (if (eq? id '#:abstract)
+                      (added-method-result-id added)
+                      id)))
           ;; result annotation can convert if final
           #,(or in-final?
                 (eq? (added-method-disposition added) 'final))

@@ -170,10 +170,11 @@
                          disposition ; 'abstract, 'final, 'private
                          exposure    ; 'private, 'public, 'protected
                          kind        ; 'method, 'property
-                         arity))     ; #f, integer, or (list integer required-list allowed-list)
+                         arity       ; #f, integer, or (list integer required-list allowed-list)
+                         reflect-name)) ; #f or symbol
 
 ;; used for a table produced by `extract-method-tables`
-(struct mindex (index final? protected? property? arity inherited?))
+(struct mindex (index final? protected? property? arity inherited? reflect-name))
 
 ;; When a private method or property overrides one from a privately
 ;; implemented interface, and when the enclosing class is not final,

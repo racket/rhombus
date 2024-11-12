@@ -238,7 +238,7 @@
          [(#:private-property) (values 'method 'method 'private 'private 'property)]
          [(#:private-override-property) (values 'method 'override 'private 'private 'property)]
          [else (error "method kind not handled" #'tag)]))
-     (define arity (extract-arity #'rhs))
+     (define-values (arity reflect-name) (extract-shape #'rhs))
      (hash-set options 'methods (cons (added-method #'id
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
@@ -254,7 +254,8 @@
                                                     disposition
                                                     exposure
                                                     kind
-                                                    arity)
+                                                    arity
+                                                    reflect-name)
                                       (hash-ref options 'methods null)))]
     [((~and tag (~or* #:abstract #:abstract-protected
                       #:abstract-property #:abstract-protected-property
@@ -269,7 +270,7 @@
          [(#:abstract-override) (values 'override 'public 'method)]
          [(#:abstract-override-property) (values 'override 'public 'property)]
          [else (error "method kind not handled" #'tag)]))
-     (define arity (extract-arity #'rhs))
+     (define-values (arity reflect-name) (extract-shape #'rhs))
      (hash-set options 'methods (cons (added-method #'id
                                                     '#:abstract
                                                     #'rhs
@@ -285,7 +286,8 @@
                                                     'abstract
                                                     exposure
                                                     kind
-                                                    arity)
+                                                    arity
+                                                    reflect-name)
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
@@ -298,15 +300,21 @@
       (hash-set new-options extra-key (append l (hash-ref new-options extra-key '())))
       new-options))
 
-(define-for-syntax (extract-arity rhs)
+(define-for-syntax (extract-shape rhs)
   (syntax-parse rhs
-    [(_ e-arity::entry-point-arity)
-     (and (syntax-e #'e-arity.parsed)
-          (let ([a (syntax->datum #'e-arity.parsed)])
-            (if (exact-integer? a)
-                (* 2 a)
-                (cons (* 2 (car a)) (cdr a)))))]
-    [_ #f]))
+    [(_ e-arity::entry-point-shape)
+     (define ht (syntax-e #'e-arity.parsed))
+     (cond
+       [ht (values
+            (let ([a (hash-ref (syntax-e #'e-arity.parsed) 'arity #f)])
+              (and a
+                   (let ([a (syntax->datum a)])
+                     (if (exact-integer? a)
+                         (* 2 a)
+                         (cons (* 2 (car a)) (cdr a))))))
+            (hash-ref ht 'name #f))]
+       [else (values #f #f)])]
+    [_ (values #f #f)]))
 
 (define-for-syntax (class-clause-accum forms)
   ;; early processing of a clause to accumulate information of `class-data`;
@@ -319,21 +327,26 @@
 (define-for-syntax (class-clause-extract who accum key)
   (define (method id rhs vis)
     (case key
-      [(method_names) (list id)]
+      [(method_names) (list (or (extract-name rhs) id))]
       [(method_arities) (list (extract-arity rhs))]
       [(method_visibilities) (list vis)]
       [else null]))
   (define (property id rhs vis)
     (case key
-      [(property_names) (list id)]
+      [(property_names) (list (or (extract-name rhs) id))]
       [(property_arities) (list (extract-arity rhs))]
       [(property_visibilities) (list vis)]
       [else null]))
-  (define (extract-arity e)
+  (define (extract-shape e key)
     (syntax-parse e
-      [(_ e-arity::entry-point-arity)
-       (syntax->datum #'e-arity.parsed)]
+      [(_ e-arity::entry-point-shape)
+       (define ht (syntax->datum #'e-arity.parsed))
+       (and ht (hash-ref ht key #f))]
       [_ #f]))
+  (define (extract-arity e)
+    (extract-shape e 'arity))
+  (define (extract-name e)
+    (extract-shape e 'name))
   (for/list ([a (in-list (reverse (syntax->list accum)))]
              #:do [(define v
                      (syntax-parse a
