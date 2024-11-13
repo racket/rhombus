@@ -65,7 +65,9 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (tag::block . body))
-        (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-body #'tag #'tag) #'body) #'tag)
+        (values (datum->syntax #f
+                               (cons (datum->syntax #'here 'rhombus-body #'tag #'tag)
+                                     #'body))
                 #'())]))))
 
 (define-syntax #%block
