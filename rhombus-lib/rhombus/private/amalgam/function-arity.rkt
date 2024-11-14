@@ -116,8 +116,10 @@
            (hash-union (cadr new-a) (cadr a))
            (and (caddr new-a) (caddr a) (hash-intersect (caddr new-a) (caddr a)))))))
 
-;; `kind` = #f => return boolean, `stx` and `fallback-stx` unused
-(define-for-syntax (check-arity stx fallback-stx a n kws rsts kwrsts kind)
+;; `kind` = #f => return boolean, `stx` and `fallback-stx` unused;
+;; if `always?` is true, then report not just whether the arity might might,
+;; but whether it definitely matches
+(define-for-syntax (check-arity stx fallback-stx a n kws rsts kwrsts kind #:always? [always? #f])
   (define orig-needed (if (pair? a)
                           (list->hash (cadr a))
                           #hasheq()))
@@ -132,9 +134,7 @@
        (and
         (if (and a
                  (zero? (bitwise-and (if rsts
-                                         (if (zero? n)
-                                             -1
-                                             (bitwise-not (sub1 (arithmetic-shift 1 (sub1 n)))))
+                                         (bitwise-not (sub1 (arithmetic-shift 1 n)))
                                          (arithmetic-shift 1 n))
                                      (if (pair? a) (car a) a))))
             (and kind
@@ -162,7 +162,18 @@
                                        "  keyword: ~"
                                        (keyword->immutable-string (hash-iterate-key needed (hash-iterate-first needed))))
                         (error-stx)))
-                  #t))))]
+                  #t)))
+        (or (not always?)
+            (and
+             a
+             (or (not rsts)
+                 (let ([all (bitwise-not (sub1 (arithmetic-shift 1 n)))])
+                   (= all (bitwise-and all (if (pair? a) (car a) a)))))
+             (or (not kwrsts)
+                 (and (pair? a)
+                      (not (caddr a))
+                      (let ()
+                        (= 0 (hash-count (or needed-kws orig-needed)))))))))]
       [(syntax-e (car kws))
        (define kw (syntax-e (car kws)))
        (define needed (hash-remove (or needed-kws orig-needed) kw))

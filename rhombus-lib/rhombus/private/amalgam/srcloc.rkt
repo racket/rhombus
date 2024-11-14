@@ -62,11 +62,12 @@
 ;; to the sequence.
 ;;
 ;; For most calls to `raise-syntax-error`, `respan` is applied
-;; automatically to the arguments. When `raise-syntax-error` is called
-;; in a trampolining macro, though, like the way `for` and `class` are
-;; implemented, then explicit `respan` may be needed. In those cases,
-;; `respan` may also be needed for input to `syntax-parse`, in case it
-;; is responsible for raising an exception when a match files.
+;; automatically to the arguments via `call-with-syntax-error-respan`.
+;; When `raise-syntax-error` is called in a trampolining macro,
+;; though, like the way `for` and `class` are implemented, then
+;; explicit `respan` may be needed. In those cases, `respan` may also
+;; be needed for input to `syntax-parse`, in case it is responsible
+;; for raising an exception when a match files.
 ;;
 ;; "Relocate" means to take source location from one syntax object and
 ;; use it for another. The target of a relocation is normally a

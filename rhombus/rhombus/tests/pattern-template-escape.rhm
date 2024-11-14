@@ -66,13 +66,13 @@ check:
   ~eval
   import: rhombus/meta open
   expr.macro '$1 + $2': '0'
-  ~throws "expected operator-macro pattern"
+  ~throws " expected macro identifier or operator"
 
 check:
   ~eval
   import: rhombus/meta open
   expr.macro '$x $ $x': '0'
-  ~throws "expected operator-macro pattern"
+  ~throws "expected macro identifier or operator"
 
 check:
   //  macro that acts as a template form

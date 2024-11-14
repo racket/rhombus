@@ -12,8 +12,8 @@ check:
   entry_point.macro 'identity':
     ~mode mode
     ~adjustment adj
-    if (mode == #'arity)
-    | 2
+    if (mode == #'shape)
+    | { #'arity: 2 }
     | check:
         adj ~is_a entry_point_meta.Adjustment
         adj.prefix_arguments ~is_a List.of(Syntax)
@@ -31,8 +31,8 @@ check:
   entry_point.macro 'identity':
     ~mode mode
     ~adjustment adj
-    if (mode == #'arity)
-    | [2, [], []]
+    if (mode == #'shape)
+    | { #'arity: [2, [], []], #'name: #'identity }
     | 'fun (x): x'
 
   class C():
@@ -45,8 +45,8 @@ check:
   entry_point.macro 'identity':
     ~mode mode
     ~adjustment adj
-    if (mode == #'arity)
-    | [2, [], []]
+    if (mode == #'shape)
+    | { #'arity: [2, [], []] }
     | let [id, ...] = adj.prefix_arguments
       entry_point_meta.pack('fun ($id, ..., x):
                                $(adj.wrap_body(2, 'x'))')
@@ -61,8 +61,8 @@ check:
   entry_point.macro 'kw_identity':
     ~mode mode
     ~adjustment adj
-    if (mode == #'arity)
-    | [1, [#'~kw], [#'~kw]]
+    if (mode == #'shape)
+    | { #'arity: [1, [#'~kw], [#'~kw]] }
     | 'fun (~kw: x): x'
 
   class C():
@@ -76,8 +76,8 @@ check:
     ~mode mode
     ~adjustment adj
     cond
-    | mode compares_equal dynamic(#'arity):
-        [2, [], []]
+    | mode compares_equal dynamic(#'shape):
+        { #'arity: [2, [], []] }
     | mode compares_equal dynamic(#'function):
         let [id, ...] = adj.prefix_arguments
         entry_point_meta.pack('fun ($id, ..., x):

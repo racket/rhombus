@@ -65,7 +65,9 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (tag::block . body))
-        (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-body #'tag #'tag) #'body) #'tag)
+        (values (datum->syntax #f
+                               (cons (datum->syntax #'here 'rhombus-body #'tag #'tag)
+                                     #'body))
                 #'())]))))
 
 (define-syntax #%block
@@ -179,20 +181,22 @@
                                                                 #:adjustments adjustments)]
                [(~var e (:entry-point adjustments)) #'e.parsed]
                [_ (raise-syntax-error #f "not an entry point" #'head)])]))]))
-   ;; extract arity:
+   ;; extract shape:
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and head (_::parens arg-g)))
         (syntax-parse #'arg-g
           [(_ ... _::_-expr . _)
-           (arithmetic-shift
-            1
-            (for/sum ([t (in-list (cdr (syntax->list #'arg-g)))])
-              (syntax-parse t
-                [_::_-expr 1]
-                [_ 0])))]
-          [e::entry-point-arity #'e.parsed]
+           (hash
+            'arity
+            (arithmetic-shift
+             1
+             (for/sum ([t (in-list (cdr (syntax->list #'arg-g)))])
+               (syntax-parse t
+                 [_::_-expr 1]
+                 [_ 0]))))]
+          [e::entry-point-shape (syntax->datum #'e.parsed)]
           [_ #f])]
        [_ #f]))))
 

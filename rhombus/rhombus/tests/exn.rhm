@@ -36,12 +36,12 @@ block:
     | Exn.Fail.Read(a, b, srcs): srcs[0].line
     ~is 2
   check:
-    String.substring((v :: Exn).message, 0, 24) ~is "fun: expected more terms"
-    String.substring(Exn.message(v), 0, 24) ~is "fun: expected more terms"
+    String.substring((v :: Exn).message, 0, 63) ~is "fun: expected dotted identifier sequence or expected more terms"
+    String.substring(Exn.message(v), 0, 63) ~is "fun: expected dotted identifier sequence or expected more terms"
   block:
     use_dynamic
     check:
-      String.substring(v.message, 0, 24) ~is "fun: expected more terms"
+      String.substring(v.message, 0, 63) ~is "fun: expected dotted identifier sequence or expected more terms"
 
 block:
   use_static

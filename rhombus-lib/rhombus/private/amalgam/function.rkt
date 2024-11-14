@@ -455,9 +455,9 @@
        [_ (raise-syntax-error #f
                               "unexpected extra terms"
                               tail)]))
-   ;; extract arity:
+   ;; extract shape:
    (lambda (stx)
-     (parse-anonymous-function-arity stx))))
+     (parse-anonymous-function-shape stx))))
 
 (define-immediate-callee-syntax fun
   (immediate-callee-transformer
@@ -472,9 +472,9 @@
    (lambda (stx adjustments)
      (define-values (term tail) (parse-anonymous-function stx adjustments '()))
      term)
-   ;; extract arity:
+   ;; extract shape:
    (lambda (stx)
-     1)))
+     (hash 'arity 1))))
 
 (define-for-syntax (parse-anonymous-function stx
                                              [adjustments no-adjustments]

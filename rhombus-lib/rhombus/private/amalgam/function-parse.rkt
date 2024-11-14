@@ -12,7 +12,8 @@
                      "entry-point-adjustment.rkt"
                      (only-in "annotation-string.rkt" annotation-any-string)
                      "to-list.rkt"
-                     "sorted-list-subset.rkt")
+                     "sorted-list-subset.rkt"
+                     "dotted-sequence.rkt")
          racket/unsafe/undefined
          "treelist.rkt"
          "to-list.rkt"
@@ -59,7 +60,7 @@
                        build-function
                        build-case-function
                        maybe-add-function-result-definition
-                       parse-anonymous-function-arity))
+                       parse-anonymous-function-shape))
   (begin-for-syntax
     (provide (struct-out converter))))
 
@@ -401,21 +402,41 @@
                     (~optional ::kwp-arity-rest #:defaults ([kwrest? #'#f])))
               ...))))
 
-(define-for-syntax (parse-anonymous-function-arity stx)
+(define-for-syntax (parse-anonymous-function-shape stx)
+  (define (build arity name)
+    (let* ([ht (hash)]
+           [ht (if arity (hash-set ht 'arity arity) ht)]
+           [ht (if name (hash-set ht 'name name) ht)])
+      ht))
+  (define (extract-name tail)
+    (syntax-parse tail
+      #:datum-literals (group)
+      [(_ ... (_::block (~alt (~optional (group #:name n::dotted-operator-or-identifier-sequence))
+                              (~optional (group #:who . _)))
+                        ...
+                        . _))
+       (and (attribute n)
+            (build-dot-symbol (syntax->list #'n) #:skip-dots? #t))]
+      [_ #false]))
   (syntax-parse stx
-    [(form-id (alts-tag::alts
+    [(form-id tail ...
+              (alts-tag::alts
                (_::block (group (_::parens arg::kw-arity-arg ... rest::maybe-rest-arity-arg)
                                 . _))
                ...+))
-     (union-arity-summaries
-      (for/list ([arg-kws (in-list (syntax->list #'((arg.kw ...) ...)))]
-                 [rest? (in-list (syntax->list #'(rest.rest? ...)))]
-                 [kw-rest? (in-list (syntax->list #'(rest.kwrest? ...)))])
-        (define kws (syntax->list arg-kws))
-        (summarize-arity kws (map (lambda (_) #'#f) kws) (syntax-e rest?) (syntax-e kw-rest?))))]
-    [(form-id (parens-tag::parens arg::kw-opt-arity-arg ... rest::maybe-rest-arity-arg) . _)
-     (summarize-arity #'(arg.kw ...) #'(arg.default ...) (syntax-e #'rest.rest?) (syntax-e #'rest.kwrest?))]
-    [_ #f]))
+     (build
+      (union-arity-summaries
+       (for/list ([arg-kws (in-list (syntax->list #'((arg.kw ...) ...)))]
+                  [rest? (in-list (syntax->list #'(rest.rest? ...)))]
+                  [kw-rest? (in-list (syntax->list #'(rest.kwrest? ...)))])
+         (define kws (syntax->list arg-kws))
+         (summarize-arity kws (map (lambda (_) #'#f) kws) (syntax-e rest?) (syntax-e kw-rest?))))
+      (extract-name #'(tail ...)))]
+    [(form-id (parens-tag::parens arg::kw-opt-arity-arg ... rest::maybe-rest-arity-arg) . tail)
+     (build
+      (summarize-arity #'(arg.kw ...) #'(arg.default ...) (syntax-e #'rest.rest?) (syntax-e #'rest.kwrest?))
+      (extract-name #'tail))]
+    [_ (build #f #f)]))
 
 (begin-for-syntax
 
@@ -519,17 +540,20 @@
              #`(lambda/kwrest
                 #:name #,function-name
                 #:arity #,shifted-arity
+                #:method #,(entry-point-adjustment-method? adjustments)
                 maybe-rest-tmp* ...
                 maybe-kwrest-tmp ...
                 #,(adjust-args #'(arg-form ... ...))
                 rest-def ...
                 #,body)
-             (syntax-property
-              #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
-                  rest-def ...
-                  #,body)
-              'inferred-name
-              function-name)))
+             (let* ([proc #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
+                              rest-def ...
+                              #,body)]
+                    [proc (syntax-property proc 'inferred-name function-name)]
+                    [proc (if (entry-point-adjustment-method? adjustments)
+                              (syntax-property proc 'method-arity-error #t)
+                              proc)])
+               proc)))
         shifted-arity)]))
 
   (define (build-case-function adjustments argument-static-infoss
@@ -573,6 +597,7 @@
       #`(case-lambda/kwrest
          #:name #,function-name
          #:arity #,shifted-arity
+         #:method #,(entry-point-adjustment-method? adjustments)
          #,@(for/list ([n (in-list ns)]
                        [fcs (in-list fcss)]
                        [aritys (in-list arityss)]
@@ -1124,12 +1149,11 @@
        (lambda (rator extra-rands args rest-args kwrest-args rator-static-info)
          (define kws (syntax->list #'(rand.kw ...)))
          (when static?
-           (when (or (not kwrsts) (not rsts))
-             (define a (or rator-arity
-                           (rator-static-info #'#%function-arity)))
-             (when a
-               (let* ([a (if (syntax? a) (syntax->datum a) a)])
-                 (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind)))))
+           (define a (or rator-arity
+                         (rator-static-info #'#%function-arity)))
+           (when a
+             (let* ([a (if (syntax? a) (syntax->datum a) a)])
+               (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts (and static? rator-kind)))))
          (define num-rands (length rands))
          (define arg-forms (apply append
                                   (for/list ([kw (in-list kws)]

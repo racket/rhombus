@@ -4,7 +4,8 @@
                      "srcloc.rkt"
                      "use-site.rkt"
                      "id-binding.rkt"
-                     "import-check.rkt")
+                     "import-check.rkt"
+                     "srcloc.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt"
          "../version-case.rkt"
@@ -104,7 +105,7 @@
               #,forms
               (final ... [#:ctx base-ctx remove-ctx] #,@(reverse (syntax->list #'(bind ...)))))]
          [(#:block #f orig)
-          (raise-syntax-error #f "block does not end with an expression" #'orig)]
+          (raise-syntax-error #f "block does not end with an expression" (maybe-respan #'orig))]
          [(#:module _ prov ...)
           (unless (bound-identifier=? (datum->syntax #'base-ctx 'x)
                                       (datum->syntax #'remove-ctx 'x))
@@ -193,7 +194,7 @@
                                                         (local-introduce stx))])
                                               (identifier-binding (suball stx) ph #t #t))
                                             (not (bound-identifier=? stx (add stx)))))
-                                  (raise-syntax-error #f "duplicate definition" stx))
+                                  (raise-syntax-error #f "duplicate definition" (maybe-respan stx)))
                                 (sub (add stx))))]
           #:with (new-id ...) (map intro (syntax->list #'(id ...)))
           #:with new-state (need-end-expr #'state)

@@ -47,10 +47,11 @@
                 (values (add1 n) kws rsts? kwrsts?)])))
          (cond
            [more-static?
-            (check-arity field-stx #f mask n kws rsts? kwrsts? 'method)
-            (success-call/static)]
+            (if (check-arity field-stx #f mask n kws rsts? kwrsts? 'method #:always? #t)
+                (success-call/static)
+                (success-call/dynamic))]
            ;; dynamic
-           [(check-arity #f #f mask n kws rsts? kwrsts? #f)
+           [(check-arity #f #f mask n kws rsts? kwrsts? #f #:always? #t)
             (success-call/static)]
            [else
             (success-call/dynamic)])]

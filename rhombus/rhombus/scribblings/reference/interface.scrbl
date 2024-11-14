@@ -241,7 +241,7 @@ or protectedly using
  an implementation, analogous to @rhombus(abstract, ~class_clause) for
  classes. Methods and properties of an interface can be defined as
  abstract without the @rhombus(abstract, ~interface_clause) form by
- declarting the method or property without an implementation.
+ declaring the method or property without an implementation.
 
 }
 

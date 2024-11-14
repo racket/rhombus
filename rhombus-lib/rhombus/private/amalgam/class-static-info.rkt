@@ -130,8 +130,8 @@
                          (cond
                            [given-constructor-rhs
                             (syntax-parse given-constructor-rhs
-                              [(_ e-arity::entry-point-arity)
-                               (syntax->datum #'e-arity.parsed)])]
+                              [(_ e-arity::entry-point-shape)
+                               (hash-ref (or (syntax->datum #'e-arity.parsed) #hasheq()) 'arity #f)])]
                            [veneer? #'2]
                            [else (summarize-arity constructor-keywords
                                                   constructor-defaults

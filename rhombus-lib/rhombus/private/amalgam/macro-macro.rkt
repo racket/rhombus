@@ -162,14 +162,17 @@
                        _))))
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
+    #:desc "prefix operator options"
     operator-options
     who-options)
 
   (define-composed-splicing-syntax-class (:self-operator-options space-sym extra-kws)
+    #:desc "operator options"
     self-options
     extra-options)
 
   (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym extra-kws)
+    #:desc "macro options"
     operator-options
     self-options
     extra-options)
@@ -191,34 +194,41 @@
                      #:defaults ([assc #'()]))))
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
+    #:desc "infix operator options"
     operator-options
     infix-operator-options
     who-options)
 
   (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym extra-kws)
+    #:desc "infix macro options"
     operator-options
     infix-operator-options
     self-options
     extra-options)
 
   (define-composed-splicing-syntax-class (:postfix-operator-options space-sym)
+    #:desc "postfix operator options"
     operator-options)
 
   (define-composed-splicing-syntax-class (:all-operator-options space-sym)
+    #:desc "operator options"
     operator-options
     infix-operator-options
     who-options)
 
   (define-composed-splicing-syntax-class (:macro-all-operator-options space-sym extra-kws)
+    #:desc "macro operator options"
     operator-options
     infix-operator-options
     extra-options)
 
   (define-composed-splicing-syntax-class (:transformer-options space-sym extra-kws)
+    #:desc "macro options"
     self-options
     extra-options)
 
   (define-composed-splicing-syntax-class (:sequence-transformer-options space-sym)
+    #:desc "macro options"
     self-options)
 
   (define-syntax-class :$+1
@@ -231,7 +241,7 @@
 
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:attributes (name extends)
-    #:description "operator-macro pattern"
+    #:description "macro identifier or operator"
     #:datum-literals (op group)
     (pattern (~seq ::name)
              #:when (not (free-identifier=? (in-binding-space #'name) (bind-quote $)
@@ -255,7 +265,7 @@
               (group ::identifier-for-parsed))))
 
   (define-splicing-syntax-class :operator-syntax-quote
-    #:description "operator-macro pattern"
+    #:description "quoted operator-macro pattern"
     #:datum-literals (op group)
     (pattern (_::quotes (~and g (group _::$+1 _::identifier-for-parsed _::operator-or-identifier-or-$ . _))))
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
@@ -453,6 +463,8 @@
                                            #'() #'() '()
                                            #:extra-kws extra-kws
                                            #:extra-shapes extra-shapes))]
+        [(form-id main-op::operator-or-identifier-or-$ (_::block . _))
+         (raise-syntax-error #f "expected quoted macro pattern" stx #'main-op)]
         [(form-id main-op::operator-or-identifier-or-$
                   (~optional
                    (_::block

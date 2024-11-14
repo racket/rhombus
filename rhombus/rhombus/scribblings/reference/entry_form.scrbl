@@ -33,7 +33,7 @@ Functions are typically documented using a @rhombus(fun) form:
 }
 
 When a function supports multiple argument counts in a way that is not
-easy expressed as optional arguments or reetitions, its documentation
+easy expressed as optional arguments or repetitions, its documentation
 may shown as separate @rhombus(fun) forms, instead of using multi-case
 @vbar syntax:
 
@@ -97,7 +97,7 @@ Sometimes, the object that a method accepts is different from the
 namespace where the method is bound. For example, @rhombus(Fish.swim)
 might actually accept any object that satisfies @rhombus(FishOrWhale)
 and works with @rhombus(f.swim) where @rhombus(f) produces a value that
-satisifes @rhombus(FishOrWhale). In that case, it would be document as
+satisfies @rhombus(FishOrWhale). In that case, it would be document as
 follows:
 
 @nested(~style: #'inset){

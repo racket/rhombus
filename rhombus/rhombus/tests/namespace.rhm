@@ -225,20 +225,26 @@ block:
     class Posn(x, y):
       nonfinal
       method d():
-        ~name alt_d // does not apply to `Posn.d`, since non-final
+        ~name alt_d
         x + y
       final method h():
         ~name alt_h
         x + y
     interface Pointy:
       abstract method q()
+      method r():
+        ~name alt_r
+        1
   check print(ns.f) ~prints "#<function:ns.f>"
   check ns.f("x") ~throws values("ns.f:", error.annot_msg("argument"))
   check ns.f(1, 2, 3) ~throws values("ns.f:", "arity")
   check print(ns.Posn) ~prints "#<function:ns.Posn>"
-  check print(ns.Posn.d) ~prints "#<function:ns.Posn.d>"
+  check print(ns.Posn(1, 2).d) ~prints "#<function:alt_d>"
+  check print(ns.Posn(1, 2).h) ~prints "#<function:alt_h>"
+  check print(ns.Posn.d) ~prints "#<function:alt_d>"
   check print(ns.Posn.h) ~prints "#<function:alt_h>"
   check print(ns.Pointy.q) ~prints "#<function:ns.Pointy.q>"
+  check print(ns.Pointy.r) ~prints "#<function:alt_r>"
 
 block:
   namespace ns:

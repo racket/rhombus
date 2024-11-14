@@ -146,9 +146,16 @@
        (cond
          [(and (syntax? s) (syntax-opaque-raw-property s)) s]
          [else
-          (syntax-case* s (multi group op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
+          (syntax-case* s (multi group
+                                 parens brackets braces quotes
+                                 op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
             [(multi . _) s]
             [(group . _) s]
+            [(parens . _) s]
+            [(brackets . _) s]
+            [(braces . _) s]
+            [(quotes . _) s]
+            [(op _) s]
             [(_ ...) #`(group . #,s)]
             [_ s])]))
      (define str (shrubbery-syntax->string stx #:max-length len))
@@ -160,7 +167,9 @@
    (lambda (s)
      (let name-of ([s s])
        (if (identifier? s)
-           (syntax-e s)
+           (if (syntax-raw-property s)
+               (string->symbol (shrubbery-syntax->string s))
+               (syntax-e s))
            (syntax-case* s (multi group op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
              [(group who . _) (name-of #'who)]
              [(multi (group who . _) . _) (name-of #'who)]
@@ -168,7 +177,7 @@
              [(head . _)
               ;; mainly intended to handle the not-a-shrubbery case:
               (and (identifier? #'head)
-                   (syntax-e #'head))]
+                   (name-of #'head))]
              [_ #f])))))
 
   (current-report-configuration
@@ -182,9 +191,12 @@
                             (cond
                               [(symbol? v) '("identifier" "identifiers")]
                               [(keyword? v) '("keyword" "keywords")]
+                              ;; `null` shows up with optional sequences
+                              [(null? v) '("empty" "empty")]
                               [else '("literal" "literals")]))
            'datum-to-string (lambda (v)
                               (cond
                                 [(symbol? v) (format "`~a`" (substring (format "~v" v) 2))]
                                 [(keyword? v) (substring (format "~v" v) 2)]
+                                [(null? v) "sequence"]
                                 [else (format "~v" v)])))))

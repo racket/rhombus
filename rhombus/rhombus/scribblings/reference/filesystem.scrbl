@@ -418,7 +418,7 @@
  purely syntactic simplification. In particular, when a prefix of
  @rhombus(path) refers to a link, the link is resolved before a
  subsequent directory-navigation element is simplified, which can produce
- a different reference than a syntactic simplication.
+ a different reference than a syntactic simplification.
 
  The @rhombus(filesystem.normalize_path) function is equivalent to
  @rhombus(filesystem.simplify_path(Path.to_absolute_path(path))). Note

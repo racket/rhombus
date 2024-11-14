@@ -218,7 +218,7 @@
                             ;; whole block content, and makes it look like
                             ;; a binding refers to the whole block
                             #,(datum->syntax #'tag '#%body #f #'tag)
-                            (#,(syntax-property (datum->syntax #f 'block #'tag) 'raw "")
+                            (#,(datum->syntax #f 'block #'tag #'tag)
                              . tail))))]))
 
 ;; Like `(rhombus-expression (group _))`, but recognizes `block` forms
@@ -230,7 +230,7 @@
     [(_ (parsed #:rhombus/expr rhs))
      #'rhs]
     [(_ rhs)
-     #'(rhombus-expression (group rhs))]))
+     (datum->syntax #f (list #'rhombus-expression (list #'group #'rhs)))]))
 
 ;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body-sequence stx)

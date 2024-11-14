@@ -323,7 +323,7 @@ check:
   (macro '() $x':
      ~weaker_than: +
      '$x')
-  ~throws "unexpected term"
+  ~throws "result must be a template expression"
 
 check:
   expr.macro 'two_of $(n :: Name)':

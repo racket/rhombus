@@ -16,10 +16,26 @@ static check:
   fun (): f()
   ~throws "wrong number of arguments"
 
+check:
+  use_dynamic
+  fun f(x): x
+  f()
+  ~throws values("arity mismatch", "expected: 1")
+
 static check:
   fun f(x): x
   fun (): f(1, 2)
   ~throws "wrong number of arguments"
+
+static check:
+  fun f(x): x
+  fun (l): f(1, 2, & l)
+  ~throws "wrong number of arguments"
+
+check:
+  fun f(x): x
+  fun (l): f(1, & l)
+  ~completes
 
 static check:
   fun f(x): x
@@ -30,6 +46,16 @@ static check:
   fun f(x, ~flavor): x
   fun (): f(1)
   ~throws "missing keyword argument in function call"
+
+static check:
+  fun f(x, ~flavor): x
+  fun (): f(~oops: 10)
+  ~throws "keyword argument not recognized by called function"
+
+static check:
+  fun f(x, ~flavor): x
+  fun (m): f(~oops: 10, & m)
+  ~throws "keyword argument not recognized by called function"
 
 static check:
   fun f(x, & y): x
@@ -47,6 +73,22 @@ static check:
   fun (): Posn.m()
   ~throws "wrong number of arguments"
 
+check:
+  use_dynamic
+  class Posn(x, y):
+    method m(): x
+  Posn(1, 2).m(1)
+  ~throws values("arity mismatch",
+                 "expected: 0")
+
+check:
+  use_dynamic
+  class Posn(x, y):
+    method m(): x
+  Posn.m(1, 2)
+  ~throws values("arity mismatch",
+                 "expected: 1")
+
 static check:
   class Posn(x, y):
     nonfinal
@@ -61,6 +103,23 @@ static check:
   fun (): Posn.m(1, 2)
   ~throws "wrong number of arguments"
 
+check:
+  use_dynamic
+  class Posn(x, y):
+    nonfinal
+    method m(): x
+  Posn(1, 2).m(1)
+  ~throws values("arity mismatch",
+                 "expected: 0")
+
+check:
+  use_dynamic
+  class Posn(x, y):
+    nonfinal
+    method m(): x
+  Posn.m(Posn(1, 2), 2)
+  ~throws values("arity mismatch",
+                 "expected: 1")
 static check:
   class Posn(x, y):
     method m(): x
@@ -170,3 +229,46 @@ static check:
       super(z+1, z-1)
   fun (): Posn(1, 2)
   ~throws "wrong number of arguments in function call"
+
+static check:
+  class Posn(x, y):
+    method m(~kw: k): x
+  fun (): Posn.m(Posn(1, 2))
+  ~throws "missing keyword argument"
+
+static check:
+  class Posn(x, y):
+    method m(~kw: k): x
+  fun (): Posn.m(Posn(1, 2), ~kw: 10, ~other: "no")
+  ~throws "keyword argument not recognized"
+
+block:
+  use_dynamic
+  class Posn(x, y):
+    method m(~kw: k): x
+  check: Posn.m(~kw: 0)
+         ~throws "no case matching 0 non-keyword arguments"
+  check: Posn(1, 2).m(~kw: 0, 1)
+         ~throws "no case matching 1 non-keyword argument"
+
+block:
+  use_dynamic
+  class Posn(x, y):
+    method m(~kw: k = #false): x
+  check: Posn.m()
+         ~throws values("arity mismatch",
+                        "expected: 1 plus")
+  check: Posn(1, 2).m(1)
+         ~throws values("arity mismatch",
+                        "expected: 0 plus")
+
+block:
+  use_dynamic
+  class Posn(x, y):
+    method m(~& kws): x
+  check: Posn.m()
+         ~throws values("wrong number of arguments",
+                        "expected: 1 plus")
+  check: Posn(1, 2).m(1)
+         ~throws values("arity mismatch",
+                        "expected: 0 plus")

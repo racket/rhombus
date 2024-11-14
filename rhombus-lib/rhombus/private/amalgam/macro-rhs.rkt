@@ -5,7 +5,8 @@
                      syntax/parse/pre
                      "treelist.rkt"
                      "pack.rkt"
-                     "entry-point-adjustment.rkt")
+                     "entry-point-adjustment.rkt"
+                     "srcloc.rkt")
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"
@@ -146,13 +147,18 @@
                     '())
              #,body))]))
   (define (convert-rule-template block ids)
-    (syntax-parse block
+    (define stx (respan (datum->syntax #f (syntax-e block))))
+    (syntax-parse (respan stx)
       #:datum-literals (group)
       [(_::block (group (_::quotes template)))
        ;; delay further conversion until after pattern variables are bound
        #`(rule-template template #,ids)]
-      [(_::block (group e))
-       (raise-syntax-error 'template "result must be a template expression" #'e)]))
+      [(_::block (group (~and e (_::quotes . _))))
+       (raise-syntax-error #f "result template must contain a single group" stx (maybe-respan #'e))]
+      [(_::block (group (~and e (_::quotes . _)) . _) . _)
+       (raise-syntax-error #f "result template expression must be only form" stx (maybe-respan #'e))]
+      [(_::block (group e . _) . _)
+       (raise-syntax-error #f "result must be a template expression" stx (maybe-respan #'e))]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol

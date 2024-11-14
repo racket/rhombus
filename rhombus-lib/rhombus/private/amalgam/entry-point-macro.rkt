@@ -32,10 +32,10 @@
     #:fields
     ([pack entry_point_meta.pack]
      [unpack entry_point_meta.unpack]
-     [pack_arity entry_point_meta.pack_arity]
-     [unpack_arity entry_point_meta.unpack_arity]
+     [pack_shape entry_point_meta.pack_shape]
+     [unpack_shape entry_point_meta.unpack_shape]
      Parsed
-     Arity
+     Shape
      [Adjustment entry_point_meta.Adjustment])))
 
 (define-identifier-syntax-definition-transformer macro
@@ -49,7 +49,7 @@
     Parsed :entry-point #:rhombus/entry_point
     #:arity 2)
   (define-transformer-syntax-class
-    Arity :entry-point-arity #:rhombus/entry_point_arity))
+    Shape :entry-point-shape #:rhombus/entry_point_shape))
 
 (define-for-syntax (extract-entry-point form proc adjustments)
   (syntax-parse (if (syntax? form)
@@ -58,8 +58,8 @@
     [(~var ep (:entry-point adjustments)) #'ep.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "entry point function" form)]))
 
-(define-for-syntax (extract-entry-point-arity form proc)
-  (syntax->datum (check-entry-point-arity-result form proc)))
+(define-for-syntax (extract-entry-point-shape form proc)
+  (syntax->datum (check-entry-point-shape-result form proc)))
 
 (define-for-syntax (make-entry-point-transformer proc)
   (entry-point-transformer
@@ -71,8 +71,8 @@
    (lambda (stx)
      (define form
        (syntax-parse stx
-         [(head . tail) (proc (pack-tail #'tail) #'head 'arity #f)]))
-     (extract-entry-point-arity form proc))))
+         [(head . tail) (proc (pack-tail #'tail) #'head 'shape #f)]))
+     (extract-entry-point-shape form proc))))
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax? s)
@@ -96,16 +96,16 @@
                                  "not a parsed entry point function"
                                  "syntax object" stx)]))
 
-  (define/arity (entry_point_meta.pack_arity a)
+  (define/arity (entry_point_meta.pack_shape a)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    #`(parsed #:rhombus/entry_point_arity #,(check-entry-point-arity-result a entry_point_meta.unpack_arity)))
+    #`(parsed #:rhombus/entry_point_shape #,(check-entry-point-shape-result a entry_point_meta.unpack_shape)))
 
-  (define/arity (entry_point_meta.unpack_arity stx)
+  (define/arity (entry_point_meta.unpack_shape stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse stx
       #:datum-literals (parsed)
-      [(parsed #:rhombus/entry_point_arity a) (syntax->datum #'a)]
+      [(parsed #:rhombus/entry_point_shape a) (syntax->datum #'a)]
       [_ (raise-arguments-error* who rhombus-realm
-                                 "not a parsed entry point arity"
+                                 "not a parsed entry point shape"
                                  "syntax object" stx)])))

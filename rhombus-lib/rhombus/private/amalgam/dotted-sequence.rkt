@@ -9,9 +9,13 @@
          build-dot-symbol)
 
 (define-splicing-syntax-class :dotted-identifier-sequence
+  #:description "dotted identifier sequence"
+  #:opaque
   (pattern (~seq head-id:identifier (~seq _::op-dot tail-id:identifier) ...)))
 
 (define-splicing-syntax-class :dotted-operator-or-identifier-sequence
+  #:description "dotted name sequence"
+  #:opaque
   #:datum-literals (group)
   (pattern (~seq _::operator))
   (pattern (~seq (~seq _:identifier _::op-dot) ... _:identifier))
