@@ -46,7 +46,9 @@ fun filter(html):
                 val: [val, ...]):
         keep_when: key == #'class
         [key, val]
-    '{ $key: $val, ... }'
+    if [key, ...] == []
+    | []
+    | '{ $key: $val, ... }'
   fun has_skip_attr(PairList[PairList[key, val], ...]):
     any(key == #'class && skip_attr[to_string(val)], ...)
   match html
@@ -54,10 +56,8 @@ fun filter(html):
       cond
       | keep_with_attrs[key]:
           if has_skip_attr(attrs)
-          | '$key:
-               $(filter_attrs(attrs))'
-          | '$key:
-               $(filter_attrs(attrs))
+          | '$key $(filter_attrs(attrs))'
+          | '$key $(filter_attrs(attrs)):
                $(filter_body([body, ...]))'
       | keeps[key]:
           '$key:
