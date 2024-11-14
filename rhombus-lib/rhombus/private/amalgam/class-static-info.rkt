@@ -156,6 +156,8 @@
                 (#%call-result result-infos)
                 . #,(get-function-static-infos))))
          '())
+     ;; a `name-field` is not public, so not need for static info:
+     #;
      (list
       #'(begin
           (define-static-info-syntax/maybe* name-field
@@ -173,11 +175,13 @@
                                   #'(info ... . #,(get-function-static-infos))))])
        (list
         #'(begin
-            (define-static-info-syntax public-name-field/mutate . sis)
+            (define-static-info-syntax/maybe* public-name-field/mutate . sis)
             ...))))))
 
+;; drops empty `#%call-result`:
 (define-syntax (define-static-info-syntax/maybe* stx)
   (syntax-parse stx
     [(~or* (_ id (_ ()) . tail)
+           (_ id (_ (#:at_arities ((_ ())))) . tail)
            (_ id . tail))
      #'(define-static-info-syntax id . tail)]))

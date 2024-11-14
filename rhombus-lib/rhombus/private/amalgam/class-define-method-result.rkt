@@ -134,19 +134,25 @@
        (if (syntax-e id)
            (list (with-syntax ([id id]
                                [result-infos
-                                (if (eq? (syntax-e #'kind) 'property)
-                                    #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))
-                                    all-static-infos)]
+                                (cond
+                                  [(null? (syntax-e all-static-infos)) all-static-infos]
+                                  [(eq? (syntax-e #'kind) 'property)
+                                   #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))]
+                                  [else all-static-infos])]
                                [(maybe-arity-info ...)
                                 (if (syntax-e #'arity)
                                     (list #`(#%function-arity #,(if de-method?
                                                                     (de-method-arity #'arity)
                                                                     #'arity)))
                                     '())])
-                   #'(define-static-info-syntax id
-                       (#%call-result result-infos)
-                       maybe-arity-info ...
-                       . #,(indirect-get-function-static-infos))))
+                   (with-syntax ([(maybe-call-result ...)
+                                  (if (null? (syntax-e #'result-infos))
+                                      null
+                                      (list #'(#%call-result result-infos)))])
+                     #'(define-static-info-syntax id
+                         maybe-call-result ...
+                         maybe-arity-info ...
+                         . #,(indirect-get-function-static-infos)))))
            '()))
      (define (gen-bounce ind-id+id key result-key #:box-id? [box-id? #f])
        (if (syntax-e ind-id+id)

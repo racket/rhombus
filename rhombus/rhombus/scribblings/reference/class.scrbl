@@ -960,7 +960,7 @@
  Performs a functional update of the object produced by @rhombus(obj) by
  creating a new instance of the same class, using the values of
  @rhombus(obj)'s fields for the new object except as replaced by
- @rhombus(fields).
+ each @rhombus(id = expr).
 
  The listed @rhombus(id)s must all correspond to fields of the object
  that would be represented by a default constructor, independent of
@@ -1033,13 +1033,19 @@
   class_clause.macro 'reconstructor
                       | case_maybe_kw
                       | ...'
+  class_clause.macro 'reconstructor $disable_form'
+  grammar disable_form:
+    ~none
+    : ~none
 ){
 
  A form for @rhombus(class) to provide an implementation of a
  functional-update @tech{reconstructor} via @rhombus(with). The
  implementation is similar to a method, in that @rhombus(this) is bound
  to the object being updated (i.e., the object whose fields are being
- used to create a new instance of the class).
+ used to create a new instance of the class). When @rhombus(~none) is
+ specified, then the class has no reconstructor (i.e., any default
+ reconstructor is disabled).
 
  By default, a class's reconstructor should expect as many arguments as
  the class has fields, and it should expect them in the declared order.

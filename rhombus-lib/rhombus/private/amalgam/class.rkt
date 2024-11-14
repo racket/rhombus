@@ -432,11 +432,16 @@
        (define replaced-ht (check-exports-distinct stxes exs fields method-mindex dots))
 
        (define reconstructor-rhs
-         (or (hash-ref options 'reconstructor-rhs #f)
-             (and (not (or (hash-ref options 'expression-rhs #f)
-                           (hash-ref options 'constructor-rhs #f)
-                           abstract-name))
-                  'default)))
+         (cond
+           [(hash-ref options 'reconstructor-rhs #f)
+            => (lambda (rhs)
+                 (and (not (eq? (syntax-e rhs) '#:none))
+                      rhs))]
+           [else
+            (and (not (or (hash-ref options 'expression-rhs #f)
+                          (hash-ref options 'constructor-rhs #f)
+                          abstract-name))
+                 'default)]))
        (define reconstructor-stx-params
          (hash-ref options 'reconstructor-stx-params #f))
 

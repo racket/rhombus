@@ -60,7 +60,7 @@
               (make-class-instance-static-infos accessors)
               #,(if name-build-convert
                     #`(quote-syntax #,name-build-convert)
-                    not-supported-due-to-internal-reasons)
+                    #'not-supported-due-to-internal-reasons)
               (quote-syntax #,(if name-build-convert
                                   #'(super-name-field ...
                                      constructor-name-field ...)

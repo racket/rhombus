@@ -12,6 +12,20 @@ check:
   Posn(0) with (x = 1)
   ~throws "value does not support functional update"
 
+check:
+  ~eval
+  class Posn(x, y):
+    reconstructor ~none
+  Posn(1, 2) with (x = 1)
+  ~throws "value does not support functional update"
+
+check:
+  ~eval
+  class Posn(x, y):
+    reconstructor: ~none
+  Posn(1, 2) with (x = 1)
+  ~throws "value does not support functional update"
+
 block:
   import rhombus/static/meta open
   class Posn(x, y):
