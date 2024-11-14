@@ -23,7 +23,9 @@
                     Multi
                     Keyword
                     String
-                    Int))
+                    Int
+                    Number
+                    Boolean))
 
 (module+ for-quasiquote
   (begin-for-syntax
@@ -109,6 +111,8 @@
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
 (define-syntax-class-syntax Int (make-syntax-class #'exact-integer))
+(define-syntax-class-syntax Number (make-syntax-class #'number))
+(define-syntax-class-syntax Boolean (make-syntax-class #'boolean))
 (define-syntax-class-syntax Sequence (make-syntax-class #':sequence #:splicing? #t #:kind 'term))
 (define-syntax-class-syntax Group (make-syntax-class #f #:kind 'group))
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
