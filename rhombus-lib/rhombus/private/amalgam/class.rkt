@@ -36,7 +36,8 @@
          "append-property.rkt"
          "reconstructor.rkt"
          "serializable.rkt"
-         "name-prefix.rkt")
+         "name-prefix.rkt"
+         "field-case-lambda.rkt")
 
 (provide this
          super
@@ -1034,9 +1035,9 @@
        (for/list ([def (in-list (syntax->list
                                  #'((define public-name-field/mutate
                                       (let ([reflect-public-name-field
-                                             (case-lambda
-                                               [(v) (public-name-field v)]
-                                               [(v val) (public-maybe-set-name-field! v val)])])
+                                             (field-case-lambda
+                                              [(v) (public-name-field v)]
+                                              [(v val) (public-maybe-set-name-field! v val)])])
                                         reflect-public-name-field))
                                     ...)))]
                   #:when (syntax-parse def
