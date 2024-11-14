@@ -417,6 +417,8 @@
   syntax_class Keyword: kind: ~term
   syntax_class String: kind: ~term
   syntax_class Int: kind: ~term
+  syntax_class Number: kind: ~term
+  syntax_class Boolean: kind: ~term
   syntax_class Group: kind: ~group
   syntax_class Multi: kind: ~multi
   syntax_class Block: kind: ~block
