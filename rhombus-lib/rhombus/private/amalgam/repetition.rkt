@@ -34,6 +34,7 @@
 
             flatten-repetition
             consume-repetition
+            add-repetition-disappeared
 
             :repetition
             :repetition-info
@@ -42,7 +43,6 @@
 
             in-repetition-space
             repet-quote
-
 
             identifier-repetition-use
 
@@ -134,7 +134,7 @@
         (repet-handler stx (lambda ()
                              (syntax-parse stx
                                [(id . tail)
-                                (values (make-repetition-info stx
+                                (values (make-repetition-info #'id
                                                               for-clausess
                                                               for-body
                                                               (element-get-static-infos)
@@ -191,14 +191,17 @@
      (define infos (if (identifier? #'rep-info.element-static-infos)
                        (extract-static-infos #'rep-info.element-static-infos)
                        #'rep-info.element-static-infos))
+     (define (add-disappeared stx)
+       (add-repetition-disappeared stx #'rep-info.rep-expr))
      (cond
        [(= depth 0)
-        (wrap-static-info* #'rep-info.body infos)]
+        (wrap-static-info* (add-disappeared #'rep-info.body) infos)]
        [else
         (define seq-expr
-          (build-for for-form
-                     (insert-clause-separators (syntax->list #'rep-info.for-clausess))
-                     #'rep-info.body))
+          (add-disappeared
+           (build-for for-form
+                      (insert-clause-separators (syntax->list #'rep-info.for-clausess))
+                      #'rep-info.body)))
         (if (null? (syntax-e infos))
             seq-expr
             (wrap-static-info seq-expr #'#%index-result infos))])]))
@@ -297,3 +300,10 @@
       [else (append (syntax->list (car clauses-stxs))
                     (list '#:when #t)
                     (loop (cdr clauses-stxs)))])))
+
+(define-for-syntax (add-repetition-disappeared stx rep-expr)
+  (if (identifier? rep-expr)
+      (syntax-property stx
+                       'disappeared-use
+                       (syntax-local-introduce rep-expr))
+      stx))
