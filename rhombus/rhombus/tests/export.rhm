@@ -1,0 +1,7 @@
+#lang rhombus
+import:
+  "empty.rhm"
+
+export:
+  all_from(.empty)
+  all_from("empty.rhm")
