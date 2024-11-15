@@ -4,10 +4,14 @@
 (provide count-graphemes
 
          column+
+         column-
          column=?
          column<?
          column>?
-         column<=>?)
+         column<=?
+         column>=?
+         column<=>?
+         column-floor)
 
 ;; represent a column in general as
 ;;   (list num-chars num-tabs ... num-chars)
@@ -34,6 +38,15 @@
                                (cons (+ (car c1) (car c2)) (cdr c2)))]
          [else (list* (car c1) (cadr c1) (loop (cddr c1)))]))]))
 
+(define (column- c1 c2)
+  (cond
+    [(and (number? c1) (number? c2))
+     (- c1 c2)]
+    [(and (pair? c1) (pair? c2)
+          (equal? (cdr c1) (cdr c2)))
+     (- (car c1) (car c2))]
+    [else 0]))
+
 (define (column=? c1 c2 #:incomparable [incomparable (lambda () #f)])
   (column<=>? = c1 c2 incomparable))
 
@@ -42,6 +55,12 @@
 
 (define (column>? c1 c2 #:incomparable [incomparable (lambda () #f)])
   (column<=>? > c1 c2 incomparable))
+
+(define (column<=? c1 c2 #:incomparable [incomparable (lambda () #f)])
+  (not (column<? c2 c1 #:incomparable incomparable)))
+
+(define (column>=? c1 c2 #:incomparable [incomparable (lambda () #f)])
+  (not (column>? c2 c1 #:incomparable incomparable)))
 
 (define (column<=>? <=>? c1 c2 incomparable)
   (cond
@@ -76,6 +95,11 @@
                                (null? (cdr rev-c2)))
                           #f
                           (incomparable)))))]))]))
+
+(define (column-floor col)
+  (if (number? col)
+      (inexact->exact (floor col))
+      (cons (column-floor (car col)) (cdr col))))
 
 (define (count-graphemes s [lines 0] [columns 0])
   (let loop ([i 0] [lines lines] [columns columns])

@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/class
+         racket/string
          syntax-color/racket-lexer
          shrubbery/lex
          shrubbery/lex-comment
@@ -77,6 +78,12 @@
 (color-test 6 input6)
 (color-test 7 input7)
 (color-test 8 input8)
+
+(define (add-prefix s prefix)
+  (apply string-append (map (lambda (s) (string-append prefix s "\n"))
+                            (string-split s "\n"))))
+
+(color-test "1t" (add-prefix input1 "\t"))
 
 ;; Check tracking of comment regions.
 ;; The "^"s here show the range of commenting. Each "^" will be stripped

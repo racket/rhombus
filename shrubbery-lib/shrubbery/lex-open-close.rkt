@@ -1,7 +1,8 @@
 #lang racket/base
 (require racket/port
          "lex.rkt"
-         "lex-comment.rkt")
+         "lex-comment.rkt"
+         "private/column.rkt")
 
 (provide lex/open-close/status
          lex/open-close-nested-status?
@@ -98,7 +99,7 @@
     (and (token? tok) (token-line tok)))
   (define (token-column* tok)
     (and (token? tok)
-         (inexact->exact (floor (token-column tok)))))
+         (column-floor (token-column tok))))
 
   (define (not-line-sensitive? status)
     (let loop ([stack (open-close-tracked-stack status)])
@@ -198,12 +199,12 @@
           (cond
             [(and t-column
                   column
-                  (t-column . < . column))
+                  (t-column . column<? . column))
              (add-opens type (struct-copy open-close-tracked status
                                           [stack (drop-alts (cdr stack))]))]
             [(and t-column
                   column
-                  (t-column . > . column)
+                  (t-column . column>? . column)
                   (= (multi-started frame) 2))
              ;; this allows lines that are too indented, but it captures
              ;; correctly indented operator-continued lines
@@ -297,11 +298,11 @@
                      (cond
                        [(and column
                              t-column
-                             (t-column . < . column))
+                             (t-column . column<? . column))
                         (loop (add type close-tag (multi-started frame)) (pop))]
                        [(and column
                              t-column
-                             (t-column . > . column))
+                             (t-column . column>? . column))
                         ;; see "too indented" in `add-opens`
                         (values type status)]
                        [else
@@ -328,7 +329,7 @@
       [(or (and (multi? frame)
                 (multi-column frame)
                 (token-column* next-tok)
-                ((token-column* next-tok) . < . (multi-column frame)))
+                ((token-column* next-tok) . column<? . (multi-column frame)))
            (memq (token-name* next-tok) '(closer at-closer)))
        ;; treat block-starting `:` or `|` like an operator
        (add-closes type status)]
@@ -361,11 +362,11 @@
           (define t-column (token-column* tok))
           (cond
             [(or (eqv? (token-line* tok) (alts-line frame))
-                 (eqv? t-column column))
+                 (column=? t-column column))
              stack]
             [(and t-column
                   column
-                  (t-column . > . column))
+                  (t-column . column>? . column))
              #f]
             [else (current-alts (cdr stack) tok)])]
          [(opened? frame) #f]
@@ -377,7 +378,7 @@
             [(and (not (eqv? (token-line* tok) (multi-line frame)))
                   t-column
                   column
-                  (t-column . > . column))
+                  (t-column . column>? . column))
              #f]
             [else
              (current-alts (cdr stack) tok)])]
@@ -402,7 +403,7 @@
                     stack)]
               [(and t-column
                     column
-                    (t-column . > . column))
+                    (t-column . column>? . column))
                #f]
               [else
                (loop (cdr stack) (add1 skipped))])]
