@@ -279,7 +279,7 @@
                (build-interface-property internal-internal-name
                                          #'(name prop:name name? name-ref name-ref-or-error
                                                  prop:internal-name internal-name? internal-name-ref))
-               (build-interface-dot-handling method-mindex method-vtable method-results replaced-ht
+               (build-interface-dot-handling method-mindex method-names method-vtable method-results replaced-ht
                                              internal-name
                                              expression-macro-rhs dot-provider-rhss parent-dot-providers
                                              #'(name reflect-name name-extends tail-name

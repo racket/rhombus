@@ -7,7 +7,8 @@
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
                      "class-method-result.rkt"
-                     "statically-str.rkt")
+                     "statically-str.rkt"
+                     "maybe-as-original.rkt")
          racket/unsafe/undefined
          "class-method.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -45,7 +46,7 @@
                      add-super-dot-providers)
          no-dynamic-dot-syntax)
 
-(define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results replaced-ht final?
+(define-for-syntax (build-class-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht final?
                                              has-private? method-private method-private-inherit
                                              exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
@@ -67,7 +68,8 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results replaced-ht #'name-ref #'name? final? #f #'reflect-name))
+      (method-static-entries method-mindex method-orig-names method-vtable method-results replaced-ht
+                             #'name-ref #'name? final? #f #'reflect-name))
     (with-syntax ([((public-field-name public-name-field/mutate) ...)
                    (filter-replaced replaced-ht #'(all-public-field-name ...) #'(all-public-name-field/mutate ...))]
                   [(method-name ...) method-names]
@@ -194,7 +196,7 @@
                                                                   ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results replaced-ht
+(define-for-syntax (build-interface-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht
                                                  internal-name
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
@@ -209,7 +211,8 @@
                  names])
     (register-field-check #'(base-ctx scope-ctx ex ...))
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results replaced-ht #'static-name-ref #'name? #f #t #'reflect-name))
+      (method-static-entries method-mindex method-orig-names method-vtable method-results replaced-ht
+                             #'static-name-ref #'name? #f #t #'reflect-name))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
@@ -286,8 +289,8 @@
                  #`(quote-syntax #,name)))))
       null))
 
-(define-for-syntax (method-static-entries method-mindex method-vtable method-results replaced-ht name-ref-id name?-id
-                                          final? via-interface? reflect-name)
+(define-for-syntax (method-static-entries method-mindex method-orig-names method-vtable method-results replaced-ht
+                                          name-ref-id name?-id final? via-interface? reflect-name)
   (for/fold ([names '()] [ids '()] [defns '()])
             ([(name mix) (in-hash method-mindex)]
              #:unless (hash-ref replaced-ht name #f))
@@ -302,7 +305,8 @@
            #`(method-ref #,name-ref-id #,obj-id #,idx))]
         [else
          (lambda (obj-id) (vector-ref method-vtable (mindex-index mix)))]))
-    (define proc-id (car (generate-temporaries (list name))))
+    (define proc-id (maybe-as-original (car (generate-temporaries (list name)))
+                                       (hash-ref method-orig-names (mindex-index mix) #f)))
     (define new-defns
       (append
        (list
@@ -533,17 +537,18 @@
        (define-values (wrap-call rator wrap-rator wrap-obj-e arity static-infos)
          (cond
            [(identifier? pos/id)
+            (define id (maybe-as-original pos/id field-id))
             (cond
               [add-check
                (values checked-wrap-call
-                       pos/id
+                       id
                        (lambda (rator extra-rands) rator)
                        (lambda (extra-rand extra-rands) obj-id)
                        #f
                        #'())]
               [else
                (values (lambda (e extra-rands) e)
-                       pos/id
+                       id
                        (lambda (rator extra-rands) rator)
                        (lambda (extra-rand extra-rands) extra-rand)
                        #f

@@ -715,7 +715,7 @@
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                ;; includes defining the namespace and constructor name:
-               (build-class-dot-handling method-mindex method-vtable method-results replaced-ht final?
+               (build-class-dot-handling method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
