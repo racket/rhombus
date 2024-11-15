@@ -1,5 +1,6 @@
 #lang racket/base
-(require "lex.rkt")
+(require "lex.rkt"
+         "private/column.rkt")
 
 (provide lex/comment/status
          lex/comment-nested-status?
@@ -17,10 +18,13 @@
     [(not (port-counts-lines? in))
      (lex/status in pos inner-status racket-lexer/status)]
     [else
-     (define-values (start-line start-column start-offset) (port-next-location in))
      (define-values (tok type paren start-pos end-pos backup new-inner-status)
        (lex/status in pos inner-status racket-lexer/status))
-     (define-values (end-line end-column end-offset) (port-next-location in))
+     (define-values (start-line start-column end-line end-column)
+       (cond
+         [(token? tok) (values (token-line tok) (column-floor (token-column tok))
+                               (token-end-line tok) (column-floor (token-end-column tok)))]
+         [else (values 0 0 0 0)]))
      (define line-delta (- end-line start-line))
      (define line (if (comment-tracked? status)
                       (comment-tracked-line status)
@@ -46,7 +50,7 @@
          (comment-tracked new-inner-status
                           (+ line line-delta)
                           (if (eqv? line-delta 0)
-                              (+ column (- end-column start-column))
+                              (column+ column (column- end-column start-column))
                               end-column)
                           (if whitespace?
                               (if (comment-tracked? status)
@@ -115,12 +119,12 @@
                     (finish pending new-stack))]
                [else
                 (finish pending new-stack)])]
-            [(and (<= (+ column (if (and (not (pending-comment-bar? pending))
-                                         (token? tok)
-                                         (eq? (token-name tok) 'bar-operator))
-                                    0.5
-                                    0))
-                      (pending-comment-column pending))
+            [(and (column<=? (column+ column (if (and (not (pending-comment-bar? pending))
+                                                      (token? tok)
+                                                      (eq? (token-name tok) 'bar-operator))
+                                                 0.5
+                                                 0))
+                             (pending-comment-column pending))
                   (not (not-line-sensitive?)))
              (case (and (token? tok)
                         (token-name tok))
@@ -147,7 +151,7 @@
                  (pair? new-stack-for-end)
                  (lex-nested-status? inner-status))
              #f]
-            [(and (column . <= . (pending-comment-column pending))
+            [(and (column . column<=? . (pending-comment-column pending))
                   (not (not-line-sensitive?)))
              #t]
             [else #f])]))
