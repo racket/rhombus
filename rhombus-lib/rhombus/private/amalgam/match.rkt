@@ -107,8 +107,8 @@
              #f ; failure
              (#,val-id b-info #,b #f)
              (begin
-               (b-info.committer-id #,val-id b-info.data)
-               (b-info.binder-id #,val-id b-info.data)
+               (b-info.committer-id #,val-id b-info.evidence-ids b-info.data)
+               (b-info.binder-id #,val-id b-info.evidence-ids b-info.data)
                (define-static-info-syntax/maybe b-info.bind-id b-info.bind-static-info ...)
                ...
                (rhombus-body-expression #,rhs))))

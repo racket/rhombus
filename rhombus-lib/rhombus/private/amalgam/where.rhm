@@ -39,11 +39,13 @@ bind.macro
 bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
   let a_info = bind_meta.get_info(bind_a, static_info)
   let [b_info, ...] = [bind_meta.get_info(bind_b, '()'), ...]
-  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_)':
+  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_, $_)':
     bind_meta.unpack_info(a_info)
-  let ['($b_ann, $b_name, $b_static_info, $b_var_info, $_, $_, $_, $_)', ...]:
+  let ['($b_ann, $b_name, $b_static_info, $b_var_info, $_, $b_evidence, $_, $_, $_)', ...]:
     [bind_meta.unpack_info(b_info), ...]
+  let [_, ..., last_b_evidence] = [b_evidence, ...]
   let [b_tmp_id, ...] = [Syntax.make_temp_id(b_name), ...]
+  let [_, ..., last_b_tmp_id] = [b_tmp_id, ...]
   let '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)' = a_var_info
   let ['(($b_var_id, [$b_var_use, ...], $b_statinfo), ...)', ...] = [b_var_info, ...]
   let [[b_keep_statinfo, ...], ...]:
@@ -63,18 +65,19 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
     (($a_var_id, [$a_var_use, ..., ~no_let], ()), ..., // drop static info, because we bind it manually
      ($b_var_id, [$b_var_use, ..., ~no_let], $b_keep_statinfo), ..., ...),
     where_matcher,
+    ($last_b_evidence, $last_b_tmp_id),
     where_committer,
     where_binder,
     ($a_info, ($b_info, $b_tmp_id, $b_expr), ...))'
 
 bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...),
                             $IF, $success, $failure)':
-  let '($_, $_, $_, $a_var_info, $a_matcher, $a_committer, $a_binder, $a_data)':
+  let '($_, $_, $_, $a_var_info, $a_matcher, $a_evidence, $a_committer, $a_binder, $a_data)':
     bind_meta.unpack_info(a_info)
   let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
   '«$a_matcher($in_id, $a_data, $IF,
-               : $a_committer($in_id, $a_data)
-                 $a_binder($in_id, $a_data)
+               : $a_committer($in_id, $a_evidence, $a_data)
+                 $a_binder($in_id, $a_evidence, $a_data)
                  statinfo.macro '$a_var_id': '$a_statinfo'
                  ...
                  $(block:
@@ -82,7 +85,7 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
                      | loop([], [], []):
                          '$success'
                      | loop([b_info, & b_infos], [b_tmp_id, & b_tmp_ids], [b_expr, & b_exprs]):
-                         let '($_, $b_name, $_, $b_var_info, $b_matcher, $b_committer, $b_binder, $b_data)':
+                         let '($_, $b_name, $_, $b_var_info, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
                            bind_meta.unpack_info(b_info)
                          let '(($b_var_id, $b_var_use, $b_statinfo), ...)' = b_var_info
                          'def $b_tmp_id:
@@ -90,8 +93,8 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
                             $b_name
                           $b_matcher($b_tmp_id, $b_data, $IF,
                                      : $(if b_infos != []
-                                         | '«$b_committer($b_tmp_id, $b_data)
-                                             $b_binder($b_tmp_id, $b_data)
+                                         | '«$b_committer($b_tmp_id, $b_evidence, $b_data)
+                                             $b_binder($b_tmp_id, $b_evidence, $b_data)
                                              statinfo.macro '$b_var_id': '$b_statinfo'
                                              ...»'
                                          | '')
@@ -100,12 +103,12 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
                      loop([b_info, ...], [b_tmp_id, ...], [b_expr, ...])),
                $failure)»'
 
-bind.committer 'where_committer($in_id, ($a_info, $b, ..., ($b_info, $b_tmp_id, $b_expr)))':
-  let '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
+bind.committer 'where_committer($in_id, ($evidence, $b_tmp_id), ($a_info, $b, ..., ($b_info, $_, $b_expr)))':
+  let '($_, $_, $_, $_, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
     bind_meta.unpack_info(b_info)
-  '$b_committer($b_tmp_id, $b_data)'
+  '$b_committer($b_tmp_id, $evidence, $b_data)'
 
-bind.committer 'where_binder($in_id, ($a_info, $b, ..., ($b_info, $b_tmp_id, $b_expr)))':
-  let '($_, $_, $_, $_, $b_matcher, $b_committer, $b_binder, $b_data)':
+bind.binder 'where_binder($in_id, ($evidence, $b_tmp_id), ($a_info, $b, ..., ($b_info, $_, $b_expr)))':
+  let '($_, $_, $_, $_, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
     bind_meta.unpack_info(b_info)
-  '$b_binder($b_tmp_id, $b_data)'
+  '$b_binder($b_tmp_id, $evidence, $b_data)'

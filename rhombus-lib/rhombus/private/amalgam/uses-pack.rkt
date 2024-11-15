@@ -17,7 +17,7 @@
                          #'(group kw)]
                         [(#:group g)
                          #'g]))
-     #'(brackets (group stx) ...)]
+     #'(brackets g ...)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed unpacked uses"
                                "syntax object" stx)]))

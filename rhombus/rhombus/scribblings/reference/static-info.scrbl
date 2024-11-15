@@ -172,6 +172,17 @@
 }
 
 @doc(
+  fun statinfo_meta.find(statinfo_stx :: Syntax,
+                         key :: Identifier)
+    :: maybe(Syntax)
+){
+
+ Searches for @rhombus(key) in @rhombus(statinfo_stx), returning a
+ syntax-object value if the key is found, @rhombus(#false) otherwise.
+
+}
+
+@doc(
   fun statinfo_meta.union(statinfo_stx :: Syntax, ...) :: Syntax
   fun statinfo_meta.intersect(statinfo_stx :: Syntax, ...) :: Syntax
 ){
@@ -229,6 +240,8 @@
   def statinfo_meta.dot_provider_key :: Identifier
   def statinfo_meta.sequence_constructor_key :: Identifier
   def statinfo_meta.sequence_element_key :: Identifier
+  def statinfo_meta.list_bounds_key :: Identifier
+  def statinfo_meta.pairlist_bounds_key :: Identifier
   def statinfo_meta.values_key :: Identifier
   def statinfo_meta.indirect_key :: Identifier
 ){
@@ -287,6 +300,14 @@
         will be propageted at all; when @rhombus(statinfo_meta.sequence_element_key)
         is not specified, @rhombus(each, ~for_clause) uses
         @rhombus(statinfo_meta.index_result_key)}
+
+  @item{@rhombus(statinfo_meta.list_bounds_key) --- a group containing
+       two elements, indicating a list with a minimum size given by the first
+       element, and a maximum size for the second element or @rhombus(#false)
+       if no maximum size is known.}
+
+  @item{@rhombus(statinfo_meta.pairlist_bounds_key) --- like
+       @rhombus(statinfo_meta.list_bounds_key), but for a @tech{pair list}.}
 
   @item{@rhombus(statinfo_meta.values_key) --- a packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),

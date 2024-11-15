@@ -539,6 +539,7 @@ bind.infoer 'rx_infoer($static_info, [$rkt_rx, [[$var, $index], ...], $src_str])
     (),
     (($var, [], ()), ...),
     rx_matcher,
+    $rx_matched,
     rx_committer,
     rx_binder,
     [$rkt_rx, $rx_matched, [[$var, $index], ...]])'
@@ -549,9 +550,9 @@ bind.matcher 'rx_matcher($rhs, [$rkt_rx, $rx_matched, $_], $IF, $success, $failu
    | $success
    | $failure'
 
-bind.binder 'rx_committer($arg, $info)':
+bind.committer 'rx_committer($arg, $rx_matched, $info)':
   ''
 
-bind.binder 'rx_binder($arg, [$_, $rx_matched, [[$var, $index], ...]])':
+bind.binder 'rx_binder($arg, $rx_matched, [$_, $_, [[$var, $index], ...]])':
   'def $var: freeze(PairList.get($rx_matched, $index+1))
    ...'

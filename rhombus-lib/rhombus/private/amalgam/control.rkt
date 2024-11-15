@@ -309,8 +309,8 @@
            (arg.matcher-id arg-id arg.data
                            if/blocked
                            (let ()
-                             (arg.committer-id arg-id arg.data)
-                             (arg.binder-id arg-id arg.data)
+                             (arg.committer-id arg-id arg.evidence-ids arg.data)
+                             (arg.binder-id arg-id arg.evidence-ids arg.data)
                              (rhombus-body-at tag g ...))
                            (#,next arg-id)))])))
 

@@ -265,8 +265,8 @@
                                                                    arg-info.data
                                                                    if/blocked
                                                                    (begin
-                                                                     (arg-info.committer-id #,arg arg-info.data)
-                                                                     (arg-info.binder-id #,arg arg-info.data)
+                                                                     (arg-info.committer-id #,arg arg-info.evidence-ids arg-info.data)
+                                                                     (arg-info.binder-id #,arg arg-info.evidence-ids arg-info.data)
                                                                      (define-static-info-syntax/maybe arg-info.bind-id
                                                                        arg-info.bind-static-info ...)
                                                                      ...
@@ -305,8 +305,8 @@
                                                           arg-info.data
                                                           if/blocked
                                                           (begin
-                                                            (arg-info.committer-id v arg-info.data)
-                                                            (arg-info.binder-id v arg-info.data)
+                                                            (arg-info.committer-id v arg-info.evidence-ids arg-info.data)
+                                                            (arg-info.binder-id v arg-info.evidence-ids arg-info.data)
                                                             (define-static-info-syntax/maybe arg-info.bind-id
                                                               arg-info.bind-static-info ...)
                                                             ...
@@ -657,8 +657,8 @@
                                 #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
                                 #:with rest-info::binding-info #'rest-impl.info
                                 #`(((rest-tmp rest-info #,(fcase-rest-arg fc) #f))
-                                   ((rest-info.committer-id rest-tmp rest-info.data))
-                                   ((rest-info.binder-id rest-tmp rest-info.data))
+                                   ((rest-info.committer-id rest-tmp rest-info.evidence-ids rest-info.data))
+                                   ((rest-info.binder-id rest-tmp rest-info.evidence-ids rest-info.data))
                                    ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
                                     ...))])]
                             [else #'(() () () ())])
@@ -674,8 +674,8 @@
                                 #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
                                 #:with kwrest-info::binding-info #'kwrest-impl.info
                                 #`(((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f))
-                                   ((kwrest-info.committer-id kwrest-tmp kwrest-info.data))
-                                   ((kwrest-info.binder-id kwrest-tmp kwrest-info.data))
+                                   ((kwrest-info.committer-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
+                                   ((kwrest-info.binder-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
                                    ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
                                     ...))])]
                             [else #'(() () () ())])
@@ -694,11 +694,11 @@
                                       maybe-match-rest ...
                                       maybe-match-kwrest ...
                                       (begin
-                                        (arg-info.committer-id this-arg-id arg-info.data)
+                                        (arg-info.committer-id this-arg-id arg-info.evidence-ids arg-info.data)
                                         ...
                                         maybe-commit-rest ...
                                         maybe-commit-kwrest ...
-                                        (arg-info.binder-id this-arg-id arg-info.data)
+                                        (arg-info.binder-id this-arg-id arg-info.evidence-ids arg-info.data)
                                         ...
                                         maybe-bind-rest ...
                                         maybe-bind-kwrest ...

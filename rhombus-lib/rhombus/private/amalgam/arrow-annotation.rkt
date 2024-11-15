@@ -386,6 +386,7 @@
                    #'static-infos
                    #'((result (0) . static-infos))
                    #'arrow-matcher
+                   #'()
                    #'arrow-committer
                    #'arrow-binder
                    #'(result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest))]))
@@ -408,12 +409,12 @@
 
 (define-syntax (arrow-committer stx)
   (syntax-parse stx
-    [(_ arg-id data)
+    [(_ arg-id () data)
      #'(begin)]))
 
 (define-syntax (arrow-binder stx)
   (syntax-parse stx
-    [(_ arg-id data)
+    [(_ arg-id () data)
      (do-arrow-binder #'arg-id #'data #'#%app #f)]))
 
 (define-for-syntax (do-arrow-binder arg-id data fail-k who-stx)
@@ -496,8 +497,8 @@
                        (a.matcher-id rest-arg-id a.data
                                      if/blocked
                                      (let ()
-                                       (a.committer-id rest-arg-id a.data)
-                                       (a.binder-id rest-arg-id a.data)
+                                       (a.committer-id rest-arg-id a.evidence-ids a.data)
+                                       (a.binder-id rest-arg-id a.evidence-ids a.data)
                                        (define-static-info-syntax/maybe a-bind-id . a-bind-static-infos)
                                        ...
                                        (success-k
@@ -566,8 +567,8 @@
                                        (a.matcher-id kw-map a.data
                                                      if/blocked
                                                      (let ()
-                                                       (a.committer-id kw-map a.data)
-                                                       (a.binder-id kw-map a.data)
+                                                       (a.committer-id kw-map a.evidence-ids a.data)
+                                                       (a.binder-id kw-map a.evidence-ids a.data)
                                                        (define-static-info-syntax/maybe a-bind-id . a-bind-static-infos)
                                                        ...
                                                        (success-k
@@ -599,8 +600,8 @@
                             (lhs.matcher-id lhs-arg-id lhs.data
                                             if/blocked
                                             (let ()
-                                              (lhs.committer-id lhs-arg-id lhs.data)
-                                              (lhs.binder-id lhs-arg-id lhs.data)
+                                              (lhs.committer-id lhs-arg-id lhs.evidence-ids lhs.data)
+                                              (lhs.binder-id lhs-arg-id lhs.evidence-ids lhs.data)
                                               (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                                               ...
                                               (let ([left-id lhs-body])
@@ -648,8 +649,8 @@
                                                 if/flattened
                                                 (void)
                                                 (raise-result-annotation-failure (who) res-in-id 'rhs-str))
-                                (rhs.committer-id result rhs.data)
-                                (rhs.binder-id res-in-id rhs.data)
+                                (rhs.committer-id res-in-id rhs.evidence-ids rhs.data)
+                                (rhs.binder-id res-in-id rhs.evidence-ids rhs.data)
                                 (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
                                 ...
                                 rhs-body)]
@@ -674,6 +675,7 @@
                    #'static-infos
                    #'((result (0) . static-infos))
                    #'all-of-matcher
+                   #'()
                    #'all-of-committer
                    #'all-of-binder
                    #'(result-id all-arity who-expr cases))]))
@@ -699,12 +701,12 @@
 
 (define-syntax (all-of-committer stx)
   (syntax-parse stx
-    [(_ arg-id data)
+    [(_ arg-id () data)
      #'(begin)]))
 
 (define-syntax (all-of-binder stx)
   (syntax-parse stx
-    [(_ arg-id (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...)))
+    [(_ arg-id () (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...)))
      (define arities (syntax->list #'(arity ...)))
      (define no-keywords? (andmap (lambda (a) (integer? (syntax-e a))) arities))
      (cond

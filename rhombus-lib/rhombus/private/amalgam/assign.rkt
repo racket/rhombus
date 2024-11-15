@@ -82,13 +82,19 @@
                    #'() ; forget enclosing  static-infos, since we can't enforce them on mutation
                    #'((id (0)))
                    #'mutable-identifier-succeed
+                   #'()
                    #'mutable-commit
                    #'mutable-bind
                    #'[id mutable-id converter-id converter static-infos annotation-str])]))
 
 (define-syntax (mutable-identifier-succeed stx)
   (syntax-parse stx
-    [(_ arg-id [bind-id mutable-id converter-id convert static-infos annotation-str] IF success fail)
+    [(_ arg-id _ IF success fail)
+     #`(IF #t success fail)]))
+
+(define-syntax (mutable-commit stx)
+  (syntax-parse stx
+    [(_ arg-id () [bind-id mutable-id converter-id convert static-infos annotation-str])
      #`(begin
          #,@(if (syntax-e #'convert)
                 #`((define converter-id (lambda (val)
@@ -97,17 +103,11 @@
                                                    raise-mutable-binding-annotation-fail)))
                    (define mutable-id (converter-id arg-id)))
                 #`((define mutable-id arg-id)))
-         (set! mutable-id mutable-id)
-         (IF #t success fail))]))
-
-(define-syntax (mutable-commit stx)
-  (syntax-parse stx
-    [(_ arg-id _)
-     #'(begin)]))
+         (set! mutable-id mutable-id))]))
 
 (define-syntax (mutable-bind stx)
   (syntax-parse stx
-    [(_ arg-id [bind-id mutable-id converter-id convert static-infos annotation-str])
+    [(_ arg-id () [bind-id mutable-id converter-id convert static-infos annotation-str])
      #`(define-syntax bind-id
          (make-mutable-variable #'mutable-id
                                 #,(and (syntax-e #'convert)

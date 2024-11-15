@@ -331,8 +331,9 @@
                    (static-infos-union #'static-infos #'up-static-infos)
                    #'()
                    #'empty-map-matcher
-                   #'literal-bind-nothing
+                   #'()
                    #'literal-commit-nothing
+                   #'literal-bind-nothing
                    #'hash?)]))
 
 (define-syntax (empty-map-matcher stx)
@@ -920,6 +921,7 @@
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
                    #'map-matcher
+                   #'composite-info.evidence-ids
                    #'map-committer
                    #'map-binder
                    #'(mode
@@ -990,19 +992,19 @@
 
 (define-syntax (map-committer stx)
   (syntax-parse stx
-    [(_ arg-id (mode
-                keys defaults tmp-ids rest-tmp
-                composite-matcher-id composite-committer-id composite-binder-id
-                composite-data))
-     #`(composite-committer-id 'map composite-data)]))
+    [(_ arg-id evidence-ids (mode
+                                keys defaults tmp-ids rest-tmp
+                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-data))
+     #`(composite-committer-id 'map evidence-ids composite-data)]))
 
 (define-syntax (map-binder stx)
   (syntax-parse stx
-    [(_ arg-id (mode
-                keys defaults tmp-ids rest-tmp
-                composite-matcher-id composite-committer-id composite-binder-id
-                composite-data))
-     #`(composite-binder-id 'map composite-data)]))
+    [(_ arg-id evidence-ids (mode
+                                keys defaults tmp-ids rest-tmp
+                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-data))
+     #`(composite-binder-id 'map evidence-ids composite-data)]))
 
 ;; macro to optimize to an inline functional update
 (define-syntax (Map.append/optimize stx)

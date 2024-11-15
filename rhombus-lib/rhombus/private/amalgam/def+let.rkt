@@ -109,10 +109,10 @@
                            if/flattened
                            (begin)
                            (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
-       #`(lhs-i.committer-id tmp-id lhs-i.data)
+       #`(lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
        (wrap-definition
         #`(begin
-            (lhs-i.binder-id tmp-id lhs-i.data)
+            (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
             ...
             #,@(maybe-end-def)))))]))
@@ -151,11 +151,11 @@
                              (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str
                                                   #:position 'pos))
            ...
-           (lhs-i.committer-id tmp-id lhs-i.data)
+           (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
            ...)
        (wrap-definition
         #`(begin
-            (lhs-i.binder-id tmp-id lhs-i.data)
+            (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
             ...
             (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
             ... ...

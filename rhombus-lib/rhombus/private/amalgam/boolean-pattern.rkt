@@ -45,6 +45,7 @@
                    #'rhs.static-infos ; presumably includes `lhs.static-infos` as passed to `rhs-id.infoer-id`
                    #'(lhs-bind-info ... . rhs.bind-infos)
                    #'and-matcher
+                   #'(lhs.evidence-ids rhs.evidence-ids)
                    #'and-committer
                    #'and-binder
                    #'(lhs rhs))]))
@@ -58,17 +59,17 @@
 
 (define-syntax (and-committer stx)
   (syntax-parse stx
-    [(_ arg-id (lhs::binding-info rhs::binding-info))
+    [(_ arg-id (lhs-evidence-ids rhs-evidence-ids) (lhs::binding-info rhs::binding-info))
      #'(begin
-         (lhs.committer-id arg-id lhs.data)
-         (rhs.committer-id arg-id rhs.data))]))
+         (lhs.committer-id arg-id lhs-evidence-ids lhs.data)
+         (rhs.committer-id arg-id rhs-evidence-ids rhs.data))]))
 
 (define-syntax (and-binder stx)
   (syntax-parse stx
-    [(_ arg-id (lhs::binding-info rhs::binding-info))
+    [(_ arg-id (lhs-evidence-ids rhs-evidence-ids) (lhs::binding-info rhs::binding-info))
      #`(begin
-         (lhs.binder-id arg-id lhs.data)
-         (rhs.binder-id arg-id rhs.data))]))
+         (lhs.binder-id arg-id lhs-evidence-ids lhs.data)
+         (rhs.binder-id arg-id rhs-evidence-ids rhs.data))]))
 
 ;; ----------------------------------------
 ;; ||
@@ -104,6 +105,7 @@
                    (static-infos-intersect #'lhs.static-infos #'rhs.static-infos)
                    #'()
                    #'or-matcher
+                   #'()
                    #'or-committer
                    #'or-binder
                    #'(lhs rhs))]))
@@ -126,12 +128,12 @@
 
 (define-syntax (or-committer stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs))
+    [(_ arg-id () (lhs rhs))
      #'(begin)]))
 
 (define-syntax (or-binder stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs))
+    [(_ arg-id () (lhs rhs))
      #'(begin)]))
 
 ;; ----------------------------------------
@@ -156,6 +158,7 @@
                    #'static-infos
                    #'()
                    #'not-matcher
+                   #'()
                    #'not-committer
                    #'not-binder
                    #'info)]))
@@ -173,10 +176,10 @@
 
 (define-syntax (not-committer stx)
   (syntax-parse stx
-    [(_ arg-id info)
+    [(_ arg-id () info)
      #'(begin)]))
 
 (define-syntax (not-binder stx)
   (syntax-parse stx
-    [(_ arg-id info)
+    [(_ arg-id () info)
      #'(begin)]))

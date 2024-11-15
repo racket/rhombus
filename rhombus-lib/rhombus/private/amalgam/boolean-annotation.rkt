@@ -57,6 +57,7 @@
                    #'rhs.static-infos ; presumably includes `lhs.static-infos` as passed to `rhs-i.infoer-id`
                    #'((right-val (0) . rhs-static-infos))
                    #'and-matcher
+                   #'rhs.evidence-ids
                    #'and-committer
                    #'and-binder
                    #'(left-val right-val lhs rhs lhs-body rhs-body))]))
@@ -67,8 +68,8 @@
      #:with ((lhs-bind-id bind-use . lhs-bind-static-infos) ...) #'lhs.bind-infos
      #'(lhs.matcher-id arg-id lhs.data IF
                        (begin
-                         (lhs.committer-id arg-id lhs.data)
-                         (lhs.binder-id arg-id lhs.data)
+                         (lhs.committer-id arg-id lhs.evidence-ids lhs.data)
+                         (lhs.binder-id arg-id lhs.evidence-ids lhs.data)
                          (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                          ...
                          (define left-id lhs-body)
@@ -77,15 +78,15 @@
 
 (define-syntax (and-committer stx)
   (syntax-parse stx
-    [(_ arg-id (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
-     #'(rhs.committer-id left-id rhs.data)]))
+    [(_ arg-id evidence-ids (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
+     #'(rhs.committer-id left-id evidence-ids rhs.data)]))
 
 (define-syntax (and-binder stx)
   (syntax-parse stx
-    [(_ arg-id (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
+    [(_ arg-id evidence-ids (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
      #:with ((rhs-bind-id bind-use . rhs-bind-static-infos) ...) #'rhs.bind-infos
      #`(begin
-         (rhs.binder-id left-id rhs.data)
+         (rhs.binder-id left-id evidence-ids rhs.data)
          (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
          ...
          (define bind-id rhs-body))]))
@@ -133,6 +134,7 @@
                    (static-infos-intersect #'lhs.static-infos #'rhs.static-infos)
                    #`((bind-id (0) . result-static-infos))
                    #'or-matcher
+                   #'()
                    #'or-committer
                    #'or-binder
                    #'(lhs rhs finish bind-id lhs-body rhs-body lhs.bind-infos rhs.bind-infos))]))
@@ -149,8 +151,8 @@
            ((lambda (right-k)
               (lhs.matcher-id arg-id lhs.data if/blocked
                               (lambda ()
-                                (lhs.committer-id arg-id lhs.data)
-                                (lhs.binder-id arg-id lhs.data)
+                                (lhs.committer-id arg-id lhs.evidence-ids lhs.data)
+                                (lhs.binder-id arg-id lhs.evidence-ids lhs.data)
                                 (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
                                 ...
                                 left-body)
@@ -158,8 +160,8 @@
             (lambda ()
               (rhs.matcher-id arg-id rhs.data if/blocked
                               (lambda ()
-                                (rhs.committer-id arg-id rhs.data)
-                                (rhs.binder-id arg-id rhs.data)
+                                (rhs.committer-id arg-id rhs.evidence-ids rhs.data)
+                                (rhs.binder-id arg-id rhs.evidence-ids rhs.data)
                                 (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
                                 ...
                                 right-body)
@@ -168,12 +170,12 @@
 
 (define-syntax (or-committer stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs finish-id . _))
+    [(_ arg-id () (lhs rhs finish-id . _))
      #'(begin)]))
 
 (define-syntax (or-binder stx)
   (syntax-parse stx
-    [(_ arg-id (lhs rhs finish-id result-id . _))
+    [(_ arg-id () (lhs rhs finish-id result-id . _))
      #'(define result-id (finish-id))]))
 
 ;; ----------------------------------------
@@ -218,6 +220,7 @@
                    #'static-infos
                    #'()
                    #'not-matcher
+                   #'()
                    #'not-committer
                    #'not-binder
                    #'[result-id info])]))
@@ -235,10 +238,10 @@
 
 (define-syntax (not-committer stx)
   (syntax-parse stx
-    [(_ arg-id [result-id info])
+    [(_ arg-id () [result-id info])
      #'(begin)]))
 
 (define-syntax (not-binder stx)
   (syntax-parse stx
-    [(_ arg-id [result-id info])
+    [(_ arg-id () [result-id info])
      #'(define result-id arg-id)]))

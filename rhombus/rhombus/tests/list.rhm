@@ -1,4 +1,4 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
   "version_guard.rhm"
 
@@ -514,19 +514,67 @@ block:
   check f(3, 4, 5, 6) ~is [3, [4, 5], 6]
 
 check:
-  ~eval
   def [x, ..., y, ...] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  [[x, ...], [y, ...]]
+  ~is [[1, 2], []]
 
 check:
-  ~eval
+  def [x, ..., 2, y, ...] = [1, 2, 3, 4]
+  [[x, ...], [y, ...]]
+  ~is [[1], [3, 4]]
+
+check:
   def [& x, y, ...] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  [x, [y, ...]]
+  ~is [[1, 2], []]
 
 check:
-  ~eval
   def [x, ..., & y, z] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  [[x, ...], y, z]
+  ~is [[1], [], 2]
+
+check:
+  def [x, ..., & y, z] = [1, 2]
+  [PairList[x, ...], y, z]
+  ~is [PairList[1], [], 2]
+
+check:
+  def [x :: Int, ..., & y :: List.of(Int), z] = [1, 2]
+  [[x, ...], y, z]
+  ~is [[1], [], 2]
+
+check:
+  def [x :: Int, ..., & y :: List.of(String), z] = [1, 2, "c", "d", 4]
+  [[x, ...], y, z]
+  ~is [[1, 2], ["c", "d"], 4]
+
+check:
+  def [x :: Int, ..., & y :: List.of(String), z, ...] = [1, 2, "c", "d", 5, "f"]
+  [[x, ...], y, [z, ...]]
+  ~is [[1, 2], ["c", "d"], [5, "f"]]
+
+check:
+  def [x :: PathString.to_path, ..., z, & y :: List.of(PathString.to_path)] = ["a", "b", 0, "c", "d"]
+  [[x, ...], y, z]
+  ~is [[Path("a"), Path("b")], [Path("c"), Path("d")], 0]
+
+check:
+  match [1, "end", 2, 3, 4, "end", 5]
+  | [& [x, ..., "end"], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1, "end", 2, 3, 4]], 5]
+
+check:
+  match [1, "end", 2, 3, 4, "end", 5]
+  | [& [x, ..., "end", & z0], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1, "end", 2, 3, 4]], 5]
+
+check:
+  match [1, "end", 2, 3, 4, "end", 5]
+  | [& [x :: Int, ..., "end"], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1], [2, 3, 4]], 5]
 
 check:
   [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
@@ -595,3 +643,28 @@ check:
     error.annot("List").msg,
     error.val("oops").msg,
   )
+
+block:
+  expr.macro 'list_bounds($(a :: annot_meta.Parsed))':
+    let (_, _, si) = annot_meta.unpack_converter(a)
+    match statinfo_meta.find(si, statinfo_meta.list_bounds_key)
+    | '$min $max':
+        '[#%literal $min, #%literal $max]'
+    | ~else:
+        '#false'
+  annot.macro 'Triple': 'matching([_, _, _])'
+  check:
+    list_bounds(matching([x, y, z])) ~is [3, 3]
+    list_bounds(matching([x, ..., z])) ~is [1, #false]
+    list_bounds(matching([& y, z])) ~is [1, #false]
+    list_bounds(matching([x, & y, z])) ~is [2, #false]
+    list_bounds(matching([x, y, ..., z])) ~is [2, #false]
+    list_bounds(matching([x, y, ..., z, ...])) ~is [1, #false]
+    list_bounds(matching([x, & [y1, y2, y3], z])) ~is [5, 5]
+    list_bounds(Triple) ~is [3, 3]
+    list_bounds(matching([x, & _ :: Triple, y])) ~is [5, 5]
+    list_bounds(matching([x, & _ :: List && Triple, y])) ~is [5, 5]
+    list_bounds(matching([x, & _ :: Triple || List, y])) ~is [2, #false]
+    list_bounds(matching([x, y, ...] where: x = [y, ...].length)) ~is [1, #false]
+    list_bounds(matching([_, & [x, y, ...] where: x = [y, ...].length, _])) ~is [3, #false]
+    list_bounds(NonemptyList) ~is [1, #false]

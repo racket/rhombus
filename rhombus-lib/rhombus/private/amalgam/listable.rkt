@@ -83,6 +83,7 @@
                    #'()
                    #'((val (#:repet ())))
                    #'to_list-matcher
+                   #'()
                    #'to_list-committer
                    #'to_list-binder
                    #'(converted-val val))]))
@@ -94,10 +95,10 @@
 
 (define-syntax (to_list-committer stx)
   (syntax-parse stx
-    [(_ arg-id (converted-val val))
+    [(_ arg-id () (converted-val val))
      #'(define converted-val (to-treelist #f arg-id))]))
 
 (define-syntax (to_list-binder stx)
   (syntax-parse stx
-    [(_ arg-id (converted-val val))
+    [(_ arg-id () (converted-val val))
      #'(define val converted-val)]))

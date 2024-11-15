@@ -124,6 +124,9 @@
 @doc(
   ~meta
   fun bind_meta.pack_info(stx :: Syntax) :: Syntax
+  grammar evidence_id_tree:
+    $id
+    ($evidence_id_tree, ...)
 ){
 
  Packs binding information that specific to a use of a binding form,
@@ -143,6 +146,7 @@
       ((#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...)),
      ...),
     #,(@rhombus(matcher_id, ~var)),
+    #,(@rhombus(evidence_id_tree)),
     #,(@rhombus(committer_id, ~var)),
     #,(@rhombus(binder_id, ~var)),
     #,(@rhombus(data, ~var)))'
@@ -187,7 +191,11 @@
  The @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var) identifiers provide
  the ``continuation'' of the binder's expansion to generate a matching
- expression and a definition sequence.
+ expression and a definition sequence. Each identifier in @rhombus(evidence_id_tree)
+ should be defined in the output of @rhombus(match_id, ~var);
+ a tree with the same shape as @rhombus(evidence_id_tree), but with
+ each identifier potentially replaced by a different one, is provided as
+ input to @rhombus(committer_id, ~var) and @rhombus(binder_id, ~var).
 
  The @rhombus(data, ~var) term is propagated to the use of
  @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
