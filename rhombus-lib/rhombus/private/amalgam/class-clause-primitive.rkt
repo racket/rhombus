@@ -336,6 +336,10 @@
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
+       [(_ #:none)
+        (wrap-class-clause #`(#:reconstructor #:none))]
+       [(_ (_::block (group #:none)))
+        (wrap-class-clause #`(#:reconstructor #:none))]
        [(_ (~and args (_::parens . _)) ret ...
            (~and rhs (_::block . _)))
         (wrap-class-clause #`(#:reconstructor (block (group fun args ret ... rhs))))]

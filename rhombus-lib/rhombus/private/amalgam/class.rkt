@@ -36,7 +36,8 @@
          "append-property.rkt"
          "reconstructor.rkt"
          "serializable.rkt"
-         "name-prefix.rkt")
+         "name-prefix.rkt"
+         "field-case-lambda.rkt")
 
 (provide this
          super
@@ -431,11 +432,16 @@
        (define replaced-ht (check-exports-distinct stxes exs fields method-mindex dots))
 
        (define reconstructor-rhs
-         (or (hash-ref options 'reconstructor-rhs #f)
-             (and (not (or (hash-ref options 'expression-rhs #f)
-                           (hash-ref options 'constructor-rhs #f)
-                           abstract-name))
-                  'default)))
+         (cond
+           [(hash-ref options 'reconstructor-rhs #f)
+            => (lambda (rhs)
+                 (and (not (eq? (syntax-e rhs) '#:none))
+                      rhs))]
+           [else
+            (and (not (or (hash-ref options 'expression-rhs #f)
+                          (hash-ref options 'constructor-rhs #f)
+                          abstract-name))
+                 'default)]))
        (define reconstructor-stx-params
          (hash-ref options 'reconstructor-stx-params #f))
 
@@ -709,7 +715,7 @@
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                ;; includes defining the namespace and constructor name:
-               (build-class-dot-handling method-mindex method-vtable method-results replaced-ht final?
+               (build-class-dot-handling method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
@@ -1034,9 +1040,9 @@
        (for/list ([def (in-list (syntax->list
                                  #'((define public-name-field/mutate
                                       (let ([reflect-public-name-field
-                                             (case-lambda
-                                               [(v) (public-name-field v)]
-                                               [(v val) (public-maybe-set-name-field! v val)])])
+                                             (field-case-lambda
+                                              [(v) (public-name-field v)]
+                                              [(v val) (public-maybe-set-name-field! v val)])])
                                         reflect-public-name-field))
                                     ...)))]
                   #:when (syntax-parse def

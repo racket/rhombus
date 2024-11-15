@@ -8,7 +8,8 @@
                      "class-method-result.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "entry-point-adjustment.rkt")
+                     "entry-point-adjustment.rkt"
+                     "maybe-as-original.rkt")
          racket/stxparam
          "expression.rkt"
          "parse.rkt"
@@ -930,7 +931,8 @@
       (list
        #`(define-values (#,@(for/list ([added (in-list added-methods)]
                                        #:when (not (eq? 'abstract (added-method-body added))))
-                              (added-method-rhs-id added))
+                              (maybe-as-original (added-method-rhs-id added)
+                                                 (added-method-id added)))
                          #,@(if (and (syntax-e #'reconstructor-name)
                                      (not (eq? reconstructor-rhs 'default)))
                                 (list #'reconstructor-name)
@@ -985,14 +987,17 @@
               #,@(for/list ([added (in-list added-methods)]
                             #:when (not (eq? 'abstract (added-method-body added))))
                    (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
-                   #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
-                                                                    reflect-name name name-instance name? name-convert
-                                                                    #,(and r (car r)) #,(added-method-id added)
-                                                                    new-private-tables
-                                                                    indirect-static-infos
-                                                                    [super-name ...]
-                                                                    #,(added-method-kind added))])
-                       #,(added-method-id added)))
+                   (define method-name (let ([id (added-method-id added)])
+                                         ;; disable check-syntax presence:
+                                         (datum->syntax id (syntax-e id) #f)))
+                   #`(let ([#,method-name (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
+                                                        reflect-name name name-instance name? name-convert
+                                                        #,(and r (car r)) #,(added-method-id added)
+                                                        new-private-tables
+                                                        indirect-static-infos
+                                                        [super-name ...]
+                                                        #,(added-method-kind added))])
+                       #,method-name))
               #,@(if (and (syntax-e #'reconstructor-name)
                           (not (eq? reconstructor-rhs 'default)))
                      (list

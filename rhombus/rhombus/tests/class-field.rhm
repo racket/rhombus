@@ -8,6 +8,9 @@ block:
   check C("apple").more ~is [Char"p", Char"a"]
   check C("banana").more ~is [Char"a", Char"b"]
   check C("apple").even_more ~is {Char"p"}
+  block:
+    use_dynamic
+    check C.s(C("ok"), "x") ~throws "arity mismatch"
 
 block:
   class C(s :: String, private b = s[0]):

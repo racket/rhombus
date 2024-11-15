@@ -75,15 +75,18 @@
       (syntax-parse (extract form)
         [rep::repetition-info
          (define for-clausess (syntax->list #'rep.for-clausess))
+         (define (add-disappeared stx)
+           (add-repetition-disappeared stx #'rep.rep-expr))
          (cond
            [(is-sequence? form)
             (define rev-for-clausess (reverse for-clausess))
             (values (reverse (cdr rev-for-clausess))
-                    #`(#,sequence-for-form #,(car rev-for-clausess)
-                        rep.body))]
+                    (add-disappeared
+                     #`(#,sequence-for-form #,(car rev-for-clausess)
+                        rep.body)))]
            [else
             (values for-clausess
-                    #'rep.body)])])))
+                    (add-disappeared #'rep.body))])])))
   (define-values (body static-infos)
     (apply build-one bodys))
   (make-repetition-info at-stx

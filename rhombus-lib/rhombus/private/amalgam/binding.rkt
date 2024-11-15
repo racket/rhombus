@@ -61,11 +61,12 @@
                                          #'infoer-id))]
              #:with info (check-binding-info-result
                           (let ([form #'form])
-                            (call-as-transformer
-                             #'infoer-id
-                             (list form)
-                             syntax-track-origin #f
-                             proc))
+                            (syntax-local-introduce
+                             (call-as-transformer
+                              #'infoer-id
+                              (list (syntax-local-introduce form))
+                              syntax-track-origin #f
+                              proc)))
                           proc)))
 
   ;; To unpack a binding infoer result:

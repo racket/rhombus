@@ -278,7 +278,7 @@
                                       #f))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
-                                         method-mindex method-vtable method-results replaced-ht final?
+                                         method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          #f #f
                                          expression-macro-rhs intro #f

@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "annotation-string.rkt"
                      "tag.rkt"
-                     "keyword-sort.rkt")
+                     "keyword-sort.rkt"
+                     "maybe-as-original.rkt")
          "parse.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -135,8 +136,7 @@
           #:with rest-impl::binding-impl #'(rest-infoer-id rest-static-infos rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
-          #:with rest-seq-tmp-ids (and (syntax-e #'rest-repetition?)
-                                       (generate-temporaries #'(rest-info.bind-id ...)))
+          #:with rest-seq-tmp-ids (generate-temporaries #'(rest-info.bind-id ...))
           #:with no-rest-map? (free-identifier=? #'always-succeed #'rest-info.matcher-id)
           (values #'(rest-tmp-id rest-accessor
                                  rest-to-repetition no-rest-map?
