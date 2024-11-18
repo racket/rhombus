@@ -5,11 +5,17 @@
 
 @title{Continuations}
 
+A @deftech{continuation} represents a captured evaluation context.
+Control can ``jump'' into a continuation by delivering values to it,
+or by using it with @rhombus(Continuation.in).
+
 @doc(
   annot.macro 'Continuation'
 ){
 
- Recognizes continuations as captured by @rhombus(Continuation.capture).
+ Recognizes continuations as captured by
+ @rhombus(Continuation.capture). Continuations are callable as
+ functions and satisfy @rhombus(Function, ~annot).
 
 }
 
@@ -38,9 +44,9 @@
     ($bind, ...)
 ){
 
- Returns the value of the @rhombus(body) sequence, but also establishes
+ Returns the value(s) of the @rhombus(body) sequence, but also establishes
  a delimiting continuation prompt around the sequence. If
- @rhombus(tag_expr) is present, is determines the tag used for the
+ @rhombus(tag_expr) is present, it determines the tag used for the
  prompt, otherwise @rhombus(Continuation.PromptTag.default) is used.
 
  The @rhombus(~catch) clauses is superficially similar to
@@ -69,9 +75,9 @@
 
  Captures the continuation of the @rhombus(Continuation.capture)
  expression, binds it to @rhombus(id), and then evaluates the
- @rhombus(body) sequence in tail position.
- The continuation is represented as a function that
- accepts values to deliver to the continuation.
+ @rhombus(body) sequence in tail position. The continuation is
+ callable as a function that accepts values to deliver to the
+ continuation, but it can also be used with @rhombus(Continuation.in).
 
  The captured continuation is delimited by a prompt with the tag
  specified by @rhombus(tag_expr), where
@@ -83,6 +89,23 @@
  continuation extends the current one when it is called, and no prompt
  is required in the continuation of the call to the capture
  continuation.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    cont_expr: block expr
+  expr.macro 'Continuation.in $cont_expr:
+                $body
+                ...'
+){
+
+ Evaluates the @rhombus(body) sequence ``in'' the captured
+ continuation produced by @rhombus(cont_expr), as opposed to
+ delivering values to it. More precisely, the current continuation is
+ extended with the captured continuation, and the @rhombus(body)
+ sequence is evaluated with that as the continuation.
 
 }
 
@@ -140,7 +163,7 @@
   ~error:
     Continuation.barrier:
       Continuation.capture k:
-        "done"
+        k
   Continuation.barrier:
     Continuation.prompt:
       Continuation.capture k:
@@ -197,18 +220,5 @@
  Calls @rhombus(fn) in tail position, providing as its argument the
  current frame's mark value for @rhombus(key), or @rhombus(default) if the
  current frame has no mark for @rhombus(key).
-
-}
-
-
-@doc(
-  fun Continuation.call_in(cont :: Continuation,
-                           fn :: Function.of_arity(0))
-    :: None
-){
-
- Calls @rhombus(fn) with the current continuation extended with
- @rhombus(cont). This means the extension happens before the call, not
- after.
 
 }
