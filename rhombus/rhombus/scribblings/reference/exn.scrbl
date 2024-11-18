@@ -32,11 +32,11 @@
 ){
 
 
- Returns the value of the @rhombus(body) sequence, but runs the body or expression of
- an @rhombus(~initially) clause when entry the @rhombus(try) body
- (whether normally or by a continuation jump) and the body or expression of a
+ Returns the value(s) of the @rhombus(body) sequence, but runs the body or expression of
+ an @rhombus(~initially) clause when entering the @rhombus(try) body
+ (whether normally or by a @tech{continuation} jump) and the body or expression of a
  @rhombus(~finally) clause when leaving the @rhombus(try) body (whether
- normally or by a continuation jump, including exception throws).
+ normally or by a @tech{continuation} jump, including exception throws).
 
  If an exception is thrown during the the @rhombus(body) sequence, the
  control escapes to the context of the @rhombus(try) @rhombus(body)
@@ -78,7 +78,6 @@
         println("ignoring all exceptions!")
         0
       ~finally: println("out")
-
   ~repl:
     def k:
       Continuation.prompt:
@@ -86,7 +85,12 @@
           ~initially: println("in")
           Continuation.capture k: k
           ~finally: println("out")
-    k("again")
+    k(block:
+        println("pre")
+        "again")
+    Continuation.in k:
+      println("body")
+      "again"
 )
 
 }
