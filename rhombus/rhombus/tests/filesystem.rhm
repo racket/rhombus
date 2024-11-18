@@ -65,9 +65,26 @@ block:
   check_annot filesystem.link_exists(cross_p)
 
 block:
-  let tmp = filesystem.make_temporary(~as: #'directory)
+  let tmp_obj = filesystem.make_temporary(~as: #'directory)
+  check tmp_obj ~is_a filesystem.Temporary
+  let tmp = tmp_obj.path
   check tmp.parent() ~is system.path(#'temp_dir)
   check filesystem.directory_exists(tmp) ~is #true
+
+  block:
+    let x:
+      Closeable.let x = filesystem.make_temporary(~in: tmp)
+      check filesystem.file_exists(x.path) ~is #true
+      x.path
+    check filesystem.file_exists(x) ~is #false
+
+  block:
+    let x:
+      Closeable.let x = filesystem.make_temporary(~as: #'directory, ~in: tmp)
+      check filesystem.directory_exists(x.path) ~is #true
+      Port.Output.open_file(x.path.add("y")).close()
+      x.path
+    check filesystem.directory_exists(x) ~is #false
 
   let x = tmp.add("x")
   block:
@@ -280,71 +297,71 @@ block:
   check filesystem.read_string(x) ~is "hello world"
 
   version_guard.at_least "8.15.0.4":
-    let tmp2 = filesystem.make_temporary(~as: #'directory)
+    block:
+      Closeable.let tmp2_obj = filesystem.make_temporary(~as: #'directory)
+      let tmp2 = tmp2_obj.path
 
-    let ex = tmp2.add("ex")
-    check filesystem.copy(x, ex) ~is #void
-    check filesystem.file_exists(ex) ~is #true
-    check filesystem.size(ex) ~is filesystem.size(x)
-    check filesystem.copy(y, ex) ~throws "filesystem.copy:"
-    check filesystem.copy(y, ex, ~exists_ok: #true) ~is #void
-    check filesystem.size(ex) ~is filesystem.size(y)
-    check filesystem.permissions(ex) ~is filesystem.permissions(y)
-    filesystem.delete(ex)
-    check filesystem.copy(x, ex, ~permissions: 0o444) ~is #void
-    check filesystem.permissions(ex) ~is { #'read }
-    filesystem.delete(ex)
-    check filesystem.copy(x, ex, ~permissions: 0o777, ~replace_permissions: #true) ~is #void
-    check filesystem.permissions(ex, ~bits: #true) ~is 0o777
-    check filesystem.copy(x, ex, ~exists_ok: #true) ~is #void
-    check filesystem.permissions(ex) ~is filesystem.permissions(x)
-    check filesystem.copy(x, ex, ~exists_ok: #true, ~keep_modify_seconds: #true) ~is #void
-    check filesystem.modify_seconds(ex) ~is filesystem.modify_seconds(x)
+      let ex = tmp2.add("ex")
+      check filesystem.copy(x, ex) ~is #void
+      check filesystem.file_exists(ex) ~is #true
+      check filesystem.size(ex) ~is filesystem.size(x)
+      check filesystem.copy(y, ex) ~throws "filesystem.copy:"
+      check filesystem.copy(y, ex, ~exists_ok: #true) ~is #void
+      check filesystem.size(ex) ~is filesystem.size(y)
+      check filesystem.permissions(ex) ~is filesystem.permissions(y)
+      filesystem.delete(ex)
+      check filesystem.copy(x, ex, ~permissions: 0o444) ~is #void
+      check filesystem.permissions(ex) ~is { #'read }
+      filesystem.delete(ex)
+      check filesystem.copy(x, ex, ~permissions: 0o777, ~replace_permissions: #true) ~is #void
+      check filesystem.permissions(ex, ~bits: #true) ~is 0o777
+      check filesystem.copy(x, ex, ~exists_ok: #true) ~is #void
+      check filesystem.permissions(ex) ~is filesystem.permissions(x)
+      check filesystem.copy(x, ex, ~exists_ok: #true, ~keep_modify_seconds: #true) ~is #void
+      check filesystem.modify_seconds(ex) ~is filesystem.modify_seconds(x)
 
-    let sub = tmp2.add("sub")
-    check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false) ~is #void
-    check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true)
-    filesystem.delete(sub, ~recur: #true)
-
-    unless windows
-    | check filesystem.copy(tmp, sub, ~recur: #true) ~throws values("filesystem.copy:", "link2")
+      let sub = tmp2.add("sub")
+      check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false) ~is #void
+      check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true)
       filesystem.delete(sub, ~recur: #true)
-      filesystem.delete(link2)
-    check filesystem.copy(tmp, sub, ~recur: #true) ~is #void
-    check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true, ~follow_links: #true)
-    unless windows
-    | make_link2()
-    filesystem.delete(sub, ~recur: #true)
 
-    check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false, ~keep_modify_seconds: #true) ~is #void
-    for (f: filesystem.files(sub, ~recur: #true)):
-      check filesystem.type(sub.add(f)) ~is filesystem.type(tmp.add(f))
-      when filesystem.file_exists(sub.add(f)) || filesystem.directory_exists(sub.add(f))
-      | check filesystem.permissions(sub.add(f)) ~is filesystem.permissions(tmp.add(f))
-      when filesystem.file_exists(sub.add(f))
-      | check filesystem.modify_seconds(sub.add(f)) ~is filesystem.modify_seconds(tmp.add(f))
-    filesystem.delete(sub, ~recur: #true)
+      unless windows
+      | check filesystem.copy(tmp, sub, ~recur: #true) ~throws values("filesystem.copy:", "link2")
+        filesystem.delete(sub, ~recur: #true)
+        filesystem.delete(link2)
+      check filesystem.copy(tmp, sub, ~recur: #true) ~is #void
+      check filesystem.files(sub, ~recur: #true) ~is filesystem.files(tmp, ~recur: #true, ~follow_links: #true)
+      unless windows
+      | make_link2()
+      filesystem.delete(sub, ~recur: #true)
 
-    filesystem.delete(tmp2, ~recur: #true)
+      check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false, ~keep_modify_seconds: #true) ~is #void
+      for (f: filesystem.files(sub, ~recur: #true)):
+        check filesystem.type(sub.add(f)) ~is filesystem.type(tmp.add(f))
+        when filesystem.file_exists(sub.add(f)) || filesystem.directory_exists(sub.add(f))
+        | check filesystem.permissions(sub.add(f)) ~is filesystem.permissions(tmp.add(f))
+        when filesystem.file_exists(sub.add(f))
+        | check filesystem.modify_seconds(sub.add(f)) ~is filesystem.modify_seconds(tmp.add(f))
+      filesystem.delete(sub, ~recur: #true)
 
-  block:
-    let tmp3 = filesystem.make_temporary(~in: tmp, ~as: x)
-    check filesystem.file_exists(tmp3) ~is #true
-    check filesystem.size(tmp3) ~is filesystem.size(x)
-    let mutable tries = 0
-    let tmp4 = filesystem.make_temporary(~in: tmp,
-                                         ~make_name:
-                                           fun (s :: String):
-                                             tries := tries + 1
-                                             if tries == 1
-                                             | tmp3.name()
-                                             | Path("mytmp_" ++ s))
-    check tmp4 != tmp3 ~is #true
-    check tries ~is 2
-    let tmp5 = filesystem.make_temporary(~in: tmp, ~permissions: 0o444)
-    check filesystem.permissions(tmp5) ~is { #'read }
-    let tmp6 = filesystem.make_temporary(~in: tmp, ~permissions: 0o777, ~replace_permissions: #true)
-    check filesystem.permissions(tmp6) ~is { #'read, #'write, #'execute }
+    block:
+      let tmp3 = filesystem.make_temporary(~in: tmp, ~as: x).path
+      check filesystem.file_exists(tmp3) ~is #true
+      check filesystem.size(tmp3) ~is filesystem.size(x)
+      let mutable tries = 0
+      let tmp4 = filesystem.make_temporary(~in: tmp,
+                                           ~make_name:
+                                             fun (s :: String):
+                                               tries := tries + 1
+                                               if tries == 1
+                                               | tmp3.name()
+                                               | Path("mytmp_" ++ s))
+      check tmp4 != tmp3 ~is #true
+      check tries ~is 2
+      let tmp5 = filesystem.make_temporary(~in: tmp, ~permissions: 0o444).path
+      check filesystem.permissions(tmp5) ~is { #'read }
+      let tmp6 = filesystem.make_temporary(~in: tmp, ~permissions: 0o777, ~replace_permissions: #true).path
+      check filesystem.permissions(tmp6) ~is { #'read, #'write, #'execute }
 
   filesystem.delete(tmp, ~recur: #true)
   check filesystem.directory_exists(tmp) ~is #false
