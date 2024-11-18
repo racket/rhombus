@@ -19,6 +19,7 @@
          "call-result-key.rkt"
          "index-result-key.rkt"
          "sequence-constructor-key.rkt"
+         "list-bounds-key.rkt"
          "op-literal.rkt"
          "literal.rkt"
          (submod "ellipsis.rkt" for-parse)
@@ -31,9 +32,11 @@
          "define-arity.rkt"
          "class-primitive.rkt"
          "rest-bind.rkt"
+         "try-rest-bind.rkt"
          "number.rkt"
          (submod "comparable.rkt" for-builtin)
-         "list-last.rkt")
+         "list-last.rkt"
+         "maybe-list-tail.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -446,17 +449,21 @@
       #'values
       #'cdr))
 
-(define-for-syntax (make-binding generate-binding make-rest-selector get-static-infos mid-splice-allowed?)
+(define-for-syntax (make-binding generate-binding make-rest-selector get-static-infos
+                                 mid-splice-allowed? rest-to-repetition bounds-key)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id (_::parens arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos) mid-splice-allowed?)]
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos)
+                             mid-splice-allowed? rest-to-repetition bounds-key)]
        [(form-id (_::brackets arg ...) . tail)
-        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos) mid-splice-allowed?)]))))
+        (parse-*list-binding stx generate-binding make-rest-selector (get-static-infos)
+                             mid-splice-allowed? rest-to-repetition bounds-key)]))))
 
 (define-for-syntax (parse-list-binding stx)
-  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos) #t))
+  (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos)
+                       #t #'in-treelist #'#%treelist-bounds))
 
 (define-annotation-constructor (List List.of)
   ()
@@ -639,8 +646,9 @@
                    (static-infos-union (get-treelist-static-infos) #'up-static-infos)
                    #'()
                    #'treelist-empty-matcher
-                   #'literal-bind-nothing
+                   #'()
                    #'literal-commit-nothing
+                   #'literal-bind-nothing
                    #'datum)]))
 
 (define-syntax (empty-infoer stx)
@@ -651,8 +659,9 @@
                    (static-infos-union (get-list-static-infos) #'up-static-infos)
                    #'()
                    #'empty-matcher
-                   #'literal-bind-nothing
+                   #'()
                    #'literal-commit-nothing
+                   #'literal-bind-nothing
                    #'datum)]))
 
 (define-syntax (treelist-empty-matcher stx)
@@ -677,7 +686,8 @@
 
 (define-annotation-constructor (NonemptyList NonemptyList.of)
   ()
-  #'nonempty-treelist? #,(get-treelist-static-infos)
+  #'nonempty-treelist? ((#%treelist-bounds (group 1 #f))
+                        #,@(get-treelist-static-infos))
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -689,7 +699,8 @@
 
 (define-annotation-constructor (NonemptyPairList NonemptyPairList.of)
   ()
-  #'nonempty-list? #,(get-list-static-infos)
+  #'nonempty-list? ((#%list-bounds (group 1 #f))
+                    #,@(get-list-static-infos))
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -1111,60 +1122,87 @@
 
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
-(define-for-syntax (parse-*list-binding stx generate-binding make-rest-selector static-infos mid-splice-allowed?)
-  (define (check-allowed-args args after-args op-stx)
-    (define (no op-stx)
-      (raise-syntax-error #f
-                          "second splice or repetition not allowed in a list pattern"
-                          stx
-                          op-stx))
-    (for ([arg (in-list args)])
-      (syntax-parse arg
-        [(group _::&-bind . _) (no op-stx)]
-        [(group _::...-bind . _) (no op-stx)]
-        [_ (void)]))
-    (for ([arg (in-list after-args)])
-      (syntax-parse arg
-        [(group op::&-bind . _) (no #'op)]
-        [(group op::...-bind . _) (no #'op)]
-        [_ (void)]))
-    (unless mid-splice-allowed?
-      (when (pair? after-args)
-        (raise-syntax-error #f
-                            "splice or repetition not allowed before the end of the pattern"
-                            stx
-                            op-stx))))
+(define-for-syntax (parse-*list-binding stx generate-binding make-rest-selector static-infos
+                                        mid-splice-allowed? rest-to-repetition bounds-key)
   (syntax-parse stx
     #:datum-literals (group)
-    [(form-id (_ arg ... (group op::&-bind rest-arg ...) after-arg ...) . tail)
-     (define args (syntax->list #'(arg ...)))
-     (define after-args (syntax->list #'(after-arg ...)))
-     (check-allowed-args args after-args #'op)
-     (generate-binding #'form-id #t args after-args #'tail
-                       #`(#,group-tag rest-bind #,static-infos
-                          (#,group-tag rest-arg ...))
-                       make-rest-selector
-                       #f)]
-    [(form-id (_ arg ... rest-arg (group op::...-bind) after-arg ...) . tail)
-     (define args (syntax->list #'(arg ...)))
-     (define after-args (syntax->list #'(after-arg ...)))
-     (check-allowed-args args after-args #'op)
-     (define len (length args))
-     (generate-binding #'form-id #t args after-args #'tail #'rest-arg
-                       make-rest-selector
-                       #t)]
     [(form-id (_ arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
-     (generate-binding #'form-id #f args null #'tail)]))
+     (let loop ([args args] [accum null])
+       (cond
+         [(null? args)
+          (generate-binding #'form-id (reverse accum) null #'tail)]
+         [else
+          (define arg (car args))
+          (define (rest-simple?)
+            (and (or mid-splice-allowed?
+                     (null? (cdr args)))
+                 (for/and ([arg (in-list (cdr args))])
+                   (syntax-parse arg
+                     [(group _::&-bind . _) #f]
+                     [(group _::...-bind) #f]
+                     [_ #t]))))
+          (syntax-parse arg
+            [(group op::&-bind rest-arg ...)
+             (cond
+               [(rest-simple?)
+                (generate-binding #'form-id (reverse accum) (cdr args) #'tail
+                                  #`(#,group-tag rest-bind #,static-infos
+                                     (#,group-tag rest-arg ...))
+                                  make-rest-selector
+                                  #f)]
+               [(and (pair? (cdr args))
+                     (syntax-parse (cadr args)
+                       [(group _::...-bind) #t]
+                       [_ #f]))
+                (generate-binding #'form-id (reverse accum) null #'tail
+                                  #`(#,group-tag try-rest-bind #,static-infos form-id
+                                     #:splice-repetition #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                     (#,group-tag rest-arg ...)
+                                     #,@(cddr args))
+                                  make-rest-selector
+                                  #f)]
+               [else
+                (generate-binding #'form-id (reverse accum) null #'tail
+                                  #`(#,group-tag try-rest-bind #,static-infos form-id
+                                     #:splice #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                     (#,group-tag rest-arg ...)
+                                     #,@(cdr args))
+                                  make-rest-selector
+                                  #f)])]
+            [(group op::...-bind)
+             #:when (pair? accum)
+             (cond
+               [(rest-simple?)
+                (generate-binding #'form-id (reverse (cdr accum)) (cdr args) #'tail (car accum)
+                                  make-rest-selector
+                                  #t)]
+               [else
+                (generate-binding #'form-id (reverse (cdr accum)) null #'tail
+                                  #`(#,group-tag try-rest-bind #,static-infos form-id
+                                     #:repetition #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                     #,(car accum)
+                                     #,@(cdr args))
+                                  make-rest-selector
+                                  #f)])]
+            [_ (loop (cdr args) (cons arg accum))])]))]))
 
-(define-for-syntax (generate-treelist-binding form-id or-more? args after-args tail [rest-arg #f] [make-rest-selector #f]
+(define-for-syntax (generate-treelist-binding form-id args after-args tail [rest-arg #f] [make-rest-selector #f]
                                               [rest-repetition? #t])
   (define pre-len (length args))
   (define post-len (length after-args))
   (define len (+ pre-len post-len))
-  (define pred #`(lambda (v)
-                   (and (treelist? v)
-                        (#,(if or-more? #'>= #'=) (treelist-length v) #,len))))
+  (define pred #`(lambda (min-len max-len)
+                   (lambda (v)
+                     (and (treelist? v)
+                          ;; constant propoagation and folding should pick one case:
+                          (cond
+                            [(not max-len)
+                             (>= (treelist-length v) min-len)]
+                            [(eqv? min-len max-len)
+                             (= (treelist-length v) min-len)]
+                            [else
+                             (<= min-len (treelist-length v) max-len)])))))
   (composite-binding-transformer #`(#,form-id (parens . #,(append args after-args)) . #,tail)
                                  #:rest-arg rest-arg
                                  "List"
@@ -1179,17 +1217,25 @@
                                  #:rest-accessor (and make-rest-selector (make-rest-selector pre-len post-len))
                                  #:rest-repetition? rest-repetition?
                                  #:rest-to-repetition #'in-treelist
+                                 #:bounds-key #'#%treelist-bounds
                                  #:static-infos (get-treelist-static-infos)))
 
-(define-for-syntax (generate-list-binding form-id or-more? args after-args tail [rest-arg #f] [make-rest-selector #f]
+(define-for-syntax (generate-list-binding form-id args after-args tail [rest-arg #f] [make-rest-selector #f]
                                           [rest-repetition? #t])
   (define len (length args))
-  (define pred #`(lambda (v)
-                   (and (list? v)
-                        #,(let ([check #`(maybe-list-tail v #,len)])
-                            (if or-more?
-                                #`(and #,check #t)
-                                #`(null? #,check))))))
+  (define pred #`(lambda (min-len max-len)
+                   (lambda (v)
+                     (and (list? v)
+                          #,(let ([check #`(maybe-list-tail v min-len)])
+                              ;; constant propoagation and folding should pick one case:
+                              #`(cond
+                                  [(not max-len)
+                                   (and #,check #t)]
+                                  [(eqv? min-len max-len)
+                                   (null? #,check)]
+                                  [else
+                                   (let ([tail #,check])
+                                     (and tail (maybe-list-tail tail (- max-len min-len)) #t))]))))))
   (composite-binding-transformer  #`(#,form-id (parens . #,args) . #,tail)
                                   #:rest-arg rest-arg
                                   "PairList"
@@ -1207,10 +1253,13 @@
                                   #:rest-accessor (and make-rest-selector (make-rest-selector len 0))
                                   #:rest-repetition? rest-repetition?
                                   #:rest-to-repetition #'in-list
+                                  #:bounds-key #'#%list-bounds
                                   #:static-infos (get-list-static-infos)))
 
-(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos #t))
-(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector get-list-static-infos #f))
+(define-binding-syntax List (make-binding generate-treelist-binding make-treelist-rest-selector get-treelist-static-infos
+                                          #t #'in-treelist #'#%treelist-bounds))
+(define-binding-syntax PairList (make-binding generate-list-binding make-list-rest-selector get-list-static-infos
+                                              #f #'in-list #'#%list-bounds))
 
 (begin-for-syntax
   (struct list-rest (syntax))
@@ -1383,12 +1432,6 @@
                     #:rep-solo-for-form #'for/treelist
                     #:repetition? #t
                     #:span-form-name? #f))
-
-(define (maybe-list-tail l n)
-  (or (and (eqv? n 0)
-           l)
-      (and (pair? l)
-           (maybe-list-tail (cdr l) (sub1 n)))))
 
 (define (ensure-treelist v)
   (or (to-treelist #f v)

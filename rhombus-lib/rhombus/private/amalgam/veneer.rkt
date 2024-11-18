@@ -372,6 +372,7 @@
                    #'()
                    #'((val (~repeat ())))
                    #'converter-matcher
+                   #'(convert-committer)
                    #'converter-committer
                    #'converter-binder
                    #'(name-convert convert-committer converted-val val))]))
@@ -385,12 +386,12 @@
 
 (define-syntax (converter-committer stx)
   (syntax-parse stx
-    [(_ arg-id (name-convert convert-committer converted-val val))
-     #'(define converted-val (convert-committer))]))
+    [(_ arg-id (evidence/convert-committer) (name-convert convert-committer converted-val val))
+     #'(define converted-val (evidence/convert-committer))]))
 
 (define-syntax (converter-binder stx)
   (syntax-parse stx
-    [(_ arg-id (name-convert convert-committer converted-val val))
+    [(_ arg-id (evidence/convert-committer) (name-convert convert-committer converted-val val))
      #'(define val converted-val)]))
 
 (define-for-syntax (build-veneer-predicate-or-converter super converter? names)
@@ -470,8 +471,8 @@
                                      [(and super
                                            (veneer-desc-predicate-id super))
                                       #`(let ([cvt1 (let ()
-                                                      (arg-info.committer-id v arg-info.data)
-                                                      (arg-info.binder-id v arg-info.data)
+                                                      (arg-info.committer-id v arg-info.evidence-ids arg-info.data)
+                                                      (arg-info.binder-id v arg-info.evidence-ids arg-info.data)
                                                       (define-static-info-syntax/maybe arg-info.bind-id
                                                         arg-info.bind-static-info ...)
                                                       ...
@@ -490,8 +491,8 @@
                                                          #f))]))]
                                      [else
                                       #`(let ([commit (lambda ()
-                                                        (arg-info.committer-id v arg-info.data)
-                                                        (arg-info.binder-id v arg-info.data)
+                                                        (arg-info.committer-id v arg-info.evidence-ids arg-info.data)
+                                                        (arg-info.binder-id v arg-info.evidence-ids arg-info.data)
                                                         (define-static-info-syntax/maybe arg-info.bind-id
                                                           arg-info.bind-static-info ...)
                                                         ...

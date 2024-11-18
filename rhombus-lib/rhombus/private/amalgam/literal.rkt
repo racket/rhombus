@@ -40,6 +40,7 @@
                     #'up-static-infos)
                    #'()
                    #'literal-matcher
+                   #'()
                    #'literal-commit-nothing
                    #'literal-bind-nothing
                    #'data)]))
@@ -54,12 +55,12 @@
 
 (define-syntax (literal-commit-nothing stx)
   (syntax-parse stx
-    [(_ arg-id data)
+    [(_ arg-id () data)
      #'(begin)]))
 
 (define-syntax (literal-bind-nothing stx)
   (syntax-parse stx
-    [(_ arg-id data)
+    [(_ arg-id () data)
      #'(begin)]))
 
 (define-for-syntax get-string-static-infos #f)

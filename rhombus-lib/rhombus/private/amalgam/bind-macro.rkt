@@ -97,7 +97,15 @@
                        #:fields #'((count #f count 0 unpack-element*)
                                    (maybe_converter #f maybe_converter 0 unpack-term*)
                                    (static_info #f static_info 0 unpack-term*)
-                                   (annotation_string #f annotation_string 0 unpack-element*)))))
+                                   (annotation_string #f annotation_string 0 unpack-element*))))
+
+  (define-syntax-class :unpacked-evidence-id-tree
+    #:attributes (packed)
+    #:datum-literals (group)
+    (pattern (group id:identifier)
+             #:with packed #'id)
+    (pattern (group (_::parens t::unpacked-evidence-id-tree ...))
+             #:with packed #'(t.packed ...))))
 
 (define-for-syntax space
   (space-syntax rhombus/bind))
@@ -136,6 +144,7 @@
                                                 (group unpacked-static-infos)))
                                  ...))
                   (group chain-to-matcher)
+                  #,(unpack-evidence-tree #'b.evidence-ids)
                   (group chain-to-committer)
                   (group chain-to-binder)
                   (group (parsed #:rhombus/bind/info/chain
@@ -352,10 +361,11 @@
   (syntax-parse stx
     #:datum-literals (parsed group)
     [(_ (_::parens (group arg-id:identifier)
+                   e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
                                   (matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
-     #`(committer-id arg-id data)]))
+     #`(committer-id arg-id e.packed data)]))
 
 (define-syntax chain-to-committer
   (expression-transformer
@@ -370,10 +380,11 @@
   (syntax-parse stx
     #:datum-literals (parsed group)
     [(_ (_::parens (group arg-id:identifier)
+                   e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
                                   (matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
-     #`(binder-id arg-id data)]))
+     #`(binder-id arg-id e.packed data)]))
 
 (define-syntax chain-to-binder
   (expression-transformer
@@ -393,7 +404,7 @@
                   . _)
          (list
           #`(define-syntax builder-id
-              (binder-rhs #,stx)))]))))
+              (binder-or-committer-rhs #,stx)))]))))
 
 (define-for-syntax (pack-info who stx)
   (check-syntax who stx)
@@ -408,6 +419,7 @@
                   static-infos-g
                   bind-ids-g
                   (group chain-to-matcher)
+                  evidence-ids-g
                   (group chain-to-committer)
                   (group chain-to-binder)
                   (group (parsed #:rhombus/bind/info/chain
@@ -418,6 +430,7 @@
                        static-infos-g
                        bind-ids-g
                        (group orig-matcher-id)
+                       evidence-ids-g
                        (group orig-committer-id)
                        (group orig-binder-id)
                        (group orig-data)))]
@@ -426,6 +439,7 @@
                   (group static-infos)
                   (group bind-ids)
                   (group matcher-id:identifier)
+                  e::unpacked-evidence-id-tree
                   (group committer-id:identifier)
                   (group binder-id:identifier)
                   (group data))
@@ -443,6 +457,7 @@
                      (pack-static-infos who #'static-infos)
                      #'((bind-id packed-bind-uses . packed-bind-static-infos) ...)
                      #'matcher-id
+                     #'e.packed
                      #'committer-id
                      #'binder-id
                      #'data)]
@@ -450,29 +465,39 @@
                                  "ill-formed unpacked binding info"
                                  "syntax object" stx)])))
 
+(define-for-syntax (unpack-evidence-tree tree)
+  (syntax-parse tree
+    [_:identifier #`(group #,tree)]
+    [(tree ...) #`(group (parens #,@(map unpack-evidence-tree (syntax->list #'(tree ...)))))]))
+
 (define-defn-syntax binder binder-or-committer)
 (define-defn-syntax committer binder-or-committer)
 
 (begin-for-syntax
-  (define-syntax (binder-rhs stx)
+  (define-syntax (binder-or-committer-rhs stx)
     (syntax-parse stx
       [(_ orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
-                                     (_::parens (group _::$-bind arg-id:identifier)
-                                                data-pattern)))
+                                     (~and pat
+                                           (_::parens (group _::$-bind arg-id:identifier)
+                                                      evidence-pattern
+                                                      data-pattern))))
                    (block-tag::block body ...))
-          (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
+          (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?)
+            (convert-pattern #'pat))
           (with-syntax ([((data-id data-id-ref) ...) data-idrs]
                         [(((data-sid ...) data-sid-ref) ...) data-sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
-                  [(_ arg-id data)
-                   (syntax-parse #'(group data)
+                  [(_ arg-id evidence-tree data)
+                   (syntax-parse (list 'parens
+                                       (list 'group #'arg-id)
+                                       (unpack-evidence-tree #'evidence-tree)
+                                       (list 'group #'data))
                      [#,converted-data-pattern
-                      (let ([arg-id #'arg-id]
-                            [data-id data-id-ref] ...)
+                      (let ([data-id data-id-ref] ...)
                         (let-syntaxes ([(data-sid ...) data-sid-ref] ...)
                           (unwrap-block
                            (rhombus-body-at block-tag body ...))))])])))])])))

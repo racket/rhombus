@@ -35,8 +35,8 @@
                               #,(if (syntax-e #'try-next)
                                     next
                                     #`(begin
-                                        (arg.committer-id arg-id arg.data)
-                                        (arg.binder-id arg-id arg.data)
+                                        (arg.committer-id arg-id arg.evidence-ids arg.data)
+                                        (arg.binder-id arg-id arg.evidence-ids arg.data)
                                         (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
                                         ...
                                         #,next))

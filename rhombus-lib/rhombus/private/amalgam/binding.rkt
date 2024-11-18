@@ -69,6 +69,10 @@
                               proc)))
                           proc)))
 
+  (define-syntax-class :evidence-id-tree
+    (pattern _:identifier)
+    (pattern (_::evidence-id-tree ...)))
+
   ;; To unpack a binding infoer result:
   (define-syntax-class :binding-info
     (pattern (annotation-str:string
@@ -76,6 +80,7 @@
               (~and static-infos ((:identifier _) ...))
               (~and bind-infos ((bind-id:identifier (~and bind-uses (bind-use ...)) (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
+              evidence-ids::evidence-id-tree
               committer-id:identifier
               binder-id:identifier
               data)))
@@ -92,12 +97,13 @@
                             data)))
 
   ;; puts pieces together into a `:binding-info`
-  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id committer-id binder-id data)
+  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id evidence-ids committer-id binder-id data)
     (datum->syntax #f (list annotation-str
                             name-id
                             static-infos
                             bind-infos
                             matcher-id
+                            evidence-ids
                             committer-id
                             binder-id
                             data)))
@@ -138,6 +144,7 @@
                    #'static-infos
                    #'((id ([#:repet ()]) . static-infos))
                    #'always-succeed
+                   #'()
                    #'identifier-commit
                    #'identifier-bind
                    (let ([prefix (syntax-property #'id extension-syntax-property-key)])
@@ -152,18 +159,18 @@
 
 (define-syntax (identifier-commit stx)
   (syntax-parse stx
-    [(_ arg-id bind-id*)
+    [(_ arg-id () bind-id*)
      #'(begin)]))
 
 (define-syntax (identifier-bind stx)
   (syntax-parse stx
-    [(_ arg-id [bind-id prefix-id])
+    [(_ arg-id () [bind-id prefix-id])
      (define l (build-definitions/maybe-extension #f #'bind-id #'prefix-id
                                                   #'arg-id))
      (if (and (pair? l) (null? (cdr l)))
          (car l)
          #`(begin #,@l))]
-    [(_ arg-id bind-id)
+    [(_ arg-id () bind-id)
      #'(define bind-id arg-id)]))
 
 (define-syntax (define-binding-syntax stx)

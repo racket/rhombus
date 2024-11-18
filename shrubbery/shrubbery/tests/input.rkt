@@ -1666,6 +1666,9 @@ begin:
 
 cond | null: 0 | list(x): 1
      | cons(a, d): f(a) + f(d)
+
+op :: :
+  ok
 INPUT
   )
 
@@ -1839,7 +1842,8 @@ INPUT
     (group
      cons
      (parens (group a) (group d))
-     (block (group f (parens (group a)) (op +) f (parens (group d))))))))))
+     (block (group f (parens (group a)) (op +) f (parens (group d))))))))
+ (group op (op ::) (block (group ok)))))
 
 (define input3
 #<<INPUT

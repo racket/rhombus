@@ -40,7 +40,9 @@
             (define all-phase+space+symss (syntax-local-module-exports (syntax->datum mod-path)))
             (define phase+space+symss
               (cond
-                [(eq? space '#:all) all-phase+space+symss]
+                [(eq? space '#:all) (if (null? all-phase+space+symss)
+                                        '((0)) ;; ensures that a portal is created in the empty case
+                                        all-phase+space+symss)]
                 [else (for/list ([phase+space+syms (in-list all-phase+space+symss)]
                                  #:when (eq? space (phase+space-space (car phase+space+syms))))
                         phase+space+syms)]))

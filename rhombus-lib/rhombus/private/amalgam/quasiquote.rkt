@@ -873,17 +873,15 @@
   (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern e))
   (with-syntax ([((id id-ref) ...) idrs]
                 [(((sid ...) sid-ref) ...) sidrs])
-    (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
-      (binding-form
-       #'syntax-infoer
-       #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
-          #,pattern
-          #,repack-id
-          (tmp-id ...)
-          (id ...)
-          (id-ref ...)
-          ((sid ...) ...)
-          (sid-ref ...))))))
+    (binding-form
+     #'syntax-infoer
+     #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
+        #,pattern
+        #,repack-id
+        (id ...)
+        (id-ref ...)
+        ((sid ...) ...)
+        (sid-ref ...)))))
 
 (define-syntax #%quotes
   (expression-prefix-operator
@@ -916,7 +914,6 @@
                                             ()
                                             ()
                                             ()
-                                            ()
                                             ())))))))
 
 (define-repetition-syntax #%quotes
@@ -937,7 +934,7 @@
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (annotation-str pattern repack tmp-ids (id ...) id-refs (sids ...) sid-refs))
+    [(_ static-infos (annotation-str pattern repack (id ...) id-refs (sids ...) sid-refs))
      (define (make-sequencers depth) (for/list ([i (in-range (syntax-e depth))]) #'in-list))
      (with-syntax ([(id-sequencers ...) (for/list ([id-ref (in-list (syntax->list #'id-refs))])
                                           (syntax-parse id-ref
@@ -947,12 +944,14 @@
                                [sid-ref (in-list (syntax->list #'sid-refs))])
                       (define id+depth
                         (extract-pattern-variable-bind-id-and-depth sids sid-ref))
-                      (list (car id+depth) (make-sequencers (cadr id+depth))))])
+                      (list (car id+depth) (make-sequencers (cadr id+depth))))]
+                   [tmp-ids (generate-temporaries #'(id ...))])
        (binding-info #'annotation-str
                      #'syntax
                      #'()
                      #'((id ((#:repet id-sequencers))) ... (sid ((#:repet sid-sequencers))) ...)
                      #'syntax-matcher
+                     #'tmp-ids
                      #'syntax-committer
                      #'syntax-binder
                      #'(pattern repack tmp-ids (id ...) id-refs (sids ...) sid-refs)))]))
@@ -974,14 +973,14 @@
 
 (define-syntax (syntax-committer stx)
   (syntax-parse stx
-    [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...)))
+    [(_ arg-id (evidence/tmp-id ...) (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...)))
      #'(begin
-         (define id tmp-id)
+         (define id evidence/tmp-id)
          ...)]))
 
 (define-syntax (syntax-binder stx)
   (syntax-parse stx
-    [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)))
+    [(_ arg-id (evidence/tmp-id ...) (pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)))
      #'(begin
          (define-syntaxes (sid ...) sid-ref)
          ...)]))
@@ -1015,7 +1014,7 @@
                   (syntax-parse #'b-impl.info
                     [b::binding-info
                      (syntax-parse #'b.data
-                       [(pattern repack (tmp-id ...) (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...))
+                       [(pattern repack tmp-ids (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...))
                         #`[#,(if (and repack-multi?
                                       (free-identifier=? #'repack #'repack-as-term))
                                  #`((~datum multi) ((~datum group) pattern))

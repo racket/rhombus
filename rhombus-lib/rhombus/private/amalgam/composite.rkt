@@ -18,6 +18,12 @@
 
 (provide (for-syntax composite-binding-transformer))
 
+(module+ for-rest
+  (provide maybe-repetition-as-list
+           build-overall-rest-getter
+           (for-syntax deepen-repetition
+                       make-repetition-bind)))
+
 (define-for-syntax (composite-binding-transformer tail
                                                   #:rest-arg [rest-arg #f]
                                                   #:stx-info [stx-in #f]
@@ -28,6 +34,7 @@
                                                   #:keywords [keywords #f] ; #f or a list of keywords and #f
                                                   #:steppers [steppers #f] ; a sequence of `cdr`s for lists
                                                   #:static-infos [composite-static-infos #'()] ; for the composite value
+                                                  #:bounds-key [bounds-key #f]
                                                   #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                   #:index-result-info? [index-result-info? #f]
                                                   #:sequence-element-info? [sequence-element-info? #f]
@@ -57,7 +64,7 @@
       (binding-form
        #'composite-infoer
        #`(#,constructor-str
-          #,predicate #,composite-static-infos
+          #,predicate #,composite-static-infos #,bounds-key
           #,steppers #,accessors #,static-infoss
           (a-parsed.infoer-id ... ) (a-parsed.data ...)
           #,accessor->info? #,index-result-info? #,sequence-element-info?
@@ -75,7 +82,7 @@
 (define-syntax (composite-infoer stx)
   (syntax-parse stx
     [(_ static-infos (constructor-str
-                      predicate (composite-static-info ...)
+                      predicate init-composite-static-infos bounds-key
                       steppers accessors ((static-info ...) ...)
                       (infoer-id ...) (data ...)
                       accessor->info? index-result-info? sequence-element-info?
@@ -98,9 +105,10 @@
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
      (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos
-                                   rest-repetition?)
+                                   rest-repetition?
+                                   rest-evidence-ids)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'rest #f #'() #f)]
+         [#f (values #'#f #'() #'rest #f #'() #f #'(() ()))]
          [(rest-accessor rest-to-repetition rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-static-infos
           (case (syntax-e #'rest-repetition?)
@@ -144,21 +152,32 @@
                   #'rest-info.static-infos
                   #'rest-info.name-id
                   #'rest-info.annotation-str
-                  (with-syntax ([(bind-uses ...)
-                                 (if (syntax-e #'rest-repetition?)
-                                     (let ([in-seq (if (syntax-e #'no-rest-map?) #'rest-to-repetition #'in-list)])
-                                       (for/list ([uses (in-list (syntax->list #'(rest-info.bind-uses ...)))]
-                                                  [id (in-list (syntax->list #'(rest-info.bind-id ...)))])
-                                         (define sequencers (uses->sequencers uses))
-                                         (unless sequencers
-                                           (raise-syntax-error #f "cannot bind within a repetition" id))
-                                         #`((#:repet (#,in-seq #,@sequencers)))))
-                                     #'(rest-info.bind-uses ...))])
-                    #'((rest-info.bind-id bind-uses rest-info.bind-static-info ...) ...))
-                  (syntax-e #'rest-repetition?))]))
+                  (if (syntax-e #'rest-repetition?)
+                      (deepen-repetition #'rest-info.bind-infos #'rest-to-repetition (syntax-e #'no-rest-map?))
+                      #'rest-info.bind-infos)
+                  (syntax-e #'rest-repetition?)
+                  #'(rest-tmp-id rest-info.evidence-ids))]))
+
+     (define-values (min-len max-len)
+       (if (syntax-e #'bounds-key)
+           (let ([a-min-len (length (syntax->list #'(a-info.name-id ...)))])
+             (syntax-parse (and (not rest-repetition?)
+                                (static-info-lookup rest-static-infos #'bounds-key))
+               #:datum-literals (group)
+               [(group min max)
+                (values (+ a-min-len (syntax-e #'min))
+                        (and (syntax-e #'max) (+ a-min-len (syntax-e #'max))))]
+               [_ (if (syntax-e #'rest-data)
+                      (values a-min-len #f)
+                      (values a-min-len a-min-len))]))
+           (values #f #f)))
 
      (define all-composite-static-infos
-       (let* ([composite-static-infos #'(composite-static-info ... . static-infos)]
+       (let* ([composite-static-infos #'init-composite-static-infos]
+              [composite-static-infos (if (syntax-e #'bounds-key)
+                                          #`((bounds-key (group #,min-len #,max-len)) . #,composite-static-infos)
+                                          composite-static-infos)]
+              [composite-static-infos (static-infos-union composite-static-infos #'static-infos)]
               [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos
@@ -196,17 +215,23 @@
                                             . #,composite-static-infos)]
                                         [else composite-static-infos])])
          composite-static-infos))
-     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str
-                                         #:rest-repetition? rest-repetition?)
-                   #'composite
-                   all-composite-static-infos
-                   #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
-                   #'composite-matcher
-                   #'composite-committer
-                   #'composite-binder
-                   #`(predicate steppers accessors #,(generate-temporaries #'(a-info.name-id ...))
-                                (a-info.name-id ...) (a-info.matcher-id ...) (a-info.committer-id ...) (a-info.binder-id ...) (a-info.data ...)
-                                #,new-rest-data))]))
+     (define tmp-ids (generate-temporaries #'(a-info.name-id ...)))
+     (with-syntax ([predicate (if (syntax-e #'bounds-key)
+                                  #`(predicate #,min-len #,max-len)
+                                  #'predicate)])
+       (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str
+                                           #:rest-repetition? rest-repetition?)
+                     #'composite
+                     all-composite-static-infos
+                     #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
+                     #'composite-matcher
+                     #`(#,tmp-ids a-info.evidence-ids ... #,rest-evidence-ids)
+                     #'composite-committer
+                     #'composite-binder
+                     #`(predicate steppers accessors #,tmp-ids
+                                  (a-info.name-id ...) (a-info.matcher-id ...)
+                                  (a-info.committer-id ...) (a-info.binder-id ...) (a-info.data ...)
+                                  #,new-rest-data)))]))
 
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
@@ -266,11 +291,12 @@
 
 (define-syntax (composite-committer stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate steppers accessors (tmp-id ...)
-                            name-ids matcher-ids (committer-id ...) binder-ids (data ...)
-                            rest-data))
+    [(_ c-arg-id all-evidence-ids (predicate steppers accessors (tmp-id ...)
+                                             name-ids matcher-ids (committer-id ...) binder-ids (data ...)
+                                             rest-data))
+     #:with ((tmp-id/evidence ...) evidence-ids ... (rest-tmp-id/evidence rest-evidence-ids)) #'all-evidence-ids
      #`(begin
-         (committer-id tmp-id data)
+         (committer-id tmp-id/evidence evidence-ids data)
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
@@ -279,16 +305,17 @@
                             rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
-                   #'((define-values rest-seq-tmp-ids (rest-tmp-id)))
-                   #'((rest.committer-id rest-tmp-id rest.data)))]))]))
+                   #'((define-values rest-seq-tmp-ids (rest-tmp-id/evidence)))
+                   #'((rest.committer-id rest-tmp-id/evidence rest-evidence-ids rest.data)))]))]))
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate steppers accessors (tmp-id ...)
-                            name-ids matcher-ids committer-ids (binder-id ...) (data ...)
-                            rest-data))
+    [(_ c-arg-id all-evidence-ids (predicate steppers accessors (tmp-id ...)
+                                             name-ids matcher-ids committer-ids (binder-id ...) (data ...)
+                                             rest-data))
+     #:with ((tmp-id/evidence ...) evidence-ids ... (rest-tmp-id/evidence rest-evidence-ids)) #'all-evidence-ids
      #`(begin
-         (binder-id tmp-id data)
+         (binder-id tmp-id/evidence evidence-ids data)
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
@@ -297,36 +324,13 @@
                             rest-repetition? rest-info rest-seq-tmp-ids)
                #:with rest::binding-info #'rest-info
                (if (syntax-e #'rest-repetition?)
-                   (with-syntax ([((sequencer ...) ...) (for/list ([uses (in-list (syntax->list #'(rest.bind-uses ...)))])
-                                                          (define sequencers (uses->sequencers uses))
-                                                          (if (syntax-e #'no-rest-map?)
-                                                              sequencers
-                                                              (for/list ([sequencer (in-list (syntax->list sequencers))])
-                                                                #'in-list)))]
-                                 [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids]
-                                 [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))]
-                                 [(elem-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))])
-                     (with-syntax ([((elem-tmp-id/copy ...) ...)
-                                    (for/list ([elem-tmp-id (in-list (syntax->list #'(elem-tmp-id ...)))]
-                                               [sequencers (in-list (syntax->list #'((sequencer ...) ...)))])
-                                      (for/list ([sequencer (in-list (syntax->list sequencers))])
-                                        elem-tmp-id))])
-                       (with-syntax ([(rest-seq-tmp-id-as-rep ...)
-                                      (with-syntax ([in-seq (if (syntax-e #'no-rest-map?)
-                                                                #'rest-to-repetition
-                                                                #'in-list)])
-                                        #'((([(elem-tmp-id) (in-seq rest-seq-tmp-id)]
-                                             ...)
-                                            ([(elem-tmp-id/copy) (sequencer elem-tmp-id/copy)])
-                                            ...)
-                                           ...))])
-                         #'((define-syntaxes (rest.bind-id rep-bind-id)
-                              (make-expression+repetition (quote-syntax rest-seq-tmp-id-as-rep)
-                                                          (quote-syntax elem-tmp-id)
-                                                          (lambda ()
-                                                            (quote-syntax (rest.bind-static-info ...)))))
-                            ...))))
-                   #'((rest.binder-id rest-tmp-id rest.data)))]))]))
+                   (make-repetition-bind #'(rest.bind-uses ...)
+                                         #'(rest.bind-id ...)
+                                         #'((rest.bind-static-info ...) ...)
+                                         #'rest-seq-tmp-ids
+                                         (syntax-e #'no-rest-map?)
+                                         #'rest-to-repetition)
+                   #'((rest.binder-id rest-tmp-id/evidence rest-evidence-ids rest.data)))]))]))
 
 ;; ------------------------------------------------------------
 
@@ -363,8 +367,8 @@
               (rest.matcher-id arg-id rest.data
                                if/blocked
                                (lambda ()
-                                 (rest.committer-id arg-id rest.data)
-                                 (rest.binder-id arg-id rest.data)
+                                 (rest.committer-id arg-id rest.evidence-ids rest.data)
+                                 (rest.binder-id arg-id rest.evidence-ids rest.data)
                                  (values (maybe-repetition-as-list rest.bind-id rest.bind-uses)
                                          ...))
                                (#,fail arg-id)))))]))
@@ -387,7 +391,7 @@
 (define (get-rest-getters rest-syms rest-val get-one-getter)
   (let loop ([rest-val rest-val] [accum null])
     (cond
-      [(null? rest-val) (build-overall-getter rest-syms accum)]
+      [(null? rest-val) (build-overall-rest-getter rest-syms accum)]
       [else
        (define getter (get-one-getter (car rest-val)))
        (and getter
@@ -395,7 +399,7 @@
 
 ;; more run-time support for "rest" matching, creates the function
 ;; that is called after a successful match to get all the results
-(define (build-overall-getter rest-syms accum)
+(define (build-overall-rest-getter rest-syms accum)
   (cond
     [(and (pair? rest-syms) (null? (cdr rest-syms)))
      ;; simple case: single-values
@@ -417,6 +421,45 @@
              (for/list ([val (in-list vals)]
                         [rest-vals (in-list rest-valss)])
                (cons val rest-vals))]))))]))
+
+(define-for-syntax (make-repetition-bind rest-bind-usess
+                                         rest-bind-ids
+                                         rest-bind-static-infoss
+                                         rest-seq-tmp-ids
+                                         no-rest-map?
+                                         rest-to-repetition)
+  (with-syntax ([(rest-bind-uses ...) rest-bind-usess]
+                [(rest-bind-id ...) rest-bind-ids]
+                [((rest-bind-static-info ...) ...) rest-bind-static-infoss])
+    (with-syntax ([((sequencer ...) ...) (for/list ([uses (in-list (syntax->list #'(rest-bind-uses ...)))])
+                                           (define sequencers (uses->sequencers uses))
+                                           (if no-rest-map?
+                                               sequencers
+                                               (for/list ([sequencer (in-list (syntax->list sequencers))])
+                                                 #'in-list)))]
+                  [(rest-seq-tmp-id ...) rest-seq-tmp-ids]
+                  [(rep-bind-id ...) (in-repetition-space #'(rest-bind-id ...))]
+                  [(elem-tmp-id ...) (generate-temporaries #'(rest-bind-id ...))])
+      (with-syntax ([((elem-tmp-id/copy ...) ...)
+                     (for/list ([elem-tmp-id (in-list (syntax->list #'(elem-tmp-id ...)))]
+                                [sequencers (in-list (syntax->list #'((sequencer ...) ...)))])
+                       (for/list ([sequencer (in-list (syntax->list sequencers))])
+                         elem-tmp-id))])
+        (with-syntax ([(rest-seq-tmp-id-as-rep ...)
+                       (with-syntax ([in-seq (if no-rest-map?
+                                                 rest-to-repetition
+                                                 #'in-list)])
+                         #'((([(elem-tmp-id) (in-seq rest-seq-tmp-id)]
+                              ...)
+                             ([(elem-tmp-id/copy) (sequencer elem-tmp-id/copy)])
+                             ...)
+                            ...))])
+          #'((define-syntaxes (rest-bind-id rep-bind-id)
+               (make-expression+repetition (quote-syntax rest-seq-tmp-id-as-rep)
+                                           (quote-syntax elem-tmp-id)
+                                           (lambda ()
+                                             (quote-syntax (rest-bind-static-info ...)))))
+             ...))))))
 
 (define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str
                                          #:rest-repetition? rest-repetition?)
@@ -473,6 +516,19 @@
          (if rest-repetition? ", ..." ""))
         "")
     (if kind "}" ")"))))
+
+(define-for-syntax (deepen-repetition bind-infos rest-to-repetition no-rest-map?)
+  (with-syntax ([((rest-info-bind-id rest-info-bind-uses rest-info-bind-static-info ...) ...)
+                 bind-infos])
+    (with-syntax ([(bind-uses ...)
+                   (let ([in-seq (if no-rest-map? rest-to-repetition #'in-list)])
+                     (for/list ([uses (in-list (syntax->list #'(rest-info-bind-uses ...)))]
+                                [id (in-list (syntax->list #'(rest-info-bind-id ...)))])
+                       (define sequencers (uses->sequencers uses))
+                       (unless sequencers
+                         (raise-syntax-error #f "cannot bind within a repetition" id))
+                       #`((#:repet (#,in-seq #,@sequencers)))))])
+      #'((rest-info-bind-id bind-uses rest-info-bind-static-info ...) ...))))
 
 (define-for-syntax (uses->sequencers uses)
   (for/or ([use (in-list (syntax->list uses))])

@@ -56,6 +56,7 @@
                    #'info.static-infos
                    #'info.bind-infos
                    #'info.matcher-id
+                   #'info.evidence-ids
                    #'info.committer-id
                    #'info.binder-id
                    #'info.data)]))

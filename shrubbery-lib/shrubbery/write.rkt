@@ -43,7 +43,8 @@
 (define (do-write-shrubbery-term v op)
   (let loop ([v v]
              [non-tail? #f] ; => unarmored single-line block still will needs « and »
-             [head? #t])    ; => '|' doesn't need a leading newline in 'multi-doc mode
+             [head? #t]     ; => '|' doesn't need a leading newline in 'multi-doc mode
+             [before-block? #f]) ; => ':' is next
     (cond
       [(list? v)
        (cond
@@ -51,7 +52,13 @@
           #;(error 'write-shubbery "unexpected ~s" v)
           (display* "#{()}" op)]
          [(eq? 'op (car v))
-          (display* (cadr v) op)]
+          (define name (cadr v))
+          (cond
+            [(and before-block?
+                  (regexp-match? #rx"^:+$" (symbol->immutable-string name)))
+             (display* (format "~a " name) op)]
+            [else
+             (display* name op)])]
          [(eq? 'alts (car v))
           (cond
             [(symbol? op)
@@ -61,7 +68,7 @@
                    (error 'write-shubbery "unexpected ~s" v))
                  (define-values (sub-insides sub-insides-multi sub-quotes?s sub-atomic?s)
                    (for/lists (sub-insides sub-insides-multi sub-quotes?s sub-atomic?s) ([v (in-list (cdr v))])
-                     (loop v #f #f)))
+                     (loop v #f #f #f)))
                  (values (if (null? (cdr v))
                              `(seq "|«»")
                              (and (all-of? sub-insides)
@@ -107,7 +114,7 @@
                  (error 'write-shubbery "unexpected ~s" v))
                (for/fold ([first? #t]) ([v (in-list (cdr v))])
                  (unless first? (display "; " op))
-                 (loop v #f #f)
+                 (loop v #f #f #f)
                  #f)
                (display " »" op)
                #f)
@@ -119,7 +126,7 @@
              (define-values (insides insides-multi quotes?s atomic?s)
                (for/lists (insides insides-multi quotes?s atomic?s) ([v (in-list (cdr v))]
                                                                      [i (in-naturals)])
-                 (loop v (not (= i last-i)) #f)))
+                 (loop v (not (= i last-i)) #f #f)))
              (values (and (or (not (eq? op 'multi-doc))
                               (null? insides)
                               (and (null? (cdr insides))
@@ -133,7 +140,7 @@
             [else
              (for/fold ([first? #t]) ([v (in-list (cdr v))])
                (unless first? (display "; " op))
-               (loop v #f #f)
+               (loop v #f #f #f)
                #f)
              (void)])]
          [else
@@ -191,7 +198,7 @@
                     (cond
                       [(null? l) (values null null null null #f)]
                       [(null? (cdr l))
-                       (define-values (inside inside-multi quotes? atomic?) (loop (car l) (not can-tail?) (or wraps? (and first? head?))))
+                       (define-values (inside inside-multi quotes? atomic?) (loop (car l) (not can-tail?) (or wraps? (and first? head?)) #f))
                        (values (and inside
                                     (list inside))
                                (list inside-multi)
@@ -203,7 +210,8 @@
                       [else
                        (define v (car l))
                        (define next-v (cadr l))
-                       (define-values (inside inside-multi inside-quotes? inside-atomic?) (loop v use-non-tail? (or wraps? (and first? head?))))
+                       (define next-is-block? (and (pair? next-v) (eq? (car next-v) 'block)))
+                       (define-values (inside inside-multi inside-quotes? inside-atomic?) (loop v use-non-tail? (or wraps? (and first? head?)) next-is-block?))
                        (define-values (insides insides-semi insides-line-multi insides-multi insides-quotes?) (inside-loop (cdr l) #f))
                        (define this-sep+space (if (and (pair? next-v)
                                                        (memq (car next-v) '(block alts)))
@@ -281,12 +289,18 @@
                [else
                 (define (sel v) (if (pair? v) (car v) v))
                 (display (sel q-line-open) op)
-                (for/fold ([first? #t]) ([v (in-list (cdr v))])
-                  (unless (or first?
-                              (and (pair? v) (eq? (car v) 'block)))
-                    (display sep+space op))
-                  (loop v #f #f)
-                  #f)
+                (let v-loop ([first? #t]
+                             [vs (cdr v)])
+                  (unless (null? vs)
+                    (define v (car vs))
+                    (unless (or first?
+                                (and (pair? v) (eq? (car v) 'block)))
+                      (display sep+space op))
+                    (define next-vs (cdr vs))
+                    (define next-v (and (pair? next-vs) (car next-vs)))
+                    (define next-is-block? (and (pair? next-v) (eq? (car next-v) 'block)))
+                    (loop v #f #f next-is-block?)
+                    (v-loop #f next-vs)))
                 (display (sel q-line-close) op)])]
             [else
              (write-escaped v op)])])]

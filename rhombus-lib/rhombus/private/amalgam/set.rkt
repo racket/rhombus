@@ -389,6 +389,7 @@
                    (static-infos-union #'static-infos #'up-static-infos)
                    #'()
                    #'empty-set-matcher
+                   #'()
                    #'literal-commit-nothing
                    #'literal-bind-nothing
                    #'hash?)]))
@@ -585,6 +586,7 @@
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
                    #'set-matcher
+                   #'composite-info.evidence-ids
                    #'set-committer
                    #'set-binder
                    #'(mode
@@ -621,19 +623,19 @@
 
 (define-syntax (set-committer stx)
   (syntax-parse stx
-    [(_ arg-id (mode
-                keys rest-tmp
-                composite-matcher-id composite-committer-id composite-binder-id
-                composite-data))
-     #`(composite-committer-id 'set composite-data)]))
+    [(_ arg-id evidence-ids (mode
+                                keys rest-tmp
+                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-data))
+     #`(composite-committer-id 'set evidence-ids composite-data)]))
 
 (define-syntax (set-binder stx)
   (syntax-parse stx
-    [(_ arg-id (mode
-                keys rest-tmp
-                composite-matcher-id composite-committer-id composite-binder-id
-                composite-data))
-     #`(composite-binder-id 'set composite-data)]))
+    [(_ arg-id evidence-ids (mode
+                                keys rest-tmp
+                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-data))
+     #`(composite-binder-id 'set evidence-ids composite-data)]))
 
 (define-for-syntax set-annotation-make-predicate
   (lambda (arg-id predicate-stxs)

@@ -67,3 +67,24 @@ check:
   | (x where:«»):
       x
   ~is 1
+
+check:
+  match [[1, 2], [3, 4]]
+  | [[x, y] where: p = { #'x: x, #'y: y }, ...]:
+      [p, ...]
+  ~is [{ #'x: 1, #'y: 2 }, { #'x: 3, #'y: 4 }]
+
+block:
+  import: rhombus/meta open
+  bind.macro 'Two($p)':
+    '[x, y] where $p = [x, y]'
+  check:
+    match [1, 2, 3, 4]:
+    | [& Two(p1), & Two(p2)]:
+        [p1, p2]
+    ~is [[1, 2], [3, 4]]
+  check:
+    match [1, 2, 3, 4, 5, 6]:
+    | [& Two(p), ...]:
+        [p, ...]
+    ~is [[1, 2], [3, 4], [5, 6]]

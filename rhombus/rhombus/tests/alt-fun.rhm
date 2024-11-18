@@ -348,6 +348,7 @@ check:
       (),
       (),
       printed_matcher,
+      (),
       printed_committer,
       printed_binder,
       $id)'
@@ -355,9 +356,9 @@ check:
     '$IF #true
      | $success
      | $failure'
-  bind.binder 'printed_committer($_, $id)':
+  bind.committer 'printed_committer($_, (), $id)':
     'println(#%literal $("commit " +& id))'
-  bind.binder 'printed_binder($_, $id)':
+  bind.binder 'printed_binder($_, (), $id)':
     'println(#%literal $("bind " +& id))'
   fun
   | bind(printed(arg1), printed(arg2), ~& printed(kwrest)): #void

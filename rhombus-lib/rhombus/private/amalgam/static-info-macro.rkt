@@ -36,6 +36,7 @@
          "dot-provider-key.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
+         "list-bounds-key.rkt"
          "values-key.rkt"
          "indirect-static-info-key.rkt"
          "is-static.rkt"
@@ -61,6 +62,7 @@
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
      [gather statinfo_meta.gather]
+     [find statinfo_meta.find]
      [union statinfo_meta.union]
      [intersect statinfo_meta.intersect]
 
@@ -80,6 +82,8 @@
      dot_provider_key
      sequence_constructor_key
      sequence_element_key
+     list_bounds_key
+     pairlist_bounds_key
      values_key
      indirect_key)))
 
@@ -257,9 +261,15 @@
     (and si (static-info-lookup si key)))
 
   (define/arity (statinfo_meta.gather form)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who form)
     (define si (extract-expr-static-infos who form))
     (unpack-static-infos who (or si #'())))
+
+  (define/arity (statinfo_meta.find si-stx key-in)
+    (define si (pack-static-infos who si-stx))
+    (define key (unpack-identifier who key-in))
+    (static-info-lookup si key))
 
   (define/arity (statinfo_meta.union . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -287,5 +297,7 @@
 (define-key dot_provider_key #%dot-provider)
 (define-key sequence_constructor_key #%sequence-constructor)
 (define-key sequence_element_key #%sequence-element)
+(define-key list_bounds_key #%treelist-bounds)
+(define-key pairlist_bounds_key #%list-bounds)
 (define-key values_key #%values)
 (define-key indirect_key #%indirect-static-info)

@@ -443,19 +443,52 @@ check:
   to_string(PairList[1, 2, 3]) ~is "PairList[1, 2, 3]"
 
 check:
-  ~eval
-  def PairList[x, ..., y, ...] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  def PairList[x, ..., y, ...] = PairList[1, 2]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[1, 2], PairList[]]
 
 check:
-  ~eval
-  def PairList[& x, y, ...] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  def PairList[x, ..., 2, y, ...] = PairList[1, 2, 3, 4]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[1], PairList[3, 4]]
 
 check:
-  ~eval
-  def PairList[x, ..., & y, z] = [1, 2]
-  ~throws "second splice or repetition not allowed"
+  def PairList[& x, y, ...] = PairList[1, 2]
+  PairList[x, PairList[y, ...]]
+  ~is PairList[PairList[1, 2], PairList[]]
+
+check:
+  def PairList[x, ..., & y, z] = PairList[1, 2]
+  PairList[PairList[x, ...], y, z]
+  ~is PairList[PairList[1], PairList[], 2]
+
+check:
+  def PairList[x, ..., & y, z] = PairList[1, 2]
+  PairList[[x, ...], y, z]
+  ~is PairList[[1], PairList[], 2]
+
+check:
+  def PairList[x :: Int, ..., & y :: PairList.of(Int), z] = PairList[1, 2]
+  PairList[PairList[x, ...], y, z]
+  ~is PairList[PairList[1], PairList[], 2]
+
+check:
+  match PairList[1, "end", 2, 3, 4, "end", 5]
+  | PairList[& PairList[x, ..., "end"], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1, "end", 2, 3, 4]], 5]
+
+check:
+  match PairList[1, "end", 2, 3, 4, "end", 5]
+  | PairList[& PairList[x, ..., "end"], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1, "end", 2, 3, 4]], 5]
+
+check:
+  match PairList[1, "end", 2, 3, 4, "end", 5]
+  | PairList[& PairList[x :: Int, ..., "end"], ..., z]:
+      [[[x, ...], ...], z]
+  ~is [[[1], [2, 3, 4]], 5]
 
 check:
   PairList[PairList.repet(PairList[1, 2, 3]), ...] ~is PairList[1, 2, 3]
