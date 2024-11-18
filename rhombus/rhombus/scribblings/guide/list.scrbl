@@ -102,8 +102,7 @@ that supplies elements for the new list.
     got_milk(["apple", "coffee", "banana"])
 )
 
-While @rhombus(..., ~bind) can only be used at the end of a list in a
-binding, @rhombus(...) can be used anywhere in an expression, and it can
+A @rhombus(...) can be used anywhere in a binding or expression, and it can
 be used multiple times.
 
 @examples(

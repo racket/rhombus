@@ -336,12 +336,16 @@
                                       #:rest-to-repetition #'in-vector
                                       #:rest-repetition? (and rest-arg #t)))
      (syntax-parse stx
-       [(form-id (tag::parens arg ... rest-arg (group _::...-bind)) . tail)
+       [(form-id (tag::parens arg ... rest-arg (group _::...-bind
+                                                      (~or (~seq) (~seq (~and nonempty #:nonempty)))))
+                 . tail)
         (define args (syntax->list #'(arg ...)))
         (define len (length args))
         (define pred #`(lambda (v)
                          (and (vector? v)
-                              (>= (vector-length v) #,len))))
+                              (>= (vector-length v) #,(+ len (if (attribute nonempty)
+                                                                 1
+                                                                 0))))))
         (build args len pred #'rest-arg #'form-id #'tail)]
        [(form-id (tag::parens arg ...) . tail)
         (define args (syntax->list #'(arg ...)))

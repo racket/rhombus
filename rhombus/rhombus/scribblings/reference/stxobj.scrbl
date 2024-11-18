@@ -148,9 +148,11 @@ suffix corresponds to text after the closer.
  portion of a candidate syntax object.
  A @dots in @rhombus(term, ~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
- are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
- @dots can appear before the end of a sequence, and
- multiple @dots can be used in the same group; when matching
+ are bound as @tech{repetitions}. A @rhombus(#,(dots) ~nonempty) following a subpattern
+ matches one or more instances, instead of zero or more instances. A
+ @rhombus(#,(dots) ~once) following a subpattern
+ matches zero instances or one instance. Multiple
+ @dots can appear within a sequence; when matching
  is ambiguous, matching prefers earlier @dots repetitions to
  later ones.
 
@@ -158,7 +160,9 @@ suffix corresponds to text after the closer.
  each of those literally. To match @rhombus($, ~datum) or
  @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
  use @rhombus($, ~bind) to escape to a nested pattern, such as
- @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')).
+ @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')). Simialrly,
+ to match a literal @rhombus(~nonempty) or @rhombus(~once) after a @dots repetition, use
+ @rhombus(#,(@rhombus($, ~bind))('~nonempty')) or @rhombus(#,(@rhombus($, ~bind))('~once')).
 
  To match identifier or operators based on binding instead of
  symbolically, use @rhombus($, ~bind) to escape, and then use
@@ -175,6 +179,12 @@ suffix corresponds to text after the closer.
   | '$x ... * 3': [x, ...]
   match '1 + 2 * 3'
   | '$x ... * $y ...': values([x, ...], [y, ...])
+  match '1 + 2 * 3'
+  | '$x ... ~nonempty $y ... ~nonempty': values([x, ...], [y, ...])
+  match '1 ! = 3'
+  | '$x $(n && '!') ... ~once = $y': [x, [n, ...], y]
+  match '1 = 3'
+  | '$x $(n && '!') ... ~once = $y': [x, [n, ...], y]
 )
 
 }

@@ -46,12 +46,33 @@
   (provide (for-syntax handle-syntax-parse-dispatch)))
 
 (begin-for-syntax
-  (define-syntax-class (list-repetition in-space)
-    #:attributes (name)
+  (define-splicing-syntax-class (:list-repetition in-space repetition-mode?)
+    #:attributes (name mode)
     #:datum-literals (group)
-    (pattern (~var || (:... in-space)))
-    (pattern (group (~var || (:... in-space))))
-    (pattern (_::block (group (~var || (:... in-space))))))
+    (pattern (~seq (~var || (:... in-space)) #:nonempty)
+             #:when repetition-mode?
+             #:attr mode 'nonempty)
+    (pattern (~seq (~var || (:... in-space)) #:once)
+             #:when repetition-mode?
+             #:attr mode 'once)
+    (pattern (~seq (~var || (:... in-space)))
+             #:attr mode #f)
+    (pattern (~seq (group (~var || (:... in-space)) #:nonempty))
+             #:when repetition-mode?
+             #:attr mode 'nonempty)
+    (pattern (~seq (group (~var || (:... in-space)) #:once))
+             #:when repetition-mode?
+             #:attr mode 'once)
+    (pattern (~seq (group (~var || (:... in-space))))
+             #:attr mode #f)
+    (pattern (~seq (_::block (group (~var || (:... in-space))) #:nonempty))
+             #:when repetition-mode?
+             #:attr mode 'nonempty)
+    (pattern (~seq (_::block (group (~var || (:... in-space))) #:once))
+             #:when repetition-mode?
+             #:attr mode 'once)
+    (pattern (~seq (_::block (group (~var || (:... in-space)))))
+             #:attr mode #f))
   (define-splicing-syntax-class (:esc dotted? any-id?)
     #:attributes (term)
     #:datum-literals (op |.|)
@@ -71,7 +92,23 @@
     #:attributes (name term)
     #:datum-literals (group)
     (pattern (~seq (group (~var _ (:$ in-space)) (~var || (:esc dotted? #f)))
-                   (group (~var || (:... in-space)))))))
+                   (group (~var || (:... in-space))))))
+
+  (define (replace-...1 ps)
+    (syntax-parse ps
+      #:literals (...1)
+      [(a ...1 . tail)
+       #`((~and (~or (~seq) (~seq _)) (~seq a (... ...)))
+          . #,(replace-...1 #'tail))]
+      [(a . tail)
+       (define old-t #'tail)
+       (define new-t (replace-...1 old-t))
+       (if (eq? old-t new-t)
+           ps
+           #`(a . #,new-t))]
+      [_ ps])))
+
+(define ...1 (void))
 
 (define-for-syntax (convert-syntax e make-datum make-literal make-void
                                    handle-escape handle-group-escape handle-multi-escape
@@ -85,6 +122,7 @@
                                    #:splice? [splice? #f]
                                    #:splice-pattern [splice-pattern #f]
                                    #:allow-fltten? [allow-flatten? #f]
+                                   #:repetition-mode? [repetition-mode? #f]
                                    #:make-describe-op [make-describe-op (lambda (e name) e)]
                                    #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
@@ -151,7 +189,10 @@
                     (list* p1 p0 ps) really-can-be-empty? #f #f depth
                     needs-group-check?)]))
          (define (finish ps tail idrs sidrs vars can-be-empty? needs-group-check?)
-           (define (ps+tail) (if tail (append ps tail) ps))
+           (define (ps+tail) (let ([ps (if tail (append ps tail) ps)])
+                               (if repetition-mode?
+                                   (replace-...1 ps)
+                                   ps)))
            (cond
              [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
               (handle-maybe-empty-alts #'tag (ps+tail) idrs sidrs vars)]
@@ -204,7 +245,7 @@
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth
                   #f)]
-           [((~var op (list-repetition in-space)) . gs)
+           [((~var op (:list-repetition in-space repetition-mode?)) . gs)
             #:when (zero? depth)
             (unless pend-idrs
               (raise-syntax-error #f
@@ -217,12 +258,16 @@
             (define new-pend-vars (for/list ([var (in-list pend-vars)])
                                     (struct-copy pattern-variable var
                                                  [depth (+ 1 (pattern-variable-depth var))])))
+            (define dots (case (attribute op.mode)
+                           [(nonempty) (quote-syntax ...+)]
+                           [(once) (quote-syntax ...1)]
+                           [else (quote-syntax ...)]))
             (if allow-flatten?
                 (loop #'gs new-pend-idrs new-pend-sidrs new-pend-vars
                       idrs
                       sidrs
                       vars
-                      (cons (quote-syntax ...) ps) can-be-empty? #t #f depth
+                      (cons dots ps) can-be-empty? #t #f depth
                       #t)
                 (let ([ps (if (eq? (syntax-e #'tag) 'group)
                               (improve-repetition-constraints ps #'gs)
@@ -231,7 +276,7 @@
                         (append new-pend-idrs idrs)
                         (append new-pend-sidrs sidrs)
                         (append new-pend-vars vars)
-                        (cons (quote-syntax ...) ps) can-be-empty? #f #f depth
+                        (cons dots ps) can-be-empty? #f #f depth
                         #t)))]
            [((op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
@@ -330,6 +375,7 @@
                   #:as-tail? as-tail?
                   #:splice? splice?
                   #:splice-pattern splice-pattern
+                  #:repetition-mode? #t
                   ;; make-datum
                   make-datum
                   ;; make-literal
@@ -424,7 +470,7 @@
                             #t))
                   ;; handle-maybe-misformed-group
                   (lambda (tag ps tail idrs sidrs vars can-be-empty? empty-ok?)
-                    (let ([ps (if tail (append ps tail) ps)])
+                    (let ([ps (replace-...1 (if tail (append ps tail) ps))])
                       ;; the `(tag . ps)` could match `(group)` or an otherwise misformed group,
                       ;; but that shouldn't be an input
                       (values #`(#,(make-datum tag) . #,ps) idrs sidrs vars #t)))

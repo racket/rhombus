@@ -55,7 +55,6 @@ it supplies its elements in order.
 
   grammar ellipsis:
     #,(dots_expr)
-
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of the
@@ -95,12 +94,25 @@ it supplies its elements in order.
     #,(@rhombus(&, ~bind)) $list_repet_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
+    #,(dots_expr) ~nonempty
+    #,(dots_expr) ~once
 ){
 
  Matches a list with as many elements as @rhombus(bind)s, or if a
  @rhombus(splice) is included, at least as many elements as
- @rhombus(bind)s. Each @rhombus(splice) matches a sublist, and the
- matching sublist is deterministic if only one @rhombus(splice) is
+ @rhombus(bind)s. Each @rhombus(bind) matches an element of the list.
+ Each @rhombus(splice) matches a sublist:
+ @rhombus(repet_bind #,(@litchar{,}) ellipsis) matches a sublist of
+ elements that individually match @rhombus(repet_bind),
+ @rhombus(#,(@rhombus(&, ~bind)) list_bind) matches a sublist that itself
+ matches @rhombus(list_bind), and
+ @rhombus(#,(@rhombus(&, ~bind)) list_repet_bind #,(@litchar{,}) ellipsis)
+ matches a sublist that is a concatenation of sublists that each match
+ @rhombus(list_repet_bind). If @rhombus(ellipsis) includes @rhombus(~nonempty),
+ then the matching sublist must have at least one element, otherwise the matching
+ sublist can be empty. If @rhombus(ellipsis) includes @rhombus(~once),
+ then a matching sublist has 0 or 1 elements.
+ A matching sublist is deterministic if only one @rhombus(splice) is
  present with @rhombus(&) or @dots (but not both).
 
 @examples(
@@ -114,6 +126,13 @@ it supplies its elements in order.
   [x, ...]
   def List(1, x, ..., 3) = [1, 2, 3]
   [x, ...]
+  def List(1, x, ... ~nonempty, 3) = [1, 2, 3]
+  [x, ...]
+  ~error:
+    def List(1, x, ... ~nonempty, 3) = [1, 3]
+  def List(1, x, ... ~once, 3) = [1, 3]
+  ~error:
+    def List(1, x, ... ~once, 3) = [1, 2, 2, 3]
 )
 
  If multiple @rhombus(splice)s are present, matching is greedy: the
@@ -123,6 +142,8 @@ it supplies its elements in order.
 
 @examples(
   def List(x, ..., z, ...) = [1, 2, "c", 5]
+  [[x, ...], [z, ...]]
+  def List(x, ..., z, ... ~nonempty) = [1, 2, "c", 5]
   [[x, ...], [z, ...]]
   def List(x, ..., #'stop, z, ...) = [1, 2, "c", #'stop, 5]
   [[x, ...], [z, ...]]

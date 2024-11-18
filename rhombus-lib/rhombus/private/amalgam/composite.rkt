@@ -26,6 +26,7 @@
 
 (define-for-syntax (composite-binding-transformer tail
                                                   #:rest-arg [rest-arg #f]
+                                                  #:post-args [post-args null]
                                                   #:stx-info [stx-in #f]
                                                   constructor-str ; string name for constructor or map list, used for contract
                                                   predicate     ; predicate for the composite value
@@ -40,7 +41,9 @@
                                                   #:sequence-element-info? [sequence-element-info? #f]
                                                   #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
                                                   #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
-                                                  #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
+                                                  #:rest-repetition? [rest-repetition? #t] ; #t, #f, or 'pair
+                                                  #:rest-repetition-min [rest-repetition-min 0]
+                                                  #:rest-repetition-max [rest-repetition-max #f])
   (syntax-parse tail
     [(form-id (tag::parens a-g ...) . new-tail)
      #:do [(define stx (or stx-in
@@ -51,7 +54,9 @@
      ;; `rest-a` will have either 0 items or 1 item
      #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
      #:with (rest-a-parsed::binding-form ...) #'(rest-a.parsed ...)
-     (define as (syntax->list #'(a ...)))
+     #:with (post-a::binding ...) post-args
+     #:with (post-a-parsed::binding-form ...) #'(post-a.parsed ...)
+     (define as (syntax->list #'(a ... post-a ...)))
      (unless (= (length as) (length accessors))
        (raise-syntax-error #f
                            (format (string-append "pattern arguments not the expected number\n"
@@ -66,12 +71,15 @@
        #`(#,constructor-str
           #,predicate #,composite-static-infos #,bounds-key
           #,steppers #,accessors #,static-infoss
-          (a-parsed.infoer-id ... ) (a-parsed.data ...)
+          (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
+          #,(length post-args)
           #,accessor->info? #,index-result-info? #,sequence-element-info?
           #,(and rest-arg
                  #`(#,rest-accessor
                     #,rest-to-repetition
                     #,rest-repetition?
+                    #,rest-repetition-min
+                    #,rest-repetition-max
                     rest-a-parsed.infoer-id ...
                     rest-a-parsed.data ...))))
       #'new-tail)]
@@ -85,6 +93,7 @@
                       predicate init-composite-static-infos bounds-key
                       steppers accessors ((static-info ...) ...)
                       (infoer-id ...) (data ...)
+                      num-post
                       accessor->info? index-result-info? sequence-element-info?
                       rest-data))
      #:with (arg-static-infos ...) (cond
@@ -105,11 +114,11 @@
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
      (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos
-                                   rest-repetition?
+                                   rest-repetition? rest-repetition-min rest-repetition-max
                                    rest-evidence-ids)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'rest #f #'() #f #'(() ()))]
-         [(rest-accessor rest-to-repetition rest-repetition? rest-infoer-id rest-a-data)
+         [#f (values #'#f #'() #'rest #f #'() #f 0 #f #'(() ()))]
+         [(rest-accessor rest-to-repetition rest-repetition? rest-repetition-min rest-repetition-max rest-infoer-id rest-a-data)
           #:with rest-static-infos
           (case (syntax-e #'rest-repetition?)
             [(pair)
@@ -156,6 +165,8 @@
                       (deepen-repetition #'rest-info.bind-infos #'rest-to-repetition (syntax-e #'no-rest-map?))
                       #'rest-info.bind-infos)
                   (syntax-e #'rest-repetition?)
+                  (or (syntax-e #'rest-repetition-min) 0)
+                  (syntax-e #'rest-repetition-max)
                   #'(rest-tmp-id rest-info.evidence-ids))]))
 
      (define-values (min-len max-len)
@@ -168,7 +179,8 @@
                 (values (+ a-min-len (syntax-e #'min))
                         (and (syntax-e #'max) (+ a-min-len (syntax-e #'max))))]
                [_ (if (syntax-e #'rest-data)
-                      (values a-min-len #f)
+                      (values (+ a-min-len rest-repetition-min)
+                              (and rest-repetition-max (+ a-min-len rest-repetition-max)))
                       (values a-min-len a-min-len))]))
            (values #f #f)))
 
@@ -219,8 +231,17 @@
      (with-syntax ([predicate (if (syntax-e #'bounds-key)
                                   #`(predicate #,min-len #,max-len)
                                   #'predicate)])
-       (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str
-                                           #:rest-repetition? rest-repetition?)
+       (define all-annotation-strs (syntax->list #'(a-info.annotation-str ...)))
+       (define num-post-strs (syntax-e #'num-post))
+       (binding-info (build-annotation-str #'constructor-str
+                                           (if (zero? num-post-strs)
+                                               all-annotation-strs
+                                               (reverse (list-tail (reverse all-annotation-strs) num-post-strs))) 
+                                           rest-annotation-str
+                                           (list-tail all-annotation-strs (- (length all-annotation-strs) num-post-strs))
+                                           #:rest-repetition? rest-repetition?
+                                           #:rest-repetition-min rest-repetition-min
+                                           #:rest-repetition-max rest-repetition-max)
                      #'composite
                      all-composite-static-infos
                      #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
@@ -461,8 +482,13 @@
                                              (quote-syntax (rest-bind-static-info ...)))))
              ...))))))
 
-(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str
-                                         #:rest-repetition? rest-repetition?)
+(define-for-syntax (build-annotation-str constructor-str
+                                         arg-annotation-strs
+                                         rest-annotation-str
+                                         post-arg-annotation-strs
+                                         #:rest-repetition? rest-repetition?
+                                         #:rest-repetition-min rest-repetition-min
+                                         #:rest-repetition-max rest-repetition-max)
   (define c-str (syntax-e constructor-str))
   (define kind (and (list? c-str) (syntax-e (car c-str))))
   (define-values (mode-desc key-strs default?s)
@@ -474,15 +500,12 @@
                        (syntax-e (caddr c-str))
                        (syntax-e (cadddr c-str)))]
       [else (values #f #f #f)]))
-  (annotation-string-from-pattern
-   (string-append
-    (if kind mode-desc c-str)
-    (if kind "{" "(")
+  (define (args-string arg-annotation-strs first?)
     (apply string-append
            (case kind
              [(#:set)
               (for/list ([key-str (in-list key-strs)]
-                         [i (in-naturals 0)])
+                         [i (in-naturals (if first? 0 1))])
                 (string-append
                  (if (zero? i) "" ", ")
                  (syntax-e key-str)))]
@@ -490,7 +513,7 @@
               (for/list ([key-str (in-list key-strs)]
                          [a-str (in-list arg-annotation-strs)]
                          [default? (in-list default?s)]
-                         [i (in-naturals 0)])
+                         [i (in-naturals (if first? 0 1))])
                 (string-append
                  (if (zero? i) "" ", ")
                  (syntax-e key-str) ": "
@@ -498,10 +521,15 @@
                  (if (syntax-e default?) " = ...." "")))]
              [else
               (for/list ([a-str (in-list arg-annotation-strs)]
-                         [i (in-naturals 0)])
+                         [i (in-naturals (if first? 0 1))])
                 (string-append
                  (if (zero? i) "" ", ")
-                 (annotation-string-to-pattern (syntax-e a-str))))]))
+                 (annotation-string-to-pattern (syntax-e a-str))))])))
+  (annotation-string-from-pattern
+   (string-append
+    (if kind mode-desc c-str)
+    (if kind "{" "(")
+    (args-string arg-annotation-strs #t)
     (if rest-annotation-str
         (string-append
          (if (and (null? arg-annotation-strs)
@@ -513,8 +541,14 @@
           (case rest-repetition?
             [(pair) (annotation-string-convert-pair (syntax-e rest-annotation-str))]
             [else (syntax-e rest-annotation-str)]))
-         (if rest-repetition? ", ..." ""))
+         (if rest-repetition? ", ..." "")
+         (cond
+           [(= rest-repetition-min 1) " ~nonempty"]
+           [(eqv? rest-repetition-max 1) " ~once"]
+           [else ""]))
         "")
+    (args-string post-arg-annotation-strs (and (null? arg-annotation-strs)
+                                               (not rest-annotation-str)))
     (if kind "}" ")"))))
 
 (define-for-syntax (deepen-repetition bind-infos rest-to-repetition no-rest-map?)

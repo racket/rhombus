@@ -172,6 +172,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
     #,(@rhombus(&, ~bind)) $pair_list_repet_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
+    #,(dots) ~nonempty
+    #,(dots) ~once
 ){
 
  Matches a @tech{pair list} with @rhombus(bind_or_splice)s in the same
