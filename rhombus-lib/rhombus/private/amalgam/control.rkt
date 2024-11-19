@@ -3,7 +3,6 @@
                      syntax/parse/pre
                      "tag.rkt"
                      "entry-point-adjustment.rkt")
-         syntax/parse/pre
          "provide.rkt"
          "name-root.rkt"
          "parens.rkt"
@@ -31,13 +30,15 @@
    ;; TEMP see `Marks`
    [current_marks Continuation.Marks.current]
    capture
+   in
    prompt
    barrier
    [escape Continuation.escape]
    ;; TEMP see `PromptTag`
    [default_prompt_tag Continuation.PromptTag.default]
    [make_prompt_tag Continuation.PromptTag.make]
-   [call_in Continuation.call_in]
+   ;; TEMP replaced by `Continuation.in`
+   [call_in call-in-continuation]
    with_mark
    [call_with_immediate_mark Continuation.call_with_immediate_mark]))
 
@@ -50,10 +51,13 @@
   #:fields
   ([current Continuation.Marks.current]))
 
+(void (set-primitive-contract! 'continuation? "Continuation"))
 (define-annotation-syntax Continuation (identifier-annotation continuation? ()))
 
+(void (set-primitive-contract! 'continuation-prompt-tag? "Continuation.PromptTag"))
 (define-annotation-syntax PromptTag (identifier-annotation continuation-prompt-tag? ()))
 
+(void (set-primitive-contract! 'continuation-mark-set? "Continuation.Marks"))
 (define-annotation-syntax Marks (identifier-annotation continuation-mark-set? ()))
 
 (define/arity (Continuation.Marks.current)
@@ -146,6 +150,7 @@
    (lambda (form1 op-stx)
      #`(raise #,form1))))
 
+(void (set-primitive-who! 'call-with-composable-continuation 'Continuation.capture))
 (define-syntax capture
   (expression-transformer
    (lambda (stx)
@@ -162,8 +167,18 @@
                    (rhombus-expression (#,group-tag tag-expr ...)))
                 #'())]))))
 
-(set-primitive-who! 'call-with-composable-continuation 'Continuation.capture)
+(void (set-primitive-who! 'call-in-continuation 'Continuation.in))
+(define-syntax in
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ cont-expr ... (tag::block g ...))
+        (values #`(call-in-continuation
+                   (rhombus-expression (#,group-tag cont-expr ...))
+                   (lambda () (rhombus-body-at tag g ...)))
+                #'())]))))
 
+(void (set-primitive-who! 'call-with-continuation-prompt 'Continuation.prompt))
 (define-syntax prompt
   (expression-transformer
    (lambda (stx)
@@ -266,6 +281,7 @@
 (define/arity (Continuation.escape
                #:tag [prompt-tag (default-continuation-prompt-tag)]
                . vals)
+  #:primitive (abort-current-continuation)
   (apply abort-current-continuation prompt-tag vals))
 
 (define Continuation.PromptTag.default
@@ -283,18 +299,6 @@
   (if name
       (make-continuation-prompt-tag name)
       (make-continuation-prompt-tag)))
-
-(define/arity (Continuation.call_in k proc)
-  (unless (continuation? k)
-    (raise-annotation-failure who
-                              k
-                              "Continuation"))
-  (unless (and (procedure? proc)
-               (procedure-arity-includes? proc 0))
-    (raise-annotation-failure who
-                              proc
-                              "Function.of_arity(0)"))
-  (call-in-continuation k proc))
 
 (define-for-syntax (build-try-handler b-parseds rhss)
   (for/foldr ([next #'raise])
@@ -331,4 +335,5 @@
 (define/arity (Continuation.call_with_immediate_mark
                key proc
                #:default [default #f])
+  #:primitive (call-with-immediate-continuation-mark)
   (call-with-immediate-continuation-mark key proc default))

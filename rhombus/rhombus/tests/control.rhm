@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 block:
   import "static_arity.rhm"
@@ -6,7 +8,6 @@ block:
     Continuation.Marks.current()
     Continuation.escape(val, ...)
     Continuation.PromptTag.make([name])
-    Continuation.call_in(k, fn)
     Continuation.call_with_immediate_mark(key, fn)
 
 check:
@@ -83,26 +84,36 @@ check:
       fun (x :: Int): x+1
   ~is 1
 
-check:
+block:
   def mutable saved = #false
-  Continuation.prompt:
-    1 + (Continuation.capture k:
-           saved := k
-           0)
-  Continuation.prompt:
+  check:
+    Continuation.prompt:
+      1 + (Continuation.capture k:
+             saved := k
+             0)
+    ~is 1
+  check:
+    saved ~is_a Continuation
+    saved ~is_a Function
+  check:
     3 + saved(4)
-  ~is 8
+    ~is 8
 
-check:
+block:
   def mutable saved = #false
   def tag = Continuation.PromptTag.make(#'demo)
-  Continuation.prompt tag:
-    1 + (Continuation.capture tag k:
-           saved := k
-           0)
-  Continuation.prompt:
+  check:
+    Continuation.prompt tag:
+      1 + (Continuation.capture tag k:
+             saved := k
+             0)
+    ~is 1
+  check:
+    saved ~is_a Continuation
+    saved ~is_a Function
+  check:
     3 + saved(4)
-  ~is 8
+    ~is 8
 
 check:
   Continuation.with_mark #'check_me = 7:
@@ -129,22 +140,72 @@ check:
      )]
   ~is [#'none]
 
-check:
-  Continuation.call_in(
+block:
+  def cont:
     Continuation.prompt:
       1 + (Continuation.capture cont:
              Continuation.escape(cont))
-      ~catch cont: cont,
-    fun (): 2
-  )
-  ~is 3
+      ~catch cont: cont
+  check:
+    cont ~is_a Continuation
+    cont ~is_a Function
+  check:
+    cont(2) ~is 3
+    (Continuation.in cont: 2) ~is 3
 
-check:
-  Continuation.prompt:
-    Continuation.capture cont:
-      Continuation.escape(cont)
-    ~catch cont: cont
-  ~is_a Continuation
+block:
+  def mutable n = 0
+  def cont:
+    Continuation.prompt:
+      1 + (try:
+             ~initially:
+               n := n+1
+             Continuation.capture cont:
+                Continuation.escape(cont)
+             ~finally:
+               n := n+1)
+      ~catch cont: cont
+  check:
+    cont ~is_a Continuation
+    cont ~is_a Function
+  check:
+    n ~is 2
+    cont(n) ~is 3
+    n ~is 4
+    (Continuation.in cont: n) ~is 6
+    n ~is 6
+
+block:
+  Parameter.def current_position = "outer"
+  def cont:
+    Continuation.prompt:
+      parameterize { current_position: "inner" }:
+        Continuation.capture cont:
+          cont
+  check:
+    cont ~is_a Continuation
+    cont ~is_a Function
+  check:
+    current_position() ~is "outer"
+    cont(current_position()) ~is "outer"
+    (Continuation.in cont: current_position()) ~is "inner"
+
+block:
+  def cont:
+    Continuation.prompt:
+      Continuation.with_mark #'check_me = 7:
+        Continuation.capture cont:
+          cont
+  check:
+    cont ~is_a Continuation
+    cont ~is_a Function
+  check:
+    Continuation.in cont:
+      Continuation.call_with_immediate_mark(
+        #'check_me,
+        fun (x): x
+      )
+    ~is 7
 
 check:
   Continuation.PromptTag.make() ~is_a Continuation.PromptTag
@@ -155,3 +216,80 @@ check:
 
 check:
   Continuation.Marks.current() ~is_a Continuation.Marks
+
+check:
+  Continuation.prompt "oops":
+    #void
+  ~throws values(
+    "Continuation.prompt: " ++ error.annot_msg(),
+    error.annot("Continuation.PromptTag").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Continuation.capture "oops" cont:
+    #void
+  ~throws values(
+    "Continuation.capture: " ++ error.annot_msg(),
+    error.annot("Continuation.PromptTag").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Continuation.in "oops":
+    #void
+  ~throws values(
+    "Continuation.in: " ++ error.annot_msg(),
+    error.annot("Continuation").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Continuation.escape(
+    ~tag: "oops",
+  )
+  ~throws values(
+    "Continuation.escape: " ++ error.annot_msg(),
+    error.annot("Continuation.PromptTag").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Continuation.escape(
+    ~tag: Continuation.PromptTag.make(),
+  )
+  ~throws values(
+    "Continuation.escape: no corresponding prompt in the continuation",
+  )
+
+check:
+  Continuation.call_with_immediate_mark(
+    #'key,
+    "oops",
+  )
+  ~throws values(
+    "Continuation.call_with_immediate_mark: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(1)").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Continuation.call_with_immediate_mark(
+    #'key,
+    ~default: #'none,
+    "oops",
+  )
+  ~throws values(
+    "Continuation.call_with_immediate_mark: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(1)").msg,
+    error.val("oops").msg,
+  )
+
+version_guard.at_least "8.15.0.3":
+  check:
+    Continuation.barrier:
+      Continuation.capture k:
+        #void
+    ~throws values(
+      "Continuation.capture: cannot capture past continuation barrier",
+    )

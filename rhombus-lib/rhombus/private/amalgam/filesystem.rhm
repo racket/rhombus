@@ -33,6 +33,7 @@ namespace filesystem:
     make_directory
     current_force_delete_permissions
     make_temporary
+    Temporary
     make_link
     copy
     size
@@ -197,6 +198,13 @@ namespace filesystem:
     #{rename-parameter}(rkt.#{current-force-delete-permissions},
                         #'#{filesystem.current_force_delete_permissions})
 
+  class Temporary(path :: Path, is_directory :: Any.to_boolean):
+    implements Closeable
+    override close():
+      delete(path,
+             ~as: if is_directory | #'directory | #'file,
+             ~recur: is_directory)
+
   fun make_temporary(
     ~in:
       dir :: PathString = rkt.#{find-system-path}(#'#{temp-dir}),
@@ -209,7 +217,7 @@ namespace filesystem:
     ~permissions:
       permissions :: maybe(Int.in(0, 65535)) = #false,
     ~replace_permissions = #false
-  ) :~ Path:
+  ) :~ Temporary:
     ~who: who
     fun make(s = rkt.#{current-seconds}(),
              ms = math.exact(math.truncate(rkt.#{current-inexact-milliseconds}())),
@@ -240,7 +248,7 @@ namespace filesystem:
                                               && tries < 32
                                         | (_): #false))):
           make(s + math.random(10), ms + math.random(10), tries + 1)
-    make()
+    Temporary(make(), copy_from == #'directory)
 
   fun make_link(to_path :: PathString,
                 path :: PathString):

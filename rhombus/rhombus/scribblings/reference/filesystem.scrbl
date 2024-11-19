@@ -187,14 +187,25 @@
     ~permissions: permissions :: maybe(Int.in(0, 65535))
                     = #false,
     ~replace_permissions: replace_permissions = #false
-  ) :: Path
+  ) :: filesystem.Temporary
+  class filesystem.Temporary(path :: Path,
+                             is_directory :: Any.to_boolean):
+    implements Closeable
 ){
 
  Creates a temporary file or directory within @rhombus(dir) and returns
- a path to the created file. If @rhombus(mode) is a path or
- @rhombus(#'file), the result is a file path, otherwise it is a directory
- path. If @rhombus(as) is a path, the temporary file is created as a copy
- of @rhombus(as).
+ a @rhombus(filesystem.Temporary, ~class), which contains a path to the
+ created file. If @rhombus(mode) is a path or
+ @rhombus(#'file), the result contains a file path, otherwise it contains a directory
+ path. If @rhombus(mode) is a path, the temporary file is created as a copy
+ of @rhombus(mode).
+
+ A @rhombus(filesystem.Temporary, ~class) object is
+ @rhombus(Closeable, ~class), which means that it can be used with
+ @rhombus(Closeable.let). The @rhombus(Closeable.close) implementation
+ for @rhombus(filesystem.Temporary, ~class) deletes the temporary file or
+ directory, recursively deleting content in the case of a temporary
+ directory.
 
  The name of the temporary file is based on the current time and the
  @rhombus(make_name) function. The argument to @rhombus(make_name) is a
@@ -208,6 +219,16 @@
  permissions argument as used as in @rhombus(filesystem.copy). Otherwise,
  the permissions arguments are used as in @rhombus(Port.Output.open_file)
  or @rhombus(filesystem.make_directory).
+
+@examples(
+  ~defn:
+    fun process_big_data(src :: Path):
+      Closeable.let tmp = filesystem.make_temporary()
+      setup(src, tmp.path)
+      work(tmp.path)
+      finish(tmp.path) // produces result
+      // `tmp.path` is deleted on return or on exception
+)
 
 }
 
