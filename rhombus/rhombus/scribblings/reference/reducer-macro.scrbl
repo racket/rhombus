@@ -318,6 +318,12 @@
     fields:
       group
       [tail, ...]
+  syntax_class reducer_meta.NameStart:
+    kind: ~group
+    fields:
+      name
+      [head, ...]
+      [tail, ...]
 ){
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for reducers.

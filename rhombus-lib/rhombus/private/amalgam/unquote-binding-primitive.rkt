@@ -68,14 +68,16 @@
     (pattern (~seq (~and args (_::parens . _))))
     (pattern (~seq)
              #:with args #'#f))
-  (define (parse-syntax-class-args stx-class rator-in arity class-args)
+  (define (parse-syntax-class-args stx-class rator-in arity class-args auto-args)
     (cond
       [(not arity)
        (when (syntax-e class-args)
          (raise-syntax-error #f
                              "syntax class does not expect arguments"
                              stx-class))
-       rator-in]
+       (if auto-args
+           #`(#,rator-in #,@auto-args)
+           rator-in)]
       [(not (syntax-e class-args))
        (raise-syntax-error #f
                            "syntax class expects arguments"
@@ -228,7 +230,8 @@
       (define sc-call (parse-syntax-class-args stx-class
                                                sc
                                                (rhombus-syntax-class-arity rsc)
-                                               class-args))
+                                               class-args
+                                               (rhombus-syntax-class-auto-args rsc)))
       (define temp-id (car (generate-temporaries (list #'id))))
       (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
                      (syntax-list->pattern-variable l)))

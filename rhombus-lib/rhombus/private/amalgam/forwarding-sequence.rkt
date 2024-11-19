@@ -113,7 +113,7 @@
           forms]
          [_ forms])]
       [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] (~and form (quote v)) . forms)
-       (loop #'(_ state base-ctx add-ctx remove-ctx all-ctx stx-params . forms)
+       (loop #'(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)
              (cons (syntax-parse #'state
                      [(#:module #f . _) #'form]
                      [(#:module wrap . _ ) (if (string? (syntax-e #'v))

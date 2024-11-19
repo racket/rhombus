@@ -17,16 +17,22 @@ export:
     in_space
     rename:
       also_space as space
+    // typeset_meta.NameStart below
 
 space.transform typeset:
   space_path rhombus/scribble/typeset
   meta_namespace typeset_meta:
+    name_start_syntax_class NameStart
     reflection space
+
+meta:
+  export:
+    typeset_meta.NameStart
 
 meta:
   class Transformer(proc)
   class Replacer(proc)
-  class Spacer(contexts :~ List, proc)
+  class Spacer(contexts :~ List, proc, can_infix)
 
   fun make_Transformer(proc):
     Transformer(proc)
@@ -37,8 +43,8 @@ meta:
   fun make_Replacer(proc):
     Replacer(proc)
 
-  fun make_Spacer(contexts, proc):
-    Spacer(contexts, proc)
+  fun make_Spacer(contexts, proc, modes):
+    Spacer(contexts, proc, modes)
 
   fun in_space(stx):
     base.#{make-interned-syntax-introducer}(#'#{rhombus/scribble/typeset})(stx)

@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "name-start-syntax-class.rkt")
          syntax/parse/pre
          "provide.rkt"
          "operator-parse.rkt"
@@ -53,7 +54,7 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
-  (struct rhombus-syntax-class (kind class attributes splicing? arity root-swap))
+  (struct rhombus-syntax-class (kind class attributes splicing? arity root-swap auto-args))
   (define (syntax-class-ref v) (and (rhombus-syntax-class? v) v))
 
   ;; used to communicate `syntax.parse` as a anonymous-class form
@@ -87,8 +88,9 @@
                              #:arity [arity #f]
                              #:fields [fields #'()]
                              #:splicing? [splicing? #f]
-                             #:root-swap [root-swap #f])
-    (rhombus-syntax-class kind pat fields splicing? arity root-swap)))
+                             #:root-swap [root-swap #f]
+                             #:auto-args [auto-args #f])
+    (rhombus-syntax-class kind pat fields splicing? arity root-swap auto-args)))
 
 (define-splicing-syntax-class :sequence
   (pattern (~seq _ ...)))
@@ -118,9 +120,16 @@
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
 
+(begin-for-syntax
+  (define name-start-fields
+    #'((name name #f 0 unpack-term*)
+       (head #f head tail unpack-tail-list*)
+       (tail #f tail tail unpack-tail-list*))))
+
 (define-syntax (define-operator-syntax-classes stx)
   (syntax-parse stx
     [(_ Parsed (~var :form) parsed-tag
+        NameStart:id in-space
         (~optional (~seq AfterPrefixParsed:id (~var :prefix-op+form+tail)
                          AfterInfixParsed:id (~var :infix-op+form+tail)))
         (~optional (~seq #:extra-arity a)
@@ -142,7 +151,11 @@
                                                                              #:arity (if a (+ a 2) 2)
                                                                              #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag))
                                                                                          (tail #f tail tail unpack-tail-list*))
-                                                                             #:root-swap '(parsed . group)))))]))
+                                                                             #:root-swap '(parsed . group))))
+         (define-syntax-class-syntax NameStart (make-syntax-class #':name-start
+                                                                  #:auto-args #'(in-space)
+                                                                  #:kind 'group
+                                                                  #:fields name-start-fields)))]))
 
 (define-syntax (define-transformer-syntax-class stx)
   (syntax-parse stx

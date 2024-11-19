@@ -132,4 +132,34 @@
 }
 
 
+@doc(
+  ~meta
+  syntax_class repet_meta.Parsed:
+    kind: ~group
+    fields:
+      group
+  syntax_class repet_meta.AfterPrefixParsed(op_name):
+    kind: ~group
+    fields:
+      group
+      [tail, ...]
+  syntax_class repet_meta.AfterInfixParsed(op_name):
+    kind: ~group
+    fields:
+      group
+      [tail, ...]
+  syntax_class repet_meta.NameStart:
+    kind: ~group
+    fields:
+      name
+      [head, ...]
+      [tail, ...]
+){
+
+ Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for
+ repetition forms.
+
+}
+
+
 @(macro.close_eval(macro_eval))

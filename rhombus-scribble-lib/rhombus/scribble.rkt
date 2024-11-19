@@ -96,16 +96,16 @@
 (define-syntax (scribble-rhombus-top stx)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
-      [(_ str:string . rest)
+      [(_ (group str:string) . rest)
        (loop #'(t . rest)
-             (cons #'str accum))]
+             (cons #'(quote str) accum))]
       [(_ . rest)
        (define top #`(rhombus-top-step scribble-rhombus-top #t #f () . rest))
        (if (null? accum)
            top
            #`(begin
                #,@(reverse accum)
-               top))])))
+               #,top))])))
 
 (define-for-syntax (version-prune gs)
   (let loop ([gs gs])

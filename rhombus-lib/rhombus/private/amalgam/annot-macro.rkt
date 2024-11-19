@@ -54,7 +54,8 @@
      [ends_parse annot_meta.ends_parse]
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     NameStart)))
 
 (define-for-syntax space
   (space-syntax rhombus/annot))
@@ -69,6 +70,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :annotation #:rhombus/annot
+    NameStart in-annotation-space
     AfterPrefixParsed :prefix-op+annotation+tail
     AfterInfixParsed :infix-op+annotation+tail))
 

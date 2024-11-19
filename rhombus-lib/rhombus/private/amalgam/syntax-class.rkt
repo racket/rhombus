@@ -199,7 +199,8 @@
                               splicing?
                               (syntax->datum class-arity)
                               (and swap-root
-                                   (cons (syntax-e (car swap-root)) (cdr swap-root))))]
+                                   (cons (syntax-e (car swap-root)) (cdr swap-root)))
+                              #f)]
        [else
         (define class-name class/inline-name)
         (define internal-class-name ((make-syntax-introducer) class-name))
@@ -219,7 +220,8 @@
                                                      (pattern-variable->list var #:keep-id? #f)))
                                    #,splicing?
                                    '#,class-arity
-                                   '#,swap-root)))
+                                   '#,swap-root
+                                   #f)))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)

@@ -5,6 +5,7 @@ space.transform food:
   bridge_definer bridge
   meta_namespace food_meta:
     reflection space
+    name_start_syntax_class NameStart
 
 check:
   food.bridge cake:
@@ -23,6 +24,21 @@ check:
     '$(syntax_meta.value('bakery.cake', food_meta.space))'
   go
   ~is "chocolate"
+
+block:
+  namespace bakery:
+    export cake
+    food.bridge cake:
+      "chocolate"
+  expr.macro 'go $(seq :: food_meta.NameStart) $()':
+    '[$(syntax_meta.value(seq.name, food_meta.space, fun (): '#false')),
+      '$seq.tail ...']'
+  check: go bakery.cake + icing
+         ~matches ["chocolate", '+ icing']
+  check: go bakery.cake.to.go
+         ~matches ["chocolate", '. to . go']
+  check: go non_cake.to.go
+         ~matches [#false, '. to . go']
 
 check:
   food.bridge List.cake:

@@ -29,7 +29,8 @@
     (ParsedModifier
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     NameStart)))
 
 ;; ----------------------------------------
 
@@ -70,6 +71,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :import #:rhombus/impo
+    NameStart in-import-space
     AfterPrefixParsed :prefix-op+import+tail
     AfterInfixParsed :infix-op+import+tail))
 

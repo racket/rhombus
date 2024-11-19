@@ -30,6 +30,7 @@ export:
     :~
     is_a
     #'
+    names: .
     for
     import
     export
@@ -67,8 +68,9 @@ module for_doc:
 // `.relocate`s on all branches, either implicitly through `spacer.*`
 // functions or explicitly.  This may seem excessive, but it's less
 // easier to mess up than `.relocate` on function-call site.  In
-// particular, remember that `spacer.adjust_sequence` doesn't
-// `.relocate_group`, so be cautious when groups are adjusted.
+// particular, remember that `spacer.adjust_[rest_]sequence` doesn't
+// `.relocate_group`, so be cautious when groups are adjusted without
+// using `.adjust_group`.
 
 meta:
   def body_spaces = [#'#{rhombus/defn}, #false]
@@ -83,7 +85,7 @@ meta:
     match rhs
     | ': $(body :: Block)':
         spacer.adjust_term(body, body_spaces, esc)
-    | '$op $expr':
+    | '$op $expr': // `op` is expected to be `=`
         let new_op = spacer.set(op, #'~expr)
         let new_expr = spacer.adjust_sequence(expr, #'~expr, esc)
         '$new_op $new_expr'
@@ -704,20 +706,28 @@ spacer.bridge is_a(self, tail, context, esc):
 meta:
   fun adjust_one(tail, context, esc, adjust):
     match tail
-    | '$t $tail': '$(adjust(t)) $(spacer.adjust_sequence(tail, context, esc))'
+    | '$t $tail': spacer.adjust_rest_sequence(adjust(t), tail, context, esc)
     | ~else: tail
 
 spacer.bridge #'(self, tail, context, esc):
   ~in: ~expr ~bind
   match tail
   | '$(e :: Escape(esc)) $tail ...':
-      '$self $e $(spacer.adjust_sequence('$tail ...', context, esc))'
+      '$self $(spacer.adjust_rest_sequence(e, '$tail ...', context, esc))'
   | ~else:
       fun adjust(t):
         match t
         | '$((_ :: Identifier) || (_ :: Keyword))': spacer.set(t, #'~value)
         | ~else: t
       '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge .(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(id :: Identifier) $tail ...':
+      '$self $(spacer.adjust_rest_sequence(spacer.set(id, #'~datum), '$tail ...', context, esc))'
+  | ~else:
+      '$self $(spacer.adjust_sequence(tail, context, esc))'
 
 meta:
   def for_spaces = [#'#{rhombus/for_clause}, & body_spaces]
