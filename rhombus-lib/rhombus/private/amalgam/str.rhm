@@ -296,6 +296,7 @@ namespace str:
   export:
     s
   fun s(v :: Any,
+        ~mode: mode :: PrintMode = #'text,
         ~width: width :: maybe(NonnegInt) = #false,
         ~min_width: min_width :: maybe(NonnegInt) = width,
         ~max_width: max_width :: maybe(NonnegInt) = width,
@@ -303,7 +304,7 @@ namespace str:
         ~align: align :: Align = #'left,
         ~clip_align: clip_align :: Align = #'left) :~ String:
     build_number(#'s,
-                 to_string(v),
+                 to_string(v, ~mode: mode),
                  0,
                  ~width: width,
                  ~min_width: min_width,

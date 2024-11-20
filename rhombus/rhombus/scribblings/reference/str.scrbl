@@ -35,6 +35,7 @@
 
 @doc(
   fun str.s(v :: Any,
+            ~mode: mode :: PrintMode = #'text,
             ~width: width :: maybe(NonnegInt) = #false,
             ~min_width: min_width :: maybe(NonnegInt) = width,
             ~max_width: max_width :: maybe(NonnegInt) = width,
