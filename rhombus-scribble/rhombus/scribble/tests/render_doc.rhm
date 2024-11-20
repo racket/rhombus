@@ -71,6 +71,9 @@ fun read(expect):
   let o = base.#{open-input-file}(expect)
   shrubbery.read(o)
 
+#//
+println(filter(html), ~pretty: #true)
+
 check:
   filter(html)
   ~prints_like read(doc_expect)
