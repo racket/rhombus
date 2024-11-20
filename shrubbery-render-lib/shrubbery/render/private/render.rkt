@@ -526,11 +526,8 @@
         (cons (datum->syntax target
                              (render-in-space
                               (if root 'rhombus/namespace space-name)
-                              (let ([str (shrubbery-syntax->string target)]
-                                    [prefix (hash-ref resolved 'raw-prefix #f)])
-                                (if prefix
-                                    (string-append prefix str)
-                                    str))
+                              #:prefix (hash-ref resolved 'raw-prefix #f)
+                              (shrubbery-syntax->string target)
                               (or (and root (add-space root 'rhombus/namespace))
                                   (add-space target space-name))
                               #:suffix (and root target)

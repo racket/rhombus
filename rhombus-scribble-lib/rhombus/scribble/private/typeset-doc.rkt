@@ -568,8 +568,13 @@
                                ref-content/no-prefix))))]
          [else content]))]))
 
-(define (as-bold stx)
-  (element symbol-color (element value-def-color (shrubbery-syntax->string stx))))
+(define (as-bold stx #:prefix [prefix #f] #:italic? [italic? #f])
+  (define e
+    (element (if italic? variable-color symbol-color)
+      (element value-def-color (shrubbery-syntax->string stx))))
+  (if prefix
+      (element #f (list (element symbol-color prefix) e))
+      e))
 
 (define (as-italic str)
   (element symbol-color (element variable-color str)))
@@ -740,12 +745,15 @@
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
       (define (subst name #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
         (define id (if (identifier? name) name (hash-ref (syntax-e name) 'target)))
+        (define prefix-str (and (hash? (syntax-e name)) (hash-ref (syntax-e name) 'raw_prefix #f)))
         (define exp
           (cond
             [(not def-id-as-def)
              (if (equal? space-names '(grammar))
                  #`(as-italic '#,(symbol->string (syntax-e id)))
-                 #`(as-bold (quote-syntax #,id)))]
+                 #`(as-bold (quote-syntax #,id)
+                            #:prefix (quote #,prefix-str)
+                            #:italic? (quote #,meta?)))]
             [else
              #`(let ([redef? #,as-redef?]
                      [meta? #,meta?])
