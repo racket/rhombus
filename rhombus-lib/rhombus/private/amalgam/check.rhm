@@ -19,8 +19,11 @@ meta:
   | '~is_a'
   | '~prints_like'
   | '~prints'
-  | '$('~throws' || '~raises')' // TEMP remove the alias at some point
+  | '~throws'
   | '~matches'
+  syntax_class CompletesMode:
+    kind: ~term
+  | '~completes'
 
   syntax_class Result:
     kind: ~sequence
@@ -29,8 +32,7 @@ meta:
   | '$(mode :: ResultMode) $g ...':
       field body: ': $g ...'
       field [suffix, ...]: []
-  | '~completes':
-      field mode: '~completes'
+  | '$(mode :: CompletesMode)':
       field body: ': #void'
       field [suffix, ...]: ['#void']
 
@@ -94,6 +96,37 @@ expr.macro
                 fun (): $result1 ...; $result2.suffix; ...,
                 matcher($result2.mode, $result2.body),
                 #'$result2.mode)'
+// error cases
+| 'check:
+     $_
+     ...
+     $(kw :: Keyword) $_ ...':
+    ~all_stx: stx
+    match kw
+    | '$(_ :: CompletesMode)':
+        syntax_meta.error("unexpected terms after completion-mode keyword", stx, kw)
+    | ~else:
+        syntax_meta.error("not an expected-result keyword", stx, kw)
+| 'check:
+     $any
+     ...':
+    ~all_stx: stx
+    match stx
+    | '$_: $result1 ... $(result2 :: Result); ... ~nonempty; $bad; $_; ...':
+        throw_bad_check_line(stx, bad)
+    | ~else:
+        syntax_meta.error("missing expected-result keyword at the end of the body", stx)
+| 'check $bad ...':
+    ~all_stx: stx
+    throw_bad_check_line(stx, '$bad ...')
+
+meta:
+  fun throw_bad_check_line(stx, bad):
+    match bad
+    | '$_ ... $(kw :: Keyword) $_ ...':
+        syntax_meta.error("invalid check line;\n keyword is not a result keyword", stx, kw)
+    | ~else:
+        syntax_meta.error("invalid check line", stx, bad)
 
 expr.macro
 | 'matcher(~matches, : $(pattern g:

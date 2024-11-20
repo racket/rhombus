@@ -194,7 +194,7 @@ check:
 check:
   def Array(0, _, ... ~nonempty) = Array(0)
   "ok"
-  ~raises error.annot_msg()
+  ~throws error.annot_msg()
 
 check:
   def Array(0, x, ...) = Array(0, 1, 2)

@@ -94,7 +94,7 @@ veneer Node(this :~ (Array.of(Node || Any)
         Node(a.set_in_copy(index, el))
 
 // wrapper `Node` variant:
-class Node(children :~ Array.of(Node || Any) = Array(), sizes :~ maybe(Array.of(Int)) = #false):
+class Node(children :~ Array.now_of(Node || Any) = Array(), sizes :~ maybe(Array.now_of(Int)) = #false):
   implements Indexable
 
   property balanced:
@@ -247,7 +247,7 @@ class TreeList(root :~ Node,
 
   // TODO chunk adding here by 32 and add whole nodes at a time?
   method add_all(els :~ Sequence) :~ TreeList:
-    for values(t = this):
+    for values(t :~ TreeList = this):
       each:
         el: els
       t.add(el)
@@ -277,18 +277,18 @@ class TreeList(root :~ Node,
         def new_root = recur take(node :~ Node = root, index = pos - 1, depth = height) :~ Node:
           cond
           | depth == 0:
-              Node(node.children.take_left(radix(index, 0) + 1))
+              Node(node.children.take(radix(index, 0) + 1))
           | node.balanced:
               def branch_index = radix(index, depth)
-              def new_children :~ Array.of(Node) = node.children.take_left(branch_index + 1)
+              def new_children :~ Array.now_of(Node) = node.children.take(branch_index + 1)
               if depth == 0
               |  Node(new_children)
               |  new_children[branch_index] := take(node.children[branch_index], index, depth - 1)
                  Node(new_children)
           | ~else:
               def (branch_index, subindex) = step(node, index, depth)
-              def new_children :~ Array.of(Node) = node.children.take_left(branch_index + 1)
-              def new_sizes :~ Array.of(Int)  = Array.take_left(node.sizes, branch_index + 1)
+              def new_children :~ Array.now_of(Node) = node.children.take(branch_index + 1)
+              def new_sizes :~ Array.now_of(Int)  = Array.take(node.sizes, branch_index + 1)
               new_children[branch_index] := take(node.get(branch_index), subindex, depth - 1)
               new_sizes[branch_index] := index + 1
               Node(new_children, new_sizes)
@@ -309,10 +309,10 @@ class TreeList(root :~ Node,
                                   depth :~ Int = height) :~ Node:
           cond
           | depth == 0:
-              Node(node.children.drop_left(radix(index, 0)))
+              Node(node.children.drop(radix(index, 0)))
           | node.balanced:
               def branch_index = radix(index, depth)
-              def new_children :~ Array.of(Node) = node.children.drop_left(branch_index)
+              def new_children :~ Array.now_of(Node) = node.children.drop(branch_index)
               def new_child :~ Node = drop(node.get(branch_index), index, depth - 1)
               new_children[0] := new_child
 
@@ -333,10 +333,10 @@ class TreeList(root :~ Node,
               Node(new_children, new_sizes)
           | ~else:
               def (branch_index, subindex) = step(node, index, depth)
-              def new_children :~ Array.of(Node) = node.children.drop_left(branch_index)
-              def new_sizes = for Array ~length (node.sizes :~ Array.of(Int)).length() - branch_index:
-                each i: branch_index .. (node.sizes :~ Array.of(Int)).length()
-                (node.sizes :~ Array.of(Int))[i] - index 
+              def new_children :~ Array.now_of(Node) = node.children.drop(branch_index)
+              def new_sizes = for Array.of_length((node.sizes :~ Array.now_of(Int)).length() - branch_index):
+                each i: branch_index .. (node.sizes :~ Array.now_of(Int)).length()
+                (node.sizes :~ Array.now_of(Int))[i] - index
               def new_child = drop(node.get(branch_index), subindex, depth - 1)
                 
               new_children[0] := new_child  
@@ -375,7 +375,7 @@ class TreeList(root :~ Node,
             left && Node(a.children.set_in_copy(0, left),
                          block:
                            let sizes :~ Array: a.sizes
-                           for Array ~length sizes.length() ():
+                           for Array.of_length(sizes.length()) ():
                              each n: sizes
                              n+1)
       let new_root = insert_left(root, height)
@@ -495,8 +495,8 @@ fun rebalance(left :~ maybe(Node),
       values(set_sizes(rebalanced_slots, height),
              height)
   | ~else:
-      def new_left = Array.take_left(rebalanced_slots, MAX_WIDTH)
-      def new_right = Array.drop_left(rebalanced_slots, MAX_WIDTH)
+      def new_left = Array.take(rebalanced_slots, MAX_WIDTH)
+      def new_right = Array.drop(rebalanced_slots, MAX_WIDTH)
       values(set_sizes(Array(set_sizes(new_left, height),
                              set_sizes(new_right, height)),
                        height + 1),
@@ -504,9 +504,9 @@ fun rebalance(left :~ maybe(Node),
 
 /* merge all children except for the rightmost in `left` and leftmost in `right` */
 fun merge_nodes(left :~ maybe(Node), center :~ Node, right :~ maybe(Node)) :~ Array:
-  Array.append(if !left | Array() | Node.children(left).drop_right(1),
+  Array.append(if !left | Array() | Node.children(left).drop_last(1),
                center.children,
-               if !right | Array() | Node.children(right).drop_left(1))
+               if !right | Array() | Node.children(right).drop(1))
 
 fun array_add(a :~ Array, val):
   a ++ Array(val)
@@ -541,7 +541,7 @@ fun concat_plan(slots :~ Array) :~ maybe(Array):
 
 fun distribute(plan :~ Array, target :~ Int, count :~ Int, node_idx :~ Int = 0) :~ Array:
   if target >= count:
-  | Array.take_left(plan, count)
+  | Array.take(plan, count)
   | let (i, r):
       recur loop(i = short_node(plan, node_idx),
                  r = plan[i]):
@@ -576,7 +576,7 @@ fun exec_concat_plan(slots :~ Array,
         each node :~ Node: slots
         sum + node.size
     def flattened:
-      for Array ~length flattened_size:
+      for Array.of_length(flattened_size):
         each node :~ Node: slots
         each child: node.children
         child
@@ -587,7 +587,7 @@ fun exec_concat_plan(slots :~ Array,
               
       let new_sum = sum + plan[i]
       let new_node:
-        for Array ~length  new_sum - sum:
+        for Array.of_length(new_sum - sum):
           each j: sum .. new_sum
           flattened[j]
       new_slots[i] :=  set_sizes(new_node, height - 1)
@@ -608,8 +608,8 @@ fun size_subtree(node :~ Node, height :~ Int):
 
 /* helper functions */
                       
-fun scan_sizes(sizes :~ Array, target_index, i = 0) :~ Int:
-  if sizes[i] <= target_index
+fun scan_sizes(sizes :~ Array.now_of(Int), target_index, i = 0) :~ Int:
+  if sizes[i] .<= target_index
   | scan_sizes(sizes, target_index, i + 1)
   | i
 
@@ -654,7 +654,7 @@ fun new_branch(el, height):
 fun
 | from() :~ TreeList: TreeList[]
 | from(s :~ Sequence) :~ TreeList:
-    for values(v = TreeList[]) (el: s):
+    for values(v :~ TreeList = TreeList[]) (el: s):
       v.add(el)
                    
 module test:
@@ -742,7 +742,7 @@ module test:
   let large_ub :~ TreeList = TreeList.from(0..32) ++ TreeList.from(32..(32**2)) ++ TreeList.from((32**2)..(32**3)) ++ TreeList.from((32**3)..(32**4))
 
   check: // get near beginning
-    empty.get(0) ~raises ""
+    empty.get(0) ~throws ""
     small.get(0) ~is 1
     medium.get(0) ~is 0
     small_ub.get(0) ~is 1
@@ -750,7 +750,7 @@ module test:
     large_ub.get(0) ~is 0
 
   check: // get in the middle
-    empty.get(1) ~raises ""
+    empty.get(1) ~throws ""
     small.get(1) ~is 2
     medium.get(500) ~is 500
     small_ub.get(2) ~is 3
@@ -758,7 +758,7 @@ module test:
     large_ub.get(16**3) ~is 16**3
 
   check: // get at the end
-    empty.get(10000000) ~raises ""
+    empty.get(10000000) ~throws ""
     small.get(4) ~is 5
     medium.get(1023) ~is 1023
     small_ub.get(4) ~is 5
@@ -778,7 +778,7 @@ module test:
 
   //set
   check: // set near beginning
-    empty.set(0, -1) ~raises ""
+    empty.set(0, -1) ~throws ""
     small.set(0, -1) ~is TreeList[-1, 2, 3, 4, 5]
     medium.set(0, -1).get(0) ~is -1
     large.set(0, -1).get(0) ~is -1
@@ -788,7 +788,7 @@ module test:
     
 
   check: // set in the middle
-    empty.set(1, -1) ~raises ""
+    empty.set(1, -1) ~throws ""
     small.set(1, -1) ~is TreeList[1, -1, 3, 4, 5]
     medium.set(500, -1).get(500) ~is -1
     large.set((MAX_WIDTH ** 4) div 2, -1).get((MAX_WIDTH ** 4) div 2) ~is -1
@@ -797,7 +797,7 @@ module test:
     large_ub.set((MAX_WIDTH ** 4) div 2, -1).get((MAX_WIDTH ** 4) div 2) ~is -1
     
   check: // set at the end
-    empty.set(100000, -1) ~raises ""
+    empty.set(100000, -1) ~throws ""
     small.set(4, -1) ~is TreeList[1, 2, 3, 4, -1]
     medium.set(1023, -1).get(1023) ~is -1
     large.set(MAX_WIDTH ** 4, -1).get(MAX_WIDTH ** 4) ~is -1
@@ -827,7 +827,7 @@ module test:
     large_ub.take(large_ub.size) == large_ub ~is #true
 
   check: // take small
-    empty.take(1) ~raises ""
+    empty.take(1) ~throws ""
     small.take(1) ~is TreeList[1]
     medium.take(1) ~is TreeList[0]
     large.take(1) ~is TreeList[0]
@@ -835,7 +835,7 @@ module test:
     medium_ub.take(1) ~is TreeList[0]
 
   check: // take medium
-    empty.take(10) ~raises ""
+    empty.take(10) ~throws ""
     small.take(2) ~is TreeList[1, 2]
     medium.take(10) == TreeList[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] ~is #true
     large.take(100).to_list() == List.iota(100) ~is #true
@@ -843,7 +843,7 @@ module test:
     medium_ub.take(10) == TreeList[0, 1, 2, 3, 4, 5, 6, 7, 8, 9] ~is #true
 
   check: // take large
-    empty.take(10000).to_list() ~raises ""
+    empty.take(10000).to_list() ~throws ""
     small.take(4).to_list() ~is [1, 2, 3, 4]
     medium.take(1000).to_list() == List.iota(1000) ~is #true
     large.take(10000).to_list() == List.iota(10000) ~is #true
@@ -851,9 +851,9 @@ module test:
     medium_ub.take(1000).to_list() == List.iota(1000) ~is #true
 
   check: // take error
-    small.take(100) ~raises ""
-    medium.take(1000000000) ~raises ""
-    large.take(10000000000000000000000000000000000000000000000000000000000) ~raises ""
+    small.take(100) ~throws ""
+    medium.take(1000000000) ~throws ""
+    large.take(10000000000000000000000000000000000000000000000000000000000) ~throws ""
 
   // drop
     // known issues: medium and large pos drops on medium and large size vectors
@@ -872,7 +872,7 @@ module test:
     medium_ub.drop(medium_ub.size) ~is TreeList[]
 
   check: // drop small
-    empty.drop(1) ~raises ""
+    empty.drop(1) ~throws ""
     small.drop(1) ~is TreeList[2, 3, 4, 5]
     medium.drop(1).to_list() == List.iota(medium.size).rest ~is #true
     large.drop(1).to_list() == List.iota(large.size).rest ~is #true
@@ -880,7 +880,7 @@ module test:
     medium_ub.drop(1).to_list() == List.iota(medium.size).rest ~is #true
 
   check: // drop medium
-    empty.drop(10) ~raises ""
+    empty.drop(10) ~throws ""
     small.drop(2) ~is TreeList[3, 4, 5]
     medium.drop(10).to_list() == Function.map(fun (x): x + 10, List.iota(medium.size - 10)) ~is #true
    // large.drop(100).to_list() == List.iota(100) ~is #true
@@ -888,7 +888,7 @@ module test:
     medium_ub.drop(10).to_list() == Function.map(fun (x): x + 10, List.iota(medium.size - 10)) ~is #true
 
   check: // drop large
-    empty.drop(10000).to_list() ~raises ""
+    empty.drop(10000).to_list() ~throws ""
     small.drop(4).to_list() ~is [5]
     medium.drop(100).take(100).to_list() == Function.map(fun (x): x + 100, List.iota(100)) ~is #true
     large.drop(10000).take(10000).to_list() == Function.map(fun (x): x + 10000, List.iota(10000)) ~is #true
@@ -896,9 +896,9 @@ module test:
     medium_ub.drop(100).take(100).to_list() == Function.map(fun (x): x + 100, List.iota(100)) ~is #true
 
   check: // drop error
-    small.drop(-1) ~raises ""
-    medium.drop(-1000000000) ~raises ""
-    large.drop(-10000000000000000000000000000000000000000000000000000000000) ~raises ""
+    small.drop(-1) ~throws ""
+    medium.drop(-1000000000) ~throws ""
+    large.drop(-10000000000000000000000000000000000000000000000000000000000) ~throws ""
 
 // append
   check: // append identity
@@ -918,7 +918,7 @@ module test:
 
 
   let (vec :~ TreeList, lst :~ List):
-    for values(v = TreeList[1], l = [1]):
+    for values(v :~ TreeList = TreeList[1], l :~ List = [1]):
       each i: 0..10
       match math.random(4)
       | 0: values(v.add(i), l ++ [i])
@@ -990,7 +990,7 @@ module test:
 
 
   check: // pop
-    empty.pop() ~raises ""
+    empty.pop() ~throws ""
     small.add(1).pop() ~is small
     medium.add(1).pop() ~is medium
     small_ub.add(1).pop() ~is small_ub

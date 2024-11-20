@@ -78,3 +78,34 @@ check_check:
     ~matches [b, c] ~expected "matching [b, c]"
     ~matches (a, [b, c], d) ~expected "matching (a, [b, c], d)"
     ~throws "anything" ~expected "exception \"anything\""
+
+check:
+  ~eval
+  check:
+    1
+  ~throws "missing expected-result keyword at the end of the body"
+
+check:
+  ~eval
+  check:
+    ~oops 1
+  ~throws "not an expected-result keyword"
+
+check:
+  ~eval
+  check 1
+  ~throws "invalid check line"
+
+check:
+  ~eval
+  check 1 ~oops
+  ~throws values("invalid check line",
+                 "keyword is not a result keyword")
+
+check:
+  ~eval
+  check:
+    2 ~is ok
+    1 no ~weird
+  ~throws values("invalid check line",
+                 "keyword is not a result keyword")
