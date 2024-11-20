@@ -289,4 +289,4 @@ check:
   veneer Stubborn(this :: Any):
     expression ~error
   Stubborn(0)
-  ~raises "cannot be used as an expression"
+  ~throws "cannot be used as an expression"

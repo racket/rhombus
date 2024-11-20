@@ -255,7 +255,8 @@ html:
                           span {class: "stt"}: "::"
                           span {class: "hspace"}: nbsp
                           span {class: "stt"}:
-                            span {class: "RktSym"}: "draw.DC"
+                            "draw."
+                            span {class: "RktStxDef RktStxLink"}: "DC"
                           span {class: "RktPn"}: ")"
                           span {class: "stt"}: "."
                           a:«»
@@ -296,7 +297,8 @@ html:
                           span {class: "stt"}: "::"
                           span {class: "hspace"}: nbsp
                           span {class: "stt"}:
-                            span {class: "RktSym"}: "draw.DC"
+                            "draw."
+                            span {class: "RktSym"}: "DC"
               tr: td: p: span {class: "hspace"}: nbsp
               tr:
                 td:

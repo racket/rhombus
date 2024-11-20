@@ -1028,14 +1028,14 @@ check:
   class Stubborn(x):
     constructor ~error
   Stubborn(0)
-  ~raises "cannot be used as an expression"
+  ~throws "cannot be used as an expression"
 
 check:
   ~eval
   class Stubborn(x):
     expression ~error
   Stubborn(0)
-  ~raises "cannot be used as an expression"
+  ~throws "cannot be used as an expression"
 
 check:
   ~eval
@@ -1043,14 +1043,14 @@ check:
     binding ~error
   def Stubborn = 10
   #void
-  ~raises "cannot be used as a binding pattern"
+  ~throws "cannot be used as a binding pattern"
 
 check:
   ~eval
   class Stubborn(x):
     annotation ~error
   10 :: Stubborn
-  ~raises "cannot be used as an annotation"
+  ~throws "cannot be used as an annotation"
 
 block:
   class Posn(x, mutable y):

@@ -660,13 +660,13 @@ check:
   interface Stubborn:
     expression ~error
   Stubborn(0)
-  ~raises "cannot be used as an expression"
+  ~throws "cannot be used as an expression"
 
 check:
   ~eval
   interface Stubborn
   Stubborn(0)
-  ~raises "cannot be used as an expression"
+  ~throws "cannot be used as an expression"
 
 check:
   ~eval
@@ -674,7 +674,7 @@ check:
     annotation ~error
   10 :: Stubborn
   #void
-  ~raises "cannot be used as an annotation"
+  ~throws "cannot be used as an annotation"
 
 block:
   interface Pointy:
