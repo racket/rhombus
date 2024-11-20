@@ -5,6 +5,11 @@ check:
   @str{1, 2, @(1+2)} ~is "1, 2, 3"
 
   str.s("apple") ~is "apple"
+  str.s("apple", ~mode: #'expr) ~is "\"apple\""
+  str.s(#'apple) ~is "apple"
+  str.s(#'apple, ~mode: #'expr) ~is "#'apple"
+  str.s(#"apple") ~is "apple"
+  str.s(#"apple", ~mode: #'expr) ~is "#\"apple\""
   str.s(["apple"]) ~is "[\"apple\"]"
   str.s("apple", ~width: 8) ~is "apple   "
   str.s("apple", ~width: 8, ~align: #'right) ~is "   apple"
