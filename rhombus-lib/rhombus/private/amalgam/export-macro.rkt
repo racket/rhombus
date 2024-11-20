@@ -29,7 +29,8 @@
     (ParsedModifier
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     NameStart)))
 
 ;; ----------------------------------------
 
@@ -70,6 +71,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :export #:rhombus/expo
+    NameStart in-export-space
     AfterPrefixParsed :prefix-op+export+tail
     AfterInfixParsed :infix-op+export+tail))
 

@@ -106,6 +106,12 @@
     fields:
       group
       [tail, ...]
+  syntax_class expr_meta.NameStart:
+    kind: ~group
+    fields:
+      name
+      [head, ...]
+      [tail, ...]
 ){
 
  Syntax classes that match by parsing expressions. The value of the
@@ -140,6 +146,14 @@
     1+0 no_fail 0 + 1
     (1+0 no_fail 0) + 1
 )
+
+ The @rhombus(expr_meta.NameStart, ~stxclass) syntax class matches a
+ group that starts with a name, potentially in dotted form. It converts an
+ operator or dotted name into an identifier with the same binding;
+ that identifier or an original one is the @rhombus(name, ~datum) field. The
+ @rhombus(head, ~datum) field contains the terms that were combined to
+ form @rhombus(name, ~datum), and the @rhombus(tail, ~datum) field
+ contains the remaining terms of the group.
 
 }
 

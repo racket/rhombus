@@ -1141,6 +1141,8 @@
                    (syntax-parse arg
                      [(group _::&-bind . _) #f]
                      [(group _::...-bind) #f]
+                     [(group _::...-bind #:nonempty) #f]
+                     [(group _::...-bind #:once) #f]
                      [_ #t]))))
           (syntax-parse arg
             [(group op::&-bind rest-arg ...)
@@ -1150,45 +1152,52 @@
                                   #`(#,group-tag rest-bind #,static-infos
                                      (#,group-tag rest-arg ...))
                                   make-rest-selector
-                                  #f)]
+                                  #f #f)]
                [(and (pair? (cdr args))
                      (syntax-parse (cadr args)
-                       [(group _::...-bind) #t]
+                       [(group _::...-bind #:nonempty) '(1 #f)]
+                       [(group _::...-bind #:once) '(0 1)]
+                       [(group _::...-bind) '(0 #f)]
                        [_ #f]))
-                (generate-binding #'form-id (reverse accum) null #'tail
-                                  #`(#,group-tag try-rest-bind #,static-infos form-id
-                                     #:splice-repetition #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
-                                     (#,group-tag rest-arg ...)
-                                     #,@(cddr args))
-                                  make-rest-selector
-                                  #f)]
+                => (lambda (rep-min+max)
+                     (generate-binding #'form-id (reverse accum) null #'tail
+                                       #`(#,group-tag try-rest-bind #,static-infos form-id
+                                          #:splice-repetition #,@rep-min+max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                          (#,group-tag rest-arg ...)
+                                          #,@(cddr args))
+                                       make-rest-selector
+                                       #f #f))]
                [else
                 (generate-binding #'form-id (reverse accum) null #'tail
                                   #`(#,group-tag try-rest-bind #,static-infos form-id
-                                     #:splice #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                     #:splice 0 #f #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
                                      (#,group-tag rest-arg ...)
                                      #,@(cdr args))
                                   make-rest-selector
-                                  #f)])]
-            [(group op::...-bind)
+                                  #f #f)])]
+            [(group op::...-bind (~or (~seq)
+                                      (~seq (~and nonempty #:nonempty))
+                                      (~seq (~and once #:once))))
              #:when (pair? accum)
+             (define rep-min (if (attribute nonempty) 1 0))
+             (define rep-max (if (attribute once) 1 #f))
              (cond
                [(rest-simple?)
                 (generate-binding #'form-id (reverse (cdr accum)) (cdr args) #'tail (car accum)
                                   make-rest-selector
-                                  #t)]
+                                  rep-min rep-max)]
                [else
                 (generate-binding #'form-id (reverse (cdr accum)) null #'tail
                                   #`(#,group-tag try-rest-bind #,static-infos form-id
-                                     #:repetition #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
+                                     #:repetition #,rep-min #,rep-max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
                                      #,(car accum)
                                      #,@(cdr args))
                                   make-rest-selector
-                                  #f)])]
+                                  #f #f)])]
             [_ (loop (cdr args) (cons arg accum))])]))]))
 
 (define-for-syntax (generate-treelist-binding form-id args after-args tail [rest-arg #f] [make-rest-selector #f]
-                                              [rest-repetition? #t])
+                                              [rest-repetition/min 0] [rest-repetition/max #f])
   (define pre-len (length args))
   (define post-len (length after-args))
   (define len (+ pre-len post-len))
@@ -1203,8 +1212,9 @@
                              (= (treelist-length v) min-len)]
                             [else
                              (<= min-len (treelist-length v) max-len)])))))
-  (composite-binding-transformer #`(#,form-id (parens . #,(append args after-args)) . #,tail)
+  (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
                                  #:rest-arg rest-arg
+                                 #:post-args after-args
                                  "List"
                                  pred
                                  (for/list ([i (in-range len)])
@@ -1215,13 +1225,15 @@
                                    #'())
                                  #:index-result-info? #t
                                  #:rest-accessor (and make-rest-selector (make-rest-selector pre-len post-len))
-                                 #:rest-repetition? rest-repetition?
+                                 #:rest-repetition? (and rest-repetition/min #t)
+                                 #:rest-repetition-min (or rest-repetition/min 0)
+                                 #:rest-repetition-max rest-repetition/max
                                  #:rest-to-repetition #'in-treelist
                                  #:bounds-key #'#%treelist-bounds
                                  #:static-infos (get-treelist-static-infos)))
 
 (define-for-syntax (generate-list-binding form-id args after-args tail [rest-arg #f] [make-rest-selector #f]
-                                          [rest-repetition? #t])
+                                          [rest-repetition/min 0] [rest-repetition/max #f])
   (define len (length args))
   (define pred #`(lambda (min-len max-len)
                    (lambda (v)
@@ -1251,7 +1263,9 @@
                                     #'())
                                   #:index-result-info? #t
                                   #:rest-accessor (and make-rest-selector (make-rest-selector len 0))
-                                  #:rest-repetition? rest-repetition?
+                                  #:rest-repetition? (and rest-repetition/min #t)
+                                  #:rest-repetition-min (or rest-repetition/min 0)
+                                  #:rest-repetition-max rest-repetition/max
                                   #:rest-to-repetition #'in-list
                                   #:bounds-key #'#%list-bounds
                                   #:static-infos (get-list-static-infos)))

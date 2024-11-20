@@ -43,6 +43,7 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
+     NameStart
      [parse_more expr_meta.parse_more]
      [parse_all expr_meta.parse_all]
      [pack_s_exp expr_meta.pack_s_exp]
@@ -65,6 +66,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :expression #:rhombus/expr
+    NameStart in-expression-space
     AfterPrefixParsed :prefix-op+expression+tail
     AfterInfixParsed :infix-op+expression+tail))
 

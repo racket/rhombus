@@ -57,18 +57,31 @@
                     str
                     (keep-spaces str))))
    #:render_in_space (lambda (space-name
+                              #:prefix [prefix-str #f]
                               str
                               id
                               #:suffix [suffix-target #f]
                               #:suffix-space [suffix-space-name #f])
-                       (element tt-style
-                         (make-id-element id str (syntax-property id 'typeset-define)
-                                          #:space space-name
-                                          #:unlinked-ok? #t
-                                          #:suffix (if suffix-target
-                                                       (list (target-id-key-symbol suffix-target)
-                                                             suffix-space-name)
-                                                       space-name))))
+                       (define as-define? (syntax-property id 'typeset-define))
+                       (define r
+                         (element tt-style
+                           (let ()
+                             (define main
+                               (make-id-element id str as-define?
+                                                #:space space-name
+                                                #:unlinked-ok? #t
+                                                #:suffix (if suffix-target
+                                                             (list (target-id-key-symbol suffix-target)
+                                                                   suffix-space-name)
+                                                             space-name)))
+                             (if prefix-str
+                                 (list prefix-str main)
+                                 main))))
+                       (cond
+                         [as-define? (defining-element #f r (if prefix-str
+                                                                (string-length prefix-str)
+                                                                0))]
+                         [else r]))
    #:render_whitespace (lambda (n)
                          (element hspace-style (make-string n #\space)))
    #:render_indentation (lambda (n offset-in-orig orig-n orig-size style)

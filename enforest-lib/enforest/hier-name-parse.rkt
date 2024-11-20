@@ -7,15 +7,20 @@
 (provide :hier-name-seq)
 
 (define-syntax-class (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)
-  #:attributes (name tail)
+  #:attributes (name head tail)
   #:datum-literals (op)
-  #:description "identifier or dotted identifier"
-  (pattern (~and stxes (root::name (op sep) . _))
+  #:description "name or dotted name"
+  (pattern (~and stxes (root::name (~and o (op sep)) . _))
            #:when (eq? name-path-op (syntax-e #'sep))
            #:do [(define head-id (in-name-root-space #'root.name))
                  (define lxc (syntax-local-value* head-id name-root-ref))]
            #:when lxc
            #:cut
            #:do [(define-values (head tail) (apply-name-root head-id lxc in-space #'stxes))]
-           #:with (~var || (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)) #`(#,head . #,tail))
-  (pattern (::name . tail)))
+           #:with (~var r (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)) #`(#,head . #,tail)
+           #:attr name #'r.name
+           #:attr head #'(root o . r.head)
+           #:attr tail #'r.tail)
+  (pattern (n::name . tail)
+           #:attr head #'(n)
+           #:attr name #'n.name))

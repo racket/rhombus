@@ -40,7 +40,8 @@
      [unpack_list repet_meta.unpack_list]
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     NameStart)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -52,6 +53,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :repetition #:rhombus/repet
+    NameStart in-repet-space
     AfterPrefixParsed :prefix-op+repetition+tail
     AfterInfixParsed :infix-op+repetition+tail))
 

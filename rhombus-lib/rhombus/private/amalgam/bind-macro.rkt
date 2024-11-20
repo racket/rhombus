@@ -67,6 +67,7 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
+     NameStart
      Argument
      Result)))
 
@@ -80,6 +81,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :binding #:rhombus/bind
+    NameStart in-binding-space
     AfterPrefixParsed :prefix-op+binding+tail
     AfterInfixParsed :infix-op+binding+tail)
 

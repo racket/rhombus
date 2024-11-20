@@ -109,13 +109,15 @@ contents, even if one is mutable and the other is immutable.
 
   grammar ellipsis:
     #,(dots)
+    #,(dots) ~nonempty
 ){
 
  Matches an array with as many elements as @rhombus(bind)s, where
  each element matches its corresponding @rhombus(bind), or at least
  as may elements as @rhombus(bind)s when a @rhombus(repet_bind) is
  provided.  When @rhombus(repet_bind) is provided, each additional element
- must match @rhombus(repet_bind).
+ must match @rhombus(repet_bind), and at least one match must be present
+ if @rhombus(ellipsis) includes @rhombus(~nonempty).
 
  Elements are extracted from a matching array eagerly, so mutations of
  the array afterward do no change the matched values. When
@@ -127,6 +129,10 @@ contents, even if one is mutable and the other is immutable.
   y
   def Array(1, z, ...) = Array(1, 2, 3)
   [z, ...]
+  def Array(1, z, ... ~nonempty) = Array(1, 2, 3)
+  [z, ...]
+  ~error:
+    def Array(1, z, ... ~nonempty) = Array(1)
 )
 
 }

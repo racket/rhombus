@@ -2,7 +2,18 @@
 
 export:
   Fish
+  pet_store
+  Lure
 
 class Fish():
   method swim(): #false
   method escape(): #false
+
+namespace pet_store:
+  export:
+    buy
+    sell
+  fun buy(): #void
+  fun sell(): #void
+
+class Lure(weight, color)

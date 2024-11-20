@@ -9,6 +9,7 @@
          enforest/operator
          enforest/transformer
          enforest/proc-name
+         "name-path-op.rkt"
          "srcloc.rkt"
          (for-template "enforest.rkt")
          "introducer.rkt"
@@ -19,6 +20,7 @@
          (for-syntax racket/base)
          "implicit.rkt" ;; needed for `#%body`
          "name-root.rkt"
+         "name-start-syntax-class.rkt"
          "space.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
@@ -100,6 +102,7 @@
            (raise-syntax-error #f "syntax class argument count does not match macro definer's keyword count" class-name)))
        (define prefix-more-class-name (hash-ref options '#:syntax_class_prefix_more #'#f))
        (define infix-more-class-name (hash-ref options '#:syntax_class_infix_more #'#f))
+       (define name-start-class-name (hash-ref options '#:syntax_class_name_start #'#f))
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
        (define desc (hash-ref options '#:desc #'"form"))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
@@ -117,7 +120,7 @@
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
-                               class-name prefix-more-class-name infix-more-class-name
+                               class-name prefix-more-class-name infix-more-class-name name-start-class-name
                                #'orig-stx)
        (define (build-pack-and-unpack)
          #`((maybe-skip
@@ -144,6 +147,16 @@
                      [unpack-parsed*/tag (if (syntax-e unpack-id)
                                              #`(unpack-parsed* '#,parsed-tag)
                                              #'unpack-term*)])
+         (define (build-name-start-syntax-class)
+           (if (syntax-e name-start-class-name)
+               (with-syntax ([name (quote-syntax name)])
+                 #`((define-syntax #,name-start-class-name (make-syntax-class #':name-start
+                                                                              #:auto-args #'(in-new-space)
+                                                                              #:kind 'group
+                                                                              #:fields #'((name name #f 0 unpack-term*)
+                                                                                          (head #f head tail unpack-tail-list*)
+                                                                                          (tail #f tail tail unpack-tail-list*))))))
+               null))
          (cond
            [(syntax-e #'enforest?)
             #`(begin
@@ -153,6 +166,7 @@
                        #`([#,class-name _class-name]
                           [#,prefix-more-class-name _prefix-more-class-name]
                           [#,infix-more-class-name _infix-more-class-name]
+                          [#,name-start-class-name #,name-start-class-name]
                           [#,space-reflect-name _space]
                           [#,pack-id #,pack-id]
                           [#,unpack-id #,unpack-id]))
@@ -193,6 +207,7 @@
                                                                                      (tail #f tail tail unpack-tail-list*))
                                                                          #:root-swap '(parsed . group)
                                                                          #:arity more-arity-mask))
+                #,@(build-name-start-syntax-class)
                 (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
                                                                         (quote #,(and pack-and-unpack? parsed-tag))))
                 (define make-infix-operator (make-make-infix-operator new-infix-operator
@@ -209,6 +224,7 @@
                   #,(filter-missing
                      #`([#,class-name _class-name]
                         [#,space-reflect-name _space]
+                        [#,name-start-class-name #,name-start-class-name]
                         . #,exs)))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
                 (maybe-skip
@@ -231,6 +247,7 @@
                                                                #:fields #'((parsed parsed parsed 0 unpack-term*))
                                                                #:root-swap '(parsed . group)
                                                                #:arity base-arity-mask)))
+                #,@(build-name-start-syntax-class)
                 (maybe-skip
                  class-name
                  (define make-prefix-operator (make-make-transformer 'name new-transformer)))
@@ -333,7 +350,7 @@
       form))
 
 (define-for-syntax (check-distinct-exports ex-ht
-                                           class-name prefix-more-class-name infix-more-class-name
+                                           class-name prefix-more-class-name infix-more-class-name name-start-class-name
                                            orig-stx)
   (define (check id what)
     (when (and (syntax-e id)
@@ -344,7 +361,8 @@
                           (hash-ref ex-ht (syntax-e id) #f))))
   (check class-name "syntax class name")
   (check prefix-more-class-name "prefix-more syntax class name")
-  (check infix-more-class-name "infix-more syntax class name"))
+  (check infix-more-class-name "infix-more syntax class name")
+  (check name-start-class-name "name-start syntax class name"))
 
 (define-syntax (maybe-skip stx)
   (syntax-parse stx

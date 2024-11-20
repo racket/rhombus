@@ -1,0 +1,10 @@
+#lang rhombus
+
+// dummy entries for the documentation-conventions section
+
+export:
+  fill
+  drain
+
+fun fill(): #void
+fun drain(): #void

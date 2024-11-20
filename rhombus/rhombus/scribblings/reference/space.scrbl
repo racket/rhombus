@@ -70,6 +70,7 @@ driver and macro-definitions forms.
     #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id($id, ...)
     #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
+    #,(@rhombus(name_start_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
     #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
     #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
@@ -248,14 +249,14 @@ driver and macro-definitions forms.
 
  @item{@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause):
   declares an identifier to be bound as a @rhombus(~group) syntax class
-  that takes one argument and has with @rhombus(group, ~datum) and
+  that takes one argument and has @rhombus(group, ~datum) and
   @rhombus(tail, ~datum) fields. The argument is a syntax object containing
   a prefix operator or identifier that is bound for the space. Parsing
   proceeds as if after the argument of the operator, which means that
   parsing can stop with a tail sequence remaining. The parsed ``argument''
   is is the matched result, the consumed terms are in a
   @rhombus(group, ~datum) field, and the remaining tail is a
-  @rhombus(tail, ~datum) field.}
+  @rhombus(tail, ~datum) repetition field.}
 
  @item{@rhombus(parse_infix_more_syntax_class, ~space_meta_clause):
   declares an identifier like
@@ -263,6 +264,18 @@ driver and macro-definitions forms.
   syntax class expects a syntax object with an infix operator or
   identifier. Parsing can stop when reaching an infix operator in the
   group whose precedence is weaker than the starting one.}
+
+ @item{@rhombus(name_start_syntax_class, ~space_meta_clause): declares
+  an identifier to be bound as a @rhombus(~group) syntax class, which has
+  @rhombus(name, ~datum), @rhombus(head, ~datum), and
+  @rhombus(tail, ~datum) fields. The syntax class matches a group that
+  starts with a dotted name that is bound in the space, and the name is
+  converted to a single identifier term as the @rhombus(name, ~datum)
+  field. It also matches an unbound name as the start of the group. The
+  @rhombus(head, ~datum) field is a repetition that contains the leading
+  terms of the group that we used to compute the @rhombus(name, ~datum),
+  and the @rhombus(tail, ~datum) field is a repetition that contains the
+  remaining terms of the group.}
 
  @item{@rhombus(parse_checker, ~space_meta_clause): supplies a
   compile-time function that is applied to two arguments: the result of
@@ -360,6 +373,7 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'parse_syntax_class $id($id, ...)'
   space_meta_clause.macro 'parse_prefix_more_syntax_class $id'
   space_meta_clause.macro 'parse_infix_more_syntax_class $id'
+  space_meta_clause.macro 'name_start_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'parsed_packer $id'

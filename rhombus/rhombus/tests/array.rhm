@@ -103,6 +103,10 @@ block:
     Array(v, ...).length()
     ~is 3
   check:
+    def [v, ... ~nonempty] = dynamic([1, 2, 3])
+    Array(v, ...).length()
+    ~is 3
+  check:
     class Posn(x, y)
     def arr :: Array.later_of(Posn) = Array(Posn(1, 2))
     arr[0].x
@@ -182,6 +186,15 @@ check:
 check:
   def Array(0, _, ...) = Array(0, 1, 2)
   ~completes
+
+check:
+  def Array(0, _, ...) = Array(0)
+  ~completes
+
+check:
+  def Array(0, _, ... ~nonempty) = Array(0)
+  "ok"
+  ~raises error.annot_msg()
 
 check:
   def Array(0, x, ...) = Array(0, 1, 2)

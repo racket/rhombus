@@ -47,7 +47,7 @@
    (lambda (tail)
      (syntax-parse tail
        [(_ static-infos constructor
-           head-mode as-treelist? rest-to-repetition bounds-key
+           head-mode rep-min rep-max as-treelist? rest-to-repetition bounds-key
            first-rest-arg::binding
            rest-arg ...)
         #:with first-rest::binding-form #'first-rest-arg.parsed
@@ -56,14 +56,14 @@
         (values
          (binding-form
           #'try-rest-bind-infoer
-          #'[static-infos head-mode as-treelist? rest-to-repetition bounds-key
+          #'[static-infos head-mode rep-min rep-max as-treelist? rest-to-repetition bounds-key
                           first-rest.infoer-id first-rest.data
                           rest-rest.infoer-id rest-rest.data])
          #'())]))))
 
 (define-syntax (try-rest-bind-infoer stx)
   (syntax-parse stx
-    [(_ up-static-infos [static-infos head-mode as-treelist? rest-to-repetition bounds-key
+    [(_ up-static-infos [static-infos head-mode rep-min rep-max as-treelist? rest-to-repetition bounds-key
                                       first-rest-infoer-id first-rest-data
                                       rest-rest-infoer-id rest-rest-data])
      #:with all-static-infos (static-infos-union #'static-infos #'up-static-infos)
@@ -83,9 +83,18 @@
          #:datum-literals (group)
          [(group min max) (values (or (extract-int #'min) 0) (extract-int #'max))]
          [_ (values 0 #f)]))
-     (define-values (head-min sr-head-max) (extract-bounds
-                                            (static-info-lookup #'first-i.static-infos #'bounds-key)))
-     (define head-max (and (eq? (syntax-e #'head-mode) '#:splice) sr-head-max))
+     (define-values (sr-head-min sr-head-max) (extract-bounds
+                                               (static-info-lookup #'first-i.static-infos #'bounds-key)))
+     (define head-min (case (syntax-e #'head-mode)
+                        [(#:splice) sr-head-min]
+                        [(#:splice-repetition) (* sr-head-min (syntax-e #'rep-min))]
+                        [else (syntax-e #'rep-min)]))
+     (define head-max (case (syntax-e #'head-mode)
+                        [(#:splice) sr-head-max]
+                        [(#:splice-repetition) (and (syntax-e #'rep-max)
+                                                    sr-head-max
+                                                    (* sr-head-max (syntax-e #'rep-max)))]
+                        [else (syntax-e #'rep-max)]))
      (define-values (rest-min rest-max) (extract-bounds
                                          (static-info-lookup #'rest-i.static-infos #'bounds-key)))
      (define (strip-constructor str)
@@ -93,7 +102,8 @@
        (substring str
                   (if (syntax-e #'as-treelist?) 5 9)
                   (sub1 (string-length str))))
-     (define no-rest-map? (free-identifier=? #'always-succeed #'first-i.matcher-id))
+     (define no-rest-map? (and (eq? (syntax-e #'head-mode) '#:repetition)
+                               (free-identifier=? #'always-succeed #'first-i.matcher-id)))
      (with-syntax ([out-first-i-bind-infos (if (memq (syntax-e #'head-mode) '(#:repetition #:splice-repetition))
                                                (deepen-repetition #'first-i.bind-infos #'rest-to-repetition no-rest-map?)
                                                #'first-i.bind-infos)])
@@ -101,7 +111,11 @@
                       (string-append (if (eq? (syntax-e #'head-mode) '#:repetition) "" "& ")
                                      (annotation-string-to-pattern
                                       (syntax-e #'first-i.annotation-str))
-                                     (if (eq? (syntax-e #'head-mode) '#:splice) ", " ", ..., ")
+                                     (cond
+                                       [(eq? (syntax-e #'head-mode) '#:splice) ", "]
+                                       [(eqv? (syntax-e #'rep-min) 1) ", ... ~nonempty, "]
+                                       [(eqv? (syntax-e #'rep-max) 1) ", ... ~once, "]
+                                       [else ", ..., "])
                                      (strip-constructor
                                       (annotation-string-to-pattern
                                        (syntax-e #'rest-i.annotation-str)))))
@@ -122,7 +136,7 @@
                                                                             #'first-i.evidence-ids
                                                                             #'())
                                                                       rest-i.evidence-ids))
-                        [#,head-min #,head-max #,sr-head-max #,rest-min #,rest-max]
+                        [#,head-min #,head-max #,sr-head-min #,sr-head-max #,rest-min #,rest-max]
                         first-i.matcher-id first-i.evidence-ids first-i.committer-id first-i.binder-id first-i.data
                         first-i.bind-infos #,(and (memq (syntax-e #'head-mode)
                                                         '(#:repetition #:splice-repetition))
@@ -134,7 +148,7 @@
     [(_ val-id (head-mode
                 as-treelist? rest-to-repetition no-rest-map?
                 evidence _ _ _
-                [head-min head-max sr-head-max rest-min rest-max]
+                [head-min head-max sr-head-min sr-head-max rest-min rest-max]
                 first-matcher-id first-evidence-ids first-committer-id first-binder-id first-data
                 first-bind-infos first-seq-tmp-ids
                 rest-matcher-id rest-evidence-ids rest-committer-id rest-binder-id rest-data)
@@ -209,7 +223,7 @@
                                      #'(lambda (i j) (> j 0))
                                      #'(lambda (i j) #t))
                                  (if splice-repetition?
-                                     #'(lambda (i j) (> j (max 1 head-min)))
+                                     #'(lambda (i j) (> j (max 1 sr-head-min)))
                                      #'(lambda (i j) #f))
                                  #'(lambda (i j) (sub1 j))
                                  ;; state
@@ -242,7 +256,7 @@
                                      #'(lambda (i j) (> j 0))
                                      #'(lambda (i j) #t))
                                  (if splice-repetition?
-                                     #'(lambda (i j) (> j (max 1 head-min)))
+                                     #'(lambda (i j) (> j (max 1 sr-head-min)))
                                      #'(lambda (i j) #f))
                                  #'(lambda (i j) (sub1 j))
                                  ;; state

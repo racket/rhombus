@@ -367,6 +367,12 @@
     fields:
       group
       [tail, ...]
+  syntax_class bind_meta.NameStart:
+    kind: ~group
+    fields:
+      name
+      [head, ...]
+      [tail, ...]
 ){
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for bindings.

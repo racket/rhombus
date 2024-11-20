@@ -448,6 +448,17 @@ check:
   ~is PairList[PairList[1, 2], PairList[]]
 
 check:
+  def PairList[x, ..., y, ... ~nonempty] = PairList[1, 2]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[1], PairList[2]]
+
+check:
+  def PairList[x :: Int, ..., y :: Int, ... ~nonempty, & tail] = PairList[1, 2, "a", "b"]
+  PairList[PairList[x, ...], PairList[y, ...], tail]
+  ~is PairList[PairList[1], PairList[2], PairList["a", "b"]]
+
+
+check:
   def PairList[x, ..., 2, y, ...] = PairList[1, 2, 3, 4]
   PairList[PairList[x, ...], PairList[y, ...]]
   ~is PairList[PairList[1], PairList[3, 4]]

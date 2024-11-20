@@ -108,8 +108,8 @@
  then @rhombus(pict) itself is returned.
 
  The @rhombus(do_ghost) argument is intended to help avoid @rhombus(if)
- wrappers, enabling @rhombus(pict.ghost(@rhombus(test, ~var))) instead of
- @rhombus(if @rhombus(test, ~var) | pict.ghost() | pict), where the
+ wrappers, enabling @rhombus(pict.ghost(#,(@rhombus(test, ~var)))) instead of
+ @rhombus(if #,(@rhombus(test, ~var)) | pict.ghost() | pict), where the
  former works even without having to bind an intermediate variable if
  @rhombus(pict) is replaced with a more complex expression.
 

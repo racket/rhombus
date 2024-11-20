@@ -519,6 +519,16 @@ check:
   ~is [[1, 2], []]
 
 check:
+  def [x, ..., y, ... ~nonempty] = [1, 2]
+  [[x, ...], [y, ...]]
+  ~is [[1], [2]]
+
+check:
+  def [x :: Int, ..., y :: Int, ... ~nonempty, & tail] = [1, 2, "a", "b"]
+  [[x, ...], [y, ...], tail]
+  ~is [[1], [2], ["a", "b"]]
+
+check:
   def [x, ..., 2, y, ...] = [1, 2, 3, 4]
   [[x, ...], [y, ...]]
   ~is [[1], [3, 4]]
@@ -575,6 +585,65 @@ check:
   | [& [x :: Int, ..., "end"], ..., z]:
       [[[x, ...], ...], z]
   ~is [[[1], [2, 3, 4]], 5]
+
+check:
+  match [4, 5]
+  | [& [x, ...], ... ~nonempty, z]:
+      [[[x, ...], ...], z]
+  ~is [[[4]], 5]
+
+check:
+  match [5]
+  | [& [x, ...], ... ~nonempty, z]:
+      [[[x, ...], ...], z]
+  | ~else:
+      #false
+  ~is #false
+
+check:
+  match [1, 2, 3]
+  | [b, & a, ...]: [a, ...]
+  ~is [[2, 3]]
+                                 
+check:
+  match [1, 2, 3]
+  | [b, & a, ... ~once]: [a, ...]
+  ~is [[2, 3]]
+
+check:
+  def [1, x, ... ~nonempty, 3] = [5]
+  "oops"
+  ~throws "matching(List(1, _, ... ~nonempty, 3))"
+
+check:
+  def [1, x, ... ~once, 3] = [5]
+  "oops"
+  ~throws "matching(List(1, _, ... ~once, 3))"
+
+check:
+  def [1, x, ... ~nonempty, 3, & _] = [5]
+  "oops"
+  ~throws "matching(List(1, _, ... ~nonempty, 3, & _))"
+
+check:
+  def [1, x, ... ~once, 3, & _] = [5]
+  "oops"
+  ~throws "matching(List(1, _, ... ~once, 3, & _))"
+
+check:
+  def [1, x, ..., 3] = [5]
+  "oops"
+  ~throws "matching(List(1, _, ..., 3))"
+
+check:
+  def [1, & x, 3] = [5]
+  "oops"
+  ~throws "matching(List(1, & _, 3))"
+
+check:
+  def [1, & x, ..., 3] = [5]
+  "oops"
+  ~throws "matching(List(1, & _, ..., 3))"
 
 check:
   [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
@@ -656,11 +725,21 @@ block:
   check:
     list_bounds(matching([x, y, z])) ~is [3, 3]
     list_bounds(matching([x, ..., z])) ~is [1, #false]
+    list_bounds(matching([x, ... ~nonempty, z])) ~is [2, #false]
+    list_bounds(matching([x, ... ~once, z])) ~is [1, 2]
     list_bounds(matching([& y, z])) ~is [1, #false]
     list_bounds(matching([x, & y, z])) ~is [2, #false]
     list_bounds(matching([x, y, ..., z])) ~is [2, #false]
     list_bounds(matching([x, y, ..., z, ...])) ~is [1, #false]
+    list_bounds(matching([x, y, ... ~nonempty, z, ...])) ~is [2, #false]
+    list_bounds(matching([x, y, ..., z, ... ~nonempty])) ~is [2, #false]
+    list_bounds(matching([x, y, ... ~nonempty, z, ... ~nonempty])) ~is [3, #false]
+    list_bounds(matching([x, y, ... ~once, z, ... ~once])) ~is [1, 3]
     list_bounds(matching([x, & [y1, y2, y3], z])) ~is [5, 5]
+    list_bounds(matching([& y, ..., z])) ~is [1, #false]
+    list_bounds(matching([& [x, y, z], ..., z])) ~is [1, #false]
+    list_bounds(matching([& [x, y, z], ... ~nonempty, z])) ~is [4, #false]
+    list_bounds(matching([& [x, y, z], ... ~once, z])) ~is [1, 4]
     list_bounds(Triple) ~is [3, 3]
     list_bounds(matching([x, & _ :: Triple, y])) ~is [5, 5]
     list_bounds(matching([x, & _ :: List && Triple, y])) ~is [5, 5]

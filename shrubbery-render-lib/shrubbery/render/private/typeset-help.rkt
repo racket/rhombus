@@ -39,7 +39,7 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (let loop ([root root] [ns-root #f] [fields fields] [root-raw #f] [ns-raw-prefix #f])
+  (let loop ([root root] [ns-root #f] [fields fields] [root-raw #f] [ns-raw-prefix #f] [raw-prefix-len 0])
     (cond
       [(null? fields) #f]
       [else
@@ -107,10 +107,12 @@
                       'raw raw
                       'raw-prefix (and (not given-raw)
                                        (or ns-raw-prefix
-                                           (and is-import? raw-prefix))))))
+                                           (and is-import? raw-prefix)))
+                      'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len))))
        (define (next named-dest)
          (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
-               raw (or (and is-import? raw-prefix) ns-raw-prefix)))
+               raw (or (and is-import? raw-prefix) ns-raw-prefix)
+               (if is-import? (add1 raw-prefix-len) raw-prefix-len)))
        (cond
          [dest
           (define loc-stx

@@ -40,7 +40,8 @@
      [unpack reducer_meta.unpack]
      Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     NameStart)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -52,6 +53,7 @@
 (begin-for-syntax
   (define-operator-syntax-classes
     Parsed :reducer #:rhombus/reducer
+    NameStart in-reducer-space
     AfterPrefixParsed :prefix-op+reducer+tail
     AfterInfixParsed :infix-op+reducer+tail)
 
