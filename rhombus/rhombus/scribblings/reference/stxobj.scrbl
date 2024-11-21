@@ -244,8 +244,8 @@ suffix corresponds to text after the closer.
  @rhombus(expr) is used in place of the @rhombus($) form.
 
  The @rhombus(expr) must be either a single term or a sequence of
- @rhombus(.)-separated identifiers. To escape only an identifier (or
- @rhombus(.)-separated identifier sequence) with an unescaped @rhombus(.)
+ @litchar{.}-separated identifiers. To escape only an identifier (or
+ @litchar{.}-separated identifier sequence) with an unescaped @litchar{.}
  afterward, use parentheses around the identifier (or sequence).
 
 }
