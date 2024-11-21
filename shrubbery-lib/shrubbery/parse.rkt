@@ -1120,9 +1120,11 @@
                      (if (null? l) null (cdr l)) line delta)]))))]
     [else
      (values (lambda (g)
-               (if (pair? at-mode)
-                   (append (reverse at-mode) g)
-                   g))
+               (append
+                (reverse (at-mode-rev-prefix am))
+                (if (pair? at-mode)
+                    (append (reverse at-mode) g)
+                    g)))
              (and (at-mode-stop-at-at? am)
                   (make-at-mode #:stop-at-at? #t))
              l line delta)]))

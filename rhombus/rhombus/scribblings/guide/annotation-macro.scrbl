@@ -150,7 +150,9 @@ a @rhombus(Vector).
 If a name is otherwise bound but has no static information associated
 with the binding, the @rhombus(statinfo.macro) form can associate
 static information. In the following example, @rhombus(zero) is defined
-without a result annotation, but @rhombus(statinfo.macro) is used to
+without a result annotation, @margin_note{The example uses @rhombus(def),
+plus @rhombus(dynamic) to ensure that @rhombus(def) cannot infer any
+static information to bind automatically.} but @rhombus(statinfo.macro) is used to
 associate static information to @rhombus(zero) using
 @rhombus(statinfo_meta.call_result_key). The value for
 @rhombus(statinfo_meta.call_result_key) should be static information itself,
@@ -166,8 +168,9 @@ representation.
 @examples(
   ~eval: ann_eval
   ~defn:
-    fun zero():
-      Posn(0, 0)
+    def zero:
+      dynamic(fun ():
+                Posn(0, 0))
     statinfo.macro 'zero':
       '(($statinfo_meta.call_result_key,
          $(statinfo_meta.pack(
