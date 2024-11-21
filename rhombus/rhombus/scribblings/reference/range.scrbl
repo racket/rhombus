@@ -175,8 +175,10 @@ equal to'' the upper bound by comparison on bounds.
 ){
 
  Constructs a range that does not include either @rhombus(start) or
- @rhombus(end). The corresponding binding matches the constructed
- range.
+ @rhombus(end). Unlike the other constructors, @rhombus(start) must be
+ less than (but @emph{not} equal to) @rhombus(end), otherwise the
+ lower bound would be ``greater than'' the upper bound. The
+ corresponding binding matches the constructed range.
 
 }
 
@@ -186,19 +188,14 @@ equal to'' the upper bound by comparison on bounds.
     end_expr: block expr
     start_bind: def bind ~defn
     end_bind: def bind ~defn
-  fun Range.from_exclusive_to_inclusive(start :: Int,
-                                        end :: Int)
+  fun Range.from_exclusive_to_inclusive(start :: Int, end :: Int)
     :: Range
-  bind.macro 'Range.from_exclusive_to_inclusive($start_bind,
-                                                $end_bind)'
+  bind.macro 'Range.from_exclusive_to_inclusive($start_bind, $end_bind)'
 ){
 
  Constructs a range that does not include @rhombus(start), but
- includes @rhombus(end). Unlike the other constructors,
- @rhombus(start) must be less than (but @emph{not} equal to)
- @rhombus(end), otherwise the lower bound would be ``greater than''
- the upper bound. The corresponding binding matches the constructed
- range.
+ includes @rhombus(end). The corresponding binding matches the
+ constructed range.
 
 }
 
