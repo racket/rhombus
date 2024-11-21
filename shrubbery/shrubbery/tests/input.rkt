@@ -1865,6 +1865,8 @@ then @{8}
 @donut+eight{nine}
 @and{@eggplant. ten{eleven}}
 
+@one.two.three
+
 @none{}
 @«5»(3){yohoo @9(a, b, c){
                this is plain text
@@ -1983,7 +1985,7 @@ INPUT
     (group and (parens (group (brackets
                                (group eggplant)
                                (group ". ten{eleven}")))))
-    
+    (group one (op |.|) two (op |.|) three)
     (group none (parens (group (brackets))))
     (group
      5
