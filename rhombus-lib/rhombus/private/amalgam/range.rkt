@@ -324,6 +324,13 @@
                             "starting point" (unquoted-printing-string (number->string start))
                             "ending point" (unquoted-printing-string (number->string end)))))
 
+(define (check-start-end/not-equal who start end)
+  (unless (start . < . end)
+    (raise-arguments-error* who rhombus-realm
+                            "starting point must be less than ending point"
+                            "starting point" (unquoted-printing-string (number->string start))
+                            "ending point" (unquoted-printing-string (number->string end)))))
+
 (define (step->inc step)
   (if step
       (lambda (i) (+ i step))
@@ -331,9 +338,21 @@
 
 (define-syntax (define-range stx)
   (syntax-parse stx
-    [(_ range name Name op-str (~or* #f start) (~or* #f end)
-        (~or* #f ->sequence)
-        (~or* #f ->list))
+    [(_ range name Name op-str (~or* (~and #:none)
+                                     (~and #:left
+                                           (~parse start #'start))
+                                     (~and #:right
+                                           (~parse end #'end))
+                                     (~and #:both
+                                           (~parse start #'start)
+                                           (~parse end #'end)
+                                           (~parse check-start-end #'check-start-end))
+                                     (~and #:both-not-equal
+                                           (~parse start #'start)
+                                           (~parse end #'end)
+                                           (~parse check-start-end #'check-start-end/not-equal)))
+        (~optional (~seq #:->sequence ->sequence
+                         (~optional (~seq #:->list ->list)))))
      #:with range-method-table (datum->syntax
                                 #'range
                                 (string->symbol
@@ -420,9 +439,9 @@
 (struct sequence-range range () #:authentic)
 (struct list-range sequence-range () #:authentic)
 
-(define-range list-range range-from-to Range.from_to ".." start end
-  range-from-to->sequence
-  range-from-to->list)
+(define-range list-range range-from-to Range.from_to ".." #:both
+  #:->sequence range-from-to->sequence
+  #:->list range-from-to->list)
 
 (define (range-from-to->sequence r [step #f])
   (define start (range-from-to-start r))
@@ -437,9 +456,9 @@
   (for/treelist ([i (in-range start end)])
     i))
 
-(define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" start end
-  range-from-to-inclusive->sequence
-  range-from-to-inclusive->list)
+(define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" #:both
+  #:->sequence range-from-to-inclusive->sequence
+  #:->list range-from-to-inclusive->list)
 
 (define (range-from-to-inclusive->sequence r [step #f])
   (define start (range-from-to-inclusive-start r))
@@ -454,37 +473,24 @@
   (for/treelist ([i (in-inclusive-range start end)])
     i))
 
-(define-range sequence-range range-from Range.from ".." start #f
-  range-from->sequence
-  #f)
+(define-range sequence-range range-from Range.from ".." #:left
+  #:->sequence range-from->sequence)
 
 (define (range-from->sequence r [step #f])
   (define start (range-from-start r))
   (range-sequence start (step->inc step) #f))
 
-(define-range range range-from-exclusive-to Range.from_exclusive_to "<..<" start end
-  #f
-  #f)
+(define-range range range-from-exclusive-to Range.from_exclusive_to "<..<" #:both-not-equal)
 
-(define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" start end
-  #f
-  #f)
+(define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both)
 
-(define-range range range-from-exclusive Range.from_exclusive "<..<" start #f
-  #f
-  #f)
+(define-range range range-from-exclusive Range.from_exclusive "<..<" #:left)
 
-(define-range range range-to Range.to ".." #f end
-  #f
-  #f)
+(define-range range range-to Range.to ".." #:right)
 
-(define-range range range-to-inclusive Range.to_inclusive "..=" #f end
-  #f
-  #f)
+(define-range range range-to-inclusive Range.to_inclusive "..=" #:right)
 
-(define-range range range-full Range.full ".." #f #f
-  #f
-  #f)
+(define-range range range-full Range.full ".." #:none)
 
 (define (range-sequence start inc cont?)
   (make-do-sequence

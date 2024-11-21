@@ -9,7 +9,9 @@ A @deftech{range}, or an @deftech{interval}, represents a contiguous
 set of integers between two points. When the starting point is
 included, the range can be used as a @tech{sequence}; in addition,
 when the ending point is not @rhombus(#inf), the range is
-@tech{listable}.
+@tech{listable}. Generally, the starting point must be less than or
+equal to the ending point, so that the lower bound is ``less than or
+equal to'' the upper bound by comparison on bounds.
 
 @doc(
   annot.macro 'Range'
@@ -192,8 +194,11 @@ when the ending point is not @rhombus(#inf), the range is
 ){
 
  Constructs a range that does not include @rhombus(start), but
- includes @rhombus(end). The corresponding binding matches the
- constructed range.
+ includes @rhombus(end). Unlike the other constructors,
+ @rhombus(start) must be less than (but @emph{not} equal to)
+ @rhombus(end), otherwise the lower bound would be ``greater than''
+ the upper bound. The corresponding binding matches the constructed
+ range.
 
 }
 
