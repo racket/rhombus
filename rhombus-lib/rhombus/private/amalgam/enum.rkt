@@ -3,6 +3,7 @@
                      syntax/parse/pre)
          (submod "annotation.rkt" for-class)
          (submod "symbol.rkt" for-static-info)
+         "static-info.rkt"
          "name-root.rkt")
 
 (provide define-simple-symbol-enum)
@@ -10,8 +11,7 @@
 (define-syntax (define-simple-symbol-enum stx)
   (syntax-parse stx
     [(_ name:id
-        (~or (~seq #:extra [extra-field ...])
-             (~seq))
+        (~optional (~seq #:extra [extra-field ...]))
         (~or* [val:id rkt-val:id]
               val:id)
         ...)
@@ -22,7 +22,10 @@
                         (datum->syntax #'name (string->symbol
                                                (format "->~a" (syntax-e #'name)))))
      #'(begin
-         (define val-name 'val) ...
+         (~@ (define val-name 'val)
+             (define-static-info-syntax val-name
+               #:getter get-symbol-static-infos))
+         ...
 
          (define (name? v)
            (case v
