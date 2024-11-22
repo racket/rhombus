@@ -44,12 +44,12 @@ interface DC:
     ~head_stx: head
     ~tail: '$tail'
     match tail
-    | ': $body':
+    | ': $(body :: Block)':
         values('block:
                   def dc :: DC = $left
                   try:
                     ~initially dc.save()
-                    block $tail
+                    block $body
                     ~finally dc.restore()',
                '')
     | _:
