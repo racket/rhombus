@@ -2,6 +2,18 @@
 import:
   rhombus/scribble/spacer
   shrubbery/render/private/escape.Escape
+  meta_label:
+    rhombus.String
+    rhombus.Bytes
+    rhombus.List
+    rhombus.PairList
+    rhombus.MutableList
+    rhombus.Map as Map
+    rhombus.MutableMap
+    rhombus.WeakMutableMap
+    rhombus.Set
+    rhombus.MutableSet
+    rhombus.WeakMutableSet
 
 export:
   only_space spacer.typeset:
@@ -30,7 +42,30 @@ export:
     :~
     is_a
     #'
-    names: .
+    names:
+      .
+      #%literal
+      #%call
+      #%brackets
+      #%braces
+    PairList
+    MutableList
+    names:
+      // export namespace extensions
+      Map
+      MutableMap
+      WeakMutableMap
+      Set
+      MutableSet
+      WeakMutableSet
+    rename:
+      // renamed to avoid shadowing a namespace
+      s_Map as Map
+      s_MutableMap as MutableMap
+      s_WeakMutableMap as WeakMutableMap
+      s_Set as Set
+      s_MutableSet as MutableSet
+      s_WeakMutableSet as WeakMutableSet
     for
     import
     export
@@ -52,12 +87,6 @@ export:
     pattern
     Parameter
     enum
-    Map
-    MutableMap
-    WeakMutableMap
-    Set
-    MutableSet
-    WeakMutableSet
 
 module for_doc:
   export:
@@ -721,13 +750,156 @@ spacer.bridge #'(self, tail, context, esc):
         | ~else: t
       '$self $(adjust_one(tail, context, esc, adjust))'
 
-spacer.bridge .(self, tail, context, esc):
+spacer.bridge .(~left: left, self, tail, context, esc):
   ~in: ~expr
   match tail
   | '$(id :: Identifier) $tail ...':
-      '$self $(spacer.adjust_rest_sequence(spacer.set(id, #'~datum), '$tail ...', context, esc))'
+      let id = spacer.set(id, #'~datum)
+      let (left, id):
+        match left
+        | '': values(left, id)
+        | '$pre ... $(left :: Term)':
+            let key = left.property(#'spacer_key) || Symbol.gen()
+            values('$pre ... $(left.property(#'spacer_key, key, #true))',
+                   id.property(#'field, Pair(#'of, key), #true))
+      '$left $self $(spacer.adjust_rest_sequence(id, '$tail ...', context, esc))'
   | ~else:
-      '$self $(spacer.adjust_sequence(tail, context, esc))'
+      '$left $self $(spacer.adjust_sequence(tail, context, esc))'
+
+spacer.bridge #%literal(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$v $tail ...':
+      let annot:
+        match v.unwrap()
+        | _ :: Bytes: 'Bytes'
+        | _ :: String: 'String'
+        | _: #false
+      let new_v:
+        if annot
+        | v.property(#'annot, Pair(#'as_export, annot), #true)
+        | v
+      '$(self || '') $(spacer.adjust_rest_sequence(new_v, '$tail ...', context, esc))'
+  | ~else:
+      self || ''
+
+spacer.bridge #%call(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  match left
+  | '':
+      '$(self || '') $(spacer.adjust_sequence('$tail ...', context, esc))'
+  | ~else:
+      match tail
+      | '$parens $tail ...':
+          match left
+          | '$pre ... $(left :: Term)':
+              let key = left.property(#'spacer_key) || Symbol.gen()
+              let left = left.property(#'spacer_key, key, #true)
+              let parens = spacer.adjust_term(parens, context, esc)
+              let parens = parens.property(#'annot, Pair(#'result, key), #true)
+              '$pre ... $left $(self || '') $(spacer.adjust_rest_sequence(parens, '$tail ...', context, esc))'
+          | '':
+              '$(self || '') $(spacer.adjust_rest_sequence(parens, '$tail ...', context, esc))'
+
+meta:
+  fun adjust_list_constructor(id, self, tail, context, esc):
+    match tail
+    | '$(brackets && '[$g, ...]') $tail ...':
+        let brackets = '[$(spacer.adjust_group(g, context, esc)), ...]'.relocate(brackets)
+        let brackets = brackets.property(#'annot, Pair(#'as_export, id), #true)
+        '$(self || '') $(spacer.adjust_rest_sequence(brackets, '$tail ...', context, esc))'
+    | ~else:
+        spacer.adjust_rest_sequence(self, tail, context, esc)
+
+spacer.bridge #%brackets(self, tail, context, esc):
+  ~in: ~expr
+  adjust_list_constructor('List', self, tail, context, esc)
+
+spacer.bridge PairList(self, tail, context, esc):
+  ~in: ~expr
+  adjust_list_constructor('PairList', self, tail, context, esc)
+
+spacer.bridge MutableList(self, tail, context, esc):
+  ~in: ~expr
+  adjust_list_constructor('MutableList', self, tail, context, esc)
+
+meta:
+  fun adjust_set_map_constructor(id, self, tail, context, esc):
+    match tail
+    | '$(braces && '{$g, ...}') $tail ...':
+        let braces = '{$(spacer.adjust_group(g, context, esc)), ...}'.relocate(braces)
+        let id: if id
+                | id
+                | match braces
+                  | '{ $k: $v, $_, ... }': 'Map'
+                  | '{ }': 'Map'
+                  | ~else: 'Set'
+        let braces = braces.property(#'annot, Pair(#'as_export, id), #true)
+        '$(self || '') $(spacer.adjust_rest_sequence(braces, '$tail ...', context, esc))'
+    | ~else:
+        spacer.adjust_rest_sequence(self, tail, context, esc)
+
+  fun adjust_set_map_by_constructor(id, self, tail, context, esc):
+    match tail:
+    | '$(p && '($(g :: Group))') $tail ...':
+        let new_g = spacer.adjust_group(g, #'~key_comp, esc)
+        let new_p = '($new_g)'.relocate(p)
+        '$(self || '') $new_p $(adjust_set_map_constructor(id, '', '$tail ...', context, esc))'
+    | ~else:
+        spacer.adjust_rest_sequence(self, tail, context, esc)
+
+spacer.bridge #%braces(self, tail, context, esc):
+  ~in: ~expr
+  adjust_set_map_constructor(#false, self, tail, context, esc)
+
+spacer.bridge s_Map(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  adjust_set_map_constructor('Map', self, tail, context, esc)
+
+spacer.bridge Map.by(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  adjust_set_map_by_constructor('Map', self, tail, context, esc)
+
+spacer.bridge s_MutableMap(self, tail, context, esc):
+  ~in: ~expr
+  adjust_set_map_constructor('MutableMap', self, tail, context, esc)
+
+spacer.bridge MutableMap.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  adjust_set_map_by_constructor('MutableMap', self, tail, context, esc)
+
+spacer.bridge s_WeakMutableMap(self, tail, context, esc):
+  ~in: ~expr
+  adjust_set_map_constructor('WeakMutableMap', self, tail, context, esc)
+
+spacer.bridge WeakMutableMap.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  adjust_set_map_by_constructor('WeakMutableMap', self, tail, context, esc)
+
+spacer.bridge s_Set(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  adjust_set_map_constructor('Set', self, tail, context, esc)
+
+spacer.bridge Set.by(self, tail, context, esc):
+  ~in: ~expr ~repet ~annot ~bind ~reducer
+  adjust_set_map_by_constructor('Set', self, tail, context, esc)
+
+spacer.bridge s_MutableSet(self, tail, context, esc):
+  ~in: ~expr
+  adjust_set_map_constructor('MutableSet', self, tail, context, esc)
+
+spacer.bridge MutableSet.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  adjust_set_map_by_constructor('MutableSet', self, tail, context, esc)
+
+spacer.bridge s_WeakMutableSet(self, tail, context, esc):
+  ~in: ~expr
+  adjust_set_map_constructor('WeakMutableSet', self, tail, context, esc)
+
+spacer.bridge WeakMutableSet.by(self, tail, context, esc):
+  ~in: ~expr ~annot
+  adjust_set_map_by_constructor('WeakMutableSet', self, tail, context, esc)
+
 
 meta:
   def for_spaces = [#'#{rhombus/for_clause}, & body_spaces]
@@ -736,6 +908,7 @@ spacer.bridge for(self, tail, context, esc):
   ~in: ~expr
   match tail
   | '$(b && ': $g; ...; $gn; $(into && '$(kw && '~into') $reduce')')':
+      // ~into at end of body
       let new_b:
         let [new_g, ...] = [spacer.adjust_group(g, for_spaces, esc), ...]
         let new_gn = spacer.adjust_group(gn, body_spaces, esc)
@@ -744,6 +917,17 @@ spacer.bridge for(self, tail, context, esc):
           '$kw $new_reduce'.relocate_group(into)
         ': $new_g; ...; $new_gn; $new_into'.relocate_group(b)
       '$self $new_b'
+  | '$reduce ... $(s && '($(s_g && '$s_bind ... $(s_body && ': $_')'), ...)') $(b && ': $g; ...; $gn')':
+      // shorthand form before body
+      let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
+      let new_s = '($('$(spacer.adjust_sequence('$s_bind ...', #'~bind, esc))
+                         $(spacer.adjust_term(s_body, context, esc))'.relocate_group(s_g)),
+                    ...)'.relocate(s)
+      let new_b:
+        let [new_g, ...] = [spacer.adjust_group(g, for_spaces, esc), ...]
+        let new_gn = spacer.adjust_group(gn, body_spaces, esc)
+        ': $new_g; ...; $new_gn'.relocate(b)
+      '$self $new_reduce $new_s $new_b'
   | '$reduce ... $(b && ': $g; ...; $gn')':
       let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
       let new_b:
@@ -1050,42 +1234,3 @@ spacer.bridge enum(self, tail, context, esc):
       let new_body = ': $new_clause; ...'.relocate(body)
       '$self $e ... $new_body'
   | ~else: '$self $tail'
-
-meta:
-  fun make_adjust_by(esc):
-    fun (t):
-      match t
-      | '$(p && '($(g :: Group))')':
-          let new_g = spacer.adjust_group(g, #'~key_comp, esc)
-          '($new_g)'.relocate(p)
-      | ~else: t
-
-spacer.bridge Map.by(self, tail, context, esc):
-  ~in: ~expr ~repet ~annot ~bind ~reducer
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'
-
-spacer.bridge MutableMap.by(self, tail, context, esc):
-  ~in: ~expr ~annot
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'
-
-spacer.bridge WeakMutableMap.by(self, tail, context, esc):
-  ~in: ~expr ~annot
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'
-
-spacer.bridge Set.by(self, tail, context, esc):
-  ~in: ~expr ~repet ~annot ~bind ~reducer
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'
-
-spacer.bridge MutableSet.by(self, tail, context, esc):
-  ~in: ~expr ~annot
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'
-
-spacer.bridge WeakMutableSet.by(self, tail, context, esc):
-  ~in: ~expr ~annot
-  let adjust = make_adjust_by(esc)
-  '$self $(adjust_one(tail, context, esc, adjust))'

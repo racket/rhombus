@@ -419,14 +419,15 @@
   syntax_class Int: kind: ~term
   syntax_class Number: kind: ~term
   syntax_class Boolean: kind: ~term
+  syntax_class Literal: kind: ~term
   syntax_class Group: kind: ~group
   syntax_class Multi: kind: ~multi
   syntax_class Block: kind: ~block
 ){
 
  Syntax classes, all of which imply a single-term match except for
- @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass), and
- @rhombus(Block, ~stxclass).
+ @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass),
+ @rhombus(Block, ~stxclass), and @rhombus(IdentifierName, ~stxclass).
 
  The @rhombus(Group, ~stxclass) syntax class can be used only for a
  pattern identifier that is at the end of its group in a pattern. The
@@ -451,6 +452,9 @@
  The @rhombus(IdentifierName, ~stxclass) syntax class is an extension
  of @rhombus(Identifier, ~stxclass)
  that matches dotted sequences like an @rhombus(id_name) form.
+
+ The @rhombus(Literal, ~stxclass) syntax class matches a term that is
+ not an identifier, operator, block, or alternatives.
 
 }
 

@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
+    scribble/rx open
     meta_label:
       rhombus/rx open)
 

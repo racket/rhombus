@@ -43,12 +43,23 @@ meta:
                   ~extract_space: extract_space :: Function.of_arity(1),
                   ~extract_name: extract_name :: Function.of_arity(2),
                   ~extract_metavariables: extract_metavariables :: Function.of_arity(3),
-                  ~extract_typeset: extract_typeset :: Function.of_arity(3)):
+                  ~extract_typeset: extract_typeset :: Function.of_arity(3),
+                  ~extract_sort_order: extract_sort_order :: Function.of_arity(2):
+                                         fun (_, [spc, ...]): [100 || spc, ...],
+                  ~extract_spacer_infos: extract_spacer_infos :: Function.of_arity(2):
+                                           fun (_, [spc, ...]): [{} || spc, ...]):
     rkt.#{make-doc-transformer}(#{#:extract-desc}: extract_desc,
                                 #{#:extract-space-sym}: extract_space,
+                                #{#:extract-sort-order}: fun (stx, PairList[PairList[spc, ...], ...]):
+                                                           let [order, ...] = extract_sort_order(stx, [[spc, ...], ...])
+                                                           PairList[order, ...],
                                 #{#:extract-name}: extract_name,
                                 #{#:extract-metavariables}: extract_metavariables,
-                                #{#:extract-typeset}: extract_typeset)
+                                #{#:extract-typeset}: extract_typeset,
+                                #{#:extract-spacer-infos}: fun (stx, PairList[PairList[spc, ...], ...]):
+                                                             match extract_spacer_infos(stx, [[spc, ...], ...])
+                                                             | [m, ...]: PairList[m, ...]
+                                                             | m: m)
 
   fun add_metavariable(vars,
                        id :: Identifier,

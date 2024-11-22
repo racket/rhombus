@@ -57,7 +57,11 @@
                   target-element
                   plain
                   style
-                  table-cells)
+                  table-cells
+                  part-relative-element
+                  collect-put!)
+         (only-in scribble/tag
+                  intern-taglet)
          (only-in scribble/private/manual-vars
                   boxed-style)
          (only-in scribble/private/manual-bind
@@ -66,7 +70,8 @@
                   with-exporting-libraries)
          (only-in scribble/private/manual-vars
                   add-background-label)
-         "mod-path.rkt")
+         "mod-path.rkt"
+         "spacer-binding.rkt")
 
 (meta-if-version-at-least
  "8.14.0.5" ; assuming implies "scribble-lib" version 1.54
@@ -189,6 +194,15 @@
                                      [space-namess (in-list all-space-namesss)])
                             (define index/s ((doc-transformer-extract-sort-order t) form space-namess))
                             index/s))
+     (define spacer-infosss (for/list ([form (in-list forms)]
+                                       [t (in-list transformers)]
+                                       [space-namess (in-list all-space-namesss)])
+                              (define spacer-infos/s ((doc-transformer-extract-spacer-infos t) form space-namess))
+                              (cond
+                                [(not spacer-infos/s) '(#f)]
+                                [(hash? spacer-infos/s) (list spacer-infos/s)]
+                                [(list? spacer-infos/s) spacer-infos/s]
+                                [else (error "bad spacer infos")])))
      (define space-namess (for/list ([all-namess (in-list all-space-namesss)])
                             (for/list ([all-names (in-list all-namess)])
                               (car all-names))))
@@ -266,7 +280,8 @@
                   [introducers (in-list introducerss)]
                   [space-names (in-list space-namess)]
                   [extra-space-namess (in-list extra-space-namesss)]
-                  [kind-strs (in-list kind-strss)])
+                  [kind-strs (in-list kind-strss)]
+                  [spacer-infoss (in-list spacer-infosss)])
          (for/fold ([rev-mk-as-defs '()] [rev-keys '()] [seen seen]
                                          #:result (values (cons rev-mk-as-defs rev-mk-as-defss)
                                                           (cons rev-keys rev-keyss)
@@ -276,7 +291,8 @@
                     [immed-space-name (in-list space-names)]
                     [extra-space-names (in-list extra-space-namess)]
                     [kind-str (in-list kind-strs)]
-                    [sort-order (in-list sort-orders)])
+                    [sort-order (in-list sort-orders)]
+                    [spacer-infos (in-list spacer-infoss)])
            (cond
              [(or (not immed-def-ht)
                   (and (eq? immed-space-name 'grammar)
@@ -340,7 +356,14 @@
                      (quote #,(and (eq? immed-space-name 'grammar)
                                    (hash-ref immed-def-ht 'target)))
                      (quote #,immed-space-name)
-                     (quote #,sort-order))))
+                     (quote #,sort-order)
+                     #,(and spacer-infos
+                            #`(hasheq #,@(apply append
+                                                (for/list ([(k v) (in-hash spacer-infos)])
+                                                  (list #`(quote #,k)
+                                                        (if (identifier? v)
+                                                            #`(quote-syntax #,v)
+                                                            #`(quote #,v))))))))))
               (values
                (cons (if (eq? immed-space-name 'grammar)
                          make-typeset-id
@@ -479,7 +502,7 @@
      #`(parsed #:rhombus/expr (tt "...")))))
 
 (define (make-def-id redef? meta? id extra-ids prefix-str str-id index-str-in kind-str space extra-spaces
-                     nonterm-sym immed-space sort-order)
+                     nonterm-sym immed-space sort-order spacer-infos)
   (define str-id-e (syntax-e str-id))
   (cond
     [redef?
@@ -528,6 +551,23 @@
            (list (racketidfont prefix-str) c)
            c))
      (define content (annote-exporting-library (make-content #t)))
+     (define spacer-infos/resolved
+       (and spacer-infos
+            (for/hash ([(k v) (in-hash spacer-infos)])
+              (values k
+                      (cond
+                        [(identifier? v)
+                         (define in-name-root-space
+                           (make-interned-syntax-introducer 'rhombus/namespace))
+                         (define b (identifier-binding v #f))
+                         (define ns-b (identifier-binding (in-name-root-space v 'add) #f))
+                         (and (or b ns-b)
+                              (let ([b (or b '(#f #f #f #f))]
+                                    [ns-b (or ns-b '(#f #f))])
+                                (spacer-binding (syntax-e v)
+                                                (list-ref ns-b 0) (list-ref ns-b 1) (list-ref ns-b 2) (list-ref ns-b 3)
+                                                (list-ref ns-b 4) (list-ref ns-b 5) (list-ref ns-b 6))))]
+                        [else v])))))
      (for/fold ([content content]) ([id (in-list (cons id (syntax->list extra-ids)))]
                                     [space (in-list (cons space extra-spaces))]
                                     [idx (in-naturals)])
@@ -542,30 +582,42 @@
           (define ref-content/no-prefix (make-content content-as-defn? index-str #:meta? #f #:can-prefix? #f))
           (target-maker content
                         (lambda (tag)
-                          (if (or nonterm-sym
-                                  (idx . > . 0))
-                              (begin
-                                (target-element
+                          (define e
+                            (if (or nonterm-sym
+                                    (idx . > . 0))
+                                (begin
+                                  (target-element
+                                   #f
+                                   content
+                                   tag))
+                                (toc-target2-element
                                  #f
-                                 content
-                                 tag))
-                              (toc-target2-element
-                               #f
-                               (index-element
-                                #f
-                                content
-                                tag
-                                (list (datum-intern-literal index-str))
-                                (list (list ref-content " " kind-str))
-                                (with-exporting-libraries
-                                  (lambda (libs)
-                                    (exported-index-desc*
-                                     name libs
-                                     (hash 'kind kind-str
-                                           'sort-order sort-order
-                                           'display-from-libs (map module-path->rhombus-module-path libs))))))
-                               tag
-                               ref-content/no-prefix))))]
+                                 (index-element
+                                  #f
+                                  content
+                                  tag
+                                  (list (datum-intern-literal index-str))
+                                  (list (list ref-content " " kind-str))
+                                  (with-exporting-libraries
+                                    (lambda (libs)
+                                      (exported-index-desc*
+                                       name libs
+                                       (hash 'kind kind-str
+                                             'sort-order sort-order
+                                             'display-from-libs (map module-path->rhombus-module-path libs))))))
+                                 tag
+                                 ref-content/no-prefix)))
+                          (cond
+                            [spacer-infos/resolved
+                             (part-relative-element
+                              (lambda (ci)
+                                (collect-put! ci
+                                              (intern-taglet (list 'spacer-infos tag))
+                                              spacer-infos/resolved)
+                                e)
+                              (lambda () content)
+                              (lambda () content))]
+                            [else e])))]
          [else content]))]))
 
 (define (as-bold stx #:prefix [prefix #f] #:italic? [italic? #f])

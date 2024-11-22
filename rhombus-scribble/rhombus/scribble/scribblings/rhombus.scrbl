@@ -43,7 +43,8 @@
     ~doc
 ){
 
- Typesets @rhombus(group) literally as an @rhombus(Element, ~annot) to
+ Typesets @rhombus(group) literally, except as adjusted by spacers and
+ typesetting transformers. The result is an @rhombus(Element, ~annot) to
  appear inline in a paragraph. Spacing in @rhombus(group) is normalized,
  instead of preserved exactly as in the source.
 
@@ -54,6 +55,19 @@
  A @rhombus(builtin_space) or space name after @rhombus(~at) supplies
  the initial space to use for creating hyperlinks in @rhombus(group)
  based on @rhombus(meta_label, ~impo) imports.
+
+ Typesetting and hyperlinking can be adjusted via @tech{spacers}, which
+ can select an alternative space for components of @rhombus(group) for
+ hyperlinking. That is, a supplied @rhombus(builtin_space) or
+ @rhombus(~at space_name) specifies the initial space of @rhombus(group),
+ but a spacer binding can determine the space of subsequent elements of
+ @rhombus(group).
+
+ Even before applying spacers, identifiers in @rhombus(group) bound as
+ typesetting transformers are replaced with their transformations. That's
+ how metavariables get typeset as italic, for example: each metavariable
+ is bound as a transformer that adds the @rhombus(~var) space to the
+ identifier.
 
 }
 

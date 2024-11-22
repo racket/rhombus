@@ -20,6 +20,38 @@ html:
                     "package:"
                   " "
                   a: span {class: "stt"}: "rhombus-lib"
+        p: "Starting example:"
+        blockquote:
+          table:
+            tr: td: p: span {class: "RktCmt"}: "// should be linked"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "get"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
         p:
           div {class: "SIntrapara"}:
             table:
@@ -213,6 +245,76 @@ html:
                             nbsp
                             nbsp
                           span {class: "stt"}: "x"
+                          span {class: "RktPn"}: ")"
+              tr: td: p: span {class: "hspace"}: nbsp
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "function"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                          span {class: "hspace"}: nbsp
+                          a:«»
+                          span:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "repr"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: span {class: "RktSym"}: "String"
+              tr: td: p: span {class: "hspace"}: nbsp
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "method"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "method"
+                          span {class: "hspace"}: nbsp
+                          span {class: "RktPn"}: "("
+                          span {class: "RktVar"}: "s"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            span {class: "RktStxDef RktStxLink"}: "String"
+                          span {class: "RktPn"}: ")"
+                          span {class: "stt"}: "."
+                          a:«»
+                          span:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "length"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+              tr: td: p: span {class: "hspace"}: nbsp
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "method"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "method"
+                          span {class: "hspace"}: nbsp
+                          a:«»
+                          span:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "String.get"
+                          span {class: "RktPn"}: "("
                           span {class: "RktPn"}: ")"
           div {class: "SIntrapara"}: "Description."
         h3:«»

@@ -29,7 +29,7 @@ def html:
 file.#{delete-directory/files}(dir)
 
 def keep_with_attrs = { #'div, #'span, #'a }
-def keeps = { #'html, #'body, #'table, #'tr, #'td, #'p }
+def keeps = { #'html, #'body, #'table, #'tr, #'td, #'p, #'blockquote }
 def skip_attr = { "tocset", "versionbox" }
 
 fun filter(html):  

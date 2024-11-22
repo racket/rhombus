@@ -130,7 +130,7 @@ Some additional @litchar("@") rules:
        can be provided as different newline-separated groups without a
        @litchar{,} in between.}
 
- @item{The form @bseq(@litchar("@(«"), @italic{command}, @elem{...}, @litchar{»})
+ @item{The form @bseq(@litchar("@(«"), @italic{command}, @elem{...}, @litchar("»)"))
        splices as-is with no arguments, even if the subsequent text has
        the shape of parenthesized @italic{arg}s or braced @italic{text}.},
 

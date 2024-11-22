@@ -11,7 +11,10 @@ import:
     rhombus/scribble/manual open
 
 export:
+  epsilon
   meta_label:
     all_from(rhombus)
     all_from(rhombus/meta)
     all_from(rhombus/scribble/manual)
+
+def epsilon = "ϵ"

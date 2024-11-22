@@ -71,6 +71,11 @@ meta:
         Syntax.make([#'alts, adjust_block(b, context, esc), ...]).relocate(t)
     | '$(_ :: Name)':
         set_space(t, context)
+    | '$(_ :: Literal)':
+        try_spacer(implicit('#%literal', t), #false, t, context, esc,
+                   ~implicit: #true,
+                   fun ():
+                     t)
     | ~else:
         t
 
@@ -91,7 +96,7 @@ meta:
     fun try_implicit(name, gs, k :: (~any) -> Syntax):
       match seq
       | '$t $tail ...':
-          try_spacer(implicit(name, t), #false, '$t $tail ...', context, esc,
+          try_spacer(implicit(name, t), #false, seq, context, esc,
                      ~implicit: #true,
                      fun ():
                        let [g, ...] = gs
@@ -114,6 +119,10 @@ meta:
         try_implicit(#'#%braces, [g, ...], fun (g, ...): '{$g, ...}')
     | '«'$g; ...' $_ ...»':
         try_implicit(#'#%quotes, [g, ...], fun (g, ...): '«'$g; ...'»')
+    | '$(t :: Literal) $tail ...':
+        try_spacer(implicit(#'#%literal, t), #false, seq, context, esc,
+                   ~implicit: #true,
+                   fun (): loop(t, '$tail ...'))
     | '$head $tail ...':
         loop(adjust_term(head, context, esc), '$tail ...')
     | ~else:
@@ -135,7 +144,7 @@ meta:
         default()
     | '$(name :: typeset_meta.NameStart)':
         try_spacer(~left: head,
-                   name.name, name, '$name.tail ...', context, esc,
+                   name.name, '$name.head ...', '$name.tail ...', context, esc,
                    default)
     | '($g, ...) $_ ...':
         try_implicit(#'#%call)
@@ -166,7 +175,8 @@ meta:
           if found
           | let res:
               try:
-                proc(!implicit && set_space(src_id, relevant_context), tail, context, esc)
+                proc(& (if can_infix | [left || ''] | []),
+                     !implicit && set_space(src_id, relevant_context), tail, context, esc)
                 ~catch x :: Exn.Fail:
                   error("error from spacer",
                         error.val(~label: "spacer form", src_id || id),
@@ -199,7 +209,7 @@ defn.macro 'bridge $(name :: Name)(~left: $(left :: Identifier), ... ~once,
   'meta.bridge $(typeset_meta.in_space(name)):
      typeset_meta.Spacer(
        [$(quote(space_name)), ...],
-       fun ($left :: maybe(Syntax), ..., $self :: maybe(Syntax), $tail :: Syntax, $mode, $esc :: Syntax):
+       fun ($left :: Syntax, ..., $self :: maybe(Syntax), $tail :: Syntax, $mode, $esc :: Syntax):
          $body
          ...,
        $can_infix

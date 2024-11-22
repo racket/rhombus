@@ -7,9 +7,8 @@ export:
   Thread
   Semaphore
 
-expr.macro 'thread:
-              $body':
-  'Thread(fun (): $body)'
+expr.macro 'thread: $(body :: Block)':
+  'Thread(fun () $body)'
 
 namespace ~open:
   export: Thread

@@ -58,6 +58,17 @@ block:
     println("go")
     ~prints "bye\ngo\nbye\n"
 
+block:
+  use_static
+  class Weird():
+    implements Closeable
+    override method close(): values("I'm", "very", "weird")
+  check:
+    Weird() ~is_a Closeable
+    Weird().close() ~matches (_, _, _)
+    (Weird() :: Closeable).close() ~matches (_, _, _)
+    Closeable.close(Weird()) ~is #void
+
 check:
   Closeable.let c = 5
   #void
