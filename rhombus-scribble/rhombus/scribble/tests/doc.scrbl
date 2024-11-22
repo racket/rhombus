@@ -4,9 +4,20 @@
       rhombus:
         expose:
           fun
+          repr
+          String
       rhombus/draw)
 
 @docmodule(rhombus)
+
+Starting example:
+
+@rhombusblock(
+  // should be linked
+  repr().length()
+  repr().get()
+  "Hello".length()
+)
 
 @doc(
   defn.macro 'rhombus.fun:
@@ -19,6 +30,9 @@
                         b,
                         c: fun (x):
                              x)
+  fun repr() :: String
+  method (s :: String).length()
+  method String.get()
 ){
 
  Description.

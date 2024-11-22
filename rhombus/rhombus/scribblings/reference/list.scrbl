@@ -326,7 +326,7 @@ it supplies its elements in order.
 
 
 @doc(
-  method List.first(lst :: NonemptyList) :: Any
+  property List.first(lst :: NonemptyList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
@@ -341,7 +341,7 @@ it supplies its elements in order.
 
 
 @doc(
-  method List.last(lst :: NonemptyList) :: Any
+  property List.last(lst :: NonemptyList) :: Any
 ){
 
  Returns the last element of @rhombus(lst).
@@ -356,7 +356,7 @@ it supplies its elements in order.
 
 
 @doc(
-  method List.rest(lst :: NonemptyList) :: List
+  property List.rest(lst :: NonemptyList) :: List
 ){
 
  Returns a list like @rhombus(lst), but without its first element.

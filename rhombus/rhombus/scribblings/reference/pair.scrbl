@@ -87,8 +87,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  method (pr :: Pair).first()
-  method (pr :: Pair).rest()
+  property (pr :: Pair).first
+  property (pr :: Pair).rest
 ){
 
  Returns the first or second component of @rhombus(pr).
@@ -290,7 +290,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  method PairList.first(lst :: NonemptyPairList) :: Any
+  property PairList.first(lst :: NonemptyPairList) :: Any
 ){
 
  Returns the first element of @rhombus(lst).
@@ -304,7 +304,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  method PairList.last(lst :: NonemptyPairList) :: Any
+  property PairList.last(lst :: NonemptyPairList) :: Any
 ){
 
  Returns the last element of @rhombus(lst).
@@ -318,7 +318,7 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 }
 
 @doc(
-  method PairList.rest(lst :: NonemptyPairList) :: PairList
+  property PairList.rest(lst :: NonemptyPairList) :: PairList
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but without its first element.

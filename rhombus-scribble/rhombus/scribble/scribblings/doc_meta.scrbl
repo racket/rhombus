@@ -38,7 +38,11 @@
     ~extract_space: extract_space :: Function.of_arity(1),
     ~extract_defined: extract_defined :: Function.of_arity(2),
     ~extract_metavariables: extract_metavariables :: Function.of_arity(3),
-    ~extract_typeset: extract_typeset :: Function.of_arity(3)
+    ~extract_typeset: extract_typeset :: Function.of_arity(3),
+    ~extract_sort_order: extract_sort_order :: Function.of_arity(2):
+                           fun (_, [spc, ...]): [100 || spc, ...],
+    ~extract_spacer_infos: extract_spacer_infos :: Function.of_arity(2):
+                             fun (_, [spc, ...]): [{} || spc, ...]
   )
 ){
 
@@ -139,6 +143,21 @@
    italic) instead of a variable.}
 
   )}
+
+ @item{@rhombus(extract_sort_order): Takes a syntax object and a list of
+  space lists (the normalized result of @rhombus(extra_space)) and returns
+  a list of exact integers used to order documentation searches for the
+  corresponding definition relative to other documentation entries.}
+
+ @item{@rhombus(extract_spacer_infos): Takes a syntax object and list of
+  space lists (the normalized result of @rhombus(extra_space)) and returns
+  a list of maps. Each map provides additional information for a
+  documented binding that is stored in the cross-reference database ---
+  especially for use by @rhombus(rhombusblock) and similar in cooperation
+  with @tech{spacers}. Each key should be mapped to a serializable value
+  or identifier, and identifier values are converted to a serializable
+  form that retains only binding information. See @secref("spacer-props")
+  for information about recognized keys.}
 
 )
 

@@ -30,9 +30,9 @@ The @rhombus(:=) operator can also change object fields accessed via
 
 @examples(
   ~defn:
-    class Box(mutable content)
+    class Boxed(mutable content)
   ~repl:
-    def present = Box("socks")
+    def present = Boxed("socks")
     present.content
     present.content := "toy"
     present.content

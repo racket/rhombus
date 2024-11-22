@@ -226,6 +226,7 @@ elements.
   autos
   [& autos]
   PairList["cadillac", & [& autos, "corvette"]]
+  PairList["cadillac", & [& autos, "corvette"]]
 )
 
 @(close_eval(list_eval))

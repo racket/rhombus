@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      shrubbery/property
                      shrubbery/print
+                     enforest/name-parse
                      rhombus/private/enforest
                      rhombus/private/name-path-op
                      racket/list)
@@ -57,6 +58,7 @@
         space-sym ; id, #f, or expression for procedure
         extract-name
         extract-metavariables
+        (~optional (~seq #:spacer-infos extract-spacer-infos))
         extract-typeset)
      #`(begin
          (provide (for-space rhombus/doc id)
@@ -76,6 +78,7 @@
                                  #:extract-sort-order space-to-sort-order
                                  #:extract-name extract-name
                                  #:extract-metavariables extract-metavariables
+                                 #:extract-spacer-infos (~? extract-spacer-infos none-extract-spacer-infos)
                                  #:extract-typeset extract-typeset)))]))
 
 (define-for-syntax (space-to-sort-order stx spcs)
@@ -168,6 +171,9 @@
     (pattern (~seq (op name:identifier)))
     (pattern (~seq (~var || (identifier-target space-name))))))
 
+(define-for-syntax (none-extract-spacer-infos stx space-names)
+  (map (lambda (x) #f) space-names))
+
 (define-for-syntax (head-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group)
@@ -222,6 +228,25 @@
         #:datum-literals (parens group)
         [(group _ (~var _ (identifier-target space-name)) (parens . gs) . _)
          (extract-groups #'gs)])))
+
+(define-for-syntax (parens-extract-spacer-infos stx space-names)
+  (syntax-parse stx
+    #:datum-literals (parens group op ::)
+    [(group _ (~var _ (identifier-target (caar space-names))) (parens . gs) (op ::) . ret)
+     (ret-extract-spacer-infos #'ret)]
+    [_ #f]))
+
+(define-for-syntax (ret-extract-spacer-infos ret)
+  (syntax-parse ret
+    #:datum-literals (block alts)
+    [(id:identifier)
+     (hash 'result_annotation #'id)]
+    [(id:identifier (block . _))
+     (hash 'result_annotation #'id)]
+    [(id:identifier (alts . _))
+     (hash 'result_annotation #'id)]
+    [_
+     #f]))
 
 (define-for-syntax (identifier-macro-extract-name stx space-name)
   (syntax-parse stx
@@ -512,6 +537,7 @@
   #f
   parens-extract-name
   parens-extract-metavariables
+  #:spacer-infos parens-extract-spacer-infos
   head-extract-typeset)
 
 (define-for-syntax (build-dotted root #:prefix [names #'()] name)
@@ -612,11 +638,26 @@
      (rb #:at stx
          #`(group as_class_clause tag #,@(subst #'id.name) e ...))]))
 
+(define-for-syntax (method-extract-spacer-infos stx space-names #:property? [property? #f])
+  (syntax-parse stx
+    #:datum-literals (group parens alts block :: |.| op)
+    [(~and (~fail #:unless property?)
+           (group _ (alts (block (group (parens (group self (op ::) . ret)) (op |.|) . _)) . more)))
+     (ret-extract-spacer-infos #'ret)]
+    [(~and (~fail #:unless property?)
+           (group _ (parens (group self (op ::) . _)) (op |.|) name (op ::) . ret))
+     (ret-extract-spacer-infos #'ret)]
+    [(group _  (_::name ...) (parens (group self (op ::) . _)) (op |.|) name (parens . _) (op ::) . ret)
+     (ret-extract-spacer-infos #'ret)]
+    [_
+     (parens-extract-spacer-infos stx space-names)]))
+
 (define-doc method
   "method"
   #f
   method-extract-name
   method-extract-metavariables
+  #:spacer-infos method-extract-spacer-infos
   method-extract-typeset)
 
 (define-doc property
@@ -626,6 +667,8 @@
     (method-extract-name stx space-name #:property? #t))
   (lambda (stx space-name vars)
     (method-extract-metavariables stx space-name vars #:property? #t))
+  #:spacer-infos (lambda (stx space-names)
+                   (method-extract-spacer-infos stx space-names #:property? #t))
   (lambda (stx space-name subst)
     (method-extract-typeset stx space-name subst #:property? #t)))
 

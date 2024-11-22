@@ -33,9 +33,8 @@ defn.macro 'def_unquote $name: $context_expr':
     syntax_class Term:
       kind ~term
     | '$('$')t':
-        #//
         unless t.property(#'#{typeset-space-name}) == context
-        | println(t, t.srcloc(), t.property(#'#{typeset-space-name}), "vs", context)
+        | println("at", t, t.srcloc(), t.property(#'#{typeset-space-name}), "expected", context)
         match_when t.property(#'#{typeset-space-name}) == context
     unquote_bind.macro '$name':
       '_ :: Term'

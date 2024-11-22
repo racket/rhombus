@@ -26,7 +26,8 @@
                     String
                     Int
                     Number
-                    Boolean))
+                    Boolean
+                    Literal))
 
 (module+ for-quasiquote
   (begin-for-syntax
@@ -95,6 +96,12 @@
 (define-splicing-syntax-class :sequence
   (pattern (~seq _ ...)))
 
+(define-syntax-class :literal
+  (pattern t
+           #:when (let ([v (syntax-e #'t)])
+                    (and (not (symbol? v))
+                         (not (pair? v))))))
+
 (define-syntax (define-syntax-class-syntax stx)
   (syntax-parse stx
     [(_ name:id rhs)
@@ -115,6 +122,7 @@
 (define-syntax-class-syntax Int (make-syntax-class #'exact-integer))
 (define-syntax-class-syntax Number (make-syntax-class #'number))
 (define-syntax-class-syntax Boolean (make-syntax-class #'boolean))
+(define-syntax-class-syntax Literal (make-syntax-class #':literal))
 (define-syntax-class-syntax Sequence (make-syntax-class #':sequence #:splicing? #t #:kind 'term))
 (define-syntax-class-syntax Group (make-syntax-class #f #:kind 'group))
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))

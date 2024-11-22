@@ -2,14 +2,15 @@
 @(import:
     "common.rhm" open
     meta_label:
-      scribble/spacer open)
+      scribble/spacer open
+      scribble/doc_meta open)
 
 @title(~tag: "spacer"){Code Binding-Space Adjusters}
 
 @docmodule(~use_sources: lib("scribble/spacer.rhm"),
            scribble/spacer)
 
-A @defterm{spacer} is a compile-time function that is used by forms like
+A @deftech{spacer} is a compile-time function that is used by forms like
 @rhombus(rhombus) to determine how names within a typeset form should be
 linked to documentation. For example, @rhombus(::, ~datum) in some
 contexts should be linked to the @rhombus(::) expression operator, and
@@ -20,16 +21,29 @@ bindings. Instead, links are determined by a combination of
 Spacers thus provide an approximate and best-effort attempt to properly
 link names in documentation.
 
+A spacer can also communicate indirect binding information to support
+linking of names after @rhombus(.). For example, the
+@rhombus(length, ~datum) method name in @rhombus([1, 2, 3].length())
+should be linked to the documentation of @rhombus(List.length),
+independent of whatever @rhombus(meta_label, ~expo) binding the
+identifier @rhombus(length, ~datum) length might have. See
+@secref("spacer-props") for more information.
+
 @doc(
   ~nonterminal:
     self_id: block id
     tail_id: block id
     context_id: block id
     esc_id: block id
-  defn.macro 'bridge $name($self_id, $tail_id, $context_id, $esc_id):
+    left_id: block id
+  defn.macro 'bridge $name($maybe_left, $self_id, $tail_id, $context_id, $esc_id):
                 ~in: $space ...
                 $body
                 ...'
+
+  grammar maybe_left:
+    ~left $left_id
+    #,(epsilon)
 ){
 
  Binds @rhombus(name) in the typesetting space to a function that
@@ -59,6 +73,11 @@ link names in documentation.
  The @rhombus(esc_id) argument is an identifier or operator syntax object
  that specifies an escape operator, such as @rhombus(#,). Spacing should
  general not traverse into escaped forms.
+
+ If a @rhombus(~left) argument is declared, then the spacer can be
+ called in either infix or prefix mode. When called in prefix mode, the
+ argument for @rhombus(~left) will be an empty syntax object,
+ @rhombus('').
 
 }
 
@@ -100,6 +119,10 @@ link names in documentation.
   fun adjust_sequence(stx :: TermSequence, context :: Context,
                       esc :: Name)
     :: Syntax
+  fun adjust_rest_sequence(head :: TermSequence,
+                           stx :: TermSequence, context :: Context,
+                           esc :: Name)
+    :: Syntax
   fun adjust_multi(stx :: Syntax, context :: Context, esc :: Name)
     :: Syntax
   fun adjust_block(stx :: Block, context :: Context, esc :: Name)
@@ -111,4 +134,102 @@ link names in documentation.
  along @rhombus(esc) to nested spacers so that they can avoid traversing
  escape sequences.
 
+ The @rhombus(adjust_rest_sequence) function supports the possibility of
+ an infix spacer at the start of @rhombus(stx), in which case
+ @rhombus(head) is propagated to the spacer as the @rhombus(~left)
+ argument.
+
 }
+
+
+@section(~tag: "spacer-props"){Spacers and Indirect Binding}
+
+In addition to setting the space of a name, a @tech{spacer} can add
+syntax properties that communicate binding and annotation information.
+Resolving these properties some requires extra context as provided by
+the documentation of a form, such as the annotation for a function's
+result.
+
+For example, to implement the connection that links the
+@rhombus(length, ~datum) method name in @rhombus([1, 2, 3].length()) to
+@rhombus(List.length), the spacer for @rhombus(#%brackets, ~datum) adds
+a @rhombus(#'annot) property to the @rhombus([1, 2, 3]) term with the
+value @rhombus('List', ~datum); then, the method @rhombus(List.length) can
+be inferred by treating the annotation name as a namespace.
+
+In the case of @rhombus(to_string(1).length()), the term before
+@rhombus(.) is @rhombus((1)), but that term is part of a function call.
+The @rhombus(#%call, ~datum) infix spacer adds a property to
+@rhombus((1)) to say that its annotation is effectively the result of
+calling @rhombus(to_string). The result annotation for
+@rhombus(to_string) is determined to be @rhombus(String, ~annot) via
+cross-reference information stored by the @rhombus(fun, ~doc)
+documentation form as used to document @rhombus(to_string).
+
+The following syntax property keys (see @rhombus(Syntax/property)) are
+recognized; take care to add them as preserved properties:
+
+@itemlist(
+
+ @item{@rhombus(#'spacer_key): used by other syntax objects to refer to
+ the one with the property. References to spaced terms generally make
+ sense only with in a set of syntax objects that are compiled an
+ serialized together, so the value of @rhombus(#'spacer_key) can be a
+ gensym created by @rhombus(Symbol.gen).}
+
+ @item{@rhombus(#'field): on a field identifier to connect it to an
+ annotation-as-namespace that exports the field, typically by referring
+ to another term. A @rhombus(#'field) value can have one of several
+ recognized shapes:
+
+ @itemlist(
+
+   @item{@rhombus(Pair(#'of, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term
+  should have an @rhombus(#'annot) property to describe an annotation name
+  that is used as namespace name.}
+
+  )}
+
+ @item{@rhombus(#'annot): on a field identifier to connect it to a
+ namespace name that exports the field, typically by referring to another
+ term. A @rhombus(#'field) value can have one of several recognized
+ shapes:
+
+ @itemlist(
+
+   @item{@rhombus(Pair(#'as, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term
+  should be an identifier that is used as the namespace name.}
+
+   @item{@rhombus(Pair(#'as_export, id)): provides a namespace name
+  directly as @rhombus(id).}
+
+   @item{@rhombus(Pair(#'result, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term
+  should be an identifier that is hperlinked as a function, and the
+  function's result annotation (as recorded in documentation) is used as
+  the namespace name.}
+
+)
+
+ Some inference steps may require cross-reference information from
+ documentation, such as the result annotation of a function. That
+ cross-reference information can be provided by a documentation form that
+ is bound by @rhombus(doc.bridge), implemented with
+ @rhombus(doc_meta.transformer), and through an
+ @rhombus(~extract_spacer_infos) function that produces a map with the
+ following recognized keys:
+
+@itemlist(
+
+ @item{@rhombus(#'result_annotation): an identifier for the result of a
+  documented function, method, or property. The identifier is used as a
+  namespace for the purpose of finding methods and properties within that
+  result.}
+
+)
+
+}
+
+)

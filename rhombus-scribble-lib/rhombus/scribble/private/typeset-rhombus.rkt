@@ -5,17 +5,28 @@
                   element
                   element?
                   element-content
+                  delayed-element
+                  delayed-element?
+                  delayed-element-plain
                   content?
                   content-width
                   paragraph
                   table
                   style
                   plain
-                  nested-flow)
+                  nested-flow
+                  resolve-get
+                  resolve-get/tentative)
          (submod scribble/racket id-element)
+         (only-in scribble/search
+                  find-racket-tag)
+         (for-template
+          (only-in rhombus/private/name-root
+                   portal-syntax->lookup))
          "typeset-key-help.rkt"
          "hspace.rkt"
-         "defining-element.rkt")
+         "defining-element.rkt"
+         "spacer-binding.rkt")
 
 (provide typeset-rhombus
          typeset-rhombusblock)
@@ -38,6 +49,7 @@
                   [(pair? e) (loop (car e))]
                   [(defining-element? e) (target-style (defining-element-prefix-len e))]
                   [(element? e) (loop (element-content e))]
+                  [(delayed-element? e) (loop ((delayed-element-plain e)))]
                   [else #f])))))
 
 (define-values (render_code
@@ -82,6 +94,64 @@
                                                                 (string-length prefix-str)
                                                                 0))]
                          [else r]))
+   #:render_via_result_annotation (let ([ns (make-base-namespace)])
+                                    (lambda (rator field field-str)
+                                      (delayed-element
+                                       (lambda (renderer sec ri)
+                                         (define default (element tt-style field-str))
+                                         (define tag (find-racket-tag sec ri rator #f
+                                                                      #:unlinked-ok? #t))
+                                         (define spacer-infos (resolve-get/tentative sec ri (list 'spacer-infos tag)))
+                                         (define result-annot (and spacer-infos
+                                                                   (hash-ref spacer-infos 'result_annotation #f)))
+                                         (cond
+                                           [(and result-annot
+                                                 (spacer-binding? result-annot))
+                                            (parameterize ([current-namespace ns])
+                                              (define root-sym (spacer-binding-datum result-annot))
+                                              (define nom-mpi (spacer-binding-ns-nom-mpi result-annot))
+                                              (define mpi (spacer-binding-ns-mpi result-annot))
+                                              (define (reset mpi)
+                                                (define-values (sub base) (module-path-index-split mpi))
+                                                (if (not sub)
+                                                    #f
+                                                    (module-path-index-join sub (and base (reset base)))))
+                                              (module-path-index-resolve (reset nom-mpi) #t)
+                                              (module-path-index-resolve (reset mpi) #t)
+                                              (define ns-id
+                                                (syntax-binding-set->syntax (syntax-binding-set-extend
+                                                                             (syntax-binding-set)
+                                                                             root-sym
+                                                                             0
+                                                                             mpi
+                                                                             #:source-symbol (spacer-binding-ns-sym result-annot)
+                                                                             #:source-phase (spacer-binding-ns-phase result-annot)
+                                                                             #:nominal-module nom-mpi
+                                                                             #:nominal-symbol (spacer-binding-ns-nom-sym result-annot)
+                                                                             #:nominal-phase (spacer-binding-ns-export-phase result-annot)
+                                                                             #:nominal-require-phase (spacer-binding-ns-import-phase result-annot))
+                                                                            root-sym))
+                                              (define p (identifier-binding-portal-syntax ns-id 0))
+                                              (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
+                                              (define field-id (and lookup (lookup #f "identifier" field values)))
+                                              (cond
+                                                [field-id
+                                                 (define e
+                                                   (make-id-element (syntax-shift-phase-level ns-id #f) field-str #f
+                                                                    ;; #:unlinked-ok? #t
+                                                                    #:space 'rhombus/namespace
+                                                                    #:suffix (list (string->symbol
+                                                                                    (format "~a.~a"
+                                                                                            root-sym
+                                                                                            (syntax-e field)))
+                                                                                   #f)))
+                                                 (element tt-style e)]
+                                                [else
+                                                 default]))]
+                                           [else
+                                            default]))
+                                       (lambda () field-str)
+                                       (lambda () field-str))))
    #:render_whitespace (lambda (n)
                          (element hspace-style (make-string n #\space)))
    #:render_indentation (lambda (n offset-in-orig orig-n orig-size style)

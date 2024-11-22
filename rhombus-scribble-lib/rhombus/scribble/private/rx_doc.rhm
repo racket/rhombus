@@ -3,6 +3,8 @@ import:
   scribble/doc_meta open
   scribble/spacer
   rhombus/rx open
+  meta_label:
+    rhombus/rx.RX
 
 export:
   only_space doc:
@@ -10,6 +12,7 @@ export:
     #{rx_charset.macro}
   only_space spacer.typeset:
     rx
+    rename: rx as rx_in
     #%brackets
 
 doc.bridge #{rx.macro}:
@@ -31,12 +34,13 @@ doc.bridge #{rx_charset.macro}:
   )
 
 spacer.bridge rx(self, tail, context, esc):
-  ~in: ~expr
+  ~in: ~expr ~bind
   match tail
   | '$(q && '«'$g'»') $tail ...':
       let g = spacer.adjust_group(g, #'#{rhombus/rx}, esc)
       let q = '«'$g'»'.relocate(q)
-      '$self $q $tail ...'
+      let q = q.property(#'annot, Pair(#'as_export, 'RX'), #true)
+      '$self $(spacer.adjust_rest_sequence(q, '$tail ...', context, esc))'
   | ~else:
       '$self $tail'
 
