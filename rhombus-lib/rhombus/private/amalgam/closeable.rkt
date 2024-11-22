@@ -1,5 +1,4 @@
 #lang racket/base
-
 (require (for-syntax racket/base
                      "interface-parse.rkt"
                      "class-method-result.rkt")
@@ -66,4 +65,4 @@
     [(input-port? v) (close-input-port v)]
     [(output-port? v) (close-output-port v)]
     [(Closeable? v) ((vector-ref (Closeable-ref v) 0) v)]
-    [else (raise-annotation-failure 'Closeable.close v "Closeable")]))
+    [else (raise-annotation-failure who v "Closeable")]))

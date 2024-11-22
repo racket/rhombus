@@ -108,7 +108,7 @@
 
 
 @doc(
-  property (subp :: Subprocess).close() :: Void
+  method (subp :: Subprocess).close() :: Void
 ){
 
  Closes any pipes created for the subprocess that are still open.

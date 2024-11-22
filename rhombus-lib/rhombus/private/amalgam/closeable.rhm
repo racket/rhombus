@@ -1,5 +1,4 @@
 #lang rhombus/private/amalgam/core
-
 import:
   "core-meta.rkt" open
   "closeable.rkt" open
@@ -16,7 +15,7 @@ namespace Closeable:
     v.close()
     #void
 
-  defn.sequence_macro 'clet $bind ... = $(rhs :: expr_meta.Parsed)
+  defn.sequence_macro 'clet $bind ... $(bound_as expr_meta.space: '=') $(rhs :: expr_meta.Parsed)
                        $body0
                        $body
                        ...':
