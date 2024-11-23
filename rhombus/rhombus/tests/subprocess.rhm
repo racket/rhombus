@@ -8,6 +8,10 @@ when system.type() != #'windows
     sp.out.read_line()
   check ls_exe ~is_a PathString
 
+  check subprocess.find_executable_path("ls") ~is Path(ls_exe)
+  check subprocess.find_executable_path(ls_exe) ~is Path(ls_exe)
+  check subprocess.find_executable_path(Path(ls_exe)) ~is Path(ls_exe)
+
   block:
     Closeable.let sp = subprocess.run(ls_exe, "-d", ".", ~out: #'pipe, ~in: #'pipe)
     check sp.out.read_line() ~is "."
