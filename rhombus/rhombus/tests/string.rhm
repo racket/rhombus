@@ -9,13 +9,23 @@ block:
     String.make(n, char)
     String.length(str) ~method ReadableString
     String.get(str, i) ~method ReadableString
+    String.find(str, substr) ~method ReadableString
     String.contains(str, substr) ~method ReadableString
+    String.starts_with(str, substr) ~method ReadableString
+    String.ends_with(str, substr) ~method ReadableString
     String.to_string(str) ~method ReadableString
     ReadableString.to_string(str) ~method
     String.to_int(str) ~method ReadableString
     String.to_number(str) ~method ReadableString
     String.substring(str, start, [end]) ~method ReadableString
     String.append(str, ...) ~method ReadableString
+    String.replace(str, from, to) ~method ReadableString
+    String.trim(str, [sep]) ~method ReadableString
+    String.split(str, [sep]) ~method ReadableString
+    String.upcase(str) ~method ReadableString
+    String.downcase(str) ~method ReadableString
+    String.locale_upcase(str) ~method ReadableString
+    String.locale_downcase(str) ~method ReadableString
     String.normalize_nfd(str) ~method ReadableString
     String.normalize_nfkd(str) ~method ReadableString
     String.normalize_nfc(str) ~method ReadableString
@@ -60,6 +70,8 @@ block:
     "Hello".downcase() ~is "hello"
     "Hello".foldcase() ~is "hello"
     "hello".titlecase() ~is "Hello"
+    "hello".locale_upcase() ~is_a String
+    "Hello".locale_downcase() ~is_a String
     "hello".substring(1) ~is "ello"
     "hello".substring(1, 3) ~is "el"
     "hÉllo".utf8_bytes() ~is #"h\303\211llo"
@@ -75,8 +87,28 @@ block:
     "Hello".grapheme_count(2) ~is 3
     "Hello".grapheme_span(2, 4) ~is 1
     "Hello".grapheme_count(2, 4) ~is 2
+    "Hello".find("ello") ~is 1
+    "Hello".find("howdy") ~is #false
     "Hello".contains("ello") ~is #true
     "Hello".contains("howdy") ~is #false
+    "Hello".starts_with("ello") ~is #false
+    "Hello".ends_with("ello") ~is #true
+    "Hello".starts_with("Hel") ~is #true
+    "Hello".ends_with("hel") ~is #false
+    "Hello".replace("l", "x") ~is "Hexlo"
+    "Hello".replace("l", "x", ~all: #true) ~is "Hexxo"
+    "Hello World".split() ~is ["Hello", "World"]
+    "Hello World".split("l") ~is ["He", "", "o Wor", "d"]
+    "Hello World".split("l", ~repeat: #true) ~is ["He", "o Wor", "d"]
+    "Hello".split("H") ~is ["ello"]
+    "Hello".split("H", ~trim: #false) ~is ["", "ello"]
+    " Hello  ".trim() ~is "Hello"
+    " Hello  ".trim(~start: #false) ~is " Hello"
+    " Hello  ".trim(~end: #false) ~is "Hello  "
+    "_Hello__".trim("_") ~is "Hello_"
+    "_Hello__".trim("_", ~repeat: #true) ~is "Hello"
+    "_Hello__".trim("_", ~start: #false) ~is "_Hello_"
+    "_Hello__".trim("_", ~end: #false) ~is "Hello__"
     "Hello".copy() ~is_now "Hello"
     "Hello".copy() == "Hello" ~is #false
     "Hello".snapshot() ~is_now "Hello"
@@ -97,6 +129,8 @@ check:
   dynamic("4.35").to_number() ~is 4.35
   dynamic("hello").upcase() ~is "HELLO"
   dynamic("Hello").downcase() ~is "hello"
+  dynamic("hello").locale_upcase() ~is_a String
+  dynamic("Hello").locale_downcase() ~is_a String
   dynamic("Hello").foldcase() ~is "hello"
   dynamic("hello").titlecase() ~is "Hello"
   dynamic("hello").substring(1) ~is "ello"
@@ -113,8 +147,17 @@ check:
   dynamic("Hello").grapheme_count(2) ~is 3
   dynamic("Hello").grapheme_span(2, 4) ~is 1
   dynamic("Hello").grapheme_count(2, 4) ~is 2
+  dynamic("Hello").find("ello") ~is 1
   dynamic("Hello").contains("ello") ~is #true
   dynamic("Hello").contains("howdy") ~is #false
+  dynamic("Hello").ends_with("ello") ~is #true
+  dynamic("Hello").starts_with("Hel") ~is #true
+  dynamic("Hello").replace("l", "x") ~is "Hexlo"
+  dynamic("Hello").replace("l", "x", ~all: #true) ~is "Hexxo"
+  dynamic("Hello World").split() ~is ["Hello", "World"]
+  dynamic("Hello World").split("l", ~repeat: #true) ~is ["He", "o Wor", "d"]
+  dynamic(" Hello  ").trim() ~is "Hello"
+  dynamic("_Hello__").trim("_", ~start: #false) ~is "_Hello_"
   dynamic("Hello").copy() ~is_now "Hello"
   dynamic("Hello").snapshot() ~is_now "Hello"
 
@@ -215,6 +258,64 @@ block:
     a compares_unequal a ~is #false
     a compares_unequal A ~is #false
     a compares_unequal B ~is #true
+
+check:
+  ~eval
+  "a" :: StringLocale
+  ~throws "not allowed in a dynamic context"
+
+check:
+  ~eval
+  def s :: StringLocale = "a"
+  ~throws "not allowed in a dynamic context"
+
+block:
+  use_static
+  let a :: StringLocale = "a"
+  let also_a :: StringLocale = "a"
+  check:
+    a < also_a ~is #false
+    a <= also_a ~is #true
+    a > also_a ~is #false
+    a >= also_a ~is #true
+    a compares_equal also_a ~is #true
+    a compares_unequal also_a ~is #false
+
+block:
+  use_static
+  let a :: ReadableStringLocale = "a"
+  let also_a :: ReadableStringLocale = "a"
+  check:
+    a < also_a ~is #false
+    a <= also_a ~is #true
+    a > also_a ~is #false
+    a >= also_a ~is #true
+    a compares_equal also_a ~is #true
+    a compares_unequal also_a ~is #false
+
+block:
+  use_static
+  let a :: StringLocaleCI = "a"
+  let also_a :: StringLocaleCI = "a"
+  check:
+    a < also_a ~is #false
+    a <= also_a ~is #true
+    a > also_a ~is #false
+    a >= also_a ~is #true
+    a compares_equal also_a ~is #true
+    a compares_unequal also_a ~is #false
+
+block:
+  use_static
+  let a :: ReadableStringLocaleCI = "a"
+  let also_a :: ReadableStringLocaleCI = "a"
+  check:
+    a < also_a ~is #false
+    a <= also_a ~is #true
+    a > also_a ~is #false
+    a >= also_a ~is #true
+    a compares_equal also_a ~is #true
+    a compares_unequal also_a ~is #false
 
 block:
   use_static
