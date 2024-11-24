@@ -2,14 +2,17 @@
 @(import:
     "common.rhm" open
     meta_label:
+      rhombus/subprocess
       rhombus/subprocess open)
 
 @title(~tag: "subprocess"){Subprocesses}
 
 @docmodule(rhombus/subprocess)
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class Subprocess():
+  class subprocess.Subprocess():
     implements Closeable
     expression: ~error
 ){
@@ -20,21 +23,26 @@
 }
 
 @doc(
-  fun run(
-    exe :: PathString,
+  fun subprocess.run(
+    program :: PathString,
     ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
     ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
     ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current(),
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
-              = (if current_subprocess_group_new() | #'new | #'same),
+              = (if current_group_new() | #'new | #'same),
     arg :: PathString || ReadableString,
     ...
   ) :: Subprocess
 ){
 
  Runs another program as a subprocess in the host operating system. The
- executable to run in the process is named by @rhombus(exe), and it
+ executable to run in the process is named by @rhombus(program), and it
  receives the @rhombus(arg)s.
+
+ If @rhombus(program) is a pathless file name (i.e.,
+ @rhombus(Path.parent(program)) produces @rhombus(#'relative)), then a
+ non-@rhombus(#false) result of @rhombus(find_executable_path(program))
+ is used in place of @rhombus(program).
 
  The new process's input, output, or error output can be captured in a
  pipe using @rhombus(#'pipe) for @rhombus(in), @rhombus(out), or
@@ -62,13 +70,13 @@
 
 
 @doc(
-  fun run_shell(
+  fun subprocess.run_shell(
     command :: String,
     ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
     ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
     ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current(),
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
-              = (if current_subprocess_group_new() | #'new | #'same)
+              = (if current_group_new() | #'new | #'same)
   ) :: Subprocess
   fun shell(command :: String) :: Boolean
 ){
@@ -86,12 +94,15 @@
 }
 
 @doc(
-  property (subp :: Subprocess).in :: Port.Output
-  property (subp :: Subprocess).out :: Port.Input
-  property (subp :: Subprocess).err :: Port.Input
-  property (subp :: Subprocess).maybe_in :: maybe(Port.Output)
-  property (subp :: Subprocess).maybe_out :: maybe(Port.Input)
-  property (subp :: Subprocess).maybe_err :: maybe(Port.Input)
+  property (subp :: subprocess.Subprocess).in :: Port.Output
+  property (subp :: subprocess.Subprocess).out :: Port.Input
+  property (subp :: subprocess.Subprocess).err :: Port.Input
+  property (subp :: subprocess.Subprocess).maybe_in
+    :: maybe(Port.Output)
+  property (subp :: subprocess.Subprocess).maybe_out
+    :: maybe(Port.Input)
+  property (subp :: subprocess.Subprocess).maybe_err
+    :: maybe(Port.Input)
 ){
 
  Accesses pipe ends created for subprocess.
@@ -108,7 +119,7 @@
 
 
 @doc(
-  method (subp :: Subprocess).close() :: Void
+  method (subp :: subprocess.Subprocess).close() :: Void
 ){
 
  Closes any pipes created for the subprocess that are still open.
@@ -117,7 +128,7 @@
 
 
 @doc(
-  property (subp :: Subprocess).pid :: NonnegInt
+  property (subp :: subprocess.Subprocess).pid :: NonnegInt
 ){
 
  Returns the operating system's process ID for a subprocess.
@@ -126,9 +137,9 @@
 
 
 @doc(
-  method (subp :: Subprocess).wait() :: Int
-  method (subp :: Subprocess).wait_ok() :: Boolean
-  method (subp :: Subprocess).poll() :: maybe(Int)
+  method (subp :: subprocess.Subprocess).wait() :: Int
+  method (subp :: subprocess.Subprocess).wait_ok() :: Boolean
+  method (subp :: subprocess.Subprocess).poll() :: maybe(Int)
 ){
 
  Waits for a subprocess to complete or checks whether it has completed.
@@ -146,8 +157,8 @@
 
 
 @doc(
-  method (subp :: Subprocess).interrupt() :: Void
-  method (subp :: Subprocess).kill() :: Void
+  method (subp :: subprocess.Subprocess).interrupt() :: Void
+  method (subp :: subprocess.Subprocess).kill() :: Void
 ){
 
  Send a process an interrupt signal or a kill signal, respectively. The
@@ -156,7 +167,36 @@
 }
 
 @doc(
-  Parameter.def current_subprocess_group_new
+  fun subprocess.find_executable_path(program :: PathString)
+    :: maybe(Path.Absolute)
+){
+
+ Finds an absolute path for the executable named by @rhombus(program),
+ returning @rhombus(#false) if the path cannot be found or does not
+ have executable permissions.
+
+ If @rhombus(program) is a pathless name (i.e.,
+ @rhombus(Path.parent(program)) produces @rhombus(#'relative)),
+ @rhombus(find_executable_path) gets the value of the @tt{PATH}
+ environment variable; if this environment variable is defined,
+ @rhombus(find_executable_path) tries each path in @tt{PATH} as a prefix
+ for @rhombus(program). On Windows, the current directory is always
+ implicitly the first item in @tt{PATH}, so
+ @rhombus(find_executable_path) checks the current directory first on
+ Windows. If the @tt{PATH} environment variable is not defined or if
+ @rhombus(program) is not pathless, @rhombus(program) is prefixed with
+ the current directory.
+
+ On Windows, if @rhombus(program) is not found and it has no file suffix,
+ then the search starts over with @rhombus(".exe") added to program, and
+ the result is @rhombus(#false) only if the path with @rhombus(".exe")
+ also cannot be found. The result includes the suffix @rhombus(".exe")
+ if only program with the suffix is found.
+
+}
+
+@doc(
+  Parameter.def subprocess.current_group_new
     :: Any.to_boolean
 ){
 
@@ -168,7 +208,7 @@
 
 
 @doc(
-  Parameter.def current_subprocess_custodian_mode
+  Parameter.def subprocess.current_custodian_mode
     :: False || matching(#'kill) || matching(#'interrupt)
 ){
 
@@ -178,15 +218,15 @@
 }
 
 @doc(
-  enum Subprocess.Pipe:
+  enum subprocess.Subprocess.Pipe:
     pipe
-  enum Subprocess.ErrorPipe:
+  enum subprocess.Subprocess.ErrorPipe:
     ~is_a Subprocess.Pipe
     out
-  enum Subprocess.Group:
+  enum subprocess.Subprocess.Group:
     same
     new
-  annot.macro 'Subprocess.NewGroup'
+  annot.macro 'subprocess.Subprocess.NewGroup'
 ){
 
  Port and group modes for use with @rhombus(Subprocess, ~class), @rhombus(run),

@@ -314,6 +314,7 @@
        (or (syntax-column s)
            (let ([l (syntax->list s)])
              (and l
+                  (pair? l)
                   (case (syntax-e (car l))
                     [(multi)
                      (and (pair? (cdr l))
@@ -325,8 +326,11 @@
                      (and (pair? (cdr l))
                           (null? (cddr l))
                           (loop (cadr l)))]
-                    [(parens brackets braces quotes block alts)
+                    [(parens brackets braces quotes block)
                      (extract-starting-column (car l))]
+                    [(alts)
+                     (and (pair? (cdr l))
+                          (extract-starting-column (cadr l)))]
                     [(parsed)
                      (and (= 3 (length l))
                           (extract-starting-column (caddr l)))]

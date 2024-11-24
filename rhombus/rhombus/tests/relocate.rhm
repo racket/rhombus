@@ -3,6 +3,41 @@
 def empty_raw = PairList[]
 
 block:
+  // check column inference for multi-line syntax objects
+  check:
+    '1
+     2'.to_source_string()
+    ~is "1\n2"
+  check:
+    ' 1
+      2'.to_source_string()
+    ~is "1\n2"
+  check:
+    '(1,
+      2)'.to_source_string()
+    ~is "(1,\n 2)"
+  check:
+    '[1,
+      2]'.to_source_string()
+    ~is "[1,\n 2]"
+  check:
+    '{1,
+      2}'.to_source_string()
+    ~is "{1,\n 2}"
+  check:
+    ': 1
+       2'.to_source_string()
+    ~is ": 1\n  2"
+  check:
+    '| foo
+       bar'.to_source_string()
+    ~is "| foo\n  bar"
+  check:
+    '| foo
+     | bar'.to_source_string()
+    ~is "| foo\n| bar"
+
+block:
   let x = 'x'
   let plus = '+'
   let '$_ $x_c $b' = '1 x /* x */ 2'

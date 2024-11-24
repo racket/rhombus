@@ -12,19 +12,20 @@ export:
   run_shell
   run_command
   Subprocess
-  current_subprocess_group_new
-  current_subprocess_custodian_mode
+  current_group_new
+  current_custodian_mode
+  find_executable_path
 
-def current_subprocess_group_new:
+def current_group_new:
   rkt_rename.#{rename-parameter}(rkt.#{subprocess-group-enabled},
                                  #'current_subprocess_group_enabled)
 
-def current_subprocess_custodian_mode:
+def current_custodian_mode:
   rkt_rename.#{rename-parameter}(rkt.#{current-subprocess-custodian-mode},
                                  #'current_subprocess_custodian_mode)
 
 fun current_group():
-  if current_subprocess_group_new()
+  if current_group_new()
   | #'new
   | #'same
 
@@ -127,6 +128,9 @@ fun run(exe :: PathString,
         ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current_error(),
         ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
         arg :: PathString || ReadableString, ...) :~ Subprocess:
+  let exe: if Path.parent(exe) == #'relative
+           | find_executable_path(exe) || exe
+           | exe
   do_run(to_string(exe), exe, arg, ..., ~in: in, ~out: out, ~err: err, ~group: group)
 
 fun run_shell(command :: String,
@@ -152,3 +156,6 @@ fun run_command(exe :: PathString,
   unless system.type() == #'windows
   | error(~who: #'run_command, "supported only on Windows")
   do_run(command, exe, #'exact, command, ~in: in, ~out: out, ~err: err, ~group: group)
+
+fun find_executable_path(exe_name :: PathString) :: maybe(Path):
+  rkt.#{find-executable-path}(exe_name)
