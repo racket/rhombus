@@ -400,7 +400,7 @@
                   (lambda ($-id e in-e)
                     (handle-escape/match-head $-id e in-e 'group #f))
                   ;; handle-multi-escape:
-                  (lambda ($-id e in-e splice?)
+                  (lambda ($-id e in-e splice?)                    
                     (define kind
                       (syntax-parse in-e
                         [(head . _) (if (memq (syntax-e #'head) '(block alts))
@@ -540,7 +540,7 @@
                     [_ (raise-syntax-error #f
                                            (format "multi-group pattern incompatible with ~a context" kind)
                                            #'qs)])]
-                 [else (values e (and (eq? pat-kind 'group)
+                 [else (values e (and (eq? pat-kind 'group) 
                                       (memq kind '(multi block term))))]))
              (define-values (pattern idrs sidrs vars can-be-empty?)
                (convert-pattern use-e
@@ -553,7 +553,14 @@
                                                     (lambda (e)
                                                       #`((~datum block) ((~datum group) . #,e)))]
                                                    [else #f])))
-             #`(#,pattern #,idrs #,sidrs #,(map pattern-variable->list vars))]))
+             (define pattern*
+               (if (and (not splice?) (eq? pat-kind 'multi))
+                   ;; replace literal `multi` head with a wildcard, and the context
+                   ;; will add a constraint for the right head symbol as needed
+                   (syntax-parse pattern
+                     [(_ . tail) #`(_ . tail)])
+                   pattern))
+             #`(#,pattern* #,idrs #,sidrs #,(map pattern-variable->list vars))]))
         (define-values (r empty-tail)
           (quoted-shape-dispatch #'(form-id qs)
                                  in-binding-space

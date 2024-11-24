@@ -354,3 +354,60 @@ block:
                 let b = 2
                 let c = 3
                 let d = 4'
+
+block:
+  check:
+    match ': first
+             second'
+    | ': $('first
+            second')':
+        "ok"
+    ~is "ok"
+
+  check:
+    match '| first
+             second'
+    | '| $('first
+            second')':
+        "ok"
+    ~is "ok"
+
+  check:
+    match '(first,
+            second)'
+    | '($('first
+           second'))':
+        "ok"
+    ~is "ok"
+
+  check:
+    match '[first,
+            second]'
+    | '[$('first
+           second')]':
+        "ok"
+    ~is "ok"
+
+  check:
+    match '{first,
+            second}'
+    | '{$('first
+           second')}':
+        "ok"
+    ~is "ok"
+
+  check:
+    match '(first,
+            second)'
+    | ': $('first
+            second')':
+        "ok"
+    ~throws "expected a `:` block"
+
+  check:
+    match ': first
+             second'
+    | '($('first
+           second'))':
+        "ok"
+    ~throws "expected parentheses"
