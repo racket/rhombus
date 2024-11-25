@@ -69,7 +69,8 @@
                                                                (+ '#,(if (attribute no-prompt?) 0 2)
                                                                   (rhombus-expression indent-expr))))))
                          (group #:inset (block (group (parsed #:rhombus/expr #f))))
-                         (group #:indent_from_block (block (group (parsed #:rhombus/expr '#,spliced?)))))
+                         (group #:indent_from_block (block (group (parsed #:rhombus/expr '#,spliced?))))
+                         (group #:spacer_info_box (block (group info-box))))
                  #,block-stx)))
      (with-syntax ([((t-form e-form) ...)
                     (for/list ([form (in-list (syntax->list #'(g ...)))])
@@ -87,17 +88,18 @@
                         [(group #:fake (block t-form e-form))
                          (list (rb #'t-form) #'e-form)]
                         [_ (list (rb form) form)]))])
-       #`(examples
-          #:eval (rhombus-expression eval-expr)
-          #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
-          #:label (rhombus-expression label-expr)
-          #:hidden? (rhombus-expression hidden-expr)
-          #:result-only? (rhombus-expression result-only-expr)
-          #:indent (rhombus-expression indent-expr)
-          (list
-           (list t-form
-                 (adjust-top-srcloc (quote-syntax (multi e-form))))
-           ...)))]))
+       #`(let ([info-box (box #f)])
+           (examples
+            #:eval (rhombus-expression eval-expr)
+            #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
+            #:label (rhombus-expression label-expr)
+            #:hidden? (rhombus-expression hidden-expr)
+            #:result-only? (rhombus-expression result-only-expr)
+            #:indent (rhombus-expression indent-expr)
+            (list
+             (list t-form
+                   (adjust-top-srcloc (quote-syntax (multi e-form))))
+             ...))))]))
 
 (define (make-rhombus-eval [lang 'rhombus]
                            #:attach [attach? #t])

@@ -427,12 +427,32 @@
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
+(define-for-syntax (annotation-prune-fallback proc)
+  (lambda (stx . args)
+    (apply proc
+           (syntax-parse stx
+             #:datum-literals (group block)
+             [((~and tag group) head ... (block (group #:method_fallback id)))
+              #'(tag head ...)]
+             [_ stx])
+           args)))
+
+(define-for-syntax (annotation-extract-spacer-infos stx space-names)
+  (syntax-parse stx
+    #:datum-literals (group block)
+    [(group head ... (block (group #:method_fallback id:identifier)))
+     (hash 'method_fallback #'id)]
+    [(group head ... (block (group #:method_fallback (block (gorup id:identifier)))))
+     (hash 'method_fallback #'id)]
+    [_ (list #f)]))
+
 (define-doc annot.macro annot
   "annotation"
   rhombus/annot
-  operator-macro-extract-name
-  operator-macro-extract-metavariables
-  operator-macro-extract-typeset)
+  (annotation-prune-fallback operator-macro-extract-name)
+  (annotation-prune-fallback operator-macro-extract-metavariables)
+  #:spacer-infos annotation-extract-spacer-infos
+  (annotation-prune-fallback operator-macro-extract-typeset))
 
 (define-doc repet.macro repet
   "repetition"

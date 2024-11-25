@@ -224,7 +224,7 @@ meta:
     fun check_options(options :~ List):
       for (opt: options):
         match opt
-        | '$('~inset' || '~indent' || '~prompt' || '~indent_from_block'): $_': #void
+        | '$('~inset' || '~indent' || '~prompt' || '~indent_from_block' || '~spacer_info_box'): $_': #void
         | ~else: syntax_meta.error("invalid option", stx, opt)
     match '$tail ...'
     | '($option, ...) $new_tail ...':

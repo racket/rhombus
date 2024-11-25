@@ -28,7 +28,8 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   annot.macro 'String'
-  annot.macro 'ReadableString'
+  annot.macro 'ReadableString':
+    ~method_fallback: String
   annot.macro 'ReadableString.to_string'
 ){
 

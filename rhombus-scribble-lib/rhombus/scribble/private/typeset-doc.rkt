@@ -557,16 +557,12 @@
               (values k
                       (cond
                         [(identifier? v)
-                         (define in-name-root-space
-                           (make-interned-syntax-introducer 'rhombus/namespace))
-                         (define b (identifier-binding v #f))
+                         (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))
+                         (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
+                         (define ann-b (identifier-binding (in-annot-space v 'add) #f))
                          (define ns-b (identifier-binding (in-name-root-space v 'add) #f))
-                         (and (or b ns-b)
-                              (let ([b (or b '(#f #f #f #f))]
-                                    [ns-b (or ns-b '(#f #f))])
-                                (spacer-binding (syntax-e v)
-                                                (list-ref ns-b 0) (list-ref ns-b 1) (list-ref ns-b 2) (list-ref ns-b 3)
-                                                (list-ref ns-b 4) (list-ref ns-b 5) (list-ref ns-b 6))))]
+                         (and (or ann-b ns-b)
+                              (spacer-binding (syntax-e v) ann-b ns-b))]
                         [else v])))))
      (for/fold ([content content]) ([id (in-list (cons id (syntax->list extra-ids)))]
                                     [space (in-list (cons space extra-spaces))]

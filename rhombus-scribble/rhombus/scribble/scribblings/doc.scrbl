@@ -282,15 +282,20 @@
     op_or_id_name: namespace ~defn
   doc '«expr.macro '$op_or_id_name $quoted_term ...' $term ...»'
   doc '«expr.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...' $term ...»'
-  doc '«defn.macro '$id_name $quoted_term ...' $term ...»'
-  doc '«decl.macro '$id_name $quoted_term ...' $term ...»'
-  doc '«decl.nestable_macro '$id_name $term ...' $term ...»'
-  doc '«annot.macro '$op_or_id_name $term ...' $term ...»'
-  doc '«annot.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $term ...' $term ...»'
-  doc '«bind.macro '$op_or_id_name $term ...' $term ...»'
-  doc '«bind.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $term ...' $term ...»'
-  doc '«repet.macro '$op_or_id_name $term ...' $term ...»'
-  doc '«repet.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $term ...' $term ...»'
+  doc '«defn.macro '$id_name $quoted_term ...'»'
+  doc '«decl.macro '$id_name $quoted_term ...'»'
+  doc '«decl.nestable_macro '$id_name $quoted_term ...'»'
+  doc '«annot.macro '$op_or_id_name $quoted_term ...' $maybe_fallback»'
+  doc '«annot.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...' $maybe_fallback»'
+  doc '«bind.macro '$op_or_id_name $quoted_term ...'»'
+  doc '«bind.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...'»'
+  doc '«repet.macro '$op_or_id_name $quoted_term ...'»'
+  doc '«repet.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...'»'
+
+  grammar maybe_fallback:
+    $(epsilon)
+    ~method_fallback $id
+    ~method_fallback: $id
 ){
 
  A @tech{doc entry} form to documents an expression, definition,
@@ -304,6 +309,17 @@
  to a nonterminal that is defined using @rhombus(grammar, ~doc) or bound
  with a @rhombus(~nonterminal) preparation in the enclosing @rhombus(doc)
  form.
+
+ In the @rhombus(annot.macro) case, @rhombus(maybe_fallback) can provide
+ an alternate annotation name that is used when hyperlinking method names
+ in @rhombus(rhombus) and @rhombus(rhombusblock) forms. When the context
+ of a method name indicates the documented @rhombus(op_or_id_name) but
+ the method cannot be found within that name as a namespace, then the
+ @rhombus(id) after @rhombus(~method_fallback) is tried as a namespace.
+ Typically, @rhombus(id) implies @rhombus(op_or_id_name), but not
+ necessarily; for example, @rhombus(ReadableString) falls back to
+ @rhombus(String) due to the way that @rhombus(String) method accept
+ @rhombus(ReadableString)s.
 
  The following example demonstrates documenting a @rhombus(widget)
  expression macro with a metavariable @rhombus(direction) that is

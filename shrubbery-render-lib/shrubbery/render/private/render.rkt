@@ -31,8 +31,9 @@
   (define res-semicolon (render 'result "; "))
 
   (define (render_line stx-in
-                       #:space [space-name-in #f])
-    (define stx (replace-name-refs stx-in 'group
+                       #:space [space-name-in #f]
+                       #:spacer_info_box [info-box #f])
+    (define stx (replace-name-refs stx-in 'group info-box
                                    render-in-space
                                    render-via-result-annotation))
     (define space-names (full-space-names space-name-in))
@@ -160,7 +161,8 @@
   (define (render_block stx
                         #:indent [indent-amt 0]
                         #:prompt [prompt ""]
-                        #:indent_from_block [indent-from-block? #t])
+                        #:indent_from_block [indent-from-block? #t]
+                        #:spacer_info_box [info-box #f])
     ;; Go back to a string, then parse again using the
     ;; colorer. Why didn't we use a string to start with?
     ;; Because having `rhombusblock` work on implicitly quoted syntax
@@ -173,7 +175,7 @@
         [(block . _) stx]
         [_ (error 'typeset-rhombusblock "not a block term: ~e" stx)]))
     (define stx-ranges (make-hasheq))
-    (define str (block-string->content-string (shrubbery-syntax->string (replace-name-refs block-stx 'block
+    (define str (block-string->content-string (shrubbery-syntax->string (replace-name-refs block-stx 'block info-box
                                                                                            render-in-space
                                                                                            render-via-result-annotation)
                                                                         #:use-raw? #t
@@ -568,11 +570,22 @@
              leftover)]
     [else (values #f #f)]))
 
+(struct info-tables (keys       ; key -> stx
+                     binds      ; sym -> 'bind value
+                     closures)) ; key -> binds
+(struct via-result (root-annot
+                    rators))
+
 ;; replace `root.field` with a typeset element
-(define (replace-name-refs stx-in mode
+(define (replace-name-refs stx-pre-keys mode info-box
                            render-in-space
                            render-via-result-annotation)
-  (define keys (gather-keys stx-in mode))
+  (define stx-in (add-keys stx-pre-keys mode))
+  (define info (gather-info stx-in mode (if (and (box? info-box)
+                                                 (info-tables? (unbox info-box)))
+                                            (unbox info-box)
+                                            (info-tables #hasheq() #hasheq() #hasheq()))))
+  (when (box? info-box) (set-box! info-box info))
   (define (replace-in-groups gs)
     (for/list ([g (in-list (syntax->list gs))])
       (replace-in-group g)))
@@ -598,11 +611,11 @@
       [((~and tag alts) b ...)
        (datum->syntax stx (cons #'tag (replace-in-terms #'(b ...))) stx stx)]
       [_
-       (define head (find-namespace-root stx keys
-                                         render-via-result-annotation))
+       (define head (find-namespace-root stx info
+                                         #hasheq()))
        (cond
-         [(procedure? head)
-          (datum->syntax stx (head stx) stx stx)]
+         [(via-result? head)
+          (datum->syntax stx (element-via-result head stx render-via-result-annotation) stx stx)]
          [head
           (define-values (new-elem/id leftover)
             (dotted-name-ref head
@@ -619,86 +632,161 @@
       (replace-in-term stx-in)
       (replace-in-group stx-in)))
 
-(define (gather-keys stx-in mode)
-  (define (gather-in-groups ht gs)
-    (for/fold ([ht ht]) ([g (in-list (syntax->list gs))])
-      (gather-in-group ht g)))
-  (define (gather-in-group ht g)
+;; ensure that every identifier has a key, so that we can record use information
+;; in `gather-info`
+(define (add-keys stx-in mode)
+  (define (add-in-groups gs)
+    (for/list ([g (in-list (syntax->list gs))])
+      (add-in-group g)))
+  (define (add-in-group g)
     (syntax-parse g
       #:datum-literals (group)
       [((~and tag group) t ...)
-       (gather-in-terms ht #'(t ...))]))
-  (define (gather-in-terms ht ts)
-    (let loop ([ht ht] [elems (syntax->list ts)])
+       (datum->syntax g (cons #'tag (add-in-terms #'(t ...))) g g)]))
+  (define (add-in-terms ts)
+    (let loop ([elems (syntax->list ts)])
       (cond
-        [(null? elems) ht]
+        [(null? elems) null]
         [else
-         (loop (gather-in-term ht (car elems))
-               (cdr elems))])))
-  (define (gather-in-term ht stx)
+         (cons (add-in-term (car elems))
+               (loop (cdr elems)))])))
+  (define (add-in-term stx)
     (syntax-parse stx
       #:datum-literals (parens brackets braces block quotes multi alts op)
       [((~and tag (~or* parens brackets braces quotes block multi)) g ...)
-       (gather-in-groups (gather-in-term ht #'tag) #'(g ...))]
+       (datum->syntax stx (cons #'tag (add-in-groups #'(g ...))) stx stx)]
       [((~and tag alts) b ...)
-       (gather-in-terms (gather-in-term ht #'tag) #'(b ...))]
+       (datum->syntax stx (cons #'tag (add-in-terms #'(b ...))) stx stx)]
       [_
-       (define key (syntax-property stx 'spacer_key))
-       (if key
-           (hash-set ht key stx)
-           ht)]))
+       (if (and (identifier? stx)
+                (not (syntax-property stx 'spacer_key)))
+           (syntax-property stx 'spacer_key (gensym))
+           stx)]))
   (if (eq? mode 'block)
-      (gather-in-term #hasheq() stx-in)
-      (gather-in-group #hasheq() stx-in)))
+      (add-in-term stx-in)
+      (add-in-group stx-in)))
 
-(define (find-namespace-root stx keys
-                             render-via-result-annotation
+(define (gather-info stx-in mode info)
+  (define (gather-in-groups info gs)
+    (for/fold ([info info]) ([g (in-list (syntax->list gs))])
+      (gather-in-group info g)))
+  (define (gather-in-group info g)
+    (syntax-parse g
+      #:datum-literals (group)
+      [((~and tag group) t ...)
+       (gather-in-terms info #'(t ...))]))
+  (define (gather-in-terms info ts)
+    (let loop ([info info] [elems (syntax->list ts)])
+      (cond
+        [(null? elems) info]
+        [else
+         (loop (gather-in-term info (car elems))
+               (cdr elems))])))
+  (define (gather-in-term info stx)
+    (syntax-parse stx
+      #:datum-literals (parens brackets braces block quotes multi alts op)
+      [((~and tag (~or* parens brackets braces quotes block multi)) g ...)
+       (gather-in-groups (gather-in-term info #'tag) #'(g ...))]
+      [((~and tag alts) b ...)
+       (gather-in-terms (gather-in-term info #'tag) #'(b ...))]
+      [_
+       (define keys (info-tables-keys info))
+       (define binds (info-tables-binds info))
+       (define closures (info-tables-closures info))
+       (define key (syntax-property stx 'spacer_key))
+       (define sym (and (identifier? stx)
+                        (syntax-e stx)))
+       (define bind (and sym (syntax-property stx 'bind)))
+       (struct-copy info-tables info
+                    [keys (if key
+                              (hash-set keys key stx)
+                              keys)]
+                    [binds (if bind
+                               (hash-set binds sym bind)
+                               binds)]
+                    [closures (if (and sym key)
+                                  (hash-set closures key binds)
+                                  closures)])]))
+  (if (eq? mode 'block)
+      (gather-in-term info stx-in)
+      (gather-in-group info stx-in)))
+
+(define (find-namespace-root stx info
+                             seen
                              #:must-indirect? [must-indirect? #t])
+  (define keys (info-tables-keys info))
   (define field (syntax-property stx 'field))
   (case (and field (car field))
     [(of)
-     (define of-stx (hash-ref keys (cdr field) #f))
-     (define annot (and of-stx (syntax-property (term-ctx of-stx) 'annot)))
-     (case (and annot (car annot))
-       [(as) ; field of an annotation-as-namespace in the source
-        (hash-ref keys (cdr annot) #f)]
-       [(as_export) ; field of a specific annotation-as-namespace
-        ;; for example, a list construction could declare being an instance of `List`
-        (define desc (cdr annot))
-        (cond
-          [(syntax? desc) (term-identifier desc)]
-          [(and (list? desc) (= 4 (length desc)))
-           (define-values (mpi sym nom-mpi nom-sym) (apply values desc))
-           (syntax-binding-set->syntax (syntax-binding-set-extend
-                                        (syntax-binding-set)
-                                        sym
-                                        #f
-                                        mpi
-                                        #:nominal-module nom-mpi
-                                        #:nominal-symbol nom-sym)
-                                       sym)]
-          [else #f])]
-       [(result) ; check result of some other identifier as function/method
-        (define rator (hash-ref keys (cdr annot) #f))
-        (define ns (and rator
-                        (find-namespace-root rator keys
-                                             render-via-result-annotation
-                                             #:must-indirect? #f)))
-        (cond
-          [ns
-           ;; need to resolve a dotted name
-           #f]
-          [(identifier? rator)
-           ;; look up result of `rator` via doc info
-           (lambda (id)
-             (render-via-result-annotation rator id (shrubbery-syntax->string id)))]
-          [else #f])]
-       [else
-        (if (and (not must-indirect?)
-                 (identifier? of-stx))
-            of-stx
-            #f)])]
+     (let of-loop ([val-key (cdr field)] [seen seen])
+       (define of-stx (and (not (hash-ref seen val-key #f))
+                           (hash-ref keys val-key #f)))
+       (define annot (and of-stx (syntax-property (term-ctx of-stx) 'annot)))
+       (case (and annot (car annot))
+         [(as) ; field of an annotation-as-namespace in the source
+          (define id (hash-ref keys (cdr annot) #f))
+          ;; use `via-result` to get annotation fallbacks
+          (via-result id null)]
+         [(as_export) ; field of a specific annotation-as-namespace
+          ;; for example, a list construction could declare being an instance of `List`
+          (define desc (cdr annot))
+          (cond
+            [(syntax? desc) (via-result (term-identifier desc) null)]
+            [(and (list? desc) (= 4 (length desc)))
+             (define-values (mpi sym nom-mpi nom-sym) (apply values desc))
+             (syntax-binding-set->syntax (syntax-binding-set-extend
+                                          (syntax-binding-set)
+                                          sym
+                                          #f
+                                          mpi
+                                          #:nominal-module nom-mpi
+                                          #:nominal-symbol nom-sym)
+                                         sym)]
+            [else #f])]
+         [(result) ; check result of some other identifier as function/method
+          (define rator (and (not (hash-ref seen (cdr annot) #f))
+                             (hash-ref keys (cdr annot) #f)))
+          (define ns (and rator
+                          (find-namespace-root rator info
+                                               (hash-set seen (cdr annot) #t)
+                                               #:must-indirect? #f)))
+          (cond
+            [(via-result? ns)
+             ;; chain result lookup
+             (via-result (via-result-root-annot ns)
+                         (append (via-result-rators ns) (list rator)))]
+            [ns
+             ;; need to resolve a dotted name relative to an annotation
+             (via-result ns (list rator))]
+            [(identifier? rator)
+             ;; look up result of `rator` via doc info
+             (via-result #f (list rator))]
+            [else #f])]
+         [else
+          (cond
+            [(identifier? of-stx)
+             (define key (syntax-property of-stx 'spacer_key))
+             (define binds (and key (hash-ref (info-tables-closures info) key #f)))
+             (define binder (and binds (hash-ref binds (syntax-e of-stx) #f)))
+             (cond
+               [binder
+                (case (and (pair? binder) (car binder))
+                  [(value)
+                   (define next-val-key (cdr binder))
+                   (cond
+                     [val-key (of-loop next-val-key (hash-set seen val-key #t))]
+                     [else #f])])]
+               [(not must-indirect?)
+                of-stx]
+               [else #f])]
+            [else #f])]))]
     [else #f]))
+
+(define (element-via-result head id render-via-result-annotation)
+  (render-via-result-annotation (via-result-root-annot head)
+                                (via-result-rators head)
+                                id
+                                (shrubbery-syntax->string id)))
 
 (define (term-ctx stx)
   (syntax-parse stx
