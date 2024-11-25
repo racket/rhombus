@@ -52,7 +52,10 @@
                       (~optional (group #:result_only (block result-only-expr))
                                  #:defaults ([result-only-expr #'(group (parsed #:rhombus/expr #f))]))
                       (~optional (group #:indent (block indent-expr))
-                                 #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))])))
+                                 #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))]))
+                      (~optional (group #:spacer_info_box (block spacer-info-box-expr))
+                                 #:defaults ([spacer-info-box-expr
+                                              #'(group (parsed #:rhombus/expr (lookup-spacer-info evaluator)))])))
                 ...
                 (~and g (group _ ...)) ...))
      (define (rb form)
@@ -69,7 +72,8 @@
                                                                (+ '#,(if (attribute no-prompt?) 0 2)
                                                                   (rhombus-expression indent-expr))))))
                          (group #:inset (block (group (parsed #:rhombus/expr #f))))
-                         (group #:indent_from_block (block (group (parsed #:rhombus/expr '#,spliced?)))))
+                         (group #:indent_from_block (block (group (parsed #:rhombus/expr '#,spliced?))))
+                         (group #:spacer_info_box (block (group info-box))))
                  #,block-stx)))
      (with-syntax ([((t-form e-form) ...)
                     (for/list ([form (in-list (syntax->list #'(g ...)))])
@@ -87,17 +91,19 @@
                         [(group #:fake (block t-form e-form))
                          (list (rb #'t-form) #'e-form)]
                         [_ (list (rb form) form)]))])
-       #`(examples
-          #:eval (rhombus-expression eval-expr)
-          #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
-          #:label (rhombus-expression label-expr)
-          #:hidden? (rhombus-expression hidden-expr)
-          #:result-only? (rhombus-expression result-only-expr)
-          #:indent (rhombus-expression indent-expr)
-          (list
-           (list t-form
-                 (adjust-top-srcloc (quote-syntax (multi e-form))))
-           ...)))]))
+       #`(let* ([evaluator (rhombus-expression eval-expr)]
+                [info-box (rhombus-expression spacer-info-box-expr)])
+           (examples
+            #:eval evaluator
+            #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
+            #:label (rhombus-expression label-expr)
+            #:hidden? (rhombus-expression hidden-expr)
+            #:result-only? (rhombus-expression result-only-expr)
+            #:indent (rhombus-expression indent-expr)
+            (list
+             (list t-form
+                   (adjust-top-srcloc (quote-syntax (multi e-form))))
+             ...))))]))
 
 (define (make-rhombus-eval [lang 'rhombus]
                            #:attach [attach? #t])
@@ -305,3 +311,11 @@
    thunk
    (lambda ()
      (call-in-sandbox-context eval (lambda () (current-output-port orig))))))
+
+(define spacer-info-boxes (make-ephemeron-hasheq))
+
+(define (lookup-spacer-info evaluator)
+  (or (hash-ref spacer-info-boxes evaluator #f)
+      (let ([b (box #f)])
+        (hash-set! spacer-info-boxes evaluator b)
+        b)))

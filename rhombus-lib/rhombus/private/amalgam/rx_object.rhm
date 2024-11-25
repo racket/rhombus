@@ -6,6 +6,7 @@ import:
   "recur.rhm" open
   "error.rhm" open
   "rx_match.rhm" open
+  "rx-object.rkt" as rkt
 
 export:
   RX
@@ -223,3 +224,6 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
       vars,
       has_backref,
       src)
+
+// register predicate and selector for use by `String`
+rkt.#{set-rx!}(fun (x): x is_a RX, _RX._rkt_partial_rx)

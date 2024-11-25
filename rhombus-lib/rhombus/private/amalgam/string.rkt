@@ -2,9 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "make-get-veneer-like-static-infos.rkt")
-         (only-in racket/string string-contains?)
+         racket/string
          racket/symbol
          racket/keyword
+         racket/unsafe/undefined
+         "../version-case.rkt"
          "provide.rkt"
          "define-operator.rkt"
          (only-in "arithmetic.rkt"
@@ -23,12 +25,15 @@
          (submod "literal.rkt" for-info)
          (submod "annotation.rkt" for-class)
          (submod "char.rkt" for-static-info)
+         (submod "list.rkt" for-compound-repetition)
          "mutability.rkt"
          "pack.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "number.rkt"
-         "static-info.rkt")
+         "treelist.rkt"
+         "static-info.rkt"
+         "rx-object.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -43,7 +48,11 @@
          (for-space rhombus/annot
                     ReadableString
                     StringCI
-                    ReadableStringCI))
+                    ReadableStringCI
+                    StringLocale
+                    ReadableStringLocale
+                    StringLocaleCI
+                    ReadableStringLocaleCI))
 
 (module+ for-builtin
   (provide string-method-table))
@@ -80,9 +89,15 @@
   #:dot-methods
   ([length String.length]
    [get String.get]
+   [find String.find]
    [contains String.contains]
+   [starts_with String.starts_with]
+   [ends_with String.ends_with]
    [append String.append]
    [substring String.substring]
+   [trim String.trim]
+   [split String.split]
+   [replace String.replace]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
@@ -93,6 +108,8 @@
    [downcase String.downcase]
    [foldcase String.foldcase]
    [titlecase String.titlecase]
+   [locale_upcase String.locale_upcase]
+   [locale_downcase String.locale_downcase]
    [normalize_nfd String.normalize_nfd]
    [normalize_nfkd String.normalize_nfkd]
    [normalize_nfc String.normalize_nfc]
@@ -116,8 +133,14 @@
    [append String.append]
    [length String.length]
    [get String.get]
+   [find String.find]
    [contains String.contains]
+   [starts_with String.starts_with]
+   [ends_with String.ends_with]
    [substring String.substring]
+   [trim String.trim]
+   [split String.split]
+   [replace String.replace]
    [make String.make]
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
@@ -129,6 +152,8 @@
    [downcase String.downcase]
    [foldcase String.foldcase]
    [titlecase String.titlecase]
+   [locale_upcase String.locale_upcase]
+   [locale_downcase String.locale_downcase]
    [normalize_nfd String.normalize_nfd]
    [normalize_nfkd String.normalize_nfkd]
    [normalize_nfc String.normalize_nfc]
@@ -166,6 +191,53 @@
   (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))
 (define-annotation-syntax ReadableStringCI
   (identifier-annotation string? #,(get-readable-string-ci-static-infos) #:static-only))
+
+(define-for-syntax (convert-string-locale-compare-static-info static-info)
+  (syntax-parse static-info
+    #:datum-literals (#%compare)
+    [(#%compare . _) #'(#%compare ((< string-locale<?)
+                                   (<= string-locale<=?)
+                                   (= string-locale=?)
+                                   (!= string-locale!=?)
+                                   (>= string-locale>=?)
+                                   (> string-locale>?)))]
+    [_ static-info]))
+
+(define-for-syntax (get-string-locale-static-infos)
+  (make-get-veneer-like-static-infos get-string-static-infos
+                                     convert-string-locale-compare-static-info))
+
+(define-for-syntax (get-readable-string-locale-static-infos)
+  (make-get-veneer-like-static-infos get-readable-string-static-infos
+                                     convert-string-locale-compare-static-info))
+
+(define-for-syntax (convert-string-locale-ci-compare-static-info static-info)
+  (syntax-parse static-info
+    #:datum-literals (#%compare)
+    [(#%compare . _) #'(#%compare ((< string-locale-ci<?)
+                                   (<= string-locale-ci<=?)
+                                   (= string-locale-ci=?)
+                                   (!= string-locale-ci!=?)
+                                   (>= string-locale-ci>=?)
+                                   (> string-locale-ci>?)))]
+    [_ static-info]))
+
+(define-for-syntax (get-string-locale-ci-static-infos)
+  (make-get-veneer-like-static-infos get-string-static-infos
+                                     convert-string-locale-compare-static-info))
+
+(define-for-syntax (get-readable-string-locale-ci-static-infos)
+  (make-get-veneer-like-static-infos get-readable-string-static-infos
+                                     convert-string-locale-ci-compare-static-info))
+
+(define-annotation-syntax StringLocale
+  (identifier-annotation immutable-string? #,(get-string-locale-static-infos) #:static-only))
+(define-annotation-syntax ReadableStringLocale
+  (identifier-annotation string? #,(get-readable-string-locale-static-infos) #:static-only))
+(define-annotation-syntax StringLocaleCI
+  (identifier-annotation immutable-string? #,(get-string-locale-ci-static-infos) #:static-only))
+(define-annotation-syntax ReadableStringLocaleCI
+  (identifier-annotation string? #,(get-readable-string-locale-ci-static-infos) #:static-only))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===)
@@ -234,10 +306,75 @@
   (check-readable-string who s)
   (string->number s))
 
+(define/method (String.find s1 s2)
+  (check-readable-string who s1)
+  (check-readable-string who s2)
+  (meta-if-version-at-least
+   "8.15.0.7"
+   (string-find s1 s2)
+   (and (string-contains? s1 s2)
+        ;; find position the slow way:
+        (for/or ([i (in-range 0 (string-length s1))])
+          (and (string=? (substring s1 i (+ i (string-length s2))) s2) i)))))
+
 (define/method (String.contains s1 s2)
   (check-readable-string who s1)
   (check-readable-string who s2)
   (string-contains? s1 s2))
+
+(define/method (String.starts_with s1 s2)
+  (check-readable-string who s1)
+  (check-readable-string who s2)
+  (string-prefix? s1 s2))
+
+(define/method (String.ends_with s1 s2)
+  (check-readable-string who s1)
+  (check-readable-string who s2)
+  (string-suffix? s1 s2))
+
+(define/method (String.trim s1 [sep unsafe-undefined]
+                            #:start [start? #t]
+                            #:end [end? #t]
+                            #:repeat [repeat? #f])
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (check-readable-string who s1)
+  (string->immutable-string
+   (cond
+     [(eq? sep unsafe-undefined)
+      (string-trim s1 #:left? start? #:right? end? #:repeat? repeat?)]
+     [else
+      (unless (or (string? sep) (rx? sep))
+        (raise-annotation-failure who sep "ReadableString || RX"))
+      (string-trim s1 (if (string? sep) sep (rx-regexp sep))
+                   #:left? start? #:right? end? #:repeat? repeat?)])))
+
+(define/method (String.split s1 [sep unsafe-undefined]
+                             #:trim [trim? #t]
+                             #:repeat [repeat? #f])
+  #:static-infos ((#%call-result ((#%index-result #,(get-string-static-infos))
+                                  #,@(get-list-static-infos))))
+  (check-readable-string who s1)
+  (define l
+    (cond
+      [(eq? sep unsafe-undefined)
+       (string-split s1 #:trim? trim? #:repeat? repeat?)]
+      [else
+       (unless (or (string? sep) (rx? sep))
+         (raise-annotation-failure who sep "ReadableString || RX"))
+       (string-split s1 (if (string? sep) sep (rx-regexp sep))
+                     #:trim? trim? #:repeat? repeat?)]))
+  (for/treelist ([s (in-list l)])
+    (string->immutable-string s)))
+
+(define/method (String.replace s1 from to
+                               #:all [all? #f])
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (check-readable-string who s1)
+  (unless (or (string? from) (rx? from))
+    (raise-annotation-failure who from "ReadableString || RX"))
+  (check-readable-string who to)
+  (string->immutable-string
+   (string-replace s1 from to #:all? all?)))
 
 (define/method (String.copy s)
   #:primitive (string-copy)
@@ -273,11 +410,11 @@
 
 (define-syntax (define-upcase stx)
   (syntax-parse stx
-    [(_ upcase)
-     #:do [(define (format-name fmt)
-             (datum->syntax #'upcase (string->symbol (format fmt (syntax-e #'upcase)))))]
-     #:with method-name (format-name "String.~a")
-     #:with fn-name (format-name "string-~a")
+    [(_ upcase (~optional rkt-upcase))
+     #:do [(define (format-name fmt upcase-stx)
+             (datum->syntax upcase-stx (string->symbol (format fmt (syntax-e upcase-stx)))))]
+     #:with method-name (format-name "String.~a" #'upcase)
+     #:with fn-name (format-name "string-~a" (or (attribute rkt-upcase) #'upcase))
      #'(define/method (method-name s)
          #:primitive (fn-name)
          #:static-infos ((#%call-result #,(get-string-static-infos)))
@@ -287,6 +424,8 @@
 (define-upcase downcase)
 (define-upcase titlecase)
 (define-upcase foldcase)
+(define-upcase locale_upcase locale-upcase)
+(define-upcase locale_downcase locale-downcase)
 
 (define-syntax (define-normalize stx)
   (syntax-parse stx
@@ -353,15 +492,48 @@
   #:static-infos ((#%call-result ((#%sequence-constructor #t))))
   (in-string str))
 
+(define (raise-string-comp-failure who a b)
+  (raise-annotation-failure '!= (if (string? a) b a) "ReadableString"))
+
 (define (string!=? a b)
   (if (and (string? a) (string? b))
       (not (string=? a b))
-      (raise-annotation-failure '!= (if (string? a) b a) "String")))
+      (raise-string-comp-failure '!= a b)))
 
 (define (string-ci!=? a b)
   (if (and (string? a) (string? b))
       (not (string-ci=? a b))
-      (raise-annotation-failure '!= (if (string? a) b a) "String")))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale!=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale=? a b))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale<=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale>? a b))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale>=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale<? a b))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale-ci!=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale-ci=? a b))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale-ci<=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale-ci>? a b))
+      (raise-string-comp-failure '!= a b)))
+
+(define (string-locale-ci>=? a b)
+  (if (and (string? a) (string? b))
+      (not (string-locale-ci<? a b))
+      (raise-string-comp-failure '!= a b)))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'string get-string-static-infos))

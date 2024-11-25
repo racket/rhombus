@@ -15,6 +15,7 @@
     ~label: $content_expr
     ~eval: $evaluator_expr
     ~indent: $indentation_expr
+    ~spacer_info_box: $box_expr
 
   grammar chunk:
     ~defn:
@@ -117,6 +118,11 @@
  The @rhombus(~indent) option can provide an expression to produce a
  nonnegative exact integer. That number of additional spaces is used to
  indent the example. The default is @rhombus(0).
+
+ The @rhombus(~spacer_info_box) option can provide a box the hold spacer
+ binding information for linking methods after a @rhombus(.). By default,
+ an box specific to the evaluator is created or found (if the @rhombus(~eval)
+ option is present) in a weak table.
 
 }
 

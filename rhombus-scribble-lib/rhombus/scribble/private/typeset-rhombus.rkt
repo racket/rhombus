@@ -95,61 +95,97 @@
                                                                 0))]
                          [else r]))
    #:render_via_result_annotation (let ([ns (make-base-namespace)])
-                                    (lambda (rator field field-str)
+                                    (lambda (root-annot rators field field-str)
                                       (delayed-element
                                        (lambda (renderer sec ri)
                                          (define default (element tt-style field-str))
-                                         (define tag (find-racket-tag sec ri rator #f
-                                                                      #:unlinked-ok? #t))
-                                         (define spacer-infos (resolve-get/tentative sec ri (list 'spacer-infos tag)))
-                                         (define result-annot (and spacer-infos
-                                                                   (hash-ref spacer-infos 'result_annotation #f)))
-                                         (cond
-                                           [(and result-annot
-                                                 (spacer-binding? result-annot))
-                                            (parameterize ([current-namespace ns])
+                                         (define (start)
+                                           (cond
+                                             [root-annot
+                                              (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
+                                              (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))
+                                              (define ns-id (in-name-root-space root-annot 'add))
+                                              (define annot-id (in-annot-space root-annot 'add))
+                                              (prep-namespace-for-binding ns-id)
+                                              (find-via-namespace-id ns-id annot-id rators #f)]
+                                             [else
+                                              (define rator (car rators))
+                                              (define tag (find-racket-tag sec ri rator #f
+                                                                           #:unlinked-ok? #t))
+                                              (parameterize ([current-namespace ns])
+                                                (find-via-rator-tag tag (cdr rators)))]))
+
+                                         (define (find-via-rator-tag rator-tag more-rators)
+                                           (define spacer-infos (and rator-tag
+                                                                     (resolve-get/tentative sec ri (list 'spacer-infos rator-tag))))
+                                           (define result-annot (and spacer-infos
+                                                                     (hash-ref spacer-infos 'result_annotation #f)))
+                                           (find-via-annot-spacer-binding result-annot more-rators))
+
+                                         (define (find-via-annot-spacer-binding result-annot more-rators)
+                                           (cond
+                                             [(and result-annot
+                                                   (spacer-binding? result-annot))
                                               (define root-sym (spacer-binding-datum result-annot))
-                                              (define nom-mpi (spacer-binding-ns-nom-mpi result-annot))
-                                              (define mpi (spacer-binding-ns-mpi result-annot))
-                                              (define (reset mpi)
-                                                (define-values (sub base) (module-path-index-split mpi))
-                                                (if (not sub)
-                                                    #f
-                                                    (module-path-index-join sub (and base (reset base)))))
-                                              (module-path-index-resolve (reset nom-mpi) #t)
-                                              (module-path-index-resolve (reset mpi) #t)
-                                              (define ns-id
-                                                (syntax-binding-set->syntax (syntax-binding-set-extend
-                                                                             (syntax-binding-set)
-                                                                             root-sym
-                                                                             0
-                                                                             mpi
-                                                                             #:source-symbol (spacer-binding-ns-sym result-annot)
-                                                                             #:source-phase (spacer-binding-ns-phase result-annot)
-                                                                             #:nominal-module nom-mpi
-                                                                             #:nominal-symbol (spacer-binding-ns-nom-sym result-annot)
-                                                                             #:nominal-phase (spacer-binding-ns-export-phase result-annot)
-                                                                             #:nominal-require-phase (spacer-binding-ns-import-phase result-annot))
-                                                                            root-sym))
-                                              (define p (identifier-binding-portal-syntax ns-id 0))
-                                              (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
-                                              (define field-id (and lookup (lookup #f "identifier" field values)))
+                                              (define ns-id (binding->id root-sym (spacer-binding-ns-b result-annot)))
+                                              (define annot-id (binding->id root-sym (spacer-binding-annot-b result-annot)))
+                                              (find-via-namespace-id ns-id annot-id more-rators #t)]
+                                             [else default]))
+
+                                         (define (find-via-namespace-id ns-id annot-id more-rators shift?)
+                                           (define (try-fallback)
+                                             (cond
+                                               [annot-id
+                                                (define tag (find-racket-tag sec ri (syntax-shift-phase-level annot-id #f) #f
+                                                                             #:space 'rhombus/annot
+                                                                             #:unlinked-ok? #t))
+                                                (define spacer-infos (and tag
+                                                                          (resolve-get/tentative sec ri (list 'spacer-infos tag))))
+                                                (define fallback-annot (and spacer-infos
+                                                                            (hash-ref spacer-infos 'method_fallback #f)))
+                                                (if fallback-annot
+                                                    (find-via-annot-spacer-binding fallback-annot more-rators)
+                                                    default)]
+                                               [else default]))
+                                           (define p (and ns-id (identifier-binding-portal-syntax ns-id 0)))
+                                           (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
+                                           (define next-field (if (null? more-rators)
+                                                                  field
+                                                                  (car more-rators)))
+                                           (define next-id (and lookup (lookup #f "identifier"
+                                                                               next-field
+                                                                               values)))
+                                           (cond
+                                             [next-id
                                               (cond
-                                                [field-id
-                                                 (define e
-                                                   (make-id-element (syntax-shift-phase-level ns-id #f) field-str #f
-                                                                    ;; #:unlinked-ok? #t
-                                                                    #:space 'rhombus/namespace
-                                                                    #:suffix (list (string->symbol
-                                                                                    (format "~a.~a"
-                                                                                            root-sym
-                                                                                            (syntax-e field)))
-                                                                                   #f)))
-                                                 (element tt-style e)]
-                                                [else
-                                                 default]))]
-                                           [else
-                                            default]))
+                                                [(find-racket-tag sec ri (if shift? (syntax-shift-phase-level ns-id #f) ns-id) #f
+                                                                  #:space 'rhombus/namespace
+                                                                  #:suffix (list (string->symbol
+                                                                                  (format "~a.~a"
+                                                                                          (syntax-e ns-id)
+                                                                                          (syntax-e next-field)))
+                                                                                 #f)
+                                                                  #:unlinked-ok? #t)
+                                                 => (lambda (tag)
+                                                      (cond
+                                                        [(pair? more-rators)
+                                                         (find-via-rator-tag tag (cdr more-rators))]
+                                                        [else
+                                                         (define e
+                                                           (make-id-element (if shift? (syntax-shift-phase-level ns-id #f) ns-id) field-str #f
+                                                                            #:unlinked-ok? #t
+                                                                            #:space 'rhombus/namespace
+                                                                            #:suffix (list (string->symbol
+                                                                                            (format "~a.~a"
+                                                                                                    (syntax-e ns-id)
+                                                                                                    (syntax-e field)))
+                                                                                           #f)))
+                                                         (element tt-style e)]))]
+                                                [else (try-fallback)])]
+                                             [else
+                                              (try-fallback)]))
+
+                                         (start))
                                        (lambda () field-str)
                                        (lambda () field-str))))
    #:render_whitespace (lambda (n)
@@ -189,12 +225,51 @@
                               #:inset [inset? #t]
                               #:indent [indent-amt 0]
                               #:prompt [prompt ""]
-                              #:indent_from_block [indent-from-block? #t])
+                              #:indent_from_block [indent-from-block? #t]
+                              #:spacer_info_box [info-box #f])
   (define output-block
     (render_code_block stx
                        #:indent indent-amt
                        #:prompt prompt
-                       #:indent_from_block indent-from-block?))
+                       #:indent_from_block indent-from-block?
+                       #:spacer_info_box info-box))
   (if inset?
       (nested-flow (style 'code-inset null) (list output-block))
       output-block))
+
+(define (binding->id root-sym b)
+  (cond
+    [(not b) #f]
+    [else
+     (define-values (mpi sym nom-mpi nom-sym phase import-phase export-phase)
+       (apply values b))
+     (load-mpi nom-mpi)
+     (load-mpi mpi)
+     (syntax-binding-set->syntax (syntax-binding-set-extend
+                                  (syntax-binding-set)
+                                  root-sym
+                                  0
+                                  mpi
+                                  #:source-symbol sym
+                                  #:source-phase phase
+                                  #:nominal-module nom-mpi
+                                  #:nominal-symbol nom-sym
+                                  #:nominal-phase export-phase
+                                  #:nominal-require-phase import-phase)
+                                 root-sym)]))
+
+(define (prep-namespace-for-binding id)
+  (define b (identifier-binding id #f))
+  (when b
+    (define-values (mpi sym nom-mpi nom-sym phase import-phase export-phase) (apply values b))
+    (load-mpi nom-mpi)
+    (load-mpi mpi)))
+
+(define (load-mpi mpi)
+  (define (reset mpi)
+    (define-values (sub base) (module-path-index-split mpi))
+    (if (not sub)
+        #f
+        (module-path-index-join sub (and base (reset base)))))
+  (with-handlers ([exn:fail? void])
+    (module-path-index-resolve (reset mpi) #t)))

@@ -1,6 +1,9 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    scribble/rx open
+    meta_label:
+      rhombus/rx open)
 
 @title{Strings}
 
@@ -25,7 +28,8 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   annot.macro 'String'
-  annot.macro 'ReadableString'
+  annot.macro 'ReadableString':
+    ~method_fallback: String
   annot.macro 'ReadableString.to_string'
 ){
 
@@ -130,25 +134,6 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.contains(str :: ReadableString,
-                         substr :: ReadableString)
-    :: Boolean
-){
-
- Checks whether @rhombus(str) contains @rhombus(substr) as a
- substring.
-
-@examples(
-  String.contains("howdy", "how")
-  "howdy".contains("how")
-  String.contains("howdy", "nope")
-  "howdy".contains("nope")
-)
-
-}
-
-
-@doc(
   method String.get(str :: ReadableString, n :: NonnegInt) :: Char
 ){
 
@@ -176,6 +161,127 @@ Strings are @tech{comparable}, which means that generic operations like
 @examples(
   String.substring("hello", 2, 4)
   String.substring("hello", 2)
+)
+
+}
+
+
+@doc(
+  method String.find(str :: ReadableString,
+                     substr :: ReadableString)
+    :: maybe(NonnegInt)
+  method String.contains(str :: ReadableString,
+                         substr :: ReadableString)
+    :: Boolean
+  method String.starts_with(str :: ReadableString,
+                            substr :: ReadableString)
+    :: Boolean
+  method String.ends_with(str :: ReadableString,
+                          substr :: ReadableString)
+    :: Boolean
+){
+
+ Checks whether @rhombus(str) contains @rhombus(substr) as a substring.
+ The @rhombus(String.find) function reports the first position in
+ @rhombus(str) where @rhombus(substr) starts, if @rhombus(substr) is
+ found. The @rhombus(String.starts_with) and @rhombus(String.ends_with)
+ functions return @rhombus(#true) only when @rhombus(substr) is at the
+ start or end of @rhombus(str), respectively.
+
+@examples(
+  String.contains("howdy", "how")
+  "howdy".contains("how")
+  "howdy".contains("nope")
+  "say howdy".find("how")
+  "say howdy".find("nope")
+  "say howdy".starts_with("say")
+  "say howdy".ends_with("dy")
+)
+
+}
+
+
+@doc(
+  method String.replace(str :: ReadableString,
+                        from :: ReadableString || RX,
+                        to :: ReadableString,
+                        ~all: all = #false)
+    :: String
+){
+
+ Replaces either the first or every (depending on the @rhombus(all)
+ argument) non-overlapping instance of @rhombus(from) in @rhombus(str)
+ with @rhombus(to).
+
+@examples(
+  String.replace("Hello", "l", "x")
+  String.replace("Hello", "l", "x", ~all: #true)
+)
+
+}
+
+
+@doc(
+  method String.split(str :: ReadableString,
+                      sep :: ReadableString || RX = rx'space+',
+                      ~trim: trim = #true,
+                      ~repeat: repeat = #false)
+    :: List.of(String)
+){
+
+ Finds non-overlapping instances of @rhombus(sep) in @rhombus(str)
+ and returns a list of substrings that appear between the @rhombus(sep)
+ instances.
+
+ If @rhombus(trim) is true, then the result list never starts or ends
+ with an empty string. Otherwise, an instance of @rhombus(sep) at the
+ start or end of @rhombus(str) implies an empty-string result.
+
+ The @rhombus(repeat) argument is relevant only when @rhombus(sep) is a
+ string instead of a @tech{regexp}. When @rhombus(repeat) is true, then
+ @rhombus(sep) is converted to a pattern that matches one or more
+ consecutive instances of @rhombus(sep).
+
+@examples(
+  ~hidden:
+    import rhombus/rx open
+  ~repl:
+    "Hello  World".split()
+    "Hello  World".split(" ")
+    "Hello  World".split(" ", ~repeat: #true)
+    "Hello  World".split(rx'upper')
+    "Hello  World".split(rx'upper', ~trim: #false)
+)
+
+}
+
+
+@doc(
+  method String.trim(str :: ReadableString,
+                     sep :: ReadableString || RX = rx'space+',
+                     ~start: start = #true,
+                     ~end: end = #true,
+                     ~repeat: repeat = #false)
+    :: List.of(String)
+){
+
+ Removes @rhombus(sep) from the start (when @rhombus(start) is true) and
+ end (when @rhombus(end) is true) of @rhombus(str).
+
+ The @rhombus(repeat) argument is relevant only when @rhombus(sep) is a
+ string instead of a @tech{regexp}. When @rhombus(repeat) is true, then
+ @rhombus(sep) is converted to a pattern that matches one or more
+ consecutive instances of @rhombus(sep).
+
+@examples(
+  ~hidden:
+    import rhombus/rx open
+  ~repl:
+    "  Hello World  ".trim()
+    "  Hello World  ".trim(~start: #false)
+    "  Hello World  ".trim(~end: #false)
+    "_Hello World__".trim("_")
+    "_Hello World__".trim("_", ~repeat: #true)
 )
 
 }
@@ -273,9 +379,14 @@ Strings are @tech{comparable}, which means that generic operations like
   method String.downcase(str :: ReadableString) :: String
   method String.foldcase(str :: ReadableString) :: String
   method String.titlecase(str :: ReadableString) :: String
+  method String.locale_upcase(str :: ReadableString) :: String
+  method String.locale_downcase(str :: ReadableString) :: String
 ){
 
- Case-conversion functions.
+ Case-conversion functions. The @rhombus(locale_upcase) and
+ @rhombus(locale_downcase) functions are sensitive to the current locale,
+ but the other functions are locale-independent conversions defined by
+ the Unicode standard.
 
 }
 
@@ -387,5 +498,19 @@ Strings are @tech{comparable}, which means that generic operations like
     "apple" < "BANANA"
     ("apple" :: StringCI) < ("BANANA" :: StringCI)
 )
+
+}
+
+
+@doc(
+  annot.macro 'StringLocale'
+  annot.macro 'ReadableStringLocale'
+  annot.macro 'StringLocaleCI'
+  annot.macro 'ReadableStringLocaleCI'
+){
+
+ Like @rhombus(StringCI, ~annot) and @rhombus(ReadableStringCI, ~annot),
+ but for locale-sensitive case-sensitive and case-insensitive
+ comparisons.
 
 }

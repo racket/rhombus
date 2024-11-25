@@ -11,7 +11,8 @@
 
 @doc(
   annot.macro 'Pict'
-  annot.macro 'StaticPict'
+  annot.macro 'StaticPict':
+    ~method_fallback: Pict
 ){
 
  An annotation representing a @tech{pict} value or a pict value that is
@@ -21,7 +22,8 @@
 
 @doc(
   def nothing :: NothingPict
-  annot.macro 'NothingPict'
+  annot.macro 'NothingPict':
+    ~method_fallback: Pict
 ){
 
  The @rhombus(nothing) pict is a special @tech{static pict} that acts as

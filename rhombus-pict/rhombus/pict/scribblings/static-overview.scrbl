@@ -22,7 +22,8 @@ document or used as slide content.
 
 @examples(
   ~eval: pict_eval
-  def rect = rectangle(~width: 40, ~height: 20, ~fill: "lightblue")
+  def rect = rectangle(~width: 40, ~height: 20, ~fill: "lightblue",
+                       ~line: #'inherit)
   rect
   def circ = circle(~size: 40, ~fill: "lightgreen")
   beside(rect, circ)
@@ -113,11 +114,11 @@ within a composite pict, as we explain a little further below.)
       ap.refocus(p)
     beside(antenna(rect), circ)
   ~repl:
-    fun underline(p):
+    fun underline(p :: Pict):
       stack(p, line(~dx: p.width))
     beside(~vert: #'baseline, hello, underline(world))
   ~repl:
-    fun underline(p):
+    fun underline(p :: Pict):
       stack(p, line(~dx: p.width)).refocus(p)
     beside(~vert: #'baseline, hello, underline(world))
   ~repl:

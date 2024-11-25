@@ -113,10 +113,11 @@
                 $group
                 ...'
   grammar option:
-    ~inset
-    ~indent
-    ~prompt
-    ~indent_from_block
+    ~inset: $expr
+    ~indent: $expr
+    ~prompt: $expr
+    ~indent_from_block: $expr
+    ~spacer_info_box: $expr
 ){
 
  Like @rhombus(rhombusblock), but supports @rhombus(option)s.

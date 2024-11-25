@@ -193,7 +193,7 @@ recognized; take care to add them as preserved properties:
 
  @item{@rhombus(#'annot): on a field identifier to connect it to a
  namespace name that exports the field, typically by referring to another
- term. A @rhombus(#'field) value can have one of several recognized
+ term. A @rhombus(#'annot) value can have one of several recognized
  shapes:
 
  @itemlist(
@@ -207,29 +207,49 @@ recognized; take care to add them as preserved properties:
 
    @item{@rhombus(Pair(#'result, #,(@rhombus(key_symbol, ~var)))): refers to
   another term by it's @rhombus(#'spacer_key) value, where that term
-  should be an identifier that is hperlinked as a function, and the
+  should be an identifier that is hyperlinked as a function, and the
   function's result annotation (as recorded in documentation) is used as
   the namespace name.}
 
+ )}
+
+ @item{@rhombus(#'bind): on an identifier to indicate that it is a
+ binding. A @rhombus(#'bind) value can have one of the following
+ recognized shapes:
+
+ @itemlist(
+
+   @item{@rhombus(Pair(#'value, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term
+  provides the value (and therefore annotation) for the binding.}
+
+   @item{@rhombus(Pair(#'as, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term is an
+  annotation for the binding.}
+
+ )}
+
 )
 
- Some inference steps may require cross-reference information from
- documentation, such as the result annotation of a function. That
- cross-reference information can be provided by a documentation form that
- is bound by @rhombus(doc.bridge), implemented with
- @rhombus(doc_meta.transformer), and through an
- @rhombus(~extract_spacer_infos) function that produces a map with the
- following recognized keys:
+
+Some inference steps may require cross-reference information from
+documentation, such as the result annotation of a function. That
+cross-reference information can be provided by a documentation form that
+is bound by @rhombus(doc.bridge), implemented with
+@rhombus(doc_meta.transformer), and through an
+@rhombus(~extract_spacer_infos) function that produces a map with the
+following recognized keys:
 
 @itemlist(
 
  @item{@rhombus(#'result_annotation): an identifier for the result of a
-  documented function, method, or property. The identifier is used as a
-  namespace for the purpose of finding methods and properties within that
-  result.}
+ documented function, method, or property. The identifier is used as a
+ namespace for the purpose of finding methods and properties within that
+ result.}
 
-)
-
-}
+ @item{@rhombus(#'method_fallback): an identifier associated with an
+ annotation that names another annotation/namespace. The other namespace
+ should be consulted when a field cannot be found under the associated
+ annotation. That is, the other annotation is typically a ``supertype.''}
 
 )

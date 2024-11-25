@@ -3,10 +3,17 @@
     meta_label:
       rhombus:
         expose:
+          // the "documentation" here for these bindings
+          // doesn't have to be related to the actual documentation;
+          // they're just convenient names
           fun
           repr
+          println
           String
+          ReadableString
       rhombus/draw)
+
+@title{Example}
 
 @docmodule(rhombus)
 
@@ -17,6 +24,35 @@ Starting example:
   repr().length()
   repr().get()
   "Hello".length()
+  println().length()
+  "Hello".snapshot().length()
+  "Hello".copy().length()
+  repr().snapshot().length()
+  repr().copy().length()
+  String.copy("Hello").length()
+  String.snapshot("Hello").length()
+  rhombus.String.copy("Hello").length()
+  String.copy("Hello").snapshot().length()
+  "Hello".upcase().length()
+)
+
+@rhombusblock(
+  // also linked
+  def s1 = "Hello"
+  s1.length()
+  def s2 = repr()
+  s2.length()
+  def s3 = println()
+  s2.length()
+  s1.copy().length()
+  def s4 = println()
+  s4.length()
+  def s5 = repr().copy()
+  s5.length()
+  def s6 = String.snapshot("Hello")
+  s6.length()
+  fun (s :: String):
+    s.length()
 )
 
 @doc(
@@ -33,6 +69,13 @@ Starting example:
   fun repr() :: String
   method (s :: String).length()
   method String.get()
+  fun println() :: ReadableString
+  annot.macro 'String'
+  annot.macro 'ReadableString':
+    ~method_fallback: String
+  method String.copy() :: ReadableString
+  method String.snapshot() :: String
+  method (s :: String).upcase() :: String
 ){
 
  Description.
