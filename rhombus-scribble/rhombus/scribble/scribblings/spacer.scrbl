@@ -207,7 +207,7 @@ recognized; take care to add them as preserved properties:
 
    @item{@rhombus(Pair(#'result, #,(@rhombus(key_symbol, ~var)))): refers to
   another term by it's @rhombus(#'spacer_key) value, where that term
-  should be an identifier that is hperlinked as a function, and the
+  should be an identifier that is hyperlinked as a function, and the
   function's result annotation (as recorded in documentation) is used as
   the namespace name.}
 
