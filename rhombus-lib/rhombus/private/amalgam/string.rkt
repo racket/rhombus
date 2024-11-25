@@ -315,7 +315,7 @@
    (and (string-contains? s1 s2)
         ;; find position the slow way:
         (for/or ([i (in-range 0 (string-length s1))])
-          (and (string-prefix? s1 s2) i)))))
+          (and (string=? (substring s1 i (+ i (string-length s2))) s2) i)))))
 
 (define/method (String.contains s1 s2)
   (check-readable-string who s1)
