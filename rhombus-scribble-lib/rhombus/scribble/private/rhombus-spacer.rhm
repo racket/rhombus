@@ -728,18 +728,35 @@ spacer.bridge matches(self, tail, context, esc):
 meta:
   fun adjust_colon(tail, esc):
     spacer.adjust_sequence(tail, #'~annot, esc)
+  fun adjust_bind_colon(left :~ Syntax, self, tail, esc):
+    let new_tail = adjust_colon(tail, esc)
+    if left is_a Identifier
+    | match new_tail
+      | '$(ann :: Identifier) $new_tail ...':
+          let key = ann.property(#'spacer_key) || Symbol.gen()
+          let left = left.property(#'bind, Pair(#'as, key), #true)
+          '$left $self $(ann.property(#'spacer_key, key, #true)) $new_tail ...'
+      | ~else:
+          '$left $self $new_tail'
+    | '$left $self $new_tail'
 
-spacer.bridge ::(self, tail, context, esc):
+spacer.bridge ::(~left: left, self, tail, context, esc):
   ~in: ~expr ~bind ~unquote_bind
-  let adjust_colon:
-    match get_space(self)
-    | #'#{rhombus/unquote_bind}: adjust_syntax_colon
-    | ~else: adjust_colon
-  '$self $(adjust_colon(tail, esc))'
+  match get_space(self)
+  | #'#{rhombus/unquote_bind}:
+      '$left $self $(adjust_syntax_colon(tail, esc))'
+  | #'#{rhombus/bind}:
+      adjust_bind_colon(left, self, tail, esc)
+  | ~else:
+      '$left $self $(adjust_colon(tail, esc))'
 
-spacer.bridge :~(self, tail, context, esc):
+spacer.bridge :~(~left: left, self, tail, context, esc):
   ~in: ~expr ~bind
-  '$self $(adjust_colon(tail, esc))'
+  match get_space(self)
+  | #'#{rhombus/bind}:
+      adjust_bind_colon(left, self, tail, esc)
+  | ~else:
+      '$left $self $(adjust_colon(tail, esc))'
 
 spacer.bridge is_a(self, tail, context, esc):
   ~in: ~expr

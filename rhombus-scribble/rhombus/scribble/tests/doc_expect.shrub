@@ -5,6 +5,13 @@ html:
     div {class: "maincolumn"}:
       div {class: "main"}:
         div {class: "versionbox"}
+        h2:
+          a:«»
+          a:«»
+          "Example"
+          span {class: "button-group"}:
+            a {class: "heading-anchor"}: "🔗"
+            span: " "
         p:
           table:
             tr:
@@ -108,6 +115,69 @@ html:
                   span {class: "RktPn"}: ")"
                   span {class: "stt"}: "."
                   span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}:
+                    a {class: "RktValLink"}: "String.snapshot"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}:
+                    "rhombus."
+                    a {class: "RktValLink"}: "String.copy"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "upcase"
                   span {class: "RktPn"}: "("
                   span {class: "RktPn"}: ")"
                   span {class: "stt"}: "."
@@ -227,6 +297,52 @@ html:
               td:
                 p:
                   span {class: "stt"}: "s5"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: "def"
+                  span {class: "hspace"}: nbsp
+                  span {class: "stt"}: "s6"
+                  span {class: "hspace"}: nbsp
+                  span {class: "stt"}: "="
+                  span {class: "hspace"}: nbsp
+                  span {class: "stt"}:
+                    a {class: "RktValLink"}: "String.snapshot"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktVal"}: "\"Hello\""
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: "s6"
+                  span {class: "stt"}: "."
+                  span {class: "stt"}: a {class: "RktValLink"}: "length"
+                  span {class: "RktPn"}: "("
+                  span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p:
+                  span {class: "stt"}: span {class: "RktSym"}: "fun"
+                  span {class: "hspace"}: nbsp
+                  span {class: "RktPn"}: "("
+                  span {class: "stt"}: "s"
+                  span {class: "hspace"}: nbsp
+                  span {class: "stt"}: "::"
+                  span {class: "hspace"}: nbsp
+                  span {class: "stt"}: a {class: "RktValLink"}: "String"
+                  span {class: "RktPn"}: ")"
+                  span {class: "stt"}: ":"
+            tr:
+              td:
+                p:
+                  span {class: "hspace"}:
+                    nbsp
+                    nbsp
+                  span {class: "stt"}: "s"
                   span {class: "stt"}: "."
                   span {class: "stt"}: a {class: "RktValLink"}: "length"
                   span {class: "RktPn"}: "("
@@ -592,6 +708,39 @@ html:
                             span {class: "RktSym"}:
                               a {class: "RktValDef RktValLink"}:
                                 "String.snapshot"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValLink"}: "String"
+              tr: td: p: span {class: "hspace"}: nbsp
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "method"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "method"
+                          span {class: "hspace"}: nbsp
+                          span {class: "RktPn"}: "("
+                          span {class: "RktVar"}: "s"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValDef RktValLink"}: "String"
+                          span {class: "RktPn"}: ")"
+                          span {class: "stt"}: "."
+                          a:«»
+                          span:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "upcase"
                           span {class: "RktPn"}: "("
                           span {class: "RktPn"}: ")"
                           span {class: "hspace"}: nbsp

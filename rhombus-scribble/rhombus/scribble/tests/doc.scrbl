@@ -13,6 +13,8 @@
           ReadableString
       rhombus/draw)
 
+@title{Example}
+
 @docmodule(rhombus)
 
 Starting example:
@@ -27,6 +29,11 @@ Starting example:
   "Hello".copy().length()
   repr().snapshot().length()
   repr().copy().length()
+  String.copy("Hello").length()
+  String.snapshot("Hello").length()
+  rhombus.String.copy("Hello").length()
+  String.copy("Hello").snapshot().length()
+  "Hello".upcase().length()
 )
 
 @rhombusblock(
@@ -42,6 +49,10 @@ Starting example:
   s4.length()
   def s5 = repr().copy()
   s5.length()
+  def s6 = String.snapshot("Hello")
+  s6.length()
+  fun (s :: String):
+    s.length()
 )
 
 @doc(
@@ -64,6 +75,7 @@ Starting example:
     ~method_fallback: String
   method String.copy() :: ReadableString
   method String.snapshot() :: String
+  method (s :: String).upcase() :: String
 ){
 
  Description.

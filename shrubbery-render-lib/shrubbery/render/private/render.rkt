@@ -775,7 +775,15 @@
                    (define next-val-key (cdr binder))
                    (cond
                      [val-key (of-loop next-val-key (hash-set seen val-key #t))]
-                     [else #f])])]
+                     [else #f])]
+                  [(as)
+                   (define id (hash-ref keys (cdr binder) #f))
+                   (cond
+                     [id
+                      ;; use `via-result` to get annotation fallbacks
+                      (via-result id null)]
+                     [else #f])]
+                  [else #f])]
                [(not must-indirect?)
                 of-stx]
                [else #f])]

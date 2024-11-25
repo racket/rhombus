@@ -667,7 +667,7 @@
     [(~and (~fail #:unless property?)
            (group _ (parens (group self (op ::) . _)) (op |.|) name (op ::) . ret))
      (ret-extract-spacer-infos #'ret)]
-    [(group _  (_::name ...) (parens (group self (op ::) . _)) (op |.|) name (parens . _) (op ::) . ret)
+    [(group _  (parens . _) (op |.|) name (parens . _) (op ::) . ret)
      (ret-extract-spacer-infos #'ret)]
     [_
      (parens-extract-spacer-infos stx space-names)]))

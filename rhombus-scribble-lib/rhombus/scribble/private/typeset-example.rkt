@@ -52,7 +52,10 @@
                       (~optional (group #:result_only (block result-only-expr))
                                  #:defaults ([result-only-expr #'(group (parsed #:rhombus/expr #f))]))
                       (~optional (group #:indent (block indent-expr))
-                                 #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))])))
+                                 #:defaults ([indent-expr #'(group (parsed #:rhombus/expr 0))]))
+                      (~optional (group #:spacer_info_box (block spacer-info-box-expr))
+                                 #:defaults ([spacer-info-box-expr
+                                              #'(group (parsed #:rhombus/expr (lookup-spacer-info evaluator)))])))
                 ...
                 (~and g (group _ ...)) ...))
      (define (rb form)
@@ -88,9 +91,10 @@
                         [(group #:fake (block t-form e-form))
                          (list (rb #'t-form) #'e-form)]
                         [_ (list (rb form) form)]))])
-       #`(let ([info-box (box #f)])
+       #`(let* ([evaluator (rhombus-expression eval-expr)]
+                [info-box (rhombus-expression spacer-info-box-expr)])
            (examples
-            #:eval (rhombus-expression eval-expr)
+            #:eval evaluator
             #:once? #,(and (or (attribute once-kw) (not (attribute eval-kw))) #t)
             #:label (rhombus-expression label-expr)
             #:hidden? (rhombus-expression hidden-expr)
@@ -307,3 +311,11 @@
    thunk
    (lambda ()
      (call-in-sandbox-context eval (lambda () (current-output-port orig))))))
+
+(define spacer-info-boxes (make-ephemeron-hasheq))
+
+(define (lookup-spacer-info evaluator)
+  (or (hash-ref spacer-info-boxes evaluator #f)
+      (let ([b (box #f)])
+        (hash-set! spacer-info-boxes evaluator b)
+        b)))

@@ -223,6 +223,10 @@ recognized; take care to add them as preserved properties:
   another term by it's @rhombus(#'spacer_key) value, where that term
   provides the value (and therefore annotation) for the binding.}
 
+   @item{@rhombus(Pair(#'as, #,(@rhombus(key_symbol, ~var)))): refers to
+  another term by it's @rhombus(#'spacer_key) value, where that term is an
+  annotation for the binding.}
+
  )}
 
 )
