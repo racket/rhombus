@@ -49,11 +49,11 @@ nonempty.
 
 @nested(~style: #'inset,
         BNF([@nonterm{group},
-             annote(bseq(kleenestar(@nonterm{dterm}),
+             annote(bseq(kleenestar(@nonterm{delit}),
                          boptional(@nonterm{block}),
                          boptional(@nonterm{alts})),
                     "must be nonempty")],
-            [@nonterm{dterm},
+            [@nonterm{delit},
              @nonterm{atom},
              balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
                   bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
