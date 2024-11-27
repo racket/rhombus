@@ -4,11 +4,13 @@
                      racket/phase+space
                      racket/symbol
                      syntax/parse/pre
+                     enforest/syntax-local
                      "introducer.rkt"
                      "id-binding.rkt")
          "name-root-ref.rkt"
          "name-root-space.rkt"
-         "dotted-sequence-parse.rkt")
+         "dotted-sequence-parse.rkt"
+         "static-info.rkt")
 
 (provide all-spaces-out
          all-spaces-defined-out)
@@ -77,13 +79,16 @@
                                   #:do [(define intro (if space
                                                           (make-interned-syntax-introducer/add space)
                                                           (lambda (x) x)))]
-                                  [sym (in-list (syntax-bound-symbols (intro out-int-id)))]
+                                  [sym (in-list (syntax-bound-symbols int-id))]
                                   #:do [(define str (symbol->immutable-string sym))]
                                   #:when (and (> (string-length str) (string-length prefix))
                                               (string=? prefix (substring str 0 (string-length prefix))))
                                   #:do [(define id* (datum->syntax out-int-id sym))
                                         (define id (intro id*))]
-                                  #:when (identifier-extension-binding? id name-root-id)
+                                  #:when (or (identifier-extension-binding? id name-root-id)
+                                             (syntax-local-value*
+                                              id
+                                              (lambda (v) (and (static-info? v) v))))
                                   #:when (or (not space)
                                              (identifier-distinct-binding* id id* abs-phase)))
                          (make-export phase space (intro (datum->syntax out-int-id sym out-int-id)) (adjust-prefix sym prefix))))]
