@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  rhombus/random.Random
+  rhombus/random open
 
 block:
   import "static_arity.rhm"
@@ -11,16 +11,66 @@ block:
     Random.current([prng])
 
 check:
-  use_static
-  // FIXME this should have call result at arity 0
-  def cur :~ Random = Random.current()
-  cur.random()
-  cur.random(1)
-  cur.random(1, 2)
-  cur.random(2 ** 1024)
-  cur.state
-  cur.state := cur.state
+  Random() ~is_a Random
+  Random(Random().state) ~is_a Random
+
+check:
+  parameterize { Random.current: Random() }:
+    check:
+      Random.current() ~is_a Random
+      Random.current(Random()) ~is #void
   ~completes
+
+check:
+  Random.current("oops")
+  ~throws values(
+    "Random.current: " ++ error.annot_msg("argument"),
+    error.annot("Random").msg,
+    error.val(~label: "argument", "oops").msg,
+  )
+
+check:
+  parameterize { Random.current: "oops" }:
+    "ok"
+  ~throws values(
+    "Random.current: " ++ error.annot_msg("argument"),
+    error.annot("Random").msg,
+    error.val(~label: "argument", "oops").msg,
+  )
+
+block:
+  use_static
+  let cur_rng = Random.current()
+  check:
+    cur_rng.state ~is_a RandomState
+    cur_rng.state ~matches Array(
+      _ :: Int.in(0, 4294967086),
+      _ :: Int.in(0, 4294967086),
+      _ :: Int.in(0, 4294967086),
+      _ :: Int.in(0, 4294944442),
+      _ :: Int.in(0, 4294944442),
+      _ :: Int.in(0, 4294944442),
+    )
+  let similar_rng = Random(cur_rng.state)
+  check:
+    cur_rng.random() ~is similar_rng.random()
+    cur_rng.random(1) ~is similar_rng.random(1)
+    cur_rng.random(1, 2) ~is similar_rng.random(1, 2)
+    cur_rng.random(2 ** 1024) ~is similar_rng.random(2 ** 1024)
+  check:
+    math.random() ~is similar_rng.random()
+    math.random(1) ~is similar_rng.random(1)
+    math.random(1, 2) ~is similar_rng.random(1, 2)
+    math.random(2 ** 1024) ~is similar_rng.random(2 ** 1024)
+
+block:
+  use_static
+  let rng = Random()
+  let old_state = rng.state
+  check:
+    rng.random() ~is:
+      rng.state := old_state
+      rng.random()
 
 check:
   for (n: [2 ** 31, 2 ** 32, 2 ** 64, 10 ** 1000]):
@@ -32,8 +82,8 @@ check:
       let k = x div (n div M)
       hits[k] := hits[k] + 1
     // We expect about 100 hits in each bin. Having less than 50 or
-    // more than 150 should be so etxremely unlikely that we can rely on
-    // it not happning:
+    // more than 150 should be so extremely unlikely that we can rely on
+    // it not happening:
     for (v: hits):
       when v < 50 || v > 150
       | error("bad sample")
