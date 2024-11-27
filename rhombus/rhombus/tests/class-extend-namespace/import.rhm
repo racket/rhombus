@@ -6,6 +6,11 @@ check:
   prefix.something
   ~is "yes"
 
+block:
+  use_static
+  check: prefix.something.contains("y") ~is #true
+  check: prefix.something.contains("n") ~is #false
+
 check:
   prefix.Something.x(prefix.Something(13))
   ~is 13
