@@ -345,9 +345,10 @@
                                 (attribute ret.converter) (attribute ret.annot-str)
                                 (filter-whos #'(rhs ...))
                                 stx))
+         (define extends (car (syntax->list #'(name.extends ...))))
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.static-infos ...)) arity
-          (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
+          the-name extends (syntax->list #'(ret.static-infos ...)) arity
+          (build-definitions/maybe-extension #f the-name extends
                                              proc))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
@@ -390,6 +391,7 @@
                                 (attribute ret.converter) (attribute ret.annot-str)
                                 (filter-whos #'(rhs ...))
                                 stx))
+         (define extends (car (syntax->list #'(name.extends ...))))
          (maybe-add-doc
           (attribute doc)
           #'form-id
@@ -397,8 +399,8 @@
           #'([(~@ . name-seq) args-form (~@ . ret)] ...)
           (attribute doc-kw) stx
           (maybe-add-function-result-definition
-           the-name (list #'main-ret.static-infos) arity
-           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...))) proc)))]
+           the-name extends (list #'main-ret.static-infos) arity
+           (build-definitions/maybe-extension #f the-name extends proc)))]
         ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
@@ -434,7 +436,7 @@
           #'([(~@ . name-seq) args-form (~@ . ret)])
           (attribute doc-kw) stx
           (maybe-add-function-result-definition
-           #'name.name (list #'ret.static-infos) arity
+           #'name.name #'name.extends (list #'ret.static-infos) arity
            (build-definitions/maybe-extension #f #'name.name #'name.extends proc)))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or* (~seq (_::parens _ ...) _ ...)

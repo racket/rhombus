@@ -723,13 +723,14 @@
                              (lambda () #,next))]))]))))
      shifted-arity))
 
-  (define (maybe-add-function-result-definition name static-infoss arity defns)
+  (define (maybe-add-function-result-definition name extends static-infoss arity defns)
     (define result-info?
       (and (pair? static-infoss)
            (pair? (syntax-e (car static-infoss)))
            (for/and ([static-infos (in-list (cdr static-infoss))])
              (same-expression? (car static-infoss) static-infos))))
     (cons (with-syntax ([name name]
+                        [extends extends]
                         [(maybe-result-info ...)
                          (if result-info?
                              (list #`(#%call-result #,(car static-infoss)))
@@ -738,7 +739,7 @@
                          (if arity
                              (list #`(#%function-arity #,arity))
                              null)])
-            #'(define-static-info-syntax name
+            #'(define-static-info-syntax/maybe/maybe-extension name extends
                 maybe-result-info ...
                 maybe-arity-info ...
                 . #,(indirect-get-function-static-infos)))
