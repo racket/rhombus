@@ -262,3 +262,24 @@ block:
   check print(ns.sub.g) ~prints "#<function:gee>"
   check ns.sub.g("x") ~throws values("gee:", error.annot_msg("argument"))
   check ns.sub.g(1, 2, 3) ~throws values("gee:", "arity")
+
+// check that static info is propagated for namespace extensions
+block:
+  use_static
+
+  namespace n
+  fun n.x() :: String:
+    "ok"
+  def n.lst = []
+  def (n.str :: String, n.bstr :: Bytes) = values("", #"")
+  class n.Posn(x, y):
+    method m(): 1
+
+  check:
+    import .n as n2
+    [n2.x().length(),
+     n2.lst.length(),
+     n2.str.length(),
+     n2.bstr.length(),
+     n2.Posn(1, 2).m()]
+    ~is [2, 0, 0, 0, 1]

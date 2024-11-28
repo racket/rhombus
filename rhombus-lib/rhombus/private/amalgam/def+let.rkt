@@ -96,6 +96,10 @@
      #:with static-infos (normalize-static-infos (extract-static-infos #'rhs))
      #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
      #:with lhs-i::binding-info #'lhs-impl.info
+     #:with (lhs-extends ...) (for/list ([bind-uses (syntax->list #'(lhs-i.bind-uses ...))])
+                                (syntax-parse bind-uses
+                                  [(_ ... [#:extends extends:identifier] . _) #'extends]
+                                  [_ #'#f]))
      (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
            [uses (in-list (syntax->list #'(lhs-i.bind-uses ...)))])
        (check-bind-uses form-id #'lhs id uses))
@@ -113,7 +117,7 @@
        (wrap-definition
         #`(begin
             (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
             ...
             #,@(maybe-end-def)))))]))
 
@@ -128,6 +132,11 @@
                                 (extract-static-infos #'rhs))
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
+     #:with ((lhs-extends ...) ...) (for/list ([bind-usess (syntax->list #'((lhs-i.bind-uses ...) ...))])
+                                      (for/list ([bind-uses (syntax->list bind-usess)])
+                                        (syntax-parse bind-uses
+                                          [(_ ... [#:extends extends:identifier] . _) #'extends]
+                                          [_ #'#f])))
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      #:with (pos ...) (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]
                                  [i (in-naturals 1)])
@@ -157,7 +166,7 @@
         #`(begin
             (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
             ...
-            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
             ... ...
             #,@(maybe-end-def)))))]))
 

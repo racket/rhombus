@@ -179,12 +179,15 @@
   @item{@rhombus(~repet (#,(@rhombus(sequencer, ~var)), ...))
   indicates that the variable can be used as repetition at a depth
   corresponding to the number of @rhombus(sequencer, ~var)s, and also
-  as an expression if the number @rhombus(sequencer, ~var)s is zero;
-  and}
+  as an expression if the number @rhombus(sequencer, ~var)s is zero;}
 
   @item{@rhombus(~no_let) indicates that the variable's is not
   compatible with @rhombus(let), because it needs to be bound early (such
-  as through @rhombus(when, ~bind)).}
+  as through @rhombus(when, ~bind)); and}
+
+  @item{@rhombus(~extends #,(@rhombus(ns_id, ~var) )) indicates that the
+  variable is bound as an extension of the namespace
+  @rhombus(ns_id, ~var).}
 
  )
 

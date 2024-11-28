@@ -5,7 +5,8 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "srcloc.rkt"
-                     (for-syntax racket/base)))
+                     (for-syntax racket/base))
+         "dotted-sequence-parse.rkt")
 
 ;; Represent static information in either of two ways:
 ;;
@@ -46,6 +47,7 @@
          define-static-info-syntax
          define-static-info-syntaxes
          define-static-info-syntax/maybe
+         define-static-info-syntax/maybe/maybe-extension
 
          define-static-info-key-syntax/provide
 
@@ -247,6 +249,16 @@
   (syntax-parse stx
     [(_ id) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
+
+(define-syntax (define-static-info-syntax/maybe/maybe-extension stx)
+  (syntax-parse stx
+    [(_ id prefix) #'(begin)]
+    [(_ id prefix rhs ...)
+     (if (syntax-e #'prefix)
+         (build-syntax-definition/maybe-extension
+          'rhombus/statinfo #'id #'prefix
+          #`(static-info #,(make-static-info-getter #'(rhs ...))))
+         #'(define-static-info-syntax id rhs ...))]))
 
 (define-static-info-getter get-empty-static-infos)
 

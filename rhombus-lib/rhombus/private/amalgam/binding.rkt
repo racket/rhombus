@@ -139,18 +139,22 @@
 (define-syntax (identifier-infoer stx)
   (syntax-parse stx
     [(_ static-infos id)
-     (binding-info annotation-any-string
-                   #'id
-                   #'static-infos
-                   #'((id ([#:repet ()]) . static-infos))
-                   #'always-succeed
-                   #'()
-                   #'identifier-commit
-                   #'identifier-bind
-                   (let ([prefix (syntax-property #'id extension-syntax-property-key)])
-                     (if prefix
-                         #`[id #,prefix]
-                         #'id)))]))
+     (let ([prefix (syntax-property #'id extension-syntax-property-key)])
+       (with-syntax ([maybe-prefix
+                      (if prefix
+                          #`([#:extends #,prefix])
+                          #'())])
+         (binding-info annotation-any-string
+                       #'id
+                       #'static-infos
+                       #'((id ([#:repet ()] . maybe-prefix) . static-infos))
+                       #'always-succeed
+                       #'()
+                       #'identifier-commit
+                       #'identifier-bind
+                       (if prefix
+                           #`[id #,prefix]
+                           #'id))))]))
 
 (define-syntax (always-succeed stx)
   (syntax-parse stx
