@@ -9,8 +9,8 @@
 
 @doc(
   ~nonterminal:
-    right_parsed_id: block id
-    left_parsed_id: block id
+    right_parsed_id: macro parsed_id ~defn
+    left_parsed_id: macro parsed_id ~defn
 
   defn.macro 'macro $macro_case'
   defn.macro 'macro
@@ -102,7 +102,7 @@
  term is a single @rhombus($, ~bind) escape followed by a
  @rhombus(defined_name) to be defined as an infix macro.
 
- In the case of a prefix macro, the left-hand @rhombus($, ~bind) escape
+ In the case of an infix macro, the left-hand @rhombus($, ~bind) escape
  must be an identifier. It stands for a match to preceding terms that
  have been parsed as an expression, and the identifier is bound to an
  opaque representation of the expression. The right-hand side of the
