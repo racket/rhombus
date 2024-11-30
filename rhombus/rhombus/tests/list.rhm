@@ -312,6 +312,12 @@ check:
   ~is "other"
 
 check:
+  match (for List (i: []): i)
+  | List.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
   use_static
   [1, 2].reverse().reverse()
   ~is [1, 2]
@@ -604,7 +610,7 @@ check:
   match [1, 2, 3]
   | [b, & a, ...]: [a, ...]
   ~is [[2, 3]]
-                                 
+
 check:
   match [1, 2, 3]
   | [b, & a, ... ~once]: [a, ...]
