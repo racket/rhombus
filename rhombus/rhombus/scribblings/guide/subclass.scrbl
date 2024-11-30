@@ -48,29 +48,4 @@ included before new fields in the subclass's constructor:
     p is_a Posn3D
 )
 
-The @rhombus(interface) definition form is similar to @rhombus(class),
-but without fields. A @rhombus(class) form can declare that the class
-implements an interface through an @rhombus(implements, ~class_clause)
-clause. When a class implements an interface, then instances of the
-class satisfy the interface annotation, similar to the way that a
-subclass instances satisfies the superclass annotation. A class can have
-at most one superclass. but it can implement any number of interfaces.
-An interface is never final, so no @rhombus(nonfinal, ~class_clause) is
-needed in an interface.
-
-@examples(
-  ~defn:
-    interface Shape
-    interface Dance
-    class Square(side):
-      implements:
-        Shape
-        Dance
-  ~repl:
-    def s = Square(10)
-    s is_a Shape
-    s is_a Dance
-)
-
-
 @(close_eval(subclass_eval))
