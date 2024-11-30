@@ -16,7 +16,7 @@ expression at the top of a module, then its value gets printed out.
   "Hello, world!"  // prints "Hello, world!", including the quotes
 )
 
-@margin_note_block{If you have installed the @pkg{rhombus-prototype} package, then
+@margin_note_block{If you have installed the @pkg{rhombus} package, then
  you can run Rhombus modules in DrRacket or by supplying the file path to
  @exec{racket} on the command line.}
 
