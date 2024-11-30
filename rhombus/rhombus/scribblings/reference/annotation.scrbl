@@ -226,11 +226,85 @@
  @rhombus(annot). If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation},
  its conversion applies to a non-@rhombus(#false) value.
 
+ See also @rhombus(definitely).
+
 @examples(
   #false :: maybe(String)
   "string" :: maybe(String)
   ~error:
     #true :: maybe(String)
+)
+
+}
+
+@doc(
+  expr.macro '$expr !!'
+  bind.macro '$bind !!'
+){
+
+ An an expression, @rhombus(expr!!) ensures that the result of
+ @rhombus(expr) is not @rhombus(#false) by throwing an exception if the
+ result is @rhombus(#false). If @rhombus(expr) has static information
+ from @rhombus(maybe(#,(@nontermref(annot))), ~annot), then the overall
+ @rhombus(!!) expression gets the static information of
+ @nontermref(annot).
+
+ As a binding, @rhombus(bind!!) matches non-@rhombus(#false) values that
+ match @rhombus(bind). Similar to the @rhombus(!!) expression form, when
+ static information for the input to @rhombus(bind!!) is
+ @rhombus(maybe(#,(@nontermref(annot))), ~annot), then @rhombus(bind)
+ more specifically starts with the static information of
+ @nontermref(annot).
+
+ See also @rhombus(?)
+
+@examples(
+  ~repl:
+    ~error:
+      definitely(#false)
+    ~error:
+      #false!!
+  ~defn:
+    fun len(str :: maybe(String)):
+      use_static
+      match str
+      | s!!: s.length()
+      | ~else: 0
+  ~repl:
+    len("apple")
+    len(#false)
+    ~error:
+      len(1)
+)
+
+}
+
+
+@doc(
+  expr.macro '$expr ? $infix_op_and_tail'
+){
+
+ If @rhombus(expr) produces @rhombus(#false), then the result of a
+ @rhombus(?) expression is @rhombus(#false). Otherwise,
+ @rhombus(infix_op_and_tail) is expected to continue with an infix
+ operator, such as @rhombus(.), and the result of @rhombus(expr) is used
+ as the left argument to that operator.
+
+ When @rhombus(expr) has static information from
+ @rhombus(maybe(#,(@nontermref(annot))), ~annot), then the argument to
+ the infix operator has static information of @nontermref(annot). If the
+ result in the non-@rhombus(#false) case has static information like
+ @nontermref(annot), then the overall @rhombus(?) expression has static
+ information like @rhombus(maybe(#,(@nontermref(annot))), ~annot).
+
+@examples(
+  ~defn:
+    fun len(str :: maybe(String)):
+      use_static
+      str?.length() || 0
+  ~repl:
+    len("apple")
+    len(#false)
 )
 
 }

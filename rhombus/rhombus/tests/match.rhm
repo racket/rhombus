@@ -69,3 +69,17 @@ check:
   0 matches (i :: Int when i mod 3 == 0) ~is #true
   1 matches (i :: Int unless i mod 3 == 0) ~is #true
   [1, 2, 3] matches ([x, ...] when math.sum(x, ...) == 6) ~is #true
+
+// make sure static info propagates
+block:
+  use_static
+  check:
+    match "s"
+    | s: s.length()
+    ~is 1
+  check:
+    use_static
+    match "s"
+    | _ :: Int: "can't happen"
+    | s: s.length()
+    ~is 1

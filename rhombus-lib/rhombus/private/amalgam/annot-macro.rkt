@@ -177,11 +177,11 @@
     (check-syntax who static-infos)
     (syntax-parse binding
       #:datum-literals (parsed)
-      [(parsed #:rhombus/bind _::binding-form)
+      [(parsed #:rhombus/bind b::binding-form)
        (no-srcloc
         #`(parsed #:rhombus/annot
                   #,(annotation-binding-form
-                     binding
+                     #'b
                      (wrap-expression body)
                      (pack-static-infos who (unpack-term static-infos who #f)))))]
       [_ (raise-arguments-error* who rhombus-realm

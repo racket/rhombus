@@ -1098,7 +1098,7 @@
                (free-identifier=? #'repack #'repack-as-multi)])])))
      (relocate+reraw
       (respan stx)
-      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,in-expr)
+      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) (rhombus-expression #,in-expr))
           #:disable-colon-notation
           #:context '#,who
           #,@(for/list ([bind (in-list binds)]

@@ -28,7 +28,7 @@
                      mod
                      rem
 
-                     !
+                     ! ;; replaced by `!?` in "maybe.rhm"
                      &&
                      \|\|
 

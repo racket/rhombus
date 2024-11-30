@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   "core-meta.rkt" open
+  "maybe.rhm".(?)
 
 use_static
 
@@ -10,6 +11,7 @@ export:
 expr.macro '$arg |> $tail ...':
   ~op_stx: self
   ~weaker_than: ~other
+  ~stronger_than: ?
   // Convert to a dynamic or static call:
   let call:
     if statinfo_meta.is_static(self)

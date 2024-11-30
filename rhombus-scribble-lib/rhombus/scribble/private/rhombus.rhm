@@ -2,15 +2,17 @@
 import:
   shrubbery/render/define  
   "typeset-rhombus.rkt" open
-  lib("scribble/base.rkt").elem
+  lib("scribble/base.rkt")
+  "element.rhm".elem
 
 export:
   rhombus
   rhombusblock
   rhombusblock_etc  
+  rhombuslink
 
 fun escape(who, v):
-  elem(v)
+  base.elem(v)
 
 define.macros (rhombus,
                rhombusblock,
@@ -19,3 +21,14 @@ define.macros (rhombus,
   ~render_block: #{typeset-rhombusblock}
   ~escape: escape
   ~result: Any
+
+expr.macro
+| 'rhombuslink($(name :: Name), $(kw :: Keyword), $content, ... ~nonempty)':
+    '#{typeset-rhombus}(Syntax.literal '$name', ~space: #'$kw, ~content: elem([$content, ...]))'
+| 'rhombuslink($(name :: Name),
+               ~at: $(sp && ('$(sp :: Identifier)' || '$(sp :: Identifier)')) ...,
+               $content, ... ~nonempty)':
+    let space = Symbol.from_string(String.append(to_string(sp), ...))
+    '#{typeset-rhombus}(Syntax.literal '$name', ~space: #'$space, ~content: elem([$content, ...]))'
+| 'rhombuslink($(name :: Name), $content, ... ~nonempty)':
+    '#{typeset-rhombus}(Syntax.literal '$name', ~content: elem([$content, ...]))'

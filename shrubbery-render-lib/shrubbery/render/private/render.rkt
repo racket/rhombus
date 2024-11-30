@@ -32,8 +32,14 @@
 
   (define (render_line stx-in
                        #:space [space-name-in #f]
-                       #:spacer_info_box [info-box #f])
-    (define stx (replace-name-refs stx-in 'group info-box
+                       #:spacer_info_box [info-box #f]
+                       #:content [content #f])
+    (define stx (replace-name-refs (syntax-parse stx-in
+                                     #:datum-literals (multi)
+                                     [(multi g) #'g]
+                                     [(group . _) stx-in]
+                                     [_ #`(group #,stx)])
+                                   'group info-box
                                    render-in-space
                                    render-via-result-annotation))
     (define space-names (full-space-names space-name-in))
@@ -122,7 +128,7 @@
              [(braces elem ...) (seq "{" #'(elem ...) "}")]
              [(quotes elem ...) (seq "'" #'(elem ...) "'" #:sep (res tt-semicolon res-semicolon))]
              [(op id)
-              (define str (string->immutable-string (shrubbery-syntax->string stx)))
+              (define str (or content (string->immutable-string (shrubbery-syntax->string stx))))
               (cond
                 [(eq? one-space-name 'datum) (render 'plain str)]
                 [(eq? one-space-name 'value) (render 'variable str)]
@@ -133,7 +139,7 @@
                      (render-in-space space-name str (add-space #'id space-name))
                      (render 'plain str))])]
              [id:identifier
-              (define str  (string->immutable-string (shrubbery-syntax->string stx)))
+              (define str (or content (string->immutable-string (shrubbery-syntax->string stx))))
               (define space-name (id-space-name* #'id))
               (cond
                 [(eq? space-name 'var)
@@ -155,7 +161,8 @@
                         [(symbol? d) 'identifier]
                         [(keyword? d) 'paren]
                         [else 'value])
-                      (string->immutable-string (shrubbery-syntax->string stx)))])])))
+                      (or content
+                          (string->immutable-string (shrubbery-syntax->string stx))))])])))
     (render-one-line elems))
 
   (define (render_block stx

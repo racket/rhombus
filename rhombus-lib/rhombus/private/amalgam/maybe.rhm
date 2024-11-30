@@ -6,6 +6,117 @@ use_static
 
 export:
   maybe
+  !!
+  ?
 
 annot.macro 'maybe($(ann :: annot_meta.Parsed))':
-  'False || $ann'
+  ~all_stx: stx
+  if annot_meta.is_predicate(ann)
+  | let (pred, statinfos) = annot_meta.unpack_predicate(ann)
+    annot_meta.pack_predicate('block:
+                                 let p = $pred
+                                 fun (v): !v || p(v)',
+                              '(($statinfo_meta.maybe_key,
+                                 $(statinfo_meta.pack(statinfos))))').relocate_span([stx])
+  | let (_, _, statinfos) = annot_meta.unpack_converter(ann)
+    let '$(f_ann :: annot_meta.Parsed)' = 'False || $ann'
+    let (bind, body, _) = annot_meta.unpack_converter('$f_ann')
+    annot_meta.pack_converter(bind,
+                              body,
+                              '(($statinfo_meta.maybe_key,
+                                 $(statinfo_meta.pack(statinfos))))')
+
+meta:
+  fun demaybe_statinfos(statinfos):
+    let maybe_statinfos = statinfo_meta.find(statinfos, statinfo_meta.maybe_key)
+    if maybe_statinfos
+    | statinfo_meta.union(statinfos,
+                          statinfo_meta.unpack(maybe_statinfos))
+    | statinfos
+
+expr.macro '$e !!':
+  ~op_stx: self
+  let statinfos = statinfo_meta.gather(e)
+  statinfo_meta.replace('match $(statinfo_meta.replace(e, '()'))
+                         | #false: definitely_failed(#' $(Symbol.from_string(self.to_source_string())))
+                         | v: v',
+                        demaybe_statinfos(statinfos))
+
+repet.macro '$e !!':
+  ~op_stx: self
+  ~all_stx: stx
+  let '($_, $expr, $depth, $use_depth, $statinfos)' = repet_meta.unpack_list(e)
+  repet_meta.pack_list('($stx,
+                         'check_definitely_at_depth(#' $(Symbol.from_string(self.to_source_string())),
+                                                    $expr,
+                                                    $depth - $use_depth)',
+                         $depth,
+                         $use_depth,
+                         $(demaybe_statinfos(statinfos)))')
+
+expr.macro '$e ? $tail ... ~nonempty':
+  ~weaker_than: ~other
+  let statinfos = statinfo_meta.gather(e)
+  let id = 'v'
+  let id_expr = statinfo_meta.replace(expr_meta.pack_s_exp(id), // packing can avoid an unbound-identifier error
+                                      demaybe_statinfos(statinfos))
+  let '$(v_finish :: expr_meta.AfterInfixParsed('?'))' = '$id_expr $tail ...'
+  let finish_statinfos = statinfo_meta.gather(v_finish)
+  values(
+    statinfo_meta.replace(
+      'block:
+         def $id = $(statinfo_meta.replace(e, '()'))
+         if $id
+         | $v_finish
+         | #false',
+      '(($statinfo_meta.maybe_key, $(statinfo_meta.pack(finish_statinfos))))'
+      ),
+    '$v_finish.tail ...'
+  )
+
+fun definitely_failed(who):
+  throw Exn.Fail.Annot(who +& ": claimed not false, but actual value is false",
+                       Continuation.Marks.current())
+
+fun check_definitey_at_depth(who, v, depth):
+  if depth == 0
+  | v || definitely_failed(who)
+  | for (e: (v :~ List)):
+      check_definitey_at_depth(who, e, depth-1)
+
+bind.macro '$b !!':
+  ~op_stx: self
+  bind_meta.pack('(definitely_infoer,
+                   $b)')
+
+bind.infoer 'definitely_infoer($statinfos, $b)':
+  let b_info = bind_meta.get_info(b, demaybe_statinfos(statinfos))
+  let '($b_ann, $b_name, $b_s_infos, $b_var_infos,
+        $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+    bind_meta.unpack_info(b_info)
+  let b_ann_str :~ String = b_ann.unwrap()
+  let ann:
+    if b_ann_str.starts_with("matching(") && b_ann_str.ends_with(")")
+    | "matching((" ++ b_ann_str.substring(9, b_ann_str.length() - 1) ++ ")!!)"
+    | "matching((_ :: " ++ b_ann_str ++ ") !!)"
+  '($ann,
+    $b_name,
+    $b_s_infos,
+    $b_var_infos,
+    definitely_matcher,
+    $b_evidence,
+    definitely_committer,
+    definitely_binder,
+    ($b_matcher, $b_committer, $b_binder, $b_data))'
+
+bind.matcher 'definitely_matcher($in_id, ($b_matcher, $_, $_, $b_data),
+                                 $IF, $success, $failure)':
+  '$IF $in_id
+   | $b_matcher($in_id, $b_data, $IF, $success, $failure)
+   | $failure'
+
+bind.committer 'definitely_committer($in_id, $evidence, ($_, $b_committer, $_, $b_data))':
+  '$b_committer($in_id, $evidence, $b_data)'
+
+bind.binder 'definitely_binder($in_id, $evidence, ($_, $_, $b_binder, $b_data))':
+  '$b_binder($in_id, $evidence, $b_data)'

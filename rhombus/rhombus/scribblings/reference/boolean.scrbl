@@ -252,8 +252,8 @@
   operator (! (v :: Any)) :: Boolean
 ){
 
- Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),
- @rhombus(#false) otherwise.
+ As a prefix operator, returns @rhombus(#true) if @rhombus(v) is
+ @rhombus(#false), @rhombus(#false) otherwise.
 
 @examples(
   !#false
@@ -267,8 +267,8 @@
   bind.macro '! $bind'
 ){
 
- Matches if @rhombus(bind) does not match. Because @rhombus(bind) does
- not match, no identifiers are bound.
+ As a prefix operator, matches if @rhombus(bind) does not match. Because
+ @rhombus(bind) does not match, no identifiers are bound.
 
 @examples(
   fun

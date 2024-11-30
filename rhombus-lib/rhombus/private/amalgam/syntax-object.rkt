@@ -22,6 +22,8 @@
          "srcloc.rkt"
          "call-result-key.rkt"
          "index-result-key.rkt"
+         "index-result-key.rkt"
+         "maybe-key.rkt"
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
          (submod "list.rkt" for-compound-repetition)
@@ -825,9 +827,9 @@
                                                       #:inner? inner?)))
 
 (define/method (Syntax.srcloc stx)
+  #:static-infos ((#%call-result ((#%maybe #,(get-srcloc-static-infos)))))
   (check-syntax who stx)
-  (or (syntax-srcloc (maybe-respan stx))
-      (srcloc #f #f #f #f #f)))
+  (syntax-srcloc (maybe-respan stx)))
 
 (define/method (Syntax.is_original v)
   (syntax-original? (extract-ctx who v #:false-ok? #f)))

@@ -163,11 +163,17 @@
 
 @doc(
   fun statinfo_meta.gather(expr_stx :: Syntax) :: Syntax
+  fun statinfo_meta.replace(expr_stx :: Syntax, statinfo_stx :: Syntax) :: Syntax
 ){
 
- Returns all of the static information of @rhombus(expr_stx) in unpacked
- form. The returned static information corresponds to all the possible
- keys for which @rhombus(statinfo_meta.lookup) would return a value.
+ Returns or replaces all of the static information of @rhombus(expr_stx)
+ in unpacked form. The result of @rhombus(statinfo_meta.gather) can be
+ used with @rhombus(statinfo_meta.find) to get the same values as using
+ @rhombus(statinfo_meta.lookup) on @rhombus(expr_str). The result of
+ @rhombus(fun statinfo_meta.replace) is the same expression as
+ @rhombus(expr_str), but removing any static information that is directly
+ attached to @rhombus(expr_str) and replacing it with
+ @rhombus(statinfo_stx).
 
 }
 
@@ -242,6 +248,7 @@
   def statinfo_meta.sequence_element_key :: Identifier
   def statinfo_meta.list_bounds_key :: Identifier
   def statinfo_meta.pairlist_bounds_key :: Identifier
+  def statinfo_meta.maybe_key :: Identifier
   def statinfo_meta.values_key :: Identifier
   def statinfo_meta.indirect_key :: Identifier
 ){
@@ -251,32 +258,32 @@
 
  @itemlist(
 
-  @item{@rhombus(statinfo_meta.call_result_key) --- packed, per-arity static
+  @item{@rhombus(statinfo_meta.call_result_key): Packed, per-arity static
         information for the result value if the expression is used as
-        a function to call; see @rhombus(statinfo_meta.unpack_call_result)}
+        a function to call; see @rhombus(statinfo_meta.unpack_call_result).}
 
-  @item{@rhombus(statinfo_meta.index_result_key) --- packed static information
+  @item{@rhombus(statinfo_meta.index_result_key): Packed static information
         for the result value if the expression is used with
-        @rhombus([]) to access an element}
+        @rhombus([]) to access an element.}
 
-  @item{@rhombus(statinfo_meta.index_get_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.index_get_key): An identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        access an element}
+        access an element.}
 
-  @item{@rhombus(statinfo_meta.index_set_key) --- an identifier bound to a
+  @item{@rhombus(statinfo_meta.index_set_key): An identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        update an element}
+        update an element.}
 
-  @item{@rhombus(statinfo_meta.append_key) --- an identifier or a boxed identifier bound to a
+  @item{@rhombus(statinfo_meta.append_key): An identifier or a boxed identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to
-        append the result of another expression; for a boxed identifier,
+        append the result of another expression. For a boxed identifier,
         the application will be guarded by a check to ensure that both
-        arguments share the same @rhombus(append, ~datum) implementation}
+        arguments share the same @rhombus(append, ~datum) implementation.}
 
-  @item{@rhombus(statinfo_meta.dot_provider_key) --- an identifier
+  @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
         bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to
         implement the expression's behavior as a @tech(~doc: guide_doc){dot provider},
         or a packed sequence of such identifiers. In the case of a sequence, the
@@ -285,37 +292,42 @@
         and the union of two sequences, which picks the longer of two
         sequences when one is a tail of the other.}
 
-  @item{@rhombus(statinfo_meta.sequence_constructor_key) --- an identifier
+  @item{@rhombus(statinfo_meta.sequence_constructor_key): An identifier
         bound as a variable or a macro that is wrapped around an expression
         to create or specialize a sequence for @rhombus(for), or @rhombus(#true) to
-        indicate that no wrapper is needed}
+        indicate that no wrapper is needed.}
 
-  @item{@rhombus(statinfo_meta.sequence_element_key) --- packed static information
+  @item{@rhombus(statinfo_meta.sequence_element_key): Packed static information
         for the elements of the expression as a sequence used with
-        @rhombus(each, ~for_clause); for a sequence with
+        @rhombus(each, ~for_clause). For a sequence with
         multiple values in each element, the static information can
         map @rhombus(statinfo_meta.values_key) to a group of per-value
-        static information; the number of static information must be
+        static information. The number of static information must be
         consistent with the bindings, otherwise no static information
-        will be propageted at all; when @rhombus(statinfo_meta.sequence_element_key)
+        will be propageted at all. When @rhombus(statinfo_meta.sequence_element_key)
         is not specified, @rhombus(each, ~for_clause) uses
-        @rhombus(statinfo_meta.index_result_key)}
+        @rhombus(statinfo_meta.index_result_key).}
 
-  @item{@rhombus(statinfo_meta.list_bounds_key) --- a group containing
-       two elements, indicating a list with a minimum size given by the first
-       element, and a maximum size for the second element or @rhombus(#false)
-       if no maximum size is known.}
+  @item{@rhombus(statinfo_meta.list_bounds_key): A group containing
+        two elements, indicating a list with a minimum size given by the first
+        element, and a maximum size for the second element or @rhombus(#false)
+        if no maximum size is known.}
 
-  @item{@rhombus(statinfo_meta.pairlist_bounds_key) --- like
-       @rhombus(statinfo_meta.list_bounds_key), but for a @tech{pair list}.}
+  @item{@rhombus(statinfo_meta.pairlist_bounds_key): Like
+        @rhombus(statinfo_meta.list_bounds_key), but for a @tech{pair list}.}
 
-  @item{@rhombus(statinfo_meta.values_key) --- a packed group of
+  @item{@rhombus(statinfo_meta.maybe_key): Packed static
+        information that applies to a non-@rhombus(#false) value. This
+        information is exposed by @rhombus(definitely), for example. See
+        also @rhombus(statinfo_meta.unpack_call_result).}
+
+  @item{@rhombus(statinfo_meta.values_key): A packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),
-        one for each value produced by a multiple-value expression}
+        one for each value produced by a multiple-value expression.}
 
-  @item{@rhombus(statinfo_meta.indirect_key) --- an identifier whose
+  @item{@rhombus(statinfo_meta.indirect_key): An identifier whose
         static information is lazily spliced in place of this key
-        and identifier}
+        and identifier.}
 
 )
 

@@ -72,6 +72,18 @@
 }
 
 @doc(
+  expr.macro 'rhombuslink($name, $content, ... ~nonempty)'
+  expr.macro 'rhombuslink($name, $builtin_space, $content, ... ~nonempty)'
+  expr.macro 'rhombuslink($name, ~at $space_name, $content, ... ~nonempty)'
+){
+
+ Link @rhombus(rhombus), but uses the text of
+ @rhombus(elem([content, ...])) preserving the hyperlink (if any) of
+ @rhombus(name).
+
+}
+
+@doc(
   expr.macro 'rhombusblock($group, ...)'
 ){
 

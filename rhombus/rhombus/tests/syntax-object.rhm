@@ -245,6 +245,10 @@ check:
   ~completes
 
 block:
+  use_static
+  check 'x'.srcloc()?.line ~is_a Int
+
+block:
   import:
     meta -1: rhombus/meta open
     lib("racket/base.rkt")

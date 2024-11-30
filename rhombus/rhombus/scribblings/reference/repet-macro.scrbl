@@ -65,11 +65,12 @@
  The syntax object @rhombus(stx) must have the following shape:
 
  @rhombusblock(
-  '(#,(@rhombus(source_form, ~var)),
-    #,(@rhombus(list_expr, ~var)),
-    #,(@rhombus(depth, ~var)),
-    #,(@rhombus(use_depth, ~var)),
-    ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...)
+  '(
+     #,(@rhombus(source_form, ~var)),
+     #,(@rhombus(list_expr, ~var)),
+     #,(@rhombus(depth, ~var)),
+     #,(@rhombus(use_depth, ~var)),
+     ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...)
    )'
  )
 
