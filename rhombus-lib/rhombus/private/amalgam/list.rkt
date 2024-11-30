@@ -731,7 +731,7 @@
 (define-syntax (build-from-root stx)
   (syntax-parse stx
     [(_ _ e) #'(let-values ([(root size height) e])
-                 (if (zero? size)
+                 (if (eqv? size 0)
                      empty-treelist
                      (unsafe-treelist root size height)))]))
 
