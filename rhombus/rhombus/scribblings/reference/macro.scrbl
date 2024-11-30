@@ -120,8 +120,10 @@
  @item{Otherwise, the right-hand side is an arbitrary pattern that is
   matched to a sequence of terms after the macro name in its enclosing
   group. Unless the pattern ends with @rhombus(#,(@rhombus($, ~bind))()),
+  a block pattern, or an alternatives pattern,
   the use of the macro can be followed by additional terms in the same
-  group. If the pattern ends with @rhombus(#,(@rhombus($, ~bind))()), then
+  group. If the pattern ends with @rhombus(#,(@rhombus($, ~bind))()),
+  a block pattern, or an alternatives pattern, then
   all terms after the macro operator must match the right-hand pattern.
   The position before @rhombus(#,(@rhombus($, ~bind))()) is itself treated
   as a group position.}

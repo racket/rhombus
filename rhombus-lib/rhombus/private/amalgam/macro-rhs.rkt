@@ -81,6 +81,10 @@
          #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
                                    (unquote-bind-quote #%parens))
          (values #'(pat ...) #f)]
+        [(_ ... (~or (_::block . _)
+                     (_::alts . _)))
+         ;; a block or alts simiarly must end a group
+         (values tail-pattern-in #f)]
         [(pat ... _::$-bind _:identifier _::...-bind)
          ;; recognize where a tail match would be redundant and always be empty;
          ;; this is kind of an optimization, but one that's intended to be guaranteed;
@@ -142,7 +146,7 @@
                     #`((define #,all*-id
                          #,(if implicit-tail?
                                #`(make-all (list* left-id ... self (unpack-tail (rhombus-expression (group all_tail)) #f #f)))
-                               #`(make-all (list* left-id ... self tail))))
+                               #`(make-all (list* left-id ... self (unpack-tail tail #f #f)))))
                        (define-static-info-syntax #,all*-id #:getter get-syntax-static-infos))
                     '())
              #,body))]))
@@ -257,7 +261,7 @@
                    #`[#t
                       (let ([self-id self])
                         (define-static-info-syntax self-id #:getter get-syntax-static-infos)
-                        #,@(maybe-bind-all all*-id #'self-id #'make-all #'tail-pattern #'tail)
+                        #,@(maybe-bind-all all*-id #'self-id #'make-all #'tail-pattern #'(unpack-tail tail #f #f))
                         #,@(maybe-bind-tail #'tail-pattern #'tail)
                         #,(maybe-return-tail
                            (let ([body (if (eq? kind 'rule)
