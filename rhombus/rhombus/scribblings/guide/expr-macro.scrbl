@@ -93,8 +93,8 @@ identifier for its left-hand side. The pattern variable is bound to an
 opaque representation of the parsed form. In the definition of
 @rhombus(no_fail) above, the pattern variable @rhombus(left) stands for a parsed
 form, and not just a single shrubbery term. The form is parsed according
-to declared precedence relationships; specify presence for a macro in
-the same way as for @rhombus(operator).
+to declared precedence relationships; you can specify their presence in the same
+way as for @rhombus(operator).
 
 @examples(
   ~eval: macro_eval
