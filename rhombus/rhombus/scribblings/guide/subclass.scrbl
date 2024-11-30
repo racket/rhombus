@@ -6,12 +6,12 @@
 
 @title(~tag: "subclass"){Subclasses}
 
-In a @rhombus(class) body, @rhombus(extends, ~class_clause) followed by
-the name of an existing class. Instances of the new class, the
-@emph{subclass}, will also count as instances of the existing class, the
-@emph{superclass}. Since that creates obligations on the superclass,
-however, a class is @emph{final} by default, which means that it does
-not permit subclasses.
+When defining body of a new @rhombus(class), add
+@rhombus(extends, ~class_clause) clause followed by the name of an existing
+class. Instances of the new class, the @emph{subclass}, will also count as
+instances of the existing class, the @emph{superclass}. Since that creates
+obligations on the superclass, however, a class is @emph{final} by default,
+which means that it does not permit subclasses.
 
 @examples(
   ~defn:
