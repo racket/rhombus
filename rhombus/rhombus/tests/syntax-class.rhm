@@ -279,12 +279,21 @@ block:
 
 block:
   check:
-    ~eval
     syntax_class Foo:
       kind: ~group
     | '$x + $y'
     match '0 + 1 + 2 + 3'
     | '0 + $(f :: Foo) + 3': [f.x, f.y]
+    ~matches ['1', '2']
+
+block:
+  check:
+    ~eval
+    syntax_class Foo:
+      kind: ~group
+    | '$x + $y'
+    match '0 + 1 + 2 + 3'
+    | '0 + $(f :: Foo) + $z': [f.x, f.y]
     ~throws "syntax class incompatible with this context"
 
 block:

@@ -67,8 +67,9 @@
  body after each @rhombus(macro_pattern).
 
  If a @rhombus(macro_pattern) ends with
- @rhombus(#,(@rhombus($, ~bind))()) or
- @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))), then a match
+ @rhombus(#,(@rhombus($, ~bind))()),
+ @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))),
+ a block pattern, or an alternatives pattern, then a match
  covers all subsequent terms in the enclosing group of a use of the
  macro. In that case, the @rhombus(body) after the pattern can return two
  values: an expansion for the consumed part of the input match, and a

@@ -195,7 +195,7 @@ check:
 check:
   ~eval
   def '0 $('1; 2') 3' = '0 1; 2'
-  ~throws "multi-group pattern incompatible with term context"
+  ~throws "multi-group pattern incompatible with group context"
 
 check:
   ~eval
