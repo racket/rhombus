@@ -32,7 +32,7 @@ not needed in an interface.
 )
 
 Interfaces can extend other interfaces. Unlike
-classes extending at one most superclass, interfaces can extend any
+classes extending at most one superclass, interfaces can extend any
 number of superinterfaces.
 
 @examples(

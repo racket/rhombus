@@ -38,7 +38,7 @@ Rhombus uses several built-in static-information keys:
    of the @brackets. (The index expression inside @brackets does
    not matter.) For example @rhombus(ps :: List.of(Posn)) associates
    @rhombus(statinfo_meta.index_result_key) to @rhombus(ps), where the associated value
-   includes is static information with @rhombus(statinfo_meta.dot_provider_key). So,
+   is static information with @rhombus(statinfo_meta.dot_provider_key). So,
    @rhombus(ps[i].x) is allowed and selects an @rhombus(x) field from the @rhombus(Posn)
    instance produced by @rhombus(ps[i]).}
 

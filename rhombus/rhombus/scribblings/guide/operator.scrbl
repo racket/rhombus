@@ -49,7 +49,7 @@ block. Inside the parentheses, there must be exactly two or three terms,
 and the first, middle, or last term must be an operator or identifier to define.
 The arguments can be described by binding patterns, but in that case,
 they may need parentheses around the pattern to ensure that they form a
-single term in next to the operator being defined:
+single term next to the operator being defined:
 
 @examples(
   ~eval: op_eval

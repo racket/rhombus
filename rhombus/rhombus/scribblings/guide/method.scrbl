@@ -96,7 +96,7 @@ implemented, abstract, or inherited from a superinterface.
 The declaration above of an @rhombus(area) method in @rhombus(Shape)
 specifies that the method should accept zero arguments, but that intent
 is not enforced on implementations. That is, a class might implement
-@rhombus(area) to take additional arguments Result
+@rhombus(area) to take additional arguments. Result
 annotations are different. If @rhombus(area) declares a result
 annotation, a check is added to each implementation to ensure that it
 results a satisfying result.
