@@ -83,7 +83,7 @@ calls the superclass constructor, and the arguments should match whatever
 is expected by the superclass's constructor. The result, however, is not
 an instance of the class or superclass, but a function that expects
 arguments for the fields that are added to the new class. That second
-round of arguments should match the ones the that the default
+round of arguments should match the ones that the default
 constructor would accept if it were for a class with no superclass. The
 @rhombus(super) function needs a programmer to explicitly separate the
 two sets of arguments, because it might be ambiguous which arguments are

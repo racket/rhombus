@@ -51,7 +51,7 @@ Here's a summary of the static-information behavior of classes:
    providers.}
 
   @item{When a class name is used as a binding pattern, any ``downward''
-   static information that flows the binding is checked for static
+   static information that follows the binding is checked for static
    information keyed by the class's accessors, and that information is
    propagated as ``downward'' information to the corresponding binding
    subpattern. For example, if @rhombus(Rect(tl, s)) as a binding receives
@@ -83,7 +83,7 @@ More rules about static information in general:
    @rhombus(fun) definition form.}
 
   @item{When the right-hand side of a @rhombus(def) or @rhombus(let) has a single
-   group, and when that goes does not start with a definition-form
+   group, and when that group does not start with a definition-form
    name, then static information from that right-hand side expression
    is propagated to the binding side. For example, @rhombus(def p: Posn(1, 2))
    associated that static information of @rhombus(Posn(1, 2)) with @rhombus(p), which
