@@ -39,7 +39,7 @@ export:
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @whn is
-                 used in @(if is_infix | @scribble.elem{after another @context} | "")
+                 used @(if is_infix | @scribble.elem{after another @context} | "")
                  in a@(if (context[0] matches (Char"e" || Char"i")) | "n" | "")
                  @context position.
                  See also @scribble.secref("implicit").}
