@@ -578,6 +578,14 @@
                                           (syntax-e name))))]
     [else target]))
 
+(define-for-syntax (dotted-to-identifier head tail)
+  (cond
+    [(null? (syntax-e tail))
+     head]
+    [else
+     (define resolved (resolve-name-ref (list #f) head (syntax->list tail)))
+     (and resolved (hash-ref resolved 'target))]))
+
 (begin-for-syntax
   (define-splicing-syntax-class :dotted-class
     #:attributes (head tail)
@@ -600,18 +608,24 @@
     [_ (parens-extract-name stx space-name)]))
 
 (define-for-syntax (method-extract-metavariables stx space-name vars #:property? [property? #f])
+  (define (add-annot id class-id)
+    (if class-id
+        (syntax-property id 'annot_id class-id)
+        id))
   (syntax-parse stx
     #:datum-literals (group parens alts block :: |.| op)
     [(~and (~fail #:unless property?)
-           (group _ (alts (block (group (parens (group self (op ::) . _)) (op |.|) . _)) . more)))
-     (define vars+self (add-metavariable vars #'self #f))
+           (group _ (alts (block (group (parens (group self (op ::) class::dotted-class)) (op |.|) . _)) . more)))
+     (define class-id (dotted-to-identifier #'class.head #'class.tail))
+     (define vars+self (add-metavariable vars (add-annot #'self class-id) #f))
      (syntax-parse #'more
        #:datum-literals (group parens block :: |.| := op)
        [((block (group (parens (group _ (op ::) . _)) (op |.|) _ (op :=) . rhs)) . _)
         (extract-binding-metavariables #'(group . rhs) vars+self)]
        [_ vars+self])]
-    [(group _ (parens (group self (op ::) . _)) (op |.|) name . more)
-     (define vars+self (add-metavariable vars #'self #f))
+    [(group _ (parens (group self (op ::) class::dotted-class)) (op |.|) name . more)
+     (define class-id (dotted-to-identifier #'class.head #'class.tail))
+     (define vars+self (add-metavariable vars (add-annot #'self class-id) #f))
      (syntax-parse #'more
        #:datum-literals (parens)
        [((~and p (parens . _)) . _)

@@ -73,12 +73,13 @@ Starting example:
   annot.macro 'String'
   annot.macro 'ReadableString':
     ~method_fallback: String
-  method String.copy() :: ReadableString
+  method String.copy(some_s :: String) :: ReadableString
   method String.snapshot() :: String
-  method (s :: String).upcase() :: String
+  method (some_other_s :: String).upcase() :: String
 ){
 
- Description.
+ Description, where @rhombus(some_s.length()) and
+ @rhombus(some_other_s.length()) are linked.
 
 }
 

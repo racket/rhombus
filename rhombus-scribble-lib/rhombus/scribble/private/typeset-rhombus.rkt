@@ -10,6 +10,7 @@
                   delayed-element-plain
                   content?
                   content-width
+                  content->string
                   paragraph
                   table
                   style
@@ -147,7 +148,8 @@
                                                     (find-via-annot-spacer-binding fallback-annot more-rators)
                                                     default)]
                                                [else default]))
-                                           (define p (and ns-id (identifier-binding-portal-syntax ns-id 0)))
+                                           (define p (and ns-id (with-handlers ([exn:fail? (lambda (x) #f)])
+                                                                  (identifier-binding-portal-syntax ns-id (if shift? 0 #f)))))
                                            (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
                                            (define next-field (if (null? more-rators)
                                                                   field
@@ -218,8 +220,10 @@
    #:is_rendered element*?))
 
 (define (typeset-rhombus stx
-                         #:space [space-name-in #f])
-  (render_code stx #:space space-name-in))
+                         #:space [space-name-in #f]
+                         #:content [content #f])
+  (render_code stx #:space space-name-in #:content (and content
+                                                        (content->string content))))
 
 (define (typeset-rhombusblock stx
                               #:inset [inset? #t]
