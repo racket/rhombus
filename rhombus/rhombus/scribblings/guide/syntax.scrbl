@@ -115,10 +115,12 @@ to form a repetition of matches:
  must thread potentially long sequences into and out of macro
  transformers.}
 
-A @rhombus($)-escaped variable in a @quotes pattern matches one term
-among other terms in the group. A block created with @litchar{:} counts
-as a single term of its enclosing group, and a sequence of @litchar{|}
-alternatives (not an individual alternative) similarly counts as one term.
+A @rhombus($)-escaped variable in a @quotes pattern matches one or more
+terms in a group, and it can only match multiple terms if it is the last
+escape within a group. A block created with @litchar{:} counts as a
+single term of its enclosing group, and a sequence of @litchar{|}
+alternatives (not an individual alternative) similarly counts as one
+term.
 
 @examples(
   ~defn:
@@ -135,21 +137,20 @@ alternatives (not an individual alternative) similarly counts as one term.
 
 Keep in mind that @quotes
 creates syntax objects containing shrubberies that are not yet parsed,
-so a variable will @emph{not} be matched to a multi-term sequence that would be
-parsed as an expression. For example, a pattern variable @rhombus(y) by
-itself cannot be matched to a sequence @rhombus(2 + 3):
+so single-term escape will @emph{not} be matched to a multi-term sequence that would be
+parsed as an expression. For example, a pattern variable @rhombus(y)
+cannot be matched to a sequence @rhombus(2 * 3) if there's another escape
+after @rhombus($y).
 
 @examples(
   ~error:
-    def '1 + $y + 4' = '1 + 2 + 3 + 4'
+    def '1 + $y + $z' = '1 + 2 * 3 + 4'
 )
 
-Having pattern variables always stand for individual terms turns out to
-be tedious, however. For example, to match a @rhombus(thunk) pattern
-with a block that has any number of groups with any number of terms,
-you'd have to use two layers of ellipses. Then, to substitute that same
-body into a @rhombus(fun) template, you'd have to use the two layers of
-ellipses again.
+When an escaped variable is alone in its group in a pattern, it can
+match multiple terms, and so it stand for a match to the whole group. A
+pattern variable that is alone in a multi-group context similarly stands
+for a match to all the groups.
 
 @examples(
   ~eval:
@@ -158,34 +159,12 @@ ellipses again.
     def thunk_form = 'thunk:
                         def x = 1
                         x + 1'
-    def 'thunk: $term ...; ...' = thunk_form
-  ~repl:
-    'fun (): $term ...; ...'
-)
-
-As a shorthand, when an escaped variable is alone in its group in a
-pattern, it stands for a match to the whole group (at least by default).
-A pattern variable that is alone in a multi-group context similarly
-stands for a match to all the groups.
-
-@examples(
-  ~eval:
-    syntax_eval
   ~defn:
     def 'thunk: $group; ...' = thunk_form
     def 'thunk: $body' = thunk_form
   ~repl:
     [group, ...]
     body
-)
-
-As a further generalization, when an escaped variable is at the end of
-its group in a pattern, it stands for a match to remaining terms in group.
-
-@examples(
-  ~repl:
-    def '1 + $y' = '1 + 2 + 3 + 4'
-    y
 )
 
 These multi-term and multi-group syntax objects can be spliced into
@@ -211,12 +190,12 @@ brackets context, for example.
 )
 
 A multi-term, single-group syntax object can be spliced in place of any
-term escape, even if it is not at the end of the group.
+term escape, even if it is followed by another escape.
 
 @examples(
   ~repl:
     def '$x' = '1 + 2 + 3'
-    '0 + $x + 4'
+    '0 + $x + $x + 4'
 )
 
 A multi-group syntax object splices multiple groups in place of a group

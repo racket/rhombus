@@ -72,7 +72,7 @@ the @rhombus(.) operator can be chained for efficient access:
 
 More generally, @rhombus(.) access is efficient when the left-hand side
 of @rhombus(.) is an expression that can act as a @deftech{dot provider}.
-A class name also acts as a @tech(~doc: ref_doc){namespace} to provides access to
+A class name also acts as a @tech(~doc: ref_doc){namespace} to provide access to
 field-accessor functions, as in @rhombus(Posn.x, ~datum) (which doesn't get a
 specific @rhombus(x, ~datum), but produces a function that can be called on a
 @rhombus(Posn, ~datum) instance to extract its @rhombus(x, ~datum) field).

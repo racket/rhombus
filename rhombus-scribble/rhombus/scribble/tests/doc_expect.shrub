@@ -684,6 +684,12 @@ html:
                             span {class: "RktSym"}:
                               a {class: "RktValDef RktValLink"}: "String.copy"
                           span {class: "RktPn"}: "("
+                          span {class: "RktVar"}: "some_s"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValLink"}: "String"
                           span {class: "RktPn"}: ")"
                           span {class: "hspace"}: nbsp
                           span {class: "stt"}: "::"
@@ -729,7 +735,7 @@ html:
                           span {class: "stt"}: "method"
                           span {class: "hspace"}: nbsp
                           span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "s"
+                          span {class: "RktVar"}: "some_other_s"
                           span {class: "hspace"}: nbsp
                           span {class: "stt"}: "::"
                           span {class: "hspace"}: nbsp
@@ -748,7 +754,20 @@ html:
                           span {class: "hspace"}: nbsp
                           span {class: "stt"}:
                             a {class: "RktValLink"}: "String"
-          div {class: "SIntrapara"}: "Description."
+          div {class: "SIntrapara"}:
+            "Description, where "
+            span {class: "RktVar"}: "some_s"
+            span {class: "stt"}: "."
+            span {class: "stt"}: a {class: "RktValLink"}: "length"
+            span {class: "RktPn"}: "("
+            span {class: "RktPn"}: ")"
+            " and\n"
+            span {class: "RktVar"}: "some_other_s"
+            span {class: "stt"}: "."
+            span {class: "stt"}: a {class: "RktValLink"}: "length"
+            span {class: "RktPn"}: "("
+            span {class: "RktPn"}: ")"
+            " are linked."
         h3:«»
         p:
           table:

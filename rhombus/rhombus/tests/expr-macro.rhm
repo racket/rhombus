@@ -356,3 +356,28 @@ check:
       ex:
         "ok"
   ~completes
+
+check:
+  expr.macro 'm0 $a $()':
+    ~all_stx: stx
+    '('$stx')'
+  m0 10 11 12
+  ~matches 'm0 10 11 12'
+
+check:
+  expr.macro '$left m1 $a $()':
+    ~all_stx: stx
+    let '$_ $after_left' = stx
+    '('$after_left')'
+  1 m1 10 11 12
+  ~matches 'm1 10 11 12'
+
+check:
+  expr.macro 'with_options $term ...:
+                $options':
+    let '$(e :: expr_meta.Parsed)' = '$term ...'
+    e
+  with_options 1 + 3:
+    ~more
+  ~is 4
+

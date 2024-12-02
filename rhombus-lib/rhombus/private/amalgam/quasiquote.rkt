@@ -110,7 +110,7 @@
 
 (define ...1 (void))
 
-(define-for-syntax (convert-syntax e make-datum make-literal make-void
+(define-for-syntax (convert-syntax orig-e make-datum make-literal make-void
                                    handle-escape handle-group-escape handle-multi-escape
                                    adjust-escape-siblings deepen-escapes deepen-syntax-escape
                                    handle-tail-escape handle-block-tail-escape
@@ -125,7 +125,7 @@
                                    #:repetition-mode? [repetition-mode? #f]
                                    #:make-describe-op [make-describe-op (lambda (e name) e)]
                                    #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
-  (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
+  (let convert ([e orig-e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (group parens brackets braces block quotes multi alts)
       [(group
@@ -165,7 +165,8 @@
                                  [sidrs '()] ; list of #`[(#,id ...) #,rhs] for syntax definitions
                                  [vars '()]  ; list of `[,id . ,depth] for visible subset of `idrs` and `sidrs`
                                  [ps '()] [can-be-empty? #t] [pend-is-splice? #f] [tail #f] [depth depth]
-                                 [needs-group-check? #f])
+                                 [needs-group-check? #f]
+                                 [splice? splice?])
          (define really-can-be-empty? (and can-be-empty? (or pend-is-splice? (not pend-idrs))))
          (define (simple gs a-depth)
            (syntax-parse gs
@@ -176,7 +177,8 @@
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
                     (cons p ps) really-can-be-empty? #f #f depth
-                    needs-group-check?)]))
+                    needs-group-check?
+                    splice?)]))
          (define (simple2 gs a-depth)
            (syntax-parse gs
              [(g0 g1 . gs)
@@ -187,7 +189,8 @@
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
                     (list* p1 p0 ps) really-can-be-empty? #f #f depth
-                    needs-group-check?)]))
+                    needs-group-check?
+                    splice?)]))
          (define (finish ps tail idrs sidrs vars can-be-empty? needs-group-check?)
            (define (ps+tail) (let ([ps (if tail (append ps tail) ps)])
                                (if repetition-mode?
@@ -233,7 +236,8 @@
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth
                   ;; tail escape is responsible for making sure it's valid
-                  needs-group-check?)]
+                  needs-group-check?
+                  splice?)]
            [((~var op (:block-tail-repetition in-space tail-any-escape?)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
@@ -244,7 +248,8 @@
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth
-                  #f)]
+                  #f
+                  splice?)]
            [((~var op (:list-repetition in-space repetition-mode?)) . gs)
             #:when (zero? depth)
             (unless pend-idrs
@@ -268,7 +273,8 @@
                       sidrs
                       vars
                       (cons dots ps) can-be-empty? #t #f depth
-                      #t)
+                      #t
+                      splice?)
                 (let ([ps (if (eq? (syntax-e #'tag) 'group)
                               (improve-repetition-constraints ps #'gs)
                               ps)])
@@ -277,15 +283,35 @@
                         (append new-pend-sidrs sidrs)
                         (append new-pend-vars vars)
                         (cons dots ps) can-be-empty? #f #f depth
-                        #t)))]
+                        #t
+                        splice?)))]
            [((op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
               [(zero? depth)
+               (define could-tail? (or (and (not tail) (not splice?)) as-tail?))
                (define tail? (and (null? (syntax-e #'n-gs))
-                                  (or (and (not tail) (not splice?)) as-tail?)))
-               (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id.name #'esc.term e tail?))
+                                  could-tail?))
+               (define fixed-terms-after? (and could-tail?
+                                               (for/and ([n-g (in-list (syntax->list #'n-gs))])
+                                                 (syntax-parse n-g
+                                                   [(~var _ (:$ in-space)) #f]
+                                                   [(~var _ (:... in-space)) #f]
+                                                   [_ #t]))))
+               (define-values (pat new-idrs new-sidrs new-vars pat-as-tail?)
+                 (handle-escape #'$-id.name #'esc.term e tail?
+                                (or (and fixed-terms-after? #'n-gs) #'())
+                                (and fixed-terms-after?
+                                     (lambda ()
+                                       (loop #'n-gs '() '() '()
+                                             '()
+                                             '()
+                                             '()
+                                             null
+                                             #t #f #f depth
+                                             #t
+                                             #f)))))
                (cond
-                 [tail?
+                 [pat-as-tail?
                   (finish (reverse ps) pat
                           (append new-idrs (or pend-idrs '()) idrs)
                           (append new-sidrs (or pend-sidrs '()) sidrs)
@@ -300,7 +326,8 @@
                         (append (or pend-vars '()) vars)
                         (cons pat ps)
                         really-can-be-empty? #t #f depth
-                        #t)])]
+                        #t
+                        splice?)])]
               [else
                (simple2 gs (sub1 depth))])]
            [((op (~var $-id (:$ in-space))))
@@ -385,17 +412,31 @@
                   (lambda (e)
                     #`(~datum #,(void)))
                   ;; handle-escape:
-                  (lambda ($-id e in-e tail?)
+                  (lambda ($-id e in-e tail? fixed-tail-gs handle-fixed-tail)
                     (let-values ([(p new-idrs new-sidrs new-vars)
-                                  (if tail?
+                                  (if (or tail? handle-fixed-tail)
                                       (handle-escape $-id e in-e 'group)
                                       (values #f #f #f #f))])
                       (if p
                           (with-syntax ([(tmp) (generate-temporaries '(tail))])
-                            (values #`(~and tmp (~parse #,p (cons group-tag #'tmp)))
-                                    new-idrs new-sidrs new-vars))
+                            (cond
+                              [(null? (syntax-e fixed-tail-gs))
+                               (values #`(~and tmp (~parse #,p (cons group-tag #'tmp)))
+                                       new-idrs new-sidrs new-vars #t)]
+                              [else
+                               ;; there are term patterns after this group position
+                               (define-values (tail-p tail-idrs tail-sidrs tail-vars tail-empty?)
+                                 (handle-fixed-tail))
+                               (with-syntax ([(tail-tmp ...) (generate-temporaries fixed-tail-gs)])
+                                 (values #`(~and (tmp (... ...+) tail-tmp ...)
+                                                 (~parse #,p (cons group-tag #'(tmp (... ...))))
+                                                 (~parse #,(cdr (syntax-e tail-p)) #'(tail-tmp ...)))
+                                         (append new-idrs tail-idrs)
+                                         (append new-sidrs tail-sidrs)
+                                         (append new-vars tail-vars)
+                                         #t))]))
                           (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'term)])
-                            (values (if tail? (list p) p) new-idrs new-sidrs new-vars)))))
+                            (values (if tail? (list p) p) new-idrs new-sidrs new-vars tail?)))))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
                     (handle-escape/match-head $-id e in-e 'group #f))
@@ -623,11 +664,12 @@
                        ;; make-void
                        (lambda (e) e)
                        ;; handle-escape:
-                       (lambda ($-id e in-e tail?)
+                       (lambda ($-id e in-e tail? fixed-tail-gs handle-fixed-tail)
                          (check-escape e)
                          (define id (car (generate-temporaries (list e))))
                          (values (if tail? id #`(#,(quote-syntax ~@) . #,id))
-                                 (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
+                                 (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null
+                                 tail?))
                        ;; handle-group-escape:
                        (lambda ($-id e in-e)
                          (check-escape e)

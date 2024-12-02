@@ -93,8 +93,8 @@ identifier for its left-hand side. The pattern variable is bound to an
 opaque representation of the parsed form. In the definition of
 @rhombus(no_fail) above, the pattern variable @rhombus(left) stands for a parsed
 form, and not just a single shrubbery term. The form is parsed according
-to declared precedence relationships; specify presence for a macro in
-the same way as for @rhombus(operator).
+to declared precedence relationships; you can specify their presence in the same
+way as for @rhombus(operator).
 
 @examples(
   ~eval: macro_eval
@@ -109,7 +109,7 @@ the same way as for @rhombus(operator).
 )
 
 Since an @rhombus(expr.macro) implementation can use arbitrary
-compile-time code, it can inspect the input syntax objects in more way
+compile-time code, it can inspect the input syntax objects in more ways
 than just pattern matching. However, already-parsed terms will be
 opaque. Currently, there's no way for a transformer to inspect a parsed
 Rhombus expression (except by escaping to Racket). When the parsed
@@ -218,7 +218,7 @@ In the same way that @rhombus(operator) supports operators that are both
 prefix and infix, you can use @vbar alternatives with
 @rhombus(expr.macro) to create a prefix-and-infix macro. Furthermore, an
 @rhombus(expr.macro) form can have multiple prefix blocks or multiple
-infix blocks, where the each block's pattern is tried in order; in that
+infix blocks, where each block's pattern is tried in order; in that
 case, only the first prefix block (if any) and first infix block (if
 any) can have precedence and associativity declarations that apply to
 all cases---or precedence can be written before all alternatives by

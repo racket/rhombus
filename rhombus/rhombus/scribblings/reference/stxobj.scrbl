@@ -143,7 +143,7 @@ suffix corresponds to text after the closer.
  binding), and other atomic terms are matched using @rhombus(==) on
  unwrapped syntax objects.
 
- A @rhombus($, ~bind) within @rhombus(term)
+ A @rhombus($, ~bind) as a @rhombus(term)
  escapes to a subsequent unquoted binding that is matched against the corresponding
  portion of a candidate syntax object.
  A @dots in @rhombus(term, ~var) following a subpattern matches any number
@@ -155,20 +155,6 @@ suffix corresponds to text after the closer.
  @dots can appear within a sequence; when matching
  is ambiguous, matching prefers earlier @dots repetitions to
  later ones.
-
- A @rhombus($, ~bind) or @dots as the only @rhombus(term) matches
- each of those literally. To match @rhombus($, ~datum) or
- @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
- use @rhombus($, ~bind) to escape to a nested pattern, such as
- @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')). Simialrly,
- to match a literal @rhombus(~nonempty) or @rhombus(~once) after a @dots repetition, use
- @rhombus(#,(@rhombus($, ~bind))('~nonempty')) or @rhombus(#,(@rhombus($, ~bind))('~once')).
-
- To match identifier or operators based on binding instead of
- symbolically, use @rhombus($, ~bind) to escape, and then use
- @rhombus(bound_as, ~unquote_bind) within the escape.
-
- @see_implicit(@rhombus(#%quotes, ~bind), @quotes, "binding")
 
 @examples(
   match '1 + 2'
@@ -186,6 +172,48 @@ suffix corresponds to text after the closer.
   match '1 = 3'
   | '$x $(n && '!') ... ~once = $y': [x, [n, ...], y]
 )
+
+ Each @rhombus($, ~bind) escape is in either a term, group, or
+ multi-group context. A @rhombus($, ~bind) escape is in a term context if
+ it is followed by another escape within the same group. A
+ @rhombus($, ~bind) escape is a multi-group context when it is alone
+ within its group and when the group is last in its enclosing group
+ sequence. All other escapes are in a group context. An escape may impose
+ constraints mor elimiting than its context, such as using
+ @rhombus(Term, ~stxclass) within an escape in a group context. Escaping
+ to a group pattern in a term context is a syntax error, as is using a
+ multi-group pattern in a group or term context. A sequence escape (such
+ as a use of a @tech{syntax class} of kind @rhombus(~sequence)) can be
+ used in a term context.
+
+@examples(
+  ~error:
+    match '1 + 2'
+    | '$(a :: Group) + $b': a
+  match '1 + 2 + 3 + 4'
+  | '$(a :: Sequence) + $b': a
+  match '1 + 2 + 3'
+  | '$a + $(b :: Group)': b
+)
+
+ A @rhombus($, ~bind) or @dots as the only @rhombus(term) matches
+ each of those literally. To match @rhombus($, ~datum) or
+ @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
+ use @rhombus($, ~bind) to escape to a nested pattern, such as
+ @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')). Simialrly,
+ to match a literal @rhombus(~nonempty) or @rhombus(~once) after a @dots repetition, use
+ @rhombus(#,(@rhombus($, ~bind))('~nonempty')) or @rhombus(#,(@rhombus($, ~bind))('~once')).
+
+@examples(
+  match Syntax.literal '1 $ 2'
+  | '$n $('$') $m': [n, m]
+)
+
+ To match identifier or operators based on binding instead of
+ symbolically, use @rhombus($, ~bind) to escape, and then use
+ @rhombus(bound_as, ~unquote_bind) within the escape.
+
+ @see_implicit(@rhombus(#%quotes, ~bind), @quotes, "binding")
 
 }
 
@@ -407,7 +435,7 @@ suffix corresponds to text after the closer.
   def '$(!'2') ...' = '1 3 5 7 9'
   def '$(!'($_)') ...' = '[] {}'
   ~error:
-    def '$(b && '$_ $_ $_') done' = '1 2 3 done' // b in term context
+    def '$(b && '$_ $_ $_') $end' = '1 2 3 done' // b in term context
 )
 
 }

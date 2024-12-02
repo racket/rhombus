@@ -423,7 +423,7 @@
                            #`[#,(typeset-meta:in_space id)
                               #,(if nt
                                     (nonterminal-transformer-id nt)
-                                    #`(make-meta-id-transformer (quote-syntax #,id)))])
+                                    #`(make-meta-id-transformer (quote-syntax #,id) (quote-syntax #,(metavar-annot mv))))])
                       #,@(for/list ([id (in-hash-values nonterm-vars)])
                            #`[#,(typeset-meta:in_space id)
                               #,(nonterm-id-transformer id id nt-def-ht nt-space-name)])
@@ -670,7 +670,7 @@
         #:rhombus/expr
         (racketvarfont '#,(symbol->immutable-string id-sym))))))
 
-(define-for-syntax (make-meta-id-transformer id)
+(define-for-syntax (make-meta-id-transformer id annot-id)
   #;
   (typeset-meta:make_Transformer
    (lambda (use-stx)
@@ -686,16 +686,25 @@
      (define (datum-space? id)
        ;; done override datum or value spacing
        (memq (syntax-property id 'typeset-space-name) '(datum value result)))
+     (define (add-annot-prop id)
+       (if (syntax-e annot-id)
+           (syntax-property id 'annot (cons 'as_export annot-id) #t)
+           id))
      (syntax-parse term
        #:datum-literals (op)
        [((~and tag op) id)
-        (if (datum-space? #'id)
-            term
-            #`(op #,(syntax-property #'id 'typeset-space-name 'var #t)))]
+        (cond
+          [(datum-space? #'id)
+           term]
+          [(syntax-e annot-id)
+           #`(op #,(add-annot-prop #'id))]
+          [else
+           #`(op #,(add-annot-prop (syntax-property #'id 'typeset-space-name 'var #t)))])]
        [else
-        (if (datum-space? term)
-            term
-            (syntax-property term 'typeset-space-name 'var #t))]))))
+        (add-annot-prop
+         (if (datum-space? term)
+             term
+             (syntax-property term 'typeset-space-name 'var #t)))]))))
 
 (define-for-syntax (nt-key-expand nt-key-g)
   (define-values (root fields space-names)
@@ -860,22 +869,25 @@
 ;; ----------------------------------------
 
 (define-for-syntax (add-metavariable vars id nonterm?)
+  (define annot (syntax-property id 'annot_id))
   (hash-set vars (syntax-e id) (let ([mv (hash-ref vars (syntax-e id) #f)])
                                  (if mv
                                      (struct-copy metavar mv
                                                   [nonterm? (or nonterm?
-                                                                (metavar-nonterm? mv))])
-                                     (metavar id nonterm?)))))
+                                                                (metavar-nonterm? mv))]
+                                                  [annot (or annot
+                                                             (metavar-annot mv))])
+                                     (metavar id nonterm? annot)))))
 
 (define-for-syntax (extract-binding-metavariables stx vars)
   (define (extract-binding-group stx vars)
     (syntax-parse stx
       #:datum-literals (group op :: :~)
       [(~or* (group t)
-             (group t (op (~or* :: :~)) . _))
-       (extract-binding-term #'t vars)]
+             (group t (op (~or* :: :~)) . annot-seq))
+       (extract-binding-term #'t (attribute annot-seq) vars)]
       [_ vars]))
-  (define (extract-binding-term stx vars)
+  (define (extract-binding-term stx annot-seq vars)
     (define-splicing-syntax-class rst/dot
       #:datum-literals (group op ...)
       (pattern (~seq _ (group (op ...)))))
@@ -931,7 +943,13 @@
           (extract-list-rest (attribute rst) vars)])]
       [(parens g) (extract-binding-group #'g vars)]
       [hole vars]
-      [id:identifier (add-metavariable vars #'id #f)]
+      [id:identifier
+       (define id/annot
+         (syntax-parse annot-seq
+           [(annot-id:identifier)
+            (syntax-property #'id 'annot_id #'annot-id)]
+           [_ #'id]))
+       (add-metavariable vars id/annot #f)]
       [_ vars]))
   (extract-binding-group stx vars))
 

@@ -4,4 +4,4 @@
 (begin-for-syntax
   (provide (struct-out metavar))
   
-  (struct metavar (id nonterm?)))
+  (struct metavar (id nonterm? annot)))

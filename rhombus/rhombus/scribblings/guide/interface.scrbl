@@ -13,7 +13,7 @@ implements an interface through an @rhombus(implements, ~class_clause)
 clause. When a class implements an interface, then instances of the
 class satisfy the interface annotation, similar to the way that a
 subclass instances satisfies the superclass annotation. A class can have
-at most one superclass. but it can implement any number of interfaces.
+at most one superclass, but it can implement any number of interfaces.
 An interface is never final, so @rhombus(nonfinal, ~class_clause) is
 not needed in an interface.
 
@@ -32,7 +32,7 @@ not needed in an interface.
 )
 
 Interfaces can extend other interfaces. Unlike
-classes extending at one most superclass, interfaces can extend any
+classes extending at most one superclass, interfaces can extend any
 number of superinterfaces.
 
 @examples(
