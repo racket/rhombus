@@ -98,7 +98,7 @@
     (syntax-parse ps
       #:literals (...1)
       [(a ...1 . tail)
-       #`((~and (~or (~seq) (~seq _)) (~seq a (... ...)))
+       #`((~and (~or (~seq _) (~seq)) (~seq a (... ...)))
           . #,(replace-...1 #'tail))]
       [(a . tail)
        (define old-t #'tail)
