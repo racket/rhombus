@@ -53,21 +53,6 @@
  The set of @rhombus(bind) forms is extensible, so it cannot be
  completely enumerated here.
 
- If no @rhombus(target_expr) produces a true value and there is no
- @rhombus(~else) clause, a run-time exception is thrown. In that case,
- when all of the @rhombus(bind) forms are syntax-object patterns, the
- generated exception's message may be specialized to report the expected
- pattern, instead of just reporting that no cases matched.
-
- If an initial segment of @rhombus(bind) patterns are ``literal-like''
- or combinations of such patterns with @rhombus(||, ~bind), then the
- match is implemented as a case dispatch, and a match is found with
- logarithmic rather than linear time complexity in the number of
- literals. ``Literal-like'' patterns include (usually implicitly used)
- @rhombus(#%literal, ~bind), @rhombus(#', ~bind),
- @rhombus(Char, ~bind), and @rhombus(Byte, ~bind). The remaining
- patterns are handled as usual.
-
 @examples(
   match 1+2
   | 3: "three"
@@ -84,6 +69,50 @@
     match 1+2
     | n when n > 4: "ok"
 )
+
+ If no @rhombus(target_expr) produces a true value and there is no
+ @rhombus(~else) clause, a run-time exception is thrown. In that case,
+ when all of the @rhombus(bind) forms are syntax-object patterns, the
+ generated exception's message may be specialized to report the expected
+ pattern, instead of just reporting that no cases matched.
+
+@examples(
+  ~error:
+    match 1+2
+    | 4: "four"
+  ~error:
+    match '1+2'
+    | '4': "four"
+)
+
+ If an initial segment of @rhombus(bind) patterns are ``literal-like''
+ or combinations of such patterns with @rhombus(||, ~bind), then the
+ match is implemented as a case dispatch, and a match is found with
+ logarithmic rather than linear time complexity in the number of
+ literals. ``Literal-like'' patterns include (usually implicitly used)
+ @rhombus(#%literal, ~bind), @rhombus(#', ~bind),
+ @rhombus(Char, ~bind), and @rhombus(Byte, ~bind). The remaining
+ patterns are handled as usual.
+
+@examples(
+  ~defn:
+    fun classify_efficiently(n):
+      match n
+      | 1: "one"
+      | 2: "two"
+      | 3 || 4: "some"
+      | ~else: "more"
+)
+
+ Static information for @rhombus(target_expr) is propagated to each
+ @rhombus(bind).
+
+@examples(
+  use_static
+  match (["apple", "banana"] :: List.of(String))
+  | [s, ...]: [s.length(), ...]
+)
+
 }
 
 
