@@ -101,7 +101,7 @@ fun radial_path(Radial(~points: n,
     fun arc(frac, m1, m2, flat):
       unless m1 .= m2
       | unless flat
-        | p.arc([frac*-100, frac*-100, frac*200, frac*200], -m1, -m2, ~clockwise: #true)
+        | p.arc([frac*(-100), frac*(-100), frac*200, frac*200], -m1, -m2, ~clockwise: #true)
     if flat_outer_edge
     | p.line_to(arm(s, outer_radius * 100, 0))
     | arc(1, s0, s, flat_outer_edge)
