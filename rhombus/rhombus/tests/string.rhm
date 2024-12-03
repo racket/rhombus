@@ -98,6 +98,7 @@ block:
     "Hello".replace("l", "x") ~is "Hexlo"
     "Hello".replace("l", "x", ~all: #true) ~is "Hexxo"
     "Hello World".split() ~is ["Hello", "World"]
+    "Hello World".split().length() ~is 2
     "Hello World".split("l") ~is ["He", "", "o Wor", "d"]
     "Hello World".split("l", ~repeat: #true) ~is ["He", "o Wor", "d"]
     "Hello".split("H") ~is ["ello"]

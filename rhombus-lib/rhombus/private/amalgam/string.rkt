@@ -352,7 +352,7 @@
                              #:trim [trim? #t]
                              #:repeat [repeat? #f])
   #:static-infos ((#%call-result ((#%index-result #,(get-string-static-infos))
-                                  #,@(get-list-static-infos))))
+                                  #,@(get-treelist-static-infos))))
   (check-readable-string who s1)
   (define l
     (cond
