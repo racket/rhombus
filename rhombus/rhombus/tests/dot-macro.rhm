@@ -177,3 +177,35 @@ check:
 check:
   [more.add(more), ...]
   ~is [10, 12, 14]
+
+dot.macro 'array_or_string_dot_provider $left $dot $right':
+  ~is_repet: is_repet
+  ~tail: '$tail ...'
+  fun try(annot, can_fail):
+    let '$(ann :: annot_meta.Parsed)' = 'Array'
+    let (_, _, statinfos) = annot_meta.unpack_converter(ann)
+    if is_repet
+    | let '($s, $l, $d, $u, $sis)' = repet_meta.unpack_list(left)
+      repet_meta.parse_dot(repet_meta.pack_list('($d, $l, $d, $d, $statinfos)'),
+                           '$dot $right $tail ...',
+                           ~disable_generic: can_fail)
+    | expr_meta.parse_dot(statinfo_meta.replace(left, statinfos),
+                          '$dot $right $tail ...',
+                          ~disable_generic: can_fail)
+  let (e, e_tail) = try('Array', #true)
+  if e
+  | values(e, e_tail)
+  | try('String', #false)
+
+annot.macro 'ArrayOrString':
+  annot_meta.pack_predicate('fun (x): (x is_a Array) || (x is_a String)',
+                            '(($(statinfo_meta.dot_provider_key), array_or_string_dot_provider))')
+
+check (Array(1, 2, 3) :: ArrayOrString).length() ~is 3
+check ("apple" :: ArrayOrString).upcase() ~is "APPLE"
+check ("apple" :: ArrayOrString).nonesuch() ~throws "no such field or method"
+
+block:
+  use_static
+  let [a, ...] :: List.of(ArrayOrString) = [Array(1), Array(2, 3, 4), Array(5, 6)]
+  check [a.length(), ...] ~is [1, 3, 2]

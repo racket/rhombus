@@ -38,7 +38,7 @@
      (syntax-parse stx
        [(form-name q . tail)
         (define si (check-quotable #'form-name #'q))
-        (values (make-repetition-info #'datum
+        (values (make-repetition-info (list #'datum)
                                       #'()
                                       (syntax/loc stx (quote q))
                                       si

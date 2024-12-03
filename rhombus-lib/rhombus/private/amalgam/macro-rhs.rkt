@@ -85,7 +85,7 @@
                      (_::alts . _)))
          ;; a block or alts simiarly must end a group
          (values tail-pattern-in #f)]
-        [(pat ... _::$-bind _:identifier _::...-bind)
+        [(pat ... _::$-bind _:identifier _::...-bind (~or (~seq) (~seq #:nonempty)))
          ;; recognize where a tail match would be redundant and always be empty;
          ;; this is kind of an optimization, but one that's intended to be guaranteed;
          ;; note that this enables returning two values from the macro, instead

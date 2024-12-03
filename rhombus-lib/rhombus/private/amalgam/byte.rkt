@@ -39,7 +39,7 @@
      (syntax-parse tail
        [(form-id bstr . new-tail)
         (define byte (extract-byte-from-bytes #'form-id #'bstr))
-        (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'bstr)))
+        (values (make-repetition-info (list #'form-id #'bstr)
                                       '()
                                       #`(quote #,byte)
                                       (get-int-static-infos)

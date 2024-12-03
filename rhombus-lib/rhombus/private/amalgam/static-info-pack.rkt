@@ -16,9 +16,11 @@
 
 (define (pack-static-infos who stx)
   (syntax-parse stx
-    #:datum-literals (group)
+    #:datum-literals (group multi)
     [(_::parens (group (_::parens (group key) (group val))) ...)
      #'((key val) ...)]
+    [(group t) (pack-static-infos who #'t)]
+    [(multi (group t)) (pack-static-infos who #'t)]
     [_ (raise-arguments-error* who rhombus-realm
                                "ill-formed unpacked static infos"
                                "syntax object" stx)]))
