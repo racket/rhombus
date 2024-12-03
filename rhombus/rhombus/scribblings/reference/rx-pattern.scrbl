@@ -284,11 +284,13 @@ multiplying like the expression @rhombus(*) operator.
     mode: * ~at rhombus/rx
   rx.macro '.*'
   rx.macro '.* $mode'
+  rx.macro '.+'
+  rx.macro '.+ $mode'
   rx.macro '.?'
   rx.macro '.? $mode'
 ){
 
- Equivalent to @rhombus(. *, ~at rhombus/rx) and
+ Equivalent to @rhombus(. *, ~at rhombus/rx), @rhombus(. +, ~at rhombus/rx), and
  @rhombus(. ?, ~at rhombus/rx), but allowing the space between the
  operators to be omitted.
 

@@ -54,9 +54,9 @@ export:
 
   // operators for use inside `rx'...'`:
   only_space rx:
-    ||     // alternatives
-    * ? +  // repetitions
-    .* .?  // allow combinations of `.` with `*` and `?` without space
+    ||        // alternatives
+    * ? +     // repetitions
+    .* .? .+  // allow combinations of `.` with `*`, `?`, and `+` without space
     ! lookahead lookbehind
     word_boundary word_continue
     cut       // keep any match (prevent backtracking sreach) before this `cut`
@@ -337,6 +337,10 @@ rx.macro '$left ? $(g :: Greed) $()':
 
 rx.macro '.* $(g :: Greed) $()':
   values(rx_meta.pack('[repeat(0, #inf, $g.mode, #false)(any_except_newline), []]'),
+         '$g.tail ...')
+
+rx.macro '.+ $(g :: Greed) $()':
+  values(rx_meta.pack('[repeat(1, #inf, $g.mode, #false)(any_except_newline), []]'),
          '$g.tail ...')
 
 rx.macro '.? $(g :: Greed) $()':

@@ -118,3 +118,22 @@ normally bound to implement @tech{function} calls.
 )
 
 }
+
+@doc(
+  ~nonterminal:
+    arg_expr: block expr
+    fun_expr: block expr
+  expr.macro '$arg_expr ?> $immediate_callee'
+  expr.macro '$arg_expr ?> $fun_expr'
+){
+
+ Like @rhombus(|>), but if the result of @rhombus(arg_expr) is
+ @rhombus(#false), the result of the @rhombus(?>) expression is
+ @rhombus(#false). Static information is propagated in a way analogous to
+ @rhombus(?.).
+
+@examples(
+  #false ?> List.length
+)
+
+}

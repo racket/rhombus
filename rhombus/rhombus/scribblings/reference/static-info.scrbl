@@ -316,6 +316,11 @@
   @item{@rhombus(statinfo_meta.pairlist_bounds_key): Like
         @rhombus(statinfo_meta.list_bounds_key), but for a @tech{pair list}.}
 
+  @item{@rhombus(statinfo_meta.maybe_key): Packed static
+        information that applies to a non-@rhombus(#false) value. This
+        information is exposed by @rhombus(definitely), for example. See
+        also @rhombus(statinfo_meta.unpack_call_result).}
+
   @item{@rhombus(statinfo_meta.values_key): A packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),
         one for each value produced by a multiple-value expression.}
