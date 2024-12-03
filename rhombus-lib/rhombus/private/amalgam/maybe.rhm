@@ -9,8 +9,8 @@ use_static
 export:
   maybe
   !!
-  !!.
-  ?.
+  // !!.
+  // ?.
   ?>
 
 annot.macro 'maybe($(ann :: annot_meta.Parsed))':
@@ -46,6 +46,7 @@ expr.macro '$e !!':
                          | v: v',
                         demaybe_statinfos(statinfos))
 
+#//
 expr.macro '$e !!. $tail ... ~nonempty':
   ~same_as: .
   ~stronger_than: ~other
@@ -65,6 +66,7 @@ repet.macro '$e !!':
                          $use_depth,
                          $(demaybe_statinfos(statinfos)))')
 
+#//
 repet.macro '$e !!. $tail ... ~nonempty':
   ~same_as: .
   ~stronger_than: ~other
@@ -72,6 +74,7 @@ repet.macro '$e !!. $tail ... ~nonempty':
   let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
   values('($e !!)', '$dot $tail ...')
 
+#//
 expr.macro '$e ?. $(id :: Identifier) $(args && '($_)') ... ~once $tail ...':
   ~stronger_than: ~other
   ~same_as: .
@@ -108,6 +111,7 @@ meta:
       v_tail
     )
 
+#//
 repet.macro '$e ?. $(id :: Identifier) $(args && '($_)') ... ~once $tail ...':
   ~stronger_than: ~other
   ~same_as: .

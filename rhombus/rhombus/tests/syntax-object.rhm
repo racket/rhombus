@@ -244,6 +244,7 @@ check:
   ('x'.srcloc() :~ Srcloc).line
   ~completes
 
+#//
 block:
   use_static
   check 'x'.srcloc()?.line ~is_a Int

@@ -10,10 +10,11 @@ check:
   #false!! ~throws fail_msg
   #false!! || #true ~throws fail_msg
   #false!!.m() ~throws fail_msg
-  #false?.m ~is #false
-  #false?.m() ~is #false
-  #false?.m.n ~throws "n: no such field or method"
-  
+  // #false?.m ~is #false
+  // #false?.m() ~is #false
+  // #false?.m.n ~throws "n: no such field or method"
+
+#//
 check:
   def [x, ...] = [#false, "abc", #false]
   [x?.length(), ...]
@@ -41,10 +42,13 @@ block:
          ~is "no"
   check: []!!.length()
          ~is 0
+  #//
   check: s?.length()
          ~is 1
+  #//
   check: s?.copy()?.length()
          ~is 1
+  #//
   check: (#false :: maybe(String))?.copy()?.length()
          ~is #false
   check: 1 ?> List
@@ -55,6 +59,8 @@ block:
          ~is #false
   check: (#false ?> List) |> List
          ~is [#false]
+  #//
   def [x :: maybe(String), ...] = [#false, "abc", #false]
+  #//
   check: [x?.length(), ...]
          ~is [#false, 3, #false]

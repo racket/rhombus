@@ -284,8 +284,8 @@ multiplying like the expression @rhombus(*) operator.
     mode: * ~at rhombus/rx
   rx.macro '.*'
   rx.macro '.* $mode'
-  rx.macro '.+'
-  rx.macro '.+ $mode'
+  #// rx.macro '.+'
+  #// rx.macro '.+ $mode'
   rx.macro '.?'
   rx.macro '.? $mode'
 ){
