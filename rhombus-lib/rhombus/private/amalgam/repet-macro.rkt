@@ -14,6 +14,7 @@
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
+                     "maybe-key.rkt"
                      (for-syntax racket/base)
                      "srcloc.rkt")
          (only-in "space.rkt" space-syntax)
@@ -212,6 +213,8 @@
   (define/arity (repet_meta.parse_dot form1 tail
                                       #:as_static [more-static? #f]
                                       #:disable_generic [no-generic? #t])
+    #:static-infos ((#%call-result ((#%values (((#%maybe #,(get-syntax-static-infos)))
+                                               ((#%maybe #,(get-syntax-static-infos))))))))
     (define-values (repet new-tail)
       (syntax-parse (unpack-term form1 who #f)
         #:datum-literals (parsed)

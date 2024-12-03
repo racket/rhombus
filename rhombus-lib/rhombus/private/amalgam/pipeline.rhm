@@ -7,29 +7,39 @@ use_static
 export:
   |>
 
+module for_maybe:
+  export:
+    meta:
+      parse_pipeline_expr
+
+meta:
+  fun parse_pipeline_expr(arg, '$self $tail ...', ~as_static: as_static):
+    // Convert to a dynamic or static call:
+    let call = syntax_meta.dynamic_name('#%call', ~as_static: as_static)
+    // Parse function as entry point, if possible, to supply static info of `arg`
+    let arg_si = statinfo_meta.pack(statinfo_meta.gather(arg))
+    let (func, tail):
+      match '$tail ...'
+      | '$(func :: immediate_callee_meta.Parsed([arg_si], #'infix, self))':
+          values(func, '$func.tail ...')
+      | '$(func :: expr_meta.AfterInfixParsed(self))':
+          values(func, '$func.tail ...')
+    // The expansion:
+    let expr:
+      'block:
+         let arg = $arg
+         $func $call (arg)'
+    // Propagate static information, if any, for the call result:
+    let ress = statinfo_meta.lookup(func, statinfo_meta.call_result_key)
+    let ress: if ress | statinfo_meta.unpack_call_result(ress) | []
+    let [_, unpacked_res]:
+      ress.find(fun ([mask, unpacked_info]): mask bits.and 2)
+        || [-1, '()']
+    values(statinfo_meta.wrap(expr, unpacked_res),
+           tail)
+
 expr.macro '$arg |> $tail ...':
   ~op_stx: self
   ~weaker_than: ~other
-  // Convert to a dynamic or static call:
-  let call = syntax_meta.dynamic_name('#%call', ~as_static: syntax_meta.is_static(self))
-  // Parse function as entry point, if possible, to supply static info of `arg`
-  let arg_si = statinfo_meta.pack(statinfo_meta.gather(arg))
-  let (func, tail):
-    match '$tail ...'
-    | '$(func :: immediate_callee_meta.Parsed([arg_si], #'infix, self))':
-        values(func, '$func.tail ...')
-    | '$(func :: expr_meta.AfterInfixParsed(self))':
-        values(func, '$func.tail ...')
-  // The expansion:
-  let expr:
-    'block:
-       let arg = $arg
-       $func $call (arg)'
-  // Propagate static information, if any, for the call result:
-  let ress = statinfo_meta.lookup(func, statinfo_meta.call_result_key)
-  let ress: if ress | statinfo_meta.unpack_call_result(ress) | []
-  let [_, unpacked_res]:
-    ress.find(fun ([mask, unpacked_info]): mask bits.and 2)
-      || [-1, '()']
-  values(statinfo_meta.wrap(expr, unpacked_res),
-         tail)
+  parse_pipeline_expr(arg, '$self $tail ...',
+                      ~as_static: syntax_meta.is_static(self))

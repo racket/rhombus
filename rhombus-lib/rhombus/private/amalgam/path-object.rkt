@@ -10,6 +10,7 @@
          "define-arity.rkt"
          "compare-key.rkt"
          "index-result-key.rkt"
+         "maybe-key.rkt"
          "static-info.rkt"
          "annotation-failure.rkt"
          "enum.rkt"
@@ -265,6 +266,7 @@
   (bytes->path-element bstr))
 
 (define/arity (Path.Element.maybe bstr)
+  #:static-infos ((#%call-result ((#%maybe #,(get-path-static-infos)))))
   (unless (bytes? bstr) (raise-annotation-failure who bstr "Bytes"))
   (bytes->path-element bstr (system-path-convention-type) #t))
 
@@ -327,6 +329,7 @@
 
 (define/method (Path.suffix p)
   #:primitive (path-get-extension)
+  #:static-infos ((#%call-result ((#%maybe #,(get-path-static-infos)))))
   (define maybe-bstr (path-get-extension p))
   (and maybe-bstr (bytes->immutable-bytes maybe-bstr)))
 

@@ -6,9 +6,11 @@
          "dot-parse.rkt"
          "function-arity-key.rkt"
          "call-result-key.rkt"
+         "maybe-key.rkt"
          "define-arity.rkt"
          "realm.rkt"
-         (submod "string.rkt" static-infos))
+         (submod "string.rkt" static-infos)
+         (submod "arithmetic.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -28,10 +30,10 @@
   #:transparent
   #:fields
   ([(source)]
-   [(line)]
-   [(column)]
-   [(position)]
-   [(span)])
+   [(line) ((#%maybe #,(get-int-static-infos)))]
+   [(column) ((#%maybe #,(get-int-static-infos)))]
+   [(position) ((#%maybe #,(get-int-static-infos)))]
+   [(span) ((#%maybe #,(get-int-static-infos)))])
   #:properties
   ()
   #:methods

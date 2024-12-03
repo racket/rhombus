@@ -36,6 +36,7 @@
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "list-bounds-key.rkt"
+         "maybe-key.rkt"
          "values-key.rkt"
          "indirect-static-info-key.rkt"
          "is-static.rkt")
@@ -75,6 +76,7 @@
      sequence_element_key
      list_bounds_key
      pairlist_bounds_key
+     maybe_key
      values_key
      indirect_key)))
 
@@ -246,6 +248,7 @@
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
   (define/arity (statinfo_meta.lookup form key-in)
+    #:static-infos ((#%call-result ((#%maybe #,(get-syntax-static-infos)))))
     (check-syntax who form)
     (define key (unpack-identifier who key-in))
     (define si (extract-expr-static-infos who form))
@@ -267,6 +270,7 @@
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
   (define/arity (statinfo_meta.find si-stx key-in)
+    #:static-infos ((#%call-result ((#%maybe #,(get-syntax-static-infos)))))
     (define si (pack-static-infos who si-stx))
     (define key (unpack-identifier who key-in))
     (static-info-lookup si key))
@@ -295,5 +299,6 @@
 (define-key sequence_element_key #%sequence-element)
 (define-key list_bounds_key #%treelist-bounds)
 (define-key pairlist_bounds_key #%list-bounds)
+(define-key maybe_key #%maybe)
 (define-key values_key #%values)
 (define-key indirect_key #%indirect-static-info)

@@ -1,0 +1,60 @@
+#lang rhombus
+
+def fail_msg = "claimed not false, but actual value is false"
+
+check:
+  1 :: maybe(Int) ~is 1
+  #false :: maybe(Int) ~is #false
+  "x" :: maybe(Int) ~throws error.annot_msg()
+  0!! ~is 0
+  #false!! ~throws fail_msg
+  #false!! || #true ~throws fail_msg
+  #false!!.m() ~throws fail_msg
+  #false?.m ~is #false
+  #false?.m() ~is #false
+  #false?.m.n ~throws "n: no such field or method"
+  
+check:
+  def [x, ...] = [#false, "abc", #false]
+  [x?.length(), ...]
+  ~is [#false, 3, #false]
+  
+check:
+  ~eval
+  use_static
+  (dynamic("s") :: maybe(String)).length()
+  ~throws values("no such field or method",
+                 "based on static information")
+
+block:
+  use_static
+  check ("s" :: maybe(String))!!.length() ~is 1
+  check (dynamic("s") :: maybe(String))!!.length() ~is 1
+  check (#false :: maybe(String))!!.length() ~throws fail_msg
+  let s :: maybe(String) = dynamic("s")
+  check: match s
+         | s!!: s.length()
+         ~is 1
+  check: match (#false :: maybe(String))
+         | s!!: s.length()
+         | ~else: "no"
+         ~is "no"
+  check: []!!.length()
+         ~is 0
+  check: s?.length()
+         ~is 1
+  check: s?.copy()?.length()
+         ~is 1
+  check: (#false :: maybe(String))?.copy()?.length()
+         ~is #false
+  check: 1 ?> List
+         ~is [1]
+  check: #false ?> List
+         ~is #false
+  check: #false ?> List ?> List
+         ~is #false
+  check: (#false ?> List) |> List
+         ~is [#false]
+  def [x :: maybe(String), ...] = [#false, "abc", #false]
+  check: [x?.length(), ...]
+         ~is [#false, 3, #false]

@@ -295,18 +295,19 @@
   (string->immutable-string s))
 
 (define/method (String.to_int s)
-  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-readable-string who s)
   (define n (string->number s))
   (and (exact-integer? n)
        n))
 
 (define/method (String.to_number s)
-  #:static-infos ((#%call-result #,(get-number-static-infos)))
+  #:static-infos ((#%call-result ((#%maybe #,(get-number-static-infos)))))
   (check-readable-string who s)
   (string->number s))
 
 (define/method (String.find s1 s2)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-readable-string who s1)
   (check-readable-string who s2)
   (meta-if-version-at-least
