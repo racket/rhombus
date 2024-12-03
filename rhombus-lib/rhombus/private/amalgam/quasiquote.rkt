@@ -770,12 +770,12 @@
        (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
      (cond
        [repetition? (if (eqv? depth 0)
-                        (make-repetition-info e
+                        (make-repetition-info (list e)
                                               null
                                               #`(pack-element* #,template-e #,depth)
                                               (get-syntax-static-infos)
                                               0)
-                        (make-repetition-info e
+                        (make-repetition-info (list e)
                                               #`(([(elem) (in-list (pack-element* #,template-e #,depth))])
                                                  #,@(for/list ([i (in-range (sub1 depth))])
                                                       #`([(elem) (in-list elem)])))
@@ -1021,7 +1021,7 @@
                             convert-repetition-template
                             #f
                             convert-repetition-template
-                            (lambda (e) (make-repetition-info stx
+                            (lambda (e) (make-repetition-info (list stx)
                                                               null
                                                               #`(quote-syntax #,e)
                                                               (get-syntax-static-infos)
@@ -1098,7 +1098,7 @@
                (free-identifier=? #'repack #'repack-as-multi)])])))
      (relocate+reraw
       (respan stx)
-      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,in-expr)
+      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) (rhombus-expression #,in-expr))
           #:disable-colon-notation
           #:context '#,who
           #,@(for/list ([bind (in-list binds)]

@@ -110,7 +110,7 @@
      (syntax-parse tail
        [(form-id str . new-tail)
         (define char (extract-char-from-string #'form-id #'str))
-        (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'str)))
+        (values (make-repetition-info (list #'form-id #'str)
                                       '()
                                       #`(quote #,char)
                                       (get-char-static-infos)

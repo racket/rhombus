@@ -40,6 +40,11 @@
   (provide set-builtin->accessor-ref!
            set-builtin->mutator-ref!))
 
+(module+ for-syntax-meta
+  (provide (for-syntax
+            parse-dot-expr
+            parse-dot-repet)))
+
 (begin-for-syntax
   (property dot-provider (handler))
 
@@ -55,18 +60,26 @@
    'macro
    (lambda (form1 tail)
      (define more-static? (is-static-context/tail? tail))
-     (parse-dot-provider
-      tail
-      (lambda (dot dot-name field-id tail)
-        (let ([form1 (rhombus-local-expand form1)])
-          (define dp-id/s
-            (syntax-parse form1
-              [dp::dot-provider #'dp.id]
-              [_ #f]))
-          (build-dot-access form1 dp-id/s
-                            more-static? #:repetition? #f
-                            dot dot-name field-id tail)))))
+     (parse-dot-expr form1 tail #:as-static? more-static?))
    'left))
+
+(define-for-syntax (parse-dot-expr form1 tail
+                                   #:as-static? [more-static? #f]
+                                   #:no-generic? [no-generic? #f])
+  (parse-dot-provider
+   tail
+   (lambda (dot dot-name field-id tail)
+     (let ([form1 (rhombus-local-expand form1)])
+       (define dp-id/s
+         (syntax-parse form1
+           [dp::dot-provider #'dp.id]
+           [_ #f]))
+       (build-dot-access form1 dp-id/s
+                         more-static? #:repetition? #f
+                         dot dot-name field-id tail
+                         #:generic
+                         (and no-generic?
+                              (lambda () (values #f #f))))))))
 
 (define-repetition-syntax |.|
   (repetition-infix-operator
@@ -74,36 +87,43 @@
    'macro
    (lambda (form1 tail)
      (define more-static? (is-static-context/tail? tail))
-     (parse-dot-provider
-      tail
-      (lambda (dot dot-name field-id tail)
-        (syntax-parse form1
-          [rep::repetition-info
-           (define dp-id/s
-             (or (repetition-static-info-lookup #'rep.element-static-infos #'#%dot-provider)
-                 (and (null? (syntax->list #'rep.for-clausess))
-                      (identifier? #'rep.body)
-                      (syntax-local-value* (in-dot-provider-space #'rep.body) dot-provider-ref))))
-           (build-dot-access
-            form1 dp-id/s
-            more-static? #:repetition? #t
-            dot dot-name field-id tail
-            #:generic
-            (lambda ()
-              (define rep
-                (build-compound-repetition
-                 dot (list form1)
-                 (lambda (form1)
-                   (define-values (expr new-tail)
-                     (build-dot-access form1 dp-id/s
-                                       more-static? #:for-repetition? #t
-                                       dot dot-name field-id tail))
-                   (set! tail new-tail)
-                   (values expr
-                           (extract-static-infos expr)))))
-              (values rep
-                      tail)))]))))
+     (parse-dot-repet form1 tail #:as-static? more-static?))
    'left))
+
+(define-for-syntax (parse-dot-repet form1 tail
+                                    #:as-static? more-static?
+                                    #:no-generic? [no-generic? #f])
+  (parse-dot-provider
+   tail
+   (lambda (dot dot-name field-id tail)
+     (syntax-parse form1
+       [rep::repetition-info
+        (define dp-id/s
+          (or (repetition-static-info-lookup #'rep.element-static-infos #'#%dot-provider)
+              (and (null? (syntax->list #'rep.for-clausess))
+                   (identifier? #'rep.body)
+                   (syntax-local-value* (in-dot-provider-space #'rep.body) dot-provider-ref))))
+        (build-dot-access
+         form1 dp-id/s
+         more-static? #:repetition? #t
+         dot dot-name field-id tail
+         #:generic
+         (if no-generic?
+             (lambda () (values #f #f))
+             (lambda ()
+               (define rep
+                 (build-compound-repetition
+                  (datum->syntax #f (list form1 dot field-id)) (list form1)
+                  (lambda (form1)
+                    (define-values (expr new-tail)
+                      (build-dot-access form1 dp-id/s
+                                        more-static? #:for-repetition? #t
+                                        dot dot-name field-id tail))
+                    (set! tail new-tail)
+                    (values expr
+                            (extract-static-infos expr)))))
+               (values rep
+                       tail))))]))))
 
 ;; annotation, declared explicitly to create a syntax error
 ;; for something like `"a" :: String.length()`

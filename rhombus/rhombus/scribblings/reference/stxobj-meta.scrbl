@@ -136,13 +136,31 @@
 
 @doc(
   ~meta
-  fun syntax_meta.is_static(stx :: Operator || Identifier)
-    :: Boolean
+  fun syntax_meta.is_static(stx :: Name) :: Boolean
 ){
 
  Check whether the identifier @rhombus(#%dynamism) using the scopes of
  @rhombus(stx) is bound to indicate static mode. See @rhombus(use_static)
  for more information.
+
+}
+
+
+@doc(
+  ~meta
+  fun syntax_meta.dynamic_name(
+    name :: Name,
+    ~space: space :: SpaceMeta = expr_meta.space,
+    ~as_static: as_static = #false
+  ) :: Identifier
+){
+
+ Returns an identifier that has the same binding as @rhombus(name) in
+ @rhombus(space), and it also has a binding for @rhombus(#%dynamism) to
+ indicate dynamic or static mode, depending on @rhombus(as_static).
+
+ See @rhombus(use_static) for more information about dynamic versus
+ static mode.
 
 }
 

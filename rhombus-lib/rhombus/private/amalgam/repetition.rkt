@@ -8,6 +8,7 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "macro-result.rkt"
+                     "srcloc.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "expression.rkt"
@@ -63,7 +64,10 @@
               used-depth:exact-nonnegative-integer))) ; depth of `rep-expr` already consumed, only for error reporting
 
   (define (make-repetition-info rep-expr for-clausess body element-static-infos used-depth)
-    #`(#,rep-expr #,for-clausess #,body #,element-static-infos #,used-depth))
+    (let ([rep-expr (datum->syntax #f rep-expr)])
+      (relocate+reraw
+       rep-expr
+       #`(#,rep-expr #,for-clausess #,body #,element-static-infos #,used-depth))))
 
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -83,7 +87,7 @@
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/repet) #'id))]))
 
   (define (identifier-repetition-use id)
-    (make-repetition-info id
+    (make-repetition-info (list id)
                           null
                           id
                           #`((#%indirect-static-info #,id))
@@ -97,7 +101,7 @@
       (raise-syntax-error #f
                           "expression form does not support use as a repetition"
                           id))
-    (make-repetition-info id
+    (make-repetition-info (list id)
                           null
                           #`(rhombus-expression (group #,id))
                           #`((#%indirect-static-info #,id))
@@ -134,7 +138,7 @@
         (repet-handler stx (lambda ()
                              (syntax-parse stx
                                [(id . tail)
-                                (values (make-repetition-info #'id
+                                (values (make-repetition-info (list #'id)
                                                               for-clausess
                                                               for-body
                                                               (element-get-static-infos)

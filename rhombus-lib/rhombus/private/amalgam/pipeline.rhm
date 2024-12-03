@@ -11,10 +11,7 @@ expr.macro '$arg |> $tail ...':
   ~op_stx: self
   ~weaker_than: ~other
   // Convert to a dynamic or static call:
-  let call:
-    if statinfo_meta.is_static(self)
-    | statinfo_meta.static_call_name
-    | statinfo_meta.dynamic_call_name
+  let call = syntax_meta.dynamic_name('#%call', ~as_static: syntax_meta.is_static(self))
   // Parse function as entry point, if possible, to supply static info of `arg`
   let arg_si = statinfo_meta.pack(statinfo_meta.gather(arg))
   let (func, tail):

@@ -19,8 +19,7 @@
                      "call-result-key.rkt"
                      (for-syntax racket/base)
                      (only-in (submod "list.rkt" for-listable)
-                              get-treelist-static-infos)
-                     "context-stx.rkt")
+                              get-treelist-static-infos))
          "space-provide.rkt"
          "definition.rkt"
          "name-root-ref.rkt"
@@ -39,8 +38,7 @@
          "list-bounds-key.rkt"
          "values-key.rkt"
          "indirect-static-info-key.rkt"
-         "is-static.rkt"
-         "dynamic-static-name.rkt")
+         "is-static.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 statinfo_meta)))
@@ -62,17 +60,10 @@
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
      [gather statinfo_meta.gather]
+     [replace statinfo_meta.replace]
      [find statinfo_meta.find]
      [union statinfo_meta.union]
      [intersect statinfo_meta.intersect]
-
-     [is_static statinfo_meta.is_static]
-     static_call_name
-     static_dot_name
-     static_index_name
-     dynamic_call_name
-     dynamic_dot_name
-     dynamic_index_name
 
      call_result_key
      index_result_key
@@ -266,6 +257,15 @@
     (define si (extract-expr-static-infos who form))
     (unpack-static-infos who (or si #'())))
 
+  (define/arity (statinfo_meta.replace form statinfos)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who form)
+    (check-syntax who statinfos)
+    (define e
+      (wrap-static-info* (discard-static-infos (wrap-expression form))
+                         (pack-static-infos who statinfos)))
+    (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
+
   (define/arity (statinfo_meta.find si-stx key-in)
     (define si (pack-static-infos who si-stx))
     (define key (unpack-identifier who key-in))
@@ -277,11 +277,7 @@
 
   (define/arity (statinfo_meta.intersect . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-intersect))
-
-  (define/arity (statinfo_meta.is_static ctx-stx)
-    (define ctx (extract-ctx who ctx-stx))
-    (is-static-context? ctx)))
+    (static-infos-merge who statinfos static-infos-intersect)))
 
 (define-syntax-rule (define-key key id)
   (begin-for-syntax

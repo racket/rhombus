@@ -23,7 +23,8 @@
          "wrap-expression.rkt"
          "parse-meta.rkt"
          "parse-and-meta.rkt"
-         "operator-compare.rkt")
+         "operator-compare.rkt"
+         (submod "dot.rkt" for-syntax-meta))
 
 (provide (for-syntax (for-space rhombus/namespace
                                 expr_meta)))
@@ -46,6 +47,7 @@
      NameStart
      [parse_more expr_meta.parse_more]
      [parse_all expr_meta.parse_all]
+     [parse_dot expr_meta.parse_dot]
      [pack_s_exp expr_meta.pack_s_exp]
      [pack_expr expr_meta.pack_expr]
      [pack_meta_expr expr_meta.pack_meta_expr]
@@ -166,6 +168,23 @@
                                               #,expr))
                (relocate+reraw expr #`(parsed #:rhombus/expr
                                               #,opaque)))]))
+
+  (define/arity (expr_meta.parse_dot form1 tail
+                                     #:as_static [more-static? #f]
+                                     #:disable_generic [no-generic? #t])
+    (define-values (expr new-tail)
+      (syntax-parse (unpack-term form1 who #f)
+        #:datum-literals (parsed)
+        [(parsed #:rhombus/expr v)
+         (parse-dot-expr #'v (unpack-tail tail who #f)
+                         #:as-static? more-static?
+                         #:no-generic? no-generic?)]
+        [_
+         (raise-syntax-error who "not a parsed expression" form1)]))
+    (if expr
+        (values (relocate+reraw expr #`(parsed #:rhombus/expr #,expr))
+                (pack-tail new-tail))
+        (values #f #f)))
 
   (define/arity (expr_meta.relative_precedence left-mode left-stx right-stx)
     (get-relative-precedence who left-mode left-stx right-stx

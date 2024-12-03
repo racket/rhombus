@@ -16,9 +16,11 @@
                      (for-syntax racket/base)
                      (submod "syntax-object.rkt" for-quasiquote)
                      "srcloc.rkt"
-                     "treelist.rkt")
+                     "treelist.rkt"
+                     "context-stx.rkt")
          "space.rkt"
          "is-static.rkt"
+         "static-info.rkt"
          "operator-compare.rkt")
 
 (module+ for-unquote
@@ -39,7 +41,10 @@
      [error syntax_meta.error]
      [value syntax_meta.value]
      [flip_introduce syntax_meta.flip_introduce]
-     [is_static syntax_meta.is_static]))
+     [is_static syntax_meta.is_static]
+     [dynamic_name syntax_meta.dynamic_name]
+     [parse_dot_expr syntax_meta.parse_dot_expr]
+     [parse_dot_repet syntax_meta.parse_dot_repet]))
 
   (define expr-space-path (space-syntax #f))
 
@@ -179,23 +184,20 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (syntax-local-introduce stx))
 
-  (define (unpack-identifier-or-operator who id/op-in)
-    (define id/op (unpack-term/maybe id/op-in))
-    (define id
-      (cond
-        [(identifier? id/op) id/op]
-        [id/op (syntax-parse id/op
-                 #:datum-literals (op)
-                 [(op o) #'o]
-                 [_ #f])]
-        [else #f]))
-    (unless id
-      (raise-annotation-failure who id/op-in "Identifier || Operator"))
-    id)
+  (define/arity (syntax_meta.is_static ctx-stx)
+    (define ctx (extract-ctx who ctx-stx))
+    (is-static-context? ctx))
 
-  (define/arity (syntax_meta.is_static id/op-in)
-    (define id (unpack-identifier-or-operator who id/op-in))
-    (is-static-context? id))
+  (define/arity (syntax_meta.dynamic_name name-stx
+                                          #:as_static [static? #false]
+                                          #:space [sp expr-space-path])
+    (syntax-parse name-stx
+      #:datum-literals (group multi)
+      [n::name
+       (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
+       (relocate+reraw name-stx (add-dynamism-context #'n.name static? (space-name-symbol sp)))]
+      [_
+       (raise-annotation-failure who name-stx "Name")]))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation phase? ())))

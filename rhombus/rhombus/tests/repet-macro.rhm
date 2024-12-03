@@ -19,7 +19,7 @@ check:
   {nat3: nat3, ...} ~is {0: 0, 1: 1, 2: 2}
   {nat3: "ok", ...} ~is {0: "ok", 1: "ok", 2: "ok"}
 
-repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
+repet.macro 'enumed($from, $(sub :: repet_meta.Parsed))':
   ~op_stx self
   def '($orig, $expr, $depth, $use_depth, $statinfos)':
     repet_meta.unpack_list(sub)
@@ -36,9 +36,32 @@ repet.macro 'enum($from, $(sub :: repet_meta.Parsed))':
                          $si)')
 
 check:
-  [enum(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
+  [enumed(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
 
 check:
   use_static
-  [enum(10, nat3), ...][0].length()
+  [enumed(10, nat3), ...][0].length()
+  ~is 2
+
+repet.macro 'new_enumed($from, $(sub :: repet_meta.Parsed))':
+  ~all_stx stx
+  let '($_, ($binds, ..., ($inner_bind, ...)), $body, $use_depth, $_)':
+    repet_meta.unpack_generator(sub)
+  let (_, si):
+    let '$(p :: annot_meta.Parsed)' = 'List'
+    annot_meta.unpack_predicate(p)
+  repet_meta.pack_generator(
+    '($stx,
+      ($binds, ..., ($inner_bind, ..., ((i), $from ..))),
+      [i, $body],
+      $use_depth,
+      $si)'
+  )
+
+check:
+  [new_enumed(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
+
+check:
+  use_static
+  [new_enumed(10, nat3), ...][0].length()
   ~is 2

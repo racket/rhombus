@@ -188,6 +188,40 @@
 }
 
 
+@doc(
+  ~meta
+  fun expr_meta.parse_dot(left :: Syntax, op_and_tail :: Group,
+                          ~as_static: as_static = #false,
+                          ~disable_generic: disable_generic = #false)
+    :: (maybe(Syntax), maybe(Syntax))
+){
+
+ Dispatches to a @tech(~doc: guide_doc){dot provider} in the same way as
+ @rhombus(.). The @rhombus(left) syntax object must represent a parsed
+ expression to the left of @rhombus(.), while @rhombus(op_and_tail)
+ contains the operator and rest of the group to parse. The result is
+ two values: a parsed expression that consumes @rhombus(left) and part of
+ @rhombus(op_and_tail), and an unparsed remainder of
+ @rhombus(op_and_tail). The result can be @rhombus(#false) and
+ @rhombus(#false) only when @rhombus(disable_generic) is a true value.
+
+ To select a specific dot provider, use @rhombus(statinfo_meta.replace)
+ to adjust the static information of @rhombus(left), where
+ @rhombus(statinfo_meta.dot_provider_key) is the relevant
+ static-information key.
+
+ The @rhombus(as_static) argument determines whether a dot provider is
+ considered in static or dynamic mode, independent of the mode that would
+ be selected by the operator at the start of @rhombus(op_and_tail).
+
+ If no dot provider is found or if a dot provider declines to provide a
+ conversion, then a generic fallback expression is produced unless
+ @rhombus(disable_generic) is a true value. Note that a resolution
+ failure (when no dot provider is found) is an error in static mode only
+ when @rhombus(disable_generic) is @rhombus(#false).
+
+}
+
 
 @doc(
   ~meta
@@ -249,13 +283,16 @@
 }
 
 @doc(
-  fun expr_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
-                                    left_op :: Name,
-                                    right_infix_op :: Name)
-    :: matching(#'weaker || #'stronger || #false)
-  fun expr_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
-                           left_op :: Name,
-                           tail :: Group) :: Boolean
+  fun expr_meta.relative_precedence(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    right_infix_op :: Name
+  ) :: matching(#'weaker || #'stronger || #false)
+  fun expr_meta.ends_parse(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    tail :: Group
+  ) :: Boolean
 ){
 
  The @rhombus(expr_meta.relative_precedence) function reports relative

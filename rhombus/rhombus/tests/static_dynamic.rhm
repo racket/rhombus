@@ -1,4 +1,4 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 // Dot
 
@@ -100,3 +100,31 @@ check:
     use_static
     1 x 2
   ~throws "value does not satisfy annotation"
+
+
+// Macros
+
+expr.macro 'check_static_dynamic $term $()':
+  ~op_stx: self
+  '[$(syntax_meta.is_static(self)),
+    $(syntax_meta.is_static(term))]'
+
+expr.macro 'as_dynamic $term $op $arg ...':
+  ~op_stx: self
+  '$term $(syntax_meta.dynamic_name(op)) $arg ...'
+
+check check_static_dynamic 0 ~is [#false, #false]
+block:
+  use_static
+  check check_static_dynamic 0 ~is [#true, #true]
+  check as_dynamic #false.nonesuch() ~throws "no such field or method"
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'as_static $term $op $arg ...':
+    ~op_stx: self
+    '$term $(syntax_meta.dynamic_name(op, ~as_static: #true)) $arg ...'
+  as_static #false.nonesuch()
+  ~throws values("no such field or method",
+                 "based on static information")
