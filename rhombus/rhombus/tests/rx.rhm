@@ -485,6 +485,11 @@ block:
   check r3.num_captures ~is 3
   check r3.capture_names ~is { #'a: 1, #'b: 3 }
 
+  let r4 = rx'"x" || "y" ~~ digit'
+  check tl(r4.match_range_in("y42")) ~is [0..2, 1..2]
+  check tl(r4.match_range_in("x")) ~is [0..1, #false]
+  check tl(r4.match_range_in("__x__")) ~is [2..3, #false]
+
 // Examples from Cooper Coradeschi's thesis
 block:
   // Cooper's original example:
@@ -564,3 +569,21 @@ block:
   check p3.match("abc") ~is RXMatch("abc", ["b"], { #'B: 1 })
   check p3.match_in("xabc") ~is #false
   check p3.match("xabc") ~is RXMatch("abc", ["b"], { #'B: 1 })
+
+// regression test for precedence between `#%juxtapose` and `#%call`
+block:
+  let r1 = rx'["a" "b" ("c")]'
+  let r2 = rx'["a" ("b") "c"]'
+  let r3 = rx'[("a") "b" "c"]'
+  check:
+    r1.match("a") ~is r2.match("a")
+    r2.match("a") ~is r3.match("a")
+  check:
+    r1.match("b") ~is r2.match("b")
+    r2.match("b") ~is r3.match("b")
+  check:
+    r1.match("c") ~is r2.match("c")
+    r2.match("c") ~is r3.match("c")
+  check:
+    r1.match("d") ~is r2.match("d")
+    r2.match("d") ~is r3.match("d")
