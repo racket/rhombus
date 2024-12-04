@@ -20,7 +20,7 @@ expr.macro 'static_arity_check $(pattern:
                 | '$pre ... $args ~method':
                     field method_annot = #false
                     field is_method = #true
-                | '$pre ... $args ~method $method_annot':
+                | '$pre ... $args ~method $(method_annot :: Group)':
                     field is_method = #true
                 | '$pre ... $(args :: Term)':
                     field method_annot = #false

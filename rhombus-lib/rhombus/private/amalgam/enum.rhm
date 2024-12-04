@@ -54,7 +54,7 @@ meta:
         | (pattern:
              kind ~group
            | '~is_a: $ann; ...'
-           | '~is_a $ann_g': field [ann, ...] = [ann_g]):
+           | '~is_a $(ann_g :: Group)': field [ann, ...] = [ann_g]):
             let new_anns = [parse_annot(ann), ...]
             let parseds:
               match (parseds is_a NonemptyList) && parseds.last

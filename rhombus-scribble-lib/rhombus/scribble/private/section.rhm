@@ -38,7 +38,7 @@ meta:
   // general, eventually.
   fun fix_arg_indentation(orig_len, s):
     match s
-    | '$fun $id $args $rest':
+    | '$fun $id $args $rest ...':
         let len = '$fun $id'.to_source_string().length() + 1
         let delta = len - orig_len
         let '($arg1, ...)' = args
@@ -62,7 +62,7 @@ meta:
             | arg1.group_property(#'#{raw-prefix}, new_prefix, #true)
             | arg1
         let args = '($arg1, ...)'.relocate(args)
-        '$fun $id $args $rest'
+        '$fun $id $args $rest ...'
 
 defn.macro 'def_section $section: $rkt_section':
   fix_arg_indentation(

@@ -6,7 +6,7 @@ export:
 
 defn.macro
 | 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier) $(unconvert :: Identifier):
-     ~is_a $annot
+     ~is_a $(annot :: Group)
      ...
      { $(src :: Identifier): $(dest :: Identifier), ...}':
     '«
@@ -22,7 +22,7 @@ defn.macro
          ...
      »'
 | 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier):
-     ~is_a $annot
+     ~is_a $(annot :: Group)
      ...
      { $(src :: Identifier): $(dest :: Identifier), ...}':
     '«
@@ -36,7 +36,7 @@ defn.macro
      »'
 
 defn.macro 'symbol_set_annot $(name :: Identifier):
-              ~is_a $annot
+              ~is_a $(annot :: Group)
               ...
               { $(src :: Identifier), ...}':
   '«

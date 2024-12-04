@@ -261,14 +261,19 @@
             (quoted-shape-dispatch #'(pattern pat)
                                    in-binding-space
                                    (lambda (e) 'term)
-                                   (lambda (e) 'sequence)
+                                   (lambda (e)
+                                     ;; It's possible that `e` is a multi pattern,
+                                     ;; but we infer 'sequence for simplicity
+                                     'sequence)
                                    (lambda (e)
                                      (syntax-parse e
                                        #:datum-literals (multi)
                                        [(multi)
-                                        ;; special case: empty sequence can be spliced
+                                        ;; Special case: empty as 'sequence, unless
+                                        ;; forced to 'multi by other patterns
                                         'sequence]
-                                       [_ 'multi]))
+                                       [_
+                                        'multi]))
                                    (lambda (e) 'term)))
           (cond
             [(and (eq? kind 'sequence) (eq? new-kind 'term)) kind]

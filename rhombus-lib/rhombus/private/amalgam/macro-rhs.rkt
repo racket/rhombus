@@ -57,7 +57,7 @@
   (unquote-binding-transformer
    (lambda (stx)
      (cond
-       [(eq? 'term (current-unquote-binding-kind))
+       [(eq? 'term1 (current-unquote-binding-kind))
         (syntax-parse stx
           [(form-id . tail)
            (values #`(#,(syntax/loc #'form-id _) () () ())

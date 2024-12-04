@@ -72,12 +72,12 @@ repet.macro '$e !!. $tail ... ~nonempty':
   let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
   values('($e !!)', '$dot $tail ...')
 
-expr.macro '$e ?. $(id :: Identifier) $(args && '($_)') ... ~once $tail ...':
+expr.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
   ~stronger_than: ~other
   ~same_as: .
   ~op_stx: self
   maybe_op(e, self,  '.', '$id $args ...',
-           fun (left, '$op $id_and_args', ~as_static: as_static):
+           fun (left, '$op $(id_and_args :: Sequence)', ~as_static: as_static):
              let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
              let '$(v :: expr_meta.Parsed)' = '$left $dot $id_and_args'
              values(v, '$tail ...'))
@@ -108,7 +108,7 @@ meta:
       v_tail
     )
 
-repet.macro '$e ?. $(id :: Identifier) $(args && '($_)') ... ~once $tail ...':
+repet.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
   ~stronger_than: ~other
   ~same_as: .
   ~op_stx: self

@@ -6,11 +6,11 @@ import:
   rhombus/measure
 
 defn.macro 'type $id
-            | $ctr($args)
+            | $ctr($arg, ...)
             | ...':
   'class $id():
      nonfinal
-   class $ctr($args):
+   class $ctr($arg, ...):
      extends $id
    ...'
 

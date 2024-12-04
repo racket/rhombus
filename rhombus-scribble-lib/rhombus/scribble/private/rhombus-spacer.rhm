@@ -109,14 +109,14 @@ meta:
     | ~else: spacer.adjust_sequence(expr_or_body, #'~expr, esc)
   syntax_class Rhs:
     kind ~group
-  | '= $_'
+  | '= $_ ...'
   fun adjust_rhs(rhs, esc):
     match rhs
     | ': $(body :: Block)':
         spacer.adjust_term(body, body_spaces, esc)
-    | '$op $expr': // `op` is expected to be `=`
+    | '$op $expr ...': // `op` is expected to be `=`
         let new_op = spacer.set(op, #'~expr)
-        let new_expr = spacer.adjust_sequence(expr, #'~expr, esc)
+        let new_expr = spacer.adjust_sequence('$expr ...', #'~expr, esc)
         '$new_op $new_expr'
   fun last_key(stx):
     match stx
@@ -173,10 +173,10 @@ meta:
          | 'values($_)'
          | '($_)'
          | '$_ ...')'
-  fun adjust_res_ann(stx && '$op $res_ann', esc):
+  fun adjust_res_ann(stx && '$op $res_ann ...', esc):
     let new_op = spacer.set(op, #'~bind)
     let new_res_ann:
-      match res_ann
+      match '$res_ann ...'
       | (pattern:
            kind ~sequence
          | '$(tag && 'values') $(p && '($_)')'
@@ -184,7 +184,7 @@ meta:
           let new_tag = if tag | spacer.set(tag, #'~annot) | ''
           let new_p = spacer.adjust_term(p, #'~annot, esc)
           '$new_tag $new_p'
-      | ~else: spacer.adjust_sequence(res_ann, #'~annot, esc)
+      | ~else: spacer.adjust_sequence('$res_ann ...', #'~annot, esc)
     '$new_op $new_res_ann'
 
 meta:
@@ -298,8 +298,8 @@ spacer.bridge doc(self, tail, context, esc):
       fun adjust_clause(clause):
         let new_clause = spacer.adjust_sequence(clause, #'~defn, esc)
         match new_clause
-        | '$id $tail':
-            '$(spacer.set(id, #'~doc)) $tail'.relocate_group(clause)
+        | '$id $tail ...':
+            '$(spacer.set(id, #'~doc)) $tail ...'.relocate_group(clause)
         | ~else:
             new_clause.relocate_group(clause)
       let new_args:
@@ -396,9 +396,9 @@ meta:
   syntax_class Ann:
     kind ~sequence
   | '$('::' || ':~') $_ ...'
-  fun adjust_ann(stx && '$op $ann', esc):
+  fun adjust_ann(stx && '$op $ann ...', esc):
     let new_op = spacer.set(op, #'~bind)
-    let new_ann = spacer.adjust_sequence(ann, #'~annot, esc)
+    let new_ann = spacer.adjust_sequence('$ann ...', #'~annot, esc)
     '$new_op $new_ann'
 
 meta:
@@ -423,10 +423,10 @@ module for_doc:
     ~in: ~defn
     fun adjust_lhs_method(lhs, esc) :~ Syntax:
       match lhs
-      | '$(p && '($(_ :: Group))') $(dot && '.') $new_tail':
+      | '$(p && '($(_ :: Group))') $(dot && '.') $new_tail ...':
           let new_p = spacer.adjust_term(p, #'~expr, esc)
           let new_dot = spacer.set(dot, #'~expr)
-          '$new_p $new_dot $new_tail'
+          '$new_p $new_dot $new_tail ...'
       | ~else: lhs
     fun adjust_lhs_property(lhs, esc):
       match lhs
@@ -765,7 +765,7 @@ spacer.bridge is_a(self, tail, context, esc):
 meta:
   fun adjust_one(tail, context, esc, adjust):
     match tail
-    | '$t $tail': spacer.adjust_rest_sequence(adjust(t), tail, context, esc)
+    | '$t $tail ...': spacer.adjust_rest_sequence(adjust(t), '$tail ...', context, esc)
     | ~else: tail
 
 spacer.bridge #'(self, tail, context, esc):
@@ -1126,10 +1126,10 @@ spacer.bridge fields(self, tail, context, esc):
   fun adjust_kind(kind):
     let ': $(g :: Group)' = kind
     match g
-    | '$(tag && 'kind') $tail':
+    | '$(tag && 'kind') $tail ...':
         let new_g:
           let new_tag = spacer.set(tag, #'~syntax_class_clause)
-          '$new_tag $tail'.relocate_group(g)
+          '$new_tag $tail ...'.relocate_group(g)
         ': $new_g'.relocate(kind)
     | ~else: kind
   fun adjust_specs(specs) :~ Syntax:
@@ -1211,7 +1211,7 @@ meta:
          $(pattern:
              kind ~group
            | '$(args :: Args): $(expose :: Block)': field tail = ''
-           | '$(args :: Args) $tail': field expose = #false
+           | '$(args :: Args) $(tail :: Sequence)': field expose = #false
            | ': $(expose :: Block)': field args = #false; field tail = ''
            | '$tail': field args = #false; field expose = #false)':
         let new_ref:

@@ -42,7 +42,15 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/unquote_bind) #'id))]))
 
-  (define current-unquote-binding-kind (make-parameter 'term))
+  ;; Binding context kinds:
+  ;;  'term1 - parse a term, but can splice multi
+  ;;  'grouplet - parse a non-empty term sequence, allowed in designated pattern positions
+  ;;  'group1 - parse a whole group; like 'grouplet, but where an id should be group mode
+  ;;  'multi1 - parse a group sequence
+  ;;  'block1 - parse a group sequence within a block
+  ;; There's a close connection between pattern types and binding contexts, but we
+  ;; use different symbols to reflect how pattern-type expands adapt to binding context
+  (define current-unquote-binding-kind (make-parameter 'term1))
 
   (define-rhombus-enforest
     #:syntax-class :unquote-binding

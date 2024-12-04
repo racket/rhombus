@@ -37,7 +37,7 @@
   (unquote-binding-transformer
    (lambda (stxes)
      (cond
-       [(eq? (current-unquote-binding-kind) 'term)
+       [(eq? (current-unquote-binding-kind) 'term1)
         (syntax-parse stxes
           #:datum-literals (group)
           [(form-id space ... (_::block (group (_::quotes (group bound::dotted-operator-or-identifier-sequence)))))

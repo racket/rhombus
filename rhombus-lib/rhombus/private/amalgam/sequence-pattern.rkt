@@ -9,4 +9,5 @@
 (define-for-syntax (is-sequence-pattern? pat)
   (syntax-parse pat
     [((~datum ~seq) . _) #t]
+    [((~datum ~and) ((~datum ~seq) . _) . _) #t]
     [_ #f]))
