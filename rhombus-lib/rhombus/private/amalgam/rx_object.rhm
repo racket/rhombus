@@ -85,14 +85,14 @@ class RX(private _rkt_partial_rx,
 
   match_method match_range(input, start_pos, end_pos, output_port, input_prefix):
     MATCH base.#{regexp-match-positions}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
-    | PairList[Pair(s0, e0), Pair(s, e), ...]:
-        RXMatch(s0 .. e0, [Range.from_to(s, e), ...], _vars)
+    | PairList[Pair(s0, e0), maybe_pr, ...]:
+        RXMatch(s0 .. e0, [maybe_range(maybe_pr), ...], _vars)
     | ~else: #false
 
   match_method match_range_in(input, start_pos, end_pos, output_port, input_prefix):
     MATCH base.#{regexp-match-positions}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
-    | PairList[Pair(s0, e0), Pair(s, e), ...]:
-        RXMatch(s0 .. e0, [Range.from_to(s, e), ...], _vars)
+    | PairList[Pair(s0, e0), maybe_pr, ...]:
+        RXMatch(s0 .. e0, [maybe_range(maybe_pr), ...], _vars)
     | ~else: #false
 
   match_method is_match(input, start_pos, end_pos, output_port, input_prefix):
@@ -171,6 +171,11 @@ fun from_handles(rx,
   unless base.#{regexp?}(partial_rx)
   | bad("partial-match")
   _RX(partial_rx, rx, num_captures, vars, has_backref, source)
+
+fun maybe_range(maybe_pr):
+  MATCH maybe_pr
+  | Pair(s, e): s .. e
+  | ~else: #false
 
 fun freeze(elem):
   match elem

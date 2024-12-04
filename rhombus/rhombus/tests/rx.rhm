@@ -485,6 +485,11 @@ block:
   check r3.num_captures ~is 3
   check r3.capture_names ~is { #'a: 1, #'b: 3 }
 
+  let r4 = rx'"x" || "y" ~~ digit'
+  check tl(r4.match_range_in("y42")) ~is [0..2, 1..2]
+  check tl(r4.match_range_in("x")) ~is [0..1, #false]
+  check tl(r4.match_range_in("__x__")) ~is [2..3, #false]
+
 // Examples from Cooper Coradeschi's thesis
 block:
   // Cooper's original example:
