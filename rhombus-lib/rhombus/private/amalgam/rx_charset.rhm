@@ -81,6 +81,7 @@ rx_charset.macro '! $right':
 
 rx_charset.macro '$left #%juxtapose $right':
   ~weaker_than: ~other
+  ~same_as: #%call
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)),
                        stx)
