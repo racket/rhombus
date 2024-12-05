@@ -41,7 +41,9 @@
                       rhombus/bind)
                      ..
                      ..=
-                     <..<
+                     <..
+                     ;; TEMP replaced by `<..`
+                     (rename-out [<.. <..<])
                      <..=))
 
 (define-primitive-class Range range
@@ -197,7 +199,7 @@
        (get-list-range-static-infos)))
     'none)))
 
-(define-syntax <..<
+(define-syntax <..
   (expression-infix-operator
    range-assoc-table
    'macro
@@ -207,16 +209,16 @@
         (values (wrap-static-info*
                  (relocate+reraw
                   (respan (datum->syntax #f (list form1 tail)))
-                  #`(range-from-exclusive/who '<..<
+                  #`(range-from-exclusive/who '<..
                                               #,(discard-static-infos form1)))
                  (get-range-static-infos))
                 #'())]
        [(_ . more)
-        #:with (~var rhs (:infix-op+expression+tail #'<..<)) #'(group . more)
+        #:with (~var rhs (:infix-op+expression+tail #'<..)) #'(group . more)
         (values (wrap-static-info*
                  (relocate+reraw
                   (respan (datum->syntax #f (list form1 tail)))
-                  #`(range-from-exclusive-to/who '<..<
+                  #`(range-from-exclusive-to/who '<..
                                                  #,(discard-static-infos form1)
                                                  #,(discard-static-infos #'rhs.parsed)))
                  (get-range-static-infos))
@@ -279,7 +281,7 @@
       (parse-range-binding #'Range.from_to_inclusive form1 form2))
     'none)))
 
-(define-binding-syntax <..<
+(define-binding-syntax <..
   (binding-infix-operator
    `()
    'macro
@@ -289,7 +291,7 @@
         (values (parse-range-binding #'Range.from_exclusive form1)
                 #'())]
        [(_ . more)
-        #:with (~var rhs (:infix-op+binding+tail #'<..<)) #'(group . more)
+        #:with (~var rhs (:infix-op+binding+tail #'<..)) #'(group . more)
         (values (parse-range-binding #'Range.from_exclusive_to form1 #'rhs.parsed)
                 #'rhs.tail)]))
    'none))
@@ -480,11 +482,11 @@
   (define start (range-from-start r))
   (range-sequence start (step->inc step) #f))
 
-(define-range range range-from-exclusive-to Range.from_exclusive_to "<..<" #:both-not-equal)
+(define-range range range-from-exclusive-to Range.from_exclusive_to "<.." #:both-not-equal)
 
 (define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both)
 
-(define-range range range-from-exclusive Range.from_exclusive "<..<" #:left)
+(define-range range range-from-exclusive Range.from_exclusive "<.." #:left)
 
 (define-range range range-to Range.to ".." #:right)
 
