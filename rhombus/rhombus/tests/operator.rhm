@@ -2,7 +2,7 @@
 
 operator a +* b:
   (a + b) * b
-  
+
 check:
   3 +* 4
   ~is 28
@@ -31,40 +31,40 @@ block:
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
     3 ++* ((4 * 2) ++* 5) ~is 4420
-  
+
 block:
   operator ++*:
     ~weaker_than: *
     ~associativity: ~right
   | (a ++* b):
       (a + b) * b
-  
+
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
     3 ++* ((4 * 2) ++* 5) ~is 4420
-  
+
 block:
   operator ++*:
     ~weaker_than: *
   | (a ++* b):
       ~associativity: ~right
       (a + b) * b
-  
+
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
     3 ++* ((4 * 2) ++* 5) ~is 4420
-  
+
 block:
   operator ++*:
     ~associativity: ~right
   | (a ++* b):
       ~weaker_than: *
       (a + b) * b
-  
+
   check:
     3 ++* 4 * 2 ++* 5 ~is 4420
     3 ++* ((4 * 2) ++* 5) ~is 4420
-  
+
 // defining a prefix operator
 
 operator (!! b):
@@ -454,3 +454,23 @@ check:
   | ((a :: Int) ?):
       who
   ~throws "name option not allowed in operator case"
+
+// regression test for static info in repetitions
+block:
+  use_static
+  let [x, ...] = [1, 2, 3, 4, 5]
+  operator (x times y) :: Number:
+    x*y
+  check:
+    [x*x < dynamic(10), ...] ~is [#true, #true, #true, #false, #false]
+    [(x times x) < dynamic(10), ...] ~is [#true, #true, #true, #false, #false]
+  operator (two_times x) :: Number:
+    2*x
+  check:
+    [2*x < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
+    [(two_times x) < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
+  operator ((x) times_two) :: Number:
+    x*2
+  check:
+    [x*2 < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
+    [(x times_two) < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
