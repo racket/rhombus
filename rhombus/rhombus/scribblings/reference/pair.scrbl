@@ -442,17 +442,21 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  method (lst :: PairList).find(pred :: Function.of_arity(1)) :: Any
+  method (lst :: PairList).find(pred :: Function.of_arity(1))
+    :: Any
+  method (lst :: PairList).index(pred :: Function.of_arity(1))
+    :: maybe(NonnegInt)
 ){
 
- Returns the first element of @rhombus(lst) for which @rhombus(pred)
- return true, @rhombus(#false) otherwise. Searching the list
- takes @math{O(N)} time (multiplied by the cost of @rhombus(pred))
- to find an element as position @math{N}.
+ Like @rhombus(List.find) and @rhombus(List.find) , but for @tech{pair
+  lists}. Searching the list takes @math{O(N)} time (multiplied by the
+ cost of @rhombus(pred)) to find an element as position @math{N}.
 
 @examples(
   PairList[1, 2, 3].find((_ mod 2 .= 0))
   PairList[1, 2, 3].find((_ mod 10 .= 9))
+  PairList[1, 2, 3].index((_ mod 2 .= 0))
+  PairList[1, 2, 3].index((_ mod 10 .= 9))
 )
 
 }
@@ -485,6 +489,28 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
   PairList.map(PairList[1, 2, 3], (_ + 1))
   PairList[1, 2, 3].map((_ + 1))
   PairList[1, 2, 3].for_each(println)
+)
+
+}
+
+
+@doc(
+  method (lst :: PairList).filter(
+    ~keep: keep_pred :: Function.of_arity(1),
+    ~skip: skip_pred :: Function.of_arity(1)
+  ) :: PairList,
+  method (lst :: PairList).partition(pred :: Function.of_arity(1))
+    :: values(PairList, PairList)
+){
+
+ List @rhombus(List.filter) and @rhombus(List.partition), but for
+ @tech{pair lists}.
+
+@examples(
+  PairList[1, -1, -2, 2].filter(~keep: (_ > 0))
+  PairList[1, -1, -2, 2].filter(~skip: (_ > 0))
+  PairList[1, -1, -2, 2].filter(~keep: (_ != -2), ~skip: (_ > 0))
+  PairList[1, -1, -2, 2].partition((_ > 0))
 )
 
 }

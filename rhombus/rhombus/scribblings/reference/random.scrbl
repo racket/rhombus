@@ -64,3 +64,22 @@
  @rhombus(4294944442), inclusive.
 
 }
+
+@doc(
+  fun shuffle(lst :: List, rnd :: Random = Random.current())
+    :: List
+){
+
+ Returns a list with the same elements as @rhombus(lst), but in a random
+ order, where @rhombus(rnd) is used for randomization.
+
+@examples(
+  ~hidden:
+    import rhombus/random open
+    // make result deterministic
+    Random.current(Random(Array(1, 2, 3, 4, 5, 6)))
+  ~repl:
+    shuffle([1, 2, 3, 4])
+)
+
+}

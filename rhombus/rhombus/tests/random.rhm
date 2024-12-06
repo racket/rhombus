@@ -88,3 +88,10 @@ check:
       when v < 50 || v > 150
       | error("bad sample")
   ~completes
+
+block:
+  use_static
+  let l = [1, 2, 3, 4, 5]
+  check shuffle(l) ~is_a List
+  check shuffle(l).length() ~is 5
+  check Set(& shuffle(l)) ~is Set(& l)
