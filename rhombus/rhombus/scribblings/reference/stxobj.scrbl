@@ -177,9 +177,9 @@ suffix corresponds to text after the closer.
  multi-group context. A @rhombus($, ~bind) escape is in a term context if
  it is followed by another escape within the same group. A
  @rhombus($, ~bind) escape is a multi-group context when it is alone
- within its group and when the group is last in its enclosing group
+ within its group and when the group is alone within its enclosing group
  sequence. All other escapes are in a group context. An escape may impose
- constraints mor elimiting than its context, such as using
+ constraints more limiting than its context, such as using
  @rhombus(Term, ~stxclass) within an escape in a group context. Escaping
  to a group pattern in a term context is a syntax error, as is using a
  multi-group pattern in a group or term context. A sequence escape (such
@@ -242,7 +242,7 @@ suffix corresponds to text after the closer.
   single-term syntax object).}
 
  @item{@rhombus(TermSequence, ~annot) matches only a single-group
-  syntax object or an multi-group sequence with zero groups.}
+  syntax object or a multi-group sequence with zero groups.}
 
  @item{@rhombus(Identifier, ~annot) matches only an identifier (which is
   a single-term syntax object).}
@@ -311,6 +311,16 @@ suffix corresponds to text after the closer.
   match '1 + 2 + 3'
   | '$x + $y + $z': [x, y, z]
 )
+
+ An @rhombus($, ~bind)@rhombus(id) escape matches a single term, a
+ group, or a multi-group sequence, depending on its context. It matches a
+ multi-group sequence only when the @rhombus($, ~bind)@rhombus(id) escape
+ is alone within its group and the group is along within a block or
+ @quotes form. Otherwise, the escape matches a group only when it is
+ alone within its group. In all other contexts, a
+ @rhombus($, ~bind)@rhombus(id) escape matches a single term. Beware that
+ syntax patterns in @rhombus(macro) and similar forms treat certain
+ @rhombus($, ~bind)@rhombus(id) escapes specially.
 
  A @rhombus(_, ~unquote_bind) as a syntax pattern binding
  matches any input, like an identifier does, but without binding an

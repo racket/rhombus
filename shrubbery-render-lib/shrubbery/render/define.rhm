@@ -53,7 +53,7 @@ meta:
 
   fun extract_literal(stx):
     match stx
-    | '$_ $_ $_($stxs)': stxs
+    | '$_ $_ $_($(stxs :: Multi))': stxs
 
   fun nested([g, ...], builder, builder_stx, stxs):
     let [new_g, ...] = [escape_group(g), ...]
@@ -203,7 +203,7 @@ defn.macro 'macros ($rhombus,
        ~all_stx stx
        '$('$')(rhombusblock_etc(self, stx, '$('$')tail $('...')', '$typeset_rhombusblock', '$escape')) :~ $Result'
 
-     expr.macro '$rhombusblock ($('$')args)':
+     expr.macro '$rhombusblock ($('$')(args :: Multi))':
        ~op_stx: self
        '$typeset_rhombusblock(
           ~indent_from_block: #false,

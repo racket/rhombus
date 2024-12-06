@@ -208,8 +208,13 @@ check:
   ~throws "multi-group pattern incompatible with group context"
 
 check:
-  ~eval
   def '(0, $('1; 2'))' = '(0, 1, 2)'
+  #void
+  ~completes
+
+check:
+  ~eval
+  def '(0, $('1; 2') 3)' = '(0, 1, 2)'
   ~throws "multi-group pattern incompatible with group context"
 
 check:
@@ -294,10 +299,22 @@ check:
 
 check:
   match '(1)':
-  | '(1 $y)':
+  | '(1 $(y :: Sequence))':
       match y
       | '': "ok"
   ~is "ok"
+
+check:
+  match '(1)':
+  | '(1 $y)': "oops"
+  | ~else : "no"
+  ~is "no"
+
+check:
+  match '(1)':
+  | '(1 $(y :: Group))': "oops"
+  | ~else : "no"
+  ~is "no"
 
 // Make sure multi-element syntax can be replicated for a repetition
 check:
@@ -416,3 +433,64 @@ block:
            second'))':
         "ok"
     ~throws "expected parentheses"
+
+check:
+  match '1; 2; 3'
+  | '1; $((_ :: Multi) && ''); 2;  3': "ok"
+  ~is "ok"
+
+check:
+  match '1; 2; 3'
+  | '1; $(''); 2;  3': "ok"
+  ~is "ok"
+
+check:
+  match '1; 2; 3'
+  | '1; $s; 2;  3': s
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '1; 5; 6; 2; 3'
+  | '1; $s; 2;  3': s
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '1; 2; 3'
+  | '1; $(s :: Multi); 2;  3': s
+  ~matches ''
+
+check:
+  match '1; 5; 6; 2; 3'
+  | '1; $(s :: Multi); 2;  3': s
+  ~matches '5; 6'
+
+check:
+  match '1; 2; 3'
+  | '1; $(s :: Group); 2;  3': s
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match ': 1; 2':
+  | ': $x': x
+  ~matches '1; 2'
+
+check:
+  match '(1, 2)':
+  | '($x)': x
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '(1, 2, 3)'
+  | '($(a :: Multi), $(b :: Multi))':
+      [a, b]
+  ~matches ['1; 2; 3', '']
+
+check:
+  match '(1, 2, 2, 3)'
+  | '($(a :: Multi), 2, $(b :: Multi))':
+      [a, b]
+  ~matches ['1; 2', '3']

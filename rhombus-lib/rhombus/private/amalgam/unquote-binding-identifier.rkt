@@ -7,14 +7,14 @@
 
 (provide (for-syntax identifier-as-unquote-binding))
 
-(define-for-syntax (identifier-as-unquote-binding id kind
+(define-for-syntax (identifier-as-unquote-binding id ctx-kind
                                                   #:result [result list]
                                                   #:pattern-variable [pattern-variable list])
   (define-values (pack* unpack*)
-    (case kind
-      [(term) (values #'pack-term* #'unpack-term*)]
-      [(group) (values #'pack-group-or-empty* #'unpack-group-or-empty*)]
-      [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
+    (case ctx-kind
+      [(term1 grouplet) (values #'pack-term* #'unpack-term*)]
+      [(group1) (values #'pack-group-or-empty* #'unpack-group-or-empty*)]
+      [(multi1 block1) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
   (let* ([temps (generate-temporaries (list id id))]
          [temp1 (car temps)]
          [temp2 (cadr temps)])

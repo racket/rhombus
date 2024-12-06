@@ -180,8 +180,9 @@ For example, the @rhombus(no_fail) macro can be equivalently written like this:
 Returning a single value is allowed, and that's the same as returning an
 empty sequence for the remaining terms. Two return values are allowed
 only when the macro pattern ends with
-@rhombus(#,(@rhombus($, ~bind))#,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind)))
-or with @rhombus(#,(@rhombus($, ~bind))()), where @rhombus(#,(@rhombus($, ~bind))())
+@rhombus(#,(@rhombus($, ~bind))#,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind))),
+a block pattern, an alternatives pattern, or
+@rhombus(#,(@rhombus($, ~bind))()), where @rhombus(#,(@rhombus($, ~bind))())
 means that the pattern is required to match to the end of a group. In some
 cases,  @rhombus(#,(@rhombus($, ~bind))()) can be useful to constrain
 a macro uses to appear at the end of a group.

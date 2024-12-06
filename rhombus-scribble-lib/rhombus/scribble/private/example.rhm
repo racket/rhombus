@@ -80,7 +80,7 @@ expr.macro 'examples($form, ...)':
      $(if eval | '' | 'close_eval(eval)')
      content'
 
-expr.macro 'examples_stanza $(parens && '($_)')':
+expr.macro 'examples_stanza $(parens && '($_, ...)')':
   expr_meta.pack_s_exp(['#{typeset-examples}', parens])
 
 fun make_rhombus_eval(~lang: lang :: ModulePath || Any = ModulePath 'rhombus',

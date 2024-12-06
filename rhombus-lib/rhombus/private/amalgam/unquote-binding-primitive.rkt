@@ -56,10 +56,10 @@
         ;; empty parentheses match an empty group, which
         ;; is only useful for matching an empty group tail
         (case (current-unquote-binding-kind)
-          [(group)
+          [(grouplet)
            (values #`((group) () () ())
                    #'tail)]
-          [(term)
+          [(term1)
            (raise-syntax-error #f "incompatible with this context" stx)]
           [else (values #'#f #'())])]))))
 
@@ -101,7 +101,14 @@
         #:when (free-identifier=? (in-import-space #'name)
                                   (impo-quote spec)))))
   (define-expose-specifier-class :as-id as "the literal `as`")
-  (define-expose-specifier-class :open-id open "the literal `open`"))
+  (define-expose-specifier-class :open-id open "the literal `open`")
+
+  (define (context-kind->class-kind ctx-kind)
+    (case ctx-kind
+      [(term1) 'term]
+      [(grouplet group1) 'group]
+      [(multi1) 'multi]
+      [(block1) 'block])))
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
@@ -164,7 +171,8 @@
         (define rsc ((syntax-class-parser-proc parser) (string->symbol
                                                         (shrubbery-syntax->string #'sc-hier.name))
                                                        #'sc
-                                                       (current-unquote-binding-kind)
+                                                       (context-kind->class-kind
+                                                        (current-unquote-binding-kind))
                                                        match-id
                                                        #'sc-hier.tail))
         (if rsc
@@ -199,7 +207,8 @@
        (define rsc
          (parse-anonymous-syntax-class (syntax-e #'form-id)
                                        stx
-                                       (current-unquote-binding-kind)
+                                       (context-kind->class-kind
+                                        (current-unquote-binding-kind))
                                        #f
                                        #'tail))
        (values (if rsc
@@ -225,7 +234,7 @@
 (define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
                                                form1 match-id)
   (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
-    (define (compat pack* unpack*)
+    (define (compat pack* unpack* #:splice? [splice? #f])
       (define sc (rhombus-syntax-class-class rsc))
       (define sc-call (parse-syntax-class-args stx-class
                                                sc
@@ -328,17 +337,25 @@
         (for/first ([var (in-list attribute-vars)]
                     #:when (eq? (pattern-variable-sym var) swap-to-root))
           var))
-      #`(#,(if sc
-               (if (identifier? sc)
-                   (let ([p #`(~var #,instance-id #,sc-call)])
-                     (if (rhombus-syntax-class-splicing? rsc)
-                         #`(~seq #,p) ;; communicates to `&&`
-                         p))
-                   #`(~and #,(if dotted-bind?
-                                 #`(~seq #,instance-id (... ...))
-                                 instance-id)
-                           #,sc)) ; inline syntax class
-                instance-id)
+      #`(#,((if splice?
+                (lambda (p)
+                  (with-syntax ([(tmp) (generate-temporaries '(tail))])
+                    #`(~and (~seq tmp (... ...))
+                            (~parse #,p (cons 'multi #'(tmp (... ...)))))))
+                values)
+            (if sc
+                (if (identifier? sc)
+                    (let ([p #`(~var #,instance-id #,sc-call)])
+                      (if (rhombus-syntax-class-splicing? rsc)
+                          #`(~seq #,p) ;; communicates to `&&`
+                          p))
+                    #`(~and #,(if dotted-bind?
+                                  #`(~seq #,instance-id (... ...))
+                                  instance-id)
+                            #,sc)) ; inline syntax class
+                (if (eq? 'group (rhombus-syntax-class-kind rsc))
+                    #`(~and (_ _ . _) #,instance-id)
+                    instance-id)))
          #,(cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
                                                      #`(#,instance-id (... ...))
                                                      instance-id))
@@ -397,27 +414,29 @@
                           "syntax class incompatible with this context"
                           stx-class))
     (define (retry) #'#f)
-    (define kind (current-unquote-binding-kind))
+    (define ctx-kind (current-unquote-binding-kind))
     (cond
       [(eq? (rhombus-syntax-class-kind rsc) 'term)
        (cond
-         [(not (eq? kind 'term)) (retry)]
+         [(not (eq? ctx-kind 'term1)) (retry)]
          [(rhombus-syntax-class-splicing? rsc)
           (compat #'pack-tail* #'unpack-element*)] ;; `unpack-element*` keeps `group` or `multi` wrapper
          [else (compat #'pack-term* #'unpack-term*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'group)
        (cond
-         [(eq? kind 'term) (incompat)]
-         [(not (eq? kind 'group)) (retry)]
+         [(eq? ctx-kind 'term1) (incompat)]
+         [(not (or (eq? ctx-kind 'grouplet) (eq? ctx-kind 'group1))) (retry)]
          [else (compat #'pack-group* #'unpack-group*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'multi)
        (cond
-         [(or (eq? kind 'multi) (eq? kind 'block))
+         [(or (eq? ctx-kind 'multi1) (eq? ctx-kind 'block1))
           (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
+         [(eq? ctx-kind 'group1)
+          (compat #'pack-tagged-multi* #'unpack-multi-as-term* #:splice? #t)]
          [else (incompat)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'block)
        (cond
-         [(eq? kind 'block)
+         [(eq? ctx-kind 'block1)
           (compat #'pack-block* #'unpack-multi-as-term*)]
          [else (incompat)])]
       [else
@@ -425,7 +444,9 @@
 
 (define-for-syntax (normalize-id form)
   (if (identifier? form)
-      (identifier-as-unquote-binding form (current-unquote-binding-kind))
+      (if (eq? (current-unquote-binding-kind) 'grouplet)
+          #f
+          (identifier-as-unquote-binding form (current-unquote-binding-kind)))
       form))
 
 (define-for-syntax (norm-seq pat like-pat)
@@ -484,7 +505,7 @@
    `()
    'automatic
    (lambda (form stx)
-     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term)
+     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term1)
                         (normalize-id form))
        [#f #'#f]
        [(pat _ _ _) #'((~not pat) () () ())]))))

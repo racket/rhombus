@@ -239,9 +239,9 @@ check:
   ~is "#'dropped  quote  +&  1  +&  2001200"
 
 check:
-  expr.macro '$left quote $tail $()':
+  expr.macro '$left quote $tail ... $()':
     ~all_stx stx
-    values('$(stx.to_source_string())', tail)
+    values('$(stx.to_source_string())', '$tail ...')
   #'dropped  quote  +&  1  +&  200
   ~is "#'dropped  quote  +&  1  +&  2001200"
 
@@ -365,9 +365,9 @@ check:
   ~matches 'm0 10 11 12'
 
 check:
-  expr.macro '$left m1 $a $()':
+  expr.macro '$left m1 $a ... $()':
     ~all_stx: stx
-    let '$_ $after_left' = stx
+    let '$_ $(after_left :: Group)' = stx
     '('$after_left')'
   1 m1 10 11 12
   ~matches 'm1 10 11 12'

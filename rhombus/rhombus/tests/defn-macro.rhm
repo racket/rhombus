@@ -101,7 +101,7 @@ check:
 
 // implicit as macro
 check:
-  defn.macro '#%parens ($defn)':
+  defn.macro '#%parens ($(defn :: Multi))':
     '$defn'
   (def ding = "ding",
    def dong = "dong")

@@ -499,7 +499,6 @@ block:
     | '$(exp :: N.Arithmetic)': exp.y
     ~matches '2'
 
-// empty pattern is a special case
 block:
   syntax_class Maybe
   | '1'
@@ -514,6 +513,26 @@ block:
     def '$(x :: Maybe) 2' = '1 2'
     x
     ~matches '1'
+
+block:
+  syntax_class Maybe:
+    kind: ~multi
+  | '1'
+  | ''
+
+  check:
+    match '1; 2'
+    | '1; $(f :: Maybe); 2': f
+    ~matches ''
+
+check:
+  ~eval
+  syntax_class Maybe:
+    kind: ~multi
+  | '1'
+  | ''
+  def '$(x :: Maybe) 2' = '2'
+  ~throws "syntax class incompatible with this context"
 
 block:
   syntax_class House(material)
@@ -1049,3 +1068,24 @@ check:
   syntax_class D
   | '$(c :: C) $a' // `c :: C` doesn;t bind `a`
   ~completes
+
+block:
+  syntax_class Option:
+    root_swap: o orig
+  | '~opt_a: $n':
+      field o = {#'a: n}
+  | '~opt_b':
+      field o = {#'b: #true}
+
+  syntax_class.together:
+    syntax_class Options:
+      fields: o
+    | '$(opt :: Option)': field o = opt
+    | '$(opt :: Option)
+       $(tail :: Options)': // multi-group escape allowed here
+        field o = opt ++ tail.o
+
+  check:
+    match '~opt_a: 10; ~opt_b'
+    | '$(v :: Options)': v.o
+    ~matches { #'a: '10; ~opt_b' }

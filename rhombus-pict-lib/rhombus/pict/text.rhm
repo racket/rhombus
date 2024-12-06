@@ -100,7 +100,7 @@ fun current_font_as_underline():
 defn.macro 'ly $ly: $expr':
   '«
      macro
-     | '$ly($('$')args)':
+     | '$ly($('$')(args :: Multi))':
          '(parameterize { current_font: $expr }:
              t($('$')args)) :~ Pict'
      | '$ly: $('$')(body :: Block)':

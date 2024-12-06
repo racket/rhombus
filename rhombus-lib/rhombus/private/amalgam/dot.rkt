@@ -120,7 +120,7 @@
                                         more-static? #:for-repetition? #t
                                         dot dot-name field-id tail))
                     (set! tail new-tail)
-                    (values expr
+                    (values (discard-static-infos expr)
                             (extract-static-infos expr)))))
                (values rep
                        tail))))]))))

@@ -83,7 +83,7 @@
  default relationship.
 
  The @racket[protocol] is either @racket['macro] for
- @tech{macro protocol} or @racket['auto] for
+ @tech{macro protocol} or @racket['automatic] for
  @tech{automatic protocol}.
 
  The @racket[proc] transformer procedure depends on the mode (prefix
@@ -102,7 +102,7 @@
  operator term) in the enclosing group and returns two values: a
  parsed form, and a syntax list of remaining terms.
 
- If the @racket[protocol] is @racket['auto], @racket[proc] takes two
+ If the @racket[protocol] is @racket['automatic], @racket[proc] takes two
  arguments: a parsed right-hand form and the operator name, and
  returns a further parsed form.
 
@@ -128,7 +128,7 @@
  the enclosing group, and returns two values: a parsed form, and a
  syntax list of remaining terms.
 
- If the @racket[protocol] is @racket['auto], @racket[proc] takes three
+ If the @racket[protocol] is @racket['automatic], @racket[proc] takes three
  arguments: a parsed left-hand form, a parsed right-hand form, and the
  operator name, and returns a further parsed form.
 

@@ -420,27 +420,31 @@
   syntax_class Number: kind: ~term
   syntax_class Boolean: kind: ~term
   syntax_class Literal: kind: ~term
+  syntax_class Sequence: kind: ~sequence
   syntax_class Group: kind: ~group
   syntax_class Multi: kind: ~multi
   syntax_class Block: kind: ~block
 ){
 
  Syntax classes, all of which imply a single-term match except for
- @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass),
+ @rhombus(Sequence, ~stxclass), @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass),
  @rhombus(Block, ~stxclass), and @rhombus(IdentifierName, ~stxclass).
 
+ The @rhombus(Sequence, ~stxclass) syntax class matches any number of
+ terms, including zero terms. That is, it matches a group or a
+ multi-group sequence that has zero groups.
+
  The @rhombus(Group, ~stxclass) syntax class can be used only for a
- pattern identifier that is at the end of its group in a pattern. The
- identifier is bound to a match for the entire tail of the group as a
- group syntax object.
+ pattern identifier that has no other pattern escapes after it in the
+ same group. The identifier is bound to a match for a non-empty sequence
+ of term syntax objects.
 
  The @rhombus(Multi, ~stxclass) syntax class can be used only for a
- pattern identifier that is the sole term where a sequence of groups is
- allowed, such as in the body of a block. The identifier is bound to a
- match for the entire sequence of groups.
+ pattern identifier that is alone within its group. The identifier is
+ bound to a match for a sequence of groups.
 
  The @rhombus(Block, ~stxclass) syntax class can be used only for a
- pattern identifier that is the sole term of a block. The identifier is
+ pattern escape that is along within a block. The identifier is
  bound to a match for the entire block as a single term (i.e., as a
  single-term syntax object that has a block term, and not as a
  multi-group syntax object).

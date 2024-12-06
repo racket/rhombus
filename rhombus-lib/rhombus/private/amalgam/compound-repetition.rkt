@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          "expression.rkt"
-         "repetition.rkt")
+         "repetition.rkt"
+         "static-info.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
                      make-expression&repetition-infix-operator
@@ -18,8 +19,10 @@
       (lambda (form self-stx)
         (build-compound-repetition self-stx
                                    (list form)
-                                   (lambda (form) (values (exp form self-stx)
-                                                          #'())))))
+                                   (lambda (form)
+                                     (define expr (exp form self-stx))
+                                     (values (discard-static-infos expr)
+                                             (extract-static-infos expr))))))
     (values
      (expression-prefix-operator prec protocol exp)
      (repetition-prefix-operator (add-repet-space prec) protocol rep)))
@@ -33,15 +36,18 @@
             (define e (build-compound-repetition stx
                                                  (list form)
                                                  (lambda (form)
-                                                   (define-values (e e-tail) (exp form stx))
-                                                   (set! tail e-tail)
-                                                   (values e #'()))))
+                                                   (define-values (expr new-tail) (exp form stx))
+                                                   (set! tail new-tail)
+                                                   (values (discard-static-infos expr)
+                                                           (extract-static-infos expr)))))
             (values e tail))
           (lambda (form1 form2 self-stx)
             (build-compound-repetition self-stx
                                        (list form1 form2)
-                                       (lambda (form1 form2) (values (exp form1 form2 self-stx)
-                                                                     #'()))))))
+                                       (lambda (form1 form2)
+                                         (define expr (exp form1 form2 self-stx))
+                                         (values (discard-static-infos expr)
+                                                 (extract-static-infos expr)))))))
     (values
      (expression-infix-operator prec protocol exp assc)
      (repetition-infix-operator (add-repet-space prec) protocol rep assc)))

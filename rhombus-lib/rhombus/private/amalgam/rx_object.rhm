@@ -44,7 +44,7 @@ class RX(private _rkt_partial_rx,
     | #'char
     | #'bytes
 
-  class_clause.macro 'match_method $name($input $input_ann, $start, $end, $out, $prefix):
+  class_clause.macro 'match_method $name($input $(input_ann :: Sequence), $start, $end, $out, $prefix):
                         $(body :: Block)':
     let input_ann:
       match input_ann

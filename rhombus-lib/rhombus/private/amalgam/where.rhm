@@ -18,7 +18,7 @@ expr.macro
 meta:
   syntax_class Bind_Right_Expr:
     kind: ~group
-  | '$bind ... = $expr'
+  | '$bind ... = $(expr :: Group)'
   | '$bind ...: $(body :: Block)':
       field expr = 'block $body'
 

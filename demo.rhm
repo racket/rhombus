@@ -493,7 +493,7 @@ match '([{1 + 2}])'
 | '([{ $g }])': g
 
 match '([{1 + 2, 3 + 4}])'
-| '([{ $g }])': g
+| '([{ $(g :: Multi) }])': g
 
 // the `macro` form defines a simple pattern-based expression macro:
 macro 'thunk: $body':

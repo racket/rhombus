@@ -115,9 +115,26 @@ to form a repetition of matches:
  must thread potentially long sequences into and out of macro
  transformers.}
 
-A @rhombus($)-escaped variable in a @quotes pattern matches one or more
-terms in a group, and it can only match multiple terms if it is the last
-escape within a group. A block created with @litchar{:} counts as a
+A @rhombus($)-escaped variable in a @quotes pattern matches one term in
+with a group, or it matches a whole group if the a @rhombus($)-escaped
+variable is alone within its group.
+
+@examples(
+  ~defn:
+    def '$x $y' = '1 2'
+  ~repl:
+    x
+    y
+  ~repl:
+    ~error:
+      def '$x $y' = '1 2 3'
+  ~defn:
+    def '$x' = '1 2 3'
+  ~repl:
+    x
+)
+
+A block created with @litchar{:} counts as a
 single term of its enclosing group, and a sequence of @litchar{|}
 alternatives (not an individual alternative) similarly counts as one
 term.
@@ -144,13 +161,14 @@ after @rhombus($y).
 
 @examples(
   ~error:
-    def '1 + $y + $z' = '1 + 2 * 3 + 4'
+    def '1 + $y' = '1 + 2 * 3'
 )
 
-When an escaped variable is alone in its group in a pattern, it can
-match multiple terms, and so it stand for a match to the whole group. A
-pattern variable that is alone in a multi-group context similarly stands
-for a match to all the groups.
+In the same way that an escaped variable alone in its group matches the
+whole group as a sequence of terms, a pattern variable that is alone in
+a multi-group context matches a sequence of groups. This rule applies
+only for multi-group contexts where groups are not separated by
+@litchar{,}, such as in a block.
 
 @examples(
   ~eval:
@@ -167,9 +185,9 @@ for a match to all the groups.
     body
 )
 
-These multi-term and multi-group syntax objects can be spliced into
-similar positions in templates, where an escape is by itself within its
-group or by itself in a multi-group position.
+Multi-term and multi-group syntax objects can be spliced into templates
+where a single term or single group is expected. A list of terms can
+similarly splice into a context where a single term is expected.
 
 @examples(
   ~eval:
@@ -177,11 +195,26 @@ group or by itself in a multi-group position.
   ~repl:
     'fun (): $group; ...'
     'fun (): $body'
+  ~repl:
+    def '$x' = '1 + 2 + 3'
+    '0 + $x + $x + 4'
+  ~repl:
+    '0 + $(['1', '+', '2', '+', '3']) + 4'
 )
 
-There is no constraint that the original and destination contexts have
-the same shape, so a match from a block-like context can be put into a
-brackets context, for example.
+A list of group syntax objects does not splice into a group context,
+because that would create ambiguities among group and term contexts;
+instead, the list of group syntax objects must be converted to a
+multi-group syntax object for splicing when that is the intent.
+Meanwhile, a single-term syntax object can be used as a group syntax
+object, a single-group syntax object can be used as a multi-group syntax
+object, and a single-term syntax object can be used as a multi-group
+syntax object.
+
+For a multi-group match and template splice, there is no constraint that
+the original and destination contexts have the same shape, so a match
+from a block-like context can be put into a brackets context, for
+example.
 
 @examples(
   def '$x' = '1 + 2 + 3
@@ -189,46 +222,37 @@ brackets context, for example.
   '[$x]'
 )
 
-A multi-term, single-group syntax object can be spliced in place of any
-term escape, even if it is followed by another escape.
+Although a @rhombus($) escape followed by variable in a @quotes pattern
+normally matches only one term, a variable can be annotated with the
+@rhombus(TermSequence, ~stxclass) syntax class to match multiple terms.
+Sequence matches can be ambiguous, in which case ambiguity is resolved
+by eagerly matching terms to earlier escapes.
 
 @examples(
+  ~defn:
+    def '$(x :: Sequence) + $(y :: Sequence)' = '1 + 2 * 3'
   ~repl:
-    def '$x' = '1 + 2 + 3'
-    '0 + $x + $x + 4'
-)
-
-A multi-group syntax object splices multiple groups in place of a group
-escape only when the escape is alone in its group. A list of group syntax
-objects does not splice into group contexts, because that would create
-ambiguities among group and term contexts. Meanwhile, a single-term
-syntax object can be used as a group syntax object, a single-group
-syntax object can be used as a multi-group syntax object, and a
-single-term syntax object can be used as a multi-group syntax object.
-
-Sometimes, a pattern variable that is at the end of a group is meant to
-match a single term and not a group of terms. To match a single term in
-a group context, annotate the pattern variable with the
-@rhombus(Term, ~stxclass) syntax class using the @rhombus(::) operator.
-
-@examples(
-  ~repl:
-    def '$(x :: Term)' = '1'
     x
+    y
+  ~defn:
+    def '$(x :: Sequence) + $(y :: Sequence)' = '0 + 1 + 2 * 3'
   ~repl:
-    ~error:
-      def '$(x :: Term)' = '1 + 2'
+    x
+    y
 )
 
-You can similarly use the @rhombus(Group, ~stxclass) syntax class to
-match a single group instead of a multi-group sequence. There are
-several other predefined syntax classes, such as @rhombus(Identifier, ~stxclass)
-to match an identifier, @rhombus(String, ~stxclass) to match a string
-literal, and @rhombus(Int, ~stxclass) to match an integer literal.
+The @rhombus(Group, ~stxclass) syntax class is similar to
+@rhombus(Sequence, ~stxclass), except that it matches only non-empty
+term sequences, and it is allowed only in specific positions that do not
+create ambiguity: places within a group with no escapes afterward. There
+are several other predefined syntax classes, such as
+@rhombus(Identifier, ~stxclass) to match an identifier,
+@rhombus(String, ~stxclass) to match a string literal, and
+@rhombus(Int, ~stxclass) to match an integer literal.
 
-In practice, you should use @rhombus(Block, ~stxclass) to match a
-block, preserving its lexical context for the implicit
-@rhombus(#%body, ~datum) form (see @secref(~doc: ref_doc, "implicit")).
+Use @rhombus(Block, ~stxclass) to match a block and preserve its lexical
+context for the implicit @rhombus(#%body, ~datum) form (see
+@secref(~doc: ref_doc, "implicit")).
 
 @examples(
   ~eval: syntax_eval
