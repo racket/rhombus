@@ -370,26 +370,32 @@ and it is not managed by a lock.
  cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(
-  [1, 2, 3].has_element(2)
-  [1, 2, 3].has_element(200)
+  def l = MutableList[1, 2, 3]
+  l.has_element(2)
+  l.has_element(200)
 )
 
 }
 
 
 @doc(
-  method (mlst :: MutableList).find(pred :: Function.of_arity(1))
+  method (lst :: MutableList).find(pred :: Function.of_arity(1))
     :: Any
+  method (lst :: MutableList).index(pred :: Function.of_arity(1))
+    :: maybe(NonnegInt)
 ){
 
- Returns the first element of @rhombus(mlst) for which @rhombus(pred)
- returns true, @rhombus(#false) otherwise. Searching the list
- takes @math{O(N)} time (multiplied by the cost of @rhombus(pred))
- to find an element as position @math{N}.
+ Like @rhombus(List.find) and @rhombus(List.find) , but for
+ @tech{mutable lists}. Searching the list takes @math{O(N)} time
+ (multiplied by the cost of @rhombus(pred)) to find an element as
+ position @math{N}.
 
 @examples(
-  [1, 2, 3].find((_ mod 2 .= 0))
-  [1, 2, 3].find((_ mod 10 .= 9))
+  def l = MutableList[1, 2, 3]
+  l.find((_ mod 2 .= 0))
+  l.find((_ mod 10 .= 9))
+  l.index((_ mod 2 .= 0))
+  l.index((_ mod 10 .= 9))
 )
 
 }
@@ -425,6 +431,35 @@ and it is not managed by a lock.
   MutableList.map(l, (_ + 1))
   l
   l.for_each(println)
+)
+
+}
+
+
+@doc(
+  method (mlst :: MutableList).filter(
+    ~keep: keep_pred :: Function.of_arity(1),
+    ~skip: skip_pred :: Function.of_arity(1)
+  ) :: Void
+){
+
+ Like @rhombus(List.filter), but modifies @rhombus(mlst) by dropping
+ each element for which @rhombus(keep_pred) returns @rhombus(#false) or
+ @rhombus(skip_pred) returns a true value.
+
+@examples(
+  ~repl:
+    def l = MutableList[1, -1, -2, 2]
+    l.filter(~keep: (_ > 0))
+    l
+  ~repl:
+    def l = MutableList[1, -1, -2, 2]
+    l.filter(~skip: (_ > 0))
+    l
+  ~repl:
+    def l = MutableList[1, -1, -2, 2]
+    l.filter(~keep: (_ != -2), ~skip: (_ > 0))
+    l
 )
 
 }

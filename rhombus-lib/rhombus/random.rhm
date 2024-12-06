@@ -3,10 +3,13 @@ import:
   lib("racket/base.rkt") as rkt
   "private/amalgam/realm.rkt".#{rhombus-realm}
 
+use_static
+
 export:
   Random:
     only_space namespace annot expr
   RandomState
+  shuffle
 
 annot.macro 'RandomState':
   annot_meta.pack_predicate('rkt.#{pseudo-random-generator-vector?}', '()')
@@ -61,3 +64,14 @@ statinfo.macro 'current':
      )'
   let (_, _, statinfo) = annot_meta.unpack_converter(a)
   statinfo
+
+fun shuffle(l :: List, rnd :: Random = current()) :~ List:
+  // Fisher-Yates shuffle
+  let a = Array.make(l.length())
+  for (x: l,
+       i: 0..):
+    let j = rnd.random(i+1)
+    unless j == i
+    | a[i] := a[j]
+    a[j] := x
+  a.to_list()

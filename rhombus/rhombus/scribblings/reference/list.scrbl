@@ -534,17 +534,25 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).find(pred :: Function.of_arity(1)) :: Any
+  method (lst :: List).find(pred :: Function.of_arity(1))
+    :: Any
+  method (lst :: List).index(pred :: Function.of_arity(1))
+    :: maybe(NonnegInt)
 ){
 
- Returns the first element of @rhombus(lst) for which @rhombus(pred)
- returns true, @rhombus(#false) otherwise. Searching the list
- takes @math{O(N)} time (multiplied by the cost of @rhombus(pred))
- to find an element as position @math{N}.
+ The @rhombus(List.find) function finds the first element of
+ @rhombus(lst) for which @rhombus(pred) returns a true value, or it
+ returns @rhombus(#false) if no such element is found. The
+ @rhombus(List.find) function is similar, but it returns the index of the
+ found element instead of the element. Searching the list takes
+ @math{O(N)} time (multiplied by the cost of @rhombus(pred)) to find an
+ element as position @math{N}.
 
 @examples(
   [1, 2, 3].find((_ mod 2 .= 0))
   [1, 2, 3].find((_ mod 10 .= 9))
+  [1, 2, 3].index((_ mod 2 .= 0))
+  [1, 2, 3].index((_ mod 10 .= 9))
 )
 
 }
@@ -577,6 +585,37 @@ it supplies its elements in order.
   List.map([1, 2, 3], (_ + 1))
   [1, 2, 3].map((_ + 1))
   [1, 2, 3].for_each(println)
+)
+
+}
+
+
+@doc(
+  method (lst :: List).filter(
+    ~keep: keep_pred :: Function.of_arity(1),
+    ~skip: skip_pred :: Function.of_arity(1)
+  ) :: List,
+  method (lst :: List).partition(pred :: Function.of_arity(1))
+    :: values(List, List)
+){
+
+ The @rhombus(List.filter) function returns a list that is like
+ @rhombus(lst), but drops any element for which @rhombus(keep_pred)
+ returns @rhombus(#false) or @rhombus(skip_pred) returns a true value. If
+ @rhombus(keep_pred) returns @rhombus(#false) for a value, then
+ @rhombus(skip_pred) is not called for that value.
+
+ The @rhombus(List.partition) function returns two lists that are like
+ @rhombus(lst), but with complementary elements: the first result list
+ has elements for which @rhombus(pred) returns a true value, and the
+ second result list has elements for which @rhombus(pred) returns
+ @rhombus(#false).
+
+@examples(
+  [1, -1, -2, 2].filter(~keep: (_ > 0))
+  [1, -1, -2, 2].filter(~skip: (_ > 0))
+  [1, -1, -2, 2].filter(~keep: (_ != -2), ~skip: (_ > 0))
+  [1, -1, -2, 2].partition((_ > 0))
 )
 
 }

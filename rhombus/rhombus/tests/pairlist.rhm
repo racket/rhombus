@@ -14,8 +14,11 @@ block:
     PairList.rest(lst)
     PairList.map(lst, proc) ~method
     PairList.for_each(lst, proc) ~method
+    List.filter(lst) ~method
+    List.partition(lst, proc) ~method
     PairList.has_element(lst, val, [eql]) ~method
     PairList.find(lst, pred) ~method
+    PairList.index(lst, pred) ~method
     PairList.remove(lst, val) ~method
     PairList.reverse(lst) ~method
     PairList.append(lst, ...) ~method
@@ -276,11 +279,21 @@ check:
   ~is PairList[1, 2]
 
 block:
+  use_static
   check PairList[1, 2].map(fun (x): x + 1).reverse() ~is PairList[3, 2]
   block:
     def mutable sum = 0
     check PairList[1, 2].for_each(fun (x): sum := sum + x) ~is #void
     check sum ~is 3
+  check PairList[1, 3, 2, 4].filter(~keep: (_ > 2)) ~is PairList[3, 4]
+  check PairList[1, 3, 2, 4].filter(~skip: (_ > 2)) ~is PairList[1, 2]
+  check PairList[1, 3, 2, 4].filter(~keep: (_ > 1), ~skip: (_ > 3)) ~is PairList[3, 2]
+  check PairList[1, 3, 2, 4].filter(~keep: (_ > 2)).length() ~is 2
+  check PairList[1, 3, 2, 4].partition((_ > 2)) ~is values(PairList[3, 4], PairList[1, 2])
+  check:
+    let (a, b) = PairList[1, 3, 2, 4].partition((_ > 2))
+    [a.length(), b.length()]
+    ~is [2, 2]
 
 check:
   PairList.append(& PairList[PairList[1, 2], PairList[3], PairList[4, 5]]) ~is PairList[1, 2, 3, 4, 5]
@@ -311,6 +324,9 @@ check:
   PairList[1, 2, 3].find(fun (x): x > 1) ~is 2
   PairList[1, 2, 3].find(fun (x): x > 10) ~is #false
   dynamic(PairList[1, 2, 3]).find(fun (x): x > 1) ~is 2
+  PairList[1, 2, 3].index(fun (x): x > 1) ~is 1
+  PairList[1, 2, 3].index(fun (x): x > 10) ~is #false
+  dynamic(PairList[1, 2, 3]).index(fun (x): x > 1) ~is 1
 
 check:
   PairList[1, 2, 3].remove(2) ~is PairList[1, 3]
