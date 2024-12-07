@@ -44,9 +44,7 @@
                       rhombus/bind)
                      ..
                      ..=
-                     <..
-                     ;; TEMP replaced by `<..`
-                     (rename-out [<.. <..<])
+                     <..<
                      <..=))
 
 (define-primitive-class Range range
@@ -225,23 +223,23 @@
       (wrap-static-info*
        (relocate+reraw
         (respan (datum->syntax #f (list left self-stx)))
-        #`(range-from-exclusive/who '<..
+        #`(range-from-exclusive/who '<..<
                                     #,(discard-static-infos left)))
        (get-range-static-infos))]
      [(left right self-stx)
       (wrap-static-info*
        (relocate+reraw
         (respan (datum->syntax #f (list left self-stx right)))
-        #`(range-from-exclusive-to/who '<..
+        #`(range-from-exclusive-to/who '<..<
                                        #,(discard-static-infos left)
                                        #,(discard-static-infos right)))
        (get-range-static-infos))])
    'none))
 
-(define-syntax <..
+(define-syntax <..<
   <..-expr-infix)
 
-(define-repetition-syntax <..
+(define-repetition-syntax <..<
   <..-repet-infix)
 
 (define-values-for-syntax (<..=-expr-infix <..=-repet-infix)
@@ -306,7 +304,7 @@
       (parse-range-binding #'Range.from_to_inclusive form1 form2))
     'none)))
 
-(define-binding-syntax <..
+(define-binding-syntax <..<
   (binding-infix-operator
    `()
    'macro
@@ -316,7 +314,7 @@
         (values (parse-range-binding #'Range.from_exclusive form1)
                 #'())]
        [(_ . more)
-        #:with (~var rhs (:infix-op+binding+tail #'<..)) #`(#,group-tag . more)
+        #:with (~var rhs (:infix-op+binding+tail #'<..<)) #`(#,group-tag . more)
         (values (parse-range-binding #'Range.from_exclusive_to form1 #'rhs.parsed)
                 #'rhs.tail)]))
    'none))
@@ -507,11 +505,11 @@
   (define start (range-from-start r))
   (range-sequence start (step->inc step) #f))
 
-(define-range range range-from-exclusive-to Range.from_exclusive_to "<.." #:both-not-equal)
+(define-range range range-from-exclusive-to Range.from_exclusive_to "<..<" #:both-not-equal)
 
 (define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both)
 
-(define-range range range-from-exclusive Range.from_exclusive "<.." #:left)
+(define-range range range-from-exclusive Range.from_exclusive "<..<" #:left)
 
 (define-range range range-to Range.to ".." #:right)
 

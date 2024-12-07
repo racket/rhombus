@@ -102,12 +102,12 @@ equal to'' the upper bound by comparison on bounds.
     end_repet: block repet
     start_bind: def bind ~defn
     end_bind: def bind ~defn
-  expr.macro '$start_expr <.. $end_expr'
-  repet.macro '$start_repet <.. $end_repet'
-  bind.macro '$start_bind <.. $end_bind'
-  expr.macro '$start_expr <..'
-  repet.macro '$start_repet <..'
-  bind.macro '$start_bind <..'
+  expr.macro '$start_expr <..< $end_expr'
+  repet.macro '$start_repet <..< $end_repet'
+  bind.macro '$start_bind <..< $end_bind'
+  expr.macro '$start_expr <..<'
+  repet.macro '$start_repet <..<'
+  bind.macro '$start_bind <..<'
 ){
 
  The same as @rhombus(Range.from_exclusive_to, ~expr) and
@@ -312,11 +312,11 @@ equal to'' the upper bound by comparison on bounds.
 
 @examples(
   Range.encloses()
-  (2 <.. 8).encloses()
-  (2 <.. 8).encloses(4..=6)
-  (2 <.. 8).encloses(2..=6, 4..=6)
-  (2 <.. 8).encloses(5..)
-  (2 <..).encloses(5..)
+  (2 <..< 8).encloses()
+  (2 <..< 8).encloses(4..=6)
+  (2 <..< 8).encloses(2..=6, 4..=6)
+  (2 <..< 8).encloses(5..)
+  (2 <..<).encloses(5..)
 )
 
 }
@@ -330,9 +330,9 @@ equal to'' the upper bound by comparison on bounds.
  both @rhombus(rge) and @rhombus(rge2).
 
 @examples(
-  (2..=7).is_connected(3 <.. 8)
-  (2..=5).is_connected(5 <.. 8)
-  (2 <.. 5).is_connected(5 <.. 8)
+  (2..=7).is_connected(3 <..< 8)
+  (2..=5).is_connected(5 <..< 8)
+  (2 <..< 5).is_connected(5 <..< 8)
 )
 
 }
@@ -346,9 +346,9 @@ equal to'' the upper bound by comparison on bounds.
  @rhombus(rge) and @rhombus(rge2).
 
 @examples(
-  (2..=7).overlaps(3 <.. 8)
+  (2..=7).overlaps(3 <..< 8)
   (2..=5).overlaps(5..=8)
-  (2..=5).overlaps(5 <.. 8)
+  (2..=5).overlaps(5 <..< 8)
 )
 
 }
@@ -363,9 +363,9 @@ equal to'' the upper bound by comparison on bounds.
 
 @examples(
   (2..=5).span()
-  (2..=5).span(8 <.. 9)
+  (2..=5).span(8 <..< 9)
   (..4).span(6..=6)
-  (2 <.. 8).span(..=5, 8 <.. 9)
+  (2 <..< 8).span(..=5, 8 <..< 9)
 )
 
 }
@@ -381,7 +381,7 @@ equal to'' the upper bound by comparison on bounds.
 @examples(
   (2..=5).gap(8..=9)
   (..4).gap(6..=6)
-  (2 <.. 8).gap(8..=10)
+  (2 <..< 8).gap(8..=10)
   (2..=8).gap(8..=10)
 )
 
@@ -403,10 +403,10 @@ equal to'' the upper bound by comparison on bounds.
 @examples(
   Range.intersect()
   (2..=8).intersect()
-  (2..=8).intersect(4 <.. 16)
-  (4 <..).intersect(..6, 2..=8)
-  (2 <.. 8).intersect(..=5)
-  (2 <.. 8).intersect(8 <.. 10)
+  (2..=8).intersect(4 <..< 16)
+  (4 <..<).intersect(..6, 2..=8)
+  (2 <..< 8).intersect(..=5)
+  (2 <..< 8).intersect(8 <..< 10)
 )
 
 }
