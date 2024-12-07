@@ -10,31 +10,62 @@ an @deftech{output string port} writes to a @tech{byte string}.
 @doc(
   annot.macro 'Port.Output'
   annot.macro 'Port.Output.String'
+  annot.macro 'Port.Output.Special'
 ){
 
  The @rhombus(Port.Output, ~annot) annotation recognizes @tech{output
-  ports}, and the @rhombus(Port.Output.String, ~annot) annotation
- recognizes @tech{output string ports}.
+  ports}, the @rhombus(Port.Output.String, ~annot) annotation recognizes
+ @tech{output string ports}, and the
+ @rhombus(Port.Output.Special, ~annot) annotation recognizes ports that
+ support @rhombus(Port.Output.Special.write).
 
 }
 
+
 @doc(
+  ~nonterminal:
+    port_expr: block expr
+    path_expr: block expr
+    exists_mode_expr: block expr
+    exists_mode_body: block body
+
   Parameter.def Port.Output.current :: Port.Output
-){
-
- A @tech{context parameter} for the default port to use when printing.
-
-}
-
-
-@doc(
   Parameter.def Port.Output.current_error :: Port.Output
+
+  expr.macro 'stdout'
+  expr.macro 'stderr'
+
+  expr.macro 'Port.Output.using $port_expr:
+                $body
+                ...'
+  expr.macro 'Port.Output.using ~file $path_expr:
+                $option; ...
+                $body
+                ...'
+
+  grammar option:
+    ~exists $exist_mode_expr
+    ~exists: $exist_mode_body; ...
 ){
 
- A @tech{context parameter} for the default port to use when printing
- errors.
+ The @rhombus(Port.Output.current) @tech{context parameter} determines a
+ default port to use when printing, and @rhombus(Port.Output.current)
+ determines the default port to use when printing errors.
+
+ The @rhombus(stdout) form is a shorthand for
+ @rhombus(Port.Output.current()), and the @rhombus(stderr) form is a
+ shorthand for @rhombus(Port.Output.current_error()).
+
+ The @rhombus(Port.Output.using) form is analogous to
+ @rhombus(Port.Input.using), but for setting the current output port
+ while evaluating the @rhombus(body) sequence. When the @rhombus(~file)
+ variant is used, an @rhombus(~exists) option before the @rhombus(body)
+ sequence indicates how to handle the case that a file with the indicated
+ path exists, the same as the @rhombus(~exists) argument to
+ @rhombus(Port.Output.open_file).
 
 }
+
 
 @doc(
   method (out :: Port.Output).print(v :: Any, ...,
@@ -57,6 +88,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 }
 
+
 @doc(
   fun Port.Output.open_file(
     path :: PathString,
@@ -64,7 +96,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
     ~mode: mode :: Port.Mode = #'binary,
     ~permissions: permissions :: Int.in(0, 65535) = 0o666,
     ~replace_permissions: replace_permissions = #false
-  ) :: Port.Output
+  ) :: Port.Output && Port.FileStream
 ){
 
  Creates an @tech{output port} that writes to the @tech{path} @rhombus(file).
@@ -105,6 +137,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 )}
 
+
 @doc(
   fun Port.Output.open_bytes(name :: Symbol = #'string)
     :: Port.Output.String
@@ -121,6 +154,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
  intention together with @rhombus(Port.Output.get_string).
 
 }
+
 
 @doc(
   method (out :: Port.Output.String).get_bytes()
@@ -140,6 +174,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 }
 
+
 @doc(
   method Port.Output.flush(out :: Port.Output = Port.Output.current())
     :: Void
@@ -148,6 +183,17 @@ an @deftech{output string port} writes to a @tech{byte string}.
  Flushes the content of @rhombus(out)'s buffer.
 
 }
+
+
+@doc(
+  method (port :: Port.Output.Special).write(v) :: Void
+){
+
+ Writes an arbitrary ``special'' value to a port that supports content
+ other than just bytes.
+
+}
+
 
 @doc(
   enum Port.Output.ExistsMode:

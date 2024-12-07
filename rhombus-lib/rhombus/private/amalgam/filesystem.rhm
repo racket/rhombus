@@ -413,12 +413,12 @@ namespace filesystem:
     read([])
 
   fun read_lines(path :: PathString,
-                 ~mode: mode :: Port.ReadLineMode = #'any) :: List.of(String):
+                 ~mode: mode :: Port.Input.ReadLineMode = #'any) :: List.of(String):
     ~who: who
     content_lines(who, path, mode, Port.Input.read_line)
 
   fun read_bytes_lines(path :: PathString,
-                       ~mode: mode :: Port.ReadLineMode = #'any) :: List.of(Bytes):
+                       ~mode: mode :: Port.Input.ReadLineMode = #'any) :: List.of(Bytes):
     ~who: who
     content_lines(who, path, mode, Port.Input.read_bytes_line)
 
@@ -426,6 +426,7 @@ namespace filesystem:
     Closeable.let out = (rkt_error.local_error_adjust { #'#{open-output-file}: who }:
                            rkt.#{open-output-file}(path, ~mode: mode, ~exists: exists))
     write(out, s)
+    #void
 
   fun write_string(path :: PathString,
                    str :: String,

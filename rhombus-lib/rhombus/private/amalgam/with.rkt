@@ -47,10 +47,11 @@
             (syntax-parse form1
               [dp::update-provider #'dp.id]
               [_ #f]))
-          (define update-id (extract-dot-provider-id update-id/s))
+          (define update-ids (extract-dot-provider-ids update-id/s))
           (define updater
-            (and update-id
-                 (syntax-local-value* (in-update-space update-id) update-transformer-ref)))
+            (and (pair? update-ids)
+                 (null? (cdr update-ids))
+                 (syntax-local-value* (in-update-space (car update-ids)) update-transformer-ref)))
           (when (and more-static? (not updater))
             (raise-syntax-error #f
                                 (string-append "no update implementation available" statically-str)
