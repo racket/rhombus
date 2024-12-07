@@ -20,6 +20,7 @@
          "index-result-key.rkt"
          "sequence-constructor-key.rkt"
          "list-bounds-key.rkt"
+         "maybe-key.rkt"
          "op-literal.rkt"
          "literal.rkt"
          (submod "ellipsis.rkt" for-parse)
@@ -127,9 +128,12 @@
    sublist
    has_element
    find
+   index
    remove
    map
    for_each
+   filter
+   partition
    sort
    to_list
    to_sequence
@@ -176,9 +180,12 @@
    drop_last
    has_element
    find
+   index
    remove
    map
    for_each
+   filter
+   partition
    sort
    to_list
    to_sequence))
@@ -214,9 +221,11 @@
    sublist
    has_element
    find
+   index
    remove
    map
    for_each
+   filter
    sort
    to_list
    snapshot
@@ -808,6 +817,28 @@
   (for ([e (in-treelist lst)])
     (proc e)))
 
+(define/method (List.filter lst
+                            #:keep [keep (lambda (x) #t)]
+                            #:skip [skip (lambda (x) #f)])
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (check-treelist who lst)
+  (check-function-of-arity 1 who keep)
+  (check-function-of-arity 1 who skip)
+  (for/treelist ([e (in-treelist lst)]
+                 #:when (keep e)
+                 #:unless (skip e))
+    e))
+
+(define/method (List.partition lst pred)
+  #:static-infos ((#%call-result ((#%values (#,(get-treelist-static-infos)
+                                             #,(get-treelist-static-infos))))))
+  (check-treelist who lst)
+  (check-function-of-arity 1 who pred)
+  (for/fold ([a empty-treelist] [b empty-treelist]) ([e (in-treelist lst)])
+    (if (pred e)
+        (values (treelist-add a e) b)
+        (values a (treelist-add b e)))))
+
 (define/method (PairList.map lst proc)
   #:static-infos ((#%call-result #,(get-list-static-infos)))
   (check-list who lst)
@@ -819,6 +850,29 @@
   (check-function-of-arity 1 who proc)
   (for-each proc lst))
 
+(define/method (PairList.filter lst
+                                #:keep [keep (lambda (x) #t)]
+                                #:skip [skip (lambda (x) #f)])
+  #:static-infos ((#%call-result #,(get-list-static-infos)))
+  (check-list who lst)
+  (check-function-of-arity 1 who keep)
+  (check-function-of-arity 1 who skip)
+  (for/list ([e (in-list lst)]
+             #:when (keep e)
+             #:unless (skip e))
+    e))
+
+(define/method (PairList.partition lst pred)
+  #:static-infos ((#%call-result ((#%values (#,(get-list-static-infos)
+                                             #,(get-list-static-infos))))))
+  (check-list who lst)
+  (check-function-of-arity 1 who pred)
+  (for/fold ([a '()] [b '()] #:result (values (reverse a) (reverse b)))
+            ([e (in-list lst)])
+    (if (pred e)
+        (values (cons e a) b)
+        (values a (cons e b)))))
+
 (define/method (MutableList.map lst proc)
   #:primitive (mutable-treelist-map!)
   (mutable-treelist-map! lst proc))
@@ -826,6 +880,23 @@
 (define/method (MutableList.for_each lst proc)
   #:primitive (mutable-treelist-for-each)
   (mutable-treelist-for-each lst proc))
+
+(define/method (MutableList.filter lst
+                                   #:keep [keep (lambda (x) #t)]
+                                   #:skip [skip (lambda (x) #f)])
+  (check-mutable-treelist who lst)
+  (check-function-of-arity 1 who keep)
+  (check-function-of-arity 1 who skip)
+  (for/fold ([delta 0]) ([e (in-treelist (mutable-treelist-snapshot lst))]
+                         [i (in-naturals)])
+    (cond
+      [(and (keep e)
+            (not (skip e)))
+       delta]
+      [else
+       (mutable-treelist-delete! lst (- i delta))
+       (add1 delta)]))
+  (void))
 
 (define/method (List.sort lst [less-than? general<])
   #:primitive (treelist-sort)
@@ -1112,6 +1183,30 @@
 (define/method (MutableList.find l pred)
   #:primitive (mutable-treelist-find)
   (mutable-treelist-find l pred))
+
+(define/method (List.index l pred)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (check-treelist who l)
+  (check-function-of-arity 1 who pred)
+  (for/or ([v (in-treelist l)]
+           [i (in-naturals)])
+    (and (pred v) i)))
+
+(define/method (PairList.index l pred)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (check-list who l)
+  (check-function-of-arity 1 who pred)
+  (for/or ([v (in-list l)]
+           [i (in-naturals)])
+    (and (pred v) i)))
+
+(define/method (MutableList.index l pred)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (check-mutable-treelist who l)
+  (check-function-of-arity 1 who pred)
+  (for/or ([v (in-mutable-treelist l)]
+           [i (in-naturals)])
+    (and (pred v) i)))
 
 (define-for-syntax (wrap-treelist-static-info expr)
   (wrap-static-info* expr (get-treelist-static-infos)))

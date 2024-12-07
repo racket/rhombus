@@ -11,6 +11,8 @@
                   unsafe-fx<
                   unsafe-fx<=)
          "expression.rkt"
+         "repetition.rkt"
+         "compound-repetition.rkt"
          "static-info.rkt"
          "parse.rkt"
          (prefix-in rhombus-a: "arithmetic.rkt")
@@ -38,10 +40,13 @@
                      SequenceRange
                      ListRange)
          (for-spaces (#f
+                      rhombus/repet
                       rhombus/bind)
                      ..
                      ..=
-                     <..<
+                     <..
+                     ;; TEMP replaced by `<..`
+                     (rename-out [<.. <..<])
                      <..=))
 
 (define-primitive-class Range range
@@ -114,7 +119,7 @@
   #:methods
   ([to_list Range.to_list]))
 
-(define-for-syntax (range-assoc-table)
+(define-for-syntax (range-precedences)
   `((,(expr-quote rhombus-a:+) . weaker)
     (,(expr-quote rhombus-a:-) . weaker)
     (,(expr-quote rhombus-a:*) . weaker)
@@ -124,118 +129,140 @@
     (,(expr-quote rhombus-a:mod) . weaker)
     (,(expr-quote rhombus-a:rem) . weaker)))
 
+(define-values-for-syntax (..-expr-prefix ..-repet-prefix)
+  (make-expression&repetition-prefix-operator
+   range-precedences
+   'mixfix
+   (case-lambda
+     [(self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list self-stx)))
+        #`(range-full))
+       (get-range-static-infos))]
+     [(right self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list self-stx right)))
+        #`(range-to/who '..
+                        #,(discard-static-infos right)))
+       (get-range-static-infos))])))
+
+(define-values-for-syntax (..-expr-infix ..-repet-infix)
+  (make-expression&repetition-infix-operator
+   range-precedences
+   'mixfix
+   (case-lambda
+     [(left self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list left self-stx)))
+        #`(range-from/who '..
+                          #,(discard-static-infos left)))
+       (get-sequence-range-static-infos))]
+     [(left right self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list left self-stx right)))
+        #`(range-from-to/who '..
+                             #,(discard-static-infos left)
+                             #,(discard-static-infos right)))
+       (get-list-range-static-infos))])
+   'none))
+
 (define-syntax ..
   (expression-prefix+infix-operator
-   (expression-prefix-operator
-    range-assoc-table
-    'macro
-    (lambda (tail)
-      (syntax-parse tail
-        [(_)
-         (values (wrap-static-info*
-                  (relocate+reraw
-                   (respan tail)
-                   #`(range-full))
-                  (get-range-static-infos))
-                 #'())]
-        [(_ . more)
-         #:with (~var rhs (:prefix-op+expression+tail #'..)) #'(group . more)
-         (values (wrap-static-info*
-                  (relocate+reraw
-                   (respan tail)
-                   #`(range-to/who '..
-                                   #,(discard-static-infos #'rhs.parsed)))
-                  (get-range-static-infos))
-                 #'rhs.tail)])))
-   (expression-infix-operator
-    range-assoc-table
-    'macro
-    (lambda (form1 tail)
-      (syntax-parse tail
-        [(_)
-         (values (wrap-static-info*
-                  (relocate+reraw
-                   (respan (datum->syntax #f (list form1 tail)))
-                   #`(range-from/who '..
-                                     #,(discard-static-infos form1)))
-                  (get-sequence-range-static-infos))
-                 #'())]
-        [(_ . more)
-         #:with (~var rhs (:infix-op+expression+tail #'..)) #'(group . more)
-         (values (wrap-static-info*
-                  (relocate+reraw
-                   (respan (datum->syntax #f (list form1 tail)))
-                   #`(range-from-to/who '..
-                                        #,(discard-static-infos form1)
-                                        #,(discard-static-infos #'rhs.parsed)))
-                  (get-list-range-static-infos))
-                 #'rhs.tail)]))
-    'none)))
+   ..-expr-prefix
+   ..-expr-infix))
+
+(define-repetition-syntax ..
+  (repetition-prefix+infix-operator
+   ..-repet-prefix
+   ..-repet-infix))
+
+(define-values-for-syntax (..=-expr-prefix ..=-repet-prefix)
+  (make-expression&repetition-prefix-operator
+   range-precedences
+   'prefix
+   (lambda (right self-stx)
+     (wrap-static-info*
+      (relocate+reraw
+       (respan (datum->syntax #f (list self-stx right)))
+       #`(range-to-inclusive/who '..=
+                                 #,(discard-static-infos right)))
+      (get-range-static-infos)))))
+
+(define-values-for-syntax (..=-expr-infix ..=-repet-infix)
+  (make-expression&repetition-infix-operator
+   range-precedences
+   'infix
+   (lambda (left right self-stx)
+     (wrap-static-info*
+      (relocate+reraw
+       (respan (datum->syntax #f (list left self-stx right)))
+       #`(range-from-to-inclusive/who '..=
+                                      #,(discard-static-infos left)
+                                      #,(discard-static-infos right)))
+      (get-list-range-static-infos)))
+   'none))
 
 (define-syntax ..=
   (expression-prefix+infix-operator
-   (expression-prefix-operator
-    range-assoc-table
-    'automatic
-    (lambda (form stx)
-      (wrap-static-info*
-       (relocate+reraw
-        (respan (datum->syntax #f (list stx form)))
-        #`(range-to-inclusive/who '..=
-                                  #,(discard-static-infos form)))
-       (get-range-static-infos))))
-   (expression-infix-operator
-    range-assoc-table
-    'automatic
-    (lambda (form1 form2 stx)
-      (wrap-static-info*
-       (relocate+reraw
-        (respan (datum->syntax #f (list form1 stx form2)))
-        #`(range-from-to-inclusive/who '..=
-                                       #,(discard-static-infos form1)
-                                       #,(discard-static-infos form2)))
-       (get-list-range-static-infos)))
-    'none)))
+   ..=-expr-prefix
+   ..=-expr-infix))
 
-(define-syntax <..<
-  (expression-infix-operator
-   range-assoc-table
-   'macro
-   (lambda (form1 tail)
-     (syntax-parse tail
-       [(_)
-        (values (wrap-static-info*
-                 (relocate+reraw
-                  (respan (datum->syntax #f (list form1 tail)))
-                  #`(range-from-exclusive/who '<..<
-                                              #,(discard-static-infos form1)))
-                 (get-range-static-infos))
-                #'())]
-       [(_ . more)
-        #:with (~var rhs (:infix-op+expression+tail #'<..<)) #'(group . more)
-        (values (wrap-static-info*
-                 (relocate+reraw
-                  (respan (datum->syntax #f (list form1 tail)))
-                  #`(range-from-exclusive-to/who '<..<
-                                                 #,(discard-static-infos form1)
-                                                 #,(discard-static-infos #'rhs.parsed)))
-                 (get-range-static-infos))
-                #'rhs.tail)]))
+(define-repetition-syntax ..=
+  (repetition-prefix+infix-operator
+   ..=-repet-prefix
+   ..=-repet-infix))
+
+(define-values-for-syntax (<..-expr-infix <..-repet-infix)
+  (make-expression&repetition-infix-operator
+   range-precedences
+   'mixfix
+   (case-lambda
+     [(left self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list left self-stx)))
+        #`(range-from-exclusive/who '<..
+                                    #,(discard-static-infos left)))
+       (get-range-static-infos))]
+     [(left right self-stx)
+      (wrap-static-info*
+       (relocate+reraw
+        (respan (datum->syntax #f (list left self-stx right)))
+        #`(range-from-exclusive-to/who '<..
+                                       #,(discard-static-infos left)
+                                       #,(discard-static-infos right)))
+       (get-range-static-infos))])
+   'none))
+
+(define-syntax <..
+  <..-expr-infix)
+
+(define-repetition-syntax <..
+  <..-repet-infix)
+
+(define-values-for-syntax (<..=-expr-infix <..=-repet-infix)
+  (make-expression&repetition-infix-operator
+   range-precedences
+   'infix
+   (lambda (left right self-stx)
+     (wrap-static-info*
+      (relocate+reraw
+       (respan (datum->syntax #f (list left self-stx right)))
+       #`(range-from-exclusive-to-inclusive/who '<..=
+                                                #,(discard-static-infos left)
+                                                #,(discard-static-infos right)))
+      (get-range-static-infos)))
    'none))
 
 (define-syntax <..=
-  (expression-infix-operator
-   range-assoc-table
-   'automatic
-   (lambda (form1 form2 stx)
-     (wrap-static-info*
-      (relocate+reraw
-       (respan (datum->syntax #f (list form1 stx form2)))
-       #`(range-from-exclusive-to-inclusive/who '<..=
-                                                #,(discard-static-infos form1)
-                                                #,(discard-static-infos form2)))
-      (get-range-static-infos)))
-   'none))
+  <..=-expr-infix)
+
+(define-repetition-syntax <..=
+  <..=-repet-infix)
 
 (define-binding-syntax ..
   (binding-prefix+infix-operator
@@ -248,7 +275,7 @@
          (values (parse-range-binding #'Range.full)
                  #'())]
         [(_ . more)
-         #:with (~var rhs (:prefix-op+binding+tail #'..)) #'(group . more)
+         #:with (~var rhs (:prefix-op+binding+tail #'..)) #`(#,group-tag . more)
          (values (parse-range-binding #'Range.to #'rhs.parsed)
                  #'rhs.tail)])))
    (binding-infix-operator
@@ -260,7 +287,7 @@
          (values (parse-range-binding #'Range.from form1)
                  #'())]
         [(_ . more)
-         #:with (~var rhs (:infix-op+binding+tail #'..)) #'(group . more)
+         #:with (~var rhs (:infix-op+binding+tail #'..)) #`(#,group-tag . more)
          (values (parse-range-binding #'Range.from_to form1 #'rhs.parsed)
                  #'rhs.tail)]))
     'none)))
@@ -279,7 +306,7 @@
       (parse-range-binding #'Range.from_to_inclusive form1 form2))
     'none)))
 
-(define-binding-syntax <..<
+(define-binding-syntax <..
   (binding-infix-operator
    `()
    'macro
@@ -289,7 +316,7 @@
         (values (parse-range-binding #'Range.from_exclusive form1)
                 #'())]
        [(_ . more)
-        #:with (~var rhs (:infix-op+binding+tail #'<..<)) #'(group . more)
+        #:with (~var rhs (:infix-op+binding+tail #'<..)) #`(#,group-tag . more)
         (values (parse-range-binding #'Range.from_exclusive_to form1 #'rhs.parsed)
                 #'rhs.tail)]))
    'none))
@@ -480,11 +507,11 @@
   (define start (range-from-start r))
   (range-sequence start (step->inc step) #f))
 
-(define-range range range-from-exclusive-to Range.from_exclusive_to "<..<" #:both-not-equal)
+(define-range range range-from-exclusive-to Range.from_exclusive_to "<.." #:both-not-equal)
 
 (define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both)
 
-(define-range range range-from-exclusive Range.from_exclusive "<..<" #:left)
+(define-range range range-from-exclusive Range.from_exclusive "<.." #:left)
 
 (define-range range range-to Range.to ".." #:right)
 

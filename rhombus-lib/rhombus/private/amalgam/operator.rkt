@@ -149,38 +149,36 @@
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-prefix-operator
          #,(convert-prec prec)
-         'automatic
-         (lambda (arg self-stx)
-           (relocate (span-srcloc self-stx arg)
-                     (wrap-static-info*
-                      #`(op-proc #,arg)
-                      (quote-syntax #,static-infos)))))))
+         'prefix
+         (lambda (right self-stx)
+           (wrap-static-info*
+            (relocate (span-srcloc self-stx right)
+                      #`(op-proc #,(discard-static-infos right)))
+            (quote-syntax #,static-infos))))))
 
   (define (make-infix name op-proc prec assc static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
          #,(convert-prec prec)
-         'automatic
+         'infix
          (lambda (left right self-stx)
-           (relocate (span-srcloc left right)
-                     (wrap-static-info*
-                      #`(op-proc #,left #,right)
-                      (quote-syntax #,static-infos))))
+           (wrap-static-info*
+            (relocate (span-srcloc left right)
+                      #`(op-proc #,(discard-static-infos left)
+                                 #,(discard-static-infos right)))
+            (quote-syntax #,static-infos)))
          #,(convert-assc assc))))
 
   (define (make-postfix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
          #,(convert-prec prec)
-         'macro
-         (lambda (left stx)
-           (syntax-parse stx
-             [(self . tail)
-              (values (relocate (span-srcloc left #'self)
-                                (wrap-static-info*
-                                 #`(op-proc #,left)
-                                 (quote-syntax #,static-infos)))
-                      #'tail)]))
+         'postfix
+         (lambda (left self-stx)
+           (wrap-static-info*
+            (relocate (span-srcloc left self-stx)
+                      #`(op-proc #,(discard-static-infos left)))
+            (quote-syntax #,static-infos)))
          'none)))
 
   (define (parse-binding arg)
