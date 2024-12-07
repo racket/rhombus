@@ -51,7 +51,7 @@
                       (cons (quote-syntax stronger-op)
                             'stronger)
                       ...)))
-          'automatic
+          'prefix
           (lambda (form stx)
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list stx form)))
@@ -93,7 +93,7 @@
                       (cons (quote-syntax stronger-op)
                             'stronger)
                       ...)))
-          'automatic
+          'infix
           (lambda (form1 form2 stx)
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list form1 stx form2)))

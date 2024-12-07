@@ -1,8 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "tag.rkt")
          "expression.rkt"
          "repetition.rkt"
+         "parse.rkt"
          "static-info.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
@@ -13,54 +15,128 @@
                      build-compound-repetition))
 
 (begin-for-syntax
-  (define (make-expression&repetition-prefix-operator prec protocol exp)
-    (when (eq? protocol 'macro) (error "macro protocol not currently supported for prefix repetition"))
-    (define rep
-      (lambda (form self-stx)
-        (build-compound-repetition self-stx
-                                   (list form)
-                                   (lambda (form)
-                                     (define expr (exp form self-stx))
-                                     (values (discard-static-infos expr)
-                                             (extract-static-infos expr))))))
+  ;; `kind` can be
+  ;;  - 'prefix -- actual prefix operator
+  ;;  - 'nofix  -- "nofix" operator that consumes nothing
+  ;;  - 'mixfix -- both prefix and "nofix", depending on the tail
+  (define (make-expression&repetition-prefix-operator prec kind exp)
+    (define (prefix-exp form self-stx)
+      (exp form self-stx))
+    (define (prefix-rep form self-stx)
+      (build-compound-repetition self-stx
+                                 (list form)
+                                 (lambda (form)
+                                   (define expr (exp form self-stx))
+                                   (values (discard-static-infos expr)
+                                           (extract-static-infos expr)))))
+    (define (nofix-exp stx)
+      (syntax-parse stx
+        [(self . tail)
+         (define expr (exp #'self))
+         (values expr #'tail)]))
+    (define (nofix-rep stx)
+      (define-values (expr tail) (nofix-exp stx))
+      (define repet (make-repetition-info stx
+                                          '()
+                                          (discard-static-infos expr)
+                                          (extract-static-infos expr)
+                                          0))
+      (values repet tail))
+    (define (mixfix-exp stx)
+      (syntax-parse stx
+        [(_)
+         (nofix-exp stx)]
+        [(self . more)
+         #:with (~var rhs (:prefix-op+expression+tail #'self)) #`(#,group-tag . more)
+         (define expr (prefix-exp #'rhs.parsed #'self))
+         (values expr #'rhs.tail)]))
+    (define (mixfix-rep stx)
+      (syntax-parse stx
+        [(_)
+         (nofix-rep stx)]
+        [(self . more)
+         #:with (~var rhs (:prefix-op+repetition-use+tail #'self)) #`(#,group-tag . more)
+         (define expr (prefix-rep #'rhs.parsed #'self))
+         (values expr #'rhs.tail)]))
+    (define-values (final-exp final-rep protocol)
+      (case kind
+        [(prefix)
+         (values prefix-exp prefix-rep 'automatic)]
+        [(nofix)
+         (values nofix-exp nofix-rep 'macro)]
+        [(mixfix)
+         (values mixfix-exp mixfix-rep 'macro)]
+        [else
+         (error "unrecognized kind")]))
     (values
-     (expression-prefix-operator prec protocol exp)
-     (repetition-prefix-operator (add-repet-space prec) protocol rep)))
+     (expression-prefix-operator prec protocol final-exp)
+     (repetition-prefix-operator (add-repet-space prec) protocol final-rep)))
 
-  (define (make-expression&repetition-infix-operator prec protocol exp assc)
-    (define rep
-      (if (eq? protocol 'macro)
-          ;; used for postfix
-          (lambda (form stx)
-            (define tail #f)
-            (define e (build-compound-repetition stx
-                                                 (list form)
-                                                 (lambda (form)
-                                                   (define-values (expr new-tail) (exp form stx))
-                                                   (set! tail new-tail)
-                                                   (values (discard-static-infos expr)
-                                                           (extract-static-infos expr)))))
-            (values e tail))
-          (lambda (form1 form2 self-stx)
-            (build-compound-repetition self-stx
-                                       (list form1 form2)
-                                       (lambda (form1 form2)
-                                         (define expr (exp form1 form2 self-stx))
-                                         (values (discard-static-infos expr)
-                                                 (extract-static-infos expr)))))))
+  ;; `kind` can be
+  ;;  - 'infix   -- actual infix operator
+  ;;  - 'postfix -- postfix operator that consumes nothing
+  ;;  - 'mixfix  -- both infix and postfix, depending on the tail
+  (define (make-expression&repetition-infix-operator prec kind exp assc)
+    (define (infix-exp form1 form2 self-stx)
+      (exp form1 form2 self-stx))
+    (define (infix-rep form1 form2 self-stx)
+      (build-compound-repetition self-stx
+                                 (list form1 form2)
+                                 (lambda (form1 form2)
+                                   (define expr (exp form1 form2 self-stx))
+                                   (values (discard-static-infos expr)
+                                           (extract-static-infos expr)))))
+    (define (postfix-exp form stx)
+      (syntax-parse stx
+        [(self . tail)
+         (define expr (exp form #'self))
+         (values expr #'tail)]))
+    (define (postfix-rep form stx)
+      (syntax-parse stx
+        [(self . tail)
+         (define repet (build-compound-repetition #'self
+                                                  (list form)
+                                                  (lambda (form)
+                                                    (define expr (exp form #'self))
+                                                    (values (discard-static-infos expr)
+                                                            (extract-static-infos expr)))))
+         (values repet #'tail)]))
+    (define (mixfix-exp form stx)
+      (syntax-parse stx
+        [(_)
+         (postfix-exp form stx)]
+        [(self . more)
+         #:with (~var rhs (:infix-op+expression+tail #'self)) #`(#,group-tag . more)
+         (define expr (infix-exp form #'rhs.parsed #'self))
+         (values expr #'rhs.tail)]))
+    (define (mixfix-rep form stx)
+      (syntax-parse stx
+        [(_)
+         (postfix-rep form stx)]
+        [(self . more)
+         #:with (~var rhs (:infix-op+repetition-use+tail #'self)) #`(#,group-tag . more)
+         (define expr (infix-rep form #'rhs.parsed #'self))
+         (values expr #'rhs.tail)]))
+    (define-values (final-exp final-rep protocol)
+      (case kind
+        [(infix)
+         (values infix-exp infix-rep 'automatic)]
+        [(postfix)
+         (values postfix-exp postfix-rep 'macro)]
+        [(mixfix)
+         (values mixfix-exp mixfix-rep 'macro)]
+        [else
+         (error "unrecognized kind")]))
     (values
-     (expression-infix-operator prec protocol exp assc)
-     (repetition-infix-operator (add-repet-space prec) protocol rep assc)))
+     (expression-infix-operator prec protocol final-exp assc)
+     (repetition-infix-operator (add-repet-space prec) protocol final-rep assc)))
 
   (define (add-repet-space get-prec)
     (lambda ()
-      (let ([prec (if (procedure? get-prec)
-                      (get-prec)
-                      get-prec)])
-        (for/list ([p (in-list prec)])
-          (if (identifier? (car p))
-              (cons (in-repetition-space (car p)) (cdr p))
-              p)))))
+      (for/list ([p (in-list (get-prec))])
+        (if (identifier? (car p))
+            (cons (in-repetition-space (car p)) (cdr p))
+            p))))
 
   (define (repetition-depth form)
     (syntax-parse form

@@ -40,15 +40,21 @@ equal to'' the upper bound by comparison on bounds.
   ~nonterminal:
     start_expr: block expr
     end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   expr.macro '$start_expr .. $end_expr'
+  repet.macro '$start_repet .. $end_repet'
   bind.macro '$start_bind .. $end_bind'
   expr.macro '$start_expr ..'
+  repet.macro '$start_repet ..'
   bind.macro '$start_bind ..'
   expr.macro '.. $end_expr'
+  repet.macro '.. $end_repet'
   bind.macro '.. $end_bind'
   expr.macro '..'
+  repet.macro '..'
   bind.macro '..'
 ){
 
@@ -67,11 +73,15 @@ equal to'' the upper bound by comparison on bounds.
   ~nonterminal:
     start_expr: block expr
     end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   expr.macro '$start_expr ..= $end_expr'
+  repet.macro '$start_repet ..= $end_repet'
   bind.macro '$start_bind ..= $end_bind'
   expr.macro '..= $end_expr'
+  repet.macro '..= $end_repet'
   bind.macro '..= $end_bind'
 ){
 
@@ -88,11 +98,15 @@ equal to'' the upper bound by comparison on bounds.
   ~nonterminal:
     start_expr: block expr
     end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   expr.macro '$start_expr <.. $end_expr'
+  repet.macro '$start_repet <.. $end_repet'
   bind.macro '$start_bind <.. $end_bind'
   expr.macro '$start_expr <..'
+  repet.macro '$start_repet <..'
   bind.macro '$start_bind <..'
 ){
 
@@ -105,9 +119,12 @@ equal to'' the upper bound by comparison on bounds.
   ~nonterminal:
     start_expr: block expr
     end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   expr.macro '$start_expr <..= $end_expr'
+  repet.macro '$start_repet <..= $end_repet'
   bind.macro '$start_bind <..= $end_bind'
 ){
 
@@ -118,8 +135,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
-    end_expr: block expr
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   fun Range.from_to(start :: Int, end :: Int) :: ListRange
@@ -134,8 +149,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
-    end_expr: block expr
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   fun Range.from_to_inclusive(start :: Int, end :: Int)
@@ -151,7 +164,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
     start_bind: def bind ~defn
   fun Range.from(start :: Int) :: SequenceRange
   bind.macro 'Range.from($start_bind)'
@@ -165,8 +177,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
-    end_expr: block expr
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   fun Range.from_exclusive_to(start :: Int, end :: Int)
@@ -184,8 +194,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
-    end_expr: block expr
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   fun Range.from_exclusive_to_inclusive(start :: Int, end :: Int)
@@ -201,7 +209,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    start_expr: block expr
     start_bind: def bind ~defn
   fun Range.from_exclusive(start :: Int) :: Range
   bind.macro 'Range.from_exclusive($start_bind)'
@@ -215,7 +222,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    end_expr: block expr
     end_bind: def bind ~defn
   fun Range.to(end :: Int) :: Range
   bind.macro 'Range.to($end_bind)'
@@ -229,7 +235,6 @@ equal to'' the upper bound by comparison on bounds.
 
 @doc(
   ~nonterminal:
-    end_expr: block expr
     end_bind: def bind ~defn
   fun Range.to_inclusive(end :: Int) :: Range
   bind.macro 'Range.to_inclusive($end_bind)'
