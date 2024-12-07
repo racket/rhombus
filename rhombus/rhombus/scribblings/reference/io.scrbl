@@ -9,5 +9,7 @@
 @include_section("port.scrbl")
 @include_section("input_port.scrbl")
 @include_section("output_port.scrbl")
+@include_section("file_stream_port.scrbl")
+@include_section("pipe.scrbl")
 @include_section("printing.scrbl")
 @include_section("shrubbery.scrbl")
