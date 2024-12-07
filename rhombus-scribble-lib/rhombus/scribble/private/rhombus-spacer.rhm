@@ -155,7 +155,7 @@ spacer.bridge let(self, tail, context, esc):
 meta:
   syntax_class Args:
     kind ~term
-  | '($_)'
+  | '($(_ :: Multi))'
   fun adjust_args(args && '($arg, ...)', adjust_arg):
     '($(adjust_arg(arg)), ...)'.relocate(args)
   syntax_class Name(esc):
@@ -170,8 +170,8 @@ meta:
   | '$('::' || ':~')
        $(pattern:
            kind ~sequence
-         | 'values($_)'
-         | '($_)'
+         | 'values($(_ :: Multi))'
+         | '($(_ :: Multi))'
          | '$_ ...')'
   fun adjust_res_ann(stx && '$op $res_ann ...', esc):
     let new_op = spacer.set(op, #'~bind)
@@ -179,8 +179,8 @@ meta:
       match '$res_ann ...'
       | (pattern:
            kind ~sequence
-         | '$(tag && 'values') $(p && '($_)')'
-         | '$(p && '($_)')': field tag = #false):
+         | '$(tag && 'values') $(p && '($(_ :: Multi))')'
+         | '$(p && '($(_ :: Multi))')': field tag = #false):
           let new_tag = if tag | spacer.set(tag, #'~annot) | ''
           let new_p = spacer.adjust_term(p, #'~annot, esc)
           '$new_tag $new_p'
@@ -234,7 +234,7 @@ meta:
                          kind ~sequence
                        | '$(_ :: Name(esc))'
                        | '')
-                       $case')':
+                       $(case :: Sequence)')':
             when find_name | find_name(name)
             let new_g:
               let new_case = adjust_fun_case(case, adjust_arg)
@@ -250,7 +250,7 @@ meta:
            kind ~sequence
          | '$(_ :: Name(esc))'
          | '')
-         $tail':
+         $(tail :: Sequence)':
         when find_name | find_name(name)
         let new_tail:
           match tail
@@ -452,7 +452,7 @@ module for_doc:
              field adjust = fun (tail, esc):
                spacer.adjust_sequence(tail, body_spaces, esc)
              field adjust_lhs = adjust_lhs_method)
-         $tail':
+         $(tail :: Sequence)':
         let new_who = spacer.set(who, #'~class_clause)
         let new_tail = who.adjust_lhs(who.adjust(tail, esc), esc)
         '$new_who $new_tail'
@@ -471,7 +471,7 @@ spacer.bridge class(self, tail, context, esc):
          | '$(priv && 'private')': field mut = #false
          | '$(mut && 'mutable')': field priv = #false
          | '': field priv = #false; field mut = #false)
-         $fld':
+         $(fld :: Sequence)':
         let new_priv = if priv | spacer.set(priv, #'~class_clause) | ''
         let new_mut = if mut | spacer.set(mut, #'~bind) | ''
         let new_fld = adjust_field(fld, esc)
@@ -604,7 +604,7 @@ meta:
            kind ~sequence
          | '$(_ :: Name(esc))'
          | '')
-         $tail':
+         $(tail :: Sequence)':
         match tail
         | (pattern:
              kind ~group
@@ -640,7 +640,7 @@ meta:
            kind ~term
          | 'method': field adjust = adjust_method
          | 'property': field adjust = adjust_property)
-         $tail':
+         $(tail :: Sequence)':
         let new_who = spacer.set(who, space)
         let new_tail = who.adjust(tail, esc)
         '$new_who $new_tail'
@@ -660,7 +660,7 @@ spacer.bridge abstract(self, tail, context, esc):
        | 'property': field adjust = adjust_property
        | 'override': field adjust = fun (override, esc):
                        adjust_override(override, space, esc))
-       $tail':
+       $(tail :: Sequence)':
       let new_who = spacer.set(who, space)
       let new_tail = who.adjust(tail, esc)
       '$self $new_who $new_tail'
@@ -676,7 +676,7 @@ spacer.bridge final(self, tail, context, esc):
        | 'property': field adjust = adjust_property
        | 'override': field adjust = fun (override, esc):
                        adjust_override(override, space, esc))
-       $tail':
+       $(tail :: Sequence)':
       let new_who = spacer.set(who, space)
       let new_tail = who.adjust(tail, esc)
       '$self $new_who $new_tail'
@@ -695,7 +695,7 @@ spacer.bridge private(self, tail, context, esc):
        | 'property': field adjust = adjust_property
        | 'override': field adjust = fun (override, esc):
                        adjust_override(override, space, esc))
-       $tail':
+       $(tail :: Sequence)':
       let new_who = spacer.set(who, space)
       let new_tail = who.adjust(tail, esc)
       '$self $new_who $new_tail'
@@ -979,7 +979,7 @@ spacer.bridge Any.of(self, tail, context, esc):
   ~in: ~annot
   fun adjust(t):
     match t
-    | '($_)': spacer.adjust_term(t, #'~expr, esc)
+    | '($(_ :: Multi))': spacer.adjust_term(t, #'~expr, esc)
     | ~else: t
   '$self $(adjust_one(tail, context, esc, adjust))'
 
@@ -1213,7 +1213,7 @@ meta:
            | '$(args :: Args): $(expose :: Block)': field tail = ''
            | '$(args :: Args) $(tail :: Sequence)': field expose = #false
            | ': $(expose :: Block)': field args = #false; field tail = ''
-           | '$tail': field args = #false; field expose = #false)':
+           | '$(tail :: Sequence)': field args = #false; field expose = #false)':
         let new_ref:
           match ref
           | '($(inner :: Group))':
