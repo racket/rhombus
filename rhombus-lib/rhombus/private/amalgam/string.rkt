@@ -47,6 +47,7 @@
                      String)
          (for-space rhombus/annot
                     ReadableString
+                    MutableString
                     StringCI
                     ReadableStringCI
                     StringLocale
@@ -186,6 +187,9 @@
 (define-for-syntax (get-readable-string-ci-static-infos)
   (make-get-veneer-like-static-infos get-readable-string-static-infos
                                      convert-string-ci-compare-static-info))
+
+(define-annotation-syntax MutableString
+  (identifier-annotation mutable-string? #,(get-readable-string-static-infos)))
 
 (define-annotation-syntax StringCI
   (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))

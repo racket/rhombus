@@ -391,11 +391,11 @@
 @doc(
   fun filesystem.read_bytes_lines(
     path :: PathString,
-    ~mode: mode :: Port.ReadLineMode = #'any
+    ~mode: mode :: Port.Input.ReadLineMode = #'any
   ) :: List.of(String)
   fun filesystem.read_lines(
     path :: PathString,
-    ~mode: mode :: Port.ReadLineMode = #'any
+    ~mode: mode :: Port.Input.ReadLineMode = #'any
   ) :: List.of(String)
 ){
 

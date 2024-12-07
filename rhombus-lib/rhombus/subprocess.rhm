@@ -39,13 +39,13 @@ class Subprocess(hand, output, input, error_output, desc, is_new):
   private override method describe(mode, recur):
     PrintDesc.concat("Subprocess(", repr(to_string(desc)), ")")
   property handle: hand
-  property maybe_in :~ maybe(Port.Output): input is_a Port.Output && input
-  property maybe_out :~ maybe(Port.Input): output is_a Port.Input && output
-  property maybe_err :~ maybe(Port.Input): error_output is_a Port.Input && error_output
+  property maybe_in :~ maybe(Port.Output && Port.FileStream): input is_a Port.Output && input
+  property maybe_out :~ maybe(Port.Input && Port.FileStream): output is_a Port.Input && output
+  property maybe_err :~ maybe(Port.Input && Port.FileStream): error_output is_a Port.Input && error_output
   fun not_available(who): error(~who: who, "pipe not available")
-  property in :~ Port.Output: maybe_in || not_available(#'in)
-  property out :~ Port.Input: maybe_out || not_available(#'out)
-  property err :~ Port.Input: maybe_err || not_available(#'err)
+  property in :~ Port.Output && Port.FileStream: maybe_in || not_available(#'in)
+  property out :~ Port.Input && Port.FileStream: maybe_out || not_available(#'out)
+  property err :~ Port.Input && Port.FileStream: maybe_err || not_available(#'err)
   property pid: rkt.#{subprocess-pid}(hand)
   override method close():
     when input is_a Port.Output | Port.Output.close(input)

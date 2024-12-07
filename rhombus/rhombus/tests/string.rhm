@@ -201,6 +201,10 @@ check:
   to_string("hello".copy(), ~mode: #'expr) ~is "String.copy(\"hello\")"
 
 check:
+  "a" is_a MutableString ~is #false
+  "a".copy() is_a MutableString ~is #true
+
+check:
   ~eval
   "a" :: StringCI
   ~throws "not allowed in a dynamic context"
