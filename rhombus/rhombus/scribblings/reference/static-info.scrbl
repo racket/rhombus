@@ -218,7 +218,7 @@
  required, and they should each produce a function that accepts two
  syntax objects as values for static information keyed by @rhombus('id').
  The union operation is used, for example, on static information from
- annotations combined with @rhombus(&&, ~annot), and interaction is used
+ annotations combined with @rhombus(&&, ~annot), and intersection is used
  on static information from annotations combined with
  @rhombus(||, ~annot).
 
