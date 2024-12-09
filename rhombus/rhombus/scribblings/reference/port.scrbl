@@ -174,6 +174,18 @@ output; it is possible for an object to be both an input and output port.
 }
 
 @doc(
+  method (port :: Port).name() :: Any
+){
+
+ Returns the port's name, which is typically represented by a
+ @tech{symbol} or @tech{path}, but can be any kind of value. A port's
+ name is used for printing and as a default for constructing source
+ locations.
+
+}
+
+
+@doc(
  enum Port.Mode:
    binary
    text

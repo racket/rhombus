@@ -107,6 +107,23 @@
 
 @doc(
   ~meta
+  fun statinfo_meta.check_function_arity(arity :: Syntax,
+                                         num_args :: NonnegInt,
+                                         arg_kws :: List.of(Keyword))
+    :: Boolean
+){
+
+ Takes packed arity information associated with
+ @rhombus(statinfo_meta.function_arity_key), the number of non-keyword
+ arguments in a function call, and a list of keywords for keyword
+ arguments in a function call, and reports whether the arguments are
+ consist with the packed arity information---that is, that the number and
+ keyword arguments will be accepted.
+
+}
+
+@doc(
+  ~meta
   fun statinfo_meta.pack_call_result([[arity_mask :: Int,
                                        statinfo_stx :: Syntax],
                                       ...])
@@ -257,6 +274,11 @@
  expression:
 
  @itemlist(
+
+  @item{@rhombus(statinfo_meta.function_arity_key): Packed information
+        about the number of arguments and keywords that are accepted if
+        the result value if the expression is called as a function;
+        see @rhombus(statinfo_meta.check_function_arity).}
 
   @item{@rhombus(statinfo_meta.call_result_key): Packed, per-arity static
         information for the result value if the expression is used as
