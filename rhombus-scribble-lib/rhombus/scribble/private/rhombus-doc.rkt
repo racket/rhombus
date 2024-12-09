@@ -573,9 +573,7 @@
                              ;; 'raw property used to typeset object
                              'target target
                              ;; string for key, index, and search:
-                             'raw (format "~a.~a"
-                                          (syntax-e r-root)
-                                          (syntax-e name))))]
+                             'raw (hash-ref resolved 'raw)))]
     [else target]))
 
 (define-for-syntax (dotted-to-identifier head tail)

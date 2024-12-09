@@ -96,7 +96,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 
 @doc(
-  fun Port.Input.open_nowhere(name :: Symbol = #'string)
+  fun Port.Input.open_nowhere(name :: Symbol = #'nowhere)
     :: Port.Input
 ){
 
@@ -167,9 +167,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
  read or an end-of-file is found. If @rhombus(wait) is @rhombus(#'none),
  then reading will always return without waiting, even if no bytes are
  immediately available. If @rhombus(wait) is @rhombus(#'enable_break),
- then waiting is like @rhombus(#'some), but asynchronously break
- exceptions are enabled during the wait; in that case, either some bytes
- will be read or a break exception will be thrown, but not both.
+ then waiting is like @rhombus(#'some), but asynchronous break exceptions
+ are enabled during the wait; in that case, if breaks are disabled before
+ the call to @rhombus(Port.Input.read_bytes_to) either some bytes will be
+ read or a break exception will be thrown, but not both.
 
 }
 

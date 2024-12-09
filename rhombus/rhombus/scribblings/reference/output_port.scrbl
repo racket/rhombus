@@ -68,28 +68,6 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 
 @doc(
-  method (out :: Port.Output).print(v :: Any, ...,
-                                    ~mode: mode :: PrintMode = #'text)
-    :: Void
-  method (out :: Port.Output).println(v :: Any, ...,
-                                      ~mode: mode :: PrintMode = #'text)
-    :: Void
-  method (out :: Port.Output).show(v :: Any, ...,
-                                   ~mode: mode :: PrintMode = #'text)
-    :: Void
-  method (out :: Port.Output).showln(v :: Any, ...,
-                                     ~mode: mode :: PrintMode = #'text)
-    :: Void
-){
-
- The same as @rhombus(print), @rhombus(println), @rhombus(show), and
- @rhombus(showln), but with an output provided as a required initial
- argument instead of an optional @rhombus(~out) keyword argument.
-
-}
-
-
-@doc(
   fun Port.Output.open_file(
     path :: PathString,
     ~exists: exists_flag :: Port.Output.ExistsMode = #'error,
@@ -171,6 +149,94 @@ an @deftech{output string port} writes to a @tech{byte string}.
  @rhombus(Port.Output.String.get_string) is like
  @rhombus(Port.Output.String.get_bytes), but returns a string converted from
  the byte string instead.
+
+}
+
+
+@doc(
+  fun Port.Output.open_nowhere(name :: Symbol = #'nowhere)
+    :: Port.Output
+){
+
+ Creates an @tech{output port} that discards all output written to the
+ port. The optional @rhombus(name) is used as the name for the returned
+ port.
+
+}
+
+@doc(
+  method (out :: Port.Output).write_byte(b :: Byte) :: Void
+  method (out :: Port.Output).write_char(ch :: Char) :: Void
+){
+
+ Writes a single byte or a single (UTF-8 encoded) @tech{character} to
+ @rhombus(out).
+
+}
+
+@doc(
+  method (out :: Port.Output).write_bytes(
+    bytes :: ReadableBytes,
+    ~start: start :: NonnegInt = 0,
+    ~end: end :: NonnegInt = bytes.length(),
+    ~wait: wait :: Port.WaitMode = #'all
+  ) :: NonnegInt
+){
+
+ Writes bytes from the @rhombus(start) to @rhombus(end) substring of
+ @rhombus(bytes) and returns the number of bytes that are written.
+
+ Writing to @rhombus(out) may block, depending on the backing device.
+ If @rhombus(wait) is @rhombus(#'all), then all bytes are written, but
+ not necessarily flushed (see @rhombus(Port.Output.flush)), and the
+ result is @rhombus(end-start). If @rhombus(wait) is
+ @rhombus(#'one), then writing will block until at least one byte is
+ written and immediately flushed, and the result is the number of bytes
+ written. If @rhombus(wait) is @rhombus(#'none), then writing never
+ blocks, and the result is the number of bytes written and immediately
+ flushed. If @rhombus(wait) is @rhombus(#'enable_break), then writing
+ blocks in the same way as for @rhombus(#'one), but asynchronous break
+ exceptions are enabled during the wait; in that case, if breaks are
+ disabled before the call to @rhombus(Port.Output.write_bytes) either some
+ bytes will be written or a break exception will be thrown, but not both.
+
+}
+
+
+@doc(
+  method (out :: Port.Output).write_string(
+    str :: ReadableString,
+    ~start: start :: NonnegInt = 0,
+    ~end: end :: NonnegInt = bytes.length()
+  ) :: NonnegInt
+){
+
+ Like @rhombus(Port.Output.write_bytes) with @rhombus(#'all) waiting,
+ but writing a (UTF-8 encoded) substring of @rhombus(str) from
+ @rhombus(start) to @rhombus(end). The result is the number of characters
+ written.
+
+}
+
+
+@doc(
+  method (out :: Port.Output).print(v :: Any, ...,
+                                    ~mode: mode :: PrintMode = #'text)
+    :: Void
+  method (out :: Port.Output).println(v :: Any, ...,
+                                      ~mode: mode :: PrintMode = #'text)
+    :: Void
+  method (out :: Port.Output).show(v :: Any, ...,
+                                   ~mode: mode :: PrintMode = #'text)
+    :: Void
+  method (out :: Port.Output).showln(v :: Any, ...,
+                                     ~mode: mode :: PrintMode = #'text)
+    :: Void
+){
+
+ The same as @rhombus(print), @rhombus(println), @rhombus(show), and
+ @rhombus(showln), but with an output provided as a required initial
+ argument instead of an optional @rhombus(~out) keyword argument.
 
 }
 
