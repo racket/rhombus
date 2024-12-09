@@ -67,7 +67,8 @@
    buffer
    position
    locations_enabled
-   next_location))
+   next_location
+   name))
 
 (define-primitive-class Port.Input input-port
   #:lift-declaration
@@ -457,6 +458,10 @@
     [(p line col offset)
      (with-error-adjust-primitive ([set-port-next-location! Port.next_location])
        (set-port-next-location! p line col offset))]))
+
+(define/method (Port.name p)
+  (check-port who p)
+  (object-name p))
 
 (define/method (Port.FileStream.identity p)
   #:primitive (port-file-identity)

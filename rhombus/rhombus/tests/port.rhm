@@ -310,9 +310,11 @@ check:
   stderr.write_bytes(#"") ~is 0
 
 block:
-  let (in, out) = Port.Pipe.make()
+  let (in, out) = Port.Pipe.make(~input_name: #'my_in, ~output_name: #'my_out)
   check in ~is_a Port.Pipe
   check out ~is_a Port.Pipe
+  check in.name() ~is #'my_in
+  check out.name() ~is #'my_out
   check:
     Port.Output.using out:
       stdout.write_bytes(#"abcdef")

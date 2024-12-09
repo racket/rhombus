@@ -1,0 +1,19 @@
+#lang rhombus
+
+use_static
+
+check:
+  (List compose values)(1) ~is [1]
+  (List compose_values values)(1, 2, 3) ~is [1, 2, 3]
+  (List compose PairList)(1, 2, 3) ~is [PairList[1, 2, 3]]
+  (List ∘ PairList)(1, 2, 3) ~is [PairList[1, 2, 3]]
+  (List compose values)(1).length() ~is 1
+  (List compose_values values)(1, 2, 3).length() ~is 3
+  (List.cons compose_values values)(3, []) ~is [3]
+
+check:
+  ~eval
+  use_static
+  List.cons compose values
+  ~throws values("function does not accept one argument",
+                 "based on static information")
