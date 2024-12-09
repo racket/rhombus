@@ -189,18 +189,23 @@
                          #,assign-expr)
                      tail)]
             [_ (lookup)])])]))
-  (define dp-id (extract-dot-provider-id dp-id/s))
-  (cond
-    [dp-id
-     (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))
-     (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space dp-id)))
-     (define (success-k expr tail) (values expr tail))
-     ((dot-provider-handler p) form1 dot field-id
-                               tail
-                               more-static?
-                               repetition?
-                               success-k generic)]
-    [else (generic)]))
+  (define dp-ids (extract-dot-provider-ids dp-id/s))
+  ;; make sure only one in `dp-ids` provides an answer
+  (let loop ([dp-ids dp-ids])
+    (cond
+      [(null? dp-ids) (generic)]
+      [else
+       (define dp-id (car dp-ids))
+       (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))
+       (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space dp-id)))
+       (define (success-k expr tail)
+         (values expr tail))
+       ((dot-provider-handler p) form1 dot field-id
+                                 tail
+                                 more-static?
+                                 repetition?
+                                 success-k (lambda ()
+                                             (loop (cdr dp-ids))))])))
 
 (define-syntax (define-dot-provider-syntax stx)
   (syntax-parse stx
@@ -224,6 +229,13 @@
                             "in value" v))
   (cond
     [(not ht) (fail)]
+    [(pair? ht) (or
+                 (let loop ([ht ht])
+                   (cond
+                     [(pair? ht) (or (loop (car ht)) (loop (cdr ht)))]
+                     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
+                     [else #f]))
+                 (fail))]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
     [else (fail)]))
 

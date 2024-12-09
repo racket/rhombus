@@ -6,7 +6,7 @@
 
 @doc(
   fun print(v :: Any, ...,
-            ~out: out :: Port.Output = Port.Output.current(),
+            ~out: out :: Port.Output = stdout,
             ~mode: mode :: PrintMode = #'text,
             ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -44,7 +44,7 @@
 
 @doc(
   fun println(v :: Any, ...,
-              ~out: out :: Port.Output = Port.Output.current(),
+              ~out: out :: Port.Output = stdout,
               ~mode: mode :: PrintMode = #'text,
               ~pretty: pretty = Printable.current_pretty())
     :: Void
@@ -56,11 +56,11 @@
 
 @doc(
   fun show(v :: Any, ...,
-           ~out: out :: Port.Output = Port.Output.current(),
+           ~out: out :: Port.Output = stdout,
            ~pretty: pretty = Printable.current_pretty())
     :: Void
   fun showln(v :: Any, ...,
-             ~out: out :: Port.Output = Port.Output.current(),
+             ~out: out :: Port.Output = stdout,
              ~pretty: pretty = Printable.current_pretty())
     :: Void
 ){

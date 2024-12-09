@@ -436,8 +436,10 @@
          (output-port? v))
      (pretty-listlike
       (pretty-text (if (input-port? v)
-                       "Port.Input("
-                       "Port.output("))
+                       (if (output-port? v)
+                           "Port("
+                           "Port.Input(")
+                       "Port.Output("))
       (let ([n (object-name v)])
         (if n
             (list (print n))

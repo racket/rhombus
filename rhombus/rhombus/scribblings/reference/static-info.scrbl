@@ -286,11 +286,14 @@
   @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
         bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to
         implement the expression's behavior as a @tech(~doc: guide_doc){dot provider},
-        or a packed sequence of such identifiers. In the case of a sequence, the
-        first identifier is used, but the rest is relevant for an
-        intersection of two sequences, which produces the shared tail,
-        and the union of two sequences, which picks the longer of two
-        sequences when one is a tail of the other.}
+        a packed sequence of such identifiers, or a packed sequence mixing
+        identifiers and packed sequences of identifiers. In the case of an overall
+        sequence, the first element is used to find a dot provider, and if that
+        element is itself a sequence, the dot providers are tried in order.
+        The rest of an overall sequence records progressively less-specific
+        dot providers, such as the dot providers for superclasses of a class
+        or superinterfaces of an interface. Intersection of overall sequences finds
+        a shared tail, while union of overall sequences combines elements pairwise.}
 
   @item{@rhombus(statinfo_meta.sequence_constructor_key): An identifier
         bound as a variable or a macro that is wrapped around an expression

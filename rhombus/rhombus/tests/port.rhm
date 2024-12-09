@@ -3,32 +3,57 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
+    Port.open_input_output_file(path)
+    Port.buffer(p, [mode])
+    Port.position(p, [mode])
+    Port.locations_enabled(p, [on])
     Port.Input.current([in])
     Port.Input.open_bytes(bstr, [name])
     Port.Input.open_string(str, [name])
+    Port.Input.open_file(path)
+    Port.Input.open_nowhere([name])
     // TODO fix tests for keyword arguments
     Port.Input.peek_byte(in) ~method
     Port.Input.peek_bytes(in, amount) ~method
+    Port.Input.peek_bytes_to(in, bstr) ~method
     Port.Input.peek_char(in) ~method
     Port.Input.peek_string(in, amount) ~method
+    Port.Input.peek_string_to(in, str) ~method
     Port.Input.read_byte(in) ~method
     Port.Input.read_bytes(in, amount) ~method
+    Port.Input.read_bytes_to(in, bstr) ~method
     Port.Input.read_char(in) ~method
     Port.Input.read_line(in) ~method
     Port.Input.read_string(in, amount) ~method
+    Port.Input.read_string_to(in, str) ~method
+    Port.Input.copy_to(p, out, ...)
+    Port.Input.Progress.evt(path)
+    Port.Input.Progress.is_evt(path, v)
+    Port.Input.Progress.commit(path)
     Port.Output.open_bytes([name])
     Port.Output.open_string([name])
+    Port.Output.open_file(path)
+    Port.Output.open_nowhere([name])
     Port.Output.get_bytes(out) ~method Port.Output.String
     Port.Output.get_string(out) ~method Port.Output.String
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
-    Port.Output.write_bytes(out, b, [start], [end])
-    Port.Output.write_string(out, s, [start], [end])
+    Port.Output.write_byte(out, b)
+    Port.Output.write_char(out, s)
+    Port.Output.write_bytes(out, b)
+    Port.Output.write_string(out, s)
     Port.Output.print(v, ...) ~method
     Port.Output.println(v, ...) ~method
     Port.Output.show(v, ...) ~method
     Port.Output.showln(v, ...) ~method
+    Port.Output.Special.write(out, s)
+    Port.Output.Special.write(out, s)
+    Port.FileStream.try_lock(p, mode) ~method
+    Port.FileStream.identity(p) ~method
+    Port.FileStream.stat(p) ~method
+    Port.Pipe.make([name])
+    Port.Pipe.content_length(p) ~method
 
 block:
   check Port.eof ~is_a Port.EOF
@@ -43,19 +68,22 @@ block:
     ~is "no"
 
 block:
-  let p = Port.Input.open_string("abλcdefμ")
+  let p = Port.Input.open_string("axbλcdefμ")
   check p is_a Port.Input ~is #true
   check p is_a Port.Input.String ~is #true
   check p.peek_byte() ~is Char"a".to_int()
-  check p.peek_byte(~skip_bytes: 1) ~is Char"b".to_int()
+  check p.peek_byte(~special_wrap: values) ~is Char"a".to_int()
+  check p.peek_byte(~skip_bytes: 2) ~is Char"b".to_int()
   check p.read_byte() ~is Char"a".to_int()
+  check p.read_byte(~special_wrap: values) ~is Char"x".to_int()
   check p.peek_byte(~skip_bytes: 3) ~is Char"c".to_int()
   check p.peek_char() ~is Char"b"
+  check p.peek_char(~special_wrap: values) ~is Char"b"
   check p.peek_char(~skip_bytes: 1) ~is Char"λ"
   check p.peek_char(~skip_bytes: 3) ~is Char"c"
   check p.read_char() ~is Char"b"
   check p.read_char() ~is Char"λ"
-  check p.peek_char() ~is Char"c"
+  check p.peek_char(~special_wrap: values) ~is Char"c"
   check p.read_bytes(2) ~is_now #"cd".copy()
   check p.read_string(3) ~is "efμ"
 
@@ -72,6 +100,61 @@ block:
   check p.read_bytes(4) ~is Port.eof
 
 block:
+  let p = Port.Input.open_string("abcdefg")
+  let bstr = Bytes.make(10)
+  check p ~is_a Port.Input.Progress
+  check p.peek_bytes_to(bstr) ~is 7
+  check bstr[0] ~is Byte#"a"
+  check p.peek_bytes_to(bstr, ~wait: #'some) > 0 ~is #true
+  check bstr[0] ~is Byte#"a"
+  check p.peek_bytes_to(bstr, ~wait: #'none) > 0 ~is #true
+  check bstr[0] ~is Byte#"a"
+  check p.peek_bytes_to(bstr, ~wait: #'enable_break) > 0 ~is #true
+  check bstr[0] ~is Byte#"a"
+  check p.peek_bytes_to(bstr, ~wait: #'oops) ~throws values(error.annot_msg(),
+                                                            error.annot("Port.WaitMode").msg)
+  check p.peek_bytes_to(bstr, ~start: 5) ~is 5
+  check bstr[5] ~is Byte#"a"
+  check p.peek_bytes_to(bstr, ~end: 5) ~is 5
+  check p.peek_bytes_to(bstr, ~start: 1, ~end: 5) ~is 4
+
+  let evt: use_dynamic; p.evt()
+  check (p :: Port.Input.Progress).is_evt(evt) ~is #true
+  check p.peek_bytes_to(bstr, ~wait: #'some, ~progress: evt) ~is 7
+  check bstr[0] ~is Byte#"a"
+  check p.read_bytes_to(bstr, ~end: 1) ~is 1
+  check p.peek_bytes_to(bstr, ~wait: #'some, ~progress: evt) ~is 0
+  check p.peek_bytes_to(bstr) ~is 6
+  check bstr[0] ~is Byte#"b"
+  // Need evts filled in more to test this:
+  #//
+  block:
+    import rhombus/thread
+    check (p :: Port.Input.Progress).commit(3, evt, thread.Semaphore(1)) ~is 3
+
+block:
+  let p = Port.Input.open_string("abcdefg")
+  let bstr = Bytes.make(10)
+  check p ~is_a Port.Input.Progress
+  check p.read_bytes_to(bstr) ~is 7
+  check bstr[0] ~is Byte#"a"
+
+block:
+  let p = Port.Input.open_string("abcdefg")
+  let bstr = Bytes.make(10)
+  check p ~is_a Port.Input.Progress
+  check p.read_bytes_to(bstr, ~wait: #'some, ~end: 1) ~is 1
+  check bstr[0] ~is Byte#"a"
+  check p.read_bytes_to(bstr, ~wait: #'none, ~end: 1) ~is 1
+  check bstr[0] ~is Byte#"b"
+  check p.read_bytes_to(bstr, ~wait: #'enable_break, ~end: 1) ~is 1
+  check bstr[0] ~is Byte#"c"
+  check p.read_bytes_to(bstr, ~wait: #'oops) ~throws values(error.annot_msg(),
+                                                            error.annot("Port.WaitMode").msg)
+  check p.read_bytes_to(bstr, ~start: 5, ~end: 6) ~is 1
+  check bstr[5] ~is Byte#"d"
+  
+block:
   let p = Port.Input.open_string("abλcdefμ")
   check p is_a Port.Input ~is #true
   check p is_a Port.Input.String ~is #true
@@ -79,6 +162,28 @@ block:
   check p.peek_string(~skip_bytes: 2, 1) ~is "λ"
   check p.peek_string(3) ~is "abλ"
   check p.peek_string(1, ~skip_bytes: 4) ~is "c"
+
+block:
+  let p = Port.Input.open_string("abcdefg")
+  let str = String.make(10, Char"\0")
+  check p ~is_a Port.Input.Progress
+  check p.peek_string_to(str) ~is 7
+  check str[0] ~is Char"a"
+  check p.peek_string_to(str, ~start: 5) ~is 5
+  check str[5] ~is Char"a"
+  check p.peek_string_to(str, ~end: 5) ~is 5
+  check p.peek_string_to(str, ~start: 1, ~end: 5) ~is 4
+
+block:
+  let p = Port.Input.open_string("abcdefg")
+  let str = String.make(10, Char"x")
+  check p.read_string_to(str, ~end: 1) ~is 1
+  check str[0] ~is Char"a"
+  check str[1] ~is Char"x"
+  check p.read_string_to(str, ~start: 4, ~end: 6) ~is 2
+  check str[4] ~is Char"b"
+  check str[5] ~is Char"c"
+  check str[1] ~is Char"x"
 
 block:
   def str = "a\nb\rc\r\nd\n\re"
@@ -119,22 +224,22 @@ block:
   let p = Port.Output.open_bytes()
   p.write_bytes(#"apple")
   check p.get_bytes() ~is_now #"apple"
-  p.write_bytes(#"apple", 3)
+  p.write_bytes(#"apple", ~start: 3)
   check p.get_bytes() ~is_now #"applele"
-  p.write_bytes(#"apple", 1, 4)
+  p.write_bytes(#"apple", ~start: 1, ~end: 4)
   check p.get_bytes() ~is_now #"appleleppl"
 
 block:
   let p = Port.Output.open_bytes()
   p.write_string("apple")
   check p.get_bytes() ~is_now #"apple"
-  p.write_string("apple", 3)
+  p.write_string("apple", ~start: 3)
   check p.get_bytes() ~is_now #"applele"
-  p.write_string("apple", 1, 4)
+  p.write_string("apple", ~start: 1, ~end: 4)
   check p.get_bytes() ~is_now #"appleleppl"
   p.write_string("λ")
   check p.get_bytes() ~is_now #"appleleppl\316\273"
-  p.write_string("λλλλ", 1, 3)
+  p.write_string("λλλλ", ~start: 1, ~end: 3)
   check p.get_bytes() ~is_now #"appleleppl\316\273\316\273\316\273"
 
 // make sure `current` functions have static info
@@ -195,3 +300,116 @@ check:
     error.annot("Port.Output.String").msg,
     error.val("oops").msg,
   )
+
+check:
+  stdin ~is_a Port.Input
+  stdout ~is_a Port.Output
+  stderr ~is_a Port.Output
+  stdin.peek_bytes_to(Bytes.make(0)) ~is 0
+  stdout.write_bytes(#"") ~is 0
+  stderr.write_bytes(#"") ~is 0
+
+block:
+  let (in, out) = Port.Pipe.make()
+  check in ~is_a Port.Pipe
+  check out ~is_a Port.Pipe
+  check:
+    Port.Output.using out:
+      stdout.write_bytes(#"abcdef")
+    ~is 6
+  check in.content_length() ~is 6
+  check out.content_length() ~is 6
+  check:
+    Port.Input.using in:
+      stdin.read_bytes(2)
+    ~is_now #"ab"
+  check in.content_length() ~is 4
+
+block:
+  Closeable.let tmp = filesystem.make_temporary()
+  check:
+    Port.Output.using ~file tmp.path:
+      ~exists: #'truncate
+      stdout.write_bytes(#"hi")
+    ~is 2
+  check:
+    Port.Input.using ~file tmp.path:
+      stdin.read_bytes(5)
+    ~is_now #"hi"
+  check:
+    Port.Input.using Port.Input.open_file(tmp.path):
+      stdin.read_bytes(1)
+    ~is_now #"h"
+  block:
+    Closeable.let out = Port.Output.open_file(tmp.path, ~exists: #'update)
+    Closeable.let in = Port.Input.open_file(tmp.path)
+    check in ~is_a Port.FileStream
+    check out ~is_a Port.FileStream
+    check in is_a Port.FileStream.Terminal ~is #false
+    check out is_a Port.FileStream.Terminal ~is #false
+    check in.is_waiting_on_peer() ~is #false
+    check out.is_waiting_on_peer() ~is #false
+    check in.buffer() ~is #'block
+    check in.buffer(#'none) ~is #void
+    check in.buffer() ~is #'none
+    check out.buffer() ~is #'block
+    check out.buffer(#'line) ~is #void
+    check out.buffer() ~is #'line
+    check out.write_bytes(#"bye") ~is 3
+    check in.read_byte() ~is Byte#"h"
+    check out.write_bytes(#"\n") ~is 1
+    check in.read_byte() ~is Byte#"y"
+    check out.truncate(2) ~is #void
+    check in.read_byte() ~is Port.eof
+    check in.position() ~is 2
+    check in.position(0) ~is #void
+    check in.read_byte() ~is Byte#"b"
+    check in.identity() ~is out.identity()
+    check in.stat() ~is_a Map
+    check in.try_lock(#'shared) ~is #true
+    check in.unlock() ~is #void
+
+block:
+  Closeable.let tmp = filesystem.make_temporary()
+  let (in, out) = Port.open_input_output_file(tmp.path,
+                                              ~exists: #'truncate)
+  check out.write_bytes(#"abc") ~is 3
+  check in.position() ~is 0
+  check out.flush() ~is #void
+  check in.position() ~is 3
+  check in.read_bytes(10) ~is Port.eof
+  check in.position(0) ~is #void
+  check in.read_bytes(3) ~is_now #"abc"
+
+block:
+  check Port.Input.open_nowhere() ~is_a Port.Input
+  check Port.Input.open_nowhere().read_char() ~is Port.eof
+
+block:
+  check Port.Output.open_nowhere() ~is_a Port.Output
+  check Port.Output.open_nowhere().write_bytes(#"abc") ~is 3
+
+block:
+  let s = Port.Input.open_string("aλb\nc")
+  check s.locations_enabled() ~is #false
+  check s.locations_enabled(#true) ~is #void
+  check s.locations_enabled() ~is #true
+  check s.next_location() ~is values(1, 0, 1)
+  check s.read_char() ~is Char"a"
+  check s.next_location() ~is values(1, 1, 2)
+  check s.read_char() ~is Char"λ"
+  check s.next_location() ~is values(1, 2, 3)
+  check s.read_string(2) ~is "b\n"
+  check s.next_location() ~is values(2, 0, 5)
+  check s.next_location(10, 100, 1000) ~is #void
+  check s.next_location() ~is values(10, 100, 1000)
+  check s.read_char() ~is Char"c"
+  check s.next_location() ~is values(10, 101, 1001)
+
+block:
+  let s = Port.Input.open_string("aλb\nc")
+  let o1 = Port.Output.open_string()
+  let o2 = Port.Output.open_string()
+  s.copy_to(o1, o2)
+  check o1.get_string() ~is "aλb\nc"
+  check o2.get_string() ~is "aλb\nc"

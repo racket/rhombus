@@ -31,10 +31,12 @@ Strings are @tech{comparable}, which means that generic operations like
   annot.macro 'ReadableString':
     ~method_fallback: String
   annot.macro 'ReadableString.to_string'
+  annot.macro 'MutableString'
 ){
 
  Matches strings. The @rhombus(ReadableString, ~annot) annotation allows mutable
- Racket strings as well as immutable Rhombus strings.
+ Racket strings as well as immutable Rhombus strings, while @rhombus(MutableString, ~annot)
+ matches only mutable strings.
  The @rhombus(ReadableString.to_string, ~annot) @tech(~doc: guide_doc){converter annotation}
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string, like
@@ -444,7 +446,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  method String.copy(str :: ReadableString) :: ReadableString
+  method String.copy(str :: ReadableString) :: MutableString
 ){
 
  Creates a mutable copy of @rhombus(str).
