@@ -94,6 +94,8 @@ block:
     dynamic(bstr)[3] := Byte#"h"
     dynamic(bstr).set(4, Byte#"h")
     check bstr ~is_now #"hhhhh"
+  bstr.fill(Byte#"x")
+  check bstr ~is_now #"xxxxx"
 
 check:
   Bytes.append() ~is_now #""

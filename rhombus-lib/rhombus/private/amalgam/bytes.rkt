@@ -60,6 +60,7 @@
    subbytes
    copy
    copy_from
+   fill
    utf8_string
    latin1_string
    locale_string
@@ -138,6 +139,10 @@
     [(bstr dest-start src) (bytes-copy! bstr dest-start src)]
     [(bstr dest-start src src-start) (bytes-copy! bstr dest-start src src-start)]
     [(bstr dest-start src src-start src-end) (bytes-copy! bstr dest-start src src-start src-end)]))
+
+(define/method (Bytes.fill bstr b)
+  #:primitive (bytes-fill!)
+  (bytes-fill! bstr b))
 
 (define-sequence-syntax Bytes.to_sequence/optimize
   (lambda () #'Bytes.to_sequence)

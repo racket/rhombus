@@ -148,6 +148,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 }
 
+
 @doc(
   fun Bytes.copy_from(dest_bstr :: MutableBytes,
                       dest_start :: NonnegInt,
@@ -163,6 +164,22 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
  @rhombus(dest_start + (src_end - src_start)).
 
 }
+
+
+@doc(
+  method Bytes.fill(bstr :: MutableBytes, byte :: Byte) :: Void
+){
+
+ Sets every byte in @rhombus(bstr) to @rhombus(byte).
+
+@examples(
+  def b = #"apple".copy()
+  b.fill(Byte#"x")
+  b
+)
+
+}
+
 
 @doc(
   method (bstr :: Bytes).snapshot(str :: Bytes) :: ImmutableBytes

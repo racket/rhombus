@@ -9,6 +9,9 @@ export:
   time
   memory
   time_and_memory
+  real_milliseconds
+  cpu_milliseconds
+  gc_milliseconds
 
 expr.macro
 | 'time $(b && ': ~gc; $body; ...')':
@@ -35,3 +38,12 @@ fun call_with_memory_use(proc):
 
 expr.macro 'time_and_memory: $(body :: Block)':
   'memory: time $body'
+
+fun real_milliseconds() :~ Flonum:
+  base.#{current-inexact-monotonic-milliseconds}()
+
+fun cpu_milliseconds() :~ Flonum:
+  base.#{current-process-milliseconds}()
+
+fun gc_milliseconds():
+    base.#{current-gc-milliseconds}()
