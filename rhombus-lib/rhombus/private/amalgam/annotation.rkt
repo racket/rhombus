@@ -49,6 +49,7 @@
                     Exact
                     Inexact
                     Flonum
+                    Fixnum
                     Number
                     Void
                     False
@@ -850,6 +851,7 @@
 (define-annotation-syntax NonnegInt (identifier-annotation exact-nonnegative-integer? #,(get-int-static-infos)))
 (define-annotation-syntax Flonum (identifier-annotation flonum? #,(get-flonum-static-infos)))
 (define-annotation-syntax Number (identifier-annotation number? #,(get-number-static-infos)))
+(define-annotation-syntax Fixnum (identifier-annotation fixnum? #,(get-int-static-infos)))
 (define-annotation-syntax Integral (identifier-annotation integer? #,(get-rational-static-infos)))
 (define-annotation-syntax Rational (identifier-annotation rational? #,(get-rational-static-infos)))
 (define-annotation-syntax Exact (identifier-annotation exact-number? #,(get-rational-static-infos)))

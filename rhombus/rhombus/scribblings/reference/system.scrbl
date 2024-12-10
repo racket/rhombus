@@ -1,8 +1,10 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      rhombus/measure)
 
-@title(~tag: "system"){System Information}
+@title(~tag: "system"){System Information and Control}
 
 @doc(
   fun system.version() :: String
@@ -82,5 +84,34 @@
   files.}
 
 )
+
+}
+
+
+@doc(
+  fun system.seconds() :: Int
+  fun system.milliseconds() :: Flonum
+){
+
+ The @rhombus(system.seconds) reports the current time in seconds since
+ the epoch---which is consistent with the
+ @rhombus(filesystem.modify_seconds) function's result, for example. The
+ @rhombus(system.milliseconds) function reports the same time with more
+ precision, expressed in milliseconds (including fractional milliseconds)
+ since the epoch.
+
+ See also @rhombus(measure.cpu_milliseconds) and
+ @rhombus(measure.real_milliseconds).
+
+}
+
+
+@doc(
+  fun system.exit(v :: Any = #true) :: Void
+){
+
+ Calls the system exit handler, which normally exits the current
+ process. If @rhombus(v) is a byte, then the byte is used as the
+ process's exit code, otherwise @rhombus(0) is used as the exit code.
 
 }

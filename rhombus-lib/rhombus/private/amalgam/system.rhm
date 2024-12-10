@@ -16,6 +16,9 @@ namespace system:
     target_machine
     version
     path
+    seconds
+    milliseconds
+    exit
     TargetMachineSymbol
 
   fun type() :~ Symbol:
@@ -50,3 +53,12 @@ namespace system:
         error(~who: who,
               "unrecognized symbol",
               error.val(~label: "symbol", which))
+
+  fun seconds() :~ Int:
+    rkt.#{current-seconds}()
+
+  fun milliseconds() :~ Flonum:
+    rkt.#{current-inexact-milliseconds}()
+
+  fun exit(v = #true):
+    rkt.exit(v)
