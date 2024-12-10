@@ -28,6 +28,8 @@
          "parse.rkt"
          "wrap-expression.rkt"
          "parens.rkt"
+         "function-arity.rkt"
+         "function-arity-key.rkt"
          "call-result-key.rkt"
          "append-key.rkt"
          "index-key.rkt"
@@ -58,6 +60,7 @@
      [unpack_group statinfo_meta.unpack_group]
      [pack_call_result statinfo_meta.pack_call_result]
      [unpack_call_result statinfo_meta.unpack_call_result]
+     [check_function_arity statinfo_meta.check_function_arity]
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
      [gather statinfo_meta.gather]
@@ -66,6 +69,7 @@
      [union statinfo_meta.union]
      [intersect statinfo_meta.intersect]
 
+     function_arity_key
      call_result_key
      index_result_key
      index_get_key
@@ -239,6 +243,25 @@
       [_
        (treelist (treelist -1 (unpack-static-infos who stx)))]))
 
+  (define/arity (statinfo_meta.check_function_arity stx n kws)
+    (check-syntax who stx)
+    (unless (exact-nonnegative-integer? n) (raise-annotation-failure who n "NonnegInt"))
+    (unless (and (treelist? kws)
+                 (for/and ([e (in-treelist kws)])
+                   (keyword? e)))
+      (raise-annotation-failure who kws "List.of(Keyword)"))
+    (define a (syntax->datum stx))
+    (unless (or (exact-integer? a)
+                (and (list? a)
+                     (= (length a))
+                     (exact-integer? (car a))
+                     (hash? (cadr a))
+                     (or (not (caddr a)) (hash? (caddr a)))))
+      (raise-arguments-error* who rhombus-realm
+                              "ill-formed packed arity description"
+                              "syntax object" stx))
+    (check-arity #f #f a n (treelist->list kws) #f #f #f #:always? #t))
+
   (define/arity (statinfo_meta.wrap form info)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who form)
@@ -289,6 +312,7 @@
     (define-static-info-syntax key
       #:getter get-syntax-static-infos)))
 
+(define-key function_arity_key #%function-arity)
 (define-key call_result_key #%call-result)
 (define-key index_result_key #%index-result)
 (define-key index_get_key #%index-get)

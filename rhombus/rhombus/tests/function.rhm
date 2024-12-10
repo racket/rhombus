@@ -440,3 +440,18 @@ block:
   check f(0, 1, 2, 3) ~is #'eff
   check f("no") ~throws "eff:"
   check f("no", 7) ~throws "eff:"
+
+block:
+  fun f1(x): x
+  fun f2(x, y = 1, ~z: z, ~w = #false): x
+  fun f3(x, y, z, & args): x
+  fun f4(x, ~y, & args, ~& kws): x
+  check f1.name() ~is #'f1
+  check f2.name() ~is #'f2
+  check print(f1.rename(#'helper)) ~prints "#<function:helper>"
+  check f1.arity() ~is values(2, [], [])
+  check f2.arity() ~is values(6, [#'~z], [#'~w, #'~z])
+  check f3.arity() ~is values(-8, [], [])
+  check f4.arity() ~is values(-2, [#'~y], #false)
+  check f2.reduce_arity(4, [#'~z], [#'~w, #'~z]) ~is_a Function
+  check f4.reduce_arity(32, [#'~y], [#'~a, #'~b, #'~c, #'~y]) ~is_a Function
