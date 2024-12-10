@@ -1,0 +1,62 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  lib("racket/base.rkt") as rkt
+
+use_static
+
+export:
+  compose
+  rename: compose as ∘
+  compose_values
+
+meta:
+  fun parse_compose(self, left, right, one):
+    when one && syntax_meta.is_static(self)
+    | let left_arity = statinfo_meta.lookup(left, statinfo_meta.function_arity_key)
+      when left_arity
+      | unless statinfo_meta.check_function_arity(left_arity, 1, [])
+        | syntax_meta.error(~who: self,
+                            "function does not accept one argument (based on static information)",
+                            left)
+    let right_arity = statinfo_meta.lookup(right, statinfo_meta.function_arity_key)
+    let ret_mask:
+      if one
+      | 1 bits.(<<) 1
+      | let left_res = statinfo_meta.lookup(left, statinfo_meta.call_result_key)
+        match left_res && statinfo_meta.unpack_call_result(left_res)
+        | [[-1, info], & _]:
+            // result is the same for all argument counts, and
+            // is will indicate either be one or multiple values
+            let vals = statinfo_meta.find(info, statinfo_meta.values_key)
+            if vals
+            | 1 bits.(<<) statinfo_meta.unpack_group(vals).length()
+            | 1 bits.(<<) 1
+        | ~else:
+            // result value count unknown
+            -1
+    let res = statinfo_meta.lookup(left, statinfo_meta.call_result_key)
+    let res :~ List = if res | statinfo_meta.unpack_call_result(res) | []
+    let res_info:
+      for any ([mask, res_info]: res):
+        (mask bits.and ret_mask) != 0 && res_info
+    let e = 'rkt . $(if one | 'compose1' | 'compose')($left, $right)'
+    let e:
+      if res_info
+      | statinfo_meta.wrap(e, '(($statinfo_meta.call_result_key,
+                                 $(statinfo_meta.pack(res_info))))')
+      | e
+    let e:
+      if right_arity
+      | statinfo_meta.wrap(e, '(($statinfo_meta.function_arity_key,
+                                 $right_arity))')
+      | e
+    e
+
+expr.macro '$left compose $right':
+  ~op_stx: self
+  parse_compose(self, left, right, #true)
+
+expr.macro '$left compose_values $right':
+  ~op_stx: self
+  parse_compose(self, left, right, #false)

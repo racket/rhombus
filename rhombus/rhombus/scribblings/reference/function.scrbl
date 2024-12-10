@@ -473,3 +473,130 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 )
 
 }
+
+
+@doc(
+  method (f :: Function).arity()
+    :: values(Int, List.of(Keyword), maybe(List.of(Keyword)))
+  method (f :: Function).reduce_arity(
+    by_pos_mask :: Int,
+    required_kws :: List.of(Keyword),
+    allowed_kws :: maybe(List.of(Keyword)),
+    ~name: name :: Symbol = Function.name(f),
+    ~realm: realm :: Symbol = #'rhombus
+  ) :: Function
+){
+
+ The @rhombus(Function.arity) method reports information about the
+ arguments that a function accepts:
+
+@itemlist(
+
+ @item{A bitwise @rhombus(by_pos_mask) for the number(s) of by-position
+  arguments that a function accepts. If the function accepts
+  @rhombus(n, ~var) arguments, then
+  @rhombus(by_pos_mask bits.and (1 bits.(<<) @rhombus(n, ~var))) is
+  non-zero.}
+
+ @item{A @rhombus(required_kws) list of keyword arguments that the
+  function requires, where the keywords are sorted by @rhombus(<).}
+
+ @item{An @rhombus(allowed_kws) as @rhombus(#false) if the function
+  accepts any keyword, or a list of keyword arguments that the function
+  accepts, including the required keywords, where the keywords are sorted
+  by @rhombus(<).}
+
+)
+
+ The @rhombus(Function.arity) method returns a function that is like
+ @rhombus(f), but with its allowed arguments more restricted. The given
+ @rhombus(by_pos_mask) must have only bits that are set of the mask of
+ @rhombus(f), the given @rhombus(required_kws) must contain at least the
+ keywords that @rhombus(f) requires and must contain a subset of the
+ keywords that @rhombus(f) accepts, and @rhombus(allowed_kws) must
+ contain a subset of the keywords that @rhombus(f) allows (so it can be
+ @rhombus(#false) only if @rhombus(f) accepts any keyword).
+
+@examples(
+  ~repl:
+    Function.arity(fun (x): 0)
+    Function.arity(fun | (x): 0 | (x, y): 1)
+    Function.arity(fun (x, ...): 0)
+    Function.arity(fun (x, ~y: y = 1): 0)
+    Function.arity(Function.arity)
+    Function.arity(fun (& args, ~& kws): 0)
+  ~repl:
+    def f = fun | (x): 0 | (x, y): 1
+    def g = Function.reduce_arity(f, 2, [], [])
+    g(1)
+    f(1, 2)
+    ~error:
+      g(1, 2)
+)
+
+}
+
+
+@doc(
+  method (f :: Function).name() :: Symbol
+  method (f :: Function).rename(
+    name :: Symbol,
+    ~realm: realm :: Symbol = #'rhombus
+  ) :: Function
+){
+
+ The @rhombus(Function.name) method reports a function's name, which is
+ used for printing the function. The @rhombus(Function.rename) method
+ returns a function that is like @rhombus(f), but with the given name. A
+ function's realm may affect how the function name is printed in
+ different contexts.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    pre_fun_expr: block expr
+    post_fun_expr: block expr
+  expr.macro '$post_fun_expr compose $pre_fun_expr'
+  expr.macro '$post_fun_expr ∘ $pre_fun_expr'
+  expr.macro '$post_fun_expr compose_values $pre_fun_expr'
+){
+
+ Produces a function that that composes the result functions of
+ @rhombus(pre_fun_expr) and @rhombus(post_fun_expr) so that
+
+@rhombusblock(
+  (post_fun_expr compose pre_fun_expr)(#,(@rhombus(arg, ~var)), ...)
+)
+
+ is the same as
+
+@rhombusblock(
+  post_fun_expr(pre_fun_expr(#,(@rhombus(arg, ~var)), ...))
+)
+
+ With the @rhombus(compose) operator or its alias @rhombus(∘),
+ @rhombus(pre_fun_expr) must produce a single result when called. With
+ @rhombus(compose), @rhombus(pre_fun_expr) can produce multiple values,
+ and the values are all delivered as arguments to
+ @rhombus(post_fun_expr).
+
+ In static mode (see @rhombus(use_static)) when using @rhombus(compose)
+ or @rhombus(∘), if @rhombus(post_fun_expr) with has a known arity, it
+ must accept a single argument. In all modes and including
+ @rhombus(compose_values), static information about the arity of
+ @rhombus(pre_fun_expr) is propagated the the operation's result, and
+ static information about the call result of @rhombus(post_fun_expr) is
+ propagated to the operation's result.
+
+@examples(
+  ~repl:
+    def nstr = to_string compose math.abs
+    nstr(-100)
+  ~repl:
+    def partition_to_list = List compose_values List.partition
+    partition_to_list([1, -2, -3, 4], (_ > 0))
+)
+
+}

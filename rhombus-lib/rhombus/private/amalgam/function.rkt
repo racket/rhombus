@@ -25,7 +25,12 @@
          "immediate-callee.rkt"
          "parse.rkt"
          "call-result-key.rkt"
+         "values-key.rkt"
+         "maybe-key.rkt"
          "function-arity-key.rkt"
+         (submod "list.rkt" for-compound-repetition)
+         (submod "arithmetic.rkt" static-infos)
+         (submod "symbol.rkt" for-static-info)
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          "dotted-sequence-parse.rkt"
@@ -70,7 +75,11 @@
   ()
   #:methods
   (map
-   for_each))
+   for_each
+   name
+   rename
+   arity
+   reduce_arity))
 
 (define (check-proc who proc)
   (unless (procedure? proc)
@@ -704,6 +713,47 @@
 (define-static-info-syntax Function.pass
   (#%function-arity (-1 () #f))
   . #,(get-function-static-infos))
+
+(define/method (Function.name p)
+  #:static-infos ((#%call-result ((#%maybe #,(get-symbol-static-infos)))))
+  (check-proc who p)
+  (object-name p))
+
+(define/method (Function.rename p name #:realm [realm rhombus-realm])
+  #:primitive (procedure-rename)
+  #:static-infos ((#%call-result #,(get-function-static-infos)))
+  (procedure-rename p name realm))
+
+(define/method (Function.arity p)
+  #:static-infos ((#%call-result ((#%values (#,(get-int-static-infos)
+                                             #,(get-treelist-static-infos)
+                                             ((#%maybe #,(get-treelist-static-infos))))))))
+  (check-proc who p)
+  (define-values (req-kws allow-kws) (procedure-keywords p))
+  (values (procedure-arity-mask p)
+          (list->treelist req-kws)
+          (and allow-kws (list->treelist allow-kws))))
+
+(define/method (Function.reduce_arity p
+                                      mask
+                                      req-kws
+                                      allow-kws
+                                      #:name [name (object-name p)]
+                                      #:realm [realm rhombus-realm])
+  #:primitive (procedure-reduce-keyword-arity-mask procedure-reduce-arity-mask)
+  #:static-infos ((#%call-result #,(get-function-static-infos)))
+  (check-proc who p)
+  (unless (exact-integer? mask) (raise-annotation-failure who mask "Int"))
+  (unless (and (treelist? req-kws) (for/and ([kw (in-treelist req-kws)]) (keyword? kw)))
+    (raise-annotation-failure who req-kws "List.of(Keyword)"))
+  (unless (or (not allow-kws) (and (treelist? allow-kws) (for/and ([kw (in-treelist allow-kws)]) (keyword? kw))))
+    (raise-annotation-failure who allow-kws "maybe(List.of(Keyword))"))
+  (procedure-reduce-keyword-arity-mask p
+                                       mask
+                                       (treelist->list req-kws)
+                                       (and allow-kws (treelist->list allow-kws))
+                                       name
+                                       realm))
 
 (begin-for-syntax
   (install-get-function-static-infos! get-function-static-infos))
