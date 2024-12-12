@@ -14,6 +14,7 @@
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
          "definition.rkt"
@@ -65,7 +66,7 @@
   #`(parsed #:rhombus/reducer #,stx))
 
 (define-for-syntax (extract-reducer form proc)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [b::reducer #'b.parsed]
@@ -109,7 +110,7 @@
                           proc)))))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (unpack-identifier who id-in [annot-str "Identifier"])

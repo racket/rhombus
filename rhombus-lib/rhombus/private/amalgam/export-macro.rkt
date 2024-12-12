@@ -7,6 +7,7 @@
                      "macro-result.rkt"
                      "tail-returner.rkt"
                      "name-root.rkt"
+                     "syntax-wrap.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-object.rkt" for-quasiquote)
                      (for-syntax racket/base))
@@ -45,7 +46,7 @@
     #:arity 2))
 
 (define-for-syntax (extract-modifier form proc req)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [(~var i (:export-modifier req)) #'i.parsed]
@@ -76,7 +77,7 @@
     AfterInfixParsed :infix-op+export+tail))
 
 (define-for-syntax (extract-export form proc)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [i::export #'i.parsed]

@@ -159,6 +159,96 @@ block:
     | '$(f :: Foo)': [f.x, ...]
     ~matches ['(1, 2, 3)', 'z']
 
+block:
+  syntax_class Foo
+  | '$a ... $b'
+
+  syntax_class Bar
+  | '($(f :: Foo))'
+
+  check:
+    match '(1 3)'
+    | '$(b :: Bar)': b.f
+    ~matches '1 3'
+
+  check:
+    match '(1 2 3)'
+    | '$(b :: Bar)': b.f.b
+    ~matches '3'
+
+  check:
+    match '(1 2 3)'
+    | '$(b :: Bar)': dynamic(b).f.b
+    ~matches '3'
+
+  check:
+    match '(1 2 3)'
+    | '$(b :: Bar)': dynamic(b.f).a
+    ~throws "field is a repetition"
+
+block:
+  syntax_class Foo:
+    root_swap: a group
+  | '$a $b'
+
+  syntax_class Bar
+  | '($(f :: Foo))'
+
+  check:
+    match '(1 3)'
+    | '$(b :: Bar)': b.f
+    ~matches '1'
+
+  check:
+    match '(1 3)'
+    | '$(b :: Bar)': b.f.b
+    ~matches '3'
+
+block:
+  syntax_class Foo:
+  | '$a $b; $c; ...'
+
+  syntax_class Bar
+  | '($(f :: Foo))'
+
+  check:
+    match '1 3'
+    | '$(f :: Foo)': (f).b
+    ~matches '3'
+
+  check:
+    match '1 3'
+    | '$(f :: Foo)': dynamic(f).b
+    ~matches '3'
+
+  check:
+    match '(1 3) (5 7)'
+    | '($(f :: Foo)) ...': [(f).b, ...]
+    ~matches ['3', '7']
+
+  check:
+    match '(1 3) (5 7)'
+    | '($(f :: Foo)) ...': [dynamic(f).b, ...]
+    ~matches ['3', '7']
+
+  check:
+    match '(1 3)'
+    | '$(r :: Bar)': ((r).f).b
+    ~matches '3'
+
+block:
+  syntax_class Foo:
+    kind: ~group
+  | '$a $b'
+
+  syntax_class Bar
+  | '($(f :: Foo))'
+
+  check:
+    match '(1 3)'
+    | '$(r :: Bar)': ((r).f).b
+    ~matches '3'
+
 // check that right-hand side of pattern
 // is in a more nested scope than pattern variables
 block:
@@ -438,7 +528,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~throws "field is a repetition"
+  ~throws "cannot use expression binding as a repetition"
 
 check:
   ~eval
@@ -447,7 +537,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~throws "field is a repetition"
+  ~throws "cannot use expression binding as a repetition"
 
 block:
   syntax_class NTerms
@@ -754,10 +844,6 @@ block:
     m(['8 1', '9 2 3'])
     ~matches ['1', '2']
 
-// The following two tests currently do not work due to how
-// repetitions are handled.  If these are to be fixed, the
-// corresponding `::` forms should also be fixed.
-#//
 block:
   fun m(stx):
     def [pattern match
@@ -772,7 +858,6 @@ block:
     m(['8 1', '9 2 3'])
     ~matches ['1', '2']
 
-#//
 block:
   fun m(stx):
     def [pattern match:
@@ -817,6 +902,76 @@ block:
     m(['8 1', '9 2 3'])
     ~matches ['1', '2']
 
+block:
+  use_static
+
+  syntax_class Foo
+  | '$a $b'
+
+  check:
+    match '1 4'
+    | '$(x :: Foo)': [(x).a, (x).b]
+    ~matches ['1', '4']
+
+block:
+  use_static
+
+  syntax_class Foo
+  | '$a ... $b'
+
+  check:
+    match '1 2 3 4'
+    | '$(x :: Foo)': [(x).a, ...]
+    ~matches ['1', '2', '3']
+
+  check:
+    match '(1 2 3 4) (5 6)'
+    | '($(x :: Foo)) ...': [[(x).a, ...], ...]
+    ~matches [['1', '2', '3'], ['5']]
+
+  fun help(x :: Syntax.matched_of(Foo)):
+    [[x.a, ...], x.b]
+
+  check:
+    match '1 2 3 4'
+    | '$(x :: Foo)': help(x)
+    ~matches [['1', '2', '3'], '4']
+
+check:
+  let (pattern match
+       | '9 $x $_'
+       | '8 $x'):
+    '8 1'
+  (match).x
+  ~matches '1'
+
+check:
+  match ['(8 1)', '(9 2 3)']
+  | ['($(pattern match
+         | '9 $x $_'
+         | '8 $x'))', ...]:
+      [match.x, ...]
+  ~matches ['1', '2']
+
+check:
+  match '(8 1)'
+  | '($(pattern match
+        | '9 $x $_'
+        | '8 $x'))':
+      (match).x
+  ~matches '1'
+
+block:
+  import rhombus/meta open
+  use_static
+  expr.macro 'boo $(e :: expr_meta.Parsed) $()':
+    fun help(s :: Syntax.matched_of(expr_meta.Parsed)):
+      s.group
+    '('$(help(e))')'
+  check:
+    boo 1 + 2
+    ~matches '1 + 2'
+
 // check interaction of macro introduction and pattern variables
 block:
   import rhombus/meta open
@@ -846,35 +1001,24 @@ block:
       matcher x
       ~matches '1'
 
-// field names are recognized symbolically
-// Is this the expected behavior?  I think it is.
-block:
+// field names are recognized symbolically, so  make
+// sure they're not ambigious
+check:
+  ~eval
   import rhombus/meta open
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern who | '$('$')x $('$')$ex'): who.x»'
-    matcher x
-    ~matches '2'
-  check:
-    expr.macro 'matcher $(ex :: Term)':
-      '«match '1 2'
-        | (pattern who | '$('$')x $('$')$ex'): who . $ex»'
-    matcher x
-    ~matches '2'
-  version_guard.at_least "8.10":
-    check:
-      expr.macro 'matcher $(ex :: Term)':
-        '«match '1 2'
-          | (pattern who | '$('$')$ex $('$')x'): who.x»'
-      matcher x
-      ~matches '2'
-    check:
-      expr.macro 'matcher $(ex :: Term)':
-        '«match '1 2'
-          | (pattern who | '$('$')$ex $('$')x'): who . $ex»'
-      matcher x
-      ~matches '2'
+  expr.macro 'matcher $(ex :: Term)':
+    '«match '1 2'
+      | (pattern who | '$('$')x $('$')$ex'): who.x»'
+  matcher x
+  ~throws "field name is ambiguous"
+
+check:
+  import rhombus/meta open
+  expr.macro 'matcher $(ex :: Term)':
+    '«match '1 2'
+      | (pattern who | '$('$')x $('$')$ex'): dynamic(who).x»'
+  matcher x
+  ~throws "field name is ambiguous"
 
 // check (not) `open`ing named `pattern`s
 check:
@@ -1043,6 +1187,12 @@ check:
   | '$first $second'
   ~throws "field for root already exists"
 
+check:
+  ~eval
+  syntax_class C:
+    root_swap: first other
+  | '$first ... $second'
+  ~throws "field for root cannot be a repetition"
 
 check:
   syntax_class.together:

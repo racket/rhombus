@@ -8,7 +8,8 @@
                      "introducer.rkt"
                      "expression-space.rkt"
                      (for-syntax racket/base)
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "syntax-wrap.rkt")
          (only-in "definition.rkt"
                   in-defn-space
                   definition-transformer-ref
@@ -81,8 +82,8 @@
     id)
 
   (define (check-expression-result form proc)
-    (unless (syntax? form) (raise-bad-macro-result (proc-name proc) "expression" form))
-    form)
+    (unless (syntax*? form) (raise-bad-macro-result (proc-name proc) "expression" form))
+    (syntax-unwrap form))
 
   (define-syntax (expr-quote stx)
     (syntax-case stx ()

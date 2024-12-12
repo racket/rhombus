@@ -14,6 +14,7 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      (submod "symbol.rkt" for-static-info)
                      "call-result-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          "space-provide.rkt"
          "entry-point.rkt"
@@ -52,7 +53,7 @@
     Shape :entry-point-shape #:rhombus/entry_point_shape))
 
 (define-for-syntax (extract-entry-point form proc adjustments)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [(~var ep (:entry-point adjustments)) #'ep.parsed]

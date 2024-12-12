@@ -24,7 +24,8 @@
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
          "tag.rkt" ; for use in `~parse`
-         "sequence-pattern.rkt")
+         "sequence-pattern.rkt"
+         "syntax-wrap.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -181,8 +182,8 @@
       [((~and tag (~or* parens brackets braces quotes multi block alts group))
         g ...)
        (let loop ([gs #'(g ...)] [pend-idrs #f] [pend-sidrs #f] [pend-vars #f]
-                                 [idrs '()]  ; list of #`[#,id #,rhs] for definitions
-                                 [sidrs '()] ; list of #`[(#,id ...) #,rhs] for syntax definitions
+                                 [idrs '()]  ; list of #`[#,id #,rhs #,statinfo ...] for definitions
+                                 [sidrs '()] ; list of #`[(#,id ...) #,rhs #,statinfo ...] for syntax definitions
                                  [vars '()]  ; list of `[,id . ,depth] for visible subset of `idrs` and `sidrs`
                                  [ps '()] [can-be-empty? #t] [pend-is-splice? #f] [tail #f]
                                  [needs-group-check? #f]
@@ -513,9 +514,13 @@
                     (for/list ([idr (in-list idrs)])
                       (syntax-parse idr
                         #:literals (pack-nothing*)
+                        #:datum-literals (maybe-syntax-wrap)
                         [(id (pack-nothing* _ _)) idr]
+                        [(id (maybe-syntax-wrap (pack-nothing* _ _) . _)) idr]
                         [(id (pack (_ stx) depth))
-                         #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))])))
+                         #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]
+                        [(id ((~and msw maybe-syntax-wrap) (pack (_ stx) depth) . msw-tail))
+                         #`(id (msw (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))) . msw-tail))])))
                   ;; deepen-syntax-escape
                   (lambda (sidr)
                     (deepen-pattern-variable-bind sidr))
@@ -529,9 +534,8 @@
                              [temp-id (car (generate-temporaries (list e)))])
                          (values temp0-id
                                  (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
-                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*)
-                                                                   1 '()))
-                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
+                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
+                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))]))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
                     (syntax-parse e
@@ -542,9 +546,8 @@
                              [temp-id (car (generate-temporaries (list e)))])
                          (values temp0-id
                                  (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
-                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*)
-                                                                   1 null))
-                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*)))))]))
+                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*) 1))
+                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*) 'stx))))]))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
@@ -1030,8 +1033,8 @@
 
 (define-for-syntax ((convert-pattern/generate-match repack-id) e)
   (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern e))
-  (with-syntax ([((id id-ref) ...) idrs]
-                [(((sid ...) sid-ref) ...) sidrs])
+  (with-syntax ([((id id-ref id-statinfo ...) ...) idrs]
+                [(((sid ...) sid-ref sid-statinfo ...) ...) sidrs])
     (binding-form
      #'syntax-infoer
      #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
@@ -1039,8 +1042,10 @@
         #,repack-id
         (id ...)
         (id-ref ...)
+        ((id-statinfo ...) ...)
         ((sid ...) ...)
-        (sid-ref ...)))))
+        (sid-ref ...)
+        ((sid-statinfo ...) ...)))))
 
 (define-syntax #%quotes
   (expression-prefix-operator
@@ -1073,6 +1078,8 @@
                                             ()
                                             ()
                                             ()
+                                            ()
+                                            ()
                                             ())))))))
 
 (define-repetition-syntax #%quotes
@@ -1093,10 +1100,14 @@
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (annotation-str pattern repack (id ...) id-refs (sids ...) sid-refs))
+    [(_ static-infos (annotation-str pattern repack
+                                     (id ...) id-refs (id-statinfos ...)
+                                     (sids ...) sid-refs (sid-statinfos ...)))
      (define (make-sequencers depth) (for/list ([i (in-range (syntax-e depth))]) #'in-list))
      (with-syntax ([(id-sequencers ...) (for/list ([id-ref (in-list (syntax->list #'id-refs))])
                                           (syntax-parse id-ref
+                                            #:datum-literals (maybe-syntax-wrap)
+                                            [(maybe-syntax-wrap (pack _ depth) . _) (make-sequencers #'depth)]
                                             [(pack _ depth) (make-sequencers #'depth)]))]
                    [((sid sid-sequencers) ...)
                     (for/list ([sids (in-list (syntax->list #'(sids ...)))]
@@ -1108,7 +1119,10 @@
        (binding-info #'annotation-str
                      #'syntax
                      #'()
-                     #'((id ((#:repet id-sequencers))) ... (sid ((#:repet sid-sequencers))) ...)
+                     #'((id ((#:repet id-sequencers)) . id-statinfos)
+                        ...
+                        (sid ((#:repet sid-sequencers)) . sid-statinfos)
+                        ...)
                      #'syntax-matcher
                      #'tmp-ids
                      #'syntax-committer
@@ -1117,13 +1131,19 @@
 
 (define-syntax (syntax-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...)) IF success fail)
-     #'(IF (syntax? arg-id)
+    [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...))
+        IF success fail)
+     #'(IF (syntax*? arg-id)
            (begin
              (define-values (match? tmp-id ...)
                (syntax-parse (repack arg-id)
                  #:disable-colon-notation
-                 [pattern (values #t id-ref ...)]
+                 [pattern
+                  ;; use `let*` to allow a syntax-class synatx-wrap construction
+                  ;; to refer to fields, which are placed earlier
+                  (let* ([id id-ref]
+                         ...)
+                    (values #t id ...))]
                  [_ (values #f 'id ...)]))
              (IF match?
                  success

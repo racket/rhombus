@@ -17,7 +17,8 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "srcloc.rkt"
                      "treelist.rkt"
-                     "context-stx.rkt")
+                     "context-stx.rkt"
+                     "syntax-wrap.rkt")
          "space.rkt"
          "is-static.rkt"
          "static-info.rkt"
@@ -151,13 +152,13 @@
     (cond
       [(eq? form unsafe-undefined)
        (define form form/msg)
-       (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
-       (raise-syntax-error who-in "bad syntax" (maybe-respan form))]
+       (unless (syntax*? form) (raise-annotation-failure who form "Syntax"))
+       (raise-syntax-error who-in "bad syntax" (maybe-respan (syntax-unwrap form)))]
       [(eq? detail unsafe-undefined)
        (define msg form/msg)
        (unless (string? msg) (raise-annotation-failure who msg "ReadableString"))
-       (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
-       (raise-syntax-error who-in msg (maybe-respan form))]
+       (unless (syntax*? form) (raise-annotation-failure who form "Syntax"))
+       (raise-syntax-error who-in msg (maybe-respan (syntax-unwrap form)))]
       [else
        (define msg form/msg)
        (unless (string? msg) (raise-annotation-failure who msg "ReadableString"))
@@ -167,10 +168,10 @@
                                            [(treelist? detail)
                                             (define l (treelist->list detail))
                                             (for ([i (in-list l)])
-                                              (unless (syntax? i) (bad-detail)))
-                                            l]
-                                           [(syntax? detail)
-                                            (list detail)]
+                                              (unless (syntax*? i) (bad-detail)))
+                                            (map syntax-unwrap l)]
+                                           [(syntax*? detail)
+                                            (list (syntax-unwrap detail))]
                                            [else (bad-detail)])))
        (if (pair? details)
            (raise-syntax-error who-in msg
@@ -182,7 +183,8 @@
 
   (define/arity (syntax_meta.flip_introduce stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (syntax-local-introduce stx))
+    (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
+    (syntax-local-introduce (syntax-unwrap stx)))
 
   (define/arity (syntax_meta.is_static ctx-stx)
     (define ctx (extract-ctx who ctx-stx))

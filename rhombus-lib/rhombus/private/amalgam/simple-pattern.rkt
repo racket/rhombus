@@ -45,11 +45,13 @@
   (syntax-parse tail-pattern
     [() null]
     [(_ name _)
-     (list
-      #`(define-syntaxes . #,(make-pattern-variable-bind #'name tail #'unpack-tail-list* 1 '())))]
+     (with-syntax ([(ids rhs . _) (make-pattern-variable-bind #'name tail #'unpack-tail-list* 1)])
+       (list
+        #`(define-syntaxes ids rhs)))]
     [(_ name _ _)
-     (list
-      #`(define-syntaxes . #,(make-pattern-variable-bind #'name tail #'unpack-tail* 0 '())))]))
+     (with-syntax ([(ids rhs . _) (make-pattern-variable-bind #'name tail #'unpack-tail* 0)])
+       (list
+        #`(define-syntaxes ids rhs)))]))
 
 ;; add tail or not for an `enforest`-based simple pattern
 (define-for-syntax (maybe-return-tail expr tail-pattern tail)

@@ -21,8 +21,10 @@
          "parse.rkt"
          "pack.rkt"
          "parens.rkt"
+         (only-in "static-info.rkt" static-infos-intersect)
          (rename-in "ellipsis.rkt"
-                    [... rhombus...]))
+                    [... rhombus...])
+         "syntax-wrap.rkt")
 
 (provide (for-spaces (rhombus/defn
                       rhombus/namespace)
@@ -40,7 +42,7 @@
     [(form-id class-name args::class-args
               (_::alts alt ...))
      (build-syntax-class stx (syntax->list #'(alt ...)) null
-                         #:define-class-id #'define-syntax
+                         #:define-class? #t
                          #:class/inline-name #'class-name
                          #:class-formals #'args.formals
                          #:class-arity #'args.arity
@@ -57,7 +59,7 @@
                         (and (attribute alt)
                              (syntax->list #'(alt ...)))))
      (build-syntax-class stx pattern-alts parsed-clauses
-                         #:define-class-id #'define-syntax
+                         #:define-class? #t
                          #:class/inline-name #'class-name
                          #:class-formals #'args.formals
                          #:class-arity #'args.arity
@@ -130,12 +132,12 @@
                          #:expected-kind expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
 
-;; returns a `rhombus-syntax-class` if `define-syntax-id` is #f, otherwise
+;; returns a `rhombus-syntax-class` if `define-syntaxed-id` is #f, otherwise
 ;; returns a list of definitions
 (define-for-syntax (build-syntax-class stx
                                        alts
                                        track-stxes
-                                       #:define-class-id [define-syntax-id #f]
+                                       #:define-class? [define-class? #f]
                                        #:class/inline-name [class/inline-name #f]
                                        #:class-formals [class-formals #'#f]
                                        #:class-arity [class-arity #'#f]
@@ -177,7 +179,8 @@
                                         (or (syntax-e (declared-field-depth df)) 0)
                                         (if (syntax-e (declared-field-unpack*-id df))
                                             (declared-field-unpack*-id df)
-                                            (quote-syntax unpack-term*))))]))
+                                            (quote-syntax unpack-term*))
+                                        #'()))]))
           (values #`((#:delayed-patterns #,stx #,alts #,fields-ht
                       #,(map (lambda (pv)
                                (list (pattern-variable-sym pv)
@@ -188,10 +191,10 @@
                   (list attrs))]
          [else
           (for/lists (patterns attributess) ([alt-stx (in-list alts)])
-            (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id)))]))
+            (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-class?)))]))
      (define attributes (intersect-attributes stx attributess fields-ht swap-root))
      (cond
-       [(not define-syntax-id)
+       [(not define-class?)
         ;; return a `rhombus-syntax-class` directly
         (rhombus-syntax-class kind
                               (syntax-class-body->inline patterns class/inline-name)
@@ -200,7 +203,10 @@
                               (syntax->datum class-arity)
                               (and swap-root
                                    (cons (syntax-e (car swap-root)) (cdr swap-root)))
-                              #f)]
+                              #f
+                              (if (null? attributes)
+                                  #f
+                                  (gensym (if class/inline-name (syntax-e class/inline-name) 'sc-dot))))]
        [else
         (define class-name class/inline-name)
         (define internal-class-name ((make-syntax-introducer) class-name))
@@ -213,15 +219,18 @@
         (list
          ;; return a list of definitions
          (track-all
-          #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-             (rhombus-syntax-class '#,kind
-                                   (quote-syntax #,internal-class-name)
-                                   (quote-syntax #,(for/list ([var (in-list attributes)])
-                                                     (pattern-variable->list var #:keep-id? #f)))
-                                   #,splicing?
-                                   '#,class-arity
-                                   '#,swap-root
-                                   #f)))
+          #`(define-syntax #,(in-syntax-class-space class-name)
+              (rhombus-syntax-class '#,kind
+                                    (quote-syntax #,internal-class-name)
+                                    (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                      (pattern-variable->list var #:keep-id? #f)))
+                                    #,splicing?
+                                    '#,class-arity
+                                    '#,swap-root
+                                    #f
+                                    #,(if (null? attributes)
+                                          #f
+                                          #`(gensym '#,class-name)))))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)
@@ -353,8 +362,8 @@
                      in-quotes))
 
   (define (bindings->defns idrs sidrs)
-    (with-syntax ([([val-id val-rhs] ...) idrs]
-                  [([(stx-id ...) stx-rhs] ...) sidrs])
+    (with-syntax ([([val-id val-rhs . _] ...) idrs]
+                  [([(stx-id ...) stx-rhs . _] ...) sidrs])
       #'[(define val-id val-rhs)
          ...
          (define-syntaxes (stx-id ...) stx-rhs)
@@ -390,14 +399,14 @@
                                            (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])
                                              (and id (list id))))
                                       (generate-temporaries #'(id)))
-                  #:with (pat-ids pat-rhs) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
-                                                                       (syntax-e #'depth) null)
+                  #:with (pat-ids pat-rhs . pat-statinfos) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
+                                                                                       (syntax-e #'depth))
                   (loop (cdr body)
                         null
                         (list* #'[(define tmp-id rhs)
                                   (define-syntaxes pat-ids pat-rhs)] '#:do
                                (accum-do))
-                        (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*))
+                        (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*) #'pat-statinfos)
                               rev-attrs))]
                  [(#:also (_ pat-g ...) rhs)
                   (define-values (p idrs sidrs vars can-be-empty?)
@@ -428,7 +437,7 @@
                                                      (pattern-variable-sym var)))
                                   (pattern-variable-sym var))
                             #,(pattern-variable-depth var)]
-                           (#,(pattern-variable-unpack* var)
+                           (#,(keep-syntax-wrap (pattern-variable-unpack* var))
                             (quote-syntax dots)
                             #,(pattern-variable-val-id var)
                             #,(pattern-variable-depth var))))
@@ -517,7 +526,8 @@
            ht))
      ;; check swap root
      (when swap-root
-       (unless (hash-ref filtered-ht (syntax-e (car swap-root)) #f)
+       (define var (hash-ref filtered-ht (syntax-e (car swap-root)) #f))
+       (unless var
          (raise-syntax-error #f
                              "field to swap as root not found"
                              stx
@@ -526,7 +536,12 @@
          (raise-syntax-error #f
                              "field for root already exists"
                              stx
-                             (cdr swap-root))))
+                             (cdr swap-root)))
+       (unless (= 0 (pattern-variable-depth var))
+         (raise-syntax-error #f
+                             "field for root cannot be a repetition"
+                             stx
+                             (car swap-root))))
      ;; convert back to list
      (hash-values filtered-ht #t)]))
 
@@ -536,10 +551,22 @@
                         "field with different depths in different cases"
                         stx
                         (pattern-variable-sym a)))
-  ;; keeping the same unpack, if possible, enables optimizations for
-  ;; tail repetitions; otherwise, the term is sufficiently normalized
-  ;; by matching that we can just use `unpack-element*`
-  (if (free-identifier=? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
-      a
-      (struct-copy pattern-variable a
-                   [unpack* #'unpack-element*])))
+  (struct-copy pattern-variable a
+               [unpack*
+                ;; keeping the same unpack, if possible, enables optimizations for
+                ;; tail repetitions; otherwise, the term is sufficiently normalized
+                ;; by matching that we can just use `unpack-element*`
+                (if (free-identifier=? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
+                    (pattern-variable-unpack* a)
+                    #'unpack-element*)]
+               [statinfos (static-infos-intersect (normalize-pvar-statinfos (pattern-variable-statinfos a))
+                                                  (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
+
+;; When packing to communicate a match as a syntax-class attribute,
+;; we don't want to discard syntax wraps, because those wraps are
+;; useful when a syntax-class field itself is from a syntax class
+(define-for-syntax (keep-syntax-wrap unpack*)
+  (case (syntax-e unpack*)
+    [(unpack-term* unpack-multi-as-term* unpack-group*)
+     (quote-syntax unpack-element*)]
+    [else unpack*]))

@@ -19,7 +19,8 @@
                      "call-result-key.rkt"
                      (for-syntax racket/base)
                      (only-in (submod "list.rkt" for-listable)
-                              get-treelist-static-infos))
+                              get-treelist-static-infos)
+                     "syntax-wrap.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root-ref.rkt"
@@ -120,7 +121,7 @@
               (make-key (~@ kw (rhombus-body-expression clause-block)) ...)))]))))
 
 (define-for-syntax (convert-static-info who stx)
-  (unless (syntax? stx)
+  (unless (syntax*? stx)
     (raise-bad-macro-result who "static info" stx))
   (define si (syntax->list (pack who stx)))
   (static-info (lambda () si)))
@@ -134,7 +135,7 @@
   (pack-static-infos who (unpack-term stx who #f)))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (unpack-identifier who id-in)
@@ -210,7 +211,7 @@
                    (and (treelist? r)
                         (= 2 (treelist-length r))
                         (exact-integer? (treelist-ref r 0))
-                        (syntax? (treelist-ref r 1)))))
+                        (syntax*? (treelist-ref r 1)))))
       (raise-annotation-failure who
                                 infos
                                 "matching([[_ :: Int, _ :: Syntax], ...])"))
@@ -229,7 +230,7 @@
   (define/arity (statinfo_meta.unpack_call_result stx)
     #:static-infos ((#%call-result #,(get-treelist-static-infos)))
     (check-syntax who stx)
-    (syntax-parse stx
+    (syntax-parse (syntax-unwrap stx)
       [(#:at_arities rs)
        (for/treelist ([r (in-list (syntax->list #'rs))])
          (syntax-parse r
@@ -250,7 +251,7 @@
                  (for/and ([e (in-treelist kws)])
                    (keyword? e)))
       (raise-annotation-failure who kws "List.of(Keyword)"))
-    (define a (syntax->datum stx))
+    (define a (syntax->datum (syntax-unwrap stx)))
     (unless (or (exact-integer? a)
                 (and (list? a)
                      (= (length a))
@@ -267,20 +268,20 @@
     (check-syntax who form)
     (check-syntax who info)
     (define e
-      (wrap-static-info* (wrap-expression form) (pack who info)))
+      (wrap-static-info* (wrap-expression (syntax-unwrap form)) (pack who info)))
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 
   (define/arity (statinfo_meta.lookup form key-in)
     #:static-infos ((#%call-result ((#%maybe #,(get-syntax-static-infos)))))
     (check-syntax who form)
     (define key (unpack-identifier who key-in))
-    (define si (extract-expr-static-infos who form))
+    (define si (extract-expr-static-infos who (syntax-unwrap form)))
     (and si (static-info-lookup si key)))
 
   (define/arity (statinfo_meta.gather form)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who form)
-    (define si (extract-expr-static-infos who form))
+    (define si (extract-expr-static-infos who (syntax-unwrap form)))
     (unpack-static-infos who (or si #'())))
 
   (define/arity (statinfo_meta.replace form statinfos)
@@ -288,7 +289,7 @@
     (check-syntax who form)
     (check-syntax who statinfos)
     (define e
-      (wrap-static-info* (discard-static-infos (wrap-expression form))
+      (wrap-static-info* (discard-static-infos (wrap-expression (syntax-unwrap form)))
                          (pack-static-infos who statinfos)))
     (pack-term (relocate+reraw e #`(parsed #:rhombus/expr #,e))))
 

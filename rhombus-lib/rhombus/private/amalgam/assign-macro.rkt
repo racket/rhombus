@@ -14,6 +14,7 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "values-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          "name-root.rkt"
          "macro-macro.rkt"
@@ -45,7 +46,7 @@
   #'#f)
 
 (define-for-syntax (extract-assignment form proc)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     #:datum-literals (parsed group assignment left-hand-side)
@@ -98,7 +99,7 @@
          form))))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
@@ -146,7 +147,7 @@
      #':assign-parsed
      #:arity 8
      #:kind 'group
-     #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr))
-                 (tail #f tail tail unpack-tail-list*))
+     #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr) stx)
+                 (tail #f tail tail unpack-tail-list* stx))
      #:root-swap '(parsed . group)))
   )

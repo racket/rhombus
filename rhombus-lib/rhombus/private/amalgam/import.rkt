@@ -16,6 +16,7 @@
                      "tag.rkt"
                      "id-binding.rkt"
                      "operator-parse.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "name-root.rkt"
@@ -132,7 +133,7 @@
     #:desc "import modifier"
     #:parsed-tag #:rhombus/impo
     #:in-space in-import-space
-    #:transformer-ref (make-import-modifier-ref (syntax-parse parsed-req
+    #:transformer-ref (make-import-modifier-ref (syntax-parse (syntax-unwrap parsed-req)
                                                   #:datum-literals (parsed)
                                                   [(parsed #:rhombus/impo req) #'req]
                                                   [_ (raise-arguments-error

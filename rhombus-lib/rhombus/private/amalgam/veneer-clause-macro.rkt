@@ -4,7 +4,8 @@
                      enforest/proc-name
                      "pack.rkt"
                      "macro-result.rkt"
-                     (submod "veneer-meta.rkt" for-static-info))
+                     (submod "veneer-meta.rkt" for-static-info)
+                     "syntax-wrap.rkt")
          "space-provide.rkt"
          "veneer-clause.rkt"
          "macro-macro.rkt")
@@ -23,6 +24,6 @@
    (lambda (stx data)
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head data)]))
-     (unless (syntax? defns)
+     (unless (syntax*? defns)
        (raise-bad-macro-result (proc-name proc) "`veneer` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))

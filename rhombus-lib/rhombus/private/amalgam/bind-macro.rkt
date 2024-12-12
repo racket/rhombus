@@ -22,6 +22,7 @@
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
          (only-in "space.rkt" space-syntax)
@@ -88,18 +89,18 @@
   (define-syntax-class-syntax Argument
     (make-syntax-class #':rhombus-kw-opt-binding
                        #:kind 'group
-                       #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/bind))
-                                   (maybe_keyword #f maybe_keyword 0 unpack-maybe-term*)
-                                   (maybe_expr #f maybe_expr 0 unpack-maybe-group*))))
+                       #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/bind) stx)
+                                   (maybe_keyword #f maybe_keyword 0 unpack-maybe-term* stx)
+                                   (maybe_expr #f maybe_expr 0 unpack-maybe-group* stx))))
 
   (define-syntax-class-syntax Result
     (make-syntax-class #':rhombus-ret-annotation
                        #:kind 'term
                        #:splicing? #t
-                       #:fields #'((count #f count 0 unpack-element*)
-                                   (maybe_converter #f maybe_converter 0 unpack-term*)
-                                   (static_info #f static_info 0 unpack-term*)
-                                   (annotation_string #f annotation_string 0 unpack-element*))))
+                       #:fields #'((count #f count 0 unpack-element* stx)
+                                   (maybe_converter #f maybe_converter 0 unpack-term* stx)
+                                   (static_info #f static_info 0 unpack-term* stx)
+                                   (annotation_string #f annotation_string 0 unpack-element* stx))))
 
   (define-syntax-class :unpacked-evidence-id-tree
     #:attributes (packed)
@@ -113,7 +114,7 @@
   (space-syntax rhombus/bind))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax
@@ -219,9 +220,9 @@
           (define-values (converted-info-pattern info-idrs info-sidrs info-vars info-can-be-empty?) (convert-pattern #'info-pattern))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((info-id info-id-ref) ...) info-idrs]
-                        [(((info-sid ...) info-sid-ref) ...) info-sidrs]
+                        [(((info-sid ...) info-sid-ref . _) ...) info-sidrs]
                         [((data-id data-id-ref) ...) data-idrs]
-                        [(((data-sid ...) data-sid-ref) ...) data-sidrs])
+                        [(((data-sid ...) data-sid-ref . _ ) ...) data-sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ info data)
@@ -229,9 +230,9 @@
                      [#,converted-info-pattern
                       (syntax-parse #'(group data)
                         [#,converted-data-pattern
-                         (let ([arg-id #'arg-id]
-                               [info-id info-id-ref] ...
-                               [data-id data-id-ref] ...)
+                         (let* ([arg-id #'arg-id]
+                                [info-id info-id-ref] ...
+                                [data-id data-id-ref] ...)
                            (let-syntaxes ([(info-sid ...) info-sid-ref]
                                           ...
                                           [(data-sid ...) data-sid-ref]
@@ -265,14 +266,14 @@
                                                 (group _::$-bind fail-id:identifier))))
                    (block-tag::block body ...))
           (define-values (converted-pattern idrs sidrs vars can-be-empty?) (convert-pattern #'data-pattern))
-          (with-syntax ([((id id-ref) ...) idrs]
-                        [(((sid ...) sid-ref) ...) sidrs])
+          (with-syntax ([((id id-ref . _) ...) idrs]
+                        [(((sid ...) sid-ref . _) ...) sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ arg-id data IF success fail)
                    (syntax-parse #'(group data)
                      [#,converted-pattern
-                      (let ([id id-ref] ... [arg-id #'arg-id])
+                      (let* ([id id-ref] ... [arg-id #'arg-id])
                         (let-syntaxes ([(sid ...) sid-ref] ...)
                           (let ([IF-id #'if-bridge])
                             (let ([success-id #'(parsed #:rhombus/expr (maybe-definition success))]
@@ -489,8 +490,8 @@
                    (block-tag::block body ...))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?)
             (convert-pattern #'pat))
-          (with-syntax ([((data-id data-id-ref) ...) data-idrs]
-                        [(((data-sid ...) data-sid-ref) ...) data-sidrs])
+          (with-syntax ([((data-id data-id-ref . _) ...) data-idrs]
+                        [(((data-sid ...) data-sid-ref . _) ...) data-sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ arg-id evidence-tree data)
@@ -499,7 +500,7 @@
                                        (unpack-evidence-tree #'evidence-tree)
                                        (list 'group #'data))
                      [#,converted-data-pattern
-                      (let ([data-id data-id-ref] ...)
+                      (let* ([data-id data-id-ref] ...)
                         (let-syntaxes ([(data-sid ...) data-sid-ref] ...)
                           (unwrap-block
                            (rhombus-body-at block-tag body ...))))])])))])])))
@@ -511,7 +512,7 @@
   #`(parsed #:rhombus/bind #,stx))
 
 (define-for-syntax (extract-binding form proc)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [b::binding #'b.parsed]

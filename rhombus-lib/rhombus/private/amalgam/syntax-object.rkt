@@ -28,6 +28,7 @@
          (submod "string.rkt" static-infos)
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
+         "syntax-wrap.rkt"
          "context-stx.rkt"
          "static-info.rkt"
          (submod "key-comp-macro.rkt" for-key-comp))
@@ -46,11 +47,17 @@
                      IdentifierName))
 
 (module+ for-builtin
-  (provide syntax-method-table))
+  (provide syntax-method-table
+           syntax-field-table))
 
 (module+ for-quasiquote
   (provide (for-syntax get-syntax-static-infos
-                       get-treelist-of-syntax-static-infos)))
+                       get-treelist-of-syntax-static-infos
+                       get-syntax-instances
+                       set-parse-syntax-of-annotation!)))
+
+;; Shadow normal `syntax?`
+(define syntax? syntax*?)
 
 (define-primitive-class Syntax syntax
   #:lift-declaration
@@ -68,7 +75,8 @@
    [make_sequence Syntax.make_sequence]
    [make_id Syntax.make_id]
    [make_temp_id Syntax.make_temp_id]
-   [relocate_split Syntax.relocate_split])
+   [relocate_split Syntax.relocate_split]
+   [matched_of Syntax.matched_of])
   #:properties
   ()
   #:methods
@@ -100,13 +108,13 @@
 (define-annotation-syntax Identifier
   (identifier-annotation is-identifier? #,(get-syntax-static-infos)))
 (define (is-identifier? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (identifier? (unpack-term s #f #f))))
 
 (define-annotation-syntax Operator
   (identifier-annotation is-operator? #,(get-syntax-static-infos)))
 (define (is-operator? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (let ([t (unpack-term s #f #f)])
          (syntax-parse t
            #:datum-literals (op)
@@ -116,7 +124,7 @@
 (define-annotation-syntax Name
   (identifier-annotation syntax-name? #,(get-syntax-static-infos)))
 (define (syntax-name? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (let ([t (unpack-term s #f #f)])
          (or (identifier? t)
              (if t
@@ -134,7 +142,7 @@
 (define-annotation-syntax IdentifierName
   (identifier-annotation syntax-identifier-name? #,(get-syntax-static-infos)))
 (define (syntax-identifier-name? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (let ([t (unpack-term s #f #f)])
          (or (identifier? t)
              (and (not t)
@@ -148,33 +156,44 @@
 (define-annotation-syntax Term
   (identifier-annotation syntax-term? #,(get-syntax-static-infos)))
 (define (syntax-term? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (unpack-term s #f #f)
        #t))
 
 (define-annotation-syntax Group
   (identifier-annotation syntax-group? #,(get-syntax-static-infos)))
 (define (syntax-group? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (unpack-group s #f #f)
        #t))
 
 (define-annotation-syntax TermSequence
   (identifier-annotation syntax-sequence? #,(get-syntax-static-infos)))
 (define (syntax-sequence? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (unpack-group-or-empty s #f #f)
        #t))
 
 (define-annotation-syntax Block
   (identifier-annotation syntax-block? #,(get-syntax-static-infos)))
 (define (syntax-block? s)
-  (and (syntax? s)
+  (and (syntax*? s)
        (syntax-parse (unpack-term s #f #f)
          #:datum-literals (block)
          [(block . _) #t]
          [_ #f])
        #t))
+
+(define-annotation-syntax Syntax.matched_of
+  (annotation-prefix-operator
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parse-syntax-of-annotation stx))))
+
+(begin-for-syntax
+  (define parse-syntax-of-annotation #f)
+  (define (set-parse-syntax-of-annotation! proc) (set! parse-syntax-of-annotation proc)))
 
 (define-for-syntax (add-span-and-syntax-static-info orig-stx e)
   (syntax-parse orig-stx
@@ -212,7 +231,7 @@
 (define (starts-alts? ds)
   (and (pair? ds)
        (let ([a (car ds)])
-         (define e/l (if (syntax? a)
+         (define e/l (if (syntax*? a)
                          (let ([t (unpack-term a #f #f)])
                            (and t (syntax-e t)))
                          a))
@@ -222,7 +241,7 @@
          (cond
            [(pair? e)
             (define head-stx (car e))
-            (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+            (define head (if (syntax*? head-stx) (syntax-e (syntax-unwrap head-stx)) head-stx))
             (case head
               [(alts) #t]
               [else #f])]
@@ -248,7 +267,7 @@
       [(and (pair? e)
             (list? e))
        (define head-stx (car e))
-       (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+       (define head (if (syntax*? head-stx) (syntax-e (syntax-unwrap head-stx)) head-stx))
        (if (eq? head 'group)
            (cons head-stx
                  (let l-loop ([es (cdr e)])
@@ -262,7 +281,7 @@
                             (l-loop ds))])))
            (invalid))]
       [(to-list #f e) => group]
-      [(syntax? e)
+      [(syntax*? e)
        (or (unpack-group e #f #f)
            (invalid))]
       [else (invalid)]))
@@ -271,7 +290,7 @@
       [(null? v) (invalid)]
       [(list? v)
        (define head-stx (car v))
-       (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+       (define head (if (syntax*? head-stx) (syntax-e (syntax-unwrap head-stx)) head-stx))
        (case head
          [(parens brackets braces quotes)
           (cons head-stx (group-loop (cdr v)))]
@@ -288,12 +307,12 @@
                           [(and (pair? e)
                                 (list? e))
                            (define head-stx (car e))
-                           (define head (if (syntax? head-stx) (syntax-e head-stx) head-stx))
+                           (define head (if (syntax*? head-stx) (syntax-e (syntax-unwrap head-stx)) head-stx))
                            (if (eq? head 'block)
                                (loop e #f #t)
                                (invalid))]
                           [(to-list #f e) => tail-loop]
-                          [(syntax? e)
+                          [(syntax*? e)
                            (define u (unpack-term e #f #f))
                            (define d (and u (syntax-e u)))
                            (or (and d
@@ -313,21 +332,22 @@
          [else (invalid)])]
       [(pair? v) (invalid)]
       [(to-list #f v) => (lambda (v) (loop v pre-alt? tail?))]
-      [(syntax? v) (let ([t (unpack-term v #f #f)])
-                     (cond
-                       [t
-                        (define e (syntax-e t))
-                        (cond
-                          [(pair? e)
-                           (define head-stx (car e))
-                           (define head (syntax-e head-stx))
-                           (case head
-                             [(block)
-                              (unless (or pre-alt? tail?) (invalid))]
-                             [(alts)
-                              (unless tail? (invalid))])])
-                        t]
-                       [else (invalid)]))]
+      [(syntax-wrap? v) (loop (syntax-unwrap v) pre-alt? tail?)]
+      [(syntax*? v) (let ([t (unpack-term v #f #f)])
+                      (cond
+                        [t
+                         (define e (syntax-e t))
+                         (cond
+                           [(pair? e)
+                            (define head-stx (car e))
+                            (define head (syntax-e head-stx))
+                            (case head
+                              [(block)
+                               (unless (or pre-alt? tail?) (invalid))]
+                              [(alts)
+                               (unless tail? (invalid))])])
+                         t]
+                        [else (invalid)]))]
       [else v]))
   (datum->syntax ctx-stx-t (if group? (group v) (loop v pre-alts? tail?))))
 
@@ -391,7 +411,7 @@
          (or (cond
                [(symbol? v) v]
                [(string? v) (string->symbol v)]
-               [(syntax? v)
+               [(syntax*? v)
                 (define sym (unpack-term v #f #f))
                 (and (identifier? sym) (syntax-e sym))]
                [else #f])
@@ -404,7 +424,7 @@
   (syntax-raw-property id (symbol->immutable-string (syntax-e id))))
 
 (define (check-syntax who v)
-  (unless (syntax? v)
+  (unless (syntax*? v)
     (raise-annotation-failure who v "Syntax")))
 
 (define/method (Syntax.unwrap v)
@@ -422,7 +442,7 @@
          (maybe-list->treelist u))]))
 
 (define/method (Syntax.unwrap_op v)
-  (syntax-parse (and (syntax? v)
+  (syntax-parse (and (syntax*? v)
                      (unpack-term v who #f))
     #:datum-literals (op)
     [(op o) (syntax-e #'o)]
@@ -472,7 +492,7 @@
   (replace-context (extract-ctx who ctx #:false-ok? #f) v))
 
 (define/method (Syntax.name_to_symbol v)
-  (syntax-parse (and (syntax? v)
+  (syntax-parse (and (syntax*? v)
                      (unpack-group v who #f))
     #:datum-literals (group op)
     [(group (op o)) (syntax-e #'o)]
@@ -675,13 +695,13 @@
 
 (define/method (Syntax.relocate_ephemeral_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-  (unless (syntax? stx-in) (raise-annotation-failure who stx-in "Syntax"))
+  (unless (syntax*? stx-in) (raise-annotation-failure who stx-in "Syntax"))
   (relocate-span who stx-in ctx-stxes-in (lambda (who stx #:update update)
                                            (update stx 's-exp))))
 
 (define (to-list-of-stx who v-in)
   (define stxs (to-list #f v-in))
-  (unless (and stxs (andmap syntax? stxs))
+  (unless (and stxs (andmap syntax*? stxs))
     (raise-annotation-failure who v-in "Listable.to_list && List.of(Syntax)"))
   stxs)
 
@@ -728,7 +748,7 @@
 (define/arity (Syntax.relocate_split stxes-in ctx-stx)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (define stxes (to-list-of-term-stx who stxes-in))
-  (unless (syntax? ctx-stx)
+  (unless (syntax*? ctx-stx)
     (raise-annotation-failure who ctx-stx "Syntax"))
   (cond
     [(null? (cdr stxes))
@@ -833,3 +853,24 @@
 
 (define/method (Syntax.is_original v)
   (syntax-original? (extract-ctx who v #:false-ok? #f)))
+
+(define (syntax-field-table s)
+  (cond
+    [(syntax-wrap? s)
+     (define ht (syntax-wrap-attribs s))
+     (for/hash ([(k v) (in-hash ht)])
+       (values k (lambda (s)
+                   (cond
+                     [(eq? v 'ambiguous)
+                      (raise-arguments-error*
+                       k
+                       rhombus-realm
+                       "field name is ambiguous")]
+                     [(eqv? 0 (cdr v))
+                      (car v)]
+                     [else
+                      (raise-arguments-error*
+                       k
+                       rhombus-realm
+                       "field is a repetition;\n use requires static mode")]))))]
+    [else #f]))

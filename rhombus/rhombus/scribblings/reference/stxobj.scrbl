@@ -47,6 +47,13 @@ object that represents a pair of parentheses, brackets, braces or
 quotes, where the tail string corresponds to the closer, and the tail
 suffix corresponds to text after the closer.
 
+A syntax object that results from a match using a @tech{syntax class}
+annotation has have fields in addition to the methods of all syntax
+objects. If a field from a syntax class has the same name as a
+@rhombus(Syntax) method, the field takes precedence for dynamic access
+and for static access using @rhombus(Syntax.matched_of, ~annot) with the syntax
+class's name.
+
 @doc(
   ~also_meta
   expr.macro '«#%quotes '$term ...; ...'»'
@@ -262,6 +269,37 @@ suffix corresponds to text after the closer.
 )
 
 }
+
+
+@doc(
+  annot.macro 'Syntax.matched_of($name)'
+){
+
+ Satisfied by a @tech{syntax object} that was produced by a match to a
+ syntax pattern with a @rhombus(::, ~unquote_bind) annotation and the
+ syntax class @rhombus(name). The static information of
+ @rhombus(Syntax.matched_of(name), ~annot) provides statically resolved
+ access to fields declared by the syntax class, including fields that are
+ repetitions.
+
+@examples(
+  ~defn:
+    syntax_class ManyThenOne
+    | '$a ... $b'
+  ~defn:
+    fun describe(mto :: Syntax.matched_of(ManyThenOne)):
+      "matched " +& [mto.a, ...] +& " followed by " +& mto.b
+  ~repl:
+    def '$(mto :: ManyThenOne)' = '1 2 3 4'
+    [mto.a, ...]
+    describe(mto)
+    ~error:
+      dynamic(mto).a
+    dynamic(mto).b
+)
+
+}
+
 
 @doc(
   ~also_meta

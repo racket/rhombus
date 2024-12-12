@@ -6,7 +6,8 @@
                      "macro-result.rkt"
                      (submod "class-meta.rkt" for-static-info)
                      (only-in "static-info.rkt"
-                              get-empty-static-infos))
+                              get-empty-static-infos)
+                     "syntax-wrap.rkt")
          "space-provide.rkt"
          "class+interface.rkt"
          "class-clause.rkt"
@@ -47,6 +48,6 @@
   (lambda (stx data)
     (define defns (syntax-parse stx
                     [(head . tail) (proc (pack-tail #'tail) #'head data)]))
-    (unless (syntax? defns)
+    (unless (syntax*? defns)
       (raise-bad-macro-result (proc-name proc) "`class` clause" defns))
     (datum->syntax #f (unpack-multi defns proc #f))))
