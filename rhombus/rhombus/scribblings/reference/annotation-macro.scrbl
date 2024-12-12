@@ -101,7 +101,7 @@
     :: (Syntax, Syntax, Syntax)
 ){
 
- The @rhombus(annot_meta.is_predicate) function determines whether a
+ The @rhombus(annot_meta.is_converter) function determines whether a
  syntax object represents a parsed @tech(~doc: guide_doc){converter annotation}. This
  function and @rhombus(annot_meta.unpack_converter) are potentially
  useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
