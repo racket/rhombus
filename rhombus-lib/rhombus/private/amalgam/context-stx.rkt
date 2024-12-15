@@ -1,7 +1,8 @@
 #lang racket/base
 (require syntax/parse/pre
          "pack.rkt"
-         "annotation-failure.rkt")
+         "annotation-failure.rkt"
+         "syntax-wrap.rkt")
 
 (provide extract-ctx
          extract-group-ctx)
@@ -14,7 +15,7 @@
                      #:update-outer [update-outer (lambda (outer-stx innner-stx) outer-stx)]
                      #:annot [annot #f])
   (and (or (not false-ok?) ctx-stx)
-       (let ([t (and (syntax? ctx-stx)
+       (let ([t (and (syntax*? ctx-stx)
                      (unpack-term ctx-stx #f #f))])
          (unless t
            (raise-annotation-failure who ctx-stx (or annot (if false-ok? "maybe(Term)" "Term"))))
@@ -54,7 +55,7 @@
                            #:update-outer [update-outer (lambda (outer-stx innner-stx) outer-stx)]
                            #:annot [annot #f])
   (and (or (not false-ok?) ctx-stx)
-       (let ([t (and (syntax? ctx-stx)
+       (let ([t (and (syntax*? ctx-stx)
                      (unpack-group ctx-stx #f #f))])
          (unless t
            (raise-annotation-failure who ctx-stx (or annot (if false-ok? "maybe(Group)" "Group"))))

@@ -11,6 +11,7 @@
                      "define-arity.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
@@ -41,7 +42,7 @@
      (unpack-definitions defns proc))))
 
 (define-for-syntax (unpack-definitions form proc)
-  (syntax-parse (and (syntax? form) (unpack-multi form proc #f))
+  (syntax-parse (and (syntax*? form) (unpack-multi form proc #f))
     [(g ...)
      #`((rhombus-definition g)
         ...)]

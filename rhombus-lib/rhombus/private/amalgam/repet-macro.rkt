@@ -15,8 +15,9 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "maybe-key.rkt"
-                     (for-syntax racket/base)
-                     "srcloc.rkt")
+                     "syntax-wrap.rkt"
+                     "srcloc.rkt"
+                     (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "treelist.rkt"
          "space-provide.rkt"
@@ -72,7 +73,7 @@
     #:property prop:repetition-infix-operator (lambda (self) (prefix+infix-infix self))))
 
 (define-for-syntax (extract-repetition form proc)
-  (syntax-parse (if (syntax? form)
+  (syntax-parse (if (syntax*? form)
                     (unpack-group form proc #f)
                     #'#f)
     [b::repetition #'b.parsed]
@@ -119,7 +120,7 @@
                              proc)))))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax

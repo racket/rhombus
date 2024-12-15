@@ -10,6 +10,7 @@
                      "introducer.rkt"
                      "macro-result.rkt"
                      "module-path-parse.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          "name-root.rkt"
          "parens.rkt")
@@ -62,7 +63,8 @@
 
   (define current-module-path-context (make-parameter 'import))
 
-  (define (check-module-path-result form proc)
+  (define (check-module-path-result form-in proc)
+    (define form (syntax-unwrap form-in))
     (unless (and (syntax? form)
                  (module-path? (syntax->datum form)))
       (raise-bad-macro-result (proc-name proc) "module path" form))

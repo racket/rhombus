@@ -119,8 +119,8 @@
                            #:as-tail? #t
                            #:splice? #t
                            #:splice-pattern values)))
-    (with-syntax ([((id id-ref) ...) idrs]
-                  [(((sid ...) sid-ref) ...) sidrs]
+    (with-syntax ([((id id-ref . _) ...) idrs]
+                  [(((sid ...) sid-ref . _) ...) sidrs]
                   [(left-id ...) left-ids])
       (define body
         (cond
@@ -137,7 +137,7 @@
           [else
            #`(rhombus-body-expression #,rhs)]))
       #`[#,pattern
-         (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
+         (let* ([id id-ref] ... [#,self-id self] [left-id left] ...)
            (define-static-info-syntax #,self-id #:getter get-syntax-static-infos)
            (define-static-info-syntax left-id #:getter get-syntax-static-infos)
            ...
@@ -482,8 +482,8 @@
                                                                                                             #:splice-pattern values))
                                     (define-values (extra-patterns wrap-extra)
                                       (build-extra-patterns in-extra-ids extra-binds-stx extra-get-static-infoss-stx extra-shapes))
-                                    (with-syntax ([((p-id id-ref) ...) idrs]
-                                                  [(((s-id ...) sid-ref) ...) sidrs])
+                                    (with-syntax ([((p-id id-ref . _) ...) idrs]
+                                                  [(((s-id ...) sid-ref . _) ...) sidrs])
                                       #`[#,pattern
                                          #,@(if cut? #'(#:cut) '())
                                          #,@extra-patterns
@@ -495,7 +495,7 @@
                                                    (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
                                                 '())
                                          #,(wrap-extra
-                                            #`(let ([p-id id-ref] ...)
+                                            #`(let* ([p-id id-ref] ...)
                                                 (let-syntaxes ([(s-id ...) sid-ref] ...)
                                                   #,(wrap-for-tail
                                                      #`(rhombus-body-expression rhs)))))])]))
@@ -530,8 +530,8 @@
                                     (lambda (body)
                                       (define-values (pattern idrs sidrs vars can-be-empty?)
                                         (convert-pattern #`(multi . #,gs-stx)))
-                                      (with-syntax ([((p-id id-ref) ...) idrs]
-                                                    [(((s-id ...) sid-ref) ...) sidrs])
+                                      (with-syntax ([((p-id id-ref . _) ...) idrs]
+                                                    [(((s-id ...) sid-ref . _) ...) sidrs])
                                         #`(syntax-parse extra-tail
                                             #:context (insert-multi-front-head-group orig-head extra-tail)
                                             #:disable-colon-notation
@@ -544,7 +544,7 @@
                                                        (define-static-info-syntax #,all-id #:getter get-syntax-static-infos))
                                                     '())
                                              #,(wrap-extra
-                                                #`(let ([p-id id-ref] ...)
+                                                #`(let* ([p-id id-ref] ...)
                                                     (let-syntaxes ([(s-id ...) sid-ref] ...)
                                                       #,body)))])))))
 
@@ -589,14 +589,14 @@
                           #:as-tail? #t
                           #:splice? #t
                           #:splice-pattern values)]))
-    (with-syntax ([((p-id id-ref) ...) idrs]
-                  [(((s-id ...) sid-ref) ...) sidrs])
+    (with-syntax ([((p-id id-ref . _) ...) idrs]
+                  [(((s-id ...) sid-ref . _) ...) sidrs])
       (values
        (append (reverse (syntax->list
                          #`(#:with #,pattern (unpack-tail #,in-extra-id #f #f))))
                rev-withs)
        (lambda (x)
-         #`(let ([p-id id-ref] ...)
+         #`(let* ([p-id id-ref] ...)
              (let-syntaxes ([(s-id ...) sid-ref] ...)
                #,(wrap x))))))))
 

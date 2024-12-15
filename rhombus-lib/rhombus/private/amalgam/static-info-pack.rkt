@@ -1,13 +1,14 @@
 #lang racket/base
 (require syntax/parse/pre
          "realm.rkt"
-         "parens-sc.rkt")
+         "parens-sc.rkt"
+         "syntax-wrap.rkt")
 
 (provide unpack-static-infos
          pack-static-infos)
 
 (define (unpack-static-infos who stx)
-  (syntax-parse stx
+  (syntax-parse (syntax-unwrap stx)
     [((key val) ...)
      #'(parens (group (parens (group key) (group val))) ...)]
     [_ (raise-arguments-error* who rhombus-realm
@@ -15,7 +16,7 @@
                                "syntax object" stx)]))
 
 (define (pack-static-infos who stx)
-  (syntax-parse stx
+  (syntax-parse (syntax-unwrap stx)
     #:datum-literals (group multi)
     [(_::parens (group (_::parens (group key) (group val))) ...)
      #'((key val) ...)]

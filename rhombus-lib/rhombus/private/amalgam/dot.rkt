@@ -190,7 +190,6 @@
                      tail)]
             [_ (lookup)])])]))
   (define dp-ids (extract-dot-provider-ids dp-id/s))
-  ;; make sure only one in `dp-ids` provides an answer
   (let loop ([dp-ids dp-ids])
     (cond
       [(null? dp-ids) (generic)]

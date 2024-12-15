@@ -6,7 +6,8 @@
          "to-list.rkt"
          "realm.rkt"
          "annotation-failure.rkt"
-         "srcloc.rkt")
+         "srcloc.rkt"
+         "syntax-wrap.rkt")
 
 ;; We represent Rhombus syntax objects as a syntax object with one of
 ;; the following forms:
@@ -82,7 +83,7 @@
          pack-nothing*
          pack-parsed*
          unpack-parsed*
-
+         
          repack-as-term
          repack-as-multi
 
@@ -115,6 +116,7 @@
     (raise-error who "multi-term syntax not allowed in term context" form))
   (let loop ([r form])
     (cond
+      [(syntax-wrap? r) (loop (syntax-unwrap r))]
       [(multi-syntax? r)
        (define l (syntax->list r))
        (if (and (pair? (cdr l)) (null? (cddr l)))
@@ -130,7 +132,7 @@
 
 ;; For meta functions that take terms as arguments
 (define (unpack-term/maybe v)
-  (and (syntax? v)
+  (and (syntax*? v)
        (unpack-term v #f #f)))
 
 ;; "Packs" to a `group` form, but `r` starts with `group` already
@@ -150,6 +152,7 @@
 ;; `group` representation. The result is always a syntax object.
 (define (unpack-group r who at-stx)
   (cond
+    [(syntax-wrap? r) (unpack-group (syntax-unwrap r) who at-stx)]
     [(multi-syntax? r)
      (define l (syntax->list r))
      (cond
@@ -168,10 +171,13 @@
 
 ;; "Unpacks" to a `group` form that might be empty
 (define (unpack-group-or-empty r who at-stx)
-  (if (and (multi-syntax? r)
-           (stx-null? (cdr (syntax-e r))))
-      (datum->syntax #f (list group-blank))
-      (unpack-group r who at-stx)))
+  (cond
+    [(syntax-wrap? r) (unpack-group (syntax-unwrap r) who at-stx)]
+    [(and (multi-syntax? r)
+          (stx-null? (cdr (syntax-e r))))
+     (datum->syntax #f (list group-blank))]
+    [else
+     (unpack-group r who at-stx)]))
 
 ;; make sure 'block or 'alts doesn't end up mid-group in the list `terms`
 ;; where `tail` (list or syntax) does not need to be checked but supplies
@@ -225,6 +231,7 @@
 ;; used in the middle of a template
 (define (unpack-term-list r who at-stx)
   (cond
+    [(syntax-wrap? r) (unpack-term-list (syntax-unwrap r) who at-stx)]
     [(syntax? r)
      (cond
        [(multi-syntax? r)
@@ -249,6 +256,7 @@
 ;; treated as a list of elements instead of a list of groups
 (define (unpack-group-list r who at-stx)
   (cond
+    [(syntax-wrap? r) (unpack-group-list (syntax-unwrap r) who at-stx)]
     [(and (syntax? r)
           (multi-syntax? r))
      (cdr (syntax->list r))]
@@ -269,6 +277,7 @@
 ;; plain list of syntax objects
 (define (unpack-multi r who at-stx)
   (cond
+    [(syntax-wrap? r) (unpack-multi (syntax-unwrap r) who at-stx)]
     [(multi-syntax? r) (cdr (syntax->list r))]
     [(group-syntax? r) (list r)]
     [(to-list #f r)
@@ -305,16 +314,17 @@
 (define (unpack-tail r who at-stx)
   (datum->syntax
    #f
-   (cond
-     [(multi-syntax? r)
-      (define l (syntax->list r))
-      (cond
-        [(null? (cdr l)) '()]
-        [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
-        [else (raise-error who "multi-group syntax not allowed in group context" r)])]
-     [(group-syntax? r) (cdr (syntax-e r))]
-     [(pair? r) (cannot-coerce-pair who r)]
-     [else (list (datum->syntax at-stx r))])))
+   (let ([r (syntax-unwrap r)])
+     (cond
+       [(multi-syntax? r)
+        (define l (syntax->list r))
+        (cond
+          [(null? (cdr l)) '()]
+          [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
+          [else (raise-error who "multi-group syntax not allowed in group context" r)])]
+       [(group-syntax? r) (cdr (syntax-e r))]
+       [(pair? r) (cannot-coerce-pair who r)]
+       [else (list (datum->syntax at-stx r))]))))
 
 ;; similar to `pack-tail` but for a list of groups, so no
 ;; special case for empty is needed
@@ -325,11 +335,12 @@
 (define (unpack-multi-tail r who at-stx)
   (datum->syntax
    #f
-   (cond
-     [(multi-syntax? r) (cdr (syntax-e r))]
-     [(group-syntax? r) (list r)]
-     [(pair? r) (cannot-coerce-pair who r)]
-     [else (list (datum->syntax at-stx r))])))
+   (let ([r (syntax-unwrap r)])
+     (cond
+       [(multi-syntax? r) (cdr (syntax-e r))]
+       [(group-syntax? r) (list r)]
+       [(pair? r) (cannot-coerce-pair who r)]
+       [else (list (datum->syntax at-stx r))]))))
 
 ;; ----------------------------------------
 
@@ -490,6 +501,7 @@
 ;; normalize for multi-term pattern matching:
 (define (repack-as-multi r)
   (cond
+    [(syntax-wrap? r) (repack-as-multi (syntax-unwrap r))]
     [(group-syntax? r) (list multi-blank r)]
     [(multi-syntax? r) r]
     [else (list multi-blank (list group-blank r))]))
@@ -507,6 +519,7 @@
 ;; the parameter when it becomes reliably available
 (define (insert-multi-front-group term r)
   (cond
+    [(syntax-wrap? r) (insert-multi-front-group term (syntax-unwrap r))]
     [(group-syntax? r) (cons term
                              (cdr (syntax-e r)))]
     [(multi-syntax? r) (let ([r (cdr (syntax-e r))])
@@ -519,6 +532,7 @@
 
 (define (insert-multi-front-head-group head r)
   (cond
+    [(syntax-wrap? r) (insert-multi-front-head-group head (syntax-unwrap r))]
     [(multi-syntax? r) (datum->syntax
                         #f
                         (cons (stx-car r)
@@ -564,7 +578,7 @@
          "invalid macro result"
          ";\n " msg
          "\n  received: " ((error-value->string-handler)
-                           r
+                           (syntax-unwrap r)
                            (error-print-width)))
         rhombus-realm)
        (current-continuation-marks)))]
@@ -572,5 +586,5 @@
      (raise-arguments-error* (->name who)
                              rhombus-realm
                              msg
-                             "syntax" r)]
+                             "syntax" (syntax-unwrap r))]
     [else #f]))

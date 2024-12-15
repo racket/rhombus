@@ -193,7 +193,7 @@
                           want-depth
                           depth))
      (define infos (if (identifier? #'rep-info.element-static-infos)
-                       (extract-static-infos #'rep-info.element-static-infos)
+                       (datum->syntax #f (extract-static-infos #'rep-info.element-static-infos))
                        #'rep-info.element-static-infos))
      (define (add-disappeared stx)
        (add-repetition-disappeared stx #'rep-info.rep-expr))

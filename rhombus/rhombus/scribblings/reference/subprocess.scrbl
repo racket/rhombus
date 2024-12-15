@@ -94,15 +94,18 @@
 }
 
 @doc(
-  property (subp :: subprocess.Subprocess).in :: Port.Output
-  property (subp :: subprocess.Subprocess).out :: Port.Input
-  property (subp :: subprocess.Subprocess).err :: Port.Input
+  property (subp :: subprocess.Subprocess).in
+    :: Port.Output && Port.FileStream
+  property (subp :: subprocess.Subprocess).out
+    :: Port.Input && Port.FileStream
+  property (subp :: subprocess.Subprocess).err
+    :: Port.Input && Port.FileStream
   property (subp :: subprocess.Subprocess).maybe_in
-    :: maybe(Port.Output)
+    :: maybe(Port.Output && Port.FileStream)
   property (subp :: subprocess.Subprocess).maybe_out
-    :: maybe(Port.Input)
+    :: maybe(Port.Input && Port.FileStream)
   property (subp :: subprocess.Subprocess).maybe_err
-    :: maybe(Port.Input)
+    :: maybe(Port.Input && Port.FileStream)
 ){
 
  Accesses pipe ends created for subprocess.

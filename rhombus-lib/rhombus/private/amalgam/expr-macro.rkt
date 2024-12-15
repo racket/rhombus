@@ -15,6 +15,7 @@
                      "call-result-key.rkt"
                      "values-key.rkt"
                      "maybe-key.rkt"
+                     "syntax-wrap.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
@@ -121,7 +122,7 @@
                                    proc)))))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (begin-for-syntax

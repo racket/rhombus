@@ -14,7 +14,8 @@
          "annotation-failure.rkt"
          "print-desc.rkt"
          "key-comp-property.rkt"
-         "enum.rkt")
+         "enum.rkt"
+         "syntax-wrap.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -414,8 +415,8 @@
                         [else "{"]))
          elems
          (pretty-text "}"))))]
-    [(syntax? v)
-     (define s (syntax->datum v))
+    [(syntax*? v)
+     (define s (syntax->datum (syntax-unwrap v)))
      (define qs
        (cond
          [(and (pair? s) (eq? 'multi (car s)))

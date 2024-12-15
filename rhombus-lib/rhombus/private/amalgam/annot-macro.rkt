@@ -16,7 +16,8 @@
                      "call-result-key.rkt"
                      "values-key.rkt"
                      (for-syntax racket/base)
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "syntax-wrap.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -83,7 +84,7 @@
   (no-srcloc #`(parsed #:rhombus/annot #,stx)))
 
 (define-for-syntax (parse-annotation-macro-result form proc #:srcloc [loc (maybe-respan form)])
-  (unless (syntax? form)
+  (unless (syntax*? form)
     (raise-bad-macro-result (proc-name proc) "annotation" form))
   (syntax-parse (unpack-group form proc #f)
     [c::annotation (relocate+reraw loc #'c.parsed)]))
@@ -128,7 +129,7 @@
                                         #:srcloc (datum->syntax #f (list stx form)))))))
 
 (define-for-syntax (check-syntax who s)
-  (unless (syntax? s)
+  (unless (syntax*? s)
     (raise-annotation-failure who s "Syntax")))
 
 (define-for-syntax (annotation-kind stx who)

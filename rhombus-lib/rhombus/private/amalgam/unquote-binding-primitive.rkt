@@ -25,7 +25,8 @@
          (submod  "import.rkt" for-meta)
          (submod "syntax-class.rkt" for-anonymous-syntax-class)
          "sequence-pattern.rkt"
-         (only-in "static-info.rkt" unwrap-static-infos))
+         (only-in "static-info.rkt" unwrap-static-infos)
+         (submod "syntax-object.rkt" for-quasiquote))
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -176,7 +177,7 @@
                                                        match-id
                                                        #'sc-hier.tail))
         (if rsc
-            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id)
+            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id #f)
                     end-tail)
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
@@ -190,7 +191,8 @@
                                                #'args.args
                                                open-attributes
                                                form1
-                                               match-id)
+                                               match-id
+                                               #f)
                    tail)])]))
    'none))
 
@@ -219,7 +221,8 @@
                                                         (attribute open?))
                                                     #'form-id)
                                                (attribute form1)
-                                               #f)
+                                               #f
+                                               #t)
                    #'#f)
                #'()))]))
 
@@ -232,7 +235,7 @@
 ;; used for `::` and for `pattern`, returns a parsed binding form that takes advantage
 ;; of a syntax class --- possibly an inlined syntax class and/or one with exposed fields
 (define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
-                                               form1 match-id)
+                                               form1 match-id bind-dot?)
   (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
     (define (compat pack* unpack* #:splice? [splice? #f])
       (define sc (rhombus-syntax-class-class rsc))
@@ -258,6 +261,7 @@
           (define id (pattern-variable-id var))
           (define depth (pattern-variable-depth var))
           (define unpack*-form (pattern-variable-unpack* var))
+          (define statinfos (normalize-pvar-statinfos (pattern-variable-statinfos var)))
           (define id-with-attr (compose-attr-name match-id name id))
           (values #`[#,temp-attr #,(cond
                                      [(eq? depth 'tail)
@@ -292,7 +296,7 @@
                                                          t
                                                          (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
                                          #,depth)])]
-                  (pattern-variable name id temp-attr (if (eq? depth 'tail) 1 depth) unpack*-form))))
+                  (pattern-variable name id temp-attr (if (eq? depth 'tail) 1 depth) unpack*-form statinfos))))
 
       ;; #f or (list (list bind-id var))
       (define open-attributes
@@ -337,6 +341,25 @@
         (for/first ([var (in-list attribute-vars)]
                     #:when (eq? (pattern-variable-sym var) swap-to-root))
           var))
+      (define all-attribs
+        (append
+         (if swap-root-to
+             (list
+              (pattern-variable->list
+               (pattern-variable swap-root-to #f temp-id pack-depth unpack* 'stx)))
+             null)
+         (for/list ([var (in-list attribute-vars)]
+                    #:unless (eq? swap-to-root (pattern-variable-sym var)))
+           (pattern-variable->list var #:keep-id? #f))))
+      (define root-statinfos
+        (if swap-root-to
+            'stx
+            (get-syntax-class-static-infos 'stx (datum->syntax #f all-attribs))))
+      (define swap-to-root-statinfos
+        (and swap-root-to
+             (get-syntax-class-static-infos
+              (normalize-pvar-statinfos (pattern-variable-statinfos swap-to-root-var))
+              (datum->syntax #f all-attribs))))
       #`(#,((if splice?
                 (lambda (p)
                   (with-syntax ([(tmp) (generate-temporaries '(tail))])
@@ -356,11 +379,28 @@
                 (if (eq? 'group (rhombus-syntax-class-kind rsc))
                     #`(~and (_ _ . _) #,instance-id)
                     instance-id)))
-         #,(cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
-                                                     #`(#,instance-id (... ...))
-                                                     instance-id))
-                               #,pack-depth)]
-                 attribute-bindings)
+         #,(let ([bindings (cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
+                                                                     #`(#,instance-id (... ...))
+                                                                     instance-id))
+                                               #,pack-depth)]
+                                 attribute-bindings)])
+             ;; Find root representative and wrap it to hold the other fields
+             (define root-index (if swap-root-to
+                                    (for/or ([var (in-list attribute-vars)]
+                                             [i (in-naturals 1)])
+                                      (and (eq? swap-to-root (pattern-variable-sym var)) i))
+                                    0))
+             (append
+              (let loop ([i 0] [bindings bindings])
+                (cond
+                  [(= i root-index) (cdr bindings)]
+                  [else (cons (car bindings) (loop (add1 i) (cdr bindings)))]))
+              (list
+               (syntax-parse (list-ref bindings root-index)
+                 [(id rhs) #`(id #,(build-wrap-syntax-for-attributes
+                                    #'rhs
+                                    (rhombus-syntax-class-key rsc)
+                                    (datum->syntax #f all-attribs)))]))))
          #,(append
             (if (identifier? form1)
                 (list (make-pattern-variable-bind #'id
@@ -373,16 +413,12 @@
                                                   (if swap-to-root-var
                                                       (pattern-variable-depth swap-to-root-var)
                                                       pack-depth)
-                                                  (append
-                                                   (if swap-root-to
-                                                       (list
-                                                        (pattern-variable->list
-                                                         (pattern-variable swap-root-to #f temp-id pack-depth unpack*)))
-                                                       null)
-                                                   (for/list ([var (in-list attribute-vars)]
-                                                              #:unless (eq? swap-to-root (pattern-variable-sym var)))
-                                                     (pattern-variable->list var #:keep-id? #f)))))
-                null)
+                                                  #:statinfos (if swap-to-root-var
+                                                                  swap-to-root-statinfos
+                                                                  (normalize-pvar-statinfos root-statinfos))
+                                                  #:attribs all-attribs
+                                                  #:key (rhombus-syntax-class-key rsc)))
+                 null)
             (if (not open-attributes)
                 null
                 (for/list ([oa (in-list open-attributes)]
@@ -390,15 +426,18 @@
                   (define bind-id (open-attrib-bind-id oa))
                   (define var (open-attrib-var oa))
                   (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack* var)
-                                              (pattern-variable-depth var) null))))
+                                              (pattern-variable-depth var)
+                                              #:statinfos (normalize-pvar-statinfos (pattern-variable-statinfos var))))))
          #,(append
             (if (identifier? form1)
                 (list
                  (if swap-to-root
                      (pattern-variable->list (struct-copy pattern-variable swap-to-root-var
                                                           [sym (syntax-e #'id)]
-                                                          [id #'id]))
-                     (list #'id #'id temp-id pack-depth unpack*)))
+                                                          [id #'id]
+                                                          [statinfos swap-to-root-statinfos]))
+                     (pattern-variable->list
+                      (pattern-variable #'id #'id temp-id pack-depth unpack* root-statinfos))))
                 null)
             (if (not open-attributes)
                 null
@@ -406,7 +445,7 @@
                   (define var (open-attrib-var oa))
                   (if (eq? var 'root)
                       (pattern-variable->list
-                       (pattern-variable (open-attrib-sym oa) #f temp-id pack-depth unpack*))
+                       (pattern-variable (open-attrib-sym oa) #f temp-id pack-depth unpack* root-statinfos))
                       (pattern-variable->list (struct-copy pattern-variable var
                                                            [sym (open-attrib-sym oa)]))))))))
     (define (incompat)

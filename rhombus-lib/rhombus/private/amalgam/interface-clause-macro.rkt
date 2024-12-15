@@ -4,7 +4,8 @@
                      enforest/proc-name
                      "pack.rkt"
                      "macro-result.rkt"
-                     (submod "interface-meta.rkt" for-static-info))
+                     (submod "interface-meta.rkt" for-static-info)
+                     "syntax-wrap.rkt")
          "space-provide.rkt"
          "interface-clause.rkt"
          "macro-macro.rkt")
@@ -23,6 +24,6 @@
    (lambda (stx data)
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head data)]))
-     (unless (syntax? defns)
+     (unless (syntax*? defns)
        (raise-bad-macro-result (proc-name proc) "`interface` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))

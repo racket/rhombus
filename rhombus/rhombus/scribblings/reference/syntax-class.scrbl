@@ -12,11 +12,14 @@
 @doc(
   ~nonterminal:
     id_bind: def bind ~defn
+    stxclass_id: block id
     rest_id: block id
+    field_to_root_id: block id
+    root_to_field_id: block id
     syntax_pattern: #%quotes pattern
     bind_maybe_kw_opt: fun ~defn
 
-  defn.macro 'syntax_class $id $maybe_args:
+  defn.macro 'syntax_class $stxclass_id $maybe_args:
                 $class_clause
                 ...
               | $pattern_case
@@ -32,7 +35,7 @@
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
     #,(@rhombus(fields, ~syntax_class_clause)): $field_decl
-    #,(@rhombus(root_swap, ~syntax_class_clause)): $id $id
+    #,(@rhombus(root_swap, ~syntax_class_clause)): $field_to_root_id $root_to_field_id
 
   grammar pattern_case:
     $syntax_pattern
@@ -46,13 +49,13 @@
     $body
 ){
 
- Defines a @deftech{syntax class} that can be used in syntax patterns with
+ Defines a @deftech{syntax class} @rhombus(stxclass_id) that can be used in syntax patterns with
  @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
  case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
  arguments; an @rhombus(id_bind) is like a @rhombus(bind_maybe_kw_opt) for
  @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments
- are visible in @rhombus(class_clause) bodies. Use @rhombus(syntax_class.together) to
+ are visible in @rhombus(class_clause) bodies. Use @rhombus(syntax_class.together, ~defn) to
  define a syntax class that refers to itself or a group of mutually referential
  syntax classes.
 
@@ -105,6 +108,16 @@
  example, if the pattern variable is @rhombus(var, ~var), its value is
  accessed from @rhombus(id, ~var) using
  @rhombus(#,(@rhombus(id, ~var)).#,(@rhombus(var, ~var))).
+ When a field is a repetition, it can only be accessed statically---that is,
+ when the @rhombus(id, ~var) in @rhombus(#,(@rhombus(id, ~var)).#,(@rhombus(var, ~var)))
+ is bound as a pattern variable annotated with @rhombus(stxclass_id),
+ or via @rhombus(#,(@nontermref(expr)).#,(@rhombus(var, ~var))) when
+ @nontermref(expr) has the static information of @rhombus(Syntax.matched_of(stxclass_id), ~annot).
+ When a syntax object with fields for a syntax class is used to produce another
+ system object (e.g., the syntax object is used in a template to make a larger
+ syntax object), fields are not associated with any part of the new syntax object;
+ however, a syntax object with fields preserves its fields when bound itself as
+ a field value in another syntax class.
 
  A @rhombus(pattern_case) matches when
 
@@ -240,16 +253,20 @@
 
 
 @doc(
-  syntax_class_clause.macro 'root_swap: $id $id'
+  ~nonterminal:
+    field_to_root_id: block id
+    root_to_field_id: block id
+  syntax_class_clause.macro 'root_swap: $field_to_root_id $root_to_field_id'
 ){
 
- Adjusts the match value and fields of a syntax class. The first
- @rhombus(id) names a field that the syntax class would otherwise
+ Adjusts the match value and fields of a syntax class. The
+ @rhombus(field_to_root_id) names a field that the syntax class would otherwise
  provide, but the field is removed, and its value instead becomes the
  main value of an identifier that is bound with the syntax class.
+ The field for this first @rhombus(field_to_root_id) must not be a repetition.
  Meanwhile, the matching terms that would otherwise be the variable's
  value are associated instead with a fresh field named by the second
- @rhombus(id).
+ @rhombus(root_to_field_id).
 
 @examples(
   ~defn:
