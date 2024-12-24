@@ -1,7 +1,7 @@
 #lang rhombus/static
 
 import:
-  pict open
+  "static.rhm" open
   draw
 
 export:
@@ -20,7 +20,12 @@ module private:
 fun time_at(t) :~ Pict:
   beside(~vert: #'baseline,
          text("t", ~font: draw.Font(~style: #'italic)),
-         text(" = " +& t))
+         text(" = " +& (if t is_a Int
+                        | t
+                        | let s = str.f(t, ~precision: 2)
+                          if s[s.length()-1] == Char"0"
+                          | s.substring(0, s.length()-1)
+                          | s)))
 
 def epoch_dot_size = 10
 def epoch_dot_color = "red"
@@ -44,13 +49,17 @@ fun timeline(p_in :~ Pict, [t, ...],
              ~post: post = 0,
              ~label: label = #false,
              ~balance_label = #false,
-             ~show_timebox = #false):
+             ~show_timebox = #false) :~ Pict:
   let sep = 20
-  fun p_at_time(t, keep): if keep
-                          | p_in.snapshot(math.exact(math.floor(t)),
-                                          t - math.floor(t))
-                          | nothing
-  let w = p_in.width
+  fun p_at_time(t, keep) :~ Pict:
+    if keep
+    | p_in.snapshot(math.exact(math.floor(t)),
+                    t - math.floor(t))
+    | nothing
+  let w: for values(w = 0) (t: [t, ...]):
+           math.max(w, p_at_time(t, #true).width)
+  fun center(p :~ Pict):
+    p.pad(~horiz: (w - p.width) / 2)
   let dot = circle(~size: epoch_dot_size, ~fill: epoch_dot_color)
   fun mk_dot(_): dot.launder()
   fun epochly(p :~ Pict, t):
@@ -63,13 +72,16 @@ fun timeline(p_in :~ Pict, [t, ...],
     let sep = sep + w - dot.width
     fun keep(p, keep): if keep | p | nothing  
     let tb = beside(~sep: sep, keep(lt_dot, t >= 0 && t < p_in.duration), ...)
-    beside(~sep: sep, beside(~sep: sep, keep(lt_dot, t < 0), ...),
-           overlay(~vert: #'bottom,
-                   rectangle(~width: tb.width + sep, ~height: dot.height + 2*duration_box_pad,
-                             ~line: show_timebox && duration_box_color)
-                     .pad(~bottom: -4, ~left: sep/2 + 4).translate(sep/4-1, 0),
-                   tb)
-             .refocus(tb),
+    beside(~sep: sep,
+           beside(~sep: sep, keep(lt_dot, t < 0), ...),
+           if tb is_a NothingPict
+           | nothing
+           | overlay(~vert: #'bottom,
+                     rectangle(~width: tb.width + sep, ~height: dot.height + 2*duration_box_pad,
+                               ~line: show_timebox && duration_box_color)
+                       .pad(~bottom: -4, ~left: sep/2 + 4).translate(sep/4-1, 0),
+                     tb)
+               .refocus(tb),
            beside(~sep: sep, keep(lt_dot, t >= p_in.duration), ...))
   let p = tl_arrows(p, [t_dot, ...].first)
   let (p, _):
@@ -79,11 +91,11 @@ fun timeline(p_in :~ Pict, [t, ...],
              | p,
              t_dot)
   let imgs:
-    let tb = beside(~sep: sep, p_at_time(t, t >= 0 && t < p_in.duration), ...)
+    let tb = beside(~sep: sep, center(p_at_time(t, t >= 0 && t < p_in.duration)), ...)
     beside(~sep: sep,
-           beside(~sep: sep, p_at_time(t, t < 0), ...),
+           beside(~sep: sep, center(p_at_time(t, t < 0)), ...),
            tb,
-           beside(~sep: sep, p_at_time(t, t >= p_in.duration), ...))
+           beside(~sep: sep, center(p_at_time(t, t >= p_in.duration)), ...))
   let p:
     stack(~sep: 10, p, imgs).pad(~horiz: 10)
   let p = p.pad(~left: pre * (w + sep), ~right: post * (w + sep))

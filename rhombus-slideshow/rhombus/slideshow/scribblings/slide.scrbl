@@ -29,9 +29,9 @@
             content :: SlideContent, ...) :: Void
 ){
 
- Registers one or more slides. In the sample case, each
+ Registers one or more slides. In the simple case, each
  @rhombus(content) produces a pict, and the picts are combined with
- @rhombus(stack) and a separation of @rhombus(sep) and the horizontal
+ @rhombus(stack) with a separation of @rhombus(sep) and the horizontal
  alignment @rhombus(horiz_align). A slide is produced for each epoch in
  the resulting pict's duration, and extra transitions slides are
  registered for epochs that have a non-@rhombus(0) extent. If
@@ -74,7 +74,7 @@
  @item{A value produced by @rhombus(slide.alts) creates one pict for
   each argument to @rhombus(slide.alts), and the picts are sequentialized
   and then combined with @rhombus(overlay). (That's similar to using
-  @rhombus(transition), but the bounding boxes for all alternatives are
+  @rhombus(switch), but the bounding boxes for all alternatives are
   preserved for the combined duration.) The @rhombus(overlay) combination
   uses @rhombus(#'top) alignment. A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
   any alternative, and @rhombus(slide.alts) can be nested; in either of
@@ -115,7 +115,7 @@
  Like @rhombus(slide), except that the result is a pict (potentially with
  a multi-epoch duration) instead of registering a slide.
 
- If @rhombus(full) is true, then the resulting pict represents a slide
+ If @rhombus(full) is a true value, then the resulting pict represents a slide
  including its title as combined via @rhombus(current_assembler).
  Otherwise, @rhombus(current_assembler) is not used, and the resulting
  pict is just the result of combining the @rhombus(content) values.
@@ -149,6 +149,16 @@
  with a specific @rhombus(~horiz) argument.
 
 }
+
+
+@doc(
+  def slide.gap = 24
+){
+
+ The default separation used by @rhombus(slide) and @rhombus(slide_pict).
+
+}
+
 
 @doc(
   Parameter.def current_assembler :: Function.of_arity(3)

@@ -5,7 +5,9 @@ import:
     expose Color
   "pict/private/static.rhm"
   "pict/private/anim.rhm"
+  "pict/private/explain_anim.rhm"
 
 export:
   all_from(.static)
   all_from(.anim)
+  all_from(.explain_anim)

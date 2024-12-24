@@ -1,0 +1,46 @@
+#lang rhombus/static
+import:
+  pict open
+  pict/text open
+
+export pict_diagram
+
+def pict_diagram:
+
+  let w = romanly(italic("w"))
+  let h = romanly(italic("h"))
+  let a = romanly(italic("a"))
+  let d = romanly(italic("d"))
+
+  let dx = 5
+
+  let H = 2 * (a.height + d.height + 4 * dx)
+  let W = H * 1.5
+
+  fun make_updown(p :: Pict):
+    let p = p.pad(~left: 2 * dx, ~top: dx, ~bottom: dx)
+    connect(~on: p,
+            Find.top_left(p, ~dx: dx),
+            Find.bottom_left(p, ~dx: dx),
+            ~style: #'arrows,
+            ~arrow_size: dx,
+            ~line_width: 1)
+  fun make_leftright(p :: Pict):
+    let p = p.pad(~bottom: 2 * dx, ~left: dx, ~right: dx)
+    connect(~on: p,
+            Find.bottom_left(p, ~dy: -dx),
+            Find.bottom_right(p, ~dy: -dx),
+            ~style: #'arrows,
+            ~arrow_size: dx,
+            ~line_width: 1)
+
+  let r = rectangle(~width: W, ~height: H, ~line: "firebrick")
+  let p = r
+  let p = overlay.top(p, stack(make_updown(a),
+                               line(~dx: W).colorize("seagreen")))
+  let p = overlay.bottom(p, stack(line(~dx: W).colorize("royalblue"),
+                                  make_updown(d)))
+  let p = beside(p, make_updown(h.pad(~vert: (H - 2 * dx - h.height) / 2)))
+  let p = stack.left(make_leftright(w.pad(~horiz: (W - 2 * dx - w.height) / 2)), p)
+  let p = p.line_width(2).pad(2)
+  p

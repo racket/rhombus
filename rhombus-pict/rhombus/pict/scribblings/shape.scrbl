@@ -27,6 +27,7 @@
     let width = "shadow arg"
     @examples(
       ~eval: pict_eval
+      blank(10)
       blank(10).width
     ))
 
@@ -41,7 +42,7 @@
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~rounded: rounded :: maybe(Rounded) = #false,              
-    ~order: order :: OverlayOrder = #'back,
+    ~order: order :: OverlayOrder = #'front,
     ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
@@ -77,7 +78,8 @@
  used only when @rhombus(around) is supplied, and they are passed on to
  @rhombus(overlay) to combine a static rectangle pict with
  @rhombus(around). The @rhombus(order) argument is similarly passed along to
- @rhombus(overlay). If @rhombus(around) is @rhombus(#false), the
+ @rhombus(overlay), where @rhombus(#'front) places @rhombus(around) in front
+ of the rectangle. If @rhombus(around) is @rhombus(#false), the
  resulting pict is always a @tech{static pict}.
 
 @examples(
@@ -99,7 +101,7 @@
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~rounded: rounded :: maybe(Rounded) = #false,              
-    ~order: order :: OverlayOrder = #'back,
+    ~order: order :: OverlayOrder = #'front,
     ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
@@ -127,7 +129,7 @@
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~order: order :: OverlayOrder = #'back,
+    ~order: order :: OverlayOrder = #'front,
     ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
@@ -155,7 +157,7 @@
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~order: order :: OverlayOrder = #'back,
+    ~order: order :: OverlayOrder = #'front,
     ~refocus: refocus_on :: maybe(Refocus) = #'around,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~duration: duration_align :: DurationAlignment = #'sustain
@@ -300,6 +302,16 @@
  of the time box with the static representation
  @rhombus(Pict.ghost(proc(1))).
 
+@examples(
+  ~eval: pict_eval
+  ~defn:
+    fun bar(n):
+      rectangle(~width: 30, ~height: 10 + n*10, ~fill: "lightblue")
+  explain_anim(animate(bar))
+  explain_anim(animate(bar).sustain())
+  explain_anim(animate(bar, ~sustain_edge: #'before).sustain())
+)
+
 }
 
 @doc(
@@ -339,7 +351,82 @@
  applicable) a replacement @rhombus(config).
  
 }
+
+
+@doc(
+  fun explain_bbox(
+    pic :: Pict,
+    ~line: line :: maybe(ColorMode) = "firebrick",
+    ~baseline: baseline :: maybe(ColorMode) = "royalblue",
+    ~topline: topline :: maybe(ColorMode) = "seagreen",
+    ~scale: scale_n :: Real = 3,
+    ~line_width: line_width :: LineWidth = 1,
+    ~epoch: epoch_align :: EpochAlignment = #'center,
+    ~duration: duration_align :: DurationAlignment = #'sustain
+  ) :: Pict
+){
+
+ Returns a pict like @rhombus(pict), but the pict’s @tech{bounding box} is
+ framed in the color @rhombus(line), a baseline showing the bounding
+ box's descent is draw as a line using the color @rhombus(baseline), and
+ a topline showing the bounding box's ascent is draw as a line using the
+ color @rhombus(topline). If any line color is @rhombus(#false), then
+ that part is not drawn. The pict is then scaled by @rhombus(scale_n).
+ The bounding box lines use width @rhombus(line_width) before scaling.
+
+ Note that for a single line of text, the baseline and topline are the
+ same, so only one line will be visible.
+
+ The @rhombus(epoch_align) and @rhombus(duration_align) arguments are
+ used as in @rhombus(rectangle).
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def p = stack(text("Hello"), text("Pict"), text("World"))
+    explain_bbox(p)
+)
+
+}
   
+@doc(
+  fun explain_anim(
+    pict :: Pict,
+    ~start: start :: Int = 0,
+    ~end: end :: Int = math.max(p.duration, start),
+    ~steps: steps :: PosInt = 4,
+    ~steps_before: steps_before :: NonnegInt = 0,
+    ~steps_after: steps_after :: NonnegInt = 0,
+    ~show_timebox: show_timebox = #true,
+    ~pad_before: pad_before :: NonnegInt = 0,
+    ~pad_after: pad_after :: NonnegInt = 0
+  ) :: Pict
+){
+
+ Returns a pict that shows a timeline with snapshots of @rhombus(pict)'s
+ drawing at different points. The timesline shows @tech{epochs}
+ @rhombus(start) through @rhombus(end), inclusive. If @rhombus(steps) is
+ greater than @rhombus(1), then @rhombus(steps-1) intermediate points are
+ shown for each complete epoch. Use @rhombus(steps_before) to add extra
+ steps before @rhombus(start) and @rhombus(steps_after) to add extra
+ steps after @rhombus(end).
+
+ If @rhombus(show_timebox) is a true value, then a box is drawn around
+ points on the timeline that are within @rhombus(pict)'s @tech{time box}.
+
+ If @rhombus(pad_before) or @rhombus(pad_after) are not @rhombus(0),
+ then space is added to the left or right of the timeline, respectively,
+ corresponding to @rhombus(pad_before) or @rhombus(pad_after) epochs.
+ This padding can be useful for aligning timelines that have different
+ starting or ending epochs.
+
+@examples(
+  ~eval: pict_eval
+  explain_anim(animate(fun (n): circle(~fill: "blue").alpha(1-n)),
+               ~steps: 5)
+)
+
+}
 
 @doc(
   fun Pict.from_handle(handle) :: Pict

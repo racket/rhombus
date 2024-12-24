@@ -7,7 +7,7 @@
       rhombus open
       pict open
       draw
-    lib("pict/scribblings/pict-diagram.rkt").#{pict-diagram}
+    "pict_diagram.rhm".pict_diagram
     "pict_eval.rhm" open
     "timeline.rhm" open)
 
@@ -42,7 +42,7 @@ More generally, since picts often represent text that needs to be
 positioned along a shared baseline, a static pict has a width @math{w},
 height @math{h}, ascent @math{a}, and descent @math{d}:
 
-@centered(#{pict-diagram})
+@centered(pict_diagram)
 
 In a pict representing a single line of text, the ascent plus descent
 will match the total height of the picture. For multiple lines of text,

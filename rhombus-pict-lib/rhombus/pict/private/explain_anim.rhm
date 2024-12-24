@@ -1,0 +1,54 @@
+#lang rhombus/static
+import:
+  "static.rhm" open
+  "timeline_pict.rhm" open
+
+export:
+  explain_anim
+
+fun explain_anim(p :: Pict,
+                 ~start: start :: Int = 0,
+                 ~end: end :: Int = math.max(p.duration, start),
+                 ~steps: steps :: PosInt = 4,
+                 ~steps_before: steps_before :: NonnegInt = 0,
+                 ~steps_after: steps_after :: NonnegInt = 0,
+                 ~show_timebox: show_timebox = #true,
+                 ~pad: pad_amt :: Real = 10,
+                 ~pad_before: pad_before :: NonnegInt = 0,
+                 ~pad_after: pad_after :: NonnegInt = 0) :~ Pict:
+  ~who: who
+  when end < start
+  | error(~who: who,
+          "end time is less than start time",
+          error.val(~label: "start time", start),
+          error.val(~label: "end time", end))
+  timeline(p,
+           gen_times(start, end, steps, steps_before, steps_after),
+           ~pre: pad_before,
+           ~post: pad_after,
+           ~show_timebox: show_timebox).pad(pad_amt)
+
+fun gen_times(start, end, steps, pre_extra, post_extra):
+  let l:
+    for List:
+      each i: start .. end
+      each step: 0 .. steps
+      if step == 0
+      | i
+      | i + (step * math.inexact(1/steps))
+  fun extras(n, cvt) :~ List:
+    if n == 0
+    | []
+    | for List:
+        each i: 1 ..= n
+        let j = i mod steps
+        let delta:
+          if j == 0
+          | i div steps
+          | (i div steps) + math.inexact(j / steps)
+        cvt(delta)
+  let pre:
+    extras(pre_extra, fun (delta): start - delta)
+  let post:
+    extras(post_extra, fun (delta): end + delta)
+  pre ++ l ++ [end] ++ post
