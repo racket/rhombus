@@ -543,7 +543,7 @@ it supplies its elements in order.
  The @rhombus(List.find) function finds the first element of
  @rhombus(lst) for which @rhombus(pred) returns a true value, or it
  returns @rhombus(#false) if no such element is found. The
- @rhombus(List.find) function is similar, but it returns the index of the
+ @rhombus(List.index) function is similar, but it returns the index of the
  found element instead of the element. Searching the list takes
  @math{O(N)} time (multiplied by the cost of @rhombus(pred)) to find an
  element as position @math{N}.
