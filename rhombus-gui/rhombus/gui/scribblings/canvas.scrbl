@@ -30,7 +30,7 @@
 )
 
  to draw the canvas's content to a backing store @rhombus(dc ~var),
- where @rhombus(draw_val, ~var) is the value of @rhombus(Obs.peek(data))
+ where @rhombus(data_val, ~var) is the value of @rhombus(Obs.peek(data))
  when @rhombus(data) is an @tech{observable}. The @rhombus(draw) function
  is called to update the canvas content when @rhombus(data) is an
  @tech{observable} and its value changes.

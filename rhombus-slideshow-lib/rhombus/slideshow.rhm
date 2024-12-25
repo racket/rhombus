@@ -98,7 +98,7 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
                      | []
                      | [p.snapshot(i, 0).handle]))
       | rkt_play.#{play-n}(~name: name,
-                           ~delay: extent / rkt_play.#{current-play-steps}(),
+                           ~steps: math.exact(math.round(10 * extent / 0.5)),
                            #{#:skip-last?}: #true,
                            fun (n): p.snapshot(i, n).handle)
 

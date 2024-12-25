@@ -58,6 +58,8 @@ export:
 
   table
 
+  explain_bbox
+
   animate_map
 
 module private:
@@ -172,9 +174,6 @@ class Pict():
           ~on: blank(~width: width, ~height: height, ~ascent: ascent, ~descent: descent),
           ~at: Find.abs(dx, dy))
 
-  abstract method lift(amt :: Real) :~ Pict
-  abstract method drop(amt :: Real) :~ Pict
-
   abstract method
   | scale(amt :: Real) :~ Pict
   | scale(h_amt :: Real, v_amt :: Real) :~ Pict
@@ -184,6 +183,9 @@ class Pict():
     scale(-1, 1).pad(~right: width, ~left: width)
   method vflip() :~ Pict:
     hflip().rotate(math.pi)
+
+  abstract method drop_baseline(amt :: Real) :~ Pict
+  abstract method drop_topline(amt :: Real) :~ Pict
 
   abstract method shear(horiz :: Real, vert :: Real) :~ Pict
 
@@ -399,12 +401,12 @@ class StaticPict(private _handle,
       static_pict(rkt.inset(_handle, left, top, right, bottom), this, _instances,
                   METHOD(_pad, left, top, right, bottom))
 
-  override method lift(amt :: Real) :~ Pict:
-    static_pict(rkt.#{lift-bottom-relative-to-baseline}(_handle, amt), this, _instances,
-                METHOD(lift, amt))
-  override method drop(amt :: Real) :~ Pict:
-    static_pict(rkt.#{drop-top-relative-to-ascent}(_handle, amt), this, _instances,
-                METHOD(drop, amt))
+  override method drop_baseline(amt :: Real) :~ Pict:
+    static_pict(rkt_adjust_ascent_descent(_handle, 0, -amt), this, _instances,
+                METHOD(drop_baseline, amt))
+  override method drop_topline(amt :: Real) :~ Pict:
+    static_pict(rkt_adjust_ascent_descent(_handle, amt, 0), this, _instances,
+                METHOD(drop_topline, amt))
 
   fun _raw_scale(handle, h_amt, v_amt):
     let p = rkt.scale(handle, h_amt, v_amt)
@@ -540,8 +542,8 @@ class NothingPict():
   | _pad(left_amt :: Real, top_amt :: Real,
          right_amt :: Real, bottom_amt :: Real): this
 
-  override method lift(amt :: Real): this
-  override method drop(amt :: Real): this
+  override method drop_baseline(amt :: Real): this
+  override method drop_topline(amt :: Real): this
 
   override method
   | scale(amt :: Real): this
@@ -1273,7 +1275,7 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
     | ~else:
         let dt = t_find_or_dt(p)
         unless dt is_a Int
-        | error(#'#{Find.start_in},
+        | error(~who: #'#{Find.start_in},
                 ~exn: Exn.Fail.Annot,
                 "function did not produce an integer time box difference",
                 error.val(~label: "result", dt))
@@ -1379,7 +1381,7 @@ fun animate(xy_proc :: Function.of_arity(2) || Function.of_arity(3),
             | (_ :: False, _ :: False):
                 values(#false, #false)
             | (arg, ...):
-                error(#'#{Find.animate},
+                error(~who: #'#{Find.animate},
                       ~exn: Exn.Fail.Annot,
                       "invalid result from animation function",
                       error.val(~label: "function", xy_proc),
@@ -1541,7 +1543,7 @@ fun connect(~on: p :: Pict,
         | ~else:
             if find_mode == #'maybe
             | p
-            | error(#'connect,
+            | error(~who: #'connect,
                     if from_x | "cannot find `~to` pict" | "cannot find `~from pict",
                     error.val(~label: "finder", if from_x | from | to),
                     error.val(~label: "in pict", p))
@@ -1613,7 +1615,7 @@ fun pin(q :: Pict,
           | [p :: _StaticPict, q :: _StaticPict]:
               let (at_x, at_y): at.maybe_in(p, dt, n)
               when !at_x && find_mode == #'always
-              | error(#'pin,
+              | error(~who: #'pin,
                       "cannot find pict",
                       error.val(~label: "finder", at),
                       error.val(~label: "in pict", p))
@@ -1759,6 +1761,44 @@ fun table(rows :: List.of(List.of(Pict)),
         if line_c
         | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
         | p
+
+// ----------------------------------------
+
+fun explain_bbox(p :: Pict,
+                 ~line: line :: maybe(ColorMode) = "firebrick",
+                 ~baseline: baseline :: maybe(ColorMode) = "royalblue",
+                 ~topline: ascent :: maybe(ColorMode) = "seagreen",
+                 ~scale: scale :: Real = 3,
+                 ~line_width: line_width :: LineWidth = 1,
+                 ~epoch: epoch :: EpochAlignment = #'center,
+                 ~duration: duration :: DurationAlignment = #'sustain)
+  :~ Pict:
+    recur retry(p = p):
+      match p
+      | _ :: NothingPict:
+          nothing
+      | p :: _StaticPict:
+          fun inherit(): "black"
+          static_pict(rkt.explain(p.handle,
+                                  ~border: line && (as_color(line) || inherit()),
+                                  ~ascent: ascent && (as_color(ascent) || inherit()),
+                                  ~baseline: baseline && (as_color(baseline) || inherit()),
+                                  ~scale: scale,
+                                  #{#:line-width}: line_width),
+                      [p], [p._instances],
+                      fun ([p]): retry(p))
+      | ~else:
+          convert([p], epoch, duration, fun([p], dt, n): retry(p))
+// ----------------------------------------
+
+fun rkt_adjust_ascent_descent(hand, d_ascent, d_descent):
+  let b_hand = rkt.blank(rkt.#{pict-width}(hand),
+                         rkt.#{pict-height}(hand),
+                         rkt.#{pict-ascent}(hand) + d_ascent,
+                         rkt.#{pict-descent}(hand) + d_descent)
+  rkt.refocus(rkt.#{pin-over}(hand, 0, 0, b_hand), b_hand)
+
+// ----------------------------------------
 
 def mutable pict_animate = #false
 fun set_animate(proc):

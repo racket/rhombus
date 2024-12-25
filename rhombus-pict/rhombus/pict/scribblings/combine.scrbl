@@ -35,8 +35,15 @@
 
 @examples(
   ~eval: pict_eval
-  beside(square(~size: 32), circle(~size: 16))
-  beside(~vert: #'top, ~sep: 12, square(~size: 32), circle(~size: 16))
+  ~repl:
+    beside(square(~size: 32), circle(~size: 16))
+    beside(~vert: #'top, ~sep: 12, square(~size: 32), circle(~size: 16))
+  ~repl:
+    explain_anim(beside(square(~size: 32).sustain(),
+                        animate(fun (n): circle(~size: 16).scale(1, n))))
+    explain_anim(beside(square(~size: 32).sustain(),
+                        animate(fun (n): circle(~size: 16).scale(1, n)),
+                        ~duration: #'pad))
 )
 
 }
@@ -262,12 +269,38 @@
 ){
 
  Creates a pict that has the total duration of the given
- @rhombus(pict)s, where the resulting pict switches from one pict at the
+ @rhombus(pict)s (when @rhombus(join) is @rhombus(#'step)),
+ where the resulting pict switches from one pict at the
  end of its time box to the next. The result pict's rendering before its
  timebox is the same as the first @rhombus(pict), and its rendering after
  is the same as the last @rhombus(pict).
 
+ If @rhombus(join) is @rhombus(#'splice), the the ending epoch or each
+ @rhombus(pict) is merged with the starting epoch of the next
+ @rhombus(pict). The merged epoch's extent is the sum of the original
+ extends, and the switch from each earlier to latter pict happens at a
+ point within the merged epoch corresponding to earlier epoch's duration.
+ Note that this merging normally makes sense only with non-@rhombus(0)
+ extents. If @rhombus(splice) is @rhombus(#'after) or @rhombus(#false),
+ then each switch boundary uses the latter @rhombus(pict), otherwise it
+ uses the earlier @rhombus(pict).
+
  If no @rhombus(pict)s are provided, the result is @rhombus(nothing).
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def circ = circle(~size: 16, ~fill: "lightgreen")
+    def sq = square(~fill: "lightblue")
+    explain_anim(switch(circ, sq))
+    explain_anim(rectangle(~around: switch(circ, sq), ~order: #'back))
+    def circ1 = circ.epoch_set_extent(0, 1.0)
+    def sq1 = sq.epoch_set_extent(0, 1.0)
+    explain_anim(switch(circ1, sq1, ~splice: #'after),
+                 ~steps: 6)
+    explain_anim(switch(circ1, sq1, ~splice: #'before),
+                 ~steps: 6)
+)
 
 }
 
@@ -299,12 +332,23 @@
  output list, but it does not otherwise participate in making the other
  @rhombus(pict)s concurrent.
 
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def circ = circle(~size: 16, ~fill: "lightgreen")
+    def sq = square(~fill: "lightblue")
+    explain_anim(overlay(& concurrent(sq, circ)))
+    explain_anim(overlay(& concurrent(sq.sustain(), circ)))
+    explain_anim(overlay(& concurrent(sq.sustain(), circ,
+                                      ~duration: #'sustain)))
+)
+
 }
 
 
 @doc(
   fun sequential(
-    ~join: mode :: SequentialJoin = #'step,
+    ~join: join :: SequentialJoin = #'step,
     ~duration: duration_align :: DurationAlignment = #'pad,
     ~concurrent: to_concurrent = #true,
     pict :: Pict, ...
@@ -315,6 +359,17 @@
  the time box of each is padded in the ``before'' direction to
  sequentialize the picts.
 
+ When @rhombus(join) is @rhombus(#'splice), then the last epoch of each
+ @rhombus(pict) is aligned with the first epoch of the next
+ @rhombus(pict), the synchronized epoch's extent for each @rhombus(pict)
+ becomes the sum of the extents, the earlier @rhombus(pict)'s animation
+ within the epoch is mapped into the earlier part of the combined extent,
+ and the later @rhombus(pict)'s animation is within the epoch is mapped
+ into the later part of the combined extent. When multiple adjacent
+ @rhombus(pict)s each have a duration of @rhombus(1), then the epoch of
+ all of those picts is aligned with the last epoch of the @rhombus(pict)
+ before and first epoch of the @rhombus(pict) after.
+
  If @rhombus(to_concurrent) is true, then after the picts are
  sequentialized, they are passed to @rhombus(#'concurrent). The
  @rhombus(duration_align) argument is passed along in that case.
@@ -323,12 +378,33 @@
  output list, but it does not otherwise participate in making the other
  @rhombus(pict)s sequential.
 
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def circ = circle(~size: 16, ~fill: "lightgreen")
+    def sq = square(~fill: "lightblue")
+    explain_anim(overlay(& sequential(sq, circ)))
+    explain_anim(rectangle(~around: overlay(& sequential(sq, circ)),
+                           ~order: #'back))
+    explain_anim(overlay(& sequential(sq, circ, ~duration: #'sustain)))
+    explain_anim(overlay(& sequential(sq, circ,
+                                      // defer to `overlay` ~duration:
+                                      ~concurrent: #false)))
+  ~repl:
+    def circ_grow = animate(fun (n): circ.scale(1, 1 + n)).sustain()
+    def sq_grow = animate(fun (n): sq.scale(1, 1 + n)).sustain()
+    explain_anim(overlay(& sequential(sq_grow, circ_grow)),
+                 ~steps: 3)
+    explain_anim(overlay(& sequential(sq_grow, circ_grow, ~join: #'splice)),
+                 ~steps: 3)
+)
+
 }
 
 @doc(
   fun animate_map(
     picts :~ List.of(Pict),
-    ~combine: combine :: Function.of_arity(2),
+    ~combine: combine :: (List.of(Pict), Int, Real.in(0, 1)) -> Pict,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     ~non_sustain_combine: non_sustain_combine :: Function.of_arity(3)
@@ -345,6 +421,19 @@
 
  The picts are first made concurrent via @rhombus(concurrent), passing
  along @rhombus(duration_align) and @rhombus(epoch_align).
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def sq_grow = animate(fun (n): sq.scale(1, 1 + n))
+    explain_anim(
+      animate_map([sq_grow],
+                  ~combine:
+                    fun ([sq :: Pict], i, n):
+                      stack(sq, text(str.f(sq.height,
+                                           ~precision: 1))))
+    )
+)
 
 }
 

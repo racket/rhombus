@@ -4,8 +4,8 @@ import:
   pict open
   draw
   rhombus/scribble.centered
-  "timeline_pict.rhm"
-  "timeline_pict.rhm"!private open
+  rhombus/pict/private/timeline_pict
+  rhombus/pict/private/timeline_pict!private open
 
 export:
   timeline

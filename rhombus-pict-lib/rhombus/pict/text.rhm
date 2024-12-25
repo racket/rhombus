@@ -127,11 +127,11 @@ fun roman(a :: TextContent, ...) :~ Pict:
 
 fun subscript(arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
-  p.lift(-p.height/2).scale(0.75)
+  p.translate(0, p.height/4).pad(~bottom: p.height/8).scale(0.75)
 
 fun superscript(arg :: TextContent, ...) :~ Pict:
   let p = t(arg, ...)
-  p.lift(p.height/3).scale(0.75)
+  p.translate(0, -p.height * 0.6).pad(~top: p.height/2).scale(0.75)
 
 fun strikethrough(~line: line :: ColorMode = #'inherit,
                   ~line_width: line_width :: LineWidth = 3,

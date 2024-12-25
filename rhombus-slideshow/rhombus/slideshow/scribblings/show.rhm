@@ -21,7 +21,7 @@ block:
         pict open
         pict/text open
         slideshow/content
-        rhombus/pict/scribblings/timeline_pict.timeline
+        rhombus/pict/private/timeline_pict.timeline
         draw
       namespace slide:
         import .content open
