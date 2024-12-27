@@ -429,15 +429,6 @@
 }
 
 @doc(
-  fun Pict.from_handle(handle) :: Pict
-){
-
- Converts a static pict value compatible with the Racket
- @racketmodname(pict) library into a @rhombus(Pict, ~annot) value.
-
-}
-
-@doc(
   enum ColorMode:
     ~is_a Color
     ~is_a String

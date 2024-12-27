@@ -96,6 +96,12 @@ interface DC:
   | clipping_region := region :: maybe(Region):
       rkt.send handle.#{set-clipping-region}(region && (region :~ _Region).handle)
 
+  property
+  | smoothing :: Smoothing:
+      rkt.send handle.#{get-smoothing}()
+  | smoothing := v :: Smoothing:
+      rkt.send handle.#{set-smoothing}(v)
+
   method copy(src :: RectLike,
               dest :: PointLike):
     rkt.send handle.copy(src.x, src.y, src.width, src.height, dest.x, dest.y)
@@ -213,6 +219,10 @@ interface DC:
     Fill
     Transformation
     LayeredTransformation
+    Smoothing
+
+  symbol_set_annot Smoothing:
+    { unsmoothed, aligned, smoothed }
 
   symbol_set_annot BitmapOverlay:
     { solid, opaque, xor }

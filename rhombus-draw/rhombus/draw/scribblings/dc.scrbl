@@ -66,6 +66,9 @@
   property
   | (dc :: draw.DC).layered_transformation :: LayeredTransformation
   | (dc :: draw.DC).layered_transformation := (lt :: LayeredTransformation)
+  property
+  | (dc :: draw.DC).smoothing :: Smoothing
+  | (dc :: draw.DC).smoothing := (s :: Smoothing)
 ){
 
  Properties to get or set the drawing context's configuration.
@@ -213,6 +216,17 @@
 
  Returns a value that changes when the selected font is changed to one
  with different metrics.
+
+}
+
+@doc(
+  enum draw.DC.Smoothing:
+    unsmoothed
+    aligned
+    smoothed
+){
+
+ Smoothing modes for use with @rhombus(DC.smoothing).
 
 }
 

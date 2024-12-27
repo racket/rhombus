@@ -87,7 +87,7 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
   | rkt_play.#{play-n}(~name: name,
                        #{#:skip-first?}: #true,
                        #{#:skip-last?}: #true,
-                       fun (n): p.snapshot(-1, n).handle)
+                       fun (n): p.snapshot(-1, n).draw_handle)
   for (i: 0..p.duration):
     if rkt.#{condense?} && p.epoch_metadata(i).get(#'nonarchival, #false)
     | rkt.#{skip-slides}(1)
@@ -96,11 +96,11 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
       | rkt.slide(~name: name,
                   & (if p == pict.nothing
                      | []
-                     | [p.snapshot(i, 0).handle]))
+                     | [p.snapshot(i, 0).draw_handle]))
       | rkt_play.#{play-n}(~name: name,
                            ~steps: math.exact(math.round(10 * extent / 0.5)),
                            #{#:skip-last?}: #true,
-                           fun (n): p.snapshot(i, n).handle)
+                           fun (n): p.snapshot(i, n).draw_handle)
 
 fun slide_pict(~title: title :: maybe(String || Pict) = #false,
                ~full: full = title && #true,

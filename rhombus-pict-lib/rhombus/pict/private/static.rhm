@@ -33,6 +33,9 @@ export:
   only_space annot:
     StaticPict
     NothingPict
+  only_space namespace:
+    rename:
+      StaticPict_public as StaticPict
 
   nothing
 
@@ -118,14 +121,14 @@ class Pict():
 
   primitive_property fileconv.#{prop:convertible}:
     fun (self :~ Pict, req, defval):
-      fileconv.convert(self.snapshot().handle, req, defval)
+      fileconv.convert(self.snapshot().draw_handle, req, defval)
   primitive_property pictconv.#{prop:pict-convertible}:
     fun (self :~ Pict):
-      self.snapshot().handle
+      self.snapshot().draw_handle
 
   private implements Printable
   private override describe(mode, recur):
-    PrintDesc.special(snapshot().handle, ~mode: #'print,
+    PrintDesc.special(snapshot().draw_handle, ~mode: #'print,
                       "Pict(...)")
 
   abstract property width :~ Real
@@ -340,6 +343,16 @@ class StaticPict(private _handle,
   override property ascent: rkt.#{pict-ascent}(_handle)
   override property descent: rkt.#{pict-descent}(_handle)
 
+  property draw_handle:
+    let drawer = rkt.#{make-pict-drawer}(_handle)
+    rkt.dc(fun (rkt_dc, dx, dy):
+             let dc = DC.from_handle(rkt_dc)
+             let saved = dc.smoothing
+             dc.smoothing := #'smoothed
+             drawer(rkt_dc, dx, dy)
+             dc.smoothing := saved,
+           width, height, ascent, descent)
+
   override property duration: 1
   override method epoch_extent(i :: Int): 0
 
@@ -479,6 +492,12 @@ class StaticPict(private _handle,
     _do_replace(pre_adjuster, adjuster, config_adjuster, subst,
                 _children, _dependencies, _config,
                 _rebuild)
+
+namespace StaticPict_public:
+  export:
+    rename:
+      StaticPict.handle as handle
+      StaticPict.draw_handle as draw_handle
 
 annot.delayed_complete SnapshotPict: StaticPict
 

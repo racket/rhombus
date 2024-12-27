@@ -724,6 +724,21 @@
 }
 
 @doc(
+  property (pict :: StaticPict).handle :: Any
+  property (pict :: StaticPict).draw_handle :: Any
+  fun Pict.from_handle(hand :: Any) :: StaticPict
+){
+
+ Converts a rhombus @tech{pict} to/from a Racket pict.
+
+ The @rhombus(StaticPict.draw_handle) property returns a Racket pict
+ suitable for drawing directly or embedding in a Racket pict
+ construction. It configures the drawing context with more modern
+ defaults, including drawing in @rhombus(#'smoothed) mode.
+
+}
+
+@doc(
   enum TimeOrder:
     before
     after
