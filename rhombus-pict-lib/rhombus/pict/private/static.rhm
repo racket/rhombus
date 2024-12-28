@@ -51,6 +51,7 @@ export:
   square
   ellipse
   circle
+  triangle
   polygon
   bitmap
   dc
@@ -631,6 +632,8 @@ fun find_instance(p :: _StaticPict, q :~ Pict):
 
 def default_font = draw.Font()
 
+// ------------------------------------------------------------
+
 fun beside(~sep: sep ::Real = 0,
            ~vert: vert :: VertAlignment = #'center,
            ~order: order :: OverlayOrder = #'front,
@@ -726,12 +729,17 @@ namespace stack:
   fun right(~sep: sep :: Real = 0, p :: Pict, ...) :~ Pict:
     stack(~sep: sep, ~horiz: #'right, p, ...)
 
-fun overlay(~horiz: horiz :: HorizAlignment = #'center,
-            ~vert: vert :: VertAlignment = #'center,
+fun overlay(~dx: dx :: maybe(Real) = #false,
+            ~dy: dy :: maybe(Real) = #false,
+            ~horiz: horiz :: HorizAlignment = (if dx || dy | #'left | #'center),
+            ~vert: vert :: VertAlignment = (if dx || dy | #'top | #'center),
             ~order: order :: OverlayOrder = #'front,
             ~epoch: epoch :: EpochAlignment = #'center,
             ~duration: duration :: DurationAlignment = #'sustain,
             p :: Pict, ...) :~ Pict:
+  ~who: who
+  let dx = dx || 0
+  let dy = dy || 0
   recur retry (ps = [p, ...]):
     match remove_nothings(ps):
     | []:
@@ -742,34 +750,67 @@ fun overlay(~horiz: horiz :: HorizAlignment = #'center,
         let all_instances = [p._instances, ...]
         let ps = [p._handle, ...]
         fun build(ps :~ List):
-          let [p, ...] = if order == #'back | ps.reverse() | ps
-          match horiz
-          | #'left:
-              match vert:
-              | #'top: rkt.#{lt-superimpose}(p, ...)
-              | #'topline: rkt.#{ltl-superimpose}(p, ...)
-              | #'center: rkt.#{lc-superimpose}(p, ...)
-              | #'baseline: rkt.#{lbl-superimpose}(p, ...)
-              | #'bottom: rkt.#{lb-superimpose}(p, ...)
-          | #'center:
-              match vert:
-              | #'top: rkt.#{ct-superimpose}(p, ...)
-              | #'topline: rkt.#{ctl-superimpose}(p, ...)
-              | #'center: rkt.#{cc-superimpose}(p, ...)
-              | #'baseline: rkt.#{cbl-superimpose}(p, ...)
-              | #'bottom: rkt.#{cb-superimpose}(p, ...)
-          | #'right:
-              match vert:
-              | #'top: rkt.#{rt-superimpose}(p, ...)
-              | #'topline: rkt.#{rtl-superimpose}(p, ...)
-              | #'center: rkt.#{rc-superimpose}(p, ...)
-              | #'baseline: rkt.#{rbl-superimpose}(p, ...)
-              | #'bottom: rkt.#{rb-superimpose}(p, ...)
+          if dy .= 0 && dx .= 0
+          | let [p, ...]:
+              if order == #'back | ps.reverse() | ps
+            match horiz
+            | #'left:
+                match vert:
+                | #'top: rkt.#{lt-superimpose}(p, ...)
+                | #'topline: rkt.#{ltl-superimpose}(p, ...)
+                | #'center: rkt.#{lc-superimpose}(p, ...)
+                | #'baseline: rkt.#{lbl-superimpose}(p, ...)
+                | #'bottom: rkt.#{lb-superimpose}(p, ...)
+            | #'center:
+                match vert:
+                | #'top: rkt.#{ct-superimpose}(p, ...)
+                | #'topline: rkt.#{ctl-superimpose}(p, ...)
+                | #'center: rkt.#{cc-superimpose}(p, ...)
+                | #'baseline: rkt.#{cbl-superimpose}(p, ...)
+                | #'bottom: rkt.#{cb-superimpose}(p, ...)
+            | #'right:
+                match vert:
+                | #'top: rkt.#{rt-superimpose}(p, ...)
+                | #'topline: rkt.#{rtl-superimpose}(p, ...)
+                | #'center: rkt.#{rc-superimpose}(p, ...)
+                | #'baseline: rkt.#{rbl-superimpose}(p, ...)
+                | #'bottom: rkt.#{rb-superimpose}(p, ...)
+          | fun get_pt(p, i):
+              values((match horiz
+                      | #'left: 0
+                      | #'center: rkt.#{pict-width}(p) / 2
+                      | #'right: rkt.#{pict-width}(p))
+                       + (if i == 0
+                          | math.max(0, dx)
+                          | math.max(0, -dx)),
+                     (match vert
+                      | #'top: 0
+                      | #'topline: rkt.#{pict-ascent}(p)
+                      | #'center: rkt.#{pict-height}(p) / 2
+                      | #'baseline: rkt.#{pict-height}(p) - rkt.#{pict-descent}(p)
+                      | #'bottom: rkt.#{pict-height}(p))
+                       + (if i == 0
+                          | math.max(0, dy)
+                          | math.max(0, -dy)))
+            let (init_x, init_y) = get_pt(ps[0], 0)
+            let (min_x, min_y, max_x, max_y):
+              for values(min_x = init_x, min_y = init_y,
+                         max_x = init_x, max_y = init_y):
+                each p: ps.rest
+                let (x, y) = get_pt(p, 1)
+                values(math.min(min_x, x),
+                       math.min(min_y, y),
+                       math.max(max_x, x),
+                       math.max(max_y, y))
+            rkt.#{lt-superimpose}(& for List (p: ps,
+                                              i: 0..):
+                                    let (x, y) = get_pt(p, i)
+                                    rkt.inset(p, max_x - x, max_y - y, 0, 0))
         static_pict(build(ps), children, all_instances, retry)
     | ps:
         convert(ps, epoch, duration, fun (ps, dt, n): retry(ps))
 
-namespace overlay: 
+namespace overlay:
   export:
     center
     left
@@ -793,45 +834,52 @@ namespace overlay:
     right_center center_right
     right_baseline baseline_right
     right_bottom bottom_right
-  fun center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'center, p, ...)
-  fun left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'center, p, ...)
-  fun right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'center, p, ...)
-  fun top(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'top, p, ...)
-  fun topline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'topline, p, ...)
-  fun baseline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'baseline, p, ...)
-  fun bottom(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'bottom, p, ...)
 
-  fun left_top(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'top, p, ...)
-  fun top_left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'top, p, ...)
-  fun left_topline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'topline, p, ...)
-  fun topline_left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'topline, p, ...)
-  fun left_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'center, p, ...)
-  fun center_left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'center, p, ...)
-  fun left_baseline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'baseline, p, ...)
-  fun baseline_left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'baseline, p, ...)
-  fun left_bottom(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'bottom, p, ...)
-  fun bottom_left(p :: Pict, ...) :~ Pict: overlay(~horiz: #'left, ~vert: #'bottom, p, ...)
+  defn.macro 'def_overlay $name(~horiz: $horiz, ~vert: $vert)':
+    'fun $name(p :: Pict, $('...')) :~ Pict:
+       overlay(~horiz: $horiz,
+               ~vert: $vert,
+               p, $('...'))'
 
-  fun right_top(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'top, p, ...)
-  fun top_right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'top, p, ...)
-  fun right_topline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'topline, p, ...)
-  fun topline_right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'topline, p, ...)
-  fun right_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'center, p, ...)
-  fun center_right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'center, p, ...)
-  fun right_baseline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'baseline, p, ...)
-  fun baseline_right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'baseline, p, ...)
-  fun right_bottom(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'bottom, p, ...)
-  fun bottom_right(p :: Pict, ...) :~ Pict: overlay(~horiz: #'right, ~vert: #'bottom, p, ...)
+  def_overlay center(~horiz: #'center, ~vert: #'center)
+  def_overlay left(~horiz: #'left, ~vert: #'center)
+  def_overlay right(~horiz: #'right, ~vert: #'center)
+  def_overlay top(~horiz: #'center, ~vert: #'top)
+  def_overlay topline(~horiz: #'center, ~vert: #'topline)
+  def_overlay baseline(~horiz: #'center, ~vert: #'baseline)
+  def_overlay bottom(~horiz: #'center, ~vert: #'bottom)
 
-  fun center_top(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'top, p, ...)
-  fun top_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'top, p, ...)
-  fun center_topline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'topline, p, ...)
-  fun topline_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'topline, p, ...)
-  fun center_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'center, p, ...)
-  fun center_baseline(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'baseline, p, ...)
-  fun baseline_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'baseline, p, ...)
-  fun center_bottom(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'bottom, p, ...)
-  fun bottom_center(p :: Pict, ...) :~ Pict: overlay(~horiz: #'center, ~vert: #'bottom, p, ...)
+  def_overlay left_top(~horiz: #'left, ~vert: #'top)
+  def_overlay top_left(~horiz: #'left, ~vert: #'top)
+  def_overlay left_topline(~horiz: #'left, ~vert: #'topline)
+  def_overlay topline_left(~horiz: #'left, ~vert: #'topline)
+  def_overlay left_center(~horiz: #'left, ~vert: #'center)
+  def_overlay center_left(~horiz: #'left, ~vert: #'center)
+  def_overlay left_baseline(~horiz: #'left, ~vert: #'baseline)
+  def_overlay baseline_left(~horiz: #'left, ~vert: #'baseline)
+  def_overlay left_bottom(~horiz: #'left, ~vert: #'bottom)
+  def_overlay bottom_left(~horiz: #'left, ~vert: #'bottom)
+
+  def_overlay right_top(~horiz: #'right, ~vert: #'top)
+  def_overlay top_right(~horiz: #'right, ~vert: #'top)
+  def_overlay right_topline(~horiz: #'right, ~vert: #'topline)
+  def_overlay topline_right(~horiz: #'right, ~vert: #'topline)
+  def_overlay right_center(~horiz: #'right, ~vert: #'center)
+  def_overlay center_right(~horiz: #'right, ~vert: #'center)
+  def_overlay right_baseline(~horiz: #'right, ~vert: #'baseline)
+  def_overlay baseline_right(~horiz: #'right, ~vert: #'baseline)
+  def_overlay right_bottom(~horiz: #'right, ~vert: #'bottom)
+  def_overlay bottom_right(~horiz: #'right, ~vert: #'bottom)
+
+  def_overlay center_top(~horiz: #'center, ~vert: #'top)
+  def_overlay top_center(~horiz: #'center, ~vert: #'top)
+  def_overlay center_topline(~horiz: #'center, ~vert: #'topline)
+  def_overlay topline_center(~horiz: #'center, ~vert: #'topline)
+  def_overlay center_center(~horiz: #'center, ~vert: #'center)
+  def_overlay center_baseline(~horiz: #'center, ~vert: #'baseline)
+  def_overlay baseline_center(~horiz: #'center, ~vert: #'baseline)
+  def_overlay center_bottom(~horiz: #'center, ~vert: #'bottom)
+  def_overlay bottom_center(~horiz: #'center, ~vert: #'bottom)
 
 fun text(content :: String,
          ~font: font :: draw.Font = default_font) :~ Pict:
@@ -1196,6 +1244,33 @@ fun polygon([pt :: draw.PointLike.to_point, ...],
     empty_instances
   )
 
+fun triangle(~around: around :: maybe(Pict) = #false,
+             ~width: width :: AutoReal = #'auto,
+             ~height: height :: AutoReal = #'auto,
+             ~fill: fill :: maybe(ColorMode) = #false,
+             ~line: line :: maybe(ColorMode) = !fill && #'inherit,
+             ~line_width: line_width :: LineWidth = #'inherit,
+             ~order: order :: OverlayOrder = #'front,
+             ~refocus: refocus :: maybe(Refocus) = #'around,
+             ~epoch: epoch :: EpochAlignment = #'center,
+             ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
+   do_around(~around: around,
+             ~width: width,
+             ~height: height,
+             ~resize: fun (d, other): math.max(d, other),
+             ~order: order,
+             ~refocus: refocus,
+             ~epoch: epoch,
+             ~duration: duration,
+             ~make: fun (width, height):
+                      let pts = [[0, height], [width, height], [width/2, 0]]
+                      make_dc_pict(fun (dc :~ draw.DC, dx, dy):
+                                     dc.polygon(pts, ~dx: dx, ~dy: dy),
+                                   width, height, height, 0,
+                                   line,
+                                   line_width,
+                                   fill))
+
 fun bitmap(path :: Path || String) :~ Pict:
   static_pict(rkt.bitmap(path), [], empty_instances)
 
@@ -1481,6 +1556,8 @@ def_find right_baseline: #{rbl-find}
 def_find baseline_right: #{rbl-find}
 def_find right_bottom: #{rb-find}
 def_find bottom_right: #{rb-find}
+
+// ------------------------------------------------------------
 
 fun connect(~on: p :: Pict,
             from :: Find,
