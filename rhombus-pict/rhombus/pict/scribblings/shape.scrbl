@@ -140,6 +140,12 @@
  draws an arc or widge if @rhombus(arc) is @rhombus(#'cw) (clockwise) or
  @rhombus(#'ccw) (counterclockwise).
 
+ When @rhombus(around) is provided, it determines default
+ @rhombus(width) and @rhombus(height) values, but since the ellipse fits
+ inside a @rhombus(width) by @rhombus(height) rectangle, the
+ @rhombus(around) pict may extend beyond the ellipse's edge at the
+ corners.
+
 @examples(
   ~eval: pict_eval
   ellipse(~around: text("Hello"), ~fill: "lightgreen")
@@ -170,6 +176,34 @@
   ~eval: pict_eval
   circle(~around: text("Hello"), ~fill: "lightgreen")
 )
+
+}
+
+@doc(
+  fun triangle(
+    ~around: around :: maybe(Pict) = #false,
+    ~size: size :: AutoReal = #'auto,
+    ~fill: fill :: maybe(ColorMode) = #false,
+    ~line: line :: maybe(ColorMode) = !fill && #'inherit,
+    ~line_width: line_width :: LineWidth = #'inherit,
+    ~rounded: rounded :: maybe(Rounded) = #false,              
+    ~order: order :: OverlayOrder = #'front,
+    ~refocus: refocus_on :: maybe(Refocus) = #'around,
+    ~epoch: epoch_align :: EpochAlignment = #'center,
+    ~duration: duration_align :: DurationAlignment = #'sustain
+  ) :: Pict
+){
+
+ Like @rhombus(rectangle), but for an isosceles triangle with a base
+ along the bottom of a rectangle defined by @rhombus(width) and
+ @rhombus(height) and a vertex at the center of the top of the rectangle.
+
+@examples(
+  ~eval: pict_eval
+  triangle(~fill: "orange")
+  triangle(~fill: "orange").rotate(-1/2 * math.pi)
+)
+
 
 }
 
@@ -425,15 +459,6 @@
   explain_anim(animate(fun (n): circle(~fill: "blue").alpha(1-n)),
                ~steps: 5)
 )
-
-}
-
-@doc(
-  fun Pict.from_handle(handle) :: Pict
-){
-
- Converts a static pict value compatible with the Racket
- @racketmodname(pict) library into a @rhombus(Pict, ~annot) value.
 
 }
 

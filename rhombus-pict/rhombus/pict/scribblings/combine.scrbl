@@ -21,10 +21,17 @@
 ){
 
  Creates a pict that combines the given @rhombus(pict)s horizontally
- with the first @rhombus(pict) as leftmost.
+ with the first @rhombus(pict) as leftmost. The @rhombus(vert_align)
+ argument determines how each @rhombus(pict) is positioned vertically
+ relative to other @rhombus(pict)s. The resulting pict's bounding box
+ covers all of the input @rhombus(pict) bounding boxes, its baseline (as
+ reflected by the bounding box descent) corresponds to the lowest of the
+ input @rhombus(pict) baselines, and its topline (as reflected by the
+ bounding box ascent) corresponds to the highest of the input
+ @rhombus(pict) toplines.
 
  If a pict extends horizontally outside its bounding box, then the
- front-ot-back order of picts can matter for the combined image. The
+ front-to-back order of picts can matter for the combined image. The
  @rhombus(order) argument determines the order of each pict added to the
  right of the combined image.
 
@@ -51,7 +58,7 @@
 @doc(
   fun stack(
     ~sep: sep :: Real = 0,
-    ~horiz: horiz_alig :: HorizAlignment = #'center,
+    ~horiz: horiz_align :: HorizAlignment = #'center,
     ~order: order :: OverlayOrder = #'front,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
@@ -60,7 +67,11 @@
 ){
 
  Creates a pict that combines the given @rhombus(pict)s vertically with
- the first @rhombus(pict) as topmost.
+ the first @rhombus(pict) as topmost. The @rhombus(horiz_align) argument
+ determines how each @rhombus(pict) is positioned horizontally relative
+ to other @rhombus(pict)s. The resulting pict's bounding box is computsed
+ as in @rhombus(beside) to cover all of the input @rhombus(pict) bounding
+ boxes.
 
  If a pict extends vertically outside its bounding box, then the
  front-ot-back order of picts can matter for the combined image. The
@@ -82,8 +93,10 @@
 
 @doc(
   fun overlay(
-    ~horiz: horiz_align :: HorizAlignment = #'center,
-    ~vert: vert_align :: VertAlignment = #'center,
+    ~dx: dx :: maybe(Real) = #false,
+    ~dy: dy :: maybe(Real) = #false,
+    ~horiz: horiz_align :: HorizAlignment = (if dx || dy | #'left | #'center),
+    ~vert: vert_align :: VertAlignment = (if dx || dy | #'top | #'center),
     ~order: order :: OverlayOrder = #'front,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
@@ -94,6 +107,19 @@
  Creates a pict that combines the given @rhombus(pict)s by overlaying.
  The @rhombus(order) argument determines whether later @rhombus(pict)s
  are placed in front of earlier @rhombus(pict)s or behind them.
+
+ The @rhombus(horiz_align) argument determines how each @rhombus(pict)
+ is positioned horizontally relative to other @rhombus(pict)s, and the
+ @rhombus(vert_align) argument determines how each @rhombus(pict) is
+ positioned vertically relative to other @rhombus(pict)s. The resulting
+ pict's bounding box is computed as in @rhombus(beside) to cover all of
+ the input @rhombus(pict) bounding boxes.
+
+ If @rhombus(dx) or @rhombus(dy) is provided, then each @rhombus(pict)
+ after the first one is shifted by @rhombus(dx) or @rhombus(dy) from the
+ position where it would otherwise be placed relative to the first
+ @rhombus(pict) based on @rhombus(horiz_align) and @rhombus(vert_align).
+ The resulting pict's bounding box is computed after this adjustment.
 
  The picts are first made concurrent via @rhombus(concurrent), passing
  along @rhombus(duration_align) and @rhombus(epoch_align).
@@ -108,7 +134,6 @@
           square(~size: 32),
           circle(~size: 16, ~line: "red"))
 )
-
 
 }
 
@@ -523,7 +548,10 @@
     bottom
 ){
 
- Options for vertical alignment.
+ Options for vertical alignment. The @rhombus(#'topline) alignment mode
+ causes picts to be aligned based on their ascents, while
+ @rhombus(#'baseline) alignment mode causes picts to be aligned based on
+ their descents.
 
 }
 
