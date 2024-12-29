@@ -183,6 +183,8 @@
   fun triangle(
     ~around: around :: maybe(Pict) = #false,
     ~size: size :: AutoReal = #'auto,
+    ~width: width :: AutoReal = size,
+    ~height: height :: AutoReal = size,
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
@@ -197,6 +199,7 @@
  Like @rhombus(rectangle), but for an isosceles triangle with a base
  along the bottom of a rectangle defined by @rhombus(width) and
  @rhombus(height) and a vertex at the center of the top of the rectangle.
+ As a short hand, the @rhombus(size) argument can be used as both the width and height.
 
 @examples(
   ~eval: pict_eval
