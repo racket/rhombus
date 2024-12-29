@@ -1245,8 +1245,9 @@ fun polygon([pt :: draw.PointLike.to_point, ...],
   )
 
 fun triangle(~around: around :: maybe(Pict) = #false,
-             ~width: width :: AutoReal = #'auto,
-             ~height: height :: AutoReal = #'auto,
+             ~size: size :: AutoReal = #'auto,
+             ~width: width :: AutoReal = size,
+             ~height: height :: AutoReal = size,
              ~fill: fill :: maybe(ColorMode) = #false,
              ~line: line :: maybe(ColorMode) = !fill && #'inherit,
              ~line_width: line_width :: LineWidth = #'inherit,
