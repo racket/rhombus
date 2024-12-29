@@ -284,11 +284,16 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
                _sustaining,
                _before :~ StaticPict, // for measuring
                _children :~ AnimPict || List.of(AnimPict),
+               // a superset of children, but can have extra children that are hidden from functions like find
                _dependencies :~ maybe(List),
+               // like dependencies, but non-picts
                _config :~ maybe(Map),
                _child_starts :~ Int || List.of(Int),
+               // internal list of other equivalent picts
                _same_rep_children :~ List,
+               // arbitrary data associated with the pict- but not configurable (pict can't be rebuilt with new metadata)
                _metadata :~ Map,
+               // a function to rebuild this pict based on a new dependencies and configuration
                _rebuild :~ Function.of_arity(1)):
   ~name Pict
   extends Pict
