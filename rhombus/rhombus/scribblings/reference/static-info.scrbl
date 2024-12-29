@@ -305,6 +305,10 @@
         the application will be guarded by a check to ensure that both
         arguments share the same @rhombus(append, ~datum) implementation.}
 
+  @item{@rhombus(statinfo_meta.flonum_key): A boolean indicating whether
+        the value is a @tech{flonum}. Normally, this key is only present if it
+        has a @rhombus(#true) value.}
+
   @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
         bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to
         implement the expression's behavior as a @tech(~doc: guide_doc){dot provider},

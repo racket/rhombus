@@ -842,6 +842,7 @@
 (void (set-primitive-contract! 'number? "Number"))
 (void (set-primitive-contract! 'integer? "Integral"))
 (void (set-primitive-contract! 'real? "Real"))
+(void (set-primitive-contract! 'flonum? "Flonum"))
 (define-annotation-syntax Any (identifier-annotation (lambda (x) #t) ()))
 (define-annotation-syntax None (identifier-annotation (lambda (x) #f) ()))
 (define-annotation-syntax Boolean (identifier-annotation boolean? ()))

@@ -70,6 +70,9 @@
                        build-anonymous-function)
            raise-result-failure))
 
+(module+ for-non-special
+  (provide (for-syntax :non-special)))
+
 (begin-for-syntax
   (define-syntax-class :non-...
     #:datum-literals (group)
@@ -80,6 +83,14 @@
     #:attributes (parsed)
     (pattern form::non-...
              #:with ::binding #'form))
+
+  (define-syntax-class :non-special
+    #:datum-literals (group)
+    (pattern (~and (~not (group _::...-bind))
+                   (~not (group (~or* _::&-bind _::~&-bind) . _))
+                   (~not (group _:keyword . _))
+                   (~not (group _::_-expr))
+                   (group . _))))
 
   (define (keyword->id-group kw)
     #`(#,group-tag
