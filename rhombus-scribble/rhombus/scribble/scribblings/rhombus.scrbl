@@ -125,14 +125,53 @@
                 $group
                 ...'
   grammar option:
-    ~inset: $expr
-    ~indent: $expr
-    ~prompt: $expr
-    ~indent_from_block: $expr
-    ~spacer_info_box: $expr
+    ~escape: $op
+    ~inset: $body; ...
+    ~indent: $body: ...
+    ~prompt: $body: ....
+    ~indent_from_block: $body; ...
+    ~spacer_info_box: $body; ...
 ){
 
- Like @rhombus(rhombusblock), but supports @rhombus(option)s.
+ Like @rhombus(rhombusblock), but supports @rhombus(option)s:
+
+@itemlist(
+
+ @item{@rhombus(~escape): Replaces the escape operator @litchar{#,} with
+  @rhombus(op) so that @litchar{#,} is literal (assuming that
+  @rhombus(op) is different from @litchar{#,}).}
+
+ @item{@rhombus(~inset): Insets the block relative to surrounding text
+  if the @rhombus(body) sequence after @rhombus(~inset) produces
+  a true value. The default is to inset.}
+
+ @item{@rhombus(~indent): Adds space before each line of the block to
+  indent by the amount produced by the @rhombus(body) sequence after
+  @rhombus(~indent). The indentation amount must be a nonnegative integer
+  that is treated as a character count. The default is @rhombus(0)
+  indentation.}
+
+ @item{@rhombus(~prompt): Uses the string produced by the @rhombus(body)
+  sequence after @rhombus(~prompt) as a prompt that prefixes the first
+  line of the content, and lines afterward get the same number of spaces
+  as characters in the prompt. The default is to show no prompt, which is
+  equivalent to an empty string.}
+
+ @item{@rhombus(~indent_from_block): Uses the indentation of the block
+  overall, instead of the first item in the block, to infer relative
+  indentation for rendered content if the @rhombus(body) sequence after
+  @rhombus(~indent_from_block) produces a true value. The default is
+  true.}
+
+ @item{@rhombus(~spacer_info_box): If the @rhombus(body) sequence after
+  @rhombus(~spacer_info_box) produces a box, and if the same box is used
+  for multiple @rhombus(rhombusblock_etc) forms, then spacer information
+  is shared across the forms. For example, when forms a is treated as
+  bindings that associates an annotation with an identifier, that
+  association can persist for later blocks. The default is for each block
+  to collect independent spacer information.}
+
+)
 
 }
 
