@@ -121,7 +121,7 @@
   expr.macro 'rhombusblock_etc:
                 $group
                 ...'
-  expr.macro 'rhombusblock_etc($option, ...):
+  expr.macro 'rhombusblock_etc ($option, ...):
                 $group
                 ...'
   grammar option:
