@@ -199,7 +199,8 @@
  Like @rhombus(rectangle), but for an isosceles triangle with a base
  along the bottom of a rectangle defined by @rhombus(width) and
  @rhombus(height) and a vertex at the center of the top of the rectangle.
- As a short hand, the @rhombus(size) argument can be used as both the width and height.
+ As a shorthand, the @rhombus(size) argument can be used as both the
+ @rhombus(width) and @rhombus(height).
 
 @examples(
   ~eval: pict_eval
