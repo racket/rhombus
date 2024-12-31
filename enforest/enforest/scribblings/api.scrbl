@@ -64,17 +64,16 @@
 
 @defmodule[enforest/operator]
 
-@defstruct*[operator ([name identifier?]
-                      [precs (listof (cons/c (or/c identifier? 'default)
-                                             (or/c 'stronger 'weaker
-                                                   'same 'same-on-left 'same-on-right)))]
+@defstruct*[operator ([precs (or (procedure-arity-includes/c 0)
+                                 (listof (cons/c (or/c identifier? 'default)
+                                                 (or/c 'stronger 'weaker
+                                                       'same 'same-on-left 'same-on-right))))]
                       [protocol (or/c 'macro 'automatic)]
                       [proc procedure?])
             #:omit-constructor]{
 
- The @racket[name] identifier is the name of the operator.
-
- The @racket[precs] list is an association list from identifiers to
+ The @racket[precs] field is either a list or a function that produces
+ a list on demand. The list is an association list from identifiers to
  @racket['stronger], @racket['weaker], @racket['same],
  @racket['same-on-left], or @racket['same-on-right], indicating that
  the operator's precedence is stronger than, weaker than, or the same
