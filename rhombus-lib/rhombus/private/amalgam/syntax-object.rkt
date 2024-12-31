@@ -12,6 +12,7 @@
          "to-list.rkt"
          "provide.rkt"
          "expression.rkt"
+         "normalize-syntax.rkt"
          (submod "annotation.rkt" for-class)
          "pack.rkt"
          "realm.rkt"
@@ -838,9 +839,10 @@
                                         #:as_inner [inner? #t])
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (check-syntax who stx)
+  (define norm-stx (normalize-syntax stx))
   (string->immutable-string (shrubbery-syntax->string (or (and (not inner?)
-                                                               (unpack-term/maybe stx))
-                                                          stx)
+                                                               (unpack-term/maybe norm-stx))
+                                                          norm-stx)
                                                       #:use-raw? #t
                                                       #:keep-prefix? keep-prefix?
                                                       #:keep-suffix? keep-suffix?
