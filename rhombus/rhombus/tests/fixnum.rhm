@@ -1,0 +1,127 @@
+#lang rhombus/and_meta
+import:
+  rhombus/fixnum
+  "version_guard.rhm"
+
+fun f(x :: Fixnum,
+      y :: Fixnum):
+  [x < y,
+   x <= y,
+   x == y,
+   x != y,
+   x >= y,
+   x > y]
+
+check:
+  f(2, 3)
+  ~is [#true,
+       #true,
+       #false,
+       #true,
+       #false,
+       #false]
+
+check:
+  f(2, -3)
+  ~is [#false,
+       #false,
+       #false,
+       #true,
+       #true,
+       #true]
+
+check:
+  f(2, 2)
+  ~is [#false,
+       #true,
+       #true,
+       #false,
+       #true,
+       #false]
+
+// check that a fixnum operation is inserted by checking that
+// an error is raised if a non-fixnum number argument is supplied
+
+fun not_a_fixnum(who_str):
+  values(rewrite_who(who_str) ++ ":",
+         error.annot_msg(),
+         error.val(1).msg)
+
+fun rewrite_who(str):
+  match str
+  | "compares_equal": ".="
+  | "compares_unequal": ".="
+  | ".!=": ".="
+  | ~else: str
+
+expr.macro 'check_op $(op :: Name)':
+  'block:
+     check:
+       (1.0 :~ Fixnum) $op (1 :~ Fixnum)
+       ~throws not_a_fixnum(to_string('$op'))
+     check:
+       (1 :~ Fixnum) $op (1.0 :~ Fixnum)
+       ~throws not_a_fixnum(to_string('$op'))'
+
+check_op <
+check_op <=
+check_op compares_equal
+check_op compares_unequal
+check_op >=
+check_op >
+check_op .<
+check_op .<=
+check_op .=
+check_op .!=
+check_op .>=
+check_op .>
+
+check:
+  1 fixnum.(+) 2 ~is 3
+  1 fixnum.wraparound.(+) 2 ~is 3
+  1 fixnum.(-) 2 ~is -1
+  fixnum.(-) 2 ~is -2
+  1 fixnum.wraparound.(-) 2 ~is -1
+  (block:
+     version_guard.at_least "8.15.0.12":
+       check fixnum.wraparound.(-) 2 ~is -2
+     #void) ~is #void
+  1 fixnum.(*) 2 ~is 2
+  1 fixnum.wraparound.(*) 2 ~is 2
+  1 fixnum.div 2 ~is 0
+  1 fixnum.mod 2 ~is 1
+  1 fixnum.rem 2 ~is 1
+  -1 fixnum.mod 2 ~is 1
+  -1 fixnum.rem 2 ~is -1
+  1 fixnum.(<) 2 ~is #true
+  2 fixnum.(<) 2 ~is #false
+  1 fixnum.(<=) 2 ~is #true
+  2 fixnum.(<=) 2 ~is #true
+  1 fixnum.(==) 2 ~is #false
+  2 fixnum.(==) 2 ~is #true
+  1 fixnum.(!=) 2 ~is #true
+  2 fixnum.(!=) 2 ~is #false
+  2 fixnum.(>) 1 ~is #true
+  2 fixnum.(>) 2 ~is #false
+  2 fixnum.(>=) 1 ~is #true
+  2 fixnum.(>=) 2 ~is #true
+  fixnum.abs(2) ~is 2
+  fixnum.abs(-2) ~is 2
+  fixnum.min(1, 2, 3) ~is 1
+  fixnum.max(1, 2, 3) ~is 3
+  1 fixnum.bits.or 2 ~is 3
+  3 fixnum.bits.xor 2 ~is 1
+  fixnum.bits.not 2 ~is -3
+  1 fixnum.bits.(<<) 2 ~is 4
+  1 fixnum.wraparound.bits.(<<) 2 ~is 4
+  1 fixnum.bits.(>>) 2 ~is 0
+  1 fixnum.bits.logical.(>>) 2 ~is 0
+  -1 fixnum.bits.(>>) 2 ~is -1
+  (-1 fixnum.bits.logical.(>>) 2) > 0 ~is #true
+  fixnum.bits.popcount(2) ~is 1
+  fixnum.bits.popcount16(2) ~is 1
+  fixnum.bits.popcount32(2) ~is 1
+  fixnum.from_flonum(3.0) ~is 3
+  fixnum.from_flonum(-3.0) ~is -3
+  fixnum.to_flonum(3) ~is 3.0
+  fixnum.to_flonum(-3) ~is -3.0

@@ -5,7 +5,10 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          "static-info.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "flonum-key.rkt"
+         "fixnum-key.rkt"
+         "parse.rkt")
 
 (provide define-prefix
          define-infix
@@ -32,7 +35,13 @@
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:static-infos statinfos)
-                     #:defaults ([statinfos #'()])))
+                     #:defaults ([statinfos #'()]))
+          (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
+                     #:defaults ([flprim #'#f]
+                                 [flonum-statinfos #'()]))
+          (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
+                     #:defaults ([fxprim #'#f]
+                                 [fixnum-statinfos #'()])))
        #`(make-expression&repetition-prefix-operator
           (~? precedences-expr
               (lambda ()
@@ -52,15 +61,35 @@
                             'stronger)
                       ...)))
           'prefix
+          #:element-statinfo? #t
           (lambda (form stx)
+            #,@(if (syntax-e #'flprim)
+                   #`((define flonum? (flonum-statinfo? form)))
+                   #`())
+            #,@(if (syntax-e #'fxprim)
+                   #`((define fixnum? (fixnum-statinfo? form)))
+                   #`())
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list stx form)))
                              (datum->syntax (quote-syntax here)
-                                            (list (relocate-id stx (quote-syntax prim))
+                                            (list (relocate-id stx
+                                                               #,(if (syntax-e #'flprim)
+                                                                     #`(if flonum?
+                                                                           (quote-syntax flprim)
+                                                                           #,(if (syntax-e #'fxprim)
+                                                                                 #`(if fixnum?
+                                                                                       (quote-syntax fxprim)
+                                                                                       (quote-syntax prim))
+                                                                                 #`(quote-syntax prim)))
+                                                                     #`(quote-syntax prim)))
                                                   (discard-static-infos form))
                                             #f
                                             stx))
-             #`statinfos)))]))
+             #,(if (syntax-e #'flprim)
+                   #`(if flonum?
+                         #`flonum-statinfos
+                         #`statinfos)
+                   #`#`statinfos))))]))
 
   (define-syntax (infix stx)
     (syntax-parse stx
@@ -77,7 +106,13 @@
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left]))
           (~optional (~seq #:static-infos statinfos)
-                     #:defaults ([statinfos #'()])))
+                     #:defaults ([statinfos #'()]))
+          (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
+                     #:defaults ([flprim #'#f]
+                                 [flonum-statinfos #'()]))
+          (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
+                     #:defaults ([fxprim #'#f]
+                                 [fixnum-statinfos #'()])))
        #`(make-expression&repetition-infix-operator
           (~? precedences-expr
               (lambda ()
@@ -94,16 +129,39 @@
                             'stronger)
                       ...)))
           'infix
+          #:element-statinfo? #t
           (lambda (form1 form2 stx)
+            #,@(if (syntax-e #'flprim)
+                   #`((define flonum? (and (flonum-statinfo? form1)
+                                           (flonum-statinfo? form2))))
+                   #`())
+            #,@(if (syntax-e #'fxprim)
+                   #`((define fixnum? (and (fixnum-statinfo? form1)
+                                           (fixnum-statinfo? form2))))
+                   #`())
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list form1 stx form2)))
                              (datum->syntax (quote-syntax here)
-                                            (list (relocate-id stx (quote-syntax prim))
+                                            (list (relocate-id stx
+                                                               #,(if (syntax-e #'flprim)
+                                                                     #`(if flonum?
+                                                                           (quote-syntax flprim)
+                                                                           #,(if (syntax-e #'fxprim)
+                                                                                 #`(if fixnum?
+                                                                                       (quote-syntax fxprim)
+                                                                                       (quote-syntax prim))
+                                                                                 #`(quote-syntax prim)))
+                                                                     #`(quote-syntax prim)))
                                                   (discard-static-infos form1)
                                                   (discard-static-infos form2))
                                             #f
                                             stx))
-             #`statinfos))
+
+             #,(if (syntax-e #'flprim)
+                   #`(if flonum?
+                         #`flonum-statinfos
+                         #`statinfos)
+                   #`#`statinfos)))
           assoc)])))
 
 (define-syntax (define-prefix stx)

@@ -64,6 +64,9 @@
  comparisons to exact numbers. The value @rhombus(#nan) is not
  @rhombus(.=) to itself (but @rhombus(#nan) is @rhombus(==) to itself).
 
+ These comparisons are specialized like @rhombus(+) for arguments with
+ @rhombus(Flonum, ~annot) static information.
+
 @examples(
   1 .= 1
   1 .= 2

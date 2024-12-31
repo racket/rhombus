@@ -6,6 +6,7 @@
                      rhombus/private/enforest
                      enforest/name-parse
                      shrubbery/property
+                     shrubbery/print
                      rhombus/private/name-path-op
                      rhombus/private/doc-spec
                      rhombus/private/treelist
@@ -326,14 +327,13 @@
                                           (extra-introducer target-id))))
               (define str-id (and root-id target-id))
               (define index-str (hash-ref def-ht 'raw #f))
-              (define sym-path (cons
-                                (if str-id
-                                    (syntax-e str-id)
-                                    null)
-                                (if (eq? immed-space-name 'grammar)
-                                    (hash-ref immed-def-ht 'target)
-                                    null)))
-              (define seen-key (cons (cons (syntax-e def-id) sym-path)
+              (define seen-key (list (syntax-e def-id)
+                                     (if (eq? immed-space-name 'grammar)
+                                         (hash-ref immed-def-ht 'target)
+                                         (and str-id
+                                              (or (and index-str
+                                                       (syntax-e index-str))
+                                                  (shrubbery-syntax->string str-id))))
                                      space-name))
               (define raw-prefix-str
                 (and (not (eq? immed-space-name 'grammar))
@@ -506,15 +506,20 @@
   (define str-id-e (syntax-e str-id))
   (cond
     [redef?
-     ((if meta? racketvarfont racketidfont)
-      (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
-                       #:space space
-                       #:suffix (if str-id-e
-                                    (list (if index-str-in
-                                              (string->symbol index-str-in)
-                                              (target-id-key-symbol str-id))
-                                          space)
-                                    space)))]
+     (define c
+       ((if meta? racketvarfont racketidfont)
+        (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
+                         #:space space
+                         #:suffix (if str-id-e
+                                      (list (if index-str-in
+                                                (string->symbol index-str-in)
+                                                (target-id-key-symbol str-id))
+                                            space)
+                                      space))))
+     (append
+      (if prefix-str
+          (element #f (list (racketidfont prefix-str) c))
+          c))]
     [else
      (define str (if (eq? immed-space 'grammar)
                      (symbol->immutable-string nonterm-sym)

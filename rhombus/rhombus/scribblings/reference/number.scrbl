@@ -4,7 +4,7 @@
     meta_label:
       rhombus/random.Random)
 
-@title{Numbers}
+@title(~style: #'toc){Numbers}
 
 Real numbers are @tech{comparable}, which means that generic operations like
 @rhombus(<) and @rhombus(>) work on real numbers, while specialized
@@ -175,7 +175,8 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Flonum'
 ){
 
- Matches real numbers that are represented as floating-point numbers.
+ Matches @tech{flonums}, which are inexact real numbers that are
+ represented as IEEE 64-bit floating-point numbers.
 
 @examples(
   5.0 is_a Flonum
@@ -191,11 +192,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Fixnum'
 ){
 
- Matches integers that fall within a @deftech{fixnum} range that has a
- specialized representation. This range depends on the architecture's
- word size and Racket implementation, but it corresponds to integers that
- fit into a two's complete representation using either 30, 31, 61, or 63
- bits.
+ Matches integers that fall within a @tech{fixnum} range.
 
 @examples(
   1024 is_a Fixnum
@@ -255,6 +252,14 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
  The usual arithmetic operators with the usual precedence.
 
+ When expressions for both @rhombus(x) and @rhombus(y) have static
+ information from @rhombus(Flonum, ~annot) (or just @rhombus(x) in the
+ case of prefix the @rhombus(-) operator), then the arithmetic operation
+ is specialized to one that expects @rhombus(Flonum, ~annot) arguments.
+ If the static information is incorrect (e.g., because a non-checking
+ @rhombus(:~) is used), then a run-time error is reported if an argument
+ is not a @rhombus(Flonum, ~annot).
+
  Note that forms like @rhombus(+1), @rhombus(-1), and @rhombus(1/2) are
  immediate numbers, as opposed to uses of the @rhombus(+), @rhombus(-),
  and @rhombus(/) operators.
@@ -307,6 +312,9 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
  @tech{comparable} values. See also @rhombus(.=) and @rhombus(.!=),
  which work on all numbers.
 
+ These comparisons are specialized like @rhombus(+) for arguments with
+ @rhombus(Flonum, ~annot) static information.
+
 @examples(
   1 .< 2
   3 .>= 3.0
@@ -321,6 +329,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   fun math.floor(x :: Real) :: Real
   fun math.ceiling(x :: Real) :: Real
   fun math.round(x :: Real) :: Real
+  fun math.truncate(x :: Real) :: Real
   fun math.sqrt(x :: Number) :: Number
   fun math.log(x :: Number, base :: Number = math.exp(1))
     :: Number
@@ -336,6 +345,16 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 ){
 
  The usual functions on numbers.
+
+ When a call to the @rhombus(math.abs), @rhombus(math.max),
+ @rhombus(math.min), @rhombus(math.floor), @rhombus(math.ceiling),
+ @rhombus(math.round), @rhombus(math.truncate), @rhombus(math.sin),
+ @rhombus(math.cos), or @rhombus(math.tan) function has arguments with
+ static information from @rhombus(Flonum, ~annot), then the functions are
+ specialized to ones that require @rhombus(Flonum, ~annot) arguments,
+ similar to operations like @rhombus(+). The other functions are not
+ specialized, because they do not always produce @rhombus(Flonum, ~annot)
+ results for @rhombus(Flonum, ~annot) arguments.
 
 @examples(
   math.abs(-1.5)
@@ -585,3 +604,6 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 )
 
 }
+
+@include_section("flonum.scrbl")
+@include_section("fixnum.scrbl")

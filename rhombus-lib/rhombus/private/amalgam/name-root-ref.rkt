@@ -62,7 +62,7 @@
                              field-id)
               'disappeared-use
               (syntax-local-introduce (in-name-root-space prefix))))
-           (define (next form-id field-id what tail)
+           (define (next form-id field-id field-op-parens what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
                                          #:datum-literals (op parens |.|)
@@ -76,7 +76,7 @@
                        [(not get)
                         (define name (build-name prefix field-id))
                         (and (identifier-binding* (in-id-space name))
-                             (relocate-field form-id field-id name))]
+                             (relocate-field form-id field-id name field-op-parens))]
                        [else
                         (define sub-id (if prefix
                                            (build-name prefix field-id)
@@ -86,7 +86,7 @@
                                (or ns?
                                    (not binding-end?)
                                    (syntax-local-value* (in-id-space id) binding-ref))
-                               (relocate-field form-id field-id id)))]))
+                               (relocate-field form-id field-id id field-op-parens)))]))
                    (cond
                      [fail-ok? #f]
                      [(or binding-end?
@@ -95,7 +95,7 @@
                         (binding-extension-combine
                          (in-name-root-space prefix)
                          field-id
-                         (relocate-field form-id field-id (build-name prefix field-id))))]
+                         (relocate-field form-id field-id (build-name prefix field-id) field-op-parens)))]
                      [else
                       ;; try again with the shallowest to report an error
                       (let ([get (caar gets)])
@@ -135,9 +135,9 @@
            (syntax-parse stxes
              #:datum-literals (op parens group |.|)
              [(form-id (op |.|) field:identifier . tail)
-              (next #'form-id #'field "identifier" #'tail)]
-             [(form-id (op |.|) (parens (group (op field))) . tail)
-              (next #'form-id #'field "operator" #'tail)]
+              (next #'form-id #'field #f "identifier" #'tail)]
+             [(form-id (op |.|) (~and op-parens (parens (group (op field)))) . tail)
+              (next #'form-id #'field #'op-parens "operator" #'tail)]
              [(form-id (op (~and dot |.|)) . tail)
               (raise-syntax-error #f
                                   "expected an identifier or parentheses after dot"
@@ -172,6 +172,11 @@
                 (define pre-id (datum->syntax pre-ctx (syntax-e name)))
                 (cond
                   [(identifier-distinct-binding* (in-space id) (in-space pre-id)
+                                                 (if (eq? phase 'default)
+                                                     (syntax-local-phase-level)
+                                                     phase))
+                   id]
+                  [(identifier-distinct-binding* (in-name-root-space id) (in-name-root-space pre-id)
                                                  (if (eq? phase 'default)
                                                      (syntax-local-phase-level)
                                                      phase))
@@ -233,18 +238,23 @@
     [(nspace _ extends . _) #'extends]
     [_ #f]))
 
-(define-for-syntax (relocate-field root-id field-id new-field-id)
+(define-for-syntax (relocate-field root-id field-id new-field-id field-op-parens)
   (define name
     (datum-intern-literal
      (format "~a.~a"
              (shrubbery-syntax->string root-id)
-             (shrubbery-syntax->string field-id))))
+             (shrubbery-syntax->string (or field-op-parens field-id)))))
+  (define op-parens-head (and field-op-parens (car (syntax-e field-op-parens))))
   (syntax-property
    (syntax-raw-property
     (datum->syntax new-field-id
                    (syntax-e new-field-id)
-                   (span-srcloc root-id field-id)
-                   field-id)
+                   (span-srcloc root-id (or op-parens-head field-id))
+                   (if op-parens-head
+                       (syntax-raw-suffix-property
+                        field-id
+                        (syntax-raw-suffix-property op-parens-head))
+                       field-id))
     name)
    'disappeared-use
    (let ([root (syntax-local-introduce (in-name-root-space root-id))])
@@ -313,7 +323,7 @@
                                 (lambda (self-id get)
                                   (define id (get #f #f (car ids) in-name-root-space))
                                   (and id
-                                       (relocate-field prev-who (car ids) id))))]))
+                                       (relocate-field prev-who (car ids) id #f))))]))
     (define v
       (and id
            (syntax-local-value* (in-name-root-space id) (lambda (v)

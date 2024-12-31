@@ -1,0 +1,137 @@
+#lang rhombus/static
+import:
+  lib("racket/fixnum.rkt") as rkt
+
+export:
+  + - * div mod rem
+  < <= == != >= >
+  abs
+  min
+  max
+  from_flonum
+  to_flonum
+  bits
+  wraparound
+
+// For error reporting, the Racket-level functions are renamed by
+// Rhombus's built-in rewrite table
+
+operator ((x :~ Fixnum) + (y :~ Fixnum)) :~ Fixnum:
+  rkt.#{fx+}(x, y)
+
+operator
+| ((x :~ Fixnum) - (y :~ Fixnum)) :~ Fixnum:
+    rkt.#{fx-}(x, y)
+| (- (y :~ Fixnum)) :~ Fixnum:
+    rkt.#{fx-}(y)
+
+operator ((x :~ Fixnum) * (y :~ Fixnum)) :~ Fixnum:
+  rkt.#{fx*}(x, y)
+
+operator ((x :~ Fixnum) div (y :~ Fixnum)) :~ Fixnum:
+  rkt.#{fxquotient}(x, y)
+
+operator ((x :~ Fixnum) mod (y :~ Fixnum)) :~ Fixnum:
+  rkt.#{fxmodulo}(x, y)
+
+operator ((x :~ Fixnum) rem (y :~ Fixnum)) :~ Fixnum:
+  rkt.#{fxremainder}(x, y)
+
+operator ((x :~ Fixnum) < (y :~ Fixnum)):
+  rkt.#{fx<}(x, y)
+operator ((x :~ Fixnum) <= (y :~ Fixnum)):
+  rkt.#{fx<=}(x, y)
+operator ((x :~ Fixnum) == (y :~ Fixnum)):
+  rkt.#{fx=}(x, y)
+operator ((x :~ Fixnum) != (y :~ Fixnum)):
+  ! rkt.#{fx=}(x, y)
+operator ((x :~ Fixnum) >= (y :~ Fixnum)):
+  rkt.#{fx>=}(x, y)
+operator ((x :~ Fixnum) > (y :~ Fixnum)):
+  rkt.#{fx>}(x, y)
+
+fun abs(x :~ Fixnum) :~ Fixnum:
+  rkt.fxabs(x)
+
+fun min(x :~ Fixnum, y :~ Fixnum, ...) :~ Fixnum:
+  rkt.fxmin(x, y, ...)
+
+fun max(x :~ Fixnum, y :~ Fixnum, ...) :~ Fixnum:
+  rkt.fxmax(x, y, ...)
+
+namespace bits:
+  export:
+    <<
+    >>
+    logical
+    and
+    not
+    or
+    xor
+    popcount
+    popcount16
+    popcount32
+
+  namespace logical:
+    export:
+      >>
+    operator ((x :~ Fixnum) >> (y :~ Fixnum)):
+      rkt.#{fxrshift/logical}(x, y)
+
+operator ((x :~ Fixnum) << (y :~ Fixnum)):
+  rkt.#{fxlshift}(x, y)
+
+operator ((x :~ Fixnum) >> (y :~ Fixnum)):
+  rkt.#{fxrshift}(x, y)
+
+operator ((x :~ Fixnum) and (y :~ Fixnum)):
+  rkt.#{fxand}(x, y)
+
+operator ((x :~ Fixnum) or (y :~ Fixnum)):
+  rkt.#{fxior}(x, y)
+
+operator ((x :~ Fixnum) xor (y :~ Fixnum)):
+  rkt.#{fxxor}(x, y)
+
+operator (not (x :~ Fixnum)):
+  rkt.#{fxnot}(x)
+
+fun popcount(x :~ Fixnum) :~ Fixnum:
+  rkt.fxpopcount(x)
+
+fun popcount16(x :~ Fixnum) :~ Fixnum:
+  rkt.fxpopcount16(x)
+
+fun popcount32(x :~ Fixnum) :~ Fixnum:
+  rkt.fxpopcount32(x)
+
+namespace wraparound:
+  export:
+    +
+    -
+    *
+    bits
+
+  namespace bits:
+    export:
+      <<
+
+  operator ((x :~ Fixnum) + (y :~ Fixnum)) :~ Fixnum:
+    rkt.#{fx+/wraparound}(x, y)
+
+  operator
+  | ((x :~ Fixnum) - (y :~ Fixnum)) :~ Fixnum:
+      rkt.#{fx-/wraparound}(x, y)
+  | (- (y :~ Fixnum)) :~ Fixnum:
+      rkt.#{fx-/wraparound}(0, y)
+
+  operator ((x :~ Fixnum) * (y :~ Fixnum)) :~ Fixnum:
+    rkt.#{fx*/wraparound}(x, y)
+
+  operator ((x :~ Fixnum) << (y :~ Fixnum)):
+    rkt.#{fxlshift/wraparound}(x, y)
+
+fun from_flonum(x :~ Flonum) :~ Fixnum:
+  rkt.#{fl->fx}(x)
+fun to_flonum(x :~ Fixnum) :~ Flonum:
+  rkt.#{fx->fl}(x)

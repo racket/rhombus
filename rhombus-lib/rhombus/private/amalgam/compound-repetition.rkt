@@ -19,7 +19,8 @@
   ;;  - 'prefix -- actual prefix operator
   ;;  - 'nofix  -- "nofix" operator that consumes nothing
   ;;  - 'mixfix -- both prefix and "nofix", depending on the tail
-  (define (make-expression&repetition-prefix-operator prec kind exp)
+  (define (make-expression&repetition-prefix-operator prec kind exp
+                                                      #:element-statinfo? [element-statinfo? #f])
     (define (prefix-exp form self-stx)
       (exp form self-stx))
     (define (prefix-rep form self-stx)
@@ -28,7 +29,8 @@
                                  (lambda (form)
                                    (define expr (exp form self-stx))
                                    (values (discard-static-infos expr)
-                                           (extract-static-infos expr)))))
+                                           (extract-static-infos expr)))
+                                 #:element-statinfo? element-statinfo?))
     (define (nofix-exp stx)
       (syntax-parse stx
         [(self . tail)
@@ -76,7 +78,8 @@
   ;;  - 'infix   -- actual infix operator
   ;;  - 'postfix -- postfix operator that consumes nothing
   ;;  - 'mixfix  -- both infix and postfix, depending on the tail
-  (define (make-expression&repetition-infix-operator prec kind exp assc)
+  (define (make-expression&repetition-infix-operator prec kind exp assc
+                                                     #:element-statinfo? [element-statinfo? #f])
     (define (infix-exp form1 form2 self-stx)
       (exp form1 form2 self-stx))
     (define (infix-rep form1 form2 self-stx)
@@ -85,7 +88,8 @@
                                  (lambda (form1 form2)
                                    (define expr (exp form1 form2 self-stx))
                                    (values (discard-static-infos expr)
-                                           (extract-static-infos expr)))))
+                                           (extract-static-infos expr)))
+                                 #:element-statinfo? element-statinfo?))
     (define (postfix-exp form stx)
       (syntax-parse stx
         [(self . tail)
@@ -99,7 +103,8 @@
                                                   (lambda (form)
                                                     (define expr (exp form #'self))
                                                     (values (discard-static-infos expr)
-                                                            (extract-static-infos expr)))))
+                                                            (extract-static-infos expr)))
+                                                  #:element-statinfo? element-statinfo?))
          (values repet #'tail)]))
     (define (mixfix-exp form stx)
       (syntax-parse stx
@@ -146,13 +151,14 @@
 (define-for-syntax (build-compound-repetition at-stx forms build-one
                                               #:sequence-for-form [sequence-for-form #'for/list]
                                               #:is-sequence? [is-sequence? (lambda (form) #f)]
+                                              #:element-statinfo? [element-statinfo? #f]
                                               #:extract [extract (lambda (form) form)])
   (define depth
     (for/fold ([depth 0]) ([form (in-list forms)])
       (max depth (- (repetition-depth (extract form))
                     (if (is-sequence? form) 1 0)))))
   (define-values (for-clausesss bodys)
-    (for/lists (bodys for-clausesss)
+    (for/lists (for-clausesss bodys)
                ([form (in-list forms)])
       (syntax-parse (extract form)
         [rep::repetition-info
@@ -167,8 +173,13 @@
                      #`(#,sequence-for-form #,(car rev-for-clausess)
                         rep.body)))]
            [else
+            (define body (add-disappeared #'rep.body))
             (values for-clausess
-                    (add-disappeared #'rep.body))])])))
+                    (if element-statinfo?
+                        (wrap-static-info*
+                         body
+                         #'rep.element-static-infos)
+                        body))])])))
   (define-values (body static-infos)
     (apply build-one bodys))
   (make-repetition-info at-stx

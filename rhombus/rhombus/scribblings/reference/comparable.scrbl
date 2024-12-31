@@ -49,6 +49,13 @@ implement @rhombus(Comparable, ~class).
  identifying the same operation, or one specifying the generic
  @rhombus(Comparable, ~class) operation.
 
+ The comparison implementations for @rhombus(Number, ~annot) arguments
+ is is specialized like @rhombus(+) for arguments with
+ @rhombus(Flonum, ~annot) static information. That specialization does
+ not mean that a @rhombus(Number, ~annot) argument combined with a
+ @rhombus(Flonum, ~annot) argument will trigger an ambiguous-comparison
+ error in static mode, however.
+
 @examples(
   ~repl:
     1 < 2

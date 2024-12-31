@@ -266,3 +266,29 @@ block:
     check:
       syntax_meta.error("oops", 'here: there', ['there', 'here'])
       ~throws values("oops", "in: here: there", "at: there")
+
+check:
+  try:
+    eval(
+      'block:
+         namespace ns:
+           export: ?? !!
+           operator (a ?? b): 0
+           operator (a !! b): 0
+
+         1 ns.(??) 2 ns.(!!) 3'
+    )
+    ~catch exn :: Exn.Fail.Syntax:
+      let PairList[op2_3, op1, op2] = exn.exprs
+      [op2_3.to_source_string(),
+       op1.to_source_string(),
+       op2.to_source_string(),
+       op2_3.srcloc().span,
+       op1.srcloc().span,
+       op2.srcloc().span]
+  ~is ["ns.(!!) 3",
+       "ns.(??)",
+       "ns.(!!)",
+       9,
+       7,
+       7]

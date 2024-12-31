@@ -8,6 +8,14 @@
 
 @(def shrubbery_scrbl: ModulePath'lib("shrubbery/scribblings/shrubbery.scrbl")')
 
+@(namespace ~open:
+    import:
+      meta_label:
+        scribble/rhombus
+    export scribble_rhombusblock_etc
+    def scribble_rhombusblock_etc:
+      @rhombus(rhombusblock_etc))
+
 @(def rhombus_eval = make_rhombus_eval())
 @examples(
   ~eval: rhombus_eval
@@ -44,7 +52,7 @@ form form rendering literal shrubbery forms as a pict.
  (such as @rhombus(10), @rhombus(0xA), and @rhombus(000010)) is preserved
  verbatim.
 
- Within @rhombus(form), @rhombus(#,) followed by a parenthesized
+ Within @rhombus(form), @litchar{#,} followed by a parenthesized
  expression is an escape where the expression must produce a pict. The
  pict is rendered in place of the escape.
 
@@ -70,7 +78,7 @@ form form rendering literal shrubbery forms as a pict.
 ){
 
  Produces a @tech{pict} that renders the text of @rhombus(form)
- verbatim, preserving whitespace and comments, except that @rhombus(#,)
+ verbatim, preserving whitespace and comments, except that @litchar{#,}
  followed by a parenthesized expression is an escape that must produce a
  pict to render in place of the escape.
 
@@ -101,6 +109,40 @@ form form rendering literal shrubbery forms as a pict.
   ~repl:
     make_example(@rhombus(3), @rhombus(4))
     make_example(@rhombus(3).scale(2), @rhombus(4).scale(2))
+)
+
+}
+
+@doc(
+  expr.macro 'rhombusblock_etc:
+                $group
+                ...'
+  expr.macro 'rhombusblock_etc ($option, ...):
+                $group
+                ...'
+){
+
+ Like @rhombus(rhombusblock), but with options that are the same as for
+ Scribble's @scribble_rhombusblock_etc. In particular, using the
+ @rhombus(~escape: #,(@rhombus(op, ~var))) option changes the escape operator
+ from @litchar{#,} to @rhombus(op, ~var).
+
+@examples(
+  ~eval: rhombus_eval,
+  ~repl:
+    ~fake:
+      rhombusblock_etc(~escape: $$):
+        // example use of `rhombusblock`
+        @rhombusblock(
+          check: add1(#,(@rhombus(#,))(n))
+                 ~is #,(@rhombus(#,))(res)
+        )
+      rhombusblock_etc(~escape: $$):
+        // example use of `rhombusblock`
+        @rhombusblock(
+          check: add1(#,(n))
+                 ~is #,(res)
+        )
 )
 
 }

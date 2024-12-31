@@ -1,0 +1,197 @@
+#lang rhombus/and_meta
+import:
+  rhombus/flonum
+
+fun f(x :: Flonum,
+      y :: Flonum):
+  [x + y,
+   x - y,
+   - x,
+   x * y,
+   x / y,
+   x ** y,
+   x < y,
+   x <= y,
+   x == y,
+   x != y,
+   x >= y,
+   x > y]
+
+check:
+  f(2.0, 3.0)
+  ~is [5.0,
+       -1.0,
+       -2.0,
+       6.0,
+       math.inexact(2/3),
+       8.0,
+       #true,
+       #true,
+       #false,
+       #true,
+       #false,
+       #false]
+
+check:
+  f(2.0, -3.0)
+  ~is [-1.0,
+       5.0,
+       -2.0,
+       -6.0,
+       math.inexact(-2/3),
+       0.125,
+       #false,
+       #false,
+       #false,
+       #true,
+       #true,
+       #true]
+
+check:
+  f(2.0, 2.0)
+  ~is [4.0,
+       0.0,
+       -2.0,
+       4.0,
+       1.0,
+       4.0,
+       #false,
+       #true,
+       #true,
+       #false,
+       #true,
+       #false]
+
+// check that a flonum operation is inserted by checking that
+// an error is raised if a non-flonum number argument is supplied
+
+fun not_a_flonum(who_str):
+  values(rewrite_who(who_str) ++ ":",
+         error.annot_msg(),
+         error.val(1).msg)
+
+fun rewrite_who(str):
+  match str
+  | "compares_equal": ".="
+  | "compares_unequal": ".="
+  | ".!=": ".="
+  | ~else: str
+
+expr.macro 'check_op $(op :: Name)':
+  'block:
+     check:
+       1.0 $op (1 :~ Flonum)
+       ~throws not_a_flonum(to_string('$op'))
+     check:
+       (1 :~ Flonum) $op 1.0
+       ~throws not_a_flonum(to_string('$op'))'
+
+check_op +
+check_op -
+check_op *
+check_op /
+check_op **
+check_op <
+check_op <=
+check_op compares_equal
+check_op compares_unequal
+check_op >=
+check_op >
+check_op .<
+check_op .<=
+check_op .=
+check_op .!=
+check_op .>=
+check_op .>
+
+check:
+  - (1 :~ Flonum)
+  ~throws not_a_flonum("-")
+
+expr.macro 'check_fun $(name :: Identifier)':
+  'block:
+     check:
+       math . $name (1 :~ Flonum)
+       ~throws not_a_flonum(to_string('$name'))
+     check:
+       math . $name (1.0)
+       ~is math . $name (dynamic(1.0))'
+
+check_fun abs
+check_fun floor
+check_fun ceiling
+check_fun round
+check_fun truncate
+check_fun sin
+check_fun cos
+check_fun tan
+check_fun min
+check_fun max
+
+check:
+  math.max(0.0, 1 :~ Flonum, 2.0)
+  ~throws not_a_flonum("max")
+
+check:
+  math.min(0.0, 1 :~ Flonum, 2.0)
+  ~throws not_a_flonum("min")
+
+check:
+  math.expt(0.0, 1 :~ Flonum)
+  ~throws not_a_flonum("**")
+check:
+  math.expt(1 :~ Flonum, 2.0)
+  ~throws not_a_flonum("**")
+
+check:
+  1.0 flonum.(+) 2.0 ~is 3.0
+  1.0 flonum.(-) 2.0 ~is -1.0
+  flonum.(-) 2.0 ~is -2.0
+  1.0 flonum.(*) 2.0 ~is 2.0
+  1.0 flonum.(/) 2.0 ~is 0.5
+  1.0 flonum.(**) 2.0 ~is 1.0
+  1.0 flonum.(<) 2.0 ~is #true
+  2.0 flonum.(<) 2.0 ~is #false
+  1.0 flonum.(<=) 2.0 ~is #true
+  2.0 flonum.(<=) 2.0 ~is #true
+  1.0 flonum.(==) 2.0 ~is #false
+  2.0 flonum.(==) 2.0 ~is #true
+  1.0 flonum.(!=) 2.0 ~is #true
+  2.0 flonum.(!=) 2.0 ~is #false
+  2.0 flonum.(>) 1.0 ~is #true
+  2.0 flonum.(>) 2.0 ~is #false
+  2.0 flonum.(>=) 1.0 ~is #true
+  2.0 flonum.(>=) 2.0 ~is #true
+  flonum.abs(2.0) ~is 2.0
+  flonum.abs(-2.0) ~is 2.0
+  flonum.min(1.0, 2.0, 3.0) ~is 1.0
+  flonum.max(1.0, 2.0, 3.0) ~is 3.0
+  flonum.floor(1.5) ~is 1.0
+  flonum.floor(-1.5) ~is -2.0
+  flonum.ceiling(1.5) ~is 2.0
+  flonum.ceiling(-1.5) ~is -1.0
+  flonum.round(1.5) ~is 2.0
+  flonum.round(1.25) ~is 1.0
+  flonum.truncate(1.5) ~is 1.0
+  flonum.truncate(-1.5) ~is -1.0
+  flonum.sin(0.0) ~is 0.0
+  flonum.cos(0.0) ~is 1.0
+  flonum.tan(1.0) ~is math.tan(1.0)
+  flonum.asin(0.5) ~is math.asin(0.5)
+  flonum.asin(2.0) ~is #nan
+  flonum.acos(0.5) ~is math.acos(0.5)
+  flonum.acos(2.0) ~is #nan
+  flonum.atan(0.5) ~is math.atan(0.5)
+  flonum.sqrt(4.0) ~is 2.0
+  flonum.sqrt(-4.0) ~is #nan
+  flonum.log(4.0) ~is math.log(4.0)
+  flonum.log(-4.0) ~is #nan
+  flonum.exp(4.0) ~is math.exp(4.0)
+  flonum.to_single(4.0) ~is 4.0
+  flonum.to_single(0.1) ~is 0.10000000149011612
+  flonum.bit_field(0.0, 0, 17) ~is 0
+  flonum.bit_field(-0.0, 62, 64) ~is 2
+  flonum.from_int(3) ~is 3.0
+  flonum.from_int(-3) ~is -3.0
+  flonum.to_int(3.0) ~is 3
+  flonum.to_int(-3.0) ~is -3

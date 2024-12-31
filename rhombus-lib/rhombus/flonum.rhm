@@ -1,0 +1,122 @@
+#lang rhombus/static
+import:
+  lib("racket/flonum.rkt") as rkt
+  "private/flbit-field.rkt" as bit
+
+export:
+  + - * / **
+  < <= == != >= >
+  abs
+  min
+  max
+  floor
+  ceiling
+  round
+  truncate
+  sin
+  cos
+  tan
+  asin
+  acos
+  atan
+  sqrt
+  log
+  exp
+  to_single
+  bit_field
+  from_int
+  to_int
+
+// For error reporting, the Racket-level functions are renamed by
+// Rhombus's built-in rewrite table
+
+operator ((x :~ Flonum) + (y :~ Flonum)) :~ Flonum:
+  rkt.#{fl+}(x, y)
+
+operator
+| ((x :~ Flonum) - (y :~ Flonum)) :~ Flonum:
+    rkt.#{fl-}(x, y)
+| (- (y :~ Flonum)) :~ Flonum:
+    rkt.#{fl-}(y)
+
+operator ((x :~ Flonum) * (y :~ Flonum)) :~ Flonum:
+  rkt.#{fl*}(x, y)
+
+operator ((x :~ Flonum) / (y :~ Flonum)) :~ Flonum:
+  rkt.#{fl/}(x, y)
+
+operator ((x :~ Flonum) ** (y :~ Flonum)) :~ Flonum:
+  rkt.#{flexpt}(x, y)
+
+operator ((x :~ Flonum) < (y :~ Flonum)):
+  rkt.#{fl<}(x, y)
+operator ((x :~ Flonum) <= (y :~ Flonum)):
+  rkt.#{fl<=}(x, y)
+operator ((x :~ Flonum) == (y :~ Flonum)):
+  rkt.#{fl=}(x, y)
+operator ((x :~ Flonum) != (y :~ Flonum)):
+  ! rkt.#{fl=}(x, y)
+operator ((x :~ Flonum) >= (y :~ Flonum)):
+  rkt.#{fl>=}(x, y)
+operator ((x :~ Flonum) > (y :~ Flonum)):
+  rkt.#{fl>}(x, y)
+
+fun abs(x :~ Flonum) :~ Flonum:
+  rkt.flabs(x)
+
+fun min(x :~ Flonum, y :~ Flonum, ...) :~ Flonum:
+  rkt.flmin(x, y, ...)
+
+fun max(x :~ Flonum, y :~ Flonum, ...) :~ Flonum:
+  rkt.flmax(x, y, ...)
+
+fun floor(x :~ Flonum) :~ Flonum:
+  rkt.flfloor(x)
+
+fun ceiling(x :~ Flonum) :~ Flonum:
+  rkt.flceiling(x)
+
+fun round(x :~ Flonum) :~ Flonum:
+  rkt.flround(x)
+
+fun truncate(x :~ Flonum) :~ Flonum:
+  rkt.fltruncate(x)
+
+fun sin(x :~ Flonum) :~ Flonum:
+  rkt.flsin(x)
+
+fun cos(x :~ Flonum) :~ Flonum:
+  rkt.flcos(x)
+
+fun tan(x :~ Flonum) :~ Flonum:
+  rkt.fltan(x)
+
+fun asin(x :~ Flonum) :~ Flonum:
+  rkt.flasin(x)
+
+fun acos(x :~ Flonum) :~ Flonum:
+  rkt.flacos(x)
+
+fun atan(x :~ Flonum) :~ Flonum:
+  rkt.flatan(x)
+
+fun sqrt(x :~ Flonum) :~ Flonum:
+  rkt.flsqrt(x)
+
+fun log(x :~ Flonum) :~ Flonum:
+  rkt.fllog(x)
+
+fun exp(x :~ Flonum) :~ Flonum:
+  rkt.flexp(x)
+
+fun to_single(x :~ Flonum) :~ Flonum:
+  rkt.flsingle(x)
+
+fun bit_field(x :~ Flonum, start :~ NonnegInt, end :~ NonnegInt) :~ Int:
+  bit.#{flbit-field}(x, start, end)
+
+fun from_int(x :~ Int) :~ Flonum:
+  rkt.#{->fl}(x)
+
+fun to_int(x :~ Flonum) :~ Int:
+  rkt.#{fl->exact-integer}(x)

@@ -346,6 +346,14 @@
         information is exposed by @rhombus(definitely), for example. See
         also @rhombus(statinfo_meta.unpack_call_result).}
 
+  @item{@rhombus(statinfo_meta.flonum_key): A boolean indicating whether
+        the value is a @tech{flonum}. Normally, this key is only present if it
+        has a @rhombus(#true) value.}
+
+  @item{@rhombus(statinfo_meta.fixnum_key): A boolean indicating whether
+        the value is a @tech{fixnum}. Normally, this key is only present if it
+        has a @rhombus(#true) value.}
+
   @item{@rhombus(statinfo_meta.values_key): A packed group of
         static information (see @rhombus(statinfo_meta.pack_group)),
         one for each value produced by a multiple-value expression.}

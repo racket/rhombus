@@ -8,6 +8,7 @@
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)
          "rhombus-primitive.rkt"
+         "normalize-syntax.rkt"
          "../version-case.rkt")
 
 ;; For `current-read-interaction` callback:
@@ -142,22 +143,7 @@
   ;; for expand-time configure or syntax errors in the REPL
   (error-syntax->string-handler
    (lambda (s len)
-     (define stx
-       (cond
-         [(and (syntax? s) (syntax-opaque-raw-property s)) s]
-         [else
-          (syntax-case* s (multi group
-                                 parens brackets braces quotes
-                                 op) (lambda (a b) (eq? (syntax-e a) (syntax-e b)))
-            [(multi . _) s]
-            [(group . _) s]
-            [(parens . _) s]
-            [(brackets . _) s]
-            [(braces . _) s]
-            [(quotes . _) s]
-            [(op _) s]
-            [(_ ...) #`(group . #,s)]
-            [_ s])]))
+     (define stx (normalize-syntax s))
      (define str (shrubbery-syntax->string stx #:max-length len))
      (if (equal? str "")
          "[end of group]"
