@@ -192,11 +192,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Fixnum'
 ){
 
- Matches integers that fall within a @deftech{fixnum} range that has a
- specialized representation. This range depends on the architecture's
- word size and Racket implementation, but it corresponds to integers that
- fit into a two's complete representation using either 30, 31, 61, or 63
- bits.
+ Matches integers that fall within a @tech{fixnum} range.
 
 @examples(
   1024 is_a Fixnum
@@ -610,3 +606,4 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 }
 
 @include_section("flonum.scrbl")
+@include_section("fixnum.scrbl")

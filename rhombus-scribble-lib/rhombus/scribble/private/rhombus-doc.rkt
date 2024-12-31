@@ -163,7 +163,7 @@
     #:datum-literals (|.| op parens group)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ... (op |.|) ((~and ptag parens) (group (op opname))))
              #:do [(define resolved (resolve-name-ref (list space-name)
-                                                      (in-name-root-space #'root)
+                                                      #'root
                                                       (syntax->list #'(field ... opname))
                                                       #:parens #'ptag))]
              #:when resolved

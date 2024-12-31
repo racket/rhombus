@@ -176,6 +176,11 @@
                                                      (syntax-local-phase-level)
                                                      phase))
                    id]
+                  [(identifier-distinct-binding* (in-name-root-space id) (in-name-root-space pre-id)
+                                                 (if (eq? phase 'default)
+                                                     (syntax-local-phase-level)
+                                                     phase))
+                   id]
                   [who-stx
                    (raise-syntax-error #f
                                        (format "no such imported ~a" what)

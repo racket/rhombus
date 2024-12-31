@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          racket/flonum
+         racket/fixnum
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -10,6 +11,7 @@
          "compare-key.rkt"
          "static-info.rkt"
          "flonum-key.rkt"
+         "fixnum-key.rkt"
          "rhombus-primitive.rkt")
 
 (provide (for-spaces (#f
@@ -47,6 +49,7 @@
                        get-real-static-infos
                        get-rational-static-infos
                        get-int-static-infos
+                       get-fixnum-static-infos
                        get-flonum-static-infos)))
 
 (module+ precedence
@@ -57,12 +60,12 @@
   ;; propagate a comparison operation from things like `+`, and
   ;; so it's simplest (and good enough in practice) to overapproximate
   ;; by pointing all numbers to `>`, etc.
-  (#%compare ((< </fl)
-              (<= <=/fl)
-              (= =/fl)
-              (!= !=/fl)
-              (>= >=/fl)
-              (> >/fl))))
+  (#%compare ((< </flfx)
+              (<= <=/flfx)
+              (= =/flfx)
+              (!= !=/flfx)
+              (>= >=/flfx)
+              (> >/flfx))))
 
 (define-for-syntax (get-real-static-infos)
   (get-number-static-infos))
@@ -70,6 +73,9 @@
   (get-real-static-infos))
 (define-for-syntax (get-int-static-infos)
   (get-real-static-infos))
+(define-for-syntax (get-fixnum-static-infos)
+  #`((#%fixnum #t)
+     #,@(get-int-static-infos)))
 (define-for-syntax (get-flonum-static-infos)
   #`((#%flonum #t)
      #,@(get-real-static-infos)))
@@ -157,11 +163,12 @@
 
 (define-syntax (define-comp-infix stx)
   (syntax-parse stx
-    [(_ (~optional (~and who #:who)) name racket-name flname)
+    [(_ (~optional (~and who #:who)) name racket-name flname fxname)
      #'(define-infix (~? who) name racket-name
          #:precedences comparison-precedences
          #:associate 'none
-         #:flonum flname ())]))
+         #:flonum flname ()
+         #:fixnum fxname ())]))
 
 (define (number!=? a b)
   (define (check n)
@@ -174,35 +181,43 @@
 (define-syntax-rule (fl!= a b)
   (not (fl= a b)))
 
-(define-comp-infix #:who .< < fl<)
-(define-comp-infix #:who .<= <= fl<=)
-(define-comp-infix #:who .= = fl=)
-(define-comp-infix .!= number!=? fl!=)
-(define-comp-infix #:who .>= >= fl>=)
-(define-comp-infix #:who .> > fl>)
+(define-syntax-rule (fx!= a b)
+  (not (fx= a b)))
 
-(define-for-syntax (make-comparable-op op flop)
+(define-comp-infix #:who .< < fl< fx<)
+(define-comp-infix #:who .<= <= fl<= fx<=)
+(define-comp-infix #:who .= = fl= fx=)
+(define-comp-infix .!= number!=? fl!= fx!=)
+(define-comp-infix #:who .>= >= fl>= fx>=)
+(define-comp-infix #:who .> > fl> fx>)
+
+(define-for-syntax (make-comparable-op op flop fxop)
   (lambda (stx)
     (syntax-parse stx
-      [(op/fl a b)
+      [(op/flfx a b)
        (let ([use-op
-              (if (and (flonum-statinfo? #'a)
-                       (flonum-statinfo? #'b))
-                  flop
-                  op)])
+              (cond
+                [(and (flonum-statinfo? #'a)
+                      (flonum-statinfo? #'b))
+                 flop]
+                [(and (fixnum-statinfo? #'a)
+                      (fixnum-statinfo? #'b))
+                 fxop]
+                [else
+                 op])])
          (datum->syntax stx
-                        (list (datum->syntax use-op (syntax-e use-op) #'op/fl #'op/fl)
+                        (list (datum->syntax use-op (syntax-e use-op) #'op/flfx #'op/flfx)
                               (discard-static-infos #'a)
                               (discard-static-infos #'b))
                         stx
                         stx))])))
 
-(define-syntax </fl (make-comparable-op #'< #'fl<))
-(define-syntax <=/fl (make-comparable-op #'<= #'fl<=))
-(define-syntax =/fl (make-comparable-op #'= #'fl=))
-(define-syntax !=/fl (make-comparable-op #'number!=? #'fl!=))
-(define-syntax >=/fl (make-comparable-op #'>= #'fl>=))
-(define-syntax >/fl (make-comparable-op #'> #'fl>))
+(define-syntax </flfx (make-comparable-op #'< #'fl< #'fx<))
+(define-syntax <=/flfx (make-comparable-op #'<= #'fl<= #'fx<=))
+(define-syntax =/flfx (make-comparable-op #'= #'fl= #'fx=))
+(define-syntax !=/flfx (make-comparable-op #'number!=? #'fl!= #'fx!=))
+(define-syntax >=/flfx (make-comparable-op #'>= #'fl>= #'fx>=))
+(define-syntax >/flfx (make-comparable-op #'> #'fl> #'fx>))
 
 (define-syntax (define-eql-infix stx)
   (syntax-parse stx

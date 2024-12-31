@@ -11,9 +11,9 @@
 A @deftech{flonum} is a number that is represented using an IEEE 64-bit
 floating-point representation. A flonum is a plain number, so number
 operations like @rhombus(+) work on flonums and mixtures of flonums with
-other numbers. In some cases, however, using functions and operators
-from @rhombusmodname(rhombus/flonum)can reduce run time by allowing
-flonum operations to more efficiently communicate intermediate results.
+other numbers. In some cases, using functions and operators from
+@rhombusmodname(rhombus/flonum) can reduce run time by allowing flonum
+operations to more efficiently communicate intermediate results.
 
 The functions exported by @rhombusmodname(rhombus/flonum) explicitly
 require flonum arguments and produce flonum results. They can produce
