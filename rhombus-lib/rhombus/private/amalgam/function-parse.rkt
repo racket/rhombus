@@ -23,6 +23,8 @@
          "nested-bindings.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
+         "unsafe-key.rkt"
+         "unsafe-key.rkt"
          "static-info.rkt"
          "repetition.rkt"
          "op-literal.rkt"
@@ -57,9 +59,13 @@
                        :rhombus-ret-annotation
                        :maybe-arg-rest
                        :non-...-binding
+                       check-arg-for-unsafe
                        build-function
                        build-case-function
+                       build-unsafe-function
+                       build-unsafe-case-function
                        maybe-add-function-result-definition
+                       maybe-add-unsafe-definition
                        parse-anonymous-function-shape))
   (begin-for-syntax
     (provide (struct-out converter))))
@@ -411,7 +417,26 @@
     (pattern (~seq
               (~alt (~optional ::pos-arity-rest #:defaults ([rest? #'#f]))
                     (~optional ::kwp-arity-rest #:defaults ([kwrest? #'#f])))
-              ...))))
+              ...)))
+
+  (define-syntax-class :unsafe-compatible-binding
+    #:datum-literals (group)
+    (pattern (group _::...-bind))
+    (pattern (group _:identifier))
+    (pattern (group _:identifier _::annotate-op (~not eq::equal) ...)))
+
+  (define (check-arg-for-unsafe stx arg kw-ok?)
+    (let loop ([arg arg] [kw-ok? kw-ok?])
+      (syntax-parse arg
+        [_::unsafe-compatible-binding #t]
+        [(group (_::parens arg)) (loop #'arg #f)]
+        [(group _:keyword (_::block arg))
+         #:when kw-ok?
+         (loop #'arg #f)]
+        [_ (raise-syntax-error #f
+                               "binding does not fit limitations of an `~unsafe` clause"
+                               stx
+                               arg)]))))
 
 (define-for-syntax (parse-anonymous-function-shape stx)
   (define (build arity name)
@@ -566,6 +591,20 @@
                               proc)])
                proc)))
         shifted-arity)]))
+
+  (define (build-unsafe-function kws args arg-parseds
+                                 rest-arg rest-parsed
+                                 body
+                                 src-ctx)
+    (syntax-parse body
+      #:datum-literals (group)
+      [(group unsafe-kw (tag::block body ...+))
+       (syntax-property
+        #`(lambda #,@(unsafe-args kws args arg-parseds
+                                  rest-arg rest-parsed)
+            (rhombus-body-at tag body ...))
+        'body-as-unsafe
+        #t)]))
 
   (define (build-case-function adjustments argument-static-infoss
                                function-name outer-whos inner-whos
@@ -734,7 +773,67 @@
                              (lambda () #,next))]))]))))
      shifted-arity))
 
-  (define (maybe-add-function-result-definition name extends static-infoss arity defns)
+  (define (build-unsafe-case-function kwss-stx argss-stx arg-parsedss-stx
+                                      rest-args-stx rest-parseds-stx
+                                      bodys
+                                      src-ctx)
+    (syntax-property
+     #`(case-lambda
+         #,@(for/list ([kws (in-list (syntax->list kwss-stx))]
+                       [args (in-list (syntax->list argss-stx))]
+                       [arg-parseds (in-list (syntax->list arg-parsedss-stx))]
+                       [rest-arg (in-list (syntax->list rest-args-stx))]
+                       [rest-parsed (in-list (syntax->list rest-parseds-stx))]
+                       [body (in-list bodys)])
+              (syntax-parse body
+                #:datum-literals (group)
+                [(group unsafe-kw (tag::block body ...+))
+                 #`[#,@(unsafe-args kws args arg-parseds
+                                    rest-arg rest-parsed)
+                    (rhombus-body-at tag body ...)]])))
+     'body-as-unsafe
+     #t))
+
+  (define (unsafe-args kws args arg-parseds
+                       rest-arg rest-parsed)
+    (define (extract-arg-id arg-parsed)
+      (syntax-parse arg-parsed
+        [arg::binding-form
+         #:with arg-impl::binding-impl #'(arg.infoer-id () arg.data)
+         #:with arg-info::binding-info #'arg-impl.info
+         #:with (bind-id) #'(arg-info.bind-id ...)
+         #'bind-id]))
+    (define arg-list
+      (apply
+       append
+       (for/list ([kw (in-list (syntax->list kws))]
+                  [arg (in-list (syntax->list args))]
+                  [arg-parsed (in-list (syntax->list arg-parseds))])
+         (cond
+           [(syntax-e kw)
+            (list kw (extract-arg-id arg-parsed))]
+           [else (list (extract-arg-id arg-parsed))]))))
+    (cond
+      [(syntax-e rest-arg)
+       (syntax-parse rest-parsed
+         [rest::binding-form
+          #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
+          #:with rest-info::binding-info #'rest-impl.info
+          #:with (bind-id) #'(rest-info.bind-id ...)
+          (syntax-parse #'(rest-info.bind-uses ...)
+            [((_ ... [#:repet ()] _ ...))
+             (list
+              (append arg-list #'bind-id))]
+            [_
+             ;; add list unpack
+             (define tmp (car (generate-temporaries #'(bind-id))))
+             (list
+              (append arg-list tmp)
+              #`(define-syntaxes (bind-id #,(in-repetition-space #'bind-id))
+                  (make-expression+repetition #'(([(elem) (in-list #,tmp)])) #'elem (lambda () #'()))))])])]
+      [(list arg-list)]))
+
+  (define (maybe-add-function-result-definition name extends static-infoss arity unsafe-id defns)
     (define result-info?
       (and (pair? static-infoss)
            (pair? (syntax-e (car static-infoss)))
@@ -749,12 +848,23 @@
                         [(maybe-arity-info ...)
                          (if arity
                              (list #`(#%function-arity #,arity))
+                             null)]
+                        [(maybe-unsafe-info ...)
+                         (if arity
+                             (list #`(#%unsafe #,unsafe-id))
                              null)])
             #'(define-static-info-syntax/maybe/maybe-extension name extends
                 maybe-result-info ...
                 maybe-arity-info ...
+                maybe-unsafe-info ...
                 . #,(indirect-get-function-static-infos)))
           defns))
+
+  (define (maybe-add-unsafe-definition unsafe-id unsafe-proc defns)
+    (if unsafe-proc
+        (cons #`(define #,unsafe-id #,unsafe-proc)
+              defns)
+        defns))
 
   ;; returns (values (listof n) (listof (listof fcase)))
   ;; where `n` is the argument count, and a negative
@@ -1166,6 +1276,8 @@
            (when a
              (let* ([a (if (syntax? a) (syntax->datum a) a)])
                (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts (and static? rator-kind)))))
+         (define unsafe (let ([v (rator-static-info #'#%unsafe)])
+                          (and (identifier? v) v)))
          (define num-rands (length rands))
          (define arg-forms (apply append
                                   (for/list ([kw (in-list kws)]
@@ -1193,6 +1305,12 @@
                                              ,@w-extra-rands
                                              ,@arg-forms
                                              ,(discard-static-infos rest-args))]
+                            [unsafe
+                             (define-values (binds args) (lift-arguments (append w-extra-rands arg-forms)))
+                             #`(let #,binds
+                                   (if (variable-reference-from-unsafe? (#%variable-reference))
+                                       (#,unsafe #,@args)
+                                       (#,w-rator #,@args)))]
                             [else `(,w-rator
                                     ,@w-extra-rands
                                     ,@arg-forms)])
@@ -1559,6 +1677,18 @@
           (values (cons id formals) (cons (convert-one stx id) converted))]
          [else
           (values formals (cons stx converted))])])))
+
+(define-for-syntax (lift-arguments args)
+  (let loop ([args args] [bind-accum null] [arg-accum null])
+    (cond
+      [(null? args) (values (reverse bind-accum) (reverse arg-accum))]
+      [(keyword? (syntax-e (car args)))
+       (loop (cdr args) bind-accum (cons (car args) arg-accum))]
+      [else
+       (define tmp (car (generate-temporaries (list (car args)))))
+       (loop (cdr args)
+             (cons #`[#,tmp #,(car args)] bind-accum)
+             (cons tmp arg-accum))])))
 
 (begin-for-syntax
   (set-parse-function-call! parse-function-call))

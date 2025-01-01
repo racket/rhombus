@@ -297,7 +297,8 @@ class Pict():
                                           error.annot_msg("config-adjust function's result"),
                                           error.annot("Pict"),
                                           error.val(~label: "function", config_adjuster),
-                                          error.val(~label: "result", c)))
+                                          error.val(~label: "result", c))
+                                  c)
                   let new:
                     if (all(new_dep === dep, ...)
                           && new_config == _config)
