@@ -130,10 +130,10 @@ module ~early unsafeable ~lang rhombus:
       ~unsafe: "oops"
       "oops"
   operator
-  | (x %/):
+  | (x %&):
       ~unsafe: [0, [x]]
       [1, [x]]
-  | (%/ y):
+  | (%& y):
       ~unsafe: [0, y]
       [1, y]
 
@@ -160,8 +160,8 @@ module ~early use_as_safe ~lang rhombus:
   check 2 %? 3 ~is [1, 2, 3]
   check %? 3 ~is [1, 3]
   check 2 %* 3 ~is [1, 2, 3]
-  check 2 %/ ~is [1, [2]]
-  check %/ 2 ~is [1, 2]
+  check 2 %& ~is [1, [2]]
+  check %& 2 ~is [1, 2]
 
 module ~early use_as_unsafe ~lang rhombus:
   import:
@@ -186,8 +186,8 @@ module ~early use_as_unsafe ~lang rhombus:
   check 2 %? 3 ~is [0, 2, 3]
   check %? 3 ~is [0, 3]
   check 2 %* 3 ~is [0, 2, 3]
-  check 2 %/ ~is [0, [2]]
-  check %/ 2 ~is [0, 2]
+  check 2 %& ~is [0, [2]]
+  check %& 2 ~is [0, 2]
 
 import self!use_as_safe
 import self!use_as_unsafe
