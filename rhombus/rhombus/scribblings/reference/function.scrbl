@@ -1,7 +1,9 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    meta_label:
+      rhombus/unsafe open)
 
 @(def dots = @rhombus(..., ~bind))
 @(def dots_expr = @rhombus(...))
@@ -32,20 +34,20 @@ form or @rhombus(fun) expression form, but see also
                 ...'
   defn.macro 'fun
               | $id_name $case_maybe_kw:
-                  $who_option; ...
+                  $case_option; ...
                   $body
                   ...
               | ...'
   defn.macro 'fun $id_name $maybe_res_annot
               | $id_name $case_maybe_kw:
-                  $who_option; ...
+                  $case_option; ...
                   $body
                   ...
               | ...'
   defn.macro 'fun $id_name $maybe_res_annot:
                 $option; ...
               | $id_name $case_maybe_kw:
-                  $who_option; ...
+                  $case_option; ...
                   $body
                   ...
               | ...'
@@ -62,10 +64,17 @@ form or @rhombus(fun) expression form, but see also
       $desc_body
       ...
     name_option
+    case_option
 
   grammar name_option:
     ~name $op_or_id_name
     ~name: $op_or_id_name
+    who_option
+
+  grammar case_option:
+    ~unsafe:
+      $unsafe_body
+      ...
     who_option
 
   grammar who_option:
@@ -300,7 +309,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  is always the initial @rhombus(id_name).
 
  When @rhombus(~who) is present as an @rhombus(option),
- @rhombus(name_option), or @rhombus(who_option), the given @rhombus(id)
+ @rhombus(name_option), or @rhombus(case_option), the given @rhombus(id)
  is bound to a symbol form of the function name---that is, to the symbol
  form of the defined @rhombus(id_name) or the @rhombus(op_or_id_name)
  provided with @rhombus(~name). A @rhombus(~who) binding is particularly
@@ -325,6 +334,46 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
       trivial("one")
     ~error:
       trivial(0)
+)
+
+ When @rhombus(~unsafe) is present as a @rhombus(case_option), an
+ alternative implementation is provided that may be used for calls to the
+ function in an unsafe context (see @rhombus(use_unsafe)). The
+ alternative implementation as a @rhombus(unsafe_body) sequence is
+ intended to produce the same result as the case's main @rhombus(body)
+ sequence, but it may skip annotation checks. Annotation on the function
+ arguments are not checked (and no conversions are applied) for unsafe
+ calls, even when the annotation is accoated with an argument via
+ @rhombus(::, ~bind) as opposed to @rhombus(:~). The
+ @rhombus(unsafe_body) sequence itself is in unsafe mode. Argument
+ bindings are restricted when a @rhombus(~unsafe) option is present: the
+ binding must be either an immediate identifier, an identifier annotated
+ with @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a single-identifier
+ binding form that accepts any argument, such as @rhombus(_, ~bind).
+ Keyword are allowed only when a function does not have multiple cases,
+ and @rhombus(&, ~bind) or @rhombus(~&) arguments are not allowed. (A
+ final repetition argument using @rhombus(ellipsis) is allowed.) When a
+ multi-case function has @rhombus(~unsafe) for any case, then it must
+ have @rhombus(~unsafe) for all cases. If the function has a result
+ annotation, it is not checked (and no conversion is applied) for the
+ unsafe result.
+
+@examples(
+  ~defn:
+    import rhombus/fixnum
+    fun fixnum_sum(ns :: List.of(Fixnum)) :: Fixnum:
+      ~unsafe:
+        // assume all fixnums and that result fits:
+        for values(res = 0) (n: ns):
+          res fixnum.(+) n
+      // use generic arithmetic, check fixnum result at end:
+      for values(res = 0) (n: ns):
+          res + n
+  ~repl:
+    fixnum_sum([1, 2, 3])
+    ~error:
+      :
+        fixnum_sum([1, 2, 3 ** 100]) // seriously bad in unsafe mode
 )
 
 }

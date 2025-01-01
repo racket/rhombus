@@ -31,9 +31,13 @@
 
   grammar impl_block:
     :
-      $option; ...
+      $case_option; ...
       $body
       ...
+
+  grammar case_option:
+    option
+    ~unsafe: $unsafe_body; ...
 
   grammar option:
     ~stronger_than $other ...
@@ -98,7 +102,7 @@
  precedence, associativity (in the case of an infix operator), and/or
  naming options. Each @rhombus(option) keyword can appear at most once. In
  a precedence specification, @rhombus(~other) stands for any operator not
- otherwise mentioned. The @rhombus(~name) and @rhombus(~who) options are
+ otherwise mentioned. The @rhombus(~name), @rhombus(~who), and @rhombus(~unsafe) options are
  as in @rhombus(fun, ~defn). When multiple cases are provided using an immediate @vbar, then
  only the first prefix case and the first infix/postfix case can supply
  options; alternatively, when the operator name (maybe with a result annotation)

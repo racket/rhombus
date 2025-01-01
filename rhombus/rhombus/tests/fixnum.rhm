@@ -1,7 +1,6 @@
 #lang rhombus/and_meta
 import:
   rhombus/fixnum
-  "version_guard.rhm"
 
 fun f(x :: Fixnum,
       y :: Fixnum):
@@ -82,10 +81,7 @@ check:
   1 fixnum.(-) 2 ~is -1
   fixnum.(-) 2 ~is -2
   1 fixnum.wraparound.(-) 2 ~is -1
-  (block:
-     version_guard.at_least "8.15.0.12":
-       check fixnum.wraparound.(-) 2 ~is -2
-     #void) ~is #void
+  fixnum.wraparound.(-) 2 ~is -2
   1 fixnum.(*) 2 ~is 2
   1 fixnum.wraparound.(*) 2 ~is 2
   1 fixnum.div 2 ~is 0

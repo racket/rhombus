@@ -314,7 +314,21 @@
                             arg
                             (list kw)))
       (hash-set seen-kws (syntax-e kw) #t))
-    (void)))
+    (void))
+
+  (define (check-consistent-unsafes stx unsafe-kws)
+    (when (ormap (lambda (kw) kw) unsafe-kws)
+      (unless (andmap (lambda (kw) kw) unsafe-kws)
+        (raise-syntax-error #f
+                            "unsafe case present, but not every case has an unsafe block"
+                            stx
+                            (ormap (lambda (kw) kw) unsafe-kws)))))
+
+  (define (check-args-for-unsafe stx args kw-ok?)
+    (syntax-parse args
+      [(_::parens arg ...)
+       (for ([arg (syntax->list #'(arg ...))])
+         (check-arg-for-unsafe stx arg kw-ok?))])))
 
 (define-syntax fun
   (expression-transformer
@@ -329,10 +343,13 @@
         ;; immediate alts case
         [(form-id (alts-tag::alts
                    (_::block
-                    (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
+                    (group name-seq::dotted-identifier-sequence (~and args (_::parens arg::kw-binding ... rest::maybe-arg-rest))
                            ret::ret-annotation
                            (~and rhs (_::block
-                                      (~optional (~and who-clause (group #:who . _)))
+                                      (~alt
+                                       (~optional (~and who-clause (group #:who . _)))
+                                       (~optional (~and unsafe (group (~and unsafe-kw #:unsafe) . _))))
+                                      ...
                                       body ...))))
                    ...+))
          #:with (name::dotted-identifier ...) #'(name-seq ...)
@@ -343,6 +360,11 @@
                [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
            (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
          (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
+         (define any-unsafe? (ormap (lambda (kw) kw) (attribute unsafe-kw)))
+         (when any-unsafe?
+           (check-consistent-unsafes stx (attribute unsafe-kw))
+           (for ([args (in-list (syntax->list #'(args ...)))])
+             (check-args-for-unsafe stx args #f)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (add-name-prefix name-prefix the-name) whos (map (lambda (x) #f) whos)
@@ -352,13 +374,22 @@
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                 (attribute ret.converter) (attribute ret.annot-str)
-                                (filter-whos #'(rhs ...))
+                                (filter-whos+unsafes #'(rhs ...))
                                 stx))
+         (define unsafe-proc (and any-unsafe?
+                                  (build-unsafe-case-function
+                                   #'((arg.kw ...) ...) #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                   #'(rest.arg ...) #'(rest.parsed ...)
+                                   (attribute unsafe)
+                                   stx)))
+         (define unsafe-id (and unsafe-proc (car (generate-temporaries (list the-name)))))
          (define extends (car (syntax->list #'(name.extends ...))))
-         (maybe-add-function-result-definition
-          the-name extends (syntax->list #'(ret.static-infos ...)) arity
-          (build-definitions/maybe-extension #f the-name extends
-                                             proc))]
+         (maybe-add-unsafe-definition
+          unsafe-id unsafe-proc
+          (maybe-add-function-result-definition
+           the-name extends (syntax->list #'(ret.static-infos ...)) arity unsafe-id
+           (build-definitions/maybe-extension #f the-name extends
+                                              proc)))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
                   (~optional (_::block
@@ -373,7 +404,10 @@
                            (~and args-form (_::parens arg::kw-binding ... rest::maybe-arg-rest))
                            ret::ret-annotation
                            (~and rhs (_::block
-                                      (~optional (~and inner-who-clause (group #:who . _)))
+                                      (~alt
+                                       (~optional (~and inner-who-clause (group #:who . _)))
+                                       (~optional (~and unsafe (group (~and unsafe-kw #:unsafe) . _))))
+                                      ...
                                       body ...))))
                    ...+))
          #:with main-name::dotted-identifier #'main-name-seq
@@ -389,6 +423,11 @@
                         (for/list ([rhs (in-list (syntax->list #'(rhs ...)))])
                           who)))
          (define inner-whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute inner-who-clause)))
+         (define any-unsafe? (ormap (lambda (kw) kw) (attribute unsafe-kw)))
+         (when any-unsafe?
+           (check-consistent-unsafes stx (attribute unsafe-kw))
+           (for ([args (in-list (syntax->list #'(args-form ...)))])
+             (check-args-for-unsafe stx args #f)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (or reflect-name (add-name-prefix name-prefix the-name)) whos inner-whos
@@ -398,18 +437,27 @@
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                 (attribute ret.converter) (attribute ret.annot-str)
-                                (filter-whos #'(rhs ...))
+                                (filter-whos+unsafes #'(rhs ...))
                                 stx))
+         (define unsafe-proc (and any-unsafe?
+                                  (build-unsafe-case-function
+                                   #'((arg.kw ...) ...) #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                   #'(rest.arg ...) #'(rest.parsed ...)
+                                   (attribute unsafe)
+                                   stx)))
+         (define unsafe-id (and unsafe-proc (car (generate-temporaries (list the-name)))))
          (define extends (car (syntax->list #'(name.extends ...))))
-         (maybe-add-doc
-          (attribute doc)
-          #'form-id
-          #'(main-name-seq.head-id main-name-seq.tail-id ...)
-          #'([(~@ . name-seq) args-form (~@ . ret)] ...)
-          (attribute doc-kw) stx
-          (maybe-add-function-result-definition
-           the-name extends (list #'main-ret.static-infos) arity
-           (build-definitions/maybe-extension #f the-name extends proc)))]
+         (maybe-add-unsafe-definition
+          unsafe-id unsafe-proc
+          (maybe-add-doc
+           (attribute doc)
+           #'form-id
+           #'(main-name-seq.head-id main-name-seq.tail-id ...)
+           #'([(~@ . name-seq) args-form (~@ . ret)] ...)
+           (attribute doc-kw) stx
+           (maybe-add-function-result-definition
+            the-name extends (list #'main-ret.static-infos) arity unsafe-id
+            (build-definitions/maybe-extension #f the-name extends proc))))]
         ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
@@ -417,7 +465,8 @@
                   (~and rhs (rhs-tag::block (~alt
                                              (~optional (~and reflect-name-clause (group #:name . _)))
                                              (~optional (~and who-clause (group #:who . _)))
-                                             (~optional (group (~and doc-kw #:doc) . doc)))
+                                             (~optional (group (~and doc-kw #:doc) . doc))
+                                             (~optional (~and unsafe (group (~and unsafe-kw #:unsafe) . _))))
                                             ...
                                             body ...)))
          #:with name::dotted-identifier #'name-seq
@@ -427,6 +476,8 @@
          (check-optional-args stx args kws defaults)
          (check-keyword-args stx args kws)
          (define reflect-name (extract-name (attribute reflect-name-clause) stx))
+         (when (attribute unsafe)
+           (check-args-for-unsafe stx #'args-form #t))
          (define-values (proc arity)
            (build-function no-adjustments '()
                            (or reflect-name (add-name-prefix name-prefix #'name.name)) #f (extract-who (attribute who-clause) stx)
@@ -434,19 +485,28 @@
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
                            (attribute ret.converter) (attribute ret.annot-str)
-                           (if (or (attribute doc) reflect-name (attribute who-clause))
+                           (if (or (attribute doc) reflect-name (attribute who-clause) (attribute unsafe))
                                #'(rhs-tag body ...)
                                #'rhs)
                            stx))
-         (maybe-add-doc
-          (attribute doc)
-          #'form-id
-          #'(name-seq.head-id name-seq.tail-id ...)
-          #'([(~@ . name-seq) args-form (~@ . ret)])
-          (attribute doc-kw) stx
-          (maybe-add-function-result-definition
-           #'name.name #'name.extends (list #'ret.static-infos) arity
-           (build-definitions/maybe-extension #f #'name.name #'name.extends proc)))]
+         (define unsafe-proc (and (attribute unsafe)
+                                  (build-unsafe-function
+                                   #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...)
+                                   #'rest.arg #'rest.parsed
+                                   (attribute unsafe)
+                                   stx)))
+         (define unsafe-id (and unsafe-proc (car (generate-temporaries (list #'name.name)))))
+         (maybe-add-unsafe-definition
+          unsafe-id unsafe-proc
+          (maybe-add-doc
+           (attribute doc)
+           #'form-id
+           #'(name-seq.head-id name-seq.tail-id ...)
+           #'([(~@ . name-seq) args-form (~@ . ret)])
+           (attribute doc-kw) stx
+           (maybe-add-function-result-definition
+            #'name.name #'name.extends (list #'ret.static-infos) arity unsafe-id
+            (build-definitions/maybe-extension #f #'name.name #'name.extends proc))))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or* (~seq (_::parens _ ...) _ ...)
                   (~seq (~optional (_::block . _))
@@ -589,7 +649,17 @@
    (for/list ([rhs (in-list (syntax->list rhss-stx))])
      (syntax-parse rhs
        #:datum-literals (group)
-       [(tag::block (ghost #:who . _) body ...)
+       [(tag::block (group #:who . _) body ...)
+        #'(tag body ...)]
+       [_ rhs]))))
+
+(define-for-syntax (filter-whos+unsafes rhss-stx)
+  (datum->syntax
+   #f
+   (for/list ([rhs (in-list (syntax->list rhss-stx))])
+     (syntax-parse rhs
+       #:datum-literals (group)
+       [(tag::block (~or (group #:who . _) (group #:unsafe . _)) ...+ body ...)
         #'(tag body ...)]
        [_ rhs]))))
 

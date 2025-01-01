@@ -145,6 +145,11 @@
                            (~parse who #'who-seq.name))
                      #:defaults ([who #'#f]))))
 
+  (define-syntax-class-mixin unsafe-options
+    #:datum-literals (op group)
+    (~alt (~optional (~and unsafe (group #:unsafe ~! _ ...))
+                     #:defaults ([unsafe #'#f]))))
+
   (define-syntax-class-mixin self-options
     #:datum-literals (group)
     (~alt (~optional (group #:op_stx ~! (~or* self-id:identifier
@@ -164,7 +169,8 @@
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
     #:desc "prefix operator options"
     operator-options
-    who-options)
+    who-options
+    unsafe-options)
 
   (define-composed-splicing-syntax-class (:self-operator-options space-sym extra-kws)
     #:desc "operator options"
@@ -197,7 +203,8 @@
     #:desc "infix operator options"
     operator-options
     infix-operator-options
-    who-options)
+    who-options
+    unsafe-options)
 
   (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym extra-kws)
     #:desc "infix macro options"

@@ -1,0 +1,26 @@
+#lang rhombus/static/and_meta
+
+export:
+  rename:
+    u_operator as operator
+    u_fun as fun
+
+defn.macro
+| 'u_operator $(head :: Sequence): $body':
+    'operator $head:
+       ~unsafe: $body
+       $body'
+| 'u_operator
+   | $(head :: Sequence): $body
+   | ...':
+    'operator
+     | $head:
+         ~unsafe: $body
+         $body
+     | ...'
+
+defn.macro
+| 'u_fun $(head :: Sequence): $body':
+    'fun $head:
+       ~unsafe: $body
+       $body'
