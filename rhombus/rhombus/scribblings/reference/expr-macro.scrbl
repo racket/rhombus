@@ -161,22 +161,10 @@
 
 @doc(
   ~meta
-  fun expr_meta.parse_more(group :: Syntax) :: Syntax
-){
-
- Similar to matching @rhombus(stx) using the syntax class
- @rhombus(expr_meta.Parsed, ~stxclass), but further forces expression parsing to
- reveal immediate static information from parsing and macro expansion.
-
-}
-
-
-@doc(
-  ~meta
   fun expr_meta.parse_all(group :: Syntax) :: (Syntax, Syntax)
 ){
 
- Similar to @rhombus(expr_meta.parse_all), but further forces expansion
+ Parses @rhombus(group) as an expression and forces expansion
  of all nested forms. Avoid this function, and use it only when control
  over expansion order is absolutely necessary.
 
