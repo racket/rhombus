@@ -7,7 +7,6 @@ block:
     expr_meta.pack_expr(s)
     expr_meta.pack_meta_expr(s)
     expr_meta.pack_and_meta_expr(s)
-    expr_meta.parse_more(s)
     expr_meta.parse_all(s)
 
 // postfix as a macro "infix" operator;

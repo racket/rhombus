@@ -162,16 +162,6 @@
  static information, or @rhombus(#false) if no information or value
  for @rhombus(key) is available.
 
- When @rhombus(expr_stx) is an expression, consider using
- @rhombus(expr_meta.parse_more) to reveal additional static information
- by forcing an earlier expansion of the expression. Use the result in
- place of @rhombus(expr_stx), instead of continuing to use
- @rhombus(expr_stx) (which could cause parsing and expansion to happen a
- second time for the same expression). A potential drawback of forcing
- expansion is that it might constrain the order of definitions in a
- recursive definition context; as a convention to limit such problems,
- avoid expansion of terms that are nested within a block.
-
  Keys for static information are compared based on binding, not merely
  the key's symbolic form.  Key identifiers should be defined with
  @statinfo_key_defn.

@@ -27,10 +27,10 @@ check:
   also_use_x
   ~is "yes"
 
-expr.macro 'two $(pre_expr :: expr_meta.Parsed) $()':
-  def expr = expr_meta.parse_more(pre_expr)
+expr.macro 'two $(expr :: expr_meta.Parsed) $()':
   def si = statinfo_meta.lookup(expr, statinfo_meta.index_get_key)
-  statinfo_meta.wrap(expr_meta.parse_more('[$expr, $expr]'),
+  let '$(list_expr :: expr_meta.Parsed)' = '[$expr, $expr]'
+  statinfo_meta.wrap(list_expr,
                      '(($statinfo_meta.index_result_key,
                         $(statinfo_meta.pack('(($statinfo_meta.index_get_key, $si))'))))')
 

@@ -47,7 +47,6 @@
      AfterPrefixParsed
      AfterInfixParsed
      NameStart
-     [parse_more expr_meta.parse_more]
      [parse_all expr_meta.parse_all]
      [parse_dot expr_meta.parse_dot]
      [pack_s_exp expr_meta.pack_s_exp]
@@ -80,23 +79,34 @@
   (define expr (relocate+reraw loc (rhombus-local-expand form)))
   (relocate+reraw expr #`(parsed #:rhombus/expr #,expr)))
 
+(define-for-syntax (extract-expression form #:srcloc [loc (maybe-respan form)])
+  (relocate+reraw
+   loc
+   (syntax-parse form
+     #:datum-literals (parsed group multi)
+     [(multi (group (parsed #:rhombus/expr e))) #'e]
+     [(group (parsed #:rhombus/expr e)) #'e]
+     [(parsed #:rhombus/expr e) #'e]
+     [_ (syntax-parse (unpack-group form 'expression #f)
+          [e::expression #'e.parsed])])))
+
 (define-for-syntax (make-expression-infix-operator prec protocol proc assc)
   (expression-infix-operator
    prec
    protocol
    (if (eq? protocol 'automatic)
        (lambda (form1 form2 stx)
-         (wrap-expression (check-expression-result
-                           (proc (parsed-argument form1) (parsed-argument form2) stx)
-                           proc)
-                          #:srcloc (datum->syntax #f (list form1 stx form2))))
+         (extract-expression (check-expression-result
+                              (proc (parsed-argument form1) (parsed-argument form2) stx)
+                              proc)
+                             #:srcloc (datum->syntax #f (list form1 stx form2))))
        (lambda (form1 tail)
          (define-values (form new-tail)
            (tail-returner
             proc
             (syntax-parse tail
               [(head . tail) (proc (parsed-argument form1) (pack-tail #'tail #:after #'head) #'head)])))
-         (check-transformer-result (wrap-expression (check-expression-result form proc))
+         (check-transformer-result (extract-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))
    assc))
@@ -107,17 +117,17 @@
    protocol
    (if (eq? protocol 'automatic)
        (lambda (form stx)
-         (wrap-expression (check-expression-result
-                           (proc (parsed-argument form) stx)
-                           proc)
-                          #:srcloc (datum->syntax #f (list stx form))))
+         (extract-expression (check-expression-result
+                              (proc (parsed-argument form) stx)
+                              proc)
+                             #:srcloc (datum->syntax #f (list stx form))))
        (lambda (tail)
          (define-values (form new-tail)
            (tail-returner
             proc
             (syntax-parse tail
               [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
-         (check-transformer-result (wrap-expression (check-expression-result form proc))
+         (check-transformer-result (extract-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
 
@@ -149,14 +159,6 @@
     (check-syntax who s)
     (define g (unpack-group s who #f))
     (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
-
-  (define/arity (expr_meta.parse_more s)
-    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (check-syntax who s)
-    (syntax-parse (unpack-group s who #f)
-      [e::expression
-       (define new-e (rhombus-local-expand #'e.parsed))
-       (relocate+reraw new-e #`(parsed #:rhombus/expr #,new-e))]))
 
   (define/arity (expr_meta.parse_all s)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
