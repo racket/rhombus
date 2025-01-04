@@ -12,7 +12,7 @@ use_static
 export:
   str
 
-fun str(elems :: List):
+fun str(elems :: List) :~ String:
   let o = Port.Output.open_string()
   for (elem: elems):
     print(elem, ~out: o)
