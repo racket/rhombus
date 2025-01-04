@@ -201,6 +201,12 @@ check:
   to_string("hello".copy(), ~mode: #'expr) ~is "String.copy(\"hello\")"
 
 check:
+  String.join(["Hello", "World"]) ~is "Hello World"
+  String.join(["Hello", "World"], "xx") ~is "HelloxxWorld"
+  String.join(["Hello"], "xx") ~is "Hello"
+  String.join(["lions", "tigers", "bears"], ", ", ~before_last: ", and ") ~is "lions, tigers, and bears"
+
+check:
   "a" is_a MutableString ~is #false
   "a".copy() is_a MutableString ~is #true
 

@@ -141,6 +141,7 @@
    [substring String.substring]
    [trim String.trim]
    [split String.split]
+   [join String.join]
    [replace String.replace]
    [make String.make]
    [utf8_bytes String.utf8_bytes]
@@ -370,6 +371,20 @@
                      #:trim? trim? #:repeat? repeat?)]))
   (for/treelist ([s (in-list l)])
     (string->immutable-string s)))
+
+(define/method (String.join strs [sep " "]
+                            #:before_last [before_last sep])
+  #:static-infos ((#%call-result ((#%index-result #,(get-string-static-infos))
+                                  #,@(get-string-static-infos))))
+  (unless (and (treelist? strs)
+               (for/and ([s (in-treelist strs)])
+                 (string? s)))
+    (raise-annotation-failure who strs "List.of(ReadableString)"))
+  (check-readable-string who sep)
+  (check-readable-string who before_last)
+  (string->immutable-string
+   (string-join (treelist->list strs) sep
+                #:before-last before_last)))
 
 (define/method (String.replace s1 from to
                                #:all [all? #f])
