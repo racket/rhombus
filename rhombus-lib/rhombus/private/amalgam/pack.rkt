@@ -81,6 +81,7 @@
          pack-element*
          unpack-element*
          pack-nothing*
+         pack-success*
          pack-parsed*
          unpack-parsed*
          
@@ -434,6 +435,21 @@
 
 ;; like `pack-element*`, but assuming the right shape already
 (define (pack-nothing* r depth) r)
+
+;; like `pack-nothing*`, but on a list of `pack-nothing*`
+;; inputs, and we want to keep just the one that is a succees
+(define ((pack-success* get-default at-depth) rs depth)
+  (let loop ([rs rs] [depth (- depth at-depth)])
+    (cond
+      [(eqv? depth 0)
+       (or (for/or ([r (in-list rs)]) r)
+           (if get-default
+               (get-default)
+               (and (at-depth . > . 0)
+                    null)))]
+      [else
+       (for/list ([rs (in-list (or rs null))])
+         (loop rs (sub1 depth)))])))
 
 ;; `stx` comes from Racket, so it should be in `parsed`
 (define ((pack-parsed kw) stx)

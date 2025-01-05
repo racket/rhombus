@@ -640,6 +640,94 @@ class's name.
 
 
 @doc(
+  ~nonterminal:
+    syntax_pattern: #%quotes pattern
+    id_maybe_rep: field ~pattern_clause
+
+  unquote_bind.macro 'group_option_sequence
+                      | $pattern_case
+                      | ...'
+  unquote_bind.macro 'term_option_sequence
+                      | $pattern_case
+                      | ...'
+
+  grammar pattern_case:
+    syntax_pattern
+    syntax_pattern:
+      $option
+      ...
+
+  grammar pattern_option:
+    ~default $id_maybe_rep = $expr
+    ~default $id_maybe_rep: $body; ...
+    ~description $string
+    ~description: $string
+){
+
+ Creates a pattern that matches a sequence of groups in the case of
+ @rhombus(group_option_sequence, ~unquote_bind) or term sequences in the
+ case of @rhombus(term_option_sequence, ~unquote_bind). Each match in a
+ sequence must match a distinct @rhombus(pattern_case); if multiple
+ matches to one @rhombus(pattern_case) are found, an error is reported
+ (i.e., the pattern does not merely fail to match). The result is similar
+ to using @dots after a @rhombus(pattern, ~unquote_bind) with the same
+ @rhombus(syntax_pattern)s, but since each @rhombus(pattern_case) matches
+ at most once, it's fields do not turn into repetitions. Each individual
+ @rhombus(syntax_pattern) is a group pattern within
+ @rhombus(group_option_sequence, ~unquote_bind) or sequence pattern
+ within @rhombus(group_option_sequence, ~unquote_bind).
+
+ In a match that does not use a particular @rhombus(pattern_case), the
+ pattern variables of that case are bound to either @rhombus(#false) or
+ @rhombus([]) by default, the latter when the pattern variable is a
+ repetition. A @rhombus(~default) clause within a @rhombus(pattern_case)
+ can specify a different default; each @rhombus(id_maybe_rep) names a
+ variable with its depth in the same way as for
+ @rhombus(field, ~pattern_clause).
+
+ A @rhombus(~description) string is used when multiple matches are found
+ for the enclosing @rhombus(pattern_case). The string is expected to be a
+ plural noun suitable to replace a generic ``options'' in an error
+ message.
+
+@examples(
+  ~eval:
+    macro.make_macro_eval()
+  ~defn:
+    expr.macro 'list_proc:
+                  $(group_option_sequence
+                    | '~min_args: $(min :: Int)':
+                        ~default min = '1'
+                    | '~max_args: $(max :: Int)')':
+      'fun $(Syntax.make(
+               [#'alts,
+                & for List (i: min.unwrap() ..= (max || min).unwrap()):
+                  let [var, ...] = for List (j: i): Syntax.make_temp_id()
+                  ': ($var, ...): [$var, ...]']
+             ))'
+  ~repl:
+    def f_2:
+      list_proc:
+        ~min_args: 2
+    f_2(1, 2)
+    ~error:
+      f_2(1, 2, 3)
+  ~repl:
+    def f_2_3:
+      list_proc:
+        ~min_args: 2
+        ~max_args: 3
+    f_2_3(1, 2, 3)
+  ~repl:
+    ~error:
+      list_proc:
+        ~min_args: 2
+        ~min_args: 3
+)
+
+}
+
+@doc(
   expr.macro '«Syntax.literal '$term ...; ...'»'
   expr.macro 'Syntax.literal ($term ..., ...)'
 ){

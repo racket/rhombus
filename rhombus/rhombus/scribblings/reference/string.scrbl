@@ -224,6 +224,26 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
+  fun String.join(
+    strs :: List.of(ReadableString),
+    sep :: ReadableString = " ",
+    ~before_last: before_last :: ReadableString = sep
+  ) :: String
+){
+
+ Appends the strings in @rhombus(strs) with @rhombus(sep) in between,
+ except that @rhombus(before_last) is used between the next-to-last and
+ last string when @rhombus(strs) has more than one element.
+
+@examples(
+  String.join(["Hello", "World"])
+  String.join(["lions", "tigers", "bears"], ", ", ~before_last: ", and ")
+)
+
+}
+
+
+@doc(
   method String.split(str :: ReadableString,
                       sep :: ReadableString || RX = rx'space+',
                       ~trim: trim = #true,

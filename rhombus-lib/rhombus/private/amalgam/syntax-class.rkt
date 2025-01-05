@@ -107,10 +107,20 @@
           (map (lambda (stx) #`(finish-together-syntax-class #,stx)) (map cadr decls)))]))))
 
 ;; returns a `rhombus-syntax-class`
-(define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
+(define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail
+                                                 #:kind-kw [kind-kw #f]
+                                                 #:commonize-fields? [commonize-fields? #f]
+                                                 #:ignore-pattern-body? [ignore-pattern-body? #f]
+                                                 #:defaultss [defaultss #f]
+                                                 #:option-tags [option-tags #f])
   (syntax-parse tail
     [((_::alts alt ...))
      (build-syntax-class orig-stx (syntax->list #'(alt ...)) null
+                         #:kind-kw kind-kw
+                         #:commonize-fields? commonize-fields?
+                         #:ignore-pattern-body? ignore-pattern-body?
+                         #:defaultss defaultss
+                         #:option-tags option-tags
                          #:class/inline-name name
                          #:expected-kind expected-kind)]
     [((_::block clause::syntax-class-clause ...)
@@ -146,6 +156,10 @@
                                        #:fields [fields-ht #f]
                                        #:swap-root [swap-root #f]
                                        #:opaque? [opaque? #f]
+                                       #:commonize-fields? [commonize-fields? #f]
+                                       #:option-tags [option-tags #f]
+                                       #:ignore-pattern-body? [ignore-pattern-body? #f]
+                                       #:defaultss [defaultss #f]
                                        #:expected-kind [expected-kind #f]
                                        #:for-together? [for-together? #f])
   (define-values (kind splicing?)
@@ -167,7 +181,7 @@
        (cond
          [for-together?
           ;; delay parsing attributes until we've declared Rhombus syntax classes; this
-          ;; require fully declared fields
+          ;; requires fully declared fields
           (define attrs
             (cond
               [(not fields-ht) null]
@@ -191,13 +205,16 @@
                   (list attrs))]
          [else
           (for/lists (patterns attributess) ([alt-stx (in-list alts)])
-            (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-class?)))]))
-     (define attributes (intersect-attributes stx attributess fields-ht swap-root))
+            (parse-pattern-cases stx alt-stx kind splicing?
+                                 #:keep-attr-id? (not define-class?)
+                                 #:ignore-pattern-body? ignore-pattern-body?))]))
+     (when defaultss (check-defaults-names stx attributess defaultss))
+     (define attributes (intersect-attributes stx attributess fields-ht swap-root commonize-fields?))
      (cond
        [(not define-class?)
         ;; return a `rhombus-syntax-class` directly
         (rhombus-syntax-class kind
-                              (syntax-class-body->inline patterns class/inline-name)
+                              (syntax-class-body->inline patterns class/inline-name option-tags splicing?)
                               (datum->syntax #f (map pattern-variable->list attributes))
                               splicing?
                               (syntax->datum class-arity)
@@ -252,7 +269,7 @@
                                           (define key+tmp-id (syntax->list key+tmp-id-stx))
                                           (values (syntax-e (car key+tmp-id)) (cadr key+tmp-id))))))
      ;; check against `fields-ht`:
-     (intersect-attributes #'orig-stx attributess (syntax-e #'fields-ht) #f)
+     (intersect-attributes #'orig-stx attributess (syntax-e #'fields-ht) #f #f)
      ;; return `form` with parsed patterns in place:
      #`(form content ... #,@patterns)]))
 
@@ -306,6 +323,7 @@
 ;; The first result has a restricted form that is recognized by `syntax-class-body->inline`
 (define-for-syntax (parse-pattern-cases orig-stx stx kind splicing?
                                         #:keep-attr-id? [keep-attr-id? #f]
+                                        #:ignore-pattern-body? [ignore-pattern-body? #f]
                                         #:tmp-ids [tmp-id-ht #f])
   (define-values (pat body)
     (syntax-parse stx
@@ -314,7 +332,9 @@
        (values #'pat #'())]
       [(_::block (group (~and pat (_::quotes . _))
                         (_::block body ...)))
-       (values #'pat #'(body ...))]))
+       (values #'pat (if ignore-pattern-body?
+                         #'()
+                         #'(body ...)))]))
 
   (define in-quotes
     (cond
@@ -450,7 +470,7 @@
 
 ;; converts a `pattern` clause for `syntax-case` into a pattern suitable
 ;; for directly inlinding into a larger pattern
-(define-for-syntax (syntax-class-body->inline patterns inline-name)
+(define-for-syntax (syntax-class-body->inline patterns inline-name option-tags splicing?)
   (define (convert-body body)
     (if (null? body)
         '()
@@ -471,24 +491,57 @@
                    (convert-body (cdddr body))))]
           ;; should not reach
           [else (raise-syntax-error #f "unhandled pattern body" patterns body)])))
-  #`(~or* #,@(for/list ([pattern (in-list patterns)])
+  #`(~or* #,@(for/list ([pattern (in-list patterns)]
+                        [option-tag (in-list (or option-tags
+                                                 (map (lambda (p) #f) patterns)))])
                (syntax-parse pattern
                  [(_ pat body ...)
-                  #`(~and pat #,@(convert-body (syntax->list #'(body ...))))]))))
+                  #`(~and pat
+                          #,@(if option-tag
+                                 (list (if splicing?
+                                           #`(~seq #,option-tag (... ...))
+                                           option-tag))
+                                 null)
+                          #,@(convert-body (syntax->list #'(body ...))))]))))
 
 ;; ----------------------------------------
 
-(define-for-syntax (intersect-attributes stx attributess fields-ht swap-root)
+(define-for-syntax (check-defaults-names stx attributess defaultss)
+  (for ([defaults (in-list defaultss)]
+        [attributes (in-list attributess)])
+    (for/fold ([seen #hasheq()]) ([default (in-list defaults)])
+      (define sym (syntax-e (car default)))
+      (when (hash-ref seen sym #f)
+        (raise-syntax-error #f
+                            "second default for pattern variable within an option"
+                            stx
+                            (car default)))
+      (define var (for/or ([var (in-list attributes)])
+                    (and (eq? (pattern-variable-sym var) sym)
+                         var)))
+      (unless var
+        (raise-syntax-error #f
+                            "not a pattern variable in the option"
+                            stx
+                            (car default)))
+      (unless (= (pattern-variable-depth var) (cadr default))
+        (raise-syntax-error #f
+                            "depth for default does not match pattern variable depth"
+                            stx
+                            (car default)))
+      (hash-set seen sym #t))))
+
+(define-for-syntax (intersect-attributes stx attributess fields-ht swap-root commonize-fields?)
   (cond
     [(and (null? attributess) (not fields-ht) (not swap-root)) '()]
-    [(and (null? (cdr attributess)) (not fields-ht) (not swap-root)) (car attributess)]
+    [(and (null? (cdr attributess)) (not fields-ht) (not swap-root) (not commonize-fields?)) (car attributess)]
     [else
      ;; start with initial set
      (define ht0
        (for/hasheq ([var (in-list (car attributess))])
          (values (pattern-variable-sym var) var)))
      ;; intersect by pruning set
-     (define ht
+     (define ht1
        (for/fold ([ht0 ht0]) ([attributes (in-list (cdr attributess))])
          (for/fold ([ht #hasheq()]) ([var (in-list attributes)])
            (define prev-var (hash-ref ht0 (pattern-variable-sym var) #f))
@@ -497,6 +550,21 @@
                          (pattern-variable-sym var)
                          (intersect-var stx var prev-var))
                ht))))
+     ;; if commonizing, then add all fields back, intersecting each as generic
+     (define ht
+       (if commonize-fields?
+           (for/fold ([ht1 ht1]) ([attributes (in-list attributess)])
+             (for/fold ([ht1 ht1]) ([var (in-list attributes)])
+               (define prev-var (hash-ref ht1 (pattern-variable-sym var) #f))
+               (if (and prev-var (not (= 1 (length attributess))))
+                   (raise-syntax-error #f
+                                       "field appears in multiple option cases"
+                                       stx
+                                       (pattern-variable-id var))
+                   (hash-set ht1 (pattern-variable-sym var)
+                             (struct-copy pattern-variable var
+                                          [unpack* #'unpack-element*])))))
+           ht1))
      ;; filter by declared fields
      (define filtered-ht
        (if fields-ht
@@ -548,7 +616,7 @@
 (define-for-syntax (intersect-var stx a b)
   (unless (eqv? (pattern-variable-depth a) (pattern-variable-depth b))
     (raise-syntax-error #f
-                        "field with different depths in different cases"
+                        "field with different repetition depths in different cases"
                         stx
                         (pattern-variable-sym a)))
   (struct-copy pattern-variable a

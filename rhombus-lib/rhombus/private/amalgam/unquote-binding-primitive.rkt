@@ -8,6 +8,7 @@
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
+         racket/treelist
          "pack.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
@@ -19,6 +20,7 @@
          "unquote-binding-identifier.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
+         "op-literal.rkt"
          "parens.rkt"
          (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
@@ -26,7 +28,8 @@
          (submod "syntax-class.rkt" for-anonymous-syntax-class)
          "sequence-pattern.rkt"
          (only-in "static-info.rkt" unwrap-static-infos)
-         (submod "syntax-object.rkt" for-quasiquote))
+         (submod "syntax-object.rkt" for-quasiquote)
+         "parse.rkt")
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -36,7 +39,9 @@
                     \|\|
                     !
                     #%literal
-                    #%block))
+                    #%block
+                    group_option_sequence
+                    term_option_sequence))
 
 (module+ for-parse-pattern
   (provide (for-syntax parse-pattern)))
@@ -569,3 +574,167 @@
         (raise-syntax-error #f
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
+
+(define-for-syntax (make-option-sequence for-kind as-kind)
+  (unquote-binding-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (~and all-alts (_::alts (_::block (group (_::quotes _)
+                                                          (~optional (~and option-config
+                                                                           (_::block . _)))))
+                                         ...)))
+        (cond
+          [(eq? (current-unquote-binding-kind) for-kind)
+           (define defaultss
+             (for/list ([option-config (in-list (attribute option-config))])
+               (cond
+                 [(not option-config) null]
+                 [else
+                  (syntax-parse option-config
+                    #:context (syntax-e #'form-id)
+                    [(_::block g ...)
+                     (filter
+                      values
+                      (for/list ([g (in-list (attribute g))])
+                        (define (extract rhs expr)
+                          (let loop ([rhs rhs] [depth 0])
+                            (syntax-parse rhs
+                              #:context (syntax-e #'form-id)
+                              #:datum-literals (group)
+                              [rhs:identifier (list #'rhs depth expr)]
+                              [(_::brackets (group rhs) (group _::...-bind))
+                               (loop #'rhs (add1 depth))])))
+                        (syntax-parse g
+                          #:context (syntax-e #'form-id)
+                          #:datum-literals (group op)
+                          [(group #:default rhs (op =) lhs ...)
+                           (extract #'rhs #'(rhombus-expression (group lhs ...)))]
+                          [(group #:default rhs (b-tag::block g ...))
+                           (extract #'rhs #'(rhombus-body-at b-tag g ...))]
+                          [(group #:description . _) #f])))])])))
+           (define duplicate-messages
+             (for/list ([option-config (in-list (attribute option-config))])
+               (define default-duplicate-message "mulitple uses of option not allowed")
+               (define message-template "multiple ~a not allowed")
+               (cond
+                 [(not option-config) default-duplicate-message]
+                 [else
+                  (syntax-parse option-config
+                    #:context (syntax-e #'form-id)
+                    [(_::block g ...)
+                     (or
+                      (for/fold ([desc #f]) ([g (in-list (attribute g))])
+                        (syntax-parse g
+                          #:context (syntax-e #'form-id)
+                          #:datum-literals (group op)
+                          [(group #:description . _)
+                           #:when desc
+                           (raise-syntax-error #f
+                                               "second description clause within an option"
+                                               stx
+                                               g)]
+                          [(group #:description str:string)
+                           (format message-template (syntax-e #'str))]
+                          [(group #:description (_::block (group str:string)))
+                           (format message-template (syntax-e #'str))]
+                          [(group #:description . _)
+                           (raise-syntax-error #f
+                                               "description clause does not contain just a string"
+                                               stx
+                                               g)]
+                          [_ desc]))
+                      default-duplicate-message)])])))
+           (define option-tags (generate-temporaries (attribute option-config)))
+           (define rsc
+             (parse-anonymous-syntax-class (syntax-e #'form-id)
+                                           stx
+                                           (if (eq? as-kind #'group)
+                                               'group
+                                               'sequence)
+                                           #:kind-kw as-kind
+                                           #:ignore-pattern-body? #t
+                                           #:commonize-fields? #t
+                                           #:defaultss defaultss
+                                           #:option-tags option-tags
+                                           #'options
+                                           #'(all-alts)))
+           (syntax-parse (build-syntax-class-pattern stx
+                                                     rsc
+                                                     #'#f
+                                                     #'form-id
+                                                     #f
+                                                     #'options
+                                                     #t)
+             [(pat idrs sidrs vars)
+              (define default-name-map ; sym -> expression
+                (for*/hash  ([defaults (in-list defaultss)]
+                             [default (in-list defaults)])
+                  (values (syntax-e (car default)) (caddr default))))
+              (define default-map
+                (for/list ([pv (in-list (syntax->list #'vars))]
+                           #:do [(define var (syntax-list->pattern-variable pv))
+                                 (define e (hash-ref default-name-map (pattern-variable-sym var) #f))]
+                           #:when e)
+                  (list (pattern-variable-val-id var)
+                        (pattern-variable-sym var)
+                        e)))
+              (with-syntax ([idrs (for/list ([idr (in-list (syntax->list #'idrs))]
+                                             ;; commonized fields will always be `pack-nothing*`
+                                             ;; and use `attribute` instead of `syntax`, so prune
+                                             ;; any useless binding like `wildcard`
+                                             #:unless (syntax-parse idr
+                                                        #:literals (syntax)
+                                                        #:datum-literals (maybe-syntax-wrap)
+                                                        [[lhs (pack* (syntax _) _)] #t]
+                                                        [[lhs (maybe-syntax-wrap (pack* (syntax _) _) . _)] #t]
+                                                        [_ #f]))
+                                    (define (get-default lhs depth)
+                                      (for/or ([p (in-list default-map)])
+                                        (and (free-identifier=? (car p) lhs)
+                                             #`(lambda () (check-depth-of-default 'form-id '#,(cadr p) #,(caddr p) #,depth)))))
+                                    (syntax-parse idr
+                                      #:datum-literals (maybe-syntax-wrap pack-nothing*)
+                                      [[lhs (pack-nothing* attr depth)]
+                                       #`[lhs ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth)]]
+                                      [[lhs ((~and msw maybe-syntax-wrap) (pack-nothing* attr depth) . tail)]
+                                       #`[lhs (msw ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth) . tail)]]))])
+                (with-syntax ([pat (with-syntax ([(option-tag ...) option-tags]
+                                                 [(duplicate-message ...) duplicate-messages])
+                                     #'(~and (~seq pat (... ...))
+                                             ~!
+                                             (~fail #:when (check-duplicate-matches (attribute option-tag))
+                                                    duplicate-message)
+                                             ...))])
+                  (values #'(pat idrs sidrs vars) #'())))])]
+          [else
+           (values #'#f #'())])]))))
+
+(define-unquote-binding-syntax group_option_sequence
+  (make-option-sequence 'group1 '#:group))
+
+(define-unquote-binding-syntax term_option_sequence
+  (make-option-sequence 'term1 '#:sequence))
+
+(define (check-duplicate-matches matches)
+  (let loop ([matches matches] [found #f])
+    (cond
+      [(null? matches) #f]
+      [(car matches) (or found
+                         (loop (cdr matches) (car matches)))]
+      [else (loop (cdr matches) found)])))
+
+(define (check-depth-of-default who var-name top-val top-depth)
+  (let loop ([val top-val] [depth top-depth])
+    (cond
+      [(zero? depth)
+       val]
+      [else
+       (unless (treelist? val)
+         (raise-arguments-error who
+                                "default value does not match expected depth"
+                                "field" (unquoted-printing-string (symbol->string var-name))
+                                "expected depth" top-depth
+                                "value" top-val))
+       (for/list ([v (in-treelist val)])
+         (loop v (sub1 depth)))])))

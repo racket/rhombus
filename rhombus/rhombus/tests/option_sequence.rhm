@@ -1,0 +1,127 @@
+#lang rhombus/and_meta
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence)':
+      0
+  ~throws "term_option_sequence: expected more terms"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | no)':
+      0
+  ~throws "term_option_sequence"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | 'x':
+           no)':
+      0
+  ~throws "term_option_sequence"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | 'x':
+           ~default x: 10)':
+      0
+  ~throws "not a pattern variable in the option"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | '$x':
+           ~default x: 10
+           ~default x = 11)':
+      0
+  ~throws "second default for pattern variable within an option"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | '$x':
+           ~default [x, ...]: 10)':
+      0
+  ~throws "depth for default does not match pattern variable depth"
+
+check:
+  ~eval
+  match ''
+  | '$(group_option_sequence
+       | '($x, ...)':
+           ~default [x, ...]: 10)':
+      0
+  ~throws "default value does not match expected depth"
+
+check:
+  ~eval
+  match 0
+  | '$(term_option_sequence
+       | '$x'
+       | '$x')':
+      0
+  ~throws "field appears in multiple option cases"
+
+block:
+  fun go(stx):
+    match stx
+    | '$(term_option_sequence
+         | 'a($z, ...)'
+         | 'b($y)':
+              ~description: "bees"
+         | 'c')':
+        ["yep", [z, ...], y]
+  check:
+    go('')
+    ~matches ["yep", [], #false]
+  check:
+    go('c')
+    ~matches ["yep", [], #false]
+  check:
+    go('b(3) a(1, 2) c')
+    ~matches ["yep", ['1', '2'], '3']
+  check:
+    go('c c')
+    ~throws "mulitple uses of option not allowed"
+  check:
+    go('b(2) b(2)')
+    ~throws "multiple bees not allowed"
+  check:
+    go('b(2) x')
+    ~throws "unexpected term"
+
+check:
+  match '('b(3); a(1, 2); c')'
+  | '('$(group_option_sequence
+         | 'a($z, ...)'
+         | 'b($y)'
+         | 'c')')':
+      ["yep", [z, ...], y]
+  ~matches ["yep", ['1', '2'], '3']
+
+block:
+  fun go(stx):
+    match stx
+    | '('$(group_option_sequence
+           | 'a($z, ...)':
+               ~default [z, ...]:
+                 ["no"]
+           | 'b($y)'
+           | '~c':
+               ~description: "cee options")',
+        ...)':
+        [["yep", [z, ...], y], ...]
+  check:
+    go('('b(3); a(1, 2); ~c', 'b(7)')')
+    ~matches [["yep", ['1', '2'], '3'], ["yep", ["no"], '7']]
+  check:
+    go('('a(1, 2); ~c', 'b(7)', '~c')')
+    ~matches [["yep", ['1', '2'], #false], ["yep", ["no"], '7'], ["yep", ["no"], #false]]
