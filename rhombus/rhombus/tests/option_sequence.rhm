@@ -125,3 +125,25 @@ block:
   check:
     go('('a(1, 2); ~c', 'b(7)', '~c')')
     ~matches [["yep", ['1', '2'], #false], ["yep", ["no"], '7'], ["yep", ["no"], #false]]
+
+check:
+  ~eval
+  syntax_class Options
+  | '$(group_option_sequence
+       | '~opt_a: $a'
+       | '$('~opt_b' && b)')'
+  ~throws "option sequence incompatible with this context"
+
+block:
+  syntax_class Options:
+    kind: ~multi
+  | '$(group_option_sequence
+       | '~opt_a: $a'
+       | '$('~opt_b' && b)')'
+
+  check:
+    match '~opt_a: 10
+           ~opt_b'
+    | '$(v :: Options)':
+        [v.a, v.b]
+    ~matches ['10', '~opt_b']

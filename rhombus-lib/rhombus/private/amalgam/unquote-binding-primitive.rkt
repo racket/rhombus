@@ -575,7 +575,7 @@
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
 
-(define-for-syntax (make-option-sequence for-kind as-kind)
+(define-for-syntax (make-option-sequence for-kind as-kind fail-contexts)
   (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -708,13 +708,17 @@
                                              ...))])
                   (values #'(pat idrs sidrs vars) #'())))])]
           [else
+           (when (memq (current-unquote-binding-kind) fail-contexts)
+             (raise-syntax-error #f
+                                 "option sequence incompatible with this context"
+                                 stx))
            (values #'#f #'())])]))))
 
 (define-unquote-binding-syntax group_option_sequence
-  (make-option-sequence 'group1 '#:group))
+  (make-option-sequence 'group1 '#:group '(term1 grouplet)))
 
 (define-unquote-binding-syntax term_option_sequence
-  (make-option-sequence 'term1 '#:sequence))
+  (make-option-sequence 'term1 '#:sequence '()))
 
 (define (check-duplicate-matches matches)
   (let loop ([matches matches] [found #f])
