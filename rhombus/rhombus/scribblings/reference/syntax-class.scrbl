@@ -422,6 +422,26 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_maybe_rep: field ~pattern_clause
+
+  pattern_clause.macro 'default $id_maybe_rep:
+                          $body
+                          ...'
+  pattern_clause.macro 'default $id_maybe_rep = $expr'
+
+  pattern_clause.macro 'description $string'
+  pattern_clause.macro 'description: $string'
+
+){
+
+ Pattern clauses that are allowed only within
+ @rhombus(group_option_sequence, ~unquote_bind) and
+ @rhombus(term_option_sequence, ~unquote_bind).
+
+}
+
+@doc(
   ~also_meta
   ~nonterminal:
     op_or_id_name: namespace ~defn

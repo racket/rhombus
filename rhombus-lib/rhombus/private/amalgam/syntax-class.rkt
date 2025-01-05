@@ -110,16 +110,14 @@
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail
                                                  #:kind-kw [kind-kw #f]
                                                  #:commonize-fields? [commonize-fields? #f]
-                                                 #:ignore-pattern-body? [ignore-pattern-body? #f]
-                                                 #:defaultss [defaultss #f]
+                                                 #:for-option? [for-option? #f]
                                                  #:option-tags [option-tags #f])
   (syntax-parse tail
     [((_::alts alt ...))
      (build-syntax-class orig-stx (syntax->list #'(alt ...)) null
                          #:kind-kw kind-kw
                          #:commonize-fields? commonize-fields?
-                         #:ignore-pattern-body? ignore-pattern-body?
-                         #:defaultss defaultss
+                         #:for-option? for-option?
                          #:option-tags option-tags
                          #:class/inline-name name
                          #:expected-kind expected-kind)]
@@ -158,8 +156,7 @@
                                        #:opaque? [opaque? #f]
                                        #:commonize-fields? [commonize-fields? #f]
                                        #:option-tags [option-tags #f]
-                                       #:ignore-pattern-body? [ignore-pattern-body? #f]
-                                       #:defaultss [defaultss #f]
+                                       #:for-option? [for-option? #f]
                                        #:expected-kind [expected-kind #f]
                                        #:for-together? [for-together? #f])
   (define-values (kind splicing?)
@@ -177,7 +174,7 @@
      ;; shortcut to avoid redundant parsing when it's not going to work out
      #f]
     [else
-     (define-values (patterns attributess)
+     (define-values (patterns attributess descs defaultss)
        (cond
          [for-together?
           ;; delay parsing attributes until we've declared Rhombus syntax classes; this
@@ -202,28 +199,34 @@
                              attrs)
                       #,kind
                       #,splicing?))
-                  (list attrs))]
+                  (list attrs)
+                  (list #f)
+                  (list null))]
          [else
-          (for/lists (patterns attributess) ([alt-stx (in-list alts)])
+          (for/lists (patterns attributess descs defaultss) ([alt-stx (in-list alts)])
             (parse-pattern-cases stx alt-stx kind splicing?
                                  #:keep-attr-id? (not define-class?)
-                                 #:ignore-pattern-body? ignore-pattern-body?))]))
-     (when defaultss (check-defaults-names stx attributess defaultss))
+                                 #:for-option? for-option?))]))
+     (check-defaults-names stx attributess defaultss)
      (define attributes (intersect-attributes stx attributess fields-ht swap-root commonize-fields?))
      (cond
        [(not define-class?)
         ;; return a `rhombus-syntax-class` directly
-        (rhombus-syntax-class kind
-                              (syntax-class-body->inline patterns class/inline-name option-tags splicing?)
-                              (datum->syntax #f (map pattern-variable->list attributes))
-                              splicing?
-                              (syntax->datum class-arity)
-                              (and swap-root
-                                   (cons (syntax-e (car swap-root)) (cdr swap-root)))
-                              #f
-                              (if (null? attributes)
-                                  #f
-                                  (gensym (if class/inline-name (syntax-e class/inline-name) 'sc-dot))))]
+        (define rsc
+          (rhombus-syntax-class kind
+                                (syntax-class-body->inline patterns class/inline-name option-tags splicing?)
+                                (datum->syntax #f (map pattern-variable->list attributes))
+                                splicing?
+                                (syntax->datum class-arity)
+                                (and swap-root
+                                     (cons (syntax-e (car swap-root)) (cdr swap-root)))
+                                #f
+                                (if (null? attributes)
+                                    #f
+                                    (gensym (if class/inline-name (syntax-e class/inline-name) 'sc-dot)))))
+        (if for-option?
+            (values rsc descs defaultss)
+            rsc)]
        [else
         (define class-name class/inline-name)
         (define internal-class-name ((make-syntax-introducer) class-name))
@@ -262,8 +265,8 @@
   (syntax-parse stx
     #:datum-literals (delayed-patterns)
     [(_ (form content ... (#:delayed-patterns orig-stx alts fields-ht key+tmp-ids kind splicing?)))
-     (define-values (patterns attributess)
-       (for/lists (patterns attributess) ([alt-stx (in-list (syntax->list #'alts))])
+     (define-values (patterns attributess descs defaults)
+       (for/lists (patterns attributess descs defaults) ([alt-stx (in-list (syntax->list #'alts))])
          (parse-pattern-cases stx alt-stx (syntax-e #'kind) (syntax-e #'splicing?)
                               #:tmp-ids (for/hasheq ([key+tmp-id-stx (in-list (syntax->list #'key+tmp-ids))])
                                           (define key+tmp-id (syntax->list key+tmp-id-stx))
@@ -323,7 +326,7 @@
 ;; The first result has a restricted form that is recognized by `syntax-class-body->inline`
 (define-for-syntax (parse-pattern-cases orig-stx stx kind splicing?
                                         #:keep-attr-id? [keep-attr-id? #f]
-                                        #:ignore-pattern-body? [ignore-pattern-body? #f]
+                                        #:for-option? [for-option? #f]
                                         #:tmp-ids [tmp-id-ht #f])
   (define-values (pat body)
     (syntax-parse stx
@@ -332,9 +335,7 @@
        (values #'pat #'())]
       [(_::block (group (~and pat (_::quotes . _))
                         (_::block body ...)))
-       (values #'pat (if ignore-pattern-body?
-                         #'()
-                         #'(body ...)))]))
+       (values #'pat #'(body ...))]))
 
   (define in-quotes
     (cond
@@ -389,18 +390,22 @@
          (define-syntaxes (stx-id ...) stx-rhs)
          ...]))
 
-  (define-values (pattern-body all-attrs)
+  (define-values (pattern-body all-attrs desc defaults)
     (let loop ([body (syntax->list body)]
                [rev-do null]
                [rev-body (list (bindings->defns idrs sidrs) '#:do)]
-               [rev-attrs (reverse vars)])
+               [rev-attrs (reverse vars)]
+               [desc #f]
+               [defaults '()])
       (define (accum-do) (if (null? rev-do)
                              rev-body
                              (list* #`[(rhombus-body-sequence #,@(reverse rev-do))] '#:do
                                     rev-body)))
       (cond
         [(null? body) (values (reverse (accum-do))
-                              (reverse rev-attrs))]
+                              (reverse rev-attrs)
+                              desc
+                              (reverse defaults))]
         [else
          (define g (car body))
          (cond
@@ -413,7 +418,9 @@
                                 (cdr body))
                         rev-do
                         rev-body
-                        rev-attrs)]
+                        rev-attrs
+                        desc
+                        defaults)]
                  [(#:field id depth rhs)
                   #:with (tmp-id) (or (and tmp-id-ht
                                            (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])
@@ -427,7 +434,9 @@
                                   (define-syntaxes pat-ids pat-rhs)] '#:do
                                (accum-do))
                         (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*) #'pat-statinfos)
-                              rev-attrs))]
+                              rev-attrs)
+                        desc
+                        defaults)]
                  [(#:also (_ pat-g ...) rhs)
                   (define-values (p idrs sidrs vars can-be-empty?)
                     (convert-pattern #'(multi pat-g ...)))
@@ -437,15 +446,50 @@
                                #' (repack-as-multi rhs) p '#:with
                                (accum-do))
                         (append (reverse vars)
-                                rev-attrs))]
+                                rev-attrs)
+                        desc
+                        defaults)]
                  [(#:when rhs)
                   (loop (cdr body)
                         null
                         (list* #'rhs '#:when
                                (accum-do))
-                        rev-attrs)])])]
+                        rev-attrs
+                        desc
+                        defaults)]
+                 [(#:default id depth rhs clause-stx)
+                  (unless for-option?
+                    (raise-syntax-error #f
+                                        "default clause can be used only for option sequences"
+                                        orig-stx
+                                        #'clause-stx))
+                  (loop (cdr body)
+                        null
+                        (list* #'rhs '#:when
+                               (accum-do))
+                        rev-attrs
+                        desc
+                        (cons (list #'id (syntax-e #'depth) #'rhs)
+                              defaults))]
+                 [(#:description str clause-stx)
+                  (unless for-option?
+                    (raise-syntax-error #f
+                                        "description clause can be used only for option sequences"
+                                        orig-stx
+                                        #'clause-stx))
+                  (when desc
+                    (raise-syntax-error #f
+                                        "multiple description clauses not allowed"
+                                        orig-stx
+                                        #'clause-stx))
+                  (loop (cdr body)
+                        rev-do
+                        rev-body
+                        rev-attrs
+                        (syntax-e #'str)
+                        defaults)])])]
            [else
-            (loop (cdr body) (cons g rev-do) rev-body rev-attrs)])])))
+            (loop (cdr body) (cons g rev-do) rev-body rev-attrs desc defaults)])])))
 
   (with-syntax ([((attr ...) ...)
                  (map (lambda (var)
@@ -466,7 +510,9 @@
     (values #`(pattern #,p
                        #,@pattern-body
                        attr ... ...)
-            all-attrs)))
+            all-attrs
+            desc
+            defaults)))
 
 ;; converts a `pattern` clause for `syntax-case` into a pattern suitable
 ;; for directly inlinding into a larger pattern

@@ -12,7 +12,9 @@
                     field
                     match_def
                     match_when
-                    match_unless))
+                    match_unless
+                    default
+                    description))
 
 (begin-for-syntax
   (define-syntax-class :field-lhs
@@ -60,3 +62,23 @@
         #`(#:when (not (rhombus-body-at tag g ...)))]
        [(_ rhs ...+)
         #`(#:when (not (rhombus-expression (#,group-tag rhs ...))))]))))
+
+(define-pattern-clause-syntax default
+  (pattern-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (op)
+       [(_ field::field-lhs (tag::block in-block ...))
+        #'(#:default field.id field.depth (rhombus-body-at tag in-block ...) #,stx)]
+       [(_ field::field-lhs _::equal rhs ...)
+        #`(#:default field.id field.depth (rhombus-expression (#,group-tag rhs ...)) #,stx)]))))
+
+(define-pattern-clause-syntax description
+  (pattern-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ str:string)
+        #'(#:description str #,stx)]
+       [(_ (_::block (group str:string)))
+        #'(#:description str #,stx)]))))

@@ -13,7 +13,7 @@ check:
   | '$(term_option_sequence
        | no)':
       0
-  ~throws "term_option_sequence"
+  ~throws "bad syntax"
 
 check:
   ~eval
@@ -22,14 +22,14 @@ check:
        | 'x':
            no)':
       0
-  ~throws "term_option_sequence"
+  ~throws "unexpected term"
 
 check:
   ~eval
   match 0
   | '$(term_option_sequence
        | 'x':
-           ~default x: 10)':
+           default x: 10)':
       0
   ~throws "not a pattern variable in the option"
 
@@ -38,8 +38,8 @@ check:
   match 0
   | '$(term_option_sequence
        | '$x':
-           ~default x: 10
-           ~default x = 11)':
+           default x: 10
+           default x = 11)':
       0
   ~throws "second default for pattern variable within an option"
 
@@ -48,7 +48,7 @@ check:
   match 0
   | '$(term_option_sequence
        | '$x':
-           ~default [x, ...]: 10)':
+           default [x, ...]: 10)':
       0
   ~throws "depth for default does not match pattern variable depth"
 
@@ -57,7 +57,7 @@ check:
   match ''
   | '$(group_option_sequence
        | '($x, ...)':
-           ~default [x, ...]: 10)':
+           default [x, ...]: 10)':
       0
   ~throws "default value does not match expected depth"
 
@@ -76,7 +76,7 @@ block:
     | '$(term_option_sequence
          | 'a($z, ...)'
          | 'b($y)':
-              ~description: "bees"
+              description: "bees"
          | 'c')':
         ["yep", [z, ...], y]
   check:
@@ -112,11 +112,11 @@ block:
     match stx
     | '('$(group_option_sequence
            | 'a($z, ...)':
-               ~default [z, ...]:
+               default [z, ...]:
                  ["no"]
            | 'b($y)'
            | '~c':
-               ~description: "cee options")',
+               description: "cee options")',
         ...)':
         [["yep", [z, ...], y], ...]
   check:
@@ -125,3 +125,45 @@ block:
   check:
     go('('a(1, 2); ~c', 'b(7)', '~c')')
     ~matches [["yep", ['1', '2'], #false], ["yep", ["no"], '7'], ["yep", ["no"], #false]]
+
+check:
+  ~eval
+  syntax_class Options
+  | '$(group_option_sequence
+       | '~opt_a: $a'
+       | '$('~opt_b' && b)')'
+  ~throws "option sequence incompatible with this context"
+
+block:
+  syntax_class Options:
+    kind: ~multi
+  | '$(group_option_sequence
+       | '~opt_a: $a'
+       | '$('~opt_b' && b)')'
+
+  check:
+    match '~opt_a: 10
+           ~opt_b'
+    | '$(v :: Options)':
+        [v.a, v.b]
+    ~matches ['10', '~opt_b']
+
+block:
+  syntax_class Options:
+    kind: ~multi
+  | '$(group_option_sequence
+       | '~opt_a: $a'
+       | '~opt_b':
+           field b = #true)'
+
+  check:
+    match '~opt_a: 10
+           ~opt_b'
+    | '$(v :: Options)':
+        [v.a, v.b]
+    ~matches ['10', #true]
+  check:
+    match '~opt_a: 10'
+    | '$(v :: Options)':
+        [v.a, v.b]
+    ~matches ['10', #false]
