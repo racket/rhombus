@@ -126,7 +126,7 @@ meta:
                key)
     | '$pre ... $(end :: Term)':
          let key = end.property(#'spacer_key) || Symbol.gen()
-         values('$pre ... $(end.property(#'spacer_key, key, #true))',
+         values('$pre ... $(end.property(#'spacer_key, key, #true))'.relocate_group(stx),
                 key)
 
 meta:
