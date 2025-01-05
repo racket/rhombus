@@ -580,85 +580,27 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (~and all-alts (_::alts (_::block (group (_::quotes _)
-                                                          (~optional (~and option-config
-                                                                           (_::block . _)))))
-                                         ...)))
+       [(form-id (~and all-alts (_::alts blk ...)))
         (cond
           [(eq? (current-unquote-binding-kind) for-kind)
-           (define defaultss
-             (for/list ([option-config (in-list (attribute option-config))])
-               (cond
-                 [(not option-config) null]
-                 [else
-                  (syntax-parse option-config
-                    #:context (syntax-e #'form-id)
-                    [(_::block g ...)
-                     (filter
-                      values
-                      (for/list ([g (in-list (attribute g))])
-                        (define (extract rhs expr)
-                          (let loop ([rhs rhs] [depth 0])
-                            (syntax-parse rhs
-                              #:context (syntax-e #'form-id)
-                              #:datum-literals (group)
-                              [rhs:identifier (list #'rhs depth expr)]
-                              [(_::brackets (group rhs) (group _::...-bind))
-                               (loop #'rhs (add1 depth))])))
-                        (syntax-parse g
-                          #:context (syntax-e #'form-id)
-                          #:datum-literals (group op)
-                          [(group #:default rhs (op =) lhs ...)
-                           (extract #'rhs #'(rhombus-expression (group lhs ...)))]
-                          [(group #:default rhs (b-tag::block g ...))
-                           (extract #'rhs #'(rhombus-body-at b-tag g ...))]
-                          [(group #:description . _) #f])))])])))
-           (define duplicate-messages
-             (for/list ([option-config (in-list (attribute option-config))])
-               (define default-duplicate-message "mulitple uses of option not allowed")
-               (define message-template "multiple ~a not allowed")
-               (cond
-                 [(not option-config) default-duplicate-message]
-                 [else
-                  (syntax-parse option-config
-                    #:context (syntax-e #'form-id)
-                    [(_::block g ...)
-                     (or
-                      (for/fold ([desc #f]) ([g (in-list (attribute g))])
-                        (syntax-parse g
-                          #:context (syntax-e #'form-id)
-                          #:datum-literals (group op)
-                          [(group #:description . _)
-                           #:when desc
-                           (raise-syntax-error #f
-                                               "second description clause within an option"
-                                               stx
-                                               g)]
-                          [(group #:description str:string)
-                           (format message-template (syntax-e #'str))]
-                          [(group #:description (_::block (group str:string)))
-                           (format message-template (syntax-e #'str))]
-                          [(group #:description . _)
-                           (raise-syntax-error #f
-                                               "description clause does not contain just a string"
-                                               stx
-                                               g)]
-                          [_ desc]))
-                      default-duplicate-message)])])))
-           (define option-tags (generate-temporaries (attribute option-config)))
-           (define rsc
+           (define option-tags (generate-temporaries (attribute blk)))
+           (define-values (rsc descs defaultss)
              (parse-anonymous-syntax-class (syntax-e #'form-id)
                                            stx
                                            (if (eq? as-kind #'group)
                                                'group
                                                'sequence)
                                            #:kind-kw as-kind
-                                           #:ignore-pattern-body? #t
+                                           #:for-option? #t
                                            #:commonize-fields? #t
-                                           #:defaultss defaultss
                                            #:option-tags option-tags
                                            #'options
                                            #'(all-alts)))
+           (define duplicate-messages
+             (for/list ([desc (in-list descs)])
+               (if desc
+                   (format "multiple ~a not allowed" desc)
+                   "mulitple uses of option not allowed")))
            (syntax-parse (build-syntax-class-pattern stx
                                                      rsc
                                                      #'#f

@@ -642,6 +642,7 @@ class's name.
 @doc(
   ~nonterminal:
     syntax_pattern: #%quotes pattern
+    pattern_body: syntax_class ~defn
     id_maybe_rep: field ~pattern_clause
 
   unquote_bind.macro 'group_option_sequence
@@ -654,14 +655,15 @@ class's name.
   grammar pattern_case:
     syntax_pattern
     syntax_pattern:
-      $option
+      $option_pattern_body
       ...
 
-  grammar pattern_option:
-    ~default $id_maybe_rep = $expr
-    ~default $id_maybe_rep: $body; ...
-    ~description $string
-    ~description: $string
+  grammar option_pattern_body:
+    pattern_body
+    #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep = $expr
+    #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep: $body; ...
+    #,(@rhombus(description, ~pattern_clause)) $string
+    #,(@rhombus(description, ~pattern_clause)): $string
 ){
 
  Creates a pattern that matches a sequence of groups in the case of
@@ -671,24 +673,30 @@ class's name.
  matches to one @rhombus(pattern_case) are found, an error is reported
  (i.e., the pattern does not merely fail to match). The result is similar
  to using @dots after a @rhombus(pattern, ~unquote_bind) with the same
- @rhombus(syntax_pattern)s, but since each @rhombus(pattern_case) matches
- at most once, it's fields do not turn into repetitions. Each individual
- @rhombus(syntax_pattern) is a group pattern within
- @rhombus(group_option_sequence, ~unquote_bind) or sequence pattern
- within @rhombus(group_option_sequence, ~unquote_bind).
+ @rhombus(pattern_case)s, but since each
+ @rhombus(pattern_case) matches at most once, it's fields do not
+ turn into repetitions. Each individual @rhombus(syntax_pattern) is a
+ group pattern within @rhombus(group_option_sequence, ~unquote_bind) or
+ sequence pattern within @rhombus(group_option_sequence, ~unquote_bind).
 
  In a match that does not use a particular @rhombus(pattern_case), the
  pattern variables of that case are bound to either @rhombus(#false) or
  @rhombus([]) by default, the latter when the pattern variable is a
- repetition. A @rhombus(~default) clause within a @rhombus(pattern_case)
- can specify a different default; each @rhombus(id_maybe_rep) names a
- variable with its depth in the same way as for
- @rhombus(field, ~pattern_clause).
+ repetition. A @rhombus(default, ~pattern_clause) clause within a
+ @rhombus(pattern_case) can specify a different default; each
+ @rhombus(id_maybe_rep) names a variable with its depth in the same way
+ as for @rhombus(field, ~pattern_clause). The @rhombus(expr) or
+ @rhombus(body) sequence within a @rhombus(default, ~pattern_clause)
+ clause has the scope of the enclosing
+ @rhombus(group_option_sequence, ~unquote_bind) or
+ @rhombus(term_option_sequence, ~unquote_bind) form; it is not in the
+ scope of definitions within the @rhombus(pattern_case)  body, because it is used
+ for non-matches instead of matches.
 
- A @rhombus(~description) string is used when multiple matches are found
- for the enclosing @rhombus(pattern_case). The string is expected to be a
- plural noun suitable to replace a generic ``options'' in an error
- message.
+ A @rhombus(description, ~pattern_clause) clause can provide a string
+ that is used when multiple matches are found for the enclosing
+ @rhombus(pattern_case). The string is expected to be a plural noun
+ suitable to replace a generic ``options'' in an error message.
 
 @examples(
   ~eval:
@@ -697,7 +705,7 @@ class's name.
     expr.macro 'list_proc:
                   $(group_option_sequence
                     | '~min_args: $(min :: Int)':
-                        ~default min = '1'
+                        default min = '1'
                     | '~max_args: $(max :: Int)')':
       'fun $(Syntax.make(
                [#'alts,
