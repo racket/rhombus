@@ -14,7 +14,9 @@
          "static-info.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide :=
          (for-space rhombus/bind
@@ -118,7 +120,8 @@
   (struct mutable-variable expression-prefix-operator (id convert-id static-infos)
     #:property prop:rename-transformer (struct-field-index id))
   (define (make-mutable-variable id converter-id static-infos)
-    (mutable-variable '((default . stronger))
+    (mutable-variable #f
+                      '((default . stronger))
                       'macro
                       (lambda (stx)
                         (syntax-parse stx
@@ -133,7 +136,7 @@
 (define (raise-mutable-binding-annotation-fail val who)
   (raise-annotation-failure (car who) val (cdr who)))
 
-(define-for-syntax (make-assign-infix-operator prec assc protocol proc)
+(define-for-syntax (make-assign-infix-operator order prec assc protocol proc)
   (define (get-mv form1 self-stx)
     (define inside (syntax-parse (unwrap-static-infos form1)
                      #:literals (rhombus-expression)
@@ -153,6 +156,7 @@
         #`(#,convert-id #,id)
         id))
   (assign-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -187,7 +191,8 @@
 
 (define-syntax :=
   (make-assign-infix-operator
-   '((default . weaker))
+   (lambda () (order-quote assignment))
+   '()
    'left
    'automatic
    (lambda (left-ref-stx left-assign-stx right-stx self-stx rhs-name)

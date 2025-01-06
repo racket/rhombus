@@ -36,12 +36,14 @@
 
 (define-syntax try-rest-bind
   (expression-prefix-operator
+   #f
    `()
    'macro
    (lambda (tail) (error "should not get here"))))
 
 (define-binding-syntax try-rest-bind
   (binding-prefix-operator
+   #f
    `()
    'macro
    (lambda (tail)

@@ -22,6 +22,9 @@ export:
     fun
     doc
     operator
+    names:
+      // export namespace extensions
+      operator_order
     class
     interface
     veneer
@@ -320,6 +323,17 @@ meta:
   | '$(_ :: Operator)'
 
 meta:
+  fun adjust_operator_option(opt, esc):
+    match opt
+    | '$(kw && '~order') $(rest :: Sequence)':
+        '$kw $(spacer.adjust_sequence(rest, #'#{rhombus/operator_order}, esc))'.relocate_group(opt)
+    | '$(kw && ('~stronger_than' || '~weaker_than'
+                  || '~same_as' || '~same_as_on_left' || '~same_as_on_right'))
+           $(rest :: Sequence)':
+        '$kw $(spacer.adjust_sequence(rest, [#'#{rhombus/operator_order}, #false], esc))'.relocate_group(opt)
+    | ~else:
+        spacer.adjust_group(opt, #'~expr, esc)
+
   fun adjust_op(op, esc):
     syntax_class Header:
       kind ~sequence
@@ -329,7 +343,7 @@ meta:
     fun adjust_body(body):
       match body
       | ': $(opt && '$(_ :: Keyword) $_'); ...; $g; ...':
-          let [new_opt, ...] = [spacer.adjust_group(opt, #'~expr, esc), ...]
+          let [new_opt, ...] = [adjust_operator_option(opt, esc), ...]
           let [new_g, ...] = [spacer.adjust_group(g, body_spaces, esc), ...]
           ': $new_opt; ...; $new_g; ...'.relocate(body)
     fun adjust_op_case(case) :~ Syntax:
@@ -391,6 +405,28 @@ meta:
 spacer.bridge operator(self, tail, context, esc):
   ~in: ~defn
   '$self $(adjust_op(tail, esc))'
+
+spacer.bridge operator_order.def(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$(name :: Sequence): $(block :: Block)':
+      match block
+      | ': $opt; ...':
+          let new_name = spacer.adjust_sequence(name, #'#{rhombus/operator_order}, esc)
+          let new_block = ': $(adjust_operator_option(opt, esc)); ...'.relocate(block)
+          '$self $new_name $new_block'
+  | '$(name :: Sequence) $(rest :: Sequence)':
+      let new_name = spacer.adjust_sequence(name, #'#{rhombus/operator_order}, esc)
+      '$self $new_name $rest'
+  | ~else: '$self $(spacer.adjust_sequence(tail, context, esc))'
+spacer.bridge operator_order.def_set(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$(name :: Sequence): $(block :: Block)':
+      let new_name = spacer.adjust_sequence(name, #'#{rhombus/operator_order}, esc)
+      let new_block = spacer.adjust_term(block, #'#{rhombus/operator_order}, esc)
+      '$self $new_name $new_block'
+  | ~else: '$self $(spacer.adjust_sequence(tail, context, esc))'
 
 meta:
   syntax_class Ann:

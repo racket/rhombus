@@ -33,7 +33,7 @@
                                    #f
                                    #f
                                    #f #f
-                                   #'() #'() '())
+                                   #'() #'() #'() '())
        '#f
        #'wrap-prefix
        #f
@@ -65,7 +65,7 @@
                        ()
                        ())))
 
-(define (wrap-prefix precedence protocol proc)
+(define (wrap-prefix order precedence protocol proc)
   (lambda (stx)
     (syntax-parse (unpack-tail stx #f #f)
       [(head . tail) (proc (pack-tail #'tail) #'head)])))

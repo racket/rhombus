@@ -7,6 +7,8 @@
                                 [module-identifier-mapping-get free-identifier-mapping-get]
                                 [module-identifier-mapping-put! free-identifier-mapping-put!])
                      enforest/name-parse
+                     enforest/operator
+                     enforest/syntax-local
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
                      "macro-rhs.rkt"
@@ -21,7 +23,8 @@
                   #%parens)
          "unquote-binding.rkt"
          "dotted-sequence-parse.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "order.rkt")
 
 (provide define-operator-definition-transformer
          define-identifier-syntax-definition-transformer
@@ -36,6 +39,8 @@
                      :infix-operator-options
                      :postfix-operator-options
                      :all-operator-options
+                     :order-options
+                     convert-order
                      convert-prec
                      convert-assc))
 
@@ -68,12 +73,14 @@
              #:when (memq (syntax-e #'kw) kws)))
 
   (define (combine-prec space-sym strongers weakers sames same-on-lefts same-on-rights)
-    (define intro (space->introducer space-sym))
+    (define intro (if (eq? space-sym 'rhombus/operator_order)
+                      #f
+                      (space->introducer space-sym)))
     (define ht (make-free-identifier-mapping))
     (define said-other? #f)
     (define prec '())
     (define (add! op kind)
-      (define use-op
+      (define use-ops
         (cond
           [(eq? (syntax-e op) '#:other)
            (when said-other?
@@ -81,17 +88,33 @@
                                  "'other' multiple times in precedence specifications"
                                  op))
            (set! said-other? #t)
-           op]
+           (list op)]
           [else
-           (define space-op (intro op))
-           (define old-op (free-identifier-mapping-get ht space-op (lambda () #f)))
-           (when old-op
-             (raise-syntax-error #f
-                                 "operator multiple times in precedence specifications"
-                                 op))
-           (free-identifier-mapping-put! ht space-op space-op)
-           space-op]))
-      (set! prec (cons (cons use-op kind) prec)))
+           (define order-op (in-order-space op))
+           (define-values (space-ops order?)
+             (cond
+               [(syntax-local-value* order-op order-set-ref)
+                => (lambda (v)
+                     (values (order-set->order-names v order-op) #t))]
+               [else
+                (when (not intro)
+                  (raise-syntax-error #f
+                                      "not defined as an operator order"
+                                      op))
+                (values (list (intro op)) #f)]))
+           (for ([space-op (in-list space-ops)])
+             (define old-kind (free-identifier-mapping-get ht space-op (lambda () #f)))
+             (when (and old-kind (or (not (eq? old-kind kind) (not order?))))
+               (raise-syntax-error #f
+                                   (format "operator~a multiple ~a in precedence specifications"
+                                           (if order? " order" "")
+                                           (if order? "modes" "times"))
+                                   op))
+             (free-identifier-mapping-put! ht space-op kind))
+           space-ops]))
+      (set! prec (append (for/list ([use-op (in-list use-ops)])
+                           (cons use-op kind))
+                         prec)))
     (for ([stronger (in-list strongers)])
       (add! stronger 'stronger))
     (for ([weaker (in-list weakers)])
@@ -111,6 +134,14 @@
     (pattern (_::block (group o::op/other ...) ...)
              #:with (name ...) #'(o.name ... ...))
     (pattern (~seq ::op/other ...)))
+
+  (define-syntax-class-mixin order-options
+    #:datum-literals (op group)
+    (~alt (~optional (group #:order ~! (~or order::name
+                                            (_::block (group order::name))))))
+    #:with order-name (if (attribute order)
+                          #'(order.name)
+                          #'()))
 
   (define-syntax-class-mixin operator-options
     #:datum-literals (op group
@@ -168,6 +199,7 @@
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
     #:desc "prefix operator options"
+    order-options
     operator-options
     who-options
     unsafe-options)
@@ -179,15 +211,17 @@
 
   (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym extra-kws)
     #:desc "macro options"
+    order-options
     operator-options
     self-options
     extra-options)
 
   (define-splicing-syntax-class (:macro-maybe-prefix-operator-options space-sym prec? extra-kws)
-    #:attributes (prec self-id all-id)
+    #:attributes (order-name prec self-id all-id)
     (pattern (~and (~fail #:when prec?)
                    (~var || (:self-operator-options space-sym extra-kws)))
-             #:with prec #'())
+             #:with prec #'()
+             #:with order-name #'())
     (pattern (~and (~fail #:unless prec?)
                    (~var || (:macro-prefix-operator-options space-sym extra-kws)))))
 
@@ -201,13 +235,20 @@
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
     #:desc "infix operator options"
+    order-options
     operator-options
     infix-operator-options
     who-options
     unsafe-options)
 
+  (define-composed-splicing-syntax-class (:order-options space-sym)
+    #:desc "infix operator options"
+    operator-options
+    infix-operator-options)
+
   (define-composed-splicing-syntax-class (:macro-infix-operator-options space-sym extra-kws)
     #:desc "infix macro options"
+    order-options
     operator-options
     infix-operator-options
     self-options
@@ -215,16 +256,19 @@
 
   (define-composed-splicing-syntax-class (:postfix-operator-options space-sym)
     #:desc "postfix operator options"
+    order-options
     operator-options)
 
   (define-composed-splicing-syntax-class (:all-operator-options space-sym)
     #:desc "operator options"
+    order-options
     operator-options
     infix-operator-options
     who-options)
 
   (define-composed-splicing-syntax-class (:macro-all-operator-options space-sym extra-kws)
     #:desc "macro operator options"
+    order-options
     operator-options
     infix-operator-options
     extra-options)
@@ -277,16 +321,37 @@
     (pattern (_::quotes (~and g (group _::$+1 _::identifier-for-parsed _::operator-or-identifier-or-$ . _))))
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
+  (define (convert-order order-name)
+    (cond
+      [(null? (syntax-e order-name))
+       #'#f]
+      [else
+       (define name (in-order-space (car (syntax-e order-name))))
+       (unless (syntax-local-value* name order-ref)
+         (raise-syntax-error #f
+                             "not defined as an operator order"
+                             name))
+        #`(lambda () (quote-syntax #,name))]))
+
   (define (convert-prec prec)
     #`(lambda () (list #,@(for/list ([p (in-list (syntax->list prec))])
                             (syntax-parse p
                               [(#:other . spec) #`'(default . spec)]
                               [(op . spec) #`(cons (quote-syntax op) 'spec)])))))
 
-  (define (convert-assc assc)
+  (define (convert-assc assc order-name)
+    (define order (and (pair? (syntax-e order-name))
+                       (syntax-local-value* (in-order-space (car (syntax-e order-name))) order-ref)))
     (if (null? (syntax-e assc))
-        #''left
-        #`'#,(string->symbol (keyword->immutable-string (syntax-e assc)))))
+        (if order
+            #`'#,(order-assoc order)
+            #''left)
+        (let ([assc (string->symbol (keyword->immutable-string (syntax-e assc)))])
+          (when (and order (not (eq? assc (order-assoc order))))
+            (raise-syntax-error #f
+                                "specified associativity does not match operator order"
+                                assc))
+          #`'#,assc)))
 
   (define (check-parsed-right-form form-id tail-pattern)
     (syntax-parse tail-pattern
@@ -296,7 +361,7 @@
 
 ;; parse one case (possibly the only case) in a macro definition
 (define-for-syntax (parse-one-macro-definition form-id kind allowed space-sym
-                                               [main-prec #'()] [main-assc #'()] [main-kws '()]
+                                               [main-order-name #'()] [main-prec #'()] [main-assc #'()] [main-kws '()]
                                                [extra-kws '()] [extra-shapes '()])
   (lambda (g rhs)
     (define (combine-main prec main-prec what)
@@ -319,14 +384,16 @@
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
          [(tag::block (~var opt (:macro-infix-operator-options space-sym extra-kws)) rhs ...)
+          (define order-name (combine-main #'opt.order-name main-order-name "operator order"))
           #`(pre-parsed op-name.name
                         op-name.extends
                         infix
                         #,kind
                         opt
                         #,(extract-extra-binds g extra-kws extra-shapes #'opt main-kws)
+                        #,(convert-order order-name)
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
-                        #,(convert-assc (combine-main #'opt.assc main-assc "associativity"))
+                        #,(convert-assc (combine-main #'opt.assc main-assc "associativity") order-name)
                         #,parsed-right-id
                         [tail-pattern
                          opt.self-id
@@ -350,6 +417,7 @@
                         #,kind
                         opt
                         #,(extract-extra-binds g extra-kws extra-shapes #'opt #f)
+                        #,(convert-order (combine-main #'opt.order-name main-order-name "operator order"))
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
                         #,main-assc
                         #,parsed-right-id
@@ -372,7 +440,7 @@
                                               #:extra-kws [extra-kws '()]
                                               #:extra-shapes [extra-shapes '()])
   (define p ((parse-one-macro-definition form-id kind allowed space-sym
-                                         #'() #'() null
+                                         #'() #'() #'() null
                                          extra-kws extra-shapes)
              g rhs))
   (define op (pre-parsed-name p))
@@ -384,12 +452,12 @@
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
-                                               main-name main-extends main-prec main-assc main-kws
+                                               main-name main-extends main-order main-prec main-assc main-kws
                                                #:allowed [allowed '(prefix infix precedence)]
                                                #:extra-kws [extra-kws '()]
                                                #:extra-shapes [extra-shapes '()])
   (define ps (map (parse-one-macro-definition form-id kind allowed space-sym
-                                              main-prec main-assc main-kws
+                                              main-order main-prec main-assc main-kws
                                               extra-kws extra-shapes)
                   gs rhss))
   (check-consistent stx
@@ -467,7 +535,7 @@
                                            space-sym
                                            compiletime-id
                                            #f #f
-                                           #'() #'() '()
+                                           #'() #'() #'() '()
                                            #:extra-kws extra-kws
                                            #:extra-shapes extra-shapes))]
         [(form-id main-op::operator-or-identifier-or-$ (_::block . _))
@@ -488,6 +556,7 @@
                                            space-sym
                                            compiletime-id
                                            #'main-op.name #'main-op.extends
+                                           (if (attribute main-options) #'main-options.order-name #'())
                                            (if (attribute main-options) #'main-options.prec #'())
                                            (if (attribute main-options) #'main-options.assc #'())
                                            (if (attribute main-options)

@@ -52,6 +52,8 @@
     $id
     ($parsed_id)
   grammar option:
+    ~order $name
+    ~order: $name
     ~stronger_than $other ...
     ~stronger_than: $other ...; ...
     ~weaker_than $other ...
@@ -69,8 +71,7 @@
     ~all_stx $id
     ~all_stx: $id
   grammar other:
-    $id
-    $op
+    $name
     ~other
   grammar assoc:
     ~left
@@ -151,10 +152,13 @@
  @rhombus(option) keywords can appear. The options
  @rhombus(~weaker_than), @rhombus(~stronger_than), @rhombus(~same_as),
  @rhombus(~same_on_left_as), and @rhombus(~same_on_right_as) declare
- an name's precedence relative to other names, where @rhombus(~other)
+ an name's precedence relative to other names or @tech{operator orders}, where @rhombus(~other)
  stands for any operator not otherwise mentioned. The
  @rhombus(~associativity) option is allowed only with an infix
- @rhombus(macro_pattern). The @rhombus(~op_stx) option binds an
+ @rhombus(macro_pattern). The @rhombus(~order) option selects a @tech{operator order}
+ for the operator, which defines precedence relationships to other operator orders and a default
+ associativity, but precedence and associativity options within @rhombus(macro, ~defn) override
+ the ones defined with the operator order. The @rhombus(~op_stx) option binds an
  identifier to an identifier or operator syntax object as it appears
  in a use of the macro (which cannot be
  matched directly in the @rhombus(macro_pattern), since that position

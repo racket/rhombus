@@ -229,6 +229,7 @@
 
   (define (make-identifier-annotation get [static-only? #f])
     (annotation-prefix-operator
+     #f
      '((default . stronger))
      'macro
      (lambda (stx)
@@ -248,6 +249,7 @@
 
   (define (make-identifier-binding-annotation get [static-only? #f])
     (annotation-prefix-operator
+     #f
      '((default . stronger))
      'macro
      (lambda (stx)
@@ -384,6 +386,7 @@
                                   parse-annotation-of)
     (define root
       (annotation-prefix-operator
+       #f
        '((default . stronger))
        'macro
        (lambda (stx)
@@ -399,6 +402,7 @@
      root
      ;; `of`:
      (annotation-prefix-operator
+      #f
       '((default . stronger))
       'macro
       (lambda (stx)
@@ -437,6 +441,7 @@
 
 (define-for-syntax (make-annotation-apply-expression-operator checked?)
   (expression-infix-operator
+   #f
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -494,6 +499,7 @@
 
 (define-for-syntax (make-annotation-apply-binding-operator checked?)
   (binding-infix-operator
+   #f
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -536,6 +542,7 @@
 
 (define-syntax is_a
   (expression-infix-operator
+   #f
    '((default . weaker))
    'macro
    (lambda (form tail)
@@ -891,12 +898,14 @@
 ;; annotation parsing terminates appropriately
 (define-annotation-syntax ::
   (annotation-infix-operator
+   #f
    `((default . weaker))
    'macro
    (lambda (form tail) (error "should not get here"))
    'none))
 (define-annotation-syntax is_a
   (annotation-infix-operator
+   #f
    `((default . stronger))
    'macro
    (lambda (form tail) (error "should not get here"))
@@ -907,6 +916,7 @@
 
 (define-annotation-syntax matching
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -930,6 +940,7 @@
 
 (define-annotation-syntax satisfying
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -957,6 +968,7 @@
 
 (define-annotation-syntax #%literal
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -972,6 +984,7 @@
 
 (define-for-syntax (make-unary-real-annotation id comp-stx)
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -1007,6 +1020,7 @@
 
 (define-for-syntax (make-in-annotation pred-stx annot-str)
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -1051,6 +1065,7 @@
 
 (define-annotation-syntax Any.of
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stxes)

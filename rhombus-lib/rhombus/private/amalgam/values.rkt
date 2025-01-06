@@ -27,6 +27,7 @@
 
 (define-binding-syntax values
   (binding-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -39,6 +40,7 @@
 
 (define-annotation-syntax values
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

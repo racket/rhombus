@@ -103,6 +103,7 @@
 
 (define-for-syntax (make-module-path-literal-operator prefix-operator)
   (prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -123,6 +124,7 @@
 
 (define-for-syntax (make-module-path-/-operator infix-operator)
   (infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (form1 stx)
@@ -154,6 +156,7 @@
 
 (define-for-syntax (make-module-path-string-arg-operator prefix-operator mp-form-id check)
   (prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -198,6 +201,7 @@
 
 (define-for-syntax (make-module-path-submod-operator infix-operator)
   (infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (mp stx)
@@ -236,6 +240,7 @@
 
 (define-for-syntax (make-module-path-submod-same-operator prefix-operator)
   (prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -256,6 +261,7 @@
 
 (define-for-syntax (make-module-path-submod-up-operator prefix-operator)
   (prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -299,6 +305,7 @@
 
 (define-module-path-syntax rhombus.
   (module-path-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

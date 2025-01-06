@@ -6,6 +6,7 @@ use_static
 
 export:
   |>
+  pipeline
 
 module for_maybe:
   export:
@@ -38,8 +39,11 @@ meta:
     values(statinfo_meta.wrap(expr, unpacked_res),
            tail)
 
+operator_order.def pipeline:
+  ~weaker_than: ~other
+
 expr.macro '$arg |> $tail ...':
   ~op_stx: self
-  ~weaker_than: ~other
+  ~order: pipeline
   parse_pipeline_expr(arg, '$self $tail ...',
                       ~as_static: syntax_meta.is_static(self))

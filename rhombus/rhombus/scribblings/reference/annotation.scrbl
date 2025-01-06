@@ -279,6 +279,8 @@
 @doc(
   expr.macro '$expr !!.'
   repet.macro '$repet !!.'
+  operator_order:
+    ~order: member_access
 ){
 
  The @rhombus(!!.) operator is equivalent to @rhombus(!!) followed by
@@ -303,6 +305,8 @@
   expr.macro '$expr ?. $id'
   repet.macro '$repet ?. $id ($arg, ...)'
   repet.macro '$repet ?. $id'
+  operator_order:
+    ~order: member_access
 ){
 
  If @rhombus(expr) produces @rhombus(#false), then the result of a

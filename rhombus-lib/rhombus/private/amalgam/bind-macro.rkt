@@ -518,8 +518,9 @@
     [b::binding #'b.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "binding" form)]))
 
-(define-for-syntax (make-binding-infix-operator prec protocol proc assc)
+(define-for-syntax (make-binding-infix-operator order prec protocol proc assc)
   (binding-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)
@@ -537,8 +538,9 @@
                           proc)))
    assc))
 
-(define-for-syntax (make-binding-prefix-operator prec protocol proc)
+(define-for-syntax (make-binding-prefix-operator order prec protocol proc)
   (binding-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)

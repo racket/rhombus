@@ -51,6 +51,7 @@
 
 (define-for-syntax (wrap-class-dot-via-class proc name pred dot-provider)
   (make-expression-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (packed-tail self-stx)

@@ -12,6 +12,7 @@
         "annot-macro.rkt"
         "reducer-macro.rkt"
         "for-clause-macro.rkt"
+        "order-macro.rkt"
         "class-clause-macro.rkt"
         "interface-clause-macro.rkt"
         "veneer-clause-macro.rkt"
@@ -36,4 +37,3 @@
 
 (bounce-meta "space-meta-clause-primitive.rkt"
              "unquote-binding-primitive-meta.rkt")
-

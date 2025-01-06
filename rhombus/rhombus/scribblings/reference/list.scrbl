@@ -39,10 +39,10 @@ it supplies its elements in order.
   ~nonterminal:
     listable_expr: block expr
   fun List(v :: Any, ...) :: List
-  expr.macro '#%brackets [$expr_or_splice, ...]'
-  repet.macro '#%brackets [$repet_or_splice, ...]'
   expr.macro 'List[$expr_or_splice, ...]'
   repet.macro 'List[$repet_or_splice, ...]'
+  expr.macro '#%brackets [$expr_or_splice, ...]'
+  repet.macro '#%brackets [$repet_or_splice, ...]'
 
   grammar expr_or_splice:
     $expr
@@ -83,8 +83,8 @@ it supplies its elements in order.
     list_repet_bind: def bind ~defn
     repet_bind: def bind ~defn
   bind.macro 'List($bind_or_splice, ...)'
-  bind.macro '#%brackets [$bind_or_splice, ...]'
   bind.macro 'List[$bind_or_splice, ...]'
+  bind.macro '#%brackets [$bind_or_splice, ...]'
   grammar bind_or_splice:
     $bind
     $splice

@@ -63,8 +63,9 @@
                    #'assign.tail)]
     [_ (raise-bad-macro-result (proc-name proc) "assignment" form)]))
 
-(define-for-syntax (make-assign-operator prec protocol proc assc)
+(define-for-syntax (make-assign-operator order prec protocol proc assc)
   (make-assign-infix-operator
+   order
    prec
    assc
    protocol

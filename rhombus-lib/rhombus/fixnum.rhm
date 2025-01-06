@@ -18,37 +18,49 @@ export:
 // Rhombus's built-in rewrite table
 
 unsafeable.operator ((x :~ Fixnum) + (y :~ Fixnum)) :~ Fixnum:
+  ~order: addition
   rkt.#{fx+}(x, y)
 
-unsafeable.operator
+unsafeable.operator:
 | ((x :~ Fixnum) - (y :~ Fixnum)) :~ Fixnum:
+    ~order: addition
     rkt.#{fx-}(x, y)
 | (- (y :~ Fixnum)) :~ Fixnum:
     rkt.#{fx-}(y)
 
 unsafeable.operator ((x :~ Fixnum) * (y :~ Fixnum)) :~ Fixnum:
+  ~order: multiplication
   rkt.#{fx*}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) div (y :~ Fixnum)) :~ Fixnum:
+  ~order: integer_division
   rkt.#{fxquotient}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) mod (y :~ Fixnum)) :~ Fixnum:
+  ~order: integer_division
   rkt.#{fxmodulo}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) rem (y :~ Fixnum)) :~ Fixnum:
+  ~order: integer_division
   rkt.#{fxremainder}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) < (y :~ Fixnum)):
+  ~order: comparison
   rkt.#{fx<}(x, y)
 unsafeable.operator ((x :~ Fixnum) <= (y :~ Fixnum)):
+  ~order: comparison
   rkt.#{fx<=}(x, y)
 unsafeable.operator ((x :~ Fixnum) == (y :~ Fixnum)):
+  ~order: comparison
   rkt.#{fx=}(x, y)
 unsafeable.operator ((x :~ Fixnum) != (y :~ Fixnum)):
+  ~order: comparison
   ! rkt.#{fx=}(x, y)
 unsafeable.operator ((x :~ Fixnum) >= (y :~ Fixnum)):
+  ~order: comparison
   rkt.#{fx>=}(x, y)
 unsafeable.operator ((x :~ Fixnum) > (y :~ Fixnum)):
+  ~order: comparison
   rkt.#{fx>}(x, y)
 
 unsafeable.fun abs(x :~ Fixnum) :~ Fixnum:
@@ -80,21 +92,27 @@ namespace bits:
       rkt.#{fxrshift/logical}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) << (y :~ Fixnum)):
+  ~order: bitwise_shift
   rkt.#{fxlshift}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) >> (y :~ Fixnum)):
+  ~order: bitwise_shift
   rkt.#{fxrshift}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) and (y :~ Fixnum)):
+  ~order: bitwise_conjunction
   rkt.#{fxand}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) or (y :~ Fixnum)):
+  ~order: bitwise_disjunction
   rkt.#{fxior}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) xor (y :~ Fixnum)):
+  ~order: bitwise_disjunction
   rkt.#{fxxor}(x, y)
 
 unsafeable.operator (not (x :~ Fixnum)):
+  ~order: bitwise_negation
   rkt.#{fxnot}(x)
 
 unsafeable.fun popcount(x :~ Fixnum) :~ Fixnum:
@@ -118,18 +136,22 @@ namespace wraparound:
       <<
 
   unsafeable.operator ((x :~ Fixnum) + (y :~ Fixnum)) :~ Fixnum:
+    ~order: addition
     rkt.#{fx+/wraparound}(x, y)
 
   unsafeable.operator
   | ((x :~ Fixnum) - (y :~ Fixnum)) :~ Fixnum:
+      ~order: addition
       rkt.#{fx-/wraparound}(x, y)
   | (- (y :~ Fixnum)) :~ Fixnum:
       rkt.#{fx-/wraparound}(0, y)
 
   unsafeable.operator ((x :~ Fixnum) * (y :~ Fixnum)) :~ Fixnum:
+    ~order: multiplication
     rkt.#{fx*/wraparound}(x, y)
 
   unsafeable.operator ((x :~ Fixnum) << (y :~ Fixnum)):
+    ~order: bitwise_shift
     rkt.#{fxlshift/wraparound}(x, y)
 
 unsafeable.fun from_flonum(x :~ Flonum) :~ Fixnum:

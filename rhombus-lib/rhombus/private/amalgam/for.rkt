@@ -360,6 +360,7 @@
 ;; reducer parsing terminates appropriately
 (define-reducer-syntax #%call
   (reducer-infix-operator
+   #f
    `((default . stronger))
    'macro
    (lambda (form tail) (error "should not get here"))

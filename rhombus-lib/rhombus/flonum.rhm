@@ -32,34 +32,45 @@ export:
 // Rhombus's built-in rewrite table
 
 unsafeable.operator ((x :~ Flonum) + (y :~ Flonum)) :~ Flonum:
+  ~order: addition
   rkt.#{fl+}(x, y)
 
 unsafeable.operator
 | ((x :~ Flonum) - (y :~ Flonum)) :~ Flonum:
+    ~order: addition
     rkt.#{fl-}(x, y)
 | (- (y :~ Flonum)) :~ Flonum:
     rkt.#{fl-}(y)
 
 unsafeable.operator ((x :~ Flonum) * (y :~ Flonum)) :~ Flonum:
+  ~order: multiplication
   rkt.#{fl*}(x, y)
 
 unsafeable.operator ((x :~ Flonum) / (y :~ Flonum)) :~ Flonum:
+  ~order: multiplication
   rkt.#{fl/}(x, y)
 
 unsafeable.operator ((x :~ Flonum) ** (y :~ Flonum)) :~ Flonum:
+  ~order: exponentiation
   rkt.#{flexpt}(x, y)
 
 unsafeable.operator ((x :~ Flonum) < (y :~ Flonum)):
+  ~order: comparison
   rkt.#{fl<}(x, y)
 unsafeable.operator ((x :~ Flonum) <= (y :~ Flonum)):
+  ~order: comparison
   rkt.#{fl<=}(x, y)
 unsafeable.operator ((x :~ Flonum) == (y :~ Flonum)):
+  ~order: comparison
   rkt.#{fl=}(x, y)
 unsafeable.operator ((x :~ Flonum) != (y :~ Flonum)):
+  ~order: comparison
   ! rkt.#{fl=}(x, y)
 unsafeable.operator ((x :~ Flonum) >= (y :~ Flonum)):
+  ~order: comparison
   rkt.#{fl>=}(x, y)
 unsafeable.operator ((x :~ Flonum) > (y :~ Flonum)):
+  ~order: comparison
   rkt.#{fl>}(x, y)
 
 unsafeable.fun abs(x :~ Flonum) :~ Flonum:

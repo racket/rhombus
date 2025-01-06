@@ -27,7 +27,8 @@
                     space_meta_clause)
          (for-space rhombus/doc
                     grammar
-                    non_target))
+                    non_target
+                    operator_order))
 
 (module+ for_doc_transformer
   (provide
@@ -112,7 +113,8 @@
       [(rhombus/space_clause) 22]
       [(rhombus/space_meta_clause) 23]
       [(rhombus/key_comp) 24]
-      [(rhombus/doc) 25]
+      [(rhombus/operator_order) 25]
+      [(rhombus/doc) 26]
       [else 100])))
 
 (begin-for-syntax
@@ -178,6 +180,11 @@
   (syntax-parse stx
     #:datum-literals (group)
     [(group _ (~var id (identifier-target space-name)) . _) #'id.name]))
+
+(define-for-syntax (head-dot-head-extract-name stx space-name)
+  (syntax-parse stx
+    #:datum-literals (group op |.|)
+    [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) #'id.name]))
 
 (define-for-syntax (parens-extract-name stx space-name)
   (syntax-parse stx
@@ -301,6 +308,13 @@
     [(group tag (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]))
+
+(define-for-syntax (head-dot-head-extract-typeset stx space-name subst)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(group tag dot tag2 (~var id (identifier-target space-name)) e ...)
+     (rb #:at stx
+         #`(group tag dot tag2 #,@(subst #'id.name) e ...))]))
 
 (define-for-syntax (parens-extract-typeset stx space-name subst)
   (head-extract-typeset stx space-name subst))
@@ -774,6 +788,20 @@
        (rb #:at stx
            #`(group tag (p-tag (g-tag arg0 #,@(subst #'id.name) arg1)) e ...))])))
 
+(define-doc operator_order.def operator_order
+  "operator order"
+  rhombus/operator_order
+  head-dot-head-extract-name
+  (lambda (stx space-name vars) vars)
+  head-dot-head-extract-typeset)
+
+(define-doc operator_order.def_set operator_order
+  "operator order set"
+  rhombus/operator_order
+  head-dot-head-extract-name
+  (lambda (stx space-name vars) vars)
+  head-dot-head-extract-typeset)
+
 (define-doc syntax_class
   "syntax class"
   rhombus/stxclass
@@ -1047,6 +1075,27 @@
      #:extract-typeset
      (lambda (stx space-name subst)
        ((bounce stx doc-transformer-extract-typeset) (trim stx) space-name subst)))))
+
+(define-doc-syntax operator_order
+  (make-doc-transformer
+   #:extract-desc
+   (lambda (stx) (list #f))
+   #:extract-space-sym
+   (lambda (stx) (list #f))
+   #:extract-name
+   (lambda (stx space-name) (list #f))
+   #:extract-metavariables
+   (lambda (stx space-name vars)
+     vars)
+   #:extract-typeset
+   (lambda (stx space-name subst)
+     (syntax-parse stx
+       #:datum-literals (group block)
+       [(group _ (block option0 option ...))
+        (rb #:at #'option0
+            #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))
+                                 (group #:space (block (group rhombus/operator_order #f)))))
+            #'(multi option0 option ...))]))))
 
 (define (typeset-grammar id . prods)
   (define (p c) (paragraph plain c))

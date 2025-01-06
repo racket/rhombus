@@ -10,14 +10,15 @@
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
          "parse.rkt"
-         (submod "arithmetic.rkt" precedence)
          "compare-key.rkt"
          "static-info.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "is-static.rkt"
-         "number.rkt")
+         "number.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -260,23 +261,19 @@
                                 (list form1 self-stx form2))
                  #'())))))])])))
 
-(define-for-syntax (repet-comparison-precedences)
-  (for/list ([p (in-list (comparison-precedences))])
-    (if (identifier? (car p))
-        (cons (in-repetition-space (car p)) (cdr p))
-        p)))
-
 (define-syntax-rule (define-compare-op def-op op)
   (begin
     (define-syntax def-op
       (expression-infix-operator
-       comparison-precedences
+       (lambda () (order-quote comparison))
+       '()
        'automatic
        (make-comp-expression 'op)
        'left))
     (define-repetition-syntax def-op
       (repetition-infix-operator
-       repet-comparison-precedences
+       (lambda () (order-quote comparison))
+       '()
        'automatic
        (make-comp-repetition 'op)
        'left))))

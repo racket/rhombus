@@ -85,8 +85,9 @@
 
 (define-for-syntax (parsed-argument form) #`(parsed #:rhombus/expo #,form))
 
-(define-for-syntax (make-export-infix-operator prec protocol proc assc)
+(define-for-syntax (make-export-infix-operator order prec protocol proc assc)
   (export-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -104,8 +105,9 @@
                                    proc)))
    assc))
 
-(define-for-syntax (make-export-prefix-operator prec protocol proc)
+(define-for-syntax (make-export-prefix-operator order prec protocol proc)
   (export-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)

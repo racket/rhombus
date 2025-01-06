@@ -2,6 +2,7 @@
 import:
   "core-meta.rkt" open
   "pipeline.rhm".(|>)
+  "pipeline.rhm".pipeline
   "pipeline.rhm"!for_maybe.parse_pipeline_expr
 
 use_static
@@ -47,8 +48,7 @@ expr.macro '$e !!':
                         demaybe_statinfos(statinfos))
 
 expr.macro '$e !!. $tail ... ~nonempty':
-  ~same_as: .
-  ~stronger_than: ~other
+  ~order: member_access
   ~op_stx: self
   let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
   values('($e !!)', '$dot $tail ...')
@@ -66,15 +66,13 @@ repet.macro '$e !!':
                          $(demaybe_statinfos(statinfos)))')
 
 repet.macro '$e !!. $tail ... ~nonempty':
-  ~same_as: .
-  ~stronger_than: ~other
+  ~order: member_access
   ~op_stx: self
   let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
   values('($e !!)', '$dot $tail ...')
 
 expr.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
-  ~stronger_than: ~other
-  ~same_as: .
+  ~order: member_access
   ~op_stx: self
   maybe_op(e, self,  '.', '$id $args ...',
            fun (left, '$op $(id_and_args :: Sequence)', ~as_static: as_static):
@@ -83,8 +81,7 @@ expr.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...
              values(v, '$tail ...'))
 
 expr.macro '$e ?> $tail ... ~nonempty':
-  ~weaker_than: ~other
-  ~stronger_than: |>
+  ~order: pipeline
   ~op_stx: self
   maybe_op(e, self, '|>', '$tail ...', parse_pipeline_expr)
 
@@ -109,8 +106,7 @@ meta:
     )
 
 repet.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
-  ~stronger_than: ~other
-  ~same_as: .
+  ~order: member_access
   ~op_stx: self
   let '($src, $binds, $body, $used_depth, $staticinfos)' = repet_meta.unpack_generator(e)
   let left = repet_meta.pack_generator('($src, $binds, $body, $used_depth, $(demaybe_statinfos(staticinfos)))')

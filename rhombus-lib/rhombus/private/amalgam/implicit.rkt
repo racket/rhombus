@@ -262,6 +262,7 @@
 
 (define-syntax #%call
   (expression-infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (rator stxes)
@@ -275,6 +276,7 @@
 
 (define-repetition-syntax #%call
   (repetition-infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (rator stxes)
@@ -310,6 +312,7 @@
 
 (define-syntax #%index
   (expression-infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (array stxes)
@@ -319,6 +322,7 @@
 
 (define-repetition-syntax #%index
   (repetition-infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (array stxes)

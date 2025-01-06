@@ -21,7 +21,7 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
     set_expr: block expr
     elem_expr: block expr
 
-  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
+  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map  operator_order
   operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
   operator ((v1 :: List) ++ (v2 :: List)) :: List
   operator ((v1 :: PairList) ++ (v2 :: PairList)) :: PairList
@@ -29,7 +29,8 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
   operator ((v1 :: ReadableString) ++ (v2 :: ReadableString))
     :: String
   operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: MutableBytes
-  operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any
+  operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any:
+    ~order: concatenation
 ){
 
  Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list,

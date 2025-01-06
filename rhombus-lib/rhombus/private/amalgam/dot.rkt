@@ -18,7 +18,9 @@
          "realm.rkt"
          "parse.rkt"
          "is-static.rkt"
-         (submod "assign.rkt" for-assign))
+         (submod "assign.rkt" for-assign)
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet
@@ -56,7 +58,8 @@
 
 (define-syntax |.|
   (expression-infix-operator
-   '((default . stronger))
+   (lambda () (order-quote member_access))
+   '()
    'macro
    (lambda (form1 tail)
      (define more-static? (is-static-context/tail? tail))
@@ -83,7 +86,8 @@
 
 (define-repetition-syntax |.|
   (repetition-infix-operator
-   '((default . stronger))
+   (lambda () (order-quote member_access))
+   '()
    'macro
    (lambda (form1 tail)
      (define more-static? (is-static-context/tail? tail))
@@ -129,7 +133,8 @@
 ;; for something like `"a" :: String.length()`
 (define-annotation-syntax |.|
   (annotation-infix-operator
-   '((default . stronger))
+   (lambda () (order-quote member_access))
+   '()
    'macro
    (lambda (form1 tail)
      (syntax-parse tail

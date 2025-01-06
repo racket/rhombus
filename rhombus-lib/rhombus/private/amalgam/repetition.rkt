@@ -146,7 +146,7 @@
                                         #'tail)])))))))
 
   (define (repetition-transformer proc)
-    (repetition-prefix-operator '((default . stronger)) 'macro proc))
+    (repetition-prefix-operator #f '((default . stronger)) 'macro proc))
 
   (define (repetition-static-info-lookup element-static-infos key)
     (if (identifier? element-static-infos)

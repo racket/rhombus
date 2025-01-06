@@ -413,6 +413,29 @@
 
 }
 
+@doc(
+  ~nonterminal:
+    id_name: namespace ~defn
+  doc 'operator_order.def $id_name'
+  doc 'operator_order.def $id_name: $option; ...'
+  doc 'operator_order.def_set $id_name: $option; ...'
+  doc 'operator_order: $option; ...'
+){
+
+ The @rhombus(operator_order.def, ~doc) and
+ @rhombus(operator_order.def_set, ~doc) forms are @tech{doc entry} forms
+ to document an operator order like @rhombus(addition, ~operator_order)
+ or operator order set like @rhombus(arithmetic, ~operator_order).
+
+ The @rhombus(operator_order, ~doc) form does not document a binding
+ itself, but is meant to be used alongside @rhombus(expr.macro, ~doc) and
+ similar when documenting a prefix or infix operator. Each
+ @rhombus(option) is typically @rhombus(~order: #,(@rhombus(name, ~var)))
+ to document the operator's order or a @rhombus(~stronger_than) or
+ @rhombus(~weaker_than) form to document its precedence directly.
+
+}
+
 
 @doc(
   ~nonterminal:

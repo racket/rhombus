@@ -52,6 +52,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with who #'options.who
              #:with unsafe #'options.unsafe
@@ -67,6 +68,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with who #'options.who
              #:with unsafe #'options.unsafe
@@ -88,6 +90,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with assc #'options.assc
              #:with who #'options.who
@@ -104,6 +107,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with assc #'options.assc
              #:with who #'options.who
@@ -126,6 +130,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with who #'options.who
              #:with unsafe #'options.unsafe
@@ -141,6 +146,7 @@
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:with name #'op-name.name
              #:with extends #'op-name.extends
+             #:with order #'options.order-name
              #:with prec #'options.prec
              #:with who #'options.who
              #:with unsafe #'options.unsafe
@@ -151,9 +157,10 @@
              #:with ret-static-infos #'()
              #:with g #'(group arg op-name-seq)))
 
-  (define (make-prefix name op-proc unsafe/s prec static-infos)
+  (define (make-prefix name op-proc unsafe/s order prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-prefix-operator
+         #,(convert-order order)
          #,(convert-prec prec)
          'prefix
          (lambda (right self-stx)
@@ -164,9 +171,10 @@
                        #`(op-proc #,(discard-static-infos right))))
             (quote-syntax #,static-infos))))))
 
-  (define (make-infix name op-proc unsafe/s prec assc static-infos)
+  (define (make-infix name op-proc unsafe/s order prec assc static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
+         #,(convert-order order)
          #,(convert-prec prec)
          'infix
          (lambda (left right self-stx)
@@ -177,11 +185,12 @@
                        #`(op-proc #,(discard-static-infos left)
                                   #,(discard-static-infos right))))
             (quote-syntax #,static-infos)))
-         #,(convert-assc assc))))
+         #,(convert-assc assc order))))
 
-  (define (make-postfix name op-proc unsafe/s prec static-infos)
+  (define (make-postfix name op-proc unsafe/s order prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
+         #,(convert-order order)
          #,(convert-prec prec)
          'postfix
          (lambda (left self-stx)
@@ -337,7 +346,7 @@
       [else
        proc]))
 
-  (define (generate-prefix stx main-who name extends args prec rhss
+  (define (generate-prefix stx main-who name extends args order prec rhss
                            ret-converters ret-annot-strs ret-static-infos
                            reflect-names whos unsafes
                            #:main-converter [main-converter #f]
@@ -355,9 +364,9 @@
                                    has-unsafe? unsafes))
        (build-syntax-definitions/maybe-extension
         '(#f rhombus/repet) name extends
-        (make-prefix name #'op-proc #'(unsafe-proc ...) prec ret-static-infos)))))
+        (make-prefix name #'op-proc #'(unsafe-proc ...) order prec ret-static-infos)))))
 
-  (define (generate-infix stx main-who name extends lefts rights prec assc rhss
+  (define (generate-infix stx main-who name extends lefts rights order prec assc rhss
                           ret-converters ret-annot-strs ret-static-infos
                           reflect-names whos unsafes
                           #:main-converter [main-converter #f]
@@ -370,7 +379,7 @@
        (append
         (build-syntax-definitions/maybe-extension
          '(#f rhombus/repet) name extends
-         (make-infix name #'op-proc #'(unsafe-proc ...) prec assc ret-static-infos))
+         (make-infix name #'op-proc #'(unsafe-proc ...) order prec assc ret-static-infos))
         (list
          #`(define-values (op-proc unsafe-proc ...)
              #,(build-binary-function stx name
@@ -380,7 +389,7 @@
                                       reflect-names main-who whos
                                       has-unsafe? unsafes)))))))
 
-  (define (generate-postfix stx main-who name extends args prec rhss
+  (define (generate-postfix stx main-who name extends args order prec rhss
                             ret-converters ret-annot-strs ret-static-infos
                             reflect-names whos unsafes
                             #:main-converter [main-converter #f]
@@ -393,7 +402,7 @@
        (append
         (build-syntax-definitions/maybe-extension
          '(#f rhombus/repet) name extends
-         (make-postfix name #'op-proc #'(unsafe-proc ...) prec ret-static-infos))
+         (make-postfix name #'op-proc #'(unsafe-proc ...) order prec ret-static-infos))
         (list
          #`(define-values (op-proc unsafe-proc ...)
              #,(build-unary-function stx name
@@ -405,10 +414,10 @@
 
   (define (generate-prefix+infix stx
                                  main-who
-                                 p-name p-extends p-args p-prec p-rhss
+                                 p-name p-extends p-args p-order p-prec p-rhss
                                  p-ret-converters p-ret-annot-strs p-ret-static-infos
                                  p-reflect-names p-whos p-unsafes
-                                 i-name i-extends i-lefts i-rights i-prec i-assc i-rhss
+                                 i-name i-extends i-lefts i-rights i-order i-prec i-assc i-rhss
                                  i-ret-converters i-ret-annot-strs i-ret-static-infos
                                  i-reflect-names i-whos i-unsafes
                                  #:main-converter [main-converter #f]
@@ -424,9 +433,9 @@
         (build-syntax-definitions/maybe-extension
          '(#f rhombus/repet) p-name p-extends
          #`(let-values ([(prefix-expr prefix-repet)
-                         #,(make-prefix p-name #'p-op-proc #'(p-unsafe-proc ...) p-prec p-ret-static-infos)]
+                         #,(make-prefix p-name #'p-op-proc #'(p-unsafe-proc ...) p-order p-prec p-ret-static-infos)]
                         [(infix-expr infix-repet)
-                         #,(make-infix i-name #'i-op-proc #'(i-unsafe-proc ...) i-prec i-assc i-ret-static-infos)])
+                         #,(make-infix i-name #'i-op-proc #'(i-unsafe-proc ...) i-order i-prec i-assc i-ret-static-infos)])
              (values
               (expression-prefix+infix-operator prefix-expr infix-expr)
               (repetition-prefix+infix-operator prefix-repet infix-repet))))
@@ -448,10 +457,10 @@
 
   (define (generate-prefix+postfix stx
                                    main-who
-                                   p-name p-extends p-args p-prec p-rhss
+                                   p-name p-extends p-args p-order p-prec p-rhss
                                    p-ret-converters p-ret-annot-strs p-ret-static-infos
                                    p-reflect-names p-whos p-unsafes
-                                   a-name a-extends a-args a-prec a-rhss
+                                   a-name a-extends a-args a-order a-prec a-rhss
                                    a-ret-converters a-ret-annot-strs a-ret-static-infos
                                    a-reflect-names a-whos a-unsafes
                                    #:main-converter [main-converter #f]
@@ -467,9 +476,9 @@
         (build-syntax-definitions/maybe-extension
          '(#f rhombus/repet) p-name p-extends
          #`(let-values ([(prefix-expr prefix-repet)
-                         #,(make-prefix p-name #'p-op-proc #'(p-unsafe-proc ...) p-prec p-ret-static-infos)]
+                         #,(make-prefix p-name #'p-op-proc #'(p-unsafe-proc ...) p-order p-prec p-ret-static-infos)]
                         [(infix-expr infix-repet)
-                         #,(make-postfix a-name #'a-op-proc #'(a-unsafe-proc ...) a-prec a-ret-static-infos)])
+                         #,(make-postfix a-name #'a-op-proc #'(a-unsafe-proc ...) a-order a-prec a-ret-static-infos)])
              (values
               (expression-prefix+infix-operator prefix-expr infix-expr)
               (repetition-prefix+infix-operator prefix-repet infix-repet))))
@@ -511,7 +520,7 @@
       [else #f])))
 
 (begin-for-syntax
-  (struct opcase (name extends prec rhs ret-converter ret-annot-str ret-static-infos orig-reflect-name reflect-name who unsafe))
+  (struct opcase (name extends order prec rhs ret-converter ret-annot-str ret-static-infos orig-reflect-name reflect-name who unsafe))
   (struct unary-opcase opcase (arg))
   (struct binary-opcase opcase (left right assc)))
 
@@ -522,19 +531,19 @@
     (lambda (stx name-prefix)
       (syntax-parse stx
         [(_ p::prefix-case)
-         (generate-prefix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
+         (generate-prefix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.order #'p.prec (list #'p.rhs)
                           (list (attribute p.ret-converter))
                           (list (attribute p.ret-annot-str))
                           #'p.ret-static-infos
                           (list #'p.reflect-name) (list #'p.who) (list #'p.unsafe))]
         [(_ p::postfix-case)
-         (generate-postfix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
+         (generate-postfix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.order #'p.prec (list #'p.rhs)
                            (list (attribute p.ret-converter))
                            (list (attribute p.ret-annot-str))
                            #'p.ret-static-infos
                            (list #'p.reflect-name) (list #'p.who) (list #'p.unsafe))]
         [(_ i::infix-case)
-         (generate-infix stx #'#f #'i.name #'i.extends (list #'i.left) (list #'i.right) #'i.prec #'i.assc (list #'i.rhs)
+         (generate-infix stx #'#f #'i.name #'i.extends (list #'i.left) (list #'i.right) #'i.order #'i.prec #'i.assc (list #'i.rhs)
                          (list (attribute i.ret-converter))
                          (list (attribute i.ret-annot-str))
                          #'i.ret-static-infos
@@ -543,7 +552,7 @@
          (parse-operator-alts stx #'as
                               #f
                               #f #f #f
-                              #'() #'()
+                              #'() #'() #'()
                               #'#f #'#f)]
         [(_ main-op-name-seq::dotted-operator-or-identifier-sequence
             main-ret::ret-annotation
@@ -555,6 +564,7 @@
                               (attribute main-ret.converter)
                               (attribute main-ret.annot-str)
                               #'main-ret.static-infos
+                              #'(~? options.order ())
                               #'(~? options.prec ())
                               #'(~? options.assc ())
                               #'(~? options.reflect-name #f)
@@ -563,7 +573,7 @@
 (define-for-syntax (parse-operator-alts stx as-stx
                                         main-name
                                         main-ret-converter main-ret-annot-str main-ret-static-infos
-                                        main-prec main-assc
+                                        main-order main-prec main-assc
                                         main-reflect-name main-who)
   (define (maybe-static-infos/main ops)
     (or main-ret-static-infos
@@ -580,7 +590,7 @@
         #:datum-literals (group)
         [(_::block (group p::prefix-case))
          (define opc (unary-opcase #'p.name #'p.extends
-                                   #'p.prec #'p.rhs
+                                   #'p.order #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
                                    (attribute p.ret-annot-str)
                                    #'p.ret-static-infos
@@ -589,7 +599,7 @@
          (values (cons opc all) (cons opc pres) ins posts (stx-or #'p.reflect-name use-main-reflect-name))]
         [(_::block (group p::postfix-case))
          (define opc (unary-opcase #'p.name #'p.extends
-                                   #'p.prec #'p.rhs
+                                   #'p.order #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
                                    (attribute p.ret-annot-str)
                                    #'p.ret-static-infos
@@ -598,7 +608,7 @@
          (values (cons opc all) pres ins (cons opc posts) (stx-or #'p.reflect-name use-main-reflect-name))]
         [(_::block (group i::infix-case))
          (define opc (binary-opcase #'i.name #'i.extends
-                                    #'i.prec #'i.rhs
+                                    #'i.order #'i.prec #'i.rhs
                                     (attribute i.ret-converter)
                                     (attribute i.ret-annot-str)
                                     #'i.ret-static-infos
@@ -627,9 +637,12 @@
                                       (if (null? (syntax-e main-opcs)) "after first" "in")
                                       what)
                               stx)))))
+  (check-options pres main-order opcase-order "operator order" "prefix")
   (check-options pres main-prec opcase-prec "precedence" "prefix")
+  (check-options ins main-order opcase-order "operator order" "infix")
   (check-options ins main-prec opcase-prec "precedence" "infix")
   (check-options ins main-assc binary-opcase-assc "associativity" "infix")
+  (check-options posts main-order opcase-order "operator order" "postfix")
   (check-options posts main-prec opcase-prec "precedence" "postfix")
   (when (and (null? ins)
              (not (null? (syntax-e main-assc))))
@@ -638,6 +651,9 @@
                         stx
                         main-assc))
   (check-options all (stx-or main-reflect-name #'()) opcase-orig-reflect-name "name" "operator")
+  (define (opcase-order/main opc) (if (null? (syntax-e main-order))
+                                      (opcase-order opc)
+                                      main-order))
   (define (opcase-prec/main opc) (if (null? (syntax-e main-prec))
                                      (opcase-prec opc)
                                      main-prec))
@@ -651,7 +667,7 @@
                       #:main-annot-str main-ret-annot-str
                       main-who
                       (opcase-name (car pres)) (opcase-extends (car pres))
-                      (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                      (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
                       (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
                       (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres))]
     [(and (null? pres) (null? posts))
@@ -661,7 +677,7 @@
                      main-who
                      (opcase-name (car ins)) (opcase-extends (car ins))
                      (map binary-opcase-left ins) (map binary-opcase-right ins)
-                     (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
+                     (opcase-order/main (car ins)) (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                      (map opcase-rhs ins)
                      (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (maybe-static-infos/main ins)
                      (map opcase-reflect-name ins) (map opcase-who ins) (map opcase-unsafe ins))]
@@ -671,7 +687,7 @@
                        #:main-annot-str main-ret-annot-str
                        main-who
                        (opcase-name (car posts)) (opcase-extends (car posts))
-                       (map unary-opcase-arg posts) (opcase-prec/main (car posts)) (map opcase-rhs posts)
+                       (map unary-opcase-arg posts) (opcase-order/main (car posts)) (opcase-prec/main (car posts)) (map opcase-rhs posts)
                        (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (maybe-static-infos/main posts)
                        (map opcase-reflect-name posts) (map opcase-who posts) (map opcase-unsafe posts))]
     [(pair? ins)
@@ -680,13 +696,13 @@
                             #:main-annot-str main-ret-annot-str
                             main-who
                             (opcase-name (car pres)) (opcase-extends (car pres))
-                            (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                            (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
                             (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
                             (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres)
 
                             (opcase-name (car ins)) (opcase-extends (car ins))
                             (map binary-opcase-left ins) (map binary-opcase-right ins)
-                            (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
+                            (opcase-order/main (car ins)) (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                             (map opcase-rhs ins)
                             (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (maybe-static-infos/main ins)
                             (map opcase-reflect-name ins) (map opcase-who ins) (map opcase-unsafe ins))]
@@ -696,11 +712,11 @@
                               #:main-annot-str main-ret-annot-str
                               main-who
                               (opcase-name (car pres)) (opcase-extends (car pres))
-                              (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                              (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
                               (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
                               (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres)
 
                               (opcase-name (car posts)) (opcase-extends (car posts))
-                              (map unary-opcase-arg posts) (opcase-prec/main (car posts)) (map opcase-rhs posts)
+                              (map unary-opcase-arg posts) (opcase-order/main (car posts)) (opcase-prec/main (car posts)) (map opcase-rhs posts)
                               (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (maybe-static-infos/main posts)
                               (map opcase-reflect-name posts) (map opcase-who posts) (map opcase-unsafe posts))]))

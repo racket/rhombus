@@ -40,6 +40,7 @@
     ~space_meta_clause
     ~key_comp
     ~immediate_callee
+    ~operator_order
     ~doc
 ){
 

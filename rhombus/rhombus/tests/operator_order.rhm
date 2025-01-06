@@ -1,0 +1,81 @@
+#lang rhombus/and_meta
+
+block:
+  operator (a $$ b):
+    ~weaker_than: multiplication
+    [a, b]
+  check 1 * 2 $$ 3 ~is [2, 3]
+
+check:
+  ~eval
+  operator (a $$ b):
+    ~weaker_than: multiplication
+    [a, b]
+  1 + 2 $$ 3
+  ~throws "explicit parenthesization needed"
+
+block:
+  operator (a $$ b):
+    ~weaker_than: arithmetic
+    [a, b]
+  check 1 * 20 $$ 3 ~is [20, 3]
+  check 1 + 20 $$ 3 ~is [21, 3]
+
+block:
+  operator_order.def tighter
+  operator_order.def looser:
+    ~weaker_than tighter
+  operator (a $$ b):
+    ~order tighter
+    [a, b]
+  operator (a ?? b):
+    ~order looser
+    [a, b]
+  operator (a !! b):
+    ~weaker_than tighter
+    [a, b]
+  operator (a !++! b):
+    ~weaker_than tighter
+    ~stronger_than $$ // can override spec by order
+    [a, b]
+  operator (a !**! b):
+    ~order looser
+    ~stronger_than $$ // can override spec inherited from order
+    [a, b]
+  check 1 ?? 2 $$ 3 ~is [1, [2, 3]]
+  check 1 $$ 2 ?? 3 ~is [[1, 2], 3]
+  check 1 !! 2 $$ 3 ~is [1, [2, 3]]
+  check 1 $$ 2 !! 3 ~is [[1, 2], 3]
+  check 1 $$ 2 !++! 3 ~is [1, [2, 3]]
+  check 1 $$ 2 !**! 3 ~is [1, [2, 3]]
+
+block:
+  operator_order.def_set addmult:
+    addition
+    multiplication
+  operator_order.def_set addmultdiv:
+    addmult
+    integer_division
+  operator (a $$ b):
+    ~weaker_than: addmult
+    [a, b]
+  operator (a $$$ b):
+    ~weaker_than: addmultdiv
+    [a, b]
+  check 1 * 20 $$ 3 ~is [20, 3]
+  check 1 + 20 $$ 3 ~is [21, 3]
+  check 1 * 20 $$$ 3 ~is [20, 3]
+  check 1 + 20 $$$ 3 ~is [21, 3]
+  check 1 + 20 $$$ 3 mod 2 ~is [21, 1]
+
+check:
+  ~eval
+  import rhombus/meta open
+  operator_order.def_set addmult:
+    addition
+    multiplication
+  operator (a $$ b):
+    ~weaker_than: addmult
+    [a, b]
+  1 < 20 $$ 3
+  ~throws "explicit parenthesization needed"

@@ -5,7 +5,8 @@
 @title{Equality}
 
 @doc(
-  operator ((v1 :: Any) == (v2 :: Any)) :: Boolean
+  operator ((v1 :: Any) == (v2 :: Any)) :: Boolean:
+    ~order: comparison
   key_comp.def '=='
 ){
 
@@ -32,7 +33,8 @@
 }
 
 @doc(
-  operator ((v1 :: Any) === (v2 :: Any)) :: Boolean
+  operator ((v1 :: Any) === (v2 :: Any)) :: Boolean:
+    ~order: comparison
   key_comp.def '==='
 ){
 
@@ -55,8 +57,10 @@
 }
 
 @doc(
-  operator ((x :: Number) .= (y :: Number)) :: Boolean
-  operator ((x :: Number) .!= (y :: Number)) :: Boolean
+  operator ((x :: Number) .= (y :: Number)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Number) .!= (y :: Number)) :: Boolean:
+    ~order: comparison
 ){
 
  Reports whether @rhombus(x) and @rhombus(y) are numerically equal or
@@ -78,7 +82,8 @@
 }
 
 @doc(
-  operator ((v1 :: Any) != (v2 :: Any)) :: Boolean
+  operator ((v1 :: Any) != (v2 :: Any)) :: Boolean:
+    ~order: comparison
 ){
 
  Equivalent to @rhombus(!(v1 == v2)).
@@ -91,7 +96,8 @@
 
 
 @doc(
-  operator ((v1 :: Any) is_now (v2 :: Any)) :: Boolean
+  operator ((v1 :: Any) is_now (v2 :: Any)) :: Boolean:
+    ~order: comparison
   key_comp.def 'is_now'
 ){
 
@@ -125,7 +131,8 @@
 
 @doc(
   operator ((v1 :: Any) is_same_number_or_object (v2 :: Any))
-    :: Boolean
+    :: Boolean:
+      ~order: comparison
   key_comp.def 'is_same_number_or_object'
 ){
 

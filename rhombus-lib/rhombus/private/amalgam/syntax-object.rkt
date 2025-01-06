@@ -187,6 +187,7 @@
 
 (define-annotation-syntax Syntax.matched_of
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

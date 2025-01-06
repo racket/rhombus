@@ -796,6 +796,7 @@
 
 (define-import-syntax #%juxtapose
   (import-infix-operator
+   #f
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -838,6 +839,7 @@
 
 (define-for-syntax infix-path-dot
   (import-infix-operator
+   #f
    '((default . weaker))
    'macro
    ;; infix
@@ -857,6 +859,7 @@
 (define-import-syntax rhombus.
   (import-prefix+infix-operator
    (import-prefix-operator
+    #f
     '((default . weaker))
     'macro
     (lambda (stx)

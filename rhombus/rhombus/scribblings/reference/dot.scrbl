@@ -12,6 +12,8 @@
   expr.macro '$target_expr . $id'
   expr.macro '$target_expr . $id $assign_op $expr'
   repet.macro '$target_repet . $id'
+  operator_order:
+    ~order: member_access
   grammar assign_op:
     :=
     $other_assign_op

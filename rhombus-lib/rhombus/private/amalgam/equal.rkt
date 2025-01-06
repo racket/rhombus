@@ -13,6 +13,7 @@
 
 (define-syntax rhombus=
   (expression-infix-operator
+   #f
    '((default . weaker))
    'macro
    (lambda (form tail)

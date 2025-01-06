@@ -145,6 +145,7 @@
 
 (define-syntax throw
   (expression-prefix-operator
+   #f
    '((default . weaker))
    'automatic
    (lambda (form1 op-stx)
