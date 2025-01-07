@@ -55,22 +55,22 @@ unsafeable.operator ((x :~ Flonum) ** (y :~ Flonum)) :~ Flonum:
   rkt.#{flexpt}(x, y)
 
 unsafeable.operator ((x :~ Flonum) < (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fl<}(x, y)
 unsafeable.operator ((x :~ Flonum) <= (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fl<=}(x, y)
 unsafeable.operator ((x :~ Flonum) == (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fl=}(x, y)
 unsafeable.operator ((x :~ Flonum) != (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   ! rkt.#{fl=}(x, y)
 unsafeable.operator ((x :~ Flonum) >= (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fl>=}(x, y)
 unsafeable.operator ((x :~ Flonum) > (y :~ Flonum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fl>}(x, y)
 
 unsafeable.fun abs(x :~ Flonum) :~ Flonum:

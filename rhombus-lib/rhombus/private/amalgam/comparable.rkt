@@ -265,14 +265,14 @@
   (begin
     (define-syntax def-op
       (expression-infix-operator
-       (lambda () (order-quote comparison))
+       (lambda () (order-quote order_comparison))
        '()
        'automatic
        (make-comp-expression 'op)
        'left))
     (define-repetition-syntax def-op
       (repetition-infix-operator
-       (lambda () (order-quote comparison))
+       (lambda () (order-quote order_comparison))
        '()
        'automatic
        (make-comp-repetition 'op)

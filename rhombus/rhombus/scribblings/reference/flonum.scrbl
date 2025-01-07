@@ -54,17 +54,17 @@ unspecialized and flonum-specific operations.
 
 @doc(
   operator ((x :: Flonum) flonum.(<) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Flonum) flonum.(<=) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Flonum) flonum.(==) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Flonum) flonum.(!=) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Flonum) flonum.(>=) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Flonum) flonum.(>) (y :: Flonum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
 ){
 
  The same as operators like @rhombus(<), but restricted to @tech{flonum}

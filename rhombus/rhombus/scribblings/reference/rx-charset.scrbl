@@ -79,6 +79,8 @@ bytes to match for a byte-mode @tech{regexp}.
 
 @doc(
   rx_charset.macro '#%parens ($charset)'
+  operator_order:
+    ~order: rx_concatenation
 ){
 
  A parenthesized character set is equivalent to the @rhombus(charset)
@@ -96,6 +98,8 @@ bytes to match for a byte-mode @tech{regexp}.
 
 @doc(
   rx_charset.macro '$charset - $charset'
+  operator_order:
+    ~order: rx_enumeration
 ){
 
  Assuming that each @rhombus(charset) contains a single character,
@@ -115,6 +119,8 @@ bytes to match for a byte-mode @tech{regexp}.
 
 @doc(
   rx_charset.macro '$charset && $charset'
+  operator_order:
+    ~order: rx_conjunction
 ){
 
  Creates a character set that has each character in both the first
@@ -133,6 +139,8 @@ bytes to match for a byte-mode @tech{regexp}.
 
 @doc(
   rx_charset.macro '$charset -- $charset'
+  operator_order:
+    ~order: rx_subtraction
 ){
 
  Creates a character set that starts with the character of the first
@@ -150,11 +158,12 @@ bytes to match for a byte-mode @tech{regexp}.
 
 @doc(
   rx_charset.macro '! $charset'
+  operator_order:
+    ~weaker_than: ~other
 ){
 
- These operators invert @rhombus(charset) by creating a character set
- that has every character not in @rhombus(charset). The operators have
- lower precedence than all other operators.
+ Inverts @rhombus(charset) by creating a character set that has every
+ character not in @rhombus(charset).
 
 @examples(
   ~eval: rx_eval

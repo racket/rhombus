@@ -45,22 +45,22 @@ unsafeable.operator ((x :~ Fixnum) rem (y :~ Fixnum)) :~ Fixnum:
   rkt.#{fxremainder}(x, y)
 
 unsafeable.operator ((x :~ Fixnum) < (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fx<}(x, y)
 unsafeable.operator ((x :~ Fixnum) <= (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fx<=}(x, y)
 unsafeable.operator ((x :~ Fixnum) == (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fx=}(x, y)
 unsafeable.operator ((x :~ Fixnum) != (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   ! rkt.#{fx=}(x, y)
 unsafeable.operator ((x :~ Fixnum) >= (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fx>=}(x, y)
 unsafeable.operator ((x :~ Fixnum) > (y :~ Fixnum)):
-  ~order: comparison
+  ~order: order_comparison
   rkt.#{fx>}(x, y)
 
 unsafeable.fun abs(x :~ Fixnum) :~ Fixnum:

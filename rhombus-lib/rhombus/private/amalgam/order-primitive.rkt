@@ -8,6 +8,8 @@
                     exponentiation
                     integer_division
                     arithmetic
+                    equivalence
+                    order_comparison
                     comparison
                     assignment
                     enumeration
@@ -71,7 +73,7 @@
       (cons (order-quote integer_division) 'weaker)))
    'none))
 
-(define-order-syntax comparison
+(define-order-syntax equivalence
   (make-order
    (lambda ()
      (list
@@ -80,6 +82,24 @@
       (cons (order-quote exponentiation) 'weaker)
       (cons (order-quote integer_division) 'weaker)))
    'none))
+
+(define-order-syntax order_comparison
+  (make-order
+   (lambda ()
+     (list
+      (cons (order-quote addition) 'weaker)
+      (cons (order-quote multiplication) 'weaker)
+      (cons (order-quote exponentiation) 'weaker)
+      (cons (order-quote integer_division) 'weaker)))
+   'none))
+
+;; can't use this shorthand internally
+(define-order-syntax comparison
+  (order-set
+   (lambda ()
+     (list
+      (order-quote equivalence)
+      (order-quote order_comparison)))))
 
 (define-order-syntax assignment
   (make-order
@@ -93,20 +113,20 @@
    (lambda ()
      (list
       (cons 'default 'stronger)))
-   'none))
+   'left))
 
 (define-order-syntax concatenation
   (make-order
    (lambda ()
      (list
-      (cons (order-quote comparison) 'weaker)
+      (cons (order-quote equivalence) 'weaker)
+      (cons (order-quote order_comparison) 'weaker)
+      (cons (order-quote enumeration) 'weaker)
       (cons (order-quote addition) 'weaker)
       (cons (order-quote multiplication) 'weaker)
       (cons (order-quote exponentiation) 'weaker)
-      (cons (order-quote integer_division) 'weaker)
-      (cons (order-quote logical_disjunction) 'weaker)
-      (cons (order-quote logical_conjunction) 'weaker)))
-   'none))
+      (cons (order-quote integer_division) 'weaker)))
+   'left))
 
 (define-order-syntax logical_negation
   (make-order
@@ -114,7 +134,7 @@
      (list
       (cons (order-quote logical_conjunction) 'stronger)
       (cons (order-quote logical_disjunction) 'stronger)
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)))
    'none))
 
 (define-order-syntax logical_conjunction
@@ -122,7 +142,10 @@
    (lambda ()
      (list
       (cons (order-quote logical_disjunction) 'stronger)
-      (cons (order-quote comparison) 'weaker)
+      (cons (order-quote equivalence) 'weaker)
+      (cons (order-quote order_comparison) 'weaker)
+      (cons (order-quote enumeration) 'weaker)
+      (cons (order-quote concatenation) 'weaker)
       (cons (order-quote addition) 'weaker)
       (cons (order-quote multiplication) 'weaker)
       (cons (order-quote exponentiation) 'weaker)
@@ -133,7 +156,10 @@
   (make-order
    (lambda ()
      (list
-      (cons (order-quote comparison) 'weaker)
+      (cons (order-quote equivalence) 'weaker)
+      (cons (order-quote order_comparison) 'weaker)
+      (cons (order-quote enumeration) 'weaker)
+      (cons (order-quote concatenation) 'weaker)
       (cons (order-quote addition) 'weaker)
       (cons (order-quote multiplication) 'weaker)
       (cons (order-quote exponentiation) 'weaker)
@@ -148,7 +174,8 @@
       (cons (order-quote bitwise_disjunction) 'stronger)
       (cons (order-quote bitwise_shift) 'stronger)
       (cons (order-quote bitwise_test) 'stronger)
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)
+      (cons (order-quote order_comparison) 'stronger)))
    'none))
 
 (define-order-syntax bitwise_shift
@@ -158,7 +185,8 @@
       (cons (order-quote bitwise_conjunction) 'stronger)
       (cons (order-quote bitwise_disjunction) 'stronger)
       (cons (order-quote bitwise_test) 'stronger)
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)
+      (cons (order-quote order_comparison) 'stronger)))
    'left))
 
 (define-order-syntax bitwise_conjunction
@@ -167,7 +195,8 @@
      (list
       (cons (order-quote bitwise_disjunction) 'stronger)
       (cons (order-quote bitwise_test) 'stronger)
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)
+      (cons (order-quote order_comparison) 'stronger)))
    'left))
 
 (define-order-syntax bitwise_disjunction
@@ -175,12 +204,13 @@
    (lambda ()
      (list
       (cons (order-quote bitwise_test) 'stronger)
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)
+      (cons (order-quote order_comparison) 'stronger)))
    'left))
 
 (define-order-syntax bitwise_test
   (make-order
    (lambda ()
      (list
-      (cons (order-quote comparison) 'stronger)))
+      (cons (order-quote equivalence) 'stronger)))
    'left))

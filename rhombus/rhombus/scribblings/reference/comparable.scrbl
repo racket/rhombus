@@ -17,19 +17,19 @@ implement @rhombus(Comparable, ~class).
 
 @doc(
   operator ((v1 :: Comparable) < (v2 :: Comparable)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((v1 :: Comparable) > (v2 :: Comparable)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((v1 :: Comparable) <= (v2 :: Comparable)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((v1 :: Comparable) >= (v2 :: Comparable)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((v1 :: Comparable) compares_equal (v2 :: Comparable))
     :: Boolean:
-      ~order: comparison
+      ~order: order_comparison
   operator ((v1 :: Comparable) compares_unequal (v2 :: Comparable))
     :: Boolean:
-      ~order: comparison
+      ~order: order_comparison
 ){
 
  Compares @rhombus(v1) and @rhombus(v2), which uses a primitive

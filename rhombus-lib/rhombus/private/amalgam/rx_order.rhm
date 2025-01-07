@@ -1,0 +1,36 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+
+export:
+  rx_concatenation
+  rx_repetition
+  rx_subtraction
+  rx_conjunction
+  rx_disjunction
+  rx_enumeration
+
+operator_order.def rx_repetition
+
+operator_order.def rx_subtraction
+
+operator_order.def rx_enumeration
+
+operator_order.def rx_conjunction:
+  ~weaker_than:
+    rx_repetition
+    rx_enumeration
+
+operator_order.def rx_disjunction:
+  ~weaker_than:
+    rx_conjunction
+    rx_repetition
+    rx_enumeration
+
+operator_order.def rx_concatenation:
+  ~weaker_than:
+    ~other
+  ~stronger_than:
+    rx_conjunction
+    rx_disjunction
+

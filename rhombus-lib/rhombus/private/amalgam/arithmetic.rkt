@@ -143,7 +143,7 @@
   (syntax-parse stx
     [(_ (~optional (~and who #:who)) name racket-name flname fxname)
      #'(define-infix (~? who) name racket-name
-         #:order comparison
+         #:order order_comparison
          #:flonum flname ()
          #:fixnum fxname ())]))
 
@@ -200,7 +200,7 @@
   (syntax-parse stx
     [(_ name racket-name)
      #'(define-infix name racket-name
-         #:order comparison)]))
+         #:order equivalence)]))
 
 (define (not-equal-always? a b)
   (not (equal-always? a b)))

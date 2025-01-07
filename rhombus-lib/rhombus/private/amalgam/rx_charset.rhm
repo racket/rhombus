@@ -5,6 +5,7 @@ import:
   "recur.rhm" open
   meta:
     "charset.rhm".Charset
+  "rx_order.rhm" open
 
 space.enforest rx_charset:
   space_path rhombus/rx_charset
@@ -80,22 +81,20 @@ rx_charset.macro '! $right':
                        stx)
 
 rx_charset.macro '$left #%juxtapose $right':
-  ~weaker_than: ~other
-  ~same_as: #%call
+  ~order: rx_concatenation
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)),
                        stx)
 
 rx_charset.macro '$left #%call ($(right :: rx_charset_meta.Parsed))':
-  ~weaker_than: ~other
-  ~same_as: #%juxtapose
+  ~order: rx_concatenation
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)),
                        stx)
 
 rx_charset.macro '$left - $right':
   ~all_stx: stx
-  ~stronger_than: || &&
+  ~order: rx_enumeration
   let left_cs = rx_charset_meta.unpack(left)
   let right_cs = rx_charset_meta.unpack(right)
   unless left_cs.length() == 1
@@ -110,15 +109,16 @@ rx_charset.macro '$left - $right':
 
 rx_charset.macro '$left && $right':
   ~all_stx: stx
+  ~order: rx_conjunction
   rx_charset_meta.pack(rx_charset_meta.unpack(left).intersect(rx_charset_meta.unpack(right)), stx)
 
 rx_charset.macro '$left || $right':
-  ~weaker_than: &&
+  ~order: rx_disjunction
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)), stx)
 
 rx_charset.macro '$left -- $right':
-  ~weaker_than -
+  ~order: rx_subtraction
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).subtract(rx_charset_meta.unpack(right)), stx)
 
