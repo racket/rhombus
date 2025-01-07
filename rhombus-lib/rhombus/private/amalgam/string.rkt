@@ -9,9 +9,6 @@
          "../version-case.rkt"
          "provide.rkt"
          "define-operator.rkt"
-         (only-in "arithmetic.rkt"
-                  ==
-                  ===)
          (only-in (submod "print.rkt" for-string)
                   [display rhombus:display]
                   [print rhombus:print])
@@ -33,7 +30,8 @@
          "number.rkt"
          "treelist.rkt"
          "static-info.rkt"
-         "rx-object.rkt")
+         "rx-object.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -245,7 +243,7 @@
   (identifier-annotation string? #,(get-readable-string-locale-ci-static-infos) #:static-only))
 
 (define-infix +& append-as-strings
-  #:stronger-than (== ===)
+  #:order concatenation
   #:static-infos #,(get-string-static-infos))
 
 (define (append-as-strings a b)

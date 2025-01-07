@@ -40,6 +40,8 @@
     ~unsafe: $unsafe_body; ...
 
   grammar option:
+    ~order $name
+    ~order: $name
     ~stronger_than $other ...
     ~stronger_than: $other ...; ...
     ~weaker_than $other ...
@@ -100,8 +102,13 @@
 
  At the start of an operator body, @rhombus(option)s can declare
  precedence, associativity (in the case of an infix operator), and/or
- naming options. Each @rhombus(option) keyword can appear at most once. In
- a precedence specification, @rhombus(~other) stands for any operator not
+ naming options. Each @rhombus(option) keyword can appear at most once. The
+ @rhombus(~order) option selects a @tech{operator order} for the operator, which
+ defines precedence relationships to other operator orders and a default
+ associativity, but precedence and associativity options with @rhombus(operator)
+ override the ones defined with the operator order. In
+ a precedence specification, a @rhombus(name) refers to another operator binding
+ or to a @tech{operator order}, while @rhombus(~other) stands for any operator not
  otherwise mentioned. The @rhombus(~name), @rhombus(~who), and @rhombus(~unsafe) options are
  as in @rhombus(fun, ~defn). When multiple cases are provided using an immediate @vbar, then
  only the first prefix case and the first infix/postfix case can supply
@@ -149,7 +156,7 @@
     ^^^ "b"
   ~defn:
     operator ^^^:
-      ~weaker_than: +
+      ~weaker_than: arithmetic
     | x ^^^ y:
         x +& y +& x
     | ^^^ y:

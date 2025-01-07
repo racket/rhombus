@@ -55,7 +55,7 @@
                                       '#f
                                       #'rules-rhs
                                       #f #f
-                                      #'() #'() '()))]
+                                      #'() #'() #'() '()))]
         [(form-id main-op::operator-or-identifier
                   (~optional (_::block
                               (~var main-options (:all-operator-options #f))))
@@ -73,6 +73,7 @@
                                       #'rules-rhs
                                       (if (attribute main-op) #'main-op.name #'#f)
                                       #'#f
+                                      (if (attribute main-options) #'main-options.order-name #'())
                                       (if (attribute main-options) #'main-options.prec #'())
                                       (if (attribute main-options) #'main-options.assc #'())
                                       '()))]

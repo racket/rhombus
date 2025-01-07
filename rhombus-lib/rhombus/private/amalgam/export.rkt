@@ -196,6 +196,7 @@
 
 (define-export-syntax as
   (export-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -207,6 +208,7 @@
 
 (define-export-syntax rename
   (export-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -282,6 +284,7 @@
 
 (define-export-syntax names
   (export-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -294,6 +297,7 @@
 
 (define-export-syntax all_from
   (export-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -365,6 +369,7 @@
 
 (define-export-syntax all_defined
   (export-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -378,6 +383,7 @@
 
 (define-export-syntax #%juxtapose
   (export-infix-operator
+   #f
    '((default . weaker))
    'macro
    (lambda (form1 stx)
@@ -395,6 +401,7 @@
 
 (define-export-syntax |.|
   (export-infix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (form stx)

@@ -78,6 +78,13 @@ sequences, not values. So, @rhombus(0), @rhombus(0 + 1), and
 @rhombus(0 + 1 + 1) fit the grammar for @rhombus(peano_num, ~var), but
 @rhombus(2) does not.
 
+When a syntactic form is an operator, then precedence or an
+@tech{operator order} for the operator is shown by keywords such as
+@rhombus(~order), @rhombus(~weaker_than), or @rhombus(~stronger_than),
+as in a @rhombus(macro, ~defn) form. Unless otherwise documented, a
+prefix operator's precedence corresponds to
+@rhombus(~stronger_than: ~other).
+
 @section(~tag: "doc_method"){Documenting Methods}
 
 When a binding is documented with @rhombus(method, ~class_clause), it

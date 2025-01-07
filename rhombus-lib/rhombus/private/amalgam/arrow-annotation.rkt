@@ -38,6 +38,7 @@
 
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -61,6 +62,7 @@
 
 (define-annotation-syntax ->
   (annotation-infix-operator
+   #f
    (lambda () `((default . stronger)))
    'macro
    (lambda (lhs stx)

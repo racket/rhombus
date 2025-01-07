@@ -5,7 +5,9 @@
          "binding.rkt"
          "static-info.rkt"
          "literal.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-space rhombus/bind
                     &&
@@ -20,7 +22,8 @@
 
 (define-binding-syntax &&
   (binding-infix-operator
-   (lambda () `((,(bind-quote \|\|) . stronger)))
+   (lambda () (order-quote logical_conjuction))
+   null
    'automatic
    (lambda (lhs rhs stx)
      (binding-form
@@ -76,6 +79,7 @@
 
 (define-binding-syntax \|\|
   (binding-infix-operator
+   (lambda () (order-quote logical_disjuction))
    null
    'automatic
    (lambda (lhs rhs stx)
@@ -141,9 +145,8 @@
 
 (define-binding-syntax !
   (binding-prefix-operator
-   (lambda ()
-     `((,(bind-quote &&) . stronger)
-       (,(bind-quote \|\|) . stronger)))
+   (lambda () (order-quote logical_negation))
+   null
    'automatic
    (lambda (form stx)
      (binding-form #'not-infoer form))))

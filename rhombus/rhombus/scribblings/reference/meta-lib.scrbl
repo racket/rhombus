@@ -43,6 +43,7 @@ alternative to starting with @rhombuslangname(rhombus) and importing
 @include_section("static-info.scrbl")
 @include_section("dot-provider.scrbl")
 @include_section("repet-macro.scrbl")
+@include_section("operator-order.scrbl")
 @include_section("macro-more.scrbl")
 @include_section("stxobj-meta.scrbl")
 @include_section("syntax-parameter.scrbl")

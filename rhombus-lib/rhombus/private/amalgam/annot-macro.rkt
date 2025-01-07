@@ -89,8 +89,9 @@
   (syntax-parse (unpack-group form proc #f)
     [c::annotation (relocate+reraw loc #'c.parsed)]))
 
-(define-for-syntax (make-annotation-infix-operator prec protocol proc assc)
+(define-for-syntax (make-annotation-infix-operator order prec protocol proc assc)
   (annotation-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)
@@ -109,8 +110,9 @@
                                         #:srcloc (datum->syntax #f (list form1 stx form2)))))
    assc))
 
-(define-for-syntax (make-annotation-prefix-operator prec protocol proc)
+(define-for-syntax (make-annotation-prefix-operator order prec protocol proc)
   (annotation-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)

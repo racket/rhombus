@@ -693,6 +693,7 @@
 
 (define-annotation-syntax Set.by
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -853,6 +854,7 @@
 
 (define-annotation-syntax MutableSet.by
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -868,6 +870,7 @@
 
 (define-annotation-syntax WeakMutableSet.by
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

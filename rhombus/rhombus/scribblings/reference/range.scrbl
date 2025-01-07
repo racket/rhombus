@@ -56,6 +56,8 @@ equal to'' the upper bound by comparison on bounds.
   expr.macro '..'
   repet.macro '..'
   bind.macro '..'
+  operator_order:
+    ~order: enumeration
 ){
 
  The same as @rhombus(Range.from_to, ~expr),
@@ -83,6 +85,8 @@ equal to'' the upper bound by comparison on bounds.
   expr.macro '..= $end_expr'
   repet.macro '..= $end_repet'
   bind.macro '..= $end_bind'
+  operator_order:
+    ~order: enumeration
 ){
 
  The same as @rhombus(Range.from_to_inclusive, ~expr) and
@@ -108,6 +112,8 @@ equal to'' the upper bound by comparison on bounds.
   expr.macro '$start_expr <..<'
   repet.macro '$start_repet <..<'
   bind.macro '$start_bind <..<'
+  operator_order:
+    ~order: enumeration
 ){
 
  The same as @rhombus(Range.from_exclusive_to, ~expr) and
@@ -126,6 +132,8 @@ equal to'' the upper bound by comparison on bounds.
   expr.macro '$start_expr <..= $end_expr'
   repet.macro '$start_repet <..= $end_repet'
   bind.macro '$start_bind <..= $end_bind'
+  operator_order:
+    ~order: enumeration
 ){
 
  The same as @rhombus(Range.from_exclusive_to_inclusive, ~expr).

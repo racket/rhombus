@@ -182,6 +182,7 @@
 
 (define-for-syntax no-annotation-transformer
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

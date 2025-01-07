@@ -955,6 +955,10 @@
 
 @doc(
   expr.macro '$obj with ($id = $expr, ...)'
+
+  operator_order:
+    ~stronger_than: assignment
+    ~weaker_than: ~other
 ){
 
  Performs a functional update of the object produced by @rhombus(obj) by

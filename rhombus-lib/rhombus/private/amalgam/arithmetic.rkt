@@ -12,7 +12,8 @@
          "static-info.rkt"
          "flonum-key.rkt"
          "fixnum-key.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -52,9 +53,6 @@
                        get-fixnum-static-infos
                        get-flonum-static-infos)))
 
-(module+ precedence
-  (provide (for-syntax comparison-precedences)))
-
 (define-static-info-getter get-number-static-infos
   ;; comparison actually requires real numbers, but we want to
   ;; propagate a comparison operation from things like `+`, and
@@ -81,19 +79,18 @@
      #,@(get-real-static-infos)))
 
 (define-infix rhombus+ +
-  #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
-  #:same-as (rhombus-)
+  #:order addition
   #:static-infos #,(get-number-static-infos)
   #:flonum fl+ #,(get-flonum-static-infos))
 
 (define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
   (prefix -
-          #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
+          #:order addition
           #:static-infos #,(get-number-static-infos)
           #:flonum fl- #,(get-flonum-static-infos)))
 (define-values-for-syntax (minus-expr-infix minus-repet-infix)
   (infix -
-         #:weaker-than (rhombus** rhombus* rhombus/ div mod rem)
+         #:order addition
          #:static-infos #,(get-number-static-infos)
          #:flonum fl- #,(get-flonum-static-infos)))
 
@@ -108,65 +105,45 @@
    minus-repet-infix))
 
 (define-infix rhombus* *
-  #:weaker-than (rhombus**)
-  #:same-as (rhombus/)
+  #:order multiplication
   #:static-infos #,(get-number-static-infos)
   #:flonum fl* #,(get-flonum-static-infos))
 
 (define-infix rhombus/ /
-  #:weaker-than (rhombus**)
+  #:order multiplication
   #:static-infos #,(get-number-static-infos)
   #:flonum fl/ #,(get-flonum-static-infos))
 
 (define-infix #:who ** rhombus** expt
+  #:order exponentiation
   #:associate 'right
   #:static-infos #,(get-number-static-infos)
   #:flonum flexpt #,(get-flonum-static-infos))
 
 (define-infix #:who div quotient
-  #:weaker-than (rhombus**)
+  #:order integer_division
   #:static-infos #,(get-real-static-infos))
 (define-infix #:who mod modulo
-  #:weaker-than (rhombus**)
+  #:order integer_division
   #:static-infos #,(get-real-static-infos))
 (define-infix #:who rem remainder
-  #:weaker-than (rhombus**)
+  #:order integer_division
   #:static-infos #,(get-real-static-infos))
 
 (define-prefix ! not
-  #:stronger-than (&& \|\|))
+  #:order logical_negation)
 
 (define-infix && and
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
-  #:stronger-than (\|\|))
+  #:order logical_conjunction)
 
 (define-infix \|\| or
-  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**))
-
-(define-for-syntax (comparison-precedences)
-  `((,(expr-quote rhombus+) . weaker)
-    (,(expr-quote rhombus-) . weaker)
-    (,(expr-quote rhombus*) . weaker)
-    (,(expr-quote rhombus/) . weaker)
-    (,(expr-quote mod) . weaker)
-    (,(expr-quote div) . weaker)
-    (,(expr-quote rem) . weaker)
-    (,(expr-quote rhombus**) . weaker)
-    (,(expr-quote .>) . same)
-    (,(expr-quote .>=) . same)
-    (,(expr-quote .=) . same)
-    (,(expr-quote .!=) . same)
-    (,(expr-quote .<) . same)
-    (,(expr-quote .<=) . same)
-    (,(expr-quote \|\|) . stronger)
-    (,(expr-quote &&) . stronger)))
+  #:order logical_disjunction)
 
 (define-syntax (define-comp-infix stx)
   (syntax-parse stx
     [(_ (~optional (~and who #:who)) name racket-name flname fxname)
      #'(define-infix (~? who) name racket-name
-         #:precedences comparison-precedences
-         #:associate 'none
+         #:order comparison
          #:flonum flname ()
          #:fixnum fxname ())]))
 
@@ -223,9 +200,7 @@
   (syntax-parse stx
     [(_ name racket-name)
      #'(define-infix name racket-name
-         #:weaker-than (rhombus+ rhombus- rhombus* rhombus/ mod div rem rhombus**)
-         #:stronger-than (\|\| &&)
-         #:associate 'none)]))
+         #:order comparison)]))
 
 (define (not-equal-always? a b)
   (not (equal-always? a b)))

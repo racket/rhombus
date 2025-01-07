@@ -87,6 +87,8 @@ normally bound to implement @tech{function} calls.
     fun_expr: block expr
   expr.macro '$arg_expr |> $immediate_callee'
   expr.macro '$arg_expr |> $fun_expr'
+  operator_order:
+    ~order: pipeline
 ){
 
  The @rhombus(|>) operator applies its second argument as a function to
@@ -125,6 +127,8 @@ normally bound to implement @tech{function} calls.
     fun_expr: block expr
   expr.macro '$arg_expr ?> $immediate_callee'
   expr.macro '$arg_expr ?> $fun_expr'
+  operator_order:
+    ~order: pipeline
 ){
 
  Like @rhombus(|>), but if the result of @rhombus(arg_expr) is

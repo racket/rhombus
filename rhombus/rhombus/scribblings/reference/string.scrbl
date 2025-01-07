@@ -76,7 +76,8 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  operator ((v1 :: Any) +& (v2 :: Any)) :: String
+  operator ((v1 :: Any) +& (v2 :: Any)) :: String:
+    ~order: concatenation
 ){
 
  Coerces @rhombus(v1) and @rhombus(v2) to a string, then appends the strings.

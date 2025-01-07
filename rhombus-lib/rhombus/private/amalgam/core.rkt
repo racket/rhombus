@@ -91,6 +91,7 @@
         "module-path.rkt"
         "module-path-object.rkt"
         "operator.rkt"
+        "order-primitive.rkt"
         "annotation.rkt"
         "annotation-converting.rkt"
         "list.rkt"

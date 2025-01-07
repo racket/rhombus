@@ -31,7 +31,9 @@
          (submod "dot.rkt" for-dot-provider)
          "define-arity.rkt"
          "call-result-key.rkt"
-         "sequence-constructor-key.rkt")
+         "sequence-constructor-key.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -117,19 +119,10 @@
   #:methods
   ([to_list Range.to_list]))
 
-(define-for-syntax (range-precedences)
-  `((,(expr-quote rhombus-a:+) . weaker)
-    (,(expr-quote rhombus-a:-) . weaker)
-    (,(expr-quote rhombus-a:*) . weaker)
-    (,(expr-quote rhombus-a:/) . weaker)
-    (,(expr-quote rhombus-a:**) . weaker)
-    (,(expr-quote rhombus-a:div) . weaker)
-    (,(expr-quote rhombus-a:mod) . weaker)
-    (,(expr-quote rhombus-a:rem) . weaker)))
-
 (define-values-for-syntax (..-expr-prefix ..-repet-prefix)
   (make-expression&repetition-prefix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'mixfix
    (case-lambda
      [(self-stx)
@@ -148,7 +141,8 @@
 
 (define-values-for-syntax (..-expr-infix ..-repet-infix)
   (make-expression&repetition-infix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'mixfix
    (case-lambda
      [(left self-stx)
@@ -180,7 +174,8 @@
 
 (define-values-for-syntax (..=-expr-prefix ..=-repet-prefix)
   (make-expression&repetition-prefix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'prefix
    (lambda (right self-stx)
      (wrap-static-info*
@@ -192,7 +187,8 @@
 
 (define-values-for-syntax (..=-expr-infix ..=-repet-infix)
   (make-expression&repetition-infix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'infix
    (lambda (left right self-stx)
      (wrap-static-info*
@@ -216,7 +212,8 @@
 
 (define-values-for-syntax (<..-expr-infix <..-repet-infix)
   (make-expression&repetition-infix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'mixfix
    (case-lambda
      [(left self-stx)
@@ -244,7 +241,8 @@
 
 (define-values-for-syntax (<..=-expr-infix <..=-repet-infix)
   (make-expression&repetition-infix-operator
-   range-precedences
+   (lambda () (order-quote enumeration))
+   '()
    'infix
    (lambda (left right self-stx)
      (wrap-static-info*
@@ -265,6 +263,7 @@
 (define-binding-syntax ..
   (binding-prefix+infix-operator
    (binding-prefix-operator
+    (lambda () (order-quote enumeration))
     `()
     'macro
     (lambda (tail)
@@ -277,6 +276,7 @@
          (values (parse-range-binding #'Range.to #'rhs.parsed)
                  #'rhs.tail)])))
    (binding-infix-operator
+    (lambda () (order-quote enumeration))
     `()
     'macro
     (lambda (form1 tail)
@@ -293,11 +293,13 @@
 (define-binding-syntax ..=
   (binding-prefix+infix-operator
    (binding-prefix-operator
+    (lambda () (order-quote enumeration))
     `()
     'automatic
     (lambda (form stx)
       (parse-range-binding #'Range.to_inclusive form)))
    (binding-infix-operator
+    (lambda () (order-quote enumeration))
     `()
     'automatic
     (lambda (form1 form2 stx)
@@ -306,6 +308,7 @@
 
 (define-binding-syntax <..<
   (binding-infix-operator
+   (lambda () (order-quote enumeration))
    `()
    'macro
    (lambda (form1 tail)
@@ -321,6 +324,7 @@
 
 (define-binding-syntax <..=
   (binding-infix-operator
+   (lambda () (order-quote enumeration))
    `()
    'automatic
    (lambda (form1 form2 stx)

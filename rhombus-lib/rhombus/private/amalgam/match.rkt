@@ -179,6 +179,7 @@
 
 (define-syntax matches
   (expression-infix-operator
+   #f
    `((default . weaker))
    'macro
    (lambda (form tail)
@@ -199,6 +200,7 @@
 ;; for precedence
 (define-binding-syntax matches
   (binding-infix-operator
+   #f
    `((default . stronger))
    'macro
    (lambda (form tail) (error "should not get here"))

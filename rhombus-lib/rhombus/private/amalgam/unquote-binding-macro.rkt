@@ -21,8 +21,9 @@
   #'make-unquote-binding-infix-operator
   #'unquote-binding-prefix+infix-operator)
 
-(define-for-syntax (make-unquote-binding-prefix-operator prec protocol proc)
+(define-for-syntax (make-unquote-binding-prefix-operator order prec protocol proc)
   (unquote-binding-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -37,8 +38,9 @@
                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
                  proc)))))
 
-(define-for-syntax (make-unquote-binding-infix-operator prec protocol proc assc)
+(define-for-syntax (make-unquote-binding-infix-operator order prec protocol proc assc)
   (unquote-binding-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)

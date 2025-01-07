@@ -37,7 +37,7 @@
                      parse-transformer-definition-sequence-rhs))
 
 (begin-for-syntax
-  (struct parsed (fixity name opts-stx prec-stx assc-stx parsed-right? extra-kw-args
+  (struct parsed (fixity name opts-stx order-name-stx prec-stx assc-stx parsed-right? extra-kw-args
                          ;; implementation is function stx if `parsed-right?`,
                          ;; or a clause over #'self and maybe #'left otherwise
                          impl))
@@ -70,7 +70,7 @@
 (define-for-syntax (parse-one-macro-definition pre-parsed adjustments case-shape)
   (define-values (who kind parsed-right?)
     (syntax-parse pre-parsed
-      [(_ name _ _ kind _ _ _ _ parsed-right-id . _)
+      [(_ name _ _ kind _ _ _ _ _ parsed-right-id . _)
        (values #'name (syntax-e #'kind) (and (syntax-e #'parsed-right-id) #t))]))
   (define (macro-clause self-id all-id left-ids tail-pattern-in rhs)
     (define-values (tail-pattern implicit-tail?)
@@ -172,6 +172,7 @@
                  _
                  opt
                  (extra-kw-id ...)
+                 order-name
                  prec
                  assc
                  parsed-right-id
@@ -183,6 +184,7 @@
      (parsed 'infix
              #'name
              #'opt
+             #'order-name
              #'prec
              #'assc
              (and (syntax-e #'parsed-right-id) #t)
@@ -217,6 +219,7 @@
                  _
                  opt
                  (extra-kw-id ...)
+                 order-name
                  prec
                  assc ; only non-#f if main (i.e., specified before `match` in the definition)
                  parsed-right-id
@@ -227,6 +230,7 @@
      (parsed 'prefix
              #'name
              #'opt
+             #'order-name
              #'prec
              #'assc
              (and (syntax-e #'parsed-right-id) #t)
@@ -291,6 +295,7 @@
                  _
                  _
                  _
+                 _
                  [tail-pattern
                   . _])
      (if (is-simple-pattern? #'tail-pattern)
@@ -334,6 +339,7 @@
                         orig-stx))
   (define p (car ps))
   #`(#,make-id
+     #,(parsed-order-name-stx p)
      #,(parsed-prec-stx p)
      #,(if (parsed-parsed-right? p)
            #''automatic

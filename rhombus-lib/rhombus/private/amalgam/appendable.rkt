@@ -18,14 +18,14 @@
          "append-property.rkt"
          "call-result-key.rkt"
          "static-info.rkt"
-         (only-in "string.rkt"
-                  +&)
          (submod "set.rkt" for-append)
          "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         "is-static.rkt")
+         "is-static.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -114,7 +114,8 @@
 
 (define-syntax ++
   (expression-infix-operator
-   (lambda () `((,(expr-quote +&) . same)))
+   (lambda () (order-quote concatenation))
+   '()
    'automatic
    (lambda (form1-in form2 self-stx)
      (define static? (is-static-context? self-stx))
@@ -132,7 +133,8 @@
 
 (define-repetition-syntax ++
   (repetition-infix-operator
-   (lambda () `((,(repet-quote +&) . same)))
+   (lambda () (order-quote concatenation))
+   '()
    'automatic
    (lambda (form1 form2 self-stx)
      (define static? (is-static-context? self-stx))

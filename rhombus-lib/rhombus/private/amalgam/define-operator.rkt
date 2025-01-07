@@ -8,7 +8,8 @@
          "rhombus-primitive.rkt"
          "flonum-key.rkt"
          "fixnum-key.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "order.rkt")
 
 (provide define-prefix
          define-infix
@@ -23,6 +24,7 @@
   (define-syntax (prefix stx)
     (syntax-parse stx
       [(_ prim:identifier
+          (~optional (~seq #:order order-id:identifier))
           (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
@@ -43,6 +45,8 @@
                      #:defaults ([fxprim #'#f]
                                  [fixnum-statinfos #'()])))
        #`(make-expression&repetition-prefix-operator
+          (~? (lambda () (order-quote order-id))
+              #f)
           (~? precedences-expr
               (lambda ()
                 (list (cons (quote-syntax weaker-op)
@@ -94,6 +98,7 @@
   (define-syntax (infix stx)
     (syntax-parse stx
       [(_ prim:identifier
+          (~optional (~seq #:order order-id:identifier))
           (~optional (~seq #:precedences precedences-expr))
           (~optional (~seq #:weaker-than (weaker-op ...))
                      #:defaults ([(weaker-op 1) '()]))
@@ -114,6 +119,8 @@
                      #:defaults ([fxprim #'#f]
                                  [fixnum-statinfos #'()])))
        #`(make-expression&repetition-infix-operator
+          (~? (lambda () (order-quote order-id))
+              #f)
           (~? precedences-expr
               (lambda ()
                 (list (cons (quote-syntax weaker-op)

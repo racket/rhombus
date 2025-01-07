@@ -242,12 +242,18 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 
 @doc(
-  operator ((x :: Number) + (y :: Number)) :: Number
-  operator ((x :: Number) - (y :: Number)) :: Number
-  operator (- (x :: Number)) :: Number
-  operator ((x :: Number) * (y :: Number)) :: Number
-  operator ((x :: Number) / (y :: Number)) :: Number
-  operator ((x :: Number) ** (y :: Number)) :: Number
+  operator ((x :: Number) + (y :: Number)) :: Number:
+    ~order: addition
+  operator ((x :: Number) - (y :: Number)) :: Number:
+    ~order: addition
+  operator (- (x :: Number)) :: Number:
+    ~order: addition
+  operator ((x :: Number) * (y :: Number)) :: Number:
+    ~order: multiplication
+  operator ((x :: Number) / (y :: Number)) :: Number:
+    ~order: multiplication
+  operator ((x :: Number) ** (y :: Number)) :: Number:
+    ~order: exponentiation
 ){
 
  The usual arithmetic operators with the usual precedence.
@@ -281,9 +287,12 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 
 @doc(
-  operator ((x :: Integral) div (y :: Integral)) :: Integral
-  operator ((x :: Integral) rem (y :: Integral)) :: Integral
-  operator ((x :: Integral) mod (y :: Integral)) :: Integral
+  operator ((x :: Integral) div (y :: Integral)) :: Integral:
+    ~order: integer_division
+  operator ((x :: Integral) rem (y :: Integral)) :: Integral:
+    ~order: integer_division
+  operator ((x :: Integral) mod (y :: Integral)) :: Integral:
+    ~order: integer_division
 ){
 
  Integer division (truncating), remainder, and modulo operations. These
@@ -301,10 +310,14 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 
 @doc(
-  operator ((x :: Real) .> (y :: Real)) :: Boolean
-  operator ((x :: Real) .>= (y :: Real)) :: Boolean
-  operator ((x :: Real) .< (y :: Real)) :: Boolean
-  operator ((x :: Real) .<= (y :: Real)) :: Boolean
+  operator ((x :: Real) .> (y :: Real)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Real) .>= (y :: Real)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Real) .< (y :: Real)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Real) .<= (y :: Real)) :: Boolean:
+    ~order: comparison
 ){
 
  The usual comparison operators on real numbers prefixed with @litchar{.} to
@@ -548,13 +561,20 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 }
 
 @doc(
-  operator ((n :: Int) bits.and (m :: Int)) :: Int
-  operator ((n :: Int) bits.or (m :: Int)) :: Int
-  operator ((n :: Int) bits.xor (m :: Int)) :: Int
-  operator (bits.not (n :: Int)) :: Int
-  operator ((n :: Int) bits.(<<) (m :: NonnegInt)) :: Int
-  operator ((n :: Int) bits.(>>) (m :: NonnegInt)) :: Int
-  operator ((n :: Int) bits.(?) (m :: NonnegInt)) :: Boolean
+  operator ((n :: Int) bits.and (m :: Int)) :: Int:
+    ~order: bitwise_conjunction
+  operator ((n :: Int) bits.or (m :: Int)) :: Int:
+    ~order: bitwise_disjunction
+  operator ((n :: Int) bits.xor (m :: Int)) :: Int:
+    ~order: bitwise_disjunction
+  operator (bits.not (n :: Int)) :: Int:
+    ~order: bitwise_negation
+  operator ((n :: Int) bits.(<<) (m :: NonnegInt)) :: Int:
+    ~order: bitwise_shift
+  operator ((n :: Int) bits.(>>) (m :: NonnegInt)) :: Int:
+    ~order: bitwise_shift
+  operator ((n :: Int) bits.(?) (m :: NonnegInt)) :: Boolean:
+    ~order: bitwise_test
   fun bits.length(n :: Int) :: Int
   fun bits.field(n :: Int,
                  start :: NonnegInt,

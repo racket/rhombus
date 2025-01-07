@@ -82,8 +82,9 @@
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #:rhombus/repet #,stx))
 
-(define-for-syntax (make-repetition-infix-operator prec protocol proc assc)
+(define-for-syntax (make-repetition-infix-operator order prec protocol proc assc)
   (repetition-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)
@@ -101,8 +102,9 @@
                           proc)))
    assc))
 
-(define-for-syntax (make-repetition-prefix-operator prec protocol proc)
+(define-for-syntax (make-repetition-prefix-operator order prec protocol proc)
   (repetition-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'macro)

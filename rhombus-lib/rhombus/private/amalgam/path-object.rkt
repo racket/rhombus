@@ -234,6 +234,7 @@
 
 (define-annotation-syntax Path.like
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)

@@ -7,7 +7,9 @@
          "binding.rkt"
          "static-info.rkt"
          "if-blocked.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide (for-space rhombus/annot
                     &&
@@ -22,7 +24,8 @@
                                             (get-combined-primitive-contract " && " form))))
 (define-annotation-syntax &&
   (annotation-infix-operator
-   (lambda () `((,(annot-quote \|\|) . stronger)))
+   (lambda () (order-quote logical_conjuction))
+   null
    'automatic
    (lambda (lhs rhs stx)
      (relocate+reraw
@@ -99,6 +102,7 @@
                                             (get-combined-primitive-contract " || " form))))
 (define-annotation-syntax \|\|
   (annotation-infix-operator
+   (lambda () (order-quote logical_disjuction))
    null
    'automatic
    (lambda (lhs rhs stx)
@@ -189,8 +193,8 @@
 (void (set-primitive-contract-combinator! 'not/c handle-not/c))
 (define-annotation-syntax !
   (annotation-prefix-operator
-   (lambda () `((,(annot-quote &&) . stronger)
-                (,(annot-quote \|\|) . stronger)))
+   (lambda () (order-quote logical_negation))
+   '()
    'automatic
    (lambda (form stx)
      (relocate+reraw

@@ -5,22 +5,29 @@ export:
     u_operator as operator
     u_fun as fun
 
+meta:
+  syntax_class KWs
+  | '$(kw :: Keyword) $rest ...; ...'
+
 defn.macro
-| 'u_operator $(head :: Sequence): $body':
+| 'u_operator $(head :: Sequence): $(kws :: KWs); $body':
     'operator $head:
+       $kws
        ~unsafe: $body
        $body'
 | 'u_operator
-   | $(head :: Sequence): $body
+   | $(head :: Sequence): $(kws :: KWs); $body
    | ...':
     'operator
      | $head:
+         $kws
          ~unsafe: $body
          $body
      | ...'
 
 defn.macro
-| 'u_fun $(head :: Sequence): $body':
+| 'u_fun $(head :: Sequence): $(kws :: KWs); $body':
     'fun $head:
+       $kws
        ~unsafe: $body
        $body'

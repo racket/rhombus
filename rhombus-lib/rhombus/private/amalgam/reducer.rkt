@@ -29,7 +29,7 @@
   (property reducer-infix-operator infix-operator)
 
   (define (reducer-transformer proc)
-    (reducer-prefix-operator '((default . stronger)) 'macro proc))
+    (reducer-prefix-operator #f '((default . stronger)) 'macro proc))
 
   (define-syntax-class :reducer-form
     #:description "reducer"

@@ -90,8 +90,9 @@
      [_ (syntax-parse (unpack-group form 'expression #f)
           [e::expression #'e.parsed])])))
 
-(define-for-syntax (make-expression-infix-operator prec protocol proc assc)
+(define-for-syntax (make-expression-infix-operator order prec protocol proc assc)
   (expression-infix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)
@@ -111,8 +112,9 @@
                                    proc)))
    assc))
 
-(define-for-syntax (make-expression-prefix-operator prec protocol proc)
+(define-for-syntax (make-expression-prefix-operator order prec protocol proc)
   (expression-prefix-operator
+   order
    prec
    protocol
    (if (eq? protocol 'automatic)

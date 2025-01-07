@@ -31,12 +31,18 @@ unspecialized and flonum-specific operations.
 @(~version_at_least "8.14.0.4")
 
 @doc(
-  operator ((x :: Flonum) flonum.(+) (y :: Flonum)) :: Flonum
-  operator ((x :: Flonum) flonum.(-) (y :: Flonum)) :: Flonum
-  operator (flonum.(-) (x :: Flonum)) :: Flonum
-  operator ((x :: Flonum) flonum.(*) (y :: Flonum)) :: Flonum
-  operator ((x :: Flonum) flonum.(/) (y :: Flonum)) :: Flonum
-  operator ((x :: Flonum) flonum.(**) (y :: Flonum)) :: Flonum
+  operator ((x :: Flonum) flonum.(+) (y :: Flonum)) :: Flonum:
+    ~order: addition
+  operator ((x :: Flonum) flonum.(-) (y :: Flonum)) :: Flonum:
+    ~order: addition
+  operator (flonum.(-) (x :: Flonum)) :: Flonum:
+    ~order: addition
+  operator ((x :: Flonum) flonum.(*) (y :: Flonum)) :: Flonum:
+    ~order: multiplication
+  operator ((x :: Flonum) flonum.(/) (y :: Flonum)) :: Flonum:
+    ~order: multiplication
+  operator ((x :: Flonum) flonum.(**) (y :: Flonum)) :: Flonum:
+    ~order: exponentiation
 ){
 
  The same as operators like @rhombus(+), but restricted to @tech{flonum}
@@ -47,12 +53,18 @@ unspecialized and flonum-specific operations.
 }
 
 @doc(
-  operator ((x :: Flonum) flonum.(<) (y :: Flonum)) :: Boolean
-  operator ((x :: Flonum) flonum.(<=) (y :: Flonum)) :: Boolean
-  operator ((x :: Flonum) flonum.(==) (y :: Flonum)) :: Boolean
-  operator ((x :: Flonum) flonum.(!=) (y :: Flonum)) :: Boolean
-  operator ((x :: Flonum) flonum.(>=) (y :: Flonum)) :: Boolean
-  operator ((x :: Flonum) flonum.(>) (y :: Flonum)) :: Boolean
+  operator ((x :: Flonum) flonum.(<) (y :: Flonum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Flonum) flonum.(<=) (y :: Flonum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Flonum) flonum.(==) (y :: Flonum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Flonum) flonum.(!=) (y :: Flonum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Flonum) flonum.(>=) (y :: Flonum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Flonum) flonum.(>) (y :: Flonum)) :: Boolean:
+    ~order: comparison
 ){
 
  The same as operators like @rhombus(<), but restricted to @tech{flonum}

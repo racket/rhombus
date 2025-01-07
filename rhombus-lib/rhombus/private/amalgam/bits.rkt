@@ -5,7 +5,8 @@
          "define-arity.rkt"
          (submod "arithmetic.rkt" static-infos)
          "call-result-key.rkt"
-         "annotation-failure.rkt")
+         "annotation-failure.rkt"
+         "order-primitive.rkt")
 
 (provide (for-space rhombus/namespace
                     bits))
@@ -23,16 +24,16 @@
    [field bits.field]))
 
 (define-prefix #:who bits.not bitwise-not
+  #:order bitwise_negation
   #:static-infos #,(get-int-static-infos))
 (define-infix #:who bits.and bitwise-and
-  #:weaker-than (bits.not)
+  #:order bitwise_conjunction
   #:static-infos #,(get-int-static-infos))
 (define-infix #:who bits.or bitwise-ior
-  #:weaker-than (bits.and bits.not)
+  #:order bitwise_disjunction
   #:static-infos #,(get-int-static-infos))
 (define-infix #:who bits.xor bitwise-xor
-  #:weaker-than (bits.not)
-  #:same-as (bits.or)
+  #:order bitwise_disjunction
   #:static-infos #,(get-int-static-infos))
 
 (define (check-int who n)
@@ -56,11 +57,14 @@
   (arithmetic-shift a (- b)))
 
 (define-infix |bits.(<<)| arithmetic-shift-left
+  #:order bitwise_shift
   #:static-infos #,(get-int-static-infos))
 (define-infix |bits.(>>)| arithmetic-shift-right
+  #:order bitwise_shift
   #:static-infos #,(get-int-static-infos))
 
-(define-infix #:who |bits.(?)| bitwise-bit-set?)
+(define-infix #:who |bits.(?)| bitwise-bit-set?
+  #:order bitwise_test)
 
 (define/arity (bits.length n)
   #:primitive (integer-length)

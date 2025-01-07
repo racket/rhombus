@@ -11,7 +11,8 @@
          "parens.rkt"
          "realm.rkt"
          (submod "equal.rkt" for-parse)
-         (only-in "assign.rkt" :=)
+         "order.rkt"
+         "order-primitive.rkt"
          "is-static.rkt")
 
 (provide with)
@@ -33,8 +34,9 @@
 
 (define-syntax with
   (expression-infix-operator
+   #f
    (lambda ()
-     `((,(expr-quote :=) . stronger)
+     `((,(order-quote assignment) . stronger)
        (default . weaker)))
    'macro
    (lambda (orig-form1 tail)

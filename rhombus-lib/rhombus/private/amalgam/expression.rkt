@@ -47,14 +47,14 @@
   (property expression-infix-operator infix-operator)
 
   (define (expression-transformer proc)
-    (expression-prefix-operator '((default . stronger)) 'macro proc))
+    (expression-prefix-operator #f '((default . stronger)) 'macro proc))
 
   ;; shortcut for an expression binding that can be used by itself like
   ;; an identifier in a repetition; this is a little bit of a cheat, so use
   ;; it only for things that are rename-transformer-like
   (struct expression-repeatable-prefix-operator expression-prefix-operator ())
   (define (expression-repeatable-transformer proc)
-    (expression-repeatable-prefix-operator '((default . stronger)) 'macro proc))
+    (expression-repeatable-prefix-operator #f '((default . stronger)) 'macro proc))
 
   (define early-unbound? #f)
   (define (check-unbound-identifier-early!)

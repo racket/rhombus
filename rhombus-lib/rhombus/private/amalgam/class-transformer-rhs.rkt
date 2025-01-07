@@ -33,7 +33,7 @@
      #:with (~var lam (:entry-point no-adjustments)) #'g
      #`lam.parsed]))
 
-(define (wrap-prefix precedence protocol proc)
+(define (wrap-prefix order precedence protocol proc)
   (lambda (stx)
     (syntax-parse (unpack-tail stx #f #f)
       [(head . tail) (proc (pack-tail #'tail) #'head)])))

@@ -64,11 +64,12 @@
                                         #f
                                         #f
                                         #f #f
-                                        #'() #'() '()))]
+                                        #'() #'() #'() '()))]
       [_
        #`(class-transformer #,g)]))
   (with-syntax ([make-prefix-operator make-prefix-operator])
-    #`(make-prefix-operator '((default . stronger))
+    #`(make-prefix-operator #f
+                            '((default . stronger))
                             'macro
                             (let ([name #,lam])
                               (let ([name (lambda (tail head)

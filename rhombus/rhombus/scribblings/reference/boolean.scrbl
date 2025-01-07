@@ -37,6 +37,8 @@
     right_repet: block repet
   expr.macro '$left_expr || $right_expr'
   repet.macro '$left_repet || $right_repet'
+  operator_order:
+    ~order: logical_disjunction
 ){
 
  Produces the value of @rhombus(left_expr) if it is
@@ -53,6 +55,8 @@
     left_bind: def bind ~defn
     right_bind: def bind ~defn
   bind.macro '$left_bind || $right_bind'
+  operator_order:
+    ~order: logical_disjunction
 ){
 
  Matches if either @rhombus(left_bind) or @rhombus(right_bind) matches.
@@ -77,6 +81,8 @@
     left_annot: :: annot
     right_annot: :: annot
   annot.macro '$left_annot || $right_annot'
+  operator_order:
+    ~order: logical_disjunction
 ){
 
  Creates an annotation that accepts a value satisfying either
@@ -140,6 +146,8 @@
     right_repet: block repet
   expr.macro '$left_expr && $right_expr'
   repet.macro '$left_repet && $right_repet'
+  operator_order:
+    ~order: logical_conjunction
 ){
 
  Produces @rhombus(#false) if the value of @rhombus(left_expr) is
@@ -156,6 +164,8 @@
     left_bind: def bind ~defn
     right_bind: def bind ~defn
   bind.macro '$left_bind && $right_bind'
+  operator_order:
+    ~order: logical_conjunction
 ){
 
  Matches when both @rhombus(left_bind) and @rhombus(right_bind) match.
@@ -185,6 +195,8 @@
     left_annot: :: annot
     right_annot: :: annot
   annot.macro '$left_annot && $right_annot'
+  operator_order:
+    ~order: logical_conjunction
 ){
 
  Creates an annotation that accepts a value satisfying both
@@ -250,6 +262,8 @@
 
 @doc(
   operator (! (v :: Any)) :: Boolean
+  operator_order:
+    ~order: logical_negation
 ){
 
  Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),
@@ -265,6 +279,8 @@
 
 @doc(
   bind.macro '! $bind'
+  operator_order:
+    ~order: logical_negation
 ){
 
  Matches if @rhombus(bind) does not match. Because @rhombus(bind) does
@@ -283,6 +299,8 @@
 
 @doc(
   annot.macro '! $annot'
+  operator_order:
+    ~order: logical_negation
 ){
 
  Creates an annotation that accepts a value not satisfying

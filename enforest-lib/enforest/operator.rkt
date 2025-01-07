@@ -17,7 +17,13 @@
 ;; precedence than the one referenced by the identifier. An operator
 ;; is implicitly the 'same as itself (i.e., not covered by 'default).
 
-(provide operator
+(provide order
+         order?
+         order-precedences
+         order-assoc
+         order-ref
+
+         operator
          operator?
          operator-precedences
          operator-protocol
@@ -46,9 +52,21 @@
            apply-prefix-transformer-operator
            apply-infix-transformer-operator))
 
-(struct operator (precedences protocol proc)
-  #:guard (lambda (precedences protocol proc who)
+(struct order (precedences assoc))
+
+(define (order-ref v) (and (order? v) v))
+
+(struct operator (order precedences protocol proc)
+  #:guard (lambda (order precedences protocol proc who)
             (when #f ;; change to #t for a debugging check
+              (let ([order (cond
+                             [(and (procedure? order)
+                                   (procedure-arity-includes? order 0))
+                              (order)]
+                             [else order])])
+                (unless (or (not order)
+                            (identifier? order))
+                  (raise-argument-error who "(or/c #f identifier? (-> (or/c #f identifier?)))" protocol)))
               (let ([precedences (cond
                                    [(and (procedure? precedences)
                                          (procedure-arity-includes? precedences 0))
@@ -69,14 +87,14 @@
               (raise-argument-error who "(or/c 'automatic 'macro)" protocol))
             (unless (procedure? proc)
               (raise-argument-error who "procedure?" proc))
-            (values precedences protocol proc)))
+            (values order precedences protocol proc)))
             
 (struct prefix-operator operator ())
 (struct infix-operator operator (assoc)
-  #:guard (lambda (precedences protocol proc assoc who)
+  #:guard (lambda (order precedences protocol proc assoc who)
             (unless (memq assoc '(left right none))
               (raise-argument-error who "(or/c 'left 'right 'none)" assoc))
-            (values precedences protocol proc assoc)))
+            (values order precedences protocol proc assoc)))
 
 (define (prefix-operator-ref v) (and (prefix-operator? v) v))
 (define (infix-operator-ref v) (and (infix-operator? v) v))
@@ -94,15 +112,21 @@
 ;;       - 'same-on-left (error because on right)
 ;;       - #f (no precedence relation)
 (define (relative-precedence left-op-name left-op op-name op)
-  (define (find op-name this-op-name precs)
-    (let loop ([precs precs] [default #f])
+  (define (find op-name op-order-name this-op-name this-order? precs)
+    (let loop ([precs precs] [by-order #f] [default #f])
       (cond
-        [(null? precs) (if (free-identifier=? op-name this-op-name)
-                           'same
-                           default)]
-        [(eq? (caar precs) 'default) (loop (cdr precs) (cdar precs))]
+        [(null? precs) (or by-order
+                           (if (if this-order?
+                                   (and op-order-name
+                                        this-op-name
+                                        (free-identifier=? op-order-name this-op-name))
+                                   (free-identifier=? op-name this-op-name))
+                               'same
+                               default))]
+        [(eq? (caar precs) 'default) (loop (cdr precs) by-order (cdar precs))]
         [(free-identifier=? op-name (caar precs)) (cdar precs)]
-        [else (loop (cdr precs) default)])))
+        [(and op-order-name (free-identifier=? op-order-name (caar precs))) (loop (cdr precs) (cdar precs) #f)]
+        [else (loop (cdr precs) by-order default)])))
   (define (invert dir)
     (case dir
       [(stronger) 'weaker]
@@ -111,8 +135,25 @@
       [(same-on-left) 'same-on-right]
       [else dir]))
   (define (extract precs) (if (procedure? precs) (precs) precs))
-  (define dir1 (find left-op-name op-name (extract (operator-precedences op))))
-  (define dir2 (invert (find op-name left-op-name (extract (operator-precedences left-op)))))
+  (define (extract-order op)
+    (define o (operator-order op))
+    (define name (if (procedure? o)
+                     (o)
+                     o))
+    (values name
+            (and name (syntax-local-value* name order-ref))))
+  (define-values (left-order-name left-order) (extract-order left-op))
+  (define-values (op-order-name op-order) (extract-order op))
+  (define dir1/op (find left-op-name left-order-name op-name #f (extract (operator-precedences op))))
+  (define dir1/order (and (not dir1/op)
+                          op-order
+                          (find left-op-name left-order-name op-order-name #t (extract (order-precedences op-order)))))
+  (define dir1 (or dir1/op dir1/order))
+  (define dir2/op (invert (find op-name op-order-name left-op-name #f (extract (operator-precedences left-op)))))
+  (define dir2/order (and (not dir2/op)
+                          left-order
+                          (invert (find op-name op-order-name left-order-name #t (extract (order-precedences left-order))))))
+  (define dir2 (or dir2/op dir2/order))
   (cond
     [(and dir1 dir2 (not (eq? dir1 dir2)))
      'inconsistent-prec]

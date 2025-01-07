@@ -5,7 +5,8 @@
          "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "order.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
                      make-expression&repetition-infix-operator
@@ -19,7 +20,7 @@
   ;;  - 'prefix -- actual prefix operator
   ;;  - 'nofix  -- "nofix" operator that consumes nothing
   ;;  - 'mixfix -- both prefix and "nofix", depending on the tail
-  (define (make-expression&repetition-prefix-operator prec kind exp
+  (define (make-expression&repetition-prefix-operator order prec kind exp
                                                       #:element-statinfo? [element-statinfo? #f])
     (define (prefix-exp form self-stx)
       (exp form self-stx))
@@ -71,14 +72,14 @@
         [else
          (error "unrecognized kind")]))
     (values
-     (expression-prefix-operator prec protocol final-exp)
-     (repetition-prefix-operator (add-repet-space prec) protocol final-rep)))
+     (expression-prefix-operator order prec protocol final-exp)
+     (repetition-prefix-operator order (add-repet-space prec) protocol final-rep)))
 
   ;; `kind` can be
   ;;  - 'infix   -- actual infix operator
   ;;  - 'postfix -- postfix operator that consumes nothing
   ;;  - 'mixfix  -- both infix and postfix, depending on the tail
-  (define (make-expression&repetition-infix-operator prec kind exp assc
+  (define (make-expression&repetition-infix-operator order prec kind exp assc
                                                      #:element-statinfo? [element-statinfo? #f])
     (define (infix-exp form1 form2 self-stx)
       (exp form1 form2 self-stx))
@@ -133,13 +134,14 @@
         [else
          (error "unrecognized kind")]))
     (values
-     (expression-infix-operator prec protocol final-exp assc)
-     (repetition-infix-operator (add-repet-space prec) protocol final-rep assc)))
+     (expression-infix-operator order prec protocol final-exp assc)
+     (repetition-infix-operator order (add-repet-space prec) protocol final-rep assc)))
 
   (define (add-repet-space get-prec)
     (lambda ()
       (for/list ([p (in-list (get-prec))])
-        (if (identifier? (car p))
+        (if (and (identifier? (car p))
+                 (not (bound-identifier=? (car p) (in-order-space (car p)))))
             (cons (in-repetition-space (car p)) (cdr p))
             p))))
 

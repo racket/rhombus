@@ -162,6 +162,7 @@ meta:
          || #'~space_meta_clause
          || #'~key_comp
          || #'~immediate_callee
+         || #'~operator_order
          || #'~doc):
         #'spaced
     | ~else:
@@ -226,22 +227,28 @@ meta:
           match opt
           | '~escape: $(op :: Operator)': op
           | '$_: $body': escape_op
+      let space:
+        for values(space = #false) (opt: [opt, ...]):
+          match opt
+          | '~space: $space ...': [space.unwrap(), ...]
+          | '$_: $body': space
       let [opt, ...]:
         for List (opt: [opt, ...]):
           skip_when:
             match opt
             | '~escape $_ ...': #true
+            | '~space $_ ...': #true
             | _: #false
           opt
       '$typeset_rhombusblock_stx(
          $opt, ...,
-         $(escape_top_term(self, spacer.adjust_term(fin_tail, #false, escape_op), escape_op, escape_id))
+         $(escape_top_term(self, spacer.adjust_term(fin_tail, space, escape_op), escape_op, escape_id))
        )'
     fun check_options(options :~ List):
       for values(kws :~ Set = Set{}) (opt :~ Syntax: options):
         match opt
         | '$(kw_stx && ('~inset' || '~indent' || '~prompt' || '~indent_from_block'
-                          || '~spacer_info_box' || '~escape')) $_ ...':
+                          || '~spacer_info_box' || '~escape' || '~space')) $_ ...':
             let kw = kw_stx.unwrap()
             if kws[kw]
             | syntax_meta.error("duplicate option", stx, kw_stx)

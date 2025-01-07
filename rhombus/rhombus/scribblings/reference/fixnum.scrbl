@@ -31,13 +31,20 @@ unspecialized and fixnum-specific operations.
 @(~version_at_least "8.14.0.4")
 
 @doc(
-  operator ((x :: Fixnum) fixnum.(+) (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.(-) (y :: Fixnum)) :: Fixnum
-  operator (fixnum.(-) (x :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.(*) (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.div (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.rem (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.mod (y :: Fixnum)) :: Fixnum
+  operator ((x :: Fixnum) fixnum.(+) (y :: Fixnum)) :: Fixnum:
+    ~order: addition
+  operator ((x :: Fixnum) fixnum.(-) (y :: Fixnum)) :: Fixnum:
+    ~order: addition
+  operator (fixnum.(-) (x :: Fixnum)) :: Fixnum:
+    ~order: addition
+  operator ((x :: Fixnum) fixnum.(*) (y :: Fixnum)) :: Fixnum:
+    ~order: multiplication
+  operator ((x :: Fixnum) fixnum.div (y :: Fixnum)) :: Fixnum:
+    ~order: integer_division
+  operator ((x :: Fixnum) fixnum.rem (y :: Fixnum)) :: Fixnum:
+    ~order: integer_division
+  operator ((x :: Fixnum) fixnum.mod (y :: Fixnum)) :: Fixnum:
+    ~order: integer_division
 ){
 
  The same as operators like @rhombus(+), but restricted to @tech{fixnum}
@@ -48,12 +55,18 @@ unspecialized and fixnum-specific operations.
 }
 
 @doc(
-  operator ((x :: Fixnum) fixnum.(<) (y :: Fixnum)) :: Boolean
-  operator ((x :: Fixnum) fixnum.(<=) (y :: Fixnum)) :: Boolean
-  operator ((x :: Fixnum) fixnum.(==) (y :: Fixnum)) :: Boolean
-  operator ((x :: Fixnum) fixnum.(!=) (y :: Fixnum)) :: Boolean
-  operator ((x :: Fixnum) fixnum.(>=) (y :: Fixnum)) :: Boolean
-  operator ((x :: Fixnum) fixnum.(>) (y :: Fixnum)) :: Boolean
+  operator ((x :: Fixnum) fixnum.(<) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Fixnum) fixnum.(<=) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Fixnum) fixnum.(==) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Fixnum) fixnum.(!=) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Fixnum) fixnum.(>=) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
+  operator ((x :: Fixnum) fixnum.(>) (y :: Fixnum)) :: Boolean:
+    ~order: comparison
 ){
 
  The same as operators like @rhombus(<), but restricted to @tech{fixnum}
@@ -74,15 +87,21 @@ unspecialized and fixnum-specific operations.
 }
 
 @doc(
-  operator ((x :: Fixnum) fixnum.bits.(<<) (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.(>>) (y :: Fixnum)) :: Fixnum
+  operator ((x :: Fixnum) fixnum.bits.(<<) (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_shift
+  operator ((x :: Fixnum) fixnum.bits.(>>) (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_shift
   operator ((x :: Fixnum) fixnum.bits.logical.(>>) (y :: Fixnum))
-    :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.and (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.or (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.xor (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.not (y :: Fixnum)) :: Fixnum
-  operator ((x :: Fixnum) fixnum.bits.xor (y :: Fixnum)) :: Fixnum
+    :: Fixnum:
+      ~order: bitwise_shift
+  operator ((x :: Fixnum) fixnum.bits.and (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_conjunction
+  operator ((x :: Fixnum) fixnum.bits.or (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_disjunction
+  operator ((x :: Fixnum) fixnum.bits.xor (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_disjunction
+  operator ((x :: Fixnum) fixnum.bits.not (y :: Fixnum)) :: Fixnum:
+    ~order: bitwise_negation
 ){
 
  The same as operators like @rhombus(bits.(<<)), but restricted to
@@ -113,15 +132,20 @@ unspecialized and fixnum-specific operations.
 
 @doc(
   operator ((x :: Fixnum) fixnum.wraparound.(+) (y :: Fixnum))
-    :: Fixnum
+    :: Fixnum:
+      ~order: addition
   operator ((x :: Fixnum) fixnum.wraparound.(-) (y :: Fixnum))
-    :: Fixnum
+    :: Fixnum:
+      ~order: addition
   operator (fixnum.wraparound.(-) (x :: Fixnum))
-    :: Fixnum
+    :: Fixnum:
+      ~order: addition
   operator ((x :: Fixnum) fixnum.wraparound.(*) (y :: Fixnum))
-    :: Fixnum
+    :: Fixnum:
+      ~order: multiplication
   operator ((x :: Fixnum) fixnum.wraparound.bits.(<<) (y :: Fixnum))
-    :: Fixnum
+    :: Fixnum:
+      ~order: bitwise_shift
 ){
 
  Like @rhombus(fixnum.(+)), @rhombus(fixnum.(-)), @rhombus(fixnum.(*)),

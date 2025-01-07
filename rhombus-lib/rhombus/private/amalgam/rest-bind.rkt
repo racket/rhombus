@@ -14,12 +14,14 @@
 
 (define-syntax rest-bind
   (expression-prefix-operator
+   #f
    `()
    'macro
    (lambda (tail) (error "should not get here"))))
 
 (define-binding-syntax rest-bind
   (binding-prefix-operator
+   #f
    `()
    'macro
    (lambda (tail)

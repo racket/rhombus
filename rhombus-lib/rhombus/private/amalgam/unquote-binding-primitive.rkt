@@ -21,6 +21,8 @@
          "name-root-space.rkt"
          "name-root-ref.rkt"
          "op-literal.rkt"
+         "order.rkt"
+         "order-primitive.rkt"
          "parens.rkt"
          (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
@@ -118,6 +120,7 @@
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
+   #f
    null
    'macro
    (lambda (form1 stx)
@@ -506,6 +509,7 @@
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
+   (lambda () (order-quote logical_conjuction))
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -526,6 +530,7 @@
 
 (define-unquote-binding-syntax \|\|
   (unquote-binding-infix-operator
+   (lambda () (order-quote logical_disjuction))
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -546,6 +551,7 @@
 
 (define-unquote-binding-syntax !
   (unquote-binding-prefix-operator
+   (lambda () (order-quote logical_negation))
    `()
    'automatic
    (lambda (form stx)

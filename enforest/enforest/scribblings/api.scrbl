@@ -7,6 +7,8 @@
                      racket/contract/base
                      syntax/parse))
 
+@(define order-struct @racket[order])
+
 @title{Enforestation API}
 
 @section{Name Roots}
@@ -64,20 +66,32 @@
 
 @defmodule[enforest/operator]
 
-@defstruct*[operator ([precs (or (procedure-arity-includes/c 0)
-                                 (listof (cons/c (or/c identifier? 'default)
-                                                 (or/c 'stronger 'weaker
-                                                       'same 'same-on-left 'same-on-right))))]
+@defstruct*[operator ([order (or (procedure-arity-includes/c 0)
+                                 identifier?
+                                 #f)]
+                      [precedences (or (procedure-arity-includes/c 0)
+                                       (listof (cons/c (or/c identifier? 'default)
+                                                       (or/c 'stronger 'weaker
+                                                             'same 'same-on-left 'same-on-right))))]
                       [protocol (or/c 'macro 'automatic)]
                       [proc procedure?])
             #:omit-constructor]{
 
- The @racket[precs] field is either a list or a function that produces
+ The @racket[order] field is an optional identifier or procedure to
+ return an identifier. The identifier indicates a general
+ classification of the operator that other operators (and operator
+ orders) can use to specify a precedence relationship to the operator.
+ The operator can also be bound to an instance of @|order-struct| and
+ also to provide a precedence information to augment the
+ @racket[precs] field.
+
+ The @racket[precedences] field is either a list or a function that produces
  a list on demand. The list is an association list from identifiers to
  @racket['stronger], @racket['weaker], @racket['same],
  @racket['same-on-left], or @racket['same-on-right], indicating that
  the operator's precedence is stronger than, weaker than, or the same
- as (when on the indicated side of) the associated identifier;
+ as (when on the indicated side of) the associated identifier, which
+ refers to either an operator or an operator order;
  @racket['default] can be used instead of an identifier to specify a
  default relationship.
 
@@ -138,6 +152,19 @@
 
  Returns @racket[v] if it is an instance of @racket[infix-operator],
  @racket[#f] otherwise.
+
+}
+
+@defstruct*[order ([precedences (or (procedure-arity-includes/c 0)
+                                    (listof (cons/c (or/c identifier? 'default)
+                                                    (or/c 'stronger 'weaker
+                                                          'same 'same-on-left 'same-on-right))))]
+                   [assoc (or/c 'left 'right 'none)])
+            #:omit-constructor]{
+
+ Represents an operator order for reference via the @racket[order, ~datum] field
+ of an @racket[operator]. The @racket[precedences] field is as in @racket[operator],
+ and the @racket[assoc] field is as in @racket[infix-operator].
 
 }
 

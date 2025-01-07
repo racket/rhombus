@@ -202,6 +202,7 @@
 (void (set-primitive-contract-combinator! 'procedure-arity-includes/c handle-procedure-arity-includes/c))
 (define-annotation-syntax of_arity
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -255,6 +256,7 @@
 
 (define-annotation-syntax all_of
   (annotation-prefix-operator
+   #f
    '((default . stronger))
    'macro
    (lambda (stx)
