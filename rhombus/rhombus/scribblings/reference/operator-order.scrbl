@@ -62,11 +62,22 @@ in multple spaces (such as via @rhombus(bind.macro, ~defn) or
 }
 
 @doc(
-  operator_order.def comparison
+  operator_order.def equivalence
+  operator_order.def order_comparison
+  operator_order.def_set comparison:
+    equivalence
+    order_comparison
 ){
 
- The precedence for a comparison operator such as @rhombus(<) or
- @rhombus(==).
+ Precedence orders for equality operators @rhombus(==) or
+ @rhombus(is_now) and ordering comparisons such as @rhombus(<) or
+ @rhombus(.=). The @rhombus(comparison, ~operator_order) shorthand can be
+ used to declare a relationship to both
+ @rhombus(equivalence, ~operator_order) and
+ @rhombus(order_comparison, ~operator_order), and declaring a
+ relationship to @rhombus(order_comparison, ~operator_order) is rarely
+ useful, but @rhombus(logical_negation, ~operator_order) refers
+ specifically @rhombus(equivalence, ~operator_order).
 
 }
 
@@ -109,17 +120,21 @@ in multple spaces (such as via @rhombus(bind.macro, ~defn) or
   operator_order.def logical_disjunction:
     ~weaker_than:
       comparison
+      concatenation
+      enumeration
       arithmetic
       logical_conjunction
       logical_negation
   operator_order.def logical_conjunction:
     ~weaker_than:
       comparison
+      concatenation
+      enumeration
       arithmetic
       logical_negation
   operator_order.def logical_negation:
-    ~weaker_than:
-      comparison
+    ~stronger_than:
+      equivalence
 ){
 
  Precedence orders for operators such as @rhombus(||),
@@ -149,9 +164,8 @@ in multple spaces (such as via @rhombus(bind.macro, ~defn) or
   operator_order.def concatenation:
     ~weaker_than:
       comparison
+      enumeration
       arithmetic
-      logical_disjunction
-      logical_conjunction
 ){
 
  Precedence orders for operators such as @rhombus(++) and @rhombus(+&).

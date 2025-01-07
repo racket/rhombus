@@ -5,6 +5,7 @@ import:
     except #%dynamism
   meta:
     "charset.rhm".Charset
+  "rx_order.rhm" open
   "rx_charset.rhm".rx_charset_meta
   "rx_charset.rhm" open
   "rx_compile.rhm" open
@@ -47,6 +48,7 @@ export:
   meta:
     rx_meta
 
+  all_from("rx_order.rhm")
   all_from("rx_charset.rhm")
 
   RX
@@ -161,15 +163,13 @@ expr.macro
     rx_macro(self, stx, pat, #false)
 
 rx.macro'$left #%index $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
-  ~weaker_than: #%parens #%juxtapose ++
-  ~same_as: #%brackets
+  ~order: rx_concatenation
   values(binary('sequence', left, next),
          '$next.tail ...')
 
 rx.macro
 | '#%brackets [$(cs_g :: Group)]':
-    ~weaker_than #%parens
-    ~same_as: #%index ~~
+    ~order: rx_concatenation
     let '$(cs :: rx_charset_meta.Parsed)' = cs_g
     rx_meta.pack('[charset($cs), []]')
 | '#%brackets []':
@@ -180,8 +180,7 @@ rx.macro
 
 rx.macro
 | '#%parens ()':
-    ~weaker_than: #%literal
-    ~same_as: ~~
+    ~order: rx_concatenation
     rx_meta.pack('[sequence(), []]')
 | '#%parens ($(p :: rx_meta.Parsed))':
     p
@@ -251,7 +250,6 @@ rx.macro
     rx_meta.pack('[not_unicode($cat), []]')
 
 rx.macro '#%literal $(s :: Term)':
-  ~weaker_than: * + ? #%comp
   unless s.unwrap() is_a (String || Bytes)
   | syntax_meta.error("literal pattern must be a string or byte string",
                       s)
@@ -267,14 +265,15 @@ meta:
     rx_meta.pack('[$op($left, $right), [$left_var, ..., $right_var, ...]]')
 
 rx.macro '$left #%juxtapose $right':
+  ~order: rx_concatenation
   binary('sequence', left, right)
 
 rx.macro '$left ++ $right':
-  ~same_as: #%juxtapose
+  ~order: rx_concatenation
   binary('sequence', left, right)
 
 rx.macro '$left #%call $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
-  ~same_as: #%juxtapose ++
+  ~order: rx_concatenation
   values(binary('sequence', left, next),
          '$next.tail ...')
 
@@ -286,13 +285,12 @@ rx.macro 'case_insensitive: $(pat :: rx_meta.Parsed)':
 
 // unnamed capture group
 rx.macro '~~ $right':
-  ~same_as: #%parens
-  ~stronger_than: #%juxtapose #%call ++ #%comp
+  ~stronger_than: ~other
   let '[$p, [$p_var, ...]]' = rx_meta.do_unpack(right)
   rx_meta.pack('[capture($p), [#false, $p_var, ...]]')
 
 rx.macro ||:
-  ~weaker_than: ~other
+  ~order: rx_disjunction
 | '$left || $right':
     binary('or', left, right)
 
@@ -315,22 +313,19 @@ meta:
       field mode = '~greedy'
 
 rx.macro '$left * $(g :: Greed) $()':
-  ~stronger_than: #%juxtapose ++ #%call
-  ~same_as: + ?
+  ~order: rx_repetition
   ~op_stx: self
   values(unary('repeat(0, #inf, $g.mode, $self)', left),
          '$g.tail ...')
 
 rx.macro '$left + $(g :: Greed) $()':
-  ~stronger_than: #%juxtapose ++ #%call
-  ~same_as: * ... ?
+  ~order: rx_repetition
   ~op_stx: self
   values(unary('repeat(1, #inf, $g.mode, $self)', left),
          '$g.tail ...')
 
 rx.macro '$left ? $(g :: Greed) $()':
-  ~stronger_than: #%juxtapose ++ #%call
-  ~same_as: * ... +
+  ~order: rx_repetition
   ~op_stx: self
   values(unary('repeat(0, 1, $g.mode, $self)', left),
          '$g.tail ...')
@@ -348,8 +343,7 @@ rx.macro '.? $(g :: Greed) $()':
          '$g.tail ...')
 
 rx.macro #%comp:
-  ~stronger_than: #%juxtapose ++ #%call
-  ~same_as: * + ?
+  ~order: rx_repetition
 | '$left #%comp $(self && '{$(min :: Int) ..}') $(g :: Greed) $()':
     values(unary('repeat($min, #inf, $g.mode, $self)', left),
            '$g.tail ...')
@@ -402,7 +396,7 @@ rx.macro 'word_boundary':
   rx_meta.pack('[word_boundary, []]')
 
 rx.macro 'word_continue':
-  ~stronger_than: #%juxtapose ++ #%call
+  ~stronger_than: concatenation
   rx_meta.pack('[word_continue, []]')
 
 rx.macro '$left cut':

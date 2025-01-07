@@ -37,6 +37,8 @@ multiplying like the expression @rhombus(*) operator.
 @doc(
   rx.macro '#%literal $string'
   rx.macro '#%literal $bytes'
+  operator_order:
+    ~stronger_than: ~other
 ){
 
  A literal @tech{string} or @tech{byte string} can be used as a pattern.
@@ -57,6 +59,8 @@ multiplying like the expression @rhombus(*) operator.
   rx.macro '$pat #%juxtapose $pat'
   rx.macro '$pat ++ $pat'
   rx.macro '$pat #%call ($pat)'
+  operator_order:
+    ~order: rx_concatenation
 ){
 
  Patterns that are adjacent in a larger pattern match in sequence. The
@@ -80,6 +84,8 @@ multiplying like the expression @rhombus(*) operator.
 
 @doc(
   rx.macro '$pat || $pat'
+  operator_order:
+    ~order: rx_disjunction
 ){
 
  Matches as either the first @rhombus(pat) or second @rhombus(pat). The
@@ -97,6 +103,8 @@ multiplying like the expression @rhombus(*) operator.
 
 @doc(
   rx.macro '#%parens ($pat)'
+  operator_order:
+    ~order: rx_concatenation
 ){
 
  A parenthesized pattern is equivalent to the @rhombus(pat) inside the
@@ -117,6 +125,8 @@ multiplying like the expression @rhombus(*) operator.
 @doc(
   rx.macro '#%brackets [$charset]'
   rx.macro '$pat #%index [$charset]'
+  operator_order:
+    ~order: rx_concatenation
 ){
 
  A @brackets pattern, which is an implicit use of
@@ -141,6 +151,8 @@ multiplying like the expression @rhombus(*) operator.
 @doc(
   rx.macro '$pat *'
   rx.macro '$pat * $mode'
+  operator_order:
+    ~order: rx_repetition
   grammar mode:
     ~greedy
     ~nongreedy
@@ -181,6 +193,8 @@ multiplying like the expression @rhombus(*) operator.
     mode: * ~at rhombus/rx
   rx.macro '$pat +'
   rx.macro '$pat + $mode'
+  operator_order:
+    ~order: rx_repetition
 ){
 
  Like @rhombus(*, ~at rhombus/rx), but matches 1 or more instances of @rhombus(pat).
@@ -200,6 +214,8 @@ multiplying like the expression @rhombus(*) operator.
     mode: * ~at rhombus/rx
   rx.macro '$pat ?'
   rx.macro '$pat ? $mode'
+  operator_order:
+    ~order: rx_repetition
 ){
 
  Similar to @rhombus(*, ~at rhombus/rx), but matches 0 or 1 instances of @rhombus(pat).
@@ -219,6 +235,8 @@ multiplying like the expression @rhombus(*) operator.
   rx.macro '$pat #%comp {$count}'
   rx.macro '$pat #%comp {$min ..}'
   rx.macro '$pat #%comp {$min .. $max}'
+  operator_order:
+    ~order: rx_repetition
 ){
 
  Using @braces after a pattern, which is use of the implicit
@@ -644,6 +662,31 @@ multiplying like the expression @rhombus(*) operator.
 
 }
 
+@doc(
+  operator_order.def rx_repetition
+  operator_order.def rx_subtraction
+  operator_order.def rx_enumeration
+  operator_order.def rx_conjunction:
+    ~weaker_than:
+      rx_repetition
+      rx_enumeration
+  operator_order.def rx_disjunction:
+    ~weaker_than:
+      rx_conjunction
+      rx_repetition
+      rx_enumeration
+  operator_order.def rx_concatenation:
+    ~weaker_than:
+      ~other
+    ~stronger_than:
+      rx_conjunction
+      rx_disjunction
+){
+
+ @tech{Operator orders} for @tech{regexp} and @tech{character set}
+ operators.
+
+}
 
 @doc(
   ~meta

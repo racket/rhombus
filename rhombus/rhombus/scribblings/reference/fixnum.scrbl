@@ -56,17 +56,17 @@ unspecialized and fixnum-specific operations.
 
 @doc(
   operator ((x :: Fixnum) fixnum.(<) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Fixnum) fixnum.(<=) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Fixnum) fixnum.(==) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Fixnum) fixnum.(!=) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Fixnum) fixnum.(>=) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Fixnum) fixnum.(>) (y :: Fixnum)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
 ){
 
  The same as operators like @rhombus(<), but restricted to @tech{fixnum}
