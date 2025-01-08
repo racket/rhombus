@@ -310,7 +310,7 @@
 
 (define/method (Path.convention p)
   #:primitive (path-convention-type)
-  #:static-infos ((#%call-result #,(get-symbol-static-infos)))  
+  #:static-infos ((#%call-result #,(get-symbol-static-infos)))
   (path-convention-type p))
 
 (define/method (Path.add p . ss)
@@ -320,8 +320,8 @@
 
 (define/method (Path.split p)
   #:primitive (explode-path)
-  #:static-infos ((#%call-result (#,@(get-treelist-static-infos)
-                                  (#%ref-result #,(get-path-static-infos)))))
+  #:static-infos ((#%call-result ((#%index-result #,(get-path-static-infos))
+                                  #,@(get-treelist-static-infos))))
   (to-treelist #f (explode-path p)))
 
 (define/method (Path.directory_only p)
@@ -379,8 +379,8 @@
   (unless (or (path-string? base-p) (path-for-some-system? p)) (raise-annotation-failure who base-p "PathString || CrossPath"))
   (find-relative-path base-p
                       (if (string? p) (string->path p) p)
-                      #:more-than-root? more-than-root?	 
-                      #:more-than-same? more-than-same?	 
+                      #:more-than-root? more-than-root?
+                      #:more-than-same? more-than-same?
                       #:normalize-case? normalize-case?))
 
 (define-annotation-syntax PathString (identifier-annotation path-string? ()))
