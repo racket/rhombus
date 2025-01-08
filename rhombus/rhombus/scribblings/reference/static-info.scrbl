@@ -245,6 +245,7 @@
 
 @doc(
   ~meta
+  def statinfo_meta.function_arity_key :: Identifier
   def statinfo_meta.call_result_key :: Identifier
   def statinfo_meta.index_result_key :: Identifier
   def statinfo_meta.index_get_key :: Identifier
@@ -256,6 +257,8 @@
   def statinfo_meta.list_bounds_key :: Identifier
   def statinfo_meta.pairlist_bounds_key :: Identifier
   def statinfo_meta.maybe_key :: Identifier
+  def statinfo_meta.flonum_key :: Identifier
+  def statinfo_meta.fixnum_key :: Identifier
   def statinfo_meta.values_key :: Identifier
   def statinfo_meta.indirect_key :: Identifier
 ){
@@ -319,7 +322,7 @@
         map @rhombus(statinfo_meta.values_key) to a group of per-value
         static information. The number of static information must be
         consistent with the bindings, otherwise no static information
-        will be propageted at all. When @rhombus(statinfo_meta.sequence_element_key)
+        will be propagated at all. When @rhombus(statinfo_meta.sequence_element_key)
         is not specified, @rhombus(each, ~for_clause) uses
         @rhombus(statinfo_meta.index_result_key).}
 
@@ -333,8 +336,7 @@
 
   @item{@rhombus(statinfo_meta.maybe_key): Packed static
         information that applies to a non-@rhombus(#false) value. This
-        information is exposed by @rhombus(definitely), for example. See
-        also @rhombus(statinfo_meta.unpack_call_result).}
+        information is exposed by @rhombus(!!), for example.}
 
   @item{@rhombus(statinfo_meta.flonum_key): A boolean indicating whether
         the value is a @tech{flonum}. Normally, this key is only present if it
