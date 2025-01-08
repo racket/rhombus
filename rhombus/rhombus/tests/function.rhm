@@ -442,6 +442,14 @@ block:
   check f("no", 7) ~throws "eff:"
 
 block:
+  use_static
+  fun f(other):
+    ~who: who
+    who < other
+  check f(#'e) ~is #false
+  check f(#'g) ~is #true
+
+block:
   fun f1(x): x
   fun f2(x, y = 1, ~z: z, ~w = #false): x
   fun f3(x, y, z, & args): x
