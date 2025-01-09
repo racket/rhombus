@@ -15,6 +15,7 @@ check:
   ModulePath '"m/n"' +& "" ~is "ModulePath('\"m/n\"')"
   ModulePath 'file("m")' +& "" ~is "ModulePath('file (\"m\")')"
   ModulePath 'file("/m")' +& "" ~is "ModulePath('file (\"/m\")')"
+  ModulePath 'lib("m")' +& "" ~is "ModulePath('lib (\"m/main.rhm\")')"
   ModulePath 'lib("m/n.rkt")' +& "" ~is "ModulePath('lib (\"m/n.rkt\")')"
   ModulePath 'lib("m/n.rkt")' +& "" ~is "ModulePath('lib (\"m/n.rkt\")')"
   ModulePath 'lib("m/n.rkt")!x' +& "" ~is "ModulePath('lib (\"m/n.rkt\") ! x')"
@@ -36,6 +37,7 @@ check:
   ModulePath('"m/n"') ~is ModulePath '"m/n"'
   ModulePath('file("m")') ~is ModulePath 'file ("m")'
   ModulePath('file("/m")') ~is ModulePath 'file ("/m")'
+  ModulePath('lib("m")') ~is ModulePath 'lib ("m/main.rhm")'
   ModulePath('lib("m/n.rkt")') ~is ModulePath 'lib ("m/n.rkt")'
   ModulePath('lib("m/n.rkt")') ~is ModulePath 'lib ("m/n.rkt")'
   ModulePath('lib("m/n.rkt")!x') ~is ModulePath 'lib ("m/n.rkt") ! x'
@@ -47,6 +49,8 @@ check:
   ModulePath('parent') ~is ModulePath 'parent'
   ModulePath('parent!x') ~is ModulePath 'parent ! x'
   ModulePath('parent!x!y') ~is ModulePath 'parent ! x ! y'
+  ModulePath.try('lib("m")') ~is ModulePath 'lib("m/main.rhm")'
+  ModulePath.try('lib("m ?")') ~is #false
 
 // method
 block:
@@ -70,6 +74,8 @@ block:
     (ModulePath 'parent').s_exp() ~is (ModulePath 'parent').s_exp()
     (ModulePath 'parent!x').s_exp() ~is (ModulePath 'parent ! x').s_exp()
     (ModulePath 'parent!x!y').s_exp() ~is (ModulePath 'parent ! x ! y').s_exp()
+    ModulePath('lib("m")').s_exp() ~is (ModulePath 'lib("m/main.rhm")').s_exp()
+    ModulePath.try('lib("m")')?.s_exp() ~is (ModulePath 'lib("m/main.rhm")').s_exp()
 
 check:
   dynamic(ModulePath 'm').s_exp() ~is dynamic(ModulePath 'm').s_exp()
