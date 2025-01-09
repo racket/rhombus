@@ -91,7 +91,7 @@ in an unspecified order.
     elem_repet: block repet
   expr.macro '#%braces {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
-    $key_expr: $val_expr
+    $key_expr: $val_body; ...
     $key_repet: $val_repet #,(@litchar{,}) $ellipses
     & $map_expr
   expr.macro '#%braces {$expr_or_splice, ...}'
@@ -115,7 +115,7 @@ in an unspecified order.
  repetitions, where @rhombus(key_repet_or_splice) and
  @rhombus(repet_or_splice) are like
  @rhombus(key_val_or_splice) and @rhombus(expr_or_splice),
- but with repetitions in place of expressions.
+ but with repetitions in place of expressions and body sequences.
 
  When @dots_expr is used among the content with two repetitions (for a
  map) or one repetition (for a set), the paired key and value elements

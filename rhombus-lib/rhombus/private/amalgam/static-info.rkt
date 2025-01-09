@@ -219,6 +219,9 @@
     [(rhs ... us:identifier rhs*)
      #:when (free-transformer-identifier=? #'us #'unsyntax)
      #`(lambda () (list* #,@(->compact (syntax->list #'(rhs ...))) rhs*))]
+    [(rhs ... (us*:identifier rhs*))
+     #:when (free-transformer-identifier=? #'us* #'unsyntax-splicing)
+     #`(lambda () (list* #,@(->compact (syntax->list #'(rhs ...))) rhs*))]
     [(rhs ...)
      #`(lambda () (list #,@(->compact (syntax->list #'(rhs ...)))))]))
 

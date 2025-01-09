@@ -206,6 +206,18 @@ check:
   String.join(["Hello"], "xx") ~is "Hello"
   String.join(["lions", "tigers", "bears"], ", ", ~before_last: ", and ") ~is "lions, tigers, and bears"
 
+block:
+  use_static
+  let str = "Hello World"
+  let split_strs = str.split(" ")
+  check split_strs ~is ["Hello", "World"]
+  check split_strs.length() ~is 2
+  check split_strs[0].length() ~is 5
+  let joined_str = String.join(split_strs, " ")
+  check joined_str ~is str
+  check joined_str.length() ~is 11
+  check joined_str[0].to_int() ~is Char"H".to_int()
+
 check:
   "a" is_a MutableString ~is #false
   "a".copy() is_a MutableString ~is #true

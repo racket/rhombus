@@ -154,7 +154,7 @@ block:
   check Path("x/y/z").parent() ~is Path("x/y/")
   check Path.name("x/y") ~is Path("y")
   check Path.parent("x/y") ~is Path("x/")
-  check Path.name(Path("x").add(#'same)) ~is #'same  
+  check Path.name(Path("x").add(#'same)) ~is #'same
   check Path(root_p).parent() ~is #false
 
 block:
@@ -178,6 +178,7 @@ block:
   check p3.split() ~is [#'up, Path("a"), Path("b"), #'same, Path("c")]
   check Path.split("x/y") ~is [Path("x"), Path("y")]
   check Path.split("x/y").length() ~is 2
+  check Path.split("x/y")[0].bytes() ~is #"x"
   check cross_p.split() ~is [cross_p]
   check_annot Path.split(0)
 
@@ -264,8 +265,8 @@ block:
   check Path("x").as_relative_to("x/y") ~is Path(#'up)
   check Path("x").as_relative_to("x") ~is Path("x")
   check Path("x").as_relative_to("x", ~more_than_same: #false) ~is Path(#'same)
-  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y")) ~is Path(#'up).add("x")  
-  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y"), ~more_than_root: #true) ~is root_p.add("x")  
+  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y")) ~is Path(#'up).add("x")
+  check Path(root_p).add("x").as_relative_to(Path(root_p).add("y"), ~more_than_root: #true) ~is root_p.add("x")
   check Path("X/Y").as_relative_to("x/z") ~is Path(match CrossPath.Convention.current()
                                                    | #'windows: "Y"
                                                    | ~else: "X/Y")

@@ -1017,7 +1017,8 @@
       [(not who) e]
       [else #`(let ()
                 (define #,who '#,function-name)
-                (define-static-info-syntax #,who #,@(get-symbol-static-infos))
+                (define-static-info-syntax #,who
+                  #:getter get-symbol-static-infos)
                 (let ()
                   #,e))])))
 

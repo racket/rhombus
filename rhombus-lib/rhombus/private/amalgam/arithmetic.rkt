@@ -71,12 +71,12 @@
   (get-real-static-infos))
 (define-for-syntax (get-int-static-infos)
   (get-real-static-infos))
-(define-for-syntax (get-fixnum-static-infos)
-  #`((#%fixnum #t)
-     #,@(get-int-static-infos)))
-(define-for-syntax (get-flonum-static-infos)
-  #`((#%flonum #t)
-     #,@(get-real-static-infos)))
+(define-static-info-getter get-fixnum-static-infos
+  (#%fixnum #t)
+  #,@(get-int-static-infos))
+(define-static-info-getter get-flonum-static-infos
+  (#%flonum #t)
+  #,@(get-real-static-infos))
 
 (define-infix rhombus+ +
   #:order addition

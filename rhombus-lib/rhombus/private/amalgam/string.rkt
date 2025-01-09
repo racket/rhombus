@@ -372,8 +372,7 @@
 
 (define/method (String.join strs [sep " "]
                             #:before_last [before_last sep])
-  #:static-infos ((#%call-result ((#%index-result #,(get-string-static-infos))
-                                  #,@(get-string-static-infos))))
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
   (unless (and (treelist? strs)
                (for/and ([s (in-treelist strs)])
                  (string? s)))
