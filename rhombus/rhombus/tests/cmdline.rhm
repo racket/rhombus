@@ -1,0 +1,501 @@
+#lang rhombus/static
+import:
+  rhombus/cmdline open
+
+def invalid_argument = "invalid argument"
+
+macro 'with_line $args: $body':
+  'parameterize { current_command_line: $args }:
+     $body'
+
+check:
+  with_line []:
+    parse:«»
+  ~is {}
+
+check:
+  with_line ["--"]:
+    parse:«»
+  ~is {}
+
+check:
+  with_line []:
+    parse:
+      args
+  ~is { #'args: [] }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args x y
+  ~is { #'args: ["ex", "why"] }
+
+block:
+  let p:
+    parser:
+      args x y ...
+  check p.parse(~line: ["ex", "why"]) ~is { #'args: ["ex", "why"] }
+  check p.parse(~line: ["ex"]) ~is { #'args: ["ex"] }
+  check p.parse(~line: ["ex", "why", "more"]) ~is { #'args: ["ex", "why", "more"] }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args x y:
+        state := state ++ { #'x: x, #'y: y }
+  ~is { #'x: "ex", #'y: "why" }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args x y:
+        state[#'x] := x
+        state[#'y] := y
+  ~is { #'x: "ex", #'y: "why" }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args (x as x) (x as y):
+        state := state ++ { #'x: x, #'y: y }
+  ~is { #'x: "ex", #'y: "why" }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      ~init { #'base: 7 }
+      args x y
+  ~is { #'args: ["ex", "why"], #'base: 7 }
+
+check:
+  with_line ["ex"]:
+    parse:
+      args x y
+  ~throws "expected <x> <y> on the command line"
+
+check:
+  with_line ["100.0"]:
+    parse:
+      args (n :: Int)
+  ~throws invalid_argument
+
+block:
+  let p:
+    parser:
+      args (n :: String.to_int)
+  check p.parse(~line: ["-n"]) ~throws "unrecognized flag -n"
+  check p.parse(~line: ["n"]) ~throws invalid_argument
+  check p.parse(~line: ["100"]) ~is { #'args: [100] }
+
+check:
+  with_line ["-n", "100"]:
+    parse:
+      flag "-n" (n as N :: String.to_int)
+  ~is { #'n: 100 }
+
+check:
+  with_line ["-n", "100"]:
+    parse:
+      flag "-n" (n as N :: String.to_int):
+        state := state ++ { #'EN: N }
+  ~is { #'EN: 100 }
+
+block:
+  let p:
+    parser:
+      flag "-n" (n :: String.to_int):
+        ~alias: "--number"
+  check p.parse(~line: ["--number", "100"]) ~is { #'n: 100 }
+  check p.parse(~line: ["-n", "100"]) ~is { #'n: 100 }
+
+block:
+  let p:
+    parser:
+      flag "--number" (n :: String.to_int):
+        ~alias: "-n"
+  check p.parse(~line: ["--number", "100"]) ~is { #'number: 100 }
+  check p.parse(~line: ["-n", "100"]) ~is { #'number: 100 }
+
+check:
+  with_line ["-n", "100.0"]:
+    parse:
+      flag "-n" (n :: String.to_int)
+  ~throws invalid_argument
+
+check:
+  with_line ["-n", "100", "-n", "200"]:
+    parse:
+      flag "-n" (n :: String.to_int)
+  ~throws "the -n flag can only be used once"
+
+check:
+  with_line ["-n", "100", "-n", "200"]:
+    parse:
+      flag "-n" (n :: String.to_int):
+        ~multi
+  ~is { #'n: [100, 200] }
+
+check:
+  with_line ["-n", "100", "-n", "200"]:
+    parse:
+      flag "-n" (n :: String.to_int):
+        ~multi
+  ~is { #'n: [100, 200] }
+
+check:
+  with_line []:
+    parse:
+      flag "-n" (n :: String.to_int):
+        ~multi
+  ~is { #'n: [] }
+
+check:
+  with_line ["-n", "100"]:
+    parse:
+      flag "-n" (n :: String.to_int):
+        ~multi
+  ~is { #'n: [100] }
+
+check:
+  with_line ["-n", "100", "-n", "200"]:
+    parse:
+      multi:
+        flag "-n" (n :: String.to_int)
+  ~is { #'n: [100, 200] }
+
+check:
+  with_line ["-n", "100", "-n", "200"]:
+    parse:
+      once_each:
+        flag "-n" (n :: String.to_int):
+          ~multi
+  ~throws "not a valid element"
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      flag "-n" (n :: String.to_int)
+      flag "-m" (m :: String.to_int)
+  ~is { #'m: 99, #'n: 100 }
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      [flag "-n" (n :: String.to_int),
+       flag "-m" (m :: String.to_int)]
+  ~is { #'m: 99, #'n: 100 }
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      [[flag "-n" (n :: String.to_int)],
+       flag "-m" (m :: String.to_int)]
+  ~is { #'m: 99, #'n: 100 }
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      once_each:
+        flag "-n" (n :: String.to_int)
+        flag "-m" (m :: String.to_int)
+  ~is { #'m: 99, #'n: 100 }
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      once_any:
+        flag "-n" (n :: String.to_int)
+        flag "-m" (m :: String.to_int)
+  ~throws "the -n flag cannot be used after -m"
+
+check:
+  with_line ["-m", "99", "-n", "100", "-m", "98"]:
+    parse:
+      multi:
+        flag "-n" (n :: String.to_int)
+        flag "-m" (m :: String.to_int)
+  ~is { #'m: [99, 98], #'n: [100] }
+
+check:
+  with_line ["-mnm", "99", "100", "98"]:
+    parse:
+      multi:
+        flag "-n" (n :: String.to_int)
+        flag "-m" (m :: String.to_int)
+  ~is { #'m: [99, 98], #'n: [100] }
+
+check:
+  with_line ["-m", "99", "-n", "100"]:
+    parse:
+      once_any:
+        flag "-n" (n :: String.to_int)
+      once_any:
+        flag "-m" (m :: String.to_int)
+  ~is { #'m: 99, #'n: 100 }
+
+check:
+  with_line []:
+    parse:
+      flag "-n":
+        ~init: { #'n: #false }
+  ~is { #'n: #false }
+
+check:
+  with_line ["-n"]:
+    parse:
+      flag "-n":
+        ~init: { #'n: #false }
+  ~is { #'n: #true }
+
+
+check:
+  with_line ["-n"]:
+    parse:
+      flag "-n":
+        ~init: { #'n: #false }
+        state := state ++ { #'n: #'on }
+  ~is { #'n: #'on }
+
+block:
+  def p:
+    parser:
+      flag "-n"
+      args dest ...
+  check p.parse(~line: ["-n"]) ~is { #'n: #true, #'args: [] }
+  check p.parse(~line: ["-n", "m"]) ~is { #'n: #true, #'args: ["m"] }
+  check p.parse(~line: ["n", "o", "p"]) ~is { #'args: ["n", "o", "p"] }
+  check p.parse(~line: ["-n", "m", "o", "p"]) ~is { #'n: #true, #'args: ["m", "o", "p"] }
+  check p.parse(~line: ["n"]) ~is { #'args: ["n"] }
+  check p.parse(~line: ["--", "-n"]) ~is { #'args: ["-n"] }
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+  p.print_help(~program: "demo")
+  ~prints "usage: demo\n"
+
+def one_option = "The <option>, if present, starts with the flag listed below."
+def many_option = "Each <option> starts with the flag listed below."
+def many_options = "Each <option> starts with one of the flags listed below."
+
+def mutually_exclusive = "/|\\ Brackets indicate mutually exclusive options."
+def can_combine = "Multiple single-letter flags can be combined after one `-`."
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+      flag "-x"
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option>]
+
+               @one_option
+
+                 -x
+               @""}
+
+check:
+  let p:
+    parser:
+      flag "-x"
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...]
+
+               @many_options
+
+                 -x
+                 --help, -h
+                   Show this information and exit, ignoring remaining arguments.
+                 --
+                   No argument after this flag is a flag.
+
+                @can_combine
+                For example, `-h-` is the same as `-h --`.
+               @""}
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+      multi:
+        flag "-x"
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...]
+
+               @many_option
+
+               * -x
+
+                * Asterisks indicate options allowed multiple times.
+               @""}
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+      flag "-x":
+        ~help: "The X factor."
+      flag "-y":
+        ~alias "--yes"
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...]
+
+               @many_options
+
+                 -x
+                   The X factor.
+                 -y, --yes
+
+                @can_combine
+                For example, `-xy` is the same as `-x -y`.
+               @""}
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+      once_any:
+        flag "-x" degree:
+          ~help: "The X factor.\nIt needs two lines of description."
+        flag "-y":
+          ~alias "--yes"
+      args name rank
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...] <name> <rank>
+
+               @many_options
+
+               / -x <degree>
+               |   The X factor.
+               |   It needs two lines of description.
+               \ -y, --yes
+
+               @mutually_exclusive
+
+                @can_combine
+                For example, `-xy <degree>` is the same as `-x <degree> -y`.
+               @""}
+
+check:
+  let p:
+    parser:
+      ~no_builtin      
+      once_any:
+        flag "-y" language:
+          ~alias "--yes"
+        flag "-x" degree:
+          ~help: "The X factor.\nIt needs two lines of description."
+      args name ...
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...] <name> ...
+
+               @many_options
+
+               / -y <language>, --yes <language>
+               | -x <degree>
+               |   The X factor.
+               \   It needs two lines of description.
+
+               @mutually_exclusive
+
+                @can_combine
+                For example, `-yx <language> <degree>` is the same as `-y <language> -x <degree>`.
+               @""}
+
+check:
+  let p:
+    parser:
+      ~no_builtin
+      help: "Positive flags:\n"
+      flag "-y" language:
+        ~alias "--yes"
+      help: "\nNegative flags:\n"
+      flag "-x" degree:
+        ~help: "The X factor."
+      args name ...
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...] <name> ...
+
+               @many_options
+
+               Positive flags:
+
+                 -y <language>, --yes <language>
+
+               Negative flags:
+
+                 -x <degree>
+                   The X factor.
+
+                @can_combine
+                For example, `-yx <language> <degree>` is the same as `-y <language> -x <degree>`.
+               @""}
+
+check:
+  let p:
+    parser:
+      help: "Positive flags:\n"
+      flag "-y" (language as lang):
+        ~alias "--yes"
+      help: "\nNegative flags:\n"
+      flag "-x" degree:
+        ~help: "The X factor."
+      help: "\nBuiltin flags:\n"
+      help:
+        ~end
+        "\nA final note."
+      args name ...
+  p.print_help(~program: "demo")      
+  ~prints @str{usage: demo [<option> ...] <name> ...
+
+               @many_options
+
+               Positive flags:
+
+                 -y <language>, --yes <language>
+
+               Negative flags:
+
+                 -x <degree>
+                   The X factor.
+
+               Builtin flags:
+
+                 --help, -h
+                   Show this information and exit, ignoring remaining arguments.
+                 --
+                   No argument after this flag is a flag.
+
+               A final note.
+
+                @can_combine
+                For example, `-h-` is the same as `-h --`.
+               @""}
+
+check:
+  ~eval
+  import rhombus/cmdline open
+  parse oops
+  ~throws "bad syntax"
+
+check:
+  parse:
+    "not a flag"
+  ~throws values("parse:",
+                 "not a valid element")
+
+check:
+  ~eval
+  import rhombus/cmdline open
+  parse:
+    flag "nope"
+  ~throws "invalid flag string"
+
+check:
+  ~eval
+  import rhombus/cmdline open
+  parse:
+    flag "--ok":
+      ~alias "nope"
+  ~throws "invalid flag string"

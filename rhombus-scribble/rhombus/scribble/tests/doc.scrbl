@@ -11,7 +11,8 @@
           println
           String
           ReadableString
-      rhombus/draw)
+      rhombus/draw
+      rhombus/cmdline)
 
 @title{Example}
 
@@ -102,5 +103,17 @@ Starting example:
 ){
 
  Draw description.
+
+}
+
+@section{Command Line}
+
+@docmodule(rhombus/cmdline)
+
+@doc(
+  annot.macro 'cmdline.String.to_lib_module_path'
+){
+
+  Annotation via namespace extension.
 
 }

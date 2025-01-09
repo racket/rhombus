@@ -11,3 +11,4 @@
 @include_section("filesystem.scrbl")
 @include_section("subprocess.scrbl")
 @include_section("system.scrbl")
+@include_section("cmdline.scrbl")
